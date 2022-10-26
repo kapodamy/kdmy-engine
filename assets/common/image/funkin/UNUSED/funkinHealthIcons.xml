@@ -1,0 +1,6 @@
+<TextureAtlas imagePath="funkinHealthIcons.png">
+	<SubTexture name="dead" x="235" y="0" width="104" height="95"/>
+	<SubTexture name="loosing" x="121" y="0" width="110" height="93"/>
+	<SubTexture name="winning" x="343" y="0" width="95" height="105"/>
+	<SubTexture name="winner" x="0" y="0" width="117" height="97"/>
+</TextureAtlas>

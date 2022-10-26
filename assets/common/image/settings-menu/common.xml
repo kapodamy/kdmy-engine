@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAspectRatio="true">
+    <Font name="title" path="/assets/common/font/Alphabet.xml" glyphSuffix="bold" />
+    <Font name="labels" path="/assets/common/font/vcr.ttf" />
+    <Font name="values" path="/assets/common/font/pixel.otf" />
+
+    <Sprite rgb="0x000000">
+        <Action>
+            <Location x="0" y="0" z="0" />
+            <Size width="1280" height="720"/>
+        </Action>
+    </Sprite>
+    <Sprite texture="menuDesat.png">
+        <Action>
+            <Location x="0" y="0" z="1" />
+            <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
+            <Property name="alpha" value="0.4" />
+        </Action>
+    </Sprite>
+
+    <Text name="title" fontName="title" fontSize="60" color="0xFFFFFF">
+        <Action>
+            <!-- <String>123</String> -->
+            <Location x="80" y="60" z="2" />
+        </Action>
+    </Text>
+	
+	<AttachValue name="menu_isVertical" type="boolean"  value="true" />
+    <AttachValue name="menu_fontSize" type="float"  value="46" />
+    <AttachValue name="menu_itemGap" type="float"  value="38" />
+    <AttachValue name="menu_fontBorderSize" type="float"  value="2" />
+	<Placeholder name="menu" x="100" y="180" z="2" width="1090" height="480" />
+	
+	<AttachValue name="menu-selector_isVertical" type="boolean"  value="false" />
+	<AttachValue name="menu-selector_fontSize" type="float"  value="28" />
+	<AttachValue name="menu-selector_itemGap" type="float"  value="56" />
+
+	<!-- Options Hint -->
+	<Group>
+		<Sprite rgba="0x0000007F">
+			<Action>
+				<Location x="0" y="628" z="1" />
+				<Size width="1280" height="96"/>
+			</Action>
+		</Sprite>
+		<Text name="hint" fontName="labels" fontSize="24" rgb="0xFFFFFF">
+			<Action>
+				<Location x="20" y="636" z="2" />
+				<MaxSize width="1280" />
+				<!-- <String>Select an option</String> -->
+			</Action>
+		</Text>
+	</Group>
+
+	<Group name="change-value" visible="false">
+		<Sprite rgb="0x000000">
+			<Action>
+				<Location x="0" y="180" z="100" />
+				<Size width="1280" height="300" />
+				<Property name="alpha" value="0.9" />
+			</Action>
+		</Sprite>
+		<Text name="setting-name" fontName="labels" fontSize="48" rgb="0xECBE23">
+			<Action>
+				<Location x="0" y="180" z="101" />
+				<Property name="alignHorizontal" value="center" />
+				<MaxSize width="1280" />
+				<!-- <String>setting name</String> -->
+			</Action>
+		</Text>
+		
+		<Group name="holder-boolean" visible="false">
+			<Sprite rgb="0xECBE23">
+				<Action>
+					<Location x="320" y="350" z="101" />
+					<Size width="320" height="80" />
+				</Action>
+				<Action name="bool-true">
+					<Show />
+				</Action>
+				<Action name="bool-false">
+					<Hide />
+				</Action>
+			</Sprite>
+			<Text fontName="values" fontSize="48">
+				<Action>
+					<Location x="320" y="364" z="102" />
+					<Property name="alignHorizontal" value="center" />
+					<MaxSize width="320" />
+					<String>enabled</String>
+				</Action>
+				<Action name="bool-true">
+					<Color rgb="0x000000" />
+				</Action>
+				<Action name="bool-false">
+					<Color rgba="0xECBE23E5" />
+				</Action>
+			</Text>
+			<Sprite rgb="0xECBE23">
+				<Action>
+					<Location x="640" y="350" z="101" />
+					<Size width="320" height="80" />
+				</Action>
+				<Action name="bool-true">
+					<Hide />
+				</Action>
+				<Action name="bool-false">
+					<Show />
+				</Action>
+			</Sprite>
+			<Text fontName="values" fontSize="48">
+				<Action>
+					<Location x="640" y="364" z="102" />
+					<Property name="alignHorizontal" value="center" />
+					<MaxSize width="320" />
+					<String>disabled</String>
+				</Action>
+				<Action name="bool-true">
+					<Color rgba="0xECBE23E5" />
+				</Action>
+				<Action name="bool-false">
+					<Color rgb="0x000000" />
+				</Action>
+			</Text>
+		</Group>
+	
+		<Group name="holder-numeric" visible="false">
+			<!-- layout does not have support for "corner rotation" -->
+			<Sprite texture="arrow_U.png">
+				<Action>
+					<Size width="-1" height="60" />
+					<Location x="0" y="270" z="101" alignHorizontal="center" />
+				</Action>
+			</Sprite>
+			<Sprite texture="arrow_U.png">
+				<Action>
+					<Size width="-1" height="60" />
+					<Location x="0" y="390" z="101" alignHorizontal="center" />
+					<Property name="flipY" value="true" />
+				</Action>
+			</Sprite>
+			<Text name="number-value"  fontName="values" fontSize="48" rgb="0xFFFFFF">
+				<Action>
+					<Location x="0" y="330" z="102"/>
+					<MaxSize width="1280" height="60" />
+					<Properties alignHorizontal="center" alignVertical="center" />
+					<!-- <String>0123456789</String> -->
+				</Action>
+			</Text>
+		</Group>
+		
+		<Group name="holder-list" visible="false">
+			<Sprite name="list-selected-back" rgb="0xECBE23">
+				<Action>
+					<!-- Note: size and location are computed using the selected item bounds  -->
+					<Location x="0" y="0" z="101" />
+					<Size width="0" height="0" />
+					<Hide />
+				</Action>
+			</Sprite>
+			<Placeholder name="menu-selector" x="370" y="330" z="102" width="700" height="60" alignHorizontal="center" />
+		</Group>
+	</Group>
+
+</Layout>

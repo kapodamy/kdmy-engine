@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2018",
+        "checkJs": true,
+        "noImplicitAny": false,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true
+    },
+    "compileOnSave": true,
+    "include": [
+        "engine/**/*.js",
+        "engine/globals.d.ts"
+    ],
+    "exclude": [
+    ]
+}

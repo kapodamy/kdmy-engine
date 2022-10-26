@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="2114" height="1075" keepAspectRatio="true" animationList="anims.xml">
+
+    <!-- ******************* Cameras ******************* -->
+	<Camera durationInBeats="2">
+		<Offset x="0" y="0" z="1" />
+		<From x="-378" y="0" z="1.4800000000000022" />
+		<To x="168" y="3" z="1.4600000000000022" />
+	</Camera>
+	<Camera name="camera_opponent">
+		<Offset x="-276" y="-246" z="1.4800000000000022" />
+		<To x="219.76193999993848" y="-53.367539999921405" z="1.4800000000000022" />
+	</Camera>
+	<Camera name="camera_player">
+		<Offset x="-276" y="-246" z="1.4800000000000022" />
+		<To x="-111" y="-183" z="1.4700000000000004" />
+	</Camera>
+	<Camera name="round_roundEnd">
+		<Offset x="-276" y="-246" z="1.4800000000000022" />
+		<To x="0" y="-18" z="1.11" />
+	</Camera>
+
+    <!-- ******************* RANKINGCOUNTER ******************* -->
+    <Placeholder name="ui_rankingcounter_rank" x="787" y="401" z="50" height="120" />
+    <Placeholder name="ui_rankingcounter_accuracy" x="1206" y="538" z="50" height="48" />
+    
+    <!-- ******************* STREAKCOUNTER ******************* -->
+    <Placeholder name="ui_streakcounter" x="817" y="521" z="50" height="80" width="0" />
+    <AttachValue type="float" name="ui_streakcounter_comboHeight" value="0" />
+    <!-- <AttachValue type="float" name="ui_streakcounter_numberGap"   value="10" /> -->
+    <!-- <AttachValue type="float" name="ui_streakcounter_delay"       value="100" />	 -->
+	
+	<!-- ******************* Characters ******************* -->
+    <!-- <AttachValue name="character_girlfriend_scale" type="float" value="0.9" /> -->
+    <Placeholder name="character_girlfriend" x="1004" y="588" z="2" />
+
+    <AttachValue name="character_count" type="integer" value="2" />
+
+    <!-- <AttachValue name="character_scale_0" type="float" value="1" /> -->
+    <Placeholder name="character_0" x="368" y="975" z="2.1" />
+
+    <!-- <AttachValue name="character_scale_1" type="float" value="1" /> -->
+    <Placeholder name="character_1" x="1005" y="975" z="2.3" />
+
+    <!-- ******************* Stage graphics ******************* -->
+    <Sprite rgb="0x000000">
+        <Action>
+            <Property name="z" value="0" />
+            <Location x="0" y="-520" />
+            <Size width="2114" height="2114" />
+            <Parallax x="0" y="0" z="0" />
+            <Static />
+        </Action>
+    </Sprite>
+    <Sprite atlas="halloween_bg.xml" initialAction="spooky">
+        <Action name="spooky">
+            <AnimationRemove />
+            <AtlasApply entry="halloweem bg0000" overrideSize="true" />
+            <Property name="z" value="0" />
+            <Location x="0" y="0" />
+            <Parallax x="0.9" y="0.9" z="1.0" />
+        </Action>
+        <Action name="lightstrike">
+            <Animation name="lightstrike" restart="true" loop="1" />
+        </Action>
+    </Sprite>
+
+    <!-- ******************* Stage sounds ******************* -->
+    <Sound src="thunder_1.ogg">
+		<Action name="lightstrike">
+			<Stop />
+		</Action>
+        <Action name="thunder_1">
+            <Stop />
+            <Play />
+        </Action>
+    </Sound>
+
+    <Sound src="thunder_2.ogg">
+		<Action name="lightstrike">
+			<Stop />
+		</Action>
+        <Action name="thunder_2">
+            <Stop />
+            <Play />
+        </Action>
+    </Sound>
+
+</Layout>

@@ -1,0 +1,7 @@
+<TextureAtlas imagePath="ranking.png">
+	<SubTexture name="bad" x="0" y="90" width="28" height="19"/>
+	<SubTexture name="combo" x="0" y="24" width="47" height="18"/>
+	<SubTexture name="good" x="0" y="46" width="39" height="16"/>
+	<SubTexture name="shit" x="0" y="66" width="35" height="20"/>
+	<SubTexture name="sick" x="0" y="0" width="51" height="20"/>
+</TextureAtlas>

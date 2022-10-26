@@ -1,0 +1,43 @@
+{
+    "name": "GIRFRIEND",
+    "model": "/assets/common/image/funkin/GF_assets.xml",
+    "modelWeekSelector": "/assets/common/image/funkin/girlfriend_preview.xml",
+    "weekSelectorEnableBeat": true,
+    "healthbarColor": "0xA5004D",
+    "healthIconsModel": "/assets/common/image/funkin/icon-gf.xml",
+
+    "actionsApplyChartSpeed": true,
+    "continuousIdle": true,
+    "offsetX": 0,
+    "offsetY": 0,
+    "alignVertical": "center",
+    "alignHorizontal": "center",
+    "referenceSize": { "width": -1, "height": -1 },
+    "leftFacing": false, 
+    "oppositeDirections": {
+        "from": ["left", "right"],
+        "to": ["right", "left"]
+    },
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "animHold": "GF left note",  "rollback": true },
+            { "direction": "down",   "animHold": "GF Down Note",  "rollback": true },
+            { "direction": "up",     "animHold": "GF Up Note",    "rollback": true },
+            { "direction": "right",  "animHold": "GF Right Note", "rollback": true }
+        ],
+
+        "miss": [],
+
+        "idle": { "anim": "GF Dancing Beat", "stopAfterBeats": 0 },
+        "hey": { "animHold": "GF Cheer" },
+
+        "extras": [
+            { "name": "fear",       "stopAfterBeats": 2,  "animHold": "GF FEAR" },
+            { "name": "sad",        "stopAfterBeats": 2,  "anim": "gf sad"},
+            { "name": "hair",   "stopAfterBeats": 0,  "animHold": "GF Dancing Beat Hair blowing", "animRollback": "GF Dancing Beat Hair Landing" }
+        ]
+    }
+}
+

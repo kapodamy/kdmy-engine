@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="2114" height="1075" keepAspectRatio="true" animationList="anims.xml">
+
+    <!-- ******************* Cameras ******************* -->
+	<Camera>
+		<Offset x="-30" y="-192" z="1.4300000000000004" />
+		<Move x="0" y="0" z="1.0" />
+	</Camera>
+	<Camera name="camera_opponent">
+		<Offset x="-27" y="-129" z="1.4300000000000004" />
+		<To x="252" y="78" z="1.3100000000000003" />
+	</Camera>
+	<Camera name="camera_player">
+		<Offset x="-21" y="-129" z="1.4300000000000004" />
+		<To x="-201" y="45" z="1.1300000000000001" />
+	</Camera>
+	<Camera name="round_roundEnd">
+		<Offset x="-216" y="-159" z="1.4700000000000004" />
+		<To x="78" y="60" z="1.09" />
+	</Camera>
+
+    <!-- ******************* RANKINGCOUNTER ******************* -->
+    <Placeholder name="ui_rankingcounter_rank" x="779" y="367" z="50" height="100" />
+    <Placeholder name="ui_rankingcounter_accuracy" x="964" y="400" z="50" height="38" />
+
+    <!-- ******************* STREAKCOUNTER ******************* -->
+    <Placeholder name="ui_streakcounter" x="977" y="637" z="50" height="60" width="0" />
+    <AttachValue type="float" name="ui_streakcounter_comboHeight" value="0" />
+    <AttachValue type="float" name="ui_streakcounter_delay"       value="5" />
+
+	<!-- ******************* Characters ******************* -->
+    <Placeholder name="character_girlfriend" x="854" y="452" z="4" />
+    <AttachValue name="character_count" type="integer" value="2" />
+    <Placeholder name="character_0" x="226" y="815" z="5" />
+    <Placeholder name="character_1" x="1011" y="615" z="5" />
+
+    <!-- ******************* Stage graphics ******************* -->
+	<Sprite rgb="0x526fe6">
+		<Action>
+			<Location x="0" y="-500" z="0" />
+			<Size width="2114" height="1075" />
+		</Action>
+	</Sprite>
+
+	<Sprite texture="limoSunset.png">
+        <Action>
+            <Location x="-173" y="-50" z="0.1" />
+			<Parallax x="0.1" y="0.1" z="1.0" />
+        </Action>
+    </Sprite>
+
+	<Sprite atlas="bgLimo.xml">
+        <Action>
+            <Location x="-200" y="480" z="1" />
+            <Parallax x="0.4" y="0.4" z="1.0" />
+			<AnimationFromAtlas name="background limo pink" loop="-1" />
+        </Action>
+    </Sprite>
+
+	<Trigger action="bg_dance_action" loop="-1" loopDelayBeats="1" />
+	<Group>
+		<Sprite atlas="limoDancer.xml">
+			<Action>
+				<Location x="130" y="80" z="2" />
+				<Parallax x="0.4" y="0.4" z="1.0" />
+				<AtlasApply entry="bg dancer sketch PINK0000" overrideSize="true" />
+			</Action>
+			<Action name="bg_dance_action">
+				<Animation name="bg-dancer" />
+			</Action>
+		</Sprite>
+		<Sprite atlas="limoDancer.xml">
+			<Action>
+				<Location x="500" y="80" z="2" />
+				<Parallax x="0.4" y="0.4" z="1.0" />
+				<AtlasApply entry="bg dancer sketch PINK0000" overrideSize="true" />
+			</Action>
+			<Action name="bg_dance_action">
+				<Animation name="bg-dancer" />
+			</Action>
+		</Sprite>
+		<Sprite atlas="limoDancer.xml">
+			<Action>
+				<Location x="870" y="80" z="2" />
+				<Parallax x="0.4" y="0.4" z="1.0" />
+				<AtlasApply entry="bg dancer sketch PINK0000" overrideSize="true" />
+			</Action>
+			<Action name="bg_dance_action">
+				<Animation name="bg-dancer" />
+			</Action>
+		</Sprite>
+		<Sprite atlas="limoDancer.xml">
+			<Action>
+				<Location x="1240" y="80" z="2" />
+				<Parallax x="0.4" y="0.4" z="1.0" />
+				<AtlasApply entry="bg dancer sketch PINK0000" overrideSize="true" />
+			</Action>
+			<Action name="bg_dance_action">
+				<Animation name="bg-dancer" />
+			</Action>
+		</Sprite>
+	</Group>
+
+	<Sprite atlas="limoDrive.xml">
+		<Action>
+			<Location x="-120" y="520" z="4" />
+			<AnimationFromAtlas name="Limo stage" loop="-1" />
+            <!-- <Parallax x="1.0" y="1.0" z="1.0" /> -->
+		</Action>
+	</Sprite>
+
+	<!-- In funkin exists an attempt to use limoOverlay texture and blend it with a red color -->
+	<!--
+	<Sprite texture="limoOverlay.png">
+        <Action>
+            <Location x="-500" y="-600" z="1" />
+            <Parallax x="0.2" y="0.2" z="1.0" />
+			<Property name="alpha" value="0.5" />
+        </Action>
+    </Sprite>
+	-->
+
+	<Sprite texture="fastCarLol.png">
+		<Action>
+			<!-- the Y axis value is choosen randomly -->
+			<Location x="-1850" y="160" z="6" />
+            <!-- <Parallax x="1.0" y="1.0" z="1.0" /> -->
+			<!-- <Hide/> -->
+		</Action>
+		<Action name="carPass">
+			<Animation name="fast_car" restart="true" />
+		</Action>
+	</Sprite>
+
+
+    <!-- ******************* Stage sounds ******************* -->
+    <Sound src="carPass0.ogg">
+		<Action>
+			<Stop />
+		</Action>
+        <Action name="carPass0">
+            <Stop />
+            <Play />
+        </Action>
+    </Sound>
+
+	<Sound src="carPass1.ogg">
+		<Action>
+			<Stop />
+		</Action>
+        <Action name="carPass1">
+            <Stop />
+            <Play />
+        </Action>
+    </Sound>
+
+</Layout>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <input type="hidden" name="entry_point" value="main_layout_visor" />
+    <title>engine [layout visor]</title>
+
+    <script type="text/javascript">
+        var ENABLE_DOTTED = true;
+    </script>
+
+    <style type="text/css">
+        body {
+            background-color: whitesmoke;
+        }
+    </style>
+</head>
+
+<body style="overflow-y: scroll;">
+
+    <style type="text/css">
+        .layoutvisor {
+            float: right;
+        }
+
+        .layoutvisor {
+            width: calc(100vw - 640px - 34px);
+        }
+
+        .coords {
+            background-color: white;
+            border: 1px solid;
+            padding: 0px 5px;
+        }
+
+        .layoutvisor.widescreen {
+            width: calc(100vw - 864px - 34px);
+        }
+
+        .tree,
+        .tree ul {
+            list-style-type: none;
+        }
+
+        .tree {
+            margin: 0;
+            padding: 0;
+        }
+
+        .tree .caret {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .tree .ul.caret::before {
+            content: "\25B6";
+            color: black;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .tree.caret-down::before {
+            transform: rotate(90deg);
+        }
+    </style>
+
+    <section class="layoutvisor">
+        <fieldset>
+            <legend>Layout item parameters</legend>
+            <div style="display: flex;">
+                <div style="display: inline;">
+                    <div>
+                        <select id="layout-items" style="min-width: 200px"></select>
+                    </div>
+                    <div>
+                        <label>Width:<input id="item-width" type="number" style="width: 40px;" /></label>
+                        <label>Height:<input id="item-height" type="number" style="width: 40px;" /></label>
+                        <br>
+                        <label>X:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<input id="item-x" type="number"
+                                style="width: 40px;" /></label>
+                        <label>Y:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;<input id="item-y" type="number"
+                                style="width: 40px;" /></label>
+                    </div>
+                </div>
+                <div style="display: inline;">
+                    <br>
+                    <label><input type="checkbox" id="item-mousemove">Move with the mouse</label>
+                    <br>
+                    <button disabled id="item-bind">Bind placeholder to...</button>
+                </div>
+            </div>
+            <fieldset>
+                <legend>Parallax coefficients</legend>
+                <label>X: <input type="number" step="0.01" value="1" style="width: 50px;"
+                        id="item-parallax-x" /></label>
+                <label>&nbsp;&nbsp;Y: <input type="number" step="0.001" value="1" style="width: 50px;"
+                        id="item-parallax-y" /></label>
+                <label>&nbsp;&nbsp;Z: <input type="number" step="0.001" value="1" style="width: 50px;"
+                        id="item-parallax-z" /></label>
+            </fieldset>
+            <fieldset id="item-placeholder-align" disabled>
+                <legend>Placeholder alignment</legend>
+                <label>Vertical:
+                    <select id="item-placeholder-align-vertical">
+                        <option value="4">NONE</option>
+                        <option value="0">START</option>
+                        <option value="1">CENTER</option>
+                        <option value="2">END</option>
+                    </select>
+                </label>
+                <label>&nbsp;&nbsp;&nbsp;Horizontal:
+                    <select id="item-placeholder-align-horizontal">
+                        <option value="4">NONE</option>
+                        <option value="0">START</option>
+                        <option value="1">CENTER</option>
+                        <option value="2">END</option>
+                    </select>
+                </label>
+            </fieldset>
+            <fieldset id="item-bind-to" style="display: none;">
+                <legend>Bind placeholder</legend>
+                <div id="item-bind-type" style="display: none;">
+                    <fieldset>
+                        <legend>Type</legend>
+                        <label><input type="radio" name="item-bind-type" value="none"> None</label>
+                        <br>
+                        <label><input type="radio" name="item-bind-type" value="ranking"> Ranking counter (displays
+                            SICK, GOOD, etc.)</label>
+                        <br>
+                        <label><input type="radio" name="item-bind-type" value="streak"> Streak counter (displays 010,
+                            011, etc.)</label>
+                        <br>
+                        <label><input type="radio" name="item-bind-type" value="accuracy"> Accuracy counter (displays
+                            10.2ms, 20ms, etc.)</label>
+                        <br>
+                        <label><input type="radio" name="item-bind-type" value="character" list="predefined-character-manifest"> Character (animated sprite
+                            using charactermanifest)</label>
+                    </fieldset>
+                </div>
+                <fieldset id="item-bind-type-ranking" style="display: none;">
+                    <legend>Configure ranking counter</legend>
+                    <strong>ui_rankingcounter_rank</strong><i> placeholder</i>
+                    <hr>
+                    <i>no additional configuration is required</i>
+                </fieldset>
+                <fieldset id="item-bind-type-streak" style="display: none;">
+                    <legend>Configure streak counter</legend>
+                    <strong>ui_streakcounter</strong><i> placeholder</i>
+                    <hr>
+                    <label><b>ui_streakcounter_comboHeight</b>: <input style="width: 100px;"
+                            id="bind-ui_streakcounter_comboHeight" type="number" step="00000.1" value="0" /></label>
+                    <br>
+                    <label><b>ui_streakcounter_numberGap</b>: <input style="width: 100px;"
+                            id="bind-ui_streakcounter_numberGap" type="number" step="00000.1" value="0" /></label>
+                    <br>
+                    <label><b>ui_streakcounter_delay</b>: <input style="width: 100px;" id="bind-ui_streakcounter_delay"
+                            type="number" step="00000.1" value="0" /></label>
+                </fieldset>
+                <fieldset id="item-bind-type-accuracy" style="display: none;">
+                    <legend>Configure accuracy counter</legend>
+                    <strong>ui_rankingcounter_accuracy</strong><i> placeholder</i>
+                    <hr>
+                    <label><b>ui_rankingcounter_accuracy_percent</b>: <input
+                            id="bind-ui_rankingcounter_accuracy_percent" type="checkbox" value="false" /></label>
+                </fieldset>
+                <fieldset id="item-bind-type-character" style="display: none;">
+                    <legend>Configure character</legend>
+                    <strong>character_#### character_girlfriend</strong><i> placeholder</i>
+                    <hr>
+                    <label><b>character_scale_### character_girlfriend_scale</b>: <input style="width: 50px;"
+                            id="bind-character_scale" type="number" step="0.02" value="1" /></label>
+                    <br>
+                    <label><input id="bind-character_facing" type="checkbox" /> Invert character facing (needs rebind)</label>
+                    <br>
+                    <label>Character manifest: <input id="bind-character_manifest" type="text" value="/assets/common/data/BOYFRIEND.json" list="predefined-character-manifest"/></label>
+                </fieldset>
+                <div style="text-align: center;margin-top: 8px;">
+                    <button id="item-bind-confirm" style="padding-left: 50px; padding-right: 50px;">Set placeholder
+                        binding</button>
+                </div>
+            </fieldset>
+        </fieldset>
+        <fieldset>
+            <legend>Camera</legend>
+            <div>
+                <select id="layout-cameras" style="min-width: 200px"></select>
+                <br>
+                <button id="layout-cameras-start">Apply</button>
+                <button id="layout-cameras-end">Apply end only</button>
+            </div>
+            <div>
+                Current offset:&nbsp;&nbsp;&nbsp;&nbsp;<span class="coords camera-offset">x="0" y="0" z="1"</span>
+                <br>
+                Current position:<span class="coords camera-position">x="0" y="0" z="1"</span>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Camera mode</legend>
+            <div style="display: flex;">
+                <div style="display: inline;">
+                    <label><input type="radio" name="viewmode" id="viewmode-offset" checked />Offset</label>
+                    <br>
+                    <label><input type="radio" name="viewmode" id="viewmode-camera" />Positon (with parallax)</label>
+                </div>
+                <div style="display: inline;margin-left: 10px;">
+                    <button id="camera-offset-reset">Reset offset</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="camera-offset-set">Set offset</button>
+                    <br>
+                    <button id="camera-position-reset">Reset position</button>&nbsp;&nbsp;<button id="camera-position-set">Set position</button>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Display mode</legend>
+            <div>
+                <label><input type="radio" name="displaymode" id="displaymode-render" checked />Render only</label>
+                <label><input type="radio" name="displaymode" id="displaymode-animate" />Animate</label>
+                <label><input type="checkbox" id="widescreen" value="false" />Widescreen</label>
+                <label><input type="checkbox" id="sing" value="false" checked />Sing simulation</label>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Executions</legend>
+            <label>Animation speed:&nbsp;<input style="width: 80px;" type="number" id="anim-speed" step="0.1" min="0"
+                    value="1.0" /></label>
+            <br>
+            <label>Triggers:&nbsp;<select id="layout-triggers" style="min-width: 100px;"></select></label>
+            <button id="layout-triggers-execute">Execute</button>&nbsp;&nbsp;<button id="layout-triggers-stop">Stop all triggers</button>
+            <br>
+            <label>Actions:&nbsp;<select id="layout-actions" style="min-width: 100px;"></select></label>
+            <button id="layout-actions-execute">Execute</button>
+        </fieldset>
+        <fieldset>
+            <legend>Layout</legend>
+            <label>Base folder for layout: <input type="text" name="base-folder" list="predefined-base-layout-folder" /></label>
+            <br>
+            <div style="height: 4px;"></div>
+            <label>Load layout: <input type="file" id="load-layout-file" /></label>
+        </fieldset>
+    </section>
+
+    <div
+        style="display:none; z-index: 999; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: #00000040;">
+        <div style="background-color: white; width: 50vw; display: flex; margin: 25px auto; min-height: 400px;">
+        </div>
+    </div>
+
+    <canvas width="640" height="480" style="border: 1px black solid;"></canvas>
+    <div>
+        <i>kdmy-engine layout visor</i>
+    </div>
+    <div style="display: none;">
+        <hr>
+        <button id="pvr-onoff">Suspend/Resume PVR</button>
+        <br>
+        <label>PVR status: <input type="text" readonly="" value="00 FPS" id="pvr-status"></label>
+    </div>
+
+    <script src="engine/platform/localforage.js"></script>
+
+    <script src="engine/platform/sh4.js"></script>
+    <script src="engine/platform/sh4matrix.js"></script>
+    <script src="engine/platform/kos.js"></script>
+    <script src="engine/platform/wglc.js"></script>
+    <script src="engine/platform/pvrctx.js"></script>
+    <script src="engine/platform/pvr.js"></script>
+    <script src="engine/platform/io.js"></script>
+    <script src="engine/platform/fs.js"></script>
+    <script src="engine/platform/gamepad.js"></script>
+    <script src="engine/platform/www_autoplay.js"></script>
+
+    <script src="engine/utils/misc.js"></script>
+    <script src="engine/utils/arraylist.js"></script>
+    <script src="engine/utils/linkedlist.js"></script>
+    <script src="engine/utils/cloneobject.js"></script>
+    <script src="engine/utils/math2d.js"></script>
+    <script src="engine/utils/vertexprops.js"></script>
+	<script src="engine/utils/stringfolding.js"></script>
+    <script src="engine/utils/tokenizer.js"></script>
+    <script src="engine/utils/stringutils.js"></script>
+    <script src="engine/utils/stringbuilder.js"></script>
+    <script src="engine/utils/jsonparser.js"></script>
+
+    <script src="engine/externals/imports.js"></script>
+    <script src="engine/externals/fontatlas.js"></script>
+    <script src="engine/externals/luascript.js"></script>
+    <script src="engine/font/glyphrenderer.js"></script>
+    <script src="engine/font/fontglyph.js"></script>
+    <script src="engine/font/fonttype.js"></script>
+    <script src="engine/font/fontholder.js"></script>
+    <script src="engine/font/textsprite.js"></script>
+
+    <script src="engine/sound/soundplayer.js"></script>
+
+    <script src="engine/image/texture.js"></script>
+    <script src="engine/image/sprite.js"></script>
+    <script src="engine/image/atlas.js"></script>
+    <script src="engine/image/texturepool.js"></script>
+    <script src="engine/image/imgutils.js"></script>
+
+    <script src="engine/animation/animlist.js"></script>
+    <script src="engine/animation/animsprite.js"></script>
+    <script src="engine/animation/macroexecutor.js"></script>
+    <script src="engine/animation/tweenlerp.js"></script>
+
+    <script src="engine/beatwatcher.js"></script>
+    <script src="engine/layout.js"></script>
+    <script src="engine/camera.js"></script>
+    <script src="engine/drawable.js"></script>
+    <script src="engine/image/statesprite.js"></script>
+
+    <script src="engine/game/funkin/character.js"></script>
+    <script src="engine/game/funkin/playerstats.js"></script>
+    <script src="engine/game/funkin/streakcounter.js"></script>
+    <script src="engine/game/funkin/streakcounter_digits.js"></script>
+    <script src="engine/game/funkin/rankingcounter.js"></script>
+    <script src="engine/modelholder.js"></script>
+    <script src="engine/game/gameplay/helpers/charactermanifest.js"></script>
+	<script src="engine/game/gameplay/weekscript.js"></script>
+
+    <script src="engine/game/main.js"></script>
+    <script src="engine/game/layoutvisor.js"></script>
+	
+	<datalist id="predefined-character-manifest">
+		<option value="/assets/common/data/BOYFRIEND.json"></option>
+		<option value="/assets/common/data/GIRLFRIEND.json"></option>
+		<option value="/assets/weeks/week1/DD/DADDYDEAREST.json"></option>
+		<option value="/assets/weeks/week2/SPKY/SPOOKY_KIDS.json"></option>
+		<option value="/assets/weeks/week2/LMNDMN/LEMON_DEMON.json"></option>
+		<option value="/assets/weeks/week3/PICO/PICO.json"></option>
+		<option value="/assets/weeks/week4/MM/MOMMY_MEAREST.json"></option>
+		<option value="/assets/weeks/week5/funkin/PARENTS.json"></option>
+		<option value="/assets/weeks/week5/funkin/MONSTER_CHRISTMAS.json"></option>
+		<option value="/assets/weeks/week6/funkin/SENPAI.json"></option>
+		<option value="/assets/weeks/week6/funkin/SENPAI_ANGRY.json"></option>
+		<option value="/assets/weeks/week6/funkin/SPIRIT.json"></option>
+	</datalist>
+	<datalist id="predefined-base-layout-folder">
+		<option value="/assets/tutorial/stage"></option>
+		<option value="/assets/week1"></option>
+		<option value="/assets/weeks/week2/halloween"></option>
+		<option value="/assets/weeks/week3/philly"></option>
+		<option value="/assets/weeks/week4/limo"></option>
+		<option value="/assets/weeks/week5/christmas"></option>
+		<option value="/assets/weeks/week6/weeb"></option>
+		<option value="/assets/weeks/week6/weeb_but_evil"></option>
+	</datalist>
+
+</body>
+
+</html>

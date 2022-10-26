@@ -1,0 +1,200 @@
+#include <stdio.h>
+#include <assert.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+
+#include "oggdecoder.h"
+
+#include "portaudio.h"
+#include "pa_win_wasapi.h"
+
+static FileHandle_t filehandle;
+static OggDecoder* decoder = NULL;
+static int32_t bytes_per_channel = 0;
+static int32_t sample_rate = 0;
+
+typedef struct {
+    OggDecoder* decoder;
+    volatile bool stop;
+} UserData_t;
+
+
+
+static int32_t read(void* stream, void* buffer, int32_t buffer_size) {
+    return fread(buffer, 1, buffer_size, (FILE*)stream);
+}
+static int64_t seek(void* stream, int64_t offset, int32_t whence) {
+    return fseek((FILE*)stream, offset, whence);
+}
+static int64_t tell(void* stream) {
+    return ftell((FILE*)stream);
+}
+static void init_decoder() {
+    FILE* file = fopen("./opus.ogg", "rb");
+    assert(file);
+
+    filehandle.handle = file;
+    filehandle.read = read;
+    filehandle.seek = seek;
+    filehandle.tell = tell;
+    
+    decoder = oggdecoder_init(&filehandle);
+    assert(decoder);
+
+    double duration;
+    oggdecoder_get_info(decoder, &sample_rate, &bytes_per_channel, &duration);
+
+    bytes_per_channel *= 2;
+}
+
+static uint8_t buffer[16 * 1024];
+static int32_t buffer_in_hold = 0;
+bool eof = false;
+
+static int user_data_cb_s(const void* ib, void* output, unsigned long frameCount, const PaStreamCallbackTimeInfo* ti, PaStreamCallbackFlags sf, void* userData) {
+    (void)ib;
+    (void)ti;
+    (void)sf;
+
+    OggDecoder* oggdecoder = (OggDecoder*)userData;
+
+    int32_t to_write = frameCount * 4;
+    int32_t required_bytes = to_write - buffer_in_hold;
+
+    if (eof) {
+        memset(output, 0x00, to_write);
+        return paContinue;
+    }
+
+    while (required_bytes > 0) {
+        int32_t readed = oggdecoder_read(oggdecoder, buffer + buffer_in_hold, required_bytes);
+        if (readed < 1) {
+            eof = true;
+            break;
+        }
+        required_bytes -= readed;
+        buffer_in_hold += readed;
+    }
+
+    int32_t written = to_write < buffer_in_hold ? to_write : buffer_in_hold;
+    memcpy(output, buffer, written);
+
+    buffer_in_hold -= written;
+    memmove(buffer, buffer + written, buffer_in_hold);
+
+    if (eof) {
+        memset(output + written, 0x00, to_write - written);
+    }
+
+    return eof ? paComplete : paContinue;
+}
+/*
+ * This routine is called by portaudio when playback is done.
+ */
+static void StreamFinished(void* userData) {
+    (void)userData;
+    printf("Stream Completed\n");
+}
+
+static inline PaDeviceIndex get_default_output_device(bool* is_wasapi) {
+#ifdef _WIN32
+    PaHostApiIndex count = Pa_GetHostApiCount();
+    for (PaHostApiIndex index = 0; index < count; index++) {
+        const PaHostApiInfo* info = Pa_GetHostApiInfo(index);
+        if (info->type == paWASAPI) {
+            if (info->defaultOutputDevice == paNoDevice) break;
+            *is_wasapi = true;
+            return info->defaultOutputDevice;
+        }
+    }
+#endif
+    * is_wasapi = false;
+    return Pa_GetDefaultOutputDevice();
+}
+
+int main3() {
+    PaStream* stream;
+    PaError    err;
+    //PaTime     previousTime;
+
+    init_decoder();
+
+    err = Pa_Initialize();
+    if (err != paNoError) goto L_error;
+
+    err = PaWasapi_UpdateDeviceList();
+    if (err != paNoError && err != paInternalError) {
+        fprintf(stderr, "PaWasapi_UpdateDeviceList() failed: %s\n", Pa_GetErrorText(err));
+    }
+
+    bool is_wasapi;
+    PaDeviceIndex output_index = get_default_output_device(&is_wasapi);
+    if (output_index == paNoDevice) goto L_error;
+
+    const PaDeviceInfo* device_info = Pa_GetDeviceInfo(output_index);
+
+    PaWasapiStreamInfo waspi_config = {
+        .size = sizeof(PaWasapiStreamInfo),
+        .version = 1,
+        .hostApiType = paWASAPI,
+        .flags = paWinWasapiAutoConvert | paWinWasapiThreadPriority | paWinWasapiThreadPriority,
+        .streamCategory = eAudioCategoryGameMedia,
+        .threadPriority = eThreadPriorityGames
+    };
+    PaStreamParameters outputParameters = {
+        .channelCount = 2,
+        .device = output_index,
+        .hostApiSpecificStreamInfo = is_wasapi ? &waspi_config : NULL,
+        .sampleFormat = paInt16,
+        .suggestedLatency = device_info->defaultLowOutputLatency
+    };
+
+    err = Pa_IsFormatSupported(NULL, &outputParameters, 48000.0);
+    if (err != paNoError) {
+        fprintf(
+            stderr,
+            "Pa_IsFormatSupported() failed. channels=%i sampleFormat=int16 latency=%f\n",
+            2,
+            outputParameters.suggestedLatency
+        );
+        goto L_error;
+    }
+
+
+    PaError open_error = Pa_OpenStream(
+        &stream, NULL, &outputParameters, 48000, paFramesPerBufferUnspecified, paNoFlag, user_data_cb_s, decoder
+    );
+
+    if (open_error != paNoError) {
+        fprintf(
+            stderr,
+            "Pa_OpenStream() failed: %s", Pa_GetErrorText(open_error)
+        );
+        goto L_error;
+    }
+
+    err = Pa_SetStreamFinishedCallback(stream, &StreamFinished);
+    if (err != paNoError) goto L_error;
+
+    err = Pa_StartStream(stream);
+    if (err != paNoError) goto L_error;
+
+    Pa_Sleep(10 * 1000);
+
+    PaWasapi_UpdateDeviceList();
+
+    err = Pa_StopStream(stream);
+    if (err != paNoError && err != paStreamIsStopped) goto L_error;
+
+    err = Pa_CloseStream(stream);
+    if (err != paNoError) goto L_error;
+
+    Pa_Terminate();
+    return 0;
+
+L_error:
+    Pa_Terminate();
+    return 1;
+}

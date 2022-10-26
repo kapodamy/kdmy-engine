@@ -1,0 +1,27 @@
+{
+    "model": "senpai.xml",
+    "healthbarColor": "0xC05D68",
+    "healthIconsModel": "icon-senpai.xml",
+
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": false, 
+
+    "oppositeDirections": {
+        "from": ["left", "right"],
+        "to": ["right", "left"]
+    },
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "Angry Senpai LEFT NOTE instance"  },
+            { "direction": "down",   "anim": "Angry Senpai DOWN NOTE instance"  },
+            { "direction": "up",     "anim": "Angry Senpai UP NOTE instance"    },
+            { "direction": "right",  "anim": "Angry Senpai RIGHT NOTE instance" }
+        ],
+
+        "idle": { "anim": "Angry Senpai Idle instance" }
+    }
+}
+

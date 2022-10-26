@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <!-- For writting layout's xml files -->
+    <!-- TODO: add assertions -->
+
+    <xs:simpleType name="antialiasing">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="disabled" />
+            <xs:enumeration value="enabled" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="AttachValue-type">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="string" />
+            <xs:enumeration value="boolean" />
+            <xs:enumeration value="float" />
+            <xs:enumeration value="integer" />
+            <xs:enumeration value="hex" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="Hex">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="((0x)|(0X))?[\da-f]+" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="Align">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="none" />
+            <xs:enumeration value="start" />
+            <xs:enumeration value="center" />
+            <xs:enumeration value="end" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="props-sprite">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="x" />
+            <xs:enumeration value="y" />
+            <xs:enumeration value="width" />
+            <xs:enumeration value="height" />
+            <xs:enumeration value="rotate" />
+            <xs:enumeration value="scalex" />
+            <xs:enumeration value="scaley" />
+            <xs:enumeration value="skewx" />
+            <xs:enumeration value="skewy" />
+            <xs:enumeration value="translatex" />
+            <xs:enumeration value="translatey" />
+            <xs:enumeration value="alpha" />
+            <xs:enumeration value="z" />
+            <xs:enumeration value="frameindex" />
+            <xs:enumeration value="vertexcolorr" />
+            <xs:enumeration value="vertexcolorg" />
+            <xs:enumeration value="vertexcolorb" />
+            <xs:enumeration value="offsetcolorr" />
+            <xs:enumeration value="offsetcolorg" />
+            <xs:enumeration value="offsetcolorb" />
+            <xs:enumeration value="offsetcolora" />
+            <xs:enumeration value="pivotenable" />
+            <xs:enumeration value="pivotu" />
+            <xs:enumeration value="pivotv" />
+            <xs:enumeration value="scaledirectionx" />
+            <xs:enumeration value="scaledirectiony" />
+            <xs:enumeration value="translaterotation" />
+            <xs:enumeration value="scalesize" />
+            <xs:enumeration value="scaletranslation" />
+            <xs:enumeration value="zoffset" />
+            <xs:enumeration value="flipx" />
+            <xs:enumeration value="flipy" />
+            <xs:enumeration value="antialiasing" />
+            <xs:enumeration value="flipcorrection" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="props-text">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="fontsize" />
+            <xs:enumeration value="fontcolor" />
+            <xs:enumeration value="alignhorizontal" />
+            <xs:enumeration value="alignvertical" />
+            <xs:enumeration value="alignparagraph" />
+            <xs:enumeration value="forcecase" />
+            <xs:enumeration value="maxlines" />
+            <xs:enumeration value="maxwidth" />
+            <xs:enumeration value="maxheight" />
+            <xs:enumeration value="borderenable" />
+            <xs:enumeration value="bordersize" />
+            <xs:enumeration value="bordercolorr" />
+            <xs:enumeration value="bordercolorg" />
+            <xs:enumeration value="bordercolorb" />
+            <xs:enumeration value="bordercolora" />
+            <xs:enumeration value="paragraphseparation" />
+            <xs:enumeration value="string" />
+            <xs:enumeration value="wordbreak" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="props-sound">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="volume" />
+            <xs:enumeration value="seek" />
+            <xs:enumeration value="playback" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="props-group">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="x" />
+            <xs:enumeration value="y" />
+            <xs:enumeration value="width" />
+            <xs:enumeration value="height" />
+            <xs:enumeration value="alpha" />
+            <xs:enumeration value="offsetColorR" />
+            <xs:enumeration value="offsetColorG" />
+            <xs:enumeration value="offsetColorB" />
+            <xs:enumeration value="offsetColorA" />
+            <xs:enumeration value="antialiasing" />
+            <xs:enumeration value="rotatepivotenable" />
+            <xs:enumeration value="scalesize" />
+            <xs:enumeration value="scaletranslation" />
+            <xs:enumeration value="translaterotation" />
+            <xs:enumeration value="translatex" />
+            <xs:enumeration value="translatey" />
+            <xs:enumeration value="scalex" />
+            <xs:enumeration value="scaley" />
+            <xs:enumeration value="skewx" />
+            <xs:enumeration value="skewy" />
+            <xs:enumeration value="rotate" />
+            <xs:enumeration value="scaledirectionx" />
+            <xs:enumeration value="scaledirectiony" />
+            <xs:enumeration value="rotatepivotu" />
+            <xs:enumeration value="rotatepivotv" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="wordbreak">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="loose" />
+            <xs:enumeration value="none" />
+            <xs:enumeration value="break" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="forcecase">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="upper" />
+            <xs:enumeration value="uppercase" />
+            <xs:enumeration value="lower" />
+            <xs:enumeration value="lowercase" />
+            <xs:enumeration value="none" />
+            <xs:enumeration value="" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="playback">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="play" />
+            <xs:enumeration value="pause" />
+            <xs:enumeration value="stop" />
+            <xs:enumeration value="mute" />
+            <xs:enumeration value="unmute" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:attributeGroup name="Font-Glpyh">
+        <xs:attribute name="glyphAnimate" type="xs:boolean" default="true" use="optional" />
+        <xs:attribute name="glyphSuffix" type="xs:string" use="optional" />
+        <xs:attribute name="colorByDifference" type="xs:boolean" default="false" use="optional" />
+    </xs:attributeGroup>
+    <xs:attributeGroup name="colors-components">
+        <xs:attribute name="r" type="xs:float" use="optional" />
+        <xs:attribute name="g" type="xs:float" use="optional" />
+        <xs:attribute name="b" type="xs:float" use="optional" />
+        <xs:attribute name="a" type="xs:float" use="optional" />
+    </xs:attributeGroup>
+    <xs:attributeGroup name="colors">
+        <xs:attribute name="color" type="Hex" default="0x00" use="optional" />
+        <xs:attribute name="rgb" type="Hex" default="0x00" use="optional" />
+        <xs:attribute name="rgba" type="Hex" default="0x00" use="optional" />
+        <xs:attribute name="argb" type="Hex" default="0x00" use="optional" />
+        <xs:attributeGroup ref="colors-components" />
+    </xs:attributeGroup>
+    <xs:attributeGroup name="props-sprite">
+        <xs:attribute name="x" type="xs:float" use="optional" />
+        <xs:attribute name="y" type="xs:float" use="optional" />
+        <xs:attribute name="width" type="xs:float" use="optional" />
+        <xs:attribute name="height" type="xs:float" use="optional" />
+        <xs:attribute name="rotate" type="xs:float" use="optional" />
+        <xs:attribute name="scalex" type="xs:float" use="optional" />
+        <xs:attribute name="scaley" type="xs:float" use="optional" />
+        <xs:attribute name="skewx" type="xs:float" use="optional" />
+        <xs:attribute name="skewy" type="xs:float" use="optional" />
+        <xs:attribute name="translatex" type="xs:float" use="optional" />
+        <xs:attribute name="translatey" type="xs:float" use="optional" />
+        <xs:attribute name="alpha" type="xs:float" use="optional" />
+        <xs:attribute name="z" type="xs:float" use="optional" />
+        <xs:attribute name="frameindex" type="xs:float" use="optional" />
+        <xs:attribute name="vertexcolorr" type="xs:float" use="optional" />
+        <xs:attribute name="vertexcolorg" type="xs:float" use="optional" />
+        <xs:attribute name="vertexcolorb" type="xs:float" use="optional" />
+        <xs:attribute name="offsetcolorr" type="xs:float" use="optional" />
+        <xs:attribute name="offsetcolorg" type="xs:float" use="optional" />
+        <xs:attribute name="offsetcolorb" type="xs:float" use="optional" />
+        <xs:attribute name="offsetcolora" type="xs:float" use="optional" />
+        <xs:attribute name="pivotenable" type="xs:boolean" use="optional" />
+        <xs:attribute name="pivotu" type="xs:float" use="optional" />
+        <xs:attribute name="pivotv" type="xs:float" use="optional" />
+        <xs:attribute name="scaledirectionx" type="xs:float" use="optional" />
+        <xs:attribute name="scaledirectiony" type="xs:float" use="optional" />
+        <xs:attribute name="translaterotation" type="xs:boolean" use="optional" />
+        <xs:attribute name="scalesize" type="xs:boolean" use="optional" />
+        <xs:attribute name="scaletranslation" type="xs:boolean" use="optional" />
+        <xs:attribute name="zoffset" type="xs:float" use="optional" />
+        <xs:attribute name="flipx" type="xs:boolean" use="optional" />
+        <xs:attribute name="flipy" type="xs:boolean" use="optional" />
+        <xs:attribute name="antialiasing" type="antialiasing" use="optional" />
+        <xs:attribute name="flipcorrection" type="xs:boolean" use="optional" />
+    </xs:attributeGroup>
+    <xs:attributeGroup name="props-text">
+        <xs:attribute name="fontsize" type="xs:float" use="optional" />
+        <xs:attribute name="fontcolor" type="xs:float" use="optional" />
+        <xs:attribute name="alignhorizontal" type="Align" use="optional" />
+        <xs:attribute name="alignvertical" type="Align" use="optional" />
+        <xs:attribute name="alignparagraph" type="Align" use="optional" />
+        <xs:attribute name="forcecase" type="forcecase" use="optional" />
+        <xs:attribute name="maxlines" type="xs:float" use="optional" />
+        <xs:attribute name="maxwidth" type="xs:float" use="optional" />
+        <xs:attribute name="maxheight" type="xs:float" use="optional" />
+        <xs:attribute name="borderenable" type="xs:boolean" use="optional" />
+        <xs:attribute name="bordersize" type="xs:float" use="optional" />
+        <xs:attribute name="bordercolorr" type="xs:float" use="optional" />
+        <xs:attribute name="bordercolorg" type="xs:float" use="optional" />
+        <xs:attribute name="bordercolorb" type="xs:float" use="optional" />
+        <xs:attribute name="bordercolora" type="xs:float" use="optional" />
+        <xs:attribute name="paragraphseparation" type="xs:float" use="optional" />
+        <xs:attribute name="string" type="xs:string" use="optional" />
+        <xs:attribute name="wordbreak" type="wordbreak" use="optional" />
+    </xs:attributeGroup>
+    <xs:attributeGroup name="props-sound">
+        <xs:attribute name="volume" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="seek" type="xs:double" use="optional" default="NaN" />
+        <xs:attribute name="playback" type="playback" use="optional" />
+    </xs:attributeGroup>
+
+    <xs:complexType name="Font">
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="path" type="xs:string" use="required" />
+        <xs:attributeGroup ref="Font-Glpyh" />
+    </xs:complexType>
+    <xs:complexType name="AttachValue">
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="type" type="AttachValue-type" use="required" />
+        <xs:attribute name="value" type="xs:anySimpleType" use="required" />
+    </xs:complexType>
+    <xs:complexType name="Location">
+        <xs:attribute name="alignVertical" type="Align" use="optional" default="none" />
+        <xs:attribute name="alignHorizontal" type="Align" use="optional" default="none" />
+        <xs:attribute name="x" type="xs:float" use="optional" />
+        <xs:attribute name="y" type="xs:float" use="optional" />
+        <xs:attribute name="z" type="xs:float" use="optional" />
+    </xs:complexType>
+    <xs:complexType name="Size">
+        <xs:attribute name="width" type="xs:float" use="optional" />
+        <xs:attribute name="height" type="xs:float" use="optional" />
+    </xs:complexType>
+    <xs:complexType name="Color-any">
+        <xs:attributeGroup ref="colors" />
+    </xs:complexType>
+    <xs:complexType name="Property-sprite">
+        <xs:attribute name="name" type="props-sprite" use="required" />
+        <xs:attribute name="value" type="xs:anySimpleType" use="required" />
+    </xs:complexType>
+    <xs:complexType name="Properties-sprite">
+        <xs:attributeGroup ref="props-sprite" />
+    </xs:complexType>
+    <xs:complexType name="AtlasApply">
+        <xs:attribute name="entry" type="xs:string" use="required" />
+        <xs:attribute name="overrideSize" type="xs:boolean" use="optional" default="false" />
+    </xs:complexType>
+    <xs:complexType name="Resize">
+        <xs:attribute name="maxWidth" type="xs:float" use="optional" default="-1.0" />
+        <xs:attribute name="maxHeight" type="xs:float" use="optional" default="-1.0" />
+        <xs:attribute name="cover" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="center" type="xs:boolean" use="optional" default="false" />
+    </xs:complexType>
+    <xs:complexType name="Animation">
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="restart" type="xs:boolean" use="optional" default="true" />
+        <xs:attribute name="stopOnLoop" type="xs:boolean" use="optional" default="false" />
+    </xs:complexType>
+    <xs:complexType name="AnimationFromAtlas">
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="loop" type="xs:integer" use="optional" default="1" />
+        <xs:attribute name="hasNumberSuffix" type="xs:boolean" use="optional" default="true" />
+    </xs:complexType>
+    <xs:complexType name="Parallax">
+        <xs:attribute name="x" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="y" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="z" type="xs:float" use="optional" default="NaN" />
+    </xs:complexType>
+    <xs:complexType name="Modifier">
+        <xs:attribute name="rotatepivotenable" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="scalesize" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="scaletranslation" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="translaterotation" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="x" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="y" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="translate" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="translatex" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="translatey" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scale" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scalex" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scaley" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="skew" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="skewx" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="skewy" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="rotate" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scaledirection" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scaledirectionx" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scaledirectiony" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="rotatepivot" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="rotatepivotu" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="rotatepivotv" type="xs:float" use="optional" default="NaN" />
+    </xs:complexType>
+    <xs:complexType name="Static">
+        <xs:attribute name="enable" type="xs:boolean" use="optional" default="true" />
+    </xs:complexType>
+    <xs:complexType name="Property-text">
+        <xs:attribute name="name" type="props-text" use="required" />
+        <xs:attribute name="value" type="xs:anySimpleType" use="required" />
+    </xs:complexType>
+    <xs:complexType name="Properties-text">
+        <xs:attributeGroup ref="props-text" />
+    </xs:complexType>
+    <xs:complexType name="String">
+        <xs:simpleContent>
+            <xs:extension base="xs:string" />
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="Border">
+        <xs:attribute name="size" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="enable" type="xs:boolean" use="optional" />
+        <xs:attribute name="alpha" type="xs:float" use="optional" default="NaN" />
+        <xs:attributeGroup ref="colors" />
+    </xs:complexType>
+    <xs:complexType name="Property-sound">
+        <xs:attribute name="name" type="props-sound" use="required" />
+        <xs:attribute name="value" type="xs:anySimpleType" use="required" />
+    </xs:complexType>
+    <xs:complexType name="Properties-sound">
+        <xs:attributeGroup ref="props-sound" />
+    </xs:complexType>
+    <xs:complexType name="Property-group">
+        <xs:attribute name="name" type="props-group" use="required" />
+        <xs:attribute name="value" type="xs:anySimpleType" use="required" />
+    </xs:complexType>
+    <xs:complexType name="Properties-group">
+        <xs:attribute name="x" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="y" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="width" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="height" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="alpha" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="offsetColorR" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="offsetColorG" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="offsetColorB" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="offsetColorA" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="antialiasing" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="rotatepivotenable" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="scalesize" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="scaletranslation" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="translaterotation" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="translatex" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="translatey" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scalex" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scaley" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="skewx" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="skewy" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="rotate" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scaledirectionx" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="scaledirectiony" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="rotatepivotu" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="rotatepivotv" type="xs:float" use="optional" default="NaN" />
+    </xs:complexType>
+    <xs:complexType name="Camera-offsetmovefromto">
+        <xs:attribute name="x" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="y" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="z" type="xs:float" use="optional" default="NaN" />
+    </xs:complexType>
+
+    <xs:complexType name="Sprite">
+        <xs:sequence>
+            <xs:element name="Action" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Location" type="Location" minOccurs="0" />
+                        <xs:element name="Size" type="Size" minOccurs="0" />
+                        <xs:element name="OffsetColor" type="Color-any" minOccurs="0" />
+                        <xs:element name="Color" type="Color-any" minOccurs="0" />
+                        <xs:element name="Property" type="Property-sprite" minOccurs="0" />
+                        <xs:element name="Properties" type="Properties-sprite" minOccurs="0" />
+                        <xs:element name="AtlasApply" type="AtlasApply" minOccurs="0" />
+                        <xs:element name="Resize" type="Resize" minOccurs="0" />
+                        <xs:element name="Animation" type="Animation" minOccurs="0" />
+                        <xs:element name="AnimationFromAtlas" type="AnimationFromAtlas" minOccurs="0" />
+                        <xs:element name="AnimationRemove" minOccurs="0" />
+                        <xs:element name="Parallax" type="Parallax" minOccurs="0" />
+                        <xs:element name="Modifier" type="Modifier" minOccurs="0" />
+                        <xs:element name="Static" type="Static" minOccurs="0" />
+                        <xs:element name="Hide" minOccurs="0" />
+                        <xs:element name="Show" minOccurs="0" />
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string" use="optional" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="texture" type="xs:string" use="optional" />
+        <xs:attribute name="atlas" type="xs:string" use="optional" />
+        <xs:attribute name="name" type="xs:string" use="optional" />
+        <xs:attribute name="initialAction" type="xs:string" use="optional" />
+        <xs:attributeGroup ref="colors" />
+    </xs:complexType>
+    <xs:complexType name="Text">
+        <xs:sequence>
+            <xs:element name="Action">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Property" type="Property-text" minOccurs="0" />
+                        <xs:element name="Properties" type="Properties-text" minOccurs="0" />
+                        <xs:element name="Location" type="Location" minOccurs="0" />
+                        <xs:element name="Color" type="Color-any" minOccurs="0" />
+                        <xs:element name="MaxSize" type="Size" minOccurs="0" />
+                        <xs:element name="String" type="String" minOccurs="0" />
+                        <xs:element name="Border" type="Border" minOccurs="0" />
+                        <xs:element name="Animation" type="Animation" minOccurs="0" />
+                        <xs:element name="AnimationRemove" minOccurs="0" />
+                        <xs:element name="Parallax" type="Parallax" minOccurs="0" />
+                        <xs:element name="Modifier" type="Modifier" minOccurs="0" />
+                        <xs:element name="Static" type="Static" minOccurs="0" />
+                        <xs:element name="Hide" minOccurs="0" />
+                        <xs:element name="Show" minOccurs="0" />
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string" use="optional" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="fontName" type="xs:string" use="required" />
+        <xs:attribute name="fontSize" type="xs:float" use="optional" default="12" />
+        <xs:attribute name="name" type="xs:string" use="prohibited" />
+        <xs:attribute name="initialAction" type="xs:string" use="optional" />
+    </xs:complexType>
+    <xs:complexType name="Sound">
+        <xs:sequence>
+            <xs:element name="Action" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Property" type="Property-sound" minOccurs="0" />
+                        <xs:element name="Properties" type="Properties-sound" minOccurs="0" />
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string" use="optional" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="optional" />
+        <xs:attribute name="initialAction" type="xs:string" use="optional" />
+        <xs:attribute name="src" type="xs:string" use="required" />
+        <xs:attribute name="volume" type="xs:float" use="optional" default="1" />
+        <xs:attribute name="looped" type="xs:boolean" use="optional" default="false" />
+    </xs:complexType>
+    <xs:complexType name="Group">
+        <xs:sequence>
+            <xs:element name="Action" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="ResetMatrix" minOccurs="0" />
+                        <xs:element name="Modifier" type="Modifier" minOccurs="0" />
+                        <xs:element name="Property" type="Property-group" minOccurs="0" />
+                        <xs:element name="Properties" type="Properties-group" minOccurs="0" />
+                        <xs:element name="OffsetColor" type="Color-any" minOccurs="0" />
+                        <xs:element name="Parallax" type="Parallax" minOccurs="0" />
+                        <xs:element name="Static" type="Static" minOccurs="0" />
+                        <xs:element name="Hide" minOccurs="0" />
+                        <xs:element name="Show" minOccurs="0" />
+                        <xs:element name="Animation" type="Animation" minOccurs="0" />
+                        <xs:element name="AnimationRemove" minOccurs="0" />
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string" use="optional" />
+                </xs:complexType>
+            </xs:element>
+            <xs:sequence minOccurs="1">
+                <xs:element name="Sprite" minOccurs="0" type="Sprite" />
+                <xs:element name="Text" minOccurs="0" type="Text" />
+                <xs:element name="Group" minOccurs="0" type="Group" />
+                <xs:element name="Placeholder" minOccurs="0" type="Placeholder" />
+            </xs:sequence>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="optional" />
+        <xs:attribute name="initialAction" type="xs:string" use="optional" />
+        <xs:attribute name="antialiasing" type="antialiasing" use="required" />
+        <xs:attribute name="alpha" type="xs:float" use="optional" default="1" />
+        <xs:attribute name="visible" type="xs:boolean" use="optional" default="false" />
+    </xs:complexType>
+    <xs:complexType name="Camera">
+        <xs:sequence minOccurs="1">
+            <xs:element name="Move" type="Camera-offsetmovefromto" maxOccurs="1" />
+            <xs:element name="From" type="Camera-offsetmovefromto" maxOccurs="1" />
+            <xs:element name="To" type="Camera-offsetmovefromto" maxOccurs="1" />
+            <xs:element name="Offset" type="Camera-offsetmovefromto" maxOccurs="1" />
+            <xs:element name="OffsetMove" type="Camera-offsetmovefromto" maxOccurs="1" />
+            <xs:element name="FromOffset" type="Camera-offsetmovefromto" maxOccurs="1" />
+            <xs:element name="ToOffset" type="Camera-offsetmovefromto" maxOccurs="1" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="optional" />
+        <xs:attribute name="durationInBeats" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="duration" type="xs:float" use="optional" default="NaN" />
+    </xs:complexType>
+    <xs:complexType name="Trigger">
+        <xs:attribute name="name" type="xs:string" use="optional" />
+        <xs:attribute name="action" type="xs:string" use="optional" />
+        <xs:attribute name="camera" type="xs:string" use="optional" />
+        <xs:attribute name="trigger" type="xs:string" use="optional" />
+        <xs:attribute name="loop" type="xs:integer" use="optional" default="1" />
+        <xs:attribute name="loopDelay" type="xs:float" use="optional" default="0" />
+        <xs:attribute name="startDelay" type="xs:float" use="optional" default="0" />
+        <xs:attribute name="loopDelayInBeats" type="xs:float" use="optional" default="0" />
+        <xs:attribute name="startDelayInBeats" type="xs:float" use="optional" default="0" />
+    </xs:complexType>
+    <xs:complexType name="Placeholder">
+        <xs:sequence minOccurs="0">
+            <xs:element name="Parallax" type="Parallax" maxOccurs="1" />
+            <xs:element name="Location" type="Location" maxOccurs="1" />
+            <xs:element name="Size" type="Size" maxOccurs="1" />
+            <xs:element name="Static" type="Static" maxOccurs="1" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="alignhorizontal" type="Align" use="optional" default="none" />
+        <xs:attribute name="alignvertical" type="Align" use="optional" default="none" />
+        <xs:attribute name="x" type="xs:float" use="optional" default="0" />
+        <xs:attribute name="y" type="xs:float" use="optional" default="0" />
+        <xs:attribute name="z" type="xs:float" use="optional" default="0" />
+        <xs:attribute name="height" type="xs:float" use="optional" default="-1" />
+        <xs:attribute name="width" type="xs:float" use="optional" default="-1" />
+        <xs:attribute name="static" type="xs:boolean" use="optional" default="false" />
+    </xs:complexType>
+
+    <xs:element name="Layout">
+        <xs:complexType>
+            <xs:sequence minOccurs="0">
+                <xs:element name="Font" minOccurs="0" type="Font" />
+                <xs:element name="AttachValue" minOccurs="0" type="AttachValue" />
+                <xs:element name="Sprite" minOccurs="0" type="Sprite" />
+                <xs:element name="Text" minOccurs="0" type="Text" />
+                <xs:element name="Sound" minOccurs="0" type="Sound" />
+                <xs:element name="Group" minOccurs="0" type="Group" />
+                <xs:element name="Camera" minOccurs="0" type="Camera" />
+                <xs:element name="Trigger" minOccurs="0" type="Trigger" />
+                <xs:element name="Placeholder" minOccurs="0" type="Placeholder" />
+            </xs:sequence>
+            <xs:attribute name="width" type="xs:float" use="required" />
+            <xs:attribute name="height" type="xs:float" use="required" />
+            <xs:attribute name="keepAspectRatio" type="xs:boolean" default="true" use="optional" />
+            <xs:attribute name="animationList" type="xs:string" use="optional" />
+            <xs:attribute name="antialiasing" type="antialiasing" default="enabled" use="optional" />
+            <xs:attribute name="animation_speed" type="xs:float" default="1.0" use="optional" />
+            <xs:attribute name="defaultBPM" type="antialiasing" default="enabled" use="optional" />
+            <xs:attribute name="visible" type="xs:boolean" use="prohibited" />
+            <xs:attribute name="name" type="xs:string" use="prohibited" />
+            <xs:attribute name="alpha" type="xs:float" default="1.0" use="optional" />
+            <xs:attribute name="initialAction" type="xs:string" use="optional" />
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

@@ -1,0 +1,29 @@
+note {
+    width: 25px;
+    height: 25px;
+    display: block;
+    background-size: 25px;
+    border: 1px solid whitesmoke;
+}
+.left { 
+    background-image: url(left.png);
+}
+.right { 
+    background-image: url(right.png);
+}
+.up { 
+    background-image: url(up.png);
+}
+.down { 
+    background-image: url(down.png);
+}
+
+canvas {
+    display: inline;
+    margin: 0 10px;
+    border: 1px solid;
+}
+
+#strum_a_3 {
+    margin-right: 200px
+}

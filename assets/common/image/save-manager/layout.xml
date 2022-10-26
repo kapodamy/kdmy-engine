@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAspectRatio="true" animationSpeed="1.0" animationList="anims.xml">
+
+    <Font name="font" path="/assets/common/font/vcr.ttf" />
+
+    <Camera name="outro" duration="1000">
+        <To z="5" />
+    </Camera>
+
+    <Sprite rgb="0x000000">
+        <Action>
+            <Property name="z" value="0" />
+            <Location x="0" y="0" />
+            <Size width="1280" height="720" />
+        </Action>
+    </Sprite>
+
+    <Sprite texture="menuBGBlue.png">
+        <Action>
+            <Location x="0" y="0" z="1"/>
+            <Resize maxWidth="1280" maxHeight="720" cover="true" center="true" />
+            <Property name="alpha" value="0.2" />
+        </Action>
+        <Action name="save-not-selected">
+            <Animation restart="true" name="fade-out-background" />
+        </Action>
+        <Action name="save-selected">
+            <Animation restart="true" name="fade-in-background" />
+        </Action>
+    </Sprite>
+
+    <Sprite rgb="0x000000" name="transition_effect">
+        <Action>
+            <Size width="1280" height="720" />
+            <Location x="0" y="0" z="3" />
+            <Hide />
+        </Action>
+        <Action name="outro">
+            <Show />
+            <Animation name="transition_outro" />
+        </Action>
+    </Sprite>
+
+    <AttachValue name="help_text_font_size" type="float" value="18" />
+
+	<AttachValue name="selected_background_color" type="hex" value="0xF9CF51" />
+    <AttachValue name="selected_label_color" type="hex" value="0xFFFFFF" />
+    <AttachValue name="label_height" type="float" value="36" />
+
+    <AttachValue name="menu_itemDimmen" type="float" value="120" />
+    <AttachValue name="menu_itemScale" type="float" value="0.0" />
+    <AttachValue name="menu_itemGap" type="float" value="80" />
+
+    <Placeholder name="menu" x="80" y="300" z="2" width="1200" height="120" alignHorizontal="center" />
+
+    <Text fontName="font" fontSize="72" color="0xFFFFFF">
+        <Action>
+            <Location x="24" y="0" z="2" />
+        </Action>
+        <Action name="load-from">
+            <String>Select a savefile</String>
+        </Action>
+        <Action name="save-to">
+            <String>Save progress to</String>
+        </Action>
+    </Text>
+
+    <Text fontName="font" fontSize="72" color="0xFFFFFF" initialAction="no-detected-hide">
+        <Action>
+            <Location x="0" y="300" z="2" />
+            <String>(INSERT A VMU)</String>
+            <MaxSize width="1280" />
+            <Property name="alignHorizontal" value="center" />
+        </Action>
+        <Action name="no-detected-show">
+            <Show />
+        </Action>
+        <Action name="no-detected-hide">
+            <Hide />
+        </Action>
+    </Text>
+
+</Layout>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAspectRatio="true">
+
+
+    <!-- *****************************************************************************
+
+        Layout for UI elements:
+            * Most of the values are expressed in pixels.
+            * The streakcounter & rankingcounter can be overrided by stage layout.
+            * All UI elements have a Z-Index (draw order) starting from 100.
+            * Dimmens depends of the orientation (whatever is vertical or not) of the element
+                * Vertical:
+                    - "dimmen" is treated as "width"
+                    - "invdimmen" is treated as "height"
+                * Horizontal:
+                    - "dimmen" is treated as "height"
+                    - "invdimmen" is treated as "width"
+            * "strum_count" indicates how many strums (not strum lines) are defined on this layout
+            * In some placeholders only "width" or "height" is required depending on the orientation
+            * RANKINGCOUNTER and STREAKCOUNTER can be overrided by stage layout
+
+        ANY SPRITE, SOUND OR TEXTSPRITE IS IGNORED (NEVER DRAWN IN SCREEN)
+
+    ******************************************************************************* -->
+
+
+    <!-- ******************* UI COMMON VALUES ******************* -->
+    <Font name="ui_font" path="/assets/common/font/vcr.ttf" />
+    <AttachValue name="ui_animlist" type="string" value="/assets/common/anims/week-round.xml" />
+
+
+    <!-- ******************* SONGPROGRESSBAR DEFINITION ******************* -->
+	<Placeholder name="ui_songprogressbar" x="400" y="32" width="480" height="12" alignHorizontal="center" />
+
+	<!-- songprogressbar additional parameters -->
+	<AttachValue name="ui_songprogressbar_borderSize" type="float" value="4" />
+	<AttachValue name="ui_songprogressbar_fontSize" type="float" value="16" />
+	<AttachValue name="ui_songprogressbar_fontBorderSize" type="float" value="2" />
+	<AttachValue name="ui_songprogressbar_isVertical" type="boolean" value="false" />
+	<AttachValue name="ui_songprogressbar_showTime" type="boolean" value="true" />
+
+
+
+	<!-- ******************* STRUMS DEFINITIONS ******************* -->
+    <AttachValue name="ui_strums_count" type="integer" value="2" />
+
+    <!-- strums positions on the screen -->
+    <Placeholder name="ui_strums0" x="52" y="56" z="101" height="664" />
+    <Placeholder name="ui_strums1" x="768" y="56" z="101" height="664" />
+
+    <!-- strums additional parameters -->
+    <AttachValue name="ui_strums_gap0" type="float" value="5" />
+    <AttachValue name="ui_strums_keepMarkerScale0" type="boolean" value="true" />
+    <AttachValue name="ui_strums_markerDimmen0" type="float" value="110" />
+    <AttachValue name="ui_strums_markerInvdimmen0" type="float" value="110" />
+    <AttachValue name="ui_strums_sustainAlpha0" type="float" value="0.8" />
+    <AttachValue name="ui_strums_verticalScroll0" type="boolean" value="true" />
+
+    <AttachValue name="ui_strums_gap1" type="float" value="5" />
+    <AttachValue name="ui_strums_keepMarkerScale1" type="boolean" value="true" />
+    <AttachValue name="ui_strums_markerDimmen1" type="float" value="110" />
+    <AttachValue name="ui_strums_markerInvdimmen1" type="float" value="110" />
+    <AttachValue name="ui_strums_sustainAlpha1" type="float" value="0.8" />
+    <AttachValue name="ui_strums_verticalScroll1" type="boolean" value="true" />
+
+
+    <!-- ******************* HEALTHBAR DEFINITION ******************* -->
+    <Placeholder name="ui_healthbar" x="340" y="648" z="100" width="600" height="20" />
+
+    <!-- healthbar additional parameters -->
+    <AttachValue name="ui_healthbar_isVertical" type="boolean" value="false" />
+    <AttachValue name="ui_healthbar_showWarnings" type="boolean" value="true" />
+    <AttachValue name="ui_healthbar_borderSize" type="float" value="4" />
+    <AttachValue name="ui_healthbar_iconOverlap" type="float" value="16" />
+    <AttachValue name="ui_healthbar_warningHeight" type="float" value="50" />
+    <AttachValue name="ui_healthbar_lockedHeight" type="float" value="90" />
+
+
+    <!-- ******************* ROUNDSTATS DEFINITION ******************* -->
+    <Placeholder name="ui_roundstats" x="0" y="700" z="100" />
+
+    <!-- roundstats additional parameters -->
+    <AttachValue name="ui_roundstats_hidden" type="boolean" value="false" />
+    <AttachValue name="ui_roundstats_fontSize" type="float" value="16" />
+    <AttachValue name="ui_roundstats_fontColor" type="hex" value="0xFFFFFF" />
+
+
+    <!-- ******************* STREAKCOUNTER DEFINITION ******************* -->
+    <Placeholder name="ui_streakcounter" x="540" y="740" z="100" height="96" width="0" />
+
+    <!-- streakcounter additional parameters -->
+    <AttachValue name="ui_streakcounter_comboHeight" type="float" value="96" /><!-- To hide use 0 -->
+    <AttachValue name="ui_streakcounter_numberGap" type="float" value="0" />
+    <AttachValue name="ui_streakcounter_delay" type="float" value="0" />
+
+
+    <!-- ******************* RANKINGCOUNTER DEFINITION ******************* -->
+    <Placeholder name="ui_rankingcounter_rank" x="600" y="320" z="100" height="96" />
+    <Placeholder name="ui_rankingcounter_accuracy" x="800" y="480" z="100" height="40" />
+
+    <!-- rankingcounter additional parameters -->
+    <AttachValue name="ui_rankingcounter_accuracy_percent" type="boolean" value="false" />
+
+
+    <!-- ******************* TRACK NAME & DIFFICULTY DEFINITION ******************* -->
+    <Placeholder name="ui_track_info" x="8" y="700" z="100" />
+
+    <!-- rankingcounter additional parameters -->
+    <AttachValue name="ui_track_info_fontSize" type="float" value="16" />
+    <AttachValue name="ui_track_info_fontColor" type="hex" value="0xFFFFFF" />
+
+
+    <!-- ******************* INVERTED DEFINITIONS ******************* -->
+    <!-- Important: -->
+    <!--    if the user enables the "inverted strum scrolling" option in settings menu -->
+    <!--    the scroll direction is inverted keeping the declared orientation (vertical or horizontal). -->
+    <!--    UI elements should be moved are: song progressbar, strums, healthbar, roundstats and trackinfo -->
+	<!--    For this layout strums are inverted from UPSCROLL to DOWNSCROLL because the orientation is vertical. -->
+	<!--    In custom layouts with horizontal scrolling, this changes from RIGHTSCROLL to LEFTSCROLL -->
+    <Placeholder name="ui_strums_inverted0" x="52" y="0" z="101" height="664" />
+    <Placeholder name="ui_strums_inverted1" x="768" y="0" z="101" height="664" />
+	<Placeholder name="ui_songprogressbar_inverted" x="400" y="688" width="480" height="12" alignHorizontal="center" />
+    <Placeholder name="ui_healthbar_inverted" x="340" y="72" z="100" width="600" height="20" />
+    <Placeholder name="ui_roundstats_inverted" x="0" y="20" z="100" />
+    <Placeholder name="ui_track_info_inverted" x="8" y="20" z="100" />
+
+
+	<!-- **************************************************************************************************** -->
+    <!-- Example of placing characters in the layout in the stage layout -->
+    <!--                                                                 -->
+    <!-- Notes: -->
+    <!--   * Characters placed here (ui layout) are ignored by the engine. -->
+    <!--   * The name "character_###" indicates the player index in the "gameplaymanifest.json" file. -->
+    <!--   * If "alignVertical" or "alignHorizontal" is not present, is assumed as "none" aligned. -->
+    <!--   * In "alignVertical" and/or "alignHorizontal" use "none" to use the align from -->
+    <!--       the character manifest (json file of the character). -->
+    <!--   * If the placeholder as "width" or "height" or both , is taken as reference box. -->
+    <!--   * "character_girlfriend_scale" and "character_scale_###" defines the sprite scale (optional, defaults to 1.0) -->
+
+    <!-- <Placeholder name="character_girlfriend" x="1" y="4" z="0" /> -->
+    <!-- <AttachValue name="character_girlfriend_scale" type="float" value="1.0" /> -->
+
+    <!-- Count of "character_###" placeholders-->
+    <!-- <AttachValue name="character_count" type="integer" value="3" /> -->
+
+    <!-- <AttachValue name="character_scale_0" type="float" value="0.5" /> -->
+    <!-- <Placeholder name="character_0" x="2" y="3" z="0" width="320" height="240" /> -->
+
+    <!-- <AttachValue name="character_scale_1" type="float" value="1.0" /> -->
+
+    <!-- <Placeholder name="character_1" x="3" y="2" z="0" alignVertical="none" alignHorizontal="end" /> -->
+    <!-- <Placeholder name="character_2" x="4" y="1" z="0" alignVertical="start" alignHorizontal="start" /> -->
+
+</Layout>

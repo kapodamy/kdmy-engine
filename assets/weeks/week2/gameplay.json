@@ -1,0 +1,20 @@
+{
+    "default" : {
+        "stage":  "halloween/halloween.xml",
+        "script": "halloween/week2.lua",
+        "players": [
+            { "manifest": "./SPKY/SPOOKY_KIDS.json", "strumId": 0, "isOpponent": true },
+            { "manifest": "#boyfriend", "strumId": 1, "controller": 0 }
+        ]
+    },
+    "tracks": [
+        { "name": "Spookeez" }, { "name": "South" }, 
+		{ 
+			"name": "Monster",
+			"players": [
+				{ "manifest": "./LMNDMN/LEMON_DEMON.json", "strumId": 0, "isOpponent": true },
+				{ "manifest": "#boyfriend", "strumId": 1, "controller": 0 }
+			]
+		}
+    ]
+}

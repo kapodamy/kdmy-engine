@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32825.248
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8938B6E9-7A0B-4312-91F3-F9D6EF7CD193}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kdy-e", "kdy-e\kdy-e.csproj", "{7C76AA79-86A1-4580-A743-2610DAF56995}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lua-iterop", "lua-iterop\lua-iterop.csproj", "{0A9500B9-1FC4-4033-851F-B33D5DD2B5CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "texture-mgr", "texture-mgr\texture-mgr.csproj", "{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C76AA79-86A1-4580-A743-2610DAF56995}.Debug|x86.ActiveCfg = Debug|x86
+		{7C76AA79-86A1-4580-A743-2610DAF56995}.Debug|x86.Build.0 = Debug|x86
+		{7C76AA79-86A1-4580-A743-2610DAF56995}.Release|x86.ActiveCfg = Release|x86
+		{7C76AA79-86A1-4580-A743-2610DAF56995}.Release|x86.Build.0 = Release|x86
+		{0A9500B9-1FC4-4033-851F-B33D5DD2B5CD}.Debug|x86.ActiveCfg = Debug|x86
+		{0A9500B9-1FC4-4033-851F-B33D5DD2B5CD}.Debug|x86.Build.0 = Debug|x86
+		{0A9500B9-1FC4-4033-851F-B33D5DD2B5CD}.Release|x86.ActiveCfg = Release|x86
+		{0A9500B9-1FC4-4033-851F-B33D5DD2B5CD}.Release|x86.Build.0 = Release|x86
+		{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}.Debug|x86.ActiveCfg = Debug|x86
+		{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}.Debug|x86.Build.0 = Debug|x86
+		{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}.Release|x86.ActiveCfg = Release|x86
+		{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {16445973-54E8-44D2-B409-2A31F48C7A3F}
+	EndGlobalSection
+EndGlobal

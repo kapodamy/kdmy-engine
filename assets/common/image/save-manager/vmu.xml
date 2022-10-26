@@ -1,0 +1,4 @@
+<TextureAtlas imagePath="vmu.png">
+	<SubTexture name="empty" x="290" y="0" width="286" height="480"/>
+	<SubTexture name="funkinsave" x="0" y="0" width="286" height="480"/>
+</TextureAtlas>

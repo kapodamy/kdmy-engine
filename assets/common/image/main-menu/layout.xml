@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAstectRatio="true" animationSpeed="1.0" animationList="animations.xml">
+
+    <!-- This background color should match the color of the background image -->
+    <Sprite rgb="0xFDE871">
+        <Action>
+            <Property name="z" value="0" />
+            <Location x="0" y="0" />
+            <Size width="1280" height="720" />
+        </Action>
+    </Sprite>
+    <Sprite name="background_image" texture="menuBG.png">
+        <Action>
+            <Property name="z" value="1" />
+            <Location x="0" y="0" />
+            <Resize maxWidth="1280" maxHeight="720" cover="true" center="true" />
+        </Action>
+    </Sprite>
+
+    <Sprite rgb="0x000000" name="transition_effect">
+        <Action>
+            <Size width="1280" height="720" />
+            <Location x="0" y="0" />
+            <Property name="z" value="3" />
+            <Animation name="transition_intro" />
+        </Action>
+        <Action name="outro">
+            <Animation name="transition_outro" />
+        </Action>
+    </Sprite>
+
+    <!-- (false) uses a horizontal list (true) uses a vertical list like Kade Engine -->
+    <AttachValue name="menu_isVertical" type="boolean"  value="true" />
+    <!-- If the list is vertical this means item height, otherwise, item width -->
+    <AttachValue name="menu_itemDimmen" type="float"  value="90" />
+    <!-- Scale of the item (use any positive value to ignore "menu_list_itemDimmen")-->
+    <AttachValue name="menu_itemScale" type="float"  value="0.0" />
+    <!-- If the list is vertical this means padding height, otherwise, padding width -->
+    <AttachValue name="menu_itemGap" type="float"  value="36" />
+    <!-- Add 48px of padding for a title, something like "Friday Night Funkin: main menu" or similar -->
+    <!-- Use "alignVertical" for horizontal lists or "alignHorizontal" for vertical lists -->
+    <Placeholder name="menu" x="0" y="72" z="2" width="1280" height="648" alignHorizontal="center" />
+
+</Layout>
+

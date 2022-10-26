@@ -1,0 +1,12 @@
+<TextureAtlas imagePath="numbers.png">
+	<SubTexture name="0" x="28" y="0" width="9" height="12"/>
+	<SubTexture name="1" x="14" y="32" width="9" height="12"/>
+	<SubTexture name="2" x="14" y="0" width="10" height="12"/>
+	<SubTexture name="3" x="0" y="0" width="10" height="12"/>
+	<SubTexture name="4" x="0" y="48" width="10" height="12"/>
+	<SubTexture name="5" x="0" y="32" width="10" height="12"/>
+	<SubTexture name="6" x="0" y="16" width="10" height="12"/>
+	<SubTexture name="7" x="14" y="16" width="9" height="12"/>
+	<SubTexture name="8" x="14" y="48" width="9" height="12"/>
+	<SubTexture name="9" x="27" y="16" width="9" height="12"/>
+</TextureAtlas>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <!-- For writting anims's xml files -->
+    <!-- TODO: add assertions -->
+
+    <xs:simpleType name="Interpolator-type">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="linear" />
+            <xs:enumeration value="ease" />
+            <xs:enumeration value="ease-in" />
+            <xs:enumeration value="ease-out" />
+            <xs:enumeration value="ease-in-out" />
+            <xs:enumeration value="steps" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="Interpolator-stepsMethod">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="start" />
+            <xs:enumeration value="end" />
+            <xs:enumeration value="both" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="register">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="reg0" />
+            <xs:enumeration value="reg1" />
+            <xs:enumeration value="reg2" />
+            <xs:enumeration value="reg3" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="Interpolator">
+        <xs:attribute name="id" type="xs:anySimpleType" use="optional" default="-1" />
+        <xs:attribute name="type" type="Interpolator-type" use="optional" default="linear" />
+        <xs:attribute name="start" type="xs:anySimpleType" use="optional" default="0" />
+        <xs:attribute name="end" type="xs:anySimpleType" use="optional" default="0" />
+        <xs:attribute name="duration" type="xs:float" use="optional" default="-1" />
+        <xs:attribute name="stepsCount" type="xs:integer" use="optional" default="-1" />
+        <xs:attribute name="stepsMethod" type="Interpolator-stepsMethod" use="optional" default="start" />
+    </xs:complexType>
+    <xs:complexType name="FrameArray">
+        <xs:attribute name="entryPrefixName" type="xs:string" use="optional" />
+        <xs:attribute name="entrySuffixName" type="xs:string" use="optional" />
+        <xs:attribute name="hasNumberSuffix" type="xs:boolean" use="optional" default="true" />
+        <xs:attribute name="indexStart" type="xs:integer" use="optional" default="0" />
+        <xs:attribute name="indexEnd" type="xs:integer" use="optional" default="-1" />
+    </xs:complexType>
+    <xs:complexType name="Frame">
+        <xs:attribute name="entryName" type="xs:string" use="optional" />
+    </xs:complexType>
+    <xs:complexType name="Pause">
+        <xs:attribute name="duration" type="xs:positiveInteger" use="optional" default="1" />
+    </xs:complexType>
+    <xs:complexType name="Set">
+        <xs:attribute name="property" type="xs:string" use="optional" default="1" />
+        <xs:attribute name="value" type="xs:anySimpleType" use="optional" default="1" />
+    </xs:complexType>
+    <xs:complexType name="Yield">
+        <xs:attribute name="duration" type="xs:integer" use="optional" default="0" />
+    </xs:complexType>
+    <xs:complexType name="RandomSetup">
+        <xs:attribute name="start" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="end" type="xs:float" use="optional" default="NaN" />
+    </xs:complexType>
+    <xs:complexType name="RandomExact">
+        <xs:attribute name="values" type="xs:anySimpleType" use="required" />
+    </xs:complexType>
+    <xs:complexType name="RegisterProp">
+        <xs:attribute name="register" type="register" use="required" />
+        <xs:attribute name="property" type="xs:string" use="required" />
+    </xs:complexType>
+    <xs:complexType name="RegisterSet">
+        <xs:attribute name="register" type="register" use="optional" />
+        <xs:attribute name="value" type="xs:anySimpleType" use="optional" />
+    </xs:complexType>
+
+
+    <xs:complexType name="Animation">
+        <xs:sequence>
+            <xs:element name="FrameArray" type="FrameArray" minOccurs="0" />
+            <xs:element name="Frame" type="Frame" minOccurs="0" />
+            <xs:element name="Pause" type="Pause" minOccurs="0" />
+            <xs:element name="AlternateSet" minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="loop" type="xs:integer" default="1" use="optional" />
+        <xs:attribute name="frameRate" type="xs:float" default="24" use="optional" />
+        <xs:attribute name="alternateInLoops" type="xs:boolean" default="0" use="optional" />
+        <xs:attribute name="alternateRandomize" type="xs:boolean" default="0" use="optional" />
+    </xs:complexType>
+    <xs:complexType name="AnimationMacro">
+        <xs:sequence>
+            <xs:element name="TweenLerp" type="Interpolator" minOccurs="0" />
+            <xs:element name="Set" type="Set" minOccurs="0" />
+            <xs:element name="Yield" type="Yield" minOccurs="0" />
+            <xs:element name="Pause" type="Pause" minOccurs="0" />
+            <xs:element name="Reset" minOccurs="0" />
+            <xs:element name="RandomSetup" type="RandomSetup" minOccurs="0" />
+            <xs:element name="RandomChoose" minOccurs="0" />
+            <xs:element name="RegisterProp" type="RegisterProp" minOccurs="0" />
+            <xs:element name="RegisterSet" type="RegisterSet" minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="loop" type="xs:integer" default="1" use="optional" />
+        <xs:attribute name="frameRestartIndex" type="xs:integer" default="-1" use="optional" />
+        <xs:attribute name="frameAllowChangeSize" type="xs:boolean" default="false" use="optional" />
+    </xs:complexType>
+    <xs:complexType name="TweenLerp">
+        <xs:sequence>
+            <xs:element name="TweenLerp" type="Interpolator" minOccurs="1" />
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <xs:element name="AnimationList">
+        <xs:complexType>
+            <xs:sequence minOccurs="0">
+                <xs:element name="Animation" type="Animation" />
+                <xs:element name="AnimationMacro" type="AnimationMacro" />
+                <xs:element name="TweenLerp" type="TweenLerp" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

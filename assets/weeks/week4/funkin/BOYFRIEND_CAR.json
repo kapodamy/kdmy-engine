@@ -1,0 +1,35 @@
+{
+    "model": "bfCar.xml",
+    "healthbarColor": "0x31B3D1",
+    "healthIconsModel": "/assets/common/image/funkin/icon-bf.xml",
+    
+	"alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": true,
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "BF NOTE LEFT",  "animHold": null, "animRollback": null, "rollback": true, "followHold": false },
+            { "direction": "down",   "anim": "BF NOTE DOWN",  "animHold": null, "animRollback": null, "rollback": true, "followHold": false },
+            { "direction": "up",     "anim": "BF NOTE UP",    "animHold": null, "animRollback": null, "rollback": true, "followHold": false },
+            { "direction": "right",  "anim": "BF NOTE RIGHT", "animHold": null, "animRollback": null, "rollback": true, "followHold": false }
+        ],
+
+        "miss": [
+            { "direction": "left",   "anim": "BF NOTE LEFT MISS",   "stopAfterBeats": 1 },
+            { "direction": "down",   "anim": "BF NOTE DOWN MISS",   "stopAfterBeats": 1 },
+            { "direction": "up",     "anim": "BF NOTE UP MISS",     "stopAfterBeats": 1 },
+            { "direction": "right",  "anim": "BF NOTE RIGHT MISS",  "stopAfterBeats": 1 }
+        ],
+
+        "idle": { "anim": "BF idle dance",  "stopAfterBeats": 0, "animHold": null },
+		
+		"extras": [
+            { "name": "dies",        "stopAfterBeats": 0,  "anim": "BF dies",           "animHold": "BF Dead Loop", "model": "/assets/common/image/funkin/BOYFRIEND.xml" },
+            { "name": "retry",       "stopAfterBeats": 0,  "anim": "BF Dead confirm",   "animHold": null, 			"model": "/assets/common/image/funkin/BOYFRIEND.xml" },
+            { "name": "giveup",      "stopAfterBeats": 0,  "anim": "BF Dead Loop",      "animHold": null, 			"model": "/assets/common/image/funkin/BOYFRIEND.xml" }
+		]
+    }
+}
+

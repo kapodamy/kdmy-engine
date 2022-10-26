@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+    <AnimationMacro name="bg_fade_in">
+        <Interpolator type="ease-in" property="alpha" start="0.0" end="1.0" duration="250" />
+	</AnimationMacro>
+    <AnimationMacro name="first_scroll">
+        <Interpolator type="ease-in" property="alpha" start="0.0" end="1.0" duration="250" />
+		<Yield duration="2000" />
+        <Interpolator type="linear" property="translateY" start="0" end="-1990" duration="23588" />
+	</AnimationMacro>
+    <AnimationMacro name="scroll_thanks">
+        <Interpolator type="linear" property="translateY" start="0" end="-282" duration="3685" />
+	</AnimationMacro>
+    <AnimationMacro name="fade_in">
+		<Set property="alpha" value="0.0" />
+		<Pause duration="1100" />
+		<Set property="alpha" value="1.0" />
+	</AnimationMacro>
+    <AnimationMacro name="fake_blur">
+		<Set property="alpha" value="1.0" />
+        <Set property="scaleDirectionX" value="-0.5" />
+        <Set property="scaleDirectionY" value="-0.5" />
+        <Set property="scaleSize" value="1" />
+        <Interpolator type="ease-in" property="scaleX" start="0.0" end="1.1" duration="1000" />
+        <Interpolator type="ease-in" property="scaleY" start="0.0" end="1.1" duration="1000" />
+		<Yield />
+        <Interpolator type="ease-out" property="alpha" start="1.0" end="0.0" duration="1000" />
+        <Interpolator type="linear" property="scaleX" start="1.2" end="1.0" duration="200" />
+        <Interpolator type="linear" property="scaleY" start="1.2" end="1.0" duration="200" />
+	</AnimationMacro>
+    <AnimationMacro name="fade_out">
+        <Interpolator type="linear" property="alpha" start="0.0" end="1.0" duration="250" />
+	</AnimationMacro>
+</AnimationList>

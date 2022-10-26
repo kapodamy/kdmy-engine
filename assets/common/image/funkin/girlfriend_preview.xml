@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="girlfriend_preview.png">
+	<SubTexture name="cheer00" x="2812" y="2607" width="695" height="653"/>
+	<SubTexture name="cheer01" x="2113" y="0" width="699" height="653"/>
+	<SubTexture name="cheer02" x="707" y="1277" width="699" height="651"/>
+	<SubTexture name="cheer03" x="2812" y="1952" width="695" height="651"/>
+	<SubTexture name="cheer04" x="2812" y="1297" width="695" height="651"/>
+	<SubTexture name="dancing_beat00" x="1406" y="3236" width="699" height="642"/>
+	<SubTexture name="dancing_beat01" x="703" y="3206" width="699" height="634"/>
+	<SubTexture name="dancing_beat02" x="0" y="1916" width="703" height="634"/>
+	<SubTexture name="dancing_beat03" x="0" y="1280" width="703" height="632"/>
+	<SubTexture name="dancing_beat04" x="707" y="641" width="699" height="632"/>
+	<SubTexture name="dancing_beat05" x="0" y="2554" width="699" height="635"/>
+	<SubTexture name="dancing_beat06" x="0" y="3193" width="699" height="635"/>
+	<SubTexture name="dancing_beat07" x="707" y="0" width="699" height="637"/>
+	<SubTexture name="dancing_beat08" x="703" y="2554" width="699" height="648"/>
+	<SubTexture name="dancing_beat09" x="703" y="2554" width="699" height="648"/>
+	<SubTexture name="dancing_beat10" x="703" y="2554" width="699" height="648"/>
+	<SubTexture name="dancing_beat11" x="1406" y="2584" width="699" height="648"/>
+	<SubTexture name="dancing_beat12" x="1406" y="2584" width="699" height="648"/>
+	<SubTexture name="dancing_beat13" x="1406" y="2584" width="699" height="648"/>
+	<SubTexture name="dancing_beat14" x="1406" y="1932" width="699" height="648"/>
+	<SubTexture name="dancing_beat15" x="1406" y="1932" width="699" height="648"/>
+	<SubTexture name="dancing_beat16" x="2812" y="657" width="699" height="636"/>
+	<SubTexture name="dancing_beat17" x="0" y="640" width="703" height="636"/>
+	<SubTexture name="dancing_beat18" x="0" y="0" width="703" height="636"/>
+	<SubTexture name="dancing_beat19" x="2109" y="3217" width="699" height="636"/>
+	<SubTexture name="dancing_beat20" x="2109" y="2576" width="699" height="637"/>
+	<SubTexture name="dancing_beat21" x="2109" y="1935" width="699" height="637"/>
+	<SubTexture name="dancing_beat22" x="2109" y="1293" width="699" height="638"/>
+	<SubTexture name="dancing_beat23" x="1410" y="646" width="699" height="643"/>
+	<SubTexture name="dancing_beat24" x="1410" y="646" width="699" height="643"/>
+	<SubTexture name="dancing_beat25" x="1410" y="646" width="699" height="643"/>
+	<SubTexture name="dancing_beat26" x="1410" y="0" width="699" height="642"/>
+	<SubTexture name="dancing_beat27" x="1410" y="0" width="699" height="642"/>
+	<SubTexture name="dancing_beat28" x="1410" y="0" width="699" height="642"/>
+	<SubTexture name="dancing_beat29" x="1406" y="3236" width="699" height="642"/>
+</TextureAtlas>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="640" height="480" animationList="customlayout_anim.xml">
+    <!--
+            change-difficult
+            selected-difficult-%name%
+
+            model-change-show
+            model-change-hide
+            
+            selected-copyright
+            selected-no-copyright
+            
+            week-choosen
+            week-locked
+            
+    -->
+    <Font name="vcr" type="truetype" path="/assets/common/font/vcr.ttf" />
+    
+    <Sprite name="custom_bg" rgb="0x888888">
+        <Action>
+            <Property name="z" value="2" />
+            <Property name="alpha" value="0.4" />
+            <Location x="20" y="40" />
+            <Size width="600" height="240" />
+        </Action>
+    </Sprite>
+
+    <!-- Difficult tests -->
+    <Text fontName="vcr" fontSize="18" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="3" />
+            <Location x="20" y="40" />
+            <String>easy</String>
+        </Action>
+        <Action name="change-difficult">
+            <Property name="forceCase" value="none" />
+        </Action>
+        <Action name="selected-difficult-EASY">
+            <Property name="forceCase" value="uppercase" />
+        </Action>
+    </Text>
+    <Text fontName="vcr" fontSize="18" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="3" />
+            <Location x="120" y="40" />
+            <String>normal</String>
+        </Action>
+        <Action name="change-difficult">
+            <Property name="forceCase" value="none" />
+        </Action>
+        <Action name="selected-difficult-NORMAL">
+            <Property name="forceCase" value="uppercase" />
+        </Action>
+    </Text>
+    <Text fontName="vcr" fontSize="18" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="3" />
+            <Location x="220" y="40" />
+            <String>hard</String>
+        </Action>
+        <Action name="change-difficult">
+            <Property name="forceCase" value="none" />
+        </Action>
+        <Action name="selected-difficult-HARD">
+            <Property name="forceCase" value="uppercase" />
+        </Action>
+    </Text>
+
+    <!-- Copyright tests -->
+    <Text fontName="vcr" fontSize="18" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="3" />
+            <Location x="20" y="80" />
+            <String>Copyright allowed</String>
+        </Action>
+        <Action name="selected-copyright">
+            <Property name="fontColor" value="0xFF0000" />
+        </Action>
+        <Action name="selected-no-copyright">
+            <Property name="fontColor" value="0xDDDDDD" />
+        </Action>
+    </Text>
+    <Text fontName="vcr" fontSize="18" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="3" />
+            <Location x="320" y="80" />
+            <String>Copyright not allowed</String>
+        </Action>
+        <Action name="selected-no-copyright">
+            <Property name="fontColor" value="0xFF0000" />
+        </Action>
+        <Action name="selected-copyright">
+            <Property name="fontColor" value="0xDDDDDD" />
+        </Action>
+    </Text>
+    
+    <!-- week choosed/locked test -->
+    <Text fontName="vcr" fontSize="18" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="102" />
+            <Location x="20" y="100" />
+            <Property name="alpha" value="0.1" />
+            <String>WEEK CHOOSEN !</String>
+        </Action>
+        <Action name="week-choosen">
+            <Property name="alpha" value="1.0" />
+        </Action>
+    </Text>
+    <Text fontName="vcr" fontSize="18" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="3" />
+            <Location x="220" y="100" />
+            <Property name="alpha" value="0.1" />
+            <String>(THIS WEEK IS LOCKED)</String>
+        </Action>
+        <Action name="week-locked">
+            <Property name="alpha" value="1.0" />
+        </Action>
+    </Text>
+ 
+    <!-- model show/hide -->
+   <Text fontName="vcr" fontSize="18" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="3" />
+            <Location x="20" y="200" />
+            <Property name="alpha" value="0.5" />
+            <String>(Selecting characters models)</String>
+        </Action>
+        <Action name="model-change-show">
+            <Property name="alpha" value="1.0" />
+        </Action>
+        <Action name="model-change-hide">
+            <Property name="alpha" value="0.5" />
+        </Action>
+    </Text>
+    <Text fontName="vcr" fontSize="18" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="3" />
+            <Location x="20" y="218" />
+            <Property name="alpha" value="0.5" />
+            <String>(the model chooser is hidden)</String>
+        </Action>
+        <Action name="model-change-show">
+            <Property name="alpha" value="0.5" />
+        </Action>
+        <Action name="model-change-hide">
+            <Property name="alpha" value="1.0" />
+        </Action>
+    </Text>
+    
+    <Sprite rgb="0x0000EE">
+        <Action>
+            <Hide />
+            <Size width="640" height="480" />
+            <Location x="0" y="0" />
+            <Property name="z" value="101" />
+        </Action>
+        <Action name="week-choosen">
+            <Show />
+            <Animation name="fade_zoom" />
+        </Action>
+    </Sprite>
+ 
+
+</Layout>
+

@@ -1,0 +1,19 @@
+{
+    "tstl": {
+        "buildMode": "default",
+        "noImplicitSelf": true,
+        "luaTarget": "5.3",
+        "luaLibImport": "inline",
+        "tstlVerbose": true,
+        "noHeader": false
+    },
+    "compilerOptions": {
+        "target": "esnext",
+        "lib": ["esnext"],
+        "moduleResolution": "node",
+        "types": ["typescript-to-lua/language-extensions", "./kdmyEngine", "lua-types/5.3"],
+        "strict": true,
+        "strictNullChecks": false,
+        "outDir": "build"
+    }
+}

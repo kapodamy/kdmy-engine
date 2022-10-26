@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+
+    <AnimationMacro name="choosen" loop="0">
+        <Set property="alpha" value="1.0" />
+        <Pause duration="60" />
+        <Set property="alpha" value="0.0" />
+        <Pause duration="60" />
+    </AnimationMacro>
+
+    <AnimationMacro name="idle" loop="1">
+        <!-- nothing to do here -->
+    </AnimationMacro>
+
+    <AnimationMacro name="rollback" loop="1">
+        <!-- nothing to do here -->
+    </AnimationMacro>
+
+    <AnimationMacro name="selected" loop="0">
+        <!-- nothing to do here -->
+    </AnimationMacro>
+
+
+    <AnimationMacro name="backgroud_image_anim" loop="0">
+        <!-- nothing to do here -->
+    </AnimationMacro>
+
+    <!-- example even/odd option indexes -->
+    <!--    *_even_index: 1 3 5 7 9    *_odd_index: 0 2 4 6 8    -->
+
+    <AnimationMacro name="no_choosen_even_index">
+        <Interpolator type="linear" property="alpha" start="1.0" end="0.5" duration="200" />
+        <Interpolator type="linear" property="translateY" end="480" duration="200" />
+    </AnimationMacro>
+
+    <AnimationMacro name="no_choosen_odd_index">
+        <Interpolator type="linear" property="alpha" start="1.0" end="0.5" duration="200" />
+        <Interpolator type="linear" property="translateY" end="480" duration="200" />
+    </AnimationMacro>
+
+    <AnimationMacro name="draw_even_index">
+        <Interpolator type="linear" property="alpha" start="0" end="1" duration="500" />
+        <Interpolator type="linear" property="translateX" start="-640" end="0" duration="500" />
+    </AnimationMacro>
+
+    <AnimationMacro name="draw_odd_index">
+        <Interpolator type="linear" property="alpha" start="0" end="1" duration="500" />
+        <Interpolator type="linear" property="translateX" start="640" end="0" duration="500" />
+    </AnimationMacro>
+
+    <AnimationMacro name="transition_intro">
+        <Interpolator type="ease-in" property="alpha" start="1.0" end="0.0" duration="200" />
+    </AnimationMacro>
+    <AnimationMacro name="transition_outro">
+        <Interpolator type="ease-out" property="alpha" start="0.0" end="1.0" duration="500" />
+    </AnimationMacro>
+
+</AnimationList>

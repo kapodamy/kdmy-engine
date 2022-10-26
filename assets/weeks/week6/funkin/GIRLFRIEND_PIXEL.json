@@ -1,0 +1,19 @@
+{
+    "model": "gfPixel.xml",
+    "healthbarColor": "0xA5004D",
+
+    "actionsApplyChartSpeed": true,
+    "continuousIdle": true,
+    "alignVertical": "center",
+    "alignHorizontal": "center",
+    "leftFacing": true,
+	
+	"oppositeDirections": {
+		"from": [],
+		"to": []
+	},
+
+    "actions": {
+		"idle": { "anim": "idle", "stopAfterBeats": 0 }
+    }
+}

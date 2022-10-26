@@ -1,0 +1,11 @@
+clone the freetype and inside of the folder run (needs emscripten):
+
+mkdir build
+
+cd build
+
+emcmake cmake ..
+
+emmake make
+
+emmake make install

@@ -1,0 +1,17 @@
+{
+    "description": "RED SNOW",
+    "songs": [
+        { "name": "Cocoa"},
+        { "name": "Eggnog"},
+        { "name": "Winter Horrorland"}
+    ],
+
+    "unlockDirectiveName": "WEEK4",
+    "emitUnlockDirectiveName": "WEEK5",
+
+    "copyrightWarnMessage": null,
+    "contentAdvisoryMessage": null,
+
+    "disallowCustomBoyfriend": true,
+    "disallowCustomGirlfriend": true
+}

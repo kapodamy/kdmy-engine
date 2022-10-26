@@ -1,0 +1,17 @@
+
+/test files/re pics/haxe/
+/test files/backups/
+
+/fontatlas/.vscode/*.log
+/fontatlas/output/
+
+/luaworkspace/build/
+/luaworkspace/node_modules/
+/luaworkspace/package-lock.json
+
+/luascript/.vscode/*.log
+/luascript/output/
+
+/sndbridge/.vscode/*.log
+/sndbridge/output/
+

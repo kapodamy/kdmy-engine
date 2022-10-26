@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="notes.png" glyphFps="12">
+	<!--   "TileSet" tells to the engine to read a tile from <SubTexture/>    -->
+	<!--   Tiles is added as atlas entries like normal <SubTexture/> does   -->
+	<!--   Every <Tile/> is indexed in the <TileSet/> left-to-right and top-to-bottom like in FlxHaxe   -->
+	<!--   Add "index" attribute to override the <Tile/> index, example <Tile index="123 name="abc" />   -->
+	<TileSet x="0" y="0" subTextureWidth="68" subTextureHeight="85" tileWidth="17" tileHeight="17">
+		<Tile name="left marker" />
+		<Tile name="down marker" />
+		<Tile name="up marker" />
+		<Tile name="right marker" />
+
+		<Tile name="left confirm00" />
+		<Tile name="down confirm00" />
+		<Tile name="up confirm00" />
+		<Tile name="right confirm00" />
+
+		<Tile name="left confirm01" />
+		<Tile name="down confirm01" />
+		<Tile name="up confirm01" />
+		<Tile name="right confirm01" />
+
+		<Tile name="left press00" />
+		<Tile name="down press00" />
+		<Tile name="up press00" />
+		<Tile name="right press00" />
+
+		<Tile name="left press01" />
+		<Tile name="down press01" />
+		<Tile name="up press01" />
+		<Tile name="right press01" />
+
+		<!-- Use "* confirm00" as non-sustain note -->
+		<Tile index="4" name="left alone" />
+		<Tile index="5" name="down alone" />
+		<Tile index="6" name="up alone" />
+		<Tile index="7" name="right alone" />
+	</TileSet>
+	<TileSet x="0" y="89" subTextureWidth="28" subTextureHeight="12" tileWidth="7" tileHeight="6">
+		<Tile name="left hold" />
+		<Tile name="down hold" />
+		<Tile name="up hold" />
+		<Tile name="right hold" />
+
+		<Tile name="left tail" />
+		<Tile name="down tail" />
+		<Tile name="up tail" />
+		<Tile name="right tail" />
+	</TileSet>
+</TextureAtlas>
+

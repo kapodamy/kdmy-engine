@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="2560" height="1400" keepAspectRatio="true" >
+
+    <!-- ******************* Cameras ******************* -->
+    <Camera>
+        <!-- Cameras without name are applied after the layout is loaded -->
+        <!-- 
+                For some reason in funkin the sprites are placed using negative coordinates,
+                the following offset "moves" the camera viewport without apply any parallax
+        -->
+        <Offset x="505" y="340" z="1" />
+        <Move x="0" y="0" z="1.0806666654110004" />
+    </Camera>
+    <Camera name="camera_opponent">
+        <To x="40" y="76" z="1.3753333353519408" />
+    </Camera>
+    <Camera name="camera_player">
+        <To x="-11" y="37" z="1.6446666628360747" />
+    </Camera>
+    <Camera name="camera_roundEnd">
+        <To x="76" y="160" z="1.330666669130326" />
+    </Camera>
+
+
+    <!-- ******************* RANKINGCOUNTER ******************* -->
+    <Placeholder name="ui_rankingcounter_rank"     x="475" y="175" z="50" height="148" />
+    <Placeholder name="ui_rankingcounter_accuracy" x="1130" y="260" z="60" height="80" />
+    <!-- <AttachValue type="boolean" name="ui_rankingcounter_accuracy_percent" value="true" /> -->
+    
+    <!-- ******************* STREAKCOUNTER ******************* -->
+    <Placeholder name="ui_streakcounter" x="470" y="310" z="50" height="136" width="0" />
+    <AttachValue type="float" name="ui_streakcounter_comboHeight" value="0" />
+    <AttachValue type="float" name="ui_streakcounter_numberGap"   value="10" />
+    <AttachValue type="float" name="ui_streakcounter_delay"       value="100" />
+
+    <!-- ******************* Characters ******************* -->
+    <AttachValue name="character_count" type="integer" value="2" />
+   
+    <AttachValue name="character_scale_0" type="float" value="0.9" />
+    <Placeholder name="character_0" x="825" y="425" z="2" />
+    
+    <AttachValue name="character_scale_1" type="float" value="0.9" />
+    <Placeholder name="character_1" x="860" y="830" z="2.2" />
+    
+    <!-- ******************* Theather graphics ******************* -->  
+    <Sprite atlas="stage.xml">
+        <Action>
+            <AtlasApply entry="stageback" overrideSize="true" />
+            <Property name="z" value="0" />
+            <Location x="-600" y="-200" />
+            <Parallax x="0.9" y="0.9" z="1.0" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="stage.xml">
+        <Action>
+            <AtlasApply entry="stagefront" overrideSize="true" />
+            <!-- <Modifier scale="1.1" scaleSize="true" scaleDirection="-0.5" /> -->
+            <Property name="z" value="1" />
+            <Location x="-470" y="600" />
+            <Parallax x="0.9" y="0.9" z="1.0" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="stage.xml">
+        <Action>
+            <AtlasApply entry="stagecurtains" overrideSize="true" />
+            <!-- <Modifier scale="0.9" scaleSize="true" scaleDirection="-0.5" /> -->
+            <Property name="z" value="4" />
+            <Location x="-500" y="-300" />
+            <Parallax x="1.3" y="1.3" z="1.0" />
+        </Action>
+    </Sprite>
+    <Sprite name="left" atlas="stage.xml"><!-- left light -->
+        <Action>
+            <AtlasApply entry="stage_light" overrideSize="true" />
+            <Location x="-200" y="-150" />
+            <Property name="z" value="5" />
+            <Parallax x="1.4" y="1.4" z="0.9" />
+        </Action>
+    </Sprite>  
+    <Sprite name="right" atlas="stage.xml"><!-- right light -->
+        <Action>
+            <AtlasApply entry="stage_light" overrideSize="true" />
+            <Properties z="5" flipX="true" />
+            <Location x="1560" y="-150" />
+            <Parallax x="1.4" y="1.4" z="0.9" />
+        </Action>
+    </Sprite>
+
+</Layout>

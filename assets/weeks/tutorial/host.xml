@@ -1,0 +1,19 @@
+<TextureAtlas imagePath="host.png">
+	<SubTexture name="idle00" x="0" y="0" width="703" height="352"/>
+	<SubTexture name="idle02" x="0" y="356" width="699" height="352"/>
+	<SubTexture name="idle04" x="0" y="712" width="699" height="352"/>
+	<!-- repeat the last frame -->
+	<SubTexture name="idle05" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle06" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle07" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle08" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle09" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle10" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle11" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle12" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle13" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle14" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle15" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle16" x="0" y="712" width="699" height="352"/>
+	<SubTexture name="idle17" x="0" y="712" width="699" height="352"/>
+</TextureAtlas>

@@ -1,0 +1,45 @@
+{
+    "name": "PICO",
+    "model": "Pico_FNF_assetss.xml",
+    "modelWeekSelector": "../host.xml",
+    "weekSelectorEnableBeat": true,
+    "healthbarColor": "0xB7D855",
+    "healthIconsModel": "icon-pico.xml",
+
+    "actionsApplyChartSpeed": false,
+    "singAlternateSuffix": null,
+    "continuousIdle": false,
+    "offsetX": 0,
+    "offsetY": 0,
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "referenceSize": { "width": -1, "height": -1 },
+    "leftFacing": true, 
+    "oppositeDirections": {
+        "from": ["left", "right"],
+        "to": ["right", "left"]
+    },
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "pico Up note" },
+            { "direction": "down",   "anim": "Pico Down Note"},
+            { "direction": "up",     "anim": "pico Up note" },
+            { "direction": "right",  "anim": "Pico Note Right" }
+        ],
+
+        "miss": [
+            { "direction": "left",   "anim": "pico Up note miss",   "stopAfterBeats": 1 },
+            { "direction": "down",   "anim": "Pico Down Note MISS",   "stopAfterBeats": 1 },
+            { "direction": "up",     "anim": "pico Up note miss",     "stopAfterBeats": 1 },
+            { "direction": "right",  "anim": "Pico Note Right Miss",  "stopAfterBeats": 1 }
+        ],
+
+        "idle": { "anim": "Pico Idle Dance",  "stopAfterBeats": 0, "animHold": null },
+        "hey": null,
+
+        "extras": []
+    }
+}
+

@@ -1,0 +1,32 @@
+{
+	"default": {
+		"players": [
+			{ "controller": -1, "isOpponent": true,  "strumId": 0, "manifest": "funkin/SENPAI.json" },
+			{ "controller": 0,  "isOpponent": false, "strumId": 1, "manifest": "funkin/BOYFRIEND_PIXEL.json" }
+		],
+		"girlfriend": { "manifest": "funkin/GIRLFRIEND_PIXEL.json" },
+		"stage": "weeb/layout.xml",
+		"script": "week6.lua"
+	},
+	"tracks": [
+        { 
+			"name": "senpai"
+		},
+        { 
+			"name": "roses",
+			"players": [
+				{ "controller": -1, "isOpponent": true,  "strumId": 0, "manifest": "funkin/SENPAI_ANGRY.json" },
+				{ "controller": 0,  "isOpponent": false, "strumId": 1, "manifest": "funkin/BOYFRIEND_PIXEL.json" }
+			]
+		},
+        { 
+			"name": "thorns",
+			"stage": "weeb_but_evil/layout.xml",
+			"players": [
+				{ "controller": -1, "isOpponent": true,  "strumId": 0, "manifest": "funkin/SPIRIT.json" },
+				{ "controller": 0,  "isOpponent": false, "strumId": 1, "manifest": "funkin/BOYFRIEND_PIXEL.json" }
+			]
+		}
+	]
+}
+

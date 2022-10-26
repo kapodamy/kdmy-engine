@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="640" height="480" keepAspectRatio="true" animationSpeed="1.0" animationList="animations.xml">
+
+    <Sprite name="background" r="0.0" g="0.0" b="0.0">
+        <Action>
+            <Location x="0" y="0" />
+            <Size width="640" height="480"/>
+            <Property name="z" value="0" />
+        </Action>
+    </Sprite>
+
+    <Sprite name="gf" atlas="gfDanceTitle.xml" initialAction="chill">
+        <!-- this unamed action is triggered when the layout is builded -->
+        <Action>
+            <!-- Apply atlas first because the sprite size is unknown -->
+            <AtlasApply entry="gfDance0000" overrideSize="true" />
+
+            <!-- Set the width only, but keep the aspect ratio -->
+            <Size width="480" height="-1"/>
+            <!-- Draw at the bottom-right corner of the screen/layout -->
+            <Location alignHorizontal="end" alignVertical="end" x="0" y="0" />
+            <Property name="z" value="1" />
+        </Action>
+
+        <Action name="chill">
+            <Animation name="gf_dance" />
+        </Action>
+
+        <Action name="start_pressed">
+            <!-- re-use the animation but no repeat (if the animation is looped) -->
+            <Animation name="gf_dance" restart="false" stopOnLoop="true" />
+        </Action>
+    </Sprite>
+
+    <Sprite name="logo" texture="logo.png">
+        <Action>
+            <Location x="10" y="10" />
+            <Size width="304" height="-1" />
+            <Property name="z" value="2" />
+            <Animation name="logo_bumping" />
+        </Action>
+    </Sprite>
+
+    <Sprite name="press-start-text" texture="titleEnter.png" atlas="titleEnter.xml">
+        <Action>
+            <!-- Apply the first frame from the atlas to obtain the size -->
+            <AtlasApply entry="Press Enter to Begin0000" overrideSize="true" />
+
+            <!-- Now set the width, the height is calculated using the aspect ratio -->
+            <Size width="576" height="-1" />
+
+            <!-- Center the image horizontally and near the bottom-edge of the layout  -->
+            <Location alignHorizontal="center" alignVertical="end" x="0" y="-32" />
+
+            <Property name="z" value="3" />
+            <Animation name="press_start" />
+        </Action>
+        
+        <!-- The engine executes the action when the START button was pressed -->
+        <!-- Note: there no button binds here, the engine executes all actions named "start_pressed" -->
+        <Action name="start_pressed">
+            <Animation name="press_start_presssed" />
+        </Action>
+    </Sprite>
+
+    <Sprite name="transition-effect" r="1.0" g="1.0" b="1.0">
+        <Action>
+            <Location x="0" y="0" />
+            <Size width="640" height="480" />
+            <Property name="z" value="4" />
+            <Animation name="transition_intro" />
+        </Action>
+        
+        <!-- The engine executes this action atfer a few seconds the start button was pressed -->
+        <Action name="outro">
+            <!-- black screen is the same as r="0.0" g="0.0" b="0.0" -->
+            <Color rgb="0x000000" />
+            <Animation name="transition_outro" />
+        </Action>
+    </Sprite>
+
+</Layout>

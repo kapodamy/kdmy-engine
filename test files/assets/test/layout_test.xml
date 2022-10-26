@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="640" height="480" animationSpeed="1.0" animationList="layout_test_anims.xml">
+    <Font name="font-glyph" glyphAnimate="0" glyphSuffix="bold" path="/assets/common/font/alphabet.xml" />
+    <Font name="font-ttf" path="/assets/common/font/vcr.ttf" />
+
+    <!-- Camera example, triggered from the engine or "Macro"  -->
+    <Camera name="pan_and_zoom_example" duration="100">
+        <From x="-50" y="0" />
+        <To x="100" y="50" z="0.5" />
+    </Camera>
+
+    <!-- Camera example with offset (start location and scale without any parallax) -->
+    <Camera name="pan_and_zoom_example" duration="100">
+        <Origin x="100" y="-50" z="1" />
+        <From x="-50" y="0" />
+        <To x="100" y="50" z="0.5" />
+    </Camera>
+
+    <!-- Camera example but with beats as duration (the engine uses the BPM defined in the chart) -->
+    <Camera name="slide_camera" durationInBeats="100">
+        <From x="-50" y="0" />
+        <To x="100" y="50" z="0.5" />
+    </Camera>
+
+    <!-- Camera example but the duration equals to a single beat ("durationInBeats" and "duration" are not present) -->
+    <Camera name="camera_example">
+        <From x="-50" y="0" />
+        <To x="100" y="50" z="0.5" />
+    </Camera>
+
+    <!-- Camera move example, moves the camera without any animation and/or transition -->
+    <Camera name="move_camera_example">
+        <Move x="-50" y="0" />
+    </Camera>
+
+
+    <!-- This fields tell to engine to execute an action in 1000 milliseconds after the trigger is invoked from code-->
+    <Trigger name="trigger_example" action="action_name_to_execute" startDelay="1000" />
+
+    <!-- Trigger with delay is expressed in beats -->
+    <Trigger name="trigger_example" action="action_name_to_execute" startDelayBeats="1000" />
+
+    <!-- Trigger with loop, to repeat indefinitely use "0" or "-1" -->
+    <Trigger name="trigger_example" action="action_name_to_execute" startDelay="5000" loop="-1" />
+
+    <!-- Trigger with loop delay -->
+    <Trigger name="trigger_example" action="action_name_to_execute" startDelay="1000" loopDelay="300" loop="7" />
+
+    <!-- Trigger with loop delay expressed in beats -->
+    <Trigger name="trigger_example" action="action_name_to_execute" loopDelayBeats="300" loop="7" />
+
+    <!-- Trigger can also be used for camera or both -->
+    <Trigger name="trigger_example" action="action_name_to_execute" camera="zoom_in_character" />
+
+    <!-- Trigger without names are executed after the layout is loaded -->
+    <Trigger action="xmas_tree_blink" camera="monster_focus" />
+
+    <!-- Trigger to trigger another Trigger -->
+    <Trigger action="action_name" camera="camera_name" trigger="another_trigger" />
+
+    <!-- Trigger is executed with "layout_trigger_trigger()" and Action is executed with "layout_trigger_action()" -->
+    <!-- In this example "layout_trigger_action('chainloader')" will execute both action and trigger named "abc" -->
+    <Trigger name="chainloader" action="abc" trigger="abc" />
+
+    <!-- TriggerAction example, can be use to trigger any action, camera or both -->
+    <Group>
+        <Action name="trigger_example1">
+            <TriggerAction action="another_action" />
+        </Action>
+        <Action name="trigger_example2">
+            <TriggerAction camera="my_camera" />
+        </Action>
+        <Action name="trigger_example3">
+            <TriggerAction action="walk" camera="scroll_to_the_left" />
+        </Action>
+        <Action name="trigger_example4">
+            <TriggerAction any="action_camera_trigger_name" />
+        </Action>
+    </Group>
+
+    <!-- Various <Macro> can be added but only one can be played (invoked from the engine) -->
+    <Macro name="layout_animation" animation="test_macro_executor_in_layout" loopByBeats="true">
+        <!-- Note 1: interpolators will no be keep attached to the last selected puppet -->
+        <!-- Note 2: a layout item is a sprite, text, group, audio, video, camera -->
+
+        <!-- execute action in layout item -->
+        <Execute id="0" action="dance" target="character" />
+
+        <!-- execute all actions with that name -->
+        <Execute id="1" action="idle" />
+
+        <!-- attach to a single layout item -->
+        <Puppet id="2" target="fast_car" />
+
+        <!-- attach to the layout camera -->
+        <PuppetCamera id="3" />
+
+        <!-- attach to the layout (root group) -->
+        <PuppetGroup id="5" />
+
+        <!-- attach to a single group -->
+        <PuppetGroup id="6" target="group_name" />
+    </Macro>
+
+    <!-- (implement in the future) If the <Sound> is added to a <Group> and is invisible, the audio should be muted -->
+    <!-- (implement in the future) If the camera moves the <Sound> should change is volume and panning-->
+    <!-- Requires a constant call to layout_animate() to poll audio samples -->
+    <Sound name="test_sound" src="/assets/sound_effect.ogg" loop="1" volume="1.0">
+        <Action name="play_the_sound_effect">
+            <!-- clammped to [0.0, 1.0] -->
+            <!-- KOS use a range of [0, 255] -->
+            <Property name="volume" value="0.8 "/>
+
+            <!-- clammped to [-1.0, 1.0] -->
+            <!-- KOS use a range of [0, 255] -->
+            <!-- panning, full left is -1.0 full right is 1.0 (and 0 is center)-->
+            <Property name="pan" value="0.4" />
+
+            <!-- seeking time in milliseconds -->
+            <!-- not implemented. This will be hard to implement (dreamcast limitations)-->
+            <Property name="seek" value="1000" />
+
+            <!-- start or resume the playback-->
+            <Play />
+
+            <!-- pauses the playback, if stopped it does nothing -->
+            <Pause />
+
+            <!-- seek to the begin and pause -->
+            <Stop />
+            
+            <!-- silence the audio -->
+            <Mute />
+            
+            <!-- unsilence the audio -->
+            <Unmute />
+
+            <!-- All posibles accesible properties (seek is not implemented) -->
+            <Properties volume="0.8" pan="0.5" seek="1000" playback="stop" />
+
+            <!-- The animation only animates the following properties:
+                    * pan. values=[-1.0, 1.0]
+                    * volume. values=[0.0, 1.0]
+                    * playback. values=[play(0), pause(2), stop(3)] -->
+            <Animation name="play-fade-in-volume"/>
+        </Action>
+    </Sound>
+
+    <!-- This is a combination of <Sound> and <Sprite> -->
+    <!-- Requires a constant call to layout_animate() to poll media streams -->
+    <Video name="test_video" loop="1" volume="1.0">
+        <Action name="test_props">
+            <Modifier skewX="100" />
+            <Location x="24" y="24" />
+            <Size width="200" height="144" />
+        </Action>
+        <Action name="inherited_from_audio">
+            <Play />
+            <Pause />
+            <Stop />
+            <Mute />
+            <Unmute />
+            <Properties volume="0.8" pan="0.5" />
+            <Properties playback="stop" />
+        </Action>
+    </Video>
+
+    <Group name="group_nesting_test" visible="0">
+        <!--<Action>
+            <OffsetColor r="1.0" g="0.0" b="0.0" a="1.0" />
+        </Action>-->
+
+        <Text fontName="font-glyph" fontSize="24" color="0xFFFFFF">
+            <Action>
+                <Location x="10" y="100" />
+                <Property name="z" value="1" />
+                <Property name="forceCase" value="uppercase" />
+                <String>glyph test font ABC @z♥ñ☐u😠7×8←9</String>
+            </Action>
+        </Text>
+        <!--<Text fontName="font-ttf" fontSize="24" color="0xFFFFFF">
+            <Action>
+                <String>ttf test font with borders</String>
+                <Location x="50" y="200" />
+                <Property name="z" value="1" />
+                <Border size="4" rgba="0x000000FF" enable="true" />
+            </Action>
+        </Text>-->
+    </Group>
+
+    <Group name="parallax-test">
+        <Sprite name="bg0" texture="bg0.png">
+            <Action>
+                <Location x="0" y="100" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="0" />
+                <Parallax x="0.1" y="0.1" z="0.1" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg1.png">
+            <Action>
+                <Location x="0" y="100" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="1" />
+                <Parallax x="0.5" y="0.5" z="0.5" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg2.png">
+            <Action>
+                <Location x="0" y="100" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="2" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg3.png">
+            <Action>
+                <Location x="0" y="100" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="3" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg4.png">
+            <Action>
+                <Location x="0" y="50" />
+                <Size width="-1" height="400" />
+                <Property name="z" value="4" />
+                <Property name="alpha" value="0.8" />
+                <Parallax x="1.2" z="1.2" y="1.2" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="fg1.png">
+            <Action>
+                <Location x="0" y="100" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="5" />
+                <Parallax x="2" z="2" y="2" />
+                <!--<Animation name="font_clouds" />-->
+            </Action>
+        </Sprite>
+    </Group>
+
+</Layout>

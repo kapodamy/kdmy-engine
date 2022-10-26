@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="640" height="480" keepAspectRatio="true" animationList="/assets/common/anims/week-round.xml">
+    <Font name="vcr" path="/assets/common/font/vcr.ttf" />
+    <Font name="pixel" path="/assets/common/font/pixel.otf" />
+    
+	<AttachValue name="transition_delay" type="float" value="0" />
+
+    <Group name="allstats">
+
+        <Sprite r="0" g="0" b="0" a="0.6">
+            <Action>
+                <Location x="0" y="0" z="0" />
+                <Size width="640" height="480" />
+            </Action>
+        </Sprite>
+
+        <Text fontName="vcr" fontSize="48" color="0xFFFFFF">
+            <Action>
+                <Location x="0" y="-5" z="1" />
+                <MaxSize width="640" height="-1" />
+                <Property name="alpha" value="0.9" />
+                <!-- <Property name="alignHorizontal" value="end" /> -->
+                <!-- <Border size="4" r="1" g="0" b="0" a="0.8" enable="true" /> -->
+            </Action>
+			<Action name="week_not_cleared">
+				<!-- If the player changes the difficult, the progress is not saved -->
+                <Property name="fontSize" value="28" />
+                <String>WAIT, YOU CHANGED THE DIFFICULT!</String>
+			</Action>
+			<Action name="week_cleared">
+                <String>WEEK CLEARED!</String>
+			</Action>
+        </Text>
+
+        <Text name="stats" fontSize="16" fontName="pixel" color="0xFFFFFF">
+            <Action>
+                <Location x="8" y="80" z="2" />
+                <Property name="paragraphSeparation" value="8" />
+                <Animation name="result_stats" />
+            </Action>
+        </Text>
+
+        <Text name="stats2" fontSize="16" fontName="pixel" color="0xFFFFFF">
+            <Action>
+                <Location x="0" y="80" z="2" />
+                <MaxSize width="632" height="-1" />
+                <Property name="paragraphSeparation" value="8" />
+                <Property name="alignHorizontal" value="end" />
+                <Animation name="result_stats" />
+            </Action>
+        </Text>
+
+        <Text fontName="vcr" fontSize="16" color="0xFFFFFF">
+            <Action>
+                <Location x="0" y="-5" z="1" />
+                <MaxSize width="632" height="480" />
+                <Property name="alpha" value="0.9" />
+                <Property name="alignHorizontal" value="end" />
+                <Property name="alignVertical" value="end" />
+                <!-- <Border size="4" r="1" g="0" b="0" a="0.8" enable="true" /> -->
+                <String>Press any button to continue...</String>
+                <Animation name="result_continue" />
+            </Action>
+        </Text>
+
+    </Group>
+
+    <Sprite name="transition_effect" rgb="0x000000">
+        <Action>
+            <Property name="alpha" value="1.0" />
+            <Location x="0" y="0" z="300" />
+            <Size width="640" height="480" />
+            <Static />
+            <Hide />
+        </Action>
+        <Action name="transition">
+            <Show />
+            <Animation name="pause_transition" />
+        </Action>
+    </Sprite>
+
+</Layout>

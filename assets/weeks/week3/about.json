@@ -1,0 +1,34 @@
+{
+    "description": "PICO",
+    "songs": [
+        { "name": "Pico"},
+        { "name": "Philly Nice"},
+        { "name": "Blammed"}
+    ],
+
+    "hostFlipSprite": true,
+
+    "hasDifficultyEasy": true,
+    "hasDifficultyHard": true,
+    "customDifficulties": [],
+
+    "unlockDirectiveName": "WEEK2",
+	"emitUnlockDirectiveName": "WEEK3",
+
+    "copyrightWarnMessage": null,
+    "contentAdvisoryMessage": null,
+    
+    "disallowCustomBoyfriend": false,
+    "disallowCustomGirlfriend": false,
+    
+    "unlockables": {
+        "boyfriend": [
+            {
+                "name": "PICO",
+                "unlockDirectiveName": "WEEK3_HARD",
+                "manifest": "PICO/PICO.json"
+            }
+        ],
+        "girlfriend": []
+    }
+}

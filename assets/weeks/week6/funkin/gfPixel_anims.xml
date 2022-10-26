@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList atlasPath="gfPixel.xml">
+    <Animation name="idle" loop="1" alternateRandomize="false">
+        <!-- This emulates the "gf-left" and "gf-right" animations -->
+        <!-- Every time the animation is looped, a different set of frames is used -->
+        <FrameArray entryPrefixName="GF IDLE" hasNumberSuffix="true" indexStart="0" indexEnd="14" />
+        <AlternateSet />
+        <FrameArray entryPrefixName="GF IDLE" hasNumberSuffix="true" indexStart="15" />
+    </Animation>
+</AnimationList>

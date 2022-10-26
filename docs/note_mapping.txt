@@ -1,0 +1,27 @@
+ldur uv ldur --> 10 notes
+LEFT  UP  DOWN  RIGHT   TR   TL   X  Y  A  B
+
+ldur s ldur --> 9 notes
+LEFT  UP  DOWN  RIGHT   TR|TL   X  Y  A  B
+
+ldur ldur --> 8 notes
+LEFT  UP  DOWN  RIGHT   X  Y  A  B
+
+lur s ldr --> 7 notes
+LEFT   UP  RIGTH   TR|TL   X  A  B
+
+lur ldr   --> 6 notes
+LEFT   UP|Y   RIGHT|TL   TR|X   A|DOWN   B
+LEFT   UP   RIGHT   X   A   B
+
+ld s ur   --> 5 notes
+LEFT|X   UP|Y   TR|TL   DOWN|A   RIGHT|B
+
+// ldur     --> 4 notes
+//   LEFT|X  DOWN|A   UP|Y   RIGHT|A
+
+// lsr      --> 3 notes
+//   LEFT|UP|DOWN|RIGHT   TR|TL  A|B|X|Y
+
+// lr      --> 2 notes
+// LEFT|UP|DOWN|RIGHT|TR   TL|A|B|X|Y

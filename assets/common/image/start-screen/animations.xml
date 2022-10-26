@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+    <Animation name="gf_dance" loop="0" frameRate="24" atlasPath="gfDanceTitle.xml">
+        <FrameArray entryPrefixName="gfDance" hasNumberSuffix="true" />
+    </Animation>
+    <Animation name="press_start" loop="0" frameRate="24" atlasPath="titleEnter.xml">
+        <FrameArray entryPrefixName="Press Enter to Begin" />
+    </Animation>
+    <Animation name="press_start_presssed" loop="0" frameRate="24" atlasPath="titleEnter.xml">
+        <FrameArray entryPrefixName="ENTER PRESSED" />
+    </Animation>
+    <AnimationMacro name="logo_bumping" loop="0">
+		 <!-- 33.33333333333333ms means 2 frames at 60fps -->
+        <!-- Stretch the logo (keeps the logo's center in the same position) -->
+        <Set property="scaleDirectionX" value="-0.5" />
+        <Set property="scaleDirectionY" value="-0.5" />
+        <Set property="scaleSize" value="true" />
+    
+        <Interpolator type="linear" property="scaleX" start="1" end="1.1" duration="33.33333333333333"/>
+        <Interpolator type="linear" property="scaleY" start="1" end="1.1" duration="33.33333333333333"/>
+        <Yield duration="33.33333333333333" />
+        <Interpolator type="linear" property="scaleX" start="1.1" end="1" duration="33.33333333333333"/>
+        <Interpolator type="linear" property="scaleY" start="1.1" end="1" duration="33.33333333333333"/>
+        <Yield duration="1000" />
+    </AnimationMacro>
+    <AnimationMacro name="transition_intro">
+        <Interpolator type="ease-in" property="alpha" end="0.0" duration="1000" />
+    </AnimationMacro>
+    <AnimationMacro name="transition_outro">
+        <Interpolator type="ease-out" property="alpha" start="0.0" end="1.0" duration="1000" />
+    </AnimationMacro>
+</AnimationList>

@@ -1,0 +1,23 @@
+{
+    "name": "DADDY DEAREST",
+    "model": "./DADDY_DEAREST.xml",
+    "modelWeekSelector": "./host.xml",
+    "healthbarColor": "0xAF66CE",
+    "healthIconsModel": "./icon-dad.xml",
+
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": false,
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "Dad Sing Note LEFT" },
+            { "direction": "down",   "anim": "Dad Sing Note DOWN" },
+            { "direction": "up",     "anim": "Dad Sing Note UP" },
+            { "direction": "right",  "anim": "Dad Sing Note RIGHT" }
+        ],
+
+        "idle": { "anim": "Dad idle dance" }
+    }
+}

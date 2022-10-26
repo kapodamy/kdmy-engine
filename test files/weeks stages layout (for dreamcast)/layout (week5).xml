@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAspectRatio="true" animationList="anims.xml">
+
+	<!-- ******************* Cameras ******************* -->
+	<Camera name="mall_start" durationInBeats="2">
+		<FromOffset x="131.82847499999988" y="174.3646725000001" z="0.7001621749999999" />
+		<ToOffset x="30" y="245.27195" z="0.8699481999999999" />
+	</Camera>
+	<Camera name="camera_opponent">
+		<Offset x="-117.17382499998885" y="195.36662249999057" z="1.000166674999978" />
+		<To x="759" y="-210" z="0.9099999999999999" />
+	</Camera>
+	<Camera name="camera_player">
+		<Offset x="-117.17382499998885" y="195.36662249999057" z="1.000166674999978" />
+		<To x="-237" y="-159" z="0.8999999999999999" />
+	</Camera>
+	<Camera name="round_roundEnd">
+		<FromOffset x="-66.17382499998885" y="129.36662249999057" z="1.000166674999978" />
+		<ToOffset x="132" y="6" z="0.7899999999999998" />
+	</Camera>
+
+	<Camera name="mall_evil">
+		<Offset x="0" y="0" z="1.0" />
+		<Move x="159" y="2043" z="2.0000050000004483" />
+	</Camera>
+	<Camera name="mall_evil_zoom_out" durationInBeats="24">
+		<Offset x="0" y="0" z="1.0" />
+		<To x="303" y="800" z="1.2000050000004477" />
+	</Camera>
+	<Camera name="camera_evil_opponent">
+		<To x="144" y="-111" z="1.2600050000004477" />
+	</Camera>
+	<Camera name="camera_evil_player">
+		<To x="-405" y="-39" z="1.1700050000004476" />
+	</Camera>
+
+
+	<!-- ******************* RANKINGCOUNTER ******************* -->
+	<Placeholder name="ui_rankingcounter_rank" x="575" y="183" z="10" height="110" />
+	<Placeholder name="ui_rankingcounter_accuracy" x="952" y="516" z="10" height="38" />
+
+	<!-- ******************* STREAKCOUNTER ******************* -->
+	<Placeholder name="ui_streakcounter" x="977" y="637" z="10" height="90" width="0" />
+	<AttachValue type="float" name="ui_streakcounter_comboHeight" value="0" />
+	<AttachValue type="float" name="ui_streakcounter_delay" value="10" />
+
+	<!-- ******************* Characters ******************* -->
+	<Placeholder name="character_girlfriend" x="758" y="468" z="7">
+		<Parallax x="0.95" y="0.95" z="1.0" />
+	</Placeholder>
+	<AttachValue name="character_count" type="integer" value="2" />
+	<Placeholder name="character_0" x="-332" y="854" z="8" />
+	<Placeholder name="lemon_demon" x="0" y="834" z="8" />
+	<Placeholder name="character_1" x="1015" y="803" z="8" />
+
+	<!-- ******************* Stage graphics ******************* -->
+	<Trigger name="bops_trigger" action="bop" loop="-1" loopDelayBeats="2" />
+
+	<Sprite rgb="0x466afd">
+		<Action>
+			<Location x="-1000" y="-750" z="-1" />
+			<Size width="3014" height="1420" />
+			<Parallax x="0.2" y="0.2" z="1.0" />
+			<Show />
+		</Action>
+		<Action name="evil">
+			<Hide />
+		</Action>
+	</Sprite>
+
+	<Sprite texture="bgWalls.png">
+		<Action>
+			<Location x="-1000" y="-500" z="0" />
+			<Parallax x="0.2" y="0.2" z="1.0" />
+			<Properties scaleX="0.8" scaleY="0.8" scaleSize="true" />
+			<Show />
+		</Action>
+		<Action name="evil">
+			<Hide />
+		</Action>
+	</Sprite>
+	<Sprite texture="evilBG.png">
+		<Action>
+			<Hide />
+			<Location x="-400" y="-500" z="0" />
+			<Parallax x="0.2" y="0.2" z="1.0" />
+			<Properties scaleX="0.8" scaleY="0.8" scaleSize="true" />
+		</Action>
+		<Action name="evil">
+			<Show />
+		</Action>
+	</Sprite>
+
+	<Sprite atlas="upperBop.xml">
+		<Action>
+			<Location x="-240" y="-90" z="1" />
+			<Parallax x="0.33" y="0.33" z="1.0" />
+			<Properties scaleX="0.85" scaleY="0.85" scaleSize="true" />
+			<!-- <AtlasApply entry="Upper Crowd Bob0000" overrideSize="true" /> -->
+		</Action>
+		<Action name="bop">
+			<AnimationFromAtlas name="Upper Crowd Bob" loop="1" />
+		</Action>
+		<Action name="evil">
+			<Hide />
+			<AnimationRemove />
+		</Action>
+	</Sprite>
+
+	<Sprite texture="bgEscalator.png">
+		<Action>
+			<Location x="-1100" y="-600" z="2" />
+			<Parallax x="0.3" y="0.3" z="1.0" />
+			<Properties scaleX="0.9" scaleY="0.9" scaleSize="true" />
+			<Show />
+		</Action>
+		<Action name="evil">
+			<Hide/>
+		</Action>
+	</Sprite>
+
+	<Sprite texture="christmasTree.png">
+		<Action>
+			<Location x="370" y="-250" z="3" />
+			<Parallax x="0.9" y="0.9" z="1.0" />
+			<Show />
+		</Action>
+		<Action name="evil">
+			<Hide />
+		</Action>
+	</Sprite>
+	<Sprite texture="evilTree.png">
+		<Action>
+			<Hide />
+			<Location x="300" y="-300" z="0" />
+			<Parallax x="0.2" y="0.2" z="1.0" />
+		</Action>
+		<Action name="evil">
+			<Show />
+		</Action>
+	</Sprite>
+
+	<Sprite atlas="bottomBop.xml">
+		<Action>
+			<Location x="-300" y="140" z="4" />
+			<Parallax x="0.9" y="0.9" z="1.0" />
+			<!-- <AtlasApply entry="Bottom Level Boppers0000" overrideSize="true" /> -->
+			<Show />
+		</Action>
+		<Action name="bop">
+			<AnimationFromAtlas name="Bottom Level Boppers" loop="1" />
+		</Action>
+		<Action name="evil">
+			<Hide />
+		</Action>
+	</Sprite>
+
+	<Sprite texture="fgSnow.png">
+		<Action>
+			<Show />
+			<Location x="-1100" y="700" z="5" />
+		</Action>
+		<Action name="evil">
+			<Hide />
+		</Action>
+	</Sprite>
+	<Sprite texture="evilSnow.png">
+		<Action>
+			<Hide />
+			<Location x="-200" y="700" z="5" />
+		</Action>
+		<Action name="evil">
+			<Show />
+		</Action>
+	</Sprite>
+
+	<Sprite atlas="santa.xml">
+		<Action>
+			<Show />
+			<Location x="-840" y="150" z="6" />
+		</Action>
+		<Action name="bop">
+			<AnimationFromAtlas name="santa idle in fear" loop="1" />
+		</Action>
+		<Action name="evil">
+			<Hide />
+		</Action>
+	</Sprite>
+
+	<Sprite rgb="0x000000">
+		<Action>
+			<Static />
+			<Location x="0" y="-600" z="9" />
+			<Size width="2625" height="1613" />
+			<Hide />
+		</Action>
+		<Action name="fade_lights">
+			<Show />
+		</Action>
+		<Action name="evil">
+			<Property name="alpha" value="1.0" />
+			<Animation name="fade_in" restart="true" />
+		</Action>
+	</Sprite>
+
+
+	<!-- ******************* Stage sounds ******************* -->
+	<Sound src="Lights_Shut_off.ogg">
+		<Action>
+			<Stop />
+		</Action>
+		<Action name="lights_off">
+			<Stop />
+			<Play />
+		</Action>
+	</Sound>
+	<Sound src="Lights_Turn_On.ogg">
+		<Action>
+			<Stop />
+		</Action>
+		<Action name="lights_on">
+			<Play />
+		</Action>
+	</Sound>
+
+</Layout>

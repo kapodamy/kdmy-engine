@@ -1,0 +1,1 @@
+texconv --in C:\Users\kapodamy\Desktop\dreamcast_buttons.png --out C:\Users\kapodamy\Desktop\dreamcast_buttons.tex --format ARGB4444 -compress -preview preview.png

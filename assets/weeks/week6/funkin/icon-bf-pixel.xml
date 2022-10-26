@@ -1,0 +1,4 @@
+<TextureAtlas imagePath="icon-bf-pixel.png">
+	<SubTexture name="neutral" x="14" y="33" width="122" height="84"/>
+	<SubTexture name="loosing" x="159" y="32" width="122" height="84"/>
+</TextureAtlas>

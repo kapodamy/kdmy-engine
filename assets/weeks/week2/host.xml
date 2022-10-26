@@ -1,0 +1,18 @@
+<TextureAtlas imagePath="host.png">
+	<SubTexture name="idle01" x="0" y="1064" width="381" height="549"/>
+	<SubTexture name="idle02" x="0" y="1064" width="381" height="549"/>
+	<SubTexture name="idle03" x="385" y="1064" width="379" height="541"/>
+	<SubTexture name="idle04" x="385" y="1064" width="379" height="541"/>
+	<SubTexture name="idle05" x="485" y="536" width="357" height="484"/>
+	<SubTexture name="idle06" x="485" y="536" width="357" height="484"/>
+	<SubTexture name="idle07" x="496" y="0" width="354" height="494"/>
+	<SubTexture name="idle08" x="496" y="0" width="354" height="494"/>
+	<SubTexture name="idle09" x="0" y="0" width="492" height="532"/>
+	<SubTexture name="idle10" x="0" y="0" width="492" height="532"/>
+	<SubTexture name="idle11" x="0" y="536" width="481" height="524"/>
+	<SubTexture name="idle12" x="0" y="536" width="481" height="524"/>
+	<SubTexture name="idle13" x="485" y="536" width="357" height="484"/>
+	<SubTexture name="idle14" x="485" y="536" width="357" height="484"/>
+	<SubTexture name="idle15" x="496" y="0" width="354" height="494"/>
+	<SubTexture name="idle16" x="496" y="0" width="354" height="494"/>
+</TextureAtlas>

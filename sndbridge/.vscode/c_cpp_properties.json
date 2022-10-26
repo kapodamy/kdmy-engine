@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "xJAVASCRIPT"
+            ],
+            "windowsSdkVersion": "8.1",
+            "compilerPath": "C:/msys64/mingw32/bin/i686-w64-mingw32-gcc.exe",
+            "cStandard": "c99",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x86",
+            "configurationProvider": "ms-vscode.makefile-tools",
+            "compilerArgs": [
+                "-Wall",
+                "-Wextra"
+            ]
+        }
+    ],
+    "version": 4
+}

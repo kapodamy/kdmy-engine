@@ -1,0 +1,6 @@
+<TextureAtlas imagePath="stage.png">
+	<SubTexture name="stage_light" x="0" y="3067" width="206" height="227"/>
+	<SubTexture name="stageback" x="0" y="1663" width="2560" height="1400"/>
+	<SubTexture name="stagecurtains" x="0" y="566" width="2560" height="1093"/>
+	<SubTexture name="stagefront" x="0" y="0" width="2560" height="562"/>
+</TextureAtlas>

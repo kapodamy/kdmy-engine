@@ -1,0 +1,56 @@
+# variables always starts with "$" symbol otherwise is a sprite property
+# NOTE: sprite properties are case insensitive (vx is same as vX)
+
+# you can declare an atlas/texture ONCE
+texture my_texture.png
+atlas   my_atlas.xml# no atlas entry will be applied until you modify the "atlasIndex" value
+
+# Sprite properties (these properties are read-only)
+#   originalWidth       (original texture width)
+#   originalHeight      (original texture height)
+#
+# Note: if an atlas was applied (setting the "atlasIndex" variable), these
+#       values will reflect the dimensions defined in the atlas.
+
+# Drawing properties
+#   x               (drawing offset x, defaults to zero)
+#   y               (drawing offset y, defaults to zero)
+#   width           (drawing width, defaults to originalWidth)
+#   height          (drawing height, defaults to originalHeight)
+#   translateX      (matrix translation x, defaults to zero)
+#   translateY      (matrix translation y, defaults to zero)
+#   rotate          (matrix rotation angle in radians, defaults to zero)
+#   scaleX          (matrix scale x, defaults to zero)
+#   scaleY          (matrix scale y, defaults to zero)
+#   skewX           (matrix skew x, defaults to zero)
+#   skewY           (matrix skew y, defaults to zero)
+
+# Atlas properties
+#   atlasSize       (amount of entries in the atlas, read-only property)
+#   atlasIndex      (the last used atlas entry, otherwise -1 if not set)
+# 
+# Note 1: setting the "atlasIndex" value, will overwrite the following
+#       properties:  originalWidth  originalHeight  width  height.
+#
+
+# Iterpolators
+ease            {sprite property}  {start}  {end}  {duration}
+ease_in         {sprite property}  {start}  {end}  {duration}
+ease_out        {sprite property}  {start}  {end}  {duration}
+ease_in_out     {sprite property}  {start}  {end}  {duration}
+steps           {sprite property}  {start}  {end}  {duration} {steps amount} {optional direction: NONE START END BOTH}
+linear          {sprite property}  {start}  {end}  {duration}
+
+yield           {optional variable/number}# waits for all interpolators, once completed, sleeps a optional amount of miliseconds
+sleep           {optional variable/number}# sleep a specified amount of milliseconds, otherwise waits for the next frame
+rerun# executes this script again, all variables and interpolators will be deleted first
+var             {variable}# creates a variable with a value of zero
+set             {variable}  {sprite property/number/variable}# example:      set $my_var 1234
+math            {variable}  {+ - / * % sin cos}  {number/variable}# example:         math $var_with_6_value / 3
+:label
+if {variable} {operator} {variable} {optional label}# example:      if $my_var == 123 :label_myvar_equals_to_123
+ifflag {variable} {optional label}# example:                        if $my_var  :label_myvar_value_is_non_zero
+goto {:label}
+exit# finalize the script execution also deletes all created variables and interpolators
+#comment
+

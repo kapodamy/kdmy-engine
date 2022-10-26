@@ -1,0 +1,17 @@
+{
+    "vsicons.customIconFolderPath":  "./.vscode",
+    "vsicons.associations.folders": [
+        { "icon": "plugin", "extensions": ["animation"] },
+        { "icon": "binary", "extensions": ["platform"] },
+        { "icon": "funkin", "extensions": ["game"], "format": "svg" },
+    ],
+    "files.exclude": {
+
+        "**/favicon.ico": true,
+
+        "**/Opera Next (Depurable).lnk": true,
+        "**/ScpServer.lnk": true,
+        "**/ShoeBox.lnk": true,
+        "**/Visual Studio Code.lnk": true
+    }
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+    <Animation name="choosen" loop="1" frameRate="24" atlasPath="boyfriend_preview.xml">
+        <Frame entryName="hey0" />
+        <Frame entryName="hey0" />
+        <Frame entryName="hey1" />
+        <Frame entryName="hey1" />
+        <Frame entryName="hey2" />
+        <!-- <Pause duration="21" /> -->
+    </Animation>
+    <Animation name="idle" loop="0" frameRate="24" atlasPath="boyfriend_preview.xml">
+        <Frame entryName="dance0" />
+        <Frame entryName="dance0" />
+        
+        <Frame entryName="dance1" />
+        <Frame entryName="dance1" />
+        
+        <Frame entryName="dance2" />
+        <Frame entryName="dance2" />
+        
+        <Frame entryName="dance3" />
+        <Frame entryName="dance3" />
+
+        <Frame entryName="dance4" />        
+        <Pause duration="10" />
+    </Animation>
+</AnimationList>

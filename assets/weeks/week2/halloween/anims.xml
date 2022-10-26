@@ -1,0 +1,6 @@
+<AnimationList>
+	<Animation name="lightstrike" atlasPath="halloween_bg.xml">
+		<FrameArray entryPrefixName="halloweem bg lightning strike" />
+		<Frame entryName="halloweem bg0000" />
+	</Animation>
+</AnimationList>

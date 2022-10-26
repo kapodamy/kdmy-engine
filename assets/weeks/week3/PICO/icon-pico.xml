@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="icon-pico.png">
+	<SubTexture name="neutral" x="10" y="4" width="128" height="98"/>
+	<SubTexture name="loosing" x="159" y="3" width="120" height="108"/>
+</TextureAtlas>

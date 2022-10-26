@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="311" height="161" keepAspectRatio="true" animationList="anims.xml" antialiasing="disabled">
+
+	<Font name="pixel" path="/assets/common/font/pixel.otf" />
+
+	<!-- ******************* Cameras ******************* -->
+	<Camera>
+		<Offset x="-51" y="-36" z="1.4500000000000004" />
+	</Camera>
+	<Camera name="camera_opponent">
+		<To x="39" y="0" z="1.02" />
+	</Camera>
+	<Camera name="camera_player">
+		<To x="-27" y="-3" z="1.05" />
+	</Camera>
+	<Camera name="senpai_dies" durationInBeats="4">
+		<To x="60" y="-6" z="0.9299999999999999" />
+	</Camera>
+    <Camera name="camera_roundEnd">
+        <To x="38.944559999998305" y="-0.002520000000076905" z="1.0200252000000007" />
+    </Camera>
+
+	<!-- ******************* RANKINGCOUNTER ******************* -->
+	<Placeholder name="ui_rankingcounter_rank" x="129" y="41" z="10" height="18" />
+	<Placeholder name="ui_rankingcounter_accuracy" x="174" y="138" z="10" height="8" />
+
+	<!-- ******************* STREAKCOUNTER ******************* -->
+	<Placeholder name="ui_streakcounter" x="171" y="75" z="10" height="12" width="0" />
+	<AttachValue type="float" name="ui_streakcounter_comboHeight" value="0" />
+	<AttachValue type="float" name="ui_streakcounter_delay" value="5" />
+
+	<!-- ******************* Characters ******************* -->
+	<Placeholder name="character_girlfriend" x="152" y="84" z="5">
+		<Parallax x="0.95" y="0.95" z="1.0" />
+	</Placeholder>
+	<AttachValue name="character_count" type="integer" value="2" />
+	<Placeholder name="character_0" x="25" y="164" z="6" />
+	<Placeholder name="character_1" x="178" y="150" z="6" />
+
+	<!-- ******************* Stage graphics ******************* -->
+	<Trigger name="girls_trigger" action="girls" loop="-1" loopDelayBeats="2" />
+	<Trigger name="dissuaded_girls_trigger" action="dissuaded" loop="-1" loopDelayBeats="2" />
+
+	<Sprite texture="weebSky.png">
+		<Action>
+			<Location z="0" />
+			<Parallax x="0.1" y="0.1" z="0.1" />
+		</Action>
+	</Sprite>
+	<Sprite texture="weebSchool.png">
+		<Action>
+			<Location z="1" />
+			<Parallax x="0.6" y="0.90"  z="0.3" />
+			<!-- ¿really? -->
+		</Action>
+	</Sprite>
+	<Sprite texture="weebStreet.png">
+		<Action>
+			<Location z="2" />
+			<Parallax x="0.95" y="0.95"  z="0.4" />
+		</Action>
+	</Sprite>
+	<Sprite texture="weebTreesBack.png">
+		<Action>
+			<Location z="3" />
+			<Parallax x="0.9" y="0.9" />
+		</Action>
+	</Sprite>
+	<Sprite atlas="weebTrees.txt">
+		<Action>
+			<Location x="-101" y="-176" z="4" />
+			<Parallax x="0.85" y="0.85" />
+			<Properties scaleX="1.01" scaleY="1.01" scaleSize="true" scaleDirectionX="-0.5" scaleDirectionY="-0.5" />
+			<AnimationFromAtlas name="trees_" loop="-1" />
+		</Action>
+	</Sprite>
+	<Sprite atlas="bgFreaks.xml">
+		<Action>
+			<!--<Location x="20" y="40" z="4" />-->
+			<Location x="-74" y="40" z="4" />
+			<Parallax x="0.9" y="0.9" />
+		</Action>
+		<Action name="girls">
+			<Animation name="backgroundGirls" loop="-1" />
+		</Action>
+		<Action name="dissuaded">
+			<Animation name="backgroundGirlsDissuaded" loop="-1" />
+		</Action>
+	</Sprite>
+	<Sprite atlas="petals.xml">
+		<Action>
+			<Location x="0" y="0" z="7" />
+			<Parallax x="0.85" y="0.85" />
+			<AnimationFromAtlas name="PETALS ALL" loop="-1" />
+		</Action>
+	</Sprite>
+
+	<Sprite name="dialogs_bg" argb="0xFFB3DFd8">
+		<Action>
+			<Location x="0" y="0" z="7" />
+			<Size width="311" height="161" />
+			<Property name="alpha" value="0.0" />
+		</Action>
+		<Action name="dialog_anim">
+			<Animation name="fade_in_bg" />
+		</Action>
+		<Action name="fade_out_group">
+			<Animation name="fade_out_group" />
+		</Action>
+	</Sprite>
+
+	<Group name="dialogs">
+		<Action>
+			<Static />
+			<Hide />
+			<Properties translateX="-40" translateY="-25" />
+			<Properties scaleSize="true" scaleDirectionX="-0.5" scaleDirectionY="-0.5" scaleX="1.5" scaleY="1.5" />
+			<Property name="alpha" value="1.0" />
+		</Action>
+		<Action name="fade_out_group">
+			<Animation name="fade_out_group" />
+		</Action>
+
+		<Sprite name="dialog_icon_boyfriend" atlas="dialogs/bfPortrait.xml">
+			<Action>
+				<Location x="5" y="0" z="11" />
+			</Action>
+			<Action name="dialog_anim_boyfriend">
+				<AnimationFromAtlas name="Boyfriend portrait enter instance" loop="1" />
+			</Action>
+		</Sprite>
+		<Sprite name="dialog_icon_senpai" atlas="dialogs/senpaiPortrait.xml">
+			<Action>
+				<Location x="0" y="0" z="11" />
+			</Action>
+			<Action name="dialog_anim_senpai">
+				<AnimationFromAtlas name="Senpai Portrait Enter instance" loop="1" restart="true" />
+			</Action>
+		</Sprite>
+
+		<Sprite name="dialog_normal" atlas="dialogs/dialogueBox-pixel.xml">
+			<Action>
+				<Location x="0" y="0" z="12" />
+			</Action>
+			<Action name="dialog_anim">
+				<AnimationFromAtlas name="Text Box Appear instance" loop="1" restart="true" />
+			</Action>
+		</Sprite>
+
+		<Sprite name="dialog_angry" atlas="dialogs/dialogueBox-senpaiMad.xml">
+			<Action>
+				<Location x="0" y="0" z="12" />
+			</Action>
+			<Action name="dialog_anim">
+				<AnimationFromAtlas name="SENPAI ANGRY IMPACT SPEECH instance" loop="1" restart="true" />
+			</Action>
+		</Sprite>
+
+		<Text name="dialog_text" fontName="pixel" fontSize="5">
+			<Action>
+				<Location x="50" y="85" z="12.1" />
+				<MaxSize width="160" height="40" />
+				<Color argb="0xFF3F2021"/>
+				<Border argb="0xFFD89494" size="0.5" enable="true" />
+				<Property name="paragraphSeparation" value="2.5" />
+				<Property name="wordbreak" value="loose" />
+			</Action>
+		</Text>
+	
+		<Group name="hand">
+			<Action>
+				<Hide />
+				<!-- FIXME: <Static /> should be inherited -->
+				<Static />
+			</Action>
+			<Sprite atlas="/assets/common/image/week-selector/dreamcast_buttons.xml">
+				<Action>
+					<Location x="203" y="115" z="13" />
+					<AtlasApply entry="a" />
+					<Size height="11" width="-1" />
+				</Action>
+			</Sprite>
+			<Sprite texture="./../pixel/image_week6/hand_textbox.png">
+				<Action>
+					<Location x="190" y="115" z="14" />
+					<Animation name="hand_anim" />
+				</Action>
+			</Sprite>
+		</Group>
+	</Group>
+
+	<Group>
+		<Sprite rgb="0xFF0000">
+			<Action>
+				<Parallax x="0" y="0" z="0" />
+				<Location x="0" y="0" z="13" />
+				<Size width="311" height="161" />
+				<Property name="alpha" value="0.0" />
+				<Hide />
+			</Action>
+			<Action name="fade_in_red">
+				<Show />
+				<Animation name="fade_in_red" />
+			</Action>
+		</Sprite>
+		<Sprite atlas="senpaiCrazy.xml">
+			<!-- WHY IN THE NAME OF GOD THIS SPRITE IS MIRRORED -->
+			<!-- the animation would have been perfect -->
+			<Action>
+				<Location x="16" y="0" z="14" />
+				<!--<AtlasApply entry="Senpai Pre Explosion instance 10000" />-->
+				<Show />
+			</Action>
+			<Action name="senpaiCrazy">
+				<Show />
+				<AnimationFromAtlas name="Senpai Pre Explosion instance" />
+			</Action>
+		</Sprite>
+		<Sprite rgb="0xFFFFFF">
+			<Action>
+				<Parallax x="0" y="0" z="0" />
+				<Location x="0" y="0" z="14" />
+				<Size width="311" height="161" />
+				<Property name="alpha" value="0.0" />
+				<Hide />
+			</Action>
+			<Action name="fade_in_white">
+				<Show />
+				<Animation name="fade_in_white" />
+			</Action>
+		</Sprite>
+	</Group>
+
+	<!-- ******************* Stage sounds ******************* -->
+	<Sound name="sndChar0" src="./../pixel/sounds_week6/pixelText.ogg" volume="0.8">
+		<Action>
+			<Stop />
+		</Action>
+	</Sound>
+	<Sound name="sndChar1" src="./../pixel/sounds_week6/pixelText.ogg" volume="0.8">
+		<Action>
+			<Stop />
+		</Action>
+	</Sound>
+	<Sound name="sndClick" src="./../pixel/sounds_week6/clickText.ogg" volume="0.6">
+		<Action>
+			<Stop />
+		</Action>
+	</Sound>
+	<Sound name="angrySenpai" src="./../pixel/sounds_week6/ANGRY_TEXT_BOX.ogg">
+		<Action>
+			<Stop />
+		</Action>
+	</Sound>
+	<Sound name="bgMusic" src="./../pixel/music/Lunchbox.ogg" volume="0.6" looped="true">
+		<Action>
+			<Stop />
+		</Action>
+	</Sound>
+	<Sound name="senpaiDies" src="./../pixel/sounds_week6/Senpai_Dies.ogg">
+		<Action>
+			<Stop />
+		</Action>
+	</Sound>
+
+</Layout>

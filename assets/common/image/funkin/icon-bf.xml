@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="icon-bf.png">
+    <!-- NOTE: the "winning" icon is the same as "neutral" -->
+	<SubTexture name="loosing" x="151" y="24" width="137" height="90"/>
+	<SubTexture name="neutral" x="0" y="25" width="138" height="82"/>
+	<SubTexture name="winning" x="0" y="25" width="138" height="82"/>
+</TextureAtlas>

@@ -1,0 +1,26 @@
+{
+    "model": "spirit.txt",
+    "healthbarColor": "0xFF3C6E",
+    "healthIconsModel": "icon-spirit.xml",
+
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": false, 
+    "oppositeDirections": {
+        "from": ["left", "right"],
+        "to": ["right", "left"]
+    },
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "left_"  },
+            { "direction": "down",   "anim": "spirit down_", "offsetX": -65, "offsetY": 65 },
+            { "direction": "up",     "anim": "up_"    },
+            { "direction": "right",  "anim": "right_" }
+        ],
+        
+		"idle": { "anim": "idle spirit_" }
+    }
+}
+

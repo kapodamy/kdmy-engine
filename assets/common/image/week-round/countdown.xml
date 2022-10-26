@@ -1,0 +1,5 @@
+<TextureAtlas imagePath="countdown.png">
+	<SubTexture name="ready" x="0" y="0" width="757" height="364"/>
+	<SubTexture name="set" x="0" y="368" width="702" height="322"/>
+	<SubTexture name="go" x="0" y="694" width="309" height="238"/>
+</TextureAtlas>

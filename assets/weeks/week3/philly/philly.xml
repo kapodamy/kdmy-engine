@@ -1,0 +1,12 @@
+<TextureAtlas imagePath="philly.png">
+	<SubTexture name="behindTrain" x="1733" y="361" width="1167" height="570"/>
+	<SubTexture name="city" x="0" y="361" width="1729" height="903"/>
+	<SubTexture name="sky" x="0" y="2134" width="1729" height="735"/>
+	<SubTexture name="street" x="0" y="1268" width="1729" height="862"/>
+	<SubTexture name="train" x="0" y="0" width="3231" height="357"/>
+	<SubTexture name="win0" x="1429" y="3247" width="1425" height="370"/>
+	<SubTexture name="win1" x="0" y="2873" width="1425" height="370"/>
+	<SubTexture name="win2" x="0" y="3247" width="1425" height="370"/>
+	<SubTexture name="win3" x="1429" y="2873" width="1425" height="370"/>
+	<SubTexture name="win4" x="0" y="3621" width="1425" height="370"/>
+</TextureAtlas>

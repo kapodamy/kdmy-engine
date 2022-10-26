@@ -1,0 +1,17 @@
+{
+	"default": {
+		"players": [
+			{ "controller": -1, "isOpponent": true, "strumId": 0, "manifest": "MM/MOMMY_MEAREST.json" },
+			{ "controller": 0, "isOpponent": false, "strumId": 1, "manifest": "funkin/BOYFRIEND_CAR.json" }
+		],
+		"girlfriend": { "manifest": "funkin/GIRLFRIEND_CAR.json" },
+		"stage": "limo/layout.xml",
+		"script": "limo/week4.lua"
+	},
+	"tracks": [
+        { "name": "Satin Panties", "chart": "charts/satin-panties.json", "song": "songs/satin-panties.ogg" },
+        { "name": "High" },
+        { "name": "Milf" }
+	]
+}
+

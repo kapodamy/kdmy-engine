@@ -1,0 +1,49 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script src="parser.js"></script>
+        <link rel="stylesheet" href="style.css"/>
+    </head>
+    <body>
+        <div id="placeholder" style="position: fixed;width: 100%;height: 25px;top: 75px;left: 0;z-index: 100;background-color: #0000001f;">
+        <input id="time" type="text" value="00:00:00.0000" disabled="" style="max-width: 8em;margin-left: 352px;height: 25px;">
+        <div style="float: right;margin-right:468px;">
+            <button id="play">Play</button> <button id="stop">Stop</button>
+        </div>
+        </div>
+        
+        <span style="margin-right: 20px"><label>Song chart: <input id="chart" type="file" accept=".json"/></label></span>
+        <span style="margin-right: 20px"><button id="del-voices">X</button><label>Song voices: <input id="voices" type="file" accept=".mp3;.ogg"/></label></span>
+        <span style="margin-right: 20px"><button id="del-instruments">X</button><label>Song instruments: <input id="instruments" type="file" accept=".mp3;.ogg"/></label></span>
+        <br>
+        <br>
+        <i>(open the web console, for more info)</i>
+        <div style="margin:16px; float:right;">
+            <code style="white-space: pre-line;margin:16px" id="info"></code>
+        </div>
+        <hr>
+        <br>
+        <br>
+        <div>
+            <canvas width="50px" height="25000px" id="strum_a_0"></canvas>
+            <canvas width="50px" height="25000px" id="strum_a_1"></canvas>
+            <canvas width="50px" height="25000px" id="strum_a_2"></canvas>
+            <canvas width="50px" height="25000px" id="strum_a_3"></canvas>
+
+            <canvas width="50px" height="25000px" id="strum_b_0"></canvas>
+            <canvas width="50px" height="25000px" id="strum_b_1"></canvas>
+            <canvas width="50px" height="25000px" id="strum_b_2"></canvas>
+            <canvas width="50px" height="25000px" id="strum_b_3"></canvas>
+        </div>
+        <img src="left.png" />
+        <img src="up.png" />
+        <img src="down.png" />
+        <img src="right.png" />
+        <img src="left_c.png" />
+        <img src="up_c.png" />
+        <img src="down_c.png" />
+        <img src="right_c.png" />
+        <script>window.addEventListener('load', main, false);</script>
+    </body>
+    
+</html>

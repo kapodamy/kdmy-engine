@@ -1,0 +1,590 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title> JS-&gt; CS partial signature converter</title>
+</head>
+
+<body>
+    <strong>class_ function decorator and self class to remove: </strong>
+    <input type="text" placeholder="sprite" value="" id="thisname" />
+    <br>
+    <strong>known class_ instance decorators: </strong>
+    <input type="text" placeholder="sprite" style="width:60%;"
+        value="arraylist_ linkedlist_ animlist_ animsprite_ macroexecutor_ tweenlerp_ textsprite_ atlas_ sprite_ statesprite_ texture_ texturepool_ gamepad_ pvr_context_ sh4matrix_ soundplayer_ songplayer_ stringbuilder_ tokenizer_ camera_ drawable_ modelholder_ layout_ playerstats_ beatwatcher_ character_ strum_ note_ strums_ conductor_ countdown_ healthbar_ healwatcher_ roundstats_ rankingcounter_ missnotefx_  streakcounter_digits_ streakcounter_ gameplaymanifest_ menumanifest_ menu_ messagebox_ week_pause_ week_gameover_ week_result_ week_"
+        id="instancenames" />
+    <br>
+    <strong>known class_ static decorators: </strong>
+    <input type="text" placeholder="fs_ math2d_" style="width:60%;"
+        value="vertexprops_ imgutils_ fs_ io_ math2d_ string_ beatwatcher_global_" id="staticnames" />
+    <br>
+    <strong>Input (Javascript code):</strong>
+    <br>
+    <textarea id="js" style="width: 80vw; height: 40vh;"></textarea>
+    <br>
+    <br>
+    <strong>Output (C# code):</strong> <label><input type="checkbox" id="makeclass" />Generate class from anonymus
+        object instead</label>
+    <br>
+    <textarea id="cs" style="width: 80vw; height: 40vh;"></textarea>
+
+    <script>
+        "use strict";
+
+        /** @returns {string} */
+        function get_value_of(name) {
+            return document.getElementById(name).value;
+        }
+
+        function valid_char(charc) {
+            switch (charc) {
+                case ',':
+                case ' ':
+                case "\t":
+                case '(':
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        function find_function_invoke(line) {
+            const rx_invocation = /(^|\s|,|\(|!)?([a-zA-Z_\d]+)\(/;
+            const rx_fnname = /[a-zA-Z_]/;
+
+            let index = line.search(rx_invocation);
+            if (index < 0) return null;
+
+            if (!valid_char(line[index])) {
+                let last = index - 1;
+                if (last >= 0 && !valid_char(line[last])) return null;
+            }
+
+            if (!rx_fnname.test(line[index])) index++;
+
+            let end_index = line.indexOf('(', index);
+            return [index, end_index]
+        }
+
+        function convert_function_name(line, start_index, stop_index) {
+            let newline = line.substring(0, start_index);
+            let doupper = true;
+
+            for (let i = start_index; i < stop_index; i++) {
+                let charc = line[i];
+
+                if (doupper) {
+                    newline += charc.toUpperCase();
+                    doupper = false;
+                    continue;
+                }
+
+                if (charc == '_')
+                    doupper = true;
+                else
+                    newline += charc;
+            }
+
+            newline += line.substring(stop_index, line.length);
+            return newline;
+        }
+
+        function console_replace(line, index, size, prefix) {
+            return line.substring(0, index) +
+                "Console.Error.WriteLine(\"[" + prefix + "]" +
+                line.substring(index + size, line.length);
+        }
+        function console_replace2(line, index, size, prefix) {
+            return line.substring(0, index) +
+                "Console.Error.WriteLine(\"[" + prefix + "]\"+" +
+                line.substring(index + size, line.length);
+        }
+
+        function process(evt) {
+            let js = get_value_of("js");
+            let this_name = get_value_of("thisname");
+            let this_name_fn = this_name;
+            let const_class = null;
+            if (this_name) {
+                this_name_fn += '_';
+                const_class = "const " + this_name_fn.toUpperCase();
+            }
+
+
+            let js_lines = js.split('\n');
+            /**@type {string[]}*/let cs_lines = new Array(js_lines.length);
+
+            if (document.getElementById("makeclass").checked) {
+                document.getElementById("cs").value = process_as_object(js_lines);
+                return;
+            }
+
+            // "function class_some_fn()" --> "public fnlet SomeFn()"
+            for (let i = 0; i < js_lines.length; i++) {
+                let line = js_lines[i];
+                if (!line.startsWith('function') && !line.startsWith('async function')) {
+                    cs_lines[i] = js_lines[i];
+                    continue;
+                }
+
+                line = line.replace(/^(async )?function /, "");
+                let index = line.indexOf('(');
+                if (index < 0) {
+                    cs_lines[i] = line;
+                    continue;
+                }
+
+                let newline = "";
+                let ismethod = this_name_fn && line.startsWith(this_name_fn);
+
+                if (ismethod) {
+                    line = line.substring(this_name_fn.length, line.length);
+                    index -= this_name_fn.length;
+                }
+
+                if (line.startsWith("internal")) newline = "private ";
+                else if (line.startsWith("helper")) newline = ismethod ? "public static " : "private static ";
+                else if (ismethod) newline = "public "
+
+                newline += "fnlet ";
+
+                // function class_myfunction(class, abc) --> function myfunction(abc)
+                L_check_this_arg:
+                if (line.startsWith(this_name, index + 1)) {
+                    let thisarg_end_index = index + this_name.length + 1;
+
+                    L_check_arg_end:
+                    for (let i = thisarg_end_index; i < line.length; i++) {
+                        switch (line[i]) {
+                            case ' ':
+                            case "\t":
+                                continue;
+                            case ',':
+                                thisarg_end_index++;
+                            case ')':
+                                break L_check_arg_end;
+                            default:
+                                break L_check_this_arg;
+                        }
+                    }
+
+                    line = line.substring(0, index + 1) + line.substring(thisarg_end_index, line.length);
+                }
+
+                newline += convert_function_name(line, 0, index);
+
+                cs_lines[i] = newline;
+            }
+
+
+            // "const CLASS_ABC123" --> "public const clet ABC123"
+            for (let i = 0; i < cs_lines.length; i++) {
+                if (cs_lines[i].startsWith(const_class)) {
+                    let constant = cs_lines[i].substring(const_class.length, cs_lines[i].length);
+                    cs_lines[i] = "public const clet " + constant;
+                }
+            }
+
+            let instance_names = get_value_of("instancenames").split(/\s+/g);
+            let static_names = get_value_of("staticnames").split(/\s+/g);
+
+            if (instance_names.includes(this_name_fn)) {
+                instance_names.splice(instance_names.indexOf(this_name_fn), 1);
+            }
+
+            // "self_some_function(self, "abc", 123)" --> "SomeFunction("abc", 12345)"
+            if (this_name) {
+                for (let i = 0; i < cs_lines.length; i++) {
+                    let line = cs_lines[i];
+
+                    let bounds = find_function_invoke(line);
+                    if (!bounds) continue;
+
+                    let index = bounds[0], end_index = bounds[1];
+
+                    if (!line.startsWith(this_name_fn, index)) continue;
+                    line = line.substring(0, index) + line.substring(index + this_name_fn.length, line.length);
+                    end_index -= this_name_fn.length;
+
+                    if (line.startsWith(this_name, end_index)) {
+                        let last = end_index + this_name.length + 1;
+                        if (last < line.length) {
+                            switch (line[last]) {
+                                case ',':
+                                case ')':
+                                    if (line[last] == ',') last++;
+                                    line = line.substring(0, index) + line.substring(last, line.length);
+                                    break;
+                            }
+                        }
+                    }
+
+                    cs_lines[i] = convert_function_name(line, index, end_index);
+                    continue;
+                }
+            }
+
+            // "arraylist_add(my_arraylist, 12345)" --> "my_arraylist.Add(12345)"
+            for (let i = 0; i < cs_lines.length; i++) {
+                let line = cs_lines[i];
+
+                let bounds = find_function_invoke(line);
+                if (!bounds) continue;
+
+                let start_index = bounds[0], end_index = bounds[1];
+                let isstatic = false;
+                let class_name = "";
+
+                L_find_class: {
+                    for (let j = 0; j < instance_names.length; j++) {
+                        if (line.startsWith(instance_names[j], start_index)) {
+                            class_name = instance_names[j];
+                            break L_find_class;
+                        }
+                    }
+                    for (let j = 0; j < static_names.length; j++) {
+                        if (line.startsWith(static_names[j], start_index)) {
+                            isstatic = true;
+                            class_name = static_names[j];
+                            break L_find_class;
+                        }
+                    }
+                }
+
+                const jsonclassname = "json_";
+                const jsonclassname_replace = "JSONParser.";
+                if (!class_name && line.startsWith(jsonclassname, start_index)) {
+                    line = line.substring(0, start_index) + jsonclassname_replace + line.substring(start_index + jsonclassname.length, line.length);
+                    start_index += jsonclassname_replace.length;
+                    end_index += jsonclassname_replace.length - jsonclassname.length;
+                    cs_lines[i] = convert_function_name(line, start_index, end_index);
+                    continue;
+                }
+
+                if (!class_name) {
+                    if (line[start_index].toUpperCase() == line[start_index]) continue;
+                    cs_lines[i] = convert_function_name(line, start_index, end_index);
+                    continue;
+                }
+
+                if (isstatic) {
+                    let static_class = class_name;
+
+                    let split_index = static_class.indexOf("_");
+                    if (split_index > 0) {
+                        static_class = static_class.substring(0, split_index) +
+                            "." +
+                            static_class.substring(split_index + 1, static_class.length);
+                    } else {
+                        static_class = static_class.substring(1, static_class.length) + ".";
+                    }
+
+                    if (static_class.length < 4)
+                        static_class = static_class.toUpperCase();
+                    else
+                        class_name[0].toUpperCase() + static_class.substring(1, static_class.length);
+
+                    split_index = start_index + class_name.length;
+                    line = line.substring(0, start_index) + static_class + line.substring(split_index, line.length);
+                    end_index -= class_name.length - static_class.length;
+
+                    start_index += static_class.length;
+                    cs_lines[i] = convert_function_name(line, start_index, end_index);
+                    continue;
+                }
+
+                // avoid cases like "arraylist_init()"
+                let isinit = line.indexOf("init", start_index);
+                if (isinit > 0 && isinit < end_index) continue;
+
+                line = line.substring(0, start_index) + line.substring(start_index + class_name.length, line.length);
+                end_index -= class_name.length;
+
+                let index_argument_end = -1;
+                let parentesis_opened = 0;
+                let brackets_opened = 0;
+                let inside_singlequotes = false;
+                let inside_doublequotes = false;
+                let inside_formatquotes = false;
+
+                L_find_argument_end:
+                for (let j = end_index + 1; j < line.length; j++) {
+                    let charc = line[j];
+                    switch (charc) {
+                        case '[':
+                            if (inside_singlequotes || inside_doublequotes || inside_formatquotes) continue;
+                            brackets_opened++;
+                            break;
+                        case ']':
+                            if (inside_singlequotes || inside_doublequotes || inside_formatquotes) continue;
+                            brackets_opened--;
+                            break;
+                        case '(':
+                            if (inside_singlequotes || inside_doublequotes || inside_formatquotes) continue;
+                            parentesis_opened++;
+                            break;
+                        case ')':
+                            if (inside_singlequotes || inside_doublequotes || inside_formatquotes) continue;
+                            if (parentesis_opened == 0) {
+                                index_argument_end = j;
+                                break L_find_argument_end;
+                            }
+                            parentesis_opened--;
+                            break;
+                        case "\"":
+                            if (inside_singlequotes || inside_formatquotes) continue;
+                            if (!inside_doublequotes) {
+                                inside_doublequotes = true;
+                                continue;
+                            }
+                            if (line[j - 1] == "\\") {
+                                if (line[j - 2] != "\\") continue;
+                            }
+                            inside_doublequotes = false;
+                            break;
+                        case "\'":
+                            if (inside_doublequotes || inside_formatquotes) continue;
+                            if (!inside_singlequotes) {
+                                inside_singlequotes = true;
+                                continue;
+                            }
+                            if (line[j - 1] == "\\") {
+                                if (line[j - 2] != "\\") continue;
+                            }
+                            inside_singlequotes = false;
+                            break;
+                        case '`':
+                            if (inside_singlequotes || inside_doublequotes) continue;
+                            if (!inside_formatquotes) {
+                                inside_formatquotes = true;
+                                continue;
+                            }
+                            if (line[j - 1] == "\\") {
+                                if (line[j - 2] != "\\") continue;
+                            }
+                            inside_formatquotes = false;
+                            break;
+                        case ',':
+                            if (inside_singlequotes || inside_doublequotes || inside_formatquotes) continue;
+                            if (parentesis_opened < 0 || brackets_opened < 0) break L_find_argument_end;// parse error
+                            if (parentesis_opened > 0 || brackets_opened > 0) continue;
+                            index_argument_end = j;
+                            break L_find_argument_end;
+                    }
+                }
+
+                if (brackets_opened != 0 || parentesis_opened != 0) continue;
+                if (inside_singlequotes || inside_doublequotes || inside_formatquotes) continue;
+                if (index_argument_end < 0) continue;
+
+                let object_instance = line.substring(end_index + 1, index_argument_end) + ".";
+                let newline = line.substring(0, start_index);
+                newline += object_instance;
+                newline += line.substring(start_index, end_index + 1);
+
+                if (line[index_argument_end] == ',') index_argument_end++;
+                newline += line.substring(index_argument_end, line.length);
+
+                start_index += object_instance.length;
+                end_index += object_instance.length + 1;
+                cs_lines[i] = convert_function_name(newline, start_index, end_index);
+
+            }
+
+
+            // "for (let i = 0;i < size; i++)" --> "for (int i = 0;i < size; i++)"
+            // "for (let item of list)" --> "foreach (let item in list)"
+            const fornumeric = /(^|\s+)for\s*\((let)\s+[a-zA-Z_]+\s*=\s*\d+\s*;/;
+            const foreach = /(^|\s+)(for)(\s*\(let\s+[a-zA-Z_]+[\da-zA-Z_]*\s+)of/;
+            for (let i = 0; i < cs_lines.length; i++) {
+                let index = cs_lines[i].search(fornumeric);
+                if (index >= 0) {
+                    index = cs_lines[i].indexOf("let", index);
+
+                    cs_lines[i] = cs_lines[i].substring(0, index) +
+                        "int" +
+                        cs_lines[i].substring(index + 3, cs_lines[i].length);
+                    continue;
+                }
+
+                if (!foreach.test(cs_lines[i])) continue;
+                cs_lines[i] = cs_lines[i].replace(foreach, "$1$2each$3in");
+            }
+
+            const consolewarn = "console.warn(";
+            const consoleerror = "console.error(";
+            for (let i = 0; i < cs_lines.length; i++) {
+                let index = cs_lines[i].indexOf(consolewarn + '"');
+                if (index >= 0) {
+                    cs_lines[i] = console_replace(cs_lines[i], index, consolewarn.length, "WARN");
+                    continue;
+                }
+
+                index = cs_lines[i].indexOf(consoleerror + '"');
+                if (index >= 0) {
+                    cs_lines[i] = console_replace(cs_lines[i], index, consoleerror.length, "ERROR");
+                    continue;
+                }
+            }
+            for (let i = 0; i < cs_lines.length; i++) {
+                let index = cs_lines[i].indexOf(consolewarn);
+                if (index >= 0) {
+                    cs_lines[i] = console_replace2(cs_lines[i], index, consolewarn.length, "WARN");
+                    continue;
+                }
+
+                index = cs_lines[i].indexOf(consoleerror);
+                if (index >= 0) {
+                    cs_lines[i] = console_replace2(cs_lines[i], index, consoleerror.length, "ERROR");
+                    continue;
+                }
+            }
+
+            const numberisfinite = "Number.isFinite";
+            for (let i = 0; i < cs_lines.length; i++) {
+                let index = cs_lines[i].indexOf(numberisfinite);
+                if (index < 0) continue;
+
+                cs_lines[i] = cs_lines[i].replace(/Number\.isFinite/g, "!Single.IsNaN");
+            }
+
+            const awaitname = "await ";
+            for (let i = 0; i < cs_lines.length; i++) {
+                let index = cs_lines[i].indexOf(awaitname);
+                if (index < 0) continue;
+
+                cs_lines[i] = cs_lines[i].replace(/await\s/g, "/*await*/ ");
+            }
+
+            const thrownewerror = "throw new Error";
+            for (let i = 0; i < cs_lines.length; i++) {
+                let index = cs_lines[i].indexOf(thrownewerror);
+                if (index < 0) continue;
+
+                cs_lines[i] = cs_lines[i].replace(/throw new Error/g, "throw new Exception");
+            }
+
+            const rx_undefined = /([a-zA-Z][a-zA-Z0-9\.\[\]_]*)\s*=\s*undefined;/g;
+            for (let i = 0; i < cs_lines.length; i++) {
+                if (!rx_undefined.test(cs_lines[i])) continue;
+
+                cs_lines[i] = cs_lines[i].replace(rx_undefined, "free($1);");
+            }
+
+            const rx_newarray = /new\s+Array\(([\d_\.a-zA-Z]+)\)([,\n;])/g;
+            for (let i = 0; i < cs_lines.length; i++) {
+                if (!rx_newarray.test(cs_lines[i])) continue;
+
+                cs_lines[i] = cs_lines[i].replace(rx_newarray, "new rrylet[$1]$2");
+            }
+
+            for (let i = 0; i < cs_lines.length; i++) {
+                let valid = true;
+                let line = cs_lines[i];
+                let start_index = line.indexOf('`');
+                if (start_index < 0) continue;
+
+                L_validate:
+                for (let j = start_index + 1; j < length.length; j++) {
+                    switch (line[j]) {
+                        case ' ':
+                        case "\t":
+                            continue;
+                        case '=':
+                        case ':':
+                        case '(':
+                            break L_validate;
+                        default:
+                            valid = false;
+                            break L_validate;
+                    }
+                }
+
+                if (!valid) continue;
+
+                let end_index = line.indexOf('`', start_index + 1);
+                if (end_index < 0) continue;
+
+                line = line.substring(0, start_index) +
+                    '$"' +
+                    line.substring(start_index + 1, end_index) +
+                    '"' +
+                    line.substring(end_index + 1, line.length);
+
+                const rx_interp = /(?:[^\\]|^)\${/g;
+                cs_lines[i] = line.replace(rx_interp, "{");
+            }
+
+            const rx_obj = /(^[ \t]*[a-zA-Z\d_]+)\:/g;
+            for (let i = 0; i < cs_lines.length; i++) {
+                if (!rx_obj.test(cs_lines[i])) continue;
+
+                cs_lines[i] = cs_lines[i].replace(rx_obj, "$1=");
+            }
+
+            document.getElementById("cs").value = cs_lines.join('\n');
+        }
+
+        function process_as_object(js_lines) {
+            const rx_let = /\s*let ([a-zA-Z0-9_]+)\s*=\s*/g;
+            let text = "";
+            for (let i = 0; i < js_lines.length; i++) {
+                let line = js_lines[i];
+
+                let open_index = line.indexOf("{");
+                if (open_index >= 0) {
+                    if (rx_let.test(line)) {
+                        line = line.replace(rx_let, "$1 ");
+                        text += "\n" + "public class " + line;
+                        continue;
+                    }
+
+                    line = line.substring(0, open_index) + "private class clslet " + line.substring(open_index, line.length);
+                    text += "\n" + line;
+                    continue;
+                }
+
+                if (line.indexOf("}") > 0) {
+                    text += "\n" + line;
+                    continue;
+                }
+
+                let new_line = null;
+                let stop_index = line.indexOf(':');
+                if (stop_index < 0) {
+                    stop_index = line.indexOf(',');
+                    if (stop_index < 0) {
+                        text += "\n//" + line;
+                        continue;
+                    }
+                    new_line = line.substring(stop_index + 1, line.length);
+                    line = line.substring(0, stop_index);
+                }
+
+                let last_index = 0;
+                for (let j = 0; j < stop_index; j++) {
+                    switch (line[j]) {
+                        case ' ':
+                        case "\t":
+                            last_index = j;
+                            continue;
+                    }
+                    break;
+                }
+
+                if (new_line) {
+                    js_lines.splice(i + 1, 0, line.substring(0, last_index) + new_line);
+                }
+
+                text += "\n" + line.substring(0, last_index) + "private fldlet " + line.substring(last_index, stop_index) + ";";
+            }
+            return text;
+        }
+
+        document.getElementById("js").addEventListener("keyup", process, false);
+        document.getElementById("makeclass").addEventListener("changed", process, false);
+
+    </script>
+</body>
+
+</html>

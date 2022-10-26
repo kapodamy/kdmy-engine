@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="2114" height="1075" keepAspectRatio="true" animationList="anims.xml">
+
+    <!-- ******************* Cameras ******************* -->
+	<Camera>
+		<Offset x="-171" y="-162" z="1.4400075000006713" />
+		<To z="1.1" />
+	</Camera>
+	<Camera name="camera_opponent">
+		<To x="252" y="111" z="1.5800000000000005" />
+	</Camera>
+	<Camera name="camera_player">
+		<To x="-54" y="102" z="1.5600000000000005" />
+	</Camera>
+	<Camera name="round_roundEnd">
+		<To x="87" y="252" z="1.06" />
+	</Camera>
+
+    <!-- ******************* RANKINGCOUNTER ******************* -->
+    <Placeholder name="ui_rankingcounter_rank" x="1111" y="153" z="50" height="100" />
+    <Placeholder name="ui_rankingcounter_accuracy" x="1024" y="296" z="50" height="38" />
+    
+    <!-- ******************* STREAKCOUNTER ******************* -->
+    <Placeholder name="ui_streakcounter" x="789" y="249" z="50" height="60" width="0" />
+    <AttachValue type="float" name="ui_streakcounter_comboHeight" value="0" />
+    <AttachValue type="float" name="ui_streakcounter_delay"       value="5" />	
+	
+	<!-- ******************* Characters ******************* -->
+    <Placeholder name="character_girlfriend" x="894" y="348" z="6" />
+    <AttachValue name="character_count" type="integer" value="2" />
+    <!-- <Placeholder name="character_0" x="-220" y="765" z="7" /> -->
+    <Placeholder name="character_0" x="680" y="720" z="7" />
+    <Placeholder name="character_1" x="945" y="715" z="8" />
+
+    <!-- ******************* Stage graphics ******************* -->
+    <Sprite atlas="philly.xml">
+        <Action>
+            <AtlasApply entry="sky" overrideSize="true" />
+            <Location x="50" y="-80" z="0" />
+            <Parallax x="0.1" y="0.1" z="1.0" />
+        </Action>
+    </Sprite>
+
+    <Sprite atlas="philly.xml">
+        <Action>
+            <AtlasApply entry="city" overrideSize="true" />
+            <Location x="0" y="0" z="1" />
+            <Parallax x="0.2" y="0.2" z="1.0" />
+        </Action>
+    </Sprite>
+
+	<Trigger name="lights_trigger" action="lights" loop="-1" loopDelayBeats="4.5" />
+
+    <Sprite atlas="philly.xml">
+        <Action>
+            <AtlasApply entry="win0" overrideSize="true" />
+            <Location x="110" y="130" z="2" />
+            <Parallax x="0.2" y="0.2" z="1.0" />
+        </Action>
+		<Action name="lights">
+			<Animation name="lights" restart="true" />
+		</Action>
+    </Sprite>
+
+    <Sprite atlas="philly.xml">
+        <Action>
+            <AtlasApply entry="behindTrain" overrideSize="true" />
+            <Location x="218" y="0" z="3" />
+            <Parallax x="0.8" y="0.8" z="1.0" />
+        </Action>
+    </Sprite>
+	
+	<Sprite atlas="philly.xml" name="train-engine">
+        <Action>
+            <AtlasApply entry="train" overrideSize="true" />
+            <Location x="1560" y="145" z="4" />
+            <Parallax x="0.8" y="0.8" z="1.0" />
+        </Action>
+		<Action name="train_passes">
+			<Animation name="train_passes" restart="true" />
+		</Action>
+    </Sprite>
+	<Sprite atlas="philly.xml">
+        <Action>
+            <AtlasApply entry="train" overrideSize="true" />
+            <Location x="4860" y="145" z="4" />
+            <Parallax x="0.8" y="0.8" z="1.0" />
+        </Action>
+		<Action name="train_passes">
+			<Animation name="train_passes" restart="true" />
+		</Action>
+    </Sprite>	
+	<Sprite atlas="philly.xml">
+        <Action>
+            <AtlasApply entry="train" overrideSize="true" />
+            <Location x="8160" y="145" z="4" />
+            <Parallax x="0.8" y="0.8" z="1.0" />
+        </Action>
+		<Action name="train_passes">
+			<Animation name="train_passes" restart="true" />
+		</Action>
+    </Sprite>
+	<Sprite atlas="philly.xml">
+        <Action>
+            <AtlasApply entry="train" overrideSize="true" />
+            <Location x="11460" y="145" z="4" />
+            <Parallax x="0.8" y="0.8" z="1.0" />
+        </Action>
+		<Action name="train_passes">
+			<Animation name="train_passes" restart="true" />
+		</Action>
+    </Sprite>
+
+
+    <Sprite atlas="philly.xml">
+        <Action>
+            <AtlasApply entry="street" overrideSize="true" />
+            <Location x="0" y="0" z="5" />
+            <Parallax x="0.8" y="0.8" z="1.0" />
+        </Action>
+    </Sprite>
+
+
+    <!-- ******************* Stage sounds ******************* -->
+    <Sound src="train_passes.ogg">
+		<Action>
+			<Stop />
+		</Action>
+        <Action name="train_passes">
+            <Stop />
+            <Play />
+        </Action>
+    </Sound>
+
+</Layout>

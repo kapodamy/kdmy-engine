@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList frameRate="24" atlasPath="noteSplashes.xml">
+    <Animation name="down splash" loop="1" alternateRandomize="true">
+        <!-- This will pick all atlas entries with the name "down splash####" -->
+        <FrameArray entryPrefixName="down splash" hasNumberPrefix="true" />
+        <!-- Create alternative animation -->
+        <AlternateSet />
+        <!-- This will pick all atlas entries with the name "down impact####" -->
+        <FrameArray entryPrefixName="down impact" hasNumberPrefix="true" />
+    </Animation>
+    <Animation name="up splash" loop="1" alternateRandomize="true">
+        <FrameArray entryPrefixName="up splash" hasNumberPrefix="true" />
+        <AlternateSet />
+        <FrameArray entryPrefixName="up impact" hasNumberPrefix="true" />
+    </Animation>
+    <Animation name="left splash" loop="1" alternateRandomize="true">
+        <FrameArray entryPrefixName="left splash" hasNumberPrefix="true" />
+        <AlternateSet />
+        <FrameArray entryPrefixName="left impact" hasNumberPrefix="true" />
+    </Animation>
+    <Animation name="right splash" loop="1" alternateRandomize="true">
+        <FrameArray entryPrefixName="left splash" hasNumberPrefix="true" />
+        <AlternateSet />
+        <FrameArray entryPrefixName="left impact" hasNumberPrefix="true" />
+    </Animation>
+</AnimationList>

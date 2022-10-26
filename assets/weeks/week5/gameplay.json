@@ -1,0 +1,25 @@
+{
+	"default": {
+		"players": [
+			{ "controller": -1, "isOpponent": true,  "strumId": 0, "manifest": "funkin/PARENTS.json" },
+			{ "controller": 0,  "isOpponent": false, "strumId": 1, "manifest": "funkin/BOYFRIEND_CHRISTMAS.json" }
+		],
+		"girlfriend": { "manifest": "funkin/GIRLFRIEND_CHRISTMAS.json" },
+		"stage": "christmas/layout.xml",
+		"script": "christmas/week5.lua"
+	},
+	"tracks": [
+        { "name": "Cocoa" },
+        { "name": "Eggnog" },
+        {
+			"name": "Winter Horrorland",
+			"chart": "charts/winter-horrorland.json",
+			"song": "songs/winter-horrorland.ogg",
+			"players": [
+				{ "controller": -1, "isOpponent": true,  "strumId": 0, "manifest": "funkin/MONSTER_CHRISTMAS.json" },
+				{ "controller": 0,  "isOpponent": false, "strumId": 1, "manifest": "funkin/BOYFRIEND_CHRISTMAS.json" }
+			]
+		}
+	]
+}
+

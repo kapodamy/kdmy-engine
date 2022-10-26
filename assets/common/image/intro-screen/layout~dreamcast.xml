@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="640" height="480" keepAspectRatio="true">
+
+    <Font name="intro-font" glyphAnimate="false" glyphSuffix="bold" path="/assets/common/font/alphabet.xml" />
+    
+    <!-- values expressed in milliseconds -->
+	<!-- Text delay, normally a beat duration (600ms @ 100bpm). Defaults to 600ms -->
+    <!-- <AttachValue name="delay" type="integer" value="600" /> -->
+    
+	<!-- Use this field if a custom introduction is used, all greetings are bypassed. Defaults to 0ms -->
+	<!-- <AttachValue name="custom_duration" type="integer" value="9600" /> -->
+
+
+    <!--
+            The folling actions are triggered during the intro screen:
+                intro-engine            the engine name is displayed (from engineText.txt file)
+                intro-greetings         a random grettings is displayed (from introText.txt file)
+                intro-week-grettings    a random played week grettings is displayed (from weeks assets)
+                intro-funkin            the "Friday Night Funkin" text is displayed
+    -->
+
+
+    <!-- background color -->
+    <Sprite rgb="0x000000">
+        <Action>
+            <Location x="0" y="0" />
+            <Size width="640" height="480" />
+            <Property name="z" value="0" />
+        </Action>
+    </Sprite>
+
+    <!-- greetings text goes here -->
+    <Text name="greetings" fontName="intro-font" fontSize="28" color="0xFFFFFF">
+        <Action>
+            <Location x="0" y="120" />
+            <MaxSize width="640" height="480" />
+            <Property name="z" value="1" />
+            <Property name="forceCase" value="uppercase" />
+            <Property name="alignHorizontal" value="center" />
+            <Property name="alignParagraph" value="center" />
+            <!-- <String>kdmy engine&#10;by kapodamy developer</String> -->
+        </Action>
+    </Text>
+
+</Layout>

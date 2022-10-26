@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAspectRatio="true">
+    <Font name="title" path="/assets/common/font/Alphabet.xml" glyphSuffix="bold" />
+    <Font name="labels" path="/assets/common/font/vcr.ttf" />
+
+    <AttachValue name="color_bg_key" type="hex" value="0x000000BF"/>
+    <AttachValue name="color_bg_key_selected" type="hex" value="0x007F7FBF"/>
+    <AttachValue name="color_bg_key_active" type="hex" value="0xFF7F7FBF"/>
+
+
+    <Sprite rgb="0x000000">
+        <Action>
+            <Location x="0" y="0" z="0" />
+            <Size width="1280" height="720"/>
+        </Action>
+    </Sprite>
+    <Sprite texture="menuDesat.png">
+        <Action>
+            <Location x="0" y="0" z="1" />
+            <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
+            <Property name="alpha" value="0.4" />
+        </Action>
+    </Sprite>
+
+    <Text fontName="title" fontSize="60" color="0xFFFFFF">
+        <Action>
+            <String>GAMEPLAY BINDINGS</String>
+            <Location x="80" y="60" z="2" />
+        </Action>
+    </Text>
+
+    <!-- backgrounds -->
+    <Group>
+        <Sprite atlas="/assets/common/image/week-round/notes.xml">
+            <Action>
+                <Location x="255" y="180" z="2" />
+                <AnimationFromAtlas name="left alone" />
+                <Resize maxWidth="140" maxHeight="60" center="true" />
+            </Action>
+        </Sprite>
+        <Sprite atlas="/assets/common/image/week-round/notes.xml">
+            <Action>
+                <Location x="465" y="180" z="2" />
+                <AnimationFromAtlas name="down alone" />
+                <Resize maxWidth="140" maxHeight="60" center="true" />
+            </Action>
+        </Sprite>
+        <Sprite atlas="/assets/common/image/week-round/notes.xml">
+            <Action>
+                <Location x="675" y="180" z="2" />
+                <AnimationFromAtlas name="up alone" />
+                <Resize maxWidth="140" maxHeight="60" center="true" />
+            </Action>
+        </Sprite>
+        <Sprite atlas="/assets/common/image/week-round/notes.xml">
+            <Action>
+                <Location x="885" y="180" z="2" />
+                <AnimationFromAtlas name="right alone" />
+                <Resize maxWidth="140" maxHeight="60" center="true" />
+            </Action>
+        </Sprite>
+
+        <Sprite rgba="0x000000BF" name="back-left0">
+            <Action>
+                <Location x="255" y="270" z="2" />
+                <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-down0">
+            <Action>
+                <Location x="465" y="270" z="2" />
+                <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-up0">
+            <Action>
+                <Location x="675" y="270" z="2" />
+                <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-right0">
+            <Action>
+                <Location x="885" y="270" z="2" />
+                <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+
+        <Sprite rgba="0x000000BF" name="back-left1">
+        <Action>
+            <Location x="255" y="360" z="2" />
+            <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-down1">
+        <Action>
+            <Location x="465" y="360" z="2" />
+            <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-up1">
+        <Action>
+            <Location x="675" y="360" z="2" />
+            <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-right1">
+        <Action>
+            <Location x="885" y="360" z="2" />
+            <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+
+        <Sprite rgba="0x000000BF" name="back-left2">
+        <Action>
+            <Location x="255" y="450" z="2" />
+            <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-down2">
+        <Action>
+            <Location x="465" y="450" z="2" />
+            <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-up2">
+        <Action>
+            <Location x="675" y="450" z="2" />
+            <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-right2">
+            <Action>
+                <Location x="885" y="450" z="2" />
+                <Size width="140" height="60" />
+            </Action>
+        </Sprite>
+
+        <Sprite rgba="0x000000BF" name="back-diamond">
+            <Action>
+                <Location x="675" y="540" z="2" />
+                <Size width="210" height="60" />
+            </Action>
+        </Sprite>
+    </Group>
+
+    <!-- row labels -->
+    <Group>
+        <Text fontName="labels" fontSize="30" color="0xFFFFFF">
+            <Action>
+                <String>Primary</String>
+                <Location x="80" y="280" z="2" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="30" color="0xFFFFFF">
+            <Action>
+                <String>Secondary</String>
+                <Location x="80" y="370" z="2" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="30" color="0xFFFFFF">
+            <Action>
+                <String>Terciary</String>
+                <Location x="80" y="460" z="2" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="30" color="0xFFFFFF">
+            <Action>
+                <String>Special/Action/Diamond</String>
+                <Location x="255" y="550" z="2" />
+            </Action>
+        </Text>
+    </Group>
+
+    <!-- key labels -->
+    <Group>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-left0">
+            <Action>
+                <Location x="255" y="270" z="3" />
+                <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-down0">
+            <Action>
+                <Location x="465" y="270" z="3" />
+                <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-up0">
+            <Action>
+                <Location x="675" y="270" z="3" />
+                <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-right0">
+            <Action>
+                <Location x="885" y="270" z="3" />
+                <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-left1">
+        <Action>
+            <Location x="255" y="360" z="3" />
+            <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-down1">
+        <Action>
+            <Location x="465" y="360" z="3" />
+            <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-up1">
+        <Action>
+            <Location x="675" y="360" z="3" />
+            <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-right1">
+        <Action>
+            <Location x="885" y="360" z="3" />
+            <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-left2">
+        <Action>
+            <Location x="255" y="450" z="3" />
+            <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-down2">
+        <Action>
+            <Location x="465" y="450" z="3" />
+            <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-up2">
+        <Action>
+            <Location x="675" y="450" z="3" />
+            <MaxSize width="140" height="60" />
+			<Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-right2">
+            <Action>
+                <Location x="885" y="450" z="3" />
+                <MaxSize width="140" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-diamond">
+            <Action>
+                <Location x="675" y="540" z="3"/>
+                <MaxSize width="210" height="60" />
+				<Properties alignVertical="center" alignHorizontal="center" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+    </Group>
+
+	<Text fontName="labels" fontSize="24" rgb="0xFFFFFF">
+		<Action>
+			<Location x="40" y="630" z="1" />
+			<String>Press ENTER and later the desired key to assign
+Press again ENTER to clear
+Press Esc to cancel the binding
+</String>
+		</Action>
+	</Text>
+
+
+</Layout>

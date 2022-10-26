@@ -1,0 +1,32 @@
+{
+    "name": "LEMON DEMON CHRISTMAS",
+    "model": "monsterChristmas.xml",
+    "modelWeekSelector": null,
+    "healthbarColor": "0xEAFF00",
+    "healthIconsModel": "./../../week2/LMNDMN/icon-monster.xml",
+
+    "alignVertical":   "end",
+    "alignHorizontal": "start",
+    "leftFacing": false, 
+    "oppositeDirections": {
+        "from": ["left", "right"],
+        "to": ["right", "left"]
+    },
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "Monster left note"  },
+            { "direction": "down",   "anim": "monster down"       },
+            { "direction": "up",     "anim": "monster up note"    },
+            { "direction": "right",  "anim": "Monster Right note" }
+        ],
+
+        "miss": [],
+
+        "idle": { "anim": "monster idle" },
+
+        "extras": []
+    }
+}
+

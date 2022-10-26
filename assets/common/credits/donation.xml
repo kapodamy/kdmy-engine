@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="640" height="480" animationSpeed="1.0" animationList="animations.xml">
+	<AttachValue name="pause_background_menu_music" type="boolean" value="false" />
+	<AttachValue name="timeout" type="float" value="-1" />
+
+	<Sprite rgb="0x000000">
+		<Action>
+			<Location x="0" y="0" z="0" />
+            <Size width="640" height="480" />
+		</Action>
+	</Sprite>
+	<Sprite texture="skin-funkin-cardbordtoast.png">
+		<Action>
+			<Location x="0" y="0" z="1" />
+            <Resize maxWidth="640" maxHeight="480" cover="true" center="true" />
+			<Property name="alpha" value="0.5" />
+		</Action>
+	</Sprite>
+	<Sprite texture="/assets/common/image/start-screen/logo.png">
+		<Action>
+			<Size width="-1" height="128" />
+			<Location alignHorizontal="center" alignVertical="start" x="0" y="48" z="10" />
+		</Action>
+		<Action name="shoot">
+			<Animation name="fade_in" />
+		</Action>
+	</Sprite>
+	<Sprite rgb="0x000000">
+		<Action>
+			<Location x="0" y="227" z="2" />
+            <Size width="640" height="30" />
+			<Property name="alpha" value="0.5" />
+		</Action>
+	</Sprite>
+    <Font name="vcr" path="/assets/common/font/vcr.ttf" />
+	<Text fontName="vcr" fontSize="20" color="0xFFFFFF">
+		<Action>
+			<Location x="0" y="230" z="3" />
+			<MaxSize width="640" />
+			<Property name="alignHorizontal" value="center" />
+			<Property name="alignParagraph" value="center" />
+			<String>https://ninja-muffin24.itch.io/funkin?ref=kdmy-engine</String>
+		</Action>
+	</Text>
+</Layout>
+

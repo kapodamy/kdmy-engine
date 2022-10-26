@@ -1,0 +1,25 @@
+{
+    "description": "Hating Simulator ft. Moawling",
+    "songs": [
+        { "name": "Senpai"},
+        { "name": "Roses"},
+        { "name": "Thorns"}
+    ],
+
+    "hasDifficultyEasy": true,
+    "hasDifficultyHard": true,
+    "customDifficulties": [],
+
+    "unlockDirectiveName": "WEEK5",
+    "emitUnlockDirectiveName": "WEEK6",
+
+    "copyrightWarnMessage": null,
+    "contentAdvisoryMessage": null,
+    
+    "disallowCustomBoyfriend": true,
+    "disallowCustomGirlfriend": true,
+	
+	"inGameplayCustomFolder": "./pixel",
+    
+	"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@qqbackgroundLayout": "customlayout.xml"
+}

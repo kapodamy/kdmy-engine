@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="strumBackground.png">
+    <SubTexture name="left background" x="0" y="0" width="75" height="450"/>
+    <SubTexture name="right background" x="0" y="0" width="75" height="450"/>
+    <SubTexture name="up background" x="0" y="0" width="75" height="450"/>
+    <SubTexture name="down background" x="0" y="0" width="75" height="450"/>
+</TextureAtlas>

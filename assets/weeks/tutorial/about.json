@@ -1,0 +1,24 @@
+{
+    "description": "How to funk...",
+    "songs": [
+        { "name": "Tutorial", "song": "songs/tutorial.ogg" }
+    ],
+
+    "weekManifest": "gameplay.json",
+
+    "flipHostSprite": false,
+
+    "hasDifficultyEasy": true,
+    "hasDifficultyHard": true,
+    "customDifficulties": [],
+
+    "unlockDirectiveName": null,
+    "emitUnlockDirectiveName": "TTRL",
+
+    "disallowCustomBoyfriend": false,
+    "disallowCustomGirlfriend": true,
+    "hasCustomFiles": null,
+
+    "warningMessage": null,
+    "sensibleContentMessage": null
+}

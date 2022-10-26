@@ -1,0 +1,10 @@
+<TextureAtlas imagePath="boyfriend.png">
+	<SubTexture name="dance0" x="412" y="1642" width="406" height="392"/>
+	<SubTexture name="dance1" x="412" y="1245" width="408" height="393"/>
+	<SubTexture name="dance2" x="414" y="830" width="405" height="398"/>
+	<SubTexture name="dance3" x="0" y="830" width="410" height="411"/>
+	<SubTexture name="dance4" x="0" y="1245" width="408" height="412"/>
+	<SubTexture name="hey0" x="418" y="0" width="395" height="416"/>
+	<SubTexture name="hey1" x="0" y="416" width="413" height="410"/>
+	<SubTexture name="hey2" x="0" y="0" width="414" height="412"/>
+</TextureAtlas>

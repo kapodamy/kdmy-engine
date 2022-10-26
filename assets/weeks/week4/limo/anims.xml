@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+	<AnimationMacro name="fast_car">
+		<!-- Wait for sound fx (is 3 seconds long)-->
+		<Pause duration="1000" />
+		
+		<!-- Choose random value and use it -->
+		<RandomSetup start="140" end="260" />
+		<RandomChoose />
+		<Set property="y" value="rnd" />
+		
+		<!-- Choose a random "velocity" and use as interpolator duration -->
+		<RandomSetup start="170" end="280" />
+		<RandomChoose />
+
+		<Interpolator type="linear" duration="rnd" property="translateX" start="0" end="3250" />
+		<Yield />
+		<Set property="translateX" value="0" />
+	</AnimationMacro>
+	<Animation name="bg-dancer" loop="1" alternateRandomize="false" atlasPath="limoDancer.xml">
+		<FrameArray entryPrefixName="bg dancer sketch PINK" hasNumberSuffix="true" indexStart="0" indexEnd="14" />
+        <AlternateSet />
+		<FrameArray entryPrefixName="bg dancer sketch PINK" hasNumberSuffix="true" indexStart="15" indexEnd="29" />
+	</Animation>
+</AnimationList>

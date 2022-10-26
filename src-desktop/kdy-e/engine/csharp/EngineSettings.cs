@@ -1,0 +1,92 @@
+﻿using System;
+using System.IO;
+using Engine.Platform;
+using Settings;
+
+namespace CsharpWrapper {
+
+    internal static class EngineSettings {
+        public const string INI_BINDING_SECTION = "KeyboardBindings";
+        public const string INI_MISC_SECTION = "Misc";
+        public const string INI_GAMEPLAY_SECTION = "Gameplay";
+
+        public static INI ini;
+        public static bool ini_exists;
+
+        public static string expansion = null;// folder name inside of "/expansions/"
+        public static string style = null;// folder name inside of "/expansions/"
+        public static bool widescreen = true;// uses 1280x720 (like Funkin) instead of 640x480
+
+        public static int input_offset = 0;
+        public static bool penality_on_empty_strum = true;
+        public static bool inverse_strum_scroll = false;
+        public static bool song_progressbar = false;
+
+        public static bool show_fps = false;
+        public static byte fps_limit = 0;
+        public static bool use_funkin_marker_duration = true;
+
+        internal static void LoadINI() {
+            if (ini == null) {
+                string ini_path = EngineSettings.EngineDir + "settings.ini";
+
+                ini_exists = File.Exists(ini_path);
+                ini = new INI(ini_path);
+            }
+
+            input_offset = GetInt(true, "input_offset", input_offset);
+            penality_on_empty_strum = GetBool(true, "penality_on_empty_strum", penality_on_empty_strum);
+            inverse_strum_scroll = GetBool(true, "inverse_strum_scroll", inverse_strum_scroll);
+            song_progressbar = GetBool(true, "song_progressbar", song_progressbar);
+            use_funkin_marker_duration = GetBool(true, "use_funkin_marker_duration", use_funkin_marker_duration);
+
+            show_fps = GetBool(false, "show_fps", show_fps);
+            switch (GetString(false, "fps_limit", null)) {
+                case "vsync":
+                    fps_limit = 0;
+                    break;
+                case "deterministic":
+                    fps_limit = 1;
+                    break;
+                case "off":
+                    fps_limit = 2;
+                    break;
+            }
+        }
+
+        internal static void Reload() {
+            int old_fps_limit = fps_limit;
+            LoadINI();
+            if (old_fps_limit != fps_limit)
+                PVRContext.global_context.SetFPSLimit(fps_limit, true);
+        }
+
+        public static void GetBind(string ini_key, ref int scancode) {
+            long raw_value = ((long)scancode) << 32;// [scancode][glfw key enum]
+            raw_value = ini.GetLong(INI_BINDING_SECTION, ini_key, raw_value);
+
+            scancode = (int)(raw_value >> 32);
+        }
+
+        public static int GetInt(bool is_gameplay_setting, string ini_key, int def_value) {
+            string section = is_gameplay_setting ? INI_GAMEPLAY_SECTION : INI_MISC_SECTION;
+            return ini.GetInt(section, ini_key, def_value);
+        }
+
+        public static bool GetBool(bool is_gameplay_setting, string ini_key, bool def_value) {
+            string section = is_gameplay_setting ? INI_GAMEPLAY_SECTION : INI_MISC_SECTION;
+            return ini.GetBool(section, ini_key, def_value);
+        }
+
+        public static string GetString(bool is_gameplay_setting, string ini_key, string def_value) {
+            string section = is_gameplay_setting ? INI_GAMEPLAY_SECTION : INI_MISC_SECTION;
+            return ini.GetString(section, ini_key, def_value);
+        }
+
+        public static string EngineDir {
+            get => AppDomain.CurrentDomain.BaseDirectory;
+        }
+
+    }
+
+}

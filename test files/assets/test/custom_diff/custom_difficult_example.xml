@@ -1,0 +1,5 @@
+<TextureAtlas imagePath="sprites">
+	<SubTexture name="X-EASY" x="0" y="142" width="196" height="65"/>
+	<SubTexture name="X-HARD" x="0" y="71" width="211" height="67"/>
+	<SubTexture name="X-NORMAL" x="0" y="0" width="308" height="67"/>
+</TextureAtlas>

@@ -1,0 +1,27 @@
+{
+    "name": "GIRLFRIEND CAR",
+    "model": "gfCar.xml",
+    "healthbarColor": "0xA5004D",
+
+    "actionsApplyChartSpeed": true,
+    "continuousIdle": true,
+    "alignVertical": "center",
+    "alignHorizontal": "center",
+    "leftFacing": true,
+	
+	"oppositeDirections": {
+		"from": [],
+		"to": []
+	},
+
+    "actions": {
+        "sing": [],
+        "miss": [],
+
+		"idle": { "anim": "GF Dancing Beat Hair blowing CAR", "stopAfterBeats": 0 },
+
+		"extras": [
+			{ "name": "sad",        "stopAfterBeats": 1,  "anim": "gf sad", "model": "/assets/common/image/funkin/GF_assets.xml"}
+		]
+    }
+}

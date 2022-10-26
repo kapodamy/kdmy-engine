@@ -1,0 +1,21 @@
+{
+    "model": "momCar.xml",
+    "healthbarColor": "0xD8558E",
+	"healthIconsModel": "icon-mom.xml",
+
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": false,
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "Mom Left Pose" },
+            { "direction": "down",   "anim": "MOM DOWN POSE" },
+            { "direction": "up",     "anim": "Mom Up Pose" },
+            { "direction": "right",  "anim": "Mom Right Pose" }
+        ],
+
+        "idle": { "anim": "Mom Idle" }
+    }
+}

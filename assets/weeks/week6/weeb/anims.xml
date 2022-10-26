@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList atlasPath="bgFreaks.xml">
+    <Animation name="backgroundGirls" loop="1" alternateRandomize="false">
+        <FrameArray entryPrefixName="BG girls group" hasNumberSuffix="true" indexStart="0" indexEnd="14" />
+        <AlternateSet />
+        <FrameArray entryPrefixName="BG girls group" hasNumberSuffix="true" indexStart="15" />
+    </Animation>
+    <Animation name="backgroundGirlsDissuaded" loop="1" alternateRandomize="false">
+        <FrameArray entryPrefixName="BG fangirls dissuaded" hasNumberSuffix="true" indexStart="0" indexEnd="14" />
+        <AlternateSet />
+        <FrameArray entryPrefixName="BG fangirls dissuaded" hasNumberSuffix="true" indexStart="15" />
+    </Animation>
+    <AnimationMacro name="fade_in_bg">
+		<Interpolator type="steps" duration="2000" property="alpha" start="0.0" end="0.7" stepsCount="4" />
+    </AnimationMacro>
+    <AnimationMacro name="fade_out_group">
+		<Interpolator type="steps" duration="2000" property="alpha" start="1.0" end="0.0" stepsCount="4" />
+    </AnimationMacro>
+    <AnimationMacro name="fade_in_red">
+		<Interpolator type="steps" duration="500" property="alpha" start="0.0" end="1.0" stepsCount="4" />
+    </AnimationMacro>
+    <AnimationMacro name="fade_in_white">
+		<Interpolator type="steps" duration="1000" property="alpha" start="0.0" end="1.0" stepsCount="4" />
+    </AnimationMacro>
+    <AnimationMacro name="hand_anim" loop="-1">
+		<Interpolator type="steps" duration="1000" property="translateX" start="0" end="-5" stepsCount="4" />
+		<Yield />
+		<Interpolator type="steps" duration="1000" property="translateX" start="-5" end="0" stepsCount="4" />
+    </AnimationMacro>
+</AnimationList>
+

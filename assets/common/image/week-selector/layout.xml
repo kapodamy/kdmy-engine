@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAspectRatio="true" animationList="ui_anims.xml">
+
+    <!-- Use the abolute path to "/assets" because the font is in another folder -->
+    <!-- On every <Text> element the font will referenced as "vcr" -->
+    <Font name="vcr" type="truetype" path="/assets/common/font/vcr.ttf" />
+
+    <!-- Help text stuff readed by the engine -->
+    <!-- Help text is always drawn at the bottom-right of the layout -->
+    <AttachValue name="help_text_font_size" type="float"  value="18" />
+    <AttachValue name="help_text_font_name" type="string" value="vcr" />
+    <AttachValue name="help_text_padding_x" type="float"  value="16" />
+    <AttachValue name="help_text_padding_y" type="float"  value="16" />
+
+    <Sprite name="layout_background" rgb="0x000000">
+        <Action>
+            <Property name="z" value="0" />
+            <Location x="0" y="0" />
+            <Size width="1280" height="720"/>
+        </Action>
+    </Sprite>
+    
+    <Text name="week_score" fontName="vcr" fontSize="28" color="0xFFFFFF">
+        <Action>
+            <Property name="z" value="10" />
+            <Property name="maxLines" value="1"/>
+            <Location x="40" y="16" />
+            <MaxSize width="600" height="28" />
+            <!-- <String>MAX SCORE: 12345678</String> -->
+        </Action>
+    </Text>
+
+    <Text name="week_description" fontName="vcr" fontSize="28" color="0xBFBFBF">
+        <Action>
+            <Property name="z" value="10" />
+            <Property name="alignHorizontal" value="end" />
+            <Property name="alignVertical" value="center" />
+            <Property name="maxLines" value="1" />
+            <Property name="forceCase" value="uppercase" />
+            <Property name="maxWidth" value="760" />
+            <Property name="maxHeight" value="28" />
+            <Location x="480" y="16" />
+            <!-- <String>Hating Simulator ft. Moawling</String> -->
+        </Action>
+    </Text>
+
+    <Sprite name="week_background_color" rgb="0xF9CF51">
+        <Action>
+            <Property name="z" value="1" />
+            <Location x="40" y="60" />
+            <Size width="1200" height="360" />
+        </Action>
+    </Sprite>
+
+    <!-- Here will be placed the characters, inside of the following bounds -->
+    <!-- all align* here are used as hint, the layout parser does not do any align -->
+    <!-- Note: Boyfriend's height (for some reason) is 10% smaller than dad and girlfriend -->
+    <Placeholder name="ui_character_opponent"
+        x="60"  y="75" z="5" width="374" height="330"
+        alignVertical="end" alignHorizontal="center" />
+    <Placeholder name="ui_character_player"
+        x="454" y="116" z="5" width="374" height="290"
+        alignVertical="end" alignHorizontal="center" />
+    <Placeholder name="ui_character_girlfriend"
+        x="848" y="75" z="5" width="374" height="330"
+        alignVertical="end" alignHorizontal="center" />
+
+    
+    <Group name="ui_week_selector" visible="true">
+        <!-- Selected week tracks -->        
+        <Text name="ui_tracks_title" fontName="vcr" fontSize="28" color="0xE55777">
+            <Action>
+                <Property name="alignHorizontal" value="center" />
+                <Property name="z" value="10" />
+                <Location x="40" y="477" />
+                <MaxSize width="400" height="28" />
+                <String>TRACKS</String>
+            </Action>
+        </Text>
+        <Text name="ui_tracks_list" fontName="vcr" fontSize="28" color="0xE55777">
+            <Action>
+                <Property name="alignHorizontal" value="center" />
+                <Property name="alignParagraph" value="center" />
+                <Property name="paragraphSeparation" value="5" />
+                <Property name="z" value="10" />
+                <Property name="forcecase" value="uppercase" />
+                <Location x="40" y="514" />
+                <MaxSize width="400" height="186" />
+				<!-- <String>A&#10;B&#10;C&#10;</String> -->
+            </Action>
+        </Text>
+
+        <!-- Weeks list (fully software rendered) -->
+        <Placeholder name="ui_weeklist" x="440" y="450" z="5" width="400" height="240" />
+
+        <!-- Game progress (weeks completed, available and choosen) -->
+        <Group name="ui_game_progress" visible="true">
+            <Text name="ui_weeks_completed_title" fontName="vcr" fontSize="28" color="0xE55777">
+                <Action>
+                    <Location x="840" y="470" />
+                    <MaxSize width="400" height="28" />
+                    <Property name="z" value="10" />
+                    <Property name="alignHorizontal" value="center" />
+                    <String>WEEKS COMPLETED</String>
+                </Action>
+            </Text>
+            <Text name="ui_weeks_completed_count" fontName="vcr" fontSize="54" color="0xE55777">
+                <Action>
+                    <Location x="840" y="497" />
+                    <MaxSize width="400" height="54" />
+                    <Property name="z" value="10" />
+                    <Property name="alignHorizontal" value="center" />
+                    <!-- <String>7</String> -->
+                </Action>
+            </Text>
+            <Text name="ui_weeks_choosen_title" fontName="vcr" fontSize="28" color="0xE55777">
+                <Action>
+                    <Location x="840" y="590" />
+                    <MaxSize width="400" height="28" />
+                    <Property name="z" value="10" />
+                    <Property name="alignHorizontal" value="center" />
+                    <!-- <String>WEEK CHOOSEN</String> -->
+                </Action>
+            </Text>
+            <Text name="ui_weeks_choosen_index" fontName="vcr" fontSize="54" color="0xE55777">
+                <Action>
+                    <Location x="840" y="617" />
+                    <MaxSize width="400" height="54" />
+                    <Property name="z" value="10" />
+                    <Property name="alignHorizontal" value="center" />
+                    <!-- <String>  0 / 7  </String> -->
+                </Action>
+            </Text>
+        </Group>
+    </Group>
+
+    <!-- Selected week info -->
+    <Group name="ui_difficult_selector" xvisible="false">
+        <!-- week title and difficult chooser (with warnings on the left) -->
+        <Placeholder name="ui_week_title_warns" x="660"  y="435" z="10" width="580" height="60" />
+        <Placeholder name="ui_difficult_warns"  x="660"  y="510" z="10" width="580" height="120" />
+        
+        <!-- week title and difficult chooser (whitout warnings) -->
+        <Placeholder name="ui_week_title_no_warns" x="40"  y="480" z="10" width="480" height="120" />
+        <Placeholder name="ui_difficult_no_warns"  x="640" y="480" z="10" width="600" height="120" />
+
+        <!-- Selected week info warnings -->
+        <Text name="warning_sensible_title" fontName="vcr" fontSize="28" color="0xE55777">
+            <Action>
+                <Location x="40"  y="450" />
+                <Property name="z" value="10" />
+                <MaxSize width="600" height="28" />
+                <String>SENSIBLE CONTENT</String>
+            </Action>
+        </Text>
+        <Text name="warning_sensible_message" fontName="vcr" fontSize="18" color="0xFFFFFF">
+            <Action>
+                <Location x="40"  y="477" />
+                <Property name="z" value="10" />
+                <MaxSize width="600" height="84" />
+                <!-- Note: the escaped character "&#xA;" means new line (aka "\n" letter) -->
+                <!-- Using "\n" for writing new lines does nothing, justs print "\n" -->
+                <!-- <String>***************************************&#xA;abc123 bla bla</String> -->
+            </Action>
+        </Text>
+        <Text name="warning_alternate_title" fontName="vcr" fontSize="28" color="0xE55777">
+            <Action>
+                <Location x="40"  y="570" />
+                <Property name="z" value="10" />
+                <MaxSize width="600" height="28" />
+                <String>COPYRIGHT WARNING</String>
+            </Action>
+        </Text>
+        <Text name="warning_alternate_message" fontName="vcr" fontSize="18" color="0xFFFFFF">
+            <Action>
+                <Location x="40"  y="597" />
+                <Property name="z" value="10" />
+                <MaxSize width="600" height="84" />
+                <!-- <String>First song has copyright, sorry :(</String> -->
+            </Action>
+        </Text>
+    </Group>
+
+    <!-- boyfriend/girlfriend model chooser settings -->
+    <AttachValue name="ui_character_selector_arrowsHeight" type="float"  value="78" />
+    <AttachValue name="ui_character_selector_fontSize" type="float"  value="28" />
+    <AttachValue name="ui_character_selector_fontName" type="string" value="vcr" />
+    <AttachValue name="ui_character_selector_fontColor" type="hex" value="0xFFFFFF" />
+    
+    <!-- boyfriend/girlfriend model chooser (fully software rendered) -->
+    <Group name="ui_character_selector" visible="false">    
+        <Text fontName="vcr" fontSize="28" color="0xE55777">
+            <Action>
+                <Property name="z" value="10" />
+                <Location x="40" y="450" />
+                <String>BOYFRIEND</String>
+            </Action>
+        </Text>
+        <Placeholder name="ui_character_selector_player" x="40" y="477" z="10" width="600" height="213" />
+
+        <Text fontName="vcr" fontSize="28" color="0xE55777">
+            <Action>
+                <Property name="z" value="10" />
+                <Location x="640" y="450" />
+                <String>GIRLFRIEND</String>
+            </Action>
+        </Text>
+        <Placeholder name="ui_character_selector_girlfriend" x="640" y="477" z="10" width="600" height="213" />
+    </Group>
+
+    <!-- Selected difficult space (displayed when the week was been choosen) -->
+    <Placeholder name="ui_difficult_selected" 
+        alignHorizontal="center" alignVertical="center" 
+        x="870" y="450" z="5" width="340" height="240" />
+
+    <!-- Transition effects (always should be drawn on top) -->
+    <Sprite rgb="0x000000" name="transition_effect">
+        <Action>
+            <Size width="1280" height="720" />
+            <Location x="0" y="0" />
+            <Property name="z" value="100" />
+            <Animation name="transition_in" />
+        </Action>
+        <Action name="week-choosen">
+            <Animation name="transition_out" />
+        </Action>
+        <Action name="back-to-main-menu">
+            <Animation name="transition_out_fast" />
+        </Action>
+    </Sprite>
+
+</Layout>
+

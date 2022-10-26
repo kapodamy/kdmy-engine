@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+	<AnimationMacro name="fade_in">
+		<Interpolator type="linear" duration="200" property="alpha" start="1.0" end="0.0" />
+	</AnimationMacro>
+</AnimationList>
+

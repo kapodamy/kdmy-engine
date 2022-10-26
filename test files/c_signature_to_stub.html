@@ -1,0 +1,166 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title> C-&gt; STUB function</title>
+    </head>
+
+    <body>
+        <strong>Input (C signatures):</strong>
+        <br>
+        <textarea id="in" style="width: 80vw; height: 40vh;"></textarea>
+        <br>
+        <br>
+        <strong>Output (stubs):</strong>
+        <br>
+        <textarea id="out" style="width: 80vw; height: 40vh;"></textarea>
+
+        <script>
+        function signature_c_to_stub(str) {
+            const RX = /(static|const|inline)\s/g;
+            const RX2 = /(\t|\r| )\s/g;
+			
+			function parse_type(type) {
+                switch(type) {
+                    case "char*":
+                        type = "%s";
+                        break;
+                    case "char":
+						type = "%c";
+                        break;
+                    case "double":
+                    case "float":
+						type = "%f";
+                        break;
+                    case "int8_t":
+						type = "%hhi";
+                        break;
+					case "Align":
+                    case "uint8_t":
+						type = "%hhu";
+                        break;
+                    case "int16_t":
+						type = "%hi";
+                        break;
+                    case "uint16_t":
+						type = "%hu";
+                        break;
+                    case "int32_t":
+						type = "%i";
+                        break;
+                    case "uint32_t":
+						type = "%u";
+                        break;
+                    case "int64_t":
+						type = "%li";
+                        break;
+                    case "uint64_t":
+						type = "%lu";
+                        break;
+                    case "bool":
+						type = "(bool)%i";
+                        break;
+					case "ANIM_INTERPOLATOR_TYPE":
+						type = "%hhu";
+						break;
+					default:
+						if (type.endsWith("*") || type.charAt(0) == type.charAt(0).toUpperCase())
+							type = "%p";
+						else
+							type = "%i";
+						break;
+                }
+                return type;
+            }
+
+			str = str.replace(RX2, "");
+            let fn_args = str.substring(str.indexOf("(")+1, str.indexOf(")")).trim();
+            let fn_ret = str.substring(0 ,str.indexOf("(")).trim();
+            let fn = fn_ret.substring(fn_ret.lastIndexOf(" ") + 1, fn_ret.length);
+            let ret = fn_ret.substring(0, fn_ret.lastIndexOf(" "));
+
+            ret = ret.replace(RX, "");
+            let args = fn_args.split(',');
+
+            for (let i=0 ; i<args.length ; i++) {
+                args[i] = args[i].replace(RX, "").trim();
+                let arg = args[i].split(' ');
+
+                if (arg.length < 1) {
+                    args[i] = {type: "", name: ""};
+                } else if (arg.length == 1){
+                    args[i] = {type: arg[0], name: "_stub" + i};
+                } else {
+                    let name = arg[arg.length - 1].trim();
+                    let type = arg[arg.length - 2].trim();
+                    args[i] = {type, name};
+                }
+            }
+
+
+            let stub_format = new Array(args.length);
+            let stub_args = new Array(args.length);
+            for (let i=0 ; i<args.length ; i++) {
+				stub_format[i] = `${args[i].name}=${parse_type(args[i].type)}`;
+				stub_args[i] = args[i].name;
+			}
+            stub_format = stub_format.join(" ");
+            stub_args = stub_args.join(", ");
+			
+			let stub_ret = "";
+			if (ret != "void") {
+				let ret_value = "NULL";
+				if (ret == "bool" || ret == "float" || ret == "double" || ret.startsWith("uint") || ret.startsWith("int")) ret_value = 0;
+				stub_ret = `    return ${ret_value};\r\n`;
+			}
+
+            return `${ret} ${fn}(${fn_args}) {\r\n    print_stub("${fn}", "${stub_format}", ${stub_args});\r\n${stub_ret}}`;
+        }
+
+        let out_ = document.getElementById("out");
+
+        function process(evt) {
+            let text = this.value.replace(/\r/g, "");
+            text = text.split("\n");
+
+            let out_str = "";
+
+            for (let i=0 ; i<text.length ; i++) {
+                let c_fn = text[i].trim();
+                if (c_fn.length < 1 || c_fn.startsWith("//") || c_fn.charAt(0) == "#") continue;
+
+                let ts_fn;
+                try {
+                    ts_fn = signature_c_to_stub(c_fn);
+                } catch (e) {
+                    ts_fn = `// unable to parse : ${c_fn}`
+                    console.err(c_fn, e);
+                }
+
+                out_str += ts_fn + "\r\n";
+            }
+
+            if (out_str.length > 0) out_.value = out_str;
+        }
+
+        document.getElementById("in").addEventListener("keyup", process, false);
+
+
+        </script>
+    </body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

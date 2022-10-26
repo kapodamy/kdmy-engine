@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="854.333" height="480" animationSpeed="1.0" animationList="animations.xml">
+    <Font name="vcr"  	  path="/assets/common/font/vcr.ttf" />
+    <Font name="bold"	  path="/assets/common/font/alphabet.xml" glyphAnimate="false" glyphSuffix="bold" />
+    <Font name="heading"  path="/assets/common/font/alphabet.xml" glyphAnimate="false" colorByDifference="true" />
+
+	<!-- For non-scripted credits, change this values instead -->
+	<!-- <AttachValue name="base_duration"  type="float" value="30000" /> -->
+	<!-- <AttachValue name="shoot_duration" type="float" value="5000" /> -->
+	<!-- <AttachValue name="before_shoot_duration" type="float" value="2000" /> -->
+	<!-- <AttachValue name="after_shoot_duration" type="float" value="2000" /> -->
+	
+	<!-- readed by the credits.lua script only -->
+	<AttachValue name="scripted_base_scrolled_to" type="float" value="1856" />
+	<AttachValue name="scripted_base_scrolled_duration" type="float" value="24250" />
+	<AttachValue name="scripted_thanks_scroll_duration" type="float" value="3685" />
+	<AttachValue name="scripted_thanks_duration" type="float" value="5000" />
+	<AttachValue name="scripted_shoot_duration" type="float" value="10000" />
+
+	<Sprite texture="skin-funkin-cardbordtoast.png">
+		<Action>
+			<Location x="0" y="0" z="0" />
+            <Resize maxWidth="854.333" maxHeight="480" cover="true" center="true" />
+			<Animation name="bg_fade_in" />
+		</Action>
+	</Sprite>
+
+	<!--********** texts **********-->
+	<Group>
+		<Action>
+			<Property name="translateY" value="0" />
+			<Animation name="first_scroll" />
+		</Action>
+
+		<Text fontName="bold" fontSize="64" color="0xFFFFFF">
+			<Action>
+				<Location x="0" y="192" z="2" />
+				<MaxSize width="854.333" />
+				<Property name="alignHorizontal" value="center" />
+				<Property name="alignParagraph" value="center" />
+				<String>CREDITS</String>
+			</Action>
+		</Text>
+
+		<Group>
+			<Action>
+				<Property name="translateY" value="548" />
+			</Action>
+
+			<Text fontName="heading" fontSize="42" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="0" z="2" />
+					<MaxSize width="854.333" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Border enable="true" rgb="0x11AAAA" alpha="0.8" size="5" />
+					<String>Funkin Crew</String>
+				</Action>
+			</Text>
+			<Text fontName="vcr" fontSize="20" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="64" z="2" />
+					<MaxSize width="854.333" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Property name="paragraphSeparation" value="6" />
+					<Border enable="true" rgb="0x220000" alpha="0.8" size="2.5" />
+					<String>ninjamuffin99
+PhantomArcade
+kawaisprite
+evilsk8er</String>
+				</Action>
+			</Text>
+		</Group>
+
+		<Group>
+			<Action>
+				<Property name="translateY" value="768" />
+			</Action>
+
+			<Text fontName="heading" fontSize="42" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="0" z="2" />
+					<MaxSize width="854.333" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Border enable="true" rgb="0x11AAAA" alpha="0.8" size="5" />
+					<String>Special Thanks</String>
+				</Action>
+			</Text>
+			<Text fontName="vcr" fontSize="20" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="64" z="2" />
+					<MaxSize width="854.333" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Property name="paragraphSeparation" value="6" />
+					<Border enable="true" rgb="0x220000" alpha="0.8" size="2.5" />
+					<String>wanda
+fizzd
+kiddbrute
+HenryEYES
+Clone Hero
+Tom Fulp
+StuffedWombat
+mmatt_ugh
+Squidly
+Luis
+GeoKureli
+Will Blanton
+SrPelo
+Austin East
+Krystin, Kaye-lyn, Cassidy, Mack, Levi, and Jasmine.
+Laurel
+bbpanzu
+Etika
+Foamymuffin (insert travis scott lyrics here)
+SiIvaGunner
+Masaya Matsuura
+
+BIT BOY - MIKE WELSH</String>
+				</Action>
+			</Text>
+		</Group>
+
+		<Group>
+			<Action>
+				<Property name="translateY" value="1548" />
+			</Action>
+
+			<Text fontName="heading" fontSize="42" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="0" z="2" />
+					<MaxSize width="854.333" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Border enable="true" rgb="0x11AAAA" alpha="0.8" size="5" />
+					<String>Dev thanks to</String>
+				</Action>
+			</Text>
+			<Text fontName="vcr" fontSize="20" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="64" z="2" />
+					<MaxSize width="854.333" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Property name="paragraphSeparation" value="6" />
+					<Border enable="true" rgb="0x220000" alpha="0.8" size="2.5" />
+					<String>billytrend
+MVG
+Guinxu
+javidx9
+gorevojd
+JoeyDeVriez
+ThinMatrix
+</String>
+				</Action>
+			</Text>
+		</Group>
+
+		<Group>
+			<Action>
+				<Property name="translateY" value="1856" />
+			</Action>
+
+			<Text fontName="heading" fontSize="38" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="0" z="2" />
+					<MaxSize width="854.333" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Border enable="true" rgb="0x11AAAA" alpha="0.8" size="5" />
+					<String>KDMY ENGINE</String>
+				</Action>
+			</Text>
+			<Text fontName="vcr" fontSize="20" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="60" z="2" />
+					<MaxSize width="854.333" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Property name="paragraphSeparation" value="6" />
+					<Border enable="true" rgb="0x220000" alpha="0.8" size="2.5" />
+					<String>desarrollado por kapodamy</String>
+				</Action>
+			</Text>
+		</Group>
+		
+		<!--<Group name="intro-texts-group">
+			<Action>
+				<Property name="translateY" value="0" />
+			</Action>
+
+			<Text fontName="heading" fontSize="42" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="0" z="2" />
+					<MaxSize width="854.333" />
+					<Property name="translateY" value="1856" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Border enable="true" rgb="0x11AAAA" alpha="0.8" size="5" />
+					<String>Introduction texts</String>
+				</Action>
+			</Text>
+			<Text name="intro-texts" fontName="vcr" fontSize="20" color="0xFFFFFF">
+				<Action>
+					<Location x="0" y="64" z="2" />
+					<Property name="translateY" value="1856" />
+					<MaxSize width="854.333" />
+					<Property name="alignHorizontal" value="center" />
+					<Property name="alignParagraph" value="center" />
+					<Property name="paragraphSeparation" value="6" />
+					<Border enable="true" rgb="0x220000" alpha="0.8" size="2.5" />
+					<String>place /assets/common/introText.txt contents here</String>
+				</Action>
+			</Text>
+		</Group>-->
+	</Group>
+
+	<Text fontName="bold" fontSize="42" color="0xFFFFFF">
+		<Action>
+			<Location x="0" y="480" z="2" />
+			<MaxSize width="854.333" />
+			<Property name="alignHorizontal" value="center" />
+			<Property name="alignParagraph" value="center" />
+			<String>THANKS FOR PLAYING</String>
+		</Action>
+		<Action name="show-thanks">
+			<Animation name="scroll_thanks" />
+		</Action>
+	</Text>
+
+	<!--********** logo **********-->
+	<Group>
+		<Action>
+			<Hide />
+		</Action>
+		<Action name="shoot">
+			<Show />
+		</Action>
+
+		<Sprite rgb="0x000000">
+			<Action>
+				<Location x="0" y="0" z="10" />
+				<Size width="854.333" height="480" />
+				<Hide />
+			</Action>
+			<Action name="shoot">
+				<Show />
+			</Action>
+		</Sprite>
+		<Sprite texture="/assets/common/image/start-screen/logo.png">
+			<Action>
+				<Size width="-1" height="128" />
+				<Location alignHorizontal="center" alignVertical="center" x="0" y="0" z="10" />
+			</Action>
+			<Action name="shoot">
+				<Animation name="fade_in" />
+			</Action>
+		</Sprite>
+		<Sprite texture="logo_blur.png">
+			<Action>
+				<Size width="-1" height="128" />
+				<Location alignHorizontal="center" alignVertical="center" x="0" y="0" z="11" />
+			</Action>
+			<Action name="shoot">
+				<Animation name="fake_blur" />
+			</Action>
+		</Sprite>
+	</Group>
+
+	<!--********** outro **********-->
+	<Sprite name="transition_effect" rgb="0x000000">
+		<Action>
+			<Location x="0" y="0" z="10" />
+			<Size width="854.333" height="480" />
+			<Hide />
+		</Action>
+		<Action name="outro">
+			<Show />
+			<Animation name="fade_out" />
+		</Action>
+	</Sprite>
+
+
+	<!--********** sounds **********-->
+	<Sound name="bg-music"  src="title.ogg" volume="0.8" looped="true">
+		<Action>
+			<Play />
+		</Action>
+	</Sound>
+	<Sound name="shoot-sfx" src="titleShoot.ogg" volume="0.8">
+		<Action name="shoot">
+			<Play />
+		</Action>
+	</Sound>
+
+</Layout>
+

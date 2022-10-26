@@ -1,0 +1,10 @@
+gampleplay:
+        song
+        audio tracks
+        stage
+            layout
+            animations
+            actions
+        characters
+        health bar
+        camera animation

@@ -1,0 +1,47 @@
+<script>
+var Module = {
+    print: (text) => {
+        alert("stdout: " + text);
+    },
+
+    printErr: (text) => {
+        alert("stderr: " + text);
+    },
+
+    onRuntimeInitialized: () => {
+        kdmyEngine_objectMap.objectIndex = 1;
+        kdmyEngine_objectMap.set(null, 0);
+        kdmyEngine_obtain = function(key) {
+            //if (key === undefined) console.warn("undefined value passed");
+            if (key == null) return 0;
+
+            let index = this.get(key);
+            if (index !== undefined) return index;
+
+            index = this.objectIndex++;
+            this.set(key, index);
+            return index;
+        };
+        
+        console.log("build_test is ready");
+    },
+    kdmyEngine_stringToPtr: function(js_string) {
+        if (js_string == null) return 0;
+        
+    	let length = lengthBytesUTF8(js_string) + 1;
+        
+        let pointer = _malloc(length);
+        if (pointer == 0) throw new Error("Out of memory");
+        
+        stringToUTF8(js_string, pointer, length);
+        
+        return pointer;
+    },
+    kdmyEngine_deallocate: function(ptr) {
+        if (ptr == 0) return;
+        _free(ptr);
+    },
+    kdmyEngine_objectMap: new Map()
+};
+</script>
+<script src="build_test.js"></script>

@@ -1,0 +1,36 @@
+{
+    "name": "PARENTS",
+    "model": "mom_dad_christmas_assets.xml",
+    "modelWeekSelector": "../host.xml",
+    "weekSelectorEnableBeat": true,
+    "healthbarColor": "0xCE599E",
+    "healthIconsModel": "icon-parents.xml",
+
+    "singSuffix": 		   "Dad",
+    "singAlternateSuffix": "Mom",
+
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": false, 
+    "oppositeDirections": {
+        "from": ["left", "right"],
+        "to": ["right", "left"]
+    },
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "Parent Left Note"  },
+            { "direction": "down",   "anim": "Parent Down Note"  },
+            { "direction": "up",     "anim": "Parent Up Note"    },
+            { "direction": "right",  "anim": "Parent Right Note" }
+        ],
+
+        "miss": [],
+
+        "idle": { "anim": "Parent Christmas Idle" },
+
+        "extras": []
+    }
+}
+

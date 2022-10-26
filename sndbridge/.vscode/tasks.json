@@ -1,0 +1,53 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build (debug)",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "windows": {
+                "command": "mingw32-make",
+                "args": [
+                    "build-debug"
+                ]
+            }
+        },
+        {
+            "label": "build (release)",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "windows": {
+                "command": "mingw32-make",
+                "args": [
+                    "build-release"
+                ]
+            }
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-c",
+                    "'mingw32-make clean'"
+                ]
+            }
+        }
+    ]
+}

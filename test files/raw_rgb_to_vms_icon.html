@@ -1,0 +1,99 @@
+<! DOCTYPE html>
+<html>
+<input type="file" />
+<br>
+<strong>output:</strong>
+<br>
+<textarea></textarea>
+<script>
+
+
+	document.querySelector("input").addEventListener("change", function () {
+		process_file(this.files[0]);
+		this.value = "";
+	});
+
+	function convert_rgba8_to_argb4444(/**@type {number}*/rgba8_color) {
+		let r = ((rgba8_color >>> 24) & 0xff) / 255;
+		let g = ((rgba8_color >>> 16) & 0xff) / 255;
+		let b = ((rgba8_color >>> 8) & 0xff) / 255;
+		let a = ((rgba8_color >>> 0) & 0xff) / 255;
+
+		r = Math.trunc(r * 15);
+		g = Math.trunc(g * 15);
+		b = Math.trunc(b * 15);
+		a = Math.trunc(a * 15);
+
+		return b << 12 | g << 8 | r << 4 | a << 0;
+	}
+
+	function convert_typed_array_to_hex_array(array) {
+		let length = array instanceof Uint16Array ? 4 : 2;
+		let str = "";
+		for (let i = 0; i < array.length; i++) {
+			let bytes = array[i].toString(16);
+			let filler = length - bytes.length;
+
+			if (filler > 0) bytes = "0".repeat(filler) + bytes;
+
+			str += "0x" + bytes + ", ";
+		}
+
+		return str.substring(0, str.length - 2);
+	}
+
+	async function process_file(file) {
+		let palette_size = 0;
+		let palette = new Uint16Array(16);
+		let rgba8_data = new Uint32Array(await file.arrayBuffer());
+		let argb4444_data = new Uint8Array(rgba8_data.length / 2);
+		let pixel = 0x00;
+		let high = true;
+		let j = 0;
+
+		palette.fill(0xFFFF);
+		argb4444_data.fill(0x0000);
+
+		for (let i = 0; i < rgba8_data.length; i++) {
+			let rgba8_color = rgba8_data[i];
+			let argb4444_color = convert_rgba8_to_argb4444(rgba8_color);
+			let color_index = palette.indexOf(argb4444_color);
+
+
+			if (color_index < 0 || color_index >= palette_size) {
+				if (palette_size < palette.length) {
+					color_index = palette_size++;
+					palette[color_index] = argb4444_color;
+				} else {
+					color_index = 0x00;
+					console.warn("too many colors");
+				}
+			}
+
+			if (high) {
+				pixel |= color_index << 4;
+			} else {
+				pixel |= color_index << 0;
+				argb4444_data[j++] = pixel;
+				pixel = 0x00;
+			}
+
+			high = !high;
+		}
+
+		let hex_palette = convert_typed_array_to_hex_array(palette);
+		let hex_bitmap = convert_typed_array_to_hex_array(argb4444_data);
+
+		let str = "const PALETTE = new Uint16Array([" +
+		hex_palette +
+		"]);\r\n" +
+		"const BITMAP = new Uint8Array([" +
+		hex_bitmap +
+		"]);";
+		document.querySelector("textarea").value = str;
+
+	}
+
+</script>
+</body>
+</html>

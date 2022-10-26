@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <!-- <link rel="icon" type="image/x-icon" href="favicon.ico"> -->
+        <title>engine</title>
+        <input type="hidden" name="entry_point" value="main" />
+
+
+        <style type="text/css">body {background-color: whitesmoke;}</style>
+    </head>
+    <body>
+        <canvas width="640" height="480"></canvas>
+        <!-- <canvas width="960" height="540"></canvas> -->
+        <hr>
+        <button id="pvr-onoff">Suspend/Resume PVR</button>
+        <br>
+        <label>PVR status: <input type="text" readonly="" value="00 FPS" id="pvr-status"></label>
+
+        <script src="engine/platform/sh4.js"></script>
+        <script src="engine/platform/sh4matrix.js"></script>
+        <script src="engine/platform/localforage.js"></script>
+        <script src="engine/platform/kos.js"></script>
+        <script src="engine/platform/pvrctx.js"></script>
+        <script src="engine/platform/pvr.js"></script>
+        <script src="engine/platform/io.js"></script>
+        <script src="engine/platform/fs.js"></script>
+        <script src="engine/platform/gamepad.js"></script>
+        
+        <script src="engine/platform/www_autoplay.js"></script>
+
+        <script src="engine/platform/wglc.js"></script>
+
+        <script src="engine/utils/misc.js"></script>
+        <script src="engine/utils/arraylist.js"></script>
+        <script src="engine/utils/linkedlist.js"></script>
+        <script src="engine/utils/cloneobject.js"></script>
+        <script src="engine/utils/math2d.js"></script>
+        <script src="engine/utils/vertexprops.js"></script>
+        <script src="engine/utils/tokenizer.js"></script>
+        <script src="engine/utils/stringutils.js"></script>
+        <script src="engine/utils/stringfolding.js"></script>
+        <script src="engine/utils/stringbuilder.js"></script>
+        <script src="engine/utils/jsonparser.js"></script>
+
+        <script src="engine/font/fontglyph.js"></script>
+        <script src="engine/font/fonttype.js"></script>
+        <script src="engine/font/glyphrenderer.js"></script>
+        <script src="engine/font/fontholder.js"></script>
+        <script src="engine/font/textsprite.js"></script>
+
+        <script src="engine/sound/soundplayer.js"></script>
+        <script src="engine/sound/songplayer.js"></script>
+
+        <script src="engine/externals/imports.js"></script>
+        <script src="engine/externals/fontatlas.js"></script>
+        <script src="engine/externals/luascript.js"></script>
+
+        <script src="engine/game/common/funkinsave.js"></script>
+        <script src="engine/game/common/funkin_ranking.js"></script>
+        <script src="engine/game/common/weekenumerator.js"></script>
+        <script src="engine/game/common/menu.js"></script>
+        <script src="engine/game/common/messagebox.js"></script>
+
+        <script src="engine/game/helpers/weekselector_weeklist.js"></script>
+        <script src="engine/game/helpers/weekselector_difficult.js"></script>
+        <script src="engine/game/helpers/weekselector_helptext.js"></script>
+        <script src="engine/game/helpers/weekselector_mdlselect.js"></script>
+        <script src="engine/game/helpers/weekselector_weekmsg.js"></script>
+        <script src="engine/game/helpers/weekselector_weektitle.js"></script>
+
+        <script src="engine/game/introscreen.js"></script>
+        <script src="engine/game/startscreen.js"></script>
+        <script src="engine/game/mainmenu.js"></script>
+        <script src="engine/game/weekselector.js"></script>
+        <script src="engine/game/savemanager.js"></script>
+
+        <script src="engine/image/texture.js"></script>
+        <script src="engine/image/sprite.js"></script>
+        <script src="engine/image/atlas.js"></script>
+        <script src="engine/image/texturepool.js"></script>
+        <script src="engine/image/imgutils.js"></script>
+        <script src="engine/image/statesprite.js"></script>
+
+        <script src="engine/animation/animlist.js"></script>
+        <script src="engine/animation/animsprite.js"></script>
+        <script src="engine/animation/macroexecutor.js"></script>
+        <script src="engine/animation/tweenlerp.js"></script>
+
+        <script src="engine/beatwatcher.js"></script>
+        <script src="engine/layout.js"></script>
+        <script src="engine/camera.js"></script>
+        <script src="engine/drawable.js"></script>
+        <script src="engine/modelholder.js"></script>
+
+        <script src="engine/game/funkin/playerstats.js"></script>
+        <script src="engine/game/funkin/note.js"></script>
+        <script src="engine/game/funkin/notepool.js"></script>
+        <script src="engine/game/funkin/strum.js"></script>
+        <script src="engine/game/funkin/strums.js"></script>
+        <script src="engine/game/funkin/healthbar.js"></script>
+        <script src="engine/game/funkin/healthwatcher.js"></script>
+        <script src="engine/game/funkin/rankingcounter.js"></script>
+        <script src="engine/game/funkin/streakcounter_digits.js"></script>
+        <script src="engine/game/funkin/streakcounter.js"></script>
+        <script src="engine/game/funkin/roundstats.js"></script>
+        <script src="engine/game/funkin/character.js"></script>
+        <script src="engine/game/funkin/missnotefx.js"></script>
+        <script src="engine/game/funkin/conductor.js"></script>
+        <script src="engine/game/funkin/countdown.js"></script>
+        <script src="engine/game/modding.js"></script>
+        <script src="engine/game/credits.js"></script>
+
+        <script src="engine/game/ddrkeysmon.js"></script>
+        <script src="engine/game/gameplay/weekscript.js"></script>
+
+        <script src="engine/game/gameplay/helpers/gameplaymanifest.js"></script>
+        <script src="engine/game/gameplay/helpers/charactermanifest.js"></script>
+        <script src="engine/game/gameplay/helpers/menumanifest.js"></script>
+        <script src="engine/game/gameplay/helpers/chart.js"></script>
+        <script src="engine/game/gameplay/week_gameover.js"></script>
+        <script src="engine/game/gameplay/week_pause.js"></script>
+        <script src="engine/game/gameplay/week_result.js"></script>
+        <script src="engine/game/gameplay/week.js"></script>
+
+        <script src="engine/game/main.js"></script>
+    </body>
+</html>

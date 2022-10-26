@@ -1,0 +1,7 @@
+﻿[resolution 1920x1080]
+kade: border=4~5 dimmen=15~16 large=825~826 fontsize=16~18 fontborder=1~2 x=542~443 y=55~56
+psych: border=6 dimmen=17 large=598 fontsize=33 fontborder=3 x=652~658 y=39
+
+kade: 43% screen
+psych: 31% screen
+kdy: 35.7% screen (720px, multiple of 16)

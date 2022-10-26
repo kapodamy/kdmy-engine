@@ -1,0 +1,21 @@
+{
+    "model": "Monster_Assets.xml",
+    "healthbarColor": "0xf3ff6e",
+	"healthIconsModel": "icon-monster.xml",
+
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": false,
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "Monster left note" },
+            { "direction": "down",   "anim": "monster down" },
+            { "direction": "up",     "anim": "monster up note" },
+            { "direction": "right",  "anim": "Monster Right note" }
+        ],
+
+        "idle": { "anim": "monster idle" }
+    }
+}

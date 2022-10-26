@@ -1,0 +1,12 @@
+{
+    "description": "Spooky Month",
+    "songs": [
+        { "name": "Spookeez" },
+        { "name": "South" },
+        { "name": "Monster" }
+    ],
+
+
+    "unlockDirectiveName": "WEEK1",
+    "emitUnlockDirectiveName": "WEEK2"
+}

@@ -1,0 +1,19 @@
+screen size: 2560x1440
+
+padding top: 96px				[7,5% 1/15(0.0666667%)]
+padding right: 292px				[0,1% 0,115%]
+
+height: 216px 213px				[15% 0,1479166666666667%]
+width: 212px 217px 216px 212px			[8.4%]
+gap between arrows: 8px 7px 12px		[in theory there no gaps]
+
+hold @ 600: 1124px				[]
+
+strum height (with markers): 13344px
+
+1milliseconds is ~0,0013% or ~0,0010% of the screen height
+
+600ms	1124px
+1ms	1,873333333333333px
+one arrow 400ms@214px
+

@@ -1,0 +1,32 @@
+resolution: 1280x720
+
+arrow:	width=106|108 height=107|108
+left strum: x=53|54 y=49|50 x_gap=3|4|5|6
+right strum: x=145|146 y=49|50 x_gap=3|4|5|6
+distance between strums horizontally: 198|200
+
+---------------------------------------------------------
+arrow markers ratio should be fixed to the aspect ratio
+(the layout should maintain the aspect ratio)
+----------------------------------------------------------
+
+
+speed=1.0x time=500ms  height=225px|226px
+speed=1.0x time=1000ms height=427px|428px
+speed=1.5x time=500ms  height=337px|338px
+speed=1.5x time=500ms  height=250px|254px|326px (sustain note)
+speed=1.5x time=250ms  height=124px|125px
+speed=1.5x time=1000ms height=~629px (sustain note) (estimated)
+speed=2.0x time=500ms  height=448px|450px
+speed=2.0x time=10ms   height=156px|157px (weird behaviour)
+speed=2.0x time=500ms  height=427px|428px (sustain note)
+speed=2.0x time=1000ms height=>657px (sustain note) (imposible to meansure)
+
+-----------------------------------------------------------
+bmp=100 speed=1.0x time=1000ms height=450px
+scrolling is 0.45px/s (pixel per seconds) at 1280x720
+scrolling ratio is 1 second and 1.6 of the screen height (1s = screen_height / 1.6)
+-----------------------------------------------------------
+
+
+

@@ -1,0 +1,13 @@
+<TextureAtlas imagePath="dreamcast_buttons.png">
+	<SubTexture name="a" x="196" y="138" width="65" height="65"/>
+	<SubTexture name="b" x="144" y="69" width="65" height="65"/>
+	<SubTexture name="dpad" x="0" y="0" width="140" height="140"/>
+	<SubTexture name="lt" x="0" y="144" width="94" height="53"/>
+	<SubTexture name="rt" x="98" y="144" width="94" height="53"/>
+	<SubTexture name="x" x="144" y="0" width="65" height="65"/>
+	<SubTexture name="y" x="213" y="0" width="65" height="65"/>
+	<SubTexture name="start" x="0" y="200" width="118" height="53"/>
+	
+    <!-- Note: "lt" and "rt" are used together -->
+    <SubTexture name="lt_rt" x="0" y="144" width="192" height="53"/>
+</TextureAtlas>

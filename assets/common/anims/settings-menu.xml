@@ -1,0 +1,51 @@
+<AnimationList>
+	<AnimationMacro name="binding" loop="-1">
+        <Set property="scaleDirectionX" value="-0.5" />
+        <Set property="scaleDirectionY" value="-0.5" />
+        <Set property="scaleSize" value="true" />
+		<Interpolator type="linear" property="scaleX" start="1.0" end="1.1" duration="300"/>
+		<Interpolator type="linear" property="scaleY" start="1.0" end="1.1" duration="300"/>
+		<Yield />
+		<Interpolator type="linear" property="scaleX" start="1.1" end="1.0" duration="300"/>
+		<Interpolator type="linear" property="scaleY" start="1.1" end="1.0" duration="300"/>
+	</AnimationMacro>
+
+	<AnimationMacro name="binding_rollback">
+        <Set property="scaleDirectionX" value="-0.5" />
+        <Set property="scaleDirectionY" value="-0.5" />
+		<Set property="scaleX" value="1.0" />
+		<Set property="scaleY" value="1.0" />
+	</AnimationMacro>
+
+    <AnimationMacro name="menu_item_selected" loop="1">
+        <Set property="alpha" value="1.0" />
+		<Set property="translateX" value="0" />
+    </AnimationMacro>
+
+    <AnimationMacro name="menu_item_idle" loop="1">
+        <Interpolator type="linear" property="alpha" start="1.0" end="0.3" duration="100" />
+        <Interpolator type="linear" property="translateX" start="0" end="-60" duration="50" />
+    </AnimationMacro>
+	
+    <AnimationMacro name="menu_common_item_selected" loop="1">
+        <Set property="alpha" value="1.0" />
+    </AnimationMacro>
+
+    <AnimationMacro name="menu_common_item_idle" loop="1">
+        <Interpolator type="linear" property="alpha" start="1.0" end="0.5" duration="100" />
+    </AnimationMacro>
+
+    <AnimationMacro name="menu_selector_item_idle" loop="1">
+        <Set property="vertexColorR" value="0.9254901960784314" />
+        <Set property="vertexColorG" value="0.7450980392156863" />
+        <Set property="vertexColorB" value="0.1372549019607843" />
+        <Set property="alpha" value="0.9" />
+    </AnimationMacro>
+
+    <AnimationMacro name="menu_selector_item_selected" loop="1">
+        <Set property="vertexColorR" value="0.1" />
+        <Set property="vertexColorG" value="0.1" />
+        <Set property="vertexColorB" value="0.1" />
+        <Set property="alpha" value="1.0" />
+    </AnimationMacro>
+</AnimationList>

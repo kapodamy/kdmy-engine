@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="640" height="480" keepAspectRatio="true">
+    <Font name="fnt" path="/assets/common/font/vcr.ttf" />
+    <AttachValue name="btn-atlas" type="string" value="/assets/common/image/week-selector/dreamcast_buttons.xml" />
+
+    <!-- root layout actions -->
+    <Action name="size-normal">
+        <Property name="translateY" value="0" />
+    </Action>
+    <Action name="size-small">
+        <Property name="translateY" value="72" />
+    </Action>
+
+    <!-- no animation -->
+    <Camera name="show-static">
+        <Move z="1.0" />
+    </Camera>
+
+    <!-- with animation -->
+    <Camera name="show-anim" duration="250">
+        <From z="0.1" />
+        <To z="1.0" />
+    </Camera>
+
+    <!-- hide animation -->
+    <Camera name="hide-anim" duration="125">
+        <From z="1.0" />
+        <To z="0.1" />
+    </Camera>
+
+
+    <!-- dialog background -->
+    <Sprite rgb="0x000000">
+        <Action>
+            <Location x="128" y="96" z="0" />
+            <Size width="384" height="288" />
+        </Action>
+        <Action name="size-normal">
+            <Size height="288" />
+        </Action>
+        <Action name="size-small">
+            <Size height="144" />
+        </Action>
+    </Sprite>
+
+    <Group name="imgg">
+        <!-- image background -->
+        <Sprite name="imgbg" rgb="0xECBE23">
+            <Action>
+                <Location x="144" y="128" z="1" />
+                <Size width="352" height="112" />
+            </Action>
+            <Action name="def-imgcolor">
+                <Color rgb="0xECBE23" />
+            </Action>
+            <Action name="no-imgbg">
+                <Hide />
+            </Action>
+            <Action name="with-imgbg">
+                <Show />
+            </Action>
+        </Sprite>
+
+        <!-- image placeholder -->
+        <Placeholder name="img" x="144" y="128" z="2" width="352" height="112" />
+    </Group>
+
+    <Text name="title" rgb="0xFFFFFF" fontName="fnt" fontSize="24" initialAction="no-full-title">
+        <Action>
+            <Location x="144" y="96" z="3" />
+            <String>Title</String>
+        </Action>
+		<Action name="no-full-title">
+            <MaxSize width="352" height="32" />
+			<Properties alignVertical="start" alignHorizontal="start" alignParagraph="start" />
+		</Action>
+		<Action name="full-title-big">
+            <MaxSize width="352" height="246" />
+			<Properties alignVertical="center" alignHorizontal="center" alignParagraph="center" />
+		</Action>
+		<Action name="full-title-small">
+            <MaxSize width="352" height="102" />
+			<Properties alignVertical="center" alignHorizontal="center" alignParagraph="center" />
+		</Action>
+    </Text>
+
+    <Text name="message" color="0xF0F0F0" fontName="fnt" fontSize="13">
+        <Action>
+            <Location x="144" y="248" z="3" />
+            <!-- <Location x="144" y="256" z="3" /> -->
+            <MaxSize width="352" height="80" />
+            <!-- <String>message message</String> -->
+        </Action>
+        <Action name="no-img">
+            <Location x="144" y="136" z="3" />
+        </Action>
+        <Action name="with-img">
+            <Location x="144" y="248" z="3" />
+        </Action>
+    </Text>
+
+    <Group name="btns">
+        <Action name="size-normal">
+            <Property name="translateY" value="0" />
+        </Action>
+        <Action name="size-small">
+            <Property name="translateY" value="-144" />
+        </Action>
+
+        <!-- two buttons -->
+        <Group name="btn2" visible="true">
+
+            <Group name="btn1g">
+                <Sprite rgb="0xECBE23">
+                    <Action>
+                        <Location x="168" y="342" z="1" />
+                        <Size width="120" height="26" />
+                    </Action>
+                </Sprite>
+                <Sprite name="btn2icn1" texture="/assets/common/image/week-selector/dreamcast_buttons.png">
+                    <Action>
+                        <Location x="142" y="342" z="1.1" />
+                    </Action>
+                    <Action name="btn-resize">
+                        <Size height="26" width="-1" />
+                    </Action>
+                </Sprite>
+                <Text name="btn1text" color="0x000000" fontName="fnt" fontSize="18">
+                    <Action>
+                        <Location x="168" y="339" z="2" />
+                        <MaxSize width="120" height="28" />
+                        <Property name="alignHorizontal" value="center"/>
+                        <Property name="alignVertical" value="center"/>
+                        <Property name="alignParagraph" value="center"/>
+                        <!-- <String>OK</String> -->
+                    </Action>
+                    <Action name="rest-fntsize-small">
+                        <Property name="fontSize" value="18"/>
+                    </Action>
+                    <Action name="rest-fntsize-normal">
+                        <Property name="fontSize" value="18"/>
+                    </Action>
+                </Text>
+            </Group>
+
+            <Group name="btn2g">
+                <Action name="btnicn-show">
+                    <Property name="translateX" value="24" />
+                </Action>
+                <Action name="btnicn-hide">
+                    <Property name="translateX" value="0" />
+                </Action>
+
+                <Sprite rgb="0xECBE23">
+                    <Action>
+                        <Location x="352" y="342" z="1" />
+                        <Size width="120" height="26" />
+                    </Action>
+                </Sprite>
+                <Sprite name="btn2icn2" texture="/assets/common/image/week-selector/dreamcast_buttons.png">
+                    <Action>
+                        <Location x="326" y="342" z="1.1" />
+                    </Action>
+                    <Action name="btn-resize">
+                        <Size height="26" width="-1" />
+                    </Action>
+                </Sprite>
+                <Text name="btn2text" color="0x000000" fontName="fnt" fontSize="18">
+                    <Action>
+                        <Location x="352" y="339" z="2" />
+                        <MaxSize width="120" height="28" />
+                        <Property name="alignHorizontal" value="center"/>
+                        <Property name="alignVertical" value="center"/>
+                        <Property name="alignParagraph" value="center"/>
+                        <!-- <String>CANCEL</String> -->
+                    </Action>
+                    <Action name="rest-fntsize-small">
+                        <Property name="fontSize" value="18"/>
+                    </Action>
+                    <Action name="rest-fntsize-normal">
+                        <Property name="fontSize" value="18"/>
+                    </Action>
+                </Text>
+            </Group>
+        </Group>
+
+        <!-- single button -->
+        <Group name="btn1" visible="false">
+            <!-- button background -->
+            <Sprite rgb="0xECBE23">
+                <Action>
+                    <!-- <Location x="192" y="336" z="1" /> -->
+                    <!-- <Size width="256" height="32" /> -->
+                    <Location x="192" y="342" z="1" />
+                    <Size width="256" height="26" />
+                </Action>
+            </Sprite>
+
+            <!-- button text -->
+            <Text name="btntext" color="0x000000" fontName="fnt" fontSize="18">
+                <Action>
+                    <!-- <Location x="192" y="336" z="2" /> -->
+                    <Location x="192" y="339" z="2" />
+                    <MaxSize width="256" height="28" />
+                    <Property name="alignHorizontal" value="center"/>
+                    <Property name="alignVertical" value="center"/>
+                    <Property name="alignParagraph" value="center"/>
+                    <!-- <String>CLOSE</String> -->
+                </Action>
+                <Action name="rest-fntsize-small">
+                    <Property name="fontSize" value="18"/>
+                </Action>
+                <Action name="rest-fntsize-normal">
+                    <Property name="fontSize" value="18"/>
+                </Action>
+            </Text>
+
+            <!-- button icon -->
+            <Sprite name="btn1icn" texture="/assets/common/image/week-selector/dreamcast_buttons.png">
+                <Action>
+                    <Location x="192" y="342" z="1.1" />
+                </Action>
+                <Action name="btn-resize">
+                    <Size height="26" width="-1" />
+                </Action>
+            </Sprite>
+
+        </Group>
+    </Group>
+
+</Layout>

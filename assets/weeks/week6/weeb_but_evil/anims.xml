@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+  <AnimationMacro name="fade_in_bg">
+    <Interpolator type="steps" duration="2000" property="alpha" start="0.0" end="0.7" stepsCount="4" />
+  </AnimationMacro>
+  <AnimationMacro name="fade_out_group">
+    <Interpolator type="steps" duration="2000" property="alpha" start="1.0" end="0.0" stepsCount="4" />
+  </AnimationMacro>
+  <AnimationMacro name="fade_in_screen">
+    <Pause duration="2000" />
+    <Interpolator type="steps" duration="2600" property="alpha" start="1.0" end="0.0" stepsCount="4" />
+  </AnimationMacro>
+  <AnimationMacro name="spirit" loop="-1">
+    <Interpolator type="steps" duration="2000" property="translateY" start="0" end="-5" stepsCount="4" />
+    <Yield />
+    <Interpolator type="steps" duration="2000" property="translateY" start="-5" end="0" stepsCount="4" />
+  </AnimationMacro>
+  <AnimationMacro name="hand_anim" loop="-1">
+    <Interpolator type="steps" duration="1000" property="translateX" start="0" end="-5" stepsCount="4" />
+    <Yield />
+    <Interpolator type="steps" duration="1000" property="translateX" start="-5" end="0" stepsCount="4" />
+  </AnimationMacro>
+</AnimationList>
+

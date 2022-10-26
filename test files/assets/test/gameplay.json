@@ -1,0 +1,86 @@
+{
+    "default" : {
+        "distributions": [
+            {
+                "notes": [
+                    { "name": "left", "customSickEffectModel": null, "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false },
+                    { "name": "down", "customSickEffectModel": null, "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false },
+                    { "name": "up", "customSickEffectModel": "up custom", "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false },
+                    { "name": "right", "customSickEffectModel": null, "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false }
+                ],
+                "strums": [
+                    { "name": "left","noteIds": [0] },
+                    { "name": "down", "noteIds": [1] },
+                    { "name": "up", "noteIds": [2] },
+                    { "name": "right", "noteIds": [3] }
+                ],
+                "buttonBinds": [132, 34, 24, 65],
+                "states": [
+                    { 
+                        "name": "strum state", 
+                        "modelMarker": "/assets/common/image/week-round/notes.xml",
+                        "modelSickEffect": "/assets/common/image/week-round/noteSplashes.xml",
+                        "modelBackground": "/assets/common/image/week-round/strumBackground.xml"
+                    }
+                ]
+            }
+        ],
+        "distributionsMinimal": [
+            { "modelMarker": "notes.xml", "modelSickEffect": "splashes.xml", "modelBackground": null },
+            { "modelMarker": "fancyNotes.xml", "modelSickEffect": null, "modelBackground": "bgs.xml" },
+            { "modelMarker": "pixelNotes.xml", "states": [ { "name": "hd-notes-state", "modelMarker": "notes_in_hd.xml", "modelSickEffect": "notes_in_hd.xml", "modelBackground": "strumBackground.xml" } ] }
+        ],
+        "healthbar": {
+            "disable": false,
+            "useAltWarnIcons": false,
+            "opponentColor": "0xFF0000",
+            "playerColor": "0x00FF00",
+            "states": [
+                {
+                    "name": "def hb",
+                    "opponent": {"iconModel": "/assets/common/image/funkin/icon-gf.xml", "barModel": "bp mdl", "barColor": "0xFF0000"},
+                    "player": {"iconModel": "/assets/common/image/funkin/icon-bf.xml", "barModel": "bp bml", "barColor": "0x00FF00"},
+                    "background": { "barModel": "bg st", "barColor": "0x000000" }
+                }
+            ],
+            "warningsModel": "/assets/common/image/week-round/healthbar_warns.xml"
+        },
+        "stage":  "stage/theater.xml",
+        "script": "stage/funkin-gf.js",
+        "girlfriend": {
+            "manifest": "gf manifest",
+            "states": [ { "name": "alt", "model": "path/to/file.xml" } ]
+        },
+        "players": [
+            {
+                "manifest": "/assets/common/data/GF.json",
+                "controller": -1,
+                "strumsInLayoutId": 0,
+                "states": [ { "name": "gf alt state", "model": "->>alt gf state" } ],
+                "distributionIndex": 0
+            },
+            {
+                "manifest": "/assets/common/data/BOYFRIEND.json",
+                "controller": 0,
+                "strumsInLayoutId": 1,
+                "distributionIndex": 0
+            }
+        ]
+    },
+    "tracks": [
+        { 
+            "name": "song name here",
+            "song": "/path/to/file.ogg",
+            "chart": "charts/tutorial.json",
+            "stage": "stage track",
+            "script": "script track",
+            "selectedStateName": "%selectedStateName%",
+            "healthbar": null,
+            "selectedStateNamePerPlayer": [
+                "%selectedStateNamePerPlayer+0%", "%selectedStateNamePerPlayer+1%"
+            ],
+            "players": null
+        }
+    ]
+}
+

@@ -1,0 +1,35 @@
+{
+    "model": "bfPixel.xml",
+    "healthbarColor": "0x31B3D1",
+    "healthIconsModel": "icon-bf-pixel.xml",
+    
+	"alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": true,
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "BF LEFT NOTE instance"  },
+            { "direction": "down",   "anim": "BF DOWN NOTE instance"  },
+            { "direction": "up",     "anim": "BF UP NOTE instance"    },
+            { "direction": "right",  "anim": "BF RIGHT MISS instance" }
+        ],
+
+        "miss": [
+            { "direction": "left",   "anim": "BF LEFT MISS instance",   "stopAfterBeats": 1 },
+            { "direction": "down",   "anim": "BF DOWN MISS instance",   "stopAfterBeats": 1 },
+            { "direction": "up",     "anim": "BF UP MISS instance",     "stopAfterBeats": 1 },
+            { "direction": "right",  "anim": "BF RIGHT MISS instance",  "stopAfterBeats": 1 }
+        ],
+
+        "idle": { "anim": "BF IDLE instance",  "stopAfterBeats": 0 },
+		
+		"extras": [
+            { "name": "dies",        "stopAfterBeats": 0,  "anim": "BF Dies pixel",   "animHold": "Retry Loop", 	"model": "bfPixelsDEAD.xml" },
+            { "name": "retry",       "stopAfterBeats": 0,  "anim": "RETRY CONFIRM",   "animHold": null, 			"model": "bfPixelsDEAD.xml" },
+            { "name": "giveup",      "stopAfterBeats": 0,  "anim": "Retry Loop",      "animHold": null, 			"model": "bfPixelsDEAD.xml" }
+		]
+    }
+}
+

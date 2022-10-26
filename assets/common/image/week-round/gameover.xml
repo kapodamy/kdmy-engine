@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAspectRatio="true" animationList="/assets/common/anims/week-round.xml">
+    <Font name="vcr" path="/assets/common/font/vcr.ttf" />
+    <Font name="pixel" path="/assets/common/font/pixel.otf" />
+
+    <AttachValue name="help_text_font_size" type="float" value="18" />
+    <AttachValue name="help_text_font_name" type="string" value="vcr" />
+    <AttachValue name="help_text_padding_x" type="float" value="4" />
+    <AttachValue name="help_text_padding_y" type="float" value="22" />
+
+    <AttachValue type="float" name="gameover_duration_die" value="3200" />
+    <AttachValue type="float" name="gameover_duration_retry" value="3600" />
+    <AttachValue type="float" name="gameover_duration_giveup" value="500" />
+
+    <!-- Stats + difficulty selector -->
+    <Group>
+        <Action>
+            <Show />
+        </Action>
+        <Action name="hide_stats">
+            <Hide />
+        </Action>
+
+        <!-- Difficulty selector + background -->
+        <Placeholder name="ui_difficult_no_warns">
+            <Location x="0" y="435" z="204" />
+            <Size width="460" height="120" />
+        </Placeholder>
+        <Sprite rgb="0x000000">
+            <Action>
+                <Property name="alpha" value="0.2" />
+                <Location x="0" y="435" z="203" />
+                <Size width="460" height="120" />
+                <Static />
+                <Hide />
+            </Action>
+            <Action name="selector_show">
+                <Show />
+            </Action>
+        </Sprite>
+
+        <!-- gameplay stats -->
+        <Group>
+            <Action>
+                <Static />
+                <Animation name="gameover_judgement" restart="true" />
+            </Action>
+
+            <!-- stats background -->
+            <Sprite rgb="0x000000">
+                <Action>
+                    <Property name="alpha" value="0.5" />
+                    <Location x="0" y="75" z="201" />
+                    <Size width="460" height="345" />
+                    <Static />
+                </Action>
+            </Sprite>
+
+            <Text name="title" fontName="pixel" fontSize="30" color="0xFFFFFF">
+                <Action>
+                    <Location x="20" y="105" z="201.1" />
+                    <String>Your Judgement</String>
+                </Action>
+            </Text>
+            <Text name="judgement" fontName="vcr" fontSize="22" color="0xFFFFFF">
+                <Action>
+                    <Location x="20" y="150" z="201.2" />
+    <!-- <String>sicks  4888 -->
+<!-- good   1238 -->
+<!-- bads   2333 -->
+<!-- shits  4021 -->
+
+<!-- misses      3923 -->
+<!-- penalties   1200 -->
+<!-- difficulty  NORMAL -->
+
+
+<!-- Lost at 1m23s (45.73% completed)</String> -->
+                </Action>
+            </Text>
+        </Group>
+
+        <Text fontName="vcr" fontSize="96" color="0xFF0000">
+            <Action>
+                <Location x="20" y="600" z="201.2" />
+                <Property name="alpha" value="0.9" />
+                <!-- <Border size="4" r="1" g="0" b="0" a="0.8" enable="true" /> -->
+                <String>GAMEOVER</String>
+                <Animation name="gameover_text" />
+            </Action>
+        </Text>
+    </Group>
+
+    <Group>
+        <Action>
+            <Static />
+            <Hide />
+            <Property name="translateX" value="0" /><!-- The animation "gameover_changed_difficult" can change this value -->
+        </Action>
+        <Action name="changed_difficult">
+            <Show />
+            <Animation name="gameover_changed_difficult" />
+        </Action>
+
+        <Text fontName="vcr" fontSize="20" color="0xEEEEEE">
+            <Action>
+                <Location x="20" y="570" z="201.2" />
+                <Property name="alpha" value="0.9" />
+                <String>Difficult changed to</String>
+            </Action>
+        </Text>
+        <Placeholder name="ui_difficult_selected">
+            <Location x="20" y="590" z="201" alignVertical="center" alignHorizontal="start" />
+            <Size width="460" height="102" />
+        </Placeholder>
+    </Group>
+
+    <Sprite name="transition_effect" rgb="0x000000">
+        <Action>
+            <Property name="alpha" value="1.0" />
+            <Location x="0" y="0" z="300" />
+            <Size width="1280" height="720" />
+            <Static />
+            <Hide />
+        </Action>
+        <Action name="transition">
+            <Show />
+            <Animation name="gameover_transition" restart="true" />
+        </Action>
+        <Action name="transition_force_end">
+            <AnimationRemove />
+        </Action>
+    </Sprite>
+
+</Layout>

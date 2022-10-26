@@ -1,0 +1,12 @@
+<AnimationList atlasPath="host.xml">
+    <Animation name="idle" loop="1" alternateRandomize="false">
+        <Frame entryName="idle01" />
+        <Frame entryName="idle02" />
+        <Frame entryName="idle06" />
+        <AlternateSet />
+        <Frame entryName="idle08" />
+        <Frame entryName="idle10" />
+        <Frame entryName="idle12" />
+        <Frame entryName="idle14" />
+    </Animation>
+</AnimationList>

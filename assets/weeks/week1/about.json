@@ -1,0 +1,11 @@
+{
+    "description": "Daddy Dearest",
+    "songs": [
+        { "name": "Bopeebo"},
+        { "name": "Fresh" },
+        { "name": "Dad Battle"}
+    ],
+    "unlockDirectiveName": "TTRL",
+    "emitUnlockDirectiveName": "WEEK1",
+    "weekHostManifest": "DD/DADDYDEAREST.json"
+}

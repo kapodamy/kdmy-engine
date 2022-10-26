@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+	<AnimationMacro name="train_passes">
+		<!-- Wait for sound fx (is 14 seconds long)-->
+		<Pause duration="4700" />
+		
+		<Interpolator type="linear" duration="1600" property="translateX" start="0" end="-19200" />
+		<Yield />
+		<Set property="translateX" value="0" />
+	</AnimationMacro>
+	<Animation name="lights" alternateRandomize="true" atlasPath="philly.xml">
+		<Frame entryName="win0" />
+        <AlternateSet />
+		<Frame entryName="win1" />
+        <AlternateSet />
+		<Frame entryName="win2" />
+        <AlternateSet />
+		<Frame entryName="win3" />
+        <AlternateSet />
+		<Frame entryName="win4" />
+	</Animation>
+</AnimationList>
+

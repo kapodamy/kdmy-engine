@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="icon-gf.png">
+	<SubTexture name="loosing" x="0" y="102" width="112" height="98"/>
+	<SubTexture name="neutral" x="0" y="0" width="112" height="98"/>
+	<SubTexture name="winning" x="116" y="0" width="112" height="98"/>
+</TextureAtlas>

@@ -1,0 +1,23 @@
+{
+    "name": "SPOOKY KIDS",
+    "model": "./spooky_kids_assets.xml",
+    "modelWeekSelector": "./../host.xml",
+    "healthbarColor": "0xD57E00",
+    "healthIconsModel": "./icon-spooky.xml",
+
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": false,
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "note sing left" },
+            { "direction": "down",   "anim": "spooky DOWN note" },
+            { "direction": "up",     "anim": "spooky UP NOTE" },
+            { "direction": "right",  "anim": "spooky sing right" }
+        ],
+
+        "idle": { "anim": "spooky dance idle" }
+    }
+}

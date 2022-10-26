@@ -1,0 +1,14 @@
+{
+    "default" : {
+        "stage":  "stage/theater.xml",
+        "script": "stage/tutorial.lua",
+        "girlfriend": null,
+        "players": [
+            { "manifest": "#girlfriend", "strumId": 0 },
+            { "manifest": "#boyfriend", "strumId": 1, "controller": 0 }
+        ]
+    },
+    "tracks": [
+        { "name": "Tutorial", "song": "tutorial.ogg", "chart": "charts/tutorial.json" }
+    ]
+}

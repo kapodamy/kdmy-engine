@@ -1,0 +1,13 @@
+{
+    "default" : {
+        "stage":  "theater2.xml",
+		"script": "week1.lua",
+        "players": [
+            { "manifest": "./DD/DADDYDEAREST.json", "strumId": 0 },
+            { "manifest": "#boyfriend", "strumId": 1, "controller": 0 }
+        ]
+    },
+    "tracks": [
+        { "name": "Bopeebo" }, { "name": "Fresh" }, { "name": "Dad Battle" }
+    ]
+}

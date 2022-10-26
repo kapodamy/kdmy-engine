@@ -1,0 +1,8 @@
+<TextureAtlas imagePath="week_selector_UI.png">
+	<SubTexture name="EASY" x="0" y="142" width="196" height="65"/>
+	<SubTexture name="HARD" x="0" y="71" width="211" height="67"/>
+	<SubTexture name="NORMAL" x="0" y="0" width="308" height="67"/>
+	<SubTexture name="arrow_L" x="271" y="160" width="42" height="75"/>
+	<SubTexture name="arrow_L push" x="271" y="71" width="48" height="85"/>
+	<SubTexture name="locked" x="200" y="142" width="67" height="93"/>
+</TextureAtlas>

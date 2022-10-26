@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="healthbar_warns.png" resolution="1280x720" glyphFps="24">
+	
+    <SubTexture name="fastDrain" x="0" y="50" width="51" height="48"/>
+	<SubTexture name="fastDrain alt" x="109" y="52" width="36" height="48"/>
+	
+    <SubTexture name="locked" x="109" y="0" width="40" height="48"/>
+	<SubTexture name="locked alt" x="109" y="0" width="40" height="48"/>
+	
+    <!-- The following SubTexture entries shares the same icon -->
+    <SubTexture name="opponentRecover" x="56" y="0" width="30" height="36"/>
+	<SubTexture name="opponentRecover alt " x="56" y="0" width="30" height="36"/>
+	
+    <SubTexture name="slowDrain" x="0" y="0" width="52" height="46"/>
+	<SubTexture name="slowDrain alt" x="55" y="50" width="50" height="48"/>
+
+</TextureAtlas>

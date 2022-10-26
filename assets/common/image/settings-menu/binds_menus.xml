@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAspectRatio="true">
+    <Font name="title" path="/assets/common/font/Alphabet.xml" glyphSuffix="bold" />
+    <Font name="labels" path="/assets/common/font/vcr.ttf" />
+
+    <AttachValue name="color_bg_key" type="hex" value="0x000000BF"/>
+    <AttachValue name="color_bg_key_selected" type="hex" value="0x007F7FBF"/>
+    <AttachValue name="color_bg_key_active" type="hex" value="0xFF7F7FBF"/>
+
+
+    <Sprite rgb="0x000000">
+        <Action>
+            <Location x="0" y="0" z="0" />
+            <Size width="1280" height="720"/>
+        </Action>
+    </Sprite>
+    <Sprite texture="menuDesat.png">
+        <Action>
+            <Location x="0" y="0" z="1" />
+            <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
+            <Property name="alpha" value="0.4" />
+        </Action>
+    </Sprite>
+
+    <Text fontName="title" fontSize="60" color="0xFFFFFF">
+        <Action>
+            <String>MENU BINDINGS</String>
+            <Location x="80" y="60" z="2" />
+        </Action>
+    </Text>
+
+    <!-- backgrounds -->
+    <Group>
+        <Sprite atlas="/assets/common/image/week-selector/dreamcast_buttons.xml">
+            <Action>
+                <Location x="465" y="180" z="2" />
+                <AtlasApply entry="a" />
+                <Resize maxWidth="70" maxHeight="60" center="false" />
+            </Action>
+        </Sprite>
+        <Sprite atlas="/assets/common/image/week-selector/week_selector_UI.xml">
+            <Action>
+                <Location x="465" y="270" z="2" />
+                <AtlasApply entry="arrow_L" />
+                <Resize maxWidth="70" maxHeight="60" center="false" />
+            </Action>
+        </Sprite>
+        <Sprite atlas="/assets/common/image/week-selector/week_selector_UI.xml">
+            <Action>
+                <Location x="465" y="360" z="2" />
+                <AtlasApply entry="arrow_L" />
+                <Resize maxWidth="70" maxHeight="60" center="false" />
+				<Property name="flipX" value="true" />
+            </Action>
+        </Sprite>
+        <Sprite atlas="/assets/common/image/week-selector/dreamcast_buttons.xml">
+            <Action>
+                <Location x="465" y="450" z="2" />
+                <AtlasApply entry="x" />
+                <Resize maxWidth="70" maxHeight="60" center="false" />
+            </Action>
+        </Sprite>
+
+        <Sprite rgba="0x000000BF" name="back-accept">
+            <Action>
+                <Location x="535" y="180" z="2" />
+                <Size width="210" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-selectorLeft">
+            <Action>
+                <Location x="535" y="270" z="2" />
+                <Size width="210" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-selectorRight">
+            <Action>
+                <Location x="535" y="360" z="2" />
+                <Size width="210" height="60" />
+            </Action>
+        </Sprite>
+        <Sprite rgba="0x000000BF" name="back-alternativeTracks">
+            <Action>
+                <Location x="535" y="450" z="2" />
+                <Size width="210" height="60" />
+            </Action>
+        </Sprite>
+	</Group>
+
+    <!-- row labels -->
+    <Group>
+        <Text fontName="labels" fontSize="30" color="0xFFFFFF">
+            <Action>
+                <String>Accept/OK/Confirm</String>
+                <Location x="80" y="180" z="2" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="30" color="0xFFFFFF">
+            <Action>
+                <String>Selector left</String>
+                <Location x="80" y="280" z="2" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="30" color="0xFFFFFF">
+            <Action>
+                <String>Selector right</String>
+                <Location x="80" y="370" z="2" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="30" color="0xFFFFFF">
+            <Action>
+                <String>Alternative tracks</String>
+                <Location x="80" y="460" z="2" />
+            </Action>
+        </Text>
+    </Group>
+
+    <!-- key labels -->
+    <Group>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-accept">
+            <Action>
+                <Location x="535" y="180" z="3" />
+                <MaxSize width="210" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-selectorLeft">
+            <Action>
+                <Location x="535" y="270" z="3" />
+                <MaxSize width="210" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-selectorRight">
+            <Action>
+                <Location x="535" y="360" z="3" />
+                <MaxSize width="210" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+        <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-alternativeTracks">
+            <Action>
+                <Location x="535" y="450" z="3" />
+                <MaxSize width="210" height="60" />
+                <Properties alignVertical="center" alignHorizontal="center" />
+            </Action>
+        </Text>
+
+    </Group>
+
+	<Text fontName="labels" fontSize="24" rgb="0xFFFFFF">
+		<Action>
+			<Location x="40" y="630" z="1" />
+			<String>Press ENTER and later the desired key to assign
+Press again ENTER to clear
+Press Esc to cancel the binding
+</String>
+		</Action>
+	</Text>
+
+
+</Layout>
