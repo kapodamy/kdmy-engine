@@ -1,0 +1,278 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/Character",
+    "definitions": {
+        "Character": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "healthbarColor": {
+                    "type": ["integer", "string", "null"],
+                    "default": 65535,
+                    "description": "8bit RGB Color in format 0xRRGGBB"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "healthIconsModel": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelWeekSelector": {
+                    "type": "string"
+                },
+                "singSuffix": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "singAlternateSuffix": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "continuousIdle": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "actionsApplyChartSpeed": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "offsetX": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "offsetY": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "leftFacing": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "weekSelectorEnableBeat": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "oppositeDirections": {
+                    "$ref": "#/definitions/OppositeDirections"
+                },
+                "alignVertical": {
+                    "type": "string",
+                    "enum": ["start", "center", "end"],
+                    "default": "center"
+                },
+                "alignHorizontal": {
+                    "type": "string",
+                    "enum": ["start", "center", "end"],
+                    "default": "center"
+                },
+                "referenceSize": {
+                    "$ref": "#/definitions/ReferenceSize"
+                },
+                "sing": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Sing"
+                    }
+                },
+                "miss": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Miss"
+                    }
+                },
+                "idle": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Extra"
+                    }
+                },
+                "hey": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Extra"
+                    }
+                },
+                "extras": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Extra"
+                    }
+                }
+            },
+            "required": [
+                "healthIconsModel",
+                "healthbarColor",
+                "idle",
+                "model",
+                "sing"
+            ],
+            "title": "Character manifest"
+        },
+        "Extra": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "anim": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "animHold": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "animRollback": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "stopAfterBeats": {
+                    "type": "integer",
+                    "default": -1
+                },
+                "staticUntilBeat": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "model": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "offsetX": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "offsetY": {
+                    "type": "number",
+                    "default": 0.0
+                }
+            },
+            "title": "Extra"
+        },
+        "Miss": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "direction": {
+                    "type": "string"
+                },
+                "anim": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "stopAfterBeats": {
+                    "type": "integer",
+                    "default": -1
+                },
+                "model": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "offsetX": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "offsetY": {
+                    "type": "number",
+                    "default": 0.0
+                }
+            },
+            "required": [
+                "anim",
+                "direction"
+            ],
+            "title": "Miss"
+        },
+        "OppositeDirections": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "from": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "to": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "from",
+                "to"
+            ],
+            "title": "OppositeDirections"
+        },
+        "ReferenceSize": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "width": {
+                    "type": "number"
+                },
+                "height": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "height",
+                "width"
+            ],
+            "title": "ReferenceSize"
+        },
+        "Sing": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "direction": {
+                    "type": "string"
+                },
+                "anim": {
+                    "type": "string"
+                },
+                "animHold": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "animRollback": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "rollback": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "followHold": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "fullSustain": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "model": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "offsetX": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "offsetY": {
+                    "type": "number",
+                    "default": 0.0
+                }
+            },
+            "required": [
+                "anim",
+                "direction"
+            ],
+            "title": "Sing"
+        }
+    }
+}

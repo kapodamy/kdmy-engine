@@ -13,7 +13,7 @@ namespace Engine.Sound {
     public class SongPlayer {
         private const string SUFFIX_INSTRUMENTAL = "-inst";
         private const string SUFFIX_VOICES = "-voices";
-        private const string SUFFIX_NOCOPYRIGHT = "-nocopy";
+        private const string SUFFIX_ALTERNATIVE = "-alt";
 
         private static readonly SongPlayer SILENCE = new SongPlayer();
 
@@ -25,54 +25,38 @@ namespace Engine.Sound {
 
         private SongPlayer() { }
 
-        public static SongPlayer Init(string src, bool prefer_no_copyright) {
-            if (String.IsNullOrWhiteSpace(src)) return SongPlayer.SILENCE;
+        public static SongPlayer Init(string src, bool prefer_alternative) {
+            string path_voices, path_instrumental;
+            bool is_not_splitted = HelperGetTracks(
+                src, prefer_alternative, out path_voices, out path_instrumental
+            );
 
-            int dot_index = src.LastIndexOf('.');
-            if (dot_index < 1) throw new Exception("missing file extension : " + src);
-
-            bool is_not_splitted = false;
-            string path_voices = null;
-            string path_instrumental = null;
-
-            if (prefer_no_copyright) {
-                src = src.Insert(dot_index, SongPlayer.SUFFIX_NOCOPYRIGHT);
-            }
-
-            if (FS.FileExists(src)) {
-                is_not_splitted = true;
-            } else {
-                // check if the song is splited in voices and instrumental
-                string voices = src.Insert(dot_index, SongPlayer.SUFFIX_VOICES);
-                string instrumental = src.Insert(dot_index, SongPlayer.SUFFIX_INSTRUMENTAL);
-
-                if (FS.FileExists(voices)) {
-                    path_voices = voices;
-                } else {
-                    Console.Error.WriteLine("songplayer_init() missing voices: " + voices);
-                    //free(voices);
-                }
-
-                if (FS.FileExists(instrumental)) {
-                    path_instrumental = instrumental;
-                } else {
-                    Console.Error.WriteLine("songplayer_init() missing instrumental: " + instrumental);
-                    //free(instrumental);
-                }
-            }
-
-            if (path_instrumental == null && path_voices == null && !is_not_splitted) {
+            if (path_voices == null && path_instrumental == null && !is_not_splitted) {
                 Console.Error.WriteLine("songplayer_init() fallback failed, missing file: " + src);
                 Console.Error.WriteLine("songplayer_init() cannot load any file, there will only be silence.");
 
-                //if (prefer_no_copyright) free(src);
                 return SongPlayer.SILENCE;
             }
+
+            SongPlayer songplayer;
+
+            if (is_not_splitted) {
+                songplayer = SongPlayer.Init2(true, src, null);
+            } else {
+                songplayer = SongPlayer.Init2(false, path_voices, path_instrumental);
+                //free(path_voices);
+                //free(path_instrumental);
+            }
+
+            return songplayer;
+        }
+
+        public static SongPlayer Init2(bool is_not_splitted, string path_voices, string path_instrumental) {
 
             SongPlayer songplayer = new SongPlayer();
 
             if (is_not_splitted) {
-                SoundPlayer player = SoundPlayer.Init(src);
+                SoundPlayer player = SoundPlayer.Init(path_voices ?? path_instrumental);
                 if (player != null) {
                     songplayer.playbacks = new SoundPlayer[1];
                     songplayer.playbacks_size = 1;
@@ -86,12 +70,10 @@ namespace Engine.Sound {
 
                 if (path_voices != null) {
                     player_voices = SoundPlayer.Init(path_voices);
-                    //free(path_voices);
                 }
 
                 if (path_instrumental != null) {
                     player_instrumentals = SoundPlayer.Init(path_instrumental);
-                    //free(path_instrumental);
                 }
 
                 if (player_voices != null) {
@@ -240,6 +222,51 @@ namespace Engine.Sound {
         public void Mute(bool muted) {
             if (this.playbacks_size < 1) return;
             for (int i = 0 ; i < this.playbacks_size ; i++) this.playbacks[i].SetMute(muted);
+        }
+
+
+        public static bool HelperGetTracks(string src, bool prefer_alternative, out string path_voices, out string path_instrumental) {
+            path_voices = null;
+            path_instrumental = null;
+            bool is_not_splitted = false;
+
+            if (String.IsNullOrWhiteSpace(src)) return is_not_splitted;
+
+            int dot_index = src.LastIndexOf('.');
+            if (dot_index < 1) throw new Exception("missing file extension : " + src);
+
+
+            if (prefer_alternative) {
+                src = src.Insert(dot_index, SongPlayer.SUFFIX_ALTERNATIVE);
+            }
+
+            if (FS.FileExists(src)) {
+                is_not_splitted = true;
+            } else {
+                // check if the song is splited in voices and instrumental
+                string voices = src.Insert(dot_index, SongPlayer.SUFFIX_VOICES);
+                string instrumental = src.Insert(dot_index, SongPlayer.SUFFIX_INSTRUMENTAL);
+
+                if (FS.FileExists(voices)) {
+                    path_voices = voices;
+                } else {
+                    Console.Error.WriteLine("songplayer_init() missing voices: " + voices);
+                    //free(voices);
+                }
+
+                if (FS.FileExists(instrumental)) {
+                    path_instrumental = instrumental;
+                } else {
+                    Console.Error.WriteLine("songplayer_init() missing instrumental: " + instrumental);
+                    //free(instrumental);
+                }
+            }
+
+            if (path_instrumental == null && path_voices == null && !is_not_splitted) {
+                //if (prefer_no_copyright) free(src);
+            }
+
+            return is_not_splitted;
         }
 
     }

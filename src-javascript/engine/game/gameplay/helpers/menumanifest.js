@@ -86,7 +86,7 @@ async function menumanifest_init(src) {
 
         menumanifest.items[i] = {
             name: json_read_string(json_item, "name", null),
-            text: json_read_string(json_item, "name", null),
+            text: json_read_string(json_item, "text", null),
             hidden: json_read_boolean(json_item, "hidden", 0),
 
             placement: {

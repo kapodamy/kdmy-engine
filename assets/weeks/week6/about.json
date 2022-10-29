@@ -3,8 +3,9 @@
     "songs": [
         { "name": "Senpai"},
         { "name": "Roses"},
-        { "name": "Thorns"}
+        { "name": "Thorns", "freeplayHostIconModel": "funkin/icon-spirit.xml" }
     ],
+	"songsDefaultFreeplayHostIconModel": "funkin/icon-senpai.xml",
 
     "hasDifficultyEasy": true,
     "hasDifficultyHard": true,
@@ -19,7 +20,5 @@
     "disallowCustomBoyfriend": true,
     "disallowCustomGirlfriend": true,
 	
-	"inGameplayCustomFolder": "./pixel",
-    
-	"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@qqbackgroundLayout": "customlayout.xml"
+	"inGameplayCustomFolder": "./pixel"
 }

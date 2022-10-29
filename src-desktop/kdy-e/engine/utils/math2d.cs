@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
+using Engine.Game.Gameplay;
+using System.Text;
 
 namespace Engine.Utils {
 
@@ -8,6 +10,10 @@ namespace Engine.Utils {
         public static readonly float DEG_TO_RAD = (float)(Math.PI / 180.0);
         public const int MAX_INT32 = 0x7FFFFFFF;
         public static readonly float LOG100 = (float)Math.Log(100);
+
+        private const string TIME_SECONDS = "$1ds";// 1.2s
+        private const string TIME_MINUTES = "$im$2is";// 1m23s
+        private const string TIME_HOURS = "$ih$2i$2i";// 1h23m45s
 
         private static readonly Random random;
 
@@ -218,6 +224,33 @@ L_stop_checking_equal:
 
         public static bool FloatsAreNearZero(float number) {
             return Math.Abs(number) < Single.Epsilon;
+        }
+
+        public static string TimestampToString(double timestamp) {
+            const string TIME_SECONDS = "$1ds";// 1.2s
+            const string TIME_MINUTES = "$im$2is";// 1m23s
+            const string TIME_HOURS = "$ih$2i$2i";// 1h23m45s
+
+            if (Double.IsNaN(timestamp)) return "--:--.---";
+
+            timestamp /= 1000.0;
+            double h = Math.Floor(timestamp / 3600.0);
+            double m = Math.Floor((timestamp - (h * 3600.0)) / 60.0);
+            double s = timestamp - (h * 3600.0) - (m * 60.0);
+
+            StringBuilder stringbuilder = new StringBuilder(9);
+
+            if (h > 0.0)
+                stringbuilder.AddFormatKDY(TIME_HOURS, (int)h, (int)m, (int)s);
+            else if (m > 0.0)
+                stringbuilder.AddFormatKDY(TIME_MINUTES, (int)m, (int)s);
+            else
+                stringbuilder.AddFormatKDY(TIME_SECONDS, s);
+
+            string str = stringbuilder.GetCopyKDY();
+            //stringbuilder.Destroy();
+
+            return str;
         }
 
     }

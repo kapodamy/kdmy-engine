@@ -1,0 +1,257 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$ref": "#/definitions/MenuManifest",
+    "$id": "kdmy-engine-menu-manifest",
+    "title": "KDMY-Engine: Menu manifest",
+    "type": "object",
+    
+    "definitions": {
+        "MenuManifest": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "parameters": {
+                    "$ref": "#/definitions/Parameters"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Item"
+                    }
+                }
+            },
+            "required": [
+                "items",
+                "parameters"
+            ],
+            "title": "Root of the menu manifest"
+        },
+        "Item": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "text": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "placement": {
+                    "$ref": "#/definitions/Placement"
+                },
+                "suffixSelected": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "suffixChoosen": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "suffixDiscarded": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "suffixIdle": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "suffixRollback": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "suffixIn": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "suffixOut": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "hidden": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "required": [
+                "name",
+                "text"
+            ],
+            "title": "A single menu item"
+        },
+        "Placement": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "x": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "y": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "dimmen": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "gap": {
+                    "type": "number",
+                    "default": 0.0
+                }
+            },
+            "title": "Menu Item Placement. In sparse menus indicates the item position, otherwise, the x/y offset. dimmen and gap overrides the params values for the item"
+        },
+        "Parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "animSelected": {
+                    "type": ["string", "null"],
+                    "default": "selected"
+                },
+                "animChoosen": {
+                    "type": ["string", "null"],
+                    "default": "choosen"
+                },
+                "animDiscarded": {
+                    "type": ["string", "null"],
+                    "default": "discarded"
+                },
+                "animIdle": {
+                    "type": ["string", "null"],
+                    "default": "idle"
+                },
+                "animRollback": {
+                    "type": ["string", "null"],
+                    "default": "rollback"
+                },
+                "animIn": {
+                    "type": ["string", "null"],
+                    "default": "in"
+                },
+                "animOut": {
+                    "type": ["string", "null"],
+                    "default":"out"
+                },
+                "atlas": {
+                    "type": "string"
+                },
+                "animlist": {
+                    "type": "string"
+                },
+                "animSelected": {
+                    "type": "null"
+                },
+                "animChoosen": {
+                    "type": "string"
+                },
+                "animDiscarded": {
+                    "type": "null"
+                },
+                "animIdle": {
+                    "type": "null"
+                },
+                "animRollback": {
+                    "type": "null"
+                },
+                "animIn": {
+                    "type": "null"
+                },
+                "animOut": {
+                    "type": "null"
+                },
+                "animTransitionInDelay": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "animTransitionOutDelay": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "font": {
+                    "type": ["string", "null"],
+                    "description": "Font file path for text items"
+                },
+                "fontGlyphSuffix": {
+                    "type": ["string", "null"]
+                },
+                "fontColorByDifference": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "fontSize": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "fontColor": {
+                    "type": "integer",
+                    "default": 0x00,
+                    "description": "An hex value in 8bit RGB form (0xRRGGBB)"
+                },
+                "fontBorderColor": {
+                    "type": "number",
+                    "description": "An hex value in 8bit RGB form (0xRRGGBB)"
+                },
+                "fontBorderSize": {
+                    "type": ["number"],
+                    "default": 0.0
+                },
+                "isSparse": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "isVertical": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "isPerPage": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "itemsAlign": {
+                    "type": "string",
+                    "enum": [
+                        "start",
+                        "center",
+                        "end"
+                    ],
+                    "default": "start"
+                },
+                "itemsGap": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "itemsDimmen": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "staticIndex": {
+                    "type": "integer",
+                    "default": 0
+                },
+                "textureScale": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "enableHorizontalTextCorrection": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "required": [
+                "animlist",
+                "atlas",
+                "font",
+                "fontColor",
+                "fontGlyphSuffix",
+                "fontSize",
+                "isVertical",
+                "itemsAlign",
+                "itemsDimmen"
+            ],
+            "title": "Parameters"
+        }
+    }
+}

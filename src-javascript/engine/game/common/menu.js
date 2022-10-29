@@ -422,6 +422,12 @@ function menu_get_selected_item_rect(menu, output_location, output_size) {
     return 1;
 }
 
+function menu_get_selected_item_name(menu) {
+    if (menu.index_selected < 0 || menu.index_selected >= menu.items_size) return null;
+
+    return menu.items[menu.index_selected].name;
+}
+
 
 async function menu_internal_build_item(item, src_item, params, modelholder, fontholder, border) {
     let custom_modelholder = false;

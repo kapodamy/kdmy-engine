@@ -17,10 +17,6 @@ namespace Engine.Game.Gameplay {
             "misses      $i\npenalties   $i\ndifficult  $s\n\n\n" +
             "Lost at $s ($2d% completed)";
 
-        public const string TIME_SECONDS = "$1ds";// 1.2s
-        public const string TIME_MINUTES = "$im$2is";// 1m23s
-        public const string TIME_HOURS = "$ih$2i$2i";// 1h23m45s
-
         public const string HELP_RETRY = "retry";
         public const string HELP_DIFFICULT = "change difficult";
         public const string HELP_GIVEUP = "giveup";
@@ -40,7 +36,6 @@ namespace Engine.Game.Gameplay {
         public const GamepadButtons BUTTONS_SELECTOR = GamepadButtons.AD_LEFT | GamepadButtons.AD_RIGHT | GamepadButtons.T_LR;
 
 
-        private StringBuilder time;
         private Layout layout;
         private WeekSelectorHelpText help_retry;
         private WeekSelectorHelpText help_difficult;
@@ -82,7 +77,6 @@ namespace Engine.Game.Gameplay {
             ui_icons.Destroy();
 
 
-            this.time = new StringBuilder(10);
             this.layout = layout; this.help_retry = help_retry; this.help_difficult = help_difficult; this.help_giveup = help_giveup; this.selector = selector;
             this.drawable = null;
             this.disabled = true;
@@ -118,7 +112,6 @@ namespace Engine.Game.Gameplay {
         }
 
         public void Destroy() {
-            //this.time.Destroy();
             this.layout.Destroy();
             this.help_retry.Destroy();
             this.help_difficult.Destroy();
@@ -147,7 +140,6 @@ namespace Engine.Game.Gameplay {
         }
 
         public void Display(double timestamp, double duration, PlayerStats playerstats, WeekInfo weekinfo, string difficult) {
-            WeekGameOver.InternalTimestampToString(this.time, timestamp);
             double percent = Math.Min((timestamp / duration) * 100.0, 100.00);
 
             this.layout.SetGroupVisibilityById(this.group_id_help, true);
@@ -164,6 +156,7 @@ namespace Engine.Game.Gameplay {
 
             TextSprite jugement = this.layout.GetTextsprite("judgement");
             if (jugement != null) {
+                string time = Math2D.TimestampToString(timestamp);
                 jugement.SetTextFormated(
                     WeekGameOver.JUDGEMENT,
 
@@ -176,9 +169,10 @@ namespace Engine.Game.Gameplay {
                     playerstats.GetPenalties(),
                     difficult,
 
-                    this.time.InternKDY(),
+                    time,
                     percent
                 );
+                //free(time);
             }
 
             this.weekinfo = weekinfo;
@@ -437,32 +431,6 @@ namespace Engine.Game.Gameplay {
 
             if (this.disabled) return;
             this.layout.Draw(pvrctx);
-        }
-
-
-        private static void InternalTimestampToString(StringBuilder stringbuilder, double timestamp) {
-            //
-            // Stringify timestamp in something like "1h22m05s", "6m12s" or "40.9s"
-            //
-            stringbuilder.Clear();
-
-            if (Double.IsNaN(timestamp)) {
-                stringbuilder.AddKDY("------");
-                return;
-            }
-
-            timestamp /= 1000.0;
-            double h = Math.Floor(timestamp / 3600.0);
-            double m = Math.Floor((timestamp - (h * 3600.0)) / 60.0);
-            double s = timestamp - (h * 3600.0) - (m * 60.0);
-
-            if (h > 0.0)
-                stringbuilder.AddFormatKDY(WeekGameOver.TIME_HOURS, (int)h, (int)m, (int)s);
-            else if (m > 0.0)
-                stringbuilder.AddFormatKDY(WeekGameOver.TIME_MINUTES, (int)m, (int)s);
-            else
-                stringbuilder.AddFormatKDY(WeekGameOver.TIME_SECONDS, s);
-
         }
 
     }

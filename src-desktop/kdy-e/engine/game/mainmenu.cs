@@ -346,6 +346,9 @@ namespace Engine.Game {
                 case 0:// storymode
                     while (WeekSelector.Main() > 0) { }
                     return true;// main-menu
+                case 1:
+                    FreeplayMenu.Main();
+                    return true;// main-menu
                 case 2:
                     MainMenu.ShowDonate();
                     return true;// main-menu

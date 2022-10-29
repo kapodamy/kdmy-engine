@@ -99,6 +99,7 @@
     <Compile Include="engine\externals\glfw_enum.cs" />
     <Compile Include="engine\externals\glfw_delegates.cs" />
     <Compile Include="engine\externals\glfw.cs" />
+    <Compile Include="engine\game\freeplaymenu.cs" />
     <Compile Include="engine\game\settingsmenu.cs" />
     <Compile Include="engine\platform\expansions.cs" />
     <Compile Include="engine\externals\aica.cs" />
@@ -205,6 +206,7 @@
     <Compile Include="engine\utils\vertexprops.cs" />
     <Compile Include="engine\utils\xmlparser.cs" />
     <Compile Include="kallistios\arch.cs" />
+    <Compile Include="kallistios\mutex.cs" />
     <Compile Include="kallistios\utsname.cs" />
     <Compile Include="kallistios\fs.cs" />
     <Compile Include="kallistios\maple.cs" />

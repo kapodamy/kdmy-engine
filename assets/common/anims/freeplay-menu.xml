@@ -1,0 +1,13 @@
+<AnimationList>
+
+    <AnimationMacro name="menu_item_selected" loop="1">
+        <Set property="alpha" value="1.0" />
+		<Set property="translateX" value="50" />
+    </AnimationMacro>
+
+    <AnimationMacro name="menu_item_idle" loop="1">
+		<Set property="translateX" value="0" />
+        <Interpolator type="linear" property="alpha" start="1.0" end="0.7" duration="100" />
+    </AnimationMacro>
+
+</AnimationList>

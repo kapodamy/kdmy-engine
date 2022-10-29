@@ -506,7 +506,7 @@ namespace Engine.Game.Gameplay.Helpers {
                 notes[i].can_kill_on_hit = JSONParser.ReadBoolean(note_json, "canKillOnHit", false);
                 notes[i].is_special = JSONParser.ReadBoolean(note_json, "isSpecial", false);
                 notes[i].model_src = JSONParser.ReadString(note_json, "model", null);
-                notes[i].sick_effect_state_name = JSONParser.ReadString(note_json, "SickEffectStateName", null);
+                notes[i].sick_effect_state_name = JSONParser.ReadString(note_json, "sickEffectStateName", null);
             }
 
             distribution.notes = notes;

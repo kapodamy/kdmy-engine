@@ -76,37 +76,39 @@
 
 
     <xs:complexType name="Animation">
-        <xs:sequence>
-            <xs:element name="FrameArray" type="FrameArray" minOccurs="0" />
-            <xs:element name="Frame" type="Frame" minOccurs="0" />
-            <xs:element name="Pause" type="Pause" minOccurs="0" />
-            <xs:element name="AlternateSet" minOccurs="0" />
+        <xs:sequence maxOccurs="unbounded">
+            <xs:element name="FrameArray" type="FrameArray" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="Frame" type="Frame" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="Pause" type="Pause" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="AlternateSet" minOccurs="0" maxOccurs="unbounded" />
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="required" />
         <xs:attribute name="loop" type="xs:integer" default="1" use="optional" />
         <xs:attribute name="frameRate" type="xs:float" default="24" use="optional" />
         <xs:attribute name="alternateInLoops" type="xs:boolean" default="0" use="optional" />
         <xs:attribute name="alternateRandomize" type="xs:boolean" default="0" use="optional" />
+        <xs:attribute name="atlasPath" type="xs:anyURI" use="optional" />
     </xs:complexType>
     <xs:complexType name="AnimationMacro">
-        <xs:sequence>
-            <xs:element name="TweenLerp" type="Interpolator" minOccurs="0" />
-            <xs:element name="Set" type="Set" minOccurs="0" />
-            <xs:element name="Yield" type="Yield" minOccurs="0" />
-            <xs:element name="Pause" type="Pause" minOccurs="0" />
-            <xs:element name="Reset" minOccurs="0" />
-            <xs:element name="RandomSetup" type="RandomSetup" minOccurs="0" />
-            <xs:element name="RandomChoose" minOccurs="0" />
-            <xs:element name="RegisterProp" type="RegisterProp" minOccurs="0" />
-            <xs:element name="RegisterSet" type="RegisterSet" minOccurs="0" />
+        <xs:sequence maxOccurs="unbounded">
+            <xs:element name="TweenLerp" type="Interpolator" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="Set" type="Set" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="Yield" type="Yield" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="Pause" type="Pause" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="Reset" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="RandomSetup" type="RandomSetup" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="RandomChoose" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="RegisterProp" type="RegisterProp" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="RegisterSet" type="RegisterSet" minOccurs="0" maxOccurs="unbounded" />
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="required" />
         <xs:attribute name="loop" type="xs:integer" default="1" use="optional" />
         <xs:attribute name="frameRestartIndex" type="xs:integer" default="-1" use="optional" />
         <xs:attribute name="frameAllowChangeSize" type="xs:boolean" default="false" use="optional" />
+        <xs:attribute name="atlasPath" type="xs:anyURI" use="optional" />
     </xs:complexType>
     <xs:complexType name="TweenLerp">
-        <xs:sequence>
+        <xs:sequence maxOccurs="unbounded">
             <xs:element name="TweenLerp" type="Interpolator" minOccurs="1" />
         </xs:sequence>
     </xs:complexType>
@@ -114,11 +116,12 @@
 
     <xs:element name="AnimationList">
         <xs:complexType>
-            <xs:sequence minOccurs="0">
+            <xs:sequence minOccurs="0" maxOccurs="unbounded">
                 <xs:element name="Animation" type="Animation" />
                 <xs:element name="AnimationMacro" type="AnimationMacro" />
                 <xs:element name="TweenLerp" type="TweenLerp" />
             </xs:sequence>
+            <xs:attribute name="atlasPath" type="xs:anyURI" use="optional" />
         </xs:complexType>
     </xs:element>
 

@@ -20,7 +20,7 @@
     </xs:simpleType>
     <xs:simpleType name="Hex">
         <xs:restriction base="xs:string">
-            <xs:pattern value="((0x)|(0X))?[\da-f]+" />
+            <xs:pattern value="((0[xX])|#)?[0-9a-fA-F]+" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="Align">
@@ -71,22 +71,22 @@
     </xs:simpleType>
     <xs:simpleType name="props-text">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="fontsize" />
-            <xs:enumeration value="fontcolor" />
-            <xs:enumeration value="alignhorizontal" />
-            <xs:enumeration value="alignvertical" />
-            <xs:enumeration value="alignparagraph" />
-            <xs:enumeration value="forcecase" />
-            <xs:enumeration value="maxlines" />
-            <xs:enumeration value="maxwidth" />
-            <xs:enumeration value="maxheight" />
-            <xs:enumeration value="borderenable" />
-            <xs:enumeration value="bordersize" />
-            <xs:enumeration value="bordercolorr" />
-            <xs:enumeration value="bordercolorg" />
-            <xs:enumeration value="bordercolorb" />
-            <xs:enumeration value="bordercolora" />
-            <xs:enumeration value="paragraphseparation" />
+            <xs:enumeration value="fontSize" />
+            <xs:enumeration value="fontColor" />
+            <xs:enumeration value="alignHorizontal" />
+            <xs:enumeration value="alignVertical" />
+            <xs:enumeration value="alignParagraph" />
+            <xs:enumeration value="forceCase" />
+            <xs:enumeration value="maxLines" />
+            <xs:enumeration value="maxWidth" />
+            <xs:enumeration value="maxHeight" />
+            <xs:enumeration value="borderEnable" />
+            <xs:enumeration value="borderSize" />
+            <xs:enumeration value="borderColorR" />
+            <xs:enumeration value="borderColorG" />
+            <xs:enumeration value="borderColorB" />
+            <xs:enumeration value="borderColorA" />
+            <xs:enumeration value="paragraphSeparation" />
             <xs:enumeration value="string" />
             <xs:enumeration value="wordbreak" />
         </xs:restriction>
@@ -236,7 +236,7 @@
 
     <xs:complexType name="Font">
         <xs:attribute name="name" type="xs:string" use="required" />
-        <xs:attribute name="path" type="xs:string" use="required" />
+        <xs:attribute name="path" type="xs:anyURI" use="required" />
         <xs:attributeGroup ref="Font-Glpyh" />
     </xs:complexType>
     <xs:complexType name="AttachValue">
@@ -380,56 +380,56 @@
     </xs:complexType>
 
     <xs:complexType name="Sprite">
-        <xs:sequence>
-            <xs:element name="Action" minOccurs="0">
+        <xs:sequence maxOccurs="unbounded">
+            <xs:element name="Action" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="Location" type="Location" minOccurs="0" />
-                        <xs:element name="Size" type="Size" minOccurs="0" />
-                        <xs:element name="OffsetColor" type="Color-any" minOccurs="0" />
-                        <xs:element name="Color" type="Color-any" minOccurs="0" />
-                        <xs:element name="Property" type="Property-sprite" minOccurs="0" />
-                        <xs:element name="Properties" type="Properties-sprite" minOccurs="0" />
-                        <xs:element name="AtlasApply" type="AtlasApply" minOccurs="0" />
-                        <xs:element name="Resize" type="Resize" minOccurs="0" />
-                        <xs:element name="Animation" type="Animation" minOccurs="0" />
-                        <xs:element name="AnimationFromAtlas" type="AnimationFromAtlas" minOccurs="0" />
-                        <xs:element name="AnimationRemove" minOccurs="0" />
-                        <xs:element name="Parallax" type="Parallax" minOccurs="0" />
-                        <xs:element name="Modifier" type="Modifier" minOccurs="0" />
-                        <xs:element name="Static" type="Static" minOccurs="0" />
-                        <xs:element name="Hide" minOccurs="0" />
-                        <xs:element name="Show" minOccurs="0" />
+                    <xs:sequence maxOccurs="unbounded">
+                        <xs:element name="Location" type="Location" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Size" type="Size" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="OffsetColor" type="Color-any" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Color" type="Color-any" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Property" type="Property-sprite" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Properties" type="Properties-sprite" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AtlasApply" type="AtlasApply" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Resize" type="Resize" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationFromAtlas" type="AnimationFromAtlas" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Modifier" type="Modifier" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Hide" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Show" minOccurs="0" maxOccurs="unbounded" />
                     </xs:sequence>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>
             </xs:element>
         </xs:sequence>
-        <xs:attribute name="texture" type="xs:string" use="optional" />
-        <xs:attribute name="atlas" type="xs:string" use="optional" />
+        <xs:attribute name="texture" type="xs:anyURI" use="optional" />
+        <xs:attribute name="atlas" type="xs:anyURI" use="optional" />
         <xs:attribute name="name" type="xs:string" use="optional" />
         <xs:attribute name="initialAction" type="xs:string" use="optional" />
         <xs:attributeGroup ref="colors" />
     </xs:complexType>
     <xs:complexType name="Text">
-        <xs:sequence>
+        <xs:sequence maxOccurs="unbounded">
             <xs:element name="Action">
                 <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="Property" type="Property-text" minOccurs="0" />
-                        <xs:element name="Properties" type="Properties-text" minOccurs="0" />
-                        <xs:element name="Location" type="Location" minOccurs="0" />
-                        <xs:element name="Color" type="Color-any" minOccurs="0" />
-                        <xs:element name="MaxSize" type="Size" minOccurs="0" />
-                        <xs:element name="String" type="String" minOccurs="0" />
-                        <xs:element name="Border" type="Border" minOccurs="0" />
-                        <xs:element name="Animation" type="Animation" minOccurs="0" />
-                        <xs:element name="AnimationRemove" minOccurs="0" />
-                        <xs:element name="Parallax" type="Parallax" minOccurs="0" />
-                        <xs:element name="Modifier" type="Modifier" minOccurs="0" />
-                        <xs:element name="Static" type="Static" minOccurs="0" />
-                        <xs:element name="Hide" minOccurs="0" />
-                        <xs:element name="Show" minOccurs="0" />
+                    <xs:sequence maxOccurs="unbounded">
+                        <xs:element name="Property" type="Property-text" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Properties" type="Properties-text" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Location" type="Location" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Color" type="Color-any" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="MaxSize" type="Size" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="String" type="String" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Border" type="Border" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Modifier" type="Modifier" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Hide" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Show" minOccurs="0" maxOccurs="unbounded" />
                     </xs:sequence>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>
@@ -437,16 +437,17 @@
         </xs:sequence>
         <xs:attribute name="fontName" type="xs:string" use="required" />
         <xs:attribute name="fontSize" type="xs:float" use="optional" default="12" />
-        <xs:attribute name="name" type="xs:string" use="prohibited" />
+        <xs:attribute name="name" type="xs:string" use="optional" />
         <xs:attribute name="initialAction" type="xs:string" use="optional" />
+        <xs:attributeGroup ref="colors" />
     </xs:complexType>
     <xs:complexType name="Sound">
-        <xs:sequence>
-            <xs:element name="Action" minOccurs="0">
+        <xs:sequence maxOccurs="unbounded">
+            <xs:element name="Action" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="Property" type="Property-sound" minOccurs="0" />
-                        <xs:element name="Properties" type="Properties-sound" minOccurs="0" />
+                    <xs:sequence maxOccurs="unbounded">
+                        <xs:element name="Property" type="Property-sound" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Properties" type="Properties-sound" minOccurs="0" maxOccurs="unbounded" />
                     </xs:sequence>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>
@@ -454,40 +455,40 @@
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="optional" />
         <xs:attribute name="initialAction" type="xs:string" use="optional" />
-        <xs:attribute name="src" type="xs:string" use="required" />
+        <xs:attribute name="src" type="xs:anyURI" use="required" />
         <xs:attribute name="volume" type="xs:float" use="optional" default="1" />
         <xs:attribute name="looped" type="xs:boolean" use="optional" default="false" />
     </xs:complexType>
     <xs:complexType name="Group">
-        <xs:sequence>
-            <xs:element name="Action" minOccurs="0">
+        <xs:sequence maxOccurs="unbounded">
+            <xs:element name="Action" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="ResetMatrix" minOccurs="0" />
-                        <xs:element name="Modifier" type="Modifier" minOccurs="0" />
-                        <xs:element name="Property" type="Property-group" minOccurs="0" />
-                        <xs:element name="Properties" type="Properties-group" minOccurs="0" />
-                        <xs:element name="OffsetColor" type="Color-any" minOccurs="0" />
-                        <xs:element name="Parallax" type="Parallax" minOccurs="0" />
-                        <xs:element name="Static" type="Static" minOccurs="0" />
-                        <xs:element name="Hide" minOccurs="0" />
-                        <xs:element name="Show" minOccurs="0" />
-                        <xs:element name="Animation" type="Animation" minOccurs="0" />
-                        <xs:element name="AnimationRemove" minOccurs="0" />
-                    </xs:sequence>
+                    <xs:choice>
+                        <xs:element name="ResetMatrix" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Modifier" type="Modifier" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Property" type="Property-group" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Properties" type="Properties-group" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="OffsetColor" type="Color-any" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Hide" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Show" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
+                    </xs:choice>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>
             </xs:element>
             <xs:sequence minOccurs="1">
-                <xs:element name="Sprite" minOccurs="0" type="Sprite" />
-                <xs:element name="Text" minOccurs="0" type="Text" />
-                <xs:element name="Group" minOccurs="0" type="Group" />
-                <xs:element name="Placeholder" minOccurs="0" type="Placeholder" />
+                <xs:element name="Sprite" minOccurs="0" maxOccurs="unbounded" type="Sprite" />
+                <xs:element name="Text" minOccurs="0" maxOccurs="unbounded" type="Text" />
+                <xs:element name="Group" minOccurs="0" maxOccurs="unbounded" type="Group" />
+                <xs:element name="Placeholder" minOccurs="0" maxOccurs="unbounded" type="Placeholder" />
             </xs:sequence>
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="optional" />
         <xs:attribute name="initialAction" type="xs:string" use="optional" />
-        <xs:attribute name="antialiasing" type="antialiasing" use="required" />
+        <xs:attribute name="antialiasing" type="antialiasing" use="optional" />
         <xs:attribute name="alpha" type="xs:float" use="optional" default="1" />
         <xs:attribute name="visible" type="xs:boolean" use="optional" default="false" />
     </xs:complexType>
@@ -517,7 +518,7 @@
         <xs:attribute name="startDelayInBeats" type="xs:float" use="optional" default="0" />
     </xs:complexType>
     <xs:complexType name="Placeholder">
-        <xs:sequence minOccurs="0">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
             <xs:element name="Parallax" type="Parallax" maxOccurs="1" />
             <xs:element name="Location" type="Location" maxOccurs="1" />
             <xs:element name="Size" type="Size" maxOccurs="1" />
@@ -536,21 +537,21 @@
 
     <xs:element name="Layout">
         <xs:complexType>
-            <xs:sequence minOccurs="0">
-                <xs:element name="Font" minOccurs="0" type="Font" />
-                <xs:element name="AttachValue" minOccurs="0" type="AttachValue" />
-                <xs:element name="Sprite" minOccurs="0" type="Sprite" />
-                <xs:element name="Text" minOccurs="0" type="Text" />
-                <xs:element name="Sound" minOccurs="0" type="Sound" />
-                <xs:element name="Group" minOccurs="0" type="Group" />
-                <xs:element name="Camera" minOccurs="0" type="Camera" />
-                <xs:element name="Trigger" minOccurs="0" type="Trigger" />
-                <xs:element name="Placeholder" minOccurs="0" type="Placeholder" />
+            <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="Font" minOccurs="0" maxOccurs="unbounded" type="Font" />
+                <xs:element name="AttachValue" minOccurs="0" maxOccurs="unbounded" type="AttachValue" />
+                <xs:element name="Sprite" minOccurs="0" maxOccurs="unbounded" type="Sprite" />
+                <xs:element name="Text" minOccurs="0" maxOccurs="unbounded" type="Text" />
+                <xs:element name="Sound" minOccurs="0" maxOccurs="unbounded" type="Sound" />
+                <xs:element name="Group" minOccurs="0" maxOccurs="unbounded" type="Group" />
+                <xs:element name="Camera" minOccurs="0" maxOccurs="unbounded" type="Camera" />
+                <xs:element name="Trigger" minOccurs="0" maxOccurs="unbounded" type="Trigger" />
+                <xs:element name="Placeholder" minOccurs="0" maxOccurs="unbounded" type="Placeholder" />
             </xs:sequence>
             <xs:attribute name="width" type="xs:float" use="required" />
             <xs:attribute name="height" type="xs:float" use="required" />
             <xs:attribute name="keepAspectRatio" type="xs:boolean" default="true" use="optional" />
-            <xs:attribute name="animationList" type="xs:string" use="optional" />
+            <xs:attribute name="animationList" type="xs:anyURI" use="optional" />
             <xs:attribute name="antialiasing" type="antialiasing" default="enabled" use="optional" />
             <xs:attribute name="animation_speed" type="xs:float" default="1.0" use="optional" />
             <xs:attribute name="defaultBPM" type="antialiasing" default="enabled" use="optional" />

@@ -3,10 +3,10 @@
         "distributions": [
             {
                 "notes": [
-                    { "name": "left", "customSickEffectModel": null, "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false },
-                    { "name": "down", "customSickEffectModel": null, "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false },
-                    { "name": "up", "customSickEffectModel": "up custom", "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false },
-                    { "name": "right", "customSickEffectModel": null, "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false }
+                    { "name": "left", "sickEffectStateName": "abc", "customSickEffectModel": null, "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false },
+                    { "name": "down", "sickEffectStateName": "abc", "customSickEffectModel": null, "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false },
+                    { "name": "up", "sickEffectStateName": "abc", "customSickEffectModel": "up_custom.xml", "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false },
+                    { "name": "right", "sickEffectStateName": "abc", "customSickEffectModel": null, "damageRatio": 1.0, "healRatio": 1.0, "ignoreHit": false, "ignoreMiss": false, "isSpecial": false }
                 ],
                 "strums": [
                     { "name": "left","noteIds": [0] },
@@ -28,7 +28,8 @@
         "distributionsMinimal": [
             { "modelMarker": "notes.xml", "modelSickEffect": "splashes.xml", "modelBackground": null },
             { "modelMarker": "fancyNotes.xml", "modelSickEffect": null, "modelBackground": "bgs.xml" },
-            { "modelMarker": "pixelNotes.xml", "states": [ { "name": "hd-notes-state", "modelMarker": "notes_in_hd.xml", "modelSickEffect": "notes_in_hd.xml", "modelBackground": "strumBackground.xml" } ] }
+            { "modelMarker": "fancyNotes.xml", "modelSickEffect": null, "modelBackground": "bgs.xml" },
+            { "modelMarker": "pixelNotes.xml", "states": [ { "name": "hd-notes-state","modelNotes": "notes_in_hd.xml" , "modelMarker": "notes_in_hd.xml", "modelSickEffect": "notes_in_hd.xml", "modelBackground": "strumBackground.xml" } ] }
         ],
         "healthbar": {
             "disable": false,
@@ -79,7 +80,11 @@
             "selectedStateNamePerPlayer": [
                 "%selectedStateNamePerPlayer+0%", "%selectedStateNamePerPlayer+1%"
             ],
-            "players": null
+            "players": null,
+			"ui_layout": "ui_layout.xml",
+			"pause_menu": "menu_manifest.json"
+			
+			
         }
     ]
 }

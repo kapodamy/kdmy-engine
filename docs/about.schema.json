@@ -1,0 +1,232 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$ref": "#/definitions/About",
+    "definitions": {
+        "About": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "displayName": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "description": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "hostFlipSprite": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "hostEnableBeat": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "weekHostManifest": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "songs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Song"
+                    }
+                },
+                "selectorBackgroundColor": {
+                    "type": ["integer", "null", "string"],
+                    "default": null
+                },
+                "hasDifficultyEasy": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "hasDifficultyNormal": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "hasDifficultyHard": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "customDifficulties": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CustomDifficulty"
+                    }
+                },
+                "customDifficultsModel": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "customDifficultyDefault": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "unlockDirectiveName": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "emitUnlockDirectiveName": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "warningMessage": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "sensibleContentMessage": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "disallowCustomBoyfriend": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "disallowCustomGirlfriend": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "unlockables": {
+                    "$ref": "#/definitions/Unlockables"
+                },
+                "customSelectorLayout": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "customFolder": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "inGameplayCustomFolder": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+				"songsDefaultFreeplayHostIconModel": {
+                    "type": ["string", "null"],
+                    "default": null
+                }
+            },
+            "required": [
+                "displayName",
+                "songs"
+            ],
+            "title": "About (week manifest)"
+        },
+        "CustomDifficulty": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "unlockDirective": {
+                    "type": ["string", "null"],
+                    "default": null
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "CustomDifficulty"
+        },
+        "Song": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "freeplayHostIconModel": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+				"freeplayHostIconName": {
+                    "type": "string",
+                    "default": "neutral"
+                },
+                "freeplayOnly": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "freeplayBackground": {
+                    "type": ["string", "null"],
+                    "default": null,
+                    "description": "Path to a model or texture"
+                },
+                "freeplayUnlockDirective": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "freeplayGameplayManifest": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "freeplayHideIfWeekLocked": {
+                    "type": "boolean",
+                    "default": false
+                },
+				"freeplayTrackIndexInGameplayManifest": {
+                    "type": "integer",
+                    "default": -1
+                },
+				"freeplaySongFilename": {
+                    "type": "string",
+					"default": null,
+					"description": "if this field is ommited, the name is used in lower case and spaces are replaced by dashes"
+                },
+                "freeplayDescription": {
+                    "type": ["string", "null"],
+                    "default": null
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "Song"
+        },
+        "Unlockables": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "boyfriend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Character"
+                    }
+                },
+                "girlfriend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Character"
+                    }
+                }
+            },
+            "title": "Unlockables"
+        },
+        "Character": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "hideIfLocked": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "unlockDirectiveName": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "manifest": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "manifest",
+                "name"
+            ],
+            "title": "Character"
+        }
+    }
+}

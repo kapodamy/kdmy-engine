@@ -18,8 +18,16 @@ namespace Engine.Game.Common {
         }
         public class Song {
             public string name;
-            public string host_icon_model;
+            public string freeplay_host_icon_model;
+            public string freeplay_host_icon_name;
             public string freeplay_background;
+            public bool freeplay_only;
+            public string freeplay_unlock_directive;
+            public bool freeplay_hide_if_week_locked;
+            public string freeplay_gameplaymanifest;
+            public int freeplay_track_index_in_gameplaymanifest;
+            public string freeplay_song_filename;
+            public string freeplay_description;
         }
         public class Unlockables {
             public UnlockableCharacter[] boyfriend_models;
@@ -54,11 +62,11 @@ namespace Engine.Game.Common {
         public bool disallow_custom_boyfriend;
         public bool disallow_custom_girlfriend;
         public Unlockables unlockables;
-        public bool background_layout;
+        public string custom_selector_layout;
         public string custom_folder;
         public string custom_folder_gameplay;
         public bool has_greetings;
-
+        public string songs_default_freeplay_host_icon_model;
     }
 
     public struct WeekArray {
@@ -137,6 +145,11 @@ namespace Engine.Game.Common {
             }
             return null;
         }
+        public static string GetAsset(WeekInfo weekinfo, string relative_path) {
+            return StringUtils.Concat(
+                Funkin.WEEKS_FOLDER, weekinfo.name, FS.CHAR_SEPARATOR.ToString(), relative_path
+            );
+        }
 
         private static WeekInfo ParseWeek(string week_name) {
             WeekInfo week_parsed = null;
@@ -201,8 +214,16 @@ namespace Engine.Game.Common {
                     JSONToken json_song = JSONParser.ReadArrayItemObject(json_songs, i);
                     songs[i] = new WeekInfo.Song() {
                         name = JSONParser.ReadString(json_song, "name", null),
-                        host_icon_model = JSONParser.ReadString(json_song, "hostIconModel", null),
-                        freeplay_background = JSONParser.ReadString(json_song, "freePlayBackground", null)
+                        freeplay_host_icon_model = ParsePath(json_song, "freeplayHostIconModel"),
+                        freeplay_host_icon_name = JSONParser.ReadString(json_song, "freeplayHostIconName", null),
+                        freeplay_background = JSONParser.ReadString(json_song, "freeplayBackground", null),
+                        freeplay_only = JSONParser.ReadBoolean(json_song, "freeplayBackground", false),
+                        freeplay_unlock_directive = JSONParser.ReadString(json_song, "freeplayUnlockDirective", null),
+                        freeplay_hide_if_week_locked = JSONParser.ReadBoolean(json_song, "freeplayGameplayManifest", false),
+                        freeplay_gameplaymanifest = JSONParser.ReadString(json_song, "freeplayHideIfWeekLocked", null),
+                        freeplay_track_index_in_gameplaymanifest = (int)JSONParser.ReadNumberLong(json_song, "freeplayTrackIndexInGameplayManifest", -1),
+                        freeplay_song_filename = ParsePath(json_song, "freeplaySongFilename"),
+                        freeplay_description = JSONParser.ReadString(json_song, "freeplayDescription", null)
                     };
                 }
 
@@ -241,10 +262,11 @@ namespace Engine.Game.Common {
                         girlfriend_models = ParseCharacters(girlfriend_array),
                         girlfriend_models_size = Math.Max(JSONParser.ReadArrayLength(girlfriend_array), 0)
                     },
-                    background_layout = JSONParser.HasPropertyString(json, "backgroundLayout"),
+                    custom_selector_layout = ParsePath(json, "customSelectorLayout"),
                     custom_folder = ParsePath(json, "customFolder"),
                     custom_folder_gameplay = ParsePath(json, "inGameplayCustomFolder"),
-                    has_greetings = FS.FileExists(Funkin.WEEK_GREETINGS_FILE)
+                    has_greetings = FS.FileExists(Funkin.WEEK_GREETINGS_FILE),
+                    songs_default_freeplay_host_icon_model = ParsePath(json, "songsDefaultFreeplayHostIconModel")
                 };
 
                 JSONParser.Destroy(json);

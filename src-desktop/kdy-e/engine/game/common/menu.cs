@@ -457,6 +457,21 @@ namespace Engine.Game.Common {
         }
 
 
+        public string GetSelectedItemName() {
+            if (this.index_selected < 0 || this.index_selected >= this.items_size) return null;
+
+            return this.items[this.index_selected].name;
+        }
+
+        public void SetTextForceCase(int none_or_lowercase_or_uppercase) {
+            for (int i = 0 ; i < this.items_size ; i++) {
+                if (this.items[i].is_text) {
+                    ((TextSprite)this.items[i].vertex).ForceCase(none_or_lowercase_or_uppercase);
+                }
+            }
+        }
+
+
         private void InternalBuildItem(MenuItem item, MenuManifest.Item src_item, MenuManifest.Parameters @params, ModelHolder modelholder, FontHolder fontholder, float[] border) {
             bool custom_modelholder = false;
             item.is_text = !String.IsNullOrEmpty(src_item.text);
@@ -485,7 +500,11 @@ namespace Engine.Game.Common {
                     custom_modelholder = true;
                     modelholder = ModelHolder.Init(src_item.modelholder);
                 }
-                item.vertex = StateSprite.InitFromTexture(modelholder.GetTexture(true));
+                StateSprite statesprite = StateSprite.InitFromTexture(modelholder.GetTexture(true));
+                statesprite.SetVertexColorRGB8(modelholder.GetVertexColor());
+                if (modelholder.IsInvalid()) statesprite.SetAlpha(0);
+
+                item.vertex = statesprite;
 
                 float scale = src_item.texture_scale > 0 ? src_item.texture_scale : @params.texture_scale;
                 if (scale > 0) {

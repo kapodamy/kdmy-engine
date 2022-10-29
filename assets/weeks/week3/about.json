@@ -5,6 +5,7 @@
         { "name": "Philly Nice"},
         { "name": "Blammed"}
     ],
+	"songsDefaultFreeplayHostIconModel": "PICO/icon-pico.xml",
 
     "hostFlipSprite": true,
 

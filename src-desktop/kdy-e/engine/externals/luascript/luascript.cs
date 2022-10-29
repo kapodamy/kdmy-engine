@@ -147,12 +147,12 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
 
-        public void notify_weekinit(bool from_restart) {
+        public void notify_weekinit(int freeplay_track_index) {
             const string FUNCTION = "f_weekinit";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
 
-            L.lua_pushboolean(from_restart);
+            L.lua_pushinteger(freeplay_track_index);
 
             lua.CallPushedGlobalFunction(1);
         }

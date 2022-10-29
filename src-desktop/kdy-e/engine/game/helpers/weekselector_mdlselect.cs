@@ -20,8 +20,8 @@ namespace Engine.Game.Helpers {
         private const string UI_BF_PREVIEW = "ui_character_player";
         private const string UI_GF_PREVIEW = "ui_character_girlfriend";
 
-        private const string MODELS_BF = "/assets/common/data/boyfriend_models.json";
-        private const string MODELS_GF = "/assets/common/data/girlfriend_models.json";
+        public const string MODELS_BF = "/assets/common/data/boyfriend_models.json";
+        public const string MODELS_GF = "/assets/common/data/girlfriend_models.json";
 
 
 

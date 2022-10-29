@@ -1,5 +1,5 @@
 precision mediump float;
-//#define SDF_FONT
+#define SDF_FONT
 
 varying vec2 v_texcoord;
 varying float v_texalt;

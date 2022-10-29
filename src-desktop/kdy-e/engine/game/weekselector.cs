@@ -132,7 +132,8 @@ namespace Engine.Game {
             StringBuilder list = ui.stringbuilder;
             list.Clear();
 
-            for (int i = 0 ; i < songs_count ; i++) {
+            for (int i = 0 ; i < weekinfo.songs_count ; i++) {
+                if (weekinfo.songs[i].freeplay_only) continue;
                 list.AddKDY("\n");
                 list.AddKDY(weekinfo.songs[i].name);
             }
@@ -185,15 +186,22 @@ namespace Engine.Game {
         }
 
         private static void LoadCustomWeekBackground(STATE state) {
-            if (!state.weekinfo.background_layout) return;
+            if (state.custom_layout != null) {
+                state.custom_layout.Destroy();
+                state.custom_layout = null;
+            }
+
+            if (String.IsNullOrEmpty(state.weekinfo.custom_selector_layout)) return;
 
             Console.Error.WriteLine("[LOG] STUB weekselector_load_custom_week_background()");
 
-            /*let path = WeekenumeratorGetAsset(state.weekinfo, state.weekinfo.background_layout);
+            string path = WeekEnumerator.GetAsset(state.weekinfo, state.weekinfo.custom_selector_layout);
             state.custom_layout = Layout.Init(path);
             //free(path);
-            if (state.custom_layout != null && !state.week_unlocked)
-                state.custom_layout.TriggerAny("week-locked"); */
+            if (state.custom_layout != null) {
+                if (!state.week_unlocked) state.custom_layout.TriggerAny("week-locked");
+                state.custom_layout.TriggerAny("show-principal");
+            }
         }
 
         private static void SetText(Layout layout, string name, string format, object text) {
@@ -380,9 +388,13 @@ namespace Engine.Game {
                 }
 
                 PVRContext.global_context.Reset();
-                if (state.custom_layout != null) state.custom_layout.Animate(elapsed);
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
+
+                if (state.custom_layout != null) {
+                    state.custom_layout.Animate(elapsed);
+                    state.custom_layout.Draw(PVRContext.global_context);
+                }
 
                 state.update_ui = page_selected_ui != state.page_selected_ui;
                 if (state.update_ui) WeekSelector.ChangePage(ui, state.page_selected_ui);
@@ -419,10 +431,14 @@ namespace Engine.Game {
 
                 BeatWatcher.GlobalSetTimestampFromKosTimer();
 
-                //if (state.custom_layout) state.custom_layout.Animate( elapsed);
                 PVRContext.global_context.Reset();
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
+
+                if (state.custom_layout != null) {
+                    state.custom_layout.Animate(elapsed);
+                    state.custom_layout.Draw(PVRContext.global_context);
+                }
 
                 if (state.back_to_main_menu && layout.AnimationIsCompleted("transition_effect") > 0)
                     break;
@@ -479,7 +495,9 @@ namespace Engine.Game {
                 gameplay_alternative_tracks,
                 gameplay_difficult,
                 gameplay_model_boyfriend,
-                gameplay_model_girlfriend
+                gameplay_model_girlfriend,
+                null,
+                -1
             );
 
             GameMain.background_menu_music = SoundPlayer.Init(Funkin.BACKGROUND_MUSIC);
@@ -542,6 +560,11 @@ namespace Engine.Game {
                 return;
             }
 
+            if (state.page_selected_ui == 1 && state.custom_layout != null) {
+                state.custom_layout.TriggerAny("hide-principal");
+                state.custom_layout.TriggerAny("show-difficult-selector");
+            }
+
             if (seek_offset == 0) return;
 
             if (!ui.weeklist.Scroll(seek_offset)) {
@@ -560,14 +583,7 @@ namespace Engine.Game {
             ui.mdl_boyfriend.SelectDefault();
             ui.mdl_girlfriend.SelectDefault();
 
-            if (state.custom_layout != null) {
-                state.custom_layout.Destroy();
-                state.custom_layout = null;
-            }
-
-            if (state.weekinfo.background_layout) {
-                WeekSelector.LoadCustomWeekBackground(state);
-            }
+            WeekSelector.LoadCustomWeekBackground(state);
         }
 
         private static void Page1(UI ui, STATE state) {
@@ -639,6 +655,11 @@ namespace Engine.Game {
                     state.quit = true;
             }
 
+            if (state.page_selected_ui == 0 && state.custom_layout != null) {
+                state.custom_layout.TriggerAny("hide-difficult-selector");
+                state.custom_layout.TriggerAny("show-principal");
+            }
+
             if (seek_offset == 0) return;
 
             if (ui.weekdifficult.Scroll(seek_offset)) {
@@ -670,7 +691,7 @@ namespace Engine.Game {
                 ui.mdl_girlfriend.EnableArrows(!state.choosing_boyfriend);
 
                 if (state.custom_layout != null)
-                    state.custom_layout.TriggerAny("model-change-show");
+                    state.custom_layout.TriggerAny("show-model-change");
             }
 
             GamepadButtons buttons = ui.maple_pads.HasPressedDelayed(
@@ -718,7 +739,7 @@ namespace Engine.Game {
             }
 
             if (state.page_selected_ui != 2 && state.custom_layout != null)
-                state.custom_layout.TriggerAny("model-change-hide");
+                state.custom_layout.TriggerAny("hide-model-change");
 
             if (character_model_seek != 0) {
                 bool old_choose_boyfriend = state.choosing_boyfriend;

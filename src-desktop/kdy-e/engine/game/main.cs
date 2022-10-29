@@ -105,7 +105,8 @@ namespace Engine.Game {
             if (GameMain.background_menu_music != null) background_menu_music.LoopEnable(true);
 
             // this code is for quick week debugging only
-            /*Credits.Main();
+            /*FreeplayMenu.Main();
+			Credits.Main();
             SettingsMenu.Main();
             WeekSelector.Main();
             Engine.Game.Gameplay.Week.Main(

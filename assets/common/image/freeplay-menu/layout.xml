@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="1280" height="720" keepAspectRatio="true">
+
+    <Font name="vcr" path="/assets/common/font/vcr.ttf" />
+
+    <Sprite texture="menuBGMagenta.png">
+        <Action>
+            <Location x="0" y="0" z="0" />
+            <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
+        </Action>
+    </Sprite>
+
+    <Sprite name="custom_background">
+        <Action>
+            <Location x="0" y="0" z="1" />
+            <Hide />
+        </Action>
+        <Action name="track-background-set">
+            <Show />
+            <Location x="0" y="0" z="0" />
+            <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
+        </Action>
+        <Action name="track-background-hide">
+            <Hide />
+        </Action>
+    </Sprite>
+
+    <!-- song info -->
+    <Group>
+        <Sprite r="0" g="0" b="0" a="0.5">
+            <Action>
+                <Location x="0" y="0" z="2" />
+                <Size width="458" height="82" />
+            </Action>
+        </Sprite>
+
+        <Text fontName="vcr" fontSize="24" rgb="0xFFFFFF" name="personal_best">
+            <Action>
+                <Location x="16" y="16" z="3" />
+                <!--<String>PERSONAL BEST SCORE: 123456789</String>-->
+            </Action>
+        </Text>
+        <Text fontName="vcr" fontSize="18" rgb="0xFFFFFF" name="info">
+            <Action>
+                <Location x="16" y="46" z="3.1" />
+                <!--<String>Week1 [EASY]</String>-->
+            </Action>
+        </Text>
+    </Group>
+
+    <!-- song description/composer commentary -->
+    <Group visible="false">
+        <Action name="description-show">
+            <Show />
+        </Action>
+        <Action name="description-hide">
+            <Hide />
+        </Action>
+
+        <Sprite r="0" g="0" b="0" a="0.5">
+            <Action>
+                <Location x="0" y="82" z="2" />
+                <Size width="1280" height="96" />
+            </Action>
+        </Sprite>
+        <Text fontName="vcr" fontSize="20" rgb="0xFFFFFF" name="description">
+            <Action>
+                <Location x="16" y="82" z="3.2" />
+                <MaxSize width="1248" />
+                <!--<String>¡Rap-battle against Daddy Dearest!&#10;Composed by kawaisprite</String>-->
+            </Action>
+        </Text>
+    </Group>
+
+    <!-- NOTE: "bold alphabet" is incompleted, does not have numbers or symbols -->
+    <!-- "VCR" or "Pixel" should be used instead -->
+    <AttachValue name="menu_font" type="string" value="/assets/common/font/Alphabet.xml" />
+    <AttachValue name="menu_fontGlyphSuffix" type="string" value="bold" />
+    <AttachValue name="menu_fontSize" type="float" value="54" />
+    <AttachValue name="menu_fontColor" type="hex" value="0xFFFFFF" />
+    <AttachValue name="menu_fontBorderColor" type="hex" value="0x000000" />
+    <AttachValue name="menu_fontBorderSize" type="hex" value="0" />
+    <AttachValue name="menu_itemsGap" type="float" value="32" />
+    
+    <Placeholder name="menu_icons" x="64" y="178" z="4" width="54" height="566" />
+    <Placeholder name="menu_songs" x="118" y="178" z="4" width="1174" height="566" />
+
+    <!-- Locked hint -->
+    <Group visible="false">
+        <Action name="not-locked">
+            <Hide />
+        </Action>
+        <Action name="locked">
+            <Show />
+        </Action>
+
+        <Sprite rgba="0x0000007F">
+            <Action>
+                <Location x="1078" y="41" z="2" />
+                <Size width="212" height="41" />
+            </Action>
+        </Sprite>
+        <Sprite atlas="/assets/common/image/week-selector/week_selector_UI.xml">
+            <Action>
+                <Location x="1086" y="41" z="2.1" />
+                <AtlasApply entry="locked" />
+                <Resize maxWidth="41" maxHeight="41" center="true" />
+            </Action>
+        </Sprite>
+        <Text fontName="vcr" fontSize="40" rgb="0xFFFFFF">
+            <Action>
+                <Location x="1122" y="41" z="2.2" />
+                <String>LOCKED</String>
+            </Action>
+        </Text>
+    </Group>
+
+    <!-- Alternative toggled hint -->
+    <Group visible="false">
+        <Action name="hide-alternative">
+            <Hide />
+        </Action>
+        <Action name="use-alternative">
+            <Show />
+        </Action>
+        <Action name="not-use-alternative">
+            <Show />
+        </Action>
+
+        <Sprite rgba="0x0000007F">
+            <Action>
+                <Location x="738" y="0" z="2" />
+                <Size width="542" height="41" />
+            </Action>
+        </Sprite>
+        <Sprite></Sprite>
+        <Text fontName="vcr" fontSize="38" rgb="0xFFFFFF">
+            <Action>
+                <Location x="738" y="0" z="2.1" />
+                <MaxSize width="542" height="41" />
+                <Property name="alignVertical" value="center" />
+                <Property name="alignHorizontal" value="center" />
+            </Action>
+            <Action name="use-alternative">
+                <String>Alternative tracks: YES</String>
+            </Action>
+            <Action name="not-use-alternative">
+                <String>Alternative tracks: NO</String>
+            </Action>
+        </Text>
+    </Group>
+
+    <!-- Help -->
+    <Group>
+        <Sprite r="0" g="0" b="0" a="0.25">
+            <Action>
+                <Location x="0" y="694" z="2" />
+                <Size width="1280" height="30" />
+            </Action>
+        </Sprite>
+        <Text fontName="vcr" fontSize="14" rgb="0xFFFFFF">
+            <Action>
+                <Location x="8" y="698" z="2.1" />
+                <String>UP/DOWN: choose song. LEFT/RIGHT: choose difficult. For songs with alternative tracks press the binded key.</String>
+            </Action>
+        </Text>
+    </Group>
+
+</Layout>

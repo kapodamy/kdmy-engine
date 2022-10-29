@@ -123,7 +123,7 @@ namespace Engine.Game.Gameplay {
 
         public UIParams ui;
 
-        public bool no_copyright;
+        public bool alt_tracks;
         public string difficult;
         public string default_boyfriend;
         public string default_girlfriend;
@@ -327,12 +327,12 @@ namespace Engine.Game.Gameplay {
         }
 
 
-        public static int Main(WeekInfo weekinfo, bool no_copyright, string difficult, string default_bf, string default_gf) {
+        public static int Main(WeekInfo weekinfo, bool alt_tracks, string difficult, string default_bf, string default_gf, string gameplaymanifest_src, int single_track_index) {
             Week.ROUND_UI_MATRIX.Clear();
             Week.ROUND_UI_MATRIX_CAMERA.Clear();
 
             InitParams initparams = new InitParams() {
-                no_copyright = no_copyright,
+                alt_tracks = alt_tracks,
                 difficult = difficult,
                 default_boyfriend = default_bf,
                 default_girlfriend = default_gf,
@@ -473,7 +473,7 @@ namespace Engine.Game.Gameplay {
             };
 
             // (JS & C# only) disable texture deferring, avoid shuttering when drawing the first frame
-            Texture.DisableDefering(true);
+            //Texture.DisableDefering(true);
 
             // the UI "bump" has one octave of beat as duration (example: 75ms @ 100bpm)
             roundcontext.ui_camera.SetTransitionDuration(true, 0.125f);
@@ -501,11 +501,16 @@ namespace Engine.Game.Gameplay {
             }
 
             // step 1: load the gameplay manifest this hosts all engine components behavior
-            string src_gameplaymanifest = WeekEnumerator.GetGameplayManifest(weekinfo);
-            GameplayManifest gameplaymanifest = Week.InternalLoadGameplayManifest(src_gameplaymanifest);
-            //free(src_gameplaymanifest);
+            GameplayManifest gameplaymanifest;
+            if (gameplaymanifest_src != null) {
+                gameplaymanifest = Week.InternalLoadGameplayManifest(gameplaymanifest_src);
+            } else {
+                gameplaymanifest_src = WeekEnumerator.GetGameplayManifest(weekinfo);
+                gameplaymanifest = Week.InternalLoadGameplayManifest(gameplaymanifest_src);
+                //free(src_gameplaymanifest);
+            }
             if (gameplaymanifest == null) {
-                Texture.DisableDefering(false);
+                //Texture.DisableDefering(false);
                 return 0;
             }
 
@@ -521,8 +526,10 @@ namespace Engine.Game.Gameplay {
             bool first_init = true;
             bool reject_completed = false;
             int last_track = gameplaymanifest.tracks_size - 1;
+            bool single_track = single_track_index >= 0;
 
             for (int i = 0 ; i < gameplaymanifest.tracks_size ; i++) tracks_attempts[i] = 0;
+            if (single_track) roundcontext.track_index = single_track_index;
 
             // step 3: start the round cycle
             while (roundcontext.track_index < gameplaymanifest.tracks_size) {
@@ -546,7 +553,9 @@ namespace Engine.Game.Gameplay {
                 if (roundcontext.songplayer != null) roundcontext.songplayer.Mute(false);
 
                 if (first_init) {
-                    if (roundcontext.script != null) roundcontext.script.NotifyWeekinit(false);
+                    if (roundcontext.script != null) {
+                        roundcontext.script.NotifyWeekinit(single_track ? single_track_index : -1);
+                    }
                     Week.Halt(roundcontext, true);
                     first_init = false;
                 }
@@ -627,6 +636,8 @@ namespace Engine.Game.Gameplay {
                     continue;
                 }
 
+                if (single_track) break;// week launched from freeplaymenu
+
                 // round completed, next one
                 roundcontext.track_index++;
                 retry = false;
@@ -673,9 +684,9 @@ namespace Engine.Game.Gameplay {
                 int total_attempts = 0;
                 for (int i = 0 ; i < gameplaymanifest.tracks_size ; i++) total_attempts += tracks_attempts[i];
 
-
+                int tracks_count = single_track ? 1 : gameplaymanifest.tracks_size;
                 roundcontext.weekresult.HelperShowSummary(
-                    roundcontext, total_attempts, gameplaymanifest.tracks_size, reject_completed
+                    roundcontext, total_attempts, tracks_count, reject_completed
                 );
 
                 if (roundcontext.script != null) roundcontext.script.NotifyAfterresults();
@@ -1031,6 +1042,7 @@ namespace Engine.Game.Gameplay {
                 Week.InitGirlfriend(roundcontext, gameplaymanifest.@default.girlfriend);
             }
 
+            // add additional pause menu
             if (trackmanifest.has_pause_menu) {
                 roundcontext.pause_menu_from_default = false;
 
@@ -1043,7 +1055,7 @@ namespace Engine.Game.Gameplay {
 
             // initialize the song tracks
             if (roundcontext.songplayer != null) roundcontext.songplayer.Destroy();
-            roundcontext.songplayer = SongPlayer.Init(trackmanifest.song, initparams.no_copyright);
+            roundcontext.songplayer = SongPlayer.Init(trackmanifest.song, initparams.alt_tracks);
 
             // initialize the gameover screen
             Week.InitUIGameover(roundcontext);
@@ -1054,7 +1066,7 @@ namespace Engine.Game.Gameplay {
             roundcontext.trackinfo.SetTextFormated(
                 UI_TRACKINFO_FORMAT,
                 trackmanifest.name,
-                initparams.no_copyright ? UI_TRACKINFO_ALT_SUFFIX : null,
+                initparams.alt_tracks ? UI_TRACKINFO_ALT_SUFFIX : null,
                 initparams.difficult
 #if DEBUG
                 , GameMain.ENGINE_VERSION

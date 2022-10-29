@@ -52,8 +52,8 @@ namespace Engine.Game.Gameplay {
         }
 
 
-        public void NotifyWeekinit(bool from_restart) {
-            this.luascript.notify_weekinit(from_restart);
+        public void NotifyWeekinit(int freeplay_track_index) {
+            this.luascript.notify_weekinit(freeplay_track_index);
         }
 
         public void NotifyBeforeready(bool from_retry) {

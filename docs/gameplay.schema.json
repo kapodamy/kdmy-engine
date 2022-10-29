@@ -1,0 +1,438 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$ref": "#/definitions/Gameplay",
+    "definitions": {
+        "Gameplay": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "default": {
+                    "$ref": "#/definitions/Default"
+                },
+                "tracks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Track"
+                    }
+                }
+            },
+            "required": [
+                "tracks"
+            ],
+            "title": "Gameplay manifest"
+        },
+        "Default": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "distributions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Distribution"
+                    }
+                },
+                "distributionsMinimal": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DistributionsMinimal"
+                    }
+                },
+                "healthbar": {
+                    "$ref": "#/definitions/Healthbar"
+                },
+                "stage": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "script": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "girlfriend": {
+                    "$ref": "#/definitions/Girlfriend"
+                },
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Player"
+                    }
+                }
+            },
+            "required": [
+                "players"
+            ],
+            "title": "Default"
+        },
+        "Distribution": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "notes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Note"
+                    }
+                },
+                "strums": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Strum"
+                    }
+                },
+                "buttonBinds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "description": "these are bit flags (see gamepad sourcecode)"
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DistributionsMinimal"
+                    }
+                }
+            },
+            "required": [
+                "notes",
+                "strums"
+            ],
+            "title": "Distribution"
+        },
+        "Note": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "sickEffectStateName": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "customSickEffectModel": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "damageRatio": {
+                    "type": "number",
+                    "default": 1.0
+                },
+                "healRatio": {
+                    "type": "number",
+                    "default": 1.0
+                },
+                "ignoreHit": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "ignoreMiss": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "isSpecial": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "Note"
+        },
+        "DistributionsMinimal": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "modelMarker": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelSickEffect": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelBackground": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DistributionsMinimalState"
+                    }
+                }
+            },
+            "required": [
+                "modelMarker",
+                "modelNotes",
+                "name"
+            ],
+            "title": "DistributionsMinimal"
+        },
+        "DistributionsMinimalState": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "modelNotes": {
+                    "type": "string"
+                },
+                "modelMarker": {
+                    "type": "string"
+                },
+                "modelSickEffect": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelBackground": {
+                    "type": ["string", "null"],
+                    "default": null
+                }
+            },
+            "required": [
+                "modelMarker",
+                "modelNotes",
+                "name"
+            ],
+            "title": "DistributionsMinimalState"
+        },
+        "Strum": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "noteIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "noteIds"
+            ],
+            "title": "Strum"
+        },
+        "Girlfriend": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "manifest": {
+                    "type": "string"
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CharacterState"
+                    }
+                }
+            },
+            "required": [
+                "manifest"
+            ],
+            "title": "Girlfriend"
+        },
+        "CharacterState": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "model",
+                "name"
+            ],
+            "title": "CharacterState"
+        },
+        "Healthbar": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "disable": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "useAltWarnIcons": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "opponentColor": {
+                    "type": ["integer", "string"],
+                    "default": "0xFF0000"
+                },
+                "playerColor": {
+                    "type": ["integer", "string"],
+                    "default": "0x00FF00"
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/HealthbarState"
+                    }
+                },
+                "warningsModel": {
+                    "type": "string"
+                }
+            },
+            "title": "Healthbar"
+        },
+        "HealthbarState": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "opponent": {
+                    "$ref": "#/definitions/HealthbarPlayer"
+                },
+                "player": {
+                    "$ref": "#/definitions/HealthbarPlayer"
+                },
+                "background": {
+                    "$ref": "#/definitions/HealthbarBackground"
+                }
+            },
+            "required": [
+                "background",
+                "name",
+                "opponent",
+                "player"
+            ],
+            "title": "HealthbarState"
+        },
+        "HealthbarBackground": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "barModel": {
+                    "type": "string"
+                },
+                "barColor": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "barColor",
+                "barModel"
+            ],
+            "title": "HealthbarBackground"
+        },
+        "HealthbarPlayer": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "iconModel": {
+                    "type": "string"
+                },
+                "barModel": {
+                    "type": "string"
+                },
+                "barColor": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "barColor",
+                "barModel",
+                "iconModel"
+            ],
+            "title": "HealthbarPlayer"
+        },
+        "Player": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "manifest": {
+                    "type": "string"
+                },
+                "controller": {
+                    "type": "integer",
+                    "default": -1
+                },
+                "strumsInLayoutId": {
+                    "type": "integer"
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CharacterState"
+                    }
+                },
+                "distributionIndex": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "manifest"
+            ],
+            "title": "Player"
+        },
+        "Track": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "song": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "chart": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "stage": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "script": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "selectedStateName": {
+                    "type": ["string", "null"]
+                },
+                "healthbar": {
+                    "$ref": "#/definitions/Healthbar"
+                },
+                "selectedStateNamePerPlayer": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Player"                        
+                    }
+                },
+                "ui_layout": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "pause_menu": {
+                    "type": ["string", "null"],
+                    "default": null
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "Track"
+        }
+    }
+}

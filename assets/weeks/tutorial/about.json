@@ -1,7 +1,7 @@
 {
     "description": "How to funk...",
     "songs": [
-        { "name": "Tutorial", "song": "songs/tutorial.ogg" }
+        { "name": "Tutorial", "freeplaySongFilename": "tutorial.ogg", "freeplayHostIconModel": "/assets/common/image/funkin/icon-gf.xml" }
     ],
 
     "weekManifest": "gameplay.json",

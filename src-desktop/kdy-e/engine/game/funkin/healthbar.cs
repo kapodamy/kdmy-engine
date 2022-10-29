@@ -29,7 +29,7 @@ namespace Engine.Game {
 
         private const string ICON_PREFIX_WINNER = "winner";
         private const string ICON_PREFIX_WINNING = "winning";
-        private const string ICON_PREFIX_NEUTRAL = "neutral";
+        public const string ICON_PREFIX_NEUTRAL = "neutral";
         private const string ICON_PREFIX_LOOSING = "loosing";
         private const string ICON_PREFIX_LOOSER = "looser";
 

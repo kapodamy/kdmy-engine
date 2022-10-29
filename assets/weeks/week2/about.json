@@ -3,8 +3,9 @@
     "songs": [
         { "name": "Spookeez" },
         { "name": "South" },
-        { "name": "Monster" }
+        { "name": "Monster", "freeplayHostIconModel": "LMNDMN/icon-monster.xml" }
     ],
+	"songsDefaultFreeplayHostIconModel": "SPKY/icon-spooky.xml",
 
 
     "unlockDirectiveName": "WEEK1",

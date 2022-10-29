@@ -161,7 +161,7 @@ namespace Engine.Game.Gameplay.Helpers {
 
                 this.items[i] = new Item() {
                     name = JSONParser.ReadString(json_item, "name", null),
-                    text = JSONParser.ReadString(json_item, "name", null),
+                    text = JSONParser.ReadString(json_item, "text", null),
                     hidden = JSONParser.ReadBoolean(json_item, "hidden", false),
 
                     placement = new Placement() {

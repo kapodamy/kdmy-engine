@@ -402,7 +402,7 @@ function gameplaymanifest_parse_notes(json, distribution) {
         notes[i].can_kill_on_hit = json_read_boolean(note_json, "canKillOnHit", false);
         notes[i].is_special = json_read_boolean(note_json, "isSpecial", false);
         notes[i].model_src = json_read_string(note_json, "model", null);
-        notes[i].sick_effect_state_name = json_read_string(note_json, "SickEffectStateName", null);
+        notes[i].sick_effect_state_name = json_read_string(note_json, "sickEffectStateName", null);
     }
 
     distribution.notes = notes;

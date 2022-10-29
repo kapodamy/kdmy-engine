@@ -1,10 +1,11 @@
 {
     "description": "RED SNOW",
     "songs": [
-        { "name": "Cocoa"},
-        { "name": "Eggnog"},
-        { "name": "Winter Horrorland"}
+        { "name": "Cocoa" },
+        { "name": "Eggnog" },
+        { "name": "Winter Horrorland", "freeplayHostIconModel": "./../week2/LMNDMN/icon-monster.xml" }
     ],
+	"songsDefaultFreeplayHostIconModel": "funkin/icon-parents.xml",
 
     "unlockDirectiveName": "WEEK4",
     "emitUnlockDirectiveName": "WEEK5",

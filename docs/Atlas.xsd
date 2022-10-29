@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    
+    <!-- For writting standard atlas's files, plus KDMY-Engine fields -->
+    <!-- KDMY-Engine fields: "TileSet", "Tile", "@resolution", "@glyphFps" -->
+
+    <xs:element name="TextureAtlas">
+        <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="SubTexture">
+                    <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" use="required" />
+                        <xs:attribute name="x" type="xs:integer" use="required" />
+                        <xs:attribute name="y" type="xs:integer" use="required" />
+                        <xs:attribute name="width" type="xs:integer" use="required" />
+                        <xs:attribute name="height" type="xs:integer" use="required" />
+                        <xs:attribute name="frameX" type="xs:float" use="optional" />
+                        <xs:attribute name="frameY" type="xs:float" use="optional" />
+                        <xs:attribute name="frameWidth" type="xs:float" use="optional" />
+                        <xs:attribute name="frameHeight" type="xs:float" use="optional" />
+                        <xs:attribute name="pivotX" type="xs:float" use="optional" />
+                        <xs:attribute name="pivotY" type="xs:float" use="optional" />
+                    </xs:complexType>
+                </xs:element>
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="TileSet">
+                    <xs:complexType>
+                        <xs:sequence maxOccurs="unbounded">
+                            <xs:element name="Tile">
+                                <xs:complexType>
+                                    <xs:attribute name="name" type="xs:string" use="required" />
+                                    <xs:attribute name="index" type="xs:integer" use="optional" />
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="x" type="xs:integer" use="required" />
+                        <xs:attribute name="y" type="xs:integer" use="required" />
+                        <xs:attribute name="subTextureWidth" type="xs:integer" use="required" />
+                        <xs:attribute name="subTextureHeight" type="xs:integer" use="required" />
+                        <xs:attribute name="tileWidth" type="xs:integer" use="required" />
+                        <xs:attribute name="tileHeight" type="xs:integer" use="required" />
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute name="imagePath" type="xs:anyURI" use="optional" default="" />
+            <xs:attribute name="glyphFps" type="xs:integer" use="optional" default="24" />
+            <xs:attribute name="resolution" use="optional" default="1280x720">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:pattern value="\d+[xX]\d+" />
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
