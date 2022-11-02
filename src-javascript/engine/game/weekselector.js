@@ -124,6 +124,7 @@ function weekselector_show_week_info(/**@type {UI}*/ui, weekinfo, score) {
     stringbuilder_clear(ui.stringbuilder);
 
     for (let i = 0; i < songs_count; i++) {
+        if (weekinfo.songs[i].freeplay_only) continue;
         stringbuilder_add(list, "\n");
         stringbuilder_add(list, weekinfo.songs[i].name);
     }
@@ -176,15 +177,20 @@ function weekselector_trigger_alternate_change(/**@type {STATE}*/state) {
 }
 
 async function weekselector_load_custom_week_background(/**@type {STATE}*/state) {
-    if (!state.weekinfo.background_layout) return;
+    if (state.custom_layout != null) {
+        layout_destroy(state.custom_layout);
+        state.custom_layout = null;
+    }
 
-    console.log("STUB weekselector_load_custom_week_background()");
+    if (!state.weekinfo.custom_selector_layout) return;
 
-    /*let path = weekenumerator_get_asset(state.weekinfo, state.weekinfo.background_layout);
+    let path = weekenumerator_get_asset(state.weekinfo, state.weekinfo.custom_selector_layout);
     state.custom_layout = await layout_init(path);
-    path = null;
-    if (state.custom_layout && !state.week_unlocked)
-        layout_trigger_any(state.custom_layout, "week-locked");*/
+    path = undefined;
+    if (state.custom_layout != null) {
+        layout_trigger_any(state.custom_layout, "principal-show");
+        if (!state.week_unlocked) layout_trigger_any(state.custom_layout, "week-locked");
+    }
 }
 
 function weekselector_set_text(layout, name, format, text_or_integer) {
@@ -376,9 +382,13 @@ async function weekselector_main() {
         }
 
         pvr_context_reset(pvr_context);
-        if (state.custom_layout) layout_animate(state.custom_layout, elapsed);
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
+
+        if (state.custom_layout != null) {
+            layout_animate(state.custom_layout, elapsed);
+            layout_draw(state.custom_layout, pvr_context);
+        }
 
         state.update_ui = page_selected_ui != state.page_selected_ui;
         if (state.update_ui) weekselector_change_page(ui, state.page_selected_ui);
@@ -415,10 +425,14 @@ async function weekselector_main() {
 
         beatwatcher_global_set_timestamp_from_kos_timer();
 
-        //if (state.custom_layout) layout_animate(state.custom_layout, elapsed);
         pvr_context_reset(pvr_context);
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
+
+        if (state.custom_layout != null) {
+            layout_animate(state.custom_layout, elapsed);
+            layout_draw(state.custom_layout, pvr_context);
+        }
 
         if (state.back_to_main_menu && layout_animation_is_completed(layout, "transition_effect"))
             break;
@@ -475,7 +489,9 @@ async function weekselector_main() {
         gameplay_alternative_tracks,
         gameplay_difficult,
         gameplay_model_boyfriend,
-        gameplay_model_girlfriend
+        gameplay_model_girlfriend,
+        null,
+        -1
     );
 
     background_menu_music = await soundplayer_init(FUNKIN_BACKGROUND_MUSIC);
@@ -539,6 +555,11 @@ async function weekselector_page0(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         return;
     }
 
+    if (state.page_selected_ui == 1 && state.custom_layout != null) {
+        layout_trigger_any(state.custom_layout, "principal-hide");
+        layout_trigger_any(state.custom_layout, "difficult-selector-show");
+    }
+
     if (seek_offset == 0) return;
 
     if (!await weekselector_weeklist_scroll(ui.weeklist, seek_offset)) {
@@ -556,11 +577,6 @@ async function weekselector_page0(/**@type {UI}*/ui, /**@type {STATE}*/state) {
     weekselector_helptext_set_visible(ui.helptext_start, 0);
     weekselector_mdlselect_select_default(ui.mdl_boyfriend);
     weekselector_mdlselect_select_default(ui.mdl_girlfriend);
-
-    if (state.custom_layout) {
-        layout_destroy(state.custom_layout);
-        state.custom_layout = null;
-    }
 
     if (state.weekinfo.background_layout) {
         await weekselector_load_custom_week_background(state);
@@ -639,6 +655,11 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
     }
 
     if (seek_offset == 0) return;
+
+    if (state.page_selected_ui == 0 && state.custom_layout) {
+        layout_trigger_any(state.custom_layout, "difficult-selector-hide");
+        layout_trigger_any(state.custom_layout, "principal-show");
+    }
 
     if (weekselector_difficult_scroll(ui.weekdifficult, seek_offset)) {
         state.play_sound = WEEKSELECTOR_SND_SCROLL;

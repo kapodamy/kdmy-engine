@@ -20,10 +20,10 @@ static int lua_imported_fn(lua_State* lua, const char* fn_name, int arguments_co
     return 1;
 }
 
-void luascript_notify_weekinit(Luascript luascript, bool from_restart) {
+void luascript_notify_weekinit(Luascript luascript, int32_t freeplay_index) {
     FUNCTION(luascript, "f_weekinit");
 
-    lua_pushboolean(lua, from_restart);
+    lua_pushinteger(lua, freeplay_index);
 
     lua_imported_fn(lua, FUNCTION, 1);
 }

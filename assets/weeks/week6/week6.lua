@@ -25,6 +25,7 @@ local function __TS__StringStartsWith(self, searchString, position)
     return string.sub(self, position + 1, #searchString + position) == searchString
 end
 
+-- End of Lua Library inline imports
 function dialog_show(dialog_lines)
     stage:set_group_visibility("hand", false)
     if dialog_is_evil then
@@ -59,7 +60,7 @@ function dialog_show(dialog_lines)
                     lyt_dialog_text:set_text(__TS__StringSubstring(text, 0, ____end))
                     next_char = progress + CHARS_DELAY
                     local snd = alt_snd and lyt_snd_char0 or lyt_snd_char1
-                    snd:seek(0)
+                    snd:stop()
                     snd:play()
                     alt_snd = not alt_snd
                 elseif dialog_button_pressed then
@@ -189,8 +190,10 @@ dialog_waiting_confirm = false
 dialog_force_end = false
 dialog_is_angry = false
 dialog_is_evil = false
-function f_weekinit(from_restart)
-    if from_restart then
+in_freeplay_mode = false
+function f_weekinit(freeplay_index)
+    if freeplay_index >= 0 then
+        in_freeplay_mode = true
         return
     end
     dialogs_senpai = dialog_parse("/assets/weeks/week6/weeb/dialogs/senpaiDialogue.txt")
@@ -223,7 +226,7 @@ function f_beforeready(from_retry)
             return
         end
     until true
-    if from_retry then
+    if from_retry or in_freeplay_mode then
         return
     end
     lyt_icon_boyfriend = stage:get_sprite("dialog_icon_boyfriend")
@@ -288,9 +291,9 @@ function f_buttons(player_id, buttons)
     if dialog_corutine == nil or player_id == 0 then
         return
     end
-    if buttons & GAMEPAD_XA ~= 0 then
+    if buttons & (GamepadButtons.A | GamepadButtons.X) ~= 0 then
         dialog_button_pressed = true
-    elseif buttons & GAMEPAD_START ~= 0 then
+    elseif buttons & GamepadButtons.START ~= 0 then
         dialog_force_end = true
     else
         return
@@ -300,7 +303,7 @@ function f_buttons(player_id, buttons)
     end
 end
 function f_roundend(loose)
-    if loose or not dialog_is_angry then
+    if loose or not dialog_is_angry or in_freeplay_mode then
         return
     end
     week_set_halt(true)

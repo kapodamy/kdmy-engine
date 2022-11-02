@@ -28,6 +28,7 @@ namespace Engine.Game.Common {
             public int freeplay_track_index_in_gameplaymanifest;
             public string freeplay_song_filename;
             public string freeplay_description;
+            public float freeplay_seek_time;
         }
         public class Unlockables {
             public UnlockableCharacter[] boyfriend_models;
@@ -217,13 +218,14 @@ namespace Engine.Game.Common {
                         freeplay_host_icon_model = ParsePath(json_song, "freeplayHostIconModel"),
                         freeplay_host_icon_name = JSONParser.ReadString(json_song, "freeplayHostIconName", null),
                         freeplay_background = JSONParser.ReadString(json_song, "freeplayBackground", null),
-                        freeplay_only = JSONParser.ReadBoolean(json_song, "freeplayBackground", false),
+                        freeplay_only = JSONParser.ReadBoolean(json_song, "freeplayOnly", false),
                         freeplay_unlock_directive = JSONParser.ReadString(json_song, "freeplayUnlockDirective", null),
                         freeplay_hide_if_week_locked = JSONParser.ReadBoolean(json_song, "freeplayGameplayManifest", false),
                         freeplay_gameplaymanifest = JSONParser.ReadString(json_song, "freeplayHideIfWeekLocked", null),
                         freeplay_track_index_in_gameplaymanifest = (int)JSONParser.ReadNumberLong(json_song, "freeplayTrackIndexInGameplayManifest", -1),
                         freeplay_song_filename = ParsePath(json_song, "freeplaySongFilename"),
-                        freeplay_description = JSONParser.ReadString(json_song, "freeplayDescription", null)
+                        freeplay_description = JSONParser.ReadString(json_song, "freeplayDescription", null),
+                        freeplay_seek_time = (float)JSONParser.ReadNumberDouble(json_song, "freeplaySeekTime", Double.NaN)
                     };
                 }
 

@@ -759,7 +759,7 @@ function character_animate(character, elapsed) {
 
     if (current_action_type == CharacterActionType.NONE) return 1;
     if (current_action_type == CharacterActionType.IDLE && character.idle_speed != 1.0) {
-        elapsed *= character.idlespeed;
+        elapsed *= character.idle_speed;
     }
 
     if (character.current_use_frame_rollback)

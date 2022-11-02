@@ -304,3 +304,8 @@ function modelholder_get_texture_resolution(modelholder, output_resolution) {
     return atlas_get_texture_resolution(modelholder.atlas, output_resolution);
 }
 
+function modelholder_utils_is_known_extension(filename) {
+    if (!filename) return false;
+    return atlas_utils_is_known_extension(filename) || string_lowercase_ends_with(filename, ".json");
+}
+

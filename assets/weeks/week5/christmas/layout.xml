@@ -132,7 +132,7 @@
 	<Sprite texture="evilTree.png">
 		<Action>
 			<Hide />
-			<Location x="300" y="-300" z="0" />
+			<Location x="300" y="-300" z="1" />
 			<Parallax x="0.2" y="0.2" z="1.0" />
 		</Action>
 		<Action name="evil">

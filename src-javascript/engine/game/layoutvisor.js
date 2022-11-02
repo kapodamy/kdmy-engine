@@ -1233,7 +1233,7 @@ function layoutvisor_update_rankingcounter(layout_placeholder) {
     }
 
     layoutvisor_rankingcounter = rankingcounter_init(
-        layout_placeholder, null, layoutvisor_uifont, PVR_WIDTH, PVR_HEIGHT
+        layout_placeholder, null, layoutvisor_uifont
     );
     rankingcounter_add_state(layoutvisor_rankingcounter, layoutvisor_rankingmodelholder, null);
     rankingcounter_toggle_state(layoutvisor_rankingcounter, null);
@@ -1253,7 +1253,7 @@ function layoutvisor_update_rankingaccuracy(layout_placeholder) {
     let accuracy_percent = document.getElementById("bind-ui_rankingcounter_accuracy_percent").checked;
 
     layoutvisor_rankingaccuracy = rankingcounter_init(
-        null, layout_placeholder, layoutvisor_uifont, PVR_WIDTH, PVR_HEIGHT
+        null, layout_placeholder, layoutvisor_uifont
     );
     rankingcounter_add_state(layoutvisor_rankingaccuracy, layoutvisor_rankingmodelholder, null);
     rankingcounter_toggle_state(layoutvisor_rankingaccuracy, null);

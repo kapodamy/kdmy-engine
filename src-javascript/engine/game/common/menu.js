@@ -144,7 +144,10 @@ async function menu_init(menumanifest, x, y, z, width, height) {
 
         per_page: params.is_per_page,
         map: null,
-        map_size: 0
+        map_size: 0,
+        drawcallback_before: 0,
+        drawcallback_privatedata: 0,
+        drawcallback: null
     };
 
     if (params.static_index) {
@@ -351,10 +354,14 @@ function menu_draw(menu, pvrctx) {
         for (let i = 0; i < menu.items_size; i++) {
             if (menu.items[i].hidden) continue;
 
+            if (menu.drawcallback_before && menu_internal_draw_callback(menu, pvrctx, i)) continue;
+
             if (menu.items[i].is_text)
                 textsprite_draw(menu.items[i].vertex, pvrctx);
             else
                 statesprite_draw(menu.items[i].vertex, pvrctx);
+
+            if (!menu.drawcallback_before && menu_internal_draw_callback(menu, pvrctx, i)) continue;
         }
     } else {
         let render_distance;
@@ -382,7 +389,7 @@ function menu_draw(menu, pvrctx) {
         for (let i = 0; i < menu.items_size; i++) {
             if (menu.items[i].hidden) continue;
 
-            if (!DEBUG) {
+            if (DEBUG) {
                 if (i >= menu.render_start && i <= menu.render_end)
                     pvr_context_set_global_alpha(pvrctx, 1.0);
                 else
@@ -392,10 +399,14 @@ function menu_draw(menu, pvrctx) {
                 if (i < menu.render_start || i > menu.render_end) continue;
             }
 
+            if (menu.drawcallback_before && menu_internal_draw_callback(menu, pvrctx, i)) continue;
+
             if (menu.items[i].is_text)
                 textsprite_draw(menu.items[i].vertex, pvrctx);
             else
                 statesprite_draw(menu.items[i].vertex, pvrctx);
+
+            if (!menu.drawcallback_before && menu_internal_draw_callback(menu, pvrctx, i)) continue;
         }
     }
     pvr_context_restore(pvrctx);
@@ -426,6 +437,20 @@ function menu_get_selected_item_name(menu) {
     if (menu.index_selected < 0 || menu.index_selected >= menu.items_size) return null;
 
     return menu.items[menu.index_selected].name;
+}
+
+function menu_set_text_force_case(menu, none_or_lowercase_or_uppercase) {
+    for (let i = 0; i < menu.items_size; i++) {
+        if (menu.items[i].is_text) {
+            textsprite_force_case(menu.items[i].vertex, none_or_lowercase_or_uppercase);
+        }
+    }
+}
+
+function menu_set_draw_callback(menu, before_or_after, callback, privatedata) {
+    menu.drawcallback_before = !!before_or_after;
+    menu.drawcallback = callback;
+    menu.drawcallback_privatedata = privatedata;
 }
 
 
@@ -460,7 +485,11 @@ async function menu_internal_build_item(item, src_item, params, modelholder, fon
                 modelholder = temp;
             }
         }
-        item.vertex = statesprite_init_from_texture(modelholder_get_texture(modelholder, 1));
+        let statesprite = statesprite_init_from_texture(modelholder_get_texture(modelholder));
+        statesprite_set_vertex_color_rgb8(statesprite, modelholder_get_vertex_color(modelholder));
+        if (modelholder_is_invalid(modelholder)) statesprite_set_alpha(statesprite, 0);
+
+        item.vertex = statesprite;
 
         let scale = src_item.texture_scale > 0 ? src_item.texture_scale : params.texture_scale;
         if (scale > 0) {
@@ -654,10 +683,12 @@ function menu_internal_set_index_selected(menu, new_index) {
         L_static_index:
         if (has_static_index) {
             let lower_index = new_index - menu.static_index;
+            if (lower_index >= menu.items_size) lower_index = menu.items_size - 1;
 
             while (lower_index > 0 && menu.items[lower_index].hidden) lower_index--;
 
             if (lower_index < 0) {
+                if (old_index < 0) old_index = 0;
                 has_static_index = false;
                 break L_static_index;
             }
@@ -881,5 +912,25 @@ function menu_internal_scroll(menu, offset) {
 
     menu_internal_set_index_selected(menu, new_index);
     return 1;
+}
+
+function menu_internal_draw_callback(menu, pvrctx, index) {
+    if (menu.drawcallback == null) return false;
+
+    const size = [0, 0];
+    const location = [0, 0];
+    let item = menu.items[index];
+
+    if (item.is_text) {
+        textsprite_get_draw_location(item.vertex, location);
+        textsprite_get_draw_size(item.vertex, size);
+    } else {
+        sprite_get_draw_location(item.vertex, location);
+        sprite_get_draw_size(item.vertex, size);
+    }
+
+    return !menu.drawcallback(
+        menu.drawcallback_privatedata, pvrctx, menu, index, location[0], location[1], size[0], size[1]
+    );
 }
 

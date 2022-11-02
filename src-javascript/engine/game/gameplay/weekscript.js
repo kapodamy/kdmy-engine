@@ -128,8 +128,8 @@ function weekscript_drop_shared_objects(script) {
 }
 
 
-function weekscript_notify_weekinit(script, from_restart) {
-    return _weekscript_call(ModuleLuaScript._luascript_notify_weekinit, script, from_restart ? 1 : 0);
+function weekscript_notify_weekinit(script, freeplay_index) {
+    return _weekscript_call(ModuleLuaScript._luascript_notify_weekinit, script, freeplay_index);
 }
 
 function weekscript_notify_beforeready(script, from_retry) {

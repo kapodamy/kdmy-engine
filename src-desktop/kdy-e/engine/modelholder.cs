@@ -324,6 +324,10 @@ namespace Engine {
             this.atlas.GetTextureResolution(out resolution_width, out resolution_height); return true;
         }
 
+        public static bool UtilsIsKnownExtension(string filename) {
+            if (String.IsNullOrEmpty(filename)) return false;
+            return Atlas.UtilsIsKnownExtension(filename) || filename.LowercaseEndsWithKDY(".json");
+        }
     }
 
 }

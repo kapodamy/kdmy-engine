@@ -4,6 +4,15 @@ trainCooldown = 0
 trainMoving = false
 girlfriendAnimationTimeout = -1
 song = nil
+function f_weekinit(freeplay_index)
+    if freeplay_index >= 0 then
+        return
+    end
+    local ____, difficult = week_get_current_track_info()
+    if difficult == "HARD" then
+        unlockdirective_create("WEEK3_HARD", true, false, 1)
+    end
+end
 function f_beforeready()
     trainCooldown = 0
     philly = week_get_stage_layout()

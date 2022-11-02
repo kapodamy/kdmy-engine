@@ -480,21 +480,3 @@ declare global {
     function modding_exit(): void;
 
 }
-
-/**
- * STUB for __lib.dom.d.ts__ library, TypescriptToLua will transpile into _print()_ calls
- */
-declare global {
-    interface Console {
-        assert(condition?: boolean, ...data: any[]): void;
-        debug(...data: any[]): void;
-        error(...data: any[]): void;
-        info(...data: any[]): void;
-        log(...data: any[]): void;
-        time(label?: string): void;
-        trace(...data: any[]): void;
-        warn(...data: any[]): void;
-    }
-
-    var console: Console;
-}

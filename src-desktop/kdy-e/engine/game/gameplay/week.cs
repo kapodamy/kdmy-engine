@@ -473,7 +473,7 @@ namespace Engine.Game.Gameplay {
             };
 
             // (JS & C# only) disable texture deferring, avoid shuttering when drawing the first frame
-            //Texture.DisableDefering(true);
+            Texture.DisableDefering(true);
 
             // the UI "bump" has one octave of beat as duration (example: 75ms @ 100bpm)
             roundcontext.ui_camera.SetTransitionDuration(true, 0.125f);
@@ -507,10 +507,10 @@ namespace Engine.Game.Gameplay {
             } else {
                 gameplaymanifest_src = WeekEnumerator.GetGameplayManifest(weekinfo);
                 gameplaymanifest = Week.InternalLoadGameplayManifest(gameplaymanifest_src);
-                //free(src_gameplaymanifest);
+                //free(gameplaymanifest_src);
             }
             if (gameplaymanifest == null) {
-                //Texture.DisableDefering(false);
+                Texture.DisableDefering(false);
                 return 0;
             }
 
@@ -555,8 +555,8 @@ namespace Engine.Game.Gameplay {
                 if (first_init) {
                     if (roundcontext.script != null) {
                         roundcontext.script.NotifyWeekinit(single_track ? single_track_index : -1);
+                        Week.Halt(roundcontext, true);
                     }
-                    Week.Halt(roundcontext, true);
                     first_init = false;
                 }
 

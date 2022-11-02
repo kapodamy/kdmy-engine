@@ -5,8 +5,8 @@ let trainMoving: boolean = false;
 let girlfriendAnimationTimeout: number = -1.0;
 let song: SongPlayer = null;
 
-function f_weekinit(from_restart: boolean): void {
-    if (from_restart) return;
+function f_weekinit(freeplay_index: number): void {
+    if (freeplay_index >= 0) return;
     let [, difficult,] = week_get_current_track_info();
     if (difficult == "HARD") unlockdirective_create("WEEK3_HARD", true, false, 1);
 }

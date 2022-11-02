@@ -268,11 +268,11 @@
                     "default": false
                 },
                 "opponentColor": {
-                    "type": ["integer", "string"],
+                    "type": ["integer", "string", "null"],
                     "default": "0xFF0000"
                 },
                 "playerColor": {
-                    "type": ["integer", "string"],
+                    "type": ["integer", "string", "null"],
                     "default": "0x00FF00"
                 },
                 "states": {
@@ -320,7 +320,8 @@
                     "type": "string"
                 },
                 "barColor": {
-                    "type": "string"
+                    "type": ["integer", "string", "null"],
+                    "default": "0x000000",
                 }
             },
             "required": [
@@ -340,7 +341,8 @@
                     "type": "string"
                 },
                 "barColor": {
-                    "type": "string"
+                    "type": ["integer", "string", "null"],
+                    "default": "0x00FF00",
                 }
             },
             "required": [

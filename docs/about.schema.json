@@ -177,7 +177,12 @@
                 "freeplayDescription": {
                     "type": ["string", "null"],
                     "default": null
-                }
+                },
+				"freeplaySeekTime": {
+					"type": "number",
+					"default": 0.0,
+					"description": "Seeks the song the desired amount of seconds before preview"
+				}
             },
             "required": [
                 "name"

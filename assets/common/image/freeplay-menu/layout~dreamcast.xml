@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Layout width="1280" height="720" keepAspectRatio="true" animationList="/assets/common/anims/freeplay-menu.xml">
+<Layout width="960" height="720" keepAspectRatio="true" animationList="/assets/common/anims/freeplay-menu.xml">
 
     <Font name="vcr" path="/assets/common/font/vcr.ttf" />
 
     <Sprite texture="menuBGMagenta.png">
         <Action>
             <Location x="0" y="0" z="0" />
-            <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
+            <Resize maxWidth="960" maxHeight="720" center="true" cover="true" />
         </Action>
     </Sprite>
 
@@ -18,7 +18,7 @@
         <Action name="track-background-set">
             <Show />
             <Location x="0" y="0" z="0" />
-            <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
+            <Resize maxWidth="960" maxHeight="720" center="true" cover="true" />
         </Action>
         <Action name="track-background-hide">
             <Hide />
@@ -30,19 +30,19 @@
         <Sprite r="0" g="0" b="0" a="0.5">
             <Action>
                 <Location x="0" y="0" z="2" />
-                <Size width="458" height="82" />
+                <Size width="392" height="82" />
             </Action>
         </Sprite>
 
-        <Text fontName="vcr" fontSize="24" rgb="0xFFFFFF" name="personal_best">
+        <Text fontName="vcr" fontSize="22" rgb="0xFFFFFF" name="personal_best">
             <Action>
-                <Location x="16" y="16" z="3" />
+                <Location x="12" y="16" z="3" />
                 <!--<String>PERSONAL BEST SCORE: 123456789</String>-->
             </Action>
         </Text>
-        <Text fontName="vcr" fontSize="18" rgb="0xFFFFFF" name="info">
+        <Text fontName="vcr" fontSize="16" rgb="0xFFFFFF" name="info">
             <Action>
-                <Location x="16" y="46" z="3.1" />
+                <Location x="12" y="46" z="3.1" />
                 <!--<String>Week1 [EASY]</String>-->
             </Action>
         </Text>
@@ -60,13 +60,13 @@
         <Sprite r="0" g="0" b="0" a="0.5">
             <Action>
                 <Location x="0" y="82" z="2" />
-                <Size width="1280" height="96" />
+                <Size width="960" height="96" />
             </Action>
         </Sprite>
-        <Text fontName="vcr" fontSize="20" rgb="0xFFFFFF" name="description">
+        <Text fontName="vcr" fontSize="18" rgb="0xFFFFFF" name="description">
             <Action>
-                <Location x="16" y="82" z="3.2" />
-                <MaxSize width="1248" />
+                <Location x="12" y="82" z="3.2" />
+                <MaxSize width="936" />
                 <!--<String>¡Rap-battle against Daddy Dearest!&#10;Composed by kawaisprite</String>-->
             </Action>
         </Text>
@@ -83,7 +83,7 @@
     <AttachValue name="menu_itemsGap" type="float" value="36" />
     <AttachValue name="menu_iconsDimmen" type="float" value="100" />
     
-    <Placeholder name="menu" x="72" y="178" z="4" width="1208" height="566" />
+    <Placeholder name="menu" x="54" y="178" z="4" width="906" height="566" />
 
     <!-- Locked hint -->
     <Group visible="false">
@@ -96,20 +96,20 @@
 
         <Sprite rgba="0x0000007F">
             <Action>
-                <Location x="1078" y="41" z="2" />
-                <Size width="212" height="41" />
+                <Location x="808" y="41" z="2" />
+                <Size width="159" height="41" />
             </Action>
         </Sprite>
         <Sprite atlas="/assets/common/image/week-selector/week_selector_UI.xml">
             <Action>
-                <Location x="1086" y="41" z="2.1" />
+                <Location x="814" y="41" z="2.1" />
                 <AtlasApply entry="locked" />
-                <Resize maxWidth="41" maxHeight="41" center="true" />
+                <Resize maxWidth="31" maxHeight="41" center="true" />
             </Action>
         </Sprite>
-        <Text fontName="vcr" fontSize="40" rgb="0xFFFFFF">
+        <Text fontName="vcr" fontSize="38" rgb="0xFFFFFF">
             <Action>
-                <Location x="1122" y="41" z="2.2" />
+                <Location x="842" y="41" z="2.2" />
                 <String>LOCKED</String>
             </Action>
         </Text>
@@ -129,15 +129,15 @@
 
         <Sprite rgba="0x0000007F">
             <Action>
-                <Location x="738" y="0" z="2" />
-                <Size width="542" height="41" />
+                <Location x="553" y="0" z="2" />
+                <Size width="406" height="41" />
             </Action>
         </Sprite>
         <Sprite></Sprite>
-        <Text fontName="vcr" fontSize="38" rgb="0xFFFFFF">
+        <Text fontName="vcr" fontSize="36" rgb="0xFFFFFF">
             <Action>
-                <Location x="738" y="0" z="2.1" />
-                <MaxSize width="542" height="41" />
+                <Location x="553" y="0" z="2.1" />
+                <MaxSize width="406" height="41" />
                 <Property name="alignVertical" value="center" />
                 <Property name="alignHorizontal" value="center" />
             </Action>
@@ -155,13 +155,13 @@
         <Sprite r="0" g="0" b="0" a="0.25">
             <Action>
                 <Location x="0" y="694" z="2" />
-                <Size width="1280" height="30" />
+                <Size width="960" height="30" />
             </Action>
         </Sprite>
-        <Text fontName="vcr" fontSize="14" rgb="0xFFFFFF">
+        <Text fontName="vcr" fontSize="17" rgb="0xFFFFFF">
             <Action>
-                <Location x="8" y="698" z="2.1" />
-                <String>UP/DOWN: choose song. LEFT/RIGHT: choose difficult. For songs with alternative tracks press the binded key.</String>
+                <Location x="6" y="698" z="2.1" />
+                <String>UP/DOWN: choose song. LEFT/RIGHT: choose difficult. For songs with alternative tracks press X.</String>
             </Action>
         </Text>
     </Group>
@@ -180,7 +180,7 @@
 	<Trigger name="after-play-song" action="transition-in" />
     <Sprite rgb="0x000000">
 		<Action>
-            <Size width="1280" height="720" />
+            <Size width="960" height="720" />
             <Location x="0" y="0" />
             <Property name="z" value="10" />
 		</Action>

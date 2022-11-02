@@ -19,54 +19,10 @@ namespace Engine.Game {
         private const string BACKGROUND_ANIM_OR_ATLAS_ENTRY_NAME = "freeplay-background";
         private const string PERSONAL_BEST = "PERSONAL BEST SCORE: $l";
         private const string INFO = "$s  -  $s  -  $s";
+        private const string LAYOUT = "/assets/common/image/freeplay-menu/layout.xml";
+        private const string LAYOUT_DREAMCAST = "/assets/common/image/freeplay-menu/layout~dreamcast.xml";
 
 
-        private static readonly MenuManifest MENU_ICONS = new MenuManifest() {
-            parameters = new MenuManifest.Parameters() {
-                suffix_selected = null,// unused
-                suffix_idle = null,// unused
-                suffix_choosen = null,// unused
-                suffix_discarded = null,// unused
-                suffix_rollback = null,// unused
-                suffix_in = null,// unused
-                suffix_out = null,// unused
-
-                atlas = null,
-                animlist = null,
-
-                anim_selected = null,
-                anim_idle = null,
-                anim_choosen = null,// unused
-                anim_discarded = null,// unused
-                anim_rollback = null,// unused
-                anim_in = null,// unused
-                anim_out = null,// unused
-
-                anim_transition_in_delay = 0,// unused
-                anim_transition_out_delay = 0,// unused
-
-                font = null,
-                font_glyph_suffix = null,// unused
-                font_color_by_difference = false,// unused
-                font_size = Single.NaN,// unused
-                font_color = 0xFFFFFF,// unused
-                font_border_color = 0x000000FF,// unused
-                font_border_size = 4,// unused
-
-                is_sparse = false,// unused
-                is_vertical = true,
-                is_per_page = false,
-                static_index = 1,
-
-                items_align = Align.START,
-                items_gap = 58f,
-                items_dimmen = 0f,// unused
-                texture_scale = Single.NaN,// unused
-                enable_horizontal_text_correction = true// unused
-            },
-            items = null,
-            items_size = 0
-        };
         private static readonly MenuManifest MENU_SONGS = new MenuManifest() {
             parameters = new MenuManifest.Parameters() {
                 suffix_selected = null,// unused
@@ -115,40 +71,44 @@ namespace Engine.Game {
         };
 
         public static void Main() {
-            Layout layout = Layout.Init("/assets/common/image/freeplay-menu/layout.xml");
-            LayoutPlaceholder placeholder_icons = layout.GetPlaceholder("menu_icons");
-            LayoutPlaceholder placeholder_tracks = layout.GetPlaceholder("menu_songs");
+            string src_layout = PVRContext.global_context.OutputIsWidescreen() ? FreeplayMenu.LAYOUT : FreeplayMenu.LAYOUT_DREAMCAST;
+            Layout layout = Layout.Init(src_layout);
+            if (layout == null) {
+                Console.Error.WriteLine("[ERROR] freeplay_main() missing layout");
+                return;
+            }
 
-            MenuManifest.Parameters params_icons = FreeplayMenu.MENU_ICONS.parameters;
-            MenuManifest.Parameters params_tracks = FreeplayMenu.MENU_SONGS.parameters;
+            LayoutPlaceholder placeholder = layout.GetPlaceholder("menu");
+            MenuManifest.Parameters @params = FreeplayMenu.MENU_SONGS.parameters;
 
 
-            params_tracks.font = (string)layout.GetAttachedValue(
+            @params.font = (string)layout.GetAttachedValue(
                 "menu_font", AttachedValueType.STRING, "/assets/common/font/Alphabet.xml"
             );
-            params_tracks.font_glyph_suffix = (string)layout.GetAttachedValue(
+            @params.font_glyph_suffix = (string)layout.GetAttachedValue(
                 "menu_fontGlyphSuffix", AttachedValueType.STRING, "bold"
             );
-            params_tracks.font_size = params_tracks.items_dimmen = layout.GetAttachedValueAsFloat(
+            @params.font_size = @params.items_dimmen = layout.GetAttachedValueAsFloat(
                 "menu_fontSize", 46f
             );
-            params_tracks.font_color = (uint)layout.GetAttachedValue(
+            @params.font_color = (uint)layout.GetAttachedValue(
                 "menu_fontColor", AttachedValueType.HEX, 0xFFFFFFU
             );
-            params_tracks.font_border_color = (uint)layout.GetAttachedValue(
+            @params.font_border_color = (uint)layout.GetAttachedValue(
                 "menu_fontBorderColor", AttachedValueType.HEX, 0x000000U
             );
-            params_tracks.font_border_size = layout.GetAttachedValueAsFloat(
+            @params.font_border_size = layout.GetAttachedValueAsFloat(
                 "menu_fontBorderSize", 0f
             );
-            params_tracks.items_gap = layout.GetAttachedValueAsFloat(
+            @params.items_gap = layout.GetAttachedValueAsFloat(
                 "menu_itemsGap", 58f
             );
+            float icons_dimmen = layout.GetAttachedValueAsFloat(
+                "menu_iconsDimmen", 70f
+            );
 
-            params_icons.items_dimmen = params_tracks.font_size;
-            params_icons.items_gap = params_tracks.items_gap;
-            params_icons.items_align = params_tracks.items_align;
-
+            float dt_playsong = layout.GetAttachedValueAsFloat("durationTransition_playSong", 0f);
+            float dt_screenout = layout.GetAttachedValueAsFloat("durationTransition_screenOut", 0f);
 
             // step 3: count required tracks
             ArrayList<MappedSong> songs = new ArrayList<MappedSong>(Funkin.weeks_array.size * 3);
@@ -167,76 +127,48 @@ namespace Engine.Game {
                 }
             }
 
-            // step 4: prepare menus
+            // step 4: prepare menu
             int songs_size = songs.Size();
-            FreeplayMenu.MENU_ICONS.items_size = songs_size;
             FreeplayMenu.MENU_SONGS.items_size = songs_size;
-            FreeplayMenu.MENU_ICONS.items = new MenuManifest.Item[songs_size];
             FreeplayMenu.MENU_SONGS.items = new MenuManifest.Item[songs_size];
 
-            string last_model = null;
-            bool last_model_exists = false;
             for (int i = 0 ; i < songs_size ; i++) {
                 MappedSong track = songs.Get(i);
                 WeekInfo weekinfo = Funkin.weeks_array.array[track.week_index];
 
-                string track_name = weekinfo.songs[track.song_index].name;
-                string icon_name = weekinfo.songs[track.song_index].freeplay_host_icon_name;
-                string model_path = weekinfo.songs[track.song_index].freeplay_host_icon_model;
-
-                if (icon_name == null) icon_name = HealthBar.ICON_PREFIX_NEUTRAL;
-                if (model_path == null) model_path = weekinfo.songs_default_freeplay_host_icon_model;
-
-                if (model_path != last_model) {
-                    last_model = model_path;
-                    last_model_exists = FS.FileExists(model_path);
-                }
-                if (!last_model_exists) model_path = null;
-
-                FreeplayMenu.MENU_ICONS.items[i] = new MenuManifest.Item() {
-                    modelholder = model_path,
-                    name = icon_name,
-                };
                 FreeplayMenu.MENU_SONGS.items[i] = new MenuManifest.Item() {
-                    text = track_name
+                    text = weekinfo.songs[track.song_index].name
                 };
             }
 
-            // step 5: build menus
-            Menu menu_icons = new Menu(
-                FreeplayMenu.MENU_ICONS,
-                placeholder_icons.x,
-                placeholder_icons.y,
-                placeholder_icons.z,
-                placeholder_icons.width,
-                placeholder_icons.height
-            );
+            // step 5: build menu
             Menu menu_songs = new Menu(
                 FreeplayMenu.MENU_SONGS,
-                placeholder_tracks.x,
-                placeholder_tracks.y,
-                placeholder_tracks.z,
-                placeholder_tracks.width,
-                placeholder_tracks.height
+                placeholder.x,
+                placeholder.y,
+                placeholder.z,
+                placeholder.width,
+                placeholder.height
             );
             menu_songs.SetTextForceCase(VertexProps.TEXTSPRITE_FORCE_UPPERCASE);
-            placeholder_icons.vertex = menu_icons.GetDrawable();
-            placeholder_tracks.vertex = menu_songs.GetDrawable();
-            menu_icons.SelectIndex(-1);
+            placeholder.vertex = menu_songs.GetDrawable();
             menu_songs.SelectIndex(-1);
 
             // step 6: drop menu manifests
-            //free(FreeplayMenu.MENU_ICONS.items);
             //free(FreeplayMenu.MENU_SONGS.items);
-            FreeplayMenu.MENU_ICONS.items = FreeplayMenu.MENU_SONGS.items = null;
+            FreeplayMenu.MENU_SONGS.items = null;
+
+            // step 7: create menu icons
+            FreeplaySongIcons songicons = new FreeplaySongIcons(songs, icons_dimmen, @params.font_size);
+            menu_songs.SetDrawCallback(false, songicons.DrawItemIcon);
+
 
             State state = new State() {
                 difficult_index = -1,
                 difficult_locked = false,
                 use_alternative = false,
                 map = songs.Get(0),
-                async_id_song = 0,
-                async_id_background = 0,
+                async_id_operation = 0,
                 soundplayer_path = null,
                 soundplayer = null,
                 background = layout.GetSprite("custom_background"),
@@ -245,7 +177,9 @@ namespace Engine.Game {
                 info = layout.GetTextsprite("info"),
                 description = layout.GetTextsprite("description"),
                 difficulties = null,
-                difficulties_size = 0
+                difficulties_size = 0,
+                running_threads = 0,
+                mutex = null
             };
             mutex.Init(out state.mutex, mutex.TYPE_NORMAL);
             if (state.background != null) state.background.SetTexture(null, false);
@@ -253,9 +187,14 @@ namespace Engine.Game {
             string default_bf = FreeplayMenu.InternalGetDefaultCharacterManifest(true);
             string default_gf = FreeplayMenu.InternalGetDefaultCharacterManifest(false);
 
+            if (GameMain.background_menu_music != null) {
+                GameMain.background_menu_music.Pause();
+            }
+
+            layout.TriggerAny("transition-in");
 
             while (true) {
-                int map_index = Show(menu_icons, menu_songs, state, songs);
+                int map_index = Show(menu_songs, state, songs);
                 if (map_index < 0) break;// back to main menu
 
                 string difficult = state.difficulties[state.difficult_index].name;
@@ -263,52 +202,64 @@ namespace Engine.Game {
                 string gameplaymanifest = weekinfo.songs[state.map.song_index].freeplay_gameplaymanifest;
                 InternalDropSoundplayer(state);
 
+                FreeplayMenu.InternalWaitTransition(layout, "before-play-song", dt_playsong);
+
                 layout.Suspend();
                 int ret = Week.Main(
                     weekinfo, state.use_alternative, difficult, default_bf, default_gf,
                     gameplaymanifest, state.map.song_index
                 );
+                if (ret == 0) break;// back to main menu
+
                 layout.Resume();
-                if (ret == 3) break;// back to main menu
+                FreeplayMenu.InternalWaitTransition(layout, "after-play-song", dt_playsong);
+                FreeplayMenu.InternalSongLoad(state, false);
             }
 
             // Wait for running threads
             while (true) {
                 PVRContext.global_context.WaitReady();
                 mutex.Lock(state.mutex);
-                if (state.running_threads < 1) break;
+                bool exit = state.running_threads < 1;
                 mutex.Unlock(state.mutex);
+                if (exit) break;
             }
             thd.pass();
 
+            FreeplayMenu.InternalWaitTransition(layout, "transition-out", dt_screenout);
             FreeplayMenu.InternalDropCustomBackground(state);
 
+            //free(default_bf);
+            //free(default_gf);
             //free(state.difficulties);
             mutex.Destroy(state.mutex);
             InternalDropSoundplayer(state);
-            menu_icons.Destroy();
+            songicons.Destroy();
             menu_songs.Destroy();
             songs.Destroy(false);
             layout.Destroy();
+
+            if (GameMain.background_menu_music != null) {
+                GameMain.background_menu_music.Play();
+            }
+
         }
 
-        private static int Show(Menu menu_icons, Menu menu_songs, State state, ArrayList<MappedSong> songs) {
+        private static int Show(Menu menu, State state, ArrayList<MappedSong> songs) {
             int map_index = -1;
             Gamepad gamepad = new Gamepad(-1);
-            gamepad.SetButtonsDelay(250);
+            gamepad.SetButtonsDelay(200);
 
             SoundPlayer sound_asterik = SoundPlayer.Init("/assets/common/sound/asterikMenu.ogg");
 
-            if (menu_icons.GetSelectedIndex() < 0) {
-                menu_icons.SelectIndex(0);
-                menu_songs.SelectIndex(0);
+            if (menu.GetSelectedIndex() < 0) {
+                menu.SelectIndex(0);
 
-                state.map = songs.Get(menu_songs.GetSelectedIndex());
+                state.map = songs.Get(menu.GetSelectedIndex());
                 state.use_alternative = false;
                 FreeplayMenu.InternalBuildDifficulties(state);
                 FreeplayMenu.InternalShowInfo(state);
-                FreeplayMenu.InternalLoadBackgroundAsync(state);
-                FreeplayMenu.InternalLoadSongAsync(state);
+                FreeplayMenu.InternalSongLoad(state, true);
             }
 
 
@@ -349,8 +300,8 @@ namespace Engine.Game {
                     offset = 1;
                     switch_difficult = true;
                 } else if ((btns & (GamepadButtons.A | GamepadButtons.START)) != GamepadButtons.NOTHING) {
-                    int index = menu_songs.GetSelectedIndex();
-                    if (index < 0 || index >= menu_songs.GetItemsCount() || state.difficult_locked) {
+                    int index = menu.GetSelectedIndex();
+                    if (index < 0 || index >= menu.GetItemsCount() || state.difficult_locked) {
                         if (sound_asterik != null) sound_asterik.Replay();
                         continue;
                     }
@@ -373,24 +324,21 @@ namespace Engine.Game {
                     continue;
                 }
 
-                menu_icons.SelectVertical(offset);
-                if (!menu_songs.SelectVertical(offset)) {
-                    int index = menu_songs.GetSelectedIndex();
+                if (!menu.SelectVertical(offset)) {
+                    int index = menu.GetSelectedIndex();
                     if (index < 1)
-                        index = menu_songs.GetItemsCount() - 1;
+                        index = menu.GetItemsCount() - 1;
                     else
                         index = 0;
 
-                    menu_icons.SelectIndex(index);
-                    menu_songs.SelectIndex(index);
+                    menu.SelectIndex(index);
                 }
 
-                state.map = songs.Get(menu_songs.GetSelectedIndex());
+                state.map = songs.Get(menu.GetSelectedIndex());
                 state.use_alternative = false;
                 FreeplayMenu.InternalBuildDifficulties(state);
                 FreeplayMenu.InternalShowInfo(state);
-                FreeplayMenu.InternalLoadBackgroundAsync(state);
-                FreeplayMenu.InternalLoadSongAsync(state);
+                FreeplayMenu.InternalSongLoad(state, true);
             }
 
             if (sound_asterik != null) sound_asterik.Destroy();
@@ -399,23 +347,26 @@ namespace Engine.Game {
             return map_index;
         }
 
-        private static void InternalLoadSongAsync(State state) {
+        private static object InternalLoadSongAsync(object param) {
+            State state = (State)param;
+
             // adquire mutex and declare this thread
             mutex.Lock(state.mutex);
             state.running_threads++;
 
             WeekInfo weekinfo = Funkin.weeks_array.array[state.map.week_index];
             WeekInfo.Song songinfo = weekinfo.songs[state.map.song_index];
-            int async_id_song = state.async_id_song;
+            int async_id_song = state.async_id_operation;
             string path_base = songinfo.freeplay_song_filename;
             bool src_is_null = songinfo.freeplay_song_filename == null;
+            float seek = songinfo.freeplay_seek_time * 1000f;
 
             if (state.map.is_locked || songinfo.name == null) {
                 InternalDropSoundplayer(state);
 
                 state.running_threads--;
                 mutex.Unlock(state.mutex);
-                return;
+                return null;
             }
 
             // shared variables adquired, release mutex
@@ -439,7 +390,7 @@ namespace Engine.Game {
             );
             string final_path = is_not_splitted ? path_base : (path_instrumental ?? path_voices);
 
-            if (async_id_song != state.async_id_song) {
+            if (async_id_song != state.async_id_operation) {
                 goto L_return;
             }
 
@@ -456,7 +407,7 @@ namespace Engine.Game {
             if (soundplayer == null) final_path = null;
 
             // check if the user selected another song
-            if (async_id_song != state.async_id_song) {
+            if (async_id_song != state.async_id_operation) {
                 if (soundplayer != null) soundplayer.Destroy();
                 goto L_return;
             }
@@ -469,6 +420,7 @@ namespace Engine.Game {
             state.soundplayer = soundplayer;
 
             soundplayer.SetVolume(0.5f);
+            if (!Single.IsNaN(seek)) soundplayer.Seek(seek);
             soundplayer.Play();
             soundplayer.Fade(true, 500);
 
@@ -481,10 +433,13 @@ L_return:
             //free(path_instrumental);
             state.running_threads--;
             mutex.Unlock(state.mutex);
+            return null;
         }
 
-        private static void InternalLoadBackgroundAsync(State state) {
-            if (state.background == null) return;
+        private static object InternalLoadBackgroundAsync(object param) {
+            State state = (State)param;
+
+            if (state.background == null) return null;
 
             // adquire mutex and declare this thread
             mutex.Lock(state.mutex);
@@ -492,7 +447,7 @@ L_return:
 
             WeekInfo weekinfo = Funkin.weeks_array.array[state.map.week_index];
             string src = weekinfo.songs[state.map.song_index].freeplay_background;
-            int async_id_background = state.async_id_background;
+            int async_id_background = state.async_id_operation;
             ModelHolder modelholder = null;
             Texture texture = null;
 
@@ -501,7 +456,7 @@ L_return:
                 FreeplayMenu.InternalDropCustomBackground(state);
                 state.running_threads--;
                 mutex.Unlock(state.mutex);
-                return;
+                return null;
             }
 
             if (src.LowercaseEndsWithKDY(".json") || src.LowercaseEndsWithKDY(".xml")) {
@@ -514,7 +469,7 @@ L_return:
             mutex.Lock(state.mutex);
 
             // if the user has no changed the song, set the background
-            if (async_id_background == state.async_id_background) {
+            if (async_id_background == state.async_id_operation) {
                 AnimSprite sprite_anim = null;
                 Texture sprite_tex = null;
 
@@ -542,6 +497,7 @@ L_return:
 
             state.running_threads--;
             mutex.Unlock(state.mutex);
+            return null;
         }
 
         private static void InternalShowInfo(State state) {
@@ -576,9 +532,9 @@ L_return:
             if (desc != null) {
                 if (state.description != null)
                     state.description.SetTextIntern(true, desc);
-                state.layout.TriggerAny("description-show");
+                layout.TriggerAny("description-show");
             } else {
-                state.layout.TriggerAny("description-hide");
+                layout.TriggerAny("description-hide");
             }
 
             layout.TriggerAny(is_locked ? "locked" : "not-locked");
@@ -685,8 +641,29 @@ L_return:
             return manifest_src;
         }
 
+        private static void InternalSongLoad(State state, bool with_bg) {
+            mutex.Lock(state.mutex);
 
-        private struct MappedSong {
+            state.async_id_operation++;
+            if (with_bg) GameMain.THDHelperSpawn(FreeplayMenu.InternalLoadBackgroundAsync, state);
+            GameMain.THDHelperSpawn(FreeplayMenu.InternalLoadSongAsync, state);
+
+            mutex.Unlock(state.mutex);
+        }
+
+        private static void InternalWaitTransition(Layout layout, string what, float duration) {
+            if (duration < 1) return;
+            if (layout.TriggerAny(what) < 1) return;
+
+            while (duration > 0) {
+                float elapsed = PVRContext.global_context.WaitReady();
+                duration -= elapsed;
+                layout.Animate(elapsed);
+                layout.Draw(PVRContext.global_context);
+            }
+        }
+
+        public struct MappedSong {
             public int song_index;
             public int week_index;
             public bool is_locked;
@@ -703,8 +680,7 @@ L_return:
             public bool use_alternative;
             public MappedSong map;
 
-            public volatile int async_id_song;
-            public volatile int async_id_background;
+            public volatile int async_id_operation;
 
             public SoundPlayer soundplayer;
             public string soundplayer_path;

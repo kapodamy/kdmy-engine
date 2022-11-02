@@ -32,8 +32,8 @@ namespace Engine.Sound {
             );
 
             if (path_voices == null && path_instrumental == null && !is_not_splitted) {
-                Console.Error.WriteLine("songplayer_init() fallback failed, missing file: " + src);
-                Console.Error.WriteLine("songplayer_init() cannot load any file, there will only be silence.");
+                Console.Error.WriteLine("[ERROR] songplayer_init() fallback failed, missing file: " + src);
+                Console.Error.WriteLine("[ERROR] songplayer_init() cannot load any file, there will only be silence.");
 
                 return SongPlayer.SILENCE;
             }
@@ -250,20 +250,20 @@ namespace Engine.Sound {
                 if (FS.FileExists(voices)) {
                     path_voices = voices;
                 } else {
-                    Console.Error.WriteLine("songplayer_init() missing voices: " + voices);
+                    Console.Error.WriteLine("[WARN] songplayer_init() missing voices: " + voices);
                     //free(voices);
                 }
 
                 if (FS.FileExists(instrumental)) {
                     path_instrumental = instrumental;
                 } else {
-                    Console.Error.WriteLine("songplayer_init() missing instrumental: " + instrumental);
+                    Console.Error.WriteLine("[WARN] songplayer_init() missing instrumental: " + instrumental);
                     //free(instrumental);
                 }
             }
 
             if (path_instrumental == null && path_voices == null && !is_not_splitted) {
-                //if (prefer_no_copyright) free(src);
+                //if (prefer_alternative) free(src);
             }
 
             return is_not_splitted;
