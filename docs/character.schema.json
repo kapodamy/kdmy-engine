@@ -8,7 +8,7 @@
             "properties": {
                 "healthbarColor": {
                     "type": ["integer", "string", "null"],
-                    "default": 65535,
+                    "default": "0x0000FF",
                     "description": "8bit RGB Color in format 0xRRGGBB"
                 },
                 "model": {

@@ -9,6 +9,8 @@ using Engine.Utils;
 
 namespace Engine.Game.Common {
 
+    public delegate bool MenuDrawCallback(PVRContext pvrctx, Menu menu, int index, float item_x, float item_y, float item_width, float item_height);
+
     public class Menu : IAnimate, IDraw {
 
 
@@ -40,6 +42,8 @@ namespace Engine.Game.Common {
         private bool per_page;
         private int[] map;
         private int map_size;
+        private bool drawcallback_before;
+        private MenuDrawCallback drawcallback;
 
 
         public Menu(MenuManifest menumanifest, float x, float y, float z, float width, float height) {
@@ -186,6 +190,8 @@ namespace Engine.Game.Common {
             this.map = null;
             this.map_size = 0;
 
+            this.drawcallback_before = false;
+            this.drawcallback = null;
 
             if (@params.static_index != 0) {
                 this.tweenlerp = TweenLerp.Init();
@@ -389,10 +395,14 @@ namespace Engine.Game.Common {
                 for (int i = 0 ; i < this.items_size ; i++) {
                     if (this.items[i].hidden) continue;
 
+                    if (this.drawcallback_before && this.InternalDrawCallback(pvrctx, i)) continue;
+
                     if (this.items[i].is_text)
                         this.items[i].vertex.Draw(pvrctx);
                     else
                         this.items[i].vertex.Draw(pvrctx);
+
+                    if (!this.drawcallback_before && this.InternalDrawCallback(pvrctx, i)) break;
                 }
             } else {
                 float render_distance;
@@ -423,10 +433,14 @@ namespace Engine.Game.Common {
                     // ignore items outside of the visible space
                     if (i < this.render_start || i > this.render_end) continue;
 
+                    if (this.drawcallback_before && this.InternalDrawCallback(pvrctx, i)) continue;
+
                     if (this.items[i].is_text)
                         this.items[i].vertex.Draw(pvrctx);
                     else
                         this.items[i].vertex.Draw(pvrctx);
+
+                    if (!this.drawcallback_before && this.InternalDrawCallback(pvrctx, i)) break;
                 }
             }
             pvrctx.Restore();
@@ -469,6 +483,11 @@ namespace Engine.Game.Common {
                     ((TextSprite)this.items[i].vertex).ForceCase(none_or_lowercase_or_uppercase);
                 }
             }
+        }
+
+        public void SetDrawCallback(bool before_or_after, MenuDrawCallback callback) {
+            this.drawcallback_before = before_or_after;
+            this.drawcallback = callback;
         }
 
 
@@ -695,10 +714,12 @@ namespace Engine.Game.Common {
 
                 if (has_static_index) {
                     int lower_index = new_index - this.static_index;
+                    if (lower_index >= this.items_size) lower_index = this.items_size - 1;
 
                     while (lower_index > 0 && this.items[lower_index].hidden) lower_index--;
 
                     if (lower_index < 0) {
+                        if (old_index < 0) old_index = 0;
                         has_static_index = false;
                         goto L_stop_checking_static_index;
                     }
@@ -922,6 +943,24 @@ L_stop_checking_static_index:
 
             InternalSetIndexSelected(new_index);
             return true;
+        }
+
+        private bool InternalDrawCallback(PVRContext pvrctx, int index) {
+            if (this.drawcallback == null) return false;
+
+            float draw_x, draw_y;
+            float draw_width, draw_height;
+            MenuItem item = this.items[index];
+
+            if (item.is_text) {
+                item.vertex.GetDrawLocation(out draw_x, out draw_y);
+                item.vertex.GetDrawSize(out draw_width, out draw_height);
+            } else {
+                item.vertex.GetDrawLocation(out draw_x, out draw_y);
+                item.vertex.GetDrawSize(out draw_width, out draw_height);
+            }
+
+            return !this.drawcallback(pvrctx, this, index, draw_x, draw_y, draw_width, draw_height);
         }
 
 

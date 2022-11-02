@@ -17,7 +17,7 @@ Luascript luascript_init(const char* lua_sourcecode, const char* filename, void*
 void luascript_destroy(Luascript* luascript);
 void luascript_drop_shared(Luascript luascript);
 
-void luascript_notify_weekinit(Luascript luascript, bool from_restart);
+void luascript_notify_weekinit(Luascript luascript, int32_t freeplay_index);
 void luascript_notify_beforeready(Luascript luascript, bool from_retry);
 void luascript_notify_ready(Luascript luascript);
 void luascript_notify_aftercountdown(Luascript luascript);

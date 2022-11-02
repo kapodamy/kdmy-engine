@@ -186,12 +186,13 @@
                     "default": 0.0
                 },
                 "fontColor": {
-                    "type": "integer",
-                    "default": 0x00,
+                    "type": ["integer", "string", "null"],
+                    "default": "0xFFFFFF",
                     "description": "An hex value in 8bit RGB form (0xRRGGBB)"
                 },
                 "fontBorderColor": {
-                    "type": "number",
+                    "type": ["integer", "string", "null"],
+                    "default": "0xFFFFFF",
                     "description": "An hex value in 8bit RGB form (0xRRGGBB)"
                 },
                 "fontBorderSize": {

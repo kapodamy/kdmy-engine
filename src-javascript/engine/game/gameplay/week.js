@@ -147,7 +147,7 @@ const CHARACTERTYPE = {
  * 
  * @property {UIParams} ui
  * 
- * @property {bool} no_copyright
+ * @property {bool} alt_tracks
  * @property {string} difficult
  * @property {string} default_boyfriend
  * @property {string} default_girlfriend
@@ -319,7 +319,7 @@ function week_destroy(/** @type {RoundContext} */ roundcontext, gameplaymanifest
 }
 
 
-async function week_main(weekinfo, no_copyright, difficult, default_bf, default_gf) {
+async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf, gameplaymanifest_src, single_track_index) {
 
     sh4matrix_clear(WEEKROUND_UI_MATRIX);
     sh4matrix_clear(WEEKROUND_UI_MATRIX_CAMERA);
@@ -327,7 +327,7 @@ async function week_main(weekinfo, no_copyright, difficult, default_bf, default_
 
     /** @type {InitParams} */
     const initparams = {
-        no_copyright: no_copyright,
+        alt_tracks: alt_tracks,
         difficult: difficult,
         default_boyfriend: default_bf,
         default_girlfriend: default_gf,
@@ -497,9 +497,14 @@ async function week_main(weekinfo, no_copyright, difficult, default_bf, default_
     }
 
     // step 1: load the gameplay manifest this hosts all engine components behavior
-    let src_gameplaymanifest = weekenumerator_get_gameplay_manifest(weekinfo);
-    let gameplaymanifest = await week_internal_load_gameplay_manifest(src_gameplaymanifest);
-    src_gameplaymanifest = undefined;
+    let gameplaymanifest;
+    if (gameplaymanifest_src != null) {
+        gameplaymanifest = await week_internal_load_gameplay_manifest(gameplaymanifest_src);
+    } else {
+        gameplaymanifest_src = weekenumerator_get_gameplay_manifest(weekinfo);
+        gameplaymanifest = await week_internal_load_gameplay_manifest(gameplaymanifest_src);
+        gameplaymanifest_src = undefined;
+    }
     if (!gameplaymanifest) {
         texture_disable_defering(0);
         return 0;
@@ -517,8 +522,10 @@ async function week_main(weekinfo, no_copyright, difficult, default_bf, default_
     let first_init = 1;
     let reject_completed = false;
     let last_track = gameplaymanifest.tracks_size - 1;
+    let single_track = single_track_index >= 0;
 
     for (let i = 0; i < gameplaymanifest.tracks_size; i++) tracks_attempts[i] = 0;
+    if (single_track) roundcontext.track_index = single_track_index;
 
     // step 3: start the round cycle
     while (roundcontext.track_index < gameplaymanifest.tracks_size) {
@@ -543,7 +550,7 @@ async function week_main(weekinfo, no_copyright, difficult, default_bf, default_
 
         if (first_init) {
             if (roundcontext.script) {
-                await weekscript_notify_weekinit(roundcontext.script, 0);
+                await weekscript_notify_weekinit(roundcontext.script, single_track ? single_track_index : -1);
                 await week_halt(roundcontext, 1);
             }
             first_init = 0;
@@ -625,6 +632,8 @@ async function week_main(weekinfo, no_copyright, difficult, default_bf, default_
             continue;
         }
 
+        if (single_track) break;// week launched from freeplaymenu
+
         // round completed, next one
         roundcontext.track_index++;
         retry = 0;
@@ -671,8 +680,9 @@ async function week_main(weekinfo, no_copyright, difficult, default_bf, default_
         let total_attempts = 0;
         for (let i = 0; i < gameplaymanifest.tracks_size; i++) total_attempts += tracks_attempts[i];
 
+        let tracks_count = single_track ? 1 : gameplaymanifest.tracks_size;
         await week_result_helper_show_summary(
-            roundcontext.weekresult, roundcontext, total_attempts, gameplaymanifest.tracks_size, reject_completed
+            roundcontext.weekresult, roundcontext, total_attempts, tracks_count, reject_completed
         );
         if (roundcontext.script) {
             await weekscript_notify_afterresults(roundcontext.script);
@@ -1008,6 +1018,7 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
         await week_init_girlfriend(roundcontext, gameplaymanifest.default.girlfriend);
     }
 
+    // add additional pause menu
     if (trackmanifest.has_pause_menu) {
         roundcontext.pause_menu_from_default = 0;
         await week_pause_external_set_menu(roundcontext.weekpause, trackmanifest.pause_menu);
@@ -1018,7 +1029,7 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
 
     // initialize the song tracks
     if (roundcontext.songplayer) songplayer_destroy(roundcontext.songplayer);
-    roundcontext.songplayer = await songplayer_init(trackmanifest.song, initparams.no_copyright);
+    roundcontext.songplayer = await songplayer_init(trackmanifest.song, initparams.alt_tracks);
 
     // initialize the gameover screen
     await week_init_ui_gameover(roundcontext);
@@ -1030,7 +1041,7 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
         roundcontext.trackinfo,
         UI_TRACKINFO_FORMAT,
         trackmanifest.name,
-        initparams.no_copyright ? UI_TRACKINFO_ALT_SUFFIX : null,
+        initparams.alt_tracks ? UI_TRACKINFO_ALT_SUFFIX : null,
         initparams.difficult,
         ENGINE_VERSION
     );

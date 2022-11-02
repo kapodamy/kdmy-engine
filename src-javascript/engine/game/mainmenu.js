@@ -337,6 +337,9 @@ async function mainmenu_handle_selected_option(selected_index) {
         case 0:// storymode
             while (await weekselector_main()) { }
             return 1;// main-menu
+        case 1:
+            await freeplaymenu_main();
+            return 1;// main-menu
         case 2:
             await mainmenu_show_donate();
             return 1;// main-menu

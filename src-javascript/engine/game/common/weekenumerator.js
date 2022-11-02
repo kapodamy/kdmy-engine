@@ -84,6 +84,12 @@ function weekenumerator_get_greetings(weekinfo) {
     return null;
 }
 
+function weekenumerator_get_asset( weekinfo,  relative_path) {
+    return string_concat(
+        4, FUNKIN_WEEKS_FOLDER, weekinfo.name, FS_CHAR_SEPARATOR, relative_path
+    );
+}
+
 async function weekenumerator_parse_week(week_name) {
     let week_parsed = null;
 
@@ -147,8 +153,17 @@ async function weekenumerator_parse_week(week_name) {
             let json_song = json_read_array_item_object(json_songs, i);
             songs[i] = {
                 name: json_read_string(json_song, "name", null),
-                host_icon_model: json_read_string(json_song, "hostIconModel", null),
-                freeplay_background: json_read_string(json_song, "freePlayBackground", null)
+                freeplay_host_icon_model: await weekenumerator_parse_path(json_song, "freeplayHostIconModel"),
+                freeplay_host_icon_name: json_read_string(json_song, "freeplayHostIconName", null),
+                freeplay_background: json_read_string(json_song, "freeplayBackground", null),
+                freeplay_only: json_read_boolean(json_song, "freeplayOnly", false),
+                freeplay_unlock_directive: json_read_string(json_song, "freeplayUnlockDirective", null),
+                freeplay_hide_if_week_locked: json_read_boolean(json_song, "freeplayGameplayManifest", 0),
+                freeplay_gameplaymanifest: json_read_string(json_song, "freeplayHideIfWeekLocked", null),
+                freeplay_track_index_in_gameplaymanifest: json_read_number(json_song, "freeplayTrackIndexInGameplayManifest", -1),
+                freeplay_song_filename: await weekenumerator_parse_path(json_song, "freeplaySongFilename"),
+                freeplay_description: json_read_string(json_song, "freeplayDescription", null),
+                freeplay_seek_time: json_read_number(json_song, "freeplaySeekTime", NaN)
             }
         }
 
@@ -187,10 +202,11 @@ async function weekenumerator_parse_week(week_name) {
                 girlfriend_models: await weekenumerator_parse_characters(girlfriend_array),
                 girlfriend_models_size: Math.max(json_read_array_length(girlfriend_array), 0)
             },
-            background_layout: json_has_property_string(json, "backgroundLayout"),
+            custom_selector_layout: await weekenumerator_parse_path(json, "backgroundLayout"),
             custom_folder: await weekenumerator_parse_path(json, "customFolder"),
             custom_folder_gameplay: await weekenumerator_parse_path(json, "inGameplayCustomFolder"),
-            has_greetings: await fs_file_exists(FUNKIN_WEEK_GREETINGS_FILE)
+            has_greetings: await fs_file_exists(FUNKIN_WEEK_GREETINGS_FILE),
+            songs_default_freeplay_host_icon_model: await weekenumerator_parse_path(json, "songsDefaultFreeplayHostIconModel")
         };
 
         json_destroy(json);

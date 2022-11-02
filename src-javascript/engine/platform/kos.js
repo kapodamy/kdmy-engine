@@ -1264,3 +1264,27 @@ function arch_menu() {
     window.close();
     window.location.href = "about:blank";
 }
+
+
+//
+// mutex stuff
+//
+const MUTEX_TYPE_NORMAL = 1;
+
+function mutex_init(m, mtype) {
+    if (mtype != MUTEX_TYPE_NORMAL) return -1;
+    // STUB
+    return 0;
+}
+
+function mutex_destroy(m) {
+    return 0;
+}
+
+function mutex_lock(m) {
+    return 0;
+}
+
+function mutex_unlock(m) {
+    return 0;
+}

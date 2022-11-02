@@ -2,7 +2,7 @@
     "description": "PICO",
     "songs": [
         { "name": "Pico"},
-        { "name": "Philly Nice"},
+        { "name": "Philly Nice", "freeplaySongFilename": "songs/philly.ogg" },
         { "name": "Blammed"}
     ],
 	"songsDefaultFreeplayHostIconModel": "PICO/icon-pico.xml",

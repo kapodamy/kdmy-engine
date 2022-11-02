@@ -193,14 +193,12 @@ namespace Engine.Game {
 
             if (String.IsNullOrEmpty(state.weekinfo.custom_selector_layout)) return;
 
-            Console.Error.WriteLine("[LOG] STUB weekselector_load_custom_week_background()");
-
             string path = WeekEnumerator.GetAsset(state.weekinfo, state.weekinfo.custom_selector_layout);
             state.custom_layout = Layout.Init(path);
             //free(path);
             if (state.custom_layout != null) {
-                if (!state.week_unlocked) state.custom_layout.TriggerAny("week-locked");
                 state.custom_layout.TriggerAny("show-principal");
+                if (!state.week_unlocked) state.custom_layout.TriggerAny("week-locked");
             }
         }
 
@@ -561,8 +559,8 @@ namespace Engine.Game {
             }
 
             if (state.page_selected_ui == 1 && state.custom_layout != null) {
-                state.custom_layout.TriggerAny("hide-principal");
-                state.custom_layout.TriggerAny("show-difficult-selector");
+                state.custom_layout.TriggerAny("principal-hide");
+                state.custom_layout.TriggerAny("difficult-selector-show");
             }
 
             if (seek_offset == 0) return;
@@ -656,8 +654,8 @@ namespace Engine.Game {
             }
 
             if (state.page_selected_ui == 0 && state.custom_layout != null) {
-                state.custom_layout.TriggerAny("hide-difficult-selector");
-                state.custom_layout.TriggerAny("show-principal");
+                state.custom_layout.TriggerAny("difficult-selector-hide");
+                state.custom_layout.TriggerAny("principal-show");
             }
 
             if (seek_offset == 0) return;
@@ -691,7 +689,7 @@ namespace Engine.Game {
                 ui.mdl_girlfriend.EnableArrows(!state.choosing_boyfriend);
 
                 if (state.custom_layout != null)
-                    state.custom_layout.TriggerAny("show-model-change");
+                    state.custom_layout.TriggerAny("model-change-show");
             }
 
             GamepadButtons buttons = ui.maple_pads.HasPressedDelayed(
@@ -739,7 +737,7 @@ namespace Engine.Game {
             }
 
             if (state.page_selected_ui != 2 && state.custom_layout != null)
-                state.custom_layout.TriggerAny("hide-model-change");
+                state.custom_layout.TriggerAny("model-change-hide");
 
             if (character_model_seek != 0) {
                 bool old_choose_boyfriend = state.choosing_boyfriend;

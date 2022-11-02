@@ -13,12 +13,12 @@ function math2d_random(min, max) {
 }
 
 function math2d_random_int(min, max) {
-	let value = math2d_random(min, max);
-	value = Math.trunc(value);
-	
-	if (value < min) return min;
-	if (value > max) return max;
-	return value;
+    let value = math2d_random(min, max);
+    value = Math.trunc(value);
+
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
 }
 
 
@@ -216,4 +216,31 @@ function math2d_floats_are_near_equal(float1, float2) {
 
 function math2d_float_are_near_zero(number) {
     return Math.abs(number) < Number.EPSILON;
+}
+
+function math2d_timestamp_to_string(timestamp) {
+    const TIME_SECONDS = "$1ds";// 1.2s
+    const TIME_MINUTES = "$im$2is";// 1m23s
+    const TIME_HOURS = "$ih$2i$2i";// 1h23m45s
+
+    if (Number.isNaN(timestamp)) return "--:--.---";
+
+    timestamp /= 1000.0;
+    let h = Math.floor(timestamp / 3600.0);
+    let m = Math.floor((timestamp - (h * 3600.0)) / 60.0);
+    let s = timestamp - (h * 3600.0) - (m * 60.0);
+
+    let stringbuilder = stringbuilder_init(9);
+
+    if (h > 0.0)
+        stringbuilder_add_format(TIME_HOURS, Math.trunc(h), Math.trunc(m), Math.trunc(s));
+    else if (m > 0.0)
+        stringbuilder_add_format(TIME_MINUTES, Math.trunc(m), Math.trunc(s));
+    else
+        stringbuilder_add_format(TIME_SECONDS, s);
+
+    let str = stringbuilder.GetCopyKDY();
+    stringbuilder_destroy();
+
+    return str;
 }

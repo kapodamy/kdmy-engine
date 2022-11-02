@@ -2,6 +2,12 @@
 let isBeforeEvilMall: boolean = false;
 let stage: Layout = null;
 let stageCamera: Camera = null;
+let in_freeplay_mode: boolean = false;
+
+function f_weekinit(freeplay_index: number) {
+    in_freeplay_mode = freeplay_index >= 0;
+    if (freeplay_index == 2) place_lemon_demon(week_get_stage_layout());
+}
 
 function f_beforeready(from_retry: boolean): void {
     stage = week_get_stage_layout();
@@ -15,7 +21,7 @@ function f_beforeready(from_retry: boolean): void {
     if (track_index < 2) {
         //
         // Notes:
-        //      * The engines attempts to restore the original layout state (executes all unamed actions)
+        //      * The engines attempts to restore the original layout state (executes all not named actions)
         //        is not necessary "rollback" the mall's evil actions.
         //      * Also restores the character camera names
         //
@@ -26,14 +32,16 @@ function f_beforeready(from_retry: boolean): void {
     // stop bop trigger
     stage.stop_all_triggers();
 
-	// change cameras focus
+    // change cameras focus
     week_change_charecter_camera_name(true, "camera_evil_opponent");
     week_change_charecter_camera_name(false, "camera_evil_player");
 
-    if (from_retry) {
+    if (from_retry || in_freeplay_mode) {
         // do not bother the player, skip intro animation
-        stage.trigger_camera("mall_evil");
-        stage.trigger_camera("mall_evil_zoom_out");
+        if (!in_freeplay_mode) {
+            stage.trigger_camera("mall_evil");
+            stage.trigger_camera("mall_evil_zoom_out");
+        }
         stage.trigger_action(null, "evil");
         return;
     }
@@ -45,17 +53,15 @@ function f_beforeready(from_retry: boolean): void {
 
     // step 1: halt "Ready?"
     week_set_halt(true);
-    
-    // trigger "fade_lights" action again, beacuse the engine execute all unamed
+
+    // trigger "fade_lights" action again, beacuse the engine execute all not named
     // actions before the round starts
     stage.trigger_action(null, "fade_lights");
 
     ui_set_visibility(false);
 
     // step 2: move lemon demon (spawns in parents location)
-    let placeholder: LayoutPlaceholderInfo = stage.get_placeholder("lemon_demon");
-    let opponent: Character = week_get_character(0);
-    opponent.set_draw_location(placeholder.x, placeholder.y);
+    place_lemon_demon(stage);
 
     // step 4: play "lights_on" sound 
     stage.trigger_action(null, "lights_on");
@@ -77,7 +83,7 @@ function f_beforeready(from_retry: boolean): void {
 }
 
 function f_roundend(loose: boolean) {
-    if (!isBeforeEvilMall || loose) return;
+    if (!isBeforeEvilMall || loose || in_freeplay_mode) return;
 
     // LOOK HOW EFFORTLESSLY I TURN OFF THE LIGHTS
     stage.trigger_action(null, "lights_off");
@@ -86,3 +92,9 @@ function f_roundend(loose: boolean) {
     timer_callback_timeout(2000, week_set_halt, false);
 }
 
+
+function place_lemon_demon(stage: Layout) {
+    let placeholder: LayoutPlaceholderInfo = stage.get_placeholder("lemon_demon");
+    let opponent: Character = week_get_character(0);
+    opponent.set_draw_location(placeholder.x, placeholder.y);
+}

@@ -28,11 +28,15 @@ let dialog_waiting_confirm: boolean = false;
 let dialog_force_end: boolean = false;
 let dialog_is_angry: boolean = false;
 let dialog_is_evil: boolean = false;
+let in_freeplay_mode: boolean = false;
 
 
 
-function f_weekinit(from_restart: boolean): void {
-    if (from_restart) return;
+function f_weekinit(freeplay_index: number): void {
+    if (freeplay_index >= 0) {
+        in_freeplay_mode = true;
+        return;
+    }
     dialogs_senpai = dialog_parse("/assets/weeks/week6/weeb/dialogs/senpaiDialogue.txt");
     dialogs_roses = dialog_parse("/assets/weeks/week6/weeb/dialogs/rosesDialogue.txt");
     dialogs_thorns = dialog_parse("/assets/weeks/week6/weeb_but_evil/dialogs/thornsDialogue.txt");
@@ -61,7 +65,7 @@ function f_beforeready(from_retry: boolean): void {
     }
 
 
-    if (from_retry) return;
+    if (from_retry || in_freeplay_mode) return;
 
     lyt_icon_boyfriend = stage.get_sprite("dialog_icon_boyfriend");
     lyt_icon_senpai = stage.get_sprite("dialog_icon_senpai");
@@ -127,7 +131,7 @@ function f_buttons(player_id: number, buttons: GamepadButtons): void {
 }
 
 function f_roundend(loose: boolean): void {
-    if (loose || !dialog_is_angry) return;
+    if (loose || !dialog_is_angry || in_freeplay_mode) return;
 
     //
     // senpai death

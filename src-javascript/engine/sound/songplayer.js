@@ -2,54 +2,38 @@
 
 const SONGPLAYER_SUFFIX_INSTRUMENTAL = "-inst";
 const SONGPLAYER_SUFFIX_VOICES = "-voices";
-const SONGPLAYER_SUFFIX_NOCOPYRIGHT = "-nocopy";
+const SONGPLAYER_SUFFIX_ALTERNATIVE = "-alt";
 
 const SONGPLAYER_SILENCE = { playbacks: null, playbacks_size: 0, paused: 1 };
 
-async function songplayer_init(src, prefer_no_copyright) {
-    if (!src) return SONGPLAYER_SILENCE;
+async function songplayer_init(src, prefer_alternative) {
+    const output_paths = [null, null];
+    let is_not_splitted = await songplayer_helper_get_tracks(
+        src, prefer_alternative, output_paths
+    );
+    let path_voices = output_paths[0], path_instrumental = output_paths[1];
 
-    let dot_index = src.lastIndexOf('.');
-    if (!dot_index) throw new Error("missing file extension : " + src);
+    if (path_voices == null && path_instrumental == null && !is_not_splitted) {
+        console.error("songplayer_init() fallback failed, missing file: " + src);
+        console.error("songplayer_init() cannot load any file, there will only be silence.");
 
-    let is_not_splitted = 0;
-    let path_voices = null;
-    let path_instrumental = null;
-
-    if (prefer_no_copyright) {
-        src = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_NOCOPYRIGHT);
-    }
-
-    if (await fs_file_exists(src)) {
-        is_not_splitted = 1;
-    } else {
-        // check if the song is splited in voices and instrumental
-        let voices = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_VOICES);
-        let instrumental = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_INSTRUMENTAL);
-
-        if (await fs_file_exists(voices)) {
-            path_voices = voices;
-        } else {
-            console.warn(`songplayer_init() missing voices: ${voices}`);
-            voices = undefined;
-        }
-
-        if (await fs_file_exists(instrumental)) {
-            path_instrumental = instrumental;
-        } else {
-            console.warn(`songplayer_init() missing instrumental: ${instrumental}`);
-            instrumental = undefined;
-        }
-    }
-
-    if (!path_instrumental && !path_voices && !is_not_splitted) {
-        console.warn(`songplayer_init() fallback failed, missing file: ${src}`);
-        console.error(`songplayer_init() cannot load any file, there will only be silence.`);
-
-        if (prefer_no_copyright) src = undefined;
         return SONGPLAYER_SILENCE;
     }
 
+    let songplayer;
+
+    if (is_not_splitted) {
+        songplayer = await songplayer_init2(1, src, null);
+    } else {
+        songplayer = await songplayer_init2(0, path_voices, path_instrumental);
+        path_voices = undefined;
+        path_instrumental = undefined;
+    }
+
+    return songplayer;
+}
+
+async function songplayer_init2(is_not_splitted, path_voices, path_instrumental) {
     let songplayer = {
         playbacks: null,
         playbacks_size: 0,
@@ -59,7 +43,7 @@ async function songplayer_init(src, prefer_no_copyright) {
     };
 
     if (is_not_splitted) {
-        let player = await songplayer_internal_init_player(src);
+        let player = await songplayer_internal_init_player(path_voices ?? path_instrumental);
         if (player) {
             songplayer.playbacks = new Array(1);
             songplayer.playbacks_size = 1;
@@ -73,12 +57,10 @@ async function songplayer_init(src, prefer_no_copyright) {
 
         if (path_voices) {
             player_voices = await songplayer_internal_init_player(path_voices);
-            path_voices = undefined;
         }
 
         if (path_instrumental) {
             player_instrumentals = await songplayer_internal_init_player(path_instrumental);
-            path_instrumental = undefined;
         }
 
         if (player_voices) {
@@ -234,6 +216,55 @@ function songplayer_mute(songplayer, muted) {
     muted = !!muted;
     for (let i = 0; i < songplayer.playbacks_size; i++) songplayer.playbacks[i].muted = muted;
 }
+
+
+async function songplayer_helper_get_tracks(src, prefer_alternative, output_paths) {
+    let path_instrumental = null;
+    let path_voices = null;
+    let is_not_splitted = 0;
+
+    if (!src) return is_not_splitted;
+
+    let dot_index = src.lastIndexOf('.');
+    if (dot_index < 1) throw new Error("missing file extension : " + src);
+
+
+    if (prefer_alternative) {
+        src = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_ALTERNATIVE);
+    }
+
+    if (await fs_file_exists(src)) {
+        is_not_splitted = 1;
+    } else {
+        // check if the song is splited in voices and instrumental
+        let voices = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_VOICES);
+        let instrumental = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_INSTRUMENTAL);
+
+        if (await fs_file_exists(voices)) {
+            path_voices = voices;
+        } else {
+            console.warn("songplayer_init() missing voices: " + voices);
+            voices = undefined;
+        }
+
+        if (await fs_file_exists(instrumental)) {
+            path_instrumental = instrumental;
+        } else {
+            console.warn("songplayer_init() missing instrumental: " + instrumental);
+            instrumental = undefined;
+        }
+    }
+
+    if (path_instrumental == null && path_voices == null && !is_not_splitted) {
+        if (prefer_alternative) src = undefined;
+    }
+
+    output_paths[0] = path_voices;
+    output_paths[1] = path_instrumental;
+    return is_not_splitted;
+}
+
+
 
 
 

@@ -2,8 +2,8 @@
     "description": "Daddy Dearest",
     "songs": [
         { "name": "Bopeebo"},
-        { "name": "Fresh" },
-        { "name": "Dad Battle" }
+        { "name": "Fresh", "freeplaySeekTime": 8.0 },
+        { "name": "Dad Battle", "freeplaySongFilename": "songs/dadbattle.ogg" }
     ],
 	"songsDefaultFreeplayHostIconModel": "DD/icon-dad.xml",
     "unlockDirectiveName": "TTRL",

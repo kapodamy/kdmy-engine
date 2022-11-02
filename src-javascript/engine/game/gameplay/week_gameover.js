@@ -5,10 +5,6 @@ const WEEK_GAMEOVER_JUDGEMENT =
     "misses      $i\npenalties   $i\ndifficult  $s\n\n\n" +
     "Lost at $s ($2d% completed)";
 
-const WEEK_GAMEOVER_TIME_SECONDS = "$1ds";// 1.2s
-const WEEK_GAMEOVER_TIME_MINUTES = "$im$2is";// 1m23s
-const WEEK_GAMEOVER_TIME_HOURS = "$ih$2i$2i";// 1h23m45s
-
 const WEEK_GAMEOVER_HELP_RETRY = "retry";
 const WEEK_GAMEOVER_HELP_DIFFICULT = "change difficult";
 const WEEK_GAMEOVER_HELP_GIVEUP = "giveup";
@@ -53,7 +49,6 @@ async function week_gameover_init() {
     modelholder_destroy(ui_icons);
 
     let weekgameover = {
-        time: stringbuilder_init(10),
         layout, help_retry, help_difficult, help_giveup, selector,
         drawable: null,
         disabled: 1,
@@ -92,7 +87,6 @@ async function week_gameover_init() {
 }
 
 function week_gameover_destroy(weekgameover) {
-    stringbuilder_destroy(weekgameover.time);
     layout_destroy(weekgameover.layout);
     weekselector_helptext_destroy(weekgameover.help_retry);
     weekselector_helptext_destroy(weekgameover.help_difficult);
@@ -121,7 +115,6 @@ function week_gameover_hide(weekgameover) {
 }
 
 function week_gameover_display(weekgameover, timestamp, duration, playerstats, weekinfo, difficult) {
-    week_gameover_internal_timestamp_to_string(weekgameover.time, timestamp);
     let percent = Math.min((timestamp / duration) * 100, 100.00);
 
     layout_set_group_visibility_by_id(weekgameover.layout, weekgameover.group_id_help, 0);
@@ -138,6 +131,7 @@ function week_gameover_display(weekgameover, timestamp, duration, playerstats, w
 
     let jugement = layout_get_textsprite(weekgameover.layout, "judgement");
     if (jugement) {
+        let time = math2d_timestamp_to_string(timestamp);
         textsprite_set_text_formated(
             jugement, WEEK_GAMEOVER_JUDGEMENT,
 
@@ -150,9 +144,10 @@ function week_gameover_display(weekgameover, timestamp, duration, playerstats, w
             playerstats_get_penalties(playerstats),
             difficult,
 
-            stringbuilder_intern(weekgameover.time),
+            time,
             percent
         );
+        time = undefined;
     }
 
     weekgameover.weekinfo = weekinfo;
@@ -411,38 +406,6 @@ function week_gameover_draw2(weekgameover, dead_player_index, roundcontext, pvrc
 
     if (weekgameover.disabled) return;
     layout_draw(weekgameover.layout, pvrctx);
-
-}
-
-
-function week_gameover_internal_timestamp_to_string(stringbuilder, timestamp) {
-    //
-    // Stringify timestamp in something like "1h22m05s", "6m12s" or "40.9s"
-    //
-    stringbuilder_clear(stringbuilder);
-
-    if (!Number.isFinite(timestamp)) {
-        stringbuilder_add(stringbuilder, "------");
-        return;
-    }
-
-    timestamp /= 1000;
-    let h = Math.floor(timestamp / 3600);
-    let m = Math.floor((timestamp - (h * 3600)) / 60);
-    let s = Math.trunc(timestamp - (h * 3600) - (m * 60));
-
-    // JS only
-    let int_s = s;
-
-    // C only
-    //int32 int_s = (int32) s;
-
-    if (h > 0)
-        stringbuilder_add_format(stringbuilder, WEEK_GAMEOVER_TIME_HOURS, h, m, int_s);
-    else if (m > 0)
-        stringbuilder_add_format(stringbuilder, WEEK_GAMEOVER_TIME_MINUTES, m, int_s);
-    else
-        stringbuilder_add_format(stringbuilder, WEEK_GAMEOVER_TIME_SECONDS, s);
 
 }
 

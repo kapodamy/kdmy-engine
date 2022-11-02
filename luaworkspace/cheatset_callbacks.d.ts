@@ -10,10 +10,13 @@ declare namespace KDMYEngine {
      */
 
     /**
-     * Called when the week is loaded (with the first track).
-     * @param from_restart {@link true} if the user restarted, otherwise, {@link false}.
+     * Called when the week is loaded (with the first track). If the week is initialized from the freeplay menu 
+     * an index of the choosen song is passed.
+     * 
+     * Note: In "freeplay mode" you should avoid/skip any cutscenes, distractions or dialogues if necessary.
+     * @param freeplay_index index of the song in "about.json" file or "freeplayTrackIndexInGameplayManifest" field value, otherwise, -1.
      */
-    export function f_weekinit(from_restart: boolean): void;
+    export function f_weekinit(freeplay_index: number): void;
 
     /**
      * Called before the "_Ready?_" message is shown.

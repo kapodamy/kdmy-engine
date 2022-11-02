@@ -41,7 +41,7 @@ function ______kdmyEngine_timer_run(timestamp: number) {
             }
 
             let [result, error] = pcall(entry.callback, unpack(entry.args));
-            if (!result) console.error(error);
+            if (!result) print(error);
         }
     }
 }

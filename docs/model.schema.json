@@ -18,8 +18,8 @@
                     "default": null
                 },
                 "vertexColor": {
-                    "type": ["string", "null", "integer"],
-                    "default": 0
+                    "type": ["integer", "string", "null"],
+                    "default": "0xFFFFFF",
                 }
             },
             "required": [
