@@ -50,12 +50,11 @@ Explained here [FEATURES.MD](FEATURES.MD "FEATURES.MD")
 ## Missing features / To be implemented
 
 * Post-processing shaders.
-* Freeplay menu (shame).
-* Dialogues (double shame).
+* Dialogues (waht a shame).
 * Expansions loader (a.k.a mods loader).
 * Lua API to manipulate strums, states and UI cosmetics.
 * Documentation (a lot).
-* Video playback.
+* Video playback (kinda optional).
 
 ## How to compile
 
