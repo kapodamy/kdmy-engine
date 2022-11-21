@@ -911,3 +911,13 @@ function textsprite_set_wordbreak(textsprite, wordbreak) {
     textsprite.modified_coords = 1;
 }
 
+function textsprite_has_font(textsprite) {
+    return textsprite.font != null;
+}
+
+function textsprite_change_font(textsprite, fontholder) {
+    if (fontholder == null) throw new Error("fontholder can not be null");
+    textsprite.font = textsprite.font;
+    textsprite.font_from_atlas = textsprite.font_from_atlas;
+}
+

@@ -1,5 +1,6 @@
 using System;
 using Engine.Utils;
+using static Engine.Platform.FSFolderEnumerator;
 
 namespace Engine.Image {
 
@@ -141,6 +142,29 @@ namespace Engine.Image {
             statesprite_state.offset_y = draw_location[1];
         }
 
+        public static void CalcResizeSprite(Sprite sprite, float max_width, float max_height, bool cover, bool center) {
+            float draw_width, draw_height;
+            float location_x, location_y;
+            if (cover) {
+                sprite.GetSourceSize(out draw_width, out draw_height);
+                float ratio_width = draw_width / max_width;
+                float ratio_height = draw_height / max_height;
+
+                // resize the longest dimension of the sprite
+                if (ratio_width > ratio_height)
+                    sprite.ResizeDrawSize(-1, max_height, out draw_width, out draw_height);
+                else
+                    sprite.ResizeDrawSize(max_width, -1, out draw_width, out draw_height);
+            } else {
+                sprite.ResizeDrawSize(max_width, max_height, out draw_width, out draw_height);
+            }
+            if (center) {
+                sprite.GetDrawLocation(out location_x, out location_y);
+                if (max_width >= 0) location_x -= (draw_width - max_width) / 2.0f;
+                if (max_height >= 0) location_y -= (draw_height - max_height) / 2.0f;
+                sprite.SetDrawLocation(location_x, location_y);
+            }
+        }
     }
 
 }

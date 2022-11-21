@@ -150,5 +150,28 @@ declare namespace KDMYEngine {
      */
     export function f_quarter(current_quarter: number, since: number): void;
 
+    /**
+     * @summary Called when the dialogue is playing the close animation
+     */
+    export function f_dialogue_closing(): void;
+    
+    /**
+     * @summary Called when the the dialogue is closed or "<Exit />" is used on a state
+     */
+    export function f_dialogue_exit(): void;
+    
+    /**
+     * @summary Called before the dialogue prints any text
+     * @param line_index the line index in the dialog text file (txt file)
+     * @param state_name state of the current line (if the line starts with ":dad:" the state name is "dad")
+     */
+    export function f_dialogue_line_starts(line_index: number, state_name: string): void;
+    
+    /**
+     * @summary Called after the dialogue ends printing the current dialog line
+     * @param line_index the line index in the dialog text file (txt file)
+     * @param state_name state of the current line (if the line starts with ":dad:" the state name is "dad")
+     */
+    export function f_dialogue_line_ends(line_index: number, state_name: string): void;
 }
 

@@ -105,7 +105,7 @@ EM_JS_PRFX(int, layout_get_attached_value2, (Layout layout, const char* name, vo
             dataView.setFloat64(result, value[0], HEAP_ENDIANESS);
             break;
         case LAYOUT_TYPE_INTEGER:
-            dataView.setInt64(result, value[0], HEAP_ENDIANESS);
+            dataView.setBigInt64(result, value[0], HEAP_ENDIANESS);
             break;
         case LAYOUT_TYPE_HEX:
             dataView.setUint32(result, value[0], HEAP_ENDIANESS);

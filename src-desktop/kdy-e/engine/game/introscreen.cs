@@ -15,7 +15,7 @@ namespace Engine.Game {
         private const GamepadButtons SKIP_BUTTONS = GamepadButtons.START | GamepadButtons.A;
 
         public static void Main() {
-            Layout layout = Layout.Init(PVRContext.global_context.OutputIsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
+            Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
             if (layout == null) return;
 
             Gamepad maple_pad = new Gamepad(-1);

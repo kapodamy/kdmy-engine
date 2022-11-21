@@ -382,7 +382,7 @@ function strum_set_scroll_speed(strum, speed) {
     strum.scroll_velocity = strum.scroll_velocity_base * speed;
 
     // Use half of the scolling speed if the screen aspect ratio is 4:3 (dreamcast)
-    if (!pvrctx_output_is_widescreen()) strum.scroll_velocity *= 0.5;//480.0 / 720.0;
+    if (!pvrctx_is_widescreen()) strum.scroll_velocity *= 0.5;//480.0 / 720.0;
 
     strum_internal_calc_marker_duration(strum, strum.scroll_velocity);
     strum_internal_calc_scroll_window(strum);

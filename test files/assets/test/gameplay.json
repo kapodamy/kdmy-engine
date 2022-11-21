@@ -48,6 +48,7 @@
         },
         "stage":  "stage/theater.xml",
         "script": "stage/funkin-gf.js",
+		"dialogueParams": "dialogue.xml",
         "girlfriend": {
             "manifest": "gf manifest",
             "states": [ { "name": "alt", "model": "path/to/file.xml" } ]
@@ -81,10 +82,10 @@
                 "%selectedStateNamePerPlayer+0%", "%selectedStateNamePerPlayer+1%"
             ],
             "players": null,
-			"ui_layout": "ui_layout.xml",
-			"pause_menu": "menu_manifest.json"
-			
-			
+			"UILayout": "ui_layout.xml",
+			"pause_menu": "menu_manifest.json",
+			"dialogueParams": "dialogue.xml",
+			"dialogText": "dialog.txt"
         }
     ]
 }

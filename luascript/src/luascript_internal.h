@@ -27,6 +27,7 @@
 #include "messagebox.h"
 #include "pvrctx.h"
 #include "fs.h"
+#include "dialogue.h"
 
 static const char* ALIGN_NONE_STRING = "NONE";
 static const char* ALIGN_BOTH_STRING = "BOTH";
@@ -71,7 +72,7 @@ int _parse_pvrflag(lua_State* L, const char* pvrflag);
 #define EM_JS_PRFX(ret, name, params, ...) _EM_JS(ret, name, __js__##name, params, #__VA_ARGS__)
 
 #define EM_ASYNC_JS_PRFX(ret, name, params, ...) _EM_JS(ret, name, __asyncjs__##name, params,          \
-  "{ return kdmyEngine_handleAsync(async () => " #__VA_ARGS__ "); }")
+  "{ return Asyncify.handleAsync(async () => " #__VA_ARGS__ "); }")
 
 #endif
 
@@ -154,6 +155,10 @@ void register_fs(lua_State* L);
 //#define MODDING "Modding"
 // int script_modding_new(lua_State* L);
 void register_modding(lua_State* L);
+
+#define DIALOGUE "Dialogue"
+int script_dialogue_new(lua_State* L, Dialogue dialogue);
+void register_dialogue(lua_State* L);
 
 #endif
 

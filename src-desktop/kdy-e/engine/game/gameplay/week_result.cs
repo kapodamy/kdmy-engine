@@ -100,7 +100,7 @@ namespace Engine.Game.Gameplay {
         }
 
         public void HelperShowSummary(RoundContext roundcontext, int attempts, int tracks_count, bool is_cleared) {
-            string src = PVRContext.global_context.OutputIsWidescreen() ? LAYOUT_WIDESCREEN : LAYOUT_DREAMCAST;
+            string src = PVRContext.global_context.IsWidescreen() ? LAYOUT_WIDESCREEN : LAYOUT_DREAMCAST;
             Layout layout = Layout.Init(src);
             if (layout == null) return;
 

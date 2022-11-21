@@ -36,6 +36,7 @@ void luascript_notify_buttons(Luascript luascript, int32_t player_id, uint32_t b
 void luascript_notify_unknownnote(Luascript luascript, int32_t player_id, double timestamp, int32_t id, double duration, double data);
 void luascript_notify_beat(Luascript luascript, int32_t current_beat, float since);
 void luascript_notify_quarter(Luascript luascript, int32_t current_quarter, float since);
-void luascript_notify_timer_run(Luascript luascript, double timestamp);
+void luascript_notify_timer_run(Luascript luascript, double kos_timestamp);
+void luascript_notify_timersong_run(Luascript luascript, double song_timestamp);
 #endif
 

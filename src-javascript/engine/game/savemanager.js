@@ -61,7 +61,7 @@ const SAVEMANAGER_MENU_MANIFEST = {
 var savemanager_game_withoutsavedata = 0;
 
 async function savemanager_init(save_only, error_code) {
-    let layout = await layout_init(pvrctx_output_is_widescreen() ? SAVEMANAGER_LAYOUT : SAVEMANAGER_LAYOUT_DREAMCAST);
+    let layout = await layout_init(pvrctx_is_widescreen() ? SAVEMANAGER_LAYOUT : SAVEMANAGER_LAYOUT_DREAMCAST);
     if (!layout) throw new Error("missing savemanager layout");
 
     let label_height = layout_get_attached_value(layout, "label_height", LAYOUT_TYPE_FLOAT, 24);

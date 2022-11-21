@@ -76,7 +76,7 @@ EM_JS_PRFX(void, camera_debug_log_info, (Camera camera), {
 EM_JS_PRFX(void, camera_apply, (Camera camera, PVRContext pvrctx), {
     camera_apply(kdmyEngine_obtain(camera), null);
     });
-EM_JS_PRFX(void, camera_move_offset, (Camera , float end_x, float end_y, float end_z), {
+EM_JS_PRFX(void, camera_move_offset, (Camera camera, float end_x, float end_y, float end_z), {
     camera_move_offset(kdmyEngine_obtain(camera), end_x, end_y, end_z);
     });
 EM_JS_PRFX(void, camera_slide_offset, (Camera camera, float start_x, float start_y, float start_z, float end_x, float end_y, float end_z), {

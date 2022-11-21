@@ -2748,25 +2748,9 @@ function layout_helper_execute_action_in_sprite(action, item, viewport_width, vi
                 atlas_apply_from_entry(sprite, entry.misc, entry.override_size);
                 break;
             case LAYOUT_ACTION_RESIZE:
-                if (entry.cover) {
-                    sprite_get_source_size(sprite, draw_size);
-                    let ratio_width = draw_size[0] / entry.max_width;
-                    let ratio_height = draw_size[1] / entry.max_height;
-
-                    // resize the longest dimension of the sprite
-                    if (ratio_width > ratio_height)
-                        sprite_resize_draw_size(sprite, -1, entry.max_height, draw_size);
-                    else
-                        sprite_resize_draw_size(sprite, entry.max_width, -1, draw_size);
-                } else {
-                    sprite_resize_draw_size(sprite, entry.max_width, entry.max_height, draw_size);
-                }
-                if (entry.center) {
-                    sprite_get_draw_location(sprite, location);
-                    if (entry.max_width >= 0) location[0] -= (draw_size[0] - entry.max_width) / 2.0;
-                    if (entry.max_height >= 0) location[1] -= (draw_size[1] - entry.max_height) / 2.0;
-                    sprite_set_draw_location(sprite, location[0], location[1]);
-                }
+                imgutils_calc_resize_sprite(
+                    sprite, entry.max_width, entry.max_height, entry.cover, entry.center
+                );
                 break;
             case LAYOUT_ACTION_ANIMATION:
                 if (!entry.misc && !item.animation) break;

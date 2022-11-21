@@ -147,7 +147,7 @@ namespace Engine.Game.Gameplay {
 
 
         public WeekPause() {
-            string src = PVRContext.global_context.OutputIsWidescreen() ? WeekPause.LAYOUT_WIDESCREEN : WeekPause.LAYOUT_DREAMCAST;
+            string src = PVRContext.global_context.IsWidescreen() ? WeekPause.LAYOUT_WIDESCREEN : WeekPause.LAYOUT_DREAMCAST;
             Layout layout = Layout.Init(src);
             if (layout == null) throw new Exception("can not load: " + src);
 

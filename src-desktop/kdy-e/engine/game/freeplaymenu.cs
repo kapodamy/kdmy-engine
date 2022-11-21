@@ -71,7 +71,7 @@ namespace Engine.Game {
         };
 
         public static void Main() {
-            string src_layout = PVRContext.global_context.OutputIsWidescreen() ? FreeplayMenu.LAYOUT : FreeplayMenu.LAYOUT_DREAMCAST;
+            string src_layout = PVRContext.global_context.IsWidescreen() ? FreeplayMenu.LAYOUT : FreeplayMenu.LAYOUT_DREAMCAST;
             Layout layout = Layout.Init(src_layout);
             if (layout == null) {
                 Console.Error.WriteLine("[ERROR] freeplay_main() missing layout");

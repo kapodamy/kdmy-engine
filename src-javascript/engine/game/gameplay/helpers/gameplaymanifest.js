@@ -42,7 +42,8 @@ const GAMEPLAYMANIFEST_DEFAULT = {
     players: null,
     players_size: 0,
     ui_layout: null,
-    pause_menu: null
+    pause_menu: null,
+    dialogue_params: null
 };
 
 
@@ -74,7 +75,8 @@ async function gameplaymanifest_init(src) {
             players: null,
             players_size: 0,
             ui_layout: null,
-            pause_menu: null
+            pause_menu: null,
+            dialogue_params: null
         };
 
         let json_default = json_read_object(json, "default");
@@ -97,6 +99,7 @@ async function gameplaymanifest_init(src) {
         manifest.default.script = json_read_string(json_default, "script", null);
         manifest.default.ui_layout = json_read_string(json_default, "UILayout", null);
         manifest.default.pause_menu = json_read_string(json_default, "pauseMenu", null);
+        manifest.default.dialogue_params = json_read_string(json_default, "dialogueParams", null);
     }
 
     let tracks_array = json_read_array(json, "tracks");
@@ -144,6 +147,7 @@ function gameplaymanifest_destroy(gameplaymanifest) {
         manifest.script = undefined;
         manifest.ui_layout = undefined;
         manifest.pause_menu = undefined;
+        manifest.dialogue_params = undefined;
 
         gameplaymanifest.default = undefined;
     }
@@ -158,6 +162,8 @@ function gameplaymanifest_destroy(gameplaymanifest) {
         track.script = undefined;
         track.ui_layout = undefined;
         track.pause_menu = undefined;
+        track.dialogue_params = undefined;
+        track.dialog_text = undefined;
         track.selected_state_name = undefined;
 
         for (let j = 0; j < track.selected_state_name_per_player_size; j++) {
@@ -310,6 +316,9 @@ function gameplaymanifest_parse_track(track, json_track, players_count) {
     track.ui_layout = json_read_string(json_track, "UILayout", null);
     track.has_ui_layout = json_has_property(json_track, "UILayout");
 
+    track.dialogue_params = json_read_string(json_track, "dialogueParams", null);
+    track.dialog_text = json_read_string(json_track, "dialogueText", null);
+
     track.pause_menu = json_read_string(json_track, "pauseMenu", null);
     track.has_pause_menu = json_has_property(json_track, "pauseMenu");
 
@@ -428,7 +437,7 @@ function gameplaymanifest_parse_distributions(json, obj, ptr_distributions, ptr_
             json_read_array_item_object(json_distributions, i), distributions[i]
         );
     }
-    
+
     obj[ptr_distributions] = distributions;
     obj[ptr_distributions_size] = distributions_size;
 }

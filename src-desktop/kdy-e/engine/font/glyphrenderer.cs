@@ -49,6 +49,7 @@ namespace Engine.Font {
             glyphrenderer_glyphs_index_outlines = 0;
 
             if (glyphrenderer_prefill) {
+#pragma warning disable CS0162 // Se detectó código inaccesible
                 // fill indices buffer
                 for (uint i = 0, j = 0, k = 0 ; i < glyph_count ; i++) {
                     for (uint l = 0 ; l < GlyphRenderer.QUAD_INDICES.Length ; l++) {
@@ -57,8 +58,9 @@ namespace Engine.Font {
                     k += 4;
 
                     // FIXME: alpha works if this break is here
-                   if (true) break;
+                    if (true) break;
                 }
+#pragma warning restore CS0162 // Se detectó código inaccesible
 
                 // fill vertex buffer
                 for (int i = 0, j = 0 ; i < glyph_count ; i++) {

@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Dialogue">
+    <xs:complexType>
+      <xs:sequence maxOccurs="unbounded">
+        <xs:element name="Definition" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+              <xs:element name="AudioList" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Audio" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" use="required" />
+                        <xs:attribute name="src" type="xs:string" use="required" />
+                        <xs:attribute name="volume" type="xs:decimal" use="optional" />
+                        <xs:attribute name="looped" type="xs:boolean" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="BackgroundList" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence maxOccurs="unbounded">
+                    <xs:element name="Image" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" use="required" />
+                        <xs:attribute name="src" type="xs:string" use="required" />
+                        <xs:attribute name="atlasEntry" type="xs:string" use="optional" />
+                        <xs:attribute name="center" type="xs:string" use="optional" />
+                        <xs:attribute name="cover" type="xs:string" use="optional" />
+                        <xs:attribute name="looped" type="xs:string" use="optional" />
+                        <xs:attribute name="alpha" type="xs:decimal" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="Color" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" use="required" />
+                        <xs:attribute name="rgb" type="xs:string" use="optional" />
+                        <xs:attribute name="alpha" type="xs:decimal" use="optional" />
+                        <xs:attribute name="r" type="xs:decimal" use="optional" />
+                        <xs:attribute name="g" type="xs:decimal" use="optional" />
+                        <xs:attribute name="b" type="xs:decimal" use="optional" />
+                        <xs:attribute name="a" type="xs:decimal" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="baseSrc" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="SpeechImageList" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence maxOccurs="unbounded">
+                    <xs:element name="TextBox" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="x" type="xs:unsignedByte" use="required" />
+                        <xs:attribute name="y" type="xs:unsignedByte" use="required" />
+                        <xs:attribute name="width" type="xs:unsignedShort" use="required" />
+                        <xs:attribute name="height" type="xs:unsignedByte" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="PortraitLine" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="x" type="xs:unsignedByte" use="required" />
+                        <xs:attribute name="y" type="xs:unsignedByte" use="required" />
+                        <xs:attribute name="width" type="xs:unsignedShort" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="TitleLocation" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="x" type="xs:unsignedByte" use="required" />
+                        <xs:attribute name="y" type="xs:unsignedByte" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="Offset" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="x" type="xs:unsignedByte" use="required" />
+                        <xs:attribute name="y" type="xs:unsignedShort" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="OffsetIdle" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="x" type="xs:unsignedByte" use="required" />
+                        <xs:attribute name="y" type="xs:unsignedShort" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="OffsetOpen" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="x" type="xs:unsignedByte" use="required" />
+                        <xs:attribute name="y" type="xs:unsignedShort" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element maxOccurs="unbounded" name="SpeechImage">
+                      <xs:complexType>
+                        <xs:attribute name="scale" type="xs:decimal" use="required" />
+                        <xs:attribute name="name" type="xs:string" use="required" />
+                        <xs:attribute name="openAnim" type="xs:string" use="required" />
+                        <xs:attribute name="idleAnim" type="xs:string" use="required" />
+                        <xs:attribute name="idleLooped" type="xs:string" use="optional" />
+                        <xs:attribute name="src" type="xs:string" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="baseSrc" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="PortraitList" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence maxOccurs="unbounded">
+                    <xs:element name="Portrait" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" use="optional" />
+                        <xs:attribute name="src" type="xs:string" use="optional" />
+                        <xs:attribute name="scale" type="xs:decimal" use="optional" />
+                        <xs:attribute name="speakAnim" type="xs:string" use="optional" />
+                        <xs:attribute name="idleAnim" type="xs:string" use="optional" />
+                        <xs:attribute name="speakAnimLooped" type="xs:string" use="optional" />
+                        <xs:attribute name="idleAnimLooped" type="xs:string" use="optional" />
+                        <xs:attribute name="positionPercent" type="xs:decimal" use="optional" />
+                        <xs:attribute name="position" type="xs:string" use="optional" />
+                        <xs:attribute name="anim" type="xs:string" use="optional" />
+                        <xs:attribute name="animLooped" type="xs:string" use="optional" />
+                        <xs:attribute name="offestSpeakX" type="xs:unsignedByte" use="optional" />
+                        <xs:attribute name="offestSpeakY" type="xs:unsignedByte" use="optional" />
+                        <xs:attribute name="offestIdleX" type="xs:unsignedByte" use="optional" />
+                        <xs:attribute name="offestIdleY" type="xs:unsignedByte" use="optional" />
+                        <xs:attribute name="portrait" type="xs:string" use="optional" />
+                        <xs:attribute name="mirror" type="xs:string" use="optional" />
+                        <xs:attribute name="x" type="xs:unsignedByte" use="optional" />
+                        <xs:attribute name="y" type="xs:unsignedByte" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="baseModel" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="AnimationsUI" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence maxOccurs="unbounded">
+                    <xs:element name="Set" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" use="required" />
+                        <xs:attribute name="anim" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="animationList" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Font" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                  <xs:attribute name="src" type="xs:string" use="required" />
+                  <xs:attribute name="glyphSuffix" type="xs:string" use="optional" />
+                  <xs:attribute name="glyphAnimated" type="xs:string" use="optional" />
+                  <xs:attribute name="colorByDifference" type="xs:boolean" use="optional" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="ImportPortraitList" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:attribute name="dialogueSrc" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="State" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence minOccurs="0" maxOccurs="unbounded">
+              <xs:element name="AudioPlay" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="AudioPause" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="AudioFadeIn" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                  <xs:attribute name="duration" type="xs:unsignedShort" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="AudioFadeOut" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                  <xs:attribute name="duration" type="xs:unsignedShort" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="AudioStop" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="AudioVolume" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                  <xs:attribute name="volume" type="xs:decimal" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="BackgroundSet" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="BackgroundChange" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="BackgroundRemove" />
+              <xs:element name="Lua" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                      <xs:attribute name="function" type="xs:string" use="optional" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Exit" minOccurs="0" maxOccurs="unbounded" />
+              <xs:element name="PortraitAdd" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                  <xs:attribute name="randomFromPrefix" type="xs:string" use="required" />
+                  <xs:attribute name="noSpeak" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="PortraitRemove" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="PortraitRemoveAll" minOccurs="0" maxOccurs="unbounded" />
+              <xs:element name="AudioUI" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="clickText" type="xs:string" use="required" />
+                  <xs:attribute name="clickChar" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="TextSpeed" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="charsPerSecond" type="xs:unsignedByte" use="required" />
+                  <xs:attribute name="charDelay" type="xs:unsignedByte" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="TextSkip" minOccurs="0" maxOccurs="unbounded" />
+              <xs:element name="TextInstantPrint" minOccurs="0" maxOccurs="unbounded" />
+              <xs:element name="SpeechBackground" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="optional" />
+                  <xs:attribute name="repeatAnim" type="xs:string" use="optional" />
+                  <xs:attribute name="fromCommon" type="xs:string" use="optional" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="TextFont" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="font" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="TextColor" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="rgba" type="xs:string" use="required" />
+                  <xs:attribute name="rgb" type="xs:string" use="required" />
+                  <xs:attribute name="alpha" type="xs:decimal" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="TextBorderColor" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="rgba" type="xs:string" use="required" />
+                  <xs:attribute name="rgb" type="xs:string" use="required" />
+                  <xs:attribute name="alpha" type="xs:decimal" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="TextSize" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="size" type="xs:unsignedByte" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="TextParagraphSpace" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="size" type="xs:unsignedByte" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="TextAlign" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="horizontal" type="xs:string" use="required" />
+                  <xs:attribute name="vertical" type="xs:string" use="required" />
+                  <xs:attribute name="paragraph" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="RunMultipleChoice" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Title" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+              <xs:element name="NoWait" minOccurs="0" maxOccurs="unbounded" />
+            </xs:sequence>
+            <xs:attribute name="initial" type="xs:string" use="optional" />
+            <xs:attribute name="name" type="xs:string" use="optional" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="MultipleChoice" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Choice" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="text" type="xs:string" use="required" />
+                  <xs:attribute name="runMultipleChoice" type="xs:string" use="optional" />
+                  <xs:attribute name="luaFunction" type="xs:string" use="optional" />
+                  <xs:attribute name="luaEval" type="xs:string" use="optional" />
+                  <xs:attribute name="exit" type="xs:string" use="optional" />
+                  <xs:attribute name="dialogFile" type="xs:string" use="optional" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required" />
+            <xs:attribute name="selectorIconColor" type="xs:string" use="optional" />
+            <xs:attribute name="selectorIconModel" type="xs:string" use="optional" />
+            <xs:attribute name="selectorIconModelName" type="xs:string" use="optional" />
+            <xs:attribute name="fontSize" type="xs:byte" use="optional" />
+            <xs:attribute name="title" type="xs:string" use="optional" />
+            <xs:attribute name="orientation" type="xs:string" use="optional" />
+            <xs:attribute name="canLeave" type="xs:string" use="optional" />
+            <xs:attribute name="stateOnLeave" type="xs:string" use="optional" />
+            <xs:attribute name="defaultIndex" type="xs:unsignedByte" use="optional" />
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="importDefaultDefinition" type="xs:string" use="optional" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

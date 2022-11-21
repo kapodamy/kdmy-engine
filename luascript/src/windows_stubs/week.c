@@ -1,5 +1,6 @@
 #include "commons.h"
 #include "week.h"
+#include "dialogue.h"
 
 static SongPlayer_t stub_songplayer = {};
 static Character_t stub_character1 = {};
@@ -10,11 +11,12 @@ static Camera_t stub_camera = {};
 static Layout_t stub_layout1 = {};
 static Layout_t stub_layout2 = {};
 static TextSprite_t stub_textsprite = {};
+static Dialogue_t stub_dialogue = {};
 static char* stub_track_name = "°°test track°°";
 static char* stub_track_difficult = "NORMAL";
 
-void week_unlockdirective_create(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week, int64_t value) {
-    print_stub("week_unlockdirective_create", "roundcontext=%p name=%s completed_round=(bool)%i completed_week=(bool)%i value=%li", roundcontext, name, completed_round, completed_week, value);
+void week_unlockdirective_create(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week, double value) {
+    print_stub("week_unlockdirective_create", "roundcontext=%p name=%s completed_round=(bool)%i completed_week=(bool)%i value=f", roundcontext, name, completed_round, completed_week, value);
 }
 void week_unlockdirective_remove(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week) {
     print_stub("week_unlockdirective_remove", "roundcontext=%p name=%s completed_round=(bool)%i completed_week=(bool)%i", roundcontext, name, completed_round, completed_week);
@@ -23,9 +25,9 @@ bool week_unlockdirective_has(RoundContext roundcontext, const char* name) {
     print_stub("week_unlockdirective_has", "roundcontext=%p name=%s", roundcontext, name);
     return 111;
 }
-int64_t week_unlockdirective_get(RoundContext roundcontext, const char* name) {
+double week_unlockdirective_get(RoundContext roundcontext, const char* name) {
     print_stub("week_unlockdirective_get", "roundcontext=%p name=%s", roundcontext, name);
-    return 123456789;
+    return 123456789.0;
 }
 void week_set_halt(RoundContext roundcontext, bool halt) {
     print_stub("week_set_halt", "roundcontext=%p halt=(bool)%i", roundcontext, halt);
@@ -92,8 +94,8 @@ void week_get_current_track_info(RoundContext roundcontext, WeekTrackInfo_t* out
     output_info->difficult = stub_track_difficult;
     print_stub("week_get_current_track_info", "roundcontext=%p output_info=%p", roundcontext, output_info);
 }
-void week_change_charecter_camera_name(RoundContext roundcontext, bool opponent_or_player, const char* new_name) {
-    print_stub("week_change_charecter_camera_name", "roundcontext=%p opponent_or_player=(bool)%i new_name=%s", roundcontext, opponent_or_player, new_name);
+void week_change_character_camera_name(RoundContext roundcontext, bool opponent_or_player, const char* new_name) {
+    print_stub("week_change_character_camera_name", "roundcontext=%p opponent_or_player=(bool)%i new_name=%s", roundcontext, opponent_or_player, new_name);
 }
 void week_disable_layout_rollback(RoundContext roundcontext, bool disable) {
     print_stub("week_disable_layout_rollback", "roundcontext=%p disable=(bool)%i", roundcontext, disable);
@@ -107,4 +109,7 @@ void week_enable_credits_on_completed(RoundContext roundcontext) {
 void week_end(RoundContext roundcontext, bool round_or_week, bool loose_or_win) {
     print_stub("week_end", "roundcontext=%p round_or_week=(bool)%i loose_or_win=(bool)%i", roundcontext, round_or_week, loose_or_win);
 }
-
+Dialogue week_get_dialogue(RoundContext roundcontext) {
+    print_stub("week_get_dialogue", "roundcontext=%p", roundcontext);
+    return &stub_dialogue;
+}

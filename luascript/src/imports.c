@@ -171,11 +171,44 @@ void luascript_notify_quarter(Luascript luascript, int32_t current_quarter, floa
     lua_imported_fn(lua, FUNCTION, 2);
 }
 
-void luascript_notify_timer_run(Luascript luascript, double timestamp) {
+void luascript_notify_timer_run(Luascript luascript, double kos_timestamp) {
     FUNCTION(luascript, "______kdmyEngine_timer_run");
 
-    lua_pushnumber(lua, timestamp);
+    lua_pushnumber(lua, kos_timestamp);
+    lua_pushboolean(lua, false);
 
-    lua_imported_fn(lua, FUNCTION, 1);
+    lua_imported_fn(lua, FUNCTION, 2);
 }
 
+void luascript_notify_timersong_run(Luascript luascript, double song_timestamp) {
+    FUNCTION(luascript, "______kdmyEngine_timer_run");
+
+    lua_pushnumber(lua, song_timestamp);
+    lua_pushboolean(lua, true);
+
+    lua_imported_fn(lua, FUNCTION, 2);
+}
+
+void luascript_notify_dialogue_line_starts(Luascript luascript, int line_index, const char* state_name) {
+    FUNCTION(luascript, "f_dialogue_line_starts");
+
+    lua_pushinteger(lua, line_index);
+    lua_pushstring(lua, state_name);
+
+    lua_imported_fn(lua, FUNCTION, 2);
+}
+
+void luascript_notify_dialogue_line_ends(Luascript luascript, int line_index, const char* state_name) {
+    FUNCTION(luascript, "f_dialogue_line_ends");
+
+    lua_pushinteger(lua, line_index);
+    lua_pushstring(lua, state_name);
+
+    lua_imported_fn(lua, FUNCTION, 2);
+}
+
+void luascript_call_function(Luascript luascript, const char* function_name) {
+    if (!function_name || !function_name[0]) return;
+    FUNCTION(luascript, function_name);
+    lua_imported_fn(lua, function_name, 2);
+}

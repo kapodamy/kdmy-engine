@@ -17,7 +17,7 @@ function f_beforeready()
     cameraUI = ui_get_camera()
     cameraStage = limo:get_camera_helper()
     local track_name, track_difficult, track_index = week_get_current_track_info()
-    console:log("track: " .. track_name)
+    print("track: " .. track_name)
     isMILF = track_name == "Milf"
     incrementalUIZoomMILF = 1.05
     incrementalStageZoomMILF = 1.09

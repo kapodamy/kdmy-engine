@@ -84,4 +84,10 @@ float* sprite_center_draw_location(Sprite sprite, float x, float y, float ref_wi
 void sprite_set_antialiasing(Sprite sprite, PVRFLAG antialiasing) {
     print_stub("sprite_set_antialiasing", "sprite=%p antialiasing=%i", sprite, antialiasing);
 }
+void sprite_flip_rendered_texture(Sprite sprite, int flip_x, int flip_y) {
+    print_stub("sprite_flip_rendered_texture", "sprite=%p flip_x=%i flip_y=%i", sprite, flip_x, flip_y);
+}
+void sprite_flip_rendered_texture_enable_correction(Sprite sprite, bool enabled) {
+    print_stub("sprite_flip_rendered_texture_enable_correction", "sprite=%p enabled=(bool)%i", sprite, enabled);
+}
 

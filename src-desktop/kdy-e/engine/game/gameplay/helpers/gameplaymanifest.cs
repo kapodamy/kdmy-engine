@@ -84,6 +84,8 @@ namespace Engine.Game.Gameplay.Helpers {
         public GameplayManifestHealthBar healthbar;
         public GameplayManifestGirlfriend girlfriend;
         public bool has_girlfriend;
+        public string dialogue_params;
+        public string dialog_text;
     }
     public class GameplayManifestDefault {
         public Distribution[] distributions;
@@ -96,6 +98,7 @@ namespace Engine.Game.Gameplay.Helpers {
         public int players_size;
         public string ui_layout;
         public string pause_menu;
+        public string dialogue_params;
     }
 
 
@@ -139,7 +142,8 @@ namespace Engine.Game.Gameplay.Helpers {
             players = null,
             players_size = 0,
             ui_layout = null,
-            pause_menu = null
+            pause_menu = null,
+            dialogue_params = null
         };
 
         public GameplayManifestDefault @default;
@@ -178,7 +182,8 @@ namespace Engine.Game.Gameplay.Helpers {
                     players = null,
                     players_size = 0,
                     ui_layout = null,
-                    pause_menu = null
+                    pause_menu = null,
+                    dialogue_params = null
                 };
 
                 JSONToken json_default = JSONParser.ReadObject(json, "default");
@@ -201,6 +206,7 @@ namespace Engine.Game.Gameplay.Helpers {
                 manifest.@default.script = JSONParser.ReadString(json_default, "script", null);
                 manifest.@default.ui_layout = JSONParser.ReadString(json_default, "UILayout", null);
                 manifest.@default.pause_menu = JSONParser.ReadString(json_default, "pauseMenu", null);
+                manifest.@default.dialogue_params = JSONParser.ReadString(json_default, "dialogueParams", null);
             }
 
             JSONToken tracks_array = JSONParser.ReadArray(json, "tracks");
@@ -250,6 +256,7 @@ namespace Engine.Game.Gameplay.Helpers {
                 //free(manifest.pause_menu);
 
                 //free(gameplaymanifest.@default);
+                //free(manifest.dialogue_params);
             }
 
             for (int i = 0 ; i < this.tracks_size ; i++) {
@@ -268,6 +275,8 @@ namespace Engine.Game.Gameplay.Helpers {
                 //    free(track.selected_state_name_per_player[i]);
                 //}
                 //free(track.selected_state_name_per_player);
+                //free(track.dialogue_params);
+                //free(track.dialog_text);
 
                 GameplayManifest.DestroyHealthbar(track.healthbar);
                 GameplayManifest.DestroyGirlfriend(track.girlfriend);
@@ -416,6 +425,9 @@ namespace Engine.Game.Gameplay.Helpers {
 
             track.pause_menu = JSONParser.ReadString(json_track, "pauseMenu", null);
             track.has_pause_menu = JSONParser.HasProperty(json_track, "pauseMenu");
+
+            track.dialogue_params = JSONParser.ReadString(json_track, "dialogueParams", null);
+            track.dialog_text = JSONParser.ReadString(json_track, "dialogText", null);
 
             track.selected_state_name_per_player = null;
             track.selected_state_name_per_player_size = 0;

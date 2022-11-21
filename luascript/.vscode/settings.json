@@ -39,6 +39,9 @@
         "commons.h": "c",
         "week.h": "c",
         "engine_version.h": "c",
-        "math2d.h": "c"
+        "math2d.h": "c",
+        "dialogue.h": "c",
+        "profileapi.h": "c",
+        "time.h": "c"
     }
 }

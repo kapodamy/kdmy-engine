@@ -113,7 +113,7 @@ function streakcounter_peek_streak(streakcounter, playerstats) {
 
     let streak_loose;
     if (streakcounter.last_streak >= FUNKIN_COMBO_STREAK_VISIBLE_AFTER)
-        streak_loose = value < this.last_streak;
+        streak_loose = value < streakcounter.last_streak;
     else
         streak_loose = 0;
 

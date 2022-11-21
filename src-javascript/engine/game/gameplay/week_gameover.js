@@ -25,7 +25,7 @@ const WEEK_GAMEOVER_BUTTONS_SELECTOR = GAMEPAD_AD_LEFT | GAMEPAD_AD_RIGHT | GAME
 
 
 async function week_gameover_init() {
-    let src = pvrctx_output_is_widescreen() ? WEEK_GAMEOVER_LAYOUT_WIDESCREEN : WEEK_GAMEOVER_LAYOUT_DREAMCAST;
+    let src = pvrctx_is_widescreen() ? WEEK_GAMEOVER_LAYOUT_WIDESCREEN : WEEK_GAMEOVER_LAYOUT_DREAMCAST;
     let button_icons = await modelholder_init(WEEKSELECTOR_BUTTONS_MODEL);
     let ui_icons = await modelholder_init(WEEKSELECTOR_UI_ICONS_MODEL);
     let animlist = await animlist_init(WEEKSELECTOR_UI_ANIMS);

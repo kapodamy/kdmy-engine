@@ -11,10 +11,10 @@ void songplayer_play(SongPlayer songplayer, SongInfo_t* songinfo) {
 void songplayer_pause(SongPlayer songplayer) {
     print_stub("songplayer_pause", "songplayer=%p", songplayer);
 }
-void songplayer_seek(SongPlayer songplayer, float timestamp) {
+void songplayer_seek(SongPlayer songplayer, double timestamp) {
     print_stub("songplayer_seek", "songplayer=%p timestamp=%f", songplayer, timestamp);
 }
-float songplayer_get_duration(SongPlayer songplayer) {
+double songplayer_get_duration(SongPlayer songplayer) {
     print_stub("songplayer_get_duration", "songplayer=%p", songplayer);
     return 123;
 }
@@ -22,7 +22,7 @@ bool songplayer_is_completed(SongPlayer songplayer) {
     print_stub("songplayer_is_completed", "songplayer=%p", songplayer);
     return 999;
 }
-float songplayer_get_timestamp(SongPlayer songplayer) {
+double songplayer_get_timestamp(SongPlayer songplayer) {
     print_stub("songplayer_get_timestamp", "songplayer=%p", songplayer);
     return 456;
 }

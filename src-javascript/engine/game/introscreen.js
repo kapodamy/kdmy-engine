@@ -9,7 +9,7 @@ const INTROSCREEN_SKIP_BUTTONS = GAMEPAD_A | GAMEPAD_START;
 
 
 async function introscreen_main() {
-    let layout = await layout_init(pvrctx_output_is_widescreen() ? INTROSCREEN_LAYOUT : INTROSCREEN_LAYOUT_DREAMCAST);
+    let layout = await layout_init(pvrctx_is_widescreen() ? INTROSCREEN_LAYOUT : INTROSCREEN_LAYOUT_DREAMCAST);
     if (!layout) return;
 
     let maple_pad = gamepad_init(-1);

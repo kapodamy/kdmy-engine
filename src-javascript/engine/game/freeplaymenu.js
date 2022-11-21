@@ -54,7 +54,7 @@ const FREEPLAYMENU_MENU_SONGS = {
 };
 
 async function freeplaymenu_main() {
-    let src_layout = pvrctx_output_is_widescreen() ? FREEPLAYMENU_LAYOUT : FREEPLAYMENU_LAYOUT_DREAMCAST;
+    let src_layout = pvrctx_is_widescreen() ? FREEPLAYMENU_LAYOUT : FREEPLAYMENU_LAYOUT_DREAMCAST;
     let layout = await layout_init(src_layout);
     if (!layout) {
         console.error("freeplay_main() missing layout");

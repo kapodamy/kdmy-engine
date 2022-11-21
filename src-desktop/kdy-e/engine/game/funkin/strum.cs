@@ -434,7 +434,7 @@ namespace Engine.Game {
             this.scroll_velocity = this.scroll_velocity_base * speed;
 
             // Use half of the scolling speed if the screen aspect ratio is 4:3 (dreamcast)
-            if (!PVRContext.global_context.OutputIsWidescreen()) this.scroll_velocity *= 0.5;
+            if (!PVRContext.global_context.IsWidescreen()) this.scroll_velocity *= 0.5;
 
             InternalCalcMarkerDuration(this.scroll_velocity);
             InternalCalcScrollWindow();

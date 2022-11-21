@@ -151,6 +151,10 @@ async function weekscript_notify_frame(script, elapsed) {
     await _weekscript_call(ModuleLuaScript._luascript_notify_frame, script, elapsed);
 }
 
+async function weekscript_notify_timersong(script, song_timestamp) {
+    await _weekscript_call(ModuleLuaScript._luascript_notify_timersong_run, script, song_timestamp);
+}
+
 function weekscript_notify_note_hit(script, strum, strum_note_index, playerstats) {
     /** @type {StrumNote} */
     let strum_note = strum.chart_notes[strum_note_index];
@@ -254,6 +258,10 @@ function weekscript_notify_quarter(script, quarter_count, since) {
 
 function weekscript_notify_buttons(script, player_id, buttons) {
     return _weekscript_call(ModuleLuaScript._luascript_notify_buttons, script, player_id, buttons);
+}
+
+function weekscript_get_luascript(script) {
+    return script;
 }
 
 

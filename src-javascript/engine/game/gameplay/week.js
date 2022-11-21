@@ -234,11 +234,13 @@ const CHARACTERTYPE = {
  * @property {HealthBarParams} healthbarparams
  * 
  * @property {ScriptContext} scriptcontext
+ * @property {object} dialogue
  * 
  * @property {bool} girlfriend_from_default
  * @property {bool} healthbar_from_default
  * @property {bool} stage_from_default
  * @property {bool} script_from_default
+ * @property {bool} dialogue_from_default
  * @property {number} weekgameover_from_version
  * @property {bool} ui_from_default
  * @property {bool} pause_menu_from_default
@@ -282,6 +284,7 @@ function week_destroy(/** @type {RoundContext} */ roundcontext, gameplaymanifest
     if (roundcontext.messagebox) messagebox_destroy(roundcontext.messagebox);
     if (roundcontext.ui_camera) camera_destroy(roundcontext.ui_camera);
     if (roundcontext.missnotefx) missnotefx_destroy(roundcontext.missnotefx);
+    if (roundcontext.dialogue) dialogue_destroy(roundcontext.dialogue);
 
     roundcontext.events = undefined;
     roundcontext.healthbarparams.player_icon_model = undefined;
@@ -390,6 +393,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         roundstats: null,
         songplayer: null,
         script: null,
+        dialogue: null,
         playerstats_index: -1,
         healthwatcher: healthwatcher_init(),
         countdown: null,
@@ -439,6 +443,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         healthbar_from_default: 1,
         stage_from_default: 1,
         script_from_default: 1,
+        dialogue_from_default: 1,
         ui_from_default: 1,
         pause_menu_from_default: 0,
         weekgameover_from_version: 0,
@@ -570,9 +575,22 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             healthbar_hide_warnings(roundcontext.healthbar);
         }
 
+        // check if necessary show dialogue if an dialog text is provided
+        let show_dialog = false;
+        if (gameplaymanifest.tracks[roundcontext.track_index].dialog_text) {
+            let dialog_text = gameplaymanifest.tracks[roundcontext.track_index].dialog_text;
+            if (roundcontext.dialogue == null) {
+                console.error(`[ERROR] week_round() can not load '${dialog_text}' there no dialogue instance`);
+            } else if (await dialogue_show_dialog(roundcontext.dialogue, dialog_text)) {
+                show_dialog = true;
+            } else {
+                console.error(`week_round() failed to read '${dialog_text}' file`);
+            }
+        }
+
         // actual gameplay is here
         let current_track_index = roundcontext.track_index;
-        let round_result = await week_round(roundcontext, retry);
+        let round_result = await week_round(roundcontext, retry, show_dialog);
 
         retry = 0;
         week_check_directives_round(roundcontext, round_result == 0);
@@ -740,7 +758,7 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     let placeholder;
 
     if (src_layout) src = src_layout;
-    else src = pvrctx_output_is_widescreen() ? UI_LAYOUT_WIDESCREEN : UI_LAYOUT_DREAMCAST;
+    else src = pvrctx_is_widescreen() ? UI_LAYOUT_WIDESCREEN : UI_LAYOUT_DREAMCAST;
 
     let layout = await layout_init(src);
     if (roundcontext.ui_layout) layout_destroy(roundcontext.ui_layout);
@@ -924,6 +942,15 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     } else if (!roundcontext.script || !roundcontext.script_from_default) {
         roundcontext.script_from_default = 1;
         await week_init_script(roundcontext, gameplaymanifest.default.script);
+    }
+
+    // initialize dialogue
+    if (trackmanifest.dialogue_params) {
+        roundcontext.dialogue_from_default = 0;
+        if (await week_init_dialogue(roundcontext, trackmanifest.dialogue_params)) updated_ui = 1;
+    } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
+        roundcontext.dialogue_from_default = 1;
+        if (await week_init_dialogue(roundcontext, gameplaymanifest.default.dialogue_params)) updated_ui = 1;
     }
 
     // reload the music only
@@ -1372,6 +1399,7 @@ async function week_init_script(/**@type {RoundContext}*/roundcontext, script_sr
 
     if (script_src) {
         roundcontext.script = await weekscript_init(script_src, roundcontext, 1);
+        if (roundcontext.dialogue != null) dialogue_set_script(roundcontext.dialogue, roundcontext.script);
     }
 
     for (let i = 0; i < roundcontext.players_size; i++) {
@@ -1853,10 +1881,18 @@ async function week_init_ui_gameover(/**@type {RoundContext}*/roundcontext) {
     if (old_weekgameover) week_gameover_destroy(old_weekgameover);
 }
 
+async function week_init_dialogue(roundcontext, dialogue_params) {
+    if (!dialogue_params) return;
+    if (roundcontext.dialogue != null) dialogue_destroy(roundcontext.dialogue);
+    roundcontext.dialogue = await dialogue_init(dialogue_params);
+    if (roundcontext.dialogue != null) dialogue_set_script(roundcontext.dialogue, roundcontext.script);
+    return roundcontext.dialogue != null;
+}
+
 
 function week_place_in_layout(roundcontext) {
     const initparams = roundcontext.initparams;
-    const UI_SIZE = 6;// all UI "cosmetics" elements + screen background
+    const UI_SIZE = 7;// all UI "cosmetics" elements + screen background + dialogue
 
     let layout, is_ui;
     if (roundcontext.layout) {
@@ -1908,6 +1944,9 @@ function week_place_in_layout(roundcontext) {
     );
     layout_external_vertex_set_entry(
         layout, 5, VERTEX_SPRITE, roundcontext.screen_background, ui2
+    );
+    layout_external_vertex_set_entry(
+        layout, 6, VERTEX_DRAWABLE, roundcontext.dialogue == null ? null : dialogue_get_drawable(roundcontext.dialogue), ui1
     );
 
     // step 3: initialize the ui camera
@@ -2017,7 +2056,7 @@ function week_override_common_folder(/** @type {RoundContext} */roundcontext, cu
 }
 
 
-async function week_round(/** @type {RoundContext} */roundcontext, from_retry) {
+async function week_round(/** @type {RoundContext} */roundcontext, from_retry, show_dialog) {
     const pressed_buttons = [0x00];
     const songinfo = { timestamp: NaN, completed: true };
     const initparams = roundcontext.initparams;
@@ -2036,12 +2075,47 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry) {
     if (round_duration < 0) round_duration = Infinity;
     if (roundcontext.layout) layout_resume(roundcontext.layout);
 
-    if (roundcontext.script) await weekscript_notify_beforeready(roundcontext.script, from_retry);
+    if (roundcontext.script) {
+        await weekscript_notify_timersong(roundcontext.script, 0.0);
+        await weekscript_notify_beforeready(roundcontext.script, from_retry);
+    }
     await week_halt(roundcontext, 1);
 
     if (roundcontext.playerstats_index >= 0) {
         playerstats = roundcontext.players[roundcontext.playerstats_index].playerstats;
         roundstats_peek_playerstats(roundcontext.roundstats, 0, playerstats);
+    }
+
+    while (show_dialog) {
+        elapsed = await pvrctx_wait_ready();
+        pvr_context_reset(pvr_context);
+        week_internal_check_screen_resolution(roundcontext, 0);
+        beatwatcher_global_set_timestamp_from_kos_timer();
+
+        if (pvr_is_offscreen(pvr_context)) {
+            layout_suspend(roundcontext.layout);
+            dialogue_suspend(roundcontext.dialogue);
+            
+            let decision = await week_pause_helper_show(roundcontext.weekpause, roundcontext, -1);
+            switch (decision) {
+                case 1:
+                    return 2;// restart song
+                case 2:
+                    return 1;// back to weekselector
+                case 3:
+                    return 3;// back to mainmenu
+            }
+            
+            layout_resume(roundcontext.layout);
+            dialogue_resume(roundcontext.dialogue);
+            continue;
+        }
+
+        if (roundcontext.script != null) await weekscript_notify_frame(roundcontext.script, elapsed);
+        layout_animate(roundcontext.layout, elapsed);
+        layout_draw(roundcontext.layout, pvr_context);
+
+        if (dialogue_is_completed(roundcontext.dialogue)) show_dialog = false;
     }
 
     if (check_ready) countdown_ready(roundcontext.countdown);
@@ -2336,7 +2410,10 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry) {
         camera_apply_offset(roundcontext.ui_camera, WEEKROUND_UI_MATRIX_CAMERA);
         sh4matrix_apply_modifier(WEEKROUND_UI_MATRIX_CAMERA, camera_get_modifier(roundcontext.ui_camera));
 
-        if (roundcontext.script) await weekscript_notify_frame(roundcontext.script, elapsed);
+        if (roundcontext.script) {
+            await weekscript_notify_timersong(roundcontext.script, song_timestamp);
+            await weekscript_notify_frame(roundcontext.script, elapsed);
+        }
         layout_animate(roundcontext.layout, elapsed);
         layout_draw(roundcontext.layout, pvr_context);
 
@@ -2673,6 +2750,10 @@ function week_end(/**@type {RoundContext} */ roundcontext, round_or_week, loose_
     roundcontext.scriptcontext.force_end_flag = 1;
     roundcontext.scriptcontext.force_end_round_or_week = round_or_week;
     roundcontext.scriptcontext.force_end_loose_or_win = loose_or_win;
+}
+
+function week_get_dialogue(/**@type {RoundContext} */ roundcontext) {
+    return roundcontext.dialogue;
 }
 
 

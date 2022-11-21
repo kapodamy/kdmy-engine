@@ -291,9 +291,9 @@ function f_buttons(player_id, buttons)
     if dialog_corutine == nil or player_id == 0 then
         return
     end
-    if buttons & (GamepadButtons.A | GamepadButtons.X) ~= 0 then
+    if buttons & (1 | 4) ~= 0 then
         dialog_button_pressed = true
-    elseif buttons & GamepadButtons.START ~= 0 then
+    elseif buttons & 256 ~= 0 then
         dialog_force_end = true
     else
         return

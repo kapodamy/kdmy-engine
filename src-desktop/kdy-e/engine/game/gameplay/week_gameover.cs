@@ -53,7 +53,7 @@ namespace Engine.Game.Gameplay {
 
 
         public WeekGameOver() {
-            string src = PVRContext.global_context.OutputIsWidescreen() ? WeekGameOver.LAYOUT_WIDESCREEN : WeekGameOver.LAYOUT_DREAMCAST;
+            string src = PVRContext.global_context.IsWidescreen() ? WeekGameOver.LAYOUT_WIDESCREEN : WeekGameOver.LAYOUT_DREAMCAST;
             ModelHolder button_icons = ModelHolder.Init(WeekSelector.BUTTONS_MODEL);
             ModelHolder ui_icons = ModelHolder.Init(WeekSelector.UI_ICONS_MODEL);
             AnimList animlist = AnimList.Init(WeekSelector.UI_ANIMS);

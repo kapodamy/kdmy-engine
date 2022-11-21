@@ -10,17 +10,17 @@ function imgutils_calc_size(orig_width, orig_height, max_width, max_height, resu
         if (max_width > 0) width = max_width;
         if (max_height > 0) height = max_height;
     } else if (max_width == 0 || max_height == 0) {
-		width = height = 0;
+        width = height = 0;
     } else {
-		if (max_width > 0 && max_height > 0)  {
-			let scale_x = max_width / orig_width;
-			let scale_y = max_height / orig_height;
+        if (max_width > 0 && max_height > 0) {
+            let scale_x = max_width / orig_width;
+            let scale_y = max_height / orig_height;
 
-			if (scale_x > scale_y)
-				max_width = -Infinity;
-			else
-				max_height = -Infinity;
-		}
+            if (scale_x > scale_y)
+                max_width = -Infinity;
+            else
+                max_height = -Infinity;
+        }
 
         if (max_height > 0) {
             height = max_height;
@@ -139,5 +139,29 @@ function imgutils_calc_rectangle_in_statesprite_state(off_x, off_y, max_width, m
     statesprite_state.draw_height = draw_size[1];
     statesprite_state.offset_x = draw_location[0];
     statesprite_state.offset_y = draw_location[1];
+}
+
+function imgutils_calc_resize_sprite(sprite, max_width, max_height, cover, center) {
+    const draw_size = [0, 0];
+    const location = [0, 0];
+    if (cover) {
+        sprite_get_source_size(sprite, draw_size);
+        let ratio_width = draw_size[0] / max_width;
+        let ratio_height = draw_size[1] / max_height;
+
+        // resize the longest dimension of the sprite
+        if (ratio_width > ratio_height)
+            sprite_resize_draw_size(sprite, -1, max_height, draw_size);
+        else
+            sprite_resize_draw_size(sprite, max_width, -1, draw_size);
+    } else {
+        sprite_resize_draw_size(sprite, max_width, max_height, draw_size);
+    }
+    if (center) {
+        sprite_get_draw_location(sprite, location);
+        if (max_width >= 0) location[0] -= (draw_size[0] - max_width) / 2.0;
+        if (max_height >= 0) location[1] -= (draw_size[1] - max_height) / 2.0;
+        sprite_set_draw_location(sprite, location[0], location[1]);
+    }
 }
 

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Dialogue>
+	<Definition>
+		<BackgroundList>
+			<Color name="default_background" rgb="0xFFFFFF" alpha="0.7" />
+		</BackgroundList>
+		<SpeechImageList baseSrc="/assets/common/image/dialogue/speech_bubble_talking.xml">
+			<TextBox x="60" y="130" width="1012" height="152" />
+			<PortraitLine x="0" y="54" width="1060" />
+			<TitleLocation x="32" y="0" />
+			<Offset x="60" y="0" />
+			<OffsetOpen x="413" y="13" />
+			<SpeechImage name="normal-left" mirror="true" openAnim="Speech Bubble Normal Open" idleAnim="speech bubble normal"/>
+			<SpeechImage name="normal-middle" openAnim="middle Speech Bubble Normal Open" idleAnim="middle speech bubble normal" />
+			<SpeechImage name="normal-right" openAnim="Speech Bubble Normal Open" idleAnim="speech bubble normal" />
+		</SpeechImageList>
+		<SpeechImageList baseSrc="/assets/common/image/dialogue/speech_bubble_talking.xml">
+			<TextBox x="110" y="140" width="980" height="140" />
+			<PortraitLine x="110" y="24" width="1060" />
+			<TitleLocation x="60" y="0" />
+			<OffsetIdle x="17" y="-40" />
+			<OffsetOpen x="-43" y="0" />
+			<SpeechImage name="loud-left" openAnim="speech bubble loud open" idleAnim="AHH speech bubble" />
+			<SpeechImage name="loud-middle" openAnim="middle speech bubble loud open" idleAnim="middle AHH speech bubble" />
+			<SpeechImage name="loud-right" mirror="true" openAnim="speech bubble loud open" idleAnim="AHH speech bubble" />
+		</SpeechImageList>
+		<!-- <PortraitList baseModel="/assets/common/image/funkin/BOYFRIEND.xml"> -->
+			<!-- <Portrait name="bf-hey" scale="0.9" idleAnim="BF HEY!!" idleAnimLooped="false" offestIdleX="0" offestIdleY="0" /> -->
+			<!-- <Portrait name="bf-idle" scale="0.9" idleAnim="BF idle dance" idleAnimLooped="true" offestIdleX="0" offestIdleY="0" /> -->
+			<!-- <Portrait name="bf-idle-shaking" scale="0.9" idleAnim="BF idle shaking" offestIdleX="0" offestIdleY="0" /> -->
+			<!-- <Portrait name="bf-note-right" scale="0.9" idleAnim="BF NOTE RIGHT" idleAnimLooped="false" offestIdleX="0" offestIdleY="0" /> -->
+			<!-- <Portrait name="bf-note-down-miss" scale="0.9" idleAnim="BF NOTE DOWN MISS" idleAnimLooped="false" offestIdleX="0" offestIdleY="0" /> -->
+			<!-- <Portrait name="bf-hit" scale="0.9" idleAnim="BF hit0018" idleAnimLooped="false" offestIdleX="0" offestIdleY="0" /> -->
+		<!-- </PortraitList> -->
+		<!-- <PortraitList baseModel="/assets/common/image/funkin/GF_assets.xml"> -->
+			<!-- <Portrait name="gf-cheers" scale="0.9" position="center" idleAnim="GF Cheer" idleAnimLooped="false" offestIdleX="0" offestIdleY="0" /> -->
+			<!-- <Portrait name="gf-idle" scale="0.9" position="center" idleAnim="GF Dancing Beat0000" idleAnimLooped="false" offestIdleX="0" offestIdleY="0" /> -->
+			<!-- <Portrait name="gf-note-right" scale="0.9" position="center" idleAnim="GF Right Note" idleAnimLooped="false" offestIdleX="0" offestIdleY="0" /> -->
+			<!-- <Portrait name="gf-fear" scale="0.9" position="center" idleAnim="GF FEAR" offestIdleX="0" offestIdleY="0" /> -->
+			<!-- <Portrait name="gf-idle" scale="0.9" position="center" idleAnim="gf sad" offestIdleX="0" offestIdleY="0" /> -->
+		<!-- </PortraitList> -->
+		<AudioList>
+			<Audio name="click_text" src="/assets/common/sound/clickText.ogg" volume="0.8" />
+			<Audio name="click_char" src="/assets/common/sound/pixelText.ogg" volume="0.5" />
+		</AudioList>
+	</Definition>
+</Dialogue>

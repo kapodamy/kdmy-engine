@@ -21,6 +21,7 @@ typedef struct _Modifier_t {
     float rotate_pivot_v;
 
     float translate_rotation;
+    float scale_translation;
     float scale_size;
 
     float x;

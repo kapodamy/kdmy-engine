@@ -49,7 +49,7 @@ declare global {
      * Enum version of gamepad buttons, this unifies all GAMEPAD_*** global variables here. Note:
      * In lua values will appear as numbers. Example: "GAMEPAD_DPAD_UP" is replaced by "16" or "0x10"
      */
-    enum GamepadButtons {
+    const enum GamepadButtons {
         /**
          * This values is never emitted, is just a placeholder for simplify comparisons
          */
@@ -113,7 +113,7 @@ declare global {
     //
     // Enumerations (literals in lua)
     //
-    enum AnimInterpolatorType {
+    const enum AnimInterpolatorType {
         EASE = "ease",
         EASE_IN = "ease-in",
         EASE_OUT = "ease-out",
@@ -121,19 +121,19 @@ declare global {
         LINEAR = "linear",
         STEPS = "steps",
     }
-    enum TextSpriteForceCase {
+    const enum TextSpriteForceCase {
         NONE = "none",
         LOWER = "lower",
         UPPER = "upper"
     }
-    enum Align {
+    const enum Align {
         BOTH = "both",
         NONE = "none",
         START = "start",
         CENTER = "center",
         END = "end"
     }
-    enum NoteState {
+    const enum NoteState {
         PENALITY = 0,
         MISS = 1,
         SHIT = 2,
@@ -141,22 +141,22 @@ declare global {
         GOOD = 4,
         SICK = 5
     }
-    enum PVRFlag {
+    const enum PVRFlag {
         ENABLE = "enable",
         DISABLE = "disable",
         DEFAULT = "default"
     }
-    enum FontWordBreak {
+    const enum FontWordBreak {
         NONE = "none",
         BREAK = "break",
         LOOSE = "loose"
     }
-    enum CharacterActionType {
-        "miss",
-        "extra",
-        "idle",
-        "sing",
-        "none"
+    const enum CharacterActionType {
+        miss = "miss",
+        extra = "extra",
+        idle = "idle",
+        sing = "sing",
+        none = "none"
     }
 
     //
@@ -367,7 +367,7 @@ declare global {
         get_current_action(): CharacterActionType;
     }
     interface SongPlayer {
-        //changesong( src: string, prefer_no_copyright: boolean): boolean;
+        changesong(src: string, prefer_no_copyright: boolean): boolean;
         play(): void;
         pause(): void;
         seek(timestamp: number): void;
@@ -409,6 +409,18 @@ declare global {
     interface Modelholder {
         // not implemented
     }
+    interface Dialogue {
+        apply_state(state_name: string): boolean;
+        is_completed(): boolean;
+        is_hidden(): boolean;
+        show_dialog(dialog_src: string): boolean;
+        close(): void;
+        hide(hidden: boolean): void;
+        get_modifier(): Modifier;
+        set_offsetcolor(r: number, g: number, b: number, a: number): void;
+        set_alpha(alpha: number): void;
+        set_antialiasing(antialiasing: PVRFlag): void;
+    }
     interface Animsprite {
         // not implemented
     }
@@ -440,19 +452,23 @@ declare global {
     function week_get_songplayer(): SongPlayer;
     function week_get_current_chart_info(): LuaMultiReturn<[number, number]>;
     function week_get_current_track_info(): LuaMultiReturn<[string, string, number]>;
-    function week_change_charecter_camera_name(opponent_or_player: boolean, new_name: string): void;
+    function week_change_character_camera_name(opponent_or_player: boolean, new_name: string): void;
     function week_disable_layout_rollback(disable: boolean): void;
     function week_override_common_folder(custom_common_path: string): void;
     function week_enable_credits_on_completed(): void;
     function week_end(round_or_week: boolean, loose_or_win: boolean): void;
+    function week_get_dialogue(): void;
 
 
     //
     // Global Timer functions
     //
+    type TimerCallback = (...args: any[]) => any;
     function timer_ms_gettime(): number;
-    function timer_callback_interval(delay: number, fn: Function, ...args: any[]): number;
-    function timer_callback_timeout(delay: number, fn: Function, ...args: any[]): number;
+    function timer_callback_interval(delay: number, fn: TimerCallback, ...args: any[]): number;
+    function timer_callback_timeout(delay: number, fn: TimerCallback, ...args: any[]): number;
+    function timer_songcallback_interval(delay: number, fn: TimerCallback, ...args: any[]): number;
+    function timer_songcallback_timeout(delay: number, fn: TimerCallback, ...args: any[]): number;
     function timer_callback_cancel(callback_id: number): boolean;
     function timer_callback_cancel_all(): number;
 

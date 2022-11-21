@@ -13,7 +13,7 @@ namespace Engine.Game {
 
         public static void Main() {
             GamepadButtons buttons = GamepadButtons.NOTHING;
-            Layout layout = Layout.Init(PVRContext.global_context.OutputIsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
+            Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
             if (layout == null) return;
 
             Modding moddingcontext = new Modding(layout, "/assets/common/credits/credits.lua");

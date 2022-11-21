@@ -24,7 +24,7 @@ EM_JS_PRFX(void, week_unlockdirective_get_JS, (RoundContext roundcontext, const 
     const ENDIANESS = true;
 
     let value = week_unlockdirective_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
-    dataView.setFloat64(value_ptr, BigInt(value), ENDIANESS);
+    dataView.setFloat64(value_ptr, value, ENDIANESS);
     });
 EM_JS_PRFX(void, week_set_halt, (RoundContext roundcontext, bool halt), {
     week_set_halt(kdmyEngine_obtain(roundcontext), halt);
@@ -132,8 +132,8 @@ setPointer(offset, ptr_name); offset += ptrsize;
 setPointer(offset, ptr_difficult); offset += ptrsize;
 dataView.setInt32(offset, values.index, HEAP_ENDIANESS);
     });
-EM_JS_PRFX(void, week_change_charecter_camera_name, (RoundContext roundcontext, bool opponent_or_player, const char* new_name), {
-    week_change_charecter_camera_name(kdmyEngine_obtain(roundcontext), opponent_or_player, kdmyEngine_ptrToString(new_name));
+EM_JS_PRFX(void, week_change_character_camera_name, (RoundContext roundcontext, bool opponent_or_player, const char* new_name), {
+    week_change_character_camera_name(kdmyEngine_obtain(roundcontext), opponent_or_player, kdmyEngine_ptrToString(new_name));
     });
 EM_JS_PRFX(void, week_disable_layout_rollback, (RoundContext roundcontext, bool disable), {
     week_disable_layout_rollback(kdmyEngine_obtain(roundcontext), disable);
@@ -146,6 +146,10 @@ EM_JS_PRFX(void, week_enable_credits_on_completed, (RoundContext roundcontext), 
     });
 EM_JS_PRFX(void, week_end, (RoundContext roundcontext, bool round_or_week, bool loose_or_win), {
     week_end(kdmyEngine_obtain(roundcontext), round_or_week, loose_or_win);
+    });
+EM_JS_PRFX(Dialogue, week_get_dialogue, (RoundContext roundcontext), {
+    const dialogue = week_get_dialogue(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(dialogue);
     });
 
 void week_unlockdirective_create(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week, double value) {
@@ -422,13 +426,13 @@ static int script_week_get_current_track_info(lua_State* L) {
     return 3;
 }
 
-static int script_week_change_charecter_camera_name(lua_State* L) {
+static int script_week_change_character_camera_name(lua_State* L) {
     LUASCRIPT_GET(L);
 
     bool opponent_or_player = luaL_checkboolean(L, 1);
     const char* new_name = luaL_optstring(L, 2, NULL);
 
-    week_change_charecter_camera_name(luascript->context, opponent_or_player, new_name);
+    week_change_character_camera_name(luascript->context, opponent_or_player, new_name);
 
     return 0;
 }
@@ -472,6 +476,15 @@ static int script_week_end(lua_State* L) {
     return 0;
 }
 
+static int script_week_get_dialogue(lua_State* L) {
+    LUASCRIPT_GET(L);
+
+    Dialogue dialogue = week_get_dialogue(luascript->context);
+
+    return script_dialogue_new(L, dialogue);
+}
+
+
 static const luaL_Reg EXPORTS_FUNCTION[] = {
     { "unlockdirective_create", script_week_unlockdirective_create },
     { "unlockdirective_remove", script_week_unlockdirective_remove },
@@ -497,11 +510,12 @@ static const luaL_Reg EXPORTS_FUNCTION[] = {
     { "week_get_songplayer", script_week_get_songplayer },
     { "week_get_current_chart_info", script_week_get_current_chart_info },
     { "week_get_current_track_info", script_week_get_current_track_info },
-    { "week_change_charecter_camera_name", script_week_change_charecter_camera_name },
+    { "week_change_character_camera_name", script_week_change_character_camera_name },
     { "week_disable_layout_rollback", script_week_disable_layout_rollback },
     { "week_override_common_folder", script_week_override_common_folder },
     { "week_enable_credits_on_completed", script_week_enable_credits_on_completed },
     { "week_end", script_week_end },
+    { "week_get_dialogue", script_week_get_dialogue },
     { NULL, NULL }
 };
 

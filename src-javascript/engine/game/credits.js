@@ -7,7 +7,7 @@ const CREDITS_LAYOUT_DREAMCAST = "/assets/common/credits/layout~dreamcast.xml";
 async function credits_main() {
     const buttons = [0x0000];
     let src;
-    if (!pvrctx_output_is_widescreen() && await fs_file_exists(CREDITS_LAYOUT_DREAMCAST))
+    if (!pvrctx_is_widescreen() && await fs_file_exists(CREDITS_LAYOUT_DREAMCAST))
         src = CREDITS_LAYOUT_DREAMCAST;
     else
         src = CREDITS_LAYOUT_WIDESCREEN;
@@ -48,9 +48,9 @@ async function credits_main() {
         pvr_context_reset(pvr_context);
 
         if (gamepad_get_managed_presses(gamepad, 1, buttons)) {
-            if (moddingcontext.script) weekscript_notify_buttons(moddingcontext.script, -1, buttons);
+            if (moddingcontext.script) await weekscript_notify_buttons(moddingcontext.script, -1, buttons);
         }
-        if (moddingcontext.script) weekscript_notify_frame(moddingcontext.script, elapsed);
+        if (moddingcontext.script) await weekscript_notify_frame(moddingcontext.script, elapsed);
 
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
