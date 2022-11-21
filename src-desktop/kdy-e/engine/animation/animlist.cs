@@ -61,7 +61,11 @@ namespace Engine.Animation {
                 }
             }
 
-            XmlParser xml = XmlParser.Init(src);
+            XmlParser xml = XmlParser.Init(full_path);
+            if (xml == null) {
+                //free(full_path)
+                return null;
+            }
 
             FS.FolderStackPush();
             FS.SetWorkingFolder(full_path, true);

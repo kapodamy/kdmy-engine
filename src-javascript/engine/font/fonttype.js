@@ -117,6 +117,9 @@ function fonttype_measure(fonttype, height, text, text_index, text_size) {
     while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
         index += grapheme.size;
 
+        //override hard-spaces with white-spaces
+        if (grapheme.code == 0xA0) grapheme.code = 0x20;
+
         // ignore "\r" characters
         if (grapheme.code == FONTGLYPH_CARRIAGERETURN) {
             previous_codepoint = grapheme.code;
@@ -171,6 +174,9 @@ function fonttype_measure(fonttype, height, text, text_index, text_size) {
 
 function fonttype_meansure_char(fonttype, codepoint, height, lineinfo) {
     const scale = height / FONTTYPE_GLYPHS_HEIGHT;
+
+    //override hard-spaces with white-spaces
+    if (codepoint == 0xA0) codepoint = 0x20;
 
     let fontchardata = fonttype_internal_get_fontchardata(fonttype.fontcharmap_primary, codepoint);
     if (!fontchardata) {
@@ -287,6 +293,8 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
     while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
         index += grapheme.size;
 
+        if (grapheme.code == 0xA0) continue;
+
         if (fontchardata = fonttype_internal_get_fontchardata(primary, grapheme.code)) {
             if (primary_texture && fontchardata.has_entry) total_glyphs++;
             continue;
@@ -306,6 +314,9 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
     index = text_index;
     while (added < maximum && index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
         index += grapheme.size;
+
+        //override hard-spaces with white-spaces
+        if (grapheme.code == 0xA0) grapheme.code = 0x20;
 
         // ignore "\r" characters
         if (grapheme.code == FONTGLYPH_CARRIAGERETURN) {

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Dialogue importDefaultDefinition="true|false">
+	<Definition>
+		<AudioList>
+			<Audio name="bg_music" src="/assets/music/breakfast.ogg" volume="1.0" looped="false" />
+			<Audio name="bg_music2" src="/assets/music/weeb.ogg" volume="1.0" looped="true" />
+			<Audio name="click" src="/assets/sound/click_fx.ogg" />
+			<Audio name="pixel_text" src="/assets/sound/pixel.ogg" />
+		</AudioList>
+		<BackgroundList baseSrc="/assets/image/theater.xml">
+			<Image name="scene0" src="/assets/image/theater.xml" atlasEntry="floor" center="true|false" cover="true|false" looped="true|false" />
+			<Image name="scene1" src="/assets/image/train.png" center="true" cover="true" />
+			<Image name="scene2" src="/assets/image/limo.png" alpha="0.2" />
+			<Color name="faded_white" rgb="0xFFFFFF" alpha="0.7" />
+			<Color name="faded_red" r="1.0" g="0.0" b="0.0" a="0.7" />
+		</BackgroundList>
+		<SpeechImageList baseSrc="/assets/image/dialogue/speech_bubble_talking.xml">
+			<TextBox x="62" y="138" width="1026" height="118" />
+			<PortraitLine x="0" y="70" width="1026" />
+			<TitleLocation x="60" y="130" />
+			<Offset x="123" y="456" />
+			<OffsetIdle x="123" y="456" />
+			<OffsetOpen x="123" y="456" />
+			<SpeechImage scale="1.0" name="normal" openAnim="Speech Bubble Normal Open" idleAnim="speech bubble normal" idleLooped="true|false"/>
+			<SpeechImage scale="1.0" name="loud" src="/assets/image/model.xml" openAnim="middle speech bubble loud open" idleAnim="AHH speech bubble" />
+		</SpeechImageList>
+		<PortraitList baseModel="/assets/image/boyfriend_portraits.xml">
+			<Portrait name="senpai" src="/assets/image/senpai.png" scale="1.0" speakAnim="talking" idleAnim="idle_anim" speakAnimLooped="true|false" idleAnimLooped="true|false" />
+			<Portrait name="senpai_angry" src="/assets/image/senpai_angry.png" positionPercent="0.0" position="left|center|right" />
+			<Portrait name="spirit" src="/assets/image/spirit.png"  anim="talking_and_idle_anim" animLooped="true|false" />
+			<Portrait name="bf" src="/assets/image/boyfriend.png" offestSpeakX="0" offestSpeakY="0" offestIdleX="0" offestIdleY="0" />
+			<Portrait name="gf" src="/assets/image/girlfriend.png" />
+			<Portrait name="bf_scared" src="/assets/image/bookinfo_scared.png" />
+			<Portrait portrait="bf_hey" mirror="true|false" x="0" y="0" />
+		</PortraitList>
+		<AnimationsUI animationList="/assets/anims/dialog-ui.xml">
+			<Set name="backgroundIn|backgroundOut" anim="anim123" />
+			<Set name="portraitLeftIn|portraitCenterIn|portraitRightIn" anim="anim123" />
+			<Set name="portraitLeftOut|portraitCenterOut|portraitRightOut" anim="anim123" />
+		</AnimationsUI>
+		<Font name="vcr" src="/assets/font/vcr.ttf" />
+		<Font name="alphabet_bold" src="/assets/font/alphabet.xml" glyphSuffix="bold" glyphAnimated="true|false" />
+		<Font name="alphabet" src="/assets/font/alphabet.xml" colorByDifference="true" />
+		<Font name="pixel" src="/assets/font/pixel.otf" />
+	</Definition>
+	
+	<ImportPortraitList dialogueSrc="another_dialogue.xml" />
+	
+	<State initial="true|false">
+		<!-- place all initializers here -->
+	</State>
+	
+
+	<State name="gfnervoussmile">
+		<AudioPlay name="bg_music" />
+		<AudioPause name="bg_music" />
+		<AudioFadeIn name="bg_music" duration="1000" />
+		<AudioFadeOut name="bg_music" duration="1000" />
+		<AudioStop name="bg_music" />
+		<AudioVolume name="bg_music" volume="1.0" />
+
+		<BackgroundSet name="faded_white" />
+		<BackgroundChange name="stage1" />
+		<BackgroundRemove />
+
+		<Lua function="abc" /><!-- calls an function named "abc" -->
+		<Lua>
+			local nro = 123
+			some_function(nro, "abc", false)
+			print("hello world")
+		</Lua>
+		
+		<!-- <DialogueLayoutTrigger any="some_name" action="name" trigger="name" camera="name" /> -->
+		<!-- <StageLayoutTrigger any="some_name" action="name" trigger="name" camera="name" /> -->
+
+		<Exit />
+
+		<PortraitAdd name="bf" randomFromPrefix="" noSpeak="false|true" />
+		<PortraitRemove name="bf" />
+		<PortraitRemoveAll />
+	
+		<AudioUI clickText="click" clickChar="pixel_text" />
+
+		<TextSpeed charsPerSecond="75" charDelay="5" />
+		<TextSkip />
+		<TextInstantPrint />
+		
+		<SpeechBackground name="custom-speechimage" repeatAnim="always|once|whileSpeaks" />
+		<SpeechBackground fromCommon="normal-left|normal-middle|normal-right|loud-left|loud-middle|loud-right|none|remove" />
+
+		<TextFont font="vcr" />
+		<TextColor rgba="0xFFFFFF7F" rgb="0xFFFFFF" alpha="0.8" />
+		<TextBorderColor rgba="0xFFFFFF7F" rgb="0xFFFFFF" alpha="0.8" />
+		<TextSize size="123" />
+		<TextParagraphSpace size="123" />
+		<TextAlign horizontal="start|center|end" vertical="start|center|end" paragraph="start|center|end" />
+		
+		<!-- <DialogKey next="x" exit="start" /> -->
+		
+		<RunMultipleChoice name="questions" />
+		
+		<Title>GIRLFIREND SAYS</Title>
+		
+		<NoWait />
+		
+	</State>
+	
+	<State name="yukichitalk2">
+		<RunMultipleChoice name="leave" />
+	</State>
+	
+	<MultipleChoice name="yukichitalk2-gf-answers" selectorIconColor="0x00FFFF" selectorIconModel="/assets/images/model.xml" selectorIconModelName="bf" fontSize="-1">
+		<Choice text="I'll try to remember what it was later..." runMultipleChoice="questions" />
+		<Choice text="Ah damn it...! Always the third song, is this a curse?" luaFunction="somefunc" luaEval="doexit('from leave', true)" exit="false" />
+	</MultipleChoice>
+	
+	<MultipleChoice title="select a choice" name="questions" orientation="vertical|horizontal" canLeave="false|true" stateOnLeave="yukichitalk2" defaultIndex="0">
+		<Choice text="About you" /><!-- continues previous dialog execution -->
+		<Choice text="Why are you here" dialogFile="dialogs3.txt" />
+		<Choice text="About shaggy" dialogFile="dialogs4.txt" />
+		<Choice text="You parts" dialogFile="dialogs5.txt" />
+		<Choice text="Exit" exit="true|false" />
+	</MultipleChoice>
+
+</Dialogue>

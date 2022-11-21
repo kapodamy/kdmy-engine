@@ -40,8 +40,8 @@ static inline char* read_text(const char* path) {
 }
 
 int main() {
-    char* lua_text = read_text("C:\\Users\\kapodamy\\Desktop\\kdmy_engine\\misc files\\lua timer impl\\timer_test.lua");
-    Luascript luascript = luascript_init(lua_text, "test.lua", &roundcontext, true);
+    char* lua_text = read_text(".\\timer_test.lua");
+    Luascript luascript = luascript_init(lua_text, "timer_test.lua", &roundcontext, false);
     free(lua_text);
 
     if (!luascript) return 1;

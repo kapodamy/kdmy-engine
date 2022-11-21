@@ -25,17 +25,24 @@
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_beat
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_quarter
  * @property {function(ModuleLuaScript,number):void} _luascript_notify_timer_run
+ * @property {function(ModuleLuaScript,number):void} _luascript_notify_timersong_run
+ * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_dialogue_line_starts
+ * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_dialogue_line_ends
+ * @property {function(ModuleLuaScript,number):void} _luascript_call_function
+ * @property {function(ModuleLuaScript,number):number} _luascript_eval
  * @property {function(string):number} kdmyEngine_stringToPtr
  * @property {function(number):void} kdmyEngine_deallocate
  * @property {function(object):number} kdmyEngine_obtain
  * @property {function(bool):void} kdmyEngine_clearMap
  * @property {function():Promise<any>|undefined} kdmyEngine_yieldAsync
+ * @property {function():boolean} kdmyEngine_hasAsyncPending
  * 
  * @property {bool} hasInstanceActive
  * @property {bool} isRuntimeInitialized
  * @property {bool} hasGlobalsSet
  * 
  */
+ 
 
 /** @type {ModuleLuaScript} */
 const ModuleLuaScript = {

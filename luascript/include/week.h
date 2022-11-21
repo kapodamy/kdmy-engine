@@ -8,6 +8,7 @@
 #include "messagebox.h"
 #include "character.h"
 #include "songplayer.h"
+#include "dialogue.h"
 
 typedef struct _RoundContext_t {
     int dummy;
@@ -55,11 +56,12 @@ Character week_get_character(RoundContext roundcontext, int32_t index);
 SongPlayer week_get_songplayer(RoundContext roundcontext);
 void week_get_current_chart_info(RoundContext roundcontext, WeekChartInfo_t* output_info);
 void week_get_current_track_info(RoundContext roundcontext, WeekTrackInfo_t* output_info);
-void week_change_charecter_camera_name(RoundContext roundcontext, bool opponent_or_player, const char* new_name);
+void week_change_character_camera_name(RoundContext roundcontext, bool opponent_or_player, const char* new_name);
 void week_disable_layout_rollback(RoundContext roundcontext, bool disable);
 void week_override_common_folder(RoundContext roundcontext, const char* custom_common_path);
 void week_enable_credits_on_completed(RoundContext roundcontext);
 void week_end(RoundContext roundcontext, bool round_or_week, bool loose_or_win);
+Dialogue week_get_dialogue(RoundContext roundcontext);
 
 #endif
 

@@ -6,7 +6,7 @@ const STARTSCREEN_LAYOUT_DREAMCAST = "/assets/common/image/start-screen/layout~d
 async function startscreen_main() {
     let soundplayer_confirm = await soundplayer_init("/assets/common/sound/confirmMenu.ogg");
     let maple_pad = gamepad_init(-1);
-    let layout = await layout_init(pvrctx_output_is_widescreen() ? STARTSCREEN_LAYOUT : STARTSCREEN_LAYOUT_DREAMCAST);
+    let layout = await layout_init(pvrctx_is_widescreen() ? STARTSCREEN_LAYOUT : STARTSCREEN_LAYOUT_DREAMCAST);
 
     let total_elapsed = 0;
     let enter_pressed = 0;

@@ -213,7 +213,7 @@ namespace Engine.Game {
 
 
         public static int Main() {
-            Layout layout = Layout.Init(PVRContext.global_context.OutputIsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
+            Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
             AnimList animlist_ui = AnimList.Init(WeekSelector.UI_ANIMS);
             ModelHolder modelholder_ui = ModelHolder.Init(WeekSelector.UI_ICONS_MODEL);
             ModelHolder modelholder_buttons_ui = ModelHolder.Init(WeekSelector.BUTTONS_MODEL);

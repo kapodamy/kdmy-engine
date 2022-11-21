@@ -323,7 +323,7 @@ function pvrctx_helper_copy_modifier(modifier_source, modifier_dest) {
     }
 }
 
-function pvrctx_output_is_widescreen() {
+function pvrctx_is_widescreen() {
     return !math2d_floats_are_near_equal(640 / 480, PVR_WIDTH / PVR_HEIGHT);
 }
 

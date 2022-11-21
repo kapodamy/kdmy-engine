@@ -740,7 +740,7 @@ function character_animate(character, elapsed) {
 
     if (character.drawable_animation != null) {
         animsprite_animate(character.drawable_animation, elapsed);
-        animsprite_update_drawable(character.drawable_animation, this.drawable, 1);
+        animsprite_update_drawable(character.drawable_animation, character.drawable, 1);
     }
 
     let completed;

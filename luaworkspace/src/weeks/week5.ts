@@ -33,8 +33,8 @@ function f_beforeready(from_retry: boolean): void {
     stage.stop_all_triggers();
 
     // change cameras focus
-    week_change_charecter_camera_name(true, "camera_evil_opponent");
-    week_change_charecter_camera_name(false, "camera_evil_player");
+    week_change_character_camera_name(true, "camera_evil_opponent");
+    week_change_character_camera_name(false, "camera_evil_player");
 
     if (from_retry || in_freeplay_mode) {
         // do not bother the player, skip intro animation

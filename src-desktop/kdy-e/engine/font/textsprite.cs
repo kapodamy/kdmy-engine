@@ -931,6 +931,15 @@ namespace Engine.Font {
             this.modified_coords = true;
         }
 
+        public bool HasFont() {
+            return this.font != null;
+        }
+
+        public void ChangeFont(FontHolder fontholder) {
+            if (fontholder == null) throw new ArgumentNullException("fontholder can not be null");
+            this.font = fontholder.font;
+            //this.font_from_atlas = fontholder.font_from_atlas;
+        }
 
         private class ParagraphInfo {
             public int length;

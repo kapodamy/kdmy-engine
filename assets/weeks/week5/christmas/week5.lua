@@ -27,8 +27,8 @@ function f_beforeready(from_retry)
         return
     end
     stage:stop_all_triggers()
-    week_change_charecter_camera_name(true, "camera_evil_opponent")
-    week_change_charecter_camera_name(false, "camera_evil_player")
+    week_change_character_camera_name(true, "camera_evil_opponent")
+    week_change_character_camera_name(false, "camera_evil_player")
     if from_retry or in_freeplay_mode then
         if not in_freeplay_mode then
             stage:trigger_camera("mall_evil")

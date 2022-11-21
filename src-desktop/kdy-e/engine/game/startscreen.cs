@@ -11,7 +11,7 @@ namespace Engine.Game {
         public static bool Main() {
             SoundPlayer soundplayer_confirm = SoundPlayer.Init("/assets/common/sound/confirmMenu.ogg");
             Gamepad maple_pad = new Gamepad(-1);
-            Layout layout = Layout.Init(PVRContext.global_context.OutputIsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
+            Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
 
             float total_elapsed = 0.0f;
             bool enter_pressed = false;

@@ -117,7 +117,7 @@ namespace Engine.Platform {
             offsetcolor[3] = -1.0f;
         }
 
-        public bool OutputIsWidescreen() {
+        public bool IsWidescreen() {
             return this.force_widescreen;
         }
 

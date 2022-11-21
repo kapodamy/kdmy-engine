@@ -48,6 +48,10 @@
                     "type": ["string", "null"],
                     "default": null
                 },
+                "dialogueParams": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
                 "girlfriend": {
                     "$ref": "#/definitions/Girlfriend"
                 },
@@ -422,11 +426,19 @@
                         "$ref": "#/definitions/Player"                        
                     }
                 },
-                "ui_layout": {
+                "UILayout": {
                     "type": ["string", "null"],
                     "default": null
                 },
                 "pause_menu": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "dialogueParams": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "dialogText": {
                     "type": ["string", "null"],
                     "default": null
                 }

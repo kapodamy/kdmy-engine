@@ -91,6 +91,7 @@ static void luascript_register_objects(lua_State* L, void* register_key, bool is
 
     if (is_week) {
         register_songplayer(L);
+        register_dialogue(L);
         register_week(L);
     } else {
         register_modding(L);
@@ -198,6 +199,10 @@ void luascript_drop_shared(Luascript luascript) {
     luascript->shared = linkedlist_init();
 }
 
+int luascript_eval(Luascript luascript, const char* eval_string) {
+    if (!eval_string || !eval_string[0]) return LUA_OK;
+    return luaL_dostring(luascript->L, eval_string) == LUA_OK;
+}
 
 void _luascript_declare_item(lua_State* lua, void* parent_ptr, void* object_ptr, bool is_shared) {
     if (!object_ptr) return;

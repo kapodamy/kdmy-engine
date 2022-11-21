@@ -75,6 +75,11 @@ namespace Engine.Game.Gameplay {
             this.luascript.notify_frame(elapsed);
         }
 
+        public void NotifyTimerSong(double song_timestamp) {
+            long timestamp = (long)timer.ms_gettime64();
+            this.luascript.notify_timersong_run(song_timestamp);
+        }
+
         public void NotifyNoteHit(Strum strum, int strum_note_index, PlayerStats playerstats) {
             /** @type {StrumNote} */
             Strum.StrumNote strum_note = strum.chart_notes[strum_note_index];
@@ -176,11 +181,14 @@ namespace Engine.Game.Gameplay {
             this.luascript.notify_buttons(player_id, (uint)buttons);
         }
 
+        public Luascript GetLuaScript() {
+            return this.luascript;
+        }
+
 
         private void InternalNotifyNote(double timestamp, int id, double duration, double data, bool special, int player_id, ScriptNote state) {
             this.luascript.notify_note(timestamp, id, duration, data, special, player_id, (uint)state);
         }
-
     }
 
 }

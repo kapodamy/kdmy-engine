@@ -64,6 +64,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             if (is_week) {
                 ExportsSongPlayer.register_songplayer(lua);
+                ExportsDialogue.register_dialogue(lua);
                 ExportsWeek.register_week(lua);
             } else {
                 ExportsModding.register_modding(lua);
@@ -143,6 +144,16 @@ namespace Engine.Externals.LuaScriptInterop {
 
         public void DropShared() {
             // In C# this function is not relevant
+        }
+
+        public bool Eval(string eval_string) {
+            if (String.IsNullOrEmpty(eval_string)) return true;
+            return this.lua.EvaluateString(eval_string) == 0;
+        }
+
+        public void CallFunction(string function_name) {
+            if (lua.PushGlobalFunction(function_name)) return;
+            lua.CallPushedGlobalFunction(0);
         }
 
 
@@ -336,14 +347,48 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.CallPushedGlobalFunction(2);
         }
 
-        public void notify_timer_run(double timestamp) {
+        public void notify_timer_run(double kos_timestamp) {
             const string FUNCTION = "______kdmyEngine_timer_run";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
 
-            L.lua_pushnumber(timestamp);
+            L.lua_pushnumber(kos_timestamp);
+            L.lua_pushboolean(false);
 
-            lua.CallPushedGlobalFunction(1);
+            lua.CallPushedGlobalFunction(2);
+        }
+
+        public void notify_timersong_run(double song_timestamp) {
+            const string FUNCTION = "______kdmyEngine_timer_run";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+
+            L.lua_pushnumber(song_timestamp);
+            L.lua_pushboolean(true);
+
+            lua.CallPushedGlobalFunction(2);
+        }
+
+        public void notify_dialogue_line_starts(int line_index, string state_name) {
+            const string FUNCTION = "f_dialogue_line_starts";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+
+            L.lua_pushinteger(line_index);
+            L.lua_pushstring(state_name);
+
+            lua.CallPushedGlobalFunction(2);
+        }
+        
+        public void notify_dialogue_line_ends(int line_index, string state_name) {
+            const string FUNCTION = "f_dialogue_line_ends";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+
+            L.lua_pushinteger(line_index);
+            L.lua_pushstring(state_name);
+
+            lua.CallPushedGlobalFunction(2);
         }
 
 

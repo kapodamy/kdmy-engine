@@ -268,8 +268,8 @@ function rankingcounter_reset(rankingcounter) {
 
     rankingcounter_set_offsetcolor_to_default(rankingcounter);
 
-    pvrctx_helper_clear_modifier(drawable_get_modifier(this.drawable_accuracy));
-    pvrctx_helper_clear_modifier(drawable_get_modifier(this.drawable_rank));
+    pvrctx_helper_clear_modifier(drawable_get_modifier(rankingcounter.drawable_accuracy));
+    pvrctx_helper_clear_modifier(drawable_get_modifier(rankingcounter.drawable_rank));
 
     // hide all visible ranking items
     for (let i = 0; i < RANKINGCOUNTER_RANKING_BUFFER_SIZE; i++)

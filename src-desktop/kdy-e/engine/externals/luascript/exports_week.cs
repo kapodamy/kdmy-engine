@@ -257,7 +257,7 @@ namespace Engine.Externals.LuaScriptInterop {
             return 3;
         }
 
-        static int script_week_change_charecter_camera_name(LuaState L) {
+        static int script_week_change_character_camera_name(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
             bool opponent_or_player = L.luaL_checkboolean(1);
@@ -307,6 +307,15 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_week_get_dialogue(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            Dialogue dialogue = Week.GetDialogue(roundcontext);
+
+            return ExportsDialogue.script_dialogue_new(L, dialogue);
+        }
+
+
         static readonly LuaTableFunction[] EXPORTS_FUNCTION = {
             new LuaTableFunction() { name = "unlockdirective_create", func = script_week_unlockdirective_create },
             new LuaTableFunction() { name = "unlockdirective_remove", func = script_week_unlockdirective_remove },
@@ -314,7 +323,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction() { name = "week_set_halt", func = script_week_halt },
             new LuaTableFunction() { name = "ui_set_visibility", func = script_week_ui_set_visibility },
             new LuaTableFunction() { name = "ui_get_layout", func = script_week_ui_get_layout },
-            new LuaTableFunction() { name = "week_get_stage_layout", func = new LuaCallback(script_week_get_stage_layout) },
+            new LuaTableFunction() { name = "week_get_stage_layout", func = script_week_get_stage_layout },
             new LuaTableFunction() { name = "ui_get_camera", func = script_week_ui_get_camera },
             new LuaTableFunction() { name = "ui_get_strums_count", func = script_week_ui_get_strums_count },
             new LuaTableFunction() { name = "ui_get_strums", func = script_week_ui_get_strums },
@@ -332,11 +341,12 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction() { name = "week_get_songplayer", func = script_week_get_songplayer },
             new LuaTableFunction() { name = "week_get_current_chart_info", func = script_week_get_current_chart_info },
             new LuaTableFunction() { name = "week_get_current_track_info", func = script_week_get_current_track_info },
-            new LuaTableFunction() { name = "week_change_charecter_camera_name", func = script_week_change_charecter_camera_name },
+            new LuaTableFunction() { name = "week_change_character_camera_name", func = script_week_change_character_camera_name },
             new LuaTableFunction() { name = "week_disable_layout_rollback", func = script_week_disable_layout_rollback },
             new LuaTableFunction() { name = "week_override_common_folder", func = script_week_override_common_folder },
             new LuaTableFunction() { name = "week_enable_credits_on_completed", func = script_week_enable_credits_on_completed },
             new LuaTableFunction() { name = "week_end", func = script_week_end },
+            new LuaTableFunction() { name = "week_get_dialogue", func = script_week_get_dialogue },
             new LuaTableFunction() { name = null, func = null }
         };
 

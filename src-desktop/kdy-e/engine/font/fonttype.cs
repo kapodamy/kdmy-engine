@@ -4,8 +4,6 @@ using Engine.Externals;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Utils;
-using KallistiOS.THD;
-using static Engine.Externals.WebGLRenderingContext.NativeMethods;
 
 namespace Engine.Font {
 
@@ -155,6 +153,9 @@ namespace Engine.Font {
             while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
                 index += grapheme.size;
 
+                //override hard-spaces with white-spaces
+                if (grapheme.code == 0xA0) grapheme.code = 0x20;
+
                 // ignore "\r" characters
                 if (grapheme.code == FontGlyph.CARRIAGERETURN) {
                     previous_codepoint = grapheme.code;
@@ -209,6 +210,9 @@ namespace Engine.Font {
 
         public void MeansureChar(int codepoint, float height, FontLineInfo lineinfo) {
             float scale = height / FontType.GLYPHS_HEIGHT;
+
+            //override hard-spaces with white-spaces
+            if (codepoint == 0xA0) codepoint = 0x20;
 
             FontCharData fontchardata = FontType.InternalGetFontchardata(this.fontcharmap_primary, codepoint);
             if (fontchardata == null) {
@@ -334,6 +338,8 @@ namespace Engine.Font {
             while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
                 index += grapheme.size;
 
+                if (grapheme.code == 0xA0) continue;
+
                 if ((fontchardata = InternalGetFontchardata(primary, grapheme.code)) != null) {
                     if (primary_texture != null && fontchardata.has_entry) total_glyphs++;
                     continue;
@@ -353,6 +359,9 @@ namespace Engine.Font {
             index = text_index;
             while (added < maximum && index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
                 index += grapheme.size;
+
+                //override hard-spaces with white-spaces
+                if (grapheme.code == 0xA0) grapheme.code = 0x20;
 
                 // ignore "\r" characters
                 if (grapheme.code == FontGlyph.CARRIAGERETURN) {

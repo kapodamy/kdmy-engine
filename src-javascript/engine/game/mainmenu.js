@@ -109,7 +109,7 @@ const MAINMENU_GAMEPAD_CANCEL = GAMEPAD_B | GAMEPAD_Y | GAMEPAD_BACK;
 const MAINMENU_GAMEPAD_BUTTONS = MAINMENU_GAMEPAD_OK | MAINMENU_GAMEPAD_CANCEL | GAMEPAD_AD;
 
 async function mainmenu_main() {
-    let layout = await layout_init(pvrctx_output_is_widescreen() ? MAINMENU_LAYOUT : MAINMENU_LAYOUT_DREAMCAST);
+    let layout = await layout_init(pvrctx_is_widescreen() ? MAINMENU_LAYOUT : MAINMENU_LAYOUT_DREAMCAST);
     let menu_placeholder = layout_get_placeholder(layout, "menu");
 
     // default values

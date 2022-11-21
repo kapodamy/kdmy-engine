@@ -94,7 +94,7 @@ namespace Engine.Game {
 
 
         public SaveManager(bool save_only, int error_code) {
-            Layout layout = Layout.Init(PVRContext.global_context.OutputIsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
+            Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
             if (layout == null) throw new Exception("missing savemanager layout");
 
             float label_height = (float)((double)layout.GetAttachedValue("label_height", AttachedValueType.FLOAT, 24.0));

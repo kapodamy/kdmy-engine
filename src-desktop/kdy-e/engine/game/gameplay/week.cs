@@ -204,11 +204,13 @@ namespace Engine.Game.Gameplay {
         public HealthBarParams healthbarparams;
 
         public ScriptContext scriptcontext;
+        public Dialogue dialogue;
 
         public bool girlfriend_from_default;
         public bool healthbar_from_default;
         public bool stage_from_default;
         public bool script_from_default;
+        public bool dialogue_from_default;
         public int weekgameover_from_version;
         public bool ui_from_default;
         public bool pause_menu_from_default;
@@ -289,6 +291,7 @@ namespace Engine.Game.Gameplay {
             if (roundcontext.messagebox != null) roundcontext.messagebox.Destroy();
             if (roundcontext.ui_camera != null) roundcontext.ui_camera.Destroy();
             if (roundcontext.missnotefx != null) roundcontext.missnotefx.Destroy();
+            if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
 
             //free(roundcontext.events);
             //free(roundcontext.healthbarparams.player_icon_model);
@@ -574,9 +577,22 @@ namespace Engine.Game.Gameplay {
                     roundcontext.healthbar.HideWarnings();
                 }
 
+                // check if necessary show dialogue if an dialog text is provided
+                bool show_dialog = false;
+                if (!String.IsNullOrEmpty(gameplaymanifest.tracks[roundcontext.track_index].dialog_text)) {
+                    string dialog_text = gameplaymanifest.tracks[roundcontext.track_index].dialog_text;
+                    if (roundcontext.dialogue == null) {
+                        Console.Error.WriteLine($"[ERROR] week_round() can not load '{dialog_text}' there no dialogue instance");
+                    } else if (roundcontext.dialogue.ShowDialog(dialog_text)) {
+                        show_dialog = true;
+                    } else {
+                        Console.Error.WriteLine($"[ERROR] week_round() failed to read '{dialog_text}' file");
+                    }
+                }
+
                 // actual gameplay is here
                 int current_track_index = roundcontext.track_index;
-                int round_result = Round(roundcontext, retry);
+                int round_result = Round(roundcontext, retry, show_dialog);
 
                 retry = false;
                 Week.CheckDirectivesRound(roundcontext, round_result == 0);
@@ -747,7 +763,7 @@ namespace Engine.Game.Gameplay {
             LayoutPlaceholder placeholder;
 
             if (!String.IsNullOrEmpty(src_layout)) src = src_layout;
-            else src = PVRContext.global_context.OutputIsWidescreen() ? UI_LAYOUT_WIDESCREEN : UI_LAYOUT_DREAMCAST;
+            else src = PVRContext.global_context.IsWidescreen() ? UI_LAYOUT_WIDESCREEN : UI_LAYOUT_DREAMCAST;
 
             Layout layout = Layout.Init(src);
             if (roundcontext.ui_layout != null) roundcontext.ui_layout.Destroy();
@@ -935,6 +951,15 @@ namespace Engine.Game.Gameplay {
                 roundcontext.script_from_default = true;
 
                 Week.InitScript(roundcontext, gameplaymanifest.@default.script);
+            }
+
+            // initialize dialogue
+            if (!String.IsNullOrEmpty(trackmanifest.dialogue_params)) {
+                roundcontext.dialogue_from_default = false;
+                if (Week.InitDialogue(roundcontext, trackmanifest.dialogue_params)) updated_ui = true;
+            } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
+                roundcontext.dialogue_from_default = true;
+                if (Week.InitDialogue(roundcontext, gameplaymanifest.@default.dialogue_params)) updated_ui = true;
             }
 
             // reload the music only  
@@ -1400,6 +1425,17 @@ namespace Engine.Game.Gameplay {
 
             if (!String.IsNullOrEmpty(script_src)) {
                 roundcontext.script = WeekScript.Init(script_src, roundcontext, true);
+                if (roundcontext.dialogue != null) roundcontext.dialogue.SetScript(roundcontext.script);
+            }
+
+            for (int i = 0 ; i < roundcontext.players_size ; i++) {
+                if (roundcontext.players[i].strums != null) {
+                        roundcontext.players[i].strums.SetParams(
+                        roundcontext.players[i].ddrkeymon,
+                        roundcontext.players[i].playerstats,
+                        roundcontext.script
+                    );
+                }
             }
         }
 
@@ -1859,10 +1895,18 @@ namespace Engine.Game.Gameplay {
             if (old_weekgameover != null) old_weekgameover.Destroy();
         }
 
+        private static bool InitDialogue(RoundContext roundcontext, string dialogue_params) {
+			if (String.IsNullOrEmpty(dialogue_params)) return false;
+            if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
+            roundcontext.dialogue = Dialogue.Init(dialogue_params);
+            if (roundcontext.dialogue != null) roundcontext.dialogue.SetScript(roundcontext.script);
+            return roundcontext.dialogue != null;
+        }
+
 
         public static void PlaceInLayout(RoundContext roundcontext) {
             InitParams initparams = roundcontext.initparams;
-            const byte UI_SIZE = 6;// all UI "cosmetics" elements + screen background
+            const byte UI_SIZE = 7;// all UI "cosmetics" elements + screen background + dialogue
 
             Layout layout; bool is_ui;
             if (roundcontext.layout != null) {
@@ -1907,13 +1951,16 @@ namespace Engine.Game.Gameplay {
                  2, PVRContextVertex.DRAWABLE, roundcontext.countdown.GetDrawable(), ui1
             );
             layout.ExternalVertexSetEntry(
-                 3, PVRContextVertex.DRAWABLE, roundcontext.trackinfo, ui1
+                 3, PVRContextVertex.TEXTSPRITE, roundcontext.trackinfo, ui1
             );
             layout.ExternalVertexSetEntry(
                  4, PVRContextVertex.DRAWABLE, roundcontext.weekgameover.GetDrawable(), ui2
             );
             layout.ExternalVertexSetEntry(
-                5, PVRContextVertex.DRAWABLE, roundcontext.screen_background, ui2
+                5, PVRContextVertex.SPRITE, roundcontext.screen_background, ui2
+            );
+            layout.ExternalVertexSetEntry(
+                6, PVRContextVertex.DRAWABLE, roundcontext.dialogue == null ? null : roundcontext.dialogue.GetDrawable(), ui1
             );
 
             // step 3: initialize the ui camera
@@ -2023,7 +2070,7 @@ namespace Engine.Game.Gameplay {
         }
 
 
-        public static int Round(RoundContext roundcontext, bool from_retry) {
+        public static int Round(RoundContext roundcontext, bool from_retry, bool show_dialog) {
             GamepadButtons pressed_buttons = GamepadButtons.NOTHING;
             SongPlayerInfo songinfo = new SongPlayerInfo { timestamp = Double.NaN, completed = true };
             InitParams initparams = roundcontext.initparams;
@@ -2041,12 +2088,47 @@ namespace Engine.Game.Gameplay {
             if (round_duration < 0) round_duration = Double.PositiveInfinity;
             if (roundcontext.layout != null) roundcontext.layout.Resume();
 
-            if (roundcontext.script != null) roundcontext.script.NotifyBeforeready(from_retry);
+            if (roundcontext.script != null) {
+				roundcontext.script.NotifyTimerSong(0.0);
+				roundcontext.script.NotifyBeforeready(from_retry);
+			}
             Week.Halt(roundcontext, true);
 
             if (roundcontext.playerstats_index >= 0) {
                 playerstats = roundcontext.players[roundcontext.playerstats_index].playerstats;
                 roundcontext.roundstats.PeekPlayerstats(0, playerstats);
+            }
+
+            while (show_dialog) {
+                elapsed = pvr_context.WaitReady();
+                pvr_context.Reset();
+                InternalCheckScreenResolution(roundcontext, false);
+                BeatWatcher.GlobalSetTimestampFromKosTimer();
+
+                if (pvr_context.IsOffscreen()) {
+					roundcontext.layout.Suspend();
+					roundcontext.dialogue.Suspend();
+
+					int decision = roundcontext.weekpause.HelperShow(roundcontext, -1);
+                    switch (decision) {
+                        case 1:
+                            return 2;// restart song
+                        case 2:
+                            return 1;// back to weekselector
+                        case 3:
+                            return 3;// back to mainmenu
+                    }
+
+					roundcontext.layout.Resume();
+					roundcontext.dialogue.Resume();
+                    continue;
+                }
+
+                if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
+                roundcontext.layout.Animate(elapsed);
+                roundcontext.layout.Draw(pvr_context);
+
+                if (roundcontext.dialogue.IsCompleted()) show_dialog = false;
             }
 
             if (check_ready) roundcontext.countdown.Ready();
@@ -2344,7 +2426,10 @@ namespace Engine.Game.Gameplay {
                 Week.ROUND_UI_MATRIX_CAMERA.ApplyModifier(roundcontext.ui_camera.GetModifier());
 
 
-                if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
+                if (roundcontext.script != null) {
+                    roundcontext.script.NotifyTimerSong(song_timestamp);
+                    roundcontext.script.NotifyFrame(elapsed);
+                }
                 roundcontext.layout.Animate(elapsed);
                 roundcontext.layout.Draw(pvr_context);
 
@@ -2679,6 +2764,10 @@ namespace Engine.Game.Gameplay {
             roundcontext.scriptcontext.force_end_flag = true;
             roundcontext.scriptcontext.force_end_round_or_week = round_or_week;
             roundcontext.scriptcontext.force_end_loose_or_win = loose_or_win;
+        }
+
+        public static Dialogue GetDialogue(RoundContext roudcontext) {
+            return roudcontext.dialogue;
         }
 
 

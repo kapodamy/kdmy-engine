@@ -2839,25 +2839,9 @@ namespace Engine {
                         Atlas.ApplyFromEntry(sprite, (AtlasEntry)entry.misc, entry.override_size);
                         break;
                     case Layout.ACTION_RESIZE:
-                        if (entry.cover) {
-                            sprite.GetSourceSize(out draw_width, out draw_height);
-                            float ratio_width = draw_width / entry.max_width;
-                            float ratio_height = draw_height / entry.max_height;
-
-                            // resize the longest dimension of the sprite
-                            if (ratio_width > ratio_height)
-                                sprite.ResizeDrawSize(-1, entry.max_height, out draw_width, out draw_height);
-                            else
-                                sprite.ResizeDrawSize(entry.max_width, -1, out draw_width, out draw_height);
-                        } else {
-                            sprite.ResizeDrawSize(entry.max_width, entry.max_height, out draw_width, out draw_height);
-                        }
-                        if (entry.center) {
-                            sprite.GetDrawLocation(out location_x, out location_y);
-                            if (entry.max_width >= 0) location_x -= (draw_width - entry.max_width) / 2.0f;
-                            if (entry.max_height >= 0) location_y -= (draw_height - entry.max_height) / 2.0f;
-                            sprite.SetDrawLocation(location_x, location_y);
-                        }
+                        ImgUtils.CalcResizeSprite(
+                            sprite, entry.max_width, entry.max_height, entry.cover, entry.center
+                        );
                         break;
                     case Layout.ACTION_ANIMATION:
                         if (entry.misc == null && item.animation == null) break;
@@ -3120,10 +3104,10 @@ namespace Engine {
                 float value_float = Single.NaN;
 
                 switch (name) {
-					case "rotatepivotenable":
-					case "scalesize":
-					case "scaletranslation":
-					case "translaterotation":
+                    case "rotatepivotenable":
+                    case "scalesize":
+                    case "scaletranslation":
+                    case "translaterotation":
                         value_bool = VertexProps.ParseBoolean(unparsed_entry, attribute, false);
                         break;
                     default:
