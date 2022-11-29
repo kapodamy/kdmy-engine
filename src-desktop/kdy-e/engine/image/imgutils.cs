@@ -1,6 +1,5 @@
 using System;
 using Engine.Utils;
-using static Engine.Platform.FSFolderEnumerator;
 
 namespace Engine.Image {
 

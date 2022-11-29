@@ -5,7 +5,6 @@ using Engine.Game.Gameplay;
 using Engine.Game.Gameplay.Helpers;
 using Engine.Image;
 using Engine.Platform;
-using Engine.Utils;
 
 namespace Engine.Game {
 

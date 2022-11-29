@@ -58,7 +58,7 @@ namespace Engine.Image {
 
             Atlas atlas = new Atlas();
             XmlParser xml = XmlParser.Init(src);
-            
+
             if (xml == null) {
                 Console.Error.WriteLine("[ERROR] atlas_init() error loading " + src);
             }

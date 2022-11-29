@@ -91,7 +91,7 @@ namespace KallistiOS.VFS {
                 if (!Directory.Exists(saves_path)) {
                     Directory.CreateDirectory(saves_path);
                     return -1;
-                } else if (!File.Exists(fn) && _mode  == FileMode.Open) {
+                } else if (!File.Exists(fn) && _mode == FileMode.Open) {
                     return -1;
                 }
 

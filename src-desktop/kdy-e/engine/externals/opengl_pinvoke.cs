@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Xml;
 
 namespace Engine.Externals {
 
-    using GLuint = UInt32;
+    using GLbitfield = UInt32;
+    using GLboolean = Byte;
+    using GLchar = String;// GLchar*
+    using GLclampd = Double;
+    using GLfloat = Single;
     using GLint = Int32;
     using GLsizei = Int32;
-    using GLfloat = Single;
-    using GLboolean = Byte;
     using GLsizeiptr = IntPtr;
-    using GLchar = String;// GLchar*
-    using GLbitfield = UInt32;
-    using GLclampd = Double;
+    using GLuint = UInt32;
 
     public partial class WebGL2RenderingContext {
 

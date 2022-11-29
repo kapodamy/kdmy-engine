@@ -1431,10 +1431,10 @@ namespace Engine.Game.Gameplay {
             for (int i = 0 ; i < roundcontext.players_size ; i++) {
                 if (roundcontext.players[i].strums != null) {
                     roundcontext.players[i].strums.SetParams(
-                    roundcontext.players[i].ddrkeymon,
-                    roundcontext.players[i].playerstats,
-                    roundcontext.script
-                );
+                        roundcontext.players[i].ddrkeymon,
+                        roundcontext.players[i].playerstats,
+                        roundcontext.script
+                    );
                 }
             }
         }

@@ -1,4 +1,3 @@
-using System;
 using Engine.Sound;
 using Engine.Utils;
 

@@ -1,12 +1,11 @@
 using System;
-using Engine.Font;
-using Engine.Animation;
-using Engine.Image;
-using Engine;
-using Engine.Utils;
-using System.Diagnostics;
-using Engine.Platform;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Engine.Animation;
+using Engine.Font;
+using Engine.Image;
+using Engine.Platform;
+using Engine.Utils;
 
 namespace Engine.Game {
 
