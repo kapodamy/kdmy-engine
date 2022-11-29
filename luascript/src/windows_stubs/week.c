@@ -113,3 +113,7 @@ Dialogue week_get_dialogue(RoundContext roundcontext) {
     print_stub("week_get_dialogue", "roundcontext=%p", roundcontext);
     return &stub_dialogue;
 }
+void week_set_ui_shader(RoundContext roundcontext, PSShader psshader) {
+    print_stub("week_set_ui_shader", "roundcontext=%p psshader=%p", roundcontext, psshader);
+}
+

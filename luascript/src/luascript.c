@@ -15,6 +15,25 @@ typedef struct { const char* variable; const char* value; } luaL_Reg_String;
 typedef struct { const char* variable; uint32_t value; } luaL_Reg_Integer;
 
 
+static int _eq_impl(lua_State* L) {
+    bool equals;
+
+    int type_a = lua_type(L, 1);
+    int type_b = lua_type(L, 2);
+
+    if (type_a != LUA_TUSERDATA || type_b != LUA_TUSERDATA) {
+        equals = false;
+    } else {
+        void** a = (void**)lua_touserdata(L, 1);
+        void** b = (void**)lua_touserdata(L, 2);
+
+        equals = (a == NULL && b == NULL) || (a != b) || ((*a) != (*b));
+    }
+
+    return equals;
+}
+
+
 static void luascript_register_objects(lua_State* L, void* register_key, bool is_week) {
     // important step
     LUASCRIPT_SET(L, register_key);
@@ -88,6 +107,7 @@ static void luascript_register_objects(lua_State* L, void* register_key, bool is
     register_soundplayer(L);
     register_sprite(L);
     register_textsprite(L);
+    register_psshader(L);
 
     if (is_week) {
         register_songplayer(L);
@@ -286,6 +306,7 @@ void _luascript_register(lua_State* lua, const char* name, lua_C gc, lua_C tostr
     const lua_R OBJECT_METAMETHODS[] = {
         {"__gc", gc},
         {"__tostring", tostring},
+        {"__eq", _eq_impl},
         {NULL, NULL}
     };
 
@@ -354,7 +375,6 @@ int _parse_pvrflag(lua_State* L, const char* pvrflag) {
     lua_pushfstring(L, "invalid pvrflag: %s", pvrflag);
     return lua_error(L);
 }
-
 
 #if JAVASCRIPT
 void luascript_destroy_JS(Luascript luascript) {

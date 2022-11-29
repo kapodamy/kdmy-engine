@@ -101,6 +101,13 @@ EM_JS_PRFX(void, sprite_flip_rendered_texture, (Sprite sprite, int flip_x, int f
 EM_JS_PRFX(void, sprite_flip_rendered_texture_enable_correction, (Sprite sprite, bool enabled), {
     sprite_flip_rendered_texture_enable_correction(kdmyEngine_obtain(sprite), enabled);
     });
+EM_JS_PRFX(void, sprite_set_shader, (Sprite sprite, PSShader psshader), {
+        sprite_set_shader(kdmyEngine_obtain(sprite), kdmyEngine_obtain(psshader));
+    });
+EM_JS_PRFX(PSShader, sprite_get_shader, (Sprite sprite), {
+    let psshader = sprite_get_shader(kdmyEngine_obtain(sprite));
+    return kdmyEngine_obtain(psshader);
+    });
 #endif
 
 
@@ -368,6 +375,29 @@ static int script_sprite_flip_rendered_texture_enable_correction(lua_State* L) {
     return 0;
 }
 
+static int script_sprite_set_shader(lua_State* L) {
+    READ_USERDATA(L, Sprite, sprite, SPRITE);
+
+    PSShader psshader = LUA_TOUSERDATA_OR_NULL(L, 2, PSShader, PSSHADER);
+
+    sprite_set_shader(sprite, psshader);
+
+    return 0;
+}
+
+static int script_sprite_get_shader(lua_State* L) {
+    READ_USERDATA(L, Sprite, sprite, SPRITE);
+
+    PSShader psshader = sprite_get_shader(sprite);
+
+    if (!psshader) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    return script_psshader_new(L, sprite, psshader);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -397,6 +427,8 @@ static const luaL_Reg SPRITE_FUNCTIONS[] = {
     {"set_antialiasing", script_sprite_set_antialiasing},
     {"flip_rendered_texture", script_sprite_flip_rendered_texture},
     {"flip_rendered_texture_enable_correction", script_sprite_flip_rendered_texture_enable_correction},
+    {"set_shader", script_sprite_set_shader},
+    {"get_shader", script_sprite_get_shader},
     {NULL, NULL}
 };
 

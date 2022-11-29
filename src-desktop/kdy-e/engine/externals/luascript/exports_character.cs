@@ -418,11 +418,11 @@ namespace Engine.Externals.LuaScriptInterop {
         };
 
         internal static int script_character_new(LuaState L, Character character) {
-            return L.CreateUserdata<Character>(CHARACTER, character, true);
+            return L.CreateUserdata<Character>(CHARACTER, character);
         }
 
         static int script_character_gc(LuaState L) {
-            return L.DestroyUserdata(CHARACTER);
+            return L.NullifyUserdata(CHARACTER);
         }
 
         static int script_character_tostring(LuaState L) {

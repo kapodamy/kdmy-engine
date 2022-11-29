@@ -1,4 +1,5 @@
 ﻿using System;
+using static Engine.Externals.WebGL2RenderingContext.NativeMethods;
 
 namespace Engine.Externals {
 
@@ -57,10 +58,53 @@ namespace Engine.Externals {
         GL_OUT_OF_MEMORY = 0x0505,
         GL_VIEWPORT = 0x0BA2,
         GL_PACK_ALIGNMENT = 0x0D05,
-        GL_RGB = 0x1907
+        GL_RGB = 0x1907,
+        GL_FLOAT_MAT2 = 0x8B5A,
+        GL_FLOAT_MAT2x3 = 0x8B65,
+        GL_FLOAT_MAT2x4 = 0x8B66,
+        GL_FLOAT_MAT3 = 0x8B5B,
+        GL_FLOAT_MAT3x2 = 0x8B67,
+        GL_FLOAT_MAT3x4 = 0x8B68,
+        GL_FLOAT_MAT4 = 0x8B5C,
+        GL_FLOAT_MAT4x2 = 0x8B69,
+        GL_FLOAT_MAT4x3 = 0x8B6A,
+        GL_FLOAT_VEC2 = 0x8B50,
+        GL_FLOAT_VEC3 = 0x8B51,
+        GL_FLOAT_VEC4 = 0x8B52,
+        GL_INT = 0x1404,
+        GL_INT_VEC2 = 0x8B53,
+        GL_INT_VEC3 = 0x8B54,
+        GL_INT_VEC4 = 0x8B55,
+        GL_BOOL = 0x8B56,
+        GL_BOOL_VEC2 = 0x8B57,
+        GL_BOOL_VEC3 = 0x8B58,
+        GL_BOOL_VEC4 = 0x8B59,
+        GL_UNSIGNED_INT_VEC2 = 0x8DC6,
+        GL_UNSIGNED_INT_VEC3 = 0x8DC7,
+        GL_UNSIGNED_INT_VEC4 = 0x8DC8,
+        GL_ACTIVE_UNIFORMS = 0x8B86,
+        GL_FRAMEBUFFER = 0x8D40,
+        GL_FRAMEBUFFER_COMPLETE = 0x8CD5,
+        GL_COLOR_ATTACHMENT0 = 0x8CE0,
+        GL_ACTIVE_UNIFORM_MAX_LENGTH = 0x8B87,
+        GL_FRAMEBUFFER_BINDING = 0x8CA6,
+        GL_ZERO = 0,
+        GL_SRC_ALPHA_SATURATE = 0x0308,
+        GL_SRC_COLOR = 0x0300,
+        GL_ONE_MINUS_CONSTANT_ALPHA = 0x8004,
+        GL_ONE_MINUS_CONSTANT_COLOR = 0x8002,
+        GL_ONE_MINUS_DST_ALPHA = 0x0305,
+        GL_ONE_MINUS_DST_COLOR = 0x0307,
+        GL_ONE_MINUS_SRC1_ALPHA = 0x88FB,
+        GL_ONE_MINUS_SRC1_COLOR = 0x88FA,
+        GL_ONE_MINUS_SRC_COLOR = 0x0301,
+        GL_DST_ALPHA = 0x0304,
+        GL_DST_COLOR = 0x0306,
+        GL_CONSTANT_ALPHA = 0x8003,
+        GL_CONSTANT_COLOR = 0x8001
     }
 
-    public partial class WebGLRenderingContext {
+    public partial class WebGL2RenderingContext {
 
         public readonly GLenum STATIC_DRAW = GLenum.GL_STATIC_DRAW;
         public readonly GLenum PROXY_TEXTURE_2D = GLenum.GL_PROXY_TEXTURE_2D;
@@ -106,6 +150,49 @@ namespace Engine.Externals {
         public readonly GLenum VIEWPORT = GLenum.GL_VIEWPORT;
         public readonly GLenum PACK_ALIGNMENT = GLenum.GL_PACK_ALIGNMENT;
         public readonly GLenum RGB = GLenum.GL_RGB;
+        public readonly GLenum FLOAT_MAT2 = GLenum.GL_FLOAT_MAT2;
+        public readonly GLenum FLOAT_MAT2x3 = GLenum.GL_FLOAT_MAT2x3;
+        public readonly GLenum FLOAT_MAT2x4 = GLenum.GL_FLOAT_MAT2x4;
+        public readonly GLenum FLOAT_MAT3 = GLenum.GL_FLOAT_MAT3;
+        public readonly GLenum FLOAT_MAT3x2 = GLenum.GL_FLOAT_MAT3x2;
+        public readonly GLenum FLOAT_MAT3x4 = GLenum.GL_FLOAT_MAT3x4;
+        public readonly GLenum FLOAT_MAT4 = GLenum.GL_FLOAT_MAT4;
+        public readonly GLenum FLOAT_MAT4x2 = GLenum.GL_FLOAT_MAT4x2;
+        public readonly GLenum FLOAT_MAT4x3 = GLenum.GL_FLOAT_MAT4x3;
+        public readonly GLenum FLOAT_VEC2 = GLenum.GL_FLOAT_VEC2;
+        public readonly GLenum FLOAT_VEC3 = GLenum.GL_FLOAT_VEC3;
+        public readonly GLenum FLOAT_VEC4 = GLenum.GL_FLOAT_VEC4;
+        public readonly GLenum INT = GLenum.GL_INT;
+        public readonly GLenum INT_VEC2 = GLenum.GL_INT_VEC2;
+        public readonly GLenum INT_VEC3 = GLenum.GL_INT_VEC3;
+        public readonly GLenum INT_VEC4 = GLenum.GL_INT_VEC4;
+        public readonly GLenum BOOL = GLenum.GL_BOOL;
+        public readonly GLenum BOOL_VEC2 = GLenum.GL_BOOL_VEC2;
+        public readonly GLenum BOOL_VEC3 = GLenum.GL_BOOL_VEC3;
+        public readonly GLenum BOOL_VEC4 = GLenum.GL_BOOL_VEC4;
+        public readonly GLenum UNSIGNED_INT_VEC2 = GLenum.GL_UNSIGNED_INT_VEC2;
+        public readonly GLenum UNSIGNED_INT_VEC3 = GLenum.GL_UNSIGNED_INT_VEC3;
+        public readonly GLenum UNSIGNED_INT_VEC4 = GLenum.GL_UNSIGNED_INT_VEC4;
+        public readonly GLenum ACTIVE_UNIFORMS = GLenum.GL_ACTIVE_UNIFORMS;
+        public readonly GLenum FRAMEBUFFER = GLenum.GL_FRAMEBUFFER;
+        public readonly GLenum FRAMEBUFFER_COMPLETE = GLenum.GL_FRAMEBUFFER_COMPLETE;
+        public readonly GLenum COLOR_ATTACHMENT0 = GLenum.GL_COLOR_ATTACHMENT0;
+        public readonly GLenum ACTIVE_UNIFORM_MAX_LENGTH = GLenum.GL_ACTIVE_UNIFORM_MAX_LENGTH;
+        public readonly GLenum FRAMEBUFFER_BINDING = GLenum.GL_FRAMEBUFFER_BINDING;
+        public readonly GLenum ZERO = GLenum.GL_ZERO;
+        public readonly GLenum SRC_ALPHA_SATURATE = GLenum.GL_SRC_ALPHA_SATURATE;
+        public readonly GLenum SRC_COLOR = GLenum.GL_SRC_COLOR;
+        public readonly GLenum ONE_MINUS_CONSTANT_ALPHA = GLenum.GL_ONE_MINUS_CONSTANT_ALPHA;
+        public readonly GLenum ONE_MINUS_CONSTANT_COLOR = GLenum.GL_ONE_MINUS_CONSTANT_COLOR;
+        public readonly GLenum ONE_MINUS_DST_ALPHA = GLenum.GL_ONE_MINUS_DST_ALPHA;
+        public readonly GLenum ONE_MINUS_DST_COLOR = GLenum.GL_ONE_MINUS_DST_COLOR;
+        public readonly GLenum ONE_MINUS_SRC1_ALPHA = GLenum.GL_ONE_MINUS_SRC1_ALPHA;
+        public readonly GLenum ONE_MINUS_SRC1_COLOR = GLenum.GL_ONE_MINUS_SRC1_COLOR;
+        public readonly GLenum ONE_MINUS_SRC_COLOR = GLenum.GL_ONE_MINUS_SRC_COLOR;
+        public readonly GLenum DST_ALPHA = GLenum.GL_DST_ALPHA;
+        public readonly GLenum DST_COLOR = GLenum.GL_DST_COLOR;
+        public readonly GLenum CONSTANT_ALPHA = GLenum.GL_CONSTANT_ALPHA;
+        public readonly GLenum CONSTANT_COLOR = GLenum.GL_CONSTANT_COLOR;
     }
 
 }

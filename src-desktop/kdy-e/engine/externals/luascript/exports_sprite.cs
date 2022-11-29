@@ -251,6 +251,29 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_sprite_set_shader(LuaState L) {
+            Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
+
+            PSShader psshader = L.ReadUserdataOrNull<PSShader>(2, ExportsPSShader.PSSHADER);
+
+            sprite.SetShader(psshader);
+
+            return 0;
+        }
+
+        static int script_sprite_get_shader(LuaState L) {
+            Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
+
+            PSShader psshader = sprite.GetShader();
+
+            if (psshader == null) {
+                L.lua_pushnil();
+                return 1;
+            }
+
+            return ExportsPSShader.script_psshader_new(L, psshader);
+        }
+
 
         static int script_sprite_flip_rendered_texture(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
@@ -303,16 +326,18 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction() { name = "set_antialiasing", func = script_sprite_set_antialiasing},
             new LuaTableFunction() { name = "flip_rendered_texture", func = script_sprite_flip_rendered_texture},
             new LuaTableFunction() { name = "flip_rendered_texture_enable_correction", func = script_sprite_flip_rendered_texture_enable_correction},
+            new LuaTableFunction() { name = "set_shader", func = script_sprite_set_shader},
+            new LuaTableFunction() { name = "get_shader", func = script_sprite_get_shader},
             new LuaTableFunction() { name = null, func = null}
         };
 
 
         internal static int script_sprite_new(LuaState L, Sprite sprite) {
-            return L.CreateUserdata(SPRITE, sprite, true);
+            return L.CreateUserdata(SPRITE, sprite);
         }
 
         static int script_sprite_gc(LuaState L) {
-            return L.DestroyUserdata(SPRITE);
+            return L.NullifyUserdata(SPRITE);
         }
 
         static int script_sprite_tostring(LuaState L) {

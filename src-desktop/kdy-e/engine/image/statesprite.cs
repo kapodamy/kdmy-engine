@@ -67,6 +67,12 @@ namespace Engine.Image {
         private float scale_texture;
         private PVRContextFlag antialiasing;
         private bool atlas_to_draw_size_enabled;
+        private PSShader psshader;
+        private bool blend_enabled;
+        private Blend blend_src_rgb;
+        private Blend blend_dst_rgb;
+        private Blend blend_src_alpha;
+        private Blend blend_dst_alpha;
 
 
         public void Draw(PVRContext pvrctx) {
@@ -181,6 +187,15 @@ namespace Engine.Image {
             pvrctx.Save();
             pvrctx.SetVertexAlpha(this.alpha);
             pvrctx.SetVertexOffsetColor(this.offsetcolor);
+            if (this.psshader != null) pvrctx.AddShader(this.psshader);
+
+            pvrctx.SetVertexBlend(
+                this.blend_enabled,
+                this.blend_src_rgb,
+                this.blend_dst_rgb,
+                this.blend_src_alpha,
+                this.blend_dst_alpha
+            );
 
             // apply self modifier
             pvrctx.ApplyModifier2(
@@ -300,6 +315,14 @@ namespace Engine.Image {
             statesprite.scale_texture = 1.0f;
             statesprite.antialiasing = PVRContextFlag.DEFAULT;
             statesprite.atlas_to_draw_size_enabled = false;
+
+            statesprite.psshader = null;
+
+            statesprite.blend_enabled = true;
+            statesprite.blend_src_rgb = Blend.DEFAULT;
+            statesprite.blend_dst_rgb = Blend.DEFAULT;
+            statesprite.blend_src_alpha = Blend.DEFAULT;
+            statesprite.blend_dst_alpha = Blend.DEFAULT;
 
             return statesprite;
         }
@@ -949,6 +972,25 @@ namespace Engine.Image {
         public void SetAntialiasing(PVRContextFlag antialiasing) {
             this.antialiasing = antialiasing;
         }
+
+        public void SetShader(PSShader psshader) {
+            this.psshader = psshader;
+        }
+
+        public PSShader GetShader() {
+            return this.psshader;
+        }
+        public void BlendEnable(bool enabled) {
+            this.blend_enabled = enabled;
+        }
+
+        public void BlendSet(Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha) {
+            this.blend_src_rgb = src_rgb;
+            this.blend_dst_rgb = dst_rgb;
+            this.blend_src_alpha = src_alpha;
+            this.blend_dst_alpha = dst_alpha;
+        }
+
 
     }
 

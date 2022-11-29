@@ -173,6 +173,8 @@ Note: this changes the value of `frameIndex` property.
 - `flipX flipY` mirror the texture. (Defaults to zero)
 - `flipCorrection` mirror the texture from the center, keeping the same draw location. (Defaults to one)
 - `zoffset` offset to z index, avoids overwritting the z index value. (Defaults to zero)
+- `groupViewportX` `groupViewportY` layout's group viewport location
+- `groupViewportWidth` `groupViewportHeight` layout's group viewport size
 
 </br>
 

@@ -465,6 +465,8 @@ function animlist_parse_complex_value(unparsed_value, def_value, value) {
     let as_property = vertexprops_parse_textsprite_property2(unparsed_value);
     if (as_property < 0) as_property = vertexprops_parse_sprite_property2(unparsed_value);
     if (as_property < 0) as_property = vertexprops_parse_media_property2(unparsed_value);
+    if (as_property < 0) as_property = vertexprops_parse_layout_property2(unparsed_value);
+
     if (as_property >= 0) {
         value.kind = ANIM_MACRO_VALUE_KIND_PROPERTY;
         value.reference = as_property;
@@ -738,6 +740,7 @@ function animlist_parse_property(node, name, warn) {
     let value = vertexprops_parse_textsprite_property(node, name, 0);
     if (value < 0) value = vertexprops_parse_sprite_property(node, name, warn);
     if (value < 0) value = vertexprops_parse_media_property(node, name, warn);
+    if (value < 0) value = vertexprops_parse_layout_property(node, name, warn);
 
     if (value == TEXTSPRITE_PROP_STRING) {
         console.error("animlist_parse_property() illegal property: string", node.outerHTML);

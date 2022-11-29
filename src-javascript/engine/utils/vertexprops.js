@@ -61,7 +61,12 @@ const FONT_PROP_WORDBREAK = 52;
 const SPRITE_PROP_SCALE_TRANSLATION = 53;
 const SPRITE_PROP_FLIP_CORRECTION = 54;
 
-const TEXTSPRITE_PROP_STRING = 55;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
+const LAYOUT_PROP_GROUP_VIEWPORT_X = 55;
+const LAYOUT_PROP_GROUP_VIEWPORT_Y = 56;
+const LAYOUT_PROP_GROUP_VIEWPORT_WIDTH = 57;
+const LAYOUT_PROP_GROUP_VIEWPORT_HEIGHT = 58;
+
+const TEXTSPRITE_PROP_STRING = 59;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
 
 
 const CORNER_TOPLEFT = 0;
@@ -86,6 +91,22 @@ const FONT_WORDBREAK_LOOSE = 0;
 const FONT_WORDBREAK_NONE = 1;
 const FONT_WORDBREAK_BREAK = 2;
 
+const BLEND_DEFAULT = 0;
+const BLEND_ZERO = 1;
+const BLEND_ONE = 2;
+const BLEND_SRC_COLOR = 3;
+const BLEND_ONE_MINUS_SRC_COLOR = 4;
+const BLEND_DST_COLOR = 5;
+const BLEND_ONE_MINUS_DST_COLOR = 6;
+const BLEND_SRC_ALPHA = 7;
+const BLEND_ONE_MINUS_SRC_ALPHA = 8;
+const BLEND_DST_ALPHA = 9;
+const BLEND_ONE_MINUS_DST_ALPHA = 10;
+const BLEND_CONSTANT_COLOR = 11;
+const BLEND_ONE_MINUS_CONSTANT_COLOR = 12;
+const BLEND_CONSTANT_ALPHA = 13;
+const BLEND_ONE_MINUS_CONSTANT_ALPHA = 14;
+const BLEND_SRC_ALPHA_SATURATE = 15;
 
 
 function vertexprops_parse_sprite_property(node, name, warn) {
@@ -302,6 +323,41 @@ function vertexprops_parse_media_property2(property) {
             return MEDIA_PROP_SEEK;
         case "playback":
             return MEDIA_PROP_PLAYBACK;
+    }
+
+    return -1;
+}
+
+
+function vertexprops_parse_layout_property(node, name, warn) {
+    let property = node.getAttribute(name);
+
+    if (!property) {
+        console.warn(
+            "vertexprops_parse_layout_property: missing " + name + " attribute", node.outerHTML
+        );
+        return -2;
+    }
+
+    let id = vertexprops_parse_layout_property2(property);
+    if (id < 0 && warn)
+        console.warn("vertexprops_parse_layout_property() unknown property " + property, node.outerHTML);
+
+    return id;
+}
+
+function vertexprops_parse_layout_property2(property) {
+    property = property.toLowerCase();// in C dispose this variable!!!
+    
+    switch (property) {
+        case "groupviewportx":
+            return LAYOUT_PROP_GROUP_VIEWPORT_X;
+        case "groupviewporty":
+            return LAYOUT_PROP_GROUP_VIEWPORT_Y;
+        case "groupviewportwidth":
+            return LAYOUT_PROP_GROUP_VIEWPORT_WIDTH;
+        case "groupviewportheight":
+            return LAYOUT_PROP_GROUP_VIEWPORT_HEIGHT;
     }
 
     return -1;
@@ -605,3 +661,52 @@ function vertexprops_parse_boolean(node, attr_name, def_value) {
     return 0;
 }
 
+function vertexprops_parse_double(node, name, def_value) {
+    let value = node.getAttribute(name);
+    if (value == null || value.length < 1) return def_value;
+    return vertexprops_parse_double2(value, def_value);
+}
+
+function vertexprops_parse_double2(value, def_value) {
+    let val = Number.parseFloat(value);
+    return Number.isNaN(val) ? def_value : val;
+}
+
+function vertexprops_parse_blending(value) {
+    switch (value) {
+        case "ZERO":
+            return BLEND_ZERO;
+        case "ONE":
+            return BLEND_ONE;
+        case "SRC_COLOR":
+            return BLEND_SRC_COLOR;
+        case "ONE_MINUS_SRC_COLOR":
+            return BLEND_ONE_MINUS_SRC_COLOR;
+        case "DST_COLOR":
+            return BLEND_DST_COLOR;
+        case "ONE_MINUS_DST_COLOR":
+            return BLEND_ONE_MINUS_DST_COLOR;
+        case "SRC_ALPHA":
+            return BLEND_SRC_ALPHA;
+        case "ONE_MINUS_SRC_ALPHA":
+            return BLEND_ONE_MINUS_SRC_ALPHA;
+        case "DST_ALPHA":
+            return BLEND_DST_ALPHA;
+        case "ONE_MINUS_DST_ALPHA":
+            return BLEND_ONE_MINUS_DST_ALPHA;
+        case "CONSTANT_COLOR":
+            return BLEND_CONSTANT_COLOR;
+        case "ONE_MINUS_CONSTANT_COLOR":
+            return BLEND_ONE_MINUS_CONSTANT_COLOR;
+        case "CONSTANT_ALPHA":
+            return BLEND_CONSTANT_ALPHA;
+        case "ONE_MINUS_CONSTANT_ALPHA":
+            return BLEND_ONE_MINUS_CONSTANT_ALPHA;
+        case "SRC_ALPHA_SATURATE":
+            return BLEND_SRC_ALPHA_SATURATE;
+        case null:
+            return BLEND_DEFAULT;
+    }
+    console.warn("vertexprops_parse_blending() unknown blending: " + value);
+    return BLEND_DEFAULT;
+}

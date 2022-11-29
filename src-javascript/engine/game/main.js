@@ -2,7 +2,7 @@
 
 // this file contains all shared data across the game
 const ENGINE_NAME = "kdmy-engine"
-const ENGINE_VERSION = "0.45";
+const ENGINE_VERSION = "0.45.7";
 
 
 /**
@@ -119,15 +119,17 @@ async function main(argc, argv) {
     background_menu_music = await soundplayer_init(FUNKIN_BACKGROUND_MUSIC);
     if (background_menu_music) soundplayer_loop_enable(background_menu_music, 1);
 
-    /*await week_main(
-        weeks_array.array[1],
+    await week_main(
+        weeks_array.array[0],
         0,
         "NORMAL",
         "/assets/common/data/BOYFRIEND.json",
-        "/assets/common/data/GIRLFRIEND.json"
+        "/assets/common/data/GIRLFRIEND.json",
+        null,
+        -1
     );
     console.info("week_main() execution done, engine is terminated");
-    return 0;*/
+    return 0;
 
     //await weekselector_main();
 
@@ -189,6 +191,121 @@ async function main_tests(argc, argv) {
     //    await www_autoplay();
 
     fs_init();
+
+    /*let layout = await layout_init("/assets/test/layout_test.xml");
+    window["layout"] = layout;
+    window["group"] = layout.group_list[4];
+
+    while (1) {
+        let elapsed = await pvrctx_wait_ready();
+        pvr_context_reset(pvr_context);
+        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+
+        layout_animate(layout, elapsed);
+        layout_draw(layout, pvr_context);
+    }*/
+
+
+    /*let texture = await texture_init("/assets/common/image/week-selector/dreamcast_buttons.png");
+    let sprite = sprite_init(texture);
+    sprite_set_draw_size_from_source_size(sprite);
+    sprite_set_draw_location(sprite, 100, 100);
+    let sprite2 = sprite_init(texture);
+    sprite_set_draw_size_from_source_size(sprite2);
+    sprite_set_draw_location(sprite2, -100, -100);
+    let sprite3 = sprite_init(texture);
+    sprite_set_draw_size_from_source_size(sprite3);
+    sprite_set_draw_location(sprite3, 300, 300);
+
+    PSFramebuffer.ResizeQuadScreen(pvr_context);
+
+    let a = `#pragma header
+        //a
+        void main() { 
+            vec4 color = texture(Texture, TexCoord);
+            FragColor = vec4(color.r, color.g*0.5, color.b, color.a);
+        }
+    `;
+    let b = `#pragma header
+        //b
+        void main() { 
+            vec4 color = texture(Texture, TexCoord);
+            FragColor = vec4(color.b, color.g/0.5, color.r, color.a);
+        }
+`;
+    let c = `#pragma header
+        // c
+        void main() { 
+            vec4 color = texture(Texture, TexCoord);
+            FragColor = vec4(color.b, color.g, color.r, color.a);
+        }
+`;
+let d = `#pragma header
+    // d
+    void main() { 
+        vec4 color = texture(Texture, TexCoord);
+        FragColor = vec4(vec3(1.0) - color.rgb, color.a);
+    }
+`;
+
+    let framebuffer1 = new PSFramebuffer(pvr_context);
+    let framebuffer2 = new PSFramebuffer(pvr_context);
+    let ps_a = PSShader.BuildFromSource(pvr_context, null, a);
+    let ps_b = PSShader.BuildFromSource(pvr_context, null, b);
+    let ps_c = PSShader.BuildFromSource(pvr_context, null, c);
+    let ps_d = PSShader.BuildFromSource(pvr_context, null, d);
+    if (!ps_a || !ps_b || !ps_c || !ps_d) return;
+
+    let frame_count = 0;
+    while (1) {
+        let elapsed = await pvrctx_wait_ready();
+        pvr_context_reset(pvr_context);
+        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        sprite_animate(sprite, elapsed);
+
+        
+        sprite_draw(sprite2, pvr_context);
+        pvr_context_save(pvr_context);
+        pvr_context_add_shader(pvr_context, ps_a);
+        //pvr_context_add_shader(pvr_context, ps_b);
+        //pvr_context_add_shader(pvr_context, ps_c);
+
+        //pvr_context_draw_solid_color(pvr_context, [1, 0, 0], 0, 0, 640, 480);
+        //pvr_context_draw_solid_color(pvr_context, PVR_CLEAR_COLOR, 1, 1, 638, 478);
+        sprite_draw(sprite, pvr_context);
+
+        pvr_context_restore(pvr_context);
+
+        
+        pvr_context_add_shader(pvr_context, ps_d);
+        
+        sprite_draw(sprite3, pvr_context);
+    }
+
+    while (1) {
+        let elapsed = await pvrctx_wait_ready();
+        pvr_context_reset(pvr_context);
+        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        sprite_animate(sprite, elapsed);
+
+        framebuffer1.Use();
+        pvr_context_draw_solid_color(pvr_context, [1, 0, 0], 0, 0, 640, 480);
+        pvr_context_draw_solid_color(pvr_context, PVR_CLEAR_COLOR, 1, 1, 638, 478);
+        sprite_draw(sprite, pvr_context);
+
+        framebuffer2.Use();
+        ps_a.Draw(framebuffer1);
+
+        framebuffer1.Use();
+        ps_b.Draw(framebuffer2);
+
+        PSFramebuffer.UseScreenFramebuffer(pvr_context);
+        ps_c.Draw(framebuffer1);
+
+        frame_count++;
+    }*/
+
+
     //await weekenumerator_enumerate();
 
     /*let fontholder = await fontholder_init("/assets/test/Lato-Regular.ttf");

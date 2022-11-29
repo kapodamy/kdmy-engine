@@ -176,6 +176,15 @@ EM_JS_PRFX(Modifier, layout_get_group_modifier, (Layout layout, const char* grou
     let modifier = layout_get_group_modifier(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
     return kdmyEngine_obtain(modifier);
     });
+EM_JS_PRFX(PSShader, layout_get_group_shader, (Layout layout, const char* group_name), {
+    let psshader = layout_get_group_shader(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
+    return kdmyEngine_obtain(psshader);
+    });
+EM_JS_PRFX(bool, layout_set_group_shader, (Layout layout, const char* group_name, PSShader psshader), {
+    return layout_set_group_shader(
+        kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), kdmyEngine_obtain(psshader)
+    );
+    });
 #endif
 
 
@@ -536,6 +545,34 @@ static int script_layout_get_group_modifier(lua_State* L) {
     return script_modifier_new(L, layout, modifier);
 }
 
+
+static int script_layout_get_group_shader(lua_State* L) {
+    READ_USERDATA(L, Layout, layout, LAYOUT);
+
+    const char* name = luaL_optstring(L, 2, NULL);
+
+    PSShader psshader = layout_get_group_shader(layout, name);
+
+    if (!psshader) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    return script_psshader_new(L, layout, psshader);
+}
+static int script_layout_set_group_shader(lua_State* L) {
+    READ_USERDATA(L, Layout, layout, LAYOUT);
+
+    const char* name = luaL_optstring(L, 2, NULL);
+    PSShader psshader = LUA_TOUSERDATA_OR_NULL(L, 3, PSShader, PSSHADER);
+
+    bool ret = layout_set_group_shader(layout, name, psshader);
+
+    lua_pushboolean(L, ret);
+
+    return 1;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -566,6 +603,8 @@ static const luaL_Reg LAYOUT_FUNCTIONS[] = {
     {"disable_antialiasing", script_layout_disable_antialiasing},
     {"set_group_antialiasing", script_layout_set_group_antialiasing},
     {"get_group_modifier", script_layout_get_group_modifier},
+    {"get_group_shader", script_layout_get_group_shader},
+    {"set_group_shader", script_layout_set_group_shader},
     {NULL, NULL}
 };
 

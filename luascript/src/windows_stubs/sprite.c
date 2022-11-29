@@ -4,6 +4,7 @@
 #include "pvrctx.h"
 
 static Modifier_t stub_modifier = {};
+static PSShader_t stub_psshader = {};
 
 Modifier sprite_matrix_get_modifier(Sprite sprite) {
     print_stub("sprite_matrix_get_modifier", "sprite=%p", sprite);
@@ -89,5 +90,12 @@ void sprite_flip_rendered_texture(Sprite sprite, int flip_x, int flip_y) {
 }
 void sprite_flip_rendered_texture_enable_correction(Sprite sprite, bool enabled) {
     print_stub("sprite_flip_rendered_texture_enable_correction", "sprite=%p enabled=(bool)%i", sprite, enabled);
+}
+void sprite_set_shader(Sprite sprite, PSShader psshader) {
+    print_stub("sprite_set_shader", "sprite=%p psshader=%p", sprite, psshader);
+}
+PSShader sprite_get_shader(Sprite sprite) {
+    print_stub("sprite_get_shader", "sprite=%p", sprite);
+    return &stub_psshader;
 }
 

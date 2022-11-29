@@ -10,6 +10,13 @@ function drawable_init(z, private_data, callback_draw, callback_animate) {
         alpha: 1.0,
         offsetcolor: [],
         modifier: {},
+        psshader: null,
+                
+        blend_enabled: true,
+        blend_src_rgb: BLEND_DEFAULT,
+        blend_dst_rgb: BLEND_DEFAULT,
+        blend_src_alpha: BLEND_DEFAULT,
+        blend_dst_alpha: BLEND_DEFAULT,
 
         z_index: z,
         z_offset: 0,
@@ -194,6 +201,16 @@ function drawable_helper_apply_in_context(drawable, pvrctx) {
     if (drawable.antialiasing != PVR_FLAG_DEFAULT) {
         pvr_context_set_global_antialiasing(pvrctx, drawable.antialiasing);
     }
+    if (drawable.psshader) pvr_context_add_shader(pvrctx, drawable.psshader);
+    
+    pvr_context_set_vertex_blend(
+        pvrctx,
+        drawable.blend_enabled,
+        drawable.blend_src_rgb,
+        drawable.blend_dst_rgb,
+        drawable.blend_src_alpha,
+        drawable.blend_dst_alpha
+    );
 }
 
 function drawable_helper_update_from_placeholder(drawable, layout_placeholder) {
@@ -218,5 +235,24 @@ function drawable_get_draw_location(drawable, output_draw_location) {
 
 function drawable_set_antialiasing(drawable, antialiasing) {
     drawable.antialiasing = antialiasing;
+}
+
+function drawable_set_shader(drawable, psshader) {
+    drawable.psshader = psshader;
+}
+
+function drawable_get_shader(drawable) {
+    return drawable.psshader;
+}
+
+function drawable_blend_enable(drawable, enabled) {
+    drawable.blend_enabled = enabled;
+}
+
+function drawable_blend_set(drawable, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    drawable.blend_src_rgb = src_rgb;
+    drawable.blend_dst_rgb = dst_rgb;
+    drawable.blend_src_alpha = src_alpha;
+    drawable.blend_dst_alpha = dst_alpha;
 }
 

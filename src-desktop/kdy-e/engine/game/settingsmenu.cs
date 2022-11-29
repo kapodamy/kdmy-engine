@@ -190,7 +190,7 @@ namespace Engine.Game {
                 new SettingOption() { description = "Change the keys assigned to navigate between menus.\nDirectonial keys are always assigned" },
                 new SettingOption() { description = "Gameplay settings like ghost-tapping and input offset" },
                 new SettingOption() { description = "Specific engine settings" },
-                new SettingOption() { description = "Returns back to the main menu.\nSettings are automatically saved }" }
+                new SettingOption() { description = "Returns back to the main menu.\n¡Settings are automatically saved!" }
             };
         
         AnimList animlist = AnimList.Init("/assets/common/anims/settings-menu.xml");
@@ -701,8 +701,8 @@ namespace Engine.Game {
                 },
                 new SettingOption() {
                     name = "INVERSE STRUM SCROLLING",
-                    description = "(Not Implemented) In the default UI layout this switch from UPSCROLL to DOWNSCROLL,\n" +
-                                  "For custom UI layouts, reverses the declared direction",
+                    description = "In the default UI layout this switch from UPSCROLL to DOWNSCROLL,\n" +
+                                  "In custom UI layouts, reverses the declared direction",
                     is_bool = true,
                     value_bool = false,
                     ini_key = "inverse_strum_scroll"

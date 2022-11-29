@@ -30,6 +30,11 @@ const LAYOUT_ACTION_ANIMATIONEND = 15;
 const LAYOUT_ACTION_EXECUTE = 16;
 const LAYOUT_ACTION_PUPPETITEM = 17;
 const LAYOUT_ACTION_PUPPETGROUP = 18;
+const LAYOUT_ACTION_SETSHADER = 19;
+const LAYOUT_ACTION_REMOVESHADER = 20;
+const LAYOUT_ACTION_SETSHADERUNIFORM = 22;
+const LAYOUT_ACTION_SETBLENDING = 23;
+const LAYOUT_ACTION_VIEWPORT = 24;
 
 const LAYOUT_GROUP_ROOT = Symbol("root-group");
 const LAYOUT_BPM_STEPS = 32;// 1/32 beats
@@ -148,7 +153,9 @@ async function layout_init(src) {
         beatwatcher: {},
 
         antialiasing_disabled: 0,
-        resolution_changes: 0
+        resolution_changes: 0,
+
+        psshader: null
     };
 
     // step 5: build modifiers
@@ -328,6 +335,7 @@ function layout_destroy(layout) {
         layout.group_list[i].name = undefined;
         layout.group_list[i].initial_action_name = undefined;
         layout_helper_destroy_actions(layout.group_list[i].actions, layout.group_list[i].actions_size);
+        if (layout.group_list[i].psframebuffer) layout.group_list[i].psframebuffer.Destroy();
     }
     layout.group_list = undefined;
 
@@ -807,6 +815,19 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
         static_screen: null,
 
         animation: null,
+        psshader: null,
+        psframebuffer: null,
+
+        blend_enabled: 1,
+        blend_src_rgb: BLEND_DEFAULT,
+        blend_dst_rgb: BLEND_DEFAULT,
+        blend_src_alpha: BLEND_DEFAULT,
+        blend_dst_alpha: BLEND_DEFAULT,
+
+        viewport_x: -1,
+        viewport_y: -1,
+        viewport_width: -1,
+        viewport_height: -1,
 
         context: {
             visible: 1,
@@ -818,6 +839,8 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
 
             next_child: null,
             next_sibling: null,
+            parent_group: null,
+            last_z_index: -1,
         }
     };
 
@@ -970,6 +993,25 @@ function layout_set_layout_antialiasing(layout, flag) {
     layout.group_list[0].antialiasing = flag;
 }
 
+function layout_set_shader(layout, psshader) {
+    layout.psshader = psshader;
+}
+
+function layout_get_group_shader(layout, group_name) {
+    let index = layout_helper_get_group_index(layout, group_name);
+    if (index < 0) return null;
+
+    return layout.group_list[index].psshader;
+}
+
+function layout_set_group_shader(layout, group_name, psshader) {
+    let index = layout_helper_get_group_index(layout, group_name);
+    if (index < 0) return 0;
+
+    layout.group_list[index].psshader = psshader;
+    return 1;
+}
+
 
 function layout_animate(layout, elapsed) {
     if (layout.suspended) return 0;
@@ -1035,11 +1077,17 @@ function layout_animate(layout, elapsed) {
 
 function layout_draw(layout, pvrctx) {
     pvr_context_save(pvrctx);
+    if (layout.psshader) pvr_context_add_shader(pvrctx, layout.psshader);
 
     if (layout.antialiasing_disabled) pvr_context_set_global_antialiasing(pvrctx, PVR_FLAG_DISABLE);
 
     if (layout.resolution_changes != pvrctx.resolution_changes) {
         layout_update_render_size(layout, pvrctx.screen_width, pvrctx.screen_height);
+        for (let i = 0; i < layout.group_list_size; i++) {
+            if (layout.group_list[i].psframebuffer)
+                layout.group_list[i].psframebuffer.Resize();
+        }
+
         layout.resolution_changes = pvrctx.resolution_changes;
     }
 
@@ -1049,7 +1097,7 @@ function layout_draw(layout, pvrctx) {
     pvr_context_apply_modifier(pvrctx, layout.modifier_viewport);
 
     camera_apply_offset(layout.camera_secondary_helper, pvrctx.current_matrix);
-    pvr_context_apply_modifier(pvrctx ,layout.modifier_camera_secondary);
+    pvr_context_apply_modifier(pvrctx, layout.modifier_camera_secondary);
 
     camera_apply_offset(layout.camera_helper, pvrctx.current_matrix);
 
@@ -1082,7 +1130,13 @@ function layout_draw(layout, pvrctx) {
     }
     qsort(layout.z_buffer, layout.z_buffer_size, NaN, layout_helper_zbuffer_sort);
 
-    // step 2: build root group context
+    // step 2: find top-most item of each group
+    for (let i = 0; i < layout.z_buffer_size; i++) {
+        let group = layout.group_list[layout.z_buffer[i].item.group_id];
+        group.context.last_z_index = i;
+    }
+
+    // step 3: build root group context
     let layout_root = layout.group_list[0];
 
     //sh4matrix_copy_to(layout_root.matrix, layout_root.context.matrix);
@@ -1097,10 +1151,10 @@ function layout_draw(layout, pvrctx) {
     layout_root.context.parallax.z = layout_root.parallax.z;
     for (let i = 0; i < 4; i++) layout_root.context.offsetcolor[i] = layout_root.offsetcolor[i];
 
-    // step 3: stack all groups
+    // step 4: stack all groups
     layout_helper_stack_groups(layout_root);
 
-    // step 4: draw all layout items
+    // step 5: draw all layout items
     let has_single_item = layout.single_item != null;
     for (let i = 0; i < layout.z_buffer_size; i++) {
         if (!layout.z_buffer[i].visible) continue;
@@ -1122,13 +1176,21 @@ function layout_draw(layout, pvrctx) {
 
         pvr_context_save(pvrctx);
 
+        // check whatever the current and/or parent group has framebuffer
+        if (group.psframebuffer) {
+            pvr_context_set_framebuffer(pvrctx, group.psframebuffer);
+        } else {
+            // use group and parent group shaders
+            layout_helper_stack_groups_shaders(group, pvrctx);
+            pvr_context_set_framebuffer(pvrctx, null);
+        }
+
         const draw_location = [0, 0];
         const matrix = pvrctx.current_matrix;
         let draw_fn;
 
-        // apply group context (¿should be applied after the camera?)
         sh4matrix_multiply_with_matrix(matrix, group.context.matrix);
-        pvr_context_set_global_alpha(pvrctx, group.context.alpha);
+        pvr_context_set_global_alpha(pvrctx, group.psframebuffer ? 1.0 : group.context.alpha);
         pvr_context_set_global_antialiasing(pvrctx, group.context.antialiasing);
         pvr_context_set_global_offsetcolor(pvrctx, group.context.offsetcolor);
 
@@ -1212,6 +1274,41 @@ function layout_draw(layout, pvrctx) {
         draw_fn(vertex, pvrctx);
 
         pvr_context_restore(pvrctx);
+
+        // if the last item of the current group was drawn, flush the group framebuffer
+        if (group.psframebuffer && group.context.last_z_index == i) {
+
+            pvr_context_save(pvrctx);
+
+            // draw group framebuffer
+            pvr_context_set_framebuffer(pvrctx, null);
+
+            // use group and parent group shaders
+            layout_helper_stack_groups_shaders(group, pvrctx);
+
+            pvr_context_set_vertex_blend(
+                pvrctx, group.blend_enabled, group.blend_src_rgb, group.blend_dst_rgb, group.blend_src_alpha, group.blend_dst_alpha
+            );
+
+            // draw group framebuffer in the screen
+            let x = group.viewport_x > 0 ? group.viewport_x : 0;
+            let y = group.viewport_y > 0 ? group.viewport_y : 0;
+            let width = group.viewport_width > 0 ? group.viewport_width : layout.viewport_width;
+            let height = group.viewport_height > 0 ? group.viewport_height : layout.viewport_height;
+
+            //pvr_context_apply_modifier(pvrctx, layout.modifier_viewport);
+            pvr_context_set_vertex_alpha(pvrctx, group.context.alpha);
+
+            let sx = x * layout.modifier_viewport.scale_x;
+            let sy = y * layout.modifier_viewport.scale_y;
+            let sw = width * layout.modifier_viewport.scale_x;
+            let sh = height * layout.modifier_viewport.scale_y;
+
+            pvr_context_draw_framebuffer(pvrctx, group.psframebuffer, sx, sy, sw, sh, x, y, width, height);
+
+            pvr_context_restore(pvrctx);
+            group.psframebuffer.Invalidate();
+        }
     }
 
     pvr_context_restore(pvrctx);
@@ -1238,6 +1335,13 @@ function layout_helper_destroy_actions(actions, actions_size) {
                 case LAYOUT_ACTION_PROPERTY:
                     if (action.entries[j].property == TEXTSPRITE_PROP_STRING)
                         action.entries[j].misc = undefined;
+                    break;
+                case LAYOUT_ACTION_SETSHADER:
+                    action.entries[j].misc.Destroy();
+                    break;
+                case LAYOUT_ACTION_SETSHADERUNIFORM:
+                    action.entries[j].uniform_name = undefined;
+                    action.entries[j].misc = undefined;
                     break;
             }
         }
@@ -1463,6 +1567,7 @@ function layout_helper_stack_groups(parent_group) {
 
     while (group) {
         group.context.visible = parent_visible && group.visible && group.alpha > 0;
+        group.context.parent_group = parent_group;
 
         if (group.context.visible) {
             // interpolate the parent context in the current context
@@ -1488,6 +1593,19 @@ function layout_helper_stack_groups(parent_group) {
         if (group.context.next_child) layout_helper_stack_groups(group);
 
         group = group.context.next_sibling;
+    }
+}
+
+function layout_helper_stack_groups_shaders(group, pvrctx) {
+    // if the parent has framebuffer, stop going up
+    while (group) {
+        if (group.psshader) {
+            if (!pvr_context_add_shader(pvrctx, group.psshader)) {
+                // limit reached
+                break;
+            }
+        }
+        group = group.context.parent_group;
     }
 }
 
@@ -1769,6 +1887,27 @@ function layout_helper_commit_trigger(layout, trigger) {
     return;
 }
 
+function layout_helper_set_shader_uniform(psshader, action_entry) {
+    if (!psshader) {
+        console.warn(`layout_helper_set_shader_uniform() can not set ${action_entry.uniform_name}, there no shader`);
+        return;
+    }
+
+    let ret = psshader.SetUniformAny(action_entry.uniform_name, action_entry.misc);
+
+    switch (ret) {
+        case 0:
+            console.warn(`layout_helper_set_shader_uniform() the shader does not have ${action_entry.uniform_name}`);
+            break;
+        case -1:
+            console.warn(`layout_helper_set_shader_uniform() type of ${action_entry.uniform_name} is not supported`);
+            break;
+        case -2:
+            console.error(`layout_helper_set_shader_uniform() bad setter for ${action_entry.uniform_name}`);
+            break;
+    }
+}
+
 
 //////////////////////////////////
 ///        VERTEX PARSER       ///
@@ -1897,7 +2036,7 @@ async function layout_parse_sprite(unparsed_sprite, layout_context, group_id) {
 
     let actions_arraylist = arraylist_init2(actions.length);
     for (let action of actions) {
-        layout_parse_sprite_action(action, layout_context.animlist, atlas, actions_arraylist);
+        await layout_parse_sprite_action(action, layout_context.animlist, atlas, actions_arraylist);
     }
     arraylist_destroy2(actions_arraylist, vertex, "actions_size", "actions");
 
@@ -1944,7 +2083,7 @@ async function layout_parse_text(unparsed_text, layout_context, group_id) {
 
     let actions_arraylist = arraylist_init2(actions.length);
     for (let action of actions) {
-        layout_parse_text_action(action, layout_context.animlist, actions_arraylist);
+        await layout_parse_text_action(action, layout_context.animlist, actions_arraylist);
     }
     arraylist_destroy2(actions_arraylist, vertex, "actions_size", "actions");
 
@@ -1971,6 +2110,19 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
         static_screen: null,
 
         animation: null,
+        psshader: null,
+        psframebuffer: null,
+
+        blend_enabled: 1,
+        blend_src_rgb: BLEND_DEFAULT,
+        blend_dst_rgb: BLEND_DEFAULT,
+        blend_src_alpha: BLEND_DEFAULT,
+        blend_dst_alpha: BLEND_DEFAULT,
+
+        viewport_x: -1,
+        viewport_y: -1,
+        viewport_width: -1,
+        viewport_height: -1,
 
         context: {
             visible: 1,
@@ -1979,15 +2131,22 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
             matrix: new Float32Array(SH4MATRIX_SIZE),
             offsetcolor: [],
             parallax: { x: 1.0, y: 1.0, z: 1.0 },
+            last_z_index: -1,
 
             next_child: null,
             next_sibling: null,
+            parent_group: null
         }
     };
 
     //sh4matrix_reset(group.matrix);
     pvrctx_helper_clear_modifier(group.modifier);
     pvrctx_helper_clear_offsetcolor(group.offsetcolor);
+
+    if (vertexprops_parse_boolean(unparsed_group, "framebuffer", 0)) {
+        // assume layout as part of the main PVRContext renderer
+        group.psframebuffer = new PSFramebuffer(pvr_context);
+    }
 
     arraylist_add(layout_context.group_list, group);
 
@@ -2000,7 +2159,7 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
                         "will be imported as root group action."
                     );
                 }
-                layout_parse_group_action(item, layout_context.animlist, actions_arraylist);
+                await layout_parse_group_action(item, layout_context.animlist, actions_arraylist);
                 break;
             case "Sprite":
                 await layout_parse_sprite(item, layout_context, group.group_id);
@@ -2423,7 +2582,7 @@ function layout_parse_macro(/** @type {Element} */ unparsed_root, layout_context
 ///        ACTION PARSER       ///
 //////////////////////////////////
 
-function layout_parse_sprite_action(unparsed_action, animlist, atlas, action_entries) {
+async function layout_parse_sprite_action(unparsed_action, animlist, atlas, action_entries) {
     let entries = arraylist_init2(unparsed_action.children.length);
 
     for (let unparsed_entry of unparsed_action.children) {
@@ -2474,6 +2633,18 @@ function layout_parse_sprite_action(unparsed_action, animlist, atlas, action_ent
             case "Show":
                 layout_helper_add_action_visibility(unparsed_entry, entries);
                 break;
+            case "SetShader":
+                await layout_helper_add_action_setshader(unparsed_entry, entries);
+                break;
+            case "RemoveShader":
+                layout_helper_add_action_removeshader(unparsed_entry, entries);
+                break;
+            case "SetShaderUniform":
+                layout_helper_add_action_setshaderuniform(unparsed_entry, entries);
+                break;
+            case "SetBlending":
+                layout_helper_parse_action_setblending(unparsed_entry, entries);
+                break;
             default:
                 console.warn("Unknown action entry: " + unparsed_entry.tagName);
                 break;
@@ -2490,7 +2661,7 @@ function layout_parse_sprite_action(unparsed_action, animlist, atlas, action_ent
     arraylist_add(action_entries, action);
 }
 
-function layout_parse_text_action(unparsed_action, animlist, action_entries) {
+async function layout_parse_text_action(unparsed_action, animlist, action_entries) {
     let entries = arraylist_init2(unparsed_action.children.length);
 
     for (let unparsed_entry of unparsed_action.children) {
@@ -2540,6 +2711,18 @@ function layout_parse_text_action(unparsed_action, animlist, action_entries) {
             case "Show":
                 layout_helper_add_action_visibility(unparsed_entry, entries);
                 break;
+            case "SetShader":
+                await layout_helper_add_action_setshader(unparsed_entry, entries);
+                break;
+            case "RemoveShader":
+                layout_helper_add_action_removeshader(unparsed_entry, entries);
+                break;
+            case "SetShaderUniform":
+                layout_helper_add_action_setshaderuniform(unparsed_entry, entries);
+                break;
+            case "SetBlending":
+                layout_helper_parse_action_setblending(unparsed_entry, entries);
+                break;
             default:
                 console.warn("Unknown Text action entry:" + unparsed_entry.tagName);
                 break;
@@ -2556,7 +2739,7 @@ function layout_parse_text_action(unparsed_action, animlist, action_entries) {
     arraylist_add(action_entries, action);
 }
 
-function layout_parse_group_action(unparsed_action, animlist, action_entries) {
+async function layout_parse_group_action(unparsed_action, animlist, action_entries) {
     let entries = arraylist_init2(unparsed_action.children.length);
 
     for (let unparsed_entry of unparsed_action.children) {
@@ -2591,6 +2774,21 @@ function layout_parse_group_action(unparsed_action, animlist, action_entries) {
                 break;
             case "AnimationRemove":
                 layout_helper_add_action_animationremove(unparsed_entry, entries);
+                break;
+            case "SetShader":
+                await layout_helper_add_action_setshader(unparsed_entry, entries);
+                break;
+            case "RemoveShader":
+                layout_helper_add_action_removeshader(unparsed_entry, entries);
+                break;
+            case "SetShaderUniform":
+                layout_helper_add_action_setshaderuniform(unparsed_entry, entries);
+                break;
+            case "SetBlending":
+                layout_helper_parse_action_setblending(unparsed_entry, entries);
+                break;
+            case "Viewport":
+                layout_helper_parse_action_viewport(unparsed_entry, entries);
                 break;
         }
     }
@@ -2779,6 +2977,20 @@ function layout_helper_execute_action_in_sprite(action, item, viewport_width, vi
             case LAYOUT_ACTION_STATIC:
                 item.static_camera = entry.enable;
                 break;
+            case LAYOUT_ACTION_SETSHADER:
+                sprite_set_shader(sprite, entry.misc);
+                break;
+            case LAYOUT_ACTION_REMOVESHADER:
+                sprite_set_shader(sprite, null);
+                break;
+            case LAYOUT_ACTION_SETSHADERUNIFORM:
+                let psshader = sprite_get_shader(sprite);
+                layout_helper_set_shader_uniform(psshader, entry);
+                break;
+            case LAYOUT_ACTION_SETBLENDING:
+                if (entry.has_enable) sprite_blend_enable(sprite, entry.enable);
+                sprite_blend_set(sprite, entry.blend_src_rgb, entry.blend_dst_rgb, entry.blend_src_alpha, entry.blend_dst_alpha);
+                break;
         }
     }
 }
@@ -2848,6 +3060,20 @@ function layout_helper_execute_action_in_textsprite(action, item, viewport_width
             case LAYOUT_ACTION_STATIC:
                 item.static_camera = entry.enable;
                 break;
+            case LAYOUT_ACTION_SETSHADER:
+                textsprite_set_shader(textsprite, entry.misc);
+                break;
+            case LAYOUT_ACTION_REMOVESHADER:
+                textsprite_set_shader(textsprite, null);
+                break;
+            case LAYOUT_ACTION_SETSHADERUNIFORM:
+                let psshader = textsprite_get_shader(textsprite);
+                layout_helper_set_shader_uniform(psshader, entry);
+                break;
+            case LAYOUT_ACTION_SETBLENDING:
+                if (entry.has_enable) textsprite_blend_enable(textsprite, entry.enable);
+                textsprite_blend_set(textsprite, entry.blend_src_rgb, entry.blend_dst_rgb, entry.blend_src_alpha, entry.blend_dst_alpha);
+                break;
         }
     }
 }
@@ -2901,6 +3127,28 @@ function layout_helper_execute_action_in_group(action, group) {
             case LAYOUT_ACTION_STATIC:
                 group.static_camera = entry.enable;
                 break;
+            case LAYOUT_ACTION_SETSHADER:
+                group.psshader = entry.misc;
+                break;
+            case LAYOUT_ACTION_REMOVESHADER:
+                group.psshader = null;
+                break;
+            case LAYOUT_ACTION_SETSHADERUNIFORM:
+                layout_helper_set_shader_uniform(group.psshader, entry);
+                break;
+            case LAYOUT_ACTION_SETBLENDING:
+                if (entry.has_enable) group.blend_enabled = entry.enable;
+                group.blend_src_rgb = entry.src_rgb;
+                group.blend_dst_rgb = entry.dst_rgb;
+                group.blend_src_alpha = entry.src_alpha;
+                group.blend_dst_alpha = entry.dst_alpha;
+                break;
+            case LAYOUT_ACTION_VIEWPORT:
+                if (!Number.isNaN(entry.x)) group.viewport_x = entry.x;
+                if (!Number.isNaN(entry.y)) group.viewport_y = entry.y;
+                if (!Number.isNaN(entry.width)) group.viewport_width = entry.width;
+                if (!Number.isNaN(entry.height)) group.viewport_height = entry.height;
+                break;
         }
     }
 }
@@ -2943,6 +3191,8 @@ function layout_helper_add_action_property(unparsed_entry, is_textsprite, action
     let property_id = vertexprops_parse_sprite_property(unparsed_entry, "name", !is_textsprite);
     if (property_id == -1 && is_textsprite) {
         property_id = vertexprops_parse_textsprite_property(unparsed_entry, "name", 1);
+    } else if (property_id == -1) {
+        property_id = vertexprops_parse_layout_property(unparsed_entry, "name", 1);
     }
 
     if (property_id < 0) return;
@@ -2965,6 +3215,8 @@ function layout_helper_add_action_properties(unparsed_entry, is_textsprite, acti
         property_id = vertexprops_parse_sprite_property2(name);
         if (property_id == -1 && is_textsprite) {
             property_id = vertexprops_parse_textsprite_property2(name);
+        } else if (property_id == -1) {
+            property_id = vertexprops_parse_layout_property2(name);
         }
 
         if (property_id < 0) {
@@ -3363,3 +3615,155 @@ function layout_helper_add_action_mediaproperties(unparsed_entry, action_entries
     }
 
 }
+
+async function layout_helper_add_action_setshader(unparsed_entry, action_entries) {
+    let shader_vertex_src = unparsed_entry.getAttribute("vertexSrc");
+    let shader_fragment_src = unparsed_entry.getAttribute("fragmentSrc");
+    let shader_sources = unparsed_entry.children;
+
+    if (!shader_fragment_src && !shader_vertex_src && shader_sources.length < 1) {
+        layout_helper_add_action_removeshader(unparsed_entry, action_entries);
+        return;
+    }
+
+
+    let sourcecode_vertex = stringbuilder_init();
+    let sourcecode_fragment = stringbuilder_init();
+
+    if (shader_vertex_src) {
+        let tmp = await fs_readtext(shader_vertex_src);
+        if (tmp) stringbuilder_add(sourcecode_vertex, tmp);
+        tmp = undefined;
+    }
+
+    if (shader_fragment_src) {
+        let tmp = await fs_readtext(shader_fragment_src);
+        if (tmp) stringbuilder_add(sourcecode_fragment, tmp);
+        tmp = undefined;
+    }
+
+    // parse source elements
+    for (let source of shader_sources) {
+        let target;
+        switch (source.tagName) {
+            case "VertexSource":
+                target = sourcecode_vertex;
+                break;
+            case "FragmentSource":
+                target = sourcecode_fragment;
+                break;
+            default:
+                console.warn(`layout_helper_add_action_setshader() unknown element: ${source.outerHTML}`);
+                continue;
+        }
+
+        stringbuilder_add_char_codepoint(target, 0x0A);// newline char
+        stringbuilder_add(target, source.textContent);
+    }
+
+    let str_vertex = stringbuilder_finalize(sourcecode_vertex);
+    let str_fragment = stringbuilder_finalize(sourcecode_fragment);
+
+    if (!str_vertex && !str_fragment) {
+        str_vertex = undefined;
+        str_fragment = undefined;
+        console.warn(`layout_helper_add_action_setshader() empty shader: ${unparsed_entry.outerHTML}`);
+        return;
+    }
+
+    // assume layout as part of the main PVRContext renderer
+    let psshader = PSShader.BuildFromSource(pvr_context, str_vertex, str_fragment);
+    str_vertex = undefined;
+    str_fragment = undefined;
+
+    if (!psshader) {
+        console.warn(`layout_helper_add_action_setshader() compilation failed: ${unparsed_entry.outerHTML}`);
+        return;
+    }
+
+    let entry = { type: LAYOUT_ACTION_SETSHADER, misc: psshader };
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_add_action_removeshader(unparsed_entry, action_entries) {
+    let entry = { type: LAYOUT_ACTION_REMOVESHADER };
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_add_action_setshaderuniform(unparsed_entry, action_entries) {
+
+    let values = new Array(16);
+    for (let i = 0; i < 16; i++) values[i] = 0.0;
+
+    let name = unparsed_entry.getAttribute("name");
+    let value = vertexprops_parse_double(unparsed_entry, "value", NaN);
+    let unparsed_values = unparsed_entry.getAttribute("values");
+
+    if (!name) {
+        console.error("layout_helper_add_action_setshaderuniform() missing name: " + unparsed_entry.outerHTML);
+        return;
+    }
+
+    if (unparsed_values != null) {
+        // separator: white-space, hard-space, tabulation, carrier-return, new-line
+        let tokenizer = tokenizer_init("\x20\xA0\t\r\n", 1, 0, unparsed_values);
+        let index = 0;
+        let str;
+
+        while ((str = tokenizer_read_next(tokenizer)) != null) {
+            let temp_value = vertexprops_parse_double2(str, Number.NaN);
+            if (Number.isNaN(temp_value)) {
+                console.warn("layout_helper_add_action_setshaderuniform() invalid value: " + str);
+                temp_value = 0.0;
+            }
+
+            str = undefined;
+            values[index++] = temp_value;
+            if (index >= 16) break;
+        }
+        tokenizer_destroy(tokenizer);
+    } else if (!Number.isNaN(value)) {
+        values[0] = value;
+    }
+
+
+    let entry = { type: LAYOUT_ACTION_SETSHADERUNIFORM, uniform_name: name, misc: values };
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_parse_action_setblending(unparsed_entry, action_entries) {
+    let has_enable = unparsed_entry.hasAttribute("enabled");
+    let enabled = vertexprops_parse_boolean(unparsed_entry, "enabled", 1);
+
+    let blend_src_rgb = vertexprops_parse_blending(unparsed_entry.getAttribute("srcRGB"));
+    let blend_dst_rgb = vertexprops_parse_blending(unparsed_entry.getAttribute("dstRGB"));
+    let blend_src_alpha = vertexprops_parse_blending(unparsed_entry.getAttribute("srcAlpha"));
+    let blend_dst_alpha = vertexprops_parse_blending(unparsed_entry.getAttribute("dstAlpha"));
+
+    let entry = {
+        type: LAYOUT_ACTION_SETBLENDING,
+        enabled, 
+        has_enable,
+        blend_src_rgb,
+        blend_dst_rgb,
+        blend_src_alpha,
+        blend_dst_alpha
+    };
+
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_parse_action_viewport(unparsed_entry, action_entries) {
+    let x = vertexprops_parse_float(unparsed_entry, "x", NaN);
+    let y = vertexprops_parse_float(unparsed_entry, "y", NaN);
+    let width = vertexprops_parse_float(unparsed_entry, "width", NaN);
+    let height = vertexprops_parse_float(unparsed_entry, "height", NaN);
+
+    let entry = {
+        type: LAYOUT_ACTION_VIEWPORT,
+        x, y, width, height
+    };
+
+    arraylist_add(action_entries, entry);
+}
+

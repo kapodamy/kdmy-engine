@@ -89,6 +89,13 @@ EM_JS_PRFX(void, textsprite_set_antialiasing, (TextSprite textsprite, PVRFLAG an
 EM_JS_PRFX(void, textsprite_set_wordbreak, (TextSprite textsprite, FontWordBreak wordbreak), {
     textsprite_set_wordbreak(kdmyEngine_obtain(textsprite), wordbreak);
     });
+EM_JS_PRFX(void, textsprite_set_shader, (TextSprite textsprite, PSShader psshader), {
+        textsprite_set_shader(kdmyEngine_obtain(textsprite), kdmyEngine_obtain(psshader));
+    });
+EM_JS_PRFX(PSShader, textsprite_get_shader, (TextSprite textsprite), {
+    let psshader = textsprite_get_shader(kdmyEngine_obtain(textsprite));
+    return kdmyEngine_obtain(psshader);
+    });
 #endif
 
 
@@ -376,6 +383,30 @@ static int script_textsprite_set_wordbreak(lua_State* L) {
     return 0;
 }
 
+static int script_textsprite_set_shader(lua_State* L) {
+    READ_USERDATA(L, TextSprite, textsprite, TEXTSPRITE);
+
+    PSShader psshader = LUA_TOUSERDATA_OR_NULL(L, 2, PSShader, PSSHADER);
+
+    textsprite_set_shader(textsprite, psshader);
+
+    return 0;
+}
+
+static int script_textsprite_get_shader(lua_State* L) {
+    READ_USERDATA(L, TextSprite, textsprite, TEXTSPRITE);
+
+    PSShader psshader = textsprite_get_shader(textsprite);
+
+    if (!psshader) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    return script_psshader_new(L, textsprite, psshader);
+}
+
+
 
 
 
@@ -408,6 +439,8 @@ static const luaL_Reg TEXTSPRITE_FUNCTIONS[] = {
     { "border_set_color", script_textsprite_border_set_color },
     { "set_antialiasing", script_textsprite_set_antialiasing },
     { "set_wordbreak", script_textsprite_set_wordbreak },
+    { "set_shader", script_textsprite_set_shader },
+    { "get_shader", script_textsprite_get_shader },
     {NULL, NULL}
 };
 

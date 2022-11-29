@@ -7,6 +7,7 @@
 #include "vertexprops.h"
 #include "modifier.h"
 #include "pvrctx.h"
+#include "psshader.h"
 
 typedef struct TextSprite_t {
     int dummy;
@@ -44,6 +45,7 @@ void textsprite_border_set_size(TextSprite textsprite, float border_size);
 void textsprite_border_set_color(TextSprite textsprite, float r, float g, float b, float a);
 void textsprite_set_antialiasing(TextSprite textsprite, PVRFLAG antialiasing);
 void textsprite_set_wordbreak(TextSprite textsprite, FontWordBreak wordbreak);
-
+void textsprite_set_shader(TextSprite textsprite, PSShader psshader);
+PSShader textsprite_get_shader(TextSprite textsprite);
 #endif
 

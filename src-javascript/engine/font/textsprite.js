@@ -68,6 +68,14 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
 
         wordbreak: FONT_WORDBREAK_LOOSE,
 
+        psshader: null,
+
+        blend_enabled: 1,
+        blend_src_rgb: BLEND_DEFAULT,
+        blend_dst_rgb: BLEND_DEFAULT,
+        blend_src_alpha: BLEND_DEFAULT,
+        blend_dst_alpha: BLEND_DEFAULT,
+
         id: TEXTSPRITE_IDS++
     };
 
@@ -761,6 +769,17 @@ function textsprite_draw_internal(textsprite, pvrctx) {
 
     pvr_context_save(pvrctx);
 
+    if (textsprite.psshader) pvr_context_add_shader(pvrctx, textsprite.psshader);
+
+    pvr_context_set_vertex_blend(
+        pvrctx,
+        textsprite.blend_enabled,
+        textsprite.blend_src_rgb,
+        textsprite.blend_dst_rgb,
+        textsprite.blend_src_alpha,
+        textsprite.blend_dst_alpha
+    );
+
     if (textsprite.antialiasing != PVR_FLAG_DEFAULT) {
         pvr_context_set_global_antialiasing(pvrctx, textsprite.antialiasing);
     }
@@ -919,5 +938,24 @@ function textsprite_change_font(textsprite, fontholder) {
     if (fontholder == null) throw new Error("fontholder can not be null");
     textsprite.font = textsprite.font;
     textsprite.font_from_atlas = textsprite.font_from_atlas;
+}
+
+function textsprite_set_shader(textsprite, psshader) {
+    textsprite.psshader = psshader;
+}
+
+function textsprite_get_shader(textsprite) {
+    return textsprite.psshader;
+}
+
+function textsprite_blend_enable(textsprite, enabled) {
+    textsprite.blend_enabled = enabled;
+}
+
+function textsprite_blend_set(textsprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    textsprite.blend_src_rgb = src_rgb;
+    textsprite.blend_dst_rgb = dst_rgb;
+    textsprite.blend_src_alpha = src_alpha;
+    textsprite.blend_dst_alpha = dst_alpha;
 }
 

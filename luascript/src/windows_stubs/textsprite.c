@@ -3,6 +3,7 @@
 #include "pvrctx.h"
 
 static Modifier_t stub_modifier = {};
+static PSShader_t stub_psshader = {};
 
 void textsprite_set_text_intern(TextSprite textsprite, bool intern, const char* text) {
     print_stub("textsprite_set_text_intern", "textsprite=%p intern=(bool)%i text=%s", textsprite, intern, text);
@@ -83,4 +84,11 @@ void textsprite_set_antialiasing(TextSprite textsprite, PVRFLAG antialiasing) {
 }
 void textsprite_set_wordbreak(TextSprite textsprite, FontWordBreak wordbreak) {
     print_stub("textsprite_set_wordbreak", "textsprite=%p wordbreak=%i", textsprite, wordbreak);
+}
+void textsprite_set_shader(TextSprite textsprite, PSShader psshader) {
+    print_stub("textsprite_set_shader", "textsprite=%p psshader=%p", textsprite, psshader);
+}
+PSShader textsprite_get_shader(TextSprite textsprite) {
+    print_stub("textsprite_get_shader", "textsprite=%p", textsprite);
+    return &stub_psshader;
 }

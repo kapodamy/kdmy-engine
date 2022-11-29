@@ -55,6 +55,12 @@ namespace Engine.Font {
         private float font_paragraph_separation;
         private PVRContextFlag antialiasing;
         private int wordbreak;
+        private PSShader psshader;
+        private bool blend_enabled;
+        private Blend blend_src_rgb;
+        private Blend blend_dst_rgb;
+        private Blend blend_src_alpha;
+        private Blend blend_dst_alpha;
         private int id;
 
 
@@ -117,6 +123,14 @@ namespace Engine.Font {
                 antialiasing = PVRContextFlag.DEFAULT,
 
                 wordbreak = VertexProps.FONT_WORDBREAK_LOOSE,
+
+                psshader = null,
+
+                blend_enabled = true,
+                blend_src_rgb = Blend.DEFAULT,
+                blend_dst_rgb = Blend.DEFAULT,
+                blend_src_alpha = Blend.DEFAULT,
+                blend_dst_alpha = Blend.DEFAULT,
 
                 id = TextSprite.IDS++
             };
@@ -781,6 +795,15 @@ namespace Engine.Font {
 
 
             pvrctx.Save();
+            if (this.psshader != null) pvrctx.AddShader(this.psshader);
+
+            pvrctx.SetVertexBlend(
+                this.blend_enabled,
+                this.blend_src_rgb,
+                this.blend_dst_rgb,
+                this.blend_src_alpha,
+                this.blend_dst_alpha
+            );
 
             if (this.antialiasing != PVRContextFlag.DEFAULT) {
                 pvrctx.SetGlobalAntialiasing(this.antialiasing);
@@ -940,6 +963,26 @@ namespace Engine.Font {
             this.font = fontholder.font;
             //this.font_from_atlas = fontholder.font_from_atlas;
         }
+
+        public void SetShader(PSShader psshader) {
+            this.psshader = psshader;
+        }
+
+        public PSShader GetShader() {
+            return this.psshader;
+        }
+
+        public void BlendEnable(bool enabled) {
+            this.blend_enabled = enabled;
+        }
+
+        public void BlendSet(Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha) {
+            this.blend_src_rgb = src_rgb;
+            this.blend_dst_rgb = dst_rgb;
+            this.blend_src_alpha = src_alpha;
+            this.blend_dst_alpha = dst_alpha;
+        }
+
 
         private class ParagraphInfo {
             public int length;

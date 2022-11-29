@@ -188,7 +188,7 @@
         </Text>-->
     </Group>
 
-    <Group name="parallax-test">
+    <Group name="parallax-test" visible="0">
         <Sprite name="bg0" texture="bg0.png">
             <Action>
                 <Location x="0" y="100" />
@@ -236,6 +236,150 @@
         <Sprite texture="fg1.png">
             <Action>
                 <Location x="0" y="100" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="5" />
+                <Parallax x="2" z="2" y="2" />
+                <!--<Animation name="font_clouds" />-->
+            </Action>
+        </Sprite>
+    </Group>
+
+	<!-- if framebuffer is true the shader and alpha is applied once all items are drawn into group framebuffer -->
+	<!-- the <Viewport /> indicates what part of the group is visible. -->
+	<!--     		 		the group viewport's location and size are relative to the layout -->
+	<!--					viewport values with -1 indicates the default values which are: x=0 y=0 width=LAYOUT_WIDTH height=LAYOUT_HEIGHT -->
+	<!-- group can not have nested framebuffers (another group with framebuffer) -->
+	<!-- the action entries <SetBlending /> and <Viewport /> requires framebuffer="true" to work, otherwise will be ignored -->
+	<!-- if framebuffer="true", the group is drawn after the item with highest z-index is drawn -->
+	<Group name="framebuffer+shader+viewport-test" framebuffer="true" alpha="1">
+		<Action>
+			<!-- <SetShader> -->
+				<!-- <FragmentSource> -->
+					<!-- #pragma header -->
+					<!-- /* example shader with color inversion (negative effect) */ -->
+					<!-- void main() {  -->
+						<!-- vec4 color = texture(Texture, TexCoord); -->
+						<!-- FragColor = vec4(vec3(1.0) - color.rgb, color.a); -->
+					<!-- }  -->
+				<!-- </FragmentSource> -->
+			<!-- </SetShader> -->
+			<Viewport x="310" y="80" width="20" height="30" />
+		</Action>
+        <Sprite name="bg0" texture="bg0.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="10" />
+                <Parallax x="0.1" y="0.1" z="0.1" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg1.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="11" />
+                <Parallax x="0.5" y="0.5" z="0.5" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg2.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="12" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg3.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="13" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg4.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="400" />
+                <Property name="z" value="13" />
+                <Property name="alpha" value="0.8" />
+                <Parallax x="1.2" z="1.2" y="1.2" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="fg1.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="15" />
+                <Parallax x="2" z="2" y="2" />
+                <!--<Animation name="font_clouds" />-->
+            </Action>
+        </Sprite>
+    </Group>
+	
+	<Group name="framebuffer+shader+viewport__background-test">
+		<Action>
+			<SetShader>
+				<FragmentSource>
+					#pragma header
+					/* example shader with color inversion (negative effect) */
+					void main() { 
+						vec4 color = texture(Texture, TexCoord);
+						FragColor = vec4(vec3(1.0) - color.rgb, color.a);
+					} 
+				</FragmentSource>
+			</SetShader>
+		</Action>
+        <Sprite name="bg0" texture="bg0.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="0" />
+                <Parallax x="0.1" y="0.1" z="0.1" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg1.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="1" />
+                <Parallax x="0.5" y="0.5" z="0.5" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg2.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="2" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg3.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="-1" />
+                <Property name="z" value="3" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="bg4.png">
+            <Action>
+                <Location x="0" y="0" />
+                <Size width="-1" height="400" />
+                <Property name="z" value="4" />
+                <Property name="alpha" value="0.8" />
+                <Parallax x="1.2" z="1.2" y="1.2" />
+            </Action>
+        </Sprite>
+
+        <Sprite texture="fg1.png">
+            <Action>
+                <Location x="0" y="0" />
                 <Size width="-1" height="-1" />
                 <Property name="z" value="5" />
                 <Parallax x="2" z="2" y="2" />

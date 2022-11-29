@@ -151,6 +151,9 @@ EM_JS_PRFX(Dialogue, week_get_dialogue, (RoundContext roundcontext), {
     const dialogue = week_get_dialogue(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(dialogue);
     });
+EM_JS_PRFX(void, week_set_ui_shader, (RoundContext roundcontext, PSShader psshader), {
+    week_set_ui_shader(kdmyEngine_obtain(roundcontext), kdmyEngine_obtain(psshader));
+    });
 
 void week_unlockdirective_create(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week, double value) {
     week_unlockdirective_create_JS(roundcontext, name, completed_round, completed_week, &value);
@@ -484,6 +487,16 @@ static int script_week_get_dialogue(lua_State* L) {
     return script_dialogue_new(L, dialogue);
 }
 
+static int script_week_set_ui_shader(lua_State* L) {
+    LUASCRIPT_GET(L);
+
+    PSShader psshader = LUA_TOUSERDATA_OR_NULL(L, 1, PSShader, PSSHADER);
+
+    week_set_ui_shader(luascript->context, psshader);
+
+    return 0;
+}
+
 
 static const luaL_Reg EXPORTS_FUNCTION[] = {
     { "unlockdirective_create", script_week_unlockdirective_create },
@@ -516,6 +529,7 @@ static const luaL_Reg EXPORTS_FUNCTION[] = {
     { "week_enable_credits_on_completed", script_week_enable_credits_on_completed },
     { "week_end", script_week_end },
     { "week_get_dialogue", script_week_get_dialogue },
+    { "week_set_ui_shader", script_week_set_ui_shader },
     { NULL, NULL }
 };
 

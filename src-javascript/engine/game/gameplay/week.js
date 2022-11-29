@@ -2095,7 +2095,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         if (pvr_is_offscreen(pvr_context)) {
             layout_suspend(roundcontext.layout);
             dialogue_suspend(roundcontext.dialogue);
-            
+
             let decision = await week_pause_helper_show(roundcontext.weekpause, roundcontext, -1);
             switch (decision) {
                 case 1:
@@ -2105,7 +2105,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
                 case 3:
                     return 3;// back to mainmenu
             }
-            
+
             layout_resume(roundcontext.layout);
             dialogue_resume(roundcontext.dialogue);
             continue;
@@ -2754,6 +2754,11 @@ function week_end(/**@type {RoundContext} */ roundcontext, round_or_week, loose_
 
 function week_get_dialogue(/**@type {RoundContext} */ roundcontext) {
     return roundcontext.dialogue;
+}
+
+function week_set_ui_shader(/**@type {RoundContext} */ roundcontext, psshader) {
+    let layout = roundcontext.layout ?? roundcontext.ui_layout;
+    layout_set_group_shader(layout, WEEKROUND_UI_GROUP_NAME, psshader);
 }
 
 

@@ -28,6 +28,7 @@
 #include "pvrctx.h"
 #include "fs.h"
 #include "dialogue.h"
+#include "psshader.h"
 
 static const char* ALIGN_NONE_STRING = "NONE";
 static const char* ALIGN_BOTH_STRING = "BOTH";
@@ -40,7 +41,7 @@ static const char* ALIGN_END_STRING = "END";
 #define luaL_optionalfloat(L, idx)     (float)luaL_optnumber(L, idx, NAN)
 
 
-#define READ_USERDATA(L, T, V, N)   if (lua_isnil(L, 1)) luaL_error(L, "%s was null (nil in lua).", N); \
+#define READ_USERDATA(L, T, V, N)   if (lua_isnil(L, 1)) return luaL_error(L, "%s was null (nil in lua).", N); \
                                     T V = (T)(*((void**)luaL_checkudata(L, 1, N))); \
                                     check_shared_userdata(L, V);
 #define READ_USERDATA_UNCHECKED(L, T, V, N)   if (lua_isnil(L, 1)) luaL_error(L, "%s was null (nil in lua).", N); \
@@ -57,6 +58,18 @@ static const char* ALIGN_END_STRING = "END";
 
 #define LUA_THROW_ERROR(L, message)  lua_pushliteral(L, message); \
                                     return lua_error(L);
+
+#define NULLIFY_USERDATA(L)  { \
+                                    void** ptr = (void**)lua_touserdata(L, 1); \
+                                    if (ptr) *ptr = NULL; \
+                                };
+
+#define LUA_TOUSERDATA_OR_NULL(L, IDX, TYPE, NAME) ( \
+                                                        lua_isnil(L, IDX) ? \
+                                                        NULL \
+                                                        : \
+                                                        ((TYPE)*((void**)luaL_checkudata(L, IDX, NAME))) \
+                                                    )
 
 void _luascript_declare_item(lua_State* lua, void* parent_ptr, void* object_ptr, bool is_shared);
 void _luascript_suppress_item(lua_State* lua, void* object_ptr, bool is_shared);
@@ -93,8 +106,8 @@ static inline int NEW_USERDATA(lua_State* L, const char* type, void* parent_ptr,
 }
 
 static inline void check_shared_userdata(lua_State* L, void* ptr) {
-    if (_luascript_has_item(L, ptr, true)) return;
-    luaL_error(L, "object destroued");
+    if (ptr && (_luascript_has_item(L, ptr, true) || _luascript_has_item(L, ptr, false))) return;
+    luaL_error(L, "object destroyed");
 }
 
 #define TEXTSPRITE "TextSprite"
@@ -159,6 +172,10 @@ void register_modding(lua_State* L);
 #define DIALOGUE "Dialogue"
 int script_dialogue_new(lua_State* L, Dialogue dialogue);
 void register_dialogue(lua_State* L);
+
+#define PSSHADER "PSShader"
+int script_psshader_new(lua_State* L, void* vertex, PSShader psshader);
+void register_psshader(lua_State* L);
 
 #endif
 

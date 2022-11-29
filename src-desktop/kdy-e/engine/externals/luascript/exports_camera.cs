@@ -390,11 +390,11 @@ namespace Engine.Externals.LuaScriptInterop {
         };
 
         internal static int script_camera_new(LuaState L, Camera camera) {
-            return L.CreateUserdata(CAMERA, camera, true);
+            return L.CreateUserdata(CAMERA, camera);
         }
 
         static int script_camera_gc(LuaState L) {
-            return L.DestroyUserdata(CAMERA);
+            return L.NullifyUserdata(CAMERA);
         }
 
         static int script_camera_tostring(LuaState L) {

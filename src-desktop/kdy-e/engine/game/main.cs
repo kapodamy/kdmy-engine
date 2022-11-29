@@ -13,7 +13,7 @@ namespace Engine.Game {
 
         // this file contains all shared data across the game
         public const string ENGINE_NAME = "kdmy-engine";
-        public const string ENGINE_VERSION = "0.45";
+        public const string ENGINE_VERSION = "0.45.7";
 
         /**
          * The background music used in all menus, inherited from introscreen
@@ -115,7 +115,9 @@ namespace Engine.Game {
                 false,
                 "NORMAL",
                 "/assets/common/data/BOYFRIEND.json",
-                "/assets/common/data/GIRLFRIEND.json"
+                "/assets/common/data/GIRLFRIEND.json",
+                null,
+                -1
             );
             Console.Error.WriteLine("[LOG] week_main() execution done, engine is terminated");
             return 0;*/

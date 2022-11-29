@@ -1,6 +1,8 @@
 using System;
 using System.Globalization;
+using Engine.Game;
 using Engine.Platform;
+using Newtonsoft.Json.Linq;
 
 namespace Engine.Utils {
 
@@ -11,6 +13,25 @@ namespace Engine.Utils {
         END = 2,
         BOTH = 3,
         NONE = 4
+    }
+
+    public enum Blend : int {
+        DEFAULT = 0,
+        ZERO = 1,
+        ONE = 2,
+        SRC_COLOR = 3,
+        ONE_MINUS_SRC_COLOR = 4,
+        DST_COLOR = 5,
+        ONE_MINUS_DST_COLOR = 6,
+        SRC_ALPHA = 7,
+        ONE_MINUS_SRC_ALPHA = 8,
+        DST_ALPHA = 9,
+        ONE_MINUS_DST_ALPHA = 10,
+        CONSTANT_COLOR = 11,
+        ONE_MINUS_CONSTANT_COLOR = 12,
+        CONSTANT_ALPHA = 13,
+        ONE_MINUS_CONSTANT_ALPHA = 14,
+        SRC_ALPHA_SATURATE = 15
     }
 
     public static class VertexProps {
@@ -80,7 +101,12 @@ namespace Engine.Utils {
         public const int SPRITE_PROP_SCALE_TRANSLATION = 53;
         public const int SPRITE_PROP_FLIP_CORRECTION = 54;
 
-        public const int TEXTSPRITE_PROP_STRING = 55;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
+        public const int LAYOUT_PROP_GROUP_VIEWPORT_X = 55;
+        public const int LAYOUT_PROP_GROUP_VIEWPORT_Y = 56;
+        public const int LAYOUT_PROP_GROUP_VIEWPORT_WIDTH = 57;
+        public const int LAYOUT_PROP_GROUP_VIEWPORT_HEIGHT = 58;
+
+        public const int TEXTSPRITE_PROP_STRING = 59;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
 
         public const int PLAYBACK_NONE = 0;
         public const int PLAYBACK_PLAY = 1;
@@ -314,6 +340,41 @@ namespace Engine.Utils {
                     return MEDIA_PROP_SEEK;
                 case "playback":
                     return MEDIA_PROP_PLAYBACK;
+            }
+
+            return -1;
+        }
+
+
+        public static int ParseLayoutProperty(XmlParserNode node, string name, bool warn) {
+            string property = node.GetAttribute(name);
+
+            if (String.IsNullOrEmpty(property)) {
+                Console.Error.WriteLine(
+                    "[WARN] vertexprops_parse_layout_property: missing " + name + " attribute", node.OuterHTML
+                );
+                return -2;
+            }
+
+            int id = ParseLayoutProperty2(property);
+            if (id < 0 && warn)
+                Console.Error.WriteLine("[WARN] vertexprops_parse_layout_property() unknown property " + property, node.OuterHTML);
+
+            return id;
+        }
+
+        public static int ParseLayoutProperty2(string property) {
+            property = property.ToLowerInvariant();// in C dispose this variable!!!
+
+            switch (property) {
+                case "groupviewportx":
+                    return LAYOUT_PROP_GROUP_VIEWPORT_X;
+                case "groupviewporty":
+                    return LAYOUT_PROP_GROUP_VIEWPORT_Y;
+                case "groupviewportwidth":
+                    return LAYOUT_PROP_GROUP_VIEWPORT_WIDTH;
+                case "groupviewportheight":
+                    return LAYOUT_PROP_GROUP_VIEWPORT_HEIGHT;
             }
 
             return -1;
@@ -574,9 +635,63 @@ L_invalid:
         public static float ParseFloat2(string value, float default_value) {
             float val;
             if (Single.TryParse(value, FLAGS_FLOAT, CultureInfo.InvariantCulture, out val)) return val;
-
             return default_value;
         }
+
+        public static double ParseDouble(XmlParserNode node, string name, double def_value) {
+            string value = node.GetAttribute(name);
+            if (value == null || value.Length < 1) return def_value;
+            return VertexProps.ParseDouble2(value, def_value);
+        }
+
+        public static double ParseDouble2(string value, double def_value) {
+            double val = Double.NaN;
+            Double.TryParse(value, FLAGS_FLOAT, CultureInfo.InvariantCulture, out val);
+
+            Console.Error.WriteLine("[ERROR] layout_parse_double2(): invalid value: " + value);
+            return Double.IsNaN(val) ? def_value : val;
+        }
+
+        public static Blend ParseBlending(string value) {
+            switch (value) {
+                case "ZERO":
+                    return Blend.ZERO;
+                case "ONE":
+                    return Blend.ONE;
+                case "SRC_COLOR":
+                    return Blend.SRC_COLOR;
+                case "ONE_MINUS_SRC_COLOR":
+                    return Blend.ONE_MINUS_SRC_COLOR;
+                case "DST_COLOR":
+                    return Blend.DST_COLOR;
+                case "ONE_MINUS_DST_COLOR":
+                    return Blend.ONE_MINUS_DST_COLOR;
+                case "SRC_ALPHA":
+                    return Blend.SRC_ALPHA;
+                case "ONE_MINUS_SRC_ALPHA":
+                    return Blend.ONE_MINUS_SRC_ALPHA;
+                case "DST_ALPHA":
+                    return Blend.DST_ALPHA;
+                case "ONE_MINUS_DST_ALPHA":
+                    return Blend.ONE_MINUS_DST_ALPHA;
+                case "CONSTANT_COLOR":
+                    return Blend.CONSTANT_COLOR;
+                case "ONE_MINUS_CONSTANT_COLOR":
+                    return Blend.ONE_MINUS_CONSTANT_COLOR;
+                case "CONSTANT_ALPHA":
+                    return Blend.CONSTANT_ALPHA;
+                case "ONE_MINUS_CONSTANT_ALPHA":
+                    return Blend.ONE_MINUS_CONSTANT_ALPHA;
+                case "SRC_ALPHA_SATURATE":
+                    return Blend.SRC_ALPHA_SATURATE;
+                case null:
+                    return Blend.DEFAULT;
+            }
+            Console.Error.WriteLine("vertexprops_parse_blending() unknown blending: " + value);
+            return Blend.DEFAULT;
+        }
+
+
 
 
         public static bool IsPropertyEnumerable(int property_id) {
@@ -638,17 +753,6 @@ L_invalid:
                 }
             }
             return false;
-        }
-
-
-        public static double ParseDouble2(string value, double def_value) {
-            if (String.IsNullOrEmpty(value)) return def_value;
-
-            double val;
-            if (Double.TryParse(value, FLAGS_FLOAT, CultureInfo.InvariantCulture, out val)) return val;
-
-            Console.Error.WriteLine("[ERROR] layout_parse_double2(): invalid value: " + value);
-            return def_value;
         }
 
         public static long ParseLongInteger2(string value, long def_value) {

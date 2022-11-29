@@ -1,5 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Runtime.Remoting.Messaging;
+using System.Security.Cryptography;
+using System.Security.Policy;
+using System.Text;
 using Engine.Animation;
 using Engine.Font;
 using Engine.Game.Common;
@@ -7,6 +12,9 @@ using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
+using KallistiOS.THD;
+using Newtonsoft.Json.Linq;
+using static Engine.Platform.FSFolderEnumerator;
 
 namespace Engine {
 
@@ -91,6 +99,11 @@ namespace Engine {
         private const int ACTION_EXECUTE = 16;
         private const int ACTION_PUPPETITEM = 17;
         private const int ACTION_PUPPETGROUP = 18;
+        private const int ACTION_SETSHADER = 19;
+        private const int ACTION_REMOVESHADER = 20;
+        private const int ACTION_SETSHADERUNIFORM = 22;
+        private const int LAYOUT_ACTION_SETBLENDING = 23;
+        private const int LAYOUT_ACTION_VIEWPORT = 24;
 
         public const string GROUP_ROOT = "___root-group___";
         private const float BPM_STEPS = 32;// 1/32 beats
@@ -140,6 +153,7 @@ namespace Engine {
         private BeatWatcher beatwatcher;
         private bool antialiasing_disabled;
         private int resolution_changes;
+        private PSShader psshader;
 
 
 
@@ -259,6 +273,7 @@ namespace Engine {
 
                 antialiasing_disabled = false,
                 resolution_changes = 0,
+                psshader = null
             };
 
             // step 5: build modifiers
@@ -439,6 +454,7 @@ namespace Engine {
                 //free(this.group_list[i].name);
                 //free(this.group_list[i].initial_action_name);
                 Layout.HelperDestroyActions(this.group_list[i].actions, this.group_list[i].actions_size);
+                if (this.group_list[i].psframebuffer != null) this.group_list[i].psframebuffer.Destroy();
             }
             //free(this.group_list);
 
@@ -918,6 +934,19 @@ namespace Engine {
                 static_screen = null,
 
                 animation = null,
+                psshader = null,
+                psframebuffer = null,
+
+                blend_enabled = true,
+                blend_src_rgb = Blend.DEFAULT,
+                blend_dst_rgb = Blend.DEFAULT,
+                blend_src_alpha = Blend.DEFAULT,
+                blend_dst_alpha = Blend.DEFAULT,
+
+                viewport_x = -1f,
+                viewport_y = -1f,
+                viewport_width = -1f,
+                viewport_height = -1f,
 
                 context = new GroupContext() {
                     visible = true,
@@ -929,6 +958,8 @@ namespace Engine {
 
                     next_child = null,
                     next_sibling = null,
+                    parent_group = null,
+                    last_z_index = -1
                 }
             };
 
@@ -1074,8 +1105,28 @@ namespace Engine {
         public PVRContextFlag GetLayoutAntialiasing() {
             return this.group_list[0].antialiasing;
         }
+
         public void SetLayoutAntialiasing(PVRContextFlag flag) {
             this.group_list[0].antialiasing = flag;
+        }
+
+        public void SetShader(PSShader psshader) {
+            this.psshader = psshader;
+        }
+
+        public PSShader GetGroupShader(string group_name) {
+            int index = this.HelperGetGroupIndex(group_name);
+            if (index < 0) return null;
+
+            return this.group_list[index].psshader;
+        }
+
+        public bool SetGroupShader(string group_name, PSShader psshader) {
+            int index = HelperGetGroupIndex(group_name);
+            if (index < 0) return false;
+
+            this.group_list[index].psshader = psshader;
+            return true;
         }
 
 
@@ -1143,12 +1194,18 @@ namespace Engine {
 
         public void Draw(PVRContext pvrctx) {
             pvrctx.Save();
+            if (this.psshader != null) pvrctx.AddShader(this.psshader);
 
             if (this.antialiasing_disabled) pvrctx.SetGlobalAntialiasing(PVRContextFlag.DISABLE);
 
             if (this.resolution_changes != pvrctx.resolution_changes) {
                 UpdateRenderSize(pvrctx.ScreenWidth, pvrctx.ScreenHeight);
                 this.resolution_changes = pvrctx.resolution_changes;
+
+                for (int i = 0 ; i < this.group_list_size ; i++) {
+                    if (this.group_list[i].psframebuffer != null)
+                        this.group_list[i].psframebuffer.Resize();
+                }
             }
 
             SH4Matrix pvr_matrix = new SH4Matrix();
@@ -1190,7 +1247,13 @@ namespace Engine {
             }
             Array.Sort(this.z_buffer, 0, this.z_buffer_size, Layout.HelperZbufferSort);
 
-            // step 2: build root group context
+            // step 2: find top-most item of each group
+            for (int i = 0 ; i < this.z_buffer_size ; i++) {
+                Group group = this.group_list[this.z_buffer[i].item.group_id];
+                group.context.last_z_index = i;
+            }
+
+            // step 3: build root group context
             Group layout_root = this.group_list[0];
 
             //sh4matrix_copy_to(layout_root.matrix, layout_root.context.matrix);
@@ -1205,10 +1268,10 @@ namespace Engine {
             layout_root.context.parallax.z = layout_root.parallax.z;
             for (int i = 0 ; i < 4 ; i++) layout_root.context.offsetcolor[i] = layout_root.offsetcolor[i];
 
-            // step 3: stack all groups
+            // step 4: stack all groups
             Layout.HelperStackGroups(layout_root);
 
-            // step 4: draw all layout items
+            // step 5: draw all layout items
             bool has_single_item = this.single_item != null;
             for (int i = 0 ; i < this.z_buffer_size ; i++) {
                 if (!this.z_buffer[i].visible) continue;
@@ -1230,11 +1293,20 @@ namespace Engine {
 
                 pvrctx.Save();
 
+                // check whatever the current and/or parent group has framebuffer
+                if (group.psframebuffer != null) {
+                    pvrctx.SetFramebuffer(group.psframebuffer);
+                } else {
+                    // use group and parent group shaders
+                    Layout.HelperStackGroupsShaders(group, pvrctx);
+                    pvrctx.SetFramebuffer(null);
+                }
+
                 SH4Matrix matrix = pvrctx.CurrentMatrix;
 
                 // apply group context (¿should be applied after the camera?)
                 matrix.MultiplyWithMatrix(group.context.matrix);
-                pvrctx.SetGlobalAlpha(group.context.alpha);
+                pvrctx.SetGlobalAlpha(group.psframebuffer != null ? 1.0f : group.context.alpha);
                 pvrctx.SetGlobalAntialiasing(group.context.antialiasing);
                 pvrctx.SetGlobalOffsetColor(group.context.offsetcolor);
 
@@ -1298,6 +1370,41 @@ namespace Engine {
                 vertex.Draw(pvrctx);
 
                 pvrctx.Restore();
+
+                // if the last item of the current group was drawn, flush the group framebuffer
+                if (group.psframebuffer != null && group.context.last_z_index == i) {
+
+                    pvrctx.Save();
+
+                    // draw group framebuffer
+                    pvrctx.SetFramebuffer(null);
+
+                    // use group and parent group shaders
+                    Layout.HelperStackGroupsShaders(group, pvrctx);
+
+                    pvrctx.SetVertexBlend(
+                        group.blend_enabled, group.blend_src_rgb, group.blend_dst_rgb, group.blend_src_alpha, group.blend_dst_alpha
+                    );
+
+                    // draw group framebuffer in the screen
+                    float x = group.viewport_x > 0 ? group.viewport_x : 0;
+                    float y = group.viewport_y > 0 ? group.viewport_y : 0;
+                    float width = group.viewport_width > 0 ? group.viewport_width : this.viewport_width;
+                    float height = group.viewport_height > 0 ? group.viewport_height : this.viewport_height;
+
+                    //pvr_context_apply_modifier(pvrctx, layout.modifier_viewport);
+                    pvrctx.SetVertexAlpha(group.context.alpha);
+
+                    float sx = x * this.modifier_viewport.scale_x;
+                    float sy = y * this.modifier_viewport.scale_y;
+                    float sw = width * this.modifier_viewport.scale_x;
+                    float sh = height * this.modifier_viewport.scale_y;
+
+                    pvrctx.DrawFramebuffer(group.psframebuffer, sx, sy, sw, sh, x, y, width, height);
+
+                    pvrctx.Restore();
+                    group.psframebuffer.Invalidate();
+                }
             }
 
             pvrctx.Restore();
@@ -1324,6 +1431,13 @@ namespace Engine {
                         case Layout.ACTION_PROPERTY:
                             //if (action.entries[j].property == VertexProps.TEXTSPRITE_PROP_STRING)
                             //    free(action.entries[j].misc);
+                            break;
+                        case Layout.ACTION_SETSHADER:
+                            ((PSShader)action.entries[j].misc).Destroy();
+                            break;
+                        case Layout.ACTION_SETSHADERUNIFORM:
+                            //free(action.entries[j].uniform_name);
+                            //free(action.entries[j].misc);
                             break;
                     }
                 }
@@ -1545,6 +1659,7 @@ namespace Engine {
 
             while (group != null) {
                 group.context.visible = parent_visible && group.visible && group.alpha > 0;
+                group.context.parent_group = parent_group;
 
                 if (group.context.visible) {
                     // interpolate the parent context in the current context
@@ -1570,6 +1685,19 @@ namespace Engine {
                 if (group.context.next_child != null) Layout.HelperStackGroups(group);
 
                 group = group.context.next_sibling;
+            }
+        }
+
+        private static void HelperStackGroupsShaders(Group group, PVRContext pvrctx) {
+            // if the parent has framebuffer, stop going up
+            while (group != null) {
+                if (group.psshader != null) {
+                    if (!pvrctx.AddShader(group.psshader)) {
+                        // limit reached
+                        break;
+                    }
+                }
+                group = group.context.parent_group;
             }
         }
 
@@ -1852,6 +1980,27 @@ namespace Engine {
             return;
         }
 
+        private static void HelperSetShaderUniform(PSShader psshader, ActionEntry action_entry) {
+            if (psshader == null) {
+                Console.Error.WriteLine($"[WARN] layout_helper_set_shader_uniform() can not set {action_entry.uniform_name}, there no shader");
+                return;
+            }
+
+            int ret = psshader.SetUniformAny(action_entry.uniform_name, (double[])action_entry.misc);
+
+            switch (ret) {
+                case 0:
+                    Console.Error.WriteLine($"[WARN] layout_helper_set_shader_uniform() the shader does not have {action_entry.uniform_name}");
+                    break;
+                case -1:
+                    Console.Error.WriteLine($"[WARN] layout_helper_set_shader_uniform() type of {action_entry.uniform_name} is not supported");
+                    break;
+                case -2:
+                    Console.Error.WriteLine($"[ERROR] layout_helper_set_shader_uniform() bad setter for {action_entry.uniform_name}");
+                    break;
+            }
+        }
+
 
         //////////////////////////////////
         ///        VERTEX PARSER       ///
@@ -2054,6 +2203,19 @@ namespace Engine {
                 static_screen = null,
 
                 animation = null,
+                psshader = null,
+                psframebuffer = null,
+
+                blend_enabled = true,
+                blend_src_rgb = Blend.DEFAULT,
+                blend_dst_rgb = Blend.DEFAULT,
+                blend_src_alpha = Blend.DEFAULT,
+                blend_dst_alpha = Blend.DEFAULT,
+
+                viewport_x = -1f,
+                viewport_y = -1f,
+                viewport_width = -1f,
+                viewport_height = -1f,
 
                 context = new GroupContext() {
                     visible = true,
@@ -2065,12 +2227,19 @@ namespace Engine {
 
                     next_child = null,
                     next_sibling = null,
+                    parent_group = null,
+                    last_z_index = -1
                 }
             };
 
             //sh4matrix_reset(group.matrix);
             group.modifier.Clear();
             PVRContext.HelperClearOffsetColor(group.offsetcolor);
+
+            if (VertexProps.ParseBoolean(unparsed_group, "framebuffer", false)) {
+                // assume layout as part of the main PVRContext renderer
+                group.psframebuffer = new PSFramebuffer(PVRContext.global_context);
+            }
 
             layout_context.group_list.Add(group);
 
@@ -2565,6 +2734,18 @@ namespace Engine {
                     case "Show":
                         Layout.HelperAddActionVisibility(unparsed_entry, entries);
                         break;
+                    case "SetShader":
+                        Layout.HelperAddActionSetshader(unparsed_entry, entries);
+                        break;
+                    case "RemoveShader":
+                        Layout.HelperAddActionRemoveshader(unparsed_entry, entries);
+                        break;
+                    case "SetShaderUniform":
+                        Layout.HelperAddActionSetshaderuniform(unparsed_entry, entries);
+                        break;
+                    case "SetBlending":
+                        Layout.HelperAddActionSetblending(unparsed_entry, entries);
+                        break;
                     default:
                         Console.Error.WriteLine("[WARN] Unknown action entry: " + unparsed_entry.TagName);
                         break;
@@ -2631,6 +2812,18 @@ namespace Engine {
                     case "Show":
                         Layout.HelperAddActionVisibility(unparsed_entry, entries);
                         break;
+                    case "SetShader":
+                        Layout.HelperAddActionSetshader(unparsed_entry, entries);
+                        break;
+                    case "RemoveShader":
+                        Layout.HelperAddActionRemoveshader(unparsed_entry, entries);
+                        break;
+                    case "SetShaderUniform":
+                        Layout.HelperAddActionSetshaderuniform(unparsed_entry, entries);
+                        break;
+                    case "SetBlending":
+                        Layout.HelperAddActionSetblending(unparsed_entry, entries);
+                        break;
                     default:
                         Console.Error.WriteLine("[WARN] Unknown Text action entry:" + unparsed_entry.TagName);
                         break;
@@ -2682,6 +2875,21 @@ namespace Engine {
                         break;
                     case "AnimationRemove":
                         Layout.HelperAddActionAnimationremove(unparsed_entry, entries);
+                        break;
+                    case "SetShader":
+                        Layout.HelperAddActionSetshader(unparsed_entry, entries);
+                        break;
+                    case "RemoveShader":
+                        Layout.HelperAddActionRemoveshader(unparsed_entry, entries);
+                        break;
+                    case "SetShaderUniform":
+                        Layout.HelperAddActionSetshaderuniform(unparsed_entry, entries);
+                        break;
+                    case "SetBlending":
+                        Layout.HelperAddActionSetblending(unparsed_entry, entries);
+                        break;
+                    case "Viewport":
+                        Layout.HelperAddActionViewport(unparsed_entry, entries);
                         break;
                 }
             }
@@ -2870,6 +3078,20 @@ namespace Engine {
                     case Layout.ACTION_STATIC:
                         item.static_camera = entry.enable;
                         break;
+                    case Layout.ACTION_SETSHADER:
+                        sprite.SetShader((PSShader)entry.misc);
+                        break;
+                    case Layout.ACTION_REMOVESHADER:
+                        sprite.SetShader(null);
+                        break;
+                    case Layout.ACTION_SETSHADERUNIFORM:
+                        PSShader psshader = sprite.GetShader();
+                        Layout.HelperSetShaderUniform(psshader, entry);
+                        break;
+                    case LAYOUT_ACTION_SETBLENDING:
+                        if (entry.has_enable) sprite.BlendEnable(entry.enable);
+                        sprite.BlendSet(entry.blend_src_rgb, entry.blend_dst_rgb, entry.blend_src_alpha, entry.blend_dst_alpha);
+                        break;
                 }
             }
         }
@@ -2939,6 +3161,20 @@ namespace Engine {
                     case Layout.ACTION_STATIC:
                         item.static_camera = entry.enable;
                         break;
+                    case Layout.ACTION_SETSHADER:
+                        textsprite.SetShader((PSShader)entry.misc);
+                        break;
+                    case Layout.ACTION_REMOVESHADER:
+                        textsprite.SetShader(null);
+                        break;
+                    case Layout.ACTION_SETSHADERUNIFORM:
+                        PSShader psshader = textsprite.GetShader();
+                        Layout.HelperSetShaderUniform(psshader, entry);
+                        break;
+                    case LAYOUT_ACTION_SETBLENDING:
+                        if (entry.has_enable) textsprite.BlendEnable(entry.enable);
+                        textsprite.BlendSet(entry.blend_src_rgb, entry.blend_dst_rgb, entry.blend_src_alpha, entry.blend_dst_alpha);
+                        break;
                 }
             }
         }
@@ -2992,6 +3228,28 @@ namespace Engine {
                     case Layout.ACTION_STATIC:
                         group.static_camera = entry.enable;
                         break;
+                    case Layout.ACTION_SETSHADER:
+                        group.psshader = (PSShader)entry.misc;
+                        break;
+                    case Layout.ACTION_REMOVESHADER:
+                        group.psshader = null;
+                        break;
+                    case Layout.ACTION_SETSHADERUNIFORM:
+                        Layout.HelperSetShaderUniform(group.psshader, entry);
+                        break;
+                    case LAYOUT_ACTION_SETBLENDING:
+                        if (entry.has_enable) group.blend_enabled = entry.enable;
+                        group.blend_src_rgb = entry.blend_src_rgb;
+                        group.blend_dst_rgb = entry.blend_dst_rgb;
+                        group.blend_src_alpha = entry.blend_src_alpha;
+                        group.blend_dst_alpha = entry.blend_dst_alpha;
+                        break;
+                    case LAYOUT_ACTION_VIEWPORT:
+                        if (!Single.IsNaN(entry.x)) group.viewport_x = entry.x;
+                        if (!Single.IsNaN(entry.y)) group.viewport_y = entry.y;
+                        if (!Single.IsNaN(entry.width)) group.viewport_width = entry.width;
+                        if (!Single.IsNaN(entry.height)) group.viewport_height = entry.height;
+                        break;
                 }
             }
         }
@@ -3034,6 +3292,8 @@ namespace Engine {
             int property_id = VertexProps.ParseSpriteProperty(unparsed_entry, "name", !is_textsprite);
             if (property_id == -1 && is_textsprite) {
                 property_id = VertexProps.ParseTextSpriteProperty(unparsed_entry, "name", true);
+            } else if (property_id == -1) {
+                property_id = VertexProps.ParseLayoutProperty(unparsed_entry, "name", true);
             }
 
             if (property_id < 0) return;
@@ -3056,6 +3316,8 @@ namespace Engine {
                 property_id = VertexProps.ParseSpriteProperty2(name);
                 if (property_id == -1 && is_textsprite) {
                     property_id = VertexProps.ParseTextSpriteProperty2(name);
+                } else if (property_id == -1) {
+                    property_id = VertexProps.ParseLayoutProperty2(name);
                 }
 
                 if (property_id < 0) {
@@ -3458,6 +3720,160 @@ namespace Engine {
         }
 
 
+        private static void HelperAddActionSetshader(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            string shader_vertex_src = unparsed_entry.GetAttribute("vertexSrc");
+            string shader_fragment_src = unparsed_entry.GetAttribute("fragmentSrc");
+            XmlParserNodeList shader_sources = unparsed_entry.Children;
+
+            if (String.IsNullOrEmpty(shader_fragment_src) && String.IsNullOrEmpty(shader_vertex_src) && shader_sources.Length < 1) {
+                Layout.HelperAddActionRemoveshader(unparsed_entry, action_entries);
+                return;
+            }
+
+
+            StringBuilder sourcecode_vertex = new StringBuilder();
+            StringBuilder sourcecode_fragment = new StringBuilder();
+
+            if (!String.IsNullOrEmpty(shader_vertex_src)) {
+                string tmp = FS.ReadText(shader_vertex_src);
+                if (!String.IsNullOrEmpty(tmp)) sourcecode_vertex.AddKDY(tmp);
+                //free(tmp);
+            }
+
+            if (!String.IsNullOrEmpty(shader_fragment_src)) {
+                string tmp = FS.ReadText(shader_fragment_src);
+                if (!String.IsNullOrEmpty(tmp)) sourcecode_fragment.AddKDY(tmp);
+                //free(tmp);
+            }
+
+            // parse source elements
+            foreach (XmlParserNode source in shader_sources) {
+                StringBuilder target;
+                switch (source.TagName) {
+                    case "VertexSource":
+                        target = sourcecode_vertex;
+                        break;
+                    case "FragmentSource":
+                        target = sourcecode_fragment;
+                        break;
+                    default:
+                        Console.Error.WriteLine($"[WARN] layout_helper_add_action_setshader() unknown element: {source.OuterHTML}");
+                        continue;
+                }
+
+                target.AddCharCodepointKDY(0x0A);// newline char
+                target.AddKDY(source.TextContent);
+            }
+
+            string str_vertex = sourcecode_vertex.ToString();
+            string str_fragment = sourcecode_fragment.ToString();
+
+            if (String.IsNullOrEmpty(str_vertex) && String.IsNullOrEmpty(str_fragment)) {
+                //free(str_vertex);
+                //free(str_fragment);
+                Console.Error.WriteLine($"[WARN] layout_helper_add_action_setshader() empty shader: {unparsed_entry.OuterHTML}");
+                return;
+            }
+
+            // assume layout as part of the main PVRContext renderer
+            PSShader psshader = PSShader.BuildFromSource(PVRContext.global_context, str_vertex, str_fragment);
+            //free(str_vertex);
+            //free(str_fragment);
+
+            if (psshader == null) {
+                Console.Error.WriteLine($"[WARN] layout_helper_add_action_setshader() compilation failed: {unparsed_entry.OuterHTML}");
+                return;
+            }
+
+            ActionEntry entry = new ActionEntry() { type = Layout.ACTION_SETSHADER, misc = psshader };
+            action_entries.Add(entry);
+        }
+
+        private static void HelperAddActionRemoveshader(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            ActionEntry entry = new ActionEntry() { type = Layout.ACTION_REMOVESHADER };
+            action_entries.Add(entry);
+        }
+
+        private static void HelperAddActionSetshaderuniform(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+
+            double[] values = new double[16];
+            for (int i = 0 ; i < 16 ; i++) values[i] = 0.0;
+
+            string name = unparsed_entry.GetAttribute("name");
+            double value = VertexProps.ParseDouble(unparsed_entry, "value", Double.NaN);
+            string unparsed_values = unparsed_entry.GetAttribute("values");
+
+            if (String.IsNullOrEmpty(name)) {
+                Console.Error.WriteLine("[ERROR] layout_helper_add_action_setshaderuniform() missing name: " + unparsed_entry.OuterHTML);
+                return;
+            }
+
+            if (unparsed_values != null) {
+                // separator: white-space, hard-space, tabulation, carrier-return, new-line
+                Tokenizer tokenizer = Tokenizer.Init("\x20\xA0\t\r\n", true, false, unparsed_values);
+                int index = 0;
+                String str;
+
+                while ((str = tokenizer.ReadNext()) != null) {
+                    double temp_value = VertexProps.ParseDouble2(str, Double.NaN);
+                    if (Double.IsNaN(temp_value)) {
+                        Console.Error.WriteLine("[WARN] layout_helper_add_action_setshaderuniform() invalid value: " + str);
+                        temp_value = 0.0;
+                    }
+
+                    //free(str);
+                    values[index++] = temp_value;
+                    if (index >= 16) break;
+                }
+                tokenizer.Destroy();
+            } else if (!Double.IsNaN(value)) {
+                values[0] = value;
+            }
+
+
+            ActionEntry entry = new ActionEntry() { type = Layout.ACTION_SETSHADERUNIFORM, uniform_name = name, misc = values };
+            action_entries.Add(entry);
+        }
+
+        private static void HelperAddActionSetblending(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            bool has_enabled = unparsed_entry.HasAttribute("enabled");
+            bool enabled = VertexProps.ParseBoolean(unparsed_entry, "enabled", true);
+
+            Blend blend_src_rgb = VertexProps.ParseBlending(unparsed_entry.GetAttribute("srcRGB"));
+            Blend blend_dst_rgb = VertexProps.ParseBlending(unparsed_entry.GetAttribute("dstRGB"));
+            Blend blend_src_alpha = VertexProps.ParseBlending(unparsed_entry.GetAttribute("srcAlpha"));
+            Blend blend_dst_alpha = VertexProps.ParseBlending(unparsed_entry.GetAttribute("dstAlpha"));
+
+            ActionEntry entry = new ActionEntry() {
+                type = LAYOUT_ACTION_SETBLENDING,
+                enabled = has_enabled,
+                blend_src_rgb = blend_src_rgb,
+                blend_dst_rgb = blend_dst_rgb,
+                blend_src_alpha = blend_src_alpha,
+                blend_dst_alpha = blend_dst_alpha
+            };
+
+            action_entries.Add(entry);
+        }
+
+        private static void HelperAddActionViewport(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            float x = VertexProps.ParseFloat(unparsed_entry, "x", Single.NaN);
+            float y = VertexProps.ParseFloat(unparsed_entry, "y", Single.NaN);
+            float width = VertexProps.ParseFloat(unparsed_entry, "width", Single.NaN);
+            float height = VertexProps.ParseFloat(unparsed_entry, "height", Single.NaN);
+
+            ActionEntry entry = new ActionEntry() {
+                type = LAYOUT_ACTION_VIEWPORT,
+                x = x,
+                y = y,
+                width = width,
+                height = height
+            };
+
+            action_entries.Add(entry);
+        }
+
+
         private class ZBufferEntry {
             public Item item; public float z_index; public bool visible;
         }
@@ -3558,11 +3974,14 @@ namespace Engine {
             public LayoutParallax parallax;
             public Group next_child;
             public Group next_sibling;
+            public Group parent_group;
+            public int last_z_index;
         }
         private class ActionEntry {
             public int type;
             public bool enable;
             public object misc;
+            public string uniform_name;
             public float max_width, max_height;
             public bool cover, center;
             public float size;
@@ -3577,6 +3996,11 @@ namespace Engine {
             public Align align_vertical, align_horizontal;
             public int property;
             public float value;
+            public bool enabled;
+            public Blend blend_src_rgb;
+            public Blend blend_dst_rgb;
+            public Blend blend_src_alpha;
+            public Blend blend_dst_alpha;
         }
         private class Group : ISetProperty {
             public Action[] actions;
@@ -3593,6 +4017,17 @@ namespace Engine {
             public string initial_action_name;
             public SH4Matrix static_screen;
             public PVRContextFlag antialiasing;
+            public PSShader psshader;
+            public PSFramebuffer psframebuffer;
+            public bool blend_enabled;
+            public Blend blend_src_rgb;
+            public Blend blend_src_alpha;
+            public Blend blend_dst_rgb;
+            public Blend blend_dst_alpha;
+            public float viewport_x;
+            public float viewport_y;
+            public float viewport_width;
+            public float viewport_height;
             public GroupContext context;
 
             public void SetProperty(int id, float value) => Layout.HelperGroupSetProperty(this, id, value);

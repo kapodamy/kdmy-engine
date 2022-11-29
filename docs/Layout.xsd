@@ -110,21 +110,25 @@
             <xs:enumeration value="offsetColorB" />
             <xs:enumeration value="offsetColorA" />
             <xs:enumeration value="antialiasing" />
-            <xs:enumeration value="rotatepivotenable" />
-            <xs:enumeration value="scalesize" />
-            <xs:enumeration value="scaletranslation" />
-            <xs:enumeration value="translaterotation" />
-            <xs:enumeration value="translatex" />
-            <xs:enumeration value="translatey" />
-            <xs:enumeration value="scalex" />
-            <xs:enumeration value="scaley" />
-            <xs:enumeration value="skewx" />
-            <xs:enumeration value="skewy" />
+            <xs:enumeration value="rotatePivotEnable" />
+            <xs:enumeration value="scaleSize" />
+            <xs:enumeration value="scaleTranslation" />
+            <xs:enumeration value="translateRotation" />
+            <xs:enumeration value="translateX" />
+            <xs:enumeration value="translateY" />
+            <xs:enumeration value="scaleX" />
+            <xs:enumeration value="scaleY" />
+            <xs:enumeration value="skewX" />
+            <xs:enumeration value="skewY" />
             <xs:enumeration value="rotate" />
-            <xs:enumeration value="scaledirectionx" />
-            <xs:enumeration value="scaledirectiony" />
-            <xs:enumeration value="rotatepivotu" />
-            <xs:enumeration value="rotatepivotv" />
+            <xs:enumeration value="scaleDirectionX" />
+            <xs:enumeration value="scaleDirectionY" />
+            <xs:enumeration value="rotatePivotU" />
+            <xs:enumeration value="rotatePivotV" />
+            <xs:enumeration value="groupViewportX" />
+            <xs:enumeration value="groupViewportY" />
+            <xs:enumeration value="groupViewportWidth" />
+            <xs:enumeration value="groupViewportHeight" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="wordbreak">
@@ -151,6 +155,31 @@
             <xs:enumeration value="stop" />
             <xs:enumeration value="mute" />
             <xs:enumeration value="unmute" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="double-list">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="((-?\d*.\d+)\s*)+" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="blending">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="DEFAULT" />
+            <xs:enumeration value="ZERO" />
+            <xs:enumeration value="ONE" />
+            <xs:enumeration value="SRC_COLOR" />
+            <xs:enumeration value="ONE_MINUS_SRC_COLOR" />
+            <xs:enumeration value="DST_COLOR" />
+            <xs:enumeration value="ONE_MINUS_DST_COLOR" />
+            <xs:enumeration value="SRC_ALPHA" />
+            <xs:enumeration value="ONE_MINUS_SRC_ALPHA" />
+            <xs:enumeration value="DST_ALPHA" />
+            <xs:enumeration value="ONE_MINUS_DST_ALPHA" />
+            <xs:enumeration value="CONSTANT_COLOR" />
+            <xs:enumeration value="ONE_MINUS_CONSTANT_COLOR" />
+            <xs:enumeration value="CONSTANT_ALPHA" />
+            <xs:enumeration value="ONE_MINUS_CONSTANT_ALPHA" />
+            <xs:enumeration value="SRC_ALPHA_SATURATE" />
         </xs:restriction>
     </xs:simpleType>
 
@@ -378,6 +407,32 @@
         <xs:attribute name="y" type="xs:float" use="optional" default="NaN" />
         <xs:attribute name="z" type="xs:float" use="optional" default="NaN" />
     </xs:complexType>
+    <xs:complexType name="SetShader">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="VertexSource" minOccurs="0" maxOccurs="unbounded" type="String" />
+            <xs:element name="FragmentSource" minOccurs="0" maxOccurs="unbounded" type="String" />
+        </xs:sequence>
+        <xs:attribute name="vertexSrc" type="xs:string" use="optional" />
+        <xs:attribute name="fragmentSrc" type="xs:string" use="optional" />
+    </xs:complexType>
+    <xs:complexType name="RemoveShader"></xs:complexType>
+    <xs:complexType name="SetShaderUniform">
+        <xs:attribute name="value" type="xs:double" use="optional" default="0" />
+        <xs:attribute name="values" type="double-list" use="optional" />
+    </xs:complexType>
+    <xs:complexType name="SetBlending">
+        <xs:attribute name="enabled" type="xs:boolean" use="optional" />
+        <xs:attribute name="srcRGB" type="blending" use="optional" default="DEFAULT" />
+        <xs:attribute name="dstRGB" type="blending" use="optional" default="DEFAULT" />
+        <xs:attribute name="srcAlpha" type="blending" use="optional" default="DEFAULT" />
+        <xs:attribute name="dstAlpha" type="blending" use="optional" default="DEFAULT" />
+    </xs:complexType>
+    <xs:complexType name="Viewport">
+        <xs:attribute name="x" type="xs:float" use="optional" default="-1" />
+        <xs:attribute name="y" type="xs:float" use="optional" default="-1" />
+        <xs:attribute name="width" type="xs:float" use="optional" default="-1" />
+        <xs:attribute name="height" type="xs:float" use="optional" default="-1" />
+    </xs:complexType>
 
     <xs:complexType name="Sprite">
         <xs:sequence maxOccurs="unbounded">
@@ -400,6 +455,10 @@
                         <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Hide" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Show" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetShader" type="SetShader" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="RemoveShader" type="RemoveShader" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetShaderUniform" type="SetShaderUniform" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetBlending" type="SetBlending" minOccurs="0" maxOccurs="unbounded" />
                     </xs:sequence>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>
@@ -430,6 +489,10 @@
                         <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Hide" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Show" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetShader" type="SetShader" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="RemoveShader" type="RemoveShader" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetShaderUniform" type="SetShaderUniform" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetBlending" type="SetBlending" minOccurs="0" maxOccurs="unbounded" />
                     </xs:sequence>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>
@@ -475,6 +538,10 @@
                         <xs:element name="Show" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetShader" type="SetShader" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="RemoveShader" type="RemoveShader" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetShaderUniform" type="SetShaderUniform" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetBlending" type="SetBlending" minOccurs="0" maxOccurs="unbounded" />
                     </xs:choice>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>
@@ -489,6 +556,7 @@
         <xs:attribute name="name" type="xs:string" use="optional" />
         <xs:attribute name="initialAction" type="xs:string" use="optional" />
         <xs:attribute name="antialiasing" type="antialiasing" use="optional" />
+        <xs:attribute name="framebuffer" type="xs:boolean" use="optional" default="false" />
         <xs:attribute name="alpha" type="xs:float" use="optional" default="1" />
         <xs:attribute name="visible" type="xs:boolean" use="optional" default="false" />
     </xs:complexType>
@@ -555,8 +623,6 @@
             <xs:attribute name="antialiasing" type="antialiasing" default="enabled" use="optional" />
             <xs:attribute name="animation_speed" type="xs:float" default="1.0" use="optional" />
             <xs:attribute name="defaultBPM" type="antialiasing" default="enabled" use="optional" />
-            <xs:attribute name="visible" type="xs:boolean" use="prohibited" />
-            <xs:attribute name="name" type="xs:string" use="prohibited" />
             <xs:attribute name="alpha" type="xs:float" default="1.0" use="optional" />
             <xs:attribute name="initialAction" type="xs:string" use="optional" />
         </xs:complexType>

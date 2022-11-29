@@ -9,6 +9,7 @@
 #include "character.h"
 #include "songplayer.h"
 #include "dialogue.h"
+#include "psshader.h"
 
 typedef struct _RoundContext_t {
     int dummy;
@@ -62,6 +63,6 @@ void week_override_common_folder(RoundContext roundcontext, const char* custom_c
 void week_enable_credits_on_completed(RoundContext roundcontext);
 void week_end(RoundContext roundcontext, bool round_or_week, bool loose_or_win);
 Dialogue week_get_dialogue(RoundContext roundcontext);
-
+void week_set_ui_shader(RoundContext roundcontext, PSShader psshader);
 #endif
 
