@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using Engine.Game;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
@@ -472,7 +471,7 @@ namespace Engine.Animation {
             if (as_property < 0) as_property = VertexProps.ParseSpriteProperty2(unparsed_value);
             if (as_property < 0) as_property = VertexProps.ParseMediaProperty2(unparsed_value);
             if (as_property < 0) as_property = VertexProps.ParseLayoutProperty2(unparsed_value);
-            
+
             if (as_property >= 0) {
                 value.kind = MacroExecutorValueKind.PROPERTY;
                 value.reference = as_property;

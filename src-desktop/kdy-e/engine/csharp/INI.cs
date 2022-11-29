@@ -5,51 +5,41 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace Settings
-{
-    internal class INI
-    {
+namespace Settings {
+    internal class INI {
         private const string NEW_LINE = "\r\n";
 
         private readonly string path;
         private readonly List<Section> sections = new List<Section>();
 
-        internal INI(string path)
-        {
+        internal INI(string path) {
             this.path = path;
             Reload();
         }
 
 
-        private void ParseFromFile(List<Section> list_sections)
-        {
+        private void ParseFromFile(List<Section> list_sections) {
             using (FileStream fs = new FileStream(
                     path,
                     FileMode.OpenOrCreate,
                     FileAccess.Read,
                     FileShare.ReadWrite | FileShare.Inheritable
                 )
-            )
-            {
-                using (StreamReader sr = new StreamReader(fs, Encoding.UTF8))
-                {
+            ) {
+                using (StreamReader sr = new StreamReader(fs, Encoding.UTF8)) {
                     StringBuilder comments_buffer = null;
                     Section current_section = new Section();
 
-                    while (!sr.EndOfStream)
-                    {
+                    while (!sr.EndOfStream) {
                         string line = sr.ReadLine();
 
-                        if (line.Length < 1 || IsEmptyOrComment(line))
-                        {
-                            if (comments_buffer == null)
-                            {
+                        if (line.Length < 1 || IsEmptyOrComment(line)) {
+                            if (comments_buffer == null) {
                                 comments_buffer = new StringBuilder(128);
                                 if (line.Length < 1) continue;
                             }
 
-                            if (line.Length < 1)
-                            {
+                            if (line.Length < 1) {
                                 comments_buffer.Append(NEW_LINE);
                                 continue;
                             }
@@ -60,18 +50,14 @@ namespace Settings
                         }
 
                         string section_name = Section.IsSectionLine(line);
-                        if (section_name == null)
-                        {
-                            if (comments_buffer != null)
-                            {
+                        if (section_name == null) {
+                            if (comments_buffer != null) {
                                 current_section.AddEntry(comments_buffer.ToString(), true);
                                 comments_buffer = null;
                             }
 
                             current_section.AddEntry(line, false);
-                        }
-                        else
-                        {
+                        } else {
                             list_sections.Add(current_section);
 
                             current_section = new Section();
@@ -91,18 +77,15 @@ namespace Settings
             }
         }
 
-        internal void Reload()
-        {
+        internal void Reload() {
             ParseFromFile(sections);
         }
 
-        internal void ReloadUnModifiedSections()
-        {
+        internal void ReloadUnModifiedSections() {
             List<Section> reloaded_sections = new List<Section>(sections.Capacity);
             ParseFromFile(reloaded_sections);
 
-            for (int i = 0; i < reloaded_sections.Count; i++)
-            {
+            for (int i = 0 ; i < reloaded_sections.Count ; i++) {
                 string reloaded_name = reloaded_sections[i].name;
 
                 foreach (Section section_modified in sections)
@@ -114,22 +97,18 @@ namespace Settings
             sections.AddRange(reloaded_sections);
         }
 
-        internal void Flush()
-        {
+        internal void Flush() {
             using (FileStream fs = new FileStream(
                     path,
                     FileMode.Create,
                     FileAccess.Write,
                     FileShare.ReadWrite | FileShare.Inheritable
                 )
-            )
-            {
-                using (StreamWriter sw = new StreamWriter(fs, Encoding.UTF8))
-                {
+            ) {
+                using (StreamWriter sw = new StreamWriter(fs, Encoding.UTF8)) {
                     sw.NewLine = NEW_LINE;
 
-                    foreach (Section section in sections)
-                    {
+                    foreach (Section section in sections) {
                         if (section.name == null && section.entries.Count < 1) continue;
 
                         // section comment header
@@ -150,10 +129,8 @@ namespace Settings
             }
         }
 
-        private bool IsEmptyOrComment(string line)
-        {
-            for (int i = 0; i < line.Length; i++)
-            {
+        private bool IsEmptyOrComment(string line) {
+            for (int i = 0 ; i < line.Length ; i++) {
                 char c = line[i];
                 if (Char.IsWhiteSpace(c)) continue;
                 return c == ';';
@@ -164,8 +141,7 @@ namespace Settings
 
         #region Sections methods
 
-        private Section GetSection(string name, bool createIfNotExists)
-        {
+        private Section GetSection(string name, bool createIfNotExists) {
             foreach (Section section in sections)
                 if (section.name == name)
                     return section;
@@ -179,8 +155,7 @@ namespace Settings
             return new_section;
         }
 
-        internal bool RenameSection(string oldName, string newName)
-        {
+        internal bool RenameSection(string oldName, string newName) {
             if (newName == null) throw new ArgumentNullException("newName");
 
             Section section = GetSection(oldName, false);
@@ -190,8 +165,7 @@ namespace Settings
             return true;
         }
 
-        internal bool HasSection(string name)
-        {
+        internal bool HasSection(string name) {
             for (int i = 0 ; i < sections.Count ; i++) {
                 if (sections[i].name == name) return true;
             }
@@ -199,20 +173,17 @@ namespace Settings
             return false;
         }
 
-        internal string[] GetSections()
-        {
+        internal string[] GetSections() {
             string[] names = new string[sections.Count];
-            for (int i = 0; i < names.Length; i++)
+            for (int i = 0 ; i < names.Length ; i++)
                 names[i] = sections[i].name;
 
             return names;
         }
 
-        internal string[] GetSections(string prefixName)
-        {
+        internal string[] GetSections(string prefixName) {
             List<string> names = new List<string>(sections.Count);
-            for (int i = 0; i < sections.Count; i++)
-            {
+            for (int i = 0 ; i < sections.Count ; i++) {
                 string name = sections[i].name;
                 if (name != null && name.StartsWith(prefixName)) names.Add(name);
             }
@@ -220,10 +191,8 @@ namespace Settings
             return names.ToArray();
         }
 
-        internal bool DeleteSection(string name)
-        {
-            for (int i = 0; i < sections.Count; i++)
-            {
+        internal bool DeleteSection(string name) {
+            for (int i = 0 ; i < sections.Count ; i++) {
                 if (sections[i].name != name) continue;
                 sections.RemoveAt(i);
                 return true;
@@ -232,8 +201,7 @@ namespace Settings
             return false;
         }
 
-        internal void CreateSection(string name)
-        {
+        internal void CreateSection(string name) {
             Section section = GetSection(name, false);
             if (section == null)
                 sections.Add(
@@ -241,8 +209,7 @@ namespace Settings
                 );
         }
 
-        internal bool SetSectionComment(string section, string comment)
-        {
+        internal bool SetSectionComment(string section, string comment) {
             Section sec = GetSection(section, false);
             if (sec == null) return false;
 
@@ -250,22 +217,20 @@ namespace Settings
             return true;
         }
 
-        internal string GetSectionComment(string section)
-        {
+        internal string GetSectionComment(string section) {
             Section sec = GetSection(section, false);
             if (sec == null) return null;
 
             return sec.comment;
         }
 
-        internal void DeleteAllSections(string prefixName)
-        {
+        internal void DeleteAllSections(string prefixName) {
             if (sections == null || sections.Count < 1) return;
 
             if (String.IsNullOrEmpty(prefixName))
                 throw new ArgumentException("invalid prefix", "prefixName");
 
-            for (int i = sections.Count - 1; i >= 0; i--)
+            for (int i = sections.Count - 1 ; i >= 0 ; i--)
                 if (sections[i].name.StartsWith(prefixName))
                     sections.RemoveAt(i);
         }
@@ -274,8 +239,7 @@ namespace Settings
 
         #region Getters methods
 
-        internal string GetString(string section, string key, string @default = null)
-        {
+        internal string GetString(string section, string key, string @default = null) {
             Section sec = GetSection(section, false);
             if (sec == null) return @default;
             string value = sec.GetValue(key);
@@ -283,8 +247,7 @@ namespace Settings
             return value == null ? @default : value;
         }
 
-        internal int GetInt(string section, string key, int @default = 0)
-        {
+        internal int GetInt(string section, string key, int @default = 0) {
             string value = GetString(section, key);
             if (value == null)
                 return @default;
@@ -292,8 +255,7 @@ namespace Settings
                 return Int32.Parse(value);
         }
 
-        internal long GetLong(string section, string key, long @default = 0)
-        {
+        internal long GetLong(string section, string key, long @default = 0) {
             string value = GetString(section, key);
             if (value == null)
                 return @default;
@@ -302,16 +264,14 @@ namespace Settings
 
         }
 
-        internal bool GetBool(string section, string key, bool @default = false)
-        {
+        internal bool GetBool(string section, string key, bool @default = false) {
             string value = GetString(section, key);
             if (value == "1") return true;
             else if (value == "0") return false;
             else return @default;
         }
 
-        internal byte GetByte(string section, string key, byte @default = 0)
-        {
+        internal byte GetByte(string section, string key, byte @default = 0) {
             string value = GetString(section, key);
             if (value == null)
                 return @default;
@@ -319,8 +279,7 @@ namespace Settings
                 return Byte.Parse(value);
         }
 
-        internal float GetFloat(string section, string key, float @default = 0)
-        {
+        internal float GetFloat(string section, string key, float @default = 0) {
             string value = GetString(section, key);
             if (value == null)
                 return @default;
@@ -328,8 +287,7 @@ namespace Settings
                 return Single.Parse(value, CultureInfo.InvariantCulture);
         }
 
-        internal byte[] GetData(string section, string key, byte[] @default = null)
-        {
+        internal byte[] GetData(string section, string key, byte[] @default = null) {
             string value = GetString(section, key);
             if (value == null) return @default;
             if (value.Length < 1) return new byte[0];
@@ -338,8 +296,7 @@ namespace Settings
 
             byte[] data = new byte[value.Length / 2];
 
-            for (int i = 0; i < value.Length; i += 2)
-            {
+            for (int i = 0 ; i < value.Length ; i += 2) {
                 data[i / 2] = Byte.Parse(
                     value.Substring(i, 2),
                     NumberStyles.HexNumber | NumberStyles.AllowHexSpecifier,
@@ -354,45 +311,37 @@ namespace Settings
 
         #region Setters methods
 
-        internal void SetString(string section, string key, string value)
-        {
+        internal void SetString(string section, string key, string value) {
             Section sec = GetSection(section, true);
             if (sec == null) return;
             sec.SetValue(key, value);
         }
 
-        internal void SetInt(string section, string key, int value)
-        {
+        internal void SetInt(string section, string key, int value) {
             SetString(section, key, value.ToString(CultureInfo.InvariantCulture));
         }
 
-        internal void SetLong(string section, string key, long value)
-        {
+        internal void SetLong(string section, string key, long value) {
             SetString(section, key, value.ToString(CultureInfo.InvariantCulture));
         }
 
-        internal void SetBool(string section, string key, bool value)
-        {
+        internal void SetBool(string section, string key, bool value) {
             if (value)
                 SetString(section, key, "1");
             else
                 SetString(section, key, "0");
         }
 
-        internal void SetByte(string section, string key, byte value)
-        {
+        internal void SetByte(string section, string key, byte value) {
             SetString(section, key, value.ToString(CultureInfo.InvariantCulture));
         }
 
-        internal void SetFloat(string section, string key, float value)
-        {
+        internal void SetFloat(string section, string key, float value) {
             SetString(section, key, value.ToString(CultureInfo.InvariantCulture));
         }
 
-        internal void SetData(string section, string key, byte[] value)
-        {
-            if (value == null)
-            {
+        internal void SetData(string section, string key, byte[] value) {
+            if (value == null) {
                 SetString(section, key, null);
                 return;
             }
@@ -408,13 +357,11 @@ namespace Settings
 
         #region Entry methods
 
-        internal bool DeleteKey(string sectionName, string keyName)
-        {
+        internal bool DeleteKey(string sectionName, string keyName) {
             Section section = GetSection(sectionName, false);
             if (section == null) return false;
 
-            for (int i = 0; i < section.entries.Count; i++)
-            {
+            for (int i = 0 ; i < section.entries.Count ; i++) {
                 Entry entry = section.entries[i];
                 if (entry.IsComment) continue;
                 if (entry.Key != keyName) continue;
@@ -426,8 +373,7 @@ namespace Settings
             return false;
         }
 
-        internal string ExchangeKey(string section, string key, string @default)
-        {
+        internal string ExchangeKey(string section, string key, string @default) {
             Section sec = GetSection(section, true);
 
             string value = sec.GetValue(key);
@@ -437,8 +383,7 @@ namespace Settings
             return @default;
         }
 
-        internal bool HasKey(string sectionName, string keyName)
-        {
+        internal bool HasKey(string sectionName, string keyName) {
             Section section = GetSection(sectionName, false);
             if (section == null) return false;
 
@@ -449,8 +394,7 @@ namespace Settings
 
 
         [DebuggerDisplay("\\{name={name} entries={entries.Count}\\}", Target = typeof(string))]
-        private class Section
-        {
+        private class Section {
             internal const char TOKEN_OPEN = '[';
             internal const char TOKEN_CLOSE = ']';
 
@@ -460,12 +404,10 @@ namespace Settings
             internal readonly List<Entry> entries = new List<Entry>();
 
 
-            private Entry IndexOf(string key)
-            {
+            private Entry IndexOf(string key) {
                 if (entries.Count < 1) return null;
 
-                foreach (Entry entry in entries)
-                {
+                foreach (Entry entry in entries) {
                     if (entry.IsComment) continue;
                     if (entry.Key == key) return entry;
                 }
@@ -473,24 +415,19 @@ namespace Settings
                 return null;
             }
 
-            internal string GetValue(string key)
-            {
+            internal string GetValue(string key) {
                 Entry entry = IndexOf(key);
                 if (entry == null) return null;
                 return entry.Value;
             }
 
-            internal void SetValue(string key, string value)
-            {
+            internal void SetValue(string key, string value) {
                 Entry entry = IndexOf(key);
 
-                if (entry == null)
-                {
+                if (entry == null) {
                     if (value == null) return;
                     entries.Add(new Entry(key, value));
-                }
-                else
-                {
+                } else {
                     if (value == null)
                         entries.Remove(entry);
                     else
@@ -500,10 +437,8 @@ namespace Settings
                 modified = true;
             }
 
-            internal void SetComment(string value)
-            {
-                if (value == null || value.Length < 1)
-                {
+            internal void SetComment(string value) {
+                if (value == null || value.Length < 1) {
                     comment = value;
                     return;
                 }
@@ -525,36 +460,30 @@ namespace Settings
                     comment = Entry.COMMENT_TOKEN + value.Replace(line_break, line_break + Entry.COMMENT_TOKEN);
             }
 
-            internal void AddEntry(string value, bool isComment)
-            {
+            internal void AddEntry(string value, bool isComment) {
                 entries.Add(new Entry(value, isComment));
             }
 
-            internal static string IsSectionLine(string line)
-            {
+            internal static string IsSectionLine(string line) {
                 int open = -1;
                 int close = -1;
 
-                for (int i = 0; i < line.Length; i++)
-                {
+                for (int i = 0 ; i < line.Length ; i++) {
                     char c = line[i];
                     if (Char.IsWhiteSpace(c)) continue;
 
-                    if (c == TOKEN_OPEN)
-                    {
+                    if (c == TOKEN_OPEN) {
                         open = i + 1;
                         break;
                     }
                 }
                 if (open < 0) return null;
 
-                for (int i = line.Length - 1; i >= open; i--)
-                {
+                for (int i = line.Length - 1 ; i >= open ; i--) {
                     char c = line[i];
                     if (Char.IsWhiteSpace(c)) continue;
 
-                    if (c == TOKEN_CLOSE)
-                    {
+                    if (c == TOKEN_CLOSE) {
                         close = i;
                         break;
                     }
@@ -614,16 +543,14 @@ namespace Settings
         }
 
         [DebuggerDisplay("\\{{content}\\}")]
-        private class Entry
-        {
+        private class Entry {
             private const char KEY_TOKEN = '=';
             internal const char COMMENT_TOKEN = ';';
 
             private readonly int at;
             internal string content;
 
-            internal Entry(string str, bool isComment)
-            {
+            internal Entry(string str, bool isComment) {
                 content = str;
 
                 if (isComment)
@@ -632,14 +559,12 @@ namespace Settings
                     at = content.IndexOf(KEY_TOKEN);
             }
 
-            internal Entry(string key, string value)
-            {
+            internal Entry(string key, string value) {
                 Create(key, value);
                 at = key.Length;
             }
 
-            internal void Create(string key, string value)
-            {
+            internal void Create(string key, string value) {
                 content = key + KEY_TOKEN + value;
             }
 
@@ -648,8 +573,7 @@ namespace Settings
 
             internal string Key => content.Substring(0, at);
 
-            internal string Value
-            {
+            internal string Value {
                 get => content.Substring(at + 1);
                 set => Create(Key, value);
             }

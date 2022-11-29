@@ -1,8 +1,8 @@
+using System;
+using System.Diagnostics;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
 using Engine.Platform;
-using System;
-using System.Diagnostics;
 
 namespace Engine.Externals.LuaScriptInterop {
     public class Luascript {
@@ -380,7 +380,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             lua.CallPushedGlobalFunction(2);
         }
-        
+
         public void notify_dialogue_line_ends(int line_index, string state_name) {
             const string FUNCTION = "f_dialogue_line_ends";
             if (lua.PushGlobalFunction(FUNCTION)) return;

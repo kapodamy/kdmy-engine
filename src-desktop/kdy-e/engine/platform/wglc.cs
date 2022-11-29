@@ -1,9 +1,9 @@
 using System;
-using Engine.Image;
-using Engine.Externals;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Engine.Externals;
 using Engine.Externals.GLFW;
+using Engine.Image;
 using Engine.Utils;
 
 namespace Engine.Platform {

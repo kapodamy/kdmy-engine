@@ -1,4 +1,3 @@
-using System.Security.Policy;
 using Engine.Externals.LuaInterop;
 using Engine.Image;
 using Engine.Platform;

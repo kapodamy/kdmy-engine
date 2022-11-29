@@ -2,7 +2,7 @@
 namespace Engine.Game.Common {
 
     public static class Funkin {
-        
+
         /**
          * Contains all weeks definitions found
          */

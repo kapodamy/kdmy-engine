@@ -17,8 +17,8 @@ namespace Engine {
 
 
         public BeatWatcher() { }
-        
-        
+
+
         public bool count_beats_or_quarters;
         public float tick;
         public int count;

@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Engine.Utils {
     public class DataView {
@@ -90,7 +85,7 @@ namespace Engine.Utils {
             this.buffer[offset + 3] = (byte)((value >> 24) & 0xFF);
 
         }
-        
+
         public void SetInt32(int offset, int value) {
             offset += this.start_offset;
             this.buffer[offset + 0] = (byte)((value >> 0) & 0xFF);

@@ -4,7 +4,7 @@ using Engine.Font;
 namespace Engine.Game.Helpers {
 
     public class WeekSelectorWeekMSG {
-        
+
         private const float DISABLED_ALPHA = 0.5f;
 
         private TextSprite title;

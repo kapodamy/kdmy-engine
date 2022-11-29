@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
-using static Engine.Externals.WebGL2RenderingContext.NativeMethods;
 
 namespace Engine.Externals {
 
@@ -446,7 +441,7 @@ namespace Engine.Externals {
         internal void bindFramebuffer(GLenum target, WebGLFramebuffer framebuffer) {
             NativeMethods.glBindFramebuffer(target, framebuffer.value);
         }
-        
+
         internal void bindFramebuffer(GLenum target, int framebuffer) {
             NativeMethods.glBindFramebuffer(target, (uint)framebuffer);
         }

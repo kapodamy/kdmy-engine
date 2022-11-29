@@ -1,5 +1,5 @@
 ﻿namespace Engine {
-    public interface IVertex: ISetProperty, IDraw, IAnimate {
+    public interface IVertex : ISetProperty, IDraw, IAnimate {
 
         void GetDrawSize(out float draw_width, out float draw_height);
 

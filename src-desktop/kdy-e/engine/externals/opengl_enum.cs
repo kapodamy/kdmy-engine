@@ -1,5 +1,4 @@
 ﻿using System;
-using static Engine.Externals.WebGL2RenderingContext.NativeMethods;
 
 namespace Engine.Externals {
 

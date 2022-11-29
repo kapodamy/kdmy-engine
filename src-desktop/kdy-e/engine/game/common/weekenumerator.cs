@@ -146,7 +146,7 @@ namespace Engine.Game.Common {
             }
             return null;
         }
-        
+
         public static string GetAsset(WeekInfo weekinfo, string relative_path) {
             return StringUtils.Concat(
                 Funkin.WEEKS_FOLDER, weekinfo.name, FS.CHAR_SEPARATOR.ToString(), relative_path

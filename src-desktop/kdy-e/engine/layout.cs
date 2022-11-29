@@ -1,9 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Runtime.Remoting.Messaging;
-using System.Security.Cryptography;
-using System.Security.Policy;
 using System.Text;
 using Engine.Animation;
 using Engine.Font;
@@ -12,9 +8,6 @@ using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
-using KallistiOS.THD;
-using Newtonsoft.Json.Linq;
-using static Engine.Platform.FSFolderEnumerator;
 
 namespace Engine {
 

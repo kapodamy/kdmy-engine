@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using CsharpWrapper;
 using Engine.Animation;
+using Engine.Externals.GLFW;
 using Engine.Font;
 using Engine.Game.Common;
 using Engine.Game.Gameplay.Helpers;
@@ -9,7 +10,6 @@ using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
-using Engine.Externals.GLFW;
 
 namespace Engine.Game {
     public static class SettingsMenu {
@@ -192,8 +192,8 @@ namespace Engine.Game {
                 new SettingOption() { description = "Specific engine settings" },
                 new SettingOption() { description = "Returns back to the main menu.\n¡Settings are automatically saved!" }
             };
-        
-        AnimList animlist = AnimList.Init("/assets/common/anims/settings-menu.xml");
+
+            AnimList animlist = AnimList.Init("/assets/common/anims/settings-menu.xml");
             AnimSprite anim_binding, anim_binding_rollback;
 
             if (animlist != null) {
