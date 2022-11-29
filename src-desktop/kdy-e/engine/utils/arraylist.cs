@@ -150,7 +150,6 @@ namespace Engine.Utils {
         public bool RemoveAt(int index) {
             if (index < 0 || index >= this.size) return false;
 
-            // JS only
             int j = index;
             for (int i = index + 1 ; i < this.size ; i++, j++) {
                 this.array[j] = this.array[i];

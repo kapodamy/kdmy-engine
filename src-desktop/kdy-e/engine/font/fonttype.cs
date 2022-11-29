@@ -503,7 +503,7 @@ namespace Engine.Font {
         private static Texture InternalUploadTexture(FontCharMap fontcharmap) {
             if (fontcharmap == null) return null;
 
-            WebGLRenderingContext gl = PVRContext.global_context.webopengl.gl;
+            WebGL2RenderingContext gl = PVRContext.global_context.webopengl.gl;
 
             int unpack_alignment = gl.getParameter(gl.UNPACK_ALIGNMENT);
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);

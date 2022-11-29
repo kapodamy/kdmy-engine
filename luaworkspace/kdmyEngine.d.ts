@@ -241,6 +241,8 @@ declare global {
         disable_antialiasing(antialiasing: boolean): void;
         set_group_antialiasing(group_name: string, antialiasing: PVRFlag): void;
         get_group_modifier(group_name: string): Modifier;
+        layout_get_group_shader(layout: Layout, name: string): PSShader;
+        layout_set_group_shader(layout: Layout, name: string, psshader: PSShader): boolean;
     }
     interface Sprite {
         matrix_get_modifier(): Modifier;
@@ -267,6 +269,9 @@ declare global {
         set_antialiasing(antialiasing: PVRFlag): void;
         flip_rendered_texture(flip_x?: boolean, flip_y?: boolean): void;
         flip_rendered_texture_enable_correction(enabled: boolean): void;
+        sprite_set_shader(sprite: Sprite, psshader: PSShader): void;
+        sprite_get_shader(sprite: Sprite): PSShader;
+
     }
     interface TextSprite {
         set_text(text: string): void;
@@ -294,6 +299,9 @@ declare global {
         border_set_color(r: number, g: number, b: number, a: number): void;
         set_antialiasing(antialiasing: PVRFlag): void;
         set_wordbreak(wordbreak: FontWordBreak): void;
+        set_shader(textsprite: TextSprite, psshader: PSShader): void;
+        get_shader(textsprite: TextSprite): PSShader;
+
     }
     interface SoundPlayer {
         play(): void;
@@ -424,6 +432,13 @@ declare global {
     interface Animsprite {
         // not implemented
     }
+    interface PSShader {
+        destroy(psshader: PSShader): void;
+        set_uniform_any(psshader: PSShader, name: string, ...values: number[]): number;
+        set_uniform1f(psshader: PSShader, name: string, value: number): boolean;
+        set_uniform1i(psshader: PSShader, name: string, value: number): boolean;
+
+    }
 
     //
     // Global functions (commented functions are not implemented) (gameplay only)
@@ -458,6 +473,7 @@ declare global {
     function week_enable_credits_on_completed(): void;
     function week_end(round_or_week: boolean, loose_or_win: boolean): void;
     function week_get_dialogue(): void;
+    function week_set_ui_shader(psshader: PSShader): void;
 
 
     //
@@ -488,6 +504,8 @@ declare global {
     //
     function fs_readfile(path: string): string;
 
+    // constructors
+    function engine_create_shader(vertex_sourcecode: string, fragment_sourcecode: string): PSShader;
 
     //
     // Modding UI (engine menus only)

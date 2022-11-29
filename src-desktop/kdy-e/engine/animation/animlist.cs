@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using Engine.Game;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
@@ -470,6 +471,8 @@ namespace Engine.Animation {
             int as_property = VertexProps.ParseTextSpriteProperty2(unparsed_value);
             if (as_property < 0) as_property = VertexProps.ParseSpriteProperty2(unparsed_value);
             if (as_property < 0) as_property = VertexProps.ParseMediaProperty2(unparsed_value);
+            if (as_property < 0) as_property = VertexProps.ParseLayoutProperty2(unparsed_value);
+            
             if (as_property >= 0) {
                 value.kind = MacroExecutorValueKind.PROPERTY;
                 value.reference = as_property;
@@ -729,6 +732,7 @@ namespace Engine.Animation {
             int value = VertexProps.ParseTextSpriteProperty(node, name, false);
             if (value < 0) value = VertexProps.ParseSpriteProperty(node, name, warn);
             if (value < 0) value = VertexProps.ParseMediaProperty(node, name, warn);
+            if (value < 0) value = VertexProps.ParseLayoutProperty(node, name, warn);
 
             if (value == VertexProps.TEXTSPRITE_PROP_STRING) {
                 Console.Error.WriteLine("animlist_parse_property() illegal property: string", node.OuterHTML);

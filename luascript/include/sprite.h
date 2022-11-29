@@ -4,12 +4,13 @@
 #include <stdbool.h>
 #include "modifier.h"
 #include "pvrctx.h"
+#include "psshader.h"
 
 typedef struct _Sprite_t {
     int dummy;
 } Sprite_t;
 
-typedef Sprite_t *Sprite;
+typedef Sprite_t* Sprite;
 
 Modifier sprite_matrix_get_modifier(Sprite sprite);
 void sprite_set_offset_source(Sprite sprite, float x, float y, float width, float height);
@@ -35,4 +36,7 @@ float* sprite_center_draw_location(Sprite sprite, float x, float y, float ref_wi
 void sprite_set_antialiasing(Sprite sprite, PVRFLAG antialiasing);
 void sprite_flip_rendered_texture(Sprite sprite, int flip_x, int flip_y);
 void sprite_flip_rendered_texture_enable_correction(Sprite sprite, bool enabled);
+void sprite_set_shader(Sprite sprite, PSShader psshader);
+PSShader sprite_get_shader(Sprite sprite);
+
 #endif

@@ -1,6 +1,4 @@
-#version 330 core
-
-attribute vec4 a_position;
+in vec4 a_position;
 
 uniform mat4 u_matrix_proyection;
 uniform mat4 u_matrix_model;// location + size

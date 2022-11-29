@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "sprite.h"
 #include "pvrctx.h"
+#include "psshader.h"
 
 static TextSprite_t stub_textsprite = {};
 static Sprite_t stub_sprite = {};
@@ -10,6 +11,7 @@ static SoundPlayer_t stub_soundplayer = {};
 static Camera_t stub_camera = {};
 static _LayoutPlaceholder_t stub_placeholder = {};
 static Modifier_t stub_modifier = {};
+static PSShader_t stub_psshader = {};
 
 int layout_trigger_any(Layout layout, const char* action_triger_camera_interval_name) {
     print_stub("layout_trigger_any", "layout=%p action_triger_camera_interval_name=%s", layout, action_triger_camera_interval_name);
@@ -110,5 +112,13 @@ void layout_set_group_antialiasing(Layout layout, const char* group_name, PVRFLA
 Modifier layout_get_group_modifier(Layout layout, const char* group_name) {
     print_stub("layout_get_group_modifier", "layout=%p group_name=%s", layout, group_name);
     return &stub_modifier;
+}
+PSShader layout_get_group_shader(Layout layout, const char* group_name) {
+    print_stub("layout_get_group_shader", "layout=%p group_name=%s", layout, group_name);
+    return &stub_psshader;
+}
+bool layout_set_group_shader(Layout layout, const char* group_name, PSShader psshader) {
+    print_stub("layout_set_group_shader", "layout=%p group_name=%s psshader=%p", layout, group_name, psshader);
+    return 0;
 }
 

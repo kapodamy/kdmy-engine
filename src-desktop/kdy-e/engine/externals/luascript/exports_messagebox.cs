@@ -218,11 +218,11 @@ namespace Engine.Externals.LuaScriptInterop {
         public static object Messagebox { get; private set; }
 
         internal static int script_messagebox_new(LuaState L, MessageBox messagebox) {
-            return L.CreateUserdata(MESSAGEBOX, messagebox, true);
+            return L.CreateUserdata(MESSAGEBOX, messagebox);
         }
 
         static int script_messagebox_gc(LuaState L) {
-            return L.DestroyUserdata(MESSAGEBOX);
+            return L.NullifyUserdata(MESSAGEBOX);
         }
 
         static int script_messagebox_tostring(LuaState L) {

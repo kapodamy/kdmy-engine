@@ -322,6 +322,34 @@ namespace Engine.Externals.LuaScriptInterop {
             return ExportsModifier.script_modifier_new(L, modifier);
         }
 
+        static int script_layout_get_group_shader(LuaState L) {
+            Layout layout = L.ReadUserdata<Layout>(LAYOUT);
+
+            string name = L.luaL_optstring(2, null);
+
+            PSShader psshader = layout.GetGroupShader(name);
+
+            if (psshader == null) {
+                L.lua_pushnil();
+                return 1;
+            }
+
+            return ExportsPSShader.script_psshader_new(L, psshader);
+        }
+
+        static int script_layout_set_group_shader(LuaState L) {
+            Layout layout = L.ReadUserdata<Layout>(LAYOUT);
+
+            string name = L.luaL_optstring(2, null);
+            PSShader psshader = L.ReadUserdataOrNull<PSShader>(3, ExportsPSShader.PSSHADER);
+
+            bool ret = layout.SetGroupShader(name, psshader);
+
+            L.lua_pushboolean(ret);
+
+            return 1;
+        }
+
         ////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////
 
@@ -352,16 +380,18 @@ namespace Engine.Externals.LuaScriptInterop {
            new LuaTableFunction() { name = "disable_antialiasing", func = script_layout_disable_antialiasing},
            new LuaTableFunction() { name = "set_group_antialiasing", func = script_layout_set_group_antialiasing},
            new LuaTableFunction() { name = "get_group_modifier", func = script_layout_get_group_modifier},
+           new LuaTableFunction() { name = "get_group_shader", func = script_layout_get_group_shader},
+           new LuaTableFunction() { name = "set_group_shader", func = script_layout_set_group_shader},
            new LuaTableFunction() { name = null, func = null}
         };
 
 
         internal static int script_layout_new(LuaState L, Layout layout) {
-            return L.CreateUserdata(LAYOUT, layout, true);
+            return L.CreateUserdata(LAYOUT, layout);
         }
 
         static int script_layout_gc(LuaState L) {
-            return L.DestroyUserdata(LAYOUT);
+            return L.NullifyUserdata(LAYOUT);
         }
 
         static int script_layout_tostring(LuaState L) {

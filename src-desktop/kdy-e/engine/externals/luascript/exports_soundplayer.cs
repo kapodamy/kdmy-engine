@@ -139,11 +139,11 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         internal static int script_soundplayer_new(LuaState L, SoundPlayer soundplayer) {
-            return L.CreateUserdata(SOUNDPLAYER, soundplayer, true);
+            return L.CreateUserdata(SOUNDPLAYER, soundplayer);
         }
 
         static int script_soundplayer_gc(LuaState L) {
-            return L.DestroyUserdata(SOUNDPLAYER);
+            return L.NullifyUserdata(SOUNDPLAYER);
         }
 
         static int script_soundplayer_tostring(LuaState L) {

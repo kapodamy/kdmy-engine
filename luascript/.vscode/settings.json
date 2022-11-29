@@ -42,6 +42,7 @@
         "math2d.h": "c",
         "dialogue.h": "c",
         "profileapi.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "psshader.h": "c"
     }
 }

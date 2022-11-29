@@ -61,6 +61,7 @@ namespace Engine.Externals.LuaScriptInterop {
             ExportsSoundPlayer.register_soundplayer(lua);
             ExportsSprite.register_sprite(lua);
             ExportsTextSprite.register_textsprite(lua);
+            ExportsPSShader.register_psshader(lua);
 
             if (is_week) {
                 ExportsSongPlayer.register_songplayer(lua);

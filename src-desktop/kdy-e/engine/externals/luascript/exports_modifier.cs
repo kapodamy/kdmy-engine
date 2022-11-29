@@ -31,11 +31,11 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         internal static int script_modifier_new(LuaState L, Modifier modifier) {
-            return L.CreateUserdata(MODIFIER, modifier, true);
+            return L.CreateUserdata(MODIFIER, modifier);
         }
 
         static int script_modifier_gc(LuaState L) {
-            return L.DestroyUserdata(MODIFIER);
+            return L.NullifyUserdata(MODIFIER);
         }
 
         static int script_modifier_tostring(LuaState L) {

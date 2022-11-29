@@ -295,6 +295,28 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_textsprite_set_shader(LuaState L) {
+            TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
+
+            PSShader psshader = L.ReadUserdataOrNull<PSShader>(2, ExportsPSShader.PSSHADER);
+
+            textsprite.SetShader(psshader);
+
+            return 0;
+        }
+
+        static int script_textsprite_get_shader(LuaState L) {
+            TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
+
+            PSShader psshader = textsprite.GetShader();
+
+            if (psshader == null) {
+                L.lua_pushnil();
+                return 1;
+            }
+
+            return ExportsPSShader.script_psshader_new(L, psshader);
+        }
 
 
 
@@ -327,15 +349,17 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction() { name = "border_set_color", func = script_textsprite_border_set_color },
             new LuaTableFunction() { name = "set_antialiasing", func = script_textsprite_set_antialiasing },
             new LuaTableFunction() { name = "set_wordbreak", func = script_textsprite_set_wordbreak },
+            new LuaTableFunction() { name = "set_shader", func = script_textsprite_set_shader },
+            new LuaTableFunction() { name = "get_shader", func = script_textsprite_get_shader },
             new LuaTableFunction() { name = null, func = null }
         };
 
         internal static int script_textsprite_new(LuaState L, TextSprite textsprite) {
-            return L.CreateUserdata(TEXTSPRITE, textsprite, true);
+            return L.CreateUserdata(TEXTSPRITE, textsprite);
         }
 
         static int script_textsprite_gc(LuaState L) {
-            return L.DestroyUserdata(TEXTSPRITE);
+            return L.NullifyUserdata(TEXTSPRITE);
         }
 
         static int script_textsprite_tostring(LuaState L) {

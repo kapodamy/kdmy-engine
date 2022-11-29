@@ -18,17 +18,14 @@ namespace Engine.Externals.LuaInterop {
 
         internal object context;
         internal unsafe lua_State* L;
-        internal UserdataList userdata_list;
-        internal ReferenceList allocated_objects;
         private GCHandle self;
         private string last_pushed_function_name;
+        private static readonly LuaCallback delegate_eq = EqImpl;
 
         private unsafe ManagedLuaState(lua_State* L, object context) {
             this.L = L;
             this.context = context;
             this.self = GCHandle.Alloc(this, GCHandleType.Normal);
-            this.userdata_list = new UserdataList(L);
-            this.allocated_objects = new ReferenceList();
             this.last_pushed_function_name = null;
 
             LUA.luaL_openlibs(L);
@@ -54,8 +51,6 @@ namespace Engine.Externals.LuaInterop {
 
             if (this.self.IsAllocated) this.self.Free();
             this.context = null;
-            this.userdata_list.Dispose();
-            this.allocated_objects.Dispose();
         }
 
         internal unsafe static ManagedLuaState SelfFrom(void* luascript) {
@@ -69,6 +64,28 @@ namespace Engine.Externals.LuaInterop {
             Debug.Assert(target != null, "self.Target returned null");
 
             return (ManagedLuaState)target;
+        }
+
+        private static unsafe int EqImpl(LuaState luastate) {
+            lua_State* L = luastate.L;
+
+            bool equals;
+
+            int type_a = LUA.lua_type(L, 1);
+            int type_b = LUA.lua_type(L, 2);
+
+            if (type_a != LUA.TUSERDATA || type_b != LUA.TUSERDATA) {
+                equals = false;
+            } else {
+                void** a = (void**)LUA.lua_touserdata(L, 1);
+                void** b = (void**)LUA.lua_touserdata(L, 2);
+
+                equals = (a == null && b == null) || (a != b) || ((*a) != (*b));
+            }
+
+            LUA.lua_pushboolean(L, equals ? 1 : 0);
+
+            return 1;
         }
 
 
@@ -185,6 +202,9 @@ namespace Engine.Externals.LuaInterop {
 
                 LUA.lua_pushcfunction(lua, newindex);
                 LUA.lua_setfield(lua, -2, "__newindex");
+
+                LUA.lua_pushcfunction(lua, ManagedLuaState.delegate_eq);
+                LUA.lua_setfield(lua, -2, "__eq");
 
                 LUA.lua_pop(lua, 1);
             }

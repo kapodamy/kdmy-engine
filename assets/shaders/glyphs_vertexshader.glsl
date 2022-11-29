@@ -1,10 +1,9 @@
-#version 330 core
 
-attribute vec4 a_position;
-attribute vec4 a_source_coords;
-attribute vec4 a_draw_coords;
-attribute float a_texture_alt;
-attribute float a_color_alt;
+in vec4 a_position;
+in vec4 a_source_coords;
+in vec4 a_draw_coords;
+in float a_texture_alt;
+in float a_color_alt;
 
 uniform mat4 u_matrix_proyection;
 uniform mat4 u_matrix_transform;

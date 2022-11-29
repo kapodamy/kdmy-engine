@@ -1,4 +1,3 @@
-#version 330 core
 #define SDF_FONT
 
 out vec4 FragColor;
@@ -19,6 +18,13 @@ uniform bool u_offsetcolor_mul_or_diff;
 uniform bool u_offsetcolor_enabled;
 uniform vec4 u_offsetcolor;
 
+#ifdef DOTTED
+uniform bool u_dotted;
+
+const float MOD_A = 0.0016;
+const float MOD_B = MOD_A / 2.0;
+#endif
+
 #ifdef SDF_FONT
 uniform float u_sdf_width;
 uniform float u_sdf_edge;
@@ -27,26 +33,25 @@ const float THICKNESS = 0.20;
 #endif
 
 void main() {
-	bool is_outline = v_coloralt != 0.0;
+    bool is_outline = v_coloralt != 0.0;
     vec4 texture_color;
     vec4 source_color = is_outline ? u_color_outline : u_color;
     vec4 color;
 
     if(bool(v_texalt))
-        texture_color = texture2D(u_texture1, v_texcoord);
+        texture_color = texture(u_texture1, v_texcoord);
     else
-        texture_color = texture2D(u_texture0, v_texcoord);
+        texture_color = texture(u_texture0, v_texcoord);
 
     if(u_grayscale) {
         float luminance = texture_color.r;
 
 		#ifdef SDF_FONT
-		if (is_outline) {
-			// if (luminance >= 0.5) luminance *= 10.0;
-			luminance = 1.0 - smoothstep(THICKNESS + u_sdf_width,THICKNESS + u_sdf_width + u_sdf_edge, 1.0 - luminance);
-		} else {
-			luminance = 1.0 - smoothstep(u_sdf_width, u_sdf_width + u_sdf_edge, 1.0 - luminance);
-		}
+        if(is_outline) {
+            luminance = 1.0 - smoothstep(THICKNESS + u_sdf_width, THICKNESS + u_sdf_width + u_sdf_edge, 1.0 - luminance);
+        } else {
+            luminance = 1.0 - smoothstep(u_sdf_width, u_sdf_width + u_sdf_edge, 1.0 - luminance);
+        }
 		#endif
 
         color = vec4(1.0, 1.0, 1.0, luminance) * source_color;
@@ -71,5 +76,11 @@ void main() {
     if(color.a <= 0.0)
         discard;
 
-	FragColor = color;
+#ifdef DOTTED
+    if(u_dotted && mod(v_texcoord.x, MOD_A) < MOD_B && mod(v_texcoord.y, MOD_A) < MOD_B) {
+        color.a *= 0.25;
+    }
+#endif
+
+    FragColor = color;
 }

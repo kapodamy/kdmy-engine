@@ -1430,11 +1430,11 @@ namespace Engine.Game.Gameplay {
 
             for (int i = 0 ; i < roundcontext.players_size ; i++) {
                 if (roundcontext.players[i].strums != null) {
-                        roundcontext.players[i].strums.SetParams(
-                        roundcontext.players[i].ddrkeymon,
-                        roundcontext.players[i].playerstats,
-                        roundcontext.script
-                    );
+                    roundcontext.players[i].strums.SetParams(
+                    roundcontext.players[i].ddrkeymon,
+                    roundcontext.players[i].playerstats,
+                    roundcontext.script
+                );
                 }
             }
         }
@@ -1896,7 +1896,7 @@ namespace Engine.Game.Gameplay {
         }
 
         private static bool InitDialogue(RoundContext roundcontext, string dialogue_params) {
-			if (String.IsNullOrEmpty(dialogue_params)) return false;
+            if (String.IsNullOrEmpty(dialogue_params)) return false;
             if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
             roundcontext.dialogue = Dialogue.Init(dialogue_params);
             if (roundcontext.dialogue != null) roundcontext.dialogue.SetScript(roundcontext.script);
@@ -2089,9 +2089,9 @@ namespace Engine.Game.Gameplay {
             if (roundcontext.layout != null) roundcontext.layout.Resume();
 
             if (roundcontext.script != null) {
-				roundcontext.script.NotifyTimerSong(0.0);
-				roundcontext.script.NotifyBeforeready(from_retry);
-			}
+                roundcontext.script.NotifyTimerSong(0.0);
+                roundcontext.script.NotifyBeforeready(from_retry);
+            }
             Week.Halt(roundcontext, true);
 
             if (roundcontext.playerstats_index >= 0) {
@@ -2106,10 +2106,10 @@ namespace Engine.Game.Gameplay {
                 BeatWatcher.GlobalSetTimestampFromKosTimer();
 
                 if (pvr_context.IsOffscreen()) {
-					roundcontext.layout.Suspend();
-					roundcontext.dialogue.Suspend();
+                    roundcontext.layout.Suspend();
+                    roundcontext.dialogue.Suspend();
 
-					int decision = roundcontext.weekpause.HelperShow(roundcontext, -1);
+                    int decision = roundcontext.weekpause.HelperShow(roundcontext, -1);
                     switch (decision) {
                         case 1:
                             return 2;// restart song
@@ -2119,8 +2119,8 @@ namespace Engine.Game.Gameplay {
                             return 3;// back to mainmenu
                     }
 
-					roundcontext.layout.Resume();
-					roundcontext.dialogue.Resume();
+                    roundcontext.layout.Resume();
+                    roundcontext.dialogue.Resume();
                     continue;
                 }
 
@@ -2768,6 +2768,11 @@ namespace Engine.Game.Gameplay {
 
         public static Dialogue GetDialogue(RoundContext roudcontext) {
             return roudcontext.dialogue;
+        }
+
+        public static void SeUIShader(RoundContext roundcontext, PSShader psshader) {
+            Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
+            layout.SetGroupShader(Week.ROUND_UI_GROUP_NAME, psshader);
         }
 
 

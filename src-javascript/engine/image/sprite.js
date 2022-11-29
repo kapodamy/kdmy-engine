@@ -110,6 +110,16 @@ function sprite_draw(sprite, pvrctx) {
     pvr_context_save(pvrctx);
     pvr_context_set_vertex_alpha(pvrctx, sprite.alpha);
     pvr_context_set_vertex_offsetcolor(pvrctx, sprite.offsetcolor);
+    if (sprite.psshader) pvr_context_add_shader(pvrctx, sprite.psshader);
+    
+    pvr_context_set_vertex_blend(
+        pvrctx,
+        sprite.blend_enabled,
+        sprite.blend_src_rgb,
+        sprite.blend_dst_rgb,
+        sprite.blend_src_alpha,
+        sprite.blend_dst_alpha
+    );
 
     if (sprite.antialiasing != PVR_FLAG_DEFAULT) {
         pvr_context_set_vertex_antialiasing(pvrctx, sprite.antialiasing);
@@ -217,6 +227,14 @@ function sprite_init(src_texture) {
     sprite.crop_enabled = 0;
 
     sprite.antialiasing = PVR_FLAG_DEFAULT;
+    
+    sprite.psshader = null;
+
+    sprite.blend_enabled = 1;
+    sprite.blend_src_rgb = BLEND_DEFAULT;
+    sprite.blend_dst_rgb = BLEND_DEFAULT;
+    sprite.blend_src_alpha = BLEND_DEFAULT;
+    sprite.blend_dst_alpha = BLEND_DEFAULT;
 
     return sprite;
 }
@@ -890,5 +908,24 @@ function sprite_get_texture(sprite) {
 
 function sprite_set_antialiasing(sprite, antialiasing) {
     sprite.antialiasing = antialiasing;
+}
+
+function sprite_set_shader(sprite, psshader) {
+    sprite.psshader = psshader;
+}
+
+function sprite_get_shader(sprite) {
+    return sprite.psshader;
+}
+
+function sprite_blend_enable(sprite, enabled) {
+    sprite.blend_enabled = enabled;
+}
+
+function sprite_blend_set(sprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    sprite.blend_src_rgb = src_rgb;
+    sprite.blend_dst_rgb = dst_rgb;
+    sprite.blend_src_alpha = src_alpha;
+    sprite.blend_dst_alpha = dst_alpha;
 }
 

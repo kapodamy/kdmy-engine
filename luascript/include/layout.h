@@ -10,6 +10,7 @@
 #include "global.h"
 #include "soundplayer.h"
 #include "modifier.h"
+#include "psshader.h"
 
 
 typedef struct _Layout_t {
@@ -46,7 +47,7 @@ typedef struct {
     void* actions;*/
 } _LayoutPlaceholder_t;
 
-typedef _LayoutPlaceholder_t *LayoutPlaceholder;
+typedef _LayoutPlaceholder_t* LayoutPlaceholder;
 
 
 #define LAYOUT_TYPE_NOTFOUND 0x00
@@ -84,6 +85,8 @@ LayoutPlaceholder layout_get_placeholder(Layout layout, const char* name);
 void layout_disable_antialiasing(Layout layout, bool disable);
 void layout_set_group_antialiasing(Layout layout, const char* group_name, PVRFLAG antialiasing);
 Modifier layout_get_group_modifier(Layout layout, const char* group_name);
+PSShader layout_get_group_shader(Layout layout, const char* group_name);
+bool layout_set_group_shader(Layout layout, const char* group_name, PSShader psshader);
 
 #endif
 

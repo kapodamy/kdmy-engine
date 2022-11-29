@@ -128,11 +128,11 @@ namespace Engine.Externals.LuaScriptInterop {
         };
 
         internal static int script_dialogue_new(LuaState L, Dialogue dialogue) {
-            return L.CreateUserdata(DIALOGUE, dialogue, true);
+            return L.CreateUserdata(DIALOGUE, dialogue);
         }
 
         static int script_dialoge_gc(LuaState L) {
-            return L.DestroyUserdata(DIALOGUE);
+            return L.NullifyUserdata(DIALOGUE);
         }
 
         static int script_dialogue_tostring(LuaState L) {

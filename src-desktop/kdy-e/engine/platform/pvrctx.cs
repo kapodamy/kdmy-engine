@@ -1,11 +1,11 @@
 using System;
 using System.Diagnostics;
 using CsharpWrapper;
+using Engine.Externals.GLFW;
 using Engine.Font;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Utils;
-using Engine.Externals.GLFW;
 using KallistiOS.MAPLE;
 
 namespace Engine.Platform {
@@ -44,6 +44,7 @@ namespace Engine.Platform {
         private const double WIDESCREEN_ASPECT_RATIO = 16.0 / 9.0;
         private const double DREAMCAST_ASPECT_RATIO = 4.0 / 3.0;
         private const float FPS_FONT_SIZE_RATIO = 40.0f / 720.0f;// 40px @ 1280x720
+        private const int SHADER_STACK_LENGTH = 64;
 
         public static PVRContext global_context;
 
@@ -75,14 +76,19 @@ namespace Engine.Platform {
                 return Single.NaN;
             }
 
+            // flush front framebuffer if there anything drawn
+            this.FlushFramebuffer();
+            this.shader_framebuffer_front.Invalidate();
+            this.shader_framebuffer_back.Invalidate();
+
             if (EngineSettings.show_fps) DrawFPS();// if enabled draw it
 
             // swap the buffers if something was drawn (avoid screen flickering)
-            if (Engine.Externals.WebGLRenderingContext.KDY_draw_calls_count > 0) {
+            if (Engine.Externals.WebGL2RenderingContext.KDY_draw_calls_count > 0) {
                 Glfw.MakeContextCurrent(this.nativeWindow);
                 Glfw.SwapBuffers(this.nativeWindow);
-                
-                Engine.Externals.WebGLRenderingContext.KDY_draw_calls_count = 0;
+
+                Engine.Externals.WebGL2RenderingContext.KDY_draw_calls_count = 0;
             }
 
             if (this.is_deterministic)
@@ -107,6 +113,12 @@ namespace Engine.Platform {
             //
             elapsed = elapsed > MIN_FRAME_TIME ? MIN_FRAME_TIME : elapsed;
 
+            this.last_elapsed = elapsed;
+            this.frame_rendered++;
+
+            // resize framebuffers if the screen size has changed
+            this.CheckFrameBufferSize();
+
             return elapsed;
         }
 
@@ -130,6 +142,7 @@ namespace Engine.Platform {
             public readonly float[] offsetcolor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
             public PVRContextFlag global_antialiasing = PVRContextFlag.DEFAULT;
             public PVRContextFlag global_offsetcolor_multiply = PVRContextFlag.DEFAULT;
+            public int added_shaders = 0;
 
             public PVRContextState() {
                 PVRContext.HelperClearOffsetColor(this.offsetcolor);
@@ -155,6 +168,16 @@ namespace Engine.Platform {
         private double fps_count;
         private double fps_resolution_changes;
         private TextSprite fps_text;
+        internal float last_elapsed = 0;
+        internal int frame_rendered = 0;
+
+        private PSFramebuffer shader_framebuffer_front;
+        private PSFramebuffer shader_framebuffer_back;
+        private PSFramebuffer target_framebuffer;
+        internal bool shader_needs_flush;
+        internal StackList<PSShader> shader_stack = new StackList<PSShader>(SHADER_STACK_LENGTH);
+        private int shader_last_resolution_changes = 0;
+
 
         private int stack_index = 0;
 
@@ -360,6 +383,10 @@ namespace Engine.Platform {
 
             maple.__initialize(this.nativeWindow);
 
+            this.shader_framebuffer_front = new PSFramebuffer(this);
+            this.shader_framebuffer_back = new PSFramebuffer(this);
+            PSFramebuffer.ResizeQuadScreen(this);
+
             Console.Error.WriteLine("PowerVR backend init completed\n");
         }
 
@@ -414,6 +441,12 @@ namespace Engine.Platform {
             this.render_offsetcolor_multiply = PVRContextFlag.DEFAULT;
 
             this.webopengl.ClearScreen(PVRContext.CLEAR_COLOR);
+
+            this.FlushFramebuffer();
+            this.shader_stack.Clear();
+            PSFramebuffer.UseScreenFramebuffer(this);
+            this.webopengl.SetBlend(this, true, Blend.DEFAULT, Blend.DEFAULT, Blend.DEFAULT, Blend.DEFAULT);
+
         }
 
         public void ApplyModifier(Modifier modifier) {
@@ -478,12 +511,17 @@ namespace Engine.Platform {
 
             //SH4_INTERRUPS_ENABLE(old_irq);
 
+            // remember the last count of added shaders
+            previous_state.added_shaders = this.shader_stack.Length;
+
             return true;
         }
 
-
         public bool Restore() {
-            if (this.stack_index <= 0) {
+            if (this.stack_index < 1) {
+                if (this.shader_stack.Length > 0) {
+                    Console.Error.WriteLine("[WARN] pvr_context_restore() the current PVRContext has stacked shaders on empty stack");
+                }
                 Console.Error.WriteLine("pvr_context_restore() the PVRContext stack was empty");
                 return false;
             }
@@ -514,6 +552,12 @@ namespace Engine.Platform {
 
             //SH4_INTERRUPS_ENABLE(old_irq);
 
+            // remove all shaders added in the current state
+            int added_shaders = this.shader_stack.Length - previous_state.added_shaders;
+            Debug.Assert(added_shaders >= 0);
+            if (added_shaders > 0) this.ShaderStackPop(added_shaders);
+            this.webopengl.SetBlend(this, true, Blend.DEFAULT, Blend.DEFAULT, Blend.DEFAULT, Blend.DEFAULT);
+
             return true;
         }
 
@@ -542,6 +586,9 @@ namespace Engine.Platform {
             this.render_offsetcolor_multiply = flag == PVRContextFlag.DEFAULT ? this.global_offsetcolor_multiply : flag;
         }
 
+        public void SetVertexBlend(bool enabled, Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha) {
+            this.webopengl.SetBlend(this, enabled, src_rgb, dst_rgb, src_alpha, dst_alpha);
+        }
 
 
         public void SetGlobalAlpha(float alpha) {
@@ -590,12 +637,18 @@ namespace Engine.Platform {
 
         public void DrawTexture(Texture texture, float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh) {
             if (texture.data_vram.IsNull) return;
+            if (this.shader_stack.Length > 0) this.shader_needs_flush = true;
             this.webopengl.DrawTexture(this, texture, sx, sy, sw, sh, dx, dy, dw, dh);
         }
 
-
         public void DrawSolidColor(float[] rgb_color, float dx, float dy, float dw, float dh) {
+            if (this.shader_stack.Length > 0) this.shader_needs_flush = true;
             this.webopengl.DrawSolid(this, rgb_color, dx, dy, dw, dh);
+        }
+
+        public void DrawFramebuffer(PSFramebuffer psframebuffer, float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh) {
+            this.shader_needs_flush = true;
+            this.webopengl.DrawFramebuffer(this, psframebuffer, sx, sy, sw, sh, dx, dy, dw, dh);
         }
 
 
@@ -605,6 +658,15 @@ namespace Engine.Platform {
 
         public bool IsMinimized() {
             return this.is_minimized;
+        }
+
+        public bool AddShader(PSShader psshader) {
+            return this.ShaderStackPush(psshader);
+        }
+
+        public void SetFramebuffer(PSFramebuffer psframebuffer) {
+            this.target_framebuffer = psframebuffer;
+            if (this.shader_stack.Length < 1) this.UseDefaultFramebuffer();
         }
 
         public static void HideWindow(bool hide) {
@@ -666,6 +728,80 @@ namespace Engine.Platform {
                 Monitor monitor = Glfw.GetWindowMonitor(PVRContext.global_context.nativeWindow);
                 return monitor == Monitor.None;
             }
+        }
+
+
+        internal void FlushFramebuffer() {
+            if (!this.shader_needs_flush) return;
+
+            PSFramebuffer front = this.shader_framebuffer_front;
+            PSFramebuffer back = this.shader_framebuffer_back;
+            int last_index = this.shader_stack.Length - 1;
+
+            for (int i = 0 ; i < this.shader_stack.Length ; i++) {
+                if (i == last_index)
+                    this.UseDefaultFramebuffer();
+                else
+                    back.Use(true);
+
+                this.shader_stack[i].Draw(front);
+
+                PSFramebuffer tmp = front;
+                front = back;
+                back = tmp;
+            }
+
+            this.shader_needs_flush = false;
+        }
+
+        private bool ShaderStackPush(PSShader psshader) {
+            if (psshader == null) throw new ArgumentNullException("psshader");
+
+            this.FlushFramebuffer();
+
+            if (this.shader_stack.Length >= PVRContext.SHADER_STACK_LENGTH) {
+                Console.Error.WriteLine("[WARN] PVRContext::ShaderStackPush() failed, the stack is full");
+                return false;
+            }
+
+            this.shader_stack.Push(psshader);
+            this.shader_framebuffer_front.Use(true);
+
+            return true;
+        }
+
+        internal bool ShaderStackPop(int count) {
+            this.FlushFramebuffer();
+
+            if (this.shader_stack.Length < 1) {
+                Console.Error.WriteLine("[WARN] PVRContext::ShaderStackPop() failed, the stack is empty");
+                return false;
+            }
+
+            while (count-- > 0) this.shader_stack.Pop();
+
+            if (this.shader_stack.Length < 1)
+                this.UseDefaultFramebuffer();
+            else
+                this.shader_framebuffer_front.Use(true);
+
+            return true;
+        }
+
+        internal void CheckFrameBufferSize() {
+            if (this.resolution_changes == this.shader_last_resolution_changes) return;
+
+            this.shader_last_resolution_changes = this.resolution_changes;
+            this.shader_framebuffer_front.Resize();
+            this.shader_framebuffer_back.Resize();
+            PSFramebuffer.ResizeQuadScreen(this);
+        }
+
+        internal void UseDefaultFramebuffer() {
+            if (this.target_framebuffer != null)
+                this.target_framebuffer.Use(false);
+            else
+                PSFramebuffer.UseScreenFramebuffer(this);
         }
 
     }

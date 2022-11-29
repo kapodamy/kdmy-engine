@@ -43,8 +43,6 @@
     <Compile Include="luatablebuilder.cs" />
     <Compile Include="managedluastate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="referencelist.cs" />
-    <Compile Include="userdatalist.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

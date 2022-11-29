@@ -5,12 +5,14 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static Engine.Externals.WebGL2RenderingContext.NativeMethods;
 
 namespace Engine.Externals {
 
     public struct WebGLBuffer {
         internal uint value;
         public static WebGLBuffer Null = new WebGLBuffer() { value = 0x0000 };
+        public bool IsNull { get => value == 0x0000; }
         public override string ToString() {
             return "WebGLBuffer: " + (value == 0 ? "(null)" : value.ToString());
         }
@@ -18,6 +20,7 @@ namespace Engine.Externals {
     public struct WebGLUniformLocation {
         internal int value;
         public static WebGLUniformLocation Null = new WebGLUniformLocation() { value = -1 };
+        public bool IsNull { get => value == 0x0000; }
         public override string ToString() {
             return "WebGLUniformLocation: " + (value == 0 ? "(null)" : value.ToString());
         }
@@ -25,6 +28,7 @@ namespace Engine.Externals {
     public struct WebGLProgram {
         internal uint value;
         public static WebGLProgram Null = new WebGLProgram() { value = 0x0000 };
+        public bool IsNull { get => value == 0x0000; }
         public override string ToString() {
             return "WebGLProgram: " + (value == 0 ? "(null)" : value.ToString());
         }
@@ -40,12 +44,32 @@ namespace Engine.Externals {
     public struct WebGLShader {
         internal uint value;
         public static WebGLShader Null = new WebGLShader() { value = 0x0000 };
+        public bool IsNull { get => value == 0x0000; }
         public override string ToString() {
             return "WebGLShader: " + (value == 0 ? "(null)" : value.ToString());
         }
     }
+    public struct WebGLVertexArrayObject {
+        internal uint value;
+        public static WebGLVertexArrayObject Null = new WebGLVertexArrayObject() { value = 0x0000 };
+        public override string ToString() {
+            return "WebGLVertexArrayObject: " + (value == 0 ? "(null)" : value.ToString());
+        }
+    }
+    public struct WebGLFramebuffer {
+        internal uint value;
+        public static WebGLFramebuffer Null = new WebGLFramebuffer() { value = 0x0000 };
+        public override string ToString() {
+            return "WebGLFramebuffer: " + (value == 0 ? "(null)" : value.ToString());
+        }
+    }
+    public struct WebGLActiveInfo {
+        public string name;
+        public int size;
+        public GLenum type;
+    }
 
-    public partial class WebGLRenderingContext {
+    public partial class WebGL2RenderingContext {
 
         public static int KDY_draw_calls_count = 0;
 
@@ -85,21 +109,22 @@ namespace Engine.Externals {
             NativeMethods.glEnableVertexAttribArray(index);
         }
 
-        internal GLenum getProgramParameter(WebGLProgram program, GLenum pname) {
+        internal int getProgramParameter(WebGLProgram program, GLenum pname) {
             int result = 0;
             NativeMethods.glGetProgramiv(program.value, pname, out result);
-            return (GLenum)result;
+            return result;
         }
 
         internal string getProgramInfoLog(WebGLProgram program) {
-            int length = 0;
-            NativeMethods.glGetProgramiv(program.value, GLenum.GL_INFO_LOG_LENGTH, out length);
-            if (length < 1) return String.Empty;
+            int maxLength;
+            NativeMethods.glGetProgramiv(program.value, GLenum.GL_INFO_LOG_LENGTH, out maxLength);
+            if (maxLength < 1) return String.Empty;
 
-            IntPtr temp = Marshal.AllocHGlobal(length * 2);
-            NativeMethods.glGetProgramInfoLog(program.value, length, out length, temp);
+            int length;
+            IntPtr temp = Marshal.AllocHGlobal(maxLength * 2);
+            NativeMethods.glGetProgramInfoLog(program.value, maxLength, out length, temp);
 
-            string str = Marshal.PtrToStringAnsi(temp);
+            string str = Marshal.PtrToStringAnsi(temp, length);
             Marshal.FreeHGlobal(temp);
 
             return str;
@@ -134,14 +159,15 @@ namespace Engine.Externals {
         }
 
         internal string getShaderInfoLog(WebGLShader shader) {
+            int maxLength;
+            NativeMethods.glGetShaderiv(shader.value, GLenum.GL_INFO_LOG_LENGTH, out maxLength);
+            if (maxLength < 1) return String.Empty;
+
             int length;
-            NativeMethods.glGetShaderiv(shader.value, GLenum.GL_INFO_LOG_LENGTH, out length);
-            if (length < 1) return String.Empty;
+            IntPtr temp = Marshal.AllocHGlobal(maxLength * 2);
+            NativeMethods.glGetShaderInfoLog(shader.value, maxLength, out length, temp);
 
-            IntPtr temp = Marshal.AllocHGlobal(length * 2);
-            NativeMethods.glGetShaderInfoLog(shader.value, length, out length, temp);
-
-            string str = Marshal.PtrToStringAnsi(temp);
+            string str = Marshal.PtrToStringAnsi(temp, length);
             Marshal.FreeHGlobal(temp);
 
             return str;
@@ -168,6 +194,16 @@ namespace Engine.Externals {
 
         internal void uniform4fv(WebGLUniformLocation location, float[] value) {
             NativeMethods.glUniform4fv(location.value, 1, value);
+        }
+
+        internal void uniformMatrix2fv(WebGLUniformLocation location, bool transpose, float[] matrix) {
+            byte flag = transpose ? (byte)1 : (byte)0;
+            NativeMethods.glUniformMatrix2fv(location.value, 1, flag, matrix);
+        }
+
+        internal void uniformMatrix3fv(WebGLUniformLocation location, bool transpose, float[] matrix) {
+            byte flag = transpose ? (byte)1 : (byte)0;
+            NativeMethods.glUniformMatrix3fv(location.value, 1, flag, matrix);
         }
 
         internal void uniformMatrix4fv(WebGLUniformLocation location, bool transpose, float[] matrix) {
@@ -202,8 +238,48 @@ namespace Engine.Externals {
             NativeMethods.glUniform1i(location.value, value);
         }
 
+        internal void uniform2i(WebGLUniformLocation location, int v0, int v1) {
+            NativeMethods.glUniform2i(location.value, v0, v1);
+        }
+
+        internal void uniform3i(WebGLUniformLocation location, int v0, int v1, int v2) {
+            NativeMethods.glUniform3i(location.value, v0, v1, v2);
+        }
+
+        internal void uniform4i(WebGLUniformLocation location, int v0, int v1, int v2, int v3) {
+            NativeMethods.glUniform4i(location.value, v0, v1, v2, v3);
+        }
+
         internal void uniform1f(WebGLUniformLocation location, float value) {
             NativeMethods.glUniform1f(location.value, value);
+        }
+
+        internal void uniform2f(WebGLUniformLocation location, float v0, float v1) {
+            NativeMethods.glUniform2f(location.value, v0, v1);
+        }
+
+        internal void uniform3f(WebGLUniformLocation location, float v0, float v1, float v2) {
+            NativeMethods.glUniform3f(location.value, v0, v1, v2);
+        }
+
+        internal void uniform4f(WebGLUniformLocation location, float v0, float v1, float v2, float v3) {
+            NativeMethods.glUniform4f(location.value, v0, v1, v2, v3);
+        }
+
+        internal void uniform1ui(WebGLUniformLocation location, uint v0) {
+            NativeMethods.glUniform1ui(location.value, v0);
+        }
+
+        internal void uniform2ui(WebGLUniformLocation location, uint v0, uint v1) {
+            NativeMethods.glUniform2ui(location.value, v0, v1);
+        }
+
+        internal void uniform3ui(WebGLUniformLocation location, uint v0, uint v1, uint v2) {
+            NativeMethods.glUniform3ui(location.value, v0, v1, v2);
+        }
+
+        internal void uniform4ui(WebGLUniformLocation location, uint v0, uint v1, uint v2, uint v3) {
+            NativeMethods.glUniform4ui(location.value, v0, v1, v2, v3);
         }
 
         internal void clear(uint mask) {
@@ -246,10 +322,6 @@ namespace Engine.Externals {
 
         internal IWebGLExtension getExtension(string name) {
             switch (name) {
-                case "OES_element_index_uint":
-                    return new OES_element_index_uint();
-                case "ANGLE_instanced_arrays":
-                    return new ANGLE_instanced_arrays();
                 default:
                     return null;
             }
@@ -316,7 +388,7 @@ namespace Engine.Externals {
 
             handle.Free();
         }
-        
+
         internal void deleteTexture(WebGLTexture texture) {
             uint[] values = { texture.value };
             NativeMethods.glDeleteTextures(1, values);
@@ -329,15 +401,19 @@ namespace Engine.Externals {
         }
 
 
-        internal uint genVertexArray() {
+        internal WebGLVertexArrayObject createVertexArray() {
             uint[] values = new uint[1];
             NativeMethods.glGenVertexArrays(1, values);
 
-            return values[0];
+            return new WebGLVertexArrayObject() { value = values[0] };
         }
 
-        internal void bindVertexArray(uint array) {
-            NativeMethods.glBindVertexArray(array);
+        internal void bindVertexArray(WebGLVertexArrayObject array) {
+            NativeMethods.glBindVertexArray(array.value);
+        }
+
+        internal void deleteVertexArray(WebGLVertexArrayObject array) {
+            NativeMethods.glBindVertexArray(array.value);
         }
 
         internal void viewport(int x, int y, int width, int height) {
@@ -352,6 +428,79 @@ namespace Engine.Externals {
             NativeMethods.glReadPixels(x, y, width, height, format, type, data);
         }
 
+        internal void uniform3fv(WebGLUniformLocation location, float[] value) {
+            NativeMethods.glUniform3fv(location.value, value.Length, value);
+        }
+
+        internal void deleteBuffer(WebGLBuffer buffer) {
+            uint[] value = new uint[] { buffer.value };
+            NativeMethods.glDeleteBuffers(1, value);
+        }
+
+        internal WebGLFramebuffer createFramebuffer() {
+            uint[] result = new uint[1];
+            NativeMethods.glGenFramebuffers(1, result);
+            return new WebGLFramebuffer() { value = result[0] };
+        }
+
+        internal void bindFramebuffer(GLenum target, WebGLFramebuffer framebuffer) {
+            NativeMethods.glBindFramebuffer(target, framebuffer.value);
+        }
+        
+        internal void bindFramebuffer(GLenum target, int framebuffer) {
+            NativeMethods.glBindFramebuffer(target, (uint)framebuffer);
+        }
+
+        internal void framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, WebGLTexture texture, int level) {
+            NativeMethods.glFramebufferTexture2D(target, attachment, textarget, texture.value, level);
+        }
+
+        internal GLenum checkFramebufferStatus(GLenum target) {
+            return NativeMethods.glCheckFramebufferStatus(target);
+        }
+
+        internal void invalidateFramebuffer(GLenum target, params GLenum[] attachments) {
+            NativeMethods.glInvalidateFramebuffer(target, attachments.Length, attachments);
+        }
+
+        internal void deleteFramebuffer(WebGLFramebuffer framebuffer) {
+            uint[] value = { framebuffer.value };
+            NativeMethods.glDeleteFramebuffers(1, value);
+        }
+
+        internal WebGLActiveInfo getActiveUniform(WebGLProgram program, uint index) {
+            int buffSize;
+            NativeMethods.glGetProgramiv(program.value, GLenum.GL_ACTIVE_UNIFORM_MAX_LENGTH, out buffSize);
+
+            if (buffSize < 1) return new WebGLActiveInfo() { size = -1, type = GLenum.GL_INVALID_VALUE };
+
+            IntPtr ptr = Marshal.AllocHGlobal(buffSize);
+            int length;
+            int size;
+            GLenum type;
+
+            NativeMethods.glGetActiveUniform(program.value, index, buffSize, out length, out size, out type, ptr);
+
+            string name = Marshal.PtrToStringAnsi(ptr, length);
+            Marshal.FreeHGlobal(ptr);
+
+            WebGLActiveInfo info = new WebGLActiveInfo() {
+                type = type,
+                size = size,
+                name = name
+            };
+
+            return info;
+        }
+
+        internal void vertexAttribDivisor(uint index, uint divisor) {
+            NativeMethods.glVertexAttribDivisor(index, divisor);
+        }
+
+        internal void drawElementsInstanced(GLenum mode, int count, GLenum type, int offset, int primcount) {
+            KDY_draw_calls_count++;
+            NativeMethods.glDrawElementsInstanced(mode, count, type, (IntPtr)offset, primcount);
+        }
 
 #pragma warning restore IDE1006
 

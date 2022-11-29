@@ -111,6 +111,16 @@ function statesprite_draw(statesprite, pvrctx) {
     pvr_context_save(pvrctx);
     pvr_context_set_vertex_alpha(pvrctx, statesprite.alpha);
     pvr_context_set_vertex_offsetcolor(pvrctx, statesprite.offsetcolor);
+    if (statesprite.psshader) pvr_context_add_shader(pvrctx, statesprite.psshader);
+    
+    pvr_context_set_vertex_blend(
+        pvrctx,
+        statesprite.blend_enabled,
+        statesprite.blend_src_rgb,
+        statesprite.blend_dst_rgb,
+        statesprite.blend_src_alpha,
+        statesprite.blend_dst_alpha
+    );
 
     // apply self modifier
     pvr_context_apply_modifier2(pvrctx,
@@ -231,6 +241,14 @@ function statesprite_init_from_texture(texture) {
     statesprite.scale_texture = 1.0;
     statesprite.antialiasing = PVR_FLAG_DEFAULT;
     statesprite.atlas_to_draw_size_enabled = 0;
+
+    statesprite.psshader = null;
+
+    statesprite.blend_enabled = 1;
+    statesprite.blend_src_rgb = BLEND_DEFAULT;
+    statesprite.blend_dst_rgb = BLEND_DEFAULT;
+    statesprite.blend_src_alpha = BLEND_DEFAULT;
+    statesprite.blend_dst_alpha = BLEND_DEFAULT;
 
     return statesprite;
 }
@@ -903,3 +921,21 @@ function statesprite_set_antialiasing(statesprite, antialiasing) {
     statesprite.antialiasing = antialiasing;
 }
 
+function statesprite_set_shader(statesprite, psshader) {
+    statesprite.psshader = psshader;
+}
+
+function statesprite_get_shader(statesprite) {
+    return statesprite.psshader;
+}
+
+function statesprite_blend_enable(statesprite, enabled) {
+    statesprite.blend_enabled = enabled;
+}
+
+function statesprite_blend_set(statesprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    statesprite.blend_src_rgb = src_rgb;
+    statesprite.blend_dst_rgb = dst_rgb;
+    statesprite.blend_src_alpha = src_alpha;
+    statesprite.blend_dst_alpha = dst_alpha;
+}

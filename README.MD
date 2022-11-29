@@ -49,8 +49,8 @@ Explained here [FEATURES.MD](FEATURES.MD "FEATURES.MD")
 
 ## Missing features / To be implemented
 
-* Post-processing shaders.
-* Dialogues (waht a shame).
+* ~~Post-processing shaders~~. ¡DONE!
+* ~~Dialogues (waht a shame)~~. ¡DONE!
 * Expansions loader (a.k.a mods loader).
 * Lua API to manipulate strums, states and UI cosmetics.
 * Documentation (a lot).

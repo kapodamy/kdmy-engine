@@ -44,7 +44,7 @@ function glyphrenderer_prepare(glyph_count, has_outlines) {
                 glyphrenderer_indices_array[j++] = GLYPHRENDERDER_QUAD_INDICES[l] + k;
             }
             k += 4;
-            
+
             // FIXME: alpha works if this break is here
             break;
         }
@@ -97,7 +97,6 @@ function glyphrenderer_append_glyph(texture, is_tex1, is_outline, sx, sy, sw, sh
 function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline, by_diff, is_gryscl, tex0, tex1) {
     const gl = pvrctx.webopengl.gl;
     const program_glyphs = pvrctx.webopengl.program_glyphs;
-    const ANGLE_instanced_arrays = pvrctx.webopengl.ANGLE_instanced_arrays;
 
     // prepare buffers
     const total_indices = glyphrenderer_glyphs_total * GLYPHRENDERDER_FLOATS_PER_INDEX;
@@ -148,16 +147,16 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
     gl.bindBuffer(gl.ARRAY_BUFFER, program_glyphs.buffer_context);
     gl.enableVertexAttribArray(program_glyphs.a_source_coords);
     gl.vertexAttribPointer(program_glyphs.a_source_coords, 4, gl.FLOAT, false, GLYPHRENDERDER_BYTES_PER_CONTEXT, 0);
-    ANGLE_instanced_arrays.vertexAttribDivisorANGLE(program_glyphs.a_source_coords, 1);
+    gl.vertexAttribDivisor(program_glyphs.a_source_coords, 1);
     gl.enableVertexAttribArray(program_glyphs.a_draw_coords);
     gl.vertexAttribPointer(program_glyphs.a_draw_coords, 4, gl.FLOAT, false, GLYPHRENDERDER_BYTES_PER_CONTEXT, 16);
-    ANGLE_instanced_arrays.vertexAttribDivisorANGLE(program_glyphs.a_draw_coords, 1);
+    gl.vertexAttribDivisor(program_glyphs.a_draw_coords, 1);
     gl.enableVertexAttribArray(program_glyphs.a_texture_alt);
     gl.vertexAttribPointer(program_glyphs.a_texture_alt, 1, gl.FLOAT, false, GLYPHRENDERDER_BYTES_PER_CONTEXT, 32);
-    ANGLE_instanced_arrays.vertexAttribDivisorANGLE(program_glyphs.a_texture_alt, 1);
+    gl.vertexAttribDivisor(program_glyphs.a_texture_alt, 1);
     gl.enableVertexAttribArray(program_glyphs.a_color_alt);
     gl.vertexAttribPointer(program_glyphs.a_color_alt, 1, gl.FLOAT, false, GLYPHRENDERDER_BYTES_PER_CONTEXT, 36);
-    ANGLE_instanced_arrays.vertexAttribDivisorANGLE(program_glyphs.a_color_alt, 1);
+    gl.vertexAttribDivisor(program_glyphs.a_color_alt, 1);
     gl.bufferData(gl.ARRAY_BUFFER, context_array, gl.DYNAMIC_DRAW);
 
     // copy transformation matrix (with all modifiers applied)
@@ -199,9 +198,12 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
     // send vertex indices
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, program_glyphs.buffer_indices);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, index_array, gl.DYNAMIC_DRAW);
-    
+
+    // if the shader stack is not empty mark front framebuffer as drawn
+    if (pvrctx.shader_stack.length > 0) pvrctx.shader_needs_flush = true;
+
     // commit draw
-    ANGLE_instanced_arrays.drawElementsInstancedANGLE(
+    gl.drawElementsInstanced(
         gl.TRIANGLES, total_indices, gl.UNSIGNED_INT, 0, glyphrenderer_glyphs_total
     );
 

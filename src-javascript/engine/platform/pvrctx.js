@@ -4,6 +4,8 @@ const PVR_FLAG_DISABLE = 0;
 const PVR_FLAG_ENABLE = 1;
 const PVR_FLAG_DEFAULT = 2;
 
+const PVRCTX_SHADER_STACK_LENGTH = 64;
+
 /**@typedef {[number,number,number,number]} RGBA */
 /**@typedef {number} PVRFLAG */
 
@@ -14,6 +16,7 @@ class PVRContextState {
     /**@type {RGBA}*/    offsetcolor = [0.0, 0.0, 0.0, 0.0];
     /**@type {PVRFLAG}*/ global_antialiasing = PVR_FLAG_DEFAULT;
     /**@type {PVRFLAG}*/ global_offsetcolor_multiply = PVR_FLAG_DEFAULT;
+    /**@type {number}*/  added_shaders = 0;
 
     constructor() {
         pvrctx_helper_clear_offsetcolor(this.offsetcolor);
@@ -22,9 +25,19 @@ class PVRContextState {
 
 class PVRContext {
     /**@type {HTMLCanvasElement}*/ _html5canvas = null;
-    /**@type {WebGLContext}*/ webopengl = null;
+    /**@type {WebGL2Context}*/ webopengl = null;
     /**@type {PVRContextState[]}*/ stack = new Array(16);
     /**@type {number}*/ resolution_changes = 0;
+    /**@type {number}*/ last_elapsed = 0;
+    /**@type {number}*/ frame_rendered = 0;
+
+    /**@type {PSFramebuffer}*/ shader_framebuffer_front;
+    /**@type {PSFramebuffer}*/ shader_framebuffer_back;
+    /**@type {PSFramebuffer}*/ target_framebuffer;
+    /**@type {bool}         */ shader_needs_flush = false;
+    /**@type {PSShader[]}   */ shader_stack = new Array();
+    /**@type {number}       */ shader_last_resolution_changes = 0;
+
 
     /**@type {number}*/ stack_index = 0;
     /**@type {number}*/ stack_length = 15;
@@ -61,6 +74,9 @@ class PVRContext {
 
     async _initWebGL() {
         this.webopengl = await webopengl_init(this._html5canvas);
+        this.shader_framebuffer_front = new PSFramebuffer(this);
+        this.shader_framebuffer_back = new PSFramebuffer(this);
+        PSFramebuffer.ResizeQuadScreen(this);
     }
 
     /** @param {HTMLCanvasElement|[number, number]} canvas */
@@ -80,6 +96,81 @@ class PVRContext {
         pvrctx_helper_clear_offsetcolor(this.vertex_offsetcolor);
         pvrctx_helper_clear_offsetcolor(this.render_offsetcolor);
     }
+
+
+    FlushFramebuffer() {
+        if (!this.shader_needs_flush) return;
+
+        let front = this.shader_framebuffer_front;
+        let back = this.shader_framebuffer_back;
+        let last_index = this.shader_stack.length - 1;
+
+        for (let i = 0; i < this.shader_stack.length; i++) {
+            if (i == last_index)
+                this.UseDefaultFramebuffer();
+            else
+                back.Use(true);
+
+            this.shader_stack[i].Draw(front);
+
+            let tmp = front;
+            front = back;
+            back = tmp;
+        }
+
+        this.shader_needs_flush = false;
+    }
+
+    ShaderStackPush(/**@type {PSShader}*/psshader) {
+        if (!psshader) throw new Error("psshader can not be null");
+
+        this.FlushFramebuffer();
+
+        if (this.shader_stack.length >= PVRCTX_SHADER_STACK_LENGTH) {
+            console.warn("PVRContext::ShaderStackPush() failed, the stack is full");
+            return false;
+        }
+
+        this.shader_stack.push(psshader);
+        this.shader_framebuffer_front.Use(true);
+
+        return true;
+    }
+
+    ShaderStackPop(/**@type {number}*/count) {
+        this.FlushFramebuffer();
+
+        if (this.shader_stack.length < 1) {
+            console.warn("PVRContext::ShaderStackPop() failed, the stack is empty");
+            return false;
+        }
+
+        while (count-- > 0) this.shader_stack.pop();
+
+        if (this.shader_stack.length < 1)
+            this.UseDefaultFramebuffer();
+        else
+            this.shader_framebuffer_front.Use(true);
+
+        return true;
+    }
+
+    CheckFramebufferSize() {
+        if (this.resolution_changes == this.shader_last_resolution_changes) return;
+
+        this.shader_last_resolution_changes = this.resolution_changes;
+        this.shader_framebuffer_front.Resize();
+        this.shader_framebuffer_back.Resize();
+        PSFramebuffer.ResizeQuadScreen(this);
+    }
+
+    UseDefaultFramebuffer() {
+        if (this.target_framebuffer)
+            this.target_framebuffer.Use(false);
+        else
+            PSFramebuffer.UseScreenFramebuffer(this);
+    }
+
 }
 
 
@@ -106,6 +197,11 @@ function pvr_context_reset(pvrctx) {
     pvrctx.global_offsetcolor_multiply = PVR_FLAG_ENABLE;
     pvrctx.vertex_offsetcolor_multiply = PVR_FLAG_DEFAULT;
     pvrctx.render_offsetcolor_multiply = PVR_FLAG_DEFAULT;
+
+    pvrctx.FlushFramebuffer();
+    pvrctx.shader_stack = new Array();
+    PSFramebuffer.UseScreenFramebuffer(pvrctx);
+    webopengl_set_blend(pvrctx, 1, BLEND_DEFAULT, BLEND_DEFAULT, BLEND_DEFAULT, BLEND_DEFAULT);
 }
 
 /** @param {PVRContext} pvrctx */
@@ -171,12 +267,18 @@ function pvr_context_save(pvrctx) {
 
     //SH4_INTERRUPS_ENABLE(old_irq);
 
+    // remember the last count of added shaders
+    previous_state.added_shaders = pvrctx.shader_stack.length;
+
     return 1;
 }
 
 /** @param {PVRContext} pvrctx */
 function pvr_context_restore(pvrctx) {
-    if (pvrctx.stack_index <= 0) {
+    if (pvrctx.stack_index < 1) {
+        if (pvrctx.shader_stack.length > 0) {
+            console.warn("pvr_context_restore() the current PVRContext has stacked shaders on empty stack");
+        }
         console.error("pvr_context_restore() the PVRContext stack was empty");
         return 0;
     }
@@ -207,6 +309,13 @@ function pvr_context_restore(pvrctx) {
 
     //SH4_INTERRUPS_ENABLE(old_irq);
 
+    // remove all shaders added in the current state
+    let added_shaders = pvrctx.shader_stack.length - previous_state.added_shaders;
+    console.assert(added_shaders >= 0);
+    if (added_shaders > 0) pvrctx.ShaderStackPop(added_shaders);
+
+    webopengl_set_blend(pvrctx, 1, BLEND_DEFAULT, BLEND_DEFAULT, BLEND_DEFAULT, BLEND_DEFAULT);
+
     return 1;
 }
 
@@ -234,6 +343,11 @@ function pvr_context_set_vertex_offsetcolor(pvrctx, offsetcolor) {
 function pvr_context_vertex_offsetcolor_multiply(pvrctx, flag) {
     pvrctx.vertex_offsetcolor_multiply = flag;
     pvrctx.render_offsetcolor_multiply = flag == PVR_FLAG_DEFAULT ? pvrctx.global_offsetcolor_multiply : flag;
+}
+
+/** @param {PVRContext} pvrctx*/
+function pvr_context_set_vertex_blend(pvrctx, enabled, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    webopengl_set_blend(pvrctx, enabled, src_rgb, dst_rgb, src_alpha, dst_alpha);
 }
 
 
@@ -284,16 +398,35 @@ function pvr_context_global_offsetcolor_multiply(pvrctx, flag) {
 /** @param {PVRContext} pvrctx */
 function pvr_context_draw_texture(pvrctx, texture, sx, sy, sw, sh, dx, dy, dw, dh) {
     if (!texture.data_vram) return;
-    webopengl_draw_texture(pvrctx, pvrctx.webopengl, texture, sx, sy, sw, sh, dx, dy, dw, dh);
+    if (pvrctx.shader_stack.length > 0) pvrctx.shader_needs_flush = true;
+    webopengl_draw_texture(pvrctx, texture, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
 /** @param {PVRContext} pvrctx */
 function pvr_context_draw_solid_color(pvrctx, rgb_color, dx, dy, dw, dh) {
-    webopengl_draw_solid(pvrctx, pvrctx.webopengl, rgb_color, dx, dy, dw, dh);
+    if (pvrctx.shader_stack.length > 0) pvrctx.shader_needs_flush = true;
+    webopengl_draw_solid(pvrctx, rgb_color, dx, dy, dw, dh);
+}
+
+/** @param {PVRContext} pvrctx @param {PSFramebuffer} psframebuffer*/
+function pvr_context_draw_framebuffer(pvrctx, psframebuffer, sx, sy, sw, sh, dx, dy, dw, dh) {
+    pvr_context.shader_needs_flush = true;
+    webopengl_draw_framebuffer(pvrctx, psframebuffer, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
 /** @param {PVRContext} pvrctx */
 function pvr_is_offscreen(pvrctx) {
     return pvrctx._html5canvas.ownerDocument.hidden;
+}
+
+/** @param {PVRContext} pvrctx @param {PSShader} psshader @returns {bool}*/
+function pvr_context_add_shader(pvrctx, psshader) {
+    return pvrctx.ShaderStackPush(psshader);
+}
+
+/** @param {PVRContext} pvrctx @param {PSFramebuffer} psframebuffer*/
+function pvr_context_set_framebuffer(pvrctx, psframebuffer) {
+    pvrctx.target_framebuffer = psframebuffer;
+    if (pvrctx.shader_stack.length < 1) pvrctx.UseDefaultFramebuffer();
 }
 

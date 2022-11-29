@@ -232,6 +232,30 @@ namespace Engine.Platform {
             }
         }
 
+        public void MultiplyPoint(ref float target_2d_x, ref float target_2d_y) {
+            float x1 = target_2d_x;
+            float y1 = target_2d_y;
+            float z1 = 0.0f;
+            float w1 = 1.0f;
+
+            float a = this.matrix[0]; float b = this.matrix[1];
+            float e = this.matrix[4]; float f = this.matrix[5];
+            float i = this.matrix[8]; float j = this.matrix[9];
+            float m = this.matrix[12]; float n = this.matrix[13];
+
+            float x2 = (x1 * a) + (y1 * e) + (z1 * i) + (w1 * m);
+            float y2 = (x1 * b) + (y1 * f) + (z1 * j) + (w1 * n);
+
+            //float c = this.matrix[2]; float g = this.matrix[6]; float k = this.matrix[10]; float ñ = this.matrix[14];
+            //float z2 = (x1 * c) + (y1 * g) + (z1 * k) + (w1 * ñ);
+
+            //float d = this.matrix[3]; float h = this.matrix[7]; float l = this.matrix[11]; float o = this.matrix[15];
+            //float w2 = (x1 * d) + (y1 * h) + (z1 * l) + (w1 * o);
+
+            target_2d_x = x2;
+            target_2d_y = y2;
+        }
+
 
         public bool IsIdentity() {
             return Math2D.FloatsAreNearEqual(matrix[0], 1) &&

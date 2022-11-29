@@ -192,6 +192,30 @@ function sh4matrix_apply_modifier2(sh4matrix, modifier, draw_x, draw_y, draw_wid
     }
 }
 
+function sh4matrix4_multiply_point(sh4matrix, target_2d_point) {
+    let x1 = target_2d_point[0];
+    let y1 = target_2d_point[1];
+    let z1 = 0.0;
+    let w1 = 1.0;
+
+    let a = sh4matrix[0]; let b = sh4matrix[1];
+    let e = sh4matrix[4]; let f = sh4matrix[5];
+    let i = sh4matrix[8]; let j = sh4matrix[9];
+    let m = sh4matrix[12]; let n = sh4matrix[13];
+
+    let x2 = (x1 * a) + (y1 * e) + (z1 * i) + (w1 * m);
+    let y2 = (x1 * b) + (y1 * f) + (z1 * j) + (w1 * n);
+
+    //let c = sh4matrix[2]; let g = sh4matrix[6]; let k = sh4matrix[10]; let ñ = sh4matrix[14];
+    //let z2 = (x1 * c) + (y1 * g) + (z1 * k) + (w1 * ñ);
+
+    //let d = sh4matrix[3]; let h = sh4matrix[7]; let l = sh4matrix[11]; let o = sh4matrix[15];
+    //let w2 = (x1 * d) + (y1 * h) + (z1 * l) + (w1 * o);
+
+    target_2d_point[0] = x2;
+    target_2d_point[1] = y2;
+}
+
 
 function sh4matrix_is_identity(sh4matrix) {
     return math2d_floats_are_near_equal(sh4matrix[0], 1) &&

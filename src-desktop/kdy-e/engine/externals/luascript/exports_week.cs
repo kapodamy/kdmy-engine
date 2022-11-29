@@ -4,6 +4,7 @@ using Engine.Font;
 using Engine.Game;
 using Engine.Game.Common;
 using Engine.Game.Gameplay;
+using Engine.Platform;
 using Engine.Sound;
 
 namespace Engine.Externals.LuaScriptInterop {
@@ -315,6 +316,16 @@ namespace Engine.Externals.LuaScriptInterop {
             return ExportsDialogue.script_dialogue_new(L, dialogue);
         }
 
+        static int script_week_set_ui_shader(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            PSShader psshader = L.ReadUserdataOrNull<PSShader>(1, ExportsPSShader.PSSHADER);
+
+            Week.SeUIShader(roundcontext, psshader);
+
+            return 0;
+        }
+
 
         static readonly LuaTableFunction[] EXPORTS_FUNCTION = {
             new LuaTableFunction() { name = "unlockdirective_create", func = script_week_unlockdirective_create },
@@ -347,6 +358,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction() { name = "week_enable_credits_on_completed", func = script_week_enable_credits_on_completed },
             new LuaTableFunction() { name = "week_end", func = script_week_end },
             new LuaTableFunction() { name = "week_get_dialogue", func = script_week_get_dialogue },
+            new LuaTableFunction() { name = "week_set_ui_shader", func = script_week_set_ui_shader },
             new LuaTableFunction() { name = null, func = null }
         };
 

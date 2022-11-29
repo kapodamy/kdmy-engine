@@ -1,7 +1,4 @@
-#version 330 core
-
 out vec4 FragColor;
-
 in vec2 v_texcoord;
 
 uniform sampler2D u_texture;
@@ -12,7 +9,7 @@ uniform bool u_offsetcolor_enabled;
 uniform vec4 u_offsetcolor;
 
 void main() {
-    vec4 color = texture2D(u_texture, v_texcoord);
+    vec4 color = texture(u_texture, v_texcoord);
     color.a *= u_alpha;
 
     if(color.a <= 0.0)

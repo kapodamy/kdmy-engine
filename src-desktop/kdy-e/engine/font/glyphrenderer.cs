@@ -108,9 +108,8 @@ namespace Engine.Font {
         }
 
         public static void Draw(PVRContext pvrctx, float[] color, float[] color_outline, bool by_diff, bool is_gryscl, Texture tex0, Texture tex1) {
-            WebGLRenderingContext gl = pvrctx.webopengl.gl;
+            WebGL2RenderingContext gl = pvrctx.webopengl.gl;
             WebGLContextProgramGlyphs program_glyphs = pvrctx.webopengl.program_glyphs;
-            ANGLE_instanced_arrays ANGLE_instanced_arrays = pvrctx.webopengl.ANGLE_instanced_arrays;
 
             // prepare buffers
             int total_indices = glyphrenderer_glyphs_total * GlyphRenderer.FLOATS_PER_INDEX;
@@ -156,34 +155,34 @@ namespace Engine.Font {
             gl.bindBuffer(gl.ARRAY_BUFFER, program_glyphs.buffer_context);
             gl.enableVertexAttribArray(program_glyphs.a_source_coords);
             gl.vertexAttribPointer(program_glyphs.a_source_coords, 4, gl.FLOAT, false, GlyphRenderer.BYTES_PER_CONTEXT, 0);
-            ANGLE_instanced_arrays.vertexAttribDivisorANGLE(program_glyphs.a_source_coords, 1);
+            gl.vertexAttribDivisor(program_glyphs.a_source_coords, 1);
             gl.enableVertexAttribArray(program_glyphs.a_draw_coords);
             gl.vertexAttribPointer(program_glyphs.a_draw_coords, 4, gl.FLOAT, false, GlyphRenderer.BYTES_PER_CONTEXT, 16);
-            ANGLE_instanced_arrays.vertexAttribDivisorANGLE(program_glyphs.a_draw_coords, 1);
+            gl.vertexAttribDivisor(program_glyphs.a_draw_coords, 1);
             gl.enableVertexAttribArray(program_glyphs.a_texture_alt);
             gl.vertexAttribPointer(program_glyphs.a_texture_alt, 1, gl.FLOAT, false, GlyphRenderer.BYTES_PER_CONTEXT, 32);
-            ANGLE_instanced_arrays.vertexAttribDivisorANGLE(program_glyphs.a_texture_alt, 1);
+            gl.vertexAttribDivisor(program_glyphs.a_texture_alt, 1);
             gl.enableVertexAttribArray(program_glyphs.a_color_alt);
             gl.vertexAttribPointer(program_glyphs.a_color_alt, 1, gl.FLOAT, false, GlyphRenderer.BYTES_PER_CONTEXT, 36);
-            ANGLE_instanced_arrays.vertexAttribDivisorANGLE(program_glyphs.a_color_alt, 1);
+            gl.vertexAttribDivisor(program_glyphs.a_color_alt, 1);
             gl.bufferData(gl.ARRAY_BUFFER, context_array_length, glyphrenderer_context_array, gl.DYNAMIC_DRAW);
 
             // copy transformation matrix (with all modifiers applied)
             gl.uniformMatrix4fv(program_glyphs.u_matrix_transform, false, pvrctx.CurrentMatrix.matrix);
 
             // render alpha value and the text color
-            WebGLContext.WEBGL_RGBA[0] = color[0];
-            WebGLContext.WEBGL_RGBA[1] = color[1];
-            WebGLContext.WEBGL_RGBA[2] = color[2];
-            WebGLContext.WEBGL_RGBA[3] = pvrctx.render_alpha;
-            gl.uniform4fv(program_glyphs.u_color, WebGLContext.WEBGL_RGBA);
+            WebGLContext.RGBA[0] = color[0];
+            WebGLContext.RGBA[1] = color[1];
+            WebGLContext.RGBA[2] = color[2];
+            WebGLContext.RGBA[3] = pvrctx.render_alpha;
+            gl.uniform4fv(program_glyphs.u_color, WebGLContext.RGBA);
 
             // outline color (if used)
-            WebGLContext.WEBGL_RGBA[0] = color_outline[0];
-            WebGLContext.WEBGL_RGBA[1] = color_outline[1];
-            WebGLContext.WEBGL_RGBA[2] = color_outline[2];
-            WebGLContext.WEBGL_RGBA[3] = color_outline[3] * pvrctx.global_alpha;
-            gl.uniform4fv(program_glyphs.u_color_outline, WebGLContext.WEBGL_RGBA);
+            WebGLContext.RGBA[0] = color_outline[0];
+            WebGLContext.RGBA[1] = color_outline[1];
+            WebGLContext.RGBA[2] = color_outline[2];
+            WebGLContext.RGBA[3] = color_outline[3] * pvrctx.global_alpha;
+            gl.uniform4fv(program_glyphs.u_color_outline, WebGLContext.RGBA);
 
             // if the offsetcolor alpha is negative, disable the offsetcolor processing
             // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_diff" are boolean values
@@ -205,8 +204,11 @@ namespace Engine.Font {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, program_glyphs.buffer_indices);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, total_indices, glyphrenderer_indices_array, gl.DYNAMIC_DRAW);
 
+            // if the shader stack is not empty mark front framebuffer as drawn
+            if (pvrctx.shader_stack.Length > 0) pvrctx.shader_needs_flush = true;
+
             // commit draw
-            ANGLE_instanced_arrays.drawElementsInstancedANGLE(
+            gl.drawElementsInstanced(
                 gl.TRIANGLES, total_indices, gl.UNSIGNED_INT, 0, glyphrenderer_glyphs_total
             );
             gl.flush();
@@ -221,12 +223,12 @@ namespace Engine.Font {
             // unbind buffers
             gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, WebGLBuffer.Null);
-            gl.bindVertexArray(0);
+            gl.bindVertexArray(WebGLVertexArrayObject.Null);
         }
 
 #if SDF_FONT
         public static void SetSDFParams(PVRContext pvrctx, float width, float edge) {
-            WebGLRenderingContext gl = pvrctx.webopengl.gl;
+            WebGL2RenderingContext gl = pvrctx.webopengl.gl;
             WebGLContextProgramGlyphs program_glyphs = pvrctx.webopengl.program_glyphs;
 
             gl.useProgram(program_glyphs.program);

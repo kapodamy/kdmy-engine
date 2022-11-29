@@ -112,11 +112,11 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         internal static int script_songplayer_new(LuaState L, SongPlayer songplayer) {
-            return L.CreateUserdata(SONGPLAYER, songplayer, true);
+            return L.CreateUserdata(SONGPLAYER, songplayer);
         }
 
         static int script_songplayer_gc(LuaState L) {
-            return L.DestroyUserdata(SONGPLAYER);
+            return L.NullifyUserdata(SONGPLAYER);
         }
 
         static int script_songplayer_tostring(LuaState L) {

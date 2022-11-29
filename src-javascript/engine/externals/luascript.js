@@ -30,6 +30,15 @@ const kdmyEngine_obtain = function (key) {
     kdmyEngine_objectMap.set(key, index);
     return index;
 };
+const kdmyEngine_forget = function (object_index) {
+    for (let [obj, idx] of kdmyEngine_objectMap) {
+        if (object_index == idx) {
+            kdmyEngine_objectMap.delete(obj);
+        }
+    }
+
+    console.assert(undefined, "unknown object index " + object_index);
+};
 const kdmyEngine_clearMap = function (keep_context) {
   if (keep_context) {
     if (kdmyEngine_objectMap.size < 2) return;
@@ -1176,6 +1185,15 @@ function __js__layout_trigger_camera(layout, camera_name) {
 function __js__layout_trigger_trigger(layout, trigger_name) {
     return layout_trigger_trigger(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(trigger_name))
 }
+function __js__layout_get_group_shader(layout, group_name) {
+    let psshader = layout_get_group_shader(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
+    return kdmyEngine_obtain(psshader);
+}
+function __js__layout_set_group_shader(layout, group_name, psshader) {
+    return layout_set_group_shader(
+        kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), kdmyEngine_obtain(psshader)
+    );
+}
 function __js__messagebox_get_modifier(messagebox) {
     const modifier = messagebox_get_modifier(kdmyEngine_obtain(messagebox));
     return kdmyEngine_obtain(modifier)
@@ -1407,6 +1425,13 @@ function __js__sprite_set_z_index(sprite, index) {
 function __js__sprite_set_z_offset(sprite, offset) {
     sprite_set_z_offset(kdmyEngine_obtain(sprite), offset)
 }
+function __js__sprite_set_shader(sprite, psshader) {
+    sprite_set_shader(kdmyEngine_obtain(sprite), kdmyEngine_obtain(psshader));
+}
+function __js__sprite_get_shader(sprite) {
+    let psshader = sprite_get_shader(kdmyEngine_obtain(sprite));
+    return kdmyEngine_obtain(psshader);
+}
 function __js__textsprite_border_enable(textsprite, enable) {
     textsprite_border_enable(kdmyEngine_obtain(textsprite), enable)
 }
@@ -1488,6 +1513,13 @@ function __js__textsprite_set_z_index(textsprite, z_index) {
 }
 function __js__textsprite_set_z_offset(textsprite, offset) {
     textsprite_set_z_offset(kdmyEngine_obtain(textsprite), offset)
+}
+function __js__textsprite_set_shader(textsprite, psshader) {
+    textsprite_set_shader(kdmyEngine_obtain(textsprite), kdmyEngine_obtain(psshader));
+}
+function __js__textsprite_get_shader(textsprite) {
+    let psshader = textsprite_get_shader(kdmyEngine_obtain(textsprite));
+    return kdmyEngine_obtain(psshader);
 }
 function __js__timer_ms_gettime32_JS() {
     return Math.trunc(performance.now())
@@ -1617,6 +1649,37 @@ function __js__week_update_bpm(roundcontext, bpm) {
 function __js__week_update_speed(roundcontext, speed) {
     week_update_speed(kdmyEngine_obtain(roundcontext), speed)
 }
+function __js__week_set_ui_shader(roundcontext, psshader) {
+    week_set_ui_shader(kdmyEngine_obtain(roundcontext), kdmyEngine_obtain(psshader));
+}
+function __js__psshader_init(vertex_sourcecode, fragment_sourcecode) {
+    let psshader = PSShader.BuildFromSource(
+        pvr_context,
+        kdmyEngine_ptrToString(vertex_sourcecode),
+        kdmyEngine_ptrToString(fragment_sourcecode)
+    );
+    return kdmyEngine_obtain(psshader);
+}
+function __js__psshader_destroy(psshader) {
+    kdmyEngine_obtain(psshader).Destroy();
+    kdmyEngine_forget(psshader);
+}
+
+function __js__psshader_set_uniform_any(psshader, name, values) {
+    const val = new Float32Array(buffer, values, 128);
+    kdmyEngine_obtain(psshader).SetUniformAny(kdmyEngine_ptrToString(name), val);
+}
+
+function __js__psshader_set_uniform1f(psshader, name, value) {
+    kdmyEngine_obtain(psshader).SetUniform1F(kdmyEngine_ptrToString(name), value);
+}
+
+function __js__psshader_set_uniform1i(psshader, name, value) {
+    kdmyEngine_obtain(psshader).SetUniform1I(kdmyEngine_ptrToString(name), value);
+}
+
+
+
 function callRuntimeCallbacks(callbacks) {
     while (callbacks.length > 0) {
         var callback = callbacks.shift();
@@ -5103,6 +5166,8 @@ var asmLibraryArg = {
     "__js__layout_trigger_any": __js__layout_trigger_any,
     "__js__layout_trigger_camera": __js__layout_trigger_camera,
     "__js__layout_trigger_trigger": __js__layout_trigger_trigger,
+    "__js__layout_get_group_shader": __js__layout_get_group_shader,
+    "__js__layout_set_group_shader": __js__layout_set_group_shader,
     "__js__messagebox_get_modifier": __js__messagebox_get_modifier,
     "__js__messagebox_hide": __js__messagebox_hide,
     "__js__messagebox_hide_image": __js__messagebox_hide_image,
@@ -5168,6 +5233,8 @@ var asmLibraryArg = {
     "__js__sprite_set_visible": __js__sprite_set_visible,
     "__js__sprite_set_z_index": __js__sprite_set_z_index,
     "__js__sprite_set_z_offset": __js__sprite_set_z_offset,
+    "__js__sprite_set_shader": __js__sprite_set_shader,
+    "__js__sprite_get_shader": __js__sprite_get_shader,
     "__js__textsprite_border_enable": __js__textsprite_border_enable,
     "__js__textsprite_border_set_color": __js__textsprite_border_set_color,
     "__js__textsprite_border_set_size": __js__textsprite_border_set_size,
@@ -5193,6 +5260,8 @@ var asmLibraryArg = {
     "__js__textsprite_set_wordbreak": __js__textsprite_set_wordbreak,
     "__js__textsprite_set_z_index": __js__textsprite_set_z_index,
     "__js__textsprite_set_z_offset": __js__textsprite_set_z_offset,
+    "__js__textsprite_set_shader": __js__textsprite_set_shader,
+    "__js__textsprite_get_shader": __js__textsprite_get_shader,
     "__js__timer_ms_gettime32_JS": __js__timer_ms_gettime32_JS,
     "__js__week_change_character_camera_name": __js__week_change_character_camera_name,
     "__js__week_disable_layout_rollback": __js__week_disable_layout_rollback,
@@ -5220,6 +5289,12 @@ var asmLibraryArg = {
     "__js__week_unlockdirective_remove": __js__week_unlockdirective_remove,
     "__js__week_update_bpm": __js__week_update_bpm,
     "__js__week_update_speed": __js__week_update_speed,
+    "__js__week_set_ui_shader": __js__week_set_ui_shader,
+    "__js__psshader_init": __js__psshader_init,
+    "__js__psshader_destroy": __js__psshader_destroy,
+    "__js__psshader_set_uniform_any": __js__psshader_set_uniform_any,
+    "__js__psshader_set_uniform1f": __js__psshader_set_uniform1f,
+    "__js__psshader_set_uniform1i": __js__psshader_set_uniform1i,
     "__syscall_dup3": ___syscall_dup3,
     "__syscall_fcntl64": ___syscall_fcntl64,
     "__syscall_ioctl": ___syscall_ioctl,

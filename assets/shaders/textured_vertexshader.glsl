@@ -1,6 +1,4 @@
-#version 330 core
-
-attribute vec4 a_position;
+in vec4 a_position;
 
 uniform mat4 u_matrix_proyection;
 uniform mat4 u_matrix_model;// location + size
@@ -13,4 +11,3 @@ void main() {
     gl_Position = u_matrix_proyection * u_matrix_transform * u_matrix_model * a_position;
     v_texcoord = (u_matrix_texture * a_position).xy;
 }
-

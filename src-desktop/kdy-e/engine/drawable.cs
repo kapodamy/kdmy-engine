@@ -23,6 +23,12 @@ namespace Engine {
         private DelegateAnimate callback_animate;
         private bool visible;
         private PVRContextFlag antialiasing;
+        private PSShader psshader;
+        private bool blend_enabled;
+        private Blend blend_src_rgb;
+        private Blend blend_dst_rgb;
+        private Blend blend_src_alpha;
+        private Blend blend_dst_alpha;
 
         public Drawable(float z, IDraw draw_impl, IAnimate animate_impl) :
             this(z, default(DelegateDraw), default(DelegateAnimate)) {
@@ -52,6 +58,13 @@ namespace Engine {
             this.visible = true;
 
             this.antialiasing = PVRContextFlag.DEFAULT;
+            this.psshader = null;
+
+            this.blend_enabled = true;
+            this.blend_src_rgb = Blend.DEFAULT;
+            this.blend_dst_rgb = Blend.DEFAULT;
+            this.blend_src_alpha = Blend.DEFAULT;
+            this.blend_dst_alpha = Blend.DEFAULT;
 
             PVRContext.HelperClearOffsetColor(this.offsetcolor);
             this.modifier.Clear();
@@ -221,6 +234,14 @@ namespace Engine {
             if (this.antialiasing != PVRContextFlag.DEFAULT) {
                 pvrctx.SetGlobalAntialiasing(this.antialiasing);
             }
+            if (this.psshader != null) pvrctx.AddShader(this.psshader);
+            pvrctx.SetVertexBlend(
+                this.blend_enabled,
+                this.blend_src_rgb,
+                this.blend_dst_rgb,
+                this.blend_src_alpha,
+                this.blend_dst_alpha
+            );
         }
 
         public void HelperUpdateFromPlaceholder(LayoutPlaceholder layout_placeholder) {
@@ -246,8 +267,28 @@ namespace Engine {
             this.antialiasing = antialiasing;
         }
 
+        public void SetShader(PSShader psshader) {
+            this.psshader = psshader;
+        }
+
+        public PSShader GetShader() {
+            return this.psshader;
+        }
+
         public void GetDrawSize(out float draw_width, out float draw_height) {
             throw new InvalidOperationException("drawable_get_draw_size() is not available");
         }
+
+        public void BlendEnable(bool enabled) {
+            this.blend_enabled = enabled;
+        }
+
+        public void BlendSet(Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha) {
+            this.blend_src_rgb = src_rgb;
+            this.blend_dst_rgb = dst_rgb;
+            this.blend_src_alpha = src_alpha;
+            this.blend_dst_alpha = dst_alpha;
+        }
+
     }
 }

@@ -46,7 +46,13 @@ const VERTEX_SHAPE = 4;
    On error. Returns -1, something is probably very wrong...
  * @async
  */
-/*async */function pvrctx_wait_ready() {
+function pvrctx_wait_ready() {
+
+    // flush front framebuffer if there anything drawn
+    pvr_context.FlushFramebuffer();
+    pvr_context.shader_framebuffer_front.Invalidate();
+    pvr_context.shader_framebuffer_back.Invalidate();
+
     return new Promise(function (resolve, reject) {
         const handle = requestAnimationFrame(function (now) {
             document.removeEventListener("visibilitychange", visibilitychange);
@@ -72,6 +78,13 @@ const VERTEX_SHAPE = 4;
             // Note: the engine should not run below 15fps, or the beat synchronization will be lost
             //
             elapsed = Math.min(elapsed, 66.66666666666667);
+
+            pvr_context.last_elapsed = elapsed;
+            pvr_context.frame_rendered++;
+
+            // resize framebuffers if the screen size has changed
+            pvr_context.CheckFramebufferSize();
+
             resolve(elapsed);
         });
 

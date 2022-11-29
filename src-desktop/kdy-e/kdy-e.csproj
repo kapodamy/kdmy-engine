@@ -100,6 +100,7 @@
     <Compile Include="engine\externals\glfw_delegates.cs" />
     <Compile Include="engine\externals\glfw.cs" />
     <Compile Include="engine\externals\luascript\exports_dialogue.cs" />
+    <Compile Include="engine\externals\luascript\exports_psshader.cs" />
     <Compile Include="engine\game\freeplaymenu.cs" />
     <Compile Include="engine\game\gameplay\dialogue.cs" />
     <Compile Include="engine\game\helpers\freeplay_songicons.cs" />
@@ -201,6 +202,7 @@
     <Compile Include="engine\utils\math2d.cs" />
     <Compile Include="engine\utils\misc.cs" />
     <Compile Include="engine\utils\number.cs" />
+    <Compile Include="engine\utils\stacklist.cs" />
     <Compile Include="engine\utils\stringfolding.cs" />
     <Compile Include="engine\utils\stringsort.cs" />
     <Compile Include="engine\utils\stringutils.cs" />
