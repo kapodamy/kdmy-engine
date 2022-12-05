@@ -1,4 +1,5 @@
 using System;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Font;
 using Engine.Image;
 using Engine.Utils;
@@ -181,6 +182,7 @@ namespace Engine.Animation {
 
             AnimSprite.POOL.Delete(this.id);
 
+            Luascript.DropShared(this);
             //free(animsprite);
         }
 

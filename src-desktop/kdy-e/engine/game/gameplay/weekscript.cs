@@ -47,10 +47,6 @@ namespace Engine.Game.Gameplay {
             this.luascript.Destroy();
         }
 
-        public void DropSharedObjects() {
-            this.luascript.DropShared();
-        }
-
 
         public void NotifyWeekinit(int freeplay_track_index) {
             this.luascript.notify_weekinit(freeplay_track_index);

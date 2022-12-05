@@ -22,7 +22,6 @@ namespace Engine.Externals.LuaScriptInterop {
                                                 "translateRotation: $b, " +
                                                 "scaleSize: $b, " +
                                                 "scaleTranslation: $b, " +
-                                                "translateRotation: $b, " +
                                                 "x: $6f, " +
                                                 "y: $6f, " +
                                                 "width: $6f, " +
@@ -35,7 +34,7 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_modifier_gc(LuaState L) {
-            return L.NullifyUserdata(MODIFIER);
+            return L.GC_userdata(MODIFIER);
         }
 
         static int script_modifier_tostring(LuaState L) {
@@ -71,95 +70,137 @@ namespace Engine.Externals.LuaScriptInterop {
             Modifier modifier = L.ReadUserdata<Modifier>(MODIFIER);
             string field = L.luaL_optstring(2, null);
 
-            if (field == "translateX")
-                L.lua_pushnumber(modifier.translate_x);
-            else if (field == "translateY")
-                L.lua_pushnumber(modifier.translate_y);
-            else if (field == "rotate")
-                L.lua_pushnumber(modifier.rotate);
-            else if (field == "skewX")
-                L.lua_pushnumber(modifier.skew_x);
-            else if (field == "skewY")
-                L.lua_pushnumber(modifier.skew_y);
-            else if (field == "scaleX")
-                L.lua_pushnumber(modifier.scale_x);
-            else if (field == "scaleY")
-                L.lua_pushnumber(modifier.scale_y);
-            else if (field == "scaleDirectionX")
-                L.lua_pushnumber(modifier.scale_direction_x);
-            else if (field == "scaleDirectionY")
-                L.lua_pushnumber(modifier.scale_direction_y);
-            else if (field == "rotatePivotEnabled")
-                L.lua_pushboolean(modifier.rotate_pivot_enabled == true);
-            else if (field == "rotatePivotU")
-                L.lua_pushnumber(modifier.rotate_pivot_u);
-            else if (field == "rotatePivotV")
-                L.lua_pushnumber(modifier.rotate_pivot_v);
-            else if (field == "translateRotation")
-                L.lua_pushboolean(modifier.translate_rotation == true);
-            else if (field == "scaleSize")
-                L.lua_pushboolean(modifier.scale_size == true);
-            else if (field == "scaleTranslation")
-                L.lua_pushboolean(modifier.scale_translation == true);
-            else if (field == "x")
-                L.lua_pushnumber(modifier.x);
-            else if (field == "y")
-                L.lua_pushnumber(modifier.y);
-            else if (field == "width")
-                L.lua_pushnumber(modifier.width);
-            else if (field == "height")
-                L.lua_pushnumber(modifier.height);
-            else
-                L.lua_pushnil();
+            switch (field) {
+                case "translateX":
+                    L.lua_pushnumber(modifier.translate_x);
+                    break;
+                case "translateY":
+                    L.lua_pushnumber(modifier.translate_y);
+                    break;
+                case "rotate":
+                    L.lua_pushnumber(modifier.rotate);
+                    break;
+                case "skewX":
+                    L.lua_pushnumber(modifier.skew_x);
+                    break;
+                case "skewY":
+                    L.lua_pushnumber(modifier.skew_y);
+                    break;
+                case "scaleX":
+                    L.lua_pushnumber(modifier.scale_x);
+                    break;
+                case "scaleY":
+                    L.lua_pushnumber(modifier.scale_y);
+                    break;
+                case "scaleDirectionX":
+                    L.lua_pushnumber(modifier.scale_direction_x);
+                    break;
+                case "scaleDirectionY":
+                    L.lua_pushnumber(modifier.scale_direction_y);
+                    break;
+                case "rotatePivotEnabled":
+                    L.lua_pushboolean(modifier.rotate_pivot_enabled == true);
+                    break;
+                case "rotatePivotU":
+                    L.lua_pushnumber(modifier.rotate_pivot_u);
+                    break;
+                case "rotatePivotV":
+                    L.lua_pushnumber(modifier.rotate_pivot_v);
+                    break;
+                case "translateRotation":
+                    L.lua_pushboolean(modifier.translate_rotation == true);
+                    break;
+                case "scaleSize":
+                    L.lua_pushboolean(modifier.scale_size == true);
+                    break;
+                case "scaleTranslation":
+                    L.lua_pushboolean(modifier.scale_translation == true);
+                    break;
+                case "x":
+                    L.lua_pushnumber(modifier.x);
+                    break;
+                case "y":
+                    L.lua_pushnumber(modifier.y);
+                    break;
+                case "width":
+                    L.lua_pushnumber(modifier.width);
+                    break;
+                case "height":
+                    L.lua_pushnumber(modifier.height);
+                    break;
+                default:
+                    L.lua_pushnil();
+                    break;
+            }
 
             return 1;
         }
 
         static int script_modifier_newindex(LuaState L) {
             Modifier modifier = L.ReadUserdata<Modifier>(MODIFIER);
-
             string field = L.luaL_optstring(2, null);
 
-            if (field == "translateX")
-                modifier.translate_x = L.luaL_checkfloat(3);
-            else if (field == "translateY")
-                modifier.translate_y = L.luaL_checkfloat(3);
-            else if (field == "rotate")
-                modifier.rotate = L.luaL_checkfloat(3);
-            else if (field == "skewX")
-                modifier.skew_x = L.luaL_checkfloat(3);
-            else if (field == "skewY")
-                modifier.skew_y = L.luaL_checkfloat(3);
-            else if (field == "scaleX")
-                modifier.scale_x = L.luaL_checkfloat(3);
-            else if (field == "scaleY")
-                modifier.scale_y = L.luaL_checkfloat(3);
-            else if (field == "scaleDirectionX")
-                modifier.scale_direction_x = L.luaL_checkfloat(3);
-            else if (field == "scaleDirectionY")
-                modifier.scale_direction_y = L.luaL_checkfloat(3);
-            else if (field == "rotatePivotEnabled")
-                modifier.rotate_pivot_enabled = L.luaL_checkboolean(3);
-            else if (field == "rotatePivotU")
-                modifier.rotate_pivot_u = L.luaL_checkfloat(3);
-            else if (field == "rotatePivotV")
-                modifier.rotate_pivot_v = L.luaL_checkfloat(3);
-            else if (field == "translateRotation")
-                modifier.translate_rotation = L.luaL_checkboolean(3);
-            else if (field == "scaleSize")
-                modifier.scale_size = L.luaL_checkboolean(3);
-            else if (field == "scaleTranslation")
-                modifier.scale_translation = L.luaL_checkboolean(3);
-            else if (field == "x")
-                modifier.x = L.luaL_checkfloat(3);
-            else if (field == "y")
-                modifier.y = L.luaL_checkfloat(3);
-            else if (field == "width")
-                modifier.width = L.luaL_checkfloat(3);
-            else if (field == "height")
-                modifier.height = L.luaL_checkfloat(3);
-            else
-                return L.luaL_argerror(2, $"unknown Modifier field '{field}'");
+            switch (field) {
+                case "translateX":
+                    modifier.translate_x = (float)L.luaL_checknumber(3);
+                    break;
+                case "translateY":
+                    modifier.translate_y = (float)L.luaL_checknumber(3);
+                    break;
+                case "rotate":
+                    modifier.rotate = (float)L.luaL_checknumber(3);
+                    break;
+                case "skewX":
+                    modifier.skew_x = (float)L.luaL_checknumber(3);
+                    break;
+                case "skewY":
+                    modifier.skew_y = (float)L.luaL_checknumber(3);
+                    break;
+                case "scaleX":
+                    modifier.scale_x = (float)L.luaL_checknumber(3);
+                    break;
+                case "scaleY":
+                    modifier.scale_y = (float)L.luaL_checknumber(3);
+                    break;
+                case "scaleDirectionX":
+                    modifier.scale_direction_x = (float)L.luaL_checknumber(3);
+                    break;
+                case "scaleDirectionY":
+                    modifier.scale_direction_y = (float)L.luaL_checknumber(3);
+                    break;
+                case "rotatePivotEnabled":
+                    modifier.rotate_pivot_enabled = L.luaL_toboolean(3);
+                    break;
+                case "rotatePivotU":
+                    modifier.rotate_pivot_u = (float)L.luaL_checknumber(3);
+                    break;
+                case "rotatePivotV":
+                    modifier.rotate_pivot_v = (float)L.luaL_checknumber(3);
+                    break;
+                case "translateRotation":
+                    modifier.translate_rotation = L.luaL_toboolean(3);
+                    break;
+                case "scaleSize":
+                    modifier.scale_size = L.luaL_toboolean(3);
+                    break;
+                case "scaleTranslation":
+                    modifier.scale_translation = L.luaL_toboolean(3);
+                    break;
+                case "x":
+                    modifier.x = (float)L.luaL_checknumber(3);
+                    break;
+                case "y":
+                    modifier.y = (float)L.luaL_checknumber(3);
+                    break;
+                case "width":
+                    modifier.width = (float)L.luaL_checknumber(3);
+                    break;
+                case "height":
+                    modifier.height = (float)L.luaL_checknumber(3);
+                    break;
+                default:
+                    return L.luaL_argerror(2, $"unknown Modifier field '{field}'");
+            }
 
             return 0;
         }
@@ -170,7 +211,7 @@ namespace Engine.Externals.LuaScriptInterop {
         private static readonly LuaCallback delegate_index = script_modifier_index;
         private static readonly LuaCallback delegate_newindex = script_modifier_newindex;
 
-        internal static void register_modifier(ManagedLuaState lua) {
+        internal static void script_modifier_register(ManagedLuaState lua) {
             lua.RegisterStructMetaTable(
                 MODIFIER,
                 delegate_gc,

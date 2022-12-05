@@ -22,8 +22,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_unlockdirective_create(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
             string name = L.luaL_checkstring(1);
-            bool completed_round = L.luaL_checkboolean(2);
-            bool completed_week = L.luaL_checkboolean(3);
+            bool completed_round = L.luaL_toboolean(2);
+            bool completed_week = L.luaL_toboolean(3);
             double value = L.luaL_checknumber(4);
 
             if (String.IsNullOrEmpty(name)) {
@@ -38,8 +38,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_unlockdirective_remove(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
             string name = L.luaL_checkstring(1);
-            bool completed_round = L.luaL_checkboolean(2);
-            bool completed_week = L.luaL_checkboolean(3);
+            bool completed_round = L.luaL_toboolean(2);
+            bool completed_week = L.luaL_toboolean(3);
 
             if (String.IsNullOrEmpty(name)) {
                 L.luaL_argerror(1, "the directive name cannot be null or empty.");
@@ -70,7 +70,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
         static int script_week_halt(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
-            bool should_halt = L.luaL_checkboolean(1);
+            bool should_halt = L.luaL_toboolean(1);
 
             Week.SetHalt(roundcontext, should_halt);
 
@@ -80,7 +80,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_ui_set_visibility(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            bool visible = L.luaL_checkboolean(1);
+            bool visible = L.luaL_toboolean(1);
 
             Week.UISetVisibility(roundcontext, visible);
 
@@ -174,7 +174,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
         static int script_week_set_bpm(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
-            float bpm = L.luaL_checkfloat(1);
+            float bpm = (float)L.luaL_checknumber(1);
 
             Week.UpdateBpm(roundcontext, bpm);
             return 0;
@@ -261,7 +261,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_change_character_camera_name(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            bool opponent_or_player = L.luaL_checkboolean(1);
+            bool opponent_or_player = L.luaL_toboolean(1);
             string new_name = L.luaL_optstring(2, null);
 
             Week.ChangeCharacterCameraName(roundcontext, opponent_or_player, new_name);
@@ -272,7 +272,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_disable_layout_rollback(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            bool disable = L.luaL_checkboolean(1);
+            bool disable = L.luaL_toboolean(1);
 
             Week.DisableLayoutRollback(roundcontext, disable);
 
@@ -300,8 +300,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_end(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            bool round_or_week = L.luaL_checkboolean(1);
-            bool loose_or_win = L.luaL_checkboolean(2);
+            bool round_or_week = L.luaL_toboolean(1);
+            bool loose_or_win = L.luaL_toboolean(2);
 
             Week.End(roundcontext, round_or_week, loose_or_win);
 
@@ -319,7 +319,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_set_ui_shader(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            PSShader psshader = L.ReadUserdataOrNull<PSShader>(1, ExportsPSShader.PSSHADER);
+            PSShader psshader = L.ReadNullableUserdata<PSShader>(1, ExportsPSShader.PSSHADER);
 
             Week.SeUIShader(roundcontext, psshader);
 
@@ -373,7 +373,7 @@ namespace Engine.Externals.LuaScriptInterop {
         };
 
 
-        internal static void register_week(ManagedLuaState lua) {
+        internal static void script_week_register(ManagedLuaState lua) {
             lua.RegisterGlobalFunctions(EXPORTS_FUNCTION);
             lua.RegisterIntegerConstants(EXPORTS_GLOBAL);
         }

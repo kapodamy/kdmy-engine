@@ -14,7 +14,7 @@ EM_JS_PRFX(void, modding_exit, (ModdingContext moddingcontext), {
 #endif
 
 static int script_modding_get_layout(lua_State* L) {
-    LUASCRIPT_GET(L);
+    Luascript luascript = luascript_get_instance(L);
 
     Layout layout = modding_get_layout(luascript->context);
 
@@ -22,7 +22,7 @@ static int script_modding_get_layout(lua_State* L) {
 }
 
 static int script_modding_exit(lua_State* L) {
-    LUASCRIPT_GET(L);
+    Luascript luascript = luascript_get_instance(L);
 
     modding_exit(luascript->context);
 
@@ -37,7 +37,7 @@ static const luaL_Reg EXPORTS_FUNCTION[] = {
 };
 
 
-void register_modding(lua_State* L) {
+void script_modding_register(lua_State* L) {
     for (size_t i = 0; ; i++) {
         if (EXPORTS_FUNCTION[i].name == NULL || EXPORTS_FUNCTION[i].func == NULL) break;
         lua_pushcfunction(L, EXPORTS_FUNCTION[i].func);

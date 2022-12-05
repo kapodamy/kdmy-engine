@@ -7,32 +7,32 @@ namespace Engine.Externals.LuaInterop {
 
     public sealed class ManagedLuaState : IDisposable {
 
-        internal const int LUA_REGISTRY_TABLE_KEY = 1;
+        public const int LUA_OK = LUA.OK;
 
-        public const int LUA_OK = 0;
-        public const int LUA_YIELD = 1;
-        public const int LUA_ERRRUN = 2;
-        public const int LUA_ERRSYNTAX = 3;
-        public const int LUA_ERRMEM = 4;
-        public const int LUA_ERRERR = 5;
 
         internal object context;
+        internal GCHandle self;
+
+        internal string last_pushed_function_name;
+        internal ReferenceList handle_references;
+
         internal unsafe lua_State* L;
-        private GCHandle self;
-        private string last_pushed_function_name;
-        private static readonly LuaCallback delegate_eq = EqImpl;
+        internal unsafe LuascriptObject* shared_array;
+        internal unsafe int shared_size;
+
 
         private unsafe ManagedLuaState(lua_State* L, object context) {
             this.L = L;
             this.context = context;
             this.self = GCHandle.Alloc(this, GCHandleType.Normal);
             this.last_pushed_function_name = null;
+            this.handle_references = new ReferenceList();
+            this.shared_size = LuaInteropHelpers.SHARED_ARRAY_CHUNK_SIZE;
+            this.shared_array = (LuascriptObject*)Marshal.AllocHGlobal(sizeof(LuascriptObject) * this.shared_size);
 
             LUA.luaL_openlibs(L);
 
-            LUA.lua_pushlightuserdata(L, (void*)LUA_REGISTRY_TABLE_KEY);
-            LUA.lua_pushlightuserdata(L, (void*)GCHandle.ToIntPtr(this.self));
-            LUA.lua_settable(L, LUA.REGISTRYINDEX);
+            LuaInteropHelpers.luascript_set_instance(this);
         }
 
         public static ManagedLuaState Init(object context) {
@@ -50,42 +50,10 @@ namespace Engine.Externals.LuaInterop {
             }
 
             if (this.self.IsAllocated) this.self.Free();
+            this.handle_references.RevokeAllReferences();
+
             this.context = null;
-        }
-
-        internal unsafe static ManagedLuaState SelfFrom(void* luascript) {
-            if (luascript == null) {
-                throw new NullReferenceException("Can not recover the object, NULL pointer provided");
-            }
-
-            GCHandle self = GCHandle.FromIntPtr((IntPtr)luascript);
-            object target = self.Target;
-
-            Debug.Assert(target != null, "self.Target returned null");
-
-            return (ManagedLuaState)target;
-        }
-
-        private static unsafe int EqImpl(LuaState luastate) {
-            lua_State* L = luastate.L;
-
-            bool equals;
-
-            int type_a = LUA.lua_type(L, 1);
-            int type_b = LUA.lua_type(L, 2);
-
-            if (type_a != LUA.TUSERDATA || type_b != LUA.TUSERDATA) {
-                equals = false;
-            } else {
-                void** a = (void**)LUA.lua_touserdata(L, 1);
-                void** b = (void**)LUA.lua_touserdata(L, 2);
-
-                equals = (a == null && b == null) || (a != b) || ((*a) != (*b));
-            }
-
-            LUA.lua_pushboolean(L, equals ? 1 : 0);
-
-            return 1;
+            this.handle_references = null;
         }
 
 
@@ -203,9 +171,6 @@ namespace Engine.Externals.LuaInterop {
                 LUA.lua_pushcfunction(lua, newindex);
                 LUA.lua_setfield(lua, -2, "__newindex");
 
-                LUA.lua_pushcfunction(lua, ManagedLuaState.delegate_eq);
-                LUA.lua_setfield(lua, -2, "__eq");
-
                 LUA.lua_pop(lua, 1);
             }
         }
@@ -260,11 +225,19 @@ namespace Engine.Externals.LuaInterop {
             return 1;
         }
 
+        public void DropSharedObject(object obj) {
+            unsafe {
+                void* obj_ptr = this.handle_references.GetReference(obj);
+                LuaInteropHelpers.luascript_remove_userdata(this, obj_ptr);
+            }
+        }
+
         public static string GetVersion() {
             unsafe {
                 string version = null;
-                lua_State* L = LUA.luaL_newstate();
 
+                lua_State* L = LUA.luaL_newstate();
+                if (L == null) return null;
                 LUA.luaL_openlibs(L);
 
                 int ret = LUA.lua_getglobal(L, "_VERSION");

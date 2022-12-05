@@ -103,6 +103,8 @@ function textsprite_destroy(textsprite) {
     linkedlist_destroy(textsprite.animation_list);
 
     TEXTSPRITE_POOL.delete(textsprite.id);
+    ModuleLuaScript.kdmyEngine_drop_shared_object(textsprite.matrix_source);
+    ModuleLuaScript.kdmyEngine_drop_shared_object(textsprite);
     textsprite = undefined;
 }
 

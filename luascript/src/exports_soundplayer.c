@@ -45,7 +45,7 @@ EM_JS_PRFX(void, soundplayer_seek, (SoundPlayer soundplayer, double timestamp), 
 
 
 static int script_soundplayer_play(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
     soundplayer_play(soundplayer);
 
@@ -53,7 +53,7 @@ static int script_soundplayer_play(lua_State* L) {
 }
 
 static int script_soundplayer_pause(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
     soundplayer_pause(soundplayer);
 
@@ -61,16 +61,16 @@ static int script_soundplayer_pause(lua_State* L) {
 }
 
 static int script_soundplayer_stop(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
     soundplayer_stop(soundplayer);
     return 0;
 }
 
 static int script_soundplayer_loop_enable(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
-    bool enable = luaL_checkboolean(L, 2);
+    bool enable = lua_toboolean(L, 2);
 
     soundplayer_loop_enable(soundplayer, enable);
 
@@ -78,10 +78,10 @@ static int script_soundplayer_loop_enable(lua_State* L) {
 }
 
 static int script_soundplayer_fade(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
-    bool in_or_out = luaL_checkboolean(L, 2);
-    float duration = luaL_checkfloat(L, 3);
+    bool in_or_out = lua_toboolean(L, 2);
+    float duration = (float)luaL_checknumber(L, 3);
 
     soundplayer_fade(soundplayer, in_or_out, duration);
 
@@ -89,9 +89,9 @@ static int script_soundplayer_fade(lua_State* L) {
 }
 
 static int script_soundplayer_set_volume(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
-    float volume = luaL_checkfloat(L, 2);
+    float volume = (float)luaL_checknumber(L, 2);
 
     soundplayer_set_volume(soundplayer, volume);
 
@@ -99,9 +99,9 @@ static int script_soundplayer_set_volume(lua_State* L) {
 }
 
 static int script_soundplayer_set_mute(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
-    bool muted = luaL_checkboolean(L, 2);
+    bool muted = lua_toboolean(L, 2);
 
     soundplayer_set_mute(soundplayer, muted);
 
@@ -109,7 +109,7 @@ static int script_soundplayer_set_mute(lua_State* L) {
 }
 
 static int script_soundplayer_is_muted(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
     bool ret = soundplayer_is_muted(soundplayer);
 
@@ -118,7 +118,7 @@ static int script_soundplayer_is_muted(lua_State* L) {
 }
 
 static int script_soundplayer_is_playing(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
     bool ret = soundplayer_is_playing(soundplayer);
 
@@ -127,7 +127,7 @@ static int script_soundplayer_is_playing(lua_State* L) {
 }
 
 static int script_soundplayer_get_duration(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
     double ret = soundplayer_get_duration(soundplayer);
 
@@ -136,7 +136,7 @@ static int script_soundplayer_get_duration(lua_State* L) {
 }
 
 static int script_soundplayer_get_position(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
     double ret = soundplayer_get_position(soundplayer);
 
@@ -145,7 +145,7 @@ static int script_soundplayer_get_position(lua_State* L) {
 }
 
 static int script_soundplayer_seek(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
     double timestamp = luaL_checknumber(L, 2);
 
@@ -175,30 +175,19 @@ static const luaL_Reg SOUNDPLAYER_FUNCTIONS[] = {
 };
 
 
-int script_soundplayer_new(lua_State* L, Layout layout, SoundPlayer soundplayer) {
-    return NEW_USERDATA(L, SOUNDPLAYER, layout, soundplayer, true);
+int script_soundplayer_new(lua_State* L, SoundPlayer soundplayer) {
+    return luascript_userdata_new(L, SOUNDPLAYER, soundplayer);
 }
 
 static int script_soundplayer_gc(lua_State* L) {
-    READ_USERDATA_UNCHECKED(L, SoundPlayer, soundplayer, SOUNDPLAYER);
-    _luascript_suppress_item(L, soundplayer, true);
-    return 0;
+    return luascript_userdata_gc(L, SOUNDPLAYER);
 }
 
 static int script_soundplayer_tostring(lua_State* L) {
-    READ_USERDATA(L, SoundPlayer, soundplayer, SOUNDPLAYER);
-    lua_pushstring(L, "[SoundPlayer]");
-    return 1;
+    return luascript_userdata_tostring(L, SOUNDPLAYER);
 }
 
-
-inline void register_soundplayer(lua_State* L) {
-    _luascript_register(
-        L,
-        SOUNDPLAYER,
-        script_soundplayer_gc,
-        script_soundplayer_tostring,
-        SOUNDPLAYER_FUNCTIONS
-    );
+void script_soundplayer_register(lua_State* L) {
+    luascript_register(L, SOUNDPLAYER, script_soundplayer_gc, script_soundplayer_tostring, SOUNDPLAYER_FUNCTIONS);
 }
 

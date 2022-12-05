@@ -22,7 +22,8 @@ function camera_init(modifier, viewport_width, viewport_height) {
         force_update: 0,
         has_transition_offset: 0,
         parallax_x: 0, parallax_y: 0, parallax_z: 1,
-        offset_x: 0, offset_y: 0, offset_z: 1
+        offset_x: 0, offset_y: 0, offset_z: 1,
+        parent_layout: null
     };
 
     if (camera.internal_modifier) {
@@ -43,7 +44,13 @@ function camera_init(modifier, viewport_width, viewport_height) {
 
 function camera_destroy(camera) {
     tweenlerp_destroy(camera.tweenlerp);
-    if (camera.internal_modifier) camera.modifier = undefined;
+
+    if (camera.internal_modifier) {
+        ModuleLuaScript.kdmyEngine_drop_shared_object(camera.modifier);
+        camera.modifier = undefined;
+    }
+
+    ModuleLuaScript.kdmyEngine_drop_shared_object(camera);
     camera = undefined;
 }
 
@@ -87,10 +94,10 @@ function camera_set_interpolator_type(camera, type) {
 }
 
 function camera_set_transition_duration(camera, expresed_in_beats, value) {
-	if (expresed_in_beats)
-		camera.duration = value * camera.beat_duration;
-	else
-		camera.duration = value;
+    if (expresed_in_beats)
+        camera.duration = value * camera.beat_duration;
+    else
+        camera.duration = value;
 }
 
 function camera_set_absolute_zoom(camera, z) {
@@ -265,7 +272,10 @@ function camera_slide_to_offset(camera, x, y, z) {
 }
 
 function camera_from_layout(camera, layout, camera_name) {
-    if (!layout) return 0;
+    if (!layout) {
+        if (!camera.parent_layout) return 0;
+        layout = camera.parent_layout;
+    }
 
     let camera_placeholder = layout_get_camera_placeholder(layout, camera_name);
     if (!camera_placeholder) return 0;
@@ -344,6 +354,14 @@ function camera_to_origin_offset(camera, should_slide) {
         camera_move_offset(camera, 0, 0, 1);
     }
     camera.has_transition_offset = 1;
+}
+
+function camera_get_parent_layout(camera) {
+    return camera.parent_layout;
+}
+
+function camera_set_parent_layout(camera, layout) {
+    camera.parent_layout = layout;
 }
 
 

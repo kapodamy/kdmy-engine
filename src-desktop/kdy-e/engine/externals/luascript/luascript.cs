@@ -1,14 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
 using Engine.Platform;
 
 namespace Engine.Externals.LuaScriptInterop {
+
     public class Luascript {
+
+        private static readonly LinkedList<Luascript> instances = new LinkedList<Luascript>();
 
         private readonly ManagedLuaState lua;
         private readonly LuaState L;
+
         private Luascript(ManagedLuaState lua) {
             this.lua = lua;
             this.L = lua.LuaStateHandle;
@@ -53,27 +58,27 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
             // register all objects (metatables) and functions
-            ExportsCamera.register_camera(lua);
-            ExportsCharacter.register_character(lua);
-            ExportsLayout.register_layout(lua);
-            ExportsMessageBox.register_messagebox(lua);
-            ExportsModifier.register_modifier(lua);
-            ExportsSoundPlayer.register_soundplayer(lua);
-            ExportsSprite.register_sprite(lua);
-            ExportsTextSprite.register_textsprite(lua);
-            ExportsPSShader.register_psshader(lua);
+            ExportsCamera.script_camera_register(lua);
+            ExportsCharacter.script_character_register(lua);
+            ExportsLayout.script_layout_register(lua);
+            ExportsMessageBox.script_messagebox_register(lua);
+            ExportsModifier.script_modifier_register(lua);
+            ExportsSoundPlayer.script_soundplayer_register(lua);
+            ExportsSprite.script_sprite_register(lua);
+            ExportsTextSprite.script_textsprite_register(lua);
+            ExportsPSShader.script_psshader_register(lua);
 
             if (is_week) {
-                ExportsSongPlayer.register_songplayer(lua);
-                ExportsDialogue.register_dialogue(lua);
-                ExportsWeek.register_week(lua);
+                ExportsSongPlayer.script_songplayer_register(lua);
+                ExportsDialogue.script_dialogue_register(lua);
+                ExportsWeek.script_week_register(lua);
             } else {
-                ExportsModding.register_modding(lua);
+                ExportsModding.script_modding_register(lua);
             }
 
-            ExportsMath2D.register_math2d(lua);
-            ExportsTimer.register_timer(lua);
-            ExportsFS.register_fs(lua);
+            ExportsMath2D.script_math2d_register(lua);
+            ExportsTimer.script_timer_register(lua);
+            ExportsFS.script_fs_register(lua);
         }
 
         private static void RegisterSandbox(ManagedLuaState lua) {
@@ -141,10 +146,13 @@ namespace Engine.Externals.LuaScriptInterop {
 
         public void Destroy() {
             this.lua.Dispose();
+            Luascript.instances.Remove(this);
         }
 
-        public void DropShared() {
-            // In C# this function is not relevant
+        public static void DropShared(object obj) {
+            foreach (Luascript luascript in Luascript.instances) {
+                luascript.lua.DropSharedObject(obj);
+            }
         }
 
         public bool Eval(string eval_string) {

@@ -18,7 +18,7 @@ static int script_timer_ms_gettime(lua_State* L) {
 }
 
 
-void register_timer(lua_State* L) {
+void script_timer_register(lua_State* L) {
 
 	lua_pushcfunction(L, script_timer_ms_gettime);
 	lua_setglobal(L, "timer_ms_gettime");

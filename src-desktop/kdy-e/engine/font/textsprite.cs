@@ -1,5 +1,6 @@
 using System;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using Engine.Utils;
 
@@ -159,6 +160,8 @@ namespace Engine.Font {
             this.animation_list.Destroy();
 
             TextSprite.POOL.Delete(this.id);
+            Luascript.DropShared(this.matrix_source);
+            Luascript.DropShared(this);
             //free(textsprite);
         }
 

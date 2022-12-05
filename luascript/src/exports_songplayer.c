@@ -7,7 +7,7 @@ EM_JS_PRFX(bool, songplayer_changesong, (SongPlayer songplayer, const char* src,
     return songplayer_changesong(kdmyEngine_obtain(songplayer), kdmyEngine_ptrToString(src), prefer_no_copyright);
 });
 EM_ASYNC_JS_PRFX(void, songplayer_play, (SongPlayer songplayer, SongInfo_t* songinfo), {
-    const _songinfo = {completed: 0, timestamp: 0};
+    const _songinfo = {completed : 0, timestamp : 0};
     await songplayer_play(kdmyEngine_obtain(songplayer), _songinfo);
 });
 EM_JS_PRFX(void, songplayer_pause, (SongPlayer songplayer), {
@@ -25,10 +25,10 @@ EM_JS_PRFX(bool, songplayer_is_completed, (SongPlayer songplayer), {
 EM_JS_PRFX(double, songplayer_get_timestamp, (SongPlayer songplayer), {
     return songplayer_get_timestamp(kdmyEngine_obtain(songplayer));
 });
-EM_JS_PRFX(void, songplayer_mute_track, (SongPlayer songplayer, bool vocals_or_instrumental, bool muted),{
+EM_JS_PRFX(void, songplayer_mute_track, (SongPlayer songplayer, bool vocals_or_instrumental, bool muted), {
     songplayer_mute_track(kdmyEngine_obtain(songplayer), vocals_or_instrumental, muted);
 });
-EM_JS_PRFX(void, songplayer_mute, (SongPlayer songplayer, bool muted),{
+EM_JS_PRFX(void, songplayer_mute, (SongPlayer songplayer, bool muted), {
     songplayer_mute(kdmyEngine_obtain(songplayer), muted);
 });
 #endif
@@ -36,10 +36,10 @@ EM_JS_PRFX(void, songplayer_mute, (SongPlayer songplayer, bool muted),{
 
 
 static int script_songplayer_changesong(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
     const char* src = luaL_checkstring(L, 2);
-    bool prefer_no_copyright = luaL_checkboolean(L, 3);
+    bool prefer_no_copyright = lua_toboolean(L, 3);
 
     bool ret = songplayer_changesong(songplayer, src, prefer_no_copyright);
 
@@ -48,7 +48,7 @@ static int script_songplayer_changesong(lua_State* L) {
 }
 
 static int script_songplayer_play(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
     SongInfo_t songinfo_dummy;
     songplayer_play(songplayer, &songinfo_dummy);
@@ -57,7 +57,7 @@ static int script_songplayer_play(lua_State* L) {
 }
 
 static int script_songplayer_pause(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
     songplayer_pause(songplayer);
 
@@ -65,9 +65,9 @@ static int script_songplayer_pause(lua_State* L) {
 }
 
 static int script_songplayer_seek(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
-    double timestamp = luaL_checkfloat(L, 2);
+    double timestamp = luaL_checknumber(L, 2);
 
     songplayer_seek(songplayer, timestamp);
 
@@ -75,7 +75,7 @@ static int script_songplayer_seek(lua_State* L) {
 }
 
 static int script_songplayer_get_duration(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
     double duration = songplayer_get_duration(songplayer);
 
@@ -84,7 +84,7 @@ static int script_songplayer_get_duration(lua_State* L) {
 }
 
 static int script_songplayer_is_completed(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
     bool ret = songplayer_is_completed(songplayer);
 
@@ -93,7 +93,7 @@ static int script_songplayer_is_completed(lua_State* L) {
 }
 
 static int script_songplayer_get_timestamp(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
     double timestamp = songplayer_get_timestamp(songplayer);
 
@@ -102,10 +102,10 @@ static int script_songplayer_get_timestamp(lua_State* L) {
 }
 
 static int script_songplayer_mute_track(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
-    bool vocals_or_instrumental = luaL_checkboolean(L, 2);
-    bool muted = luaL_checkboolean(L, 3);
+    bool vocals_or_instrumental = lua_toboolean(L, 2);
+    bool muted = lua_toboolean(L, 3);
 
     songplayer_mute_track(songplayer, vocals_or_instrumental, muted);
 
@@ -113,9 +113,9 @@ static int script_songplayer_mute_track(lua_State* L) {
 }
 
 static int script_songplayer_mute(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
-    bool muted = luaL_checkboolean(L, 2);
+    bool muted = lua_toboolean(L, 2);
 
     songplayer_mute(songplayer, muted);
 
@@ -141,29 +141,18 @@ static const luaL_Reg SONGPLAYER_FUNCTIONS[] = {
 
 
 int script_songplayer_new(lua_State* L, SongPlayer songplayer) {
-    return NEW_USERDATA(L, SONGPLAYER, NULL, songplayer, true);
+    return luascript_userdata_new(L, SONGPLAYER, songplayer);
 }
 
 static int script_songplayer_gc(lua_State* L) {
-    READ_USERDATA_UNCHECKED(L, SongPlayer, songplayer, SONGPLAYER);
-    _luascript_suppress_item(L, songplayer, true);
-    return 0;
+    return luascript_userdata_gc(L, SONGPLAYER);
 }
 
 static int script_songplayer_tostring(lua_State* L) {
-    READ_USERDATA(L, SongPlayer, songplayer, SONGPLAYER);
-    lua_pushstring(L, "[SongPlayer]");
-    return 1;
+    return luascript_userdata_tostring(L, SONGPLAYER);
 }
 
 
-inline void register_songplayer(lua_State* L) {
-    _luascript_register(
-        L,
-        SONGPLAYER,
-        script_songplayer_gc,
-        script_songplayer_tostring,
-        SONGPLAYER_FUNCTIONS
-    );
+void script_songplayer_register(lua_State* L) {
+    luascript_register(L, SONGPLAYER, script_songplayer_gc, script_songplayer_tostring, SONGPLAYER_FUNCTIONS);
 }
-

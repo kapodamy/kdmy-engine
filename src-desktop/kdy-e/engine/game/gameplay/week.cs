@@ -547,7 +547,7 @@ namespace Engine.Game.Gameplay {
                 Week.QUARTER_WATCHER.Reset(false, roundcontext.settings.original_bpm);
                 Week.ChangeCharacterCameraName(roundcontext, true, Week.ROUND_CAMERA_OPONNENT);
                 Week.ChangeCharacterCameraName(roundcontext, false, Week.ROUND_CAMERA_PLAYER);
-                if (roundcontext.script != null) roundcontext.script.DropSharedObjects();
+
                 roundcontext.messagebox.SetImageSprite(null);
                 for (int i = 0 ; i < roundcontext.players_size ; i++)
                     roundcontext.players[i].character.UseAlternateSingAnimations(false);

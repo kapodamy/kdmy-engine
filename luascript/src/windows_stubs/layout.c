@@ -80,7 +80,7 @@ int layout_get_attached_value2(Layout layout, const char* name, void* result) {
     print_stub("layout_get_attached_value2", "layout=%p name=%s result=%p", layout, name, result);
     return 500;
 }
-int layout_get_attached_value_type(Layout layout, const char* name) {
+LAYOUT_TYPE layout_get_attached_value_type(Layout layout, const char* name) {
     print_stub("layout_get_attached_value_type", "layout=%p name=%s", layout, name);
     return 999;
 }

@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 static inline bool string_equals(const char* string1, const char* string2) {
     if (string1 == string2) return 1;

@@ -30,29 +30,14 @@ const kdmyEngine_obtain = function (key) {
     kdmyEngine_objectMap.set(key, index);
     return index;
 };
-const kdmyEngine_forget = function (object_index) {
+const kdmyEngine_drop_shared_object = function (target_obj) {
     for (let [obj, idx] of kdmyEngine_objectMap) {
-        if (object_index == idx) {
+        if (obj == target_obj) {
             kdmyEngine_objectMap.delete(obj);
+            _luascript_drop_shared(idx);
         }
     }
-
-    console.assert(undefined, "unknown object index " + object_index);
 };
-const kdmyEngine_clearMap = function (keep_context) {
-  if (keep_context) {
-    if (kdmyEngine_objectMap.size < 2) return;
-    let ctx = kdmyEngine_objectMap.entries().next().value[0];
-
-    kdmyEngine_objectMap.clear();
-
-    kdmyEngine_objectMap.set(ctx, 1);
-    kdmyEngine_objectIndex = 2;
-  } else {
-    kdmyEngine_objectMap.clear();
-    kdmyEngine_objectIndex = 1;
-  }
-}
 const kdmyEngine_deallocate = function (ptr) {
     if (ptr == 0) return;
     _free(ptr);
@@ -119,9 +104,9 @@ function kdmyEngine_stringToPtr(str) {
 ModuleLuaScript.kdmyEngine_stringToPtr = kdmyEngine_stringToPtr;
 ModuleLuaScript.kdmyEngine_deallocate = kdmyEngine_deallocate;
 ModuleLuaScript.kdmyEngine_obtain = kdmyEngine_obtain;
-ModuleLuaScript.kdmyEngine_clearMap = kdmyEngine_clearMap;
 ModuleLuaScript.kdmyEngine_yieldAsync = kdmyEngine_yieldAsync;
 ModuleLuaScript.kdmyEngine_hasAsyncPending = kdmyEngine_hasAsyncPending;
+ModuleLuaScript.kdmyEngine_drop_shared_object = kdmyEngine_drop_shared_object;
 
 var moduleOverrides = Object.assign({}, ModuleLuaScript);
 var arguments_ = [];
@@ -906,6 +891,10 @@ function __js__camera_to_origin(camera, should_slide) {
 function __js__camera_to_origin_offset(camera, should_slide) {
     camera_to_origin_offset(kdmyEngine_obtain(camera), should_slide)
 }
+function __js__camera_get_parent_layout(camera) {
+    let ret = camera_get_parent_layout(kdmyEngine_obtain(camera));
+    return kdmyEngine_obtain(ret);
+}
 function __js__character_animation_end(character) {
     character_animation_end(kdmyEngine_obtain(character))
 }
@@ -1662,7 +1651,6 @@ function __js__psshader_init(vertex_sourcecode, fragment_sourcecode) {
 }
 function __js__psshader_destroy(psshader) {
     kdmyEngine_obtain(psshader).Destroy();
-    kdmyEngine_forget(psshader);
 }
 
 function __js__psshader_set_uniform_any(psshader, name, values) {
@@ -5096,6 +5084,7 @@ var asmLibraryArg = {
     "__js__camera_stop": __js__camera_stop,
     "__js__camera_to_origin": __js__camera_to_origin,
     "__js__camera_to_origin_offset": __js__camera_to_origin_offset,
+    "__js__camera_get_parent_layout": __js__camera_get_parent_layout,
     "__js__character_animation_end": __js__character_animation_end,
     "__js__character_animation_restart": __js__character_animation_restart,
     "__js__character_animation_set": __js__character_animation_set,

@@ -545,7 +545,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         beatwatcher_reset(WEEK_QUARTER_WATCHER, 0, roundcontext.settings.original_bpm);
         week_change_character_camera_name(roundcontext, 1, WEEKROUND_CAMERA_OPONNENT);
         week_change_character_camera_name(roundcontext, 0, WEEKROUND_CAMERA_PLAYER);
-        if (roundcontext.script != null) weekscript_drop_shared_objects(roundcontext.script);
+
         messagebox_set_image_sprite(roundcontext.messagebox, null);
         for (let i = 0; i < roundcontext.players_size; i++)
             character_use_alternate_sing_animations(roundcontext.players[i].character, 0);

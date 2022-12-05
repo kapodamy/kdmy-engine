@@ -16,7 +16,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
         private static readonly LuaCallback delgate_timer_ms_gettime = script_timer_ms_gettime;
 
-        internal static void register_timer(ManagedLuaState lua) {
+        internal static void script_timer_register(ManagedLuaState lua) {
             lua.RegisterGlobalFunction("timer_ms_gettime", delgate_timer_ms_gettime);
 
             const string timer_sourcecode =

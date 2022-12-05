@@ -10,32 +10,10 @@ namespace Engine.Externals.LuaScriptInterop {
 
         private const string CAMERA = "Camera";
 
-        private static Layout FindLayout(Layout layout, Camera camera) {
-            if (layout == null) return null;
-            return layout.GetCameraHelper() == camera ? layout : null;
-        }
-
-
         static int script_camera_set_interpolator_type(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            AnimInterpolator type;
-            string type_str = L.luaL_optstring(2, null);
-
-            if (type_str == "ease")
-                type = AnimInterpolator.EASE;
-            else if (type_str == "ease-in")
-                type = AnimInterpolator.EASE_IN;
-            else if (type_str == "ease-out")
-                type = AnimInterpolator.EASE_OUT;
-            else if (type_str == "ease-in-out")
-                type = AnimInterpolator.EASE_IN_OUT;
-            else if (type_str == "linear")
-                type = AnimInterpolator.LINEAR;
-            else if (type_str == "steps")
-                type = AnimInterpolator.STEPS;
-            else
-                return L.luaL_error("invalid interpolator type");
+            AnimInterpolator type = LuascriptHelpers.ParseInterpolator(L, L.luaL_optstring(2, null));
 
             camera.SetInterpolatorType(type);
 
@@ -45,8 +23,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_set_transition_duration(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            bool expresed_in_beats = L.luaL_checkboolean(2);
-            float value = L.luaL_checkfloat(3);
+            bool expresed_in_beats = L.luaL_toboolean(2);
+            float value = (float)L.luaL_checknumber(3);
 
             camera.SetTransitionDuration(expresed_in_beats, value);
 
@@ -56,7 +34,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_set_absolute_zoom(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float z = L.luaL_checkfloat(2);
+            float z = (float)L.luaL_checknumber(2);
 
             camera.SetAbsoluteZoom(z);
 
@@ -66,8 +44,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_set_absolute_position(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float x = L.luaL_optionalfloat(2);
-            float y = L.luaL_optionalfloat(3);
+            float x = (float)L.luaL_optnumber(2, Double.NaN);
+            float y = (float)L.luaL_optnumber(3, Double.NaN);
 
             camera.SetAbsolutePosition(x, y);
 
@@ -77,9 +55,9 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_set_offset(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float x = L.luaL_optionalfloat(2);
-            float y = L.luaL_optionalfloat(3);
-            float z = L.luaL_optionalfloat(4);
+            float x = (float)L.luaL_optnumber(2, Double.NaN);
+            float y = (float)L.luaL_optnumber(3, Double.NaN);
+            float z = (float)L.luaL_optnumber(4, Double.NaN);
 
             camera.SetOffset(x, y, z);
 
@@ -110,9 +88,9 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_move(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float x = L.luaL_optionalfloat(2);
-            float y = L.luaL_optionalfloat(3);
-            float z = L.luaL_optionalfloat(4);
+            float x = (float)L.luaL_optnumber(2, Double.NaN);
+            float y = (float)L.luaL_optnumber(3, Double.NaN);
+            float z = (float)L.luaL_optnumber(4, Double.NaN);
 
             camera.Move(x, y, z);
 
@@ -122,12 +100,12 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float start_x = L.luaL_optionalfloat(2);
-            float start_y = L.luaL_optionalfloat(3);
-            float start_z = L.luaL_optionalfloat(4);
-            float end_x = L.luaL_optionalfloat(5);
-            float end_y = L.luaL_optionalfloat(6);
-            float end_z = L.luaL_optionalfloat(7);
+            float start_x = (float)L.luaL_optnumber(2, Double.NaN);
+            float start_y = (float)L.luaL_optnumber(3, Double.NaN);
+            float start_z = (float)L.luaL_optnumber(4, Double.NaN);
+            float end_x = (float)L.luaL_optnumber(5, Double.NaN);
+            float end_y = (float)L.luaL_optnumber(6, Double.NaN);
+            float end_z = (float)L.luaL_optnumber(7, Double.NaN);
 
             camera.Slide(start_x, start_y, start_z, end_x, end_y, end_z);
 
@@ -137,8 +115,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide_x(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float start = L.luaL_optionalfloat(2);
-            float end = L.luaL_optionalfloat(3);
+            float start = (float)L.luaL_optnumber(2, Double.NaN);
+            float end = (float)L.luaL_optnumber(3, Double.NaN);
 
             camera.SlideX(start, end);
 
@@ -148,8 +126,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide_y(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float start = L.luaL_optionalfloat(2);
-            float end = L.luaL_optionalfloat(3);
+            float start = (float)L.luaL_optnumber(2, Double.NaN);
+            float end = (float)L.luaL_optnumber(3, Double.NaN);
 
             camera.SlideY(start, end);
 
@@ -159,8 +137,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide_z(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float start = L.luaL_optionalfloat(2);
-            float end = L.luaL_optionalfloat(3);
+            float start = (float)L.luaL_optnumber(2, Double.NaN);
+            float end = (float)L.luaL_optnumber(3, Double.NaN);
 
             camera.SlideZ(start, end);
 
@@ -170,9 +148,9 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide_to(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float x = L.luaL_optionalfloat(2);
-            float y = L.luaL_optionalfloat(3);
-            float z = L.luaL_optionalfloat(4);
+            float x = (float)L.luaL_optnumber(2, Double.NaN);
+            float y = (float)L.luaL_optnumber(3, Double.NaN);
+            float z = (float)L.luaL_optnumber(4, Double.NaN);
 
             camera.SlideTo(x, y, z);
 
@@ -183,23 +161,9 @@ namespace Engine.Externals.LuaScriptInterop {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
             string camera_name = L.luaL_optstring(2, null);
-            Layout layout = null;
-            object context = L.Context;
-
-            if (context is RoundContext) {
-                RoundContext roundcontext = (RoundContext)context;
-                layout = FindLayout(Week.GetStageLayout(roundcontext), camera);
-
-                if (layout == null) {
-                    layout = FindLayout(Week.UIGetLayout(roundcontext), camera);
-                }
-            } else if (context is Modding) {
-                Modding modding = (Modding)context;
-                layout = FindLayout(modding.GetLayout(), camera);
-            }
+            Layout layout = camera.GetParentLayout();
 
             if (layout == null) {
-                Console.WriteLine("script_camera_from_layout() Can not find the parent layout");
                 L.lua_pushboolean(false);
                 return 1;
             }
@@ -213,7 +177,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_to_origin(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            bool should_slide = L.luaL_checkboolean(2);
+            bool should_slide = L.luaL_toboolean(2);
 
             camera.ToOrigin(should_slide);
 
@@ -272,9 +236,9 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_move_offset(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float end_x = L.luaL_optionalfloat(2);
-            float end_y = L.luaL_optionalfloat(3);
-            float end_z = L.luaL_optionalfloat(4);
+            float end_x = (float)L.luaL_optnumber(2, Double.NaN);
+            float end_y = (float)L.luaL_optnumber(3, Double.NaN);
+            float end_z = (float)L.luaL_optnumber(4, Double.NaN);
 
             camera.MoveOffset(end_x, end_y, end_z);
 
@@ -284,12 +248,12 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide_offset(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float start_x = L.luaL_optionalfloat(2);
-            float start_y = L.luaL_optionalfloat(3);
-            float start_z = L.luaL_optionalfloat(4);
-            float end_x = L.luaL_optionalfloat(5);
-            float end_y = L.luaL_optionalfloat(6);
-            float end_z = L.luaL_optionalfloat(7);
+            float start_x = (float)L.luaL_optnumber(2, Double.NaN);
+            float start_y = (float)L.luaL_optnumber(3, Double.NaN);
+            float start_z = (float)L.luaL_optnumber(4, Double.NaN);
+            float end_x = (float)L.luaL_optnumber(5, Double.NaN);
+            float end_y = (float)L.luaL_optnumber(6, Double.NaN);
+            float end_z = (float)L.luaL_optnumber(7, Double.NaN);
 
             camera.SlideOffset(start_x, start_y, start_z, end_x, end_y, end_z);
 
@@ -299,8 +263,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide_x_offset(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float start = L.luaL_optionalfloat(2);
-            float end = L.luaL_optionalfloat(3);
+            float start = (float)L.luaL_optnumber(2, Double.NaN);
+            float end = (float)L.luaL_optnumber(3, Double.NaN);
 
             camera.SlideXOffset(start, end);
 
@@ -310,8 +274,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide_y_offset(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float start = L.luaL_optionalfloat(2);
-            float end = L.luaL_optionalfloat(3);
+            float start = (float)L.luaL_optnumber(2, Double.NaN);
+            float end = (float)L.luaL_optnumber(3, Double.NaN);
 
             camera.SlideYOffset(start, end);
 
@@ -321,8 +285,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide_z_offset(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float start = L.luaL_optionalfloat(2);
-            float end = L.luaL_optionalfloat(3);
+            float start = (float)L.luaL_optnumber(2, Double.NaN);
+            float end = (float)L.luaL_optnumber(3, Double.NaN);
 
             camera.SlideZOffset(start, end);
 
@@ -332,9 +296,9 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_slide_to_offset(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            float x = L.luaL_optionalfloat(2);
-            float y = L.luaL_optionalfloat(3);
-            float z = L.luaL_optionalfloat(4);
+            float x = (float)L.luaL_optnumber(2, Double.NaN);
+            float y = (float)L.luaL_optnumber(3, Double.NaN);
+            float z = (float)L.luaL_optnumber(4, Double.NaN);
 
             camera.SlideToOffset(x, y, z);
 
@@ -344,7 +308,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_to_origin_offset(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            bool should_slide = L.luaL_checkboolean(2);
+            bool should_slide = L.luaL_toboolean(2);
 
             camera.ToOriginOffset(should_slide);
 
@@ -393,25 +357,19 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_camera_gc(LuaState L) {
-            return L.NullifyUserdata(CAMERA);
+            return L.GC_userdata(CAMERA);
         }
 
         static int script_camera_tostring(LuaState L) {
-            L.lua_pushstring("[Camera]");
-            return 1;
+            return L.ToString_userdata(CAMERA);
         }
 
 
         private static readonly LuaCallback delegate_gc = script_camera_gc;
         private static readonly LuaCallback delegate_tostring = script_camera_tostring;
 
-        internal static void register_camera(ManagedLuaState L) {
-            L.RegisterMetaTable(
-                CAMERA,
-                delegate_gc,
-                delegate_tostring,
-                CAMERA_FUNCTIONS
-            );
+        internal static void script_camera_register(ManagedLuaState L) {
+            L.RegisterMetaTable(CAMERA, delegate_gc, delegate_tostring, CAMERA_FUNCTIONS);
         }
 
     }

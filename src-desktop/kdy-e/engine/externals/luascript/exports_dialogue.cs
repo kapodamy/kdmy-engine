@@ -60,7 +60,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_dialogue_hide(LuaState L) {
             Dialogue dialogue = L.ReadUserdata<Dialogue>(DIALOGUE);
 
-            bool hidden = L.luaL_checkboolean(2);
+            bool hidden = L.luaL_toboolean(2);
 
             dialogue.Hide(hidden);
 
@@ -78,10 +78,10 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_dialogue_set_offsetcolor(LuaState L) {
             Dialogue dialogue = L.ReadUserdata<Dialogue>(DIALOGUE);
 
-            float r = L.luaL_checkfloat(2);
-            float g = L.luaL_checkfloat(3);
-            float b = L.luaL_checkfloat(4);
-            float a = L.luaL_checkfloat(5);
+            float r = (float)L.luaL_checknumber(2);
+            float g = (float)L.luaL_checknumber(3);
+            float b = (float)L.luaL_checknumber(4);
+            float a = (float)L.luaL_checknumber(5);
 
             dialogue.SetOffsetColor(r, g, b, a);
 
@@ -91,7 +91,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_dialogue_set_alpha(LuaState L) {
             Dialogue dialogue = L.ReadUserdata<Dialogue>(DIALOGUE);
 
-            float alpha = L.luaL_checkfloat(2);
+            float alpha = (float)L.luaL_checknumber(2);
 
             dialogue.SetAlpha(alpha);
 
@@ -101,8 +101,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_dialogue_set_set_antialiasing(LuaState L) {
             Dialogue dialogue = L.ReadUserdata<Dialogue>(DIALOGUE);
 
-            PVRContextFlag antialiasing = VertexProps.ParseFlag2(L.luaL_checkstring(2), PVRContextFlag.INVALID_VALUE);
-            if (antialiasing == PVRContextFlag.INVALID_VALUE) return L.luaL_argerror(2, "invalid pvrflag");
+            PVRContextFlag antialiasing = LuascriptHelpers.ParsePVRFLAG(L, L.luaL_checkstring(2));
 
             dialogue.SetAntialiasing(antialiasing);
 
@@ -132,25 +131,19 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_dialoge_gc(LuaState L) {
-            return L.NullifyUserdata(DIALOGUE);
+            return L.GC_userdata(DIALOGUE);
         }
 
         static int script_dialogue_tostring(LuaState L) {
-            L.lua_pushstring("[Dialogue]");
-            return 1;
+            return L.ToString_userdata(DIALOGUE);
         }
 
 
         private static readonly LuaCallback delegate_gc = script_dialoge_gc;
         private static readonly LuaCallback delegate_tostring = script_dialogue_tostring;
 
-        internal static void register_dialogue(ManagedLuaState L) {
-            L.RegisterMetaTable(
-                DIALOGUE,
-                delegate_gc,
-                delegate_tostring,
-                DIALOGUE_FUNCTIONS
-            );
+        internal static void script_dialogue_register(ManagedLuaState L) {
+            L.RegisterMetaTable(DIALOGUE, delegate_gc, delegate_tostring, DIALOGUE_FUNCTIONS);
         }
 
     }

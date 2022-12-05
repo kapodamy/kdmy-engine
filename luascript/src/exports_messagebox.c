@@ -66,7 +66,7 @@ EM_JS_PRFX(Modifier, messagebox_get_modifier, (Messagebox messagebox), {
 
 
 static int script_messagebox_set_buttons_text(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     const char* left_text = luaL_optstring(L, 2, NULL);
     const char* right_text = luaL_optstring(L, 3, NULL);
@@ -77,7 +77,7 @@ static int script_messagebox_set_buttons_text(lua_State* L) {
 }
 
 static int script_messagebox_set_button_single(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     const char* center_text = luaL_optstring(L, 2, NULL);
 
@@ -87,7 +87,7 @@ static int script_messagebox_set_button_single(lua_State* L) {
 }
 
 static int script_messagebox_set_buttons_icons(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     const char* left_icon_name = luaL_optstring(L, 2, NULL);
     const char* right_icon_name = luaL_optstring(L, 3, NULL);
@@ -98,7 +98,7 @@ static int script_messagebox_set_buttons_icons(lua_State* L) {
 }
 
 static int script_messagebox_set_button_single_icon(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     const char* center_icon_name = luaL_optstring(L, 2, NULL);
 
@@ -108,7 +108,7 @@ static int script_messagebox_set_button_single_icon(lua_State* L) {
 }
 
 static int script_messagebox_set_title(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     const char* text = luaL_optstring(L, 2, NULL);
 
@@ -118,7 +118,7 @@ static int script_messagebox_set_title(lua_State* L) {
 }
 
 static int script_messagebox_set_image_background_color(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     int64_t number = luaL_checkinteger(L, 2);
     int32_t color_rgb8 = (int32_t)number;
@@ -129,7 +129,7 @@ static int script_messagebox_set_image_background_color(lua_State* L) {
 }
 
 static int script_messagebox_set_image_background_color_default(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     messagebox_set_image_background_color_default(messagebox);
 
@@ -137,7 +137,7 @@ static int script_messagebox_set_image_background_color_default(lua_State* L) {
 }
 
 static int script_messagebox_set_message(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     const char* text = luaL_optstring(L, 2, NULL);
 
@@ -147,9 +147,9 @@ static int script_messagebox_set_message(lua_State* L) {
 }
 
 static int script_messagebox_hide_image_background(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
-    bool hide = luaL_checkboolean(L, 2);
+    bool hide = lua_toboolean(L, 2);
 
     messagebox_hide_image_background(messagebox, hide);
 
@@ -157,9 +157,9 @@ static int script_messagebox_hide_image_background(lua_State* L) {
 }
 
 static int script_messagebox_hide_image(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
-    bool hide = luaL_checkboolean(L, 2);
+    bool hide = lua_toboolean(L, 2);
 
     messagebox_hide_image(messagebox, hide);
 
@@ -167,9 +167,9 @@ static int script_messagebox_hide_image(lua_State* L) {
 }
 
 static int script_messagebox_show_buttons_icons(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
-    bool show = luaL_checkboolean(L, 2);
+    bool show = lua_toboolean(L, 2);
 
     messagebox_show_buttons_icons(messagebox, show);
 
@@ -177,9 +177,9 @@ static int script_messagebox_show_buttons_icons(lua_State* L) {
 }
 
 static int script_messagebox_use_small_size(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
-    bool small_or_normal = luaL_checkboolean(L, 2);
+    bool small_or_normal = lua_toboolean(L, 2);
 
     messagebox_use_small_size(messagebox, small_or_normal);
 
@@ -187,7 +187,7 @@ static int script_messagebox_use_small_size(lua_State* L) {
 }
 
 static int script_messagebox_set_image_from_texture(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     const char* filename = luaL_optstring(L, 2, NULL);
 
@@ -197,7 +197,7 @@ static int script_messagebox_set_image_from_texture(lua_State* L) {
 }
 
 static int script_messagebox_set_image_from_atlas(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     const char* filename = luaL_optstring(L, 2, NULL);
     const char* entry_name = luaL_optstring(L, 3, NULL);
@@ -209,9 +209,9 @@ static int script_messagebox_set_image_from_atlas(lua_State* L) {
 }
 
 static int script_messagebox_hide(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
-    bool animated = luaL_checkboolean(L, 2);
+    bool animated = lua_toboolean(L, 2);
 
     messagebox_hide(messagebox, animated);
 
@@ -219,9 +219,9 @@ static int script_messagebox_hide(lua_State* L) {
 }
 
 static int script_messagebox_show(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
-    bool animated = luaL_checkboolean(L, 2);
+    bool animated = lua_toboolean(L, 2);
 
     messagebox_show(messagebox, animated);
 
@@ -229,9 +229,9 @@ static int script_messagebox_show(lua_State* L) {
 }
 
 static int script_messagebox_set_z_index(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
-    float z_index = luaL_checkfloat(L, 2);
+    float z_index = (float)luaL_checknumber(L, 2);
 
     messagebox_set_z_index(messagebox, z_index);
 
@@ -239,11 +239,11 @@ static int script_messagebox_set_z_index(lua_State* L) {
 }
 
 static int script_messagebox_get_modifier(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
+    Messagebox messagebox = luascript_read_userdata(L, MESSAGEBOX);
 
     Modifier modifier = messagebox_get_modifier(messagebox);
 
-    return script_modifier_new(L, messagebox, modifier);
+    return script_modifier_new(L, modifier);
 }
 
 
@@ -275,29 +275,18 @@ static const luaL_Reg MESSAGEBOX_FUNCTIONS[] = {
 };
 
 int script_messagebox_new(lua_State* L, Messagebox messagebox) {
-    return NEW_USERDATA(L, MESSAGEBOX, NULL, messagebox, true);
+    return luascript_userdata_new(L, MESSAGEBOX, messagebox);
 }
 
 static int script_messagebox_gc(lua_State* L) {
-    READ_USERDATA_UNCHECKED(L, Messagebox, messagebox, MESSAGEBOX);
-    _luascript_suppress_item(L, messagebox, true);
-    return 0;
+    return luascript_userdata_gc(L, MESSAGEBOX);
 }
 
 static int script_messagebox_tostring(lua_State* L) {
-    READ_USERDATA(L, Messagebox, messagebox, MESSAGEBOX);
-    lua_pushstring(L, "[MessageBox]");
-    return 1;
+    return luascript_userdata_tostring(L, MESSAGEBOX);
 }
 
 
-inline void register_messagebox(lua_State* L) {
-    _luascript_register(
-        L,
-        MESSAGEBOX,
-        script_messagebox_gc,
-        script_messagebox_tostring,
-        MESSAGEBOX_FUNCTIONS
-    );
+void script_messagebox_register(lua_State* L) {
+    luascript_register(L, MESSAGEBOX, script_messagebox_gc, script_messagebox_tostring, MESSAGEBOX_FUNCTIONS);
 }
-

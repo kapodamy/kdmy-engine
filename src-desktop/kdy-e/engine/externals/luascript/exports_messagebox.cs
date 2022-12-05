@@ -90,7 +90,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_hide_image_background(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool hide = L.luaL_checkboolean(2);
+            bool hide = L.luaL_toboolean(2);
 
             messagebox.HideImageBackground(hide);
 
@@ -100,7 +100,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_hide_image(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool hide = L.luaL_checkboolean(2);
+            bool hide = L.luaL_toboolean(2);
 
             messagebox.HideImage(hide);
 
@@ -110,7 +110,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_show_buttons_icons(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool show = L.luaL_checkboolean(2);
+            bool show = L.luaL_toboolean(2);
 
             messagebox.ShowButtonsIcons(show);
 
@@ -120,7 +120,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_use_small_size(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool small_or_normal = L.luaL_checkboolean(2);
+            bool small_or_normal = L.luaL_toboolean(2);
 
             messagebox.UseSmallSize(small_or_normal);
 
@@ -142,7 +142,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             string filename = L.luaL_optstring(2, null);
             string entry_name = L.luaL_optstring(3, null);
-            bool is_animation = L.luaL_checkboolean(4);
+            bool is_animation = L.luaL_toboolean(4);
 
             messagebox.SetImageFromAtlas(filename, entry_name, is_animation);
 
@@ -152,7 +152,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_hide(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool animated = L.luaL_checkboolean(2);
+            bool animated = L.luaL_toboolean(2);
 
             messagebox.Hide(animated);
 
@@ -162,7 +162,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_show(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool animated = L.luaL_checkboolean(2);
+            bool animated = L.luaL_toboolean(2);
 
             messagebox.Show(animated);
 
@@ -172,7 +172,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_set_z_index(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            float z_index = L.luaL_checkfloat(2);
+            float z_index = (float)L.luaL_checknumber(2);
 
             messagebox.SetZIndex(z_index);
 
@@ -222,25 +222,19 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_messagebox_gc(LuaState L) {
-            return L.NullifyUserdata(MESSAGEBOX);
+            return L.GC_userdata(MESSAGEBOX);
         }
 
         static int script_messagebox_tostring(LuaState L) {
-            L.lua_pushstring("[MessageBox]");
-            return 1;
+            return L.ToString_userdata(MESSAGEBOX);
         }
 
 
-        private static readonly LuaCallback gc = script_messagebox_gc;
-        private static readonly LuaCallback tostring = script_messagebox_tostring;
+        private static readonly LuaCallback delegate_gc = script_messagebox_gc;
+        private static readonly LuaCallback delegate_tostring = script_messagebox_tostring;
 
-        internal static void register_messagebox(ManagedLuaState lua) {
-            lua.RegisterMetaTable(
-                MESSAGEBOX,
-                gc,
-                tostring,
-                MESSAGEBOX_FUNCTIONS
-            );
+        internal static void script_messagebox_register(ManagedLuaState lua) {
+            lua.RegisterMetaTable(MESSAGEBOX, delegate_gc, delegate_tostring, MESSAGEBOX_FUNCTIONS);
         }
 
     }

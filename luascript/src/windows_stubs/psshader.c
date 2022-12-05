@@ -1,6 +1,7 @@
+#include "commons.h"
 #include "psshader.h"
 
-static const PSShader_t stub = {};
+static PSShader_t stub = {};
 
 PSShader psshader_init(const char* vertex_sourcecode, const char* fragment_sourcecode) {
     print_stub("psshader_init", "vertex_sourcecode=%s fragment_sourcecode=%s", vertex_sourcecode, fragment_sourcecode);

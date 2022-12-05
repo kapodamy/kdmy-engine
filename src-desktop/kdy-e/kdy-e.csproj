@@ -101,6 +101,7 @@
     <Compile Include="engine\externals\glfw.cs" />
     <Compile Include="engine\externals\luascript\exports_dialogue.cs" />
     <Compile Include="engine\externals\luascript\exports_psshader.cs" />
+    <Compile Include="engine\externals\luascript\luascript_helpers.cs" />
     <Compile Include="engine\game\freeplaymenu.cs" />
     <Compile Include="engine\game\gameplay\dialogue.cs" />
     <Compile Include="engine\game\helpers\freeplay_songicons.cs" />

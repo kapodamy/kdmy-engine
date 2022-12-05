@@ -16,7 +16,7 @@ typedef struct _Camera_t {
 
 typedef Camera_t *Camera;
 
-void camera_set_interpolator_type(Camera camera, ANIM_INTERPOLATOR_TYPE type);
+void camera_set_interpolator_type(Camera camera, AnimInterpolator type);
 void camera_set_transition_duration(Camera camera, bool expresed_in_beats, float value);
 void camera_set_absolute_zoom(Camera camera, float z);
 void camera_set_absolute_position(Camera camera, float x, float y);
@@ -44,6 +44,7 @@ void camera_slide_y_offset(Camera camera, float start, float end);
 void camera_slide_z_offset(Camera camera, float start, float end);
 void camera_slide_to_offset(Camera camera, float x, float y, float z);
 void camera_to_origin_offset(Camera camera, bool should_slide);
+Layout camera_get_parent_layout(Camera camera);
 
 #endif
 

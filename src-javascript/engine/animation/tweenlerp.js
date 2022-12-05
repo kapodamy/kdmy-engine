@@ -57,6 +57,7 @@ function tweenlerp_init3(animlist, tweenlerp_name) {
 
 function tweenlerp_destroy(tweenlerp) {
     arraylist_destroy(tweenlerp.arraylist);
+    ModuleLuaScript.kdmyEngine_drop_shared_object(tweenlerp);
     tweenlerp = undefined;
 }
 

@@ -44,5 +44,7 @@
         "profileapi.h": "c",
         "time.h": "c",
         "psshader.h": "c"
-    }
+    },
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.formatting": "clangFormat"
 }

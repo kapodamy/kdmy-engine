@@ -6,16 +6,24 @@
 
 #include "linkedlist.h"
 
-typedef struct _Luascript_t {
+typedef struct LuascriptObject_t {
+    int lua_ref;
+    void* obj_ptr;
+    bool was_allocated_by_lua;
+} LuascriptObject;
+
+typedef struct Luascript_t {
     void* L;
-    Linkedlist shared;
-    Linkedlist allocated;
     void* context;
-} *Luascript;
+    LuascriptObject* shared_array;
+    size_t shared_size;
+} * Luascript;
+
 
 Luascript luascript_init(const char* lua_sourcecode, const char* filename, void* context, bool is_week);
 void luascript_destroy(Luascript* luascript);
-void luascript_drop_shared(Luascript luascript);
+
+void luascript_drop_shared(void* obj_ptr);
 
 void luascript_notify_weekinit(Luascript luascript, int32_t freeplay_index);
 void luascript_notify_beforeready(Luascript luascript, bool from_retry);
@@ -39,4 +47,3 @@ void luascript_notify_quarter(Luascript luascript, int32_t current_quarter, floa
 void luascript_notify_timer_run(Luascript luascript, double kos_timestamp);
 void luascript_notify_timersong_run(Luascript luascript, double song_timestamp);
 #endif
-

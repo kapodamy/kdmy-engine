@@ -280,6 +280,8 @@ async function layout_init(src) {
 
     // only is possible to trigger the first null-named camera
     camera_from_layout(layout.camera_helper, layout, null);
+    camera_set_parent_layout(layout.camera_helper, layout);
+    camera_set_parent_layout(layout.camera_secondary_helper, layout);
 
     // set default beats per second
     let bpm = layout_helper_parse_float(root, "defaultBPM", 100);
@@ -380,6 +382,10 @@ function layout_destroy(layout) {
 
     layout.external_vertex_list = undefined;
     layout.z_buffer = undefined;
+
+    ModuleLuaScript.kdmyEngine_drop_shared_object(layout.modifier_camera);
+    ModuleLuaScript.kdmyEngine_drop_shared_object(layout.modifier_camera_secondary);
+    ModuleLuaScript.kdmyEngine_drop_shared_object(layout);
     layout = undefined;
 }
 

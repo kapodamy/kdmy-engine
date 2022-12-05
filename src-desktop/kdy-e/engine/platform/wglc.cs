@@ -663,8 +663,6 @@ void main() { mainImage(FragColor, TexCoord); }
 
         private static float[] buffer_floats = new float[16];
 
-        internal bool was_allocated_by_lua = false;
-
         public PSShader(PVRContext pvrctx, WebGLProgram program) {
             var gl = pvrctx.webopengl.gl;
 

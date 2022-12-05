@@ -84,18 +84,16 @@ static const char* desugar_modifier_field_nameJS(const char* lua_str) {
 #endif
 
 
-int script_modifier_new(lua_State* L, void* parent, Modifier modifier) {
-    return NEW_USERDATA(L, MODIFIER, parent, modifier, true);
+int script_modifier_new(lua_State* L, Modifier modifier) {
+   return luascript_userdata_new(L, MODIFIER, modifier);
 }
 
 static int script_modifier_gc(lua_State* L) {
-    READ_USERDATA_UNCHECKED(L, Modifier, modifier, MODIFIER);
-    _luascript_suppress_item(L, modifier, true);
-    return 0;
+    return luascript_userdata_gc(L, MODIFIER);
 }
 
 static int script_modifier_tostring(lua_State* L) {
-    READ_USERDATA(L, Modifier, modifier, MODIFIER);
+    Modifier modifier = luascript_read_userdata(L, MODIFIER);
 
 #ifdef JAVASCRIPT
     float translate_x;
@@ -190,7 +188,7 @@ static int script_modifier_tostring(lua_State* L) {
 }
 
 static int script_modifier_index(lua_State* L) {
-    READ_USERDATA(L, Modifier, modifier, MODIFIER);
+    Modifier modifier = luascript_read_userdata(L, MODIFIER);
 
     const char* field = luaL_optstring(L, 2, NULL);
 
@@ -252,7 +250,7 @@ static int script_modifier_index(lua_State* L) {
 }
 
 static int script_modifier_newindex(lua_State* L) {
-    READ_USERDATA(L, Modifier, modifier, MODIFIER);
+    Modifier modifier = luascript_read_userdata(L, MODIFIER);
 
     const char* field = luaL_optstring(L, 2, NULL);
 
@@ -261,48 +259,48 @@ static int script_modifier_newindex(lua_State* L) {
     if (!field) {
         return luaL_argerror(L, 2, lua_pushfstring(L, "Unknown Modifier field '%s'", field));
     }
-    float value = luaL_checkfloat(L, 3);
+    float value = (float)luaL_checknumber(L, 3);
     if (modifier_set_field_JS(modifier, field, value))
         return luaL_argerror(L, 2, lua_pushfstring(L, "Unknown Modifier field '%s'", field));
 #else
     if (string_equals(field, "translateX"))
-        modifier->translate_x = luaL_checkfloat(L, 3);
+        modifier->translate_x = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "translateY"))
-        modifier->translate_y = luaL_checkfloat(L, 3);
+        modifier->translate_y = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "rotate"))
-        modifier->rotate = luaL_checkfloat(L, 3);
+        modifier->rotate = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "skewX"))
-        modifier->skew_x = luaL_checkfloat(L, 3);
+        modifier->skew_x = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "skewY"))
-        modifier->skew_y = luaL_checkfloat(L, 3);
+        modifier->skew_y = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "scaleX"))
-        modifier->scale_x = luaL_checkfloat(L, 3);
+        modifier->scale_x = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "scaleY"))
-        modifier->scale_y = luaL_checkfloat(L, 3);
+        modifier->scale_y = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "scaleDirectionX"))
-        modifier->scale_direction_x = luaL_checkfloat(L, 3);
+        modifier->scale_direction_x = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "scaleDirectionY"))
-        modifier->scale_direction_y = luaL_checkfloat(L, 3);
+        modifier->scale_direction_y = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "rotatePivotEnabled"))
-        modifier->rotate_pivot_enabled = luaL_checkboolean(L, 3);
+        modifier->rotate_pivot_enabled = lua_toboolean(L, 3);
     else if (string_equals(field, "rotatePivotU"))
-        modifier->rotate_pivot_u = luaL_checkfloat(L, 3);
+        modifier->rotate_pivot_u = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "rotatePivotV"))
-        modifier->rotate_pivot_v = luaL_checkfloat(L, 3);
+        modifier->rotate_pivot_v = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "translateRotation"))
-        modifier->translate_rotation = luaL_checkboolean(L, 3);
+        modifier->translate_rotation = lua_toboolean(L, 3);
     else if (string_equals(field, "scaleSize"))
-        modifier->scale_size = luaL_checkboolean(L, 3);
+        modifier->scale_size = lua_toboolean(L, 3);
     else if (string_equals(field, "scaleTranslation"))
-        modifier->scale_translation = luaL_checkboolean(L, 3);
+        modifier->scale_translation = lua_toboolean(L, 3);
     else if (string_equals(field, "x"))
-        modifier->x = luaL_checkfloat(L, 3);
+        modifier->x = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "y"))
-        modifier->y = luaL_checkfloat(L, 3);
+        modifier->y = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "width"))
-        modifier->width = luaL_checkfloat(L, 3);
+        modifier->width = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "height"))
-        modifier->height = luaL_checkfloat(L, 3);
+        modifier->height = (float)luaL_checknumber(L, 3);
     else
         return luaL_argerror(L, 2, lua_pushfstring(L, "unknown Modifier field '%s'", field));
 #endif
@@ -311,7 +309,7 @@ static int script_modifier_newindex(lua_State* L) {
 }
 
 
-inline void register_modifier(lua_State* lua) {
+void script_modifier_register(lua_State* lua) {
     luaL_newmetatable(lua, MODIFIER);
 
     lua_pushcfunction(lua, script_modifier_gc);

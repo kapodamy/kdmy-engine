@@ -59,6 +59,9 @@ function soundplayer_destroy(soundplayer) {
     }
 
     if (soundplayer.blob_url) URL.revokeObjectURL(soundplayer.blob_url);
+
+    ModuleLuaScript.kdmyEngine_drop_shared_object(soundplayer);
+    soundplayer = undefined;
 }
 
 
