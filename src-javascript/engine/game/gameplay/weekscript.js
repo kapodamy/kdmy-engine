@@ -37,10 +37,6 @@ async function weekscript_init(src, context, is_week) {
         );
     }
 
-    if (ModuleLuaScript.hasInstanceActive) {
-        throw new Error("ModuleLuaScript is already in use or was not disposed correctly");
-    }
-
     // javascript only
     let lua_sourcecode_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(lua_sourcecode);
     let lua_filename_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(fs_get_filename_without_extension(src));
@@ -62,7 +58,6 @@ async function weekscript_init(src, context, is_week) {
         return null;
     }
 
-    ModuleLuaScript.hasInstanceActive = true;
     return luascript;
 }
 
@@ -115,16 +110,7 @@ async function weekscript_init(src, context, is_week) {
 }*/
 
 function weekscript_destroy(script) {
-
-    // in theory should not be necessary clear the "kdmyEngine_objectMap" in JS
     ModuleLuaScript._luascript_destroy_JS(script);
-    ModuleLuaScript.hasInstanceActive = false;
-    ModuleLuaScript.kdmyEngine_clearMap(0);
-}
-
-function weekscript_drop_shared_objects(script) {
-    ModuleLuaScript.kdmyEngine_clearMap(1);
-    ModuleLuaScript._luascript_drop_shared(script);
 }
 
 

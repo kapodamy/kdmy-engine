@@ -1,4 +1,5 @@
 using System;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using Engine.Utils;
 
@@ -78,7 +79,8 @@ namespace Engine {
             this.callback_draw = null;
             this.callback_animate = null;
 
-
+            Luascript.DropShared(this.modifier);
+            Luascript.DropShared(this);
             //free(drawable);
         }
 

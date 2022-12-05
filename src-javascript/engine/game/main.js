@@ -119,7 +119,7 @@ async function main(argc, argv) {
     background_menu_music = await soundplayer_init(FUNKIN_BACKGROUND_MUSIC);
     if (background_menu_music) soundplayer_loop_enable(background_menu_music, 1);
 
-    await week_main(
+    /*await week_main(
         weeks_array.array[0],
         0,
         "NORMAL",
@@ -129,7 +129,7 @@ async function main(argc, argv) {
         -1
     );
     console.info("week_main() execution done, engine is terminated");
-    return 0;
+    return 0;*/
 
     //await weekselector_main();
 

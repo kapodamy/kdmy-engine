@@ -38,6 +38,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="helpers.cs" />
+    <Compile Include="ReferenceList.cs" />
+    <Compile Include="utils.cs" />
     <Compile Include="lua.cs" />
     <Compile Include="luastate.cs" />
     <Compile Include="luatablebuilder.cs" />

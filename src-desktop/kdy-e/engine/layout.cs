@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Font;
 using Engine.Game.Common;
 using Engine.Image;
@@ -391,6 +392,8 @@ namespace Engine {
 
             // only is possible to trigger the first null-named camera
             layout.camera_helper.FromLayout(layout, null);
+            layout.camera_helper.SetParentLayout(layout);
+            layout.camera_secondary_helper.SetParentLayout(layout);
 
             // set default beats per second
             float bpm = Layout.HelperParseFloat(root, "defaultBPM", 100f);
@@ -492,6 +495,10 @@ namespace Engine {
 
             //free(this.external_vertex_list);
             //free(this.z_buffer);
+
+            Luascript.DropShared(this.modifier_camera);
+            Luascript.DropShared(this.modifier_camera_secondary);
+            Luascript.DropShared(this);
             //free(layout);
         }
 

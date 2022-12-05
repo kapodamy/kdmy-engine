@@ -1,4 +1,5 @@
 using System;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Utils;
 
 namespace Engine.Animation {
@@ -97,6 +98,7 @@ namespace Engine.Animation {
         public void Destroy() {
             this.arraylist.Destroy(false);
             this.arraylist = null;
+            Luascript.DropShared(this);
             //free(tweenlerp);
         }
 

@@ -643,11 +643,15 @@ L_invalid:
         }
 
         public static double ParseDouble2(string value, double def_value) {
-            double val = Double.NaN;
+            double val;
             Double.TryParse(value, FLAGS_FLOAT, CultureInfo.InvariantCulture, out val);
 
-            Console.Error.WriteLine("[ERROR] layout_parse_double2(): invalid value: " + value);
-            return Double.IsNaN(val) ? def_value : val;
+            if (Double.IsNaN(val)) {
+                Console.Error.WriteLine("[ERROR] vertexprops_parse_double2(): invalid value: " + value);
+                return def_value;
+            }
+
+            return val;
         }
 
         public static Blend ParseBlending(string value) {

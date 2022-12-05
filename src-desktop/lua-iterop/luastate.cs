@@ -15,149 +15,85 @@ namespace Engine.Externals.LuaInterop {
         }
 
 
+
         public T ReadUserdata<T>(string metatable_name) where T : class {
             unsafe {
                 Debug.Assert(this.L != null);
 
-                if (LUA.lua_isnil(L, 1)) {
-                    // this function should never return
-                    LUA.luaL_error(this.L, $"{metatable_name} was null (nil in lua).");
-                }
+                void* ptr = LuaInteropHelpers.luascript_read_userdata(L, metatable_name);
+                GCHandle handle = GCHandle.FromIntPtr((IntPtr)ptr);
 
-                void** ptr;
-                if (metatable_name == null)
-                    ptr = (void**)LUA.lua_touserdata(L, 1);
-                else
-                    ptr = (void**)LUA.luaL_checkudata(L, 1, metatable_name);
+                if (handle.IsAllocated) return (T)handle.Target;
 
-                T obj = (T)AdquireObject(ptr);
-                if (obj != null) return obj;
-
-
-                // this function should never return
-                LUA.luaL_error(this.L, $"{metatable_name} object was disposed.");
+                LUA.luaL_error(this.L, $"{metatable_name} object was disposed by the engine.");
+                return null;
             }
-
-            return null;
         }
 
-        public T ReadUserdataOrNull<T>(int n, string metatable_name) where T : class {
+        public T ReadNullableUserdata<T>(int idx, string metatable_name) where T : class {
             unsafe {
-                if (LUA.lua_isnil(L, n)) return null;
+                void* ptr = LuaInteropHelpers.luascript_read_nullable_userdata(L, idx, metatable_name);
+                GCHandle handle = GCHandle.FromIntPtr((IntPtr)ptr);
 
-                void** ptr;
-                if (metatable_name == null)
-                    ptr = (void**)LUA.lua_touserdata(L, n);
-                else
-                    ptr = (void**)LUA.luaL_checkudata(L, n, metatable_name);
+                if (handle.IsAllocated) return (T)handle.Target;
 
-                T obj = (T)AdquireObject(ptr);
-                if (obj != null) return obj;
-
-
-                // this function should never return
-                LUA.luaL_error(this.L, $"{metatable_name} object was disposed.");
+                LUA.luaL_error(this.L, $"{metatable_name} object was disposed by the engine.");
+                return null;
             }
-
-            return null;
         }
 
         public int CreateUserdata<T>(string metatable_name, T obj) where T : class {
             unsafe {
                 Debug.Assert(this.L != null);
-
-                if (obj == null) goto L_push_nil_and_return;
-
-                void** userdata = (void**)LUA.lua_newuserdata(L, sizeof(void**));
-                Debug.Assert(userdata != null, "Error: lua_newuserdata() returned NULL");
-
-                if (LUA.luaL_getmetatable(L, metatable_name) != LUA.TTABLE) {
-                    Console.Error.WriteLine($"[ERROR] luaL_getmetatable() missing '{metatable_name}'");
-                    return 1;
-                }
-
-                void* ptr = AllocObject(obj);
-                if (ptr == null) goto L_push_nil_and_return;
-
-                *userdata = ptr;
-
-                LUA.lua_setmetatable(L, -2);
-                return 1;
-
-L_push_nil_and_return:
-                LUA.lua_pushnil(L);
-                return 1;
+                return LuaInteropHelpers.luascript_create_userdata(this.Self, obj, metatable_name, false);
             }
         }
 
-        public int NullifyUserdata(string metatable_name) {
+        public int CreateAllocatedUserdata<T>(string metatable_name, T obj) where T : class {
             unsafe {
-                void** ptr;
-
-                if (!LUA.lua_isnil(L, 1)) {
-                    if (metatable_name == null)
-                        ptr = (void**)LUA.lua_touserdata(L, 1);
-                    else
-                        ptr = (void**)LUA.luaL_checkudata(L, 1, metatable_name);
-
-                    if (ptr != null) {
-                        DeallocObject(*ptr);
-                        *ptr = null;
-                    }
-                }
+                Debug.Assert(this.L != null);
+                return LuaInteropHelpers.luascript_create_userdata(this.Self, obj, metatable_name, true);
             }
-
-            return 0;
         }
 
-
-        private unsafe void* AllocObject(object obj) {
-            if (obj == null) return null;
-            GCHandle handle = GCHandle.Alloc(obj, GCHandleType.WeakTrackResurrection);
-            return (void*)GCHandle.ToIntPtr(handle);
+        public int ToString_userdata(string metatable_name) {
+            unsafe {
+                return LuaInteropHelpers.luascript_userdata_tostring(this.L, metatable_name);
+            }
         }
 
-        private unsafe void DeallocObject(void* ptr) {
-            if (ptr == null) return;
-
-            GCHandle handle = GCHandle.FromIntPtr((IntPtr)ptr);
-            if (!handle.IsAllocated) return;
-            handle.Free();
+        public int GC_userdata(string metatable_name) {
+            unsafe {
+                return LuaInteropHelpers.luascript_userdata_gc(this.Self, metatable_name);
+            }
         }
 
-        private unsafe object AdquireObject(void** ptr) {
-            if (ptr == null || *ptr == null) return null;
-
-            GCHandle handle = GCHandle.FromIntPtr((IntPtr)(*ptr));
-
-            if (handle.IsAllocated)
-                return handle.Target;
-            else
-                return null;
+        public bool IsUserdataAllocated(string metatable_name) {
+            unsafe {
+                return LuaInteropHelpers.luascript_userdata_is_allocated(this.L, metatable_name);
+            }
         }
 
-
+        public int DestroyUserdata(string metable_name) {
+            unsafe {
+                return LuaInteropHelpers.luascript_userdata_destroy(this.Self, metable_name);
+            }
+        }
 
 
         public ManagedLuaState Self {
             get
             {
-                unsafe {
-                    if (this.L == null) {
-                        throw new InvalidOperationException("LuaState is not initialized");
-                    }
-
-                    LUA.lua_pushlightuserdata(L, (void*)ManagedLuaState.LUA_REGISTRY_TABLE_KEY);
-                    LUA.lua_gettable(L, LUA.REGISTRYINDEX);
-                    void* ptr = LUA.lua_touserdata(L, -1);
-                    LUA.lua_pop(L, 1);
-
-                    return ManagedLuaState.SelfFrom(ptr);
-                }
+                unsafe { return LuaInteropHelpers.luascript_get_instance(this.L); }
             }
         }
 
-        public object Context { get => this.Self.context; }
+        public object Context {
+            get
+            {
+                return this.Self.context;
+            }
+        }
 
 
         public string luaL_optstring(int arg, string d) {
@@ -166,21 +102,14 @@ L_push_nil_and_return:
             }
         }
 
-        public float luaL_checkfloat(int arg) {
+        public double luaL_optnumber(int arg, double def) {
             unsafe {
-                double value = LUA.luaL_checknumber(L, arg);
-                return (float)value;
+                double value = LUA.luaL_optnumber(L, arg, def);
+                return value;
             }
         }
 
-        public float luaL_optionalfloat(int arg) {
-            unsafe {
-                double value = LUA.luaL_optnumber(L, arg, Double.NaN);
-                return (float)value;
-            }
-        }
-
-        public bool luaL_checkboolean(int arg) {
+        public bool luaL_toboolean(int arg) {
             unsafe {
                 int value = LUA.lua_toboolean(L, arg);
                 return value != 0;
@@ -308,5 +237,6 @@ L_destroyed:
         }
 
     }
+
 }
 

@@ -39,6 +39,14 @@ namespace LuaNativeMethods {
         public const int LUAI_MAXSTACK = 1000000;
         public const int REGISTRYINDEX = -LUAI_MAXSTACK - 1000;
 
+        public const int NOREF = -2;
+        public const int REFNIL = -1;
+
+        public const int ERRRUN = 2;
+        public const int ERRSYNTAX = 3;
+        public const int ERRMEM = 4;
+        public const int ERRERR = 5;
+
         private const string DLL = "lua";// "lua.dll"
 
 
@@ -272,6 +280,12 @@ namespace LuaNativeMethods {
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int lua_gettop(lua_State* L);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int luaL_ref(lua_State* L, int t);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void luaL_unref(lua_State* L, int t, int @ref);
 
 
 

@@ -1,9 +1,9 @@
+using System;
 using Engine.Externals.LuaInterop;
 using Engine.Font;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
-using Engine.Utils;
 
 namespace Engine.Externals.LuaScriptInterop {
 
@@ -11,10 +11,6 @@ namespace Engine.Externals.LuaScriptInterop {
         private const string LAYOUT = "Layout";
 
 
-        private static string _get_align(Align align) {
-            if (align == Align.INVALID) return null;
-            return align.ToString();
-        }
 
         static int script_layout_trigger_any(LuaState L) {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
@@ -95,9 +91,9 @@ namespace Engine.Externals.LuaScriptInterop {
 
         static int script_layout_camera_set_view(LuaState L) {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
-            float x = L.luaL_checkfloat(2);
-            float y = L.luaL_checkfloat(3);
-            float z = L.luaL_checkfloat(4);
+            float x = (float)L.luaL_checknumber(2);
+            float y = (float)L.luaL_checknumber(3);
+            float z = (float)L.luaL_checknumber(4);
 
             layout.CameraSetView(x, y, z);
 
@@ -214,7 +210,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_layout_set_group_visibility(LuaState L) {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
             string group_name = L.luaL_optstring(2, null);
-            bool visible = L.luaL_checkboolean(3);
+            bool visible = L.luaL_toboolean(3);
 
             layout.SetGroupVisibility(group_name, visible);
 
@@ -224,7 +220,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_layout_set_group_alpha(LuaState L) {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
             string group_name = L.luaL_optstring(2, null);
-            float alpha = L.luaL_checkfloat(3);
+            float alpha = (float)L.luaL_checknumber(3);
 
             layout.SetGroupAlpha(group_name, alpha);
 
@@ -234,10 +230,10 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_layout_set_group_offsetcolor(LuaState L) {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
             string group_name = L.luaL_optstring(2, null);
-            float r = L.luaL_optionalfloat(3);
-            float g = L.luaL_optionalfloat(4);
-            float b = L.luaL_optionalfloat(5);
-            float a = L.luaL_optionalfloat(6);
+            float r = (float)L.luaL_optnumber(3, Double.NaN);
+            float g = (float)L.luaL_optnumber(4, Double.NaN);
+            float b = (float)L.luaL_optnumber(5, Double.NaN);
+            float a = (float)L.luaL_optnumber(6, Double.NaN);
 
             layout.SetGroupOffsetcolor(group_name, r, g, b, a);
 
@@ -267,8 +263,8 @@ namespace Engine.Externals.LuaScriptInterop {
 
                 table.AddInteger("group_id", placeholder.group_id);
 
-                table.AddString("align_vertical", _get_align(placeholder.align_vertical));
-                table.AddString("align_horizontal", _get_align(placeholder.align_horizontal));
+                table.AddString("align_vertical", LuascriptHelpers.StringifyAlign(placeholder.align_vertical));
+                table.AddString("align_horizontal", LuascriptHelpers.StringifyAlign(placeholder.align_horizontal));
 
                 table.AddNumber("x", placeholder.x);
                 table.AddNumber("y", placeholder.y);
@@ -293,7 +289,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_layout_disable_antialiasing(LuaState L) {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
 
-            bool disable = L.luaL_checkboolean(3);
+            bool disable = L.luaL_toboolean(3);
 
             layout.DisableAntialiasing(disable);
 
@@ -304,8 +300,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
 
             string group_name = L.luaL_optstring(2, null);
-            PVRContextFlag antialiasing = VertexProps.ParseFlag2(L.luaL_optstring(3, null), PVRContextFlag.INVALID_VALUE);
-            if (antialiasing == PVRContextFlag.INVALID_VALUE) return L.luaL_argerror(3, "invalid pvrflag");
+            PVRContextFlag antialiasing = LuascriptHelpers.ParsePVRFLAG(L, L.luaL_optstring(3, null));
 
             layout.SetGroupAntialiasing(group_name, antialiasing);
 
@@ -341,7 +336,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
 
             string name = L.luaL_optstring(2, null);
-            PSShader psshader = L.ReadUserdataOrNull<PSShader>(3, ExportsPSShader.PSSHADER);
+            PSShader psshader = L.ReadNullableUserdata<PSShader>(3, ExportsPSShader.PSSHADER);
 
             bool ret = layout.SetGroupShader(name, psshader);
 
@@ -391,25 +386,19 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_layout_gc(LuaState L) {
-            return L.NullifyUserdata(LAYOUT);
+            return L.GC_userdata(LAYOUT);
         }
 
         static int script_layout_tostring(LuaState L) {
-            L.lua_pushstring("[Layout]");
-            return 1;
+            return L.ToString_userdata(LAYOUT);
         }
 
 
-        private static readonly LuaCallback gc = script_layout_gc;
-        private static readonly LuaCallback tostring = script_layout_tostring;
+        private static readonly LuaCallback delegate_gc = script_layout_gc;
+        private static readonly LuaCallback delegate_tostring = script_layout_tostring;
 
-        internal static void register_layout(ManagedLuaState L) {
-            L.RegisterMetaTable(
-                LAYOUT,
-                gc,
-                tostring,
-                LAYOUT_FUNCTIONS
-            );
+        internal static void script_layout_register(ManagedLuaState L) {
+            L.RegisterMetaTable(LAYOUT, delegate_gc, delegate_tostring, LAYOUT_FUNCTIONS);
         }
 
     }

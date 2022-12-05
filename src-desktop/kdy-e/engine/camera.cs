@@ -1,5 +1,6 @@
 using System;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using Engine.Utils;
 
@@ -32,6 +33,7 @@ namespace Engine {
         private float offset_x;
         private float offset_y;
         private float offset_z;
+        private Layout parent_layout;
 
 
         public Camera(Modifier modifier, float viewport_width, float viewport_height) {
@@ -46,6 +48,7 @@ namespace Engine {
             this.has_transition_offset = false;
             this.parallax_x = 0.0f; this.parallax_y = 0.0f; this.parallax_z = 1.0f;
             this.offset_x = 0.0f; this.offset_y = 0.0f; this.offset_z = 1.0f;
+            this.parent_layout = null;
 
             if (this.internal_modifier) {
                 // no modifier provided used the internal one
@@ -63,7 +66,13 @@ namespace Engine {
 
         public void Destroy() {
             this.tweenlerp.Destroy();
-            //if (this.internal_modifier) free(this.modifier);
+
+            if (this.internal_modifier) {
+                Luascript.DropShared(this.modifier);
+                //free(this.modifier);
+            }
+            
+            Luascript.DropShared(this);
             //free(camera);
         }
 
@@ -285,7 +294,10 @@ namespace Engine {
         }
 
         public bool FromLayout(Layout layout, string camera_name) {
-            if (layout == null) return false;
+            if (layout == null) {
+                if (this.parent_layout == null) return false;
+                layout = this.parent_layout;
+            }
 
             CameraPlaceholder camera_placeholder = layout.GetCameraPlaceholder(camera_name);
             if (camera_placeholder == null) return false;
@@ -362,6 +374,14 @@ namespace Engine {
                 MoveOffset(0f, 0f, 1f);
             }
             this.has_transition_offset = true;
+        }
+
+        public Layout GetParentLayout() {
+            return this.parent_layout;
+        }
+
+        public void SetParentLayout(Layout layout) {
+            this.parent_layout = layout;
         }
 
 

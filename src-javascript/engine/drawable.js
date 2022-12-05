@@ -42,6 +42,8 @@ function drawable_destroy(drawable) {
     drawable.callback_animate = null;
     drawable.private_data = null;
 
+    ModuleLuaScript.kdmyEngine_drop_shared_object(drawable.modifier);
+    ModuleLuaScript.kdmyEngine_drop_shared_object(drawable);
     drawable = undefined;
 }
 

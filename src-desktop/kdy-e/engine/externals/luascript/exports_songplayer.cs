@@ -10,7 +10,7 @@ namespace Engine.Externals.LuaScriptInterop {
             SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
 
             string src = L.luaL_checkstring(2);
-            bool prefer_no_copyright = L.luaL_checkboolean(3);
+            bool prefer_no_copyright = L.luaL_toboolean(3);
 
             bool ret = songplayer.ChangeSong(src, prefer_no_copyright);
 
@@ -38,7 +38,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_songplayer_seek(LuaState L) {
             SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
 
-            float timestamp = L.luaL_checkfloat(2);
+            double timestamp = L.luaL_checknumber(2);
 
             songplayer.Seek(timestamp);
 
@@ -75,8 +75,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_songplayer_mute_track(LuaState L) {
             SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
 
-            bool vocals_or_instrumental = L.luaL_checkboolean(2);
-            bool muted = L.luaL_checkboolean(3);
+            bool vocals_or_instrumental = L.luaL_toboolean(2);
+            bool muted = L.luaL_toboolean(3);
 
             songplayer.MuteTrack(vocals_or_instrumental, muted);
 
@@ -86,7 +86,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_songplayer_mute(LuaState L) {
             SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
 
-            bool muted = L.luaL_checkboolean(2);
+            bool muted = L.luaL_toboolean(2);
 
             songplayer.Mute(muted);
 
@@ -116,26 +116,20 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_songplayer_gc(LuaState L) {
-            return L.NullifyUserdata(SONGPLAYER);
+            return L.GC_userdata(SONGPLAYER);
         }
 
         static int script_songplayer_tostring(LuaState L) {
-            L.lua_pushstring("[SongPlayer]");
-            return 1;
+            return L.ToString_userdata(SONGPLAYER);
         }
 
 
-        private static readonly LuaCallback gc = script_songplayer_gc;
-        private static readonly LuaCallback tostring = script_songplayer_tostring;
+        private static readonly LuaCallback delegate_gc = script_songplayer_gc;
+        private static readonly LuaCallback delegate_tostring = script_songplayer_tostring;
 
 
-        internal static void register_songplayer(ManagedLuaState lua) {
-            lua.RegisterMetaTable(
-                SONGPLAYER,
-                gc,
-                tostring,
-                SONGPLAYER_FUNCTIONS
-            );
+        internal static void script_songplayer_register(ManagedLuaState lua) {
+            lua.RegisterMetaTable(SONGPLAYER, delegate_gc, delegate_tostring, SONGPLAYER_FUNCTIONS);
         }
 
     }

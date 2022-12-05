@@ -1,3 +1,4 @@
+using System;
 using Engine.Animation;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
@@ -14,7 +15,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_use_alternate_sing_animations(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_checkboolean(2);
+            bool enable = L.luaL_toboolean(2);
 
             character.UseAlternateSingAnimations(enable);
 
@@ -24,8 +25,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_draw_location(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            float x = L.luaL_checkfloat(2);
-            float y = L.luaL_checkfloat(3);
+            float x = (float)L.luaL_checknumber(2);
+            float y = (float)L.luaL_checknumber(3);
 
             character.SetDrawLocation(x, y);
 
@@ -49,8 +50,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_update_reference_size(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            float width = L.luaL_optionalfloat(2);
-            float height = L.luaL_optionalfloat(3);
+            float width = (float)L.luaL_optnumber(2, Double.NaN);
+            float height = (float)L.luaL_optnumber(3, Double.NaN);
 
             character.UpdateReferenceSize(width, height);
 
@@ -60,7 +61,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_enable_reference_size(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_checkboolean(2);
+            bool enable = L.luaL_toboolean(2);
 
             character.EnableReferenceSize(enable);
 
@@ -70,8 +71,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_offset(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            float offset_x = L.luaL_checkfloat(2);
-            float offset_y = L.luaL_checkfloat(3);
+            float offset_x = (float)L.luaL_checknumber(2);
+            float offset_y = (float)L.luaL_checknumber(3);
 
             character.SetOffset(offset_x, offset_y);
 
@@ -123,7 +124,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
             string direction = L.luaL_optstring(2, null);
-            bool prefer_sustain = L.luaL_checkboolean(3);
+            bool prefer_sustain = L.luaL_toboolean(3);
 
             bool ret = character.PlaySing(direction, prefer_sustain);
 
@@ -135,7 +136,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
             string direction = L.luaL_optstring(2, null);
-            bool keep_in_hold = L.luaL_checkboolean(3);
+            bool keep_in_hold = L.luaL_toboolean(3);
 
             int ret = character.PlayMiss(direction, keep_in_hold);
 
@@ -147,7 +148,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
             string extra_animation_name = L.luaL_optstring(2, null);
-            bool prefer_sustain = L.luaL_checkboolean(3);
+            bool prefer_sustain = L.luaL_toboolean(3);
 
             bool ret = character.PlayExtra(extra_animation_name, prefer_sustain);
 
@@ -158,7 +159,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_idle_speed(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            float speed = L.luaL_checkfloat(2);
+            float speed = (float)L.luaL_checknumber(2);
 
             character.SetIdleSpeed(speed);
 
@@ -168,7 +169,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_scale(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            float scale_factor = L.luaL_checkfloat(2);
+            float scale_factor = (float)L.luaL_checknumber(2);
 
             character.SetScale(scale_factor);
 
@@ -186,7 +187,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_enable_continuous_idle(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_checkboolean(2);
+            bool enable = L.luaL_toboolean(2);
 
             character.EnableContinuousIdle(enable);
 
@@ -205,7 +206,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_enable_flip_correction(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_checkboolean(2);
+            bool enable = L.luaL_toboolean(2);
 
             character.EnableFlipCorrection(enable);
 
@@ -215,7 +216,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_flip_orientation(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_checkboolean(2);
+            bool enable = L.luaL_toboolean(2);
 
             character.FlipOrientation(enable);
 
@@ -225,7 +226,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_face_as_opponent(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool face_as_opponent = L.luaL_checkboolean(2);
+            bool face_as_opponent = L.luaL_toboolean(2);
 
             character.FaceAsOpponent(face_as_opponent);
 
@@ -235,7 +236,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_z_index(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            float z = L.luaL_checkfloat(2);
+            float z = (float)L.luaL_checknumber(2);
 
             character.SetZIndex(z);
 
@@ -245,7 +246,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_z_offset(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            float z_offset = L.luaL_checkfloat(2);
+            float z_offset = (float)L.luaL_checknumber(2);
 
             character.SetZOffset(z_offset);
 
@@ -281,10 +282,10 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_color_offset(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            float r = L.luaL_optionalfloat(2);
-            float g = L.luaL_optionalfloat(3);
-            float b = L.luaL_optionalfloat(4);
-            float a = L.luaL_optionalfloat(5);
+            float r = (float)L.luaL_optnumber(2, Double.NaN);
+            float g = (float)L.luaL_optnumber(3, Double.NaN);
+            float b = (float)L.luaL_optnumber(4, Double.NaN);
+            float a = (float)L.luaL_optnumber(5, Double.NaN);
 
             character.SetColorOffset(r, g, b, a);
 
@@ -302,7 +303,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_alpha(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            float alpha = L.luaL_checkfloat(2);
+            float alpha = (float)L.luaL_checknumber(2);
 
             character.SetAlpha(alpha);
 
@@ -312,7 +313,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_visible(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool visible = L.luaL_checkboolean(2);
+            bool visible = L.luaL_toboolean(2);
 
             character.SetVisible(visible);
 
@@ -331,7 +332,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
             string name = L.luaL_optstring(2, null);
-            bool is_extra = L.luaL_checkboolean(3);
+            bool is_extra = L.luaL_toboolean(3);
 
             bool ret = character.HasDirection(name, is_extra);
 
@@ -351,24 +352,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_get_current_action(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            string ret;
-            switch (character.GetCurrentAction()) {
-                case CharacterActionType.MISS:
-                    ret = "miss";
-                    break;
-                case CharacterActionType.EXTRA:
-                    ret = "extra";
-                    break;
-                case CharacterActionType.IDLE:
-                    ret = "idle";
-                    break;
-                case CharacterActionType.SING:
-                    ret = "sing";
-                    break;
-                default:
-                    ret = "none";
-                    break;
-            }
+            string ret = LuascriptHelpers.StringifyActiontype(character.GetCurrentAction());
 
             L.lua_pushstring(ret);
             return 1;
@@ -422,12 +406,11 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_character_gc(LuaState L) {
-            return L.NullifyUserdata(CHARACTER);
+            return L.GC_userdata(CHARACTER);
         }
 
         static int script_character_tostring(LuaState L) {
-            L.lua_pushstring("[Character]");
-            return 1;
+            return L.ToString_userdata(CHARACTER);
         }
 
 
@@ -435,13 +418,8 @@ namespace Engine.Externals.LuaScriptInterop {
         private static readonly LuaCallback delegate_tostring = script_character_tostring;
 
 
-        internal static void register_character(ManagedLuaState L) {
-            L.RegisterMetaTable(
-                CHARACTER,
-                delegate_gc,
-                delegate_tostring,
-                CHARACTER_FUNCTIONS
-            );
+        internal static void script_character_register(ManagedLuaState L) {
+            L.RegisterMetaTable(CHARACTER, delegate_gc, delegate_tostring, CHARACTER_FUNCTIONS);
         }
 
     }

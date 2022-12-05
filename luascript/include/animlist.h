@@ -8,7 +8,7 @@
 #define ANIM_MACRO_INTERPOLATOR_LINEAR 4
 #define ANIM_MACRO_INTERPOLATOR_STEPS 5
 
-typedef unsigned char ANIM_INTERPOLATOR_TYPE;
+typedef int AnimInterpolator;
 
 #endif
 

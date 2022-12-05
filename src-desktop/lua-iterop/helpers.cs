@@ -1,26 +1,276 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using LuaNativeMethods;
 
 namespace Engine.Externals.LuaInterop {
 
-    public sealed class LuaTableFunction {
-        public string name;
-        public LuaCallback func;
+    internal unsafe struct LuascriptObject {
+        internal void* obj_ptr;
+        internal int lua_ref;
+        internal bool was_allocated_by_lua;
     }
 
-    public struct LuaIntegerConstant {
-        public string variable;
-        public long value;
+    internal static unsafe class LuaInteropHelpers {
+
+        public const int SHARED_ARRAY_CHUNK_SIZE = 16;
+
+        private static readonly object key_object;
+        public static readonly void* luascript_key_ptr;
+
+        static LuaInteropHelpers() {
+            key_object = new object();
+            GCHandle handle = GCHandle.Alloc(key_object, GCHandleType.Normal);
+            luascript_key_ptr = GCHandle.ToIntPtr(handle).ToPointer();
+        }
+
+
+        internal static int get_lua_reference(ManagedLuaState luascript, void* obj) {
+            LuascriptObject* shared_array = luascript.shared_array;
+            int shared_size = luascript.shared_size;
+
+            for (int i = 0 ; i < shared_size ; i++) {
+                if (shared_array[i].obj_ptr == obj) {
+                    return shared_array[i].lua_ref;
+                }
+            }
+
+            return LUA.NOREF;
+        }
+
+        internal static LuascriptObject* add_lua_reference(ManagedLuaState luascript, void* obj, int @ref, bool allocated) {
+            int index;
+
+            // find and empty slot
+            LuascriptObject* shared_array = luascript.shared_array;
+            int shared_size = luascript.shared_size;
+
+            for (int i = 0 ; i < shared_size ; i++) {
+                if (shared_array[i].obj_ptr == null) {
+                    index = i;
+                    goto L_store_and_return;
+                }
+            }
+
+            // no empty slots, grow the array and add it
+            index = luascript.shared_size;
+            luascript.shared_size += SHARED_ARRAY_CHUNK_SIZE;
+
+            int new_size = luascript.shared_size * sizeof(LuascriptObject);
+            luascript.shared_array = (LuascriptObject*)Marshal.ReAllocHGlobal((IntPtr)luascript.shared_array, (IntPtr)new_size);
+            Debug.Assert(luascript.shared_array != null, "reallocation failed");
+
+            for (int i = 0 ; i < SHARED_ARRAY_CHUNK_SIZE ; i++) {
+                LuascriptObject* entry = &luascript.shared_array[i + index];
+                entry->lua_ref = LUA.NOREF;
+                entry->obj_ptr = null;
+                entry->was_allocated_by_lua = false;
+            }
+
+L_store_and_return:
+            luascript.shared_array[index].obj_ptr = obj;
+            luascript.shared_array[index].lua_ref = @ref;
+            luascript.shared_array[index].was_allocated_by_lua = allocated;
+
+            return &luascript.shared_array[index];
+        }
+
+        internal static int remove_lua_reference(ManagedLuaState luascript, void* obj) {
+            LuascriptObject* shared_array = luascript.shared_array;
+            int shared_size = luascript.shared_size;
+
+            for (int i = 0 ; i < shared_size ; i++) {
+                if (shared_array[i].obj_ptr == obj) {
+                    int @ref = shared_array[i].lua_ref;
+                    shared_array[i].obj_ptr = null;
+                    shared_array[i].lua_ref = LUA.REFNIL;
+                    return @ref;
+                }
+            }
+
+            return LUA.NOREF;
+        }
+
+
+        internal static void* read_userdata(lua_State* L, int ud, string tname) {
+            LuascriptObject* udata = (LuascriptObject*)LUA.luaL_checkudata(L, ud, tname);
+
+            if (udata == null || udata->obj_ptr == null || udata->lua_ref == LUA.REFNIL || udata->lua_ref == LUA.NOREF) {
+                LUA.luaL_error(L, $"{tname} object was destroyed.");
+                return null;
+            }
+
+            return udata->obj_ptr;
+        }
+
+        /*internal static int is_userdata_equals(lua_State* L) {
+            bool equals;
+
+            int type_a = LUA.lua_type(L, 1);
+            int type_b = LUA.lua_type(L, 2);
+
+            if (type_a != LUA.TUSERDATA || type_b != LUA.TUSERDATA) {
+                equals = false;
+            } else {
+                void* a = LUA.lua_touserdata(L, 1);
+                void* b = LUA.lua_touserdata(L, 2);
+
+                equals = (a == null && b == null) || (a != b);
+            }
+
+                    LUA.lua_pushboolean(L, equals ? 1 : 0);
+
+            return 1;
+        }*/
+
+
+
+        internal static int luascript_create_userdata(ManagedLuaState luascript, object obj, string metatable_name, bool allocated) {
+            lua_State* L = luascript.L;
+
+            if (obj == null) {
+                LUA.lua_pushnil(L);
+                return 1;
+            }
+
+            void* obj_ptr = luascript.handle_references.AddReference(obj);
+
+            int @ref = get_lua_reference(luascript, obj_ptr);
+            if (@ref != LUA.NOREF) {
+                // recover userdata back into stack
+                LUA.lua_pushinteger(L, @ref);
+                LUA.lua_gettable(L, LUA.REGISTRYINDEX);
+            } else {
+                LuascriptObject* udata = (LuascriptObject*)LUA.lua_newuserdata(L, sizeof(LuascriptObject));
+                Debug.Assert(udata != null, "can not create userdata");
+
+                LUA.luaL_getmetatable(L, metatable_name);
+                LUA.lua_setmetatable(L, -2);
+
+                LUA.lua_pushvalue(L, -1);
+                @ref = LUA.luaL_ref(L, LUA.REGISTRYINDEX);
+
+                udata->lua_ref = @ref;
+                udata->obj_ptr = obj_ptr;
+                udata->was_allocated_by_lua = allocated;
+
+                add_lua_reference(luascript, obj_ptr, @ref, allocated);
+            }
+
+            return 1;
+        }
+
+        internal static void luascript_remove_userdata(ManagedLuaState luascript, void* obj) {
+            Debug.Assert(obj != null);
+
+            lua_State* L = luascript.L;
+
+            // aquire lua reference and nullify the object
+            int @ref = remove_lua_reference(luascript, obj);
+            if (@ref == LUA.NOREF) return;
+
+            // LUA.lua_pushinteger(L, @ref);
+            // LUA.lua_pushnil(L);
+            // LUA.lua_settable(L, LUA.REGISTRYINDEX);
+            // return;
+
+            // remove from lua registry
+            LUA.luaL_unref(L, LUA.REGISTRYINDEX, @ref);
+        }
+
+
+        internal static void* luascript_read_userdata(lua_State* L, string check_metatable_name) {
+            if (LUA.lua_isnil(L, 1)) {
+                LUA.luaL_error(L, $"{check_metatable_name} was null (nil in lua).");
+                return null;
+            }
+
+            return read_userdata(L, 1, check_metatable_name);
+        }
+
+        internal static void* luascript_read_nullable_userdata(lua_State* L, int idx, string check_metatable_name) {
+            if (LUA.lua_isnil(L, idx))
+                return null;
+            else
+                return read_userdata(L, idx, check_metatable_name);
+        }
+
+
+        internal static ManagedLuaState luascript_get_instance(lua_State* L) {
+            LUA.lua_pushlightuserdata(L, luascript_key_ptr);
+            LUA.lua_gettable(L, LUA.REGISTRYINDEX);
+
+            void* ptr = LUA.lua_touserdata(L, -1);
+
+            GCHandle handle = GCHandle.FromIntPtr((IntPtr)ptr);
+            ManagedLuaState luascript = (ManagedLuaState)handle.Target;
+
+            Debug.Assert(luascript != null);
+            LUA.lua_pop(L, 1);
+
+            return luascript;
+        }
+
+        internal static void luascript_set_instance(ManagedLuaState luascript) {
+            lua_State* L = luascript.L;
+            void* ptr = GCHandle.ToIntPtr(luascript.self).ToPointer();
+
+            LUA.lua_pushlightuserdata(L, luascript_key_ptr);
+            LUA.lua_pushlightuserdata(L, ptr);
+            LUA.lua_settable(L, LUA.REGISTRYINDEX);
+        }
+
+
+        internal static int luascript_userdata_tostring(lua_State* L, string check_metatable_name) {
+            void* udata = luascript_read_userdata(L, check_metatable_name);
+            string ptr = new IntPtr(udata).ToString();
+            LUA.lua_pushstring(L, $"{{{check_metatable_name} 0x{ptr}}}");
+            return 1;
+        }
+
+        internal static int luascript_userdata_gc(ManagedLuaState luascript, string check_metatable_name) {
+            void* udata = luascript_read_userdata(luascript.L, check_metatable_name);
+            luascript_remove_userdata(luascript, udata);
+            return 1;
+        }
+
+        internal static int luascript_userdata_destroy(ManagedLuaState luascript, string check_metatable_name) {
+            bool allocated = luascript_userdata_is_allocated(luascript.L, check_metatable_name);
+            void* udata = luascript_read_userdata(luascript.L, check_metatable_name);
+
+            luascript_remove_userdata(luascript, udata);
+
+            if (allocated) {
+                GCHandle handle = GCHandle.FromIntPtr((IntPtr)udata);
+                if (handle.IsAllocated) {
+                    object obj = handle.Target;
+                    Action destructor = null; ;
+
+                    if (obj is IDisposable) {
+                        destructor = ((IDisposable)obj).Dispose;
+                    } else {
+                        destructor = (Action)Delegate.CreateDelegate(typeof(Action), obj, "Destroy");
+                    }
+
+                    Debug.Assert(destructor != null);
+                    destructor();
+                }
+            }
+
+            return 1;
+        }
+
+        internal static bool luascript_userdata_is_allocated(lua_State* L, string check_metatable_name) {
+            LuascriptObject* udata = (LuascriptObject*)LUA.luaL_checkudata(L, 1, check_metatable_name);
+
+            if (udata == null || udata->obj_ptr == null || udata->lua_ref == LUA.REFNIL || udata->lua_ref == LUA.NOREF) {
+                return false;
+            }
+            return udata->was_allocated_by_lua;
+        }
+
+
     }
-
-    public struct LuaStringConstant {
-        public string variable;
-        public string value;
-    }
-
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int LuaCallback(LuaState lua);
 
 }
+

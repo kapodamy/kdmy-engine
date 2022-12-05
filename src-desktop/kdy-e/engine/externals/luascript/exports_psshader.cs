@@ -16,23 +16,18 @@ public static class ExportsPSShader {
 
         PSShader psshader = PSShader.Init(vertex_sourcecode, fragment_sourcecode);
 
-        if (psshader == null) {
-            L.lua_pushnil();
-            return 1;
-        }
-
-        psshader.was_allocated_by_lua = true;
-        return L.CreateUserdata<PSShader>(PSSHADER, psshader);
+        return L.CreateAllocatedUserdata(PSSHADER, psshader);
     }
 
     static int script_psshader_destroy(LuaState L) {
         PSShader psshader = L.ReadUserdata<PSShader>(PSSHADER);
 
-        if (!psshader.was_allocated_by_lua) {
-            return L.luaL_error("this object was not allocated by lua");
-        }
+        if (L.IsUserdataAllocated(PSSHADER))
+            psshader.Destroy();
+        else
+            Console.Error.WriteLine("[ERROR] script_psshader_destroy() object was not allocated by lua");
 
-        return L.NullifyUserdata(PSSHADER);
+        return 0;
     }
 
     static int script_psshader_set_uniform_any(LuaState L) {
@@ -83,6 +78,7 @@ public static class ExportsPSShader {
     ////////////////////////////////////////////////////////////////////////////////////
 
     private static readonly LuaTableFunction[] PSSHADER_FUNCTIONS = {
+        new LuaTableFunction() { name = "new", func = script_psshader_init },
         new LuaTableFunction() { name = "destroy", func = script_psshader_destroy },
         new LuaTableFunction() { name = "set_uniform_any", func = script_psshader_set_uniform_any },
         new LuaTableFunction() { name = "set_uniform1f", func = script_psshader_set_uniform1f },
@@ -96,34 +92,18 @@ public static class ExportsPSShader {
     }
 
     static int script_psshader_gc(LuaState L) {
-        PSShader psshader = L.ReadUserdata<PSShader>(PSSHADER);
-
-        if (psshader.was_allocated_by_lua) {
-            L.NullifyUserdata(PSSHADER);
-            psshader.Destroy();
-        }
-
-        return 0;
+        return L.DestroyUserdata(PSSHADER);
     }
 
     static int script_psshader_tostring(LuaState L) {
-        PSShader psshader = L.ReadUserdata<PSShader>(PSSHADER);
-        L.lua_pushstring("[PSShader]");
-        return 1;
+        return L.ToString_userdata(PSSHADER);
     }
 
-    private static readonly LuaCallback delegate_psshader_init = script_psshader_init;
+    private static readonly LuaCallback delegate_gc = script_psshader_gc;
+    private static readonly LuaCallback delegate_tostring = script_psshader_tostring;
 
-    public static void register_psshader(ManagedLuaState L) {
-        // register constructor
-        L.RegisterGlobalFunction("engine_create_shader", delegate_psshader_init);
-
-        L.RegisterMetaTable(
-            PSSHADER,
-            script_psshader_gc,
-            script_psshader_tostring,
-            PSSHADER_FUNCTIONS
-        );
+    public static void script_psshader_register(ManagedLuaState L) {
+        L.RegisterMetaTable(PSSHADER, delegate_gc, delegate_tostring, PSSHADER_FUNCTIONS);
     }
 
 }

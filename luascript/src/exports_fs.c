@@ -56,7 +56,7 @@ static int script_fs_readfile(lua_State* L) {
 }
 
 
-void register_fs(lua_State* L) {
+void script_fs_register(lua_State* L) {
     lua_pushcfunction(L, script_fs_readfile);
     lua_setglobal(L, "fs_readfile");
 }

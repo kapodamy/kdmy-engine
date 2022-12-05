@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build (debug)",
+            "label": "build WASM (debug)",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -16,7 +16,7 @@
                 "args": [
                     "-c",
                     "mingw32-make",
-                    "build-debug"
+                    "wasm-build-debug"
                 ]
             },
             "linux": {
@@ -24,7 +24,7 @@
                 "args": [
                     "-c",
                     "make",
-                    "build-debug"
+                    "wasm-build-debug"
                 ]
             },
             "osx": {
@@ -32,12 +32,12 @@
                 "args": [
                     "-c",
                     "make",
-                    "build-debug"
+                    "wasm-build-debug"
                 ]
             }
         },
         {
-            "label": "build (release)",
+            "label": "build WASM (release)",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -51,7 +51,7 @@
                 "args": [
                     "-c",
                     "mingw32-make",
-                    "build-release"
+                    "wasm-build-release"
                 ]
             },
             "linux": {
@@ -59,7 +59,7 @@
                 "args": [
                     "-c",
                     "make",
-                    "build-release"
+                    "wasm-build-release"
                 ]
             },
             "osx": {
@@ -67,7 +67,7 @@
                 "args": [
                     "-c",
                     "make",
-                    "build-release"
+                    "wasm-build-release"
                 ]
             }
         },
@@ -114,7 +114,7 @@
                 "args": [
                     "-c",
                     "mingw32-make",
-                    "build-debug-windows"
+                    "windows-build-debug"
                 ],
                 "presentation": {
                     "clear": true
@@ -125,7 +125,7 @@
                 "args": [
                     "-c",
                     "make",
-                    "build-debug-windows"
+                    "windows-build-debug"
                 ],
                 "presentation": {
                     "clear": true
@@ -136,7 +136,7 @@
                 "args": [
                     "-c",
                     "make",
-                    "build-debug-windows"
+                    "windows-build-debug"
                 ],
                 "presentation": {
                     "clear": true

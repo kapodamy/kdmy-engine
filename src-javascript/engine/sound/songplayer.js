@@ -95,6 +95,8 @@ function songplayer_destroy(songplayer) {
     }
 
     songplayer.playbacks = undefined;
+
+    ModuleLuaScript.kdmyEngine_drop_shared_object(songplayer);
     songplayer = undefined;
 }
 

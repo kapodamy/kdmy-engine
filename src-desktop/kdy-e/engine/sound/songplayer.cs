@@ -1,4 +1,5 @@
 using System;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using KallistiOS.THD;
 
@@ -96,6 +97,7 @@ namespace Engine.Sound {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
             if (this == SongPlayer.SILENCE) return;
 
             for (int i = 0 ; i < this.playbacks_size ; i++) {

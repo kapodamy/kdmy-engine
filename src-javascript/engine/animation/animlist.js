@@ -157,6 +157,7 @@ function animlist_destroy(animlist) {
     }
 
     animlist.entries = undefined;
+    ModuleLuaScript.kdmyEngine_drop_shared_object(animlist);
     animlist = undefined;
 }
 

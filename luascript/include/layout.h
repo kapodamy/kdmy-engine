@@ -57,6 +57,8 @@ typedef _LayoutPlaceholder_t* LayoutPlaceholder;
 #define LAYOUT_TYPE_HEX 0x08
 #define LAYOUT_TYPE_BOOLEAN 0x10
 
+typedef int LAYOUT_TYPE;
+
 
 int layout_trigger_any(Layout layout, const char* action_triger_camera_interval_name);
 int layout_trigger_action(Layout layout, const char* target_name, const char* action_name);
@@ -75,7 +77,7 @@ Sprite layout_get_sprite(Layout layout, const char* name);
 SoundPlayer layout_get_soundplayer(Layout layout, const char* name);
 float* layout_get_viewport_size(Layout layout, float* size);
 int layout_get_attached_value2(Layout layout, const char* name, void* result);
-int layout_get_attached_value_type(Layout layout, const char* name);
+LAYOUT_TYPE layout_get_attached_value_type(Layout layout, const char* name);
 void layout_set_group_visibility(Layout layout, const char* group_name, bool visible);
 void layout_set_group_alpha(Layout layout, const char* group_name, float alpha);
 void layout_set_group_offsetcolor(Layout layout, const char* group_name, float r, float g, float b, float a);

@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using Engine.Externals;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using Engine.Utils;
 
@@ -48,6 +49,7 @@ namespace Engine.Sound {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
             if (this.filehandle == IntPtr.Zero) return;
             AICA.sndbridge_dispose(this.stream_id);
             AICA.filehandle_destroy(this.filehandle);

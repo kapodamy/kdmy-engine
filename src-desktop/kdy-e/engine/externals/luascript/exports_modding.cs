@@ -29,7 +29,7 @@ namespace Engine.Externals.LuaScriptInterop {
         };
 
 
-        internal static void register_modding(ManagedLuaState lua) {
+        internal static void script_modding_register(ManagedLuaState lua) {
             lua.RegisterGlobalFunctions(EXPORTS_FUNCTION);
         }
 

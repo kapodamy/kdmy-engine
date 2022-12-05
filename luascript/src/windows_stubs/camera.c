@@ -5,9 +5,10 @@
 #include "commons.h"
 
 static Modifier_t stub_modifier = {};
+static Layout_t stub_layout = {};
 
-void camera_set_interpolator_type(Camera camera, ANIM_INTERPOLATOR_TYPE type) {
-    print_stub("camera_set_interpolator_type", "camera=%p type=%hhu", camera, type);
+void camera_set_interpolator_type(Camera camera, AnimInterpolator type) {
+    print_stub("camera_set_interpolator_type", "camera=%p type=%i", camera, type);
 }
 void camera_set_transition_duration(Camera camera, bool expresed_in_beats, float value) {
     print_stub("camera_set_transition_duration", "camera=%p expresed_in_beats=(bool)%i value=%f", camera, expresed_in_beats, value);
@@ -96,4 +97,8 @@ void camera_slide_to_offset(Camera camera, float x, float y, float z) {
 }
 void camera_to_origin_offset(Camera camera, bool should_slide) {
     print_stub("camera_to_origin_offset", "camera=%p should_slide=(bool)%i", camera, should_slide);
+}
+Layout camera_get_parent_layout(Camera camera) {
+    print_stub("camera_get_parent_layout", "camera=%p", camera);
+    return &stub_layout;
 }

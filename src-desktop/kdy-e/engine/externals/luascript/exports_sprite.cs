@@ -1,3 +1,4 @@
+using System;
 using Engine.Externals.LuaInterop;
 using Engine.Image;
 using Engine.Platform;
@@ -19,10 +20,10 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_offset_source(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float x = L.luaL_checkfloat(2);
-            float y = L.luaL_checkfloat(3);
-            float width = L.luaL_checkfloat(4);
-            float height = L.luaL_checkfloat(5);
+            float x = (float)L.luaL_checknumber(2);
+            float y = (float)L.luaL_checknumber(3);
+            float width = (float)L.luaL_checknumber(4);
+            float height = (float)L.luaL_checknumber(5);
 
             sprite.SetOffsetSource(x, y, width, height);
 
@@ -32,10 +33,10 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_offset_frame(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float x = L.luaL_checkfloat(2);
-            float y = L.luaL_checkfloat(3);
-            float width = L.luaL_checkfloat(4);
-            float height = L.luaL_checkfloat(5);
+            float x = (float)L.luaL_checknumber(2);
+            float y = (float)L.luaL_checknumber(3);
+            float width = (float)L.luaL_checknumber(4);
+            float height = (float)L.luaL_checknumber(5);
 
             sprite.SetOffsetFrame(x, y, width, height);
 
@@ -45,8 +46,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_offset_pivot(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float x = L.luaL_checkfloat(2);
-            float y = L.luaL_checkfloat(3);
+            float x = (float)L.luaL_checknumber(2);
+            float y = (float)L.luaL_checknumber(3);
 
             sprite.SetOffsetPivot(x, y);
             return 0;
@@ -63,8 +64,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_draw_location(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float x = L.luaL_checkfloat(2);
-            float y = L.luaL_checkfloat(3);
+            float x = (float)L.luaL_checknumber(2);
+            float y = (float)L.luaL_checknumber(3);
 
             sprite.SetDrawLocation(x, y);
 
@@ -74,8 +75,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_draw_size(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float width = L.luaL_checkfloat(2);
-            float height = L.luaL_checkfloat(3);
+            float width = (float)L.luaL_checknumber(2);
+            float height = (float)L.luaL_checknumber(3);
 
             sprite.SetDrawSize(width, height);
 
@@ -93,7 +94,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_alpha(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float alpha = L.luaL_checkfloat(2);
+            float alpha = (float)L.luaL_checknumber(2);
 
             sprite.SetAlpha(alpha);
 
@@ -103,7 +104,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_visible(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            bool visible = L.luaL_checkboolean(2);
+            bool visible = L.luaL_toboolean(2);
 
             sprite.SetVisible(visible);
 
@@ -113,7 +114,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_z_index(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float index = L.luaL_checkfloat(2);
+            float index = (float)L.luaL_checknumber(2);
 
             sprite.SetZIndex(index);
 
@@ -123,7 +124,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_z_offset(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float index = L.luaL_checkfloat(2);
+            float index = (float)L.luaL_checknumber(2);
 
             sprite.SetZOffset(index);
 
@@ -145,9 +146,9 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_vertex_color(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float r = L.luaL_optionalfloat(2);
-            float g = L.luaL_optionalfloat(3);
-            float b = L.luaL_optionalfloat(4);
+            float r = (float)L.luaL_optnumber(2, Double.NaN);
+            float g = (float)L.luaL_optnumber(3, Double.NaN);
+            float b = (float)L.luaL_optnumber(4, Double.NaN);
 
             sprite.SetVertexColor(r, g, b);
 
@@ -157,10 +158,10 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_offsetcolor(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float r = L.luaL_optionalfloat(2);
-            float g = L.luaL_optionalfloat(3);
-            float b = L.luaL_optionalfloat(4);
-            float a = L.luaL_optionalfloat(5);
+            float r = (float)L.luaL_optnumber(2, Double.NaN);
+            float g = (float)L.luaL_optnumber(3, Double.NaN);
+            float b = (float)L.luaL_optnumber(4, Double.NaN);
+            float a = (float)L.luaL_optnumber(5, Double.NaN);
 
             sprite.SetOffsetColor(r, g, b, a);
 
@@ -179,10 +180,10 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_crop(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float dx = L.luaL_optionalfloat(2);
-            float dy = L.luaL_optionalfloat(3);
-            float dwidth = L.luaL_optionalfloat(4);
-            float dheight = L.luaL_optionalfloat(5);
+            float dx = (float)L.luaL_optnumber(2, Double.NaN);
+            float dy = (float)L.luaL_optnumber(3, Double.NaN);
+            float dwidth = (float)L.luaL_optnumber(4, Double.NaN);
+            float dheight = (float)L.luaL_optnumber(5, Double.NaN);
 
             bool ret = sprite.Crop(dx, dy, dwidth, dheight);
 
@@ -202,7 +203,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_crop_enable(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            bool enable = L.luaL_checkboolean(2);
+            bool enable = L.luaL_toboolean(2);
 
             sprite.CropEnable(enable);
 
@@ -212,8 +213,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_resize_draw_size(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float max_width = L.luaL_checkfloat(2);
-            float max_height = L.luaL_checkfloat(3);
+            float max_width = (float)L.luaL_checknumber(2);
+            float max_height = (float)L.luaL_checknumber(3);
 
             float applied_draw_width, applied_draw_height;
             sprite.ResizeDrawSize(max_width, max_height, out applied_draw_width, out applied_draw_height);
@@ -226,10 +227,10 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_center_draw_location(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            float x = L.luaL_checkfloat(2);
-            float y = L.luaL_checkfloat(3);
-            float ref_width = L.luaL_checkfloat(4);
-            float ref_height = L.luaL_checkfloat(5);
+            float x = (float)L.luaL_checknumber(2);
+            float y = (float)L.luaL_checknumber(3);
+            float ref_width = (float)L.luaL_checknumber(4);
+            float ref_height = (float)L.luaL_checknumber(5);
 
             float applied_draw_x, applied_draw_y;
             sprite.CenterDrawLocation(x, y, ref_width, ref_height, out applied_draw_x, out applied_draw_y);
@@ -242,8 +243,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_antialiasing(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            PVRContextFlag antialiasing = VertexProps.ParseFlag2(L.luaL_checkstring(2), PVRContextFlag.INVALID_VALUE);
-            if (antialiasing == PVRContextFlag.INVALID_VALUE) return L.luaL_argerror(2, "invalid pvrflag");
+            PVRContextFlag antialiasing = LuascriptHelpers.ParsePVRFLAG(L, L.luaL_checkstring(2));
 
             sprite.SetAntialiasing(antialiasing);
 
@@ -253,7 +253,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_shader(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            PSShader psshader = L.ReadUserdataOrNull<PSShader>(2, ExportsPSShader.PSSHADER);
+            PSShader psshader = L.ReadNullableUserdata<PSShader>(2, ExportsPSShader.PSSHADER);
 
             sprite.SetShader(psshader);
 
@@ -279,8 +279,8 @@ namespace Engine.Externals.LuaScriptInterop {
 
             bool? flip_x = null, flip_y = null;
 
-            if (!L.lua_isnil(2)) flip_x = L.luaL_checkboolean(2);
-            if (!L.lua_isnil(3)) flip_y = L.luaL_checkboolean(3);
+            if (!L.lua_isnil(2)) flip_x = L.luaL_toboolean(2);
+            if (!L.lua_isnil(3)) flip_y = L.luaL_toboolean(3);
 
             sprite.FlipRenderedTexture(flip_x, flip_y);
 
@@ -290,7 +290,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_flip_rendered_texture_enable_correction(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            bool enabled = L.luaL_checkboolean(2);
+            bool enabled = L.luaL_toboolean(2);
 
             sprite.FlipRenderedTextureEnableCorrection(enabled);
 
@@ -336,25 +336,19 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_sprite_gc(LuaState L) {
-            return L.NullifyUserdata(SPRITE);
+            return L.GC_userdata(SPRITE);
         }
 
         static int script_sprite_tostring(LuaState L) {
-            L.lua_pushstring("[Sprite]");
-            return 1;
+            return L.ToString_userdata(SPRITE);
         }
 
 
-        private static readonly LuaCallback gc = script_sprite_gc;
-        private static readonly LuaCallback tostring = script_sprite_tostring;
+        private static readonly LuaCallback delegate_gc = script_sprite_gc;
+        private static readonly LuaCallback delegate_tostring = script_sprite_tostring;
 
-        internal static void register_sprite(ManagedLuaState lua) {
-            lua.RegisterMetaTable(
-                SPRITE,
-                gc,
-                tostring,
-                SPRITE_FUNCTIONS
-            );
+        internal static void script_sprite_register(ManagedLuaState lua) {
+            lua.RegisterMetaTable(SPRITE, delegate_gc, delegate_tostring, SPRITE_FUNCTIONS);
         }
 
     }

@@ -15,11 +15,6 @@ typedef struct TextSprite_t {
 
 typedef TextSprite_t* TextSprite;
 
-#define TEXTSPRITE_FORCECASE_NONE  0
-#define TEXTSPRITE_FORCECASE_LOWER 1
-#define TEXTSPRITE_FORCECASE_UPPER 2
-typedef signed char TextSpriteForceCase;
-
 void textsprite_set_text_intern(TextSprite textsprite, bool intern, const char* text);
 void textsprite_set_font_size(TextSprite textsprite, float font_size);
 void textsprite_force_case(TextSprite textsprite, TextSpriteForceCase none_or_lowercase_or_uppercase);

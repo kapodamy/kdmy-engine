@@ -147,6 +147,7 @@ function animsprite_destroy(animsprite) {
 
     ANIMSPRITE_POOL.delete(animsprite.id);
 
+    ModuleLuaScript.kdmyEngine_drop_shared_object(animsprite);
     animsprite = undefined;
 }
 

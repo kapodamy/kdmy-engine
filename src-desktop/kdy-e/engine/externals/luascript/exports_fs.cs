@@ -23,7 +23,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
         private static readonly LuaCallback readfile = script_fs_readfile;
 
-        internal static void register_fs(ManagedLuaState lua) {
+        internal static void script_fs_register(ManagedLuaState lua) {
             lua.RegisterGlobalFunction("fs_readfile", readfile);
         }
 

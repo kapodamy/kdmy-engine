@@ -247,6 +247,8 @@ function sprite_destroy(sprite) {
     sprite.texture = null;
 
     SPRITE_POOL.delete(sprite.id);
+    ModuleLuaScript.kdmyEngine_drop_shared_object(sprite.matrix_source);
+    ModuleLuaScript.kdmyEngine_drop_shared_object(sprite);
     sprite = undefined;
 }
 

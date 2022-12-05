@@ -6,9 +6,9 @@ namespace Engine.Externals.LuaScriptInterop {
     public static class ExportsMath2D {
 
         static int script_math2d_lerp(LuaState L) {
-            float start = L.luaL_checkfloat(1);
-            float end = L.luaL_checkfloat(2);
-            float step = L.luaL_checkfloat(3);
+            float start = (float)L.luaL_checknumber(1);
+            float end = (float)L.luaL_checknumber(2);
+            float step = (float)L.luaL_checknumber(3);
 
             float result = Math2D.Lerp(start, end, step);
             L.lua_pushnumber(result);
@@ -17,9 +17,9 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_math2d_inverselerp(LuaState L) {
-            float start = L.luaL_checkfloat(1);
-            float end = L.luaL_checkfloat(2);
-            float value = L.luaL_checkfloat(3);
+            float start = (float)L.luaL_checknumber(1);
+            float end = (float)L.luaL_checknumber(2);
+            float value = (float)L.luaL_checknumber(3);
 
             float result = Math2D.InverseLerp(start, end, value);
             L.lua_pushnumber(result);
@@ -28,8 +28,8 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_math2d_nearestdown(LuaState L) {
-            float value = L.luaL_checkfloat(1);
-            float step = L.luaL_checkfloat(2);
+            float value = (float)L.luaL_checknumber(1);
+            float step = (float)L.luaL_checknumber(2);
 
             float result = Math2D.NearestDown(value, step);
             L.lua_pushnumber(result);
@@ -38,9 +38,9 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_math2d_rotate_point_by_degs(LuaState L) {
-            float radians = L.luaL_checkfloat(1);
-            float x = L.luaL_checkfloat(2);
-            float y = L.luaL_checkfloat(3);
+            float radians = (float)L.luaL_checknumber(1);
+            float x = (float)L.luaL_checknumber(2);
+            float y = (float)L.luaL_checknumber(3);
 
             Math2D.RotatePoint(radians, ref x, ref y);
             L.lua_pushnumber(x);
@@ -50,10 +50,10 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_math2d_points_distance(LuaState L) {
-            float x1 = L.luaL_checkfloat(1);
-            float y1 = L.luaL_checkfloat(2);
-            float x2 = L.luaL_checkfloat(3);
-            float y2 = L.luaL_checkfloat(4);
+            float x1 = (float)L.luaL_checknumber(1);
+            float y1 = (float)L.luaL_checknumber(2);
+            float x2 = (float)L.luaL_checknumber(3);
+            float y2 = (float)L.luaL_checknumber(4);
 
             float result = Math2D.PointsDistance(x1, y1, x2, y2);
             L.lua_pushnumber(result);
@@ -71,7 +71,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction() { name = null, func = null }
         };
 
-        internal static void register_math2d(ManagedLuaState lua) {
+        internal static void script_math2d_register(ManagedLuaState lua) {
             lua.RegisterGlobalFunctions(EXPORTS_FUNCTION);
 
             lua.EvaluateString(

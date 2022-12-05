@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
@@ -165,6 +166,7 @@ namespace Engine.Animation {
             }
 
             //free(this.entries);
+            Luascript.DropShared(this);
             //free(animlist);
         }
 

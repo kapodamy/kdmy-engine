@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title> C-&gt;Emscripten signature converter</title>
+</head>
+
+<body>
+    <strong>Input (C signatures):</strong>
+    <br>
+    <textarea id="in" style="width: 80vw; height: 30vh;"></textarea>
+    <br>
+    <br>
+    <strong>Output (EMS_JS glue code + C LUA bind code):</strong>
+    <br>
+    <textarea id="out" style="width: 80vw; height: 20vh;"></textarea>
+    <br>
+    <br>
+    <strong>Output (C# bind code):</strong>
+    <br>
+    <textarea id="out-cs" style="width: 80vw; height: 20vh;"></textarea>
+
+    <script>
+        function disassemble_c_signature(str) {
+
+            const RX = /(static|const|inline|)/g;
+            const RX2 = /(\t|\r| )\s/g;
+
+            function parse_type(type) {
+                switch (type) {
+                    case "char*":
+                        type = "string";
+                        break;
+                    case "char":
+                    case "short":
+                    case "int":
+                    case "float":
+                    case "double":
+                    case "int8_t":
+                    case "uint8_t":
+                    case "int16_t":
+                    case "uint16_t":
+                    case "int32_t":
+                    case "uint32_t":
+                    case "int64_t":
+                    case "uint64_t":
+                    case "Align":
+                    case "PVRFLAG":
+                        type = "number";
+                        break;
+                    case "bool":
+                        type = "boolean";
+                        break;
+                }
+                return type;
+            }
+
+            str = str.replace(RX2, "");
+            let fn_args = str.substring(str.indexOf("(") + 1, str.indexOf(")")).trim();
+            let fn_ret = str.substring(0, str.indexOf("(")).trim();
+            let fn = fn_ret.substring(fn_ret.lastIndexOf(" ") + 1, fn_ret.length);
+            let ret = fn_ret.substring(0, fn_ret.lastIndexOf(" "));
+
+            let args = fn_args.split(',');
+
+            for (let i = 0; i < args.length; i++) {
+                args[i] = args[i].replace(RX, "").trim();
+                let arg = args[i].split(' ');
+
+                if (arg.length < 1) {
+                    args[i] = { type: "", name: "" };
+                } else if (arg.length == 1) {
+                    args[i] = { type: arg[0], name: "_stub" + i };
+                } else {
+                    let name = arg[arg.length - 1].trim();
+                    let c_type = arg[arg.length - 2].trim();
+                    let optional = c_type.includes("OPT ") || c_type.includes(" OPT");
+
+                    if (optional) c_type = c_type.replace("OPT", '').trim();
+
+                    let type = parse_type(c_type);
+                    args[i] = { c_type, type, name };
+                }
+            }
+
+            return {
+                fn_args: fn_args,
+                fn_ret: fn_ret,
+                fn: fn,
+                ret: ret,
+                ret_type: parse_type(ret),
+                args: args
+            };
+        }
+
+
+        function signature_c_to_emscripten(str) {
+            let { fn_args, fn_ret, fn, ret, ret_type, args } = disassemble_c_signature(str);
+
+            let macro = ret.includes("JS_ASYNC") ? "EM_ASYNC_JS_PRFX" : "EM_JS_PRFX";
+
+            let glue_code;
+            let call_args = "";
+
+            for (let i = 0; i < args.length; i++) {
+                if (i > 0) call_args += ", ";
+
+                let arg_name = args[i].name;
+
+                switch (args[i].type) {
+                    case "number":
+                    case "boolean":
+                        break;
+                    case "string":
+                        arg_name = `kdmyEngine_ptrToString(${arg_name})`;
+                        break;
+                    default:
+                        arg_name = `kdmyEngine_obtain(${arg_name})`;
+                        break;
+                }
+
+                call_args += arg_name;
+            }
+
+            ret = ret.replace('JS_ASYNC', '').trim();
+            if (!ret.endsWith("void")) {
+                glue_code = `    let ret = ${fn}(${call_args});\r\n`;
+
+                switch (ret_type) {
+                    case "number":
+                        glue_code += `    return ret;`;
+                        break;
+                    case "string":
+                        glue_code += `    return kdmyEngine_stringToPtr(ret);`;
+                        break;
+                    case "boolean":
+                        glue_code += `    return ret ? 1 : 0;`;
+                        break;
+                    default:
+                        glue_code += `    return kdmyEngine_obtain(ret);`;
+                        break;
+                }
+
+                glue_code += `\r\n`;
+            } else {
+                glue_code = `    ${fn}(${call_args});\r\n`;
+            }
+
+
+            return `${macro}(${ret}, ${fn}, (${fn_args}), {\r\n${glue_code}}`;
+        }
+
+        function signature_c_to_lua_bind(str, lua_regs) {
+            let { fn_args, fn_ret, fn, ret, ret_type, args } = disassemble_c_signature(str);
+
+            let var_name = args[0].type.toLowerCase();
+            let var_type = args[0].type;
+
+            let code = `static int script_${fn}(lua_State* L) {\r\n`;
+            code += `    ${var_type} ${var_name} = luascript_read_userdata(L, ${var_type.toUpperCase()});\r\n`;
+
+            for (let i = 1; i < args.length; i++) {
+                let lua_call = "stub";
+                let lua_idx = i + 1;
+                switch (args[i].c_type) {
+                    case "char*":
+                        lua_call = `luaL_optstring(L, ${lua_idx}, NULL)`;
+                        break;
+                    case "bool":
+                        lua_call = `(bool)lua_toboolean(L, ${lua_idx})`;
+                        break;
+                    case "int32_t":
+                        if (args[i].optional)
+                            lua_call = `(int32_t)luaL_optinteger(L, ${lua_idx}, 0)`;
+                        else
+                            lua_call = `(int32_t)luaL_checkinteger(L, ${lua_idx})`;
+                        break;
+                    case "int64_t":
+                        if (args[i].optional)
+                            lua_call = `(int64_t)luaL_optlong(L, ${lua_idx}, 0)`;
+                        else
+                            lua_call = `(int64_t)luaL_checklong(L, ${lua_idx})`;
+                        break;
+                    case "float":
+                        if (args[i].optional)
+                            lua_call = `(float)luaL_optnumber(L, ${lua_idx}, NAN)`;
+                        else
+                            lua_call = `(float)luaL_checknumber(L, ${lua_idx})`;
+                        break;
+                    case "double":
+                        if (args[i].optional)
+                            lua_call = `(double)luaL_optnumber(L, ${lua_idx}, NAN)`;
+                        else
+                            lua_call = `(double)luaL_checknumber(L, ${lua_idx})`;
+                        break;
+                    case "ANIM_INTERPOLATOR_TYPE":
+                        lua_call = `luascript_parse_interpolator(luaL_optstring(L, ${lua_idx}, NULL))`;
+                        break;
+                    case "Align":
+                        lua_call = `luascript_parse_align(luaL_optstring(L, ${lua_idx}, NULL))`;
+                        break;
+                    case "FontWordBreak":
+                        lua_call = `luascript_parse_wordbreak(luaL_optstring(L, ${lua_idx}, NULL))`;
+                        break;
+                    case "TextSpriteForceCase":
+                        lua_call = `luascript_parse_forcecase(luaL_optstring(L, ${lua_idx}, NULL))`;
+                        break;
+                    case "PVRFLAG":
+                        lua_call = `luascript_parse_pvrflag(luaL_optstring(L, ${lua_idx}, NULL))`;
+                        break;
+                    default:
+                        if (args[i].c_type.endsWith("*")) {
+                            lua_call = `lua_STUBSTUBSTUB(L, ${lua_idx})`;
+                            break;
+                        }
+
+                        lua_call = `luascript_read_nullable_userdata(L, ${lua_idx}, ${args[i].c_type.toUpperCase()})`;
+                        break;
+                }
+
+                let arg_code = `${args[i].c_type} ${args[i].name} = ${lua_call};`;
+
+
+
+                code += `    ${arg_code}\r\n`;
+            }
+
+
+            let call_args = "";
+            for (let i = 0; i < args.length; i++) {
+                call_args += `${args[i].name}`;
+                if ((i + 1) < args.length) call_args += ", ";
+            }
+
+            code += "\r\n";
+
+            if (!ret.endsWith("void")) {
+                code += `    ${ret} ret = ${fn}(${call_args});\r\n\r\n`;
+
+                let lua_ret, lua_idx = 0;
+                switch (ret) {
+                    case "char*":
+                        lua_ret = `lua_pushstring(L, ret)`;
+                        break;
+                    case "bool":
+                        lua_ret = `lua_pushboolean(L, ret)`;
+                        break;
+                    case "int32_t":
+                    case "int64_t":
+                        lua_ret = `lua_pushinteger(L, (lua_Integer)ret)`;
+                        break;
+                    case "float":
+                    case "double":
+                        lua_ret = `lua_pushnumber(L, ret)`;
+                        break;
+                    default:
+                        if (ret.endsWith("*")) {
+                            lua_ret = `lua_STUBSTUBSTUB(L, ret)`;
+                            break;
+                        }
+
+                        lua_ret = `script_${ret_type.toLowerCase()}_new(L, ${ret}})`;
+                        break;
+                }
+
+                code += `    ${lua_ret};\r\n    return 1;\r\n`
+            } else {
+                code += `    ${fn}(${call_args});\r\n\r\n    return 0;\r\n`;
+            }
+
+
+            code += "}\r\n\r\n";
+
+            lua_regs.push(fn);
+            return code;
+        }
+
+        function generate_imports_fns(lua_regs) {
+            let reg_name = "stub";
+            let prefix = "stub";
+            if (lua_regs.length > 0) {
+                let idx = lua_regs[0].indexOf('_');
+                if (idx < 0) idx = lua_regs[0].length;
+                prefix = reg_name = lua_regs[0].substring(0, idx);
+                reg_name = reg_name.toUpperCase();
+            }
+
+            let imports_fns = `\r\n\r\n\r\nstatic const luaL_Reg ${reg_name}_FUNCTIONS[] = {\r\n`;
+            for (let i = 0; i < lua_regs.length; i++) {
+                imports_fns += `    { "${lua_regs[0]}", script_${lua_regs[0]} }`;
+                if ((i + 1) < lua_regs.length) imports_fns += ',';
+                imports_fns += "\r\n";
+            }
+            imports_fns += "}\r\n\r\n";
+
+            imports_fns += `int script_${prefix}_new(lua_State* L, STUB ${prefix}) {\r\n`;
+            imports_fns += `    return luascript_userdata_new(luascript, ${reg_name}, ${prefix});\r\n`;
+            imports_fns += `}\r\n`;
+
+            imports_fns += `static int script_${prefix}_gc(lua_State* L) {\r\n`;
+            imports_fns += `    return luascript_userdata_gc(L, ${reg_name});\r\n`;
+            imports_fns += `}\r\n\r\n`;
+
+            imports_fns += `static int script_${prefix}_tostring(lua_State* L) {\r\n`;
+            imports_fns += `    return luascript_userdata_tostring(L, ${reg_name});\r\n`;
+            imports_fns += `}\r\n\r\n`;
+
+            imports_fns += `inline void script_${prefix}_register(lua_State* L) {\r\n`;
+            imports_fns += `    luascript_register(L, ${reg_name}, `;
+            imports_fns += `script_${prefix}_gc, script_${prefix}_tostring,`;
+            imports_fns += ` ${reg_name}_FUNCTIONS);\r\n`;
+            imports_fns += "}\r\n\r\n";
+
+            return imports_fns;
+        }
+
+        function generate_imports_cs_fns(lua_regs) {
+            let reg_name = "stub";
+            let prefix = "stub";
+            if (lua_regs.length > 0) {
+                let idx = lua_regs[0].indexOf('_');
+                if (idx < 0) idx = lua_regs[0].length;
+                prefix = reg_name = lua_regs[0].substring(0, idx);
+                reg_name = reg_name.toUpperCase();
+            }
+
+            let imports_fns = `\r\n\r\n\r\n        static readonly LuaTableFunction[] ${reg_name}_FUNCTIONS = {\r\n`;
+            for (let i = 0; i < lua_regs.length; i++) {
+                imports_fns += "           new LuaTableFunction() ";
+                imports_fns += `{ name = "${lua_regs[0]}", func = script_${lua_regs[0]} }`;
+                if ((i + 1) < lua_regs.length) imports_fns += ',';
+                imports_fns += "\r\n";
+            }
+            imports_fns += "        }\r\n\r\n";
+
+
+            imports_fns += `        internal static int script_${prefix}_new(LuaState L, STUB ${prefix}) {\r\n`;
+            imports_fns += `            return L.UserdataNEW(L, ${reg_name}, ${prefix});\r\n`;
+            imports_fns += `        }\r\n\r\n`;
+
+            imports_fns += `        internal static int script_${prefix}_gc(LuaState L) {\r\n`;
+            imports_fns += `            return L.UserdataGC(L, ${reg_name});\r\n`;
+            imports_fns += `        }\r\n\r\n`;
+
+            imports_fns += `        static int script_${prefix}_tostring(LuaState L) {\r\n`;
+            imports_fns += `            return L.UserdataTOSTRING(L, ${reg_name});\r\n`;
+            imports_fns += `        }\r\n\r\n`;
+
+            imports_fns += `        private static readonly LuaCallback gc = script_${prefix}_gc;\r\n`;
+            imports_fns += `        private static readonly LuaCallback tostring = script_${prefix}_tostring;\r\n`;
+            imports_fns += `\r\n`;
+
+            imports_fns += `        internal static void script_${prefix}_register(ManagedLuaState L) {\r\n`;
+            imports_fns += `            L.RegisterMetaTable(L, ${reg_name}, gc, tostring,`;
+            imports_fns += ` ${reg_name}_FUNCTIONS);\r\n`;
+            imports_fns += "        }\r\n\r\n";
+
+            return imports_fns;
+        }
+
+        let out_ = document.getElementById("out");
+        let out_cs = document.getElementById("out-cs");
+
+        function process(evt) {
+            let text = this.value.replace(/\r/g, "");
+            text = text.split("\n");
+
+            let out_str = "#ifdef JAVASCRIPT\r\n";
+            let out_lua_str = "\r\n\r\n";
+            let lua_regs = new Array();
+
+            for (let i = 0; i < text.length; i++) {
+                let c_fn = text[i].trim();
+                if (c_fn.length < 1 || c_fn.startsWith("//") || c_fn.charAt(0) == "#") continue;
+
+                let ems_fn;
+                try {
+                    ems_fn = signature_c_to_emscripten(c_fn);
+                } catch (e) {
+                    ems_fn = `// unable to parse : ${c_fn}`
+                    console.error(c_fn, e);
+                }
+
+                let lua_fn;
+                try {
+                    lua_fn = signature_c_to_lua_bind(c_fn, lua_regs);
+                } catch (e) {
+                    lua_fn = `// unable to parse : ${c_fn}`
+                    console.error(c_fn, e);
+                }
+
+
+                out_str += ems_fn + "\r\n";
+                out_lua_str += lua_fn + "\r\n";
+            }
+
+            out_str += "#endif\r\n";
+            out_lua_str += generate_imports_fns(lua_regs);
+
+            if (out_str.length > 0) out_.value = out_str + out_lua_str;
+
+            out_cs.value = generate_imports_cs_fns(lua_regs);
+        }
+
+        document.getElementById("in").addEventListener("keyup", process, false);
+
+
+    </script>
+</body>
+
+</html>

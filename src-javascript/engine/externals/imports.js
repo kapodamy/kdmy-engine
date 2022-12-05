@@ -2,7 +2,7 @@
 /**
  * @typedef {object} ModuleLuaScript
  * @property {function(number, number, number, number):ModuleLuaScript} _luascript_init
- * @property {function(ModuleLuaScript):void} _luascript_drop_shared
+ * @property {function(ModuleLuaScript, number):void} _luascript_drop_shared
  * @property {function(ModuleLuaScript):void} _luascript_destroy_JS
  * @property {function(number, number):void} _luascript_set_engine_globals_JS
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_weekinit
@@ -33,11 +33,10 @@
  * @property {function(string):number} kdmyEngine_stringToPtr
  * @property {function(number):void} kdmyEngine_deallocate
  * @property {function(object):number} kdmyEngine_obtain
- * @property {function(bool):void} kdmyEngine_clearMap
  * @property {function():Promise<any>|undefined} kdmyEngine_yieldAsync
  * @property {function():boolean} kdmyEngine_hasAsyncPending
+ * @property {function(object):void} kdmyEngine_drop_shared_object
  * 
- * @property {bool} hasInstanceActive
  * @property {bool} isRuntimeInitialized
  * @property {bool} hasGlobalsSet
  * 
@@ -63,7 +62,6 @@ const ModuleLuaScript = {
     },
 
     isRuntimeInitialized: false,
-    hasInstanceActive: false,
     hasGlobalsSet: false
 };
 

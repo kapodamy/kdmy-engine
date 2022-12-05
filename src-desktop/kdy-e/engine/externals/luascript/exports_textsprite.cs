@@ -1,3 +1,4 @@
+using System;
 using Engine.Externals.LuaInterop;
 using Engine.Font;
 using Engine.Platform;
@@ -23,7 +24,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_font_size(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float font_size = L.luaL_checkfloat(2);
+            float font_size = (float)L.luaL_checknumber(2);
 
             textsprite.SetFontSize(font_size);
 
@@ -33,15 +34,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_force_case(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            string str = L.luaL_optstring(2, null);
-
-            int uppercase_or_lowecase_or_none;
-            if (str == "lower")
-                uppercase_or_lowecase_or_none = VertexProps.TEXTSPRITE_FORCE_LOWERCASE;
-            else if (str == "upper")
-                uppercase_or_lowecase_or_none = VertexProps.TEXTSPRITE_FORCE_UPPERCASE;
-            else
-                uppercase_or_lowecase_or_none = VertexProps.TEXTSPRITE_FORCE_NONE;
+            int uppercase_or_lowecase_or_none = LuascriptHelpers.ParseForcecase(L, L.luaL_optstring(2, null));
 
             textsprite.ForceCase(uppercase_or_lowecase_or_none);
 
@@ -51,10 +44,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_paragraph_align(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            string str = L.luaL_optstring(2, null);
-
-            Align align = VertexProps.ParseAlign2(str);
-            if (align == Align.INVALID) return L.luaL_argerror(2, "invalid align");
+            Align align = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(2, null));
 
             textsprite.SetParagraphAlign(align);
 
@@ -64,7 +54,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_paragraph_space(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float space = L.luaL_checkfloat(2);
+            float space = (float)L.luaL_checknumber(2);
 
             textsprite.SetParagraphSpace(space);
 
@@ -95,9 +85,9 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_color(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float r = L.luaL_optionalfloat(2);
-            float g = L.luaL_optionalfloat(3);
-            float b = L.luaL_optionalfloat(4);
+            float r = (float)L.luaL_optnumber(2, Double.NaN);
+            float g = (float)L.luaL_optnumber(3, Double.NaN);
+            float b = (float)L.luaL_optnumber(4, Double.NaN);
 
             textsprite.SetColor(r, g, b);
 
@@ -107,7 +97,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_alpha(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float alpha = L.luaL_checkfloat(2);
+            float alpha = (float)L.luaL_checknumber(2);
 
             textsprite.SetAlpha(alpha);
 
@@ -117,7 +107,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_visible(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            bool visible = L.luaL_checkboolean(2);
+            bool visible = L.luaL_toboolean(2);
 
             textsprite.SetVisible(visible);
 
@@ -127,8 +117,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_draw_location(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float x = L.luaL_checkfloat(2);
-            float y = L.luaL_checkfloat(3);
+            float x = (float)L.luaL_checknumber(2);
+            float y = (float)L.luaL_checknumber(3);
 
             textsprite.SetDrawLocation(x, y);
 
@@ -138,7 +128,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_z_index(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float z_index = L.luaL_checkfloat(2);
+            float z_index = (float)L.luaL_checknumber(2);
 
             textsprite.SetZIndex(z_index);
 
@@ -148,7 +138,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_z_offset(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float offset = L.luaL_checkfloat(2);
+            float offset = (float)L.luaL_checknumber(2);
 
             textsprite.SetZOffset(offset);
 
@@ -158,8 +148,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_max_draw_size(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float max_width = L.luaL_checkfloat(2);
-            float max_height = L.luaL_checkfloat(3);
+            float max_width = (float)L.luaL_checknumber(2);
+            float max_height = (float)L.luaL_checknumber(3);
 
             textsprite.SetMaxDrawSize(max_width, max_height);
 
@@ -169,8 +159,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_matrix_flip(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            bool flip_x = L.luaL_checkboolean(2);
-            bool flip_y = L.luaL_checkboolean(3);
+            bool flip_x = L.luaL_toboolean(2);
+            bool flip_y = L.luaL_toboolean(3);
 
             textsprite.MatrixFlip(flip_x, flip_y);
 
@@ -180,14 +170,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_align(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            string str1 = L.luaL_optstring(2, null);
-            string str2 = L.luaL_optstring(3, null);
-
-            Align align_vertical = VertexProps.ParseAlign2(str1);
-            Align align_horizontal = VertexProps.ParseAlign2(str2);
-
-            if (align_vertical == Align.INVALID) return L.luaL_argerror(2, "invalid align");
-            if (align_horizontal == Align.INVALID) return L.luaL_argerror(3, "invalid align");
+            Align align_vertical = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(2, null));
+            Align align_horizontal = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(3, null));
 
             textsprite.SetAlign(align_vertical, align_horizontal);
 
@@ -233,7 +217,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_border_enable(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            bool enable = L.luaL_checkboolean(2);
+            bool enable = L.luaL_toboolean(2);
 
             textsprite.BorderEnable(enable);
 
@@ -243,7 +227,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_border_set_size(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float border_size = L.luaL_checkfloat(2);
+            float border_size = (float)L.luaL_checknumber(2);
 
             textsprite.BorderSetSize(border_size);
 
@@ -253,10 +237,10 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_border_set_color(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            float r = L.luaL_optionalfloat(2);
-            float g = L.luaL_optionalfloat(3);
-            float b = L.luaL_optionalfloat(4);
-            float a = L.luaL_optionalfloat(5);
+            float r = (float)L.luaL_optnumber(2, Double.NaN);
+            float g = (float)L.luaL_optnumber(3, Double.NaN);
+            float b = (float)L.luaL_optnumber(4, Double.NaN);
+            float a = (float)L.luaL_optnumber(5, Double.NaN);
 
             textsprite.BorderSetColor(r, g, b, a);
 
@@ -266,8 +250,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_antialiasing(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            PVRContextFlag antialiasing = VertexProps.ParseFlag2(L.luaL_checkstring(2), PVRContextFlag.INVALID_VALUE);
-            if (antialiasing == PVRContextFlag.INVALID_VALUE) return L.luaL_argerror(2, "invalid pvrflag");
+            PVRContextFlag antialiasing = LuascriptHelpers.ParsePVRFLAG(L, L.luaL_checkstring(2));
 
             textsprite.SetAntialiasing(antialiasing);
 
@@ -277,18 +260,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_wordbreak(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            int wordbreak;
-            string wordbreak_str = L.luaL_optstring(2, null);
-
-            if (wordbreak_str == "loose") {
-                wordbreak = VertexProps.FONT_WORDBREAK_LOOSE;
-            } else if (wordbreak_str == "none") {
-                wordbreak = VertexProps.FONT_WORDBREAK_NONE;
-            } else if (wordbreak_str == "break") {
-                wordbreak = VertexProps.FONT_WORDBREAK_BREAK;
-            } else {
-                return L.luaL_argerror(2, $"invalid wordbreak: {wordbreak_str}");
-            }
+            int wordbreak = LuascriptHelpers.ParseWordbreak(L, L.luaL_optstring(2, null));
 
             textsprite.SetWordbreak(wordbreak);
 
@@ -298,7 +270,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_shader(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            PSShader psshader = L.ReadUserdataOrNull<PSShader>(2, ExportsPSShader.PSSHADER);
+            PSShader psshader = L.ReadNullableUserdata<PSShader>(2, ExportsPSShader.PSSHADER);
 
             textsprite.SetShader(psshader);
 
@@ -359,25 +331,19 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_textsprite_gc(LuaState L) {
-            return L.NullifyUserdata(TEXTSPRITE);
+            return L.GC_userdata(TEXTSPRITE);
         }
 
         static int script_textsprite_tostring(LuaState L) {
-            L.lua_pushstring("[TextSprite]");
-            return 1;
+            return L.ToString_userdata(TEXTSPRITE);
         }
 
 
-        private static readonly LuaCallback gc = script_textsprite_gc;
-        private static readonly LuaCallback tostring = script_textsprite_tostring;
+        private static readonly LuaCallback delegate_gc = script_textsprite_gc;
+        private static readonly LuaCallback delegate_tostring = script_textsprite_tostring;
 
-        internal static void register_textsprite(ManagedLuaState lua) {
-            lua.RegisterMetaTable(
-                TEXTSPRITE,
-                gc,
-                tostring,
-                TEXTSPRITE_FUNCTIONS
-            );
+        internal static void script_textsprite_register(ManagedLuaState lua) {
+            lua.RegisterMetaTable(TEXTSPRITE, delegate_gc, delegate_tostring, TEXTSPRITE_FUNCTIONS);
         }
 
     }

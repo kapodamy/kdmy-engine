@@ -33,7 +33,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_soundplayer_loop_enable(LuaState L) {
             SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
 
-            bool enable = L.luaL_checkboolean(2);
+            bool enable = L.luaL_toboolean(2);
 
             soundplayer.LoopEnable(enable);
 
@@ -43,8 +43,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_soundplayer_fade(LuaState L) {
             SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
 
-            bool in_or_out = L.luaL_checkboolean(2);
-            float duration = L.luaL_checkfloat(3);
+            bool in_or_out = L.luaL_toboolean(2);
+            float duration = (float)L.luaL_checknumber(3);
 
             soundplayer.Fade(in_or_out, duration);
 
@@ -54,7 +54,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_soundplayer_set_volume(LuaState L) {
             SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
 
-            float volume = L.luaL_checkfloat(2);
+            float volume = (float)L.luaL_checknumber(2);
 
             soundplayer.SetVolume(volume);
 
@@ -64,7 +64,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_soundplayer_set_mute(LuaState L) {
             SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
 
-            bool muted = L.luaL_checkboolean(2);
+            bool muted = L.luaL_toboolean(2);
 
             soundplayer.SetMute(muted);
 
@@ -143,25 +143,19 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_soundplayer_gc(LuaState L) {
-            return L.NullifyUserdata(SOUNDPLAYER);
+            return L.GC_userdata(SOUNDPLAYER);
         }
 
         static int script_soundplayer_tostring(LuaState L) {
-            L.lua_pushstring("[SoundPlayer]");
-            return 1;
+            return L.ToString_userdata(SOUNDPLAYER);
         }
 
 
-        private static readonly LuaCallback gc = script_soundplayer_gc;
-        private static readonly LuaCallback tostring = script_soundplayer_tostring;
+        private static readonly LuaCallback delegate_gc = script_soundplayer_gc;
+        private static readonly LuaCallback delegate_tostring = script_soundplayer_tostring;
 
-        internal static void register_soundplayer(ManagedLuaState lua) {
-            lua.RegisterMetaTable(
-                SOUNDPLAYER,
-                gc,
-                tostring,
-                SOUNDPLAYER_FUNCTIONS
-            );
+        internal static void script_soundplayer_register(ManagedLuaState lua) {
+            lua.RegisterMetaTable(SOUNDPLAYER, delegate_gc, delegate_tostring, SOUNDPLAYER_FUNCTIONS);
         }
 
     }

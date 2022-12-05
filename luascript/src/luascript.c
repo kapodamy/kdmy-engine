@@ -1,42 +1,28 @@
-#include "luascript_internal.h"
 #include "engine_string.h"
 #include "engine_version.h"
 #include "gamepad.h"
+#include "luascript_internal.h"
 
-typedef struct LuascriptObject_t {
-    void* parent_ptr;
-    void* object_ptr;
-    int32_t object_references;
-} *LuascriptObject;
+typedef struct {
+    const char* variable;
+    const char* value;
+} luaL_Reg_String;
 
-typedef lua_CFunction lua_C;
-typedef const luaL_Reg lua_R;
-typedef struct { const char* variable; const char* value; } luaL_Reg_String;
-typedef struct { const char* variable; uint32_t value; } luaL_Reg_Integer;
+typedef struct {
+    const char* variable;
+    uint32_t value;
+} luaL_Reg_Integer;
 
 
-static int _eq_impl(lua_State* L) {
-    bool equals;
+static Linkedlist luascript_instances;
 
-    int type_a = lua_type(L, 1);
-    int type_b = lua_type(L, 2);
-
-    if (type_a != LUA_TUSERDATA || type_b != LUA_TUSERDATA) {
-        equals = false;
-    } else {
-        void** a = (void**)lua_touserdata(L, 1);
-        void** b = (void**)lua_touserdata(L, 2);
-
-        equals = (a == NULL && b == NULL) || (a != b) || ((*a) != (*b));
-    }
-
-    return equals;
+static void __attribute__((constructor)) ctor() {
+    luascript_instances = linkedlist_init();
 }
 
 
-static void luascript_register_objects(lua_State* L, void* register_key, bool is_week) {
-    // important step
-    LUASCRIPT_SET(L, register_key);
+
+static void luascript_register_objects(lua_State* L, bool is_week) {
 
     const luaL_Reg_String GLOBALS_STRINGS[] = {
         {"ENGINE_NAME", ENGINE_NAME},
@@ -44,120 +30,120 @@ static void luascript_register_objects(lua_State* L, void* register_key, bool is
         {NULL, NULL}
     };
     const luaL_Reg_Integer GLOBALS_INTEGERS[] = {
-        { "GAMEPAD_A", GAMEPAD_A },
-        { "GAMEPAD_B", GAMEPAD_B },
-        { "GAMEPAD_X", GAMEPAD_X },
-        { "GAMEPAD_Y", GAMEPAD_Y },
+        {"GAMEPAD_A", GAMEPAD_A},
+        {"GAMEPAD_B", GAMEPAD_B},
+        {"GAMEPAD_X", GAMEPAD_X},
+        {"GAMEPAD_Y", GAMEPAD_Y},
 
-        { "GAMEPAD_DPAD_UP", GAMEPAD_DPAD_UP },
-        { "GAMEPAD_DPAD_DOWN", GAMEPAD_DPAD_DOWN },
-        { "GAMEPAD_DPAD_RIGHT", GAMEPAD_DPAD_RIGHT },
-        { "GAMEPAD_DPAD_LEFT", GAMEPAD_DPAD_LEFT },
+        {"GAMEPAD_DPAD_UP", GAMEPAD_DPAD_UP},
+        {"GAMEPAD_DPAD_DOWN", GAMEPAD_DPAD_DOWN},
+        {"GAMEPAD_DPAD_RIGHT", GAMEPAD_DPAD_RIGHT},
+        {"GAMEPAD_DPAD_LEFT", GAMEPAD_DPAD_LEFT},
 
-        { "GAMEPAD_START", GAMEPAD_START },
-        { "GAMEPAD_SELECT", GAMEPAD_SELECT },
+        {"GAMEPAD_START", GAMEPAD_START},
+        {"GAMEPAD_SELECT", GAMEPAD_SELECT},
 
-        { "GAMEPAD_TRIGGER_LEFT", GAMEPAD_TRIGGER_LEFT },
-        { "GAMEPAD_TRIGGER_RIGHT", GAMEPAD_TRIGGER_RIGHT },
-        { "GAMEPAD_BUMPER_LEFT", GAMEPAD_BUMPER_LEFT },
-        { "GAMEPAD_BUMPER_RIGHT", GAMEPAD_BUMPER_RIGHT },
+        {"GAMEPAD_TRIGGER_LEFT", GAMEPAD_TRIGGER_LEFT},
+        {"GAMEPAD_TRIGGER_RIGHT", GAMEPAD_TRIGGER_RIGHT},
+        {"GAMEPAD_BUMPER_LEFT", GAMEPAD_BUMPER_LEFT},
+        {"GAMEPAD_BUMPER_RIGHT", GAMEPAD_BUMPER_RIGHT},
 
-        { "GAMEPAD_APAD_UP", GAMEPAD_APAD_UP },
-        { "GAMEPAD_APAD_DOWN", GAMEPAD_APAD_DOWN },
-        { "GAMEPAD_APAD_RIGHT", GAMEPAD_APAD_RIGHT },
-        { "GAMEPAD_APAD_LEFT", GAMEPAD_APAD_LEFT },
+        {"GAMEPAD_APAD_UP", GAMEPAD_APAD_UP},
+        {"GAMEPAD_APAD_DOWN", GAMEPAD_APAD_DOWN},
+        {"GAMEPAD_APAD_RIGHT", GAMEPAD_APAD_RIGHT},
+        {"GAMEPAD_APAD_LEFT", GAMEPAD_APAD_LEFT},
 
-        { "GAMEPAD_DPAD2_UP", GAMEPAD_DPAD2_UP },
-        { "GAMEPAD_DPAD2_DOWN", GAMEPAD_DPAD2_DOWN },
-        { "GAMEPAD_DPAD2_RIGHT", GAMEPAD_DPAD2_RIGHT },
-        { "GAMEPAD_DPAD2_LEFT", GAMEPAD_DPAD2_LEFT },
+        {"GAMEPAD_DPAD2_UP", GAMEPAD_DPAD2_UP},
+        {"GAMEPAD_DPAD2_DOWN", GAMEPAD_DPAD2_DOWN},
+        {"GAMEPAD_DPAD2_RIGHT", GAMEPAD_DPAD2_RIGHT},
+        {"GAMEPAD_DPAD2_LEFT", GAMEPAD_DPAD2_LEFT},
 
-        { "GAMEPAD_DPAD3_UP", GAMEPAD_DPAD3_UP },
-        { "GAMEPAD_DPAD3_DOWN", GAMEPAD_DPAD3_DOWN },
-        { "GAMEPAD_DPAD3_RIGHT", GAMEPAD_DPAD3_RIGHT },
-        { "GAMEPAD_DPAD3_LEFT", GAMEPAD_DPAD3_LEFT },
+        {"GAMEPAD_DPAD3_UP", GAMEPAD_DPAD3_UP},
+        {"GAMEPAD_DPAD3_DOWN", GAMEPAD_DPAD3_DOWN},
+        {"GAMEPAD_DPAD3_RIGHT", GAMEPAD_DPAD3_RIGHT},
+        {"GAMEPAD_DPAD3_LEFT", GAMEPAD_DPAD3_LEFT},
 
-        { "GAMEPAD_DPAD4_UP", GAMEPAD_DPAD4_UP },
-        { "GAMEPAD_DPAD4_DOWN", GAMEPAD_DPAD4_DOWN },
-        { "GAMEPAD_DPAD4_RIGHT", GAMEPAD_DPAD4_RIGHT },
-        { "GAMEPAD_DPAD4_LEFT", GAMEPAD_DPAD4_LEFT },
+        {"GAMEPAD_DPAD4_UP", GAMEPAD_DPAD4_UP},
+        {"GAMEPAD_DPAD4_DOWN", GAMEPAD_DPAD4_DOWN},
+        {"GAMEPAD_DPAD4_RIGHT", GAMEPAD_DPAD4_RIGHT},
+        {"GAMEPAD_DPAD4_LEFT", GAMEPAD_DPAD4_LEFT},
 
-        { "GAMEPAD_BACK", GAMEPAD_BACK },
-        { NULL, 0 }
+        {"GAMEPAD_BACK", GAMEPAD_BACK},
+        {NULL, 0}
     };
 
-    for (size_t i = 0; ; i++) {
+    for (size_t i = 0;; i++) {
         if (GLOBALS_STRINGS[i].variable == NULL) break;
         lua_pushstring(L, GLOBALS_STRINGS[i].value);
         lua_setglobal(L, GLOBALS_STRINGS[i].variable);
     }
 
-    for (size_t i = 0; ; i++) {
+    for (size_t i = 0;; i++) {
         if (GLOBALS_INTEGERS[i].variable == NULL) break;
         lua_pushinteger(L, (lua_Integer)GLOBALS_INTEGERS[i].value);
         lua_setglobal(L, GLOBALS_INTEGERS[i].variable);
     }
 
     // register all objects (metatables) and functions
-    register_camera(L);
-    register_character(L);
-    register_layout(L);
-    register_messagebox(L);
-    register_modifier(L);
-    register_soundplayer(L);
-    register_sprite(L);
-    register_textsprite(L);
-    register_psshader(L);
+    script_camera_register(L);
+    script_character_register(L);
+    script_layout_register(L);
+    script_messagebox_register(L);
+    script_modifier_register(L);
+    script_soundplayer_register(L);
+    script_sprite_register(L);
+    script_textsprite_register(L);
+    script_psshader_register(L);
 
     if (is_week) {
-        register_songplayer(L);
-        register_dialogue(L);
-        register_week(L);
+        script_songplayer_register(L);
+        script_dialogue_register(L);
+        script_week_register(L);
     } else {
-        register_modding(L);
+        script_modding_register(L);
     }
 
-    register_math2d(L);
-    register_timer(L);
-    register_fs(L);
+    script_math2d_register(L);
+    script_timer_register(L);
+    script_fs_register(L);
 }
 
 static void luascript_register_sandbox(lua_State* L) {
-    int result = luaL_dostring(L,
-        "debug.debug = nil\n"
-        "debug.getfenv = getfenv\n"
-        "debug.getregistry = nil\n"
-        "debug = nil\n"
-        "dofile = nil\n"
-        "io = nil\n"
-        "load = nil\n"
-        "loadfile = nil\n"
-        "dofile = nil\n"
-        "os.execute = nil\n"
-        "os.getenv = nil\n"
-        "os.remove = nil\n"
-        "os.tmpname = nil\n"
-        "os.setlocale = nil\n"
-        "os.rename = nil\n"
-        //"os.exit = nil\n"
-        //"loadstring = nil\n"
-        "package.loaded.io = nil\n"
-        "package.loaded.package = nil\n"
-        "package.cpath = nil\n"
-        "package.loaded = nil\n"
-        "package.loaders= nil\n"
-        "package.loadlib= nil\n"
-        "package.path= nil\n"
-        "package.preload= nil\n"
-        "package.seeall= nil\n"
-        "package.searchpath= nil\n"
-        "package.searchers= nil\n"
-        "package = nil\n"
-        "require = nil\n"
-        "newproxy = nil\n"
+    int result = luaL_dostring(L, "debug.debug = nil\n"
+                                  "debug.getfenv = getfenv\n"
+                                  "debug.getregistry = nil\n"
+                                  "debug = nil\n"
+                                  "dofile = nil\n"
+                                  "io = nil\n"
+                                  "load = nil\n"
+                                  "loadfile = nil\n"
+                                  "dofile = nil\n"
+                                  "os.execute = nil\n"
+                                  "os.getenv = nil\n"
+                                  "os.remove = nil\n"
+                                  "os.tmpname = nil\n"
+                                  "os.setlocale = nil\n"
+                                  "os.rename = nil\n"
+                                  //"os.exit = nil\n"
+                                  //"loadstring = nil\n"
+                                  "package.loaded.io = nil\n"
+                                  "package.loaded.package = nil\n"
+                                  "package.cpath = nil\n"
+                                  "package.loaded = nil\n"
+                                  "package.loaders= nil\n"
+                                  "package.loadlib= nil\n"
+                                  "package.path= nil\n"
+                                  "package.preload= nil\n"
+                                  "package.seeall= nil\n"
+                                  "package.searchpath= nil\n"
+                                  "package.searchers= nil\n"
+                                  "package = nil\n"
+                                  "require = nil\n"
+                                  "newproxy = nil\n"
     );
-    assert(result == 0/*luascript_register_sandbox() failed*/);
+    assert(result == 0 /*luascript_register_sandbox() failed*/);
 }
+
 
 Luascript luascript_init(const char* lua_sourcecode, const char* filename, void* context, bool is_week) {
     lua_State* L = luaL_newstate();
@@ -169,13 +155,14 @@ Luascript luascript_init(const char* lua_sourcecode, const char* filename, void*
 
     luaL_openlibs(L);
 
-    Luascript luascript = malloc(sizeof(struct _Luascript_t));
+    Luascript luascript = malloc(sizeof(struct Luascript_t));
     luascript->L = L;
-    luascript->shared = linkedlist_init();
-    luascript->allocated = linkedlist_init();
+    luascript->shared_size = SHARED_ARRAY_CHUNK_SIZE;
+    luascript->shared_array = malloc(sizeof(struct LuascriptObject_t) * SHARED_ARRAY_CHUNK_SIZE);
     luascript->context = context;
 
-    luascript_register_objects(L, luascript, is_week);
+    luascript_set_instance(luascript);
+    luascript_register_objects(L, is_week);
     luascript_register_sandbox(L);
 
     // fake the filename
@@ -192,13 +179,11 @@ Luascript luascript_init(const char* lua_sourcecode, const char* filename, void*
         const char* error_message = lua_tostring(L, -1);
         fprintf(stderr, "luascript_init() luaL_loadfile() failed: %s\n", error_message);
 
-        linkedlist_destroy(&luascript->shared);
-        linkedlist_destroy(&luascript->allocated);
-        free(luascript);
-
-        lua_close(L);
+        luascript_destroy(&luascript);
         return NULL;
     }
+
+    linkedlist_add_item(luascript_instances, luascript);
 
     return luascript;
 }
@@ -206,17 +191,14 @@ Luascript luascript_init(const char* lua_sourcecode, const char* filename, void*
 void luascript_destroy(Luascript* luascript) {
     if (*luascript == NULL) return;
 
-    lua_close((*luascript)->L);
-    linkedlist_destroy2(&(*luascript)->shared, free);
-    linkedlist_destroy2(&(*luascript)->allocated, free);
-    free(*luascript);
-    *luascript = NULL;
-}
+    Luascript obj = *luascript;
 
-void luascript_drop_shared(Luascript luascript) {
-    printf("luascript_drop_shared() was called, %i object dropped\n", linkedlist_count(luascript->shared));
-    linkedlist_destroy2(&luascript->shared, free);
-    luascript->shared = linkedlist_init();
+    linkedlist_remove_item(luascript_instances, obj);
+    lua_close(obj->L);
+    free(obj->shared_array);
+
+    free(obj);
+    *luascript = NULL;
 }
 
 int luascript_eval(Luascript luascript, const char* eval_string) {
@@ -224,157 +206,12 @@ int luascript_eval(Luascript luascript, const char* eval_string) {
     return luaL_dostring(luascript->L, eval_string) == LUA_OK;
 }
 
-void _luascript_declare_item(lua_State* lua, void* parent_ptr, void* object_ptr, bool is_shared) {
-    if (!object_ptr) return;
-
-    if (parent_ptr) {
-        while (1) {
-            const void* ptr = _luascript_get_parent(lua, parent_ptr, is_shared);
-            if (!ptr) break;
-            parent_ptr = (void*)ptr;
-        }
-    }
-
-    LUASCRIPT_GET(lua);
-    const Linkedlist linkedlist = is_shared ? luascript->shared : luascript->allocated;
-
-    ITERATE_LINKEDLIST(linkedlist, LuascriptObject, temp, stored_item,
-        if (stored_item->object_ptr == object_ptr) return;
-    );
-
-    if (linkedlist_has_item(linkedlist, object_ptr)) return;
-
-    LuascriptObject item = malloc(sizeof(struct LuascriptObject_t));
-    assert(/* _luascript_declare_item() malloc failed */item);
-
-    item->parent_ptr = parent_ptr;
-    item->object_ptr = object_ptr;
-    item->object_references = 1;
-    linkedlist_add_item(linkedlist, item);
+void luascript_drop_shared(void* obj_ptr) {
+    ITERATE_LINKEDLIST(luascript_instances, Luascript, tmp, luascript, {
+        luascript_remove_userdata(luascript, obj_ptr);
+    });
 }
 
-void _luascript_suppress_item(lua_State* lua, void* object_ptr, bool is_shared) {
-    assert(/* _luascript_declare_item() null */object_ptr);
-
-    LUASCRIPT_GET(lua);
-    const Linkedlist linkedlist = is_shared ? luascript->shared : luascript->allocated;
-
-    ITERATE_LINKEDLIST(linkedlist, LuascriptObject, temp, stored_item,
-        if (stored_item->object_ptr == object_ptr) {
-            stored_item->object_references--;
-            if (stored_item->object_references < 1) {
-                linkedlist_remove_item(linkedlist, object_ptr);
-                free(stored_item);
-            }
-            return;
-        }
-    );
-
-}
-
-int _luascript_has_item(lua_State* lua, void* object_ptr, bool is_shared) {
-    if (!object_ptr) return 0;
-
-    LUASCRIPT_GET(lua);
-    const Linkedlist linkedlist = is_shared ? luascript->shared : luascript->allocated;
-
-    ITERATE_LINKEDLIST(linkedlist, LuascriptObject, temp, stored_item,
-        if (stored_item->object_ptr == object_ptr) {
-            return 1;
-        }
-    );
-
-    return 0;
-}
-
-void* _luascript_get_parent(lua_State* lua, void* object_ptr, bool is_shared) {
-    assert(/* _luascript_declare_item() null */object_ptr);
-
-    LUASCRIPT_GET(lua);
-    const Linkedlist linkedlist = is_shared ? luascript->shared : luascript->allocated;
-
-    ITERATE_LINKEDLIST(linkedlist, LuascriptObject, temp, stored_item,
-        if (stored_item->object_ptr == object_ptr) {
-            return stored_item->parent_ptr;
-        }
-    );
-
-    return NULL;
-}
-
-void _luascript_register(lua_State* lua, const char* name, lua_C gc, lua_C tostring, lua_R fns[]) {
-    const lua_R OBJECT_METAMETHODS[] = {
-        {"__gc", gc},
-        {"__tostring", tostring},
-        {"__eq", _eq_impl},
-        {NULL, NULL}
-    };
-
-    lua_newtable(lua);
-    luaL_setfuncs(lua, fns, 0);
-    lua_pushvalue(lua, -1);
-    lua_setglobal(lua, name);
-
-    luaL_newmetatable(lua, name);
-
-    luaL_setfuncs(lua, OBJECT_METAMETHODS, 0);
-
-    lua_pushliteral(lua, "__index");
-    lua_pushvalue(lua, -3);
-    lua_rawset(lua, -3);
-
-    lua_pushliteral(lua, "__metatable");
-    lua_pushvalue(lua, -3);
-    lua_rawset(lua, -3);
-
-    lua_pop(lua, 1);
-}
-
-int _parse_align(lua_State* L, const char* align) {
-    if (!align)
-        return ALIGN_NONE;
-    if (string_equals(align, ALIGN_START_STRING))
-        return ALIGN_START;
-    else if (string_equals(align, ALIGN_CENTER_STRING))
-        return ALIGN_CENTER;
-    else if (string_equals(align, ALIGN_END_STRING))
-        return ALIGN_END;
-    else if (string_equals(align, ALIGN_NONE_STRING))
-        return ALIGN_NONE;
-    else if (string_equals(align, ALIGN_BOTH_STRING))
-        return ALIGN_BOTH;
-
-    lua_pushfstring(L, "invalid align: %s", align);
-    return lua_error(L);
-}
-
-const char* _get_align(Align align) {
-    switch (align) {
-    case ALIGN_START:
-        return ALIGN_START_STRING;
-    case ALIGN_END:
-        return ALIGN_END_STRING;
-    case ALIGN_CENTER:
-        return ALIGN_CENTER_STRING;
-    case ALIGN_BOTH:
-        return ALIGN_BOTH_STRING;
-    case ALIGN_NONE:
-    default:
-        return ALIGN_NONE_STRING;
-    }
-}
-
-int _parse_pvrflag(lua_State* L, const char* pvrflag) {
-    if (string_equals(pvrflag, "default"))
-        return PVR_FLAG_DEFAULT;
-    else if (string_equals(pvrflag, "enable"))
-        return PVR_FLAG_ENABLE;
-    else if (string_equals(pvrflag, "disable"))
-        return PVR_FLAG_DISABLE;
-
-    lua_pushfstring(L, "invalid pvrflag: %s", pvrflag);
-    return lua_error(L);
-}
 
 #if JAVASCRIPT
 void luascript_destroy_JS(Luascript luascript) {
@@ -568,4 +405,3 @@ healthbar_disable_warnings(healthbar, disable);
 playerstats_enable_penality_on_empty_strum(playerstats, enable);
 
 */
-
