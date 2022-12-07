@@ -1,29 +1,7 @@
 #include "luascript_internal.h"
 
 
-
 #ifdef JAVASCRIPT
-
-typedef struct {
-    int32_t group_id;
-
-    int32_t align_vertical;
-    int32_t align_horizontal;
-
-    float x;
-    float y;
-    float z;
-
-    float height;
-    float width;
-
-    float parallax_x;
-    float parallax_y;
-    float parallax_z;
-
-    int32_t static_camera;
-} LayoutPlaceholderJS_t;
-
 
 EM_JS_PRFX(int, layout_trigger_any, (Layout layout, const char* action_triger_camera_interval_name), {
     return layout_trigger_any(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(action_triger_camera_interval_name));
@@ -75,21 +53,14 @@ EM_JS_PRFX(SoundPlayer, layout_get_soundplayer, (Layout layout, const char* name
     const soundplayer = layout_get_soundplayer(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
     return kdmyEngine_obtain(soundplayer);
 });
-EM_JS_PRFX(float*, layout_get_viewport_size, (Layout layout, float* size), {
-    const HEAP_ENDIANESS = true;
+EM_JS_PRFX(void, layout_get_viewport_size, (Layout layout, float* viewport_width, float* viewport_height), {
     const values = [ 0, 0 ];
-    const dataView = new DataView(buffer);
-
     layout_get_viewport_size(kdmyEngine_obtain(layout), values);
-    dataView.setFloat32(size + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(size + 4, values[1], HEAP_ENDIANESS);
-
-    return size;
+    
+    kdmyEngine_set_float32(viewport_width, values[0]);
+    kdmyEngine_set_float32(viewport_height, values[1]);
 });
 EM_JS_PRFX(int, layout_get_attached_value2, (Layout layout, const char* name, void* result), {
-    const dataView = new DataView(buffer);
-    const HEAP_ENDIANESS = true;
-
     const value = [null];
     let type = layout_get_attached_value2(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name), value);
 
@@ -98,25 +69,23 @@ EM_JS_PRFX(int, layout_get_attached_value2, (Layout layout, const char* name, vo
             // nothing to do
             break;
         case LAYOUT_TYPE_STRING:
-            let str_ptr = kdmyEngine_stringToPtr(value[0]);
-            dataView.setUint32(result, str_ptr, HEAP_ENDIANESS);
+            kdmyEngine_set_uint32(result, kdmyEngine_stringToPtr(value[0]));
             break;
         case LAYOUT_TYPE_FLOAT:
-            dataView.setFloat64(result, value[0], HEAP_ENDIANESS);
+            kdmyEngine_set_float32(result, value[0]);
             break;
         case LAYOUT_TYPE_INTEGER:
-            dataView.setBigInt64(result, value[0], HEAP_ENDIANESS);
+            kdmyEngine_set_int32(result, value[0]);
             break;
         case LAYOUT_TYPE_HEX:
-            dataView.setUint32(result, value[0], HEAP_ENDIANESS);
+            kdmyEngine_set_uint32(result, value[0]);
             break;
         case LAYOUT_TYPE_BOOLEAN:
-            // bool value should have a size of 4bytes
-            dataView.setUint32(result, value[0], HEAP_ENDIANESS);
+            kdmyEngine_set_int32(result, value[0] ? 1 : 0);
             break;
         default:
             console.warn("Unknown layout type-value ", type, value[0]);
-            throw new Error("Unimplemented type: " + type);
+            break;
     }
 
     return type;
@@ -139,48 +108,14 @@ EM_JS_PRFX(void, layout_suspend, (Layout layout), {
 EM_JS_PRFX(void, layout_resume, (Layout layout), {
     layout_resume(kdmyEngine_obtain(layout));
 });
-EM_JS_PRFX(bool, layout_get_placeholder_JS, (Layout layout, const char* group_name, LayoutPlaceholderJS_t* output), {
-    const dataView = new DataView(buffer);
-    const HEAP_ENDIANESS = true;
-
+EM_JS_PRFX(LayoutPlaceholder, layout_get_placeholder, (Layout layout, const char* group_name), {
     let placeholder = layout_get_placeholder(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
-    if (!placeholder) return 0;
-
-    dataView.setInt32(output, placeholder.group_id, HEAP_ENDIANESS);
-    output += 4;
-
-    dataView.setInt32(output, placeholder.align_vertical, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setInt32(output, placeholder.align_horizontal, HEAP_ENDIANESS);
-    output += 4;
-
-    dataView.setFloat32(output, placeholder.x, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.y, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.z, HEAP_ENDIANESS);
-    output += 4;
-
-    dataView.setFloat32(output, placeholder.height, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.width, HEAP_ENDIANESS);
-    output += 4;
-
-    dataView.setFloat32(output, placeholder.parallax_x, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.parallax_y, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.parallax_z, HEAP_ENDIANESS);
-    output += 4;
-
-    dataView.setInt32(output, placeholder.static_camera ? 1 : 0, HEAP_ENDIANESS);
-
-    return 1;
+    return kdmyEngine_obtain(placeholder);
 });
 EM_JS_PRFX(void, layout_disable_antialiasing, (Layout layout, bool antialiasing), {
     layout_disable_antialiasing(kdmyEngine_obtain(layout), antialiasing);
 });
-EM_JS_PRFX(void, layout_set_group_antialiasing, (Layout layout, const char* group_name, PVRFLAG antialiasing), {
+EM_JS_PRFX(void, layout_set_group_antialiasing, (Layout layout, const char* group_name, PVRFlag antialiasing), {
     layout_set_group_antialiasing(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), antialiasing);
 });
 EM_JS_PRFX(Modifier, layout_get_group_modifier, (Layout layout, const char* group_name), {
@@ -199,24 +134,6 @@ EM_JS_PRFX(bool, layout_set_group_shader, (Layout layout, const char* group_name
 #endif
 
 
-
-
-typedef union {
-    const int value_boolean;
-    const int64_t value_integer;
-    const uint32_t value_unsigned;
-    const double value_float;
-#ifdef JAVASCRIPT
-    char* value_string;
-#else
-    const char* value_string;
-#endif
-} LayoutAttachedValue;
-
-#define LuaL_add_table_field(L, field_name, setter, value) \
-    lua_pushstring(L, field_name);                         \
-    setter(L, (value));                                    \
-    lua_settable(L, -3);
 
 static int script_layout_trigger_any(lua_State* L) {
     Layout layout = luascript_read_userdata(L, LAYOUT);
@@ -364,11 +281,11 @@ static int script_layout_get_sprite(lua_State* L) {
 static int script_layout_get_viewport_size(lua_State* L) {
     Layout layout = luascript_read_userdata(L, LAYOUT);
 
-    float size[2];
-    layout_get_viewport_size(layout, size);
+    float viewport_width, viewport_height;
+    layout_get_viewport_size(layout, &viewport_width, &viewport_height);
 
-    lua_pushnumber(L, size[0]);
-    lua_pushnumber(L, size[1]);
+    lua_pushnumber(L, viewport_width);
+    lua_pushnumber(L, viewport_height);
 
     return 2;
 }
@@ -387,15 +304,7 @@ static int script_layout_get_attached_value(lua_State* L) {
 
     switch (value_type) {
         case LAYOUT_TYPE_STRING:
-            if (value.value_string) {
-                lua_pushstring(L, value.value_string);
-#ifdef JAVASCRIPT
-                // the javascript side returned a copy of the string, dispose it
-                free(value.value_string);
-#endif
-            } else {
-                lua_pushnil(L);
-            }
+            lua_pushstring(L, value.value_string);
             break;
         case LAYOUT_TYPE_FLOAT:
             lua_pushnumber(L, value.value_float);
@@ -414,6 +323,13 @@ static int script_layout_get_attached_value(lua_State* L) {
             lua_pushvalue(L, 3); // default value (taken from the arguments)
             break;
     }
+
+#ifdef JAVASCRIPT
+    if (value_type == LAYOUT_TYPE_STRING) {
+        // the javascript side returned a copy of the string, dispose it
+        free(value.value_string);
+    }
+#endif
 
     return 1;
 }
@@ -465,62 +381,11 @@ static int script_layout_resume(lua_State* L) {
 
 static int script_layout_get_placeholder(lua_State* L) {
     Layout layout = luascript_read_userdata(L, LAYOUT);
-
     const char* name = luaL_optstring(L, 2, NULL);
 
-#ifdef JAVASCRIPT
-    LayoutPlaceholderJS_t placeholder;
-    if (layout_get_placeholder_JS(layout, name, &placeholder)) {
-        lua_createtable(L, 0, 12);
+    LayoutPlaceholder layoutplaceholder = layout_get_placeholder(layout, name);
 
-        LuaL_add_table_field(L, "group_id", lua_pushinteger, placeholder.group_id);
-
-        LuaL_add_table_field(L, "align_vertical", lua_pushstring, luascript_stringify_align(placeholder.align_vertical));
-        LuaL_add_table_field(L, "align_horizontal", lua_pushstring, luascript_stringify_align(placeholder.align_horizontal));
-
-        LuaL_add_table_field(L, "x", lua_pushnumber, placeholder.x);
-        LuaL_add_table_field(L, "y", lua_pushnumber, placeholder.y);
-        LuaL_add_table_field(L, "z", lua_pushnumber, placeholder.z);
-
-        LuaL_add_table_field(L, "height", lua_pushnumber, placeholder.height);
-        LuaL_add_table_field(L, "width", lua_pushnumber, placeholder.width);
-
-        LuaL_add_table_field(L, "parallax_x", lua_pushnumber, placeholder.parallax_x);
-        LuaL_add_table_field(L, "parallax_y", lua_pushnumber, placeholder.parallax_y);
-        LuaL_add_table_field(L, "parallax_z", lua_pushnumber, placeholder.parallax_z);
-
-        LuaL_add_table_field(L, "static_camera", lua_pushboolean, placeholder.static_camera);
-    } else {
-        lua_pushnil(L);
-    }
-#else
-    LayoutPlaceholder placeholder = layout_get_placeholder(layout, name);
-    if (placeholder) {
-        lua_createtable(L, 0, 12);
-
-        LuaL_add_table_field(L, "group_id", lua_pushinteger, placeholder->group_id);
-
-        LuaL_add_table_field(L, "align_vertical", lua_pushstring, luascript_stringify_align(placeholder->align_vertical));
-        LuaL_add_table_field(L, "align_horizontal", lua_pushstring, luascript_stringify_align(placeholder->align_horizontal));
-
-        LuaL_add_table_field(L, "x", lua_pushnumber, placeholder->x);
-        LuaL_add_table_field(L, "y", lua_pushnumber, placeholder->y);
-        LuaL_add_table_field(L, "z", lua_pushnumber, placeholder->z);
-
-        LuaL_add_table_field(L, "height", lua_pushnumber, placeholder->height);
-        LuaL_add_table_field(L, "width", lua_pushnumber, placeholder->width);
-
-        LuaL_add_table_field(L, "parallax_x", lua_pushnumber, placeholder->parallax.x);
-        LuaL_add_table_field(L, "parallax_y", lua_pushnumber, placeholder->parallax.y);
-        LuaL_add_table_field(L, "parallax_z", lua_pushnumber, placeholder->parallax.z);
-
-        LuaL_add_table_field(L, "static_camera", lua_pushboolean, placeholder->static_camera);
-    } else {
-        lua_pushnil(L);
-    }
-#endif
-
-    return 1;
+    return script_layoutplaceholder_new(L, layoutplaceholder);
 }
 
 static int script_layout_disable_antialiasing(lua_State* L) {
@@ -537,7 +402,7 @@ static int script_layout_set_group_antialiasing(lua_State* L) {
     Layout layout = luascript_read_userdata(L, LAYOUT);
 
     const char* group_name = luaL_optstring(L, 2, NULL);
-    PVRFLAG antialiasing = luascript_parse_pvrflag(L, luaL_optstring(L, 3, NULL));
+    PVRFlag antialiasing = luascript_parse_pvrflag(L, luaL_optstring(L, 3, NULL));
 
     layout_set_group_antialiasing(layout, group_name, antialiasing);
 

@@ -222,6 +222,8 @@ async function character_init(charactermanifest) {
 }
 
 function character_destroy(character) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(character);
+
     statesprite_destroy(character.statesprite);
 
     let states_size = arraylist_size(character.states);
@@ -907,14 +909,6 @@ function character_draw(character, pvrctx) {
 
     pvr_context_save(pvrctx);
     drawable_helper_apply_in_context(character.drawable, pvrctx);
-
-    if (character.inverted_enabled) {
-        let color = [1, 0, 0];
-        pvr_context_draw_solid_color(pvrctx, color, character.draw_x, character.draw_y, 300, 1);
-        pvr_context_draw_solid_color(pvrctx, color, character.draw_x, character.draw_y, 1, 300);
-        pvr_context_draw_solid_color(pvrctx, color, character.draw_x - 300, character.draw_y, 300, 1);
-        pvr_context_draw_solid_color(pvrctx, color, character.draw_x, character.draw_y - 300, 1, 300);
-    }
 
     statesprite_draw(character.statesprite, pvrctx);
     pvr_context_restore(pvrctx);

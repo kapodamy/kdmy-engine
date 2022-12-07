@@ -3,8 +3,13 @@
 namespace Engine.Externals.LuaInterop {
 
     public sealed class LuaTableFunction {
-        public string name;
-        public LuaCallback func;
+        public readonly string name;
+        public readonly LuaCallback func;
+
+        public LuaTableFunction(string name, LuaCallback func) {
+            this.name = name;
+            this.func = func;
+        }
     }
 
     public struct LuaIntegerConstant {

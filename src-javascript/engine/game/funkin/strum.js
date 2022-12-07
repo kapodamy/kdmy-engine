@@ -242,6 +242,8 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
 }
 
 function strum_destroy(strum) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(strum);
+
     statesprite_destroy(strum.sprite_marker_nothing);
     statesprite_destroy(strum.sprite_marker_confirm);
     statesprite_destroy(strum.sprite_marker_press);

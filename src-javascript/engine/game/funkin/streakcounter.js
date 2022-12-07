@@ -61,6 +61,8 @@ function streakcounter_init(placeholder, combo_height, number_gap, delay) {
 }
 
 function streakcounter_destroy(streakcounter) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(streakcounter);
+
     drawable_destroy(streakcounter.drawable);
 
     for (let i = 0; i < STREAKCOUNTER_STREAK_BUFFER_SIZE; i++)

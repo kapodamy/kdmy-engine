@@ -14,6 +14,7 @@ namespace Engine.Utils {
     }
 
     public enum Blend : int {
+        INVALID_VALUE = -1,
         DEFAULT = 0,
         ZERO = 1,
         ONE = 2,
@@ -690,7 +691,7 @@ L_invalid:
                     return Blend.DEFAULT;
             }
             Console.Error.WriteLine("vertexprops_parse_blending() unknown blending: " + value);
-            return Blend.DEFAULT;
+            return Blend.INVALID_VALUE;
         }
 
 

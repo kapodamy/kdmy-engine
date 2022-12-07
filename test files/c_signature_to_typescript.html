@@ -1,3 +1,4 @@
+<!DOCTYPE HTML>
 <html>
     <head>
         <meta charset="utf-8" />
@@ -11,6 +12,7 @@
         <br>
         <br>
         <strong>Output (Typescript signatures):</strong>
+        <label><input type="checkbox" id="drop_this">Drop first argument</label>
         <br>
         <textarea id="out" style="width: 80vw; height: 40vh;"></textarea>
 
@@ -54,8 +56,10 @@
 
             ret = ret.replace(RX, "");
             args = args.split(',');
+            
+            let idx_start = drop_this_.checked ? 1 : 0;
 
-            for (let i=0 ; i<args.length ; i++) {
+            for (let i=idx_start ; i<args.length ; i++) {
                 args[i] = args[i].replace(RX, "").trim();
                 let arg = args[i].split(' ');
 
@@ -73,18 +77,20 @@
 
             ts_ret = parse_type(ret);
 
-            let ts_args = new Array(args.length);
-            for (let i=0 ; i<args.length ; i++) ts_args[i] = `${args[i].name}: ${args[i].type}`;
+            let ts_args = new Array(args.length - idx_start);
+            for (let i=idx_start ; i<args.length ; i++) ts_args[i-idx_start] = `${args[i].name}: ${args[i].type}`;
             ts_args = ts_args.join(", ");
 
 
             return `function ${fn}(${ts_args}): ${ts_ret};`;
         }
 
+        let in_ = document.getElementById("in");
         let out_ = document.getElementById("out");
+        let drop_this_ = document.getElementById("drop_this");
 
         function process(evt) {
-            let text = this.value.replace(/\r/g, "");
+            let text = in_.value.replace(/\r/g, "");
             text = text.split("\n");
 
             let out_str = "";
@@ -107,7 +113,8 @@
             if (out_str.length > 0) out_.value = out_str;
         }
 
-        document.getElementById("in").addEventListener("keyup", process, false);
+        in_.addEventListener("keyup", process, false);
+        drop_this_.addEventListener("change", process, false);
 
 
         </script>

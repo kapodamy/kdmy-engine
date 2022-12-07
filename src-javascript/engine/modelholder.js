@@ -170,6 +170,7 @@ function modelholder_destroy(modelholder) {
         texture_destroy(modelholder.texture);
 
     MODELHOLDER_POOL.delete(modelholder.id);
+    ModuleLuaScript.kdmyEngine_drop_shared_object(modelholder);
     modelholder.instance_src = undefined;
     modelholder = undefined;
 }

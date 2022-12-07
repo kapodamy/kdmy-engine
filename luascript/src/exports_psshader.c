@@ -7,7 +7,7 @@ static double buffer[16];
 
 #ifdef JAVASCRIPT
 EM_JS_PRFX(PSShader, psshader_init, (const char* vertex_sourcecode, const char* fragment_sourcecode), {
-    let psshader = PostprocessingShader.BuildFromSource(
+    let psshader = PSShader.BuildFromSource(
         pvr_context,
         kdmyEngine_ptrToString(vertex_sourcecode),
         kdmyEngine_ptrToString(fragment_sourcecode)
@@ -15,8 +15,8 @@ EM_JS_PRFX(PSShader, psshader_init, (const char* vertex_sourcecode, const char* 
     return kdmyEngine_obtain(psshader);
 });
 
-EM_JS_PRFX(void, psshader_destroy, (PSShader psshader), {
-    kdmyEngine_obtain(psshader).Destroy();
+EM_JS_PRFX(void, psshader_destroy, (PSShader* psshader), {
+    kdmyEngine_obtain(kdmyEngine_get_uint32(psshader)).Destroy();
 });
 
 EM_JS_PRFX(int32_t, psshader_set_uniform_any, (PSShader psshader, const char* name, const double* values), {
@@ -53,7 +53,7 @@ static int script_psshader_destroy(lua_State* L) {
     PSShader psshader = luascript_read_userdata(L, PSSHADER);
 
     if (luascript_userdata_is_allocated(L, PSSHADER))
-        psshader_destroy(psshader);
+        psshader_destroy(&psshader);
     else
         printf("script_psshader_destroy() object was not allocated by lua\n");
 
@@ -112,7 +112,7 @@ static int script_psshader_set_uniform1i(lua_State* L) {
 ////////////////////////////////////////////////////////////////////////////////////
 
 static const luaL_Reg PSSHADER_FUNCTIONS[] = {
-    {"new", script_psshader_init},
+    {"init", script_psshader_init},
     {"destroy", script_psshader_destroy},
     {"set_uniform_any", script_psshader_set_uniform_any},
     {"set_uniform1f", script_psshader_set_uniform1f},

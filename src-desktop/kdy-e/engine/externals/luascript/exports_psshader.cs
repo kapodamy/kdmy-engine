@@ -78,12 +78,12 @@ public static class ExportsPSShader {
     ////////////////////////////////////////////////////////////////////////////////////
 
     private static readonly LuaTableFunction[] PSSHADER_FUNCTIONS = {
-        new LuaTableFunction() { name = "new", func = script_psshader_init },
-        new LuaTableFunction() { name = "destroy", func = script_psshader_destroy },
-        new LuaTableFunction() { name = "set_uniform_any", func = script_psshader_set_uniform_any },
-        new LuaTableFunction() { name = "set_uniform1f", func = script_psshader_set_uniform1f },
-        new LuaTableFunction() { name = "set_uniform1i", func = script_psshader_set_uniform1i },
-        new LuaTableFunction() { name = null, func = null }
+        new LuaTableFunction("init", script_psshader_init),
+        new LuaTableFunction("destroy", script_psshader_destroy),
+        new LuaTableFunction("set_uniform_any", script_psshader_set_uniform_any),
+        new LuaTableFunction("set_uniform1f", script_psshader_set_uniform1f),
+        new LuaTableFunction("set_uniform1i", script_psshader_set_uniform1i),
+        new LuaTableFunction(null, null)
     };
 
 

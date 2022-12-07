@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Font;
 using Engine.Image;
 using Engine.Platform;
@@ -144,6 +145,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             this.textsprite.Destroy();
             this.drawable_rank.Destroy();
             this.drawable_accuracy.Destroy();

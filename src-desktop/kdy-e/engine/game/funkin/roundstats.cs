@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Font;
 using Engine.Game.Common;
 using Engine.Platform;
@@ -75,6 +76,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             this.drawable.Destroy();
             if (this.drawable_animation != null) this.drawable_animation.Destroy();
             this.textsprite.Destroy();

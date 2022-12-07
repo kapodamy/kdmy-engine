@@ -1,5 +1,6 @@
 using System;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
@@ -217,6 +218,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             this.drawable.Destroy();
             if (this.drawable_animation != null) this.drawable_animation.Destroy();
 

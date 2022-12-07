@@ -1,3 +1,4 @@
+using Engine.Externals.LuaScriptInterop;
 using Engine.Utils;
 
 namespace Engine.Game {
@@ -13,6 +14,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             this.players.Destroy(false);
             this.opponents.Destroy(false);
             //free(this);

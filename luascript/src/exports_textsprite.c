@@ -63,16 +63,12 @@ EM_JS_PRFX(void, textsprite_matrix_reset, (TextSprite textsprite), {
 EM_JS_PRFX(float, textsprite_get_font_size, (TextSprite textsprite), {
     return textsprite_get_font_size(kdmyEngine_obtain(textsprite));
 });
-EM_JS_PRFX(float*, textsprite_get_draw_size, (TextSprite textsprite, float* size), {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
+EM_JS_PRFX(void, textsprite_get_draw_size, (TextSprite textsprite, float* draw_width, float* draw_height), {
     const values = [ 0, 0 ];
-
     textsprite_get_draw_size(kdmyEngine_obtain(textsprite), values);
-    dataView.setFloat32(size + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(size + 4, values[1], HEAP_ENDIANESS);
 
-    return size;
+    kdmyEngine_set_float32(draw_width, values[0]);
+    kdmyEngine_set_float32(draw_height, values[1]);
 });
 EM_JS_PRFX(void, textsprite_border_enable, (TextSprite textsprite, bool enable), {
     textsprite_border_enable(kdmyEngine_obtain(textsprite), enable);
@@ -83,7 +79,7 @@ EM_JS_PRFX(void, textsprite_border_set_size, (TextSprite textsprite, float borde
 EM_JS_PRFX(void, textsprite_border_set_color, (TextSprite textsprite, float r, float g, float b, float a), {
     textsprite_border_set_color(kdmyEngine_obtain(textsprite), r, g, b, a);
 });
-EM_JS_PRFX(void, textsprite_set_antialiasing, (TextSprite textsprite, PVRFLAG antialiasing), {
+EM_JS_PRFX(void, textsprite_set_antialiasing, (TextSprite textsprite, PVRFlag antialiasing), {
     textsprite_set_antialiasing(kdmyEngine_obtain(textsprite), antialiasing);
 });
 EM_JS_PRFX(void, textsprite_set_wordbreak, (TextSprite textsprite, FontWordBreak wordbreak), {
@@ -299,11 +295,11 @@ static int script_textsprite_get_font_size(lua_State* L) {
 static int script_textsprite_get_draw_size(lua_State* L) {
     TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
 
-    float size[2];
-    textsprite_get_draw_size(textsprite, size);
+    float draw_width, draw_height;
+    textsprite_get_draw_size(textsprite, &draw_width, &draw_height);
 
-    lua_pushnumber(L, (double)size[0]);
-    lua_pushnumber(L, (double)size[1]);
+    lua_pushnumber(L, draw_width);
+    lua_pushnumber(L, draw_height);
     return 2;
 }
 
@@ -343,7 +339,7 @@ static int script_textsprite_border_set_color(lua_State* L) {
 static int script_textsprite_set_antialiasing(lua_State* L) {
     TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
 
-    PVRFLAG antialiasing = luascript_parse_align(L, luaL_checkstring(L, 2));
+    PVRFlag antialiasing = luascript_parse_align(L, luaL_checkstring(L, 2));
 
     textsprite_set_antialiasing(textsprite, antialiasing);
 

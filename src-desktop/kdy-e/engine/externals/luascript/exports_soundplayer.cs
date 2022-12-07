@@ -33,7 +33,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_soundplayer_loop_enable(LuaState L) {
             SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
 
-            bool enable = L.luaL_toboolean(2);
+            bool enable = L.lua_toboolean(2);
 
             soundplayer.LoopEnable(enable);
 
@@ -43,7 +43,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_soundplayer_fade(LuaState L) {
             SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
 
-            bool in_or_out = L.luaL_toboolean(2);
+            bool in_or_out = L.lua_toboolean(2);
             float duration = (float)L.luaL_checknumber(3);
 
             soundplayer.Fade(in_or_out, duration);
@@ -64,7 +64,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_soundplayer_set_mute(LuaState L) {
             SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
 
-            bool muted = L.luaL_toboolean(2);
+            bool muted = L.lua_toboolean(2);
 
             soundplayer.SetMute(muted);
 
@@ -122,19 +122,19 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         static readonly LuaTableFunction[] SOUNDPLAYER_FUNCTIONS = {
-            new LuaTableFunction() { name = "play", func = script_soundplayer_play},
-            new LuaTableFunction() { name = "pause", func = script_soundplayer_pause},
-            new LuaTableFunction() { name = "stop", func = script_soundplayer_stop},
-            new LuaTableFunction() { name = "loop_enable", func = script_soundplayer_loop_enable},
-            new LuaTableFunction() { name = "fade", func = script_soundplayer_fade},
-            new LuaTableFunction() { name = "set_volume", func = script_soundplayer_set_volume},
-            new LuaTableFunction() { name = "set_mute", func = script_soundplayer_set_mute},
-            new LuaTableFunction() { name = "is_muted", func = script_soundplayer_is_muted},
-            new LuaTableFunction() { name = "is_playing", func = script_soundplayer_is_playing},
-            new LuaTableFunction() { name = "get_duration", func = script_soundplayer_get_duration},
-            new LuaTableFunction() { name = "get_position", func = script_soundplayer_get_position},
-            new LuaTableFunction() { name = "seek", func = script_soundplayer_seek},
-            new LuaTableFunction() { name = null, func = null }
+            new LuaTableFunction("play", script_soundplayer_play),
+            new LuaTableFunction("pause", script_soundplayer_pause),
+            new LuaTableFunction("stop", script_soundplayer_stop),
+            new LuaTableFunction("loop_enable", script_soundplayer_loop_enable),
+            new LuaTableFunction("fade", script_soundplayer_fade),
+            new LuaTableFunction("set_volume", script_soundplayer_set_volume),
+            new LuaTableFunction("set_mute", script_soundplayer_set_mute),
+            new LuaTableFunction("is_muted", script_soundplayer_is_muted),
+            new LuaTableFunction("is_playing", script_soundplayer_is_playing),
+            new LuaTableFunction("get_duration", script_soundplayer_get_duration),
+            new LuaTableFunction("get_position", script_soundplayer_get_position),
+            new LuaTableFunction("seek", script_soundplayer_seek),
+            new LuaTableFunction(null, null)
         };
 
 

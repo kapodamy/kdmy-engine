@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
@@ -86,6 +87,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             this.drawable.Destroy();
 
             for (int i = 0 ; i < StreakCounter.STREAK_BUFFER_SIZE ; i++)

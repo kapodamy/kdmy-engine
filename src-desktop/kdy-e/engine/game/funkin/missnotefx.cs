@@ -1,3 +1,4 @@
+using Engine.Externals.LuaScriptInterop;
 using Engine.Sound;
 using Engine.Utils;
 
@@ -18,6 +19,8 @@ public class MissNoteFX {
     }
 
     public void Destroy() {
+        Luascript.DropShared(this);
+
         if (this.missnote1 != null) this.missnote1.Destroy();
         if (this.missnote2 != null) this.missnote2.Destroy();
         if (this.missnote3 != null) this.missnote3.Destroy();

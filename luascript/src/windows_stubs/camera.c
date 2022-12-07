@@ -22,12 +22,11 @@ void camera_set_absolute_position(Camera camera, float x, float y) {
 void camera_set_offset(Camera camera, float x, float y, float z) {
     print_stub("camera_set_offset", "camera=%p x=%f y=%f z=%f", camera, x, y, z);
 }
-float* camera_get_offset(Camera camera, float* xyz) {
-    print_stub("camera_get_offset", "camera=%p xyz=%p", camera, xyz);
-    xyz[0] = 10;
-    xyz[1] = 20;
-    xyz[2] = 30;
-    return xyz;
+void camera_get_offset(Camera camera, float* x, float* y, float* z) {
+    print_stub("camera_get_offset", "camera=%p x=%p y=%p z=%p", camera, x, y, z);
+    *x = 10;
+    *y = 20;
+    *z = 30;
 }
 Modifier camera_get_modifier(Camera camera) {
     print_stub("camera_get_modifier", "camera=%p", camera);

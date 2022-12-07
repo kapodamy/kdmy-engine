@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
 
-static inline void print_stub(const char* function_name, const char* format, ...) {
+static void print_stub(const char* function_name, const char* format, ...) {
     va_list va_args;
     va_start(va_args, format);
     

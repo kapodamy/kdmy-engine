@@ -19,16 +19,13 @@ EM_JS_PRFX(void, camera_set_absolute_position, (Camera camera, float x, float y)
 EM_JS_PRFX(void, camera_set_offset, (Camera camera, float x, float y, float z), {
     camera_set_offset(kdmyEngine_obtain(camera), x, y, z);
 });
-EM_JS_PRFX(float*, camera_get_offset, (Camera camera, float* xyz), {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
+EM_JS_PRFX(void, camera_get_offset, (Camera camera, float* x, float* y, float* z), {
     const values = [ 0, 0, 0 ];
-
     camera_get_offset(kdmyEngine_obtain(camera), values);
-    dataView.setFloat32(xyz + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(xyz + 4, values[1], HEAP_ENDIANESS);
-    dataView.setFloat32(xyz + 8, values[2], HEAP_ENDIANESS);
-    return xyz;
+    
+    kdmyEngine_set_float32(x, values[0]);
+    kdmyEngine_set_float32(y, values[1]);
+    kdmyEngine_set_float32(z, values[2]);
 });
 EM_JS_PRFX(Modifier, camera_get_modifier, (Camera camera), {
     const modifier = camera_get_modifier(kdmyEngine_obtain(camera));
@@ -162,13 +159,13 @@ static int script_camera_set_offset(lua_State* L) {
 static int script_camera_get_offset(lua_State* L) {
     Camera camera = luascript_read_userdata(L, CAMERA);
 
-    float xyz[3];
+    float x, y, z;
 
-    camera_get_offset(camera, xyz);
+    camera_get_offset(camera, &x, &y, &z);
 
-    lua_pushnumber(L, (double)xyz[0]);
-    lua_pushnumber(L, (double)xyz[1]);
-    lua_pushnumber(L, (double)xyz[2]);
+    lua_pushnumber(L, (double)x);
+    lua_pushnumber(L, (double)y);
+    lua_pushnumber(L, (double)z);
 
     return 3;
 }

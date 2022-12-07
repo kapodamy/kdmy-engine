@@ -2,7 +2,6 @@ using System;
 using Engine.Externals.LuaInterop;
 using Engine.Image;
 using Engine.Platform;
-using Engine.Utils;
 
 namespace Engine.Externals.LuaScriptInterop {
 
@@ -104,7 +103,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_set_visible(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            bool visible = L.luaL_toboolean(2);
+            bool visible = L.lua_toboolean(2);
 
             sprite.SetVisible(visible);
 
@@ -203,7 +202,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_crop_enable(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            bool enable = L.luaL_toboolean(2);
+            bool enable = L.lua_toboolean(2);
 
             sprite.CropEnable(enable);
 
@@ -279,8 +278,8 @@ namespace Engine.Externals.LuaScriptInterop {
 
             bool? flip_x = null, flip_y = null;
 
-            if (!L.lua_isnil(2)) flip_x = L.luaL_toboolean(2);
-            if (!L.lua_isnil(3)) flip_y = L.luaL_toboolean(3);
+            if (!L.lua_isnil(2)) flip_x = L.lua_toboolean(2);
+            if (!L.lua_isnil(3)) flip_y = L.lua_toboolean(3);
 
             sprite.FlipRenderedTexture(flip_x, flip_y);
 
@@ -290,7 +289,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_sprite_flip_rendered_texture_enable_correction(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-            bool enabled = L.luaL_toboolean(2);
+            bool enabled = L.lua_toboolean(2);
 
             sprite.FlipRenderedTextureEnableCorrection(enabled);
 
@@ -301,33 +300,33 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         static readonly LuaTableFunction[] SPRITE_FUNCTIONS = {
-            new LuaTableFunction() { name = "matrix_get_modifier", func = script_sprite_matrix_get_modifier},
-            new LuaTableFunction() { name = "set_offset_source", func = script_sprite_set_offset_source},
-            new LuaTableFunction() { name = "set_offset_frame", func = script_sprite_set_offset_frame},
-            new LuaTableFunction() { name = "set_offset_pivot", func = script_sprite_set_offset_pivot},
-            new LuaTableFunction() { name = "matrix_reset", func = script_sprite_matrix_reset},
-            new LuaTableFunction() { name = "set_draw_location", func = script_sprite_set_draw_location},
-            new LuaTableFunction() { name = "set_draw_size", func = script_sprite_set_draw_size},
-            new LuaTableFunction() { name = "set_draw_size_from_source_size", func = script_sprite_set_draw_size_from_source_size},
-            new LuaTableFunction() { name = "set_alpha", func = script_sprite_set_alpha},
-            new LuaTableFunction() { name = "set_visible", func = script_sprite_set_visible},
-            new LuaTableFunction() { name = "set_z_index", func = script_sprite_set_z_index},
-            new LuaTableFunction() { name = "set_z_offset", func = script_sprite_set_z_offset},
-            new LuaTableFunction() { name = "get_source_size", func = script_sprite_get_source_size},
-            new LuaTableFunction() { name = "set_vertex_color", func = script_sprite_set_vertex_color},
-            new LuaTableFunction() { name = "set_offsetcolor", func = script_sprite_set_offsetcolor},
-            new LuaTableFunction() { name = "is_textured", func = script_sprite_is_textured},
-            new LuaTableFunction() { name = "crop", func = script_sprite_crop},
-            new LuaTableFunction() { name = "is_crop_enabled", func = script_sprite_is_crop_enabled},
-            new LuaTableFunction() { name = "crop_enable", func = script_sprite_crop_enable},
-            new LuaTableFunction() { name = "resize_draw_size", func = script_sprite_resize_draw_size},
-            new LuaTableFunction() { name = "center_draw_location", func = script_sprite_center_draw_location},
-            new LuaTableFunction() { name = "set_antialiasing", func = script_sprite_set_antialiasing},
-            new LuaTableFunction() { name = "flip_rendered_texture", func = script_sprite_flip_rendered_texture},
-            new LuaTableFunction() { name = "flip_rendered_texture_enable_correction", func = script_sprite_flip_rendered_texture_enable_correction},
-            new LuaTableFunction() { name = "set_shader", func = script_sprite_set_shader},
-            new LuaTableFunction() { name = "get_shader", func = script_sprite_get_shader},
-            new LuaTableFunction() { name = null, func = null}
+            new LuaTableFunction("matrix_get_modifier", script_sprite_matrix_get_modifier),
+            new LuaTableFunction("set_offset_source", script_sprite_set_offset_source),
+            new LuaTableFunction("set_offset_frame", script_sprite_set_offset_frame),
+            new LuaTableFunction("set_offset_pivot", script_sprite_set_offset_pivot),
+            new LuaTableFunction("matrix_reset", script_sprite_matrix_reset),
+            new LuaTableFunction("set_draw_location", script_sprite_set_draw_location),
+            new LuaTableFunction("set_draw_size", script_sprite_set_draw_size),
+            new LuaTableFunction("set_draw_size_from_source_size", script_sprite_set_draw_size_from_source_size),
+            new LuaTableFunction("set_alpha", script_sprite_set_alpha),
+            new LuaTableFunction("set_visible", script_sprite_set_visible),
+            new LuaTableFunction("set_z_index", script_sprite_set_z_index),
+            new LuaTableFunction("set_z_offset", script_sprite_set_z_offset),
+            new LuaTableFunction("get_source_size", script_sprite_get_source_size),
+            new LuaTableFunction("set_vertex_color", script_sprite_set_vertex_color),
+            new LuaTableFunction("set_offsetcolor", script_sprite_set_offsetcolor),
+            new LuaTableFunction("is_textured", script_sprite_is_textured),
+            new LuaTableFunction("crop", script_sprite_crop),
+            new LuaTableFunction("is_crop_enabled", script_sprite_is_crop_enabled),
+            new LuaTableFunction("crop_enable", script_sprite_crop_enable),
+            new LuaTableFunction("resize_draw_size", script_sprite_resize_draw_size),
+            new LuaTableFunction("center_draw_location", script_sprite_center_draw_location),
+            new LuaTableFunction("set_antialiasing", script_sprite_set_antialiasing),
+            new LuaTableFunction("flip_rendered_texture", script_sprite_flip_rendered_texture),
+            new LuaTableFunction("flip_rendered_texture_enable_correction", script_sprite_flip_rendered_texture_enable_correction),
+            new LuaTableFunction("set_shader", script_sprite_set_shader),
+            new LuaTableFunction("get_shader", script_sprite_get_shader),
+            new LuaTableFunction(null, null)
         };
 
 

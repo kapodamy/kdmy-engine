@@ -32,7 +32,7 @@ EM_JS_PRFX(void, dialogue_set_offsetcolor, (Dialogue dialogue, float r, float g,
 EM_JS_PRFX(void, dialogue_set_alpha, (Dialogue dialogue, float alpha), {
     dialogue_set_alpha(kdmyEngine_obtain(dialogue), alpha);
 });
-EM_JS_PRFX(void, dialogue_set_antialiasing, (Dialogue dialogue, PVRFLAG antialiasing), {
+EM_JS_PRFX(void, dialogue_set_antialiasing, (Dialogue dialogue, PVRFlag antialiasing), {
     dialogue_set_antialiasing(kdmyEngine_obtain(dialogue), antialiasing);
 });
 #endif
@@ -130,7 +130,7 @@ static int script_dialogue_set_alpha(lua_State* L) {
 static int script_dialogue_set_set_antialiasing(lua_State* L) {
     Dialogue dialogue = luascript_read_userdata(L, DIALOGUE);
 
-    PVRFLAG antialiasing = luascript_parse_pvrflag(L, luaL_optstring(L, 2, NULL));
+    PVRFlag antialiasing = luascript_parse_pvrflag(L, luaL_optstring(L, 2, NULL));
 
     dialogue_set_antialiasing(dialogue, antialiasing);
 

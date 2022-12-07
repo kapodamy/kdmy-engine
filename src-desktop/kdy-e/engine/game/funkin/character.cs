@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Game.Gameplay.Helpers;
 using Engine.Image;
@@ -281,6 +282,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             this.statesprite.Destroy();
 
             int states_size = this.states.Size();

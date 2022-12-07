@@ -1,5 +1,6 @@
 using System;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Game.Gameplay;
 using Engine.Game.Gameplay.Helpers;
@@ -294,6 +295,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             this.sprite_marker_nothing.Destroy();
             this.sprite_marker_confirm.Destroy();
             this.sprite_marker_press.Destroy();

@@ -20,7 +20,7 @@ void dialogue_hide(Dialogue dialogue, bool hidden);
 Modifier dialogue_get_modifier(Dialogue dialogue);
 void dialogue_set_offsetcolor(Dialogue dialogue, float r, float g, float b, float a);
 void dialogue_set_alpha(Dialogue dialogue, float alpha);
-void dialogue_set_antialiasing(Dialogue dialogue, PVRFLAG antialiasing);
+void dialogue_set_antialiasing(Dialogue dialogue, PVRFlag antialiasing);
 
 
 

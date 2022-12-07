@@ -162,6 +162,8 @@ namespace Engine.Animation {
                 //if (this.entries[i].is_tweenlerp) free(this.entries[i].tweenlerp_entries);
 
                 //free(this.entries[i].instructions);
+
+                Luascript.DropShared(this.entries[i]);
                 //free(this.entries[i]);
             }
 

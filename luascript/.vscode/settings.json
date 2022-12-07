@@ -43,7 +43,10 @@
         "dialogue.h": "c",
         "profileapi.h": "c",
         "time.h": "c",
-        "psshader.h": "c"
+        "psshader.h": "c",
+        "animsprite.h": "c",
+        "drawable.h": "c",
+        "modelholder.h": "c"
     },
     "C_Cpp.clang_format_style": "file",
     "C_Cpp.formatting": "clangFormat"

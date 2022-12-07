@@ -1,4 +1,5 @@
 using System;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Utils;
 
 namespace Engine.Game {
@@ -29,6 +30,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             ClearMapping();
             this.mappings.Destroy(false);
             //free(this);

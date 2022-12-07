@@ -61,12 +61,19 @@ namespace Engine.Externals.LuaScriptInterop {
             ExportsCamera.script_camera_register(lua);
             ExportsCharacter.script_character_register(lua);
             ExportsLayout.script_layout_register(lua);
+            ExportsLayoutPlaceholder.script_layoutplaceholder_register(lua);
             ExportsMessageBox.script_messagebox_register(lua);
             ExportsModifier.script_modifier_register(lua);
             ExportsSoundPlayer.script_soundplayer_register(lua);
             ExportsSprite.script_sprite_register(lua);
             ExportsTextSprite.script_textsprite_register(lua);
             ExportsPSShader.script_psshader_register(lua);
+            ExportsTweenLerp.script_tweenlerp_register(lua);
+            ExportsAtlas.script_atlas_register(lua);
+            ExportsAnimList.script_animlist_register(lua);
+            ExportsAnimListItem.script_animlistitem_register(lua);
+            ExportsAnimSprite.script_animsprite_register(lua);
+            ExportsModelHolder.script_modelholder_register(lua);
 
             if (is_week) {
                 ExportsSongPlayer.script_songplayer_register(lua);

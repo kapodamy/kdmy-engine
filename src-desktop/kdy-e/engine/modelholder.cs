@@ -1,5 +1,6 @@
 using System;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
@@ -189,6 +190,7 @@ namespace Engine {
                 this.texture.Destroy();
 
             ModelHolder.POOL.Delete(this.id);
+            Luascript.DropShared(this);
             //free(this.instance_src);
             //free;
         }

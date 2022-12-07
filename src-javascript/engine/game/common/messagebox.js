@@ -31,6 +31,7 @@ async function messagebox_init() {
 }
 
 function messagebox_destroy(messagebox) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(messagebox);
     layout_destroy(messagebox.layout);
     if (messagebox.atlas) atlas_destroy(messagebox.atlas);
     drawable_destroy(messagebox.drawable);

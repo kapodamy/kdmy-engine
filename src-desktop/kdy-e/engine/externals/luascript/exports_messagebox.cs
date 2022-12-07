@@ -90,7 +90,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_hide_image_background(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool hide = L.luaL_toboolean(2);
+            bool hide = L.lua_toboolean(2);
 
             messagebox.HideImageBackground(hide);
 
@@ -100,7 +100,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_hide_image(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool hide = L.luaL_toboolean(2);
+            bool hide = L.lua_toboolean(2);
 
             messagebox.HideImage(hide);
 
@@ -110,7 +110,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_show_buttons_icons(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool show = L.luaL_toboolean(2);
+            bool show = L.lua_toboolean(2);
 
             messagebox.ShowButtonsIcons(show);
 
@@ -120,7 +120,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_use_small_size(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool small_or_normal = L.luaL_toboolean(2);
+            bool small_or_normal = L.lua_toboolean(2);
 
             messagebox.UseSmallSize(small_or_normal);
 
@@ -142,7 +142,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             string filename = L.luaL_optstring(2, null);
             string entry_name = L.luaL_optstring(3, null);
-            bool is_animation = L.luaL_toboolean(4);
+            bool is_animation = L.lua_toboolean(4);
 
             messagebox.SetImageFromAtlas(filename, entry_name, is_animation);
 
@@ -152,7 +152,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_hide(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool animated = L.luaL_toboolean(2);
+            bool animated = L.lua_toboolean(2);
 
             messagebox.Hide(animated);
 
@@ -162,7 +162,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_messagebox_show(LuaState L) {
             MessageBox messagebox = L.ReadUserdata<MessageBox>(MESSAGEBOX);
 
-            bool animated = L.luaL_toboolean(2);
+            bool animated = L.lua_toboolean(2);
 
             messagebox.Show(animated);
 
@@ -194,25 +194,25 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         static readonly LuaTableFunction[] MESSAGEBOX_FUNCTIONS = {
-            new LuaTableFunction() { name = "set_buttons_text", func = script_messagebox_set_buttons_text},
-            new LuaTableFunction() { name = "set_button_single", func = script_messagebox_set_button_single},
-            new LuaTableFunction() { name = "set_buttons_icons", func = script_messagebox_set_buttons_icons},
-            new LuaTableFunction() { name = "set_button_single_icon", func = script_messagebox_set_button_single_icon},
-            new LuaTableFunction() { name = "set_title", func = script_messagebox_set_title},
-            new LuaTableFunction() { name = "set_image_background_color", func = script_messagebox_set_image_background_color},
-            new LuaTableFunction() { name = "set_image_background_color_default", func = script_messagebox_set_image_background_color_default},
-            new LuaTableFunction() { name = "set_message", func = script_messagebox_set_message},
-            new LuaTableFunction() { name = "hide_image_background", func = script_messagebox_hide_image_background},
-            new LuaTableFunction() { name = "hide_image", func = script_messagebox_hide_image},
-            new LuaTableFunction() { name = "show_buttons_icons", func = script_messagebox_show_buttons_icons},
-            new LuaTableFunction() { name = "use_small_size", func = script_messagebox_use_small_size},
-            new LuaTableFunction() { name = "set_image_from_texture", func = script_messagebox_set_image_from_texture},
-            new LuaTableFunction() { name = "set_image_from_atlas", func = script_messagebox_set_image_from_atlas},
-            new LuaTableFunction() { name = "hide", func = script_messagebox_hide},
-            new LuaTableFunction() { name = "show", func = script_messagebox_show},
-            new LuaTableFunction() { name = "set_z_index", func = script_messagebox_set_z_index},
-            new LuaTableFunction() { name = "get_modifier", func = script_messagebox_get_modifier},
-            new LuaTableFunction() { name = null, func = null}
+            new LuaTableFunction("set_buttons_text", script_messagebox_set_buttons_text),
+            new LuaTableFunction("set_button_single", script_messagebox_set_button_single),
+            new LuaTableFunction("set_buttons_icons", script_messagebox_set_buttons_icons),
+            new LuaTableFunction("set_button_single_icon", script_messagebox_set_button_single_icon),
+            new LuaTableFunction("set_title", script_messagebox_set_title),
+            new LuaTableFunction("set_image_background_color", script_messagebox_set_image_background_color),
+            new LuaTableFunction("set_image_background_color_default", script_messagebox_set_image_background_color_default),
+            new LuaTableFunction("set_message", script_messagebox_set_message),
+            new LuaTableFunction("hide_image_background", script_messagebox_hide_image_background),
+            new LuaTableFunction("hide_image", script_messagebox_hide_image),
+            new LuaTableFunction("show_buttons_icons", script_messagebox_show_buttons_icons),
+            new LuaTableFunction("use_small_size", script_messagebox_use_small_size),
+            new LuaTableFunction("set_image_from_texture", script_messagebox_set_image_from_texture),
+            new LuaTableFunction("set_image_from_atlas", script_messagebox_set_image_from_atlas),
+            new LuaTableFunction("hide", script_messagebox_hide),
+            new LuaTableFunction("show", script_messagebox_show),
+            new LuaTableFunction("set_z_index", script_messagebox_set_z_index),
+            new LuaTableFunction("get_modifier", script_messagebox_get_modifier),
+            new LuaTableFunction(null, null)
         };
 
         public static object Messagebox { get; private set; }

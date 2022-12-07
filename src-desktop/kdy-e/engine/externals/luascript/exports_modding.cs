@@ -23,9 +23,9 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         static readonly LuaTableFunction[] EXPORTS_FUNCTION = {
-            new LuaTableFunction() { name = "modding_get_layout", func = script_modding_get_layout },
-            new LuaTableFunction() { name = "modding_exit", func = script_modding_exit },
-            new LuaTableFunction() { name = null, func =  null }
+            new LuaTableFunction("modding_get_layout", script_modding_get_layout),
+            new LuaTableFunction("modding_exit", script_modding_exit),
+            new LuaTableFunction(null, null)
         };
 
 

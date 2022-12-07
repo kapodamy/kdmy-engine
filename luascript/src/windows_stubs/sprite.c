@@ -43,11 +43,10 @@ void sprite_set_z_index(Sprite sprite, float index) {
 void sprite_set_z_offset(Sprite sprite, float offset) {
     print_stub("sprite_set_z_offset", "sprite=%p offset=%f", sprite, offset);
 }
-float* sprite_get_source_size(Sprite sprite, float* size) {
-    size[0] = 123;
-    size[1] = 456;
-    print_stub("sprite_get_source_size", "sprite=%p size=%p", sprite, size);
-    return size;
+void sprite_get_source_size(Sprite sprite, float* source_width, float* source_height) {
+    *source_width = 123;
+    *source_height = 456;
+    print_stub("sprite_get_source_size", "sprite=%p source_width=%p source_height=%p", sprite, source_width, source_height);
 }
 void sprite_set_vertex_color(Sprite sprite, float r, float g, float b) {
     print_stub("sprite_set_vertex_color", "sprite=%p r=%f g=%f b=%f", sprite, r, g, b);
@@ -70,19 +69,17 @@ bool sprite_is_crop_enabled(Sprite sprite) {
 void sprite_crop_enable(Sprite sprite, bool enable) {
     print_stub("sprite_crop_enable", "sprite=%p enable=(bool)%i", sprite, enable);
 }
-float* sprite_resize_draw_size(Sprite sprite, float max_width, float max_height, float* applied_draw_size) {
-    applied_draw_size[0] = 789;
-    applied_draw_size[1] = 456;
-    print_stub("sprite_resize_draw_size", "sprite=%p max_width=%f max_height=%f applied_draw_size=%p", sprite, max_width, max_height, applied_draw_size);
-    return applied_draw_size;
+void sprite_resize_draw_size(Sprite sprite, float max_width, float max_height, float* applied_draw_width, float* applied_draw_height) {
+    *applied_draw_width = 789;
+    *applied_draw_height = 456;
+    print_stub("sprite_resize_draw_size", "sprite=%p max_width=%f max_height=%f applied_draw_width=%p applied_draw_height=%p", sprite, max_width, max_height, applied_draw_width, applied_draw_height);
 }
-float* sprite_center_draw_location(Sprite sprite, float x, float y, float ref_width, float ref_height, float* applied_draw_location) {
-    applied_draw_location[0] = 321;
-    applied_draw_location[1] = 876;
-    print_stub("sprite_center_draw_location", "sprite=%p x=%f y=%f ref_width=%f ref_height=%f applied_draw_location=%p", sprite, x, y, ref_width, ref_height, applied_draw_location);
-    return applied_draw_location;
+void sprite_center_draw_location(Sprite sprite, float x, float y, float ref_width, float ref_height, float* applied_draw_x, float* applied_draw_y) {
+    *applied_draw_x = 321;
+    *applied_draw_y = 876;
+    print_stub("sprite_center_draw_location", "sprite=%p x=%f y=%f ref_width=%f ref_height=%f applied_draw_x=%p applied_draw_y=%p", sprite, x, y, ref_width, ref_height, applied_draw_x, applied_draw_y);
 }
-void sprite_set_antialiasing(Sprite sprite, PVRFLAG antialiasing) {
+void sprite_set_antialiasing(Sprite sprite, PVRFlag antialiasing) {
     print_stub("sprite_set_antialiasing", "sprite=%p antialiasing=%i", sprite, antialiasing);
 }
 void sprite_flip_rendered_texture(Sprite sprite, int flip_x, int flip_y) {

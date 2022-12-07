@@ -3,14 +3,9 @@
 #ifdef JAVASCRIPT
 EM_ASYNC_JS_PRFX(bool, fs_readfile, (const char* path, uint8_t** buffer_ptr, uint32_t* size_ptr), {
     try {
-      const ENDIANESS = true;
-      const POINTER = false;
-
       if (buffer_ptr == 0) return 0;
 
       let arraybuffer = await fs_readarraybuffer(kdmyEngine_ptrToString(path));
-      let dataView = new DataView(buffer);
-
       if (!arraybuffer) return 0;
 
       let ptr = _malloc(arraybuffer.byteLength);
@@ -19,22 +14,16 @@ EM_ASYNC_JS_PRFX(bool, fs_readfile, (const char* path, uint8_t** buffer_ptr, uin
         return 0;
       }
 
-      let buf = new Uint8Array(buffer);
-      buf.set(new Uint8Array(arraybuffer), ptr);
+      (new Uint8Array(buffer)).set(new Uint8Array(arraybuffer), ptr);
 
-      if (POINTER)
-        dataView.setBigUint64(buffer_ptr, ptr, ENDIANESS);
-      else
-        dataView.setUint32(buffer_ptr, ptr, ENDIANESS);
-
-      dataView.setUint32(size_ptr, arraybuffer.byteLength, ENDIANESS);
+      kdmyEngine_set_uint32(buffer_ptr, ptr);
+      kdmyEngine_set_uint32(size_ptr, arraybuffer.byteLength);
 
       return 1;
+    } catch (e) {
+      console.error(e);
+      return 0;
     }
- catch (e) {
-console.error(e);
-return 0;
-}
     });
 #endif
 

@@ -177,12 +177,13 @@ function tweenlerp_peek_value_by_index(tweenlerp, index) {
     return entry.value;
 }
 
-function tweenlerp_peek_entry_by_index(tweenlerp, index, output_id_value_pair) {
+function tweenlerp_peek_entry_by_index(tweenlerp, index, output_id_value_duration_pair) {
     let entry = arraylist_get(tweenlerp.arraylist, index);
 	if (!entry) return null;
-    output_id_value_pair[0] = entry.id;
-    output_id_value_pair[1] = entry.value;
-    return output_id_value_pair;
+    output_id_value_duration_pair[0] = entry.id;
+    output_id_value_duration_pair[1] = entry.value;
+    output_id_value_duration_pair[2] = entry.duration;
+    return output_id_value_duration_pair;
 }
 
 function tweenlerp_peek_value_by_id(tweenlerp, id) {
