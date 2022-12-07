@@ -34,11 +34,11 @@ void textsprite_set_align(TextSprite textsprite, Align align_vertical, Align ali
 Modifier textsprite_matrix_get_modifier(TextSprite textsprite);
 void textsprite_matrix_reset(TextSprite textsprite);
 float textsprite_get_font_size(TextSprite textsprite);
-float* textsprite_get_draw_size(TextSprite textsprite, float* size);
+void textsprite_get_draw_size(TextSprite textsprite, float* draw_width, float* draw_height);
 void textsprite_border_enable(TextSprite textsprite, bool enable);
 void textsprite_border_set_size(TextSprite textsprite, float border_size);
 void textsprite_border_set_color(TextSprite textsprite, float r, float g, float b, float a);
-void textsprite_set_antialiasing(TextSprite textsprite, PVRFLAG antialiasing);
+void textsprite_set_antialiasing(TextSprite textsprite, PVRFlag antialiasing);
 void textsprite_set_wordbreak(TextSprite textsprite, FontWordBreak wordbreak);
 void textsprite_set_shader(TextSprite textsprite, PSShader psshader);
 PSShader textsprite_get_shader(TextSprite textsprite);

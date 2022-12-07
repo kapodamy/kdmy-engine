@@ -1,5 +1,6 @@
 using System;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Font;
 using Engine.Image;
 using Engine.Platform;
@@ -45,6 +46,7 @@ namespace Engine.Game.Common {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
             this.layout.Destroy();
             if (this.atlas != null) this.atlas.Destroy();
             this.drawable.Destroy();

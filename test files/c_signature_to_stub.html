@@ -59,8 +59,12 @@
                     case "bool":
 						type = "(bool)%i";
                         break;
-					case "ANIM_INTERPOLATOR_TYPE":
-						type = "%hhu";
+					case "AnimInterpolator":
+					case "Blend":
+					case "FontWordBreak":
+					case "TextSpriteForceCase":
+					case "PVRFlag":
+						type = "%i";
 						break;
 					default:
 						if (type.endsWith("*") || type.charAt(0) == type.charAt(0).toUpperCase())

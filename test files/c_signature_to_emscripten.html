@@ -46,7 +46,9 @@
                     case "int64_t":
                     case "uint64_t":
                     case "Align":
-                    case "PVRFLAG":
+                    case "PVRFlag":
+                    case "AnimInterpolator":
+                    case "Blend":
                         type = "number";
                         break;
                     case "bool":
@@ -148,7 +150,7 @@
             }
 
 
-            return `${macro}(${ret}, ${fn}, (${fn_args}), {\r\n${glue_code}}`;
+            return `${macro}(${ret}, ${fn}, (${fn_args}), {\r\n${glue_code}});`;
         }
 
         function signature_c_to_lua_bind(str, lua_regs) {
@@ -165,6 +167,7 @@
                 let lua_idx = i + 1;
                 switch (args[i].c_type) {
                     case "char*":
+                        //args[i].c_type = "const " + args[i].c_type;
                         lua_call = `luaL_optstring(L, ${lua_idx}, NULL)`;
                         break;
                     case "bool":
@@ -194,20 +197,23 @@
                         else
                             lua_call = `(double)luaL_checknumber(L, ${lua_idx})`;
                         break;
-                    case "ANIM_INTERPOLATOR_TYPE":
-                        lua_call = `luascript_parse_interpolator(luaL_optstring(L, ${lua_idx}, NULL))`;
+                    case "AnimInterpolator":
+                        lua_call = `luascript_parse_interpolator(L, luaL_optstring(L, ${lua_idx}, NULL))`;
                         break;
                     case "Align":
-                        lua_call = `luascript_parse_align(luaL_optstring(L, ${lua_idx}, NULL))`;
+                        lua_call = `luascript_parse_align(L, luaL_optstring(L, ${lua_idx}, NULL))`;
                         break;
                     case "FontWordBreak":
-                        lua_call = `luascript_parse_wordbreak(luaL_optstring(L, ${lua_idx}, NULL))`;
+                        lua_call = `luascript_parse_wordbreak(L, luaL_optstring(L, ${lua_idx}, NULL))`;
                         break;
                     case "TextSpriteForceCase":
-                        lua_call = `luascript_parse_forcecase(luaL_optstring(L, ${lua_idx}, NULL))`;
+                        lua_call = `luascript_parse_forcecase(L, luaL_optstring(L, ${lua_idx}, NULL))`;
                         break;
-                    case "PVRFLAG":
-                        lua_call = `luascript_parse_pvrflag(luaL_optstring(L, ${lua_idx}, NULL))`;
+                    case "PVRFlag":
+                        lua_call = `luascript_parse_pvrflag(L, luaL_optstring(L, ${lua_idx}, NULL))`;
+                        break;
+                    case "Blend":
+                        lua_call = `luascript_parse_blend(L, luaL_optstring(L, ${lua_idx}, NULL))`;
                         break;
                     default:
                         if (args[i].c_type.endsWith("*")) {
@@ -235,13 +241,16 @@
 
             code += "\r\n";
 
+L_compute_ret:
             if (!ret.endsWith("void")) {
                 code += `    ${ret} ret = ${fn}(${call_args});\r\n\r\n`;
 
-                let lua_ret, lua_idx = 0;
+                let lua_ret, lua_ret_extra = "", lua_idx = 0;
                 switch (ret) {
                     case "char*":
+                    case "const char*":
                         lua_ret = `lua_pushstring(L, ret)`;
+                        lua_ret_extra = `\r\n#ifdef JAVASCRIPT\r\n    free(ret);\r\n#endif\r\n`;
                         break;
                     case "bool":
                         lua_ret = `lua_pushboolean(L, ret)`;
@@ -260,17 +269,17 @@
                             break;
                         }
 
-                        lua_ret = `script_${ret_type.toLowerCase()}_new(L, ${ret}})`;
-                        break;
+                        code += `    return script_${ret_type.toLowerCase()}_new(L, ret);\r\n`
+                        break L_compute_ret;
                 }
 
-                code += `    ${lua_ret};\r\n    return 1;\r\n`
+                code += `    ${lua_ret};\r\n${lua_ret_extra}    return 1;\r\n`
             } else {
                 code += `    ${fn}(${call_args});\r\n\r\n    return 0;\r\n`;
             }
 
 
-            code += "}\r\n\r\n";
+            code += "}\r\n";
 
             lua_regs.push(fn);
             return code;
@@ -288,15 +297,13 @@
 
             let imports_fns = `\r\n\r\n\r\nstatic const luaL_Reg ${reg_name}_FUNCTIONS[] = {\r\n`;
             for (let i = 0; i < lua_regs.length; i++) {
-                imports_fns += `    { "${lua_regs[0]}", script_${lua_regs[0]} }`;
-                if ((i + 1) < lua_regs.length) imports_fns += ',';
-                imports_fns += "\r\n";
+                imports_fns += `    { "${lua_regs[i]}", script_${lua_regs[i]} },\r\n`;
             }
-            imports_fns += "}\r\n\r\n";
+            imports_fns += "    { NULL, NULL }\r\n};\r\n\r\n";
 
             imports_fns += `int script_${prefix}_new(lua_State* L, STUB ${prefix}) {\r\n`;
-            imports_fns += `    return luascript_userdata_new(luascript, ${reg_name}, ${prefix});\r\n`;
-            imports_fns += `}\r\n`;
+            imports_fns += `    return luascript_userdata_new(L, ${reg_name}, ${prefix});\r\n`;
+            imports_fns += `}\r\n\r\n`;
 
             imports_fns += `static int script_${prefix}_gc(lua_State* L) {\r\n`;
             imports_fns += `    return luascript_userdata_gc(L, ${reg_name});\r\n`;
@@ -328,12 +335,9 @@
             let imports_fns = `\r\n\r\n\r\n        static readonly LuaTableFunction[] ${reg_name}_FUNCTIONS = {\r\n`;
             for (let i = 0; i < lua_regs.length; i++) {
                 imports_fns += "           new LuaTableFunction() ";
-                imports_fns += `{ name = "${lua_regs[0]}", func = script_${lua_regs[0]} }`;
-                if ((i + 1) < lua_regs.length) imports_fns += ',';
-                imports_fns += "\r\n";
+                imports_fns += `{ name = "${lua_regs[0]}", func = script_${lua_regs[0]} },\r\n`;
             }
-            imports_fns += "        }\r\n\r\n";
-
+            imports_fns += "           { NULL, NULL }\r\n        }\r\n\r\n";
 
             imports_fns += `        internal static int script_${prefix}_new(LuaState L, STUB ${prefix}) {\r\n`;
             imports_fns += `            return L.UserdataNEW(L, ${reg_name}, ${prefix});\r\n`;
@@ -354,7 +358,7 @@
             imports_fns += `        internal static void script_${prefix}_register(ManagedLuaState L) {\r\n`;
             imports_fns += `            L.RegisterMetaTable(L, ${reg_name}, gc, tostring,`;
             imports_fns += ` ${reg_name}_FUNCTIONS);\r\n`;
-            imports_fns += "        }\r\n\r\n";
+            imports_fns += "        };\r\n\r\n";
 
             return imports_fns;
         }
@@ -366,7 +370,7 @@
             let text = this.value.replace(/\r/g, "");
             text = text.split("\n");
 
-            let out_str = "#ifdef JAVASCRIPT\r\n";
+            let out_str = `#include "luascript_internal.h"\r\n\r\n#ifdef JAVASCRIPT\r\n`;
             let out_lua_str = "\r\n\r\n";
             let lua_regs = new Array();
 

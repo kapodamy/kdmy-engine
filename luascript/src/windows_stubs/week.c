@@ -83,16 +83,16 @@ SongPlayer week_get_songplayer(RoundContext roundcontext) {
     print_stub("week_get_songplayer", "roundcontext=%p", roundcontext);
     return &stub_songplayer;
 }
-void week_get_current_chart_info(RoundContext roundcontext, WeekChartInfo_t* output_info) {
-    output_info->bpm = 123.0f;
-    output_info->speed = 456.0;
-    print_stub("week_get_current_chart_info", "roundcontext=%p output_info=%p", roundcontext, output_info);
+void week_get_current_chart_info(RoundContext roundcontext, float* bpm, double* speed) {
+    *bpm = 123.0f;
+    *speed = 456.0;
+    print_stub("week_get_current_chart_info", "roundcontext=%p bpm=%p speed=%p", roundcontext, bpm, speed);
 }
-void week_get_current_track_info(RoundContext roundcontext, WeekTrackInfo_t* output_info) {
-    output_info->index = 123;
-    output_info->name = stub_track_name;
-    output_info->difficult = stub_track_difficult;
-    print_stub("week_get_current_track_info", "roundcontext=%p output_info=%p", roundcontext, output_info);
+void week_get_current_track_info(RoundContext roundcontext, const char** name, const char** difficult, int32_t* index) {
+    *index = 123;
+    *name = stub_track_name;
+    *difficult = stub_track_difficult;
+    print_stub("week_get_current_track_info", "roundcontext=%p name=%p difficult=%p index=%p", roundcontext, name, difficult, index);
 }
 void week_change_character_camera_name(RoundContext roundcontext, bool opponent_or_player, const char* new_name) {
     print_stub("week_change_character_camera_name", "roundcontext=%p opponent_or_player=(bool)%i new_name=%s", roundcontext, opponent_or_player, new_name);

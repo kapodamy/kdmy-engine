@@ -181,10 +181,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             switch (value_type) {
                 case AttachedValueType.STRING:
-                    if (value != null)
-                        L.lua_pushstring((string)value);
-                    else
-                        L.lua_pushnil();
+                    L.lua_pushstring((string)value);
                     break;
                 case AttachedValueType.FLOAT:
                     L.lua_pushnumber((double)value);
@@ -210,7 +207,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_layout_set_group_visibility(LuaState L) {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
             string group_name = L.luaL_optstring(2, null);
-            bool visible = L.luaL_toboolean(3);
+            bool visible = L.lua_toboolean(3);
 
             layout.SetGroupVisibility(group_name, visible);
 
@@ -258,38 +255,13 @@ namespace Engine.Externals.LuaScriptInterop {
             string name = L.luaL_optstring(2, null);
 
             LayoutPlaceholder placeholder = layout.GetPlaceholder(name);
-            if (placeholder != null) {
-                LuaTableBuilder table = new LuaTableBuilder(12);
-
-                table.AddInteger("group_id", placeholder.group_id);
-
-                table.AddString("align_vertical", LuascriptHelpers.StringifyAlign(placeholder.align_vertical));
-                table.AddString("align_horizontal", LuascriptHelpers.StringifyAlign(placeholder.align_horizontal));
-
-                table.AddNumber("x", placeholder.x);
-                table.AddNumber("y", placeholder.y);
-                table.AddNumber("z", placeholder.z);
-
-                table.AddNumber("height", placeholder.height);
-                table.AddNumber("width", placeholder.width);
-
-                table.AddNumber("parallax_x", placeholder.parallax.x);
-                table.AddNumber("parallax_y", placeholder.parallax.y);
-                table.AddNumber("parallax_z", placeholder.parallax.z);
-
-                table.AddBoolean("static_camera", placeholder.static_camera);
-                table.PushTable(L);
-            } else {
-                L.lua_pushnil();
-            }
-
-            return 1;
+            return ExportsLayoutPlaceholder.script_layoutplaceholder_new(L, placeholder);
         }
 
         static int script_layout_disable_antialiasing(LuaState L) {
             Layout layout = L.ReadUserdata<Layout>(LAYOUT);
 
-            bool disable = L.luaL_toboolean(3);
+            bool disable = L.lua_toboolean(3);
 
             layout.DisableAntialiasing(disable);
 
@@ -349,35 +321,35 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         static readonly LuaTableFunction[] LAYOUT_FUNCTIONS = {
-           new LuaTableFunction() { name = "trigger_any", func = script_layout_trigger_any},
-           new LuaTableFunction() { name = "trigger_action", func = script_layout_trigger_action},
-           new LuaTableFunction() { name = "trigger_camera", func = script_layout_trigger_camera},
-           new LuaTableFunction() { name = "trigger_trigger", func = script_layout_trigger_trigger},
-           new LuaTableFunction() { name = "contains_action", func = script_layout_contains_action},
-           new LuaTableFunction() { name = "stop_all_triggers", func = script_layout_stop_all_triggers},
-           new LuaTableFunction() { name = "stop_trigger", func = script_layout_stop_trigger},
-           new LuaTableFunction() { name = "animation_is_completed", func = script_layout_animation_is_completed},
-           new LuaTableFunction() { name = "camera_set_view", func = script_layout_camera_set_view},
-           new LuaTableFunction() { name = "camera_is_completed", func = script_layout_camera_is_completed},
-           new LuaTableFunction() { name = "get_camera_helper", func = script_layout_get_camera_helper},
-           new LuaTableFunction() { name = "get_secondary_camera_helper", func = script_layout_get_secondary_camera_helper},
-           new LuaTableFunction() { name = "get_textsprite", func = script_layout_get_textsprite},
-           new LuaTableFunction() { name = "get_sprite", func = script_layout_get_sprite},
-           new LuaTableFunction() { name = "get_soundplayer", func = script_layout_get_soundplayer},
-           new LuaTableFunction() { name = "get_viewport_size", func = script_layout_get_viewport_size},
-           new LuaTableFunction() { name = "get_attached_value", func = script_layout_get_attached_value},
-           new LuaTableFunction() { name = "set_group_visibility", func = script_layout_set_group_visibility},
-           new LuaTableFunction() { name = "set_group_alpha", func = script_layout_set_group_alpha},
-           new LuaTableFunction() { name = "set_group_offsetcolor", func = script_layout_set_group_offsetcolor},
-           new LuaTableFunction() { name = "suspend", func = script_layout_suspend},
-           new LuaTableFunction() { name = "resume", func = script_layout_resume},
-           new LuaTableFunction() { name = "get_placeholder", func = script_layout_get_placeholder},
-           new LuaTableFunction() { name = "disable_antialiasing", func = script_layout_disable_antialiasing},
-           new LuaTableFunction() { name = "set_group_antialiasing", func = script_layout_set_group_antialiasing},
-           new LuaTableFunction() { name = "get_group_modifier", func = script_layout_get_group_modifier},
-           new LuaTableFunction() { name = "get_group_shader", func = script_layout_get_group_shader},
-           new LuaTableFunction() { name = "set_group_shader", func = script_layout_set_group_shader},
-           new LuaTableFunction() { name = null, func = null}
+           new LuaTableFunction("trigger_any", script_layout_trigger_any),
+           new LuaTableFunction("trigger_action", script_layout_trigger_action),
+           new LuaTableFunction("trigger_camera", script_layout_trigger_camera),
+           new LuaTableFunction("trigger_trigger", script_layout_trigger_trigger),
+           new LuaTableFunction("contains_action", script_layout_contains_action),
+           new LuaTableFunction("stop_all_triggers", script_layout_stop_all_triggers),
+           new LuaTableFunction("stop_trigger", script_layout_stop_trigger),
+           new LuaTableFunction("animation_is_completed", script_layout_animation_is_completed),
+           new LuaTableFunction("camera_set_view", script_layout_camera_set_view),
+           new LuaTableFunction("camera_is_completed", script_layout_camera_is_completed),
+           new LuaTableFunction("get_camera_helper", script_layout_get_camera_helper),
+           new LuaTableFunction("get_secondary_camera_helper", script_layout_get_secondary_camera_helper),
+           new LuaTableFunction("get_textsprite", script_layout_get_textsprite),
+           new LuaTableFunction("get_sprite", script_layout_get_sprite),
+           new LuaTableFunction("get_soundplayer", script_layout_get_soundplayer),
+           new LuaTableFunction("get_viewport_size", script_layout_get_viewport_size),
+           new LuaTableFunction("get_attached_value", script_layout_get_attached_value),
+           new LuaTableFunction("set_group_visibility", script_layout_set_group_visibility),
+           new LuaTableFunction("set_group_alpha", script_layout_set_group_alpha),
+           new LuaTableFunction("set_group_offsetcolor", script_layout_set_group_offsetcolor),
+           new LuaTableFunction("suspend", script_layout_suspend),
+           new LuaTableFunction("resume", script_layout_resume),
+           new LuaTableFunction("get_placeholder", script_layout_get_placeholder),
+           new LuaTableFunction("disable_antialiasing", script_layout_disable_antialiasing),
+           new LuaTableFunction("set_group_antialiasing", script_layout_set_group_antialiasing),
+           new LuaTableFunction("get_group_modifier", script_layout_get_group_modifier),
+           new LuaTableFunction("get_group_shader", script_layout_get_group_shader),
+           new LuaTableFunction("set_group_shader", script_layout_set_group_shader),
+           new LuaTableFunction(null, null)
         };
 
 

@@ -1,4 +1,5 @@
 using System;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Utils;
 
@@ -88,6 +89,7 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
             //free(playerstats);
         }
 

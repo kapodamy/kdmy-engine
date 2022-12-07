@@ -60,7 +60,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_dialogue_hide(LuaState L) {
             Dialogue dialogue = L.ReadUserdata<Dialogue>(DIALOGUE);
 
-            bool hidden = L.luaL_toboolean(2);
+            bool hidden = L.lua_toboolean(2);
 
             dialogue.Hide(hidden);
 
@@ -113,17 +113,17 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         static readonly LuaTableFunction[] DIALOGUE_FUNCTIONS = {
-            new LuaTableFunction() { name = "apply_state", func = script_dialogue_apply_state },
-            new LuaTableFunction() { name = "is_completed", func = script_dialogue_is_completed },
-            new LuaTableFunction() { name = "is_hidden", func = script_dialogue_is_hidden },
-            new LuaTableFunction() { name = "show_dialog", func = script_dialogue_show_dialog },
-            new LuaTableFunction() { name = "close", func = script_dialogue_close },
-            new LuaTableFunction() { name = "hide", func = script_dialogue_hide },
-            new LuaTableFunction() { name = "get_modifier", func = script_dialogue_get_modifier },
-            new LuaTableFunction() { name = "set_offsetcolor", func = script_dialogue_set_offsetcolor },
-            new LuaTableFunction() { name = "set_alpha", func = script_dialogue_set_alpha },
-            new LuaTableFunction() { name = "set_antialiasing", func = script_dialogue_set_set_antialiasing },
-            new LuaTableFunction() { name = null, func = null }
+            new LuaTableFunction("apply_state", script_dialogue_apply_state),
+            new LuaTableFunction("is_completed", script_dialogue_is_completed),
+            new LuaTableFunction("is_hidden", script_dialogue_is_hidden),
+            new LuaTableFunction("show_dialog", script_dialogue_show_dialog),
+            new LuaTableFunction("close", script_dialogue_close),
+            new LuaTableFunction("hide", script_dialogue_hide),
+            new LuaTableFunction("get_modifier", script_dialogue_get_modifier),
+            new LuaTableFunction("set_offsetcolor", script_dialogue_set_offsetcolor),
+            new LuaTableFunction("set_alpha", script_dialogue_set_alpha),
+            new LuaTableFunction("set_antialiasing", script_dialogue_set_set_antialiasing),
+            new LuaTableFunction(null, null)
         };
 
         internal static int script_dialogue_new(LuaState L, Dialogue dialogue) {

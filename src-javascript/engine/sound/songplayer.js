@@ -219,6 +219,18 @@ function songplayer_mute(songplayer, muted) {
     for (let i = 0; i < songplayer.playbacks_size; i++) songplayer.playbacks[i].muted = muted;
 }
 
+function songplayer_set_volume(songplayer, volume) {
+    if (songplayer.playbacks_size < 1) return;
+    for (let i = 0; i < songplayer.playbacks_size; i++) songplayer.playbacks[i].volume = volume;
+}
+
+function songplayer_set_volume_track(songplayer, vocals_or_instrumental, volume) {
+    if (songplayer.playbacks_size < 1) return;
+    let target = vocals_or_instrumental ? songplayer.index_voices : songplayer.index_instrumental;
+    if (target < 0) return;
+    songplayer.playbacks[target].volume = volume;
+}
+
 
 async function songplayer_helper_get_tracks(src, prefer_alternative, output_paths) {
     let path_instrumental = null;

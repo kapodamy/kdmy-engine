@@ -161,6 +161,8 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
 }
 
 function healthbar_destroy(healthbar) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(healthbar);
+
     drawable_destroy(healthbar.drawable);
     if (healthbar.drawable_animation) animsprite_destroy(healthbar.drawable_animation);
 

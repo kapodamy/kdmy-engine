@@ -6,12 +6,8 @@
 
 #ifdef JAVASCRIPT
 
-EM_JS_PRFX(void, week_unlockdirective_create_JS, (RoundContext roundcontext, const char* name, bool completed_round, bool completed_week, double* value_ptr), {
-    let dataView = new DataView(buffer);
-    const ENDIANESS = true;
-    let val = dataView.getFloat64(value_ptr, ENDIANESS);
-
-    week_unlockdirective_create(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week, val);
+EM_JS_PRFX(void, week_unlockdirective_create, (RoundContext roundcontext, const char* name, bool completed_round, bool completed_week, double value), {
+    week_unlockdirective_create(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week, value);
 });
 EM_JS_PRFX(void, week_unlockdirective_remove, (RoundContext roundcontext, const char* name, bool completed_round, bool completed_week), {
     week_unlockdirective_remove(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week);
@@ -19,12 +15,9 @@ EM_JS_PRFX(void, week_unlockdirective_remove, (RoundContext roundcontext, const 
 EM_JS_PRFX(bool, week_unlockdirective_has, (RoundContext roundcontext, const char* name), {
     return week_unlockdirective_has(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
 });
-EM_JS_PRFX(void, week_unlockdirective_get_JS, (RoundContext roundcontext, const char* name, double* value_ptr), {
-    let dataView = new DataView(buffer);
-    const ENDIANESS = true;
-
+EM_JS_PRFX(double, week_unlockdirective_get, (RoundContext roundcontext, const char* name), {
     let value = week_unlockdirective_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
-    dataView.setFloat64(value_ptr, value, ENDIANESS);
+    return value;
 });
 EM_JS_PRFX(void, week_set_halt, (RoundContext roundcontext, bool halt), {
     week_set_halt(kdmyEngine_obtain(roundcontext), halt);
@@ -96,42 +89,20 @@ EM_JS_PRFX(SongPlayer, week_get_songplayer, (RoundContext roundcontext), {
     const songplayer = week_get_songplayer(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(songplayer);
 });
-EM_JS_PRFX(void, week_get_current_chart_info, (RoundContext roundcontext, WeekChartInfo_t* output_info), {
-    const values = {bmp : null, speed : null};
-    const dataView = new DataView(buffer);
-    const HEAP_ENDIANESS = true;
-
+EM_JS_PRFX(void, week_get_current_chart_info, (RoundContext roundcontext, float* bpm, double* speed), {
+    const values = {bpm : null, speed : null};
     week_get_current_chart_info(kdmyEngine_obtain(roundcontext), values);
 
-    dataView.setFloat32(output_info + 0, values.bmp, HEAP_ENDIANESS);
-    dataView.setFloat64(output_info + 4, values.speed, HEAP_ENDIANESS);
+    kdmyEngine_set_float32(bpm, values.bpm);
+    kdmyEngine_set_float32(speed, values.speed);
 });
-EM_JS_PRFX(void, week_get_current_track_info, (RoundContext roundcontext, WeekTrackInfo_t* output_info), {
+EM_JS_PRFX(void, week_get_current_track_info, (RoundContext roundcontext, const char** name, const char** difficult, int32_t* index), {
     const values = {name : null, difficult : null, index : -1};
-    const dataView = new DataView(buffer);
-    const HEAP_ENDIANESS = true;
-    const ptrsize = dataView.getUint32(output_info, HEAP_ENDIANESS);
-
-    function setPointer(offset, ptr) {
-        if (ptrsize == 4) {
-            dataView.setUint32(offset, ptr, HEAP_ENDIANESS);
-        } else {
-            dataView.setUint32(offset, ptr, HEAP_ENDIANESS);
-            dataView.setUint32(offset + 4, 0x00, HEAP_ENDIANESS);
-        }
-    };
-
     week_get_current_track_info(kdmyEngine_obtain(roundcontext), values);
-    const ptr_name = kdmyEngine_stringToPtr(values.name);
-    const ptr_difficult = kdmyEngine_stringToPtr(values.difficult);
 
-    let offset = output_info + 4; // add _ptrsize field size
-
-    setPointer(offset, ptr_name);
-    offset += ptrsize;
-    setPointer(offset, ptr_difficult);
-    offset += ptrsize;
-    dataView.setInt32(offset, values.index, HEAP_ENDIANESS);
+    kdmyEngine_set_uint32(name, kdmyEngine_stringToPtr(values.name));
+    kdmyEngine_set_uint32(difficult, kdmyEngine_stringToPtr(values.difficult));
+    kdmyEngine_set_int32(index, values.index);
 });
 EM_JS_PRFX(void, week_change_character_camera_name, (RoundContext roundcontext, bool opponent_or_player, const char* new_name), {
     week_change_character_camera_name(kdmyEngine_obtain(roundcontext), opponent_or_player, kdmyEngine_ptrToString(new_name));
@@ -153,16 +124,6 @@ EM_JS_PRFX(Dialogue, week_get_dialogue, (RoundContext roundcontext), {
 EM_JS_PRFX(void, week_set_ui_shader, (RoundContext roundcontext, PSShader psshader), {
     week_set_ui_shader(kdmyEngine_obtain(roundcontext), kdmyEngine_obtain(psshader));
 });
-
-void week_unlockdirective_create(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week, double value) {
-    week_unlockdirective_create_JS(roundcontext, name, completed_round, completed_week, &value);
-}
-
-double week_unlockdirective_get(RoundContext roundcontext, const char* name) {
-    double value;
-    week_unlockdirective_get_JS(roundcontext, name, &value);
-    return value;
-}
 
 #endif
 
@@ -392,12 +353,13 @@ static int script_week_get_songplayer(lua_State* L) {
 static int script_week_get_current_chart_info(lua_State* L) {
     Luascript luascript = luascript_get_instance(L);
 
-    WeekChartInfo_t chartinfo = {.bpm = 0.0f, .speed = 1.0};
+    float bpm;
+    double speed;
 
-    week_get_current_chart_info(luascript->context, &chartinfo);
+    week_get_current_chart_info(luascript->context, &bpm, &speed);
 
-    lua_pushnumber(L, (lua_Number)chartinfo.bpm);
-    lua_pushnumber(L, (lua_Number)chartinfo.speed);
+    lua_pushnumber(L, bpm);
+    lua_pushnumber(L, speed);
 
     return 2;
 }
@@ -405,22 +367,19 @@ static int script_week_get_current_chart_info(lua_State* L) {
 static int script_week_get_current_track_info(lua_State* L) {
     Luascript luascript = luascript_get_instance(L);
 
-    WeekTrackInfo_t trackinfo;
-#ifdef JAVASCRIPT
-    trackinfo._ptrsize = sizeof(const char*);
-#endif
-    trackinfo.name = NULL;
-    trackinfo.difficult = NULL;
-    trackinfo.index = -1;
+    const char* name;
+    const char* difficult;
+    int32_t index;
 
-    week_get_current_track_info(luascript->context, &trackinfo);
+    week_get_current_track_info(luascript->context, &name, &difficult, &index);
 
-    lua_pushstring(L, trackinfo.name);
-    lua_pushstring(L, trackinfo.difficult);
-    lua_pushinteger(L, trackinfo.index);
+    lua_pushstring(L, name);
+    lua_pushstring(L, difficult);
+    lua_pushinteger(L, index);
 
 #ifdef JAVASCRIPT
-    if (trackinfo.name != NULL) free(trackinfo.name);
+    free((char*)name);
+    free((char*)difficult);
 #endif
 
     return 3;

@@ -7,7 +7,7 @@ typedef struct _PVRContext_t {
 
 typedef PVRContext_t* PVRContext;
 
-typedef int PVRFLAG;
+typedef int PVRFlag;
 
 #define PVR_FLAG_DEFAULT 2
 #define PVR_FLAG_ENABLE 1

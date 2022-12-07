@@ -63,6 +63,8 @@ async function countdown_init(modelholder, height) {
 }
 
 function countdown_destroy(countdown) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(countdown);
+
     statesprite_destroy(countdown.statesprite);
     tweenlerp_destroy(countdown.default_animation);
     if (countdown.sound_three) soundplayer_destroy(countdown.sound_three);

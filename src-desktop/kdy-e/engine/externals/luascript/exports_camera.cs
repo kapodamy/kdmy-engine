@@ -1,8 +1,6 @@
 using System;
 using Engine.Animation;
 using Engine.Externals.LuaInterop;
-using Engine.Game;
-using Engine.Game.Gameplay;
 
 namespace Engine.Externals.LuaScriptInterop {
 
@@ -23,7 +21,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_set_transition_duration(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            bool expresed_in_beats = L.luaL_toboolean(2);
+            bool expresed_in_beats = L.lua_toboolean(2);
             float value = (float)L.luaL_checknumber(3);
 
             camera.SetTransitionDuration(expresed_in_beats, value);
@@ -177,7 +175,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_to_origin(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            bool should_slide = L.luaL_toboolean(2);
+            bool should_slide = L.lua_toboolean(2);
 
             camera.ToOrigin(should_slide);
 
@@ -308,7 +306,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_camera_to_origin_offset(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-            bool should_slide = L.luaL_toboolean(2);
+            bool should_slide = L.lua_toboolean(2);
 
             camera.ToOriginOffset(should_slide);
 
@@ -321,35 +319,35 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         static readonly LuaTableFunction[] CAMERA_FUNCTIONS = {
-            new LuaTableFunction() { name = "set_interpolator_type", func = script_camera_set_interpolator_type},
-            new LuaTableFunction() { name = "set_transition_duration", func = script_camera_set_transition_duration},
-            new LuaTableFunction() { name = "set_absolute_zoom", func = script_camera_set_absolute_zoom},
-            new LuaTableFunction() { name = "set_absolute_position", func = script_camera_set_absolute_position},
-            new LuaTableFunction() { name = "set_offset", func = script_camera_set_offset},
-            new LuaTableFunction() { name = "get_offset", func = script_camera_get_offset},
-            new LuaTableFunction() { name = "get_modifier", func = script_camera_get_modifier},
-            new LuaTableFunction() { name = "move", func = script_camera_move},
-            new LuaTableFunction() { name = "slide", func = script_camera_slide},
-            new LuaTableFunction() { name = "slide_x", func = script_camera_slide_x},
-            new LuaTableFunction() { name = "slide_y", func = script_camera_slide_y},
-            new LuaTableFunction() { name = "slide_z", func = script_camera_slide_z},
-            new LuaTableFunction() { name = "slide_to", func = script_camera_slide_to},
-            new LuaTableFunction() { name = "from_layout", func = script_camera_from_layout},
-            new LuaTableFunction() { name = "to_origin", func = script_camera_to_origin},
-            new LuaTableFunction() { name = "repeat", func = script_camera_repeat},
-            new LuaTableFunction() { name = "stop", func = script_camera_stop},
-            new LuaTableFunction() { name = "end", func = script_camera_end},
-            new LuaTableFunction() { name = "is_completed", func = script_camera_is_completed},
-            new LuaTableFunction() { name = "debug_log_info", func = script_camera_debug_log_info},
-            new LuaTableFunction() { name = "apply", func = script_camera_apply},
-            new LuaTableFunction() { name =  "move_offset", func = script_camera_move_offset },
-            new LuaTableFunction() { name =  "slide_offset", func = script_camera_slide_offset },
-            new LuaTableFunction() { name =  "slide_x_offset", func = script_camera_slide_x_offset },
-            new LuaTableFunction() { name =  "slide_y_offset", func = script_camera_slide_y_offset },
-            new LuaTableFunction() { name =  "slide_z_offset", func = script_camera_slide_z_offset },
-            new LuaTableFunction() { name =  "slide_to_offset", func = script_camera_slide_to_offset },
-            new LuaTableFunction() { name =  "to_origin_offset", func = script_camera_to_origin_offset },
-            new LuaTableFunction() { name = null, func = null }
+            new LuaTableFunction("set_interpolator_type", script_camera_set_interpolator_type),
+            new LuaTableFunction("set_transition_duration", script_camera_set_transition_duration),
+            new LuaTableFunction("set_absolute_zoom", script_camera_set_absolute_zoom),
+            new LuaTableFunction("set_absolute_position", script_camera_set_absolute_position),
+            new LuaTableFunction("set_offset", script_camera_set_offset),
+            new LuaTableFunction("get_offset", script_camera_get_offset),
+            new LuaTableFunction("get_modifier", script_camera_get_modifier),
+            new LuaTableFunction("move", script_camera_move),
+            new LuaTableFunction("slide", script_camera_slide),
+            new LuaTableFunction("slide_x", script_camera_slide_x),
+            new LuaTableFunction("slide_y", script_camera_slide_y),
+            new LuaTableFunction("slide_z", script_camera_slide_z),
+            new LuaTableFunction("slide_to", script_camera_slide_to),
+            new LuaTableFunction("from_layout", script_camera_from_layout),
+            new LuaTableFunction("to_origin", script_camera_to_origin),
+            new LuaTableFunction("repeat", script_camera_repeat),
+            new LuaTableFunction("stop", script_camera_stop),
+            new LuaTableFunction("end", script_camera_end),
+            new LuaTableFunction("is_completed", script_camera_is_completed),
+            new LuaTableFunction("debug_log_info", script_camera_debug_log_info),
+            new LuaTableFunction("apply", script_camera_apply),
+            new LuaTableFunction("move_offset", script_camera_move_offset),
+            new LuaTableFunction("slide_offset", script_camera_slide_offset),
+            new LuaTableFunction("slide_x_offset", script_camera_slide_x_offset),
+            new LuaTableFunction("slide_y_offset", script_camera_slide_y_offset),
+            new LuaTableFunction("slide_z_offset", script_camera_slide_z_offset),
+            new LuaTableFunction("slide_to_offset", script_camera_slide_to_offset),
+            new LuaTableFunction("to_origin_offset", script_camera_to_origin_offset),
+            new LuaTableFunction(null, null)
         };
 
         internal static int script_camera_new(LuaState L, Camera camera) {

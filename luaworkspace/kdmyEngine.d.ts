@@ -113,7 +113,7 @@ declare global {
     //
     // Enumerations (literals in lua)
     //
-    const enum AnimInterpolatorType {
+    const enum AnimInterpolator {
         EASE = "ease",
         EASE_IN = "ease-in",
         EASE_OUT = "ease-out",
@@ -158,6 +158,30 @@ declare global {
         sing = "sing",
         none = "none"
     }
+    const enum StepsMethod {
+        BOTH = "both",
+        NONE = "none",
+        START = "start",
+        END = "end"
+    }
+    const enum Blend {
+        DEFAULT = "DEFAULT",
+        ZERO = "ZERO",
+        ONE = "ONE",
+        SRC_COLOR = "SRC_COLOR",
+        ONE_MINUS_SRC_COLOR = "ONE_MINUS_SRC_COLOR",
+        DST_COLOR = "DST_COLOR",
+        ONE_MINUS_DST_COLOR = "ONE_MINUS_DST_COLOR",
+        SRC_ALPHA = "SRC_ALPHA",
+        ONE_MINUS_SRC_ALPHA = "ONE_MINUS_SRC_ALPHA",
+        DST_ALPHA = "DST_ALPHA",
+        ONE_MINUS_DST_ALPHA = "ONE_MINUS_DST_ALPHA",
+        CONSTANT_COLOR = "CONSTANT_COLOR",
+        ONE_MINUS_CONSTANT_COLOR = "ONE_MINUS_CONSTANT_COLOR",
+        CONSTANT_ALPHA = "CONSTANT_ALPHA",
+        ONE_MINUS_CONSTANT_ALPHA = "ONE_MINUS_CONSTANT_ALPHA",
+        SRC_ALPHA_SATURATE = "SRC_ALPHA_SATURATE"
+    }
 
     //
     // Helpers
@@ -182,10 +206,10 @@ declare global {
     }
 
     //
-    // Global (meta)tables (classes in typescript/javascript)
+    // Global metatables (classes in typescript/javascript)
     //
     interface Camera {
-        set_interpolator_type(type: AnimInterpolatorType): void;
+        set_interpolator_type(type: AnimInterpolator): void;
         set_transition_duration(expresed_in_beats: boolean, value: number): void;
         set_absolute_zoom(z: number): void;
         set_absolute_position(x: number, y: number): void;
@@ -198,7 +222,7 @@ declare global {
         slide_y(start: number, end: number): void;
         slide_z(start: number, end: number): void;
         slide_to(x: number, y: number, z: number): void;
-        from_layout(layout: Layout, camera_name: string): boolean;
+        from_layout(camera_name: string): boolean;
         to_origin(should_slide: boolean): void;
         repeat(): void;
         stop(): void;
@@ -241,8 +265,8 @@ declare global {
         disable_antialiasing(antialiasing: boolean): void;
         set_group_antialiasing(group_name: string, antialiasing: PVRFlag): void;
         get_group_modifier(group_name: string): Modifier;
-        layout_get_group_shader(layout: Layout, name: string): PSShader;
-        layout_set_group_shader(layout: Layout, name: string, psshader: PSShader): boolean;
+        get_group_shader(layout: Layout, name: string): PSShader;
+        set_group_shader(layout: Layout, name: string, psshader: PSShader): boolean;
     }
     interface Sprite {
         matrix_get_modifier(): Modifier;
@@ -269,8 +293,8 @@ declare global {
         set_antialiasing(antialiasing: PVRFlag): void;
         flip_rendered_texture(flip_x?: boolean, flip_y?: boolean): void;
         flip_rendered_texture_enable_correction(enabled: boolean): void;
-        sprite_set_shader(sprite: Sprite, psshader: PSShader): void;
-        sprite_get_shader(sprite: Sprite): PSShader;
+        set_shader(sprite: Sprite, psshader: PSShader): void;
+        get_shader(sprite: Sprite): PSShader;
 
     }
     interface TextSprite {
@@ -345,7 +369,7 @@ declare global {
         update_reference_size(width: number, height: number): void;
         enable_reference_size(enable: boolean): void;
         set_offset(offset_x: number, offset_y: number): void;
-        state_add(modelholder: Modelholder, state_name: string): number;
+        state_add(modelholder: ModelHolder, state_name: string): number;
         state_toggle(state_name: string): number;
         play_hey(): boolean;
         play_idle(): boolean;
@@ -362,7 +386,7 @@ declare global {
         face_as_opponent(face_as_opponent: boolean): void;
         set_z_index(z: number): void;
         set_z_offset(z_offset: number): void;
-        animation_set(animsprite: Animsprite): void;
+        animation_set(animsprite: AnimSprite): void;
         animation_restart(): void;
         animation_end(): void;
         set_color_offset(r: number, g: number, b: number, a: number): void;
@@ -384,6 +408,8 @@ declare global {
         get_timestamp(): number;
         mute_track(vocals_or_instrumental: boolean, muted: boolean): void;
         mute(muted: boolean): void;
+        set_volume_track(vocals_or_instrumental: boolean, volume: number): void;
+        set_volume(volume: number): void;
     }
     interface Modifier {
         translateX: number;
@@ -400,13 +426,13 @@ declare global {
         scaleDirectionX: number;
         scaleDirectionY: number;
 
-        rotatePivotEnabled: number;
+        rotatePivotEnabled: boolean;
         rotatePivotU: number;
         rotatePivotV: number;
 
-        translateRotation: number;
-        scaleSize: number;
-        scaleTranslation: number;
+        translateRotation: boolean;
+        scaleSize: boolean;
+        scaleTranslation: boolean;
 
         x: number;
         y: number;
@@ -414,8 +440,18 @@ declare global {
         width: number;
         height: number;
     }
-    interface Modelholder {
-        // not implemented
+    interface ModelHolder {
+        destroy(): void;
+        is_invalid(): boolean;
+        has_animlist(): boolean;
+        create_animsprite(animation_name: string, fallback_static: boolean, no_return_null: boolean): AnimSprite;
+        get_atlas(): Atlas;
+        get_vertex_color(): number;
+        get_animlist(): AnimList;
+        get_atlas_entry(atlas_entry_name: string): AtlasEntry;
+        get_atlas_entry2(atlas_entry_name: string): AtlasEntry;
+        get_texture_resolution(): LuaMultiReturn<[number, number]>;
+        utils_is_known_extension(): boolean;
     }
     interface Dialogue {
         apply_state(state_name: string): boolean;
@@ -429,16 +465,121 @@ declare global {
         set_alpha(alpha: number): void;
         set_antialiasing(antialiasing: PVRFlag): void;
     }
-    interface Animsprite {
-        // not implemented
+    interface AnimSprite {
+        init(animlist_item: AnimListItem): AnimSprite;
+        destroy(): void;
+        set_loop(loop: number): void;
+        get_name(): string;
+        is_frame_animation(): boolean;
+        set_delay(delay_milliseconds: number): void;
     }
     interface PSShader {
         destroy(psshader: PSShader): void;
         set_uniform_any(psshader: PSShader, name: string, ...values: number[]): number;
         set_uniform1f(psshader: PSShader, name: string, value: number): boolean;
         set_uniform1i(psshader: PSShader, name: string, value: number): boolean;
+    }
+    interface TweenLerp {
+        destroy(): void;
+        end(): void;
+        mark_as_completed(): void;
+        restart(): void;
+        animate(elapsed: number): number;
+        animate_percent(percent: number): number;
+        is_completed(): boolean;
+        get_elapsed(): number;
+        get_entry_count(): number;
+        peek_value(): number;
+        peek_value_by_index(index: number): number;
+        peek_entry_by_index(index: number): LuaMultiReturn<[number, number, number]> | null;
+        peek_value_by_id(id: number): number;
+        change_bounds_by_index(index: number, new_start: number, new_end: number): boolean;
+        override_start_with_end_by_index(index: number): boolean;
+        change_bounds_by_id(id: number, new_start: number, new_end: number): boolean;
+        change_duration_by_index(index: number, new_duration: number): boolean;
+        swap_bounds_by_index(index: number): boolean;
+        add_ease(id: number, start: number, end: number, duration: number): number;
+        add_easein(id: number, start: number, end: number, duration: number): number;
+        add_easeout(id: number, start: number, end: number, duration: number): number;
+        add_easeinout(id: number, start: number, end: number, duration: number): number;
+        add_linear(id: number, start: number, end: number, duration: number): number;
+        add_steps(id: number, start: number, end: number, duration: number, steps_count: number, steps_method: StepsMethod): number;
+        add_interpolator(id: number, start: number, end: number, duration: number, type: AnimInterpolator): number;
+    }
+    interface AtlasEntry {
+        readonly name: string;
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+        readonly frame_x: number;
+        readonly frame_y: number;
+        readonly frame_width: number;
+        readonly frame_height: number;
+        readonly pivot_x: number;
+        readonly pivot_y: number;
+    }
+    interface Atlas {
+        destroy(): void;
+        get_index_of(name: string): number;
+        get_entry(name: string): AtlasEntry;
+        get_entry_with_number_suffix(name_prefix: string): AtlasEntry;
+        get_glyph_fps(): number;
+        get_texture_resolution(): LuaMultiReturn<[number, number]>;
+        utils_is_known_extension(src: string): boolean;
+    }
+    interface AnimListItem {
+        readonly name: string;
+        readonly is_frame_animation: boolean;
+        readonly is_item_macro_animation: boolean;
+        readonly is_item_tweenlerp_animation: boolean;
+    }
+    interface AnimList {
+        destroy(): void;
+        get_animation(animation_name: string): AnimListItem;
 
     }
+    interface Drawable {
+        set_z_index(z_index: number): void;
+        get_z_index(): number;
+        set_z_offset(offset: number): void;
+        set_alpha(alpha: number): void;
+        get_alpha(): number;
+        set_offsetcolor(r: number, g: number, b: number, a: number): void;
+        set_offsetcolor_to_default(): void;
+        get_modifier(): Modifier;
+        set_antialiasing(antialiasing: PVRFlag): void;
+        set_shader(psshader: PSShader): void;
+        get_shader(): PSShader;
+        blend_enable(enabled: boolean): void;
+        blend_set(src_rgb: Blend, dst_rgb: Blend, src_alpha: Blend, dst_alpha: Blend): void;
+
+    }
+
+    //
+    // Global metatables initializers (class static contructors in typescript/javascript)
+    //
+    interface ModelHolderConstructor {
+        init(src: string): ModelHolder;
+        init2(vertex_color_rgb8: number, atlas_src: string, animlist_src: string): ModelHolder;
+    } const ModelHolder: ModelHolderConstructor;
+    interface AnimSpriteConstructor {
+        init_from_atlas(frame_rate: number, loop: number, atlas: Atlas, prefix: string, has_number_suffix: boolean): AnimSprite;
+        init_from_animlist(animlist: AnimList, animation_name: string): AnimSprite;
+        init_as_empty(name: string): AnimSprite;
+    } const AnimSprite: AnimSpriteConstructor;
+    interface TweenLerpConstructor {
+        init(): TweenLerp;
+    } const TweenLerp: TweenLerpConstructor;
+    interface AtlasConstructor {
+        init(src: string): Atlas;
+    } const AtlasConstructor: AtlasConstructor;
+    interface AnimListConstructor {
+        init(): AnimList;
+
+    } const AnimList: AnimListConstructor;
+
+
 
     //
     // Global functions (commented functions are not implemented) (gameplay only)

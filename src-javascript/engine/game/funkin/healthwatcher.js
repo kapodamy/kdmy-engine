@@ -8,6 +8,8 @@ function healthwatcher_init() {
 }
 
 function healthwatcher_destroy(healthwatcher) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(healthwatcher);
+
     arraylist_destroy(healthwatcher.players, 0);
     arraylist_destroy(healthwatcher.opponents, 0);
     healthwatcher = undefined;

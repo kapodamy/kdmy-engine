@@ -10,7 +10,7 @@ namespace Engine.Externals.LuaScriptInterop {
             SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
 
             string src = L.luaL_checkstring(2);
-            bool prefer_no_copyright = L.luaL_toboolean(3);
+            bool prefer_no_copyright = L.lua_toboolean(3);
 
             bool ret = songplayer.ChangeSong(src, prefer_no_copyright);
 
@@ -75,8 +75,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_songplayer_mute_track(LuaState L) {
             SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
 
-            bool vocals_or_instrumental = L.luaL_toboolean(2);
-            bool muted = L.luaL_toboolean(3);
+            bool vocals_or_instrumental = L.lua_toboolean(2);
+            bool muted = L.lua_toboolean(3);
 
             songplayer.MuteTrack(vocals_or_instrumental, muted);
 
@@ -86,9 +86,28 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_songplayer_mute(LuaState L) {
             SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
 
-            bool muted = L.luaL_toboolean(2);
+            bool muted = L.lua_toboolean(2);
 
             songplayer.Mute(muted);
+
+            return 0;
+        }
+
+        static int script_songplayer_set_volume_track(LuaState L) {
+            SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
+            bool vocals_or_instrumental = L.lua_toboolean(2);
+            float volume = (float)L.luaL_checknumber(3);
+
+            songplayer.SetVolumeTrack(vocals_or_instrumental, volume);
+
+            return 0;
+        }
+
+        static int script_songplayer_set_volume(LuaState L) {
+            SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
+            float volume = (float)L.luaL_checknumber(2);
+
+            songplayer.SetVolume(volume);
 
             return 0;
         }
@@ -98,16 +117,18 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         static readonly LuaTableFunction[] SONGPLAYER_FUNCTIONS = {
-            new LuaTableFunction() { name = "changesong", func = script_songplayer_changesong},
-            new LuaTableFunction() { name = "play", func = script_songplayer_play},
-            new LuaTableFunction() { name = "pause", func = script_songplayer_pause},
-            new LuaTableFunction() { name = "seek", func = script_songplayer_seek},
-            new LuaTableFunction() { name = "get_duration", func = script_songplayer_get_duration},
-            new LuaTableFunction() { name = "is_completed", func = script_songplayer_is_completed},
-            new LuaTableFunction() { name = "get_timestamp", func = script_songplayer_get_timestamp},
-            new LuaTableFunction() { name = "mute_track", func = script_songplayer_mute_track},
-            new LuaTableFunction() { name = "mute", func = script_songplayer_mute},
-            new LuaTableFunction() { name = null, func = null}
+            new LuaTableFunction("changesong", script_songplayer_changesong),
+            new LuaTableFunction("play", script_songplayer_play),
+            new LuaTableFunction("pause", script_songplayer_pause),
+            new LuaTableFunction("seek", script_songplayer_seek),
+            new LuaTableFunction("get_duration", script_songplayer_get_duration),
+            new LuaTableFunction("is_completed", script_songplayer_is_completed),
+            new LuaTableFunction("get_timestamp", script_songplayer_get_timestamp),
+            new LuaTableFunction("mute_track", script_songplayer_mute_track),
+            new LuaTableFunction("mute", script_songplayer_mute),
+            new LuaTableFunction("set_volume_track", script_songplayer_set_volume_track),
+            new LuaTableFunction("set_volume", script_songplayer_set_volume),
+            new LuaTableFunction(null, null)
         };
 
 

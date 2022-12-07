@@ -1637,7 +1637,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
 
             if (state.model_marker) marker = await modelholder_init(state.model_marker);
             if (state.model_sick_effect) sick_effect = await modelholder_init(state.model_sick_effect);
-            if (state.model_background) background = await modelholder_init(state.model_background);
+            if (state.model_background && await fs_file_exists(state.model_background)) background = await modelholder_init(state.model_background);
             if (state.model_notes) notes = await modelholder_init(state.model_notes);
 
             strums_state_add(
@@ -2719,7 +2719,7 @@ function week_ui_set_visibility(/**@type {RoundContext} */ roundcontext, visible
 }
 
 function week_get_current_chart_info(/**@type {RoundContext} */ roundcontext, chartinfo) {
-    chartinfo.bmp = roundcontext.settings.bpm;
+    chartinfo.bpm = roundcontext.settings.bpm;
     chartinfo.speed = roundcontext.settings.speed;
 }
 

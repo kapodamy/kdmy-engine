@@ -9,71 +9,39 @@ namespace Engine.Externals.LuaScriptInterop {
     public static class LuascriptHelpers {
 
         public static Align ParseAlign(LuaState L, string align) {
-            switch (align) {
-                case null:
-                case "":
-                case "NONE":
-                    return Align.NONE;
-                case "START":
-                    return Align.START;
-                case "CENTER":
-                    return Align.CENTER;
-                case "END":
-                    return Align.END;
-                case "BOTH":
-                    return Align.BOTH;
-            }
+            Align value = VertexProps.ParseAlign2(align);
 
-            L.luaL_error($"invalid align: {align}");
-            return Align.INVALID;
+            if (value == Align.INVALID)
+                L.luaL_error($"invalid align: {align}");
+
+            return value;
         }
 
         public static PVRContextFlag ParsePVRFLAG(LuaState L, string pvrflag) {
-            switch (pvrflag) {
-                case null:
-                case "":
-                case "DEFAULT":
-                    return PVRContextFlag.DEFAULT;
-                case "ENABLE":
-                    return PVRContextFlag.ENABLE;
-                case "DISABLE":
-                    return PVRContextFlag.DISABLE;
-            }
+            PVRContextFlag value = VertexProps.ParseFlag2(pvrflag, PVRContextFlag.INVALID_VALUE);
 
-            L.luaL_error($"invalid pvrflag: {pvrflag}");
-            return PVRContextFlag.INVALID_VALUE;
+            if (value == PVRContextFlag.INVALID_VALUE)
+                L.luaL_error($"invalid pvrflag: {pvrflag}");
+
+            return value;
         }
 
         public static int ParseForcecase(LuaState L, string forcecase) {
-            switch (forcecase) {
-                case null:
-                case "":
-                case "none":
-                    return VertexProps.TEXTSPRITE_FORCE_NONE;
-                case "upper":
-                    return VertexProps.TEXTSPRITE_FORCE_UPPERCASE;
-                case "lower":
-                    return VertexProps.TEXTSPRITE_FORCE_LOWERCASE;
-            }
+            int value = VertexProps.ParseTextSpriteForceCase2(forcecase);
 
-            L.luaL_error($"invalid forcecase: {forcecase}");
-            return -1;
+            if (value < 0)
+                L.luaL_error($"invalid forcecase: {forcecase}");
+
+            return value;
         }
 
         public static int ParseWordbreak(LuaState L, string wordbreak) {
-            switch (wordbreak) {
-                case null:
-                case "":
-                case "none":
-                    return VertexProps.FONT_WORDBREAK_NONE;
-                case "loose":
-                    return VertexProps.FONT_WORDBREAK_LOOSE;
-                case "break":
-                    return VertexProps.FONT_WORDBREAK_BREAK;
-            }
+            int value = VertexProps.ParseWordbreak2(wordbreak);
 
-            L.luaL_error($"invalid wordbreak: {wordbreak}");
-            return -1;
+            if (value < 0)
+                L.luaL_error($"invalid wordbreak: {wordbreak}");
+
+            return value;
         }
 
         public static AnimInterpolator ParseInterpolator(LuaState L, string interpolator) {
@@ -94,6 +62,15 @@ namespace Engine.Externals.LuaScriptInterop {
 
             L.luaL_error($"invalid interpolator: {interpolator}");
             return AnimInterpolator.LINEAR;
+        }
+
+        public static Blend ParseBlend(LuaState L, string blend) {
+            Blend value = VertexProps.ParseBlending(blend);
+
+            if (value == Blend.INVALID_VALUE)
+                L.luaL_error($"invalid blend: {blend}");
+
+            return value;
         }
 
 

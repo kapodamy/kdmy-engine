@@ -8,7 +8,7 @@ PSShader psshader_init(const char* vertex_sourcecode, const char* fragment_sourc
     return &stub;
 }
 
-void psshader_destroy(PSShader psshader) {
+void psshader_destroy(PSShader* psshader) {
     print_stub("psshader_destroy", "psshader=%p", psshader);
 }
 

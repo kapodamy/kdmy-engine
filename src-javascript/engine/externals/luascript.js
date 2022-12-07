@@ -8,7 +8,9 @@ const kdmyEngine_textDecoder = new TextDecoder("UTF-8", { ignoreBOM: true, fatal
 const kdmyEngine_textEncoder = new TextEncoder();
 const kdmyEngine_textBuffer = new Uint8Array(128);
 const kdmyEngine_objectMap = new Map();
+/**@type {DataView}*/let kdmyEngine_dataView;
 let kdmyEngine_objectIndex = 1;
+const kdmyEngine_endianess = new Uint16Array(new Uint8Array([0x00, 0xFF]).buffer)[0] == 0xFF00;
 const kdmyEngine_obtain = function (key) {
     //if (key === undefined) console.warn("undefined value passed");
     if (key == null) return 0;
@@ -29,6 +31,15 @@ const kdmyEngine_obtain = function (key) {
     index = kdmyEngine_objectIndex++;
     kdmyEngine_objectMap.set(key, index);
     return index;
+};
+const kdmyEngine_forget = function (target_id) {
+    for (let [obj, idx] of kdmyEngine_objectMap) {
+        if (idx == target_id) {
+            kdmyEngine_objectMap.delete(obj);
+            return true;
+        }
+    }
+    return false;
 };
 const kdmyEngine_drop_shared_object = function (target_obj) {
     for (let [obj, idx] of kdmyEngine_objectMap) {
@@ -99,6 +110,21 @@ function kdmyEngine_stringToPtr(str) {
     HEAP8[ptr + bytes] = 0x00;
 
     return ptr;
+}
+function kdmyEngine_set_int32(address, value) {
+    kdmyEngine_dataView.setInt32(address, value, kdmyEngine_endianess);
+}
+function kdmyEngine_set_uint32(address, value) {
+    kdmyEngine_dataView.setUint32(address, value, kdmyEngine_endianess);
+}
+function kdmyEngine_set_float32(address, value) {
+    kdmyEngine_dataView.setFloat32(address, value, kdmyEngine_endianess);
+}
+function kdmyEngine_set_float64(address, value) {
+    kdmyEngine_dataView.setFloat64(address, value, kdmyEngine_endianess);
+}
+function kdmyEngine_get_uint32(address) {
+    return kdmyEngine_dataView.getFloat64(address, kdmyEngine_endianess);
 }
 
 ModuleLuaScript.kdmyEngine_stringToPtr = kdmyEngine_stringToPtr;
@@ -543,6 +569,7 @@ function updateGlobalBufferAndViews(buf) {
     ModuleLuaScript["HEAPU32"] = HEAPU32 = new Uint32Array(buf);
     ModuleLuaScript["HEAPF32"] = HEAPF32 = new Float32Array(buf);
     ModuleLuaScript["HEAPF64"] = HEAPF64 = new Float64Array(buf)
+    kdmyEngine_dataView = new DataView(buf);
 }
 var INITIAL_MEMORY = ModuleLuaScript["INITIAL_MEMORY"] || 16777216;
 var wasmTable;
@@ -745,6 +772,18 @@ function createWasm() {
 }
 var tempDouble;
 var tempI64;
+function __asyncjs__animlist_init(src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await animlist_init(kdmyEngine_ptrToString(src));
+        return kdmyEngine_obtain(ret)
+    })
+}
+function __asyncjs__atlas_init(src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await atlas_init(kdmyEngine_ptrToString(src));
+        return kdmyEngine_obtain(ret)
+    })
+}
 function __asyncjs__dialogue_show_dialog(dialogue, dialog_src) {
     return Asyncify.handleAsync(async() => {
         return await dialogue_show_dialog(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(dialog_src))
@@ -753,12 +792,9 @@ function __asyncjs__dialogue_show_dialog(dialogue, dialog_src) {
 function __asyncjs__fs_readfile(path, buffer_ptr, size_ptr) {
     return Asyncify.handleAsync(async() => {
         try {
-            const ENDIANESS = true;
-            const POINTER = false;
             if (buffer_ptr == 0)
                 return 0;
             let arraybuffer = await fs_readarraybuffer(kdmyEngine_ptrToString(path));
-            let dataView = new DataView(buffer);
             if (!arraybuffer)
                 return 0;
             let ptr = _malloc(arraybuffer.byteLength);
@@ -766,13 +802,9 @@ function __asyncjs__fs_readfile(path, buffer_ptr, size_ptr) {
                 console.error("__asyncjs__fs_readfile() out-of-memory, size required was " + arraybuffer.byteLength);
                 return 0
             }
-            let buf = new Uint8Array(buffer);
-            buf.set(new Uint8Array(arraybuffer), ptr);
-            if (POINTER)
-                dataView.setBigUint64(buffer_ptr, ptr, ENDIANESS);
-            else
-                dataView.setUint32(buffer_ptr, ptr, ENDIANESS);
-            dataView.setUint32(size_ptr, arraybuffer.byteLength, ENDIANESS);
+            new Uint8Array(buffer).set(new Uint8Array(arraybuffer), ptr);
+            kdmyEngine_set_uint32(buffer_ptr, ptr);
+            kdmyEngine_set_uint32(size_ptr, arraybuffer.byteLength);
             return 1
         } catch (e) {
             console.error(e);
@@ -790,6 +822,18 @@ function __asyncjs__messagebox_set_image_from_texture(messagebox, filename) {
         await messagebox_set_image_from_texture(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(filename))
     })
 }
+function __asyncjs__modelholder_init(src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await modelholder_init(kdmyEngine_ptrToString(src));
+        return kdmyEngine_obtain(ret)
+    })
+}
+function __asyncjs__modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await modelholder_init2(vertex_color_rgb8, kdmyEngine_ptrToString(atlas_src), kdmyEngine_ptrToString(animlist_src));
+        return kdmyEngine_obtain(ret)
+    })
+}
 function __asyncjs__songplayer_play(songplayer, songinfo) {
     return Asyncify.handleAsync(async() => {
         const _songinfo = {
@@ -798,6 +842,86 @@ function __asyncjs__songplayer_play(songplayer, songinfo) {
         };
         await songplayer_play(kdmyEngine_obtain(songplayer), _songinfo)
     })
+}
+function __js__animlist_destroy(animlist) {
+    animlist_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(animlist)))
+}
+function __js__animlist_get_animation(animlist, animation_name) {
+    let ret = animlist_get_animation(kdmyEngine_obtain(animlist), kdmyEngine_ptrToString(animation_name));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animlist_is_item_frame_animation(animlist_item) {
+    let ret = animlist_is_item_frame_animation(kdmyEngine_obtain(animlist_item));
+    return ret ? 1 : 0
+}
+function __js__animlist_is_item_macro_animation(animlist_item) {
+    let ret = animlist_is_item_macro_animation(kdmyEngine_obtain(animlist_item));
+    return ret ? 1 : 0
+}
+function __js__animsprite_destroy(animsprite) {
+    animsprite_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(animsprite)))
+}
+function __js__animsprite_get_name(animsprite) {
+    let ret = animsprite_get_name(kdmyEngine_obtain(animsprite));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_init(animlist_item) {
+    let ret = animsprite_init(kdmyEngine_obtain(animlist_item));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_init_as_empty(name) {
+    let ret = animsprite_init_as_empty(kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_init_from_animlist(animlist, animation_name) {
+    let ret = animsprite_init_from_animlist(kdmyEngine_obtain(animlist), kdmyEngine_ptrToString(animation_name));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_init_from_atlas(frame_rate, loop, atlas, prefix, has_number_suffix) {
+    let ret = animsprite_init_from_atlas(frame_rate, loop, kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(prefix), has_number_suffix);
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_is_frame_animation(animsprite) {
+    let ret = animsprite_is_frame_animation(kdmyEngine_obtain(animsprite));
+    return ret ? 1 : 0
+}
+function __js__animsprite_restart(animsprite) {
+    animsprite_restart(kdmyEngine_obtain(animsprite))
+}
+function __js__animsprite_set_delay(animsprite, delay_milliseconds) {
+    animsprite_set_delay(kdmyEngine_obtain(animsprite), delay_milliseconds)
+}
+function __js__animsprite_set_loop(animsprite, loop) {
+    animsprite_set_loop(kdmyEngine_obtain(animsprite), loop)
+}
+function __js__atlas_destroy(atlas) {
+    atlas_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(atlas)))
+}
+function __js__atlas_get_entry(atlas, name) {
+    let ret = atlas_get_entry(kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(ret)
+}
+function __js__atlas_get_entry_with_number_suffix(atlas, name_prefix) {
+    let ret = atlas_get_entry_with_number_suffix(kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(name_prefix));
+    return kdmyEngine_obtain(ret)
+}
+function __js__atlas_get_glyph_fps(atlas) {
+    let ret = atlas_get_glyph_fps(kdmyEngine_obtain(atlas));
+    return ret
+}
+function __js__atlas_get_index_of(atlas, name) {
+    let ret = atlas_get_index_of(kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(name));
+    return ret
+}
+function __js__atlas_get_texture_resolution(atlas, resolution_width, resolution_height) {
+    const values = [0, 0];
+    atlas_get_texture_resolution(kdmyEngine_obtain(atlas), values);
+    kdmyEngine_set_int32(resolution_width, values[0]);
+    kdmyEngine_set_int32(resolution_height, values[1])
+}
+function __js__atlas_utils_is_known_extension(src) {
+    let ret = atlas_utils_is_known_extension(kdmyEngine_ptrToString(src));
+    return ret ? 1 : 0
 }
 function __js__camera_apply(camera, pvrctx) {
     camera_apply(kdmyEngine_obtain(camera), null)
@@ -815,15 +939,16 @@ function __js__camera_get_modifier(camera) {
     const modifier = camera_get_modifier(kdmyEngine_obtain(camera));
     return kdmyEngine_obtain(modifier)
 }
-function __js__camera_get_offset(camera, xyz) {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
+function __js__camera_get_offset(camera, x, y, z) {
     const values = [0, 0, 0];
     camera_get_offset(kdmyEngine_obtain(camera), values);
-    dataView.setFloat32(xyz + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(xyz + 4, values[1], HEAP_ENDIANESS);
-    dataView.setFloat32(xyz + 8, values[2], HEAP_ENDIANESS);
-    return xyz
+    kdmyEngine_set_float32(x, values[0]);
+    kdmyEngine_set_float32(y, values[1]);
+    kdmyEngine_set_float32(z, values[2])
+}
+function __js__camera_get_parent_layout(camera) {
+    let ret = camera_get_parent_layout(kdmyEngine_obtain(camera));
+    return kdmyEngine_obtain(ret)
 }
 function __js__camera_is_completed(camera) {
     return camera_is_completed(kdmyEngine_obtain(camera))
@@ -890,10 +1015,6 @@ function __js__camera_to_origin(camera, should_slide) {
 }
 function __js__camera_to_origin_offset(camera, should_slide) {
     camera_to_origin_offset(kdmyEngine_obtain(camera), should_slide)
-}
-function __js__camera_get_parent_layout(camera) {
-    let ret = camera_get_parent_layout(kdmyEngine_obtain(camera));
-    return kdmyEngine_obtain(ret);
 }
 function __js__character_animation_end(character) {
     character_animation_end(kdmyEngine_obtain(character))
@@ -1026,6 +1147,152 @@ function __js__dialogue_set_antialiasing(dialogue, antialiasing) {
 function __js__dialogue_set_offsetcolor(dialogue, r, g, b, a) {
     dialogue_set_offsetcolor(kdmyEngine_obtain(dialogue), r, g, b, a)
 }
+function __js__drawable_blend_enable(drawable, enabled) {
+    drawable_blend_enable(kdmyEngine_obtain(drawable), enabled)
+}
+function __js__drawable_blend_set(drawable, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    drawable_blend_set(kdmyEngine_obtain(drawable), src_rgb, dst_rgb, src_alpha, dst_alpha)
+}
+function __js__drawable_get_alpha(drawable) {
+    let ret = drawable_get_alpha(kdmyEngine_obtain(drawable));
+    return ret
+}
+function __js__drawable_get_modifier(drawable) {
+    let ret = drawable_get_modifier(kdmyEngine_obtain(drawable));
+    return kdmyEngine_obtain(ret)
+}
+function __js__drawable_get_shader(drawable) {
+    let ret = drawable_get_shader(kdmyEngine_obtain(drawable));
+    return kdmyEngine_obtain(ret)
+}
+function __js__drawable_get_z_index(drawable) {
+    let ret = drawable_get_z_index(kdmyEngine_obtain(drawable));
+    return ret
+}
+function __js__drawable_set_alpha(drawable, alpha) {
+    drawable_set_alpha(kdmyEngine_obtain(drawable), alpha)
+}
+function __js__drawable_set_antialiasing(drawable, antialiasing) {
+    drawable_set_antialiasing(kdmyEngine_obtain(drawable), antialiasing)
+}
+function __js__drawable_set_offsetcolor(drawable, r, g, b, a) {
+    drawable_set_offsetcolor(kdmyEngine_obtain(drawable), r, g, b, a)
+}
+function __js__drawable_set_offsetcolor_to_default(drawable) {
+    drawable_set_offsetcolor_to_default(kdmyEngine_obtain(drawable))
+}
+function __js__drawable_set_shader(drawable, psshader) {
+    drawable_set_shader(kdmyEngine_obtain(drawable), kdmyEngine_obtain(psshader))
+}
+function __js__drawable_set_z_index(drawable, z_index) {
+    drawable_set_z_index(kdmyEngine_obtain(drawable), z_index)
+}
+function __js__drawable_set_z_offset(drawable, offset) {
+    drawable_set_z_offset(kdmyEngine_obtain(drawable), offset)
+}
+function __js__kdmyEngine_forget_obtained(obj_id) {
+    let ret = kdmyEngine_forget(obj_id);
+    if (!ret)
+        throw new Error("Uknown object id:" + obj_id)
+}
+function __js__kdmyEngine_read_prop_boolean(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return ret ? 1 : 0
+}
+function __js__kdmyEngine_read_prop_double(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return ret
+}
+function __js__kdmyEngine_read_prop_float(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return ret
+}
+function __js__kdmyEngine_read_prop_floatboolean(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return ret >= 1 || ret === true
+}
+function __js__kdmyEngine_read_prop_integer(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return ret
+}
+function __js__kdmyEngine_read_prop_object(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return kdmyEngine_obtain(typeof ret === "object" ? ret : null)
+}
+function __js__kdmyEngine_read_prop_string(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return kdmyEngine_stringToPtr(ret)
+}
+function __js__kdmyEngine_write_prop_boolean(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value
+}
+function __js__kdmyEngine_write_prop_double(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value
+}
+function __js__kdmyEngine_write_prop_float(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value
+}
+function __js__kdmyEngine_write_prop_integer(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value
+}
+function __js__kdmyEngine_write_prop_object(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = kdmyEngine_obtain(value)
+}
+function __js__kdmyEngine_write_prop_string(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = kdmyEngine_ptrToString(value)
+}
 function __js__layout_animation_is_completed(layout, item_name) {
     return layout_animation_is_completed(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(item_name))
 }
@@ -1042,32 +1309,29 @@ function __js__layout_disable_antialiasing(layout, antialiasing) {
     layout_disable_antialiasing(kdmyEngine_obtain(layout), antialiasing)
 }
 function __js__layout_get_attached_value2(layout, name, result) {
-    const dataView = new DataView(buffer);
-    const HEAP_ENDIANESS = true;
     const value = [null];
     let type = layout_get_attached_value2(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name), value);
     switch (type) {
     case LAYOUT_TYPE_NOTFOUND:
         break;
     case LAYOUT_TYPE_STRING:
-        let str_ptr = kdmyEngine_stringToPtr(value[0]);
-        dataView.setUint32(result, str_ptr, HEAP_ENDIANESS);
+        kdmyEngine_set_uint32(result, kdmyEngine_stringToPtr(value[0]));
         break;
     case LAYOUT_TYPE_FLOAT:
-        dataView.setFloat64(result, value[0], HEAP_ENDIANESS);
+        kdmyEngine_set_float32(result, value[0]);
         break;
     case LAYOUT_TYPE_INTEGER:
-        dataView.setBigInt64(result, value[0], HEAP_ENDIANESS);
+        kdmyEngine_set_int32(result, value[0]);
         break;
     case LAYOUT_TYPE_HEX:
-        dataView.setUint32(result, value[0], HEAP_ENDIANESS);
+        kdmyEngine_set_uint32(result, value[0]);
         break;
     case LAYOUT_TYPE_BOOLEAN:
-        dataView.setUint32(result, value[0], HEAP_ENDIANESS);
+        kdmyEngine_set_int32(result, value[0] ? 1 : 0);
         break;
     default:
         console.warn("Unknown layout type-value ", type, value[0]);
-        throw new Error("Unimplemented type: " + type)
+        break
     }
     return type
 }
@@ -1082,36 +1346,13 @@ function __js__layout_get_group_modifier(layout, group_name) {
     let modifier = layout_get_group_modifier(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
     return kdmyEngine_obtain(modifier)
 }
-function __js__layout_get_placeholder_JS(layout, group_name, output) {
-    const dataView = new DataView(buffer);
-    const HEAP_ENDIANESS = true;
+function __js__layout_get_group_shader(layout, group_name) {
+    let psshader = layout_get_group_shader(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
+    return kdmyEngine_obtain(psshader)
+}
+function __js__layout_get_placeholder(layout, group_name) {
     let placeholder = layout_get_placeholder(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
-    if (!placeholder)
-        return 0;
-    dataView.setInt32(output, placeholder.group_id, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setInt32(output, placeholder.align_vertical, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setInt32(output, placeholder.align_horizontal, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.x, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.y, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.z, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.height, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.width, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.parallax_x, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.parallax_y, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setFloat32(output, placeholder.parallax_z, HEAP_ENDIANESS);
-    output += 4;
-    dataView.setInt32(output, placeholder.static_camera ? 1 : 0, HEAP_ENDIANESS);
-    return 1
+    return kdmyEngine_obtain(placeholder)
 }
 function __js__layout_get_secondary_camera_helper(layout) {
     const camera = layout_get_secondary_camera_helper(kdmyEngine_obtain(layout));
@@ -1129,14 +1370,11 @@ function __js__layout_get_textsprite(layout, name) {
     const textsprite = layout_get_textsprite(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
     return kdmyEngine_obtain(textsprite)
 }
-function __js__layout_get_viewport_size(layout, size) {
-    const HEAP_ENDIANESS = true;
+function __js__layout_get_viewport_size(layout, viewport_width, viewport_height) {
     const values = [0, 0];
-    const dataView = new DataView(buffer);
     layout_get_viewport_size(kdmyEngine_obtain(layout), values);
-    dataView.setFloat32(size + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(size + 4, values[1], HEAP_ENDIANESS);
-    return size
+    kdmyEngine_set_float32(viewport_width, values[0]);
+    kdmyEngine_set_float32(viewport_height, values[1])
 }
 function __js__layout_resume(layout) {
     layout_resume(kdmyEngine_obtain(layout))
@@ -1149,6 +1387,9 @@ function __js__layout_set_group_antialiasing(layout, group_name, antialiasing) {
 }
 function __js__layout_set_group_offsetcolor(layout, group_name, r, g, b, a) {
     layout_set_group_offsetcolor(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), r, g, b, a)
+}
+function __js__layout_set_group_shader(layout, group_name, psshader) {
+    return layout_set_group_shader(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), kdmyEngine_obtain(psshader))
 }
 function __js__layout_set_group_visibility(layout, group_name, visible) {
     layout_set_group_visibility(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), visible)
@@ -1173,15 +1414,6 @@ function __js__layout_trigger_camera(layout, camera_name) {
 }
 function __js__layout_trigger_trigger(layout, trigger_name) {
     return layout_trigger_trigger(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(trigger_name))
-}
-function __js__layout_get_group_shader(layout, group_name) {
-    let psshader = layout_get_group_shader(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
-    return kdmyEngine_obtain(psshader);
-}
-function __js__layout_set_group_shader(layout, group_name, psshader) {
-    return layout_set_group_shader(
-        kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), kdmyEngine_obtain(psshader)
-    );
 }
 function __js__messagebox_get_modifier(messagebox) {
     const modifier = messagebox_get_modifier(kdmyEngine_obtain(messagebox));
@@ -1242,26 +1474,67 @@ function __js__modding_get_layout(moddingcontext) {
     let layout = modding_get_layout(kdmyEngine_obtain(moddingcontext));
     return kdmyEngine_obtain(layout)
 }
-function __js__modifier_get_field_JS(modifier, name, value_ptr) {
-    const _modifier = kdmyEngine_obtain(modifier);
-    const _field = kdmyEngine_ptrToString(name);
-    if (_field in _modifier) {
-        const HEAP_ENDIANESS = true;
-        const dataView = new DataView(buffer);
-        const value = _modifier[_field];
-        dataView.setFloat32(value_ptr, value, HEAP_ENDIANESS);
-        return 0
-    }
-    return 1
+function __js__modelholder_create_animsprite(modelholder, animation_name, fallback_static, no_return_null) {
+    let ret = modelholder_create_animsprite(kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), fallback_static, no_return_null);
+    return kdmyEngine_obtain(ret)
 }
-function __js__modifier_set_field_JS(modifier, name, value) {
-    const _modifier = kdmyEngine_obtain(modifier);
-    const _field = kdmyEngine_ptrToString(name);
-    if (_field in _modifier) {
-        _modifier[_field] = value;
-        return 0
-    }
-    return 1
+function __js__modelholder_destroy(modelholder) {
+    modelholder_destroy(kdmyEngine_obtain(modelholder))
+}
+function __js__modelholder_get_animlist(modelholder) {
+    let ret = modelholder_get_animlist(kdmyEngine_obtain(modelholder));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modelholder_get_atlas(modelholder) {
+    let ret = modelholder_get_atlas(kdmyEngine_obtain(modelholder));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modelholder_get_atlas_entry(modelholder, atlas_entry_name, return_copy) {
+    let ret = modelholder_get_atlas_entry(kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(atlas_entry_name), return_copy);
+    return kdmyEngine_obtain(ret)
+}
+function __js__modelholder_get_atlas_entry2(modelholder, atlas_entry_name, return_copy) {
+    let ret = modelholder_get_atlas_entry2(kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(atlas_entry_name), return_copy);
+    return kdmyEngine_obtain(ret)
+}
+function __js__modelholder_get_texture_resolution(modelholder, resolution_width, resolution_height) {
+    const values = [0, 0];
+    modelholder_get_texture_resolution(kdmyEngine_obtain(modelholder), values);
+    kdmyEngine_set_float32(resolution_width, values[0]);
+    kdmyEngine_set_float32(resolution_height, values[1])
+}
+function __js__modelholder_get_vertex_color(modelholder) {
+    let ret = modelholder_get_vertex_color(kdmyEngine_obtain(modelholder));
+    return ret
+}
+function __js__modelholder_has_animlist(modelholder) {
+    let ret = modelholder_has_animlist(kdmyEngine_obtain(modelholder));
+    return ret ? 1 : 0
+}
+function __js__modelholder_is_invalid(modelholder) {
+    let ret = modelholder_is_invalid(kdmyEngine_obtain(modelholder));
+    return ret ? 1 : 0
+}
+function __js__modelholder_utils_is_known_extension(filename) {
+    let ret = modelholder_utils_is_known_extension(kdmyEngine_ptrToString(filename));
+    return ret ? 1 : 0
+}
+function __js__psshader_destroy(psshader) {
+    kdmyEngine_obtain(kdmyEngine_get_uint32(psshader)).Destroy()
+}
+function __js__psshader_init(vertex_sourcecode, fragment_sourcecode) {
+    let psshader = PSShader.BuildFromSource(pvr_context, kdmyEngine_ptrToString(vertex_sourcecode), kdmyEngine_ptrToString(fragment_sourcecode));
+    return kdmyEngine_obtain(psshader)
+}
+function __js__psshader_set_uniform1f(psshader, name, value) {
+    kdmyEngine_obtain(psshader).SetUniform1F(kdmyEngine_ptrToString(name), value)
+}
+function __js__psshader_set_uniform1i(psshader, name, value) {
+    kdmyEngine_obtain(psshader).SetUniform1I(kdmyEngine_ptrToString(name), value)
+}
+function __js__psshader_set_uniform_any(psshader, name, values) {
+    const val = new Float32Array(buffer, values, 128);
+    kdmyEngine_obtain(psshader).SetUniformAny(kdmyEngine_ptrToString(name), val)
 }
 function __js__songplayer_changesong(songplayer, src, prefer_no_copyright) {
     return songplayer_changesong(kdmyEngine_obtain(songplayer), kdmyEngine_ptrToString(src), prefer_no_copyright)
@@ -1286,6 +1559,12 @@ function __js__songplayer_pause(songplayer) {
 }
 function __js__songplayer_seek(songplayer, timestamp) {
     songplayer_seek(kdmyEngine_obtain(songplayer), timestamp)
+}
+function __js__songplayer_set_volume(songplayer, volume) {
+    songplayer_set_volume(kdmyEngine_obtain(songplayer), volume)
+}
+function __js__songplayer_set_volume_track(songplayer, vocals_or_instrumental, volume) {
+    songplayer_set_volume_track(kdmyEngine_obtain(songplayer), vocals_or_instrumental, volume)
 }
 function __js__soundplayer_fade(soundplayer, in_or_out, duration) {
     soundplayer_fade(kdmyEngine_obtain(soundplayer), in_or_out, duration)
@@ -1323,14 +1602,11 @@ function __js__soundplayer_set_volume(soundplayer, volume) {
 function __js__soundplayer_stop(soundplayer) {
     soundplayer_stop(kdmyEngine_obtain(soundplayer))
 }
-function __js__sprite_center_draw_location(sprite, x, y, ref_width, ref_height, applied_draw_location) {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
+function __js__sprite_center_draw_location(sprite, x, y, ref_width, ref_height, applied_draw_x, applied_draw_y) {
     const values = [0, 0];
     sprite_center_draw_location(kdmyEngine_obtain(sprite), x, y, ref_width, ref_height, values);
-    dataView.setFloat32(applied_draw_location + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(applied_draw_location + 4, values[1], HEAP_ENDIANESS);
-    return applied_draw_location
+    kdmyEngine_set_float32(applied_draw_x, values[0]);
+    kdmyEngine_set_float32(applied_draw_y, values[1])
 }
 function __js__sprite_crop(sprite, dx, dy, dwidth, dheight) {
     return sprite_crop(kdmyEngine_obtain(sprite), dx, dy, dwidth, dheight)
@@ -1344,14 +1620,15 @@ function __js__sprite_flip_rendered_texture(sprite, flip_x, flip_y) {
 function __js__sprite_flip_rendered_texture_enable_correction(sprite, enabled) {
     sprite_flip_rendered_texture_enable_correction(kdmyEngine_obtain(sprite), enabled)
 }
-function __js__sprite_get_source_size(sprite, size) {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
+function __js__sprite_get_shader(sprite) {
+    let psshader = sprite_get_shader(kdmyEngine_obtain(sprite));
+    return kdmyEngine_obtain(psshader)
+}
+function __js__sprite_get_source_size(sprite, source_width, source_height) {
     const values = [0, 0];
     sprite_get_source_size(kdmyEngine_obtain(sprite), values);
-    dataView.setFloat32(size + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(size + 4, values[1], HEAP_ENDIANESS);
-    return size
+    kdmyEngine_set_float32(source_width, values[0]);
+    kdmyEngine_set_float32(source_height, values[1])
 }
 function __js__sprite_is_crop_enabled(sprite) {
     return sprite_is_crop_enabled(kdmyEngine_obtain(sprite))
@@ -1366,14 +1643,11 @@ function __js__sprite_matrix_get_modifier(sprite) {
 function __js__sprite_matrix_reset(sprite) {
     sprite_matrix_reset(kdmyEngine_obtain(sprite))
 }
-function __js__sprite_resize_draw_size(sprite, max_width, max_height, applied_draw_size) {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
+function __js__sprite_resize_draw_size(sprite, max_width, max_height, applied_draw_width, applied_draw_height) {
     const values = [0, 0];
     sprite_resize_draw_size(kdmyEngine_obtain(sprite), max_width, max_height, values);
-    dataView.setFloat32(applied_draw_size + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(applied_draw_size + 4, values[1], HEAP_ENDIANESS);
-    return applied_draw_size
+    kdmyEngine_set_float32(applied_draw_width, values[0]);
+    kdmyEngine_set_float32(applied_draw_height, values[1])
 }
 function __js__sprite_set_alpha(sprite, alpha) {
     sprite_set_alpha(kdmyEngine_obtain(sprite), alpha)
@@ -1402,6 +1676,9 @@ function __js__sprite_set_offset_source(sprite, x, y, width, height) {
 function __js__sprite_set_offsetcolor(sprite, r, g, b, a) {
     sprite_set_offsetcolor(kdmyEngine_obtain(sprite), r, g, b, a)
 }
+function __js__sprite_set_shader(sprite, psshader) {
+    sprite_set_shader(kdmyEngine_obtain(sprite), kdmyEngine_obtain(psshader))
+}
 function __js__sprite_set_vertex_color(sprite, r, g, b) {
     sprite_set_vertex_color(kdmyEngine_obtain(sprite), r, g, b)
 }
@@ -1413,13 +1690,6 @@ function __js__sprite_set_z_index(sprite, index) {
 }
 function __js__sprite_set_z_offset(sprite, offset) {
     sprite_set_z_offset(kdmyEngine_obtain(sprite), offset)
-}
-function __js__sprite_set_shader(sprite, psshader) {
-    sprite_set_shader(kdmyEngine_obtain(sprite), kdmyEngine_obtain(psshader));
-}
-function __js__sprite_get_shader(sprite) {
-    let psshader = sprite_get_shader(kdmyEngine_obtain(sprite));
-    return kdmyEngine_obtain(psshader);
 }
 function __js__textsprite_border_enable(textsprite, enable) {
     textsprite_border_enable(kdmyEngine_obtain(textsprite), enable)
@@ -1433,17 +1703,18 @@ function __js__textsprite_border_set_size(textsprite, border_size) {
 function __js__textsprite_force_case(textsprite, none_or_lowercase_or_uppercase) {
     textsprite_force_case(kdmyEngine_obtain(textsprite), none_or_lowercase_or_uppercase)
 }
-function __js__textsprite_get_draw_size(textsprite, size) {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
+function __js__textsprite_get_draw_size(textsprite, draw_width, draw_height) {
     const values = [0, 0];
     textsprite_get_draw_size(kdmyEngine_obtain(textsprite), values);
-    dataView.setFloat32(size + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(size + 4, values[1], HEAP_ENDIANESS);
-    return size
+    kdmyEngine_set_float32(draw_width, values[0]);
+    kdmyEngine_set_float32(draw_height, values[1])
 }
 function __js__textsprite_get_font_size(textsprite) {
     return textsprite_get_font_size(kdmyEngine_obtain(textsprite))
+}
+function __js__textsprite_get_shader(textsprite) {
+    let psshader = textsprite_get_shader(kdmyEngine_obtain(textsprite));
+    return kdmyEngine_obtain(psshader)
 }
 function __js__textsprite_matrix_flip(textsprite, flip_x, flip_y) {
     textsprite_matrix_flip(kdmyEngine_obtain(textsprite), flip_x, flip_y)
@@ -1488,6 +1759,9 @@ function __js__textsprite_set_paragraph_align(textsprite, align) {
 function __js__textsprite_set_paragraph_space(textsprite, space) {
     textsprite_set_paragraph_space(kdmyEngine_obtain(textsprite), space)
 }
+function __js__textsprite_set_shader(textsprite, psshader) {
+    textsprite_set_shader(kdmyEngine_obtain(textsprite), kdmyEngine_obtain(psshader))
+}
 function __js__textsprite_set_text_intern(textsprite, intern, text) {
     textsprite_set_text_intern(kdmyEngine_obtain(textsprite), intern, kdmyEngine_ptrToString(text))
 }
@@ -1503,15 +1777,111 @@ function __js__textsprite_set_z_index(textsprite, z_index) {
 function __js__textsprite_set_z_offset(textsprite, offset) {
     textsprite_set_z_offset(kdmyEngine_obtain(textsprite), offset)
 }
-function __js__textsprite_set_shader(textsprite, psshader) {
-    textsprite_set_shader(kdmyEngine_obtain(textsprite), kdmyEngine_obtain(psshader));
-}
-function __js__textsprite_get_shader(textsprite) {
-    let psshader = textsprite_get_shader(kdmyEngine_obtain(textsprite));
-    return kdmyEngine_obtain(psshader);
-}
 function __js__timer_ms_gettime32_JS() {
     return Math.trunc(performance.now())
+}
+function __js__tweenlerp_add_ease(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_ease(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_easein(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_easein(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_easeinout(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_easeinout(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_easeout(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_easeout(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_interpolator(tweenlerp, id, start, end, duration, type) {
+    let ret = tweenlerp_add_interpolator(kdmyEngine_obtain(tweenlerp), id, start, end, duration, type);
+    return ret
+}
+function __js__tweenlerp_add_linear(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_linear(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_steps(tweenlerp, id, start, end, duration, steps_count, steps_method) {
+    let ret = tweenlerp_add_steps(kdmyEngine_obtain(tweenlerp), id, start, end, duration, steps_count, steps_method);
+    return ret
+}
+function __js__tweenlerp_animate(tweenlerp, elapsed) {
+    let ret = tweenlerp_animate(kdmyEngine_obtain(tweenlerp), elapsed);
+    return ret
+}
+function __js__tweenlerp_animate_percent(tweenlerp, percent) {
+    let ret = tweenlerp_animate_percent(kdmyEngine_obtain(tweenlerp), percent);
+    return ret
+}
+function __js__tweenlerp_change_bounds_by_id(tweenlerp, id, new_start, new_end) {
+    let ret = tweenlerp_change_bounds_by_id(kdmyEngine_obtain(tweenlerp), id, new_start, new_end);
+    return ret ? 1 : 0
+}
+function __js__tweenlerp_change_bounds_by_index(tweenlerp, index, new_start, new_end) {
+    let ret = tweenlerp_change_bounds_by_index(kdmyEngine_obtain(tweenlerp), index, new_start, new_end);
+    return ret ? 1 : 0
+}
+function __js__tweenlerp_change_duration_by_index(tweenlerp, index, new_duration) {
+    let ret = tweenlerp_change_duration_by_index(kdmyEngine_obtain(tweenlerp), index, new_duration);
+    return ret ? 1 : 0
+}
+function __js__tweenlerp_destroy(tweenlerp) {
+    tweenlerp_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(tweenlerp)))
+}
+function __js__tweenlerp_end(tweenlerp) {
+    tweenlerp_end(kdmyEngine_obtain(tweenlerp))
+}
+function __js__tweenlerp_get_elapsed(tweenlerp) {
+    let ret = tweenlerp_get_elapsed(kdmyEngine_obtain(tweenlerp));
+    return ret
+}
+function __js__tweenlerp_get_entry_count(tweenlerp) {
+    let ret = tweenlerp_get_entry_count(kdmyEngine_obtain(tweenlerp));
+    return ret
+}
+function __js__tweenlerp_init() {
+    let ret = tweenlerp_init();
+    return kdmyEngine_obtain(ret)
+}
+function __js__tweenlerp_is_completed(tweenlerp) {
+    let ret = tweenlerp_is_completed(kdmyEngine_obtain(tweenlerp));
+    return ret ? 1 : 0
+}
+function __js__tweenlerp_mark_as_completed(tweenlerp) {
+    tweenlerp_mark_as_completed(kdmyEngine_obtain(tweenlerp))
+}
+function __js__tweenlerp_override_start_with_end_by_index(tweenlerp, index) {
+    let ret = tweenlerp_override_start_with_end_by_index(kdmyEngine_obtain(tweenlerp), index);
+    return ret ? 1 : 0
+}
+function __js__tweenlerp_peek_entry_by_index(tweenlerp, index, out_value, out_duration) {
+    const values = [0, 0];
+    let ret = tweenlerp_peek_entry_by_index(kdmyEngine_obtain(tweenlerp), index, values);
+    kdmyEngine_set_float32(out_value, values[0]);
+    kdmyEngine_set_float32(out_duration, values[1]);
+    return ret ? 1 : 0
+}
+function __js__tweenlerp_peek_value(tweenlerp) {
+    let ret = tweenlerp_peek_value(kdmyEngine_obtain(tweenlerp));
+    return ret
+}
+function __js__tweenlerp_peek_value_by_id(tweenlerp, id) {
+    let ret = tweenlerp_peek_value_by_id(kdmyEngine_obtain(tweenlerp), id);
+    return ret
+}
+function __js__tweenlerp_peek_value_by_index(tweenlerp, index) {
+    let ret = tweenlerp_peek_value_by_index(kdmyEngine_obtain(tweenlerp), index);
+    return ret
+}
+function __js__tweenlerp_restart(tweenlerp) {
+    tweenlerp_restart(kdmyEngine_obtain(tweenlerp))
+}
+function __js__tweenlerp_swap_bounds_by_index(tweenlerp, index) {
+    let ret = tweenlerp_swap_bounds_by_index(kdmyEngine_obtain(tweenlerp), index);
+    return ret ? 1 : 0
 }
 function __js__week_change_character_camera_name(roundcontext, opponent_or_player, new_name) {
     week_change_character_camera_name(kdmyEngine_obtain(roundcontext), opponent_or_player, kdmyEngine_ptrToString(new_name))
@@ -1532,43 +1902,25 @@ function __js__week_get_character(roundcontext, index) {
 function __js__week_get_character_count(roundcontext) {
     return week_get_character_count(kdmyEngine_obtain(roundcontext))
 }
-function __js__week_get_current_chart_info(roundcontext, output_info) {
+function __js__week_get_current_chart_info(roundcontext, bpm, speed) {
     const values = {
-        bmp: null,
+        bpm: null,
         speed: null
     };
-    const dataView = new DataView(buffer);
-    const HEAP_ENDIANESS = true;
     week_get_current_chart_info(kdmyEngine_obtain(roundcontext), values);
-    dataView.setFloat32(output_info + 0, values.bmp, HEAP_ENDIANESS);
-    dataView.setFloat64(output_info + 4, values.speed, HEAP_ENDIANESS)
+    kdmyEngine_set_float32(bpm, values.bpm);
+    kdmyEngine_set_float32(speed, values.speed)
 }
-function __js__week_get_current_track_info(roundcontext, output_info) {
+function __js__week_get_current_track_info(roundcontext, name, difficult, index) {
     const values = {
         name: null,
         difficult: null,
         index: -1
     };
-    const dataView = new DataView(buffer);
-    const HEAP_ENDIANESS = true;
-    const ptrsize = dataView.getUint32(output_info, HEAP_ENDIANESS);
-    function setPointer(offset, ptr) {
-        if (ptrsize == 4) {
-            dataView.setUint32(offset, ptr, HEAP_ENDIANESS)
-        } else {
-            dataView.setUint32(offset, ptr, HEAP_ENDIANESS);
-            dataView.setUint32(offset + 4, 0, HEAP_ENDIANESS)
-        }
-    }
     week_get_current_track_info(kdmyEngine_obtain(roundcontext), values);
-    const ptr_name = kdmyEngine_stringToPtr(values.name);
-    const ptr_difficult = kdmyEngine_stringToPtr(values.difficult);
-    let offset = output_info + 4;
-    setPointer(offset, ptr_name);
-    offset += ptrsize;
-    setPointer(offset, ptr_difficult);
-    offset += ptrsize;
-    dataView.setInt32(offset, values.index, HEAP_ENDIANESS)
+    kdmyEngine_set_uint32(name, kdmyEngine_stringToPtr(values.name));
+    kdmyEngine_set_uint32(difficult, kdmyEngine_stringToPtr(values.difficult));
+    kdmyEngine_set_int32(index, values.index)
 }
 function __js__week_get_dialogue(roundcontext) {
     const dialogue = week_get_dialogue(kdmyEngine_obtain(roundcontext));
@@ -1592,6 +1944,9 @@ function __js__week_override_common_folder(roundcontext, custom_common_path) {
 function __js__week_set_halt(roundcontext, halt) {
     week_set_halt(kdmyEngine_obtain(roundcontext), halt)
 }
+function __js__week_set_ui_shader(roundcontext, psshader) {
+    week_set_ui_shader(kdmyEngine_obtain(roundcontext), kdmyEngine_obtain(psshader))
+}
 function __js__week_ui_get_camera(roundcontext) {
     const camera = week_ui_get_camera(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(camera)
@@ -1614,17 +1969,12 @@ function __js__week_ui_get_trackinfo(roundcontext) {
 function __js__week_ui_set_visibility(roundcontext, visible) {
     week_ui_set_visibility(kdmyEngine_obtain(roundcontext), visible)
 }
-function __js__week_unlockdirective_create_JS(roundcontext, name, completed_round, completed_week, value_ptr) {
-    let dataView = new DataView(buffer);
-    const ENDIANESS = true;
-    let val = dataView.getFloat64(value_ptr, ENDIANESS);
-    week_unlockdirective_create(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week, val)
+function __js__week_unlockdirective_create(roundcontext, name, completed_round, completed_week, value) {
+    week_unlockdirective_create(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week, value)
 }
-function __js__week_unlockdirective_get_JS(roundcontext, name, value_ptr) {
-    let dataView = new DataView(buffer);
-    const ENDIANESS = true;
+function __js__week_unlockdirective_get(roundcontext, name) {
     let value = week_unlockdirective_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
-    dataView.setFloat64(value_ptr, value, ENDIANESS)
+    return value
 }
 function __js__week_unlockdirective_has(roundcontext, name) {
     return week_unlockdirective_has(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name))
@@ -1638,33 +1988,8 @@ function __js__week_update_bpm(roundcontext, bpm) {
 function __js__week_update_speed(roundcontext, speed) {
     week_update_speed(kdmyEngine_obtain(roundcontext), speed)
 }
-function __js__week_set_ui_shader(roundcontext, psshader) {
-    week_set_ui_shader(kdmyEngine_obtain(roundcontext), kdmyEngine_obtain(psshader));
-}
-function __js__psshader_init(vertex_sourcecode, fragment_sourcecode) {
-    let psshader = PSShader.BuildFromSource(
-        pvr_context,
-        kdmyEngine_ptrToString(vertex_sourcecode),
-        kdmyEngine_ptrToString(fragment_sourcecode)
-    );
-    return kdmyEngine_obtain(psshader);
-}
-function __js__psshader_destroy(psshader) {
-    kdmyEngine_obtain(psshader).Destroy();
-}
 
-function __js__psshader_set_uniform_any(psshader, name, values) {
-    const val = new Float32Array(buffer, values, 128);
-    kdmyEngine_obtain(psshader).SetUniformAny(kdmyEngine_ptrToString(name), val);
-}
 
-function __js__psshader_set_uniform1f(psshader, name, value) {
-    kdmyEngine_obtain(psshader).SetUniform1F(kdmyEngine_ptrToString(name), value);
-}
-
-function __js__psshader_set_uniform1i(psshader, name, value) {
-    kdmyEngine_obtain(psshader).SetUniform1I(kdmyEngine_ptrToString(name), value);
-}
 
 
 
@@ -5051,17 +5376,43 @@ function intArrayFromString(stringy, dontAddNull, length) {
 }
 var asmLibraryArg = {
     "__assert_fail": ___assert_fail,
+    "__asyncjs__animlist_init": __asyncjs__animlist_init,
+    "__asyncjs__atlas_init": __asyncjs__atlas_init,
     "__asyncjs__dialogue_show_dialog": __asyncjs__dialogue_show_dialog,
     "__asyncjs__fs_readfile": __asyncjs__fs_readfile,
     "__asyncjs__messagebox_set_image_from_atlas": __asyncjs__messagebox_set_image_from_atlas,
     "__asyncjs__messagebox_set_image_from_texture": __asyncjs__messagebox_set_image_from_texture,
+    "__asyncjs__modelholder_init": __asyncjs__modelholder_init,
+    "__asyncjs__modelholder_init2": __asyncjs__modelholder_init2,
     "__asyncjs__songplayer_play": __asyncjs__songplayer_play,
+    "__js__animlist_destroy": __js__animlist_destroy,
+    "__js__animlist_get_animation": __js__animlist_get_animation,
+    "__js__animlist_is_item_frame_animation": __js__animlist_is_item_frame_animation,
+    "__js__animlist_is_item_macro_animation": __js__animlist_is_item_macro_animation,
+    "__js__animsprite_destroy": __js__animsprite_destroy,
+    "__js__animsprite_get_name": __js__animsprite_get_name,
+    "__js__animsprite_init": __js__animsprite_init,
+    "__js__animsprite_init_as_empty": __js__animsprite_init_as_empty,
+    "__js__animsprite_init_from_animlist": __js__animsprite_init_from_animlist,
+    "__js__animsprite_init_from_atlas": __js__animsprite_init_from_atlas,
+    "__js__animsprite_is_frame_animation": __js__animsprite_is_frame_animation,
+    "__js__animsprite_restart": __js__animsprite_restart,
+    "__js__animsprite_set_delay": __js__animsprite_set_delay,
+    "__js__animsprite_set_loop": __js__animsprite_set_loop,
+    "__js__atlas_destroy": __js__atlas_destroy,
+    "__js__atlas_get_entry": __js__atlas_get_entry,
+    "__js__atlas_get_entry_with_number_suffix": __js__atlas_get_entry_with_number_suffix,
+    "__js__atlas_get_glyph_fps": __js__atlas_get_glyph_fps,
+    "__js__atlas_get_index_of": __js__atlas_get_index_of,
+    "__js__atlas_get_texture_resolution": __js__atlas_get_texture_resolution,
+    "__js__atlas_utils_is_known_extension": __js__atlas_utils_is_known_extension,
     "__js__camera_apply": __js__camera_apply,
     "__js__camera_debug_log_info": __js__camera_debug_log_info,
     "__js__camera_end": __js__camera_end,
     "__js__camera_from_layout": __js__camera_from_layout,
     "__js__camera_get_modifier": __js__camera_get_modifier,
     "__js__camera_get_offset": __js__camera_get_offset,
+    "__js__camera_get_parent_layout": __js__camera_get_parent_layout,
     "__js__camera_is_completed": __js__camera_is_completed,
     "__js__camera_move": __js__camera_move,
     "__js__camera_move_offset": __js__camera_move_offset,
@@ -5084,7 +5435,6 @@ var asmLibraryArg = {
     "__js__camera_stop": __js__camera_stop,
     "__js__camera_to_origin": __js__camera_to_origin,
     "__js__camera_to_origin_offset": __js__camera_to_origin_offset,
-    "__js__camera_get_parent_layout": __js__camera_get_parent_layout,
     "__js__character_animation_end": __js__character_animation_end,
     "__js__character_animation_restart": __js__character_animation_restart,
     "__js__character_animation_set": __js__character_animation_set,
@@ -5128,6 +5478,33 @@ var asmLibraryArg = {
     "__js__dialogue_set_alpha": __js__dialogue_set_alpha,
     "__js__dialogue_set_antialiasing": __js__dialogue_set_antialiasing,
     "__js__dialogue_set_offsetcolor": __js__dialogue_set_offsetcolor,
+    "__js__drawable_blend_enable": __js__drawable_blend_enable,
+    "__js__drawable_blend_set": __js__drawable_blend_set,
+    "__js__drawable_get_alpha": __js__drawable_get_alpha,
+    "__js__drawable_get_modifier": __js__drawable_get_modifier,
+    "__js__drawable_get_shader": __js__drawable_get_shader,
+    "__js__drawable_get_z_index": __js__drawable_get_z_index,
+    "__js__drawable_set_alpha": __js__drawable_set_alpha,
+    "__js__drawable_set_antialiasing": __js__drawable_set_antialiasing,
+    "__js__drawable_set_offsetcolor": __js__drawable_set_offsetcolor,
+    "__js__drawable_set_offsetcolor_to_default": __js__drawable_set_offsetcolor_to_default,
+    "__js__drawable_set_shader": __js__drawable_set_shader,
+    "__js__drawable_set_z_index": __js__drawable_set_z_index,
+    "__js__drawable_set_z_offset": __js__drawable_set_z_offset,
+    "__js__kdmyEngine_forget_obtained": __js__kdmyEngine_forget_obtained,
+    "__js__kdmyEngine_read_prop_boolean": __js__kdmyEngine_read_prop_boolean,
+    "__js__kdmyEngine_read_prop_double": __js__kdmyEngine_read_prop_double,
+    "__js__kdmyEngine_read_prop_float": __js__kdmyEngine_read_prop_float,
+    "__js__kdmyEngine_read_prop_floatboolean": __js__kdmyEngine_read_prop_floatboolean,
+    "__js__kdmyEngine_read_prop_integer": __js__kdmyEngine_read_prop_integer,
+    "__js__kdmyEngine_read_prop_object": __js__kdmyEngine_read_prop_object,
+    "__js__kdmyEngine_read_prop_string": __js__kdmyEngine_read_prop_string,
+    "__js__kdmyEngine_write_prop_boolean": __js__kdmyEngine_write_prop_boolean,
+    "__js__kdmyEngine_write_prop_double": __js__kdmyEngine_write_prop_double,
+    "__js__kdmyEngine_write_prop_float": __js__kdmyEngine_write_prop_float,
+    "__js__kdmyEngine_write_prop_integer": __js__kdmyEngine_write_prop_integer,
+    "__js__kdmyEngine_write_prop_object": __js__kdmyEngine_write_prop_object,
+    "__js__kdmyEngine_write_prop_string": __js__kdmyEngine_write_prop_string,
     "__js__layout_animation_is_completed": __js__layout_animation_is_completed,
     "__js__layout_camera_is_completed": __js__layout_camera_is_completed,
     "__js__layout_camera_set_view": __js__layout_camera_set_view,
@@ -5137,7 +5514,8 @@ var asmLibraryArg = {
     "__js__layout_get_attached_value_type": __js__layout_get_attached_value_type,
     "__js__layout_get_camera_helper": __js__layout_get_camera_helper,
     "__js__layout_get_group_modifier": __js__layout_get_group_modifier,
-    "__js__layout_get_placeholder_JS": __js__layout_get_placeholder_JS,
+    "__js__layout_get_group_shader": __js__layout_get_group_shader,
+    "__js__layout_get_placeholder": __js__layout_get_placeholder,
     "__js__layout_get_secondary_camera_helper": __js__layout_get_secondary_camera_helper,
     "__js__layout_get_soundplayer": __js__layout_get_soundplayer,
     "__js__layout_get_sprite": __js__layout_get_sprite,
@@ -5147,6 +5525,7 @@ var asmLibraryArg = {
     "__js__layout_set_group_alpha": __js__layout_set_group_alpha,
     "__js__layout_set_group_antialiasing": __js__layout_set_group_antialiasing,
     "__js__layout_set_group_offsetcolor": __js__layout_set_group_offsetcolor,
+    "__js__layout_set_group_shader": __js__layout_set_group_shader,
     "__js__layout_set_group_visibility": __js__layout_set_group_visibility,
     "__js__layout_stop_all_triggers": __js__layout_stop_all_triggers,
     "__js__layout_stop_trigger": __js__layout_stop_trigger,
@@ -5155,8 +5534,6 @@ var asmLibraryArg = {
     "__js__layout_trigger_any": __js__layout_trigger_any,
     "__js__layout_trigger_camera": __js__layout_trigger_camera,
     "__js__layout_trigger_trigger": __js__layout_trigger_trigger,
-    "__js__layout_get_group_shader": __js__layout_get_group_shader,
-    "__js__layout_set_group_shader": __js__layout_set_group_shader,
     "__js__messagebox_get_modifier": __js__messagebox_get_modifier,
     "__js__messagebox_hide": __js__messagebox_hide,
     "__js__messagebox_hide_image": __js__messagebox_hide_image,
@@ -5176,8 +5553,22 @@ var asmLibraryArg = {
     "__js__messagebox_use_small_size": __js__messagebox_use_small_size,
     "__js__modding_exit": __js__modding_exit,
     "__js__modding_get_layout": __js__modding_get_layout,
-    "__js__modifier_get_field_JS": __js__modifier_get_field_JS,
-    "__js__modifier_set_field_JS": __js__modifier_set_field_JS,
+    "__js__modelholder_create_animsprite": __js__modelholder_create_animsprite,
+    "__js__modelholder_destroy": __js__modelholder_destroy,
+    "__js__modelholder_get_animlist": __js__modelholder_get_animlist,
+    "__js__modelholder_get_atlas": __js__modelholder_get_atlas,
+    "__js__modelholder_get_atlas_entry": __js__modelholder_get_atlas_entry,
+    "__js__modelholder_get_atlas_entry2": __js__modelholder_get_atlas_entry2,
+    "__js__modelholder_get_texture_resolution": __js__modelholder_get_texture_resolution,
+    "__js__modelholder_get_vertex_color": __js__modelholder_get_vertex_color,
+    "__js__modelholder_has_animlist": __js__modelholder_has_animlist,
+    "__js__modelholder_is_invalid": __js__modelholder_is_invalid,
+    "__js__modelholder_utils_is_known_extension": __js__modelholder_utils_is_known_extension,
+    "__js__psshader_destroy": __js__psshader_destroy,
+    "__js__psshader_init": __js__psshader_init,
+    "__js__psshader_set_uniform1f": __js__psshader_set_uniform1f,
+    "__js__psshader_set_uniform1i": __js__psshader_set_uniform1i,
+    "__js__psshader_set_uniform_any": __js__psshader_set_uniform_any,
     "__js__songplayer_changesong": __js__songplayer_changesong,
     "__js__songplayer_get_duration": __js__songplayer_get_duration,
     "__js__songplayer_get_timestamp": __js__songplayer_get_timestamp,
@@ -5186,6 +5577,8 @@ var asmLibraryArg = {
     "__js__songplayer_mute_track": __js__songplayer_mute_track,
     "__js__songplayer_pause": __js__songplayer_pause,
     "__js__songplayer_seek": __js__songplayer_seek,
+    "__js__songplayer_set_volume": __js__songplayer_set_volume,
+    "__js__songplayer_set_volume_track": __js__songplayer_set_volume_track,
     "__js__soundplayer_fade": __js__soundplayer_fade,
     "__js__soundplayer_get_duration": __js__soundplayer_get_duration,
     "__js__soundplayer_get_position": __js__soundplayer_get_position,
@@ -5203,6 +5596,7 @@ var asmLibraryArg = {
     "__js__sprite_crop_enable": __js__sprite_crop_enable,
     "__js__sprite_flip_rendered_texture": __js__sprite_flip_rendered_texture,
     "__js__sprite_flip_rendered_texture_enable_correction": __js__sprite_flip_rendered_texture_enable_correction,
+    "__js__sprite_get_shader": __js__sprite_get_shader,
     "__js__sprite_get_source_size": __js__sprite_get_source_size,
     "__js__sprite_is_crop_enabled": __js__sprite_is_crop_enabled,
     "__js__sprite_is_textured": __js__sprite_is_textured,
@@ -5218,18 +5612,18 @@ var asmLibraryArg = {
     "__js__sprite_set_offset_pivot": __js__sprite_set_offset_pivot,
     "__js__sprite_set_offset_source": __js__sprite_set_offset_source,
     "__js__sprite_set_offsetcolor": __js__sprite_set_offsetcolor,
+    "__js__sprite_set_shader": __js__sprite_set_shader,
     "__js__sprite_set_vertex_color": __js__sprite_set_vertex_color,
     "__js__sprite_set_visible": __js__sprite_set_visible,
     "__js__sprite_set_z_index": __js__sprite_set_z_index,
     "__js__sprite_set_z_offset": __js__sprite_set_z_offset,
-    "__js__sprite_set_shader": __js__sprite_set_shader,
-    "__js__sprite_get_shader": __js__sprite_get_shader,
     "__js__textsprite_border_enable": __js__textsprite_border_enable,
     "__js__textsprite_border_set_color": __js__textsprite_border_set_color,
     "__js__textsprite_border_set_size": __js__textsprite_border_set_size,
     "__js__textsprite_force_case": __js__textsprite_force_case,
     "__js__textsprite_get_draw_size": __js__textsprite_get_draw_size,
     "__js__textsprite_get_font_size": __js__textsprite_get_font_size,
+    "__js__textsprite_get_shader": __js__textsprite_get_shader,
     "__js__textsprite_matrix_flip": __js__textsprite_matrix_flip,
     "__js__textsprite_matrix_get_modifier": __js__textsprite_matrix_get_modifier,
     "__js__textsprite_matrix_reset": __js__textsprite_matrix_reset,
@@ -5244,14 +5638,39 @@ var asmLibraryArg = {
     "__js__textsprite_set_maxlines": __js__textsprite_set_maxlines,
     "__js__textsprite_set_paragraph_align": __js__textsprite_set_paragraph_align,
     "__js__textsprite_set_paragraph_space": __js__textsprite_set_paragraph_space,
+    "__js__textsprite_set_shader": __js__textsprite_set_shader,
     "__js__textsprite_set_text_intern": __js__textsprite_set_text_intern,
     "__js__textsprite_set_visible": __js__textsprite_set_visible,
     "__js__textsprite_set_wordbreak": __js__textsprite_set_wordbreak,
     "__js__textsprite_set_z_index": __js__textsprite_set_z_index,
     "__js__textsprite_set_z_offset": __js__textsprite_set_z_offset,
-    "__js__textsprite_set_shader": __js__textsprite_set_shader,
-    "__js__textsprite_get_shader": __js__textsprite_get_shader,
     "__js__timer_ms_gettime32_JS": __js__timer_ms_gettime32_JS,
+    "__js__tweenlerp_add_ease": __js__tweenlerp_add_ease,
+    "__js__tweenlerp_add_easein": __js__tweenlerp_add_easein,
+    "__js__tweenlerp_add_easeinout": __js__tweenlerp_add_easeinout,
+    "__js__tweenlerp_add_easeout": __js__tweenlerp_add_easeout,
+    "__js__tweenlerp_add_interpolator": __js__tweenlerp_add_interpolator,
+    "__js__tweenlerp_add_linear": __js__tweenlerp_add_linear,
+    "__js__tweenlerp_add_steps": __js__tweenlerp_add_steps,
+    "__js__tweenlerp_animate": __js__tweenlerp_animate,
+    "__js__tweenlerp_animate_percent": __js__tweenlerp_animate_percent,
+    "__js__tweenlerp_change_bounds_by_id": __js__tweenlerp_change_bounds_by_id,
+    "__js__tweenlerp_change_bounds_by_index": __js__tweenlerp_change_bounds_by_index,
+    "__js__tweenlerp_change_duration_by_index": __js__tweenlerp_change_duration_by_index,
+    "__js__tweenlerp_destroy": __js__tweenlerp_destroy,
+    "__js__tweenlerp_end": __js__tweenlerp_end,
+    "__js__tweenlerp_get_elapsed": __js__tweenlerp_get_elapsed,
+    "__js__tweenlerp_get_entry_count": __js__tweenlerp_get_entry_count,
+    "__js__tweenlerp_init": __js__tweenlerp_init,
+    "__js__tweenlerp_is_completed": __js__tweenlerp_is_completed,
+    "__js__tweenlerp_mark_as_completed": __js__tweenlerp_mark_as_completed,
+    "__js__tweenlerp_override_start_with_end_by_index": __js__tweenlerp_override_start_with_end_by_index,
+    "__js__tweenlerp_peek_entry_by_index": __js__tweenlerp_peek_entry_by_index,
+    "__js__tweenlerp_peek_value": __js__tweenlerp_peek_value,
+    "__js__tweenlerp_peek_value_by_id": __js__tweenlerp_peek_value_by_id,
+    "__js__tweenlerp_peek_value_by_index": __js__tweenlerp_peek_value_by_index,
+    "__js__tweenlerp_restart": __js__tweenlerp_restart,
+    "__js__tweenlerp_swap_bounds_by_index": __js__tweenlerp_swap_bounds_by_index,
     "__js__week_change_character_camera_name": __js__week_change_character_camera_name,
     "__js__week_disable_layout_rollback": __js__week_disable_layout_rollback,
     "__js__week_enable_credits_on_completed": __js__week_enable_credits_on_completed,
@@ -5266,24 +5685,19 @@ var asmLibraryArg = {
     "__js__week_get_stage_layout": __js__week_get_stage_layout,
     "__js__week_override_common_folder": __js__week_override_common_folder,
     "__js__week_set_halt": __js__week_set_halt,
+    "__js__week_set_ui_shader": __js__week_set_ui_shader,
     "__js__week_ui_get_camera": __js__week_ui_get_camera,
     "__js__week_ui_get_layout": __js__week_ui_get_layout,
     "__js__week_ui_get_messagebox": __js__week_ui_get_messagebox,
     "__js__week_ui_get_strums_count": __js__week_ui_get_strums_count,
     "__js__week_ui_get_trackinfo": __js__week_ui_get_trackinfo,
     "__js__week_ui_set_visibility": __js__week_ui_set_visibility,
-    "__js__week_unlockdirective_create_JS": __js__week_unlockdirective_create_JS,
-    "__js__week_unlockdirective_get_JS": __js__week_unlockdirective_get_JS,
+    "__js__week_unlockdirective_create": __js__week_unlockdirective_create,
+    "__js__week_unlockdirective_get": __js__week_unlockdirective_get,
     "__js__week_unlockdirective_has": __js__week_unlockdirective_has,
     "__js__week_unlockdirective_remove": __js__week_unlockdirective_remove,
     "__js__week_update_bpm": __js__week_update_bpm,
     "__js__week_update_speed": __js__week_update_speed,
-    "__js__week_set_ui_shader": __js__week_set_ui_shader,
-    "__js__psshader_init": __js__psshader_init,
-    "__js__psshader_destroy": __js__psshader_destroy,
-    "__js__psshader_set_uniform_any": __js__psshader_set_uniform_any,
-    "__js__psshader_set_uniform1f": __js__psshader_set_uniform1f,
-    "__js__psshader_set_uniform1i": __js__psshader_set_uniform1i,
     "__syscall_dup3": ___syscall_dup3,
     "__syscall_fcntl64": ___syscall_fcntl64,
     "__syscall_ioctl": ___syscall_ioctl,
@@ -5322,9 +5736,6 @@ var ___wasm_call_ctors = ModuleLuaScript["___wasm_call_ctors"] = function () {
 };
 var _free = ModuleLuaScript["_free"] = function () {
     return (_free = ModuleLuaScript["_free"] = ModuleLuaScript["asm"]["free"]).apply(null, arguments)
-};
-var _luascript_drop_shared = ModuleLuaScript["_luascript_drop_shared"] = function () {
-    return (_luascript_drop_shared = ModuleLuaScript["_luascript_drop_shared"] = ModuleLuaScript["asm"]["luascript_drop_shared"]).apply(null, arguments)
 };
 var _luascript_notify_weekinit = ModuleLuaScript["_luascript_notify_weekinit"] = function () {
     return (_luascript_notify_weekinit = ModuleLuaScript["_luascript_notify_weekinit"] = ModuleLuaScript["asm"]["luascript_notify_weekinit"]).apply(null, arguments)
@@ -5406,6 +5817,9 @@ var _luascript_init = ModuleLuaScript["_luascript_init"] = function () {
 };
 var _luascript_eval = ModuleLuaScript["_luascript_eval"] = function () {
     return (_luascript_eval = ModuleLuaScript["_luascript_eval"] = ModuleLuaScript["asm"]["luascript_eval"]).apply(null, arguments)
+};
+var _luascript_drop_shared = ModuleLuaScript["_luascript_drop_shared"] = function () {
+    return (_luascript_drop_shared = ModuleLuaScript["_luascript_drop_shared"] = ModuleLuaScript["asm"]["luascript_drop_shared"]).apply(null, arguments)
 };
 var _luascript_destroy_JS = ModuleLuaScript["_luascript_destroy_JS"] = function () {
     return (_luascript_destroy_JS = ModuleLuaScript["_luascript_destroy_JS"] = ModuleLuaScript["asm"]["luascript_destroy_JS"]).apply(null, arguments)

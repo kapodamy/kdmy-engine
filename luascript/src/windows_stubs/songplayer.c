@@ -32,3 +32,10 @@ void songplayer_mute_track(SongPlayer songplayer, bool vocals_or_instrumental, b
 void songplayer_mute(SongPlayer songplayer, bool muted) {
     print_stub("songplayer_mute", "songplayer=%p muted=(bool)%i", songplayer, muted);
 }
+void songplayer_set_volume_track(SongPlayer songplayer, bool vocals_or_instrumental, float volume) {
+    print_stub("songplayer_set_volume_track", "songplayer=%p vocals_or_instrumental=(bool)%i volume=%f", songplayer, vocals_or_instrumental, volume);
+}
+void songplayer_set_volume(SongPlayer songplayer, float volume) {
+    print_stub("songplayer_set_volume", "songplayer=%p volume=%f", songplayer, volume);
+}
+

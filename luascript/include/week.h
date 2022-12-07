@@ -17,20 +17,6 @@ typedef struct _RoundContext_t {
 
 typedef RoundContext_t* RoundContext;
 
-typedef struct {
-#ifdef JAVASCRIPT
-    int32_t _ptrsize;
-#endif
-    char* name;
-    char* difficult;
-    int32_t index;
-} WeekTrackInfo_t;
-
-typedef struct {
-    float bpm;
-    double speed;
-} WeekChartInfo_t;
-
 
 void week_unlockdirective_create(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week, double value);
 void week_unlockdirective_remove(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week);
@@ -55,8 +41,8 @@ Character week_get_girlfriend(RoundContext roundcontext);
 int32_t week_get_character_count(RoundContext roundcontext);
 Character week_get_character(RoundContext roundcontext, int32_t index);
 SongPlayer week_get_songplayer(RoundContext roundcontext);
-void week_get_current_chart_info(RoundContext roundcontext, WeekChartInfo_t* output_info);
-void week_get_current_track_info(RoundContext roundcontext, WeekTrackInfo_t* output_info);
+void week_get_current_chart_info(RoundContext roundcontext, float* bpm, double* speed);
+void week_get_current_track_info(RoundContext roundcontext, const char** name, const char** difficult, int32_t* index);
 void week_change_character_camera_name(RoundContext roundcontext, bool opponent_or_player, const char* new_name);
 void week_disable_layout_rollback(RoundContext roundcontext, bool disable);
 void week_override_common_folder(RoundContext roundcontext, const char* custom_common_path);

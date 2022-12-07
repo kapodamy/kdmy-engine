@@ -99,6 +99,8 @@ function playerstats_init() {
 }
 
 function playerstats_destroy(playerstats) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(playerstats);
+
     playerstats = undefined;
 }
 

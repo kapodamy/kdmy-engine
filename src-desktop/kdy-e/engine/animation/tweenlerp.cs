@@ -299,7 +299,7 @@ namespace Engine.Animation {
             );
         }
 
-        public int TweenLerpAddEaseIn(int id, float start, float end, float duration) {
+        public int AddEaseIn(int id, float start, float end, float duration) {
             return InternalAdd(
                 id, start, end, duration, AnimInterpolator.EASE_IN, Align.INVALID, -1
             );

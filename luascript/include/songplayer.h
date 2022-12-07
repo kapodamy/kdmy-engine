@@ -24,6 +24,8 @@ bool songplayer_is_completed(SongPlayer songplayer);
 double songplayer_get_timestamp(SongPlayer songplayer);
 void songplayer_mute_track(SongPlayer songplayer, bool vocals_or_instrumental, bool muted);
 void songplayer_mute(SongPlayer songplayer, bool muted);
+void songplayer_set_volume_track(SongPlayer songplayer, bool vocals_or_instrumental, float volume);
+void songplayer_set_volume(SongPlayer songplayer, float volume);
 
 #endif
 

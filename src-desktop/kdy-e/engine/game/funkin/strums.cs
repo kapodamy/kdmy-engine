@@ -1,5 +1,6 @@
 using System;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Game.Gameplay;
 using Engine.Game.Gameplay.Helpers;
@@ -202,6 +203,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             for (int i = 0 ; i < this.size ; i++)
                 this.lines[i].Destroy();
 

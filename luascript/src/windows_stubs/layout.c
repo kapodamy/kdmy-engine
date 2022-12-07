@@ -1,15 +1,11 @@
 #include "commons.h"
 #include "layout.h"
-#include "camera.h"
-#include "sprite.h"
-#include "pvrctx.h"
-#include "psshader.h"
 
 static TextSprite_t stub_textsprite = {};
 static Sprite_t stub_sprite = {};
 static SoundPlayer_t stub_soundplayer = {};
 static Camera_t stub_camera = {};
-static _LayoutPlaceholder_t stub_placeholder = {};
+static LayoutPlaceholder_t stub_placeholder = {};
 static Modifier_t stub_modifier = {};
 static PSShader_t stub_psshader = {};
 
@@ -70,11 +66,10 @@ SoundPlayer layout_get_soundplayer(Layout layout, const char* name) {
     print_stub("layout_get_soundplayer", "layout=%p name=%s", layout, name);
     return &stub_soundplayer;
 }
-float* layout_get_viewport_size(Layout layout, float* size) {
-    size[0] = 640.0f;
-    size[1] = 480.0f;
-    print_stub("layout_get_viewport_size", "layout=%p size=%p", layout, size);
-    return size;
+void layout_get_viewport_size(Layout layout, float* viewport_width, float* viewport_height) {
+    *viewport_width = 640.0f;
+    *viewport_height = 480.0f;
+    print_stub("layout_get_viewport_size", "layout=%p viewport_width=%p, viewport_height=%p", layout, viewport_width, viewport_height);
 }
 int layout_get_attached_value2(Layout layout, const char* name, void* result) {
     print_stub("layout_get_attached_value2", "layout=%p name=%s result=%p", layout, name, result);
@@ -106,7 +101,7 @@ LayoutPlaceholder layout_get_placeholder(Layout layout, const char* name) {
 void layout_disable_antialiasing(Layout layout, bool disable) {
     print_stub("layout_disable_antialiasing", "layout=%p disable=(bool)%i", layout, disable);
 }
-void layout_set_group_antialiasing(Layout layout, const char* group_name, PVRFLAG antialiasing) {
+void layout_set_group_antialiasing(Layout layout, const char* group_name, PVRFlag antialiasing) {
     print_stub("layout_set_group_antialiasing", "layout=%p group_name=%s antialiasing=%i", layout, group_name, antialiasing);
 }
 Modifier layout_get_group_modifier(Layout layout, const char* group_name) {

@@ -21,7 +21,7 @@ void camera_set_transition_duration(Camera camera, bool expresed_in_beats, float
 void camera_set_absolute_zoom(Camera camera, float z);
 void camera_set_absolute_position(Camera camera, float x, float y);
 void camera_set_offset(Camera camera, float x, float y, float z);
-float* camera_get_offset(Camera camera, float* xyz);
+void camera_get_offset(Camera camera, float* x, float* y, float* z);
 Modifier camera_get_modifier(Camera camera);
 void camera_move(Camera camera, float end_x, float end_y, float end_z);
 void camera_slide(Camera camera, float start_x, float start_y, float start_z, float end_x, float end_y, float end_z);

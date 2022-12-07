@@ -15,7 +15,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_use_alternate_sing_animations(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_toboolean(2);
+            bool enable = L.lua_toboolean(2);
 
             character.UseAlternateSingAnimations(enable);
 
@@ -61,7 +61,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_enable_reference_size(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_toboolean(2);
+            bool enable = L.lua_toboolean(2);
 
             character.EnableReferenceSize(enable);
 
@@ -124,7 +124,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
             string direction = L.luaL_optstring(2, null);
-            bool prefer_sustain = L.luaL_toboolean(3);
+            bool prefer_sustain = L.lua_toboolean(3);
 
             bool ret = character.PlaySing(direction, prefer_sustain);
 
@@ -136,7 +136,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
             string direction = L.luaL_optstring(2, null);
-            bool keep_in_hold = L.luaL_toboolean(3);
+            bool keep_in_hold = L.lua_toboolean(3);
 
             int ret = character.PlayMiss(direction, keep_in_hold);
 
@@ -148,7 +148,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
             string extra_animation_name = L.luaL_optstring(2, null);
-            bool prefer_sustain = L.luaL_toboolean(3);
+            bool prefer_sustain = L.lua_toboolean(3);
 
             bool ret = character.PlayExtra(extra_animation_name, prefer_sustain);
 
@@ -187,7 +187,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_enable_continuous_idle(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_toboolean(2);
+            bool enable = L.lua_toboolean(2);
 
             character.EnableContinuousIdle(enable);
 
@@ -206,7 +206,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_enable_flip_correction(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_toboolean(2);
+            bool enable = L.lua_toboolean(2);
 
             character.EnableFlipCorrection(enable);
 
@@ -216,7 +216,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_flip_orientation(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool enable = L.luaL_toboolean(2);
+            bool enable = L.lua_toboolean(2);
 
             character.FlipOrientation(enable);
 
@@ -226,7 +226,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_face_as_opponent(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool face_as_opponent = L.luaL_toboolean(2);
+            bool face_as_opponent = L.lua_toboolean(2);
 
             character.FaceAsOpponent(face_as_opponent);
 
@@ -313,7 +313,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_character_set_visible(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
-            bool visible = L.luaL_toboolean(2);
+            bool visible = L.lua_toboolean(2);
 
             character.SetVisible(visible);
 
@@ -332,7 +332,7 @@ namespace Engine.Externals.LuaScriptInterop {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
             string name = L.luaL_optstring(2, null);
-            bool is_extra = L.luaL_toboolean(3);
+            bool is_extra = L.lua_toboolean(3);
 
             bool ret = character.HasDirection(name, is_extra);
 
@@ -364,41 +364,41 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         private static readonly LuaTableFunction[] CHARACTER_FUNCTIONS = {
-            new LuaTableFunction() { name = "use_alternate_sing_animations", func = script_character_use_alternate_sing_animations},
-            new LuaTableFunction() { name = "set_draw_location", func = script_character_set_draw_location },
-            new LuaTableFunction() { name = "set_draw_align", func = script_character_set_draw_align },
-            new LuaTableFunction() { name = "update_reference_size", func = script_character_update_reference_size },
-            new LuaTableFunction() { name = "enable_reference_size", func = script_character_enable_reference_size },
-            new LuaTableFunction() { name = "set_offset", func = script_character_set_offset },
-            new LuaTableFunction() { name = "state_add", func = script_character_state_add },
-            new LuaTableFunction() { name = "state_toggle", func = script_character_state_toggle },
-            new LuaTableFunction() { name = "play_hey", func = script_character_play_hey },
-            new LuaTableFunction() { name = "play_idle", func = script_character_play_idle },
-            new LuaTableFunction() { name = "play_sing", func = script_character_play_sing },
-            new LuaTableFunction() { name = "play_miss", func = script_character_play_miss },
-            new LuaTableFunction() { name = "play_extra", func = script_character_play_extra },
-            new LuaTableFunction() { name = "set_idle_speed", func = script_character_set_idle_speed },
-            new LuaTableFunction() { name = "set_scale", func = script_character_set_scale },
-            new LuaTableFunction() { name = "reset", func = script_character_reset },
-            new LuaTableFunction() { name = "enable_continuous_idle", func = script_character_enable_continuous_idle },
-            new LuaTableFunction() { name = "is_idle_active", func = script_character_is_idle_active },
-            new LuaTableFunction() { name = "enable_flip_correction", func = script_character_enable_flip_correction },
-            new LuaTableFunction() { name = "flip_orientation", func = script_character_flip_orientation },
-            new LuaTableFunction() { name = "face_as_opponent", func = script_character_face_as_opponent },
-            new LuaTableFunction() { name = "set_z_index", func = script_character_set_z_index },
-            new LuaTableFunction() { name = "set_z_offset", func = script_character_set_z_offset },
-            new LuaTableFunction() { name = "animation_set", func = script_character_animation_set },
-            new LuaTableFunction() { name = "animation_restart", func = script_character_animation_restart },
-            new LuaTableFunction() { name = "animation_end", func = script_character_animation_end },
-            new LuaTableFunction() { name = "set_color_offset", func = script_character_set_color_offset },
-            new LuaTableFunction() { name = "set_color_offset_to_default", func = script_character_set_color_offset_to_default },
-            new LuaTableFunction() { name = "set_alpha", func = script_character_set_alpha },
-            new LuaTableFunction() { name = "set_visible", func = script_character_set_visible },
-            new LuaTableFunction() { name = "get_modifier", func = script_character_get_modifier },
-            new LuaTableFunction() { name = "has_direction", func = script_character_has_direction },
-            new LuaTableFunction() { name = "get_play_calls", func = script_character_get_play_calls },
-            new LuaTableFunction() { name = "get_current_action", func = script_character_get_current_action },
-            new LuaTableFunction() { name = null, func = null }
+            new LuaTableFunction("use_alternate_sing_animations", script_character_use_alternate_sing_animations),
+            new LuaTableFunction("set_draw_location", script_character_set_draw_location),
+            new LuaTableFunction("set_draw_align", script_character_set_draw_align),
+            new LuaTableFunction("update_reference_size", script_character_update_reference_size),
+            new LuaTableFunction("enable_reference_size", script_character_enable_reference_size),
+            new LuaTableFunction("set_offset", script_character_set_offset),
+            new LuaTableFunction("state_add", script_character_state_add),
+            new LuaTableFunction("state_toggle", script_character_state_toggle),
+            new LuaTableFunction("play_hey", script_character_play_hey),
+            new LuaTableFunction("play_idle", script_character_play_idle),
+            new LuaTableFunction("play_sing", script_character_play_sing),
+            new LuaTableFunction("play_miss", script_character_play_miss),
+            new LuaTableFunction("play_extra", script_character_play_extra),
+            new LuaTableFunction("set_idle_speed", script_character_set_idle_speed),
+            new LuaTableFunction("set_scale", script_character_set_scale),
+            new LuaTableFunction("reset", script_character_reset),
+            new LuaTableFunction("enable_continuous_idle", script_character_enable_continuous_idle),
+            new LuaTableFunction("is_idle_active", script_character_is_idle_active),
+            new LuaTableFunction("enable_flip_correction", script_character_enable_flip_correction),
+            new LuaTableFunction("flip_orientation", script_character_flip_orientation),
+            new LuaTableFunction("face_as_opponent", script_character_face_as_opponent),
+            new LuaTableFunction("set_z_index", script_character_set_z_index),
+            new LuaTableFunction("set_z_offset", script_character_set_z_offset),
+            new LuaTableFunction("animation_set", script_character_animation_set),
+            new LuaTableFunction("animation_restart", script_character_animation_restart),
+            new LuaTableFunction("animation_end", script_character_animation_end),
+            new LuaTableFunction("set_color_offset", script_character_set_color_offset),
+            new LuaTableFunction("set_color_offset_to_default", script_character_set_color_offset_to_default),
+            new LuaTableFunction("set_alpha", script_character_set_alpha),
+            new LuaTableFunction("set_visible", script_character_set_visible),
+            new LuaTableFunction("get_modifier", script_character_get_modifier),
+            new LuaTableFunction("has_direction", script_character_has_direction),
+            new LuaTableFunction("get_play_calls", script_character_get_play_calls),
+            new LuaTableFunction("get_current_action", script_character_get_current_action),
+            new LuaTableFunction(null, null)
         };
 
         internal static int script_character_new(LuaState L, Character character) {

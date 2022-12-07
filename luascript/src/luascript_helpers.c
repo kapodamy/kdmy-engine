@@ -65,6 +65,7 @@ static int remove_lua_reference(Luascript luascript, void* obj) {
             int ref = shared_array[i].lua_ref;
             shared_array[i].obj_ptr = NULL;
             shared_array[i].lua_ref = LUA_REFNIL;
+            shared_array[i].was_allocated_by_lua = false;
             return ref;
         }
     }
@@ -72,11 +73,20 @@ static int remove_lua_reference(Luascript luascript, void* obj) {
     return LUA_NOREF;
 }
 
-
-static void* read_userdata(lua_State* L, int ud, const char* tname) {
+static LuascriptObject* read_luascript_object(lua_State* L, int ud, const char* tname) {
     LuascriptObject* udata = luaL_checkudata(L, ud, tname);
 
     if (!udata || !udata->obj_ptr || udata->lua_ref == LUA_REFNIL || udata->lua_ref == LUA_NOREF) {
+        return NULL;
+    }
+
+    return udata;
+}
+
+static void* read_userdata(lua_State* L, int ud, const char* tname) {
+    LuascriptObject* udata = read_luascript_object(L, ud, tname);
+
+    if (!udata) {
         luaL_error(L, "%s object was destroyed.", tname);
         return NULL;
     }
@@ -205,36 +215,41 @@ int luascript_userdata_allocnew(lua_State* L, const char* check_metatable_name, 
 
 int luascript_userdata_tostring(lua_State* L, const char* check_metatable_name) {
     void* udata = luascript_read_userdata(L, check_metatable_name);
-    lua_pushfstring(L, "{%s 0x%p}", check_metatable_name, udata);
+    lua_pushfstring(L, "{%s %p}", check_metatable_name, udata);
     return 1;
 }
 
 int luascript_userdata_gc(lua_State* L, const char* check_metatable_name) {
     void* udata = luascript_read_userdata(L, check_metatable_name);
     luascript_remove_userdata(luascript_get_instance(L), udata);
-    return 1;
+    return 0;
 }
 
 int luascript_userdata_destroy(lua_State* L, const char* check_metatable_name, Destructor destructor) {
-    bool allocated = luascript_userdata_is_allocated(L, check_metatable_name);
-    void* udata = luascript_read_userdata(L, check_metatable_name);
+    LuascriptObject* udata = read_luascript_object(L, 1, check_metatable_name);
 
-    luascript_remove_userdata(luascript_get_instance(L), udata);
+    if (!udata) return 0;
 
-    if (allocated) {
+    void* obj_ptr = udata->obj_ptr;
+    bool was_allocated_by_lua = udata->was_allocated_by_lua;
+
+    luascript_remove_userdata(luascript_get_instance(L), obj_ptr);
+    udata->obj_ptr = NULL;
+    udata->lua_ref = LUA_NOREF;
+    udata->was_allocated_by_lua = false;
+
+    if (was_allocated_by_lua) {
         assert(destructor);
-        destructor(udata);
+        destructor(&obj_ptr);
     }
 
-    return 1;
+    return 0;
 }
 
 bool luascript_userdata_is_allocated(lua_State* L, const char* check_metatable_name) {
-    LuascriptObject* udata = luaL_checkudata(L, 1, check_metatable_name);
+    LuascriptObject* udata = read_luascript_object(L, 1, check_metatable_name);
 
-    if (!udata || !udata->obj_ptr || udata->lua_ref == LUA_REFNIL || udata->lua_ref == LUA_NOREF) {
-        return false;
-    }
+    if (!udata)  return false;
 
     return udata->was_allocated_by_lua;
 }
@@ -333,6 +348,43 @@ int luascript_parse_interpolator(lua_State* L, const char* interpolator) {
     return luaL_error(L, "invalid interpolator: %s", interpolator);
 }
 
+Blend luascript_parse_blend(lua_State* L, const char* blend) {
+    if (!blend || blend[0] == '\0' || string_equals("BLEND_DEFAULT", blend))
+        return BLEND_DEFAULT;
+    else if (string_equals("BLEND_ZERO", blend))
+        return BLEND_ZERO;
+    else if (string_equals("BLEND_ONE", blend))
+        return BLEND_ONE;
+    else if (string_equals("BLEND_SRC_COLOR", blend))
+        return BLEND_SRC_COLOR;
+    else if (string_equals("BLEND_ONE_MINUS_SRC_COLOR", blend))
+        return BLEND_ONE_MINUS_SRC_COLOR;
+    else if (string_equals("BLEND_DST_COLOR", blend))
+        return BLEND_DST_COLOR;
+    else if (string_equals("BLEND_ONE_MINUS_DST_COLOR", blend))
+        return BLEND_ONE_MINUS_DST_COLOR;
+    else if (string_equals("BLEND_SRC_ALPHA", blend))
+        return BLEND_SRC_ALPHA;
+    else if (string_equals("BLEND_ONE_MINUS_SRC_ALPHA", blend))
+        return BLEND_ONE_MINUS_SRC_ALPHA;
+    else if (string_equals("BLEND_DST_ALPHA", blend))
+        return BLEND_DST_ALPHA;
+    else if (string_equals("BLEND_ONE_MINUS_DST_ALPHA", blend))
+        return BLEND_ONE_MINUS_DST_ALPHA;
+    else if (string_equals("BLEND_CONSTANT_COLOR", blend))
+        return BLEND_CONSTANT_COLOR;
+    else if (string_equals("BLEND_ONE_MINUS_CONSTANT_COLOR", blend))
+        return BLEND_ONE_MINUS_CONSTANT_COLOR;
+    else if (string_equals("BLEND_CONSTANT_ALPHA", blend))
+        return BLEND_CONSTANT_ALPHA;
+    else if (string_equals("BLEND_ONE_MINUS_CONSTANT_ALPHA", blend))
+        return BLEND_ONE_MINUS_CONSTANT_ALPHA;
+    else if (string_equals("BLEND_SRC_ALPHA_SATURATE", blend))
+        return BLEND_SRC_ALPHA_SATURATE;
+    
+    return luaL_error(L, "invalid blend: %s", blend); 
+}
+
 
 const char* luascript_stringify_align(Align align) {
     switch (align) {
@@ -364,3 +416,168 @@ const char* luascript_stringify_actiontype(CharacterActionType actiontype) {
             return "none";
     }
 }
+
+
+#ifdef JAVASCRIPT
+//
+// javascript imported functions are always static, warp them
+//
+EM_JS_PRFX(double, kdmyEngine_read_prop_double, (void* obj_id, const char* field_name), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    
+    return ret;
+});
+EM_JS_PRFX(float, kdmyEngine_read_prop_float, (void* obj_id, const char* field_name), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    
+    return ret;
+});
+EM_JS_PRFX(char*, kdmyEngine_read_prop_string, (void* obj_id, const char* field_name), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+
+    return kdmyEngine_stringToPtr(ret);
+});
+EM_JS_PRFX(int32_t, kdmyEngine_read_prop_integer, (void* obj_id, const char* field_name), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+
+    return ret;
+});
+EM_JS_PRFX(void*, kdmyEngine_read_prop_object, (void* obj_id, const char* field_name), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    
+    return kdmyEngine_obtain((typeof ret === 'object') ? ret : null);
+});
+EM_JS_PRFX(bool, kdmyEngine_read_prop_boolean, (void* obj_id, const char* field_name), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    
+    return ret ? 1 : 0;
+});
+EM_JS_PRFX(bool, kdmyEngine_read_prop_floatboolean, (void* obj_id, const char* field_name), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    
+    return ret >= 1.0 || ret === true;
+});
+EM_JS_PRFX(void, kdmyEngine_forget_obtained, (void* obj_id), {
+    let ret = kdmyEngine_forget(obj_id);
+    if (!ret) throw new Error("Uknown object id:" + obj_id);
+});
+
+EM_JS_PRFX(void, kdmyEngine_write_prop_double, (void* obj_id, const char* field_name, double value), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value;
+});
+EM_JS_PRFX(void, kdmyEngine_write_prop_float, (void* obj_id, const char* field_name, float value), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value;
+});
+EM_JS_PRFX(void, kdmyEngine_write_prop_string, (void* obj_id, const char* field_name, char* value), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = kdmyEngine_ptrToString(value);
+});
+EM_JS_PRFX(void, kdmyEngine_write_prop_integer, (void* obj_id, const char* field_name, int32_t value), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value;
+});
+EM_JS_PRFX(void, kdmyEngine_write_prop_object, (void* obj_id, const char* field_name, void* value), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = kdmyEngine_obtain(value);
+});
+EM_JS_PRFX(void, kdmyEngine_write_prop_boolean, (void* obj_id, const char* field_name, bool value), {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj) throw new Error("Uknown object id:" + obj_id);
+    
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value;
+});
+
+
+double kdmy_read_prop_double(void* obj_id, const char* field_name) {
+    return kdmyEngine_read_prop_double(obj_id, field_name);
+}
+float kdmy_read_prop_float(void* obj_id, const char* field_name) {
+    return kdmyEngine_read_prop_float(obj_id, field_name);
+}
+char* kdmy_read_prop_string(void* obj_id, const char* field_name) {
+    return  kdmyEngine_read_prop_string(obj_id, field_name);
+}
+int32_t kdmy_read_prop_integer(void* obj_id, const char* field_name) {
+    return kdmyEngine_read_prop_integer(obj_id, field_name);
+}
+void* kdmy_read_prop_object(void* obj_id, const char* field_name) {
+    return kdmyEngine_read_prop_object(obj_id, field_name);
+}
+bool kdmy_read_prop_boolean(void* obj_id, const char* field_name) {
+    return kdmyEngine_read_prop_boolean(obj_id, field_name);
+}
+bool kdmy_read_prop_floatboolean(void* obj_id, const char* field_name) {
+    return kdmyEngine_read_prop_floatboolean(obj_id, field_name);
+}
+void kdmy_forget_obtained(void* obj_id) {
+    return kdmyEngine_forget_obtained(obj_id);
+}
+
+
+void kdmy_write_prop_double(void* obj_id, const char* field_name, double value) {
+    return kdmyEngine_write_prop_double(obj_id, field_name, value);
+}
+void kdmy_write_prop_float(void* obj_id, const char* field_name, float value) {
+    return kdmyEngine_write_prop_float(obj_id, field_name, value);
+}
+void kdmy_write_prop_string(void* obj_id, const char* field_name, char* value) {
+    return  kdmyEngine_write_prop_string(obj_id, field_name, value);
+}
+void kdmy_write_prop_integer(void* obj_id, const char* field_name, int32_t value) {
+    return kdmyEngine_write_prop_integer(obj_id, field_name, value);
+}
+void kdmy_write_prop_object(void* obj_id, const char* field_name, void* value) {
+    return kdmyEngine_write_prop_object(obj_id, field_name, value);
+}
+void kdmy_write_prop_boolean(void* obj_id, const char* field_name, bool value) {
+    return kdmyEngine_write_prop_boolean(obj_id, field_name, value);
+}
+
+#endif
+

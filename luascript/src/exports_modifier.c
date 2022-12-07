@@ -27,60 +27,33 @@ const char TOSTRING_FORMAT[] = "{ "
 "}";
 
 #ifdef JAVASCRIPT
-EM_JS_PRFX(bool, modifier_set_field_JS, (Modifier modifier, const char* name, float value), {
-    const _modifier = kdmyEngine_obtain(modifier);
-    const _field = kdmyEngine_ptrToString(name);
 
-    if (_field in _modifier) {
-        _modifier[_field] = value;
-        return 0;
-    }
+static Modifier_t temp_modifier = {};
 
-    return 1;
-    });
-EM_JS_PRFX(bool, modifier_get_field_JS, (Modifier modifier, const char* name, float* value_ptr), {
-    const _modifier = kdmyEngine_obtain(modifier);
-    const _field = kdmyEngine_ptrToString(name);
+static Modifier kdmy_read_modifier(Modifier modifier) {
+    temp_modifier.translate_x = kdmy_read_prop_float(modifier, "translate_x");
+    temp_modifier.translate_y = kdmy_read_prop_float(modifier, "translate_y");
+    temp_modifier.rotate = kdmy_read_prop_float(modifier, "rotate");
+    temp_modifier.skew_x = kdmy_read_prop_float(modifier, "skew_x");
+    temp_modifier.skew_y = kdmy_read_prop_float(modifier, "skew_y");
+    temp_modifier.scale_x = kdmy_read_prop_float(modifier, "scale_x");
+    temp_modifier.scale_y = kdmy_read_prop_float(modifier, "scale_y");
+    temp_modifier.scale_direction_x = kdmy_read_prop_float(modifier, "scale_direction_x");
+    temp_modifier.scale_direction_y = kdmy_read_prop_float(modifier, "scale_direction_y");
+    temp_modifier.rotate_pivot_enabled = kdmy_read_prop_floatboolean(modifier, "rotate_pivot_enabled");
+    temp_modifier.rotate_pivot_u = kdmy_read_prop_float(modifier, "rotate_pivot_u");
+    temp_modifier.rotate_pivot_v = kdmy_read_prop_float(modifier, "rotate_pivot_v");
+    temp_modifier.translate_rotation = kdmy_read_prop_floatboolean(modifier, "translate_rotation");
+    temp_modifier.scale_translation = kdmy_read_prop_floatboolean(modifier, "scale_translation");
+    temp_modifier.scale_size = kdmy_read_prop_floatboolean(modifier, "scale_size");
+    temp_modifier.x = kdmy_read_prop_float(modifier, "x");
+    temp_modifier.y = kdmy_read_prop_float(modifier, "y");
+    temp_modifier.width = kdmy_read_prop_float(modifier, "width");
+    temp_modifier.height = kdmy_read_prop_float(modifier, "height");
 
-    if (_field in _modifier) {
-        const HEAP_ENDIANESS = true;
-        const dataView = new DataView(buffer);
-        const value = _modifier[_field];
-
-        dataView.setFloat32(value_ptr, value, HEAP_ENDIANESS);
-        return 0;
-    }
-
-    return 1;
-    });
-#endif
-
-#ifdef JAVASCRIPT
-#include <ctype.h>
-
-static char DESUGARED_FIELD_NAME[26];
-static const char* desugar_modifier_field_nameJS(const char* lua_str) {
-    if (!lua_str) return NULL;
-
-    const size_t length = sizeof(DESUGARED_FIELD_NAME) - 1;
-    size_t j = 0;
-
-    for (size_t i = 0;lua_str[i]; i++) {
-        char chr = lua_str[i];
-        if (isupper(chr)) {
-            DESUGARED_FIELD_NAME[j++] = '_';
-            if (j >= length) break;
-            DESUGARED_FIELD_NAME[j++] = tolower(chr);
-            if (j >= length) break;
-        } else {
-            DESUGARED_FIELD_NAME[j++] = chr;
-            if (j >= length) break;
-        }
-    }
-
-    DESUGARED_FIELD_NAME[j] = 0;
-    return DESUGARED_FIELD_NAME;
+    return &temp_modifier;
 }
+
 #endif
 
 
@@ -96,173 +69,96 @@ static int script_modifier_tostring(lua_State* L) {
     Modifier modifier = luascript_read_userdata(L, MODIFIER);
 
 #ifdef JAVASCRIPT
-    float translate_x;
-    float translate_y;
-    float rotate;
-    float skew_x;
-    float skew_y;
-    float scale_x;
-    float scale_y;
-    float scale_direction_x;
-    float scale_direction_y;
-    float rotate_pivot_enabled;
-    float rotate_pivot_u;
-    float rotate_pivot_v;
-    float translate_rotation;
-    float scale_size;
-    float scale_translation;
-    float x;
-    float y;
-    float width;
-    float height;
-    modifier_get_field_JS(modifier, "translate_x", &translate_x);
-    modifier_get_field_JS(modifier, "translate_y", &translate_y);
-    modifier_get_field_JS(modifier, "rotate", &rotate);
-    modifier_get_field_JS(modifier, "skew_x", &skew_x);
-    modifier_get_field_JS(modifier, "skew_y", &skew_y);
-    modifier_get_field_JS(modifier, "scale_x", &scale_x);
-    modifier_get_field_JS(modifier, "scale_y", &scale_y);
-    modifier_get_field_JS(modifier, "scale_direction_x", &scale_direction_x);
-    modifier_get_field_JS(modifier, "scale_direction_y", &scale_direction_y);
-    modifier_get_field_JS(modifier, "rotate_pivot_enabled", &rotate_pivot_enabled);
-    modifier_get_field_JS(modifier, "rotate_pivot_u", &rotate_pivot_u);
-    modifier_get_field_JS(modifier, "rotate_pivot_v", &rotate_pivot_v);
-    modifier_get_field_JS(modifier, "translate_rotation", &translate_rotation);
-    modifier_get_field_JS(modifier, "scale_size", &scale_size);
-    modifier_get_field_JS(modifier, "scale_translation", &scale_translation);
-    modifier_get_field_JS(modifier, "x", &x);
-    modifier_get_field_JS(modifier, "y", &y);
-    modifier_get_field_JS(modifier, "width", &width);
-    modifier_get_field_JS(modifier, "heigh", &height);
+    modifier = kdmy_read_modifier(modifier);
+#endif
 
     lua_pushfstring(
         L,
         TOSTRING_FORMAT,
-        (lua_Number)translate_x,
-        (lua_Number)translate_y,
-        (lua_Number)rotate,
-        (lua_Number)skew_x,
-        (lua_Number)skew_y,
-        (lua_Number)scale_x,
-        (lua_Number)scale_y,
-        (lua_Number)scale_direction_x,
-        (lua_Number)scale_direction_y,
-        rotate_pivot_enabled,
-        (lua_Number)rotate_pivot_u,
-        (lua_Number)rotate_pivot_v,
-        translate_rotation,
-        scale_size,
-        scale_translation,
-        (lua_Number)x,
-        (lua_Number)y,
-        (lua_Number)width,
-        (lua_Number)height
+        modifier->translate_x,
+        modifier->translate_y,
+        modifier->rotate,
+        modifier->skew_x,
+        modifier->skew_y,
+        modifier->scale_x,
+        modifier->scale_y,
+        modifier->scale_direction_x,
+        modifier->scale_direction_y,
+        modifier->rotate_pivot_enabled >= 1.0f,
+        modifier->rotate_pivot_u,
+        modifier->rotate_pivot_v,
+        modifier->translate_rotation >= 1.0f,
+        modifier->scale_size >= 1.0f,
+        modifier->scale_translation >= 1.0f,
+        modifier->x,
+        modifier->y,
+        modifier->width,
+        modifier->height
     );
-#else
-    lua_pushfstring(
-        L,
-        TOSTRING_FORMAT,
-        (double)modifier->translate_x,
-        (double)modifier->translate_y,
-        (double)modifier->rotate,
-        (double)modifier->skew_x,
-        (double)modifier->skew_y,
-        (double)modifier->scale_x,
-        (double)modifier->scale_y,
-        (double)modifier->scale_direction_x,
-        (double)modifier->scale_direction_y,
-        isfinite(modifier->rotate_pivot_enabled) && modifier->rotate_pivot_enabled >= 0.0f,
-        (double)modifier->rotate_pivot_u,
-        (double)modifier->rotate_pivot_v,
-        isfinite(modifier->translate_rotation) && modifier->translate_rotation >= 1.0f,
-        isfinite(modifier->scale_size) && modifier->scale_size >= 1.0f,
-        isfinite(modifier->scale_translation) && modifier->scale_translation >= 1.0f,
-        (double)modifier->x,
-        (double)modifier->y,
-        (double)modifier->width,
-        (double)modifier->height
-    );
-#endif
 
     return 1;
 }
 
 static int script_modifier_index(lua_State* L) {
     Modifier modifier = luascript_read_userdata(L, MODIFIER);
-
     const char* field = luaL_optstring(L, 2, NULL);
 
 #ifdef JAVASCRIPT
-    field = desugar_modifier_field_nameJS(field);
-    if (!field) {
-        lua_pushnil(L);
-        return 1;
-    }
-    float value;
-    if (modifier_get_field_JS(modifier, field, &value))
-        lua_pushnil(L);
-    else
-        lua_pushnumber(L, value);
-#else
-    if (string_equals(field, "translateX"))
-        lua_pushnumber(L, (double)modifier->translate_x);
-    else if (string_equals(field, "translateY"))
-        lua_pushnumber(L, (double)modifier->translate_y);
-    else if (string_equals(field, "rotate"))
-        lua_pushnumber(L, (double)modifier->rotate);
-    else if (string_equals(field, "skewX"))
-        lua_pushnumber(L, (double)modifier->skew_x);
-    else if (string_equals(field, "skewY"))
-        lua_pushnumber(L, (double)modifier->skew_y);
-    else if (string_equals(field, "scaleX"))
-        lua_pushnumber(L, (double)modifier->scale_x);
-    else if (string_equals(field, "scaleY"))
-        lua_pushnumber(L, (double)modifier->scale_y);
-    else if (string_equals(field, "scaleDirectionX"))
-        lua_pushnumber(L, (double)modifier->scale_direction_x);
-    else if (string_equals(field, "scaleDirectionY"))
-        lua_pushnumber(L, (double)modifier->scale_direction_y);
-    else if (string_equals(field, "rotatePivotEnabled"))
-        lua_pushboolean(L, isfinite(modifier->rotate_pivot_enabled) && modifier->rotate_pivot_enabled != 0.0f);
-    else if (string_equals(field, "rotatePivotU"))
-        lua_pushnumber(L, (double)modifier->rotate_pivot_u);
-    else if (string_equals(field, "rotatePivotV"))
-        lua_pushnumber(L, (double)modifier->rotate_pivot_v);
-    else if (string_equals(field, "translateRotation"))
-        lua_pushboolean(L, isfinite(modifier->translate_rotation) && modifier->translate_rotation != 0.0f);
-    else if (string_equals(field, "scaleSize"))
-        lua_pushboolean(L, isfinite(modifier->scale_size) && modifier->scale_size != 0.0f);
-    else if (string_equals(field, "scaleTranslation"))
-        lua_pushboolean(L, isfinite(modifier->scale_translation) && modifier->scale_translation != 0.0f);
-    else if (string_equals(field, "x"))
-        lua_pushnumber(L, (double)modifier->x);
-    else if (string_equals(field, "y"))
-        lua_pushnumber(L, (double)modifier->y);
-    else if (string_equals(field, "width"))
-        lua_pushnumber(L, (double)modifier->width);
-    else if (string_equals(field, "height"))
-        lua_pushnumber(L, (double)modifier->height);
-    else
-        lua_pushnil(L);
+    modifier = kdmy_read_modifier(modifier);
 #endif
+
+    if (string_equals(field, "translateX"))
+        lua_pushnumber(L, modifier->translate_x);
+    else if (string_equals(field, "translateY"))
+        lua_pushnumber(L, modifier->translate_y);
+    else if (string_equals(field, "rotate"))
+        lua_pushnumber(L, modifier->rotate);
+    else if (string_equals(field, "skewX"))
+        lua_pushnumber(L, modifier->skew_x);
+    else if (string_equals(field, "skewY"))
+        lua_pushnumber(L, modifier->skew_y);
+    else if (string_equals(field, "scaleX"))
+        lua_pushnumber(L, modifier->scale_x);
+    else if (string_equals(field, "scaleY"))
+        lua_pushnumber(L, modifier->scale_y);
+    else if (string_equals(field, "scaleDirectionX"))
+        lua_pushnumber(L, modifier->scale_direction_x);
+    else if (string_equals(field, "scaleDirectionY"))
+        lua_pushnumber(L, modifier->scale_direction_y);
+    else if (string_equals(field, "rotatePivotEnabled"))
+        lua_pushboolean(L, modifier->rotate_pivot_enabled >= 1.0f);
+    else if (string_equals(field, "rotatePivotU"))
+        lua_pushnumber(L, modifier->rotate_pivot_u);
+    else if (string_equals(field, "rotatePivotV"))
+        lua_pushnumber(L, modifier->rotate_pivot_v);
+    else if (string_equals(field, "translateRotation"))
+        lua_pushboolean(L, modifier->translate_rotation >= 1.0f);
+    else if (string_equals(field, "scaleSize"))
+        lua_pushboolean(L, modifier->scale_size >= 1.0f);
+    else if (string_equals(field, "scaleTranslation"))
+        lua_pushboolean(L, modifier->scale_translation >= 1.0f);
+    else if (string_equals(field, "x"))
+        lua_pushnumber(L, modifier->x);
+    else if (string_equals(field, "y"))
+        lua_pushnumber(L, modifier->y);
+    else if (string_equals(field, "width"))
+        lua_pushnumber(L, modifier->width);
+    else if (string_equals(field, "height"))
+        lua_pushnumber(L, modifier->height);
+    else
+        return luaL_error(L, "unknown modifier field '%s'", field);
 
     return 1;
 }
 
 static int script_modifier_newindex(lua_State* L) {
     Modifier modifier = luascript_read_userdata(L, MODIFIER);
-
     const char* field = luaL_optstring(L, 2, NULL);
 
 #ifdef JAVASCRIPT
-    field = desugar_modifier_field_nameJS(field);
-    if (!field) {
-        return luaL_argerror(L, 2, lua_pushfstring(L, "Unknown Modifier field '%s'", field));
-    }
-    float value = (float)luaL_checknumber(L, 3);
-    if (modifier_set_field_JS(modifier, field, value))
-        return luaL_argerror(L, 2, lua_pushfstring(L, "Unknown Modifier field '%s'", field));
-#else
+    modifier = kdmy_read_modifier(modifier);
+#endif
+
     if (string_equals(field, "translateX"))
         modifier->translate_x = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "translateY"))
@@ -302,8 +198,7 @@ static int script_modifier_newindex(lua_State* L) {
     else if (string_equals(field, "height"))
         modifier->height = (float)luaL_checknumber(L, 3);
     else
-        return luaL_argerror(L, 2, lua_pushfstring(L, "unknown Modifier field '%s'", field));
-#endif
+        return luaL_error(L, "unknown modifier field '%s'", field);
 
     return 0;
 }

@@ -4,48 +4,50 @@ using LuaNativeMethods;
 namespace Engine.Externals.LuaInterop {
     public class LuaTableBuilder {
 
-        private readonly Field[] fields;
+        private Field[] fields;
         private int size;
 
 
-        public LuaTableBuilder(int max_field_count) {
-            fields = new Field[max_field_count];
+        public LuaTableBuilder() : this(16) { }
+
+        public LuaTableBuilder(int initial_field_count) {
+            fields = new Field[initial_field_count + 1];
         }
 
 
         public void AddNumber(string name, double n) {
-            fields[size].name = name;
-            fields[size].value = n;
-            fields[size].kind = 0;
-            size++;
+            int index = CheckSize();
+            fields[index].name = name;
+            fields[index].value = n;
+            fields[index].kind = 0;
         }
 
         public void AddInteger(string name, long i) {
-            fields[size].name = name;
-            fields[size].value = i;
-            fields[size].kind = 1;
-            size++;
+            int index = CheckSize();
+            fields[index].name = name;
+            fields[index].value = i;
+            fields[index].kind = 1;
         }
 
         public void AddString(string name, string s) {
-            fields[size].name = name;
-            fields[size].value = s;
-            fields[size].kind = 2;
-            size++;
+            int index = CheckSize();
+            fields[index].name = name;
+            fields[index].value = s;
+            fields[index].kind = 2;
         }
 
         public void AddBoolean(string name, bool b) {
-            fields[size].name = name;
-            fields[size].value = b;
-            fields[size].kind = 3;
-            size++;
+            int index = CheckSize();
+            fields[index].name = name;
+            fields[index].value = b;
+            fields[index].kind = 3;
         }
 
         public void AddNil(string name) {
-            fields[size].name = name;
-            fields[size].value = null;
-            fields[size].kind = 4;
-            size++;
+            int index = CheckSize();
+            fields[index].name = name;
+            fields[index].value = null;
+            fields[index].kind = 4;
         }
 
         public int FieldsCount { get => size; }
@@ -82,6 +84,15 @@ namespace Engine.Externals.LuaInterop {
                     LUA.lua_settable(L, -3);
                 }
             }
+        }
+
+        private int CheckSize() {
+            if (size >= fields.Length) {
+                Array.Resize(ref fields, size + 15);
+            }
+            int index = size;
+            size++;
+            return index;
         }
 
         private struct Field {

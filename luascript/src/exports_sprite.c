@@ -40,16 +40,12 @@ EM_JS_PRFX(void, sprite_set_z_index, (Sprite sprite, float index), {
 EM_JS_PRFX(void, sprite_set_z_offset, (Sprite sprite, float offset), {
     sprite_set_z_offset(kdmyEngine_obtain(sprite), offset);
 });
-EM_JS_PRFX(float*, sprite_get_source_size, (Sprite sprite, float* size), {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
+EM_JS_PRFX(void, sprite_get_source_size, (Sprite sprite, float* source_width, float* source_height), {
     const values = [ 0, 0 ];
-
     sprite_get_source_size(kdmyEngine_obtain(sprite), values);
-    dataView.setFloat32(size + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(size + 4, values[1], HEAP_ENDIANESS);
-
-    return size;
+    
+    kdmyEngine_set_float32(source_width, values[0]);
+    kdmyEngine_set_float32(source_height, values[1]);
 });
 EM_JS_PRFX(void, sprite_set_vertex_color, (Sprite sprite, float r, float g, float b), {
     sprite_set_vertex_color(kdmyEngine_obtain(sprite), r, g, b);
@@ -69,29 +65,21 @@ EM_JS_PRFX(bool, sprite_is_crop_enabled, (Sprite sprite), {
 EM_JS_PRFX(void, sprite_crop_enable, (Sprite sprite, bool enable), {
     sprite_crop_enable(kdmyEngine_obtain(sprite), enable);
 });
-EM_JS_PRFX(float*, sprite_resize_draw_size, (Sprite sprite, float max_width, float max_height, float* applied_draw_size), {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
-    const values = [ 0, 0 ];
-
+EM_JS_PRFX(void, sprite_resize_draw_size, (Sprite sprite, float max_width, float max_height, float* applied_draw_width, float* applied_draw_height), {
+    const values = [0, 0];
     sprite_resize_draw_size(kdmyEngine_obtain(sprite), max_width, max_height, values);
-    dataView.setFloat32(applied_draw_size + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(applied_draw_size + 4, values[1], HEAP_ENDIANESS);
 
-    return applied_draw_size;
+    kdmyEngine_set_float32(applied_draw_width, values[0]);
+    kdmyEngine_set_float32(applied_draw_height, values[1]);
 });
-EM_JS_PRFX(float*, sprite_center_draw_location, (Sprite sprite, float x, float y, float ref_width, float ref_height, float* applied_draw_location), {
-    const HEAP_ENDIANESS = true;
-    const dataView = new DataView(buffer);
+EM_JS_PRFX(void, sprite_center_draw_location, (Sprite sprite, float x, float y, float ref_width, float ref_height, float* applied_draw_x, float* applied_draw_y), {
     const values = [ 0, 0 ];
-
     sprite_center_draw_location(kdmyEngine_obtain(sprite), x, y, ref_width, ref_height, values);
-    dataView.setFloat32(applied_draw_location + 0, values[0], HEAP_ENDIANESS);
-    dataView.setFloat32(applied_draw_location + 4, values[1], HEAP_ENDIANESS);
-
-    return applied_draw_location;
+    
+    kdmyEngine_set_float32(applied_draw_x, values[0]);
+    kdmyEngine_set_float32(applied_draw_y, values[1]);
 });
-EM_JS_PRFX(void, sprite_set_antialiasing, (Sprite sprite, PVRFLAG antialiasing), {
+EM_JS_PRFX(void, sprite_set_antialiasing, (Sprite sprite, PVRFlag antialiasing), {
     sprite_set_antialiasing(kdmyEngine_obtain(sprite), antialiasing);
 });
 
@@ -236,11 +224,11 @@ static int script_sprite_set_z_offset(lua_State* L) {
 static int script_sprite_get_source_size(lua_State* L) {
     Sprite sprite = luascript_read_userdata(L, SPRITE);
 
-    float size[2];
-    sprite_get_source_size(sprite, size);
+    float source_width, source_height;
+    sprite_get_source_size(sprite, &source_width, &source_height);
 
-    lua_pushnumber(L, size[0]);
-    lua_pushnumber(L, size[1]);
+    lua_pushnumber(L, source_width);
+    lua_pushnumber(L, source_height);
 
     return 2;
 }
@@ -318,11 +306,11 @@ static int script_sprite_resize_draw_size(lua_State* L) {
     float max_width = (float)luaL_checknumber(L, 2);
     float max_height = (float)luaL_checknumber(L, 3);
 
-    float applied_draw_size[2];
-    sprite_resize_draw_size(sprite, max_width, max_height, applied_draw_size);
+    float applied_draw_x, applied_draw_y;
+    sprite_resize_draw_size(sprite, max_width, max_height, &applied_draw_x, &applied_draw_y);
 
-    lua_pushnumber(L, applied_draw_size[0]);
-    lua_pushnumber(L, applied_draw_size[1]);
+    lua_pushnumber(L, applied_draw_x);
+    lua_pushnumber(L, applied_draw_y);
     return 2;
 }
 
@@ -334,18 +322,18 @@ static int script_sprite_center_draw_location(lua_State* L) {
     float ref_width = (float)luaL_checknumber(L, 4);
     float ref_height = (float)luaL_checknumber(L, 5);
 
-    float applied_draw_location[2];
-    sprite_center_draw_location(sprite, x, y, ref_width, ref_height, applied_draw_location);
+    float applied_draw_x, applied_draw_y;
+    sprite_center_draw_location(sprite, x, y, ref_width, ref_height, &applied_draw_x, &applied_draw_y);
 
-    lua_pushnumber(L, applied_draw_location[0]);
-    lua_pushnumber(L, applied_draw_location[1]);
+    lua_pushnumber(L, applied_draw_x);
+    lua_pushnumber(L, applied_draw_y);
     return 2;
 }
 
 static int script_sprite_set_antialiasing(lua_State* L) {
     Sprite sprite = luascript_read_userdata(L, SPRITE);
 
-    PVRFLAG antialiasing = luascript_parse_pvrflag(L, luaL_checkstring(L, 2));
+    PVRFlag antialiasing = luascript_parse_pvrflag(L, luaL_checkstring(L, 2));
 
     sprite_set_antialiasing(sprite, antialiasing);
 

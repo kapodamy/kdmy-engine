@@ -58,6 +58,8 @@ function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
 }
 
 function roundstats_destroy(roundstats) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(roundstats);
+
     drawable_destroy(roundstats.drawable);
     if (roundstats.drawable_animation) animsprite_destroy(roundstats.drawable_animation);
     textsprite_destroy(roundstats.textsprite);

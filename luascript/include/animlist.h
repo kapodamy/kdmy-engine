@@ -10,5 +10,21 @@
 
 typedef int AnimInterpolator;
 
+typedef struct {
+    int dummy;
+} AnimList_t;
+typedef AnimList_t* AnimList;
+
+typedef struct {
+    char* name;
+} AnimListItem_t;
+typedef AnimListItem_t* AnimListItem;
+
+AnimList animlist_init(const char* src);
+void animlist_destroy(AnimList* animlist);
+AnimListItem animlist_get_animation(AnimList animlist, const char* animation_name);
+bool animlist_is_item_macro_animation(AnimListItem animlist_item);
+bool animlist_is_item_frame_animation(AnimListItem animlist_item);
+
 #endif
 

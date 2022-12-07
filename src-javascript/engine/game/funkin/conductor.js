@@ -15,6 +15,8 @@ function conductor_init() {
 }
 
 function conductor_destroy(conductor) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(conductor);
+
     conductor_clear_mapping(conductor);
     arraylist_destroy(conductor.mappings, 0);
     conductor = undefined;

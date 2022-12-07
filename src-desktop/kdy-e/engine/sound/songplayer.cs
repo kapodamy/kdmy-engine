@@ -1,4 +1,5 @@
 using System;
+using System.Media;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using KallistiOS.THD;
@@ -223,6 +224,18 @@ namespace Engine.Sound {
         public void Mute(bool muted) {
             if (this.playbacks_size < 1) return;
             for (int i = 0 ; i < this.playbacks_size ; i++) this.playbacks[i].SetMute(muted);
+        }
+
+        public void SetVolume(float volume) {
+            if (this.playbacks_size < 1) return;
+            for (int i = 0 ; i < this.playbacks_size ; i++) this.playbacks[i].SetVolume(volume);
+        }
+
+        public void SetVolumeTrack(bool vocals_or_instrumental, float volume) {
+            if (this.playbacks_size < 1) return;
+            int target = vocals_or_instrumental ? this.index_voices : this.index_instrumental;
+            if (target < 0) return;
+            this.playbacks[target].SetVolume(volume);
         }
 
 

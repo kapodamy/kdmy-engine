@@ -29,6 +29,10 @@
 #include "soundplayer.h"
 #include "sprite.h"
 #include "textsprite.h"
+#include "tweenlerp.h"
+#include "atlas.h"
+#include "drawable.h"
+#include "animsprite.h"
 
 
 #ifdef JAVASCRIPT
@@ -40,9 +44,26 @@
 #define EM_ASYNC_JS_PRFX(ret, name, params, ...) \
     _EM_JS(ret, name, __asyncjs__##name, params, "{ return Asyncify.handleAsync(async () => " #__VA_ARGS__ "); }")
 
+
+double kdmy_read_prop_double(void* obj_id, const char* field_name);
+float kdmy_read_prop_float(void* obj_id, const char* field_name);
+char* kdmy_read_prop_string(void* obj_id, const char* field_name);
+int32_t kdmy_read_prop_integer(void* obj_id, const char* field_name);
+void* kdmy_read_prop_object(void* obj_id, const char* field_name);
+bool kdmy_read_prop_boolean(void* obj_id, const char* field_name);
+bool kdmy_read_prop_floatboolean(void* obj_id, const char* field_name);
+void kdmy_forget_obtained(void* obj_id);
+
+void kdmy_write_prop_double(void* obj_id, const char* field_name, double value);
+void kdmy_write_prop_float(void* obj_id, const char* field_name, float value);
+void kdmy_write_prop_string(void* obj_id, const char* field_name, char* value);
+void kdmy_write_prop_integer(void* obj_id, const char* field_name, int32_t value);
+void kdmy_write_prop_object(void* obj_id, const char* field_name, void* value);
+void kdmy_write_prop_boolean(void* obj_id, const char* field_name, bool value);
+
 #endif
 
-typedef void (*Destructor)(void*);
+typedef void (*Destructor)(void**);
 
 #define SHARED_ARRAY_CHUNK_SIZE 16
 
@@ -70,9 +91,17 @@ int luascript_parse_pvrflag(lua_State* L, const char* pvrflag);
 int luascript_parse_forcecase(lua_State* L, const char* forcecase);
 int luascript_parse_wordbreak(lua_State* L, const char* wordbreak);
 int luascript_parse_interpolator(lua_State* L, const char* interpolator);
+Blend luascript_parse_blend(lua_State* L, const char* blend);
 
 const char* luascript_stringify_align(Align align);
 const char* luascript_stringify_actiontype(CharacterActionType actiontype);
+
+int script_atlas_push_atlas_entry(lua_State* L, AtlasEntry entry);
+
+#define LuaL_add_table_field(L, field_name, lua_function_setter, value) \
+    lua_pushstring(L, (field_name));                         \
+    lua_function_setter(L, (value));                                    \
+    lua_settable(L, -3);
 
 
 #define TEXTSPRITE "TextSprite"
@@ -86,6 +115,10 @@ void script_sprite_register(lua_State* L);
 #define LAYOUT "Layout"
 int script_layout_new(lua_State* L, Layout layout);
 void script_layout_register(lua_State* L);
+
+#define LAYOUTPLACEHOLDER "LayoutPlaceholder"
+int script_layoutplaceholder_new(lua_State* L, LayoutPlaceholder placeholderlayout);
+void script_layoutplaceholder_register(lua_State* L);
 
 #define CAMERA "Camera"
 int script_camera_new(lua_State* L, Camera camera);
@@ -127,8 +160,6 @@ void script_timer_register(lua_State* L);
 // int script_fs_new(lua_State* L);
 void script_fs_register(lua_State* L);
 
-#define ANIMSPRITE "AnimSprite"
-#define MODELHOLDER "ModelHolder"
 
 //#define MODDING "Modding"
 // int script_modding_new(lua_State* L);
@@ -141,5 +172,33 @@ void script_dialogue_register(lua_State* L);
 #define PSSHADER "PSShader"
 int script_psshader_new(lua_State* L, PSShader psshader);
 void script_psshader_register(lua_State* L);
+
+#define TWEENLERP "TweenLerp"
+int script_tweenlerp_new(lua_State* L, TweenLerp tweenlerp);
+void script_tweenlerp_register(lua_State* L);
+
+#define ATLAS "Atlas"
+int script_atlas_new(lua_State* L, Atlas atlas);
+void script_atlas_register(lua_State* L);
+
+#define ANIMLIST "AnimList"
+int script_animlist_new(lua_State* L, AnimList animlist);
+void script_animlist_register(lua_State* L);
+
+#define ANIMLISTITEM "AnimListItem"
+int script_animlistitem_new(lua_State* L, AnimListItem animlistitem);
+void script_animlistitem_register(lua_State* L);
+
+#define ANIMSPRITE "AnimSprite"
+int script_animsprite_new(lua_State* L, AnimSprite animsprite);
+void script_animsprite_register(lua_State* L);
+
+#define DRAWABLE "Drawable"
+int script_drawable_new(lua_State* L, Drawable drawable);
+void script_drawable_register(lua_State* L);
+
+#define MODELHOLDER "ModelHolder"
+int script_modelholder_new(lua_State* L, ModelHolder modelholder);
+void script_modelholder_register(lua_State* L);
 
 #endif

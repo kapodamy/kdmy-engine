@@ -141,6 +141,8 @@ async function strums_init(x, y, z, dimmen, invdimmen, length, gap, player_id, i
 }
 
 function strums_destroy(strums) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(strums);
+
     for (let i = 0; i < strums.size; i++)
         strum_destroy(strums.lines[i]);
 

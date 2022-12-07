@@ -1658,7 +1658,7 @@ namespace Engine.Game.Gameplay {
 
                     if (!String.IsNullOrEmpty(state.model_marker)) marker = ModelHolder.Init(state.model_marker);
                     if (!String.IsNullOrEmpty(state.model_sick_effect)) sick_effect = ModelHolder.Init(state.model_sick_effect);
-                    if (!String.IsNullOrEmpty(state.model_background)) background = ModelHolder.Init(state.model_background);
+                    if (!String.IsNullOrEmpty(state.model_background) && FS.FileExists(state.model_background)) background = ModelHolder.Init(state.model_background);
                     if (!String.IsNullOrEmpty(state.model_notes)) notes = ModelHolder.Init(state.model_notes);
 
                     roundcontext.players[i].strums.StateAdd(
@@ -2733,8 +2733,8 @@ namespace Engine.Game.Gameplay {
             roundcontext.layout.SetGroupVisibility(Week.ROUND_UI_GROUP_NAME, visible);
         }
 
-        public static void GetCurrentChartInfo(RoundContext roundcontext, out float bmp, out double speed) {
-            bmp = roundcontext.settings.bpm;
+        public static void GetCurrentChartInfo(RoundContext roundcontext, out float bpm, out double speed) {
+            bpm = roundcontext.settings.bpm;
             speed = roundcontext.settings.speed;
         }
 

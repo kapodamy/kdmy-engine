@@ -9,6 +9,8 @@ async function missnotefx_init() {
 }
 
 function missnotefx_destroy(missnotefx) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(missnotefx);
+
     if (missnotefx.missnote1) soundplayer_destroy(missnotefx.missnote1);
     if (missnotefx.missnote2) soundplayer_destroy(missnotefx.missnote2);
     if (missnotefx.missnote3) soundplayer_destroy(missnotefx.missnote3);

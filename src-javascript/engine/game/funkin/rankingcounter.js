@@ -117,6 +117,8 @@ function rankingcounter_init(plchldr_rank, plchldr_accuracy, fnthldr) {
 }
 
 function rankingcounter_destroy(rankingcounter) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(rankingcounter);
+
     textsprite_destroy(rankingcounter.textsprite);
     drawable_destroy(rankingcounter.drawable_rank);
     drawable_destroy(rankingcounter.drawable_accuracy);

@@ -28,7 +28,7 @@ typedef struct _LayoutParallax_t {
 
 typedef struct {
     int32_t group_id;
-    const char* name;
+    char* name;
     Align align_vertical;
     Align align_horizontal;
 
@@ -45,10 +45,17 @@ typedef struct {
 
     uint16_t actions_size;
     void* actions;*/
-} _LayoutPlaceholder_t;
+} LayoutPlaceholder_t;
 
-typedef _LayoutPlaceholder_t* LayoutPlaceholder;
+typedef LayoutPlaceholder_t* LayoutPlaceholder;
 
+typedef union {
+    char* value_string;
+    uint32_t value_boolean;
+    int64_t value_integer;
+    uint32_t value_unsigned;
+    double value_float;
+} LayoutAttachedValue;
 
 #define LAYOUT_TYPE_NOTFOUND 0x00
 #define LAYOUT_TYPE_STRING 0x01
@@ -75,7 +82,7 @@ Camera layout_get_secondary_camera_helper(Layout layout);
 TextSprite layout_get_textsprite(Layout layout, const char* name);
 Sprite layout_get_sprite(Layout layout, const char* name);
 SoundPlayer layout_get_soundplayer(Layout layout, const char* name);
-float* layout_get_viewport_size(Layout layout, float* size);
+void layout_get_viewport_size(Layout layout, float* viewport_width, float* viewport_height);
 int layout_get_attached_value2(Layout layout, const char* name, void* result);
 LAYOUT_TYPE layout_get_attached_value_type(Layout layout, const char* name);
 void layout_set_group_visibility(Layout layout, const char* group_name, bool visible);
@@ -85,7 +92,7 @@ void layout_suspend(Layout layout);
 void layout_resume(Layout layout);
 LayoutPlaceholder layout_get_placeholder(Layout layout, const char* name);
 void layout_disable_antialiasing(Layout layout, bool disable);
-void layout_set_group_antialiasing(Layout layout, const char* group_name, PVRFLAG antialiasing);
+void layout_set_group_antialiasing(Layout layout, const char* group_name, PVRFlag antialiasing);
 Modifier layout_get_group_modifier(Layout layout, const char* group_name);
 PSShader layout_get_group_shader(Layout layout, const char* group_name);
 bool layout_set_group_shader(Layout layout, const char* group_name, PSShader psshader);

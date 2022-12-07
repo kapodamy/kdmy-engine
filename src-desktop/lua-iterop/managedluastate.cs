@@ -168,8 +168,10 @@ namespace Engine.Externals.LuaInterop {
                 LUA.lua_pushcfunction(lua, index);
                 LUA.lua_setfield(lua, -2, "__index");
 
-                LUA.lua_pushcfunction(lua, newindex);
-                LUA.lua_setfield(lua, -2, "__newindex");
+                if (newindex != null) {
+                    LUA.lua_pushcfunction(lua, newindex);
+                    LUA.lua_setfield(lua, -2, "__newindex");
+                }
 
                 LUA.lua_pop(lua, 1);
             }

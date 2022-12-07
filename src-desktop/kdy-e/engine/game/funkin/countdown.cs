@@ -1,4 +1,5 @@
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
@@ -90,6 +91,8 @@ namespace Engine.Game {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             this.statesprite.Destroy();
             this.default_animation.Destroy();
             this.sound_three.Destroy();

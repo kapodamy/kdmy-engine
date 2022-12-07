@@ -34,6 +34,6 @@ void dialogue_set_offsetcolor(Dialogue dialogue, float r, float g, float b, floa
 void dialogue_set_alpha(Dialogue dialogue, float alpha) {
     print_stub("dialogue_set_alpha", "dialogue=%p alpha=%f", dialogue, alpha);
 }
-void dialogue_set_antialiasing(Dialogue dialogue, PVRFLAG antialiasing) {
+void dialogue_set_antialiasing(Dialogue dialogue, PVRFlag antialiasing) {
     print_stub("dialogue_set_antialiasing", "dialogue=%p antialiasing=%p", dialogue, antialiasing);
 }

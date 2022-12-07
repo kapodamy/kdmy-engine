@@ -63,12 +63,12 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         static readonly LuaTableFunction[] EXPORTS_FUNCTION = {
-            new LuaTableFunction() { name = "math2d_lerp",  func = script_math2d_lerp },
-            new LuaTableFunction() { name = "math2d_inverselerp",  func = script_math2d_inverselerp },
-            new LuaTableFunction() { name = "math2d_nearestdown",  func = script_math2d_nearestdown },
-            new LuaTableFunction() { name = "math2d_rotate_point_by_degs",  func = script_math2d_rotate_point_by_degs },
-            new LuaTableFunction() { name = "math2d_points_distance",  func = script_math2d_points_distance },
-            new LuaTableFunction() { name = null, func = null }
+            new LuaTableFunction("math2d_lerp", script_math2d_lerp),
+            new LuaTableFunction("math2d_inverselerp", script_math2d_inverselerp),
+            new LuaTableFunction("math2d_nearestdown", script_math2d_nearestdown),
+            new LuaTableFunction("math2d_rotate_point_by_degs", script_math2d_rotate_point_by_degs),
+            new LuaTableFunction("math2d_points_distance", script_math2d_points_distance),
+            new LuaTableFunction(null, null)
         };
 
         internal static void script_math2d_register(ManagedLuaState lua) {

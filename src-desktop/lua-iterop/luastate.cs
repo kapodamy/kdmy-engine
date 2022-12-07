@@ -109,7 +109,7 @@ namespace Engine.Externals.LuaInterop {
             }
         }
 
-        public bool luaL_toboolean(int arg) {
+        public bool lua_toboolean(int arg) {
             unsafe {
                 int value = LUA.lua_toboolean(L, arg);
                 return value != 0;

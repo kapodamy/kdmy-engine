@@ -107,7 +107,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_set_visible(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            bool visible = L.luaL_toboolean(2);
+            bool visible = L.lua_toboolean(2);
 
             textsprite.SetVisible(visible);
 
@@ -159,8 +159,8 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_matrix_flip(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            bool flip_x = L.luaL_toboolean(2);
-            bool flip_y = L.luaL_toboolean(3);
+            bool flip_x = L.lua_toboolean(2);
+            bool flip_y = L.lua_toboolean(3);
 
             textsprite.MatrixFlip(flip_x, flip_y);
 
@@ -217,7 +217,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_textsprite_border_enable(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-            bool enable = L.luaL_toboolean(2);
+            bool enable = L.lua_toboolean(2);
 
             textsprite.BorderEnable(enable);
 
@@ -296,34 +296,34 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         static readonly LuaTableFunction[] TEXTSPRITE_FUNCTIONS = {
-            new LuaTableFunction() { name = "set_text", func = script_textsprite_set_text },
-            new LuaTableFunction() { name = "set_font_size", func = script_textsprite_set_font_size },
-            new LuaTableFunction() { name = "force_case", func = script_textsprite_force_case },
-            new LuaTableFunction() { name = "set_paragraph_align", func = script_textsprite_set_paragraph_align },
-            new LuaTableFunction() { name = "set_paragraph_space", func = script_textsprite_set_paragraph_space },
-            new LuaTableFunction() { name = "set_maxlines", func = script_textsprite_set_maxlines },
-            new LuaTableFunction() { name = "set_color_rgba8", func = script_textsprite_set_color_rgba8 },
-            new LuaTableFunction() { name = "set_color", func = script_textsprite_set_color },
-            new LuaTableFunction() { name = "set_alpha", func = script_textsprite_set_alpha },
-            new LuaTableFunction() { name = "set_visible", func = script_textsprite_set_visible },
-            new LuaTableFunction() { name = "set_draw_location", func = script_textsprite_set_draw_location },
-            new LuaTableFunction() { name = "set_z_index", func = script_textsprite_set_z_index },
-            new LuaTableFunction() { name = "set_z_offset", func = script_textsprite_set_z_offset },
-            new LuaTableFunction() { name = "set_max_draw_size", func = script_textsprite_set_max_draw_size },
-            new LuaTableFunction() { name = "matrix_flip", func = script_textsprite_matrix_flip },
-            new LuaTableFunction() { name = "set_align", func = script_textsprite_set_align },
-            new LuaTableFunction() { name = "matrix_get_modifier", func = script_textsprite_matrix_get_modifier },
-            new LuaTableFunction() { name = "matrix_reset", func = script_textsprite_matrix_reset },
-            new LuaTableFunction() { name = "get_font_size", func = script_textsprite_get_font_size },
-            new LuaTableFunction() { name = "get_draw_size", func = script_textsprite_get_draw_size },
-            new LuaTableFunction() { name = "border_enable", func = script_textsprite_border_enable },
-            new LuaTableFunction() { name = "border_set_size", func = script_textsprite_border_set_size },
-            new LuaTableFunction() { name = "border_set_color", func = script_textsprite_border_set_color },
-            new LuaTableFunction() { name = "set_antialiasing", func = script_textsprite_set_antialiasing },
-            new LuaTableFunction() { name = "set_wordbreak", func = script_textsprite_set_wordbreak },
-            new LuaTableFunction() { name = "set_shader", func = script_textsprite_set_shader },
-            new LuaTableFunction() { name = "get_shader", func = script_textsprite_get_shader },
-            new LuaTableFunction() { name = null, func = null }
+            new LuaTableFunction("set_text", script_textsprite_set_text),
+            new LuaTableFunction("set_font_size", script_textsprite_set_font_size),
+            new LuaTableFunction("force_case", script_textsprite_force_case),
+            new LuaTableFunction("set_paragraph_align", script_textsprite_set_paragraph_align),
+            new LuaTableFunction("set_paragraph_space", script_textsprite_set_paragraph_space),
+            new LuaTableFunction("set_maxlines", script_textsprite_set_maxlines),
+            new LuaTableFunction("set_color_rgba8", script_textsprite_set_color_rgba8),
+            new LuaTableFunction("set_color", script_textsprite_set_color),
+            new LuaTableFunction("set_alpha", script_textsprite_set_alpha),
+            new LuaTableFunction("set_visible", script_textsprite_set_visible),
+            new LuaTableFunction("set_draw_location", script_textsprite_set_draw_location),
+            new LuaTableFunction("set_z_index", script_textsprite_set_z_index),
+            new LuaTableFunction("set_z_offset", script_textsprite_set_z_offset),
+            new LuaTableFunction("set_max_draw_size", script_textsprite_set_max_draw_size),
+            new LuaTableFunction("matrix_flip", script_textsprite_matrix_flip),
+            new LuaTableFunction("set_align", script_textsprite_set_align),
+            new LuaTableFunction("matrix_get_modifier", script_textsprite_matrix_get_modifier),
+            new LuaTableFunction("matrix_reset", script_textsprite_matrix_reset),
+            new LuaTableFunction("get_font_size", script_textsprite_get_font_size),
+            new LuaTableFunction("get_draw_size", script_textsprite_get_draw_size),
+            new LuaTableFunction("border_enable", script_textsprite_border_enable),
+            new LuaTableFunction("border_set_size", script_textsprite_border_set_size),
+            new LuaTableFunction("border_set_color", script_textsprite_border_set_color),
+            new LuaTableFunction("set_antialiasing", script_textsprite_set_antialiasing),
+            new LuaTableFunction("set_wordbreak", script_textsprite_set_wordbreak),
+            new LuaTableFunction("set_shader", script_textsprite_set_shader),
+            new LuaTableFunction("get_shader", script_textsprite_get_shader),
+            new LuaTableFunction(null, null)
         };
 
         internal static int script_textsprite_new(LuaState L, TextSprite textsprite) {

@@ -31,6 +31,12 @@ EM_JS_PRFX(void, songplayer_mute_track, (SongPlayer songplayer, bool vocals_or_i
 EM_JS_PRFX(void, songplayer_mute, (SongPlayer songplayer, bool muted), {
     songplayer_mute(kdmyEngine_obtain(songplayer), muted);
 });
+EM_JS_PRFX(void, songplayer_set_volume_track, (SongPlayer songplayer, bool vocals_or_instrumental, float volume), {
+    songplayer_set_volume_track(kdmyEngine_obtain(songplayer), vocals_or_instrumental, volume);
+});
+EM_JS_PRFX(void, songplayer_set_volume, (SongPlayer songplayer, float volume), {
+    songplayer_set_volume(kdmyEngine_obtain(songplayer), volume);
+});
 #endif
 
 
@@ -122,6 +128,24 @@ static int script_songplayer_mute(lua_State* L) {
     return 0;
 }
 
+static int script_songplayer_set_volume_track(lua_State* L) {
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
+    bool vocals_or_instrumental = (bool)lua_toboolean(L, 2);
+    float volume = (float)luaL_checknumber(L, 3);
+
+    songplayer_set_volume_track(songplayer, vocals_or_instrumental, volume);
+
+    return 0;
+}
+
+static int script_songplayer_set_volume(lua_State* L) {
+    SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
+    float volume = (float)luaL_checknumber(L, 2);
+
+    songplayer_set_volume(songplayer, volume);
+
+    return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +160,8 @@ static const luaL_Reg SONGPLAYER_FUNCTIONS[] = {
     {"get_timestamp", script_songplayer_get_timestamp},
     {"mute_track", script_songplayer_mute_track},
     {"mute", script_songplayer_mute},
+    { "set_volume_track", script_songplayer_set_volume_track },
+    { "set_volume", script_songplayer_set_volume },
     {NULL, NULL}
 };
 

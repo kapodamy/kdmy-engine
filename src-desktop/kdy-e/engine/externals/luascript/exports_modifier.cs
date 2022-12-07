@@ -129,8 +129,7 @@ namespace Engine.Externals.LuaScriptInterop {
                     L.lua_pushnumber(modifier.height);
                     break;
                 default:
-                    L.lua_pushnil();
-                    break;
+                    return L.luaL_error($"unknown modifier field '{field}'");
             }
 
             return 1;
@@ -169,7 +168,7 @@ namespace Engine.Externals.LuaScriptInterop {
                     modifier.scale_direction_y = (float)L.luaL_checknumber(3);
                     break;
                 case "rotatePivotEnabled":
-                    modifier.rotate_pivot_enabled = L.luaL_toboolean(3);
+                    modifier.rotate_pivot_enabled = L.lua_toboolean(3);
                     break;
                 case "rotatePivotU":
                     modifier.rotate_pivot_u = (float)L.luaL_checknumber(3);
@@ -178,13 +177,13 @@ namespace Engine.Externals.LuaScriptInterop {
                     modifier.rotate_pivot_v = (float)L.luaL_checknumber(3);
                     break;
                 case "translateRotation":
-                    modifier.translate_rotation = L.luaL_toboolean(3);
+                    modifier.translate_rotation = L.lua_toboolean(3);
                     break;
                 case "scaleSize":
-                    modifier.scale_size = L.luaL_toboolean(3);
+                    modifier.scale_size = L.lua_toboolean(3);
                     break;
                 case "scaleTranslation":
-                    modifier.scale_translation = L.luaL_toboolean(3);
+                    modifier.scale_translation = L.lua_toboolean(3);
                     break;
                 case "x":
                     modifier.x = (float)L.luaL_checknumber(3);
@@ -199,7 +198,7 @@ namespace Engine.Externals.LuaScriptInterop {
                     modifier.height = (float)L.luaL_checknumber(3);
                     break;
                 default:
-                    return L.luaL_argerror(2, $"unknown Modifier field '{field}'");
+                    return L.luaL_error($"unknown modifier field '{field}'");
             }
 
             return 0;
