@@ -1,9 +1,9 @@
 #include <stdio.h>
-#ifdef _WIN32
+/*#ifdef _WIN32
 #include <Windows.h>
-#else
+#else*/
 #include <unistd.h>
-#endif
+//#endif
 
 #include "luascript.h"
 #include "week.h"
@@ -49,7 +49,7 @@ int main() {
     int total = 10000 / 10;
     for (int i = 0; i < total; i++) {
         luascript_notify_timer_run(luascript, timer_ms_gettime64());
-        Sleep(10);
+        sleep(10);
     }
 
     luascript_destroy(&luascript);

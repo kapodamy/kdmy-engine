@@ -1187,12 +1187,6 @@ async function webopengl_internal_create_program(gl, shader_name) {
     let vertex_shader_sourcecode = await webopengl_internal_load_shader(shader_name, true);
     let fragment_shader_sourcecode = await webopengl_internal_load_shader(shader_name, false);
 
-    if (window["ENABLE_DOTTED"]) {
-        const DOTTED = "#define DOTTED\n";
-        vertex_shader_sourcecode = DOTTED + vertex_shader_sourcecode;
-        fragment_shader_sourcecode = DOTTED + fragment_shader_sourcecode;
-    }
-
     let vertex_shader = webopengl_internal_create_shader(gl, vertex_shader_sourcecode, true, true);
     let fragment_shader = webopengl_internal_create_shader(gl, fragment_shader_sourcecode, false, true);
 
@@ -1226,7 +1220,11 @@ function webopengl_internal_enable_dotted(/**@type {WebGL2Context}*/wglc, enable
     wglc.draw_dotted = enable ? 1 : 0;
 }
 
-function webopengl_set_shader_version(sourcecode) {
+function webopengl_set_shader_version(sourcecode) { 
+    if (window["ENABLE_DOTTED"]) {
+        const DOTTED = "#define DOTTED\n";
+        sourcecode = DOTTED + sourcecode;
+    }
     return "#version 300 es\nprecision highp float;\n\n" + sourcecode;
 
 }

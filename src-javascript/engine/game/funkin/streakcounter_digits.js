@@ -99,11 +99,15 @@ function streakcounter_digits_animation_restart(streakcounter_digits) {
 function streakcounter_digits_animation_end(streakcounter_digits) {
     for (let i = 0; i < STREAKCOUNTER_DIGITS; i++) {
         statesprite_animation_end(streakcounter_digits.digits[i]);
-        if (streakcounter_digits.has_animations)
+        if (streakcounter_digits.has_animations) {
             animsprite_force_end(streakcounter_digits.animations[i]);
+            animsprite_update_statesprite(streakcounter_digits.animations[i], streakcounter_digits.digits[i], 1);
+        }
     }
-    if (streakcounter_digits.animation_pair)
+    if (streakcounter_digits.animation_pair) {
         animsprite_force_end(streakcounter_digits.animation_pair);
+        animsprite_update_drawable(streakcounter_digits.animation_pair, streakcounter_digits.drawable, 1);
+    }
 }
 
 

@@ -92,6 +92,18 @@ EM_JS_PRFX(PSShader, textsprite_get_shader, (TextSprite textsprite), {
     let psshader = textsprite_get_shader(kdmyEngine_obtain(textsprite));
     return kdmyEngine_obtain(psshader);
 });
+EM_JS_PRFX(void, textsprite_background_enable, (TextSprite textsprite, bool enabled), {
+    textsprite_background_enable(kdmyEngine_obtain(textsprite), enabled);
+});
+EM_JS_PRFX(void, textsprite_background_set_size, (TextSprite textsprite, float size), {
+    textsprite_background_set_size(kdmyEngine_obtain(textsprite), size);
+});
+EM_JS_PRFX(void, textsprite_background_set_offets, (TextSprite textsprite, float offset_x, float offset_y), {
+    textsprite_background_set_offets(kdmyEngine_obtain(textsprite), offset_x, offset_y);
+});
+EM_JS_PRFX(void, textsprite_background_set_color, (TextSprite textsprite, float r, float g, float b, float a), {
+    textsprite_background_set_color(kdmyEngine_obtain(textsprite), r, g, b, a);
+});
 #endif
 
 
@@ -374,8 +386,45 @@ static int script_textsprite_get_shader(lua_State* L) {
     return script_psshader_new(L, psshader);
 }
 
+static int script_textsprite_background_enable(lua_State* L) {
+    TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
+    bool enabled = (bool)lua_toboolean(L, 2);
 
+    textsprite_background_enable(textsprite, enabled);
 
+    return 0;
+}
+
+static int script_textsprite_background_set_size(lua_State* L) {
+    TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
+    float size = (float)luaL_checknumber(L, 2);
+
+    textsprite_background_set_size(textsprite, size);
+
+    return 0;
+}
+
+static int script_textsprite_background_set_offets(lua_State* L) {
+    TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
+    float offset_x = (float)luaL_checknumber(L, 2);
+    float offset_y = (float)luaL_checknumber(L, 3);
+
+    textsprite_background_set_offets(textsprite, offset_x, offset_y);
+
+    return 0;
+}
+
+static int script_textsprite_background_set_color(lua_State* L) {
+    TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
+    float r = (float)luaL_checknumber(L, 2);
+    float g = (float)luaL_checknumber(L, 3);
+    float b = (float)luaL_checknumber(L, 4);
+    float a = (float)luaL_checknumber(L, 5);
+
+    textsprite_background_set_color(textsprite, r, g, b, a);
+
+    return 0;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -409,6 +458,10 @@ static const luaL_Reg TEXTSPRITE_FUNCTIONS[] = {
     {"set_wordbreak", script_textsprite_set_wordbreak},
     {"set_shader", script_textsprite_set_shader},
     {"get_shader", script_textsprite_get_shader},
+    { "background_enable", script_textsprite_background_enable },
+    { "background_set_size", script_textsprite_background_set_size },
+    { "background_set_offets", script_textsprite_background_set_offets },
+    { "background_set_color", script_textsprite_background_set_color },
     {NULL, NULL}
 };
 

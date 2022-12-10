@@ -341,10 +341,13 @@ namespace Engine.Game {
 
             this.drawable.HelperApplyInContext(pvrctx);
 
-            for (int i = 0 ; i < this.size ; i++)
+            for (int i = 0 ; i < this.size ; i++) {
+                if (!this.lines[i].GetDrawable().IsVisible()) continue;
                 this.lines[i].Draw(pvrctx);
+            }
 
             for (int i = 0 ; i < this.size ; i++) {
+                if (!this.lines[i].GetDrawable().IsVisible()) continue;
                 if (this.sick_effects[i] != null && this.sick_effects[i].IsVisible())
                     this.sick_effects[i].Draw(pvrctx);
             }
@@ -463,7 +466,10 @@ namespace Engine.Game {
         }
 
         public void AnimationEnd() {
-            if (this.drawable_animation != null) this.drawable_animation.ForceEnd();
+            if (this.drawable_animation != null) {
+                this.drawable_animation.ForceEnd();
+                this.drawable_animation.UpdateDrawable(this.drawable, true);
+            }
 
             for (int i = 0 ; i < this.size ; i++)
                 this.lines[i].AnimationEnd();

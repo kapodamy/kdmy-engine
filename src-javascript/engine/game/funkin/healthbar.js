@@ -230,8 +230,8 @@ function healthbar_state_opponent_add(healthbar, icon_mdlhldr, bar_mdlhldr, stat
     );
 }
 
-function healthbar_state_opponent_add2(healthbar, icon_mdlhldr, bar_color_rbb8, state_name) {
-    HEALTHBAR_STUB_MODELHOLDER.vertex_color_rgb8 = bar_color_rbb8 | 0x00;
+function healthbar_state_opponent_add2(healthbar, icon_mdlhldr, bar_color_rgb8, state_name) {
+    HEALTHBAR_STUB_MODELHOLDER.vertex_color_rgb8 = bar_color_rgb8 | 0x00;
     return healthbar_internal_add_chrctr_state(
         healthbar.sprite_icon_opponent, healthbar.sprite_bar_opponent,
         icon_mdlhldr, HEALTHBAR_STUB_MODELHOLDER,
@@ -298,12 +298,20 @@ function healthbar_load_warnings(healthbar, modelholder, use_alt_icons) {
 }
 
 
-function healthbar_set_opponent_bar_color(healthbar, color_rgb8) {
+function healthbar_set_opponent_bar_color_rgb8(healthbar, color_rgb8) {
     statesprite_set_vertex_color_rgb8(healthbar.sprite_bar_opponent, color_rgb8);
 }
 
-function healthbar_set_player_bar_color(healthbar, color_rgb8) {
+function healthbar_set_opponent_bar_color(healthbar, r, g, b) {
+    statesprite_set_vertex_color(healthbar.sprite_bar_opponent, r, g, b);
+}
+
+function healthbar_set_player_bar_color_rgb8(healthbar, color_rgb8) {
     statesprite_set_vertex_color_rgb8(healthbar.sprite_bar_player, color_rgb8);
+}
+
+function healthbar_set_player_bar_color(healthbar, r, g, b) {
+    statesprite_set_vertex_color(healthbar.sprite_bar_player, r, g, b);
 }
 
 
@@ -417,9 +425,18 @@ function healthbar_animation_restart(healthbar) {
 }
 
 function healthbar_animation_end(healthbar) {
-    if (healthbar.bump_animation_opponent) animsprite_force_end(healthbar.bump_animation_opponent);
-    if (healthbar.bump_animation_player) animsprite_force_end(healthbar.bump_animation_player);
-    if (healthbar.drawable_animation) animsprite_force_end(healthbar.drawable_animation);
+    if (healthbar.bump_animation_opponent) {
+        animsprite_force_end(healthbar.bump_animation_opponent);
+        animsprite_update_modifier(this.bump_animation_opponent, this.bump_modifier_opponent, 1);
+    }
+    if (healthbar.bump_animation_player) {
+        animsprite_force_end(healthbar.bump_animation_player);
+        animsprite_update_modifier(this.bump_animation_player, this.bump_modifier_player, 1);
+    }
+    if (healthbar.drawable_animation) {
+        animsprite_force_end(healthbar.drawable_animation);
+        animsprite_update_drawable(this.drawable_animation, this.drawable, 1);
+    }
 
     statesprite_animation_end(healthbar.sprite_background);
     statesprite_animation_end(healthbar.sprite_bar_opponent);

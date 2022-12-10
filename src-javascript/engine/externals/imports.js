@@ -28,6 +28,7 @@
  * @property {function(ModuleLuaScript,number):void} _luascript_notify_timersong_run
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_dialogue_line_starts
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_dialogue_line_ends
+ * @property {function(ModuleLuaScript):void} _luascript_notify_after_strum_scroll
  * @property {function(ModuleLuaScript,number):void} _luascript_call_function
  * @property {function(ModuleLuaScript,number):number} _luascript_eval
  * @property {function(string):number} kdmyEngine_stringToPtr

@@ -709,14 +709,21 @@ namespace Engine.Game {
                 },
                 new SettingOption() {
                     name = "SHOW SONG PROGRESS BAR",
-                    description = "(Not Implemented) Shows a progress bar near the strums makers.\n" +
+                    description = "Shows a progress bar near the strums makers.\n" +
                                   "Indicates playback progress of the playing track",
                     is_bool = true,
-                    value_bool = false,
+                    value_bool = true,
                     ini_key = "song_progressbar"
                 },
+                new SettingOption() {
+                    name = "SONG PROGRESS BAR REMAINING TIME",
+                    description = "Shows the remaining song duration instead of time elapsed",
+                    is_bool = true,
+                    value_bool = false,
+                    ini_key="song_progressbar_remaining"
+                },
             };
-            int options_size = 4;
+            int options_size = 6;
 
             // load current settings
             for (int i = 0 ; i < options_size ; i++) {

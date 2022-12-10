@@ -42,5 +42,9 @@ void textsprite_set_antialiasing(TextSprite textsprite, PVRFlag antialiasing);
 void textsprite_set_wordbreak(TextSprite textsprite, FontWordBreak wordbreak);
 void textsprite_set_shader(TextSprite textsprite, PSShader psshader);
 PSShader textsprite_get_shader(TextSprite textsprite);
+void textsprite_background_enable(TextSprite textsprite, bool enabled);
+void textsprite_background_set_size(TextSprite textsprite, float size);
+void textsprite_background_set_offets(TextSprite textsprite, float offset_x, float offset_y);
+void textsprite_background_set_color(TextSprite textsprite, float r, float g, float b, float a);
 #endif
 

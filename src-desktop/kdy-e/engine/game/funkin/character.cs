@@ -993,7 +993,10 @@ namespace Engine.Game {
         }
 
         public void AnimationEnd() {
-            if (this.drawable_animation != null) this.drawable_animation.ForceEnd();
+            if (this.drawable_animation != null) {
+                this.drawable_animation.ForceEnd();
+                this.drawable_animation.UpdateDrawable(this.drawable, true);
+            }
         }
 
         public void SetColorOffset(float r, float g, float b, float a) {

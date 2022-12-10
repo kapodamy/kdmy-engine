@@ -772,6 +772,7 @@ function createWasm() {
 }
 var tempDouble;
 var tempI64;
+
 function __asyncjs__animlist_init(src) {
     return Asyncify.handleAsync(async() => {
         let ret = await animlist_init(kdmyEngine_ptrToString(src));
@@ -841,6 +842,11 @@ function __asyncjs__songplayer_play(songplayer, songinfo) {
             timestamp: 0
         };
         await songplayer_play(kdmyEngine_obtain(songplayer), _songinfo)
+    })
+}
+function __asyncjs__week_rebuild_ui(roundcontext) {
+    return Asyncify.handleAsync(async() => {
+        await week_rebuild_ui(kdmyEngine_obtain(roundcontext))
     })
 }
 function __js__animlist_destroy(animlist) {
@@ -1119,6 +1125,87 @@ function __js__character_update_reference_size(character, width, height) {
 function __js__character_use_alternate_sing_animations(character, enable) {
     character_use_alternate_sing_animations(kdmyEngine_obtain(character), enable)
 }
+function __js__conductor_clear_mapping(conductor) {
+    conductor_clear_mapping(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_destroy(conductor) {
+    conductor_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(conductor)))
+}
+function __js__conductor_disable(conductor, disable) {
+    conductor_disable(kdmyEngine_obtain(conductor), disable)
+}
+function __js__conductor_disable_strum_line(conductor, strum, should_disable) {
+    let ret = conductor_disable_strum_line(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), should_disable);
+    return ret ? 1 : 0
+}
+function __js__conductor_get_character(conductor) {
+    let ret = conductor_get_character(kdmyEngine_obtain(conductor));
+    return kdmyEngine_obtain(ret)
+}
+function __js__conductor_init() {
+    let ret = conductor_init();
+    return kdmyEngine_obtain(ret)
+}
+function __js__conductor_map_automatically(conductor, should_map_extras) {
+    let ret = conductor_map_automatically(kdmyEngine_obtain(conductor), should_map_extras);
+    return ret
+}
+function __js__conductor_map_strum_to_player_extra_add(conductor, strum, extra_animation_name) {
+    conductor_map_strum_to_player_extra_add(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(extra_animation_name))
+}
+function __js__conductor_map_strum_to_player_extra_remove(conductor, strum, extra_animation_name) {
+    conductor_map_strum_to_player_extra_remove(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(extra_animation_name))
+}
+function __js__conductor_map_strum_to_player_sing_add(conductor, strum, sing_direction_name) {
+    conductor_map_strum_to_player_sing_add(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(sing_direction_name))
+}
+function __js__conductor_map_strum_to_player_sing_remove(conductor, strum, sing_direction_name) {
+    conductor_map_strum_to_player_sing_remove(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(sing_direction_name))
+}
+function __js__conductor_play_hey(conductor) {
+    conductor_play_hey(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_play_idle(conductor) {
+    conductor_play_idle(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_poll(conductor) {
+    conductor_poll(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_poll_reset(conductor) {
+    conductor_poll_reset(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_remove_strum(conductor, strum) {
+    let ret = conductor_remove_strum(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum));
+    return ret ? 1 : 0
+}
+function __js__conductor_set_character(conductor, character) {
+    conductor_set_character(kdmyEngine_obtain(conductor), kdmyEngine_obtain(character))
+}
+function __js__conductor_use_strum_line(conductor, strum) {
+    conductor_use_strum_line(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum))
+}
+function __js__conductor_use_strums(conductor, strums) {
+    conductor_use_strums(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strums))
+}
+function __js__countdown_get_drawable(countdown) {
+    let ret = countdown_get_drawable(kdmyEngine_obtain(countdown));
+    return kdmyEngine_obtain(ret)
+}
+function __js__countdown_has_ended(countdown) {
+    let ret = countdown_has_ended(kdmyEngine_obtain(countdown));
+    return ret ? 1 : 0
+}
+function __js__countdown_ready(countdown) {
+    let ret = countdown_ready(kdmyEngine_obtain(countdown));
+    return ret ? 1 : 0
+}
+function __js__countdown_set_bpm(countdown, bpm) {
+    countdown_set_bpm(kdmyEngine_obtain(countdown), bpm)
+}
+function __js__countdown_start(countdown) {
+    let ret = countdown_start(kdmyEngine_obtain(countdown));
+    return ret ? 1 : 0
+}
 function __js__dialogue_apply_state(dialogue, state_name) {
     return dialogue_apply_state(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name))
 }
@@ -1189,6 +1276,156 @@ function __js__drawable_set_z_index(drawable, z_index) {
 }
 function __js__drawable_set_z_offset(drawable, offset) {
     drawable_set_z_offset(kdmyEngine_obtain(drawable), offset)
+}
+function __js__healthbar_animation_end(healthbar) {
+    healthbar_animation_end(kdmyEngine_obtain(healthbar))
+}
+function __js__healthbar_animation_restart(healthbar) {
+    healthbar_animation_restart(kdmyEngine_obtain(healthbar))
+}
+function __js__healthbar_animation_set(healthbar, animsprite) {
+    healthbar_animation_set(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(animsprite))
+}
+function __js__healthbar_bump_enable(healthbar, enable_bump) {
+    healthbar_bump_enable(kdmyEngine_obtain(healthbar), enable_bump)
+}
+function __js__healthbar_disable_icon_overlap(healthbar, disable) {
+    healthbar_disable_icon_overlap(kdmyEngine_obtain(healthbar), disable)
+}
+function __js__healthbar_disable_progress_animation(healthbar, disable) {
+    healthbar_disable_progress_animation(kdmyEngine_obtain(healthbar), disable)
+}
+function __js__healthbar_disable_warnings(healthbar, disable) {
+    healthbar_disable_warnings(kdmyEngine_obtain(healthbar), disable)
+}
+function __js__healthbar_enable_extra_length(healthbar, extra_enabled) {
+    healthbar_enable_extra_length(kdmyEngine_obtain(healthbar), extra_enabled)
+}
+function __js__healthbar_enable_low_health_flash_warning(healthbar, enable) {
+    healthbar_enable_low_health_flash_warning(kdmyEngine_obtain(healthbar), enable)
+}
+function __js__healthbar_enable_vertical(healthbar, enable_vertical) {
+    healthbar_enable_vertical(kdmyEngine_obtain(healthbar), enable_vertical)
+}
+function __js__healthbar_get_drawable(healthbar) {
+    let ret = healthbar_get_drawable(kdmyEngine_obtain(healthbar));
+    return kdmyEngine_obtain(ret)
+}
+function __js__healthbar_hide_warnings(healthbar) {
+    healthbar_hide_warnings(kdmyEngine_obtain(healthbar))
+}
+function __js__healthbar_load_warnings(healthbar, modelholder, use_alt_icons) {
+    let ret = healthbar_load_warnings(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(modelholder), use_alt_icons);
+    return ret ? 1 : 0
+}
+function __js__healthbar_set_alpha(healthbar, alpha) {
+    healthbar_set_alpha(kdmyEngine_obtain(healthbar), alpha)
+}
+function __js__healthbar_set_bpm(healthbar, beats_per_minute) {
+    healthbar_set_bpm(kdmyEngine_obtain(healthbar), beats_per_minute)
+}
+function __js__healthbar_set_bump_animation_opponent(healthbar, animsprite) {
+    healthbar_set_bump_animation_opponent(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(animsprite))
+}
+function __js__healthbar_set_bump_animation_player(healthbar, animsprite) {
+    healthbar_set_bump_animation_player(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(animsprite))
+}
+function __js__healthbar_set_health_position(healthbar, max_health, health, opponent_recover) {
+    let ret = healthbar_set_health_position(kdmyEngine_obtain(healthbar), max_health, health, opponent_recover);
+    return ret
+}
+function __js__healthbar_set_health_position2(healthbar, percent) {
+    healthbar_set_health_position2(kdmyEngine_obtain(healthbar), percent)
+}
+function __js__healthbar_set_opponent_bar_color(healthbar, r, g, b) {
+    healthbar_set_opponent_bar_color(kdmyEngine_obtain(healthbar), r, g, b)
+}
+function __js__healthbar_set_opponent_bar_color_rgb8(healthbar, color_rgb8) {
+    healthbar_set_opponent_bar_color_rgb8(kdmyEngine_obtain(healthbar), color_rgb8)
+}
+function __js__healthbar_set_player_bar_color(healthbar, r, g, b) {
+    healthbar_set_player_bar_color(kdmyEngine_obtain(healthbar), r, g, b)
+}
+function __js__healthbar_set_player_bar_color_rgb8(healthbar, color_rgb8) {
+    healthbar_set_player_bar_color_rgb8(kdmyEngine_obtain(healthbar), color_rgb8)
+}
+function __js__healthbar_set_visible(healthbar, visible) {
+    healthbar_set_visible(kdmyEngine_obtain(healthbar), visible)
+}
+function __js__healthbar_show_drain_warning(healthbar, use_fast_drain) {
+    healthbar_show_drain_warning(kdmyEngine_obtain(healthbar), use_fast_drain)
+}
+function __js__healthbar_show_locked_warning(healthbar) {
+    healthbar_show_locked_warning(kdmyEngine_obtain(healthbar))
+}
+function __js__healthbar_state_background_add(healthbar, modelholder, state_name) {
+    let ret = healthbar_state_background_add(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(state_name));
+    return ret ? 1 : 0
+}
+function __js__healthbar_state_background_add2(healthbar, color_rgb8, animsprite, state_name) {
+    let ret = healthbar_state_background_add2(kdmyEngine_obtain(healthbar), color_rgb8, kdmyEngine_obtain(animsprite), kdmyEngine_ptrToString(state_name));
+    return ret ? 1 : 0
+}
+function __js__healthbar_state_opponent_add(healthbar, icon_mdlhldr, bar_mdlhldr, state_name) {
+    let ret = healthbar_state_opponent_add(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(icon_mdlhldr), kdmyEngine_obtain(bar_mdlhldr), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__healthbar_state_opponent_add2(healthbar, icon_mdlhldr, bar_color_rgb8, state_name) {
+    let ret = healthbar_state_opponent_add2(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(icon_mdlhldr), bar_color_rgb8, kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__healthbar_state_player_add(healthbar, icon_mdlhldr, bar_mdlhldr, state_name) {
+    let ret = healthbar_state_player_add(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(icon_mdlhldr), kdmyEngine_obtain(bar_mdlhldr), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__healthbar_state_player_add2(healthbar, icon_modelholder, bar_color_rgb8, state_name) {
+    let ret = healthbar_state_player_add2(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(icon_modelholder), bar_color_rgb8, kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__healthbar_state_toggle(healthbar, state_name) {
+    let ret = healthbar_state_toggle(kdmyEngine_obtain(healthbar), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__healthbar_state_toggle_background(healthbar, state_name) {
+    let ret = healthbar_state_toggle_background(kdmyEngine_obtain(healthbar), kdmyEngine_ptrToString(state_name));
+    return ret ? 1 : 0
+}
+function __js__healthbar_state_toggle_opponent(healthbar, state_name) {
+    let ret = healthbar_state_toggle_opponent(kdmyEngine_obtain(healthbar), kdmyEngine_ptrToString(state_name));
+    return ret ? 1 : 0
+}
+function __js__healthbar_state_toggle_player(healthbar, state_name) {
+    let ret = healthbar_state_toggle_player(kdmyEngine_obtain(healthbar), kdmyEngine_ptrToString(state_name));
+    return ret ? 1 : 0
+}
+function __js__healthwatcher_add_opponent(healthwatcher, playerstats, can_recover, can_die) {
+    let ret = healthwatcher_add_opponent(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(playerstats), can_recover, can_die);
+    return ret ? 1 : 0
+}
+function __js__healthwatcher_add_player(healthwatcher, playerstats, can_recover, can_die) {
+    let ret = healthwatcher_add_player(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(playerstats), can_recover, can_die);
+    return ret ? 1 : 0
+}
+function __js__healthwatcher_balance(healthwatcher, healthbar) {
+    healthwatcher_balance(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(healthbar))
+}
+function __js__healthwatcher_clear(healthwatcher) {
+    healthwatcher_clear(kdmyEngine_obtain(healthwatcher))
+}
+function __js__healthwatcher_enable_dead(healthwatcher, playerstats, can_die) {
+    let ret = healthwatcher_enable_dead(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(playerstats), can_die);
+    return ret ? 1 : 0
+}
+function __js__healthwatcher_enable_recover(healthwatcher, playerstats, can_recover) {
+    let ret = healthwatcher_enable_recover(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(playerstats), can_recover);
+    return ret ? 1 : 0
+}
+function __js__healthwatcher_has_deads(healthwatcher, in_players_or_opponents) {
+    let ret = healthwatcher_has_deads(kdmyEngine_obtain(healthwatcher), in_players_or_opponents);
+    return ret
+}
+function __js__healthwatcher_reset_opponents(healthwatcher) {
+    healthwatcher_reset_opponents(kdmyEngine_obtain(healthwatcher))
 }
 function __js__kdmyEngine_forget_obtained(obj_id) {
     let ret = kdmyEngine_forget(obj_id);
@@ -1467,12 +1704,35 @@ function __js__messagebox_show_buttons_icons(messagebox, show) {
 function __js__messagebox_use_small_size(messagebox, small_or_normal) {
     messagebox_use_small_size(kdmyEngine_obtain(messagebox), small_or_normal)
 }
+function __js__missnotefx_play_effect(missnotefx) {
+    missnotefx_play_effect(kdmyEngine_obtain(missnotefx))
+}
 function __js__modding_exit(moddingcontext) {
     modding_exit(kdmyEngine_obtain(moddingcontext))
 }
 function __js__modding_get_layout(moddingcontext) {
-    let layout = modding_get_layout(kdmyEngine_obtain(moddingcontext));
-    return kdmyEngine_obtain(layout)
+    let ret = modding_get_layout(kdmyEngine_obtain(moddingcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modding_set_halt(moddingcontext, halt) {
+    modding_set_halt(kdmyEngine_obtain(moddingcontext), halt)
+}
+function __js__modding_set_ui_visibility(moddingcontext, visible) {
+    modding_set_ui_visibility(kdmyEngine_obtain(moddingcontext), visible)
+}
+function __js__modding_unlockdirective_create(moddingcontext, name, value) {
+    modding_unlockdirective_create(kdmyEngine_obtain(moddingcontext), kdmyEngine_ptrToString(name), value)
+}
+function __js__modding_unlockdirective_get(moddingcontext, name) {
+    let ret = modding_unlockdirective_get(kdmyEngine_obtain(moddingcontext), kdmyEngine_ptrToString(name));
+    return ret
+}
+function __js__modding_unlockdirective_has(moddingcontext, name) {
+    let ret = modding_unlockdirective_has(kdmyEngine_obtain(moddingcontext), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
+}
+function __js__modding_unlockdirective_remove(moddingcontext, name) {
+    modding_unlockdirective_remove(kdmyEngine_obtain(moddingcontext), kdmyEngine_ptrToString(name))
 }
 function __js__modelholder_create_animsprite(modelholder, animation_name, fallback_static, no_return_null) {
     let ret = modelholder_create_animsprite(kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), fallback_static, no_return_null);
@@ -1500,8 +1760,8 @@ function __js__modelholder_get_atlas_entry2(modelholder, atlas_entry_name, retur
 function __js__modelholder_get_texture_resolution(modelholder, resolution_width, resolution_height) {
     const values = [0, 0];
     modelholder_get_texture_resolution(kdmyEngine_obtain(modelholder), values);
-    kdmyEngine_set_float32(resolution_width, values[0]);
-    kdmyEngine_set_float32(resolution_height, values[1])
+    kdmyEngine_set_int32(resolution_width, values[0]);
+    kdmyEngine_set_int32(resolution_height, values[1])
 }
 function __js__modelholder_get_vertex_color(modelholder) {
     let ret = modelholder_get_vertex_color(kdmyEngine_obtain(modelholder));
@@ -1519,6 +1779,135 @@ function __js__modelholder_utils_is_known_extension(filename) {
     let ret = modelholder_utils_is_known_extension(kdmyEngine_ptrToString(filename));
     return ret ? 1 : 0
 }
+function __js__playerstats_add_extra_health(playerstats, multiplier) {
+    playerstats_add_extra_health(kdmyEngine_obtain(playerstats), multiplier)
+}
+function __js__playerstats_add_health(playerstats, health, die_if_negative) {
+    let ret = playerstats_add_health(kdmyEngine_obtain(playerstats), health, die_if_negative);
+    return ret
+}
+function __js__playerstats_add_hit(playerstats, multiplier, base_note_duration, hit_time_difference) {
+    let ret = playerstats_add_hit(kdmyEngine_obtain(playerstats), multiplier, base_note_duration, hit_time_difference);
+    return ret
+}
+function __js__playerstats_add_miss(playerstats, multiplier) {
+    playerstats_add_miss(kdmyEngine_obtain(playerstats), multiplier)
+}
+function __js__playerstats_add_penality(playerstats, on_empty_strum) {
+    playerstats_add_penality(kdmyEngine_obtain(playerstats), on_empty_strum)
+}
+function __js__playerstats_add_sustain(playerstats, quarters, is_released) {
+    playerstats_add_sustain(kdmyEngine_obtain(playerstats), quarters, is_released)
+}
+function __js__playerstats_add_sustain_delayed_hit(playerstats, multiplier, hit_time_difference) {
+    let ret = playerstats_add_sustain_delayed_hit(kdmyEngine_obtain(playerstats), multiplier, hit_time_difference);
+    return ret
+}
+function __js__playerstats_enable_penality_on_empty_strum(playerstats, enable) {
+    playerstats_enable_penality_on_empty_strum(kdmyEngine_obtain(playerstats), enable)
+}
+function __js__playerstats_get_accuracy(playerstats) {
+    let ret = playerstats_get_accuracy(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_bads(playerstats) {
+    let ret = playerstats_get_bads(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_combo_breaks(playerstats) {
+    let ret = playerstats_get_combo_breaks(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_combo_streak(playerstats) {
+    let ret = playerstats_get_combo_streak(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_goods(playerstats) {
+    let ret = playerstats_get_goods(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_health(playerstats) {
+    let ret = playerstats_get_health(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_highest_combo_streak(playerstats) {
+    let ret = playerstats_get_highest_combo_streak(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_hits(playerstats) {
+    let ret = playerstats_get_hits(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_iterations(playerstats) {
+    let ret = playerstats_get_iterations(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_last_accuracy(playerstats) {
+    let ret = playerstats_get_last_accuracy(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_last_difference(playerstats) {
+    let ret = playerstats_get_last_difference(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_last_ranking(playerstats) {
+    let ret = playerstats_get_last_ranking(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_maximum_health(playerstats) {
+    let ret = playerstats_get_maximum_health(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_misses(playerstats) {
+    let ret = playerstats_get_misses(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_notes_per_seconds(playerstats) {
+    let ret = playerstats_get_notes_per_seconds(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_notes_per_seconds_highest(playerstats) {
+    let ret = playerstats_get_notes_per_seconds_highest(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_penalties(playerstats) {
+    let ret = playerstats_get_penalties(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_score(playerstats) {
+    let ret = playerstats_get_score(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_shits(playerstats) {
+    let ret = playerstats_get_shits(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_get_sicks(playerstats) {
+    let ret = playerstats_get_sicks(kdmyEngine_obtain(playerstats));
+    return ret
+}
+function __js__playerstats_is_dead(playerstats) {
+    let ret = playerstats_is_dead(kdmyEngine_obtain(playerstats));
+    return ret ? 1 : 0
+}
+function __js__playerstats_kill(playerstats) {
+    playerstats_kill(kdmyEngine_obtain(playerstats))
+}
+function __js__playerstats_kill_if_negative_health(playerstats) {
+    playerstats_kill_if_negative_health(kdmyEngine_obtain(playerstats))
+}
+function __js__playerstats_raise(playerstats, with_full_health) {
+    playerstats_raise(kdmyEngine_obtain(playerstats), with_full_health)
+}
+function __js__playerstats_reset(playerstats) {
+    playerstats_reset(kdmyEngine_obtain(playerstats))
+}
+function __js__playerstats_reset_notes_per_seconds(playerstats) {
+    playerstats_reset_notes_per_seconds(kdmyEngine_obtain(playerstats))
+}
+function __js__playerstats_set_health(playerstats, health) {
+    playerstats_set_health(kdmyEngine_obtain(playerstats), health)
+}
 function __js__psshader_destroy(psshader) {
     kdmyEngine_obtain(kdmyEngine_get_uint32(psshader)).Destroy()
 }
@@ -1535,6 +1924,68 @@ function __js__psshader_set_uniform1i(psshader, name, value) {
 function __js__psshader_set_uniform_any(psshader, name, values) {
     const val = new Float32Array(buffer, values, 128);
     kdmyEngine_obtain(psshader).SetUniformAny(kdmyEngine_ptrToString(name), val)
+}
+function __js__rankingcounter_add_state(rankingcounter, modelholder, state_name) {
+    let ret = rankingcounter_add_state(kdmyEngine_obtain(rankingcounter), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__rankingcounter_animation_end(rankingcounter) {
+    rankingcounter_animation_end(kdmyEngine_obtain(rankingcounter))
+}
+function __js__rankingcounter_animation_restart(rankingcounter) {
+    rankingcounter_animation_restart(kdmyEngine_obtain(rankingcounter))
+}
+function __js__rankingcounter_animation_set(rankingcounter, animsprite) {
+    rankingcounter_animation_set(kdmyEngine_obtain(rankingcounter), kdmyEngine_obtain(animsprite))
+}
+function __js__rankingcounter_hide_accuracy(rankingcounter, hide) {
+    rankingcounter_hide_accuracy(kdmyEngine_obtain(rankingcounter), hide)
+}
+function __js__rankingcounter_reset(rankingcounter) {
+    rankingcounter_reset(kdmyEngine_obtain(rankingcounter))
+}
+function __js__rankingcounter_set_alpha(rankingcounter, alpha) {
+    rankingcounter_set_alpha(kdmyEngine_obtain(rankingcounter), alpha)
+}
+function __js__rankingcounter_set_default_ranking_animation2(rankingcounter, animsprite) {
+    rankingcounter_set_default_ranking_animation2(kdmyEngine_obtain(rankingcounter), kdmyEngine_obtain(animsprite))
+}
+function __js__rankingcounter_set_default_ranking_text_animation2(rankingcounter, animsprite) {
+    rankingcounter_set_default_ranking_text_animation2(kdmyEngine_obtain(rankingcounter), kdmyEngine_obtain(animsprite))
+}
+function __js__rankingcounter_toggle_state(rankingcounter, state_name) {
+    rankingcounter_toggle_state(kdmyEngine_obtain(rankingcounter), kdmyEngine_ptrToString(state_name))
+}
+function __js__rankingcounter_use_percent_instead(rankingcounter, use_accuracy_percenter) {
+    rankingcounter_use_percent_instead(kdmyEngine_obtain(rankingcounter), use_accuracy_percenter)
+}
+function __js__roundstats_get_drawable(roundstats) {
+    let ret = roundstats_get_drawable(kdmyEngine_obtain(roundstats));
+    return kdmyEngine_obtain(ret)
+}
+function __js__roundstats_hide(roundstats, hide) {
+    roundstats_hide(kdmyEngine_obtain(roundstats), hide)
+}
+function __js__roundstats_hide_nps(roundstats, hide) {
+    roundstats_hide_nps(kdmyEngine_obtain(roundstats), hide)
+}
+function __js__roundstats_reset(roundstats) {
+    roundstats_reset(kdmyEngine_obtain(roundstats))
+}
+function __js__roundstats_set_draw_y(roundstats, y) {
+    roundstats_set_draw_y(kdmyEngine_obtain(roundstats), y)
+}
+function __js__roundstats_tweenlerp_set_bpm(roundstats, beats_per_minute) {
+    roundstats_tweenlerp_set_bpm(kdmyEngine_obtain(roundstats), beats_per_minute)
+}
+function __js__roundstats_tweenlerp_set_on_beat(roundstats, tweenlerp, rollback_beats, beat_duration) {
+    roundstats_tweenlerp_set_on_beat(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenlerp), rollback_beats, beat_duration)
+}
+function __js__roundstats_tweenlerp_set_on_hit(roundstats, tweenlerp, rollback_beats, beat_duration) {
+    roundstats_tweenlerp_set_on_hit(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenlerp), rollback_beats, beat_duration)
+}
+function __js__roundstats_tweenlerp_set_on_miss(roundstats, tweenlerp, rollback_beats, beat_duration) {
+    roundstats_tweenlerp_set_on_miss(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenlerp), rollback_beats, beat_duration)
 }
 function __js__songplayer_changesong(songplayer, src, prefer_no_copyright) {
     return songplayer_changesong(kdmyEngine_obtain(songplayer), kdmyEngine_ptrToString(src), prefer_no_copyright)
@@ -1565,6 +2016,56 @@ function __js__songplayer_set_volume(songplayer, volume) {
 }
 function __js__songplayer_set_volume_track(songplayer, vocals_or_instrumental, volume) {
     songplayer_set_volume_track(kdmyEngine_obtain(songplayer), vocals_or_instrumental, volume)
+}
+function __js__songprogressbar_animation_end(songprogressbar) {
+    songprogressbar_animation_end(kdmyEngine_obtain(songprogressbar))
+}
+function __js__songprogressbar_animation_restart(songprogressbar) {
+    songprogressbar_animation_restart(kdmyEngine_obtain(songprogressbar))
+}
+function __js__songprogressbar_animation_set(songprogressbar, animsprite) {
+    songprogressbar_animation_set(kdmyEngine_obtain(songprogressbar), kdmyEngine_obtain(animsprite))
+}
+function __js__songprogressbar_get_drawable(songprogressbar) {
+    let ret = songprogressbar_get_drawable(kdmyEngine_obtain(songprogressbar));
+    return kdmyEngine_obtain(ret)
+}
+function __js__songprogressbar_hide_time(songprogressbar, hidden) {
+    songprogressbar_hide_time(kdmyEngine_obtain(songprogressbar), hidden)
+}
+function __js__songprogressbar_manual_set_position(songprogressbar, elapsed, duration, should_update_time_text) {
+    let ret = songprogressbar_manual_set_position(kdmyEngine_obtain(songprogressbar), elapsed, duration, should_update_time_text);
+    return ret
+}
+function __js__songprogressbar_manual_set_text(songprogressbar, text) {
+    songprogressbar_manual_set_text(kdmyEngine_obtain(songprogressbar), kdmyEngine_ptrToString(text))
+}
+function __js__songprogressbar_manual_update_enable(songprogressbar, enabled) {
+    songprogressbar_manual_update_enable(kdmyEngine_obtain(songprogressbar), enabled)
+}
+function __js__songprogressbar_set_background_color(songprogressbar, r, g, b, a) {
+    songprogressbar_set_background_color(kdmyEngine_obtain(songprogressbar), r, g, b, a)
+}
+function __js__songprogressbar_set_bar_back_color(songprogressbar, r, g, b, a) {
+    songprogressbar_set_bar_back_color(kdmyEngine_obtain(songprogressbar), r, g, b, a)
+}
+function __js__songprogressbar_set_bar_progress_color(songprogressbar, r, g, b, a) {
+    songprogressbar_set_bar_progress_color(kdmyEngine_obtain(songprogressbar), r, g, b, a)
+}
+function __js__songprogressbar_set_duration(songprogressbar, duration) {
+    songprogressbar_set_duration(kdmyEngine_obtain(songprogressbar), duration)
+}
+function __js__songprogressbar_set_songplayer(songprogressbar, songplayer) {
+    songprogressbar_set_songplayer(kdmyEngine_obtain(songprogressbar), kdmyEngine_obtain(songplayer))
+}
+function __js__songprogressbar_set_text_color(songprogressbar, r, g, b, a) {
+    songprogressbar_set_text_color(kdmyEngine_obtain(songprogressbar), r, g, b, a)
+}
+function __js__songprogressbar_set_visible(songprogressbar, visible) {
+    songprogressbar_set_visible(kdmyEngine_obtain(songprogressbar), visible)
+}
+function __js__songprogressbar_show_elapsed(songprogressbar, elapsed_or_remain_time) {
+    songprogressbar_show_elapsed(kdmyEngine_obtain(songprogressbar), elapsed_or_remain_time)
 }
 function __js__soundplayer_fade(soundplayer, in_or_out, duration) {
     soundplayer_fade(kdmyEngine_obtain(soundplayer), in_or_out, duration)
@@ -1690,6 +2191,242 @@ function __js__sprite_set_z_index(sprite, index) {
 }
 function __js__sprite_set_z_offset(sprite, offset) {
     sprite_set_z_offset(kdmyEngine_obtain(sprite), offset)
+}
+function __js__streakcounter_animation_end(streakcounter) {
+    streakcounter_animation_end(kdmyEngine_obtain(streakcounter))
+}
+function __js__streakcounter_animation_restart(streakcounter) {
+    streakcounter_animation_restart(kdmyEngine_obtain(streakcounter))
+}
+function __js__streakcounter_animation_set(streakcounter, animsprite) {
+    streakcounter_animation_set(kdmyEngine_obtain(streakcounter), kdmyEngine_obtain(animsprite))
+}
+function __js__streakcounter_get_drawable(streakcounter) {
+    let ret = streakcounter_get_drawable(kdmyEngine_obtain(streakcounter));
+    return kdmyEngine_obtain(ret)
+}
+function __js__streakcounter_hide_combo_sprite(streakcounter, hide) {
+    streakcounter_hide_combo_sprite(kdmyEngine_obtain(streakcounter), hide)
+}
+function __js__streakcounter_reset(streakcounter) {
+    streakcounter_reset(kdmyEngine_obtain(streakcounter))
+}
+function __js__streakcounter_set_alpha(streakcounter, alpha) {
+    streakcounter_set_alpha(kdmyEngine_obtain(streakcounter), alpha)
+}
+function __js__streakcounter_set_combo_draw_location(streakcounter, x, y) {
+    streakcounter_set_combo_draw_location(kdmyEngine_obtain(streakcounter), x, y)
+}
+function __js__streakcounter_state_add(streakcounter, combo_modelholder, number_modelholder, state_name) {
+    let ret = streakcounter_state_add(kdmyEngine_obtain(streakcounter), kdmyEngine_obtain(combo_modelholder), kdmyEngine_obtain(number_modelholder), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__streakcounter_state_toggle(streakcounter, state_name) {
+    let ret = streakcounter_state_toggle(kdmyEngine_obtain(streakcounter), kdmyEngine_ptrToString(state_name));
+    return ret ? 1 : 0
+}
+function __js__strum_animation_end(strum) {
+    strum_animation_end(kdmyEngine_obtain(strum))
+}
+function __js__strum_animation_restart(strum) {
+    strum_animation_restart(kdmyEngine_obtain(strum))
+}
+function __js__strum_draw_sick_effect_apart(strum, enable) {
+    strum_draw_sick_effect_apart(kdmyEngine_obtain(strum), enable)
+}
+function __js__strum_enable_background(strum, enable) {
+    strum_enable_background(kdmyEngine_obtain(strum), enable)
+}
+function __js__strum_enable_sick_effect(strum, enable) {
+    strum_enable_sick_effect(kdmyEngine_obtain(strum), enable)
+}
+function __js__strum_force_key_release(strum) {
+    strum_force_key_release(kdmyEngine_obtain(strum))
+}
+function __js__strum_get_drawable(strum) {
+    let ret = strum_get_drawable(kdmyEngine_obtain(strum));
+    return kdmyEngine_obtain(ret)
+}
+function __js__strum_get_duration(strum) {
+    let ret = strum_get_duration(kdmyEngine_obtain(strum));
+    return ret
+}
+function __js__strum_get_marker_duration(strum) {
+    let ret = strum_get_marker_duration(kdmyEngine_obtain(strum));
+    return ret
+}
+function __js__strum_get_modifier(strum) {
+    let ret = strum_get_modifier(kdmyEngine_obtain(strum));
+    return kdmyEngine_obtain(ret)
+}
+function __js__strum_get_name(strum) {
+    let ret = strum_get_name(kdmyEngine_obtain(strum));
+    return kdmyEngine_stringToPtr(ret)
+}
+function __js__strum_get_press_state(strum) {
+    let ret = strum_get_press_state(kdmyEngine_obtain(strum));
+    return ret
+}
+function __js__strum_get_press_state_changes(strum) {
+    let ret = strum_get_press_state_changes(kdmyEngine_obtain(strum));
+    return ret
+}
+function __js__strum_reset(strum, scroll_speed, state_name) {
+    strum_reset(kdmyEngine_obtain(strum), scroll_speed, kdmyEngine_ptrToString(state_name))
+}
+function __js__strum_set_alpha(strum, alpha) {
+    strum_set_alpha(kdmyEngine_obtain(strum), alpha)
+}
+function __js__strum_set_alpha_background(strum, alpha) {
+    let ret = strum_set_alpha_background(kdmyEngine_obtain(strum), alpha);
+    return ret
+}
+function __js__strum_set_alpha_sick_effect(strum, alpha) {
+    let ret = strum_set_alpha_sick_effect(kdmyEngine_obtain(strum), alpha);
+    return ret
+}
+function __js__strum_set_draw_offset(strum, offset_milliseconds) {
+    strum_set_draw_offset(kdmyEngine_obtain(strum), offset_milliseconds)
+}
+function __js__strum_set_extra_animation(strum, strum_script_target, strum_script_on, undo, animsprite) {
+    strum_set_extra_animation(kdmyEngine_obtain(strum), strum_script_target, strum_script_on, undo, kdmyEngine_obtain(animsprite))
+}
+function __js__strum_set_extra_animation_continuous(strum, strum_script_target, animsprite) {
+    strum_set_extra_animation_continuous(kdmyEngine_obtain(strum), strum_script_target, kdmyEngine_obtain(animsprite))
+}
+function __js__strum_set_keep_aspect_ratio_background(strum, enable) {
+    strum_set_keep_aspect_ratio_background(kdmyEngine_obtain(strum), enable)
+}
+function __js__strum_set_marker_duration_multiplier(strum, multipler) {
+    strum_set_marker_duration_multiplier(kdmyEngine_obtain(strum), multipler)
+}
+function __js__strum_set_notesmaker_tweenlerp(strum, tweenlerp, apply_to_marker_too) {
+    strum_set_notesmaker_tweenlerp(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenlerp), apply_to_marker_too)
+}
+function __js__strum_set_player_id(strum, player_id) {
+    strum_set_player_id(kdmyEngine_obtain(strum), player_id)
+}
+function __js__strum_set_scroll_direction(strum, direction) {
+    strum_set_scroll_direction(kdmyEngine_obtain(strum), direction)
+}
+function __js__strum_set_scroll_speed(strum, speed) {
+    strum_set_scroll_speed(kdmyEngine_obtain(strum), speed)
+}
+function __js__strum_set_sickeffect_size_ratio(strum, size_ratio) {
+    strum_set_sickeffect_size_ratio(kdmyEngine_obtain(strum), size_ratio)
+}
+function __js__strum_set_visible(strum, visible) {
+    strum_set_visible(kdmyEngine_obtain(strum), visible)
+}
+function __js__strum_state_add(strum, mdlhldr_mrkr, mdlhldr_sck_ffct, mdlhldr_bckgrnd, state_name) {
+    strum_state_add(kdmyEngine_obtain(strum), kdmyEngine_obtain(mdlhldr_mrkr), kdmyEngine_obtain(mdlhldr_sck_ffct), kdmyEngine_obtain(mdlhldr_bckgrnd), kdmyEngine_ptrToString(state_name))
+}
+function __js__strum_state_toggle(strum, state_name) {
+    let ret = strum_state_toggle(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__strum_state_toggle_background(strum, state_name) {
+    let ret = strum_state_toggle_background(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
+    return ret ? 1 : 0
+}
+function __js__strum_state_toggle_marker(strum, state_name) {
+    let ret = strum_state_toggle_marker(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__strum_state_toggle_notes(strum, state_name) {
+    let ret = strum_state_toggle_notes(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__strum_state_toggle_sick_effect(strum, state_name) {
+    let ret = strum_state_toggle_sick_effect(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
+    return ret ? 1 : 0
+}
+function __js__strum_update_draw_location(strum, x, y) {
+    strum_update_draw_location(kdmyEngine_obtain(strum), x, y)
+}
+function __js__strums_animation_end(strums) {
+    strums_animation_end(kdmyEngine_obtain(strums))
+}
+function __js__strums_animation_restart(strums) {
+    strums_animation_restart(kdmyEngine_obtain(strums))
+}
+function __js__strums_animation_set(strums, animsprite) {
+    strums_animation_set(kdmyEngine_obtain(strums), kdmyEngine_obtain(animsprite))
+}
+function __js__strums_enable_background(strums, enable) {
+    strums_enable_background(kdmyEngine_obtain(strums), enable)
+}
+function __js__strums_enable_post_sick_effect_draw(strums, enable) {
+    strums_enable_post_sick_effect_draw(kdmyEngine_obtain(strums), enable)
+}
+function __js__strums_force_key_release(strums) {
+    strums_force_key_release(kdmyEngine_obtain(strums))
+}
+function __js__strums_get_drawable(strums) {
+    let ret = strums_get_drawable(kdmyEngine_obtain(strums));
+    return kdmyEngine_obtain(ret)
+}
+function __js__strums_get_lines_count(strums) {
+    let ret = strums_get_lines_count(kdmyEngine_obtain(strums));
+    return ret
+}
+function __js__strums_get_strum_line(strums, index) {
+    let ret = strums_get_strum_line(kdmyEngine_obtain(strums), index);
+    return kdmyEngine_obtain(ret)
+}
+function __js__strums_reset(strums, scroll_speed, state_name) {
+    strums_reset(kdmyEngine_obtain(strums), scroll_speed, kdmyEngine_ptrToString(state_name))
+}
+function __js__strums_set_alpha(strums, alpha) {
+    let ret = strums_set_alpha(kdmyEngine_obtain(strums), alpha);
+    return ret
+}
+function __js__strums_set_alpha_background(strums, alpha) {
+    strums_set_alpha_background(kdmyEngine_obtain(strums), alpha)
+}
+function __js__strums_set_alpha_sick_effect(strums, alpha) {
+    strums_set_alpha_sick_effect(kdmyEngine_obtain(strums), alpha)
+}
+function __js__strums_set_draw_offset(strums, offset_milliseconds) {
+    strums_set_draw_offset(kdmyEngine_obtain(strums), offset_milliseconds)
+}
+function __js__strums_set_keep_aspect_ratio_background(strums, enable) {
+    strums_set_keep_aspect_ratio_background(kdmyEngine_obtain(strums), enable)
+}
+function __js__strums_set_marker_duration_multiplier(strums, multipler) {
+    strums_set_marker_duration_multiplier(kdmyEngine_obtain(strums), multipler)
+}
+function __js__strums_set_scroll_direction(strums, direction) {
+    strums_set_scroll_direction(kdmyEngine_obtain(strums), direction)
+}
+function __js__strums_set_scroll_speed(strums, speed) {
+    strums_set_scroll_speed(kdmyEngine_obtain(strums), speed)
+}
+function __js__strums_state_add(strums, mdlhldr_mrkr, mdlhldr_sck_ffct, mdlhldr_bckgrnd, state_name) {
+    strums_state_add(kdmyEngine_obtain(strums), kdmyEngine_obtain(mdlhldr_mrkr), kdmyEngine_obtain(mdlhldr_sck_ffct), kdmyEngine_obtain(mdlhldr_bckgrnd), kdmyEngine_ptrToString(state_name))
+}
+function __js__strums_state_toggle(strums, state_name) {
+    let ret = strums_state_toggle(kdmyEngine_obtain(strums), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__strums_state_toggle_marker_and_sick_effect(strums, state_name) {
+    strums_state_toggle_marker_and_sick_effect(kdmyEngine_obtain(strums), kdmyEngine_ptrToString(state_name))
+}
+function __js__strums_state_toggle_notes(strums, state_name) {
+    let ret = strums_state_toggle_notes(kdmyEngine_obtain(strums), kdmyEngine_ptrToString(state_name));
+    return ret
+}
+function __js__textsprite_background_enable(textsprite, enabled) {
+    textsprite_background_enable(kdmyEngine_obtain(textsprite), enabled)
+}
+function __js__textsprite_background_set_color(textsprite, r, g, b, a) {
+    textsprite_background_set_color(kdmyEngine_obtain(textsprite), r, g, b, a)
+}
+function __js__textsprite_background_set_offets(textsprite, offset_x, offset_y) {
+    textsprite_background_set_offets(kdmyEngine_obtain(textsprite), offset_x, offset_y)
+}
+function __js__textsprite_background_set_size(textsprite, size) {
+    textsprite_background_set_size(kdmyEngine_obtain(textsprite), size)
 }
 function __js__textsprite_border_enable(textsprite, enable) {
     textsprite_border_enable(kdmyEngine_obtain(textsprite), enable)
@@ -1857,11 +2594,12 @@ function __js__tweenlerp_override_start_with_end_by_index(tweenlerp, index) {
     let ret = tweenlerp_override_start_with_end_by_index(kdmyEngine_obtain(tweenlerp), index);
     return ret ? 1 : 0
 }
-function __js__tweenlerp_peek_entry_by_index(tweenlerp, index, out_value, out_duration) {
-    const values = [0, 0];
+function __js__tweenlerp_peek_entry_by_index(tweenlerp, index, out_id, out_value, out_duration) {
+    const values = [0, 0, 0];
     let ret = tweenlerp_peek_entry_by_index(kdmyEngine_obtain(tweenlerp), index, values);
-    kdmyEngine_set_float32(out_value, values[0]);
+    kdmyEngine_set_int32(out_id, values[0]);
     kdmyEngine_set_float32(out_duration, values[1]);
+    kdmyEngine_set_float32(out_duration, values[2]);
     return ret ? 1 : 0
 }
 function __js__tweenlerp_peek_value(tweenlerp) {
@@ -1895,12 +2633,17 @@ function __js__week_enable_credits_on_completed(roundcontext) {
 function __js__week_end(roundcontext, round_or_week, loose_or_win) {
     week_end(kdmyEngine_obtain(roundcontext), round_or_week, loose_or_win)
 }
-function __js__week_get_character(roundcontext, index) {
-    const character = week_get_character(kdmyEngine_obtain(roundcontext), index);
-    return kdmyEngine_obtain(character)
+function __js__week_get_character(roundcontext, character_index) {
+    let ret = week_get_character(kdmyEngine_obtain(roundcontext), character_index);
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_get_character_count(roundcontext) {
-    return week_get_character_count(kdmyEngine_obtain(roundcontext))
+    let ret = week_get_character_count(kdmyEngine_obtain(roundcontext));
+    return ret
+}
+function __js__week_get_conductor(roundcontext, character_index) {
+    let ret = week_get_conductor(kdmyEngine_obtain(roundcontext), character_index);
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_get_current_chart_info(roundcontext, bpm, speed) {
     const values = {
@@ -1909,7 +2652,7 @@ function __js__week_get_current_chart_info(roundcontext, bpm, speed) {
     };
     week_get_current_chart_info(kdmyEngine_obtain(roundcontext), values);
     kdmyEngine_set_float32(bpm, values.bpm);
-    kdmyEngine_set_float32(speed, values.speed)
+    kdmyEngine_set_float64(speed, values.speed)
 }
 function __js__week_get_current_track_info(roundcontext, name, difficult, index) {
     const values = {
@@ -1923,20 +2666,35 @@ function __js__week_get_current_track_info(roundcontext, name, difficult, index)
     kdmyEngine_set_int32(index, values.index)
 }
 function __js__week_get_dialogue(roundcontext) {
-    const dialogue = week_get_dialogue(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(dialogue)
+    week_get_dialogue(kdmyEngine_obtain(roundcontext))
 }
 function __js__week_get_girlfriend(roundcontext) {
-    const character = week_get_girlfriend(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(character)
+    let ret = week_get_girlfriend(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_healthwatcher(roundcontext) {
+    let ret = week_get_healthwatcher(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_messagebox(roundcontext) {
+    let ret = week_get_messagebox(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_missnotefx(roundcontext) {
+    let ret = week_get_missnotefx(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_playerstats(roundcontext, character_index) {
+    let ret = week_get_playerstats(kdmyEngine_obtain(roundcontext), character_index);
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_get_songplayer(roundcontext) {
-    const songplayer = week_get_songplayer(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(songplayer)
+    let ret = week_get_songplayer(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_get_stage_layout(roundcontext) {
-    const layout = week_get_stage_layout(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(layout)
+    let ret = week_get_stage_layout(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_override_common_folder(roundcontext, custom_common_path) {
     week_override_common_folder(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(custom_common_path))
@@ -1948,23 +2706,48 @@ function __js__week_set_ui_shader(roundcontext, psshader) {
     week_set_ui_shader(kdmyEngine_obtain(roundcontext), kdmyEngine_obtain(psshader))
 }
 function __js__week_ui_get_camera(roundcontext) {
-    const camera = week_ui_get_camera(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(camera)
+    let ret = week_ui_get_camera(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_countdown(roundcontext) {
+    let ret = week_ui_get_countdown(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_healthbar(roundcontext) {
+    let ret = week_ui_get_healthbar(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_ui_get_layout(roundcontext) {
-    const layout = week_ui_get_layout(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(layout)
+    let ret = week_ui_get_layout(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
 }
-function __js__week_ui_get_messagebox(roundcontext) {
-    const messagebox = week_ui_get_messagebox(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(messagebox)
+function __js__week_ui_get_rankingcounter(roundcontext) {
+    let ret = week_ui_get_rankingcounter(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_roundstats(roundcontext) {
+    let ret = week_ui_get_roundstats(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_songprogressbar(roundcontext) {
+    let ret = week_ui_get_songprogressbar(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_streakcounter(roundcontext) {
+    let ret = week_ui_get_streakcounter(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_strums(roundcontext, strums_id) {
+    let ret = week_ui_get_strums(kdmyEngine_obtain(roundcontext), strums_id);
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_ui_get_strums_count(roundcontext) {
-    return week_ui_get_strums_count(kdmyEngine_obtain(roundcontext))
+    let ret = week_ui_get_strums_count(kdmyEngine_obtain(roundcontext));
+    return ret
 }
 function __js__week_ui_get_trackinfo(roundcontext) {
-    const textsprite = week_ui_get_trackinfo(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(textsprite)
+    let ret = week_ui_get_trackinfo(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_ui_set_visibility(roundcontext, visible) {
     week_ui_set_visibility(kdmyEngine_obtain(roundcontext), visible)
@@ -1973,11 +2756,12 @@ function __js__week_unlockdirective_create(roundcontext, name, completed_round, 
     week_unlockdirective_create(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week, value)
 }
 function __js__week_unlockdirective_get(roundcontext, name) {
-    let value = week_unlockdirective_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
-    return value
+    let ret = week_unlockdirective_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
+    return ret
 }
 function __js__week_unlockdirective_has(roundcontext, name) {
-    return week_unlockdirective_has(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name))
+    let ret = week_unlockdirective_has(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
 }
 function __js__week_unlockdirective_remove(roundcontext, name, completed_round, completed_week) {
     week_unlockdirective_remove(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week)
@@ -1988,9 +2772,6 @@ function __js__week_update_bpm(roundcontext, bpm) {
 function __js__week_update_speed(roundcontext, speed) {
     week_update_speed(kdmyEngine_obtain(roundcontext), speed)
 }
-
-
-
 
 
 function callRuntimeCallbacks(callbacks) {
@@ -5385,6 +6166,7 @@ var asmLibraryArg = {
     "__asyncjs__modelholder_init": __asyncjs__modelholder_init,
     "__asyncjs__modelholder_init2": __asyncjs__modelholder_init2,
     "__asyncjs__songplayer_play": __asyncjs__songplayer_play,
+    "__asyncjs__week_rebuild_ui": __asyncjs__week_rebuild_ui,
     "__js__animlist_destroy": __js__animlist_destroy,
     "__js__animlist_get_animation": __js__animlist_get_animation,
     "__js__animlist_is_item_frame_animation": __js__animlist_is_item_frame_animation,
@@ -5469,6 +6251,30 @@ var asmLibraryArg = {
     "__js__character_state_toggle": __js__character_state_toggle,
     "__js__character_update_reference_size": __js__character_update_reference_size,
     "__js__character_use_alternate_sing_animations": __js__character_use_alternate_sing_animations,
+    "__js__conductor_clear_mapping": __js__conductor_clear_mapping,
+    "__js__conductor_destroy": __js__conductor_destroy,
+    "__js__conductor_disable": __js__conductor_disable,
+    "__js__conductor_disable_strum_line": __js__conductor_disable_strum_line,
+    "__js__conductor_get_character": __js__conductor_get_character,
+    "__js__conductor_init": __js__conductor_init,
+    "__js__conductor_map_automatically": __js__conductor_map_automatically,
+    "__js__conductor_map_strum_to_player_extra_add": __js__conductor_map_strum_to_player_extra_add,
+    "__js__conductor_map_strum_to_player_extra_remove": __js__conductor_map_strum_to_player_extra_remove,
+    "__js__conductor_map_strum_to_player_sing_add": __js__conductor_map_strum_to_player_sing_add,
+    "__js__conductor_map_strum_to_player_sing_remove": __js__conductor_map_strum_to_player_sing_remove,
+    "__js__conductor_play_hey": __js__conductor_play_hey,
+    "__js__conductor_play_idle": __js__conductor_play_idle,
+    "__js__conductor_poll": __js__conductor_poll,
+    "__js__conductor_poll_reset": __js__conductor_poll_reset,
+    "__js__conductor_remove_strum": __js__conductor_remove_strum,
+    "__js__conductor_set_character": __js__conductor_set_character,
+    "__js__conductor_use_strum_line": __js__conductor_use_strum_line,
+    "__js__conductor_use_strums": __js__conductor_use_strums,
+    "__js__countdown_get_drawable": __js__countdown_get_drawable,
+    "__js__countdown_has_ended": __js__countdown_has_ended,
+    "__js__countdown_ready": __js__countdown_ready,
+    "__js__countdown_set_bpm": __js__countdown_set_bpm,
+    "__js__countdown_start": __js__countdown_start,
     "__js__dialogue_apply_state": __js__dialogue_apply_state,
     "__js__dialogue_close": __js__dialogue_close,
     "__js__dialogue_get_modifier": __js__dialogue_get_modifier,
@@ -5491,6 +6297,50 @@ var asmLibraryArg = {
     "__js__drawable_set_shader": __js__drawable_set_shader,
     "__js__drawable_set_z_index": __js__drawable_set_z_index,
     "__js__drawable_set_z_offset": __js__drawable_set_z_offset,
+    "__js__healthbar_animation_end": __js__healthbar_animation_end,
+    "__js__healthbar_animation_restart": __js__healthbar_animation_restart,
+    "__js__healthbar_animation_set": __js__healthbar_animation_set,
+    "__js__healthbar_bump_enable": __js__healthbar_bump_enable,
+    "__js__healthbar_disable_icon_overlap": __js__healthbar_disable_icon_overlap,
+    "__js__healthbar_disable_progress_animation": __js__healthbar_disable_progress_animation,
+    "__js__healthbar_disable_warnings": __js__healthbar_disable_warnings,
+    "__js__healthbar_enable_extra_length": __js__healthbar_enable_extra_length,
+    "__js__healthbar_enable_low_health_flash_warning": __js__healthbar_enable_low_health_flash_warning,
+    "__js__healthbar_enable_vertical": __js__healthbar_enable_vertical,
+    "__js__healthbar_get_drawable": __js__healthbar_get_drawable,
+    "__js__healthbar_hide_warnings": __js__healthbar_hide_warnings,
+    "__js__healthbar_load_warnings": __js__healthbar_load_warnings,
+    "__js__healthbar_set_alpha": __js__healthbar_set_alpha,
+    "__js__healthbar_set_bpm": __js__healthbar_set_bpm,
+    "__js__healthbar_set_bump_animation_opponent": __js__healthbar_set_bump_animation_opponent,
+    "__js__healthbar_set_bump_animation_player": __js__healthbar_set_bump_animation_player,
+    "__js__healthbar_set_health_position": __js__healthbar_set_health_position,
+    "__js__healthbar_set_health_position2": __js__healthbar_set_health_position2,
+    "__js__healthbar_set_opponent_bar_color": __js__healthbar_set_opponent_bar_color,
+    "__js__healthbar_set_opponent_bar_color_rgb8": __js__healthbar_set_opponent_bar_color_rgb8,
+    "__js__healthbar_set_player_bar_color": __js__healthbar_set_player_bar_color,
+    "__js__healthbar_set_player_bar_color_rgb8": __js__healthbar_set_player_bar_color_rgb8,
+    "__js__healthbar_set_visible": __js__healthbar_set_visible,
+    "__js__healthbar_show_drain_warning": __js__healthbar_show_drain_warning,
+    "__js__healthbar_show_locked_warning": __js__healthbar_show_locked_warning,
+    "__js__healthbar_state_background_add": __js__healthbar_state_background_add,
+    "__js__healthbar_state_background_add2": __js__healthbar_state_background_add2,
+    "__js__healthbar_state_opponent_add": __js__healthbar_state_opponent_add,
+    "__js__healthbar_state_opponent_add2": __js__healthbar_state_opponent_add2,
+    "__js__healthbar_state_player_add": __js__healthbar_state_player_add,
+    "__js__healthbar_state_player_add2": __js__healthbar_state_player_add2,
+    "__js__healthbar_state_toggle": __js__healthbar_state_toggle,
+    "__js__healthbar_state_toggle_background": __js__healthbar_state_toggle_background,
+    "__js__healthbar_state_toggle_opponent": __js__healthbar_state_toggle_opponent,
+    "__js__healthbar_state_toggle_player": __js__healthbar_state_toggle_player,
+    "__js__healthwatcher_add_opponent": __js__healthwatcher_add_opponent,
+    "__js__healthwatcher_add_player": __js__healthwatcher_add_player,
+    "__js__healthwatcher_balance": __js__healthwatcher_balance,
+    "__js__healthwatcher_clear": __js__healthwatcher_clear,
+    "__js__healthwatcher_enable_dead": __js__healthwatcher_enable_dead,
+    "__js__healthwatcher_enable_recover": __js__healthwatcher_enable_recover,
+    "__js__healthwatcher_has_deads": __js__healthwatcher_has_deads,
+    "__js__healthwatcher_reset_opponents": __js__healthwatcher_reset_opponents,
     "__js__kdmyEngine_forget_obtained": __js__kdmyEngine_forget_obtained,
     "__js__kdmyEngine_read_prop_boolean": __js__kdmyEngine_read_prop_boolean,
     "__js__kdmyEngine_read_prop_double": __js__kdmyEngine_read_prop_double,
@@ -5551,8 +6401,15 @@ var asmLibraryArg = {
     "__js__messagebox_show": __js__messagebox_show,
     "__js__messagebox_show_buttons_icons": __js__messagebox_show_buttons_icons,
     "__js__messagebox_use_small_size": __js__messagebox_use_small_size,
+    "__js__missnotefx_play_effect": __js__missnotefx_play_effect,
     "__js__modding_exit": __js__modding_exit,
     "__js__modding_get_layout": __js__modding_get_layout,
+    "__js__modding_set_halt": __js__modding_set_halt,
+    "__js__modding_set_ui_visibility": __js__modding_set_ui_visibility,
+    "__js__modding_unlockdirective_create": __js__modding_unlockdirective_create,
+    "__js__modding_unlockdirective_get": __js__modding_unlockdirective_get,
+    "__js__modding_unlockdirective_has": __js__modding_unlockdirective_has,
+    "__js__modding_unlockdirective_remove": __js__modding_unlockdirective_remove,
     "__js__modelholder_create_animsprite": __js__modelholder_create_animsprite,
     "__js__modelholder_destroy": __js__modelholder_destroy,
     "__js__modelholder_get_animlist": __js__modelholder_get_animlist,
@@ -5564,11 +6421,66 @@ var asmLibraryArg = {
     "__js__modelholder_has_animlist": __js__modelholder_has_animlist,
     "__js__modelholder_is_invalid": __js__modelholder_is_invalid,
     "__js__modelholder_utils_is_known_extension": __js__modelholder_utils_is_known_extension,
+    "__js__playerstats_add_extra_health": __js__playerstats_add_extra_health,
+    "__js__playerstats_add_health": __js__playerstats_add_health,
+    "__js__playerstats_add_hit": __js__playerstats_add_hit,
+    "__js__playerstats_add_miss": __js__playerstats_add_miss,
+    "__js__playerstats_add_penality": __js__playerstats_add_penality,
+    "__js__playerstats_add_sustain": __js__playerstats_add_sustain,
+    "__js__playerstats_add_sustain_delayed_hit": __js__playerstats_add_sustain_delayed_hit,
+    "__js__playerstats_enable_penality_on_empty_strum": __js__playerstats_enable_penality_on_empty_strum,
+    "__js__playerstats_get_accuracy": __js__playerstats_get_accuracy,
+    "__js__playerstats_get_bads": __js__playerstats_get_bads,
+    "__js__playerstats_get_combo_breaks": __js__playerstats_get_combo_breaks,
+    "__js__playerstats_get_combo_streak": __js__playerstats_get_combo_streak,
+    "__js__playerstats_get_goods": __js__playerstats_get_goods,
+    "__js__playerstats_get_health": __js__playerstats_get_health,
+    "__js__playerstats_get_highest_combo_streak": __js__playerstats_get_highest_combo_streak,
+    "__js__playerstats_get_hits": __js__playerstats_get_hits,
+    "__js__playerstats_get_iterations": __js__playerstats_get_iterations,
+    "__js__playerstats_get_last_accuracy": __js__playerstats_get_last_accuracy,
+    "__js__playerstats_get_last_difference": __js__playerstats_get_last_difference,
+    "__js__playerstats_get_last_ranking": __js__playerstats_get_last_ranking,
+    "__js__playerstats_get_maximum_health": __js__playerstats_get_maximum_health,
+    "__js__playerstats_get_misses": __js__playerstats_get_misses,
+    "__js__playerstats_get_notes_per_seconds": __js__playerstats_get_notes_per_seconds,
+    "__js__playerstats_get_notes_per_seconds_highest": __js__playerstats_get_notes_per_seconds_highest,
+    "__js__playerstats_get_penalties": __js__playerstats_get_penalties,
+    "__js__playerstats_get_score": __js__playerstats_get_score,
+    "__js__playerstats_get_shits": __js__playerstats_get_shits,
+    "__js__playerstats_get_sicks": __js__playerstats_get_sicks,
+    "__js__playerstats_is_dead": __js__playerstats_is_dead,
+    "__js__playerstats_kill": __js__playerstats_kill,
+    "__js__playerstats_kill_if_negative_health": __js__playerstats_kill_if_negative_health,
+    "__js__playerstats_raise": __js__playerstats_raise,
+    "__js__playerstats_reset": __js__playerstats_reset,
+    "__js__playerstats_reset_notes_per_seconds": __js__playerstats_reset_notes_per_seconds,
+    "__js__playerstats_set_health": __js__playerstats_set_health,
     "__js__psshader_destroy": __js__psshader_destroy,
     "__js__psshader_init": __js__psshader_init,
     "__js__psshader_set_uniform1f": __js__psshader_set_uniform1f,
     "__js__psshader_set_uniform1i": __js__psshader_set_uniform1i,
     "__js__psshader_set_uniform_any": __js__psshader_set_uniform_any,
+    "__js__rankingcounter_add_state": __js__rankingcounter_add_state,
+    "__js__rankingcounter_animation_end": __js__rankingcounter_animation_end,
+    "__js__rankingcounter_animation_restart": __js__rankingcounter_animation_restart,
+    "__js__rankingcounter_animation_set": __js__rankingcounter_animation_set,
+    "__js__rankingcounter_hide_accuracy": __js__rankingcounter_hide_accuracy,
+    "__js__rankingcounter_reset": __js__rankingcounter_reset,
+    "__js__rankingcounter_set_alpha": __js__rankingcounter_set_alpha,
+    "__js__rankingcounter_set_default_ranking_animation2": __js__rankingcounter_set_default_ranking_animation2,
+    "__js__rankingcounter_set_default_ranking_text_animation2": __js__rankingcounter_set_default_ranking_text_animation2,
+    "__js__rankingcounter_toggle_state": __js__rankingcounter_toggle_state,
+    "__js__rankingcounter_use_percent_instead": __js__rankingcounter_use_percent_instead,
+    "__js__roundstats_get_drawable": __js__roundstats_get_drawable,
+    "__js__roundstats_hide": __js__roundstats_hide,
+    "__js__roundstats_hide_nps": __js__roundstats_hide_nps,
+    "__js__roundstats_reset": __js__roundstats_reset,
+    "__js__roundstats_set_draw_y": __js__roundstats_set_draw_y,
+    "__js__roundstats_tweenlerp_set_bpm": __js__roundstats_tweenlerp_set_bpm,
+    "__js__roundstats_tweenlerp_set_on_beat": __js__roundstats_tweenlerp_set_on_beat,
+    "__js__roundstats_tweenlerp_set_on_hit": __js__roundstats_tweenlerp_set_on_hit,
+    "__js__roundstats_tweenlerp_set_on_miss": __js__roundstats_tweenlerp_set_on_miss,
     "__js__songplayer_changesong": __js__songplayer_changesong,
     "__js__songplayer_get_duration": __js__songplayer_get_duration,
     "__js__songplayer_get_timestamp": __js__songplayer_get_timestamp,
@@ -5579,6 +6491,22 @@ var asmLibraryArg = {
     "__js__songplayer_seek": __js__songplayer_seek,
     "__js__songplayer_set_volume": __js__songplayer_set_volume,
     "__js__songplayer_set_volume_track": __js__songplayer_set_volume_track,
+    "__js__songprogressbar_animation_end": __js__songprogressbar_animation_end,
+    "__js__songprogressbar_animation_restart": __js__songprogressbar_animation_restart,
+    "__js__songprogressbar_animation_set": __js__songprogressbar_animation_set,
+    "__js__songprogressbar_get_drawable": __js__songprogressbar_get_drawable,
+    "__js__songprogressbar_hide_time": __js__songprogressbar_hide_time,
+    "__js__songprogressbar_manual_set_position": __js__songprogressbar_manual_set_position,
+    "__js__songprogressbar_manual_set_text": __js__songprogressbar_manual_set_text,
+    "__js__songprogressbar_manual_update_enable": __js__songprogressbar_manual_update_enable,
+    "__js__songprogressbar_set_background_color": __js__songprogressbar_set_background_color,
+    "__js__songprogressbar_set_bar_back_color": __js__songprogressbar_set_bar_back_color,
+    "__js__songprogressbar_set_bar_progress_color": __js__songprogressbar_set_bar_progress_color,
+    "__js__songprogressbar_set_duration": __js__songprogressbar_set_duration,
+    "__js__songprogressbar_set_songplayer": __js__songprogressbar_set_songplayer,
+    "__js__songprogressbar_set_text_color": __js__songprogressbar_set_text_color,
+    "__js__songprogressbar_set_visible": __js__songprogressbar_set_visible,
+    "__js__songprogressbar_show_elapsed": __js__songprogressbar_show_elapsed,
     "__js__soundplayer_fade": __js__soundplayer_fade,
     "__js__soundplayer_get_duration": __js__soundplayer_get_duration,
     "__js__soundplayer_get_position": __js__soundplayer_get_position,
@@ -5617,6 +6545,77 @@ var asmLibraryArg = {
     "__js__sprite_set_visible": __js__sprite_set_visible,
     "__js__sprite_set_z_index": __js__sprite_set_z_index,
     "__js__sprite_set_z_offset": __js__sprite_set_z_offset,
+    "__js__streakcounter_animation_end": __js__streakcounter_animation_end,
+    "__js__streakcounter_animation_restart": __js__streakcounter_animation_restart,
+    "__js__streakcounter_animation_set": __js__streakcounter_animation_set,
+    "__js__streakcounter_get_drawable": __js__streakcounter_get_drawable,
+    "__js__streakcounter_hide_combo_sprite": __js__streakcounter_hide_combo_sprite,
+    "__js__streakcounter_reset": __js__streakcounter_reset,
+    "__js__streakcounter_set_alpha": __js__streakcounter_set_alpha,
+    "__js__streakcounter_set_combo_draw_location": __js__streakcounter_set_combo_draw_location,
+    "__js__streakcounter_state_add": __js__streakcounter_state_add,
+    "__js__streakcounter_state_toggle": __js__streakcounter_state_toggle,
+    "__js__strum_animation_end": __js__strum_animation_end,
+    "__js__strum_animation_restart": __js__strum_animation_restart,
+    "__js__strum_draw_sick_effect_apart": __js__strum_draw_sick_effect_apart,
+    "__js__strum_enable_background": __js__strum_enable_background,
+    "__js__strum_enable_sick_effect": __js__strum_enable_sick_effect,
+    "__js__strum_force_key_release": __js__strum_force_key_release,
+    "__js__strum_get_drawable": __js__strum_get_drawable,
+    "__js__strum_get_duration": __js__strum_get_duration,
+    "__js__strum_get_marker_duration": __js__strum_get_marker_duration,
+    "__js__strum_get_modifier": __js__strum_get_modifier,
+    "__js__strum_get_name": __js__strum_get_name,
+    "__js__strum_get_press_state": __js__strum_get_press_state,
+    "__js__strum_get_press_state_changes": __js__strum_get_press_state_changes,
+    "__js__strum_reset": __js__strum_reset,
+    "__js__strum_set_alpha": __js__strum_set_alpha,
+    "__js__strum_set_alpha_background": __js__strum_set_alpha_background,
+    "__js__strum_set_alpha_sick_effect": __js__strum_set_alpha_sick_effect,
+    "__js__strum_set_draw_offset": __js__strum_set_draw_offset,
+    "__js__strum_set_extra_animation": __js__strum_set_extra_animation,
+    "__js__strum_set_extra_animation_continuous": __js__strum_set_extra_animation_continuous,
+    "__js__strum_set_keep_aspect_ratio_background": __js__strum_set_keep_aspect_ratio_background,
+    "__js__strum_set_marker_duration_multiplier": __js__strum_set_marker_duration_multiplier,
+    "__js__strum_set_notesmaker_tweenlerp": __js__strum_set_notesmaker_tweenlerp,
+    "__js__strum_set_player_id": __js__strum_set_player_id,
+    "__js__strum_set_scroll_direction": __js__strum_set_scroll_direction,
+    "__js__strum_set_scroll_speed": __js__strum_set_scroll_speed,
+    "__js__strum_set_sickeffect_size_ratio": __js__strum_set_sickeffect_size_ratio,
+    "__js__strum_set_visible": __js__strum_set_visible,
+    "__js__strum_state_add": __js__strum_state_add,
+    "__js__strum_state_toggle": __js__strum_state_toggle,
+    "__js__strum_state_toggle_background": __js__strum_state_toggle_background,
+    "__js__strum_state_toggle_marker": __js__strum_state_toggle_marker,
+    "__js__strum_state_toggle_notes": __js__strum_state_toggle_notes,
+    "__js__strum_state_toggle_sick_effect": __js__strum_state_toggle_sick_effect,
+    "__js__strum_update_draw_location": __js__strum_update_draw_location,
+    "__js__strums_animation_end": __js__strums_animation_end,
+    "__js__strums_animation_restart": __js__strums_animation_restart,
+    "__js__strums_animation_set": __js__strums_animation_set,
+    "__js__strums_enable_background": __js__strums_enable_background,
+    "__js__strums_enable_post_sick_effect_draw": __js__strums_enable_post_sick_effect_draw,
+    "__js__strums_force_key_release": __js__strums_force_key_release,
+    "__js__strums_get_drawable": __js__strums_get_drawable,
+    "__js__strums_get_lines_count": __js__strums_get_lines_count,
+    "__js__strums_get_strum_line": __js__strums_get_strum_line,
+    "__js__strums_reset": __js__strums_reset,
+    "__js__strums_set_alpha": __js__strums_set_alpha,
+    "__js__strums_set_alpha_background": __js__strums_set_alpha_background,
+    "__js__strums_set_alpha_sick_effect": __js__strums_set_alpha_sick_effect,
+    "__js__strums_set_draw_offset": __js__strums_set_draw_offset,
+    "__js__strums_set_keep_aspect_ratio_background": __js__strums_set_keep_aspect_ratio_background,
+    "__js__strums_set_marker_duration_multiplier": __js__strums_set_marker_duration_multiplier,
+    "__js__strums_set_scroll_direction": __js__strums_set_scroll_direction,
+    "__js__strums_set_scroll_speed": __js__strums_set_scroll_speed,
+    "__js__strums_state_add": __js__strums_state_add,
+    "__js__strums_state_toggle": __js__strums_state_toggle,
+    "__js__strums_state_toggle_marker_and_sick_effect": __js__strums_state_toggle_marker_and_sick_effect,
+    "__js__strums_state_toggle_notes": __js__strums_state_toggle_notes,
+    "__js__textsprite_background_enable": __js__textsprite_background_enable,
+    "__js__textsprite_background_set_color": __js__textsprite_background_set_color,
+    "__js__textsprite_background_set_offets": __js__textsprite_background_set_offets,
+    "__js__textsprite_background_set_size": __js__textsprite_background_set_size,
     "__js__textsprite_border_enable": __js__textsprite_border_enable,
     "__js__textsprite_border_set_color": __js__textsprite_border_set_color,
     "__js__textsprite_border_set_size": __js__textsprite_border_set_size,
@@ -5677,18 +6676,29 @@ var asmLibraryArg = {
     "__js__week_end": __js__week_end,
     "__js__week_get_character": __js__week_get_character,
     "__js__week_get_character_count": __js__week_get_character_count,
+    "__js__week_get_conductor": __js__week_get_conductor,
     "__js__week_get_current_chart_info": __js__week_get_current_chart_info,
     "__js__week_get_current_track_info": __js__week_get_current_track_info,
     "__js__week_get_dialogue": __js__week_get_dialogue,
     "__js__week_get_girlfriend": __js__week_get_girlfriend,
+    "__js__week_get_healthwatcher": __js__week_get_healthwatcher,
+    "__js__week_get_messagebox": __js__week_get_messagebox,
+    "__js__week_get_missnotefx": __js__week_get_missnotefx,
+    "__js__week_get_playerstats": __js__week_get_playerstats,
     "__js__week_get_songplayer": __js__week_get_songplayer,
     "__js__week_get_stage_layout": __js__week_get_stage_layout,
     "__js__week_override_common_folder": __js__week_override_common_folder,
     "__js__week_set_halt": __js__week_set_halt,
     "__js__week_set_ui_shader": __js__week_set_ui_shader,
     "__js__week_ui_get_camera": __js__week_ui_get_camera,
+    "__js__week_ui_get_countdown": __js__week_ui_get_countdown,
+    "__js__week_ui_get_healthbar": __js__week_ui_get_healthbar,
     "__js__week_ui_get_layout": __js__week_ui_get_layout,
-    "__js__week_ui_get_messagebox": __js__week_ui_get_messagebox,
+    "__js__week_ui_get_rankingcounter": __js__week_ui_get_rankingcounter,
+    "__js__week_ui_get_roundstats": __js__week_ui_get_roundstats,
+    "__js__week_ui_get_songprogressbar": __js__week_ui_get_songprogressbar,
+    "__js__week_ui_get_streakcounter": __js__week_ui_get_streakcounter,
+    "__js__week_ui_get_strums": __js__week_ui_get_strums,
     "__js__week_ui_get_strums_count": __js__week_ui_get_strums_count,
     "__js__week_ui_get_trackinfo": __js__week_ui_get_trackinfo,
     "__js__week_ui_set_visibility": __js__week_ui_set_visibility,
@@ -5805,6 +6815,9 @@ var _luascript_notify_dialogue_line_starts = ModuleLuaScript["_luascript_notify_
 };
 var _luascript_notify_dialogue_line_ends = ModuleLuaScript["_luascript_notify_dialogue_line_ends"] = function () {
     return (_luascript_notify_dialogue_line_ends = ModuleLuaScript["_luascript_notify_dialogue_line_ends"] = ModuleLuaScript["asm"]["luascript_notify_dialogue_line_ends"]).apply(null, arguments)
+};
+var _luascript_notify_after_strum_scroll = ModuleLuaScript["_luascript_notify_after_strum_scroll"] = function () {
+    return (_luascript_notify_after_strum_scroll = ModuleLuaScript["_luascript_notify_after_strum_scroll"] = ModuleLuaScript["asm"]["luascript_notify_after_strum_scroll"]).apply(null, arguments)
 };
 var _luascript_call_function = ModuleLuaScript["_luascript_call_function"] = function () {
     return (_luascript_call_function = ModuleLuaScript["_luascript_call_function"] = ModuleLuaScript["asm"]["luascript_call_function"]).apply(null, arguments)

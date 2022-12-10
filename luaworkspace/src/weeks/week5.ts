@@ -58,7 +58,7 @@ function f_beforeready(from_retry: boolean): void {
     // actions before the round starts
     stage.trigger_action(null, "fade_lights");
 
-    ui_set_visibility(false);
+    week_ui_set_visibility(false);
 
     // step 2: move lemon demon (spawns in parents location)
     place_lemon_demon(stage);
@@ -76,7 +76,7 @@ function f_beforeready(from_retry: boolean): void {
         timer_callback_timeout(2500, function (): void {
             // step 7: zoom out and resume and resume the round startup
             stage.trigger_camera("mall_evil_zoom_out");
-            ui_set_visibility(true);
+            week_ui_set_visibility(true);
             week_set_halt(false);
         });
     });

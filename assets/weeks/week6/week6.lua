@@ -94,7 +94,7 @@ function dialog_show(dialog_lines)
         500,
         function()
             week_set_halt(false)
-            ui_set_visibility(true)
+            week_ui_set_visibility(true)
         end
     )
 end
@@ -200,7 +200,7 @@ function f_weekinit(freeplay_index)
     dialogs_roses = dialog_parse("/assets/weeks/week6/weeb/dialogs/rosesDialogue.txt")
     dialogs_thorns = dialog_parse("/assets/weeks/week6/weeb_but_evil/dialogs/thornsDialogue.txt")
     week_enable_credits_on_completed()
-    unlockdirective_create("FNF_COMPLETED", false, true, 9942069)
+    week_unlockdirective_create("FNF_COMPLETED", false, true, 9942069)
 end
 function f_beforeready(from_retry)
     stage = week_get_stage_layout()
@@ -267,7 +267,7 @@ function f_beforeready(from_retry)
         return
     end
     week_set_halt(true)
-    ui_set_visibility(false)
+    week_ui_set_visibility(false)
     if track_index == 0 or track_index == 2 then
         lyt_bg_music:play()
     end
@@ -307,7 +307,7 @@ function f_roundend(loose)
         return
     end
     week_set_halt(true)
-    ui_set_visibility(false)
+    week_ui_set_visibility(false)
     stage:trigger_camera("senpai_dies")
     stage:trigger_action(nil, "fade_in_red")
     timer_callback_timeout(

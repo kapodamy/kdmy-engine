@@ -1,5 +1,5 @@
 
-const CREDITS_BUTTONS = GAMEPAD_START | GAMEPAD_A | GAMEPAD_B | GAMEPAD_X | GAMEPAD_Y;
+const CREDITS_BUTTONS = GamepadButtons.START | GamepadButtons.A | GamepadButtons.B | GamepadButtons.X | GamepadButtons.Y;
 
 // adquire intro texts
 let introText: string = fs_readfile("/assets/common/introText.txt");

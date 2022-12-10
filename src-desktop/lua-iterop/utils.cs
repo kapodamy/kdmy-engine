@@ -13,8 +13,13 @@ namespace Engine.Externals.LuaInterop {
     }
 
     public struct LuaIntegerConstant {
-        public string variable;
-        public long value;
+        public readonly string variable;
+        public readonly long value;
+
+        public LuaIntegerConstant(string variable, long value) {
+            this.variable = variable;
+            this.value = value;
+        }
     }
 
     public struct LuaStringConstant {

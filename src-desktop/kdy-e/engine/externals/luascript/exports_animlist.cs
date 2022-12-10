@@ -23,7 +23,7 @@ namespace Engine.Externals.LuaScriptInterop {
             if (L.IsUserdataAllocated(ANIMLIST))
                 animlist.Destroy();
             else
-                Console.Error.WriteLine("script_animlist_destroy() object was not allocated by lua");
+                Console.WriteLine("script_animlist_destroy() object was not allocated by lua");
 
             return 0;
         }

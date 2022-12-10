@@ -91,3 +91,15 @@ PSShader textsprite_get_shader(TextSprite textsprite) {
     print_stub("textsprite_get_shader", "textsprite=%p", textsprite);
     return &stub_psshader;
 }
+void textsprite_background_enable(TextSprite textsprite, bool enabled) {
+    print_stub("textsprite_background_enable", "textsprite=%p enabled=(bool)%i", textsprite, enabled);
+}
+void textsprite_background_set_size(TextSprite textsprite, float size) {
+    print_stub("textsprite_background_set_size", "textsprite=%p size=%f", textsprite, size);
+}
+void textsprite_background_set_offets(TextSprite textsprite, float offset_x, float offset_y) {
+    print_stub("textsprite_background_set_offets", "textsprite=%p offset_x=%f offset_y=%f", textsprite, offset_x, offset_y);
+}
+void textsprite_background_set_color(TextSprite textsprite, float r, float g, float b, float a) {
+    print_stub("textsprite_background_set_color", "textsprite=%p r=%f g=%f b=%f a=%f", textsprite, r, g, b, a);
+}
