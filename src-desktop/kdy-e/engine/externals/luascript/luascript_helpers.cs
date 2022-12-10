@@ -3,6 +3,7 @@ using Engine.Externals.LuaInterop;
 using Engine.Game;
 using Engine.Platform;
 using Engine.Utils;
+using static Engine.Game.Strum;
 
 namespace Engine.Externals.LuaScriptInterop {
 
@@ -71,6 +72,60 @@ namespace Engine.Externals.LuaScriptInterop {
                 L.luaL_error($"invalid blend: {blend}");
 
             return value;
+        }
+
+        public static StrumScriptTarget luascript_parse_strumscripttarget(LuaState L, string strumscripttarget) {
+            switch (strumscripttarget) {
+                case "marker":
+                    return StrumScriptTarget.MARKER;
+                case "sick_effect":
+                    return StrumScriptTarget.SICK_EFFECT;
+                case "background":
+                    return StrumScriptTarget.BACKGROUND;
+                case "strum_line":
+                    return StrumScriptTarget.STRUM_LINE;
+                case "all":
+                    return StrumScriptTarget.ALL;
+            }
+
+            L.luaL_error($"invalid strumscripttarget: {strumscripttarget}");
+            return StrumScriptTarget.ALL;
+        }
+
+        public static StrumScriptOn luascript_parse_strumscripton(LuaState L, string strumscripton) {
+            switch (strumscripton) {
+                case "hit_down":
+                    return StrumScriptOn.HIT_DOWN;
+                case "hit_up":
+                    return StrumScriptOn.HIT_UP;
+                case "miss":
+                    return StrumScriptOn.MISS;
+                case "penality":
+                    return StrumScriptOn.PENALITY;
+                case "idle":
+                    return StrumScriptOn.IDLE;
+                case "all":
+                    return StrumScriptOn.ALL;
+            }
+
+            L.luaL_error($"invalid strumscripton: {strumscripton}");
+            return StrumScriptOn.ALL;
+        }
+
+        public static ScrollDirection luascript_parse_scrolldirection(LuaState L, string scrolldirection) {
+            switch (scrolldirection) {
+                case "UPSCROLL":
+                    return ScrollDirection.UPSCROLL;
+                case "LEFTSCROLL":
+                    return ScrollDirection.LEFTSCROLL;
+                case "DOWNSCROLL":
+                    return ScrollDirection.DOWNSCROLL;
+                case "RIGHTSCROLL":
+                    return ScrollDirection.RIGHTSCROLL;
+            }
+
+            L.luaL_error($"invalid scrolldirection: {scrolldirection}");
+            return ScrollDirection.LEFTSCROLL;
         }
 
 

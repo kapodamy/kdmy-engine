@@ -128,6 +128,21 @@ const CHARACTERTYPE = {
  * @property {number} trackinfo_fontsize
  * @property {number} trackinfo_fontcolor
  * @property {number} countdown_height
+ * @property {number} songprogressbar_x
+ * @property {number} songprogressbar_y
+ * @property {number} songprogressbar_z
+ * @property {number} songprogressbar_width
+ * @property {number} songprogressbar_height
+ * @property {number} songprogressbar_align
+ * @property {number} songprogressbar_bordersize
+ * @property {number} songprogressbar_fontsize
+ * @property {number} songprogressbar_fontbordersize
+ * @property {number} songprogressbar_isvertical
+ * @property {number} songprogressbar_showtime
+ * @property {number} songprogressbar_colorrgba8_text
+ * @property {number} songprogressbar_colorrgba8_background
+ * @property {number} songprogressbar_colorrgba8_barback
+ * @property {number} songprogressbar_colorrgba8_barfront
  */
 
 /**
@@ -210,6 +225,7 @@ const CHARACTERTYPE = {
  * @property {object} messagebox
  * @property {object} ui_camera
  * @property {object} missnotefx
+ * @property {object} songprogressbar
  * 
  * @property {object} layout
  *  
@@ -285,6 +301,7 @@ function week_destroy(/** @type {RoundContext} */ roundcontext, gameplaymanifest
     if (roundcontext.ui_camera) camera_destroy(roundcontext.ui_camera);
     if (roundcontext.missnotefx) missnotefx_destroy(roundcontext.missnotefx);
     if (roundcontext.dialogue) dialogue_destroy(roundcontext.dialogue);
+    if (roundcontext.songprogressbar) songprogressbar_destroy(roundcontext.songprogressbar);
 
     roundcontext.events = undefined;
     roundcontext.healthbarparams.player_icon_model = undefined;
@@ -381,6 +398,21 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             trackinfo_fontcolor: 0x00,
             trackinfo_fontsize: 0x00,
             countdown_height: 0,
+            songprogressbar_x: 0,
+            songprogressbar_y: 0,
+            songprogressbar_z: 0,
+            songprogressbar_width: 0,
+            songprogressbar_height: 0,
+            songprogressbar_align: ALIGN_NONE,
+            songprogressbar_bordersize: 0,
+            songprogressbar_fontsize: 0,
+            songprogressbar_fontbordersize: 0,
+            songprogressbar_isvertical: 0,
+            songprogressbar_showtime: 0,
+            songprogressbar_colorrgba8_text: 0x00,
+            songprogressbar_colorrgba8_background: 0x00,
+            songprogressbar_colorrgba8_barback: 0x00,
+            songprogressbar_colorrgba8_barfront: 0x00
         }
     };
 
@@ -404,6 +436,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         messagebox: null,
         ui_camera: camera_init(null, 640, 480),
         missnotefx: null,
+        songprogressbar: null,
         screen_background: sprite_init_from_rgb8(0x0),
 
         has_directive_changes: 0,
@@ -573,6 +606,12 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         if (roundcontext.healthbar) {
             healthbar_set_health_position2(roundcontext.healthbar, 0.5);
             healthbar_hide_warnings(roundcontext.healthbar);
+        }
+
+        // update songprogressbar
+        if (roundcontext.songprogressbar) {
+            songprogressbar_set_songplayer(roundcontext.songprogressbar, roundcontext.songplayer);
+            songprogressbar_set_duration(roundcontext.songprogressbar, roundcontext.round_duration);
         }
 
         // check if necessary show dialogue if an dialog text is provided
@@ -835,6 +874,29 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     ui.roundstats_size = layout_get_attached_value(layout, "ui_roundstats_fontSize", LAYOUT_TYPE_FLOAT, 12);
     ui.roundstats_fontcolor = layout_get_attached_value(layout, "ui_roundstats_fontColor", LAYOUT_TYPE_HEX, 0xFFFFFF);
 
+
+    placeholder = layout_get_placeholder(layout, "ui_songprogressbar");
+    if (!placeholder) {
+        console.error("missing layout ui_songprogressbar placeholder");
+        placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
+    }
+    ui.songprogressbar_bordersize = layout_get_attached_value(layout, "ui_songprogressbar_borderSize", LAYOUT_TYPE_FLOAT, 2);
+    ui.songprogressbar_fontsize = layout_get_attached_value(layout, "ui_songprogressbar_fontSize", LAYOUT_TYPE_FLOAT, 11);
+    ui.songprogressbar_fontbordersize = layout_get_attached_value(layout, "ui_songprogressbar_fontBorderSize", LAYOUT_TYPE_FLOAT, 1.4);
+    ui.songprogressbar_isvertical = layout_get_attached_value(layout, "ui_songprogressbar_isVertical", LAYOUT_TYPE_BOOLEAN, 0);
+    ui.songprogressbar_showtime = layout_get_attached_value(layout, "ui_songprogressbar_showTime", LAYOUT_TYPE_BOOLEAN, 1);
+    ui.songprogressbar_colorrgba8_text = layout_get_attached_value(layout, "ui_songprogressbar_colorRGBA8_text", LAYOUT_TYPE_HEX, 0xFFFFFFFF);
+    ui.songprogressbar_colorrgba8_background = layout_get_attached_value(layout, "ui_songprogressbar_colorRGBA8_background", LAYOUT_TYPE_HEX, 0x000000FF);
+    ui.songprogressbar_colorrgba8_barback = layout_get_attached_value(layout, "ui_songprogressbar_colorRGBA8_barBack", LAYOUT_TYPE_HEX, 0x808080FF);
+    ui.songprogressbar_colorrgba8_barfront = layout_get_attached_value(layout, "ui_songprogressbar_colorRGBA8_barFront", LAYOUT_TYPE_HEX, 0xFFFFFFFF);
+    ui.songprogressbar_x = placeholder.x;
+    ui.songprogressbar_y = placeholder.y;
+    ui.songprogressbar_z = placeholder.z;
+    ui.songprogressbar_width = placeholder.width;
+    ui.songprogressbar_height = placeholder.height;
+    ui.songprogressbar_align = ui.songprogressbar_isvertical ? placeholder.align_vertical : placeholder.align_horizontal;
+
+
     // pick streakcounter and rankingcounter values
     week_internal_pick_counters_values_from_layout(roundcontext);
 
@@ -895,6 +957,13 @@ function week_pick_inverted_ui_layout_values(/** @type {RoundContext} */ roundco
         ui.roundstats_x = placeholder.x;
         ui.roundstats_y = placeholder.y;
         ui.roundstats_z = placeholder.z;
+    }
+
+    placeholder = layout_get_placeholder(layout, "ui_songprogressbar_inverted");
+    if (placeholder != null) {
+        ui.songprogressbar_x = placeholder.x;
+        ui.songprogressbar_y = placeholder.y;
+        ui.songprogressbar_z = placeholder.z;
     }
 
     placeholder = layout_get_placeholder(layout, "ui_track_info_inverted");
@@ -1770,6 +1839,7 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
     let old_rankingcounter = roundcontext.rankingcounter;
     let old_streakcounter = roundcontext.streakcounter;
     let old_countdown = roundcontext.countdown;
+    let old_songprogressbar = roundcontext.songprogressbar;
     if (roundcontext.roundstats) roundstats_destroy(roundcontext.roundstats);
     if (roundcontext.trackinfo) textsprite_destroy(roundcontext.trackinfo);
 
@@ -1826,7 +1896,30 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
     );
     roundstats_hide_nps(roundcontext.roundstats, initparams.ui.roundstats_hide);
 
-    // step 1d: initialize countdown
+    // step 1d: initialize songprogressbar
+    if (SETTINGS.song_progressbar) {
+        roundcontext.songprogressbar = await songprogressbar_init(
+            initparams.ui.songprogressbar_x, initparams.ui.songprogressbar_y,
+            initparams.ui.songprogressbar_z,
+            initparams.ui.songprogressbar_width, initparams.ui.songprogressbar_height,
+            initparams.ui.songprogressbar_align,
+            initparams.ui.songprogressbar_bordersize, initparams.ui.songprogressbar_isvertical,
+            initparams.ui.songprogressbar_showtime,
+            initparams.font,
+            initparams.ui.songprogressbar_fontsize, initparams.ui.songprogressbar_fontbordersize,
+            initparams.ui.songprogressbar_colorrgba8_text,
+            initparams.ui.songprogressbar_colorrgba8_background,
+            initparams.ui.songprogressbar_colorrgba8_barback,
+            initparams.ui.songprogressbar_colorrgba8_barfront
+        );
+        songprogressbar_set_songplayer(roundcontext.songprogressbar, roundcontext.songplayer);
+        songprogressbar_set_duration(roundcontext.songprogressbar, roundcontext.round_duration);
+        if (SETTINGS.song_progressbar_remaining) songprogressbar_show_elapsed(roundcontext.songprogressbar, 0);
+    } else {
+        roundcontext.songprogressbar = null;
+    }
+
+    // step 1e: initialize countdown
     roundcontext.countdown = await countdown_init(
         modelholder_countdown,
         initparams.ui.countdown_height
@@ -1836,7 +1929,7 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
         roundcontext.countdown, initparams.ui_layout_width, initparams.ui_layout_height
     );
 
-    // step 1e: initialize trackinfo
+    // step 1f: initialize trackinfo
     roundcontext.trackinfo = textsprite_init2(
         initparams.font, initparams.ui.trackinfo_fontsize, initparams.ui.trackinfo_fontcolor
     );
@@ -1867,6 +1960,7 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
     if (old_rankingcounter) rankingcounter_destroy(old_rankingcounter);
     if (old_streakcounter) streakcounter_destroy(old_streakcounter);
     if (old_countdown) countdown_destroy(old_countdown);
+    if (old_songprogressbar) songprogressbar_destroy(old_songprogressbar);
 }
 
 async function week_init_ui_gameover(/**@type {RoundContext}*/roundcontext) {
@@ -1892,7 +1986,7 @@ async function week_init_dialogue(roundcontext, dialogue_params) {
 
 function week_place_in_layout(roundcontext) {
     const initparams = roundcontext.initparams;
-    const UI_SIZE = 7;// all UI "cosmetics" elements + screen background + dialogue
+    const UI_SIZE = 8;// all UI "cosmetics" elements + screen background + dialogue
 
     let layout, is_ui;
     if (roundcontext.layout) {
@@ -1934,19 +2028,22 @@ function week_place_in_layout(roundcontext) {
         layout, 1, VERTEX_DRAWABLE, roundstats_get_drawable(roundcontext.roundstats), ui1
     );
     layout_external_vertex_set_entry(
-        layout, 2, VERTEX_DRAWABLE, countdown_get_drawable(roundcontext.countdown), ui1
+        layout, 2, VERTEX_DRAWABLE, roundcontext.songprogressbar ? songprogressbar_get_drawable(roundcontext.songprogressbar) : null, ui1
     );
     layout_external_vertex_set_entry(
-        layout, 3, VERTEX_TEXTSPRITE, roundcontext.trackinfo, ui1
+        layout, 3, VERTEX_DRAWABLE, countdown_get_drawable(roundcontext.countdown), ui1
     );
     layout_external_vertex_set_entry(
-        layout, 4, VERTEX_DRAWABLE, week_gameover_get_drawable(roundcontext.weekgameover), ui2
+        layout, 4, VERTEX_TEXTSPRITE, roundcontext.trackinfo, ui1
     );
     layout_external_vertex_set_entry(
-        layout, 5, VERTEX_SPRITE, roundcontext.screen_background, ui2
+        layout, 5, VERTEX_DRAWABLE, week_gameover_get_drawable(roundcontext.weekgameover), ui2
     );
     layout_external_vertex_set_entry(
-        layout, 6, VERTEX_DRAWABLE, roundcontext.dialogue == null ? null : dialogue_get_drawable(roundcontext.dialogue), ui1
+        layout, 6, VERTEX_SPRITE, roundcontext.screen_background, ui2
+    );
+    layout_external_vertex_set_entry(
+        layout, 7, VERTEX_DRAWABLE, roundcontext.dialogue ? dialogue_get_drawable(roundcontext.dialogue) : null, ui1
     );
 
     // step 3: initialize the ui camera
@@ -2074,6 +2171,12 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
     if (round_duration < 0) round_duration = Infinity;
     if (roundcontext.layout) layout_resume(roundcontext.layout);
+
+    if (roundcontext.songprogressbar) {
+        let duration = roundcontext.songplayer ? songplayer_get_duration(roundcontext.songplayer) : round_duration;
+        songprogressbar_manual_update_enable(roundcontext.songprogressbar, 1);
+        songprogressbar_manual_set_position(roundcontext.songprogressbar, 0, duration, 1);
+    }
 
     if (roundcontext.script) {
         await weekscript_notify_timersong(roundcontext.script, 0.0);
@@ -2205,6 +2308,8 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
     if (!roundcontext.settings.ask_ready && roundcontext.layout) {
         layout_trigger_camera(roundcontext.layout, WEEKROUND_CAMERA_ROUNDSTART);
     }
+
+    if (roundcontext.songprogressbar) songprogressbar_manual_update_enable(roundcontext.songprogressbar, 0);
 
     if (roundcontext.script) await weekscript_notify_aftercountdown(roundcontext.script);
     await week_halt(roundcontext, 1);
@@ -2341,6 +2446,11 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
                     missed_milliseconds += conductor_get_missed_milliseconds(roundcontext.players[i].conductor);
                     break;
             }
+        }
+
+        if (roundcontext.script) {
+            await weekscript_notify_after_strum_scroll(roundcontext.script);
+            if (roundcontext.scriptcontext.halt_flag) await week_halt(roundcontext, 0);
         }
 
         if (playerstats) {
@@ -2702,7 +2812,7 @@ function week_get_character(/**@type {RoundContext}*/roundcontext, index) {
     return roundcontext.players[index].character;
 }
 
-function week_ui_get_messagebox(/**@type {RoundContext}*/roundcontext) {
+function week_get_messagebox(/**@type {RoundContext}*/roundcontext) {
     return roundcontext.messagebox;
 }
 
@@ -2759,6 +2869,78 @@ function week_get_dialogue(/**@type {RoundContext} */ roundcontext) {
 function week_set_ui_shader(/**@type {RoundContext} */ roundcontext, psshader) {
     let layout = roundcontext.layout ?? roundcontext.ui_layout;
     layout_set_group_shader(layout, WEEKROUND_UI_GROUP_NAME, psshader);
+}
+
+function week_get_conductor(/**@type {RoundContext} */ roundcontext, character_index) {
+    if (character_index < 0 || character_index >= roundcontext.players_size) return null;
+    return roundcontext.players[character_index].conductor;
+}
+
+function week_get_healthwatcher(/**@type {RoundContext} */ roundcontext) {
+    return roundcontext.healthwatcher;
+}
+
+function week_get_missnotefx(/**@type {RoundContext} */ roundcontext) {
+    return roundcontext.missnotefx;
+}
+
+function week_get_playerstats(/**@type {RoundContext} */ roundcontext, character_index) {
+    if (character_index < 0 || character_index >= roundcontext.players_size) return null;
+    return roundcontext.players[character_index].playerstats;
+}
+
+async function week_rebuild_ui(/**@type {RoundContext} */ roundcontext) {
+    await week_init_ui_cosmetics(roundcontext);
+}
+
+function week_ui_get_countdown(/**@type {RoundContext} */ roundcontext) {
+    return roundcontext.countdown;
+}
+
+function week_ui_get_healthbar(/**@type {RoundContext} */ roundcontext) {
+    return roundcontext.healthbar;
+}
+
+function week_ui_get_rankingcounter(/**@type {RoundContext} */ roundcontext) {
+    return roundcontext.rankingcounter;
+}
+
+function week_ui_get_roundstats(/**@type {RoundContext} */ roundcontext) {
+    return roundcontext.roundstats;
+}
+
+function week_ui_get_songprogressbar(/**@type {RoundContext} */ roundcontext) {
+    return roundcontext.songprogressbar;
+}
+
+function week_ui_get_streakcounter(/**@type {RoundContext} */ roundcontext) {
+    return roundcontext.streakcounter;
+}
+
+function week_ui_get_strums(/**@type {RoundContext} */ roundcontext, strums_id) {
+    const initparams = roundcontext.initparams;
+    const gameplaymanifest = initparams.gameplaymanifest;
+    const track_index = roundcontext.track_index;
+
+    let players = gameplaymanifest.default.players;
+    let players_size = gameplaymanifest.default.players_size;
+    if (gameplaymanifest.tracks[track_index].has_players) {
+        players = gameplaymanifest.tracks[track_index].players;
+        players_size = gameplaymanifest.tracks[track_index].players_size;
+    }
+
+    for (let i = 0; i < players_size; i++) {
+        // obtain the position in the UI layout
+        let layout_strums_id = players[i].layout_strums_id < 0 ? i : players[i].layout_strums_id;
+
+        if (layout_strums_id >= initparams.layout_strums_size) layout_strums_id = -1;
+        if (layout_strums_id < 0 || roundcontext.players[i].type == CHARACTERTYPE.ACTOR) continue;
+
+        if (layout_strums_id == strums_id) return roundcontext.players[i].strums;
+    }
+
+    // unable to guess the correct player's strums
+    return null;
 }
 
 

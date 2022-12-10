@@ -25,7 +25,7 @@ function streakcounter_init(placeholder, combo_height, number_gap, delay) {
 
         last_streak: -1,
 
-        number_height, number_gap, delay,
+        number_height, number_gap,
 
         ignore_combo_location: 1,
 
@@ -210,6 +210,10 @@ function streakcounter_set_offsetcolor_to_default(streakcounter) {
 
 function streakcounter_get_modifier(streakcounter) {
     return drawable_get_modifier(streakcounter.drawable);
+}
+
+function streakcounter_get_drawable(streakcounter) {
+    return streakcounter.drawable;
 }
 
 

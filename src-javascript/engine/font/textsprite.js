@@ -76,6 +76,12 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
         blend_src_alpha: BLEND_DEFAULT,
         blend_dst_alpha: BLEND_DEFAULT,
 
+        background_enabled: 0,
+        background_size: 0,
+        background_offset_x: 0,
+        background_offset_y: 0,
+        background_rgba: [0.0, 0.0, 0.0, 0.5],
+
         id: TEXTSPRITE_IDS++
     };
 
@@ -691,6 +697,30 @@ function textsprite_set_property(textsprite, property_id, value) {
         case FONT_PROP_WORDBREAK:
             textsprite.wordbreak = Math.trunc(value);
             break;
+        case TEXTSPRITE_PROP_BACKGROUND_ENABLED:
+            textsprite.background_enabled = value == 1.0;
+            break;
+        case TEXTSPRITE_PROP_BACKGROUND_SIZE:
+            textsprite.background_size = value;
+            break;
+        case TEXTSPRITE_PROP_BACKGROUND_OFFSET_X:
+            textsprite.background_offset_x = value;
+            break;
+        case TEXTSPRITE_PROP_BACKGROUND_OFFSET_Y:
+            textsprite.background_offset_y = value;
+            break;
+        case TEXTSPRITE_PROP_BACKGROUND_COLOR_R:
+            textsprite.background_rgba[0] = value;
+            break;
+        case TEXTSPRITE_PROP_BACKGROUND_COLOR_G:
+            textsprite.background_rgba[1] = value;
+            break;
+        case TEXTSPRITE_PROP_BACKGROUND_COLOR_B:
+            textsprite.background_rgba[2] = value;
+            break;
+        case TEXTSPRITE_PROP_BACKGROUND_COLOR_A:
+            textsprite.background_rgba[3] = value;
+            break;
     }
 
     // check if the coordinates was modified
@@ -789,6 +819,18 @@ function textsprite_draw_internal(textsprite, pvrctx) {
     textsprite_matrix_calculate(textsprite, pvrctx);
 
     const text = textsprite.text_forced_case ?? textsprite.text;
+
+
+    if (textsprite.background_enabled) {
+        let size = textsprite.background_size * 2;
+        let x = textsprite.last_draw_x - textsprite.background_size + textsprite.background_offset_x;
+        let y = textsprite.last_draw_y - textsprite.background_size + textsprite.background_offset_y;
+        let width = textsprite.last_draw_width + size;
+        let height = textsprite.last_draw_height + size;
+
+        pvr_context_set_vertex_alpha(pvrctx, textsprite.background_rgba[3]);
+        pvr_context_draw_solid_color(pvrctx, textsprite.background_rgba, x, y, width, height);
+    }
 
     if (arraylist_size(textsprite.paragraph_array) < 2) {
         // let the font handle the draw
@@ -959,5 +1001,25 @@ function textsprite_blend_set(textsprite, src_rgb, dst_rgb, src_alpha, dst_alpha
     textsprite.blend_dst_rgb = dst_rgb;
     textsprite.blend_src_alpha = src_alpha;
     textsprite.blend_dst_alpha = dst_alpha;
+}
+
+function textsprite_background_enable(textsprite, enabled) {
+    textsprite.background_enabled = !!enabled;
+}
+
+function textsprite_background_set_size(textsprite, size) {
+    textsprite.background_size = size;
+}
+
+function textsprite_background_set_offets(textsprite, offset_x, offset_y) {
+    if (!Number.isNaN(offset_x)) textsprite.background_offset_x = offset_x;
+    if (!Number.isNaN(offset_y)) textsprite.background_offset_y = offset_y;
+}
+
+function textsprite_background_set_color(textsprite, r, g, b, a) {
+    if (!Number.isNaN(r)) textsprite.background_rgba[0] = r;
+    if (!Number.isNaN(g)) textsprite.background_rgba[1] = g;
+    if (!Number.isNaN(b)) textsprite.background_rgba[2] = b;
+    if (!Number.isNaN(a)) textsprite.background_rgba[3] = a;
 }
 

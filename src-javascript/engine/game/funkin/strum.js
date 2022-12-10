@@ -1517,6 +1517,10 @@ function strum_get_modifier(strum) {
     return drawable_get_modifier(strum.drawable);
 }
 
+function strum_get_drawable(strum) {
+    return strum.drawable;
+}
+
 function strum_get_duration(strum) {
     let max_duration = 0.0;
     for (let i = 0; i < strum.chart_notes_size; i++) {
@@ -1673,11 +1677,11 @@ function strum_internal_calc_state_sick_effect(strum, state) {
     if (strum.scroll_is_vertical) {
         width = strum.dimmen_opposite;
         height = strum.dimmen_marker;
-        if (strum.scroll_is_inverse) state.offset_y += inverse;
+        if (strum.scroll_is_inverse) state.offset_y += inverse + height;
     } else {
         width = dimmen_sick_effect;
         height = strum.dimmen_marker;
-        if (strum.scroll_is_inverse) state.offset_x += inverse;
+        if (strum.scroll_is_inverse) state.offset_x += inverse + width;
     }
 
     strum_internal_calc_state_dimmen(

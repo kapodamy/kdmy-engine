@@ -2246,12 +2246,12 @@ namespace Engine {
             foreach (XmlParserNode item in unparsed_group.Children) {
                 switch (item.TagName) {
                     case "Action":
-                        if (parent_context == null) {
+                        /*if (parent_context == null) {
                             Console.Error.WriteLine(
                                 "[WARN] layout_init(): layout_parse_group() action found in the layout root, " +
                                 "will be imported as root group action."
                             );
-                        }
+                        }*/
                         Layout.ParseGroupAction(item, layout_context.animlist, actions_arraylist);
                         break;
                     case "Sprite":

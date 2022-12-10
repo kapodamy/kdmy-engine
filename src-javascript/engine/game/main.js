@@ -2,7 +2,7 @@
 
 // this file contains all shared data across the game
 const ENGINE_NAME = "kdmy-engine"
-const ENGINE_VERSION = "0.45.8";
+const ENGINE_VERSION = "0.46.2";
 
 
 /**
@@ -22,7 +22,8 @@ var custom_style_from_week = null;
 
 var DEBUG = 0;
 var SETTINGS = { // not implemented
-    input_offset: 0, inverse_strum_scroll: false, penality_on_empty_strum: true, use_funkin_marker_duration: true
+    input_offset: 0, inverse_strum_scroll: false, penality_on_empty_strum: true, use_funkin_marker_duration: true,
+    song_progressbar: true, song_progressbar_remaining: false
 };
 
 

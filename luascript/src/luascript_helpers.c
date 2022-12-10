@@ -385,6 +385,51 @@ Blend luascript_parse_blend(lua_State* L, const char* blend) {
     return luaL_error(L, "invalid blend: %s", blend); 
 }
 
+StrumScriptTarget luascript_parse_strumscripttarget(lua_State* L, const char* strumscripttarget) {
+    if (string_equals(strumscripttarget, "marker"))
+        return STRUM_SCRIPT_TARGET_MARKER;
+    if (string_equals(strumscripttarget, "sick_effect"))
+        return STRUM_SCRIPT_TARGET_SICK_EFFECT;
+    if (string_equals(strumscripttarget, "background"))
+        return STRUM_SCRIPT_TARGET_BACKGROUND;
+    if (string_equals(strumscripttarget, "strum_line"))
+        return STRUM_SCRIPT_TARGET_STRUM_LINE;
+    if (string_equals(strumscripttarget, "all"))
+        return STRUM_SCRIPT_TARGET_ALL;
+
+    return luaL_error(L, "invalid strumscripttarget: %s", strumscripttarget);
+}
+
+StrumScriptOn luascript_parse_strumscripton(lua_State* L, const char* strumscripton) {
+    if (string_equals(strumscripton, "hit_down"))
+        return STRUM_SCRIPT_ON_HIT_DOWN;
+    if (string_equals(strumscripton, "hit_up"))
+        return STRUM_SCRIPT_ON_HIT_UP;
+    if (string_equals(strumscripton, "miss"))
+        return STRUM_SCRIPT_ON_MISS;
+    if (string_equals(strumscripton, "penality"))
+        return STRUM_SCRIPT_ON_PENALITY;
+    if (string_equals(strumscripton, "idle"))
+        return STRUM_SCRIPT_ON_IDLE;
+    if (string_equals(strumscripton, "all"))
+        return STRUM_SCRIPT_ON_ALL;
+
+    return luaL_error(L, "invalid strumscripton: %s", strumscripton);
+}
+
+ScrollDirection luascript_parse_scrolldirection(lua_State* L, const char* scrolldirection) {
+    if (string_equals(scrolldirection, "UPSCROLL"))
+        return STRUM_UPSCROLL;
+    else if (string_equals(scrolldirection, "LEFTSCROLL"))
+        return STRUM_LEFTSCROLL;
+    else if (string_equals(scrolldirection, "DOWNSCROLL"))
+        return STRUM_DOWNSCROLL;
+    else if (string_equals(scrolldirection, "RIGHTSCROLL"))
+        return STRUM_RIGHTSCROLL;
+    
+    return luaL_error(L, "invalid scrolldirection: %s", scrolldirection);
+}
+
 
 const char* luascript_stringify_align(Align align) {
     switch (align) {

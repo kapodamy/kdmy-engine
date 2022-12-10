@@ -246,6 +246,10 @@ function weekscript_notify_buttons(script, player_id, buttons) {
     return _weekscript_call(ModuleLuaScript._luascript_notify_buttons, script, player_id, buttons);
 }
 
+function weekscript_notify_after_strum_scroll(script) {
+    return _weekscript_call(ModuleLuaScript._luascript_notify_after_strum_scroll, script);
+}
+
 function weekscript_get_luascript(script) {
     return script;
 }

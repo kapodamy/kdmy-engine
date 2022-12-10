@@ -102,7 +102,7 @@ You can import various frames from an atlas by using `atlasPath`, `atlasPrefixEn
 ### AnimationMacro Contents
 
 - [AnimationMacro Attributes](#animationmacro-attributes)
-- [Accesible properties](#accesible-properties)
+- [Common properties](#common-properties)
 - [Registers](#registers)
 - [Instructions](#instructions)
   - [Interpolator](#interpolator-instruction)
@@ -151,7 +151,9 @@ Note: this changes the value of `frameIndex` property.
 
 </br>
 
-## Accesible properties
+## Common properties
+
+This list is not complete (missing textsprite and layoutgroup properties), only the most used properties are listed here
 
 - `x` `y`: Relative coordinates of the top-left sprite corner, this is basically an offset. (Defaults to zero)
 - `width` `height`: Draw size.
@@ -173,8 +175,6 @@ Note: this changes the value of `frameIndex` property.
 - `flipX flipY` mirror the texture. (Defaults to zero)
 - `flipCorrection` mirror the texture from the center, keeping the same draw location. (Defaults to one)
 - `zoffset` offset to z index, avoids overwritting the z index value. (Defaults to zero)
-- `groupViewportX` `groupViewportY` layout's group viewport location
-- `groupViewportWidth` `groupViewportHeight` layout's group viewport size
 
 </br>
 
@@ -207,7 +207,7 @@ Denotes a mathematical function that describes the rate at which a numerical val
 - **ease-in-out**  The interpolation starts slowly, speeds up, and then slows down towards the end.
 - **steps** Defines a step function dividing the domain of output values in equidistant steps. This subclass of step functions are sometimes also called *staircase functions*.
 
-`property` Sprite property to animate (see [Accesible properties](#accesible-properties)).
+`property` Sprite property to animate (the most used are listed in [Common properties](#common-properties)).
 </br>
 
 `start` Start value. (Optional)

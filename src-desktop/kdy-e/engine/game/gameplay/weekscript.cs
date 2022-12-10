@@ -177,6 +177,10 @@ namespace Engine.Game.Gameplay {
             this.luascript.notify_buttons(player_id, (uint)buttons);
         }
 
+        public void NotifyAfterStrumScroll() {
+            this.luascript.notify_after_strum_scroll();
+        }
+
         public Luascript GetLuaScript() {
             return this.luascript;
         }

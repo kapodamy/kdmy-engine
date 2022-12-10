@@ -24,12 +24,13 @@
     <script>
         function disassemble_c_signature(str) {
 
-            const RX = /(static|const|inline|)/g;
+            const RX = /((static\s)|(const)|(inline))/g;
             const RX2 = /(\t|\r| )\s/g;
 
             function parse_type(type) {
                 switch (type) {
                     case "char*":
+                    case "const char*":
                         type = "string";
                         break;
                     case "char":
@@ -49,6 +50,9 @@
                     case "PVRFlag":
                     case "AnimInterpolator":
                     case "Blend":
+                    case "StrumScriptOn":
+                    case "StrumPressState":
+                    case "ScrollDirection":
                         type = "number";
                         break;
                     case "bool":
@@ -167,7 +171,7 @@
                 let lua_idx = i + 1;
                 switch (args[i].c_type) {
                     case "char*":
-                        //args[i].c_type = "const " + args[i].c_type;
+                        args[i].c_type = "const " + args[i].c_type;
                         lua_call = `luaL_optstring(L, ${lua_idx}, NULL)`;
                         break;
                     case "bool":
@@ -178,6 +182,12 @@
                             lua_call = `(int32_t)luaL_optinteger(L, ${lua_idx}, 0)`;
                         else
                             lua_call = `(int32_t)luaL_checkinteger(L, ${lua_idx})`;
+                        break;
+                    case "uint32_t":
+                        if (args[i].optional)
+                            lua_call = `(uint32_t)luaL_optinteger(L, ${lua_idx}, 0)`;
+                        else
+                            lua_call = `(uint32_t)luaL_checkinteger(L, ${lua_idx})`;
                         break;
                     case "int64_t":
                         if (args[i].optional)
@@ -214,6 +224,15 @@
                         break;
                     case "Blend":
                         lua_call = `luascript_parse_blend(L, luaL_optstring(L, ${lua_idx}, NULL))`;
+                        break;
+                    case "StrumScriptTarget":
+                        lua_call = `luascript_parse_strumscripttarget(L, luaL_optstring(L, ${lua_idx}, NULL))`;
+                        break;
+                    case "StrumScriptOn":
+                        lua_call = `luascript_parse_strumscripton(L, luaL_optstring(L, ${lua_idx}, NULL))`;
+                        break;
+                    case "ScrollDirection":
+                        lua_call = `luascript_parse_scrolldirection(L, luaL_optstring(L, ${lua_idx}, NULL))`;
                         break;
                     default:
                         if (args[i].c_type.endsWith("*")) {
@@ -313,7 +332,7 @@ L_compute_ret:
             imports_fns += `    return luascript_userdata_tostring(L, ${reg_name});\r\n`;
             imports_fns += `}\r\n\r\n`;
 
-            imports_fns += `inline void script_${prefix}_register(lua_State* L) {\r\n`;
+            imports_fns += `void script_${prefix}_register(lua_State* L) {\r\n`;
             imports_fns += `    luascript_register(L, ${reg_name}, `;
             imports_fns += `script_${prefix}_gc, script_${prefix}_tostring,`;
             imports_fns += ` ${reg_name}_FUNCTIONS);\r\n`;

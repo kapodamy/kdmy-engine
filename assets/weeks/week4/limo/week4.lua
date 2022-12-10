@@ -14,7 +14,7 @@ incrementalStageZoomMILF = 0
 function f_beforeready()
     fastCarCanDrive = true
     limo = week_get_stage_layout()
-    cameraUI = ui_get_camera()
+    cameraUI = week_ui_get_camera()
     cameraStage = limo:get_camera_helper()
     local track_name, track_difficult, track_index = week_get_current_track_info()
     print("track: " .. track_name)

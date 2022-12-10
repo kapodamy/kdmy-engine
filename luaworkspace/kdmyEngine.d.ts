@@ -9,42 +9,6 @@ declare global {
     const ENGINE_NAME: string;
     const ENGINE_VERSION: string;
 
-    //
-    // Gamepad button constants (use GamepadButtons enum instead)
-    // used inside of "f_buttons()" and "f_pause_optionselected" functions
-    //
-    const GAMEPAD_A: number;
-    const GAMEPAD_B: number;
-    const GAMEPAD_X: number;
-    const GAMEPAD_Y: number;
-    const GAMEPAD_DPAD_UP: number;
-    const GAMEPAD_DPAD_DOWN: number;
-    const GAMEPAD_DPAD_RIGHT: number;
-    const GAMEPAD_DPAD_LEFT: number;
-    const GAMEPAD_START: number;
-    const GAMEPAD_SELECT: number;
-    const GAMEPAD_TRIGGER_LEFT: number;
-    const GAMEPAD_TRIGGER_RIGHT: number;
-    const GAMEPAD_BUMPER_LEFT: number;
-    const GAMEPAD_BUMPER_RIGHT: number;
-    const GAMEPAD_APAD_UP: number;
-    const GAMEPAD_APAD_DOWN: number;
-    const GAMEPAD_APAD_RIGHT: number;
-    const GAMEPAD_APAD_LEFT: number;
-    const GAMEPAD_DPAD2_UP: number;
-    const GAMEPAD_DPAD2_DOWN: number;
-    const GAMEPAD_DPAD2_RIGHT: number;
-    const GAMEPAD_DPAD2_LEFT: number;
-    const GAMEPAD_DPAD3_UP: number;
-    const GAMEPAD_DPAD3_DOWN: number;
-    const GAMEPAD_DPAD3_RIGHT: number;
-    const GAMEPAD_DPAD3_LEFT: number;
-    const GAMEPAD_DPAD4_UP: number;
-    const GAMEPAD_DPAD4_DOWN: number;
-    const GAMEPAD_DPAD4_RIGHT: number;
-    const GAMEPAD_DPAD4_LEFT: number;
-    const GAMEPAD_BACK: number;
-
     /**
      * Enum version of gamepad buttons, this unifies all GAMEPAD_*** global variables here. Note:
      * In lua values will appear as numbers. Example: "GAMEPAD_DPAD_UP" is replaced by "16" or "0x10"
@@ -152,11 +116,11 @@ declare global {
         LOOSE = "loose"
     }
     const enum CharacterActionType {
-        miss = "miss",
-        extra = "extra",
-        idle = "idle",
-        sing = "sing",
-        none = "none"
+        MISS = "miss",
+        EXTRA = "extra",
+        IDLE = "idle",
+        SING = "sing",
+        NONE = "none"
     }
     const enum StepsMethod {
         BOTH = "both",
@@ -182,9 +146,46 @@ declare global {
         ONE_MINUS_CONSTANT_ALPHA = "ONE_MINUS_CONSTANT_ALPHA",
         SRC_ALPHA_SATURATE = "SRC_ALPHA_SATURATE"
     }
+    const enum ScrollDirection {
+        UPSCROLL = "UPSCROLL",
+        LEFTSCROLL = "LEFTSCROLL",
+        DOWNSCROLL = "DOWNSCROLL",
+        RIGHTSCROLL = "RIGHTSCROLL"
+    }
+    const enum StrumScriptTarget {
+        MARKER = "marker",
+        SICK_EFFECT = "sick_effect",
+        BACKGROUND = "background",
+        STRUM_LINE = "strum_line",
+        ALL = "all"
+    }
+    const enum StrumScriptOn {
+        ON_HIT_DOWN = "on_hit_down",
+        ON_HIT_UP = "on_hit_up",
+        ON_MISS = "on_miss",
+        ON_PENALITY = "on_penality",
+        ON_IDLE = "on_idle",
+        ON_ALL = "on_all"
+    }
+    const enum StrumPressState {
+        NONE = "none",
+        HIT = "hit",
+        HIT_SUSTAIN = "hit_sustain",
+        PENALTY_NOTE = "penalty_note",
+        PENALTY_HIT = "penalty_hit"
+    }
+    const enum Ranking {
+        NONE = 0,
+        SICK = 1,
+        GOOD = 2,
+        BAD = 3,
+        SHIT = 4,
+        MISS = 5,
+        PENALITY = 6
+    }
 
     //
-    // Helpers
+    // Global sub-metatables (classes in typescript/javascript)
     //
     interface LayoutPlaceholderInfo {
         group_id: number;
@@ -203,6 +204,25 @@ declare global {
         parallax_z: number;
 
         static_camera: boolean;
+    }
+    interface AnimListItem {
+        readonly name: string;
+        readonly is_frame_animation: boolean;
+        readonly is_item_macro_animation: boolean;
+        readonly is_item_tweenlerp_animation: boolean;
+    }
+    interface AtlasEntry {
+        readonly name: string;
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+        readonly frame_x: number;
+        readonly frame_y: number;
+        readonly frame_width: number;
+        readonly frame_height: number;
+        readonly pivot_x: number;
+        readonly pivot_y: number;
     }
 
     //
@@ -325,7 +345,10 @@ declare global {
         set_wordbreak(wordbreak: FontWordBreak): void;
         set_shader(textsprite: TextSprite, psshader: PSShader): void;
         get_shader(textsprite: TextSprite): PSShader;
-
+        background_enable(enabled: boolean): void;
+        background_set_size(size: number): void;
+        background_set_offets(offset_x: number, offset_y: number): void;
+        background_set_color(r: number, g: number, b: number, a: number): void;
     }
     interface SoundPlayer {
         play(): void;
@@ -506,19 +529,6 @@ declare global {
         add_steps(id: number, start: number, end: number, duration: number, steps_count: number, steps_method: StepsMethod): number;
         add_interpolator(id: number, start: number, end: number, duration: number, type: AnimInterpolator): number;
     }
-    interface AtlasEntry {
-        readonly name: string;
-        readonly x: number;
-        readonly y: number;
-        readonly width: number;
-        readonly height: number;
-        readonly frame_x: number;
-        readonly frame_y: number;
-        readonly frame_width: number;
-        readonly frame_height: number;
-        readonly pivot_x: number;
-        readonly pivot_y: number;
-    }
     interface Atlas {
         destroy(): void;
         get_index_of(name: string): number;
@@ -527,12 +537,6 @@ declare global {
         get_glyph_fps(): number;
         get_texture_resolution(): LuaMultiReturn<[number, number]>;
         utils_is_known_extension(src: string): boolean;
-    }
-    interface AnimListItem {
-        readonly name: string;
-        readonly is_frame_animation: boolean;
-        readonly is_item_macro_animation: boolean;
-        readonly is_item_tweenlerp_animation: boolean;
     }
     interface AnimList {
         destroy(): void;
@@ -554,6 +558,236 @@ declare global {
         blend_enable(enabled: boolean): void;
         blend_set(src_rgb: Blend, dst_rgb: Blend, src_alpha: Blend, dst_alpha: Blend): void;
 
+    }
+    interface Strum {
+        update_draw_location(x: number, y: number): void;
+        set_scroll_speed(speed: number): void;
+        set_scroll_direction(direction: ScrollDirection): void;
+        set_marker_duration_multiplier(multipler: number): void;
+        reset(scroll_speed: number, state_name: string): void;
+        force_key_release(): void;
+        get_press_state_changes(): number;
+        get_press_state(): StrumPressState;
+        get_name(): string;
+        get_marker_duration(): number;
+        set_player_id(player_id: number): void;
+        enable_background(enable: boolean): void;
+        enable_sick_effect(enable: boolean): void;
+        state_add(mdlhldr_mrkr: ModelHolder, mdlhldr_sck_ffct: ModelHolder, mdlhldr_bckgrnd: ModelHolder, state_name: string): void;
+        state_toggle(state_name: string): number;
+        state_toggle_notes(state_name: string): number;
+        state_toggle_sick_effect(state_name: string): boolean;
+        state_toggle_marker(state_name: string): number;
+        state_toggle_background(state_name: string): boolean;
+        set_alpha_background(alpha: number): number;
+        set_alpha_sick_effect(alpha: number): number;
+        set_keep_aspect_ratio_background(enable: boolean): void;
+        draw_sick_effect_apart(enable: boolean): void;
+        set_extra_animation(strum_script_target: StrumScriptTarget, strum_script_on: StrumScriptOn, undo: boolean, animsprite: AnimSprite): void;
+        set_extra_animation_continuous(strum_script_target: StrumScriptTarget, animsprite: AnimSprite): void;
+        set_notesmaker_tweenlerp(tweenlerp: TweenLerp, apply_to_marker_too: boolean): void;
+        set_sickeffect_size_ratio(size_ratio: number): void;
+        set_alpha(alpha: number): void;
+        set_visible(visible: boolean): void;
+        set_draw_offset(offset_milliseconds: number): void;
+        get_modifier(): Modifier;
+        get_drawable(): Drawable;
+        get_duration(): number;
+        animation_restart(): void;
+        animation_end(): void;
+    }
+    interface Strums {
+        get_drawable(): Drawable;
+        set_scroll_speed(speed: number): void;
+        set_scroll_direction(direction: ScrollDirection): void;
+        set_marker_duration_multiplier(multipler: number): void;
+        reset(scroll_speed: number, state_name: string): void;
+        force_key_release(): void;
+        set_alpha(alpha: number): number;
+        enable_background(enable: boolean): void;
+        set_keep_aspect_ratio_background(enable: boolean): void;
+        set_alpha_background(alpha: number): void;
+        set_alpha_sick_effect(alpha: number): void;
+        set_draw_offset(offset_milliseconds: number): void;
+        state_add(mdlhldr_mrkr: ModelHolder, mdlhldr_sck_ffct: ModelHolder, mdlhldr_bckgrnd: ModelHolder, state_name: string): void;
+        state_toggle(state_name: string): number;
+        state_toggle_notes(state_name: string): number;
+        state_toggle_marker_and_sick_effect(state_name: string): void;
+        get_lines_count(): number;
+        get_strum_line(index: number): Strum;
+        enable_post_sick_effect_draw(enable: boolean): void;
+        animation_set(animsprite: AnimSprite): void;
+        animation_restart(): void;
+        animation_end(): void;
+    }
+    interface Conductor {
+        destroy(): void;
+        poll_reset(): void;
+        set_character(character: Character): void;
+        use_strum_line(strum: Strum): void;
+        use_strums(strums: Strums): void;
+        disable_strum_line(strum: Strum, should_disable: boolean): boolean;
+        remove_strum(strum: Strum): boolean;
+        clear_mapping(): void;
+        map_strum_to_player_sing_add(strum: Strum, sing_direction_name: string): void;
+        map_strum_to_player_extra_add(strum: Strum, extra_animation_name: string): void;
+        map_strum_to_player_sing_remove(strum: Strum, sing_direction_name: string): void;
+        map_strum_to_player_extra_remove(strum: Strum, extra_animation_name: string): void;
+        map_automatically(should_map_extras: boolean): number;
+        poll(): void;
+        disable(disable: boolean): void;
+        play_idle(): void;
+        play_hey(): void;
+        get_character(): Character;
+
+    }
+    interface Countdown {
+        set_bpm(bpm: number): void;
+        get_drawable(): Drawable;
+        ready(): boolean;
+        start(): boolean;
+        has_ended(): boolean;
+    }
+    interface PlayerStats {
+        add_hit(multiplier: number, base_note_duration: number, hit_time_difference: number): Ranking;
+        add_sustain(quarters: number, is_released: boolean): void;
+        add_sustain_delayed_hit(multiplier: number, hit_time_difference: number): Ranking;
+        add_penality(on_empty_strum: boolean): void;
+        add_miss(multiplier: number): void;
+        reset(): void;
+        reset_notes_per_seconds(): void;
+        add_extra_health(multiplier: number): void;
+        enable_penality_on_empty_strum(enable: boolean): void;
+        get_maximum_health(): number;
+        get_health(): number;
+        get_accuracy(): number;
+        get_last_accuracy(): number;
+        get_last_ranking(): Ranking;
+        get_last_difference(): number;
+        get_combo_streak(): number;
+        get_highest_combo_streak(): number;
+        get_combo_breaks(): number;
+        get_notes_per_seconds(): number;
+        get_notes_per_seconds_highest(): number;
+        get_iterations(): number;
+        get_score(): number;
+        get_hits(): number;
+        get_misses(): number;
+        get_penalties(): number;
+        get_shits(): number;
+        get_bads(): number;
+        get_goods(): number;
+        get_sicks(): number;
+        set_health(health: number): void;
+        add_health(health: number, die_if_negative: boolean): number;
+        raise(with_full_health: boolean): void;
+        kill(): void;
+        kill_if_negative_health(): void;
+        is_dead(): boolean;
+
+    }
+    interface StreakCounter {
+        reset(): void;
+        hide_combo_sprite(hide: boolean): void;
+        set_combo_draw_location(x: number, y: number): void;
+        state_add(combo_modelholder: ModelHolder, number_modelholder: ModelHolder, state_name: string): number;
+        state_toggle(state_name: string): boolean;
+        set_alpha(alpha: number): void;
+        get_drawable(): Drawable;
+        animation_set(animsprite: AnimSprite): void;
+        animation_restart(): void;
+        animation_end(): void;
+    }
+    interface RoundStats {
+        hide(hide: boolean): void;
+        hide_nps(hide: boolean): void;
+        set_draw_y(y: number): void;
+        reset(): void;
+        get_drawable(): Drawable;
+        tweenlerp_set_on_beat(tweenlerp: TweenLerp, rollback_beats: number, beat_duration: number): void;
+        tweenlerp_set_on_hit(tweenlerp: TweenLerp, rollback_beats: number, beat_duration: number): void;
+        tweenlerp_set_on_miss(tweenlerp: TweenLerp, rollback_beats: number, beat_duration: number): void;
+        tweenlerp_set_bpm(beats_per_minute: number): void;
+    }
+    interface RankingCounter {
+        add_state(modelholder: ModelHolder, state_name: string): number;
+        toggle_state(state_name: string): void;
+        reset(): void;
+        hide_accuracy(hide: boolean): void;
+        use_percent_instead(use_accuracy_percenter: boolean): void;
+        set_default_ranking_animation2(animsprite: AnimSprite): void;
+        set_default_ranking_text_animation2(animsprite: AnimSprite): void;
+        set_alpha(alpha: number): void;
+        animation_set(animsprite: AnimSprite): void;
+        animation_restart(): void;
+        animation_end(): void;
+    }
+    interface MissNoteFX {
+        play_effect(): void;
+    }
+    interface HealthBar {
+        enable_extra_length(extra_enabled: boolean): void;
+        enable_vertical(enable_vertical: boolean): void;
+        state_opponent_add(icon_mdlhldr: ModelHolder, bar_mdlhldr: ModelHolder, state_name: string): number;
+        state_opponent_add2(icon_mdlhldr: ModelHolder, bar_color_rgb8: number, state_name: string): number;
+        state_player_add(icon_mdlhldr: ModelHolder, bar_mdlhldr: ModelHolder, state_name: string): number;
+        state_player_add2(icon_modelholder: ModelHolder, bar_color_rgb8: number, state_name: string): number;
+        state_background_add(modelholder: ModelHolder, state_name: string): boolean;
+        state_background_add2(color_rgb8: number, animsprite: AnimSprite, state_name: string): boolean;
+        load_warnings(modelholder: ModelHolder, use_alt_icons: boolean): boolean;
+        set_opponent_bar_color(color_rgb8: number): void;
+        set_player_bar_color(color_rgb8: number): void;
+        state_toggle(state_name: string): number;
+        state_toggle_background(state_name: string): boolean;
+        state_toggle_player(state_name: string): boolean;
+        state_toggle_opponent(state_name: string): boolean;
+        set_bump_animation_opponent(animsprite: AnimSprite): void;
+        set_bump_animation_player(animsprite: AnimSprite): void;
+        bump_enable(enable_bump: boolean): void;
+        set_bpm(beats_per_minute: number): void;
+        set_alpha(alpha: number): void;
+        set_visible(visible: boolean): void;
+        get_drawable(): Drawable;
+        animation_set(animsprite: AnimSprite): void;
+        animation_restart(): void;
+        animation_end(): void;
+        disable_progress_animation(disable: boolean): void;
+        set_health_position(max_health: number, health: number, opponent_recover: boolean): number;
+        set_health_position2(percent: number): void;
+        disable_icon_overlap(disable: boolean): void;
+        disable_warnings(disable: boolean): void;
+        enable_low_health_flash_warning(enable: boolean): void;
+        hide_warnings(): void;
+        show_drain_warning(use_fast_drain: boolean): void;
+        show_locked_warning(): void;
+    }
+    interface HealthWatcher {
+        add_opponent(playerstats: PlayerStats, can_recover: boolean, can_die: boolean): boolean;
+        add_player(playerstats: PlayerStats, can_recover: boolean, can_die: boolean): boolean;
+        has_deads(in_players_or_opponents: boolean): number;
+        enable_dead(playerstats: PlayerStats, can_die: boolean): boolean;
+        enable_recover(playerstats: PlayerStats, can_recover: boolean): boolean;
+        clear(): void;
+        balance(healthbar: HealthBar): void;
+        reset_opponents(): void;
+    }
+    interface SongProgressbar {
+        set_songplayer(songplayer: SongPlayer): void;
+        set_duration(duration: number): void;
+        get_drawable(): void;
+        set_visible(visible: boolean): void;
+        set_background_color(r: number, g: number, b: number, a: number): void;
+        set_bar_back_color(r: number, g: number, b: number, a: number): void;
+        set_bar_progress_color(r: number, g: number, b: number, a: number): void;
+        set_text_color(r: number, g: number, b: number, a: number): void;
+        hide_time(hidden: boolean): void;
+        show_elapsed(elapsed_or_remain_time: boolean): void;
+        manual_update_enable(enabled: boolean): void;
+        manual_set_text(text: string): void;
+        manual_set_position(elapsed: number, duration: number, should_update_time_text: boolean): number;
+        animation_set(animsprite: AnimSprite): void;
+        animation_restart(): void;
+        animation_end(): void;
     }
 
     //
@@ -578,33 +812,40 @@ declare global {
         init(): AnimList;
 
     } const AnimList: AnimListConstructor;
+    interface ConductorConstructor {
+        init(): Conductor;
+
+    } const Conductor: ConductorConstructor;
 
 
 
     //
-    // Global functions (commented functions are not implemented) (gameplay only)
+    // Global functions
     //
-    function unlockdirective_create(name: string, completed_round: boolean, completed_week: boolean, value: number): void;
-    function unlockdirective_remove(name: string, completed_round: boolean, completed_week: boolean): void;
-    function unlockdirective_get(name: boolean): number | null;
+    function week_ui_set_visibility(visible: boolean): void;
+    function week_ui_get_layout(): Layout;
+    function week_ui_get_camera(): Camera;
     function week_set_halt(halt: boolean): void;
-    function ui_set_visibility(visible: boolean): void;
-    function ui_get_layout(): Layout;
+    function week_ui_get_strums_count(): number;
+    function week_ui_get_strums(strums_id: number): Strums;
+    function week_ui_get_roundstats(): RoundStats;
+    function week_ui_get_rankingcounter(): RankingCounter;
+    function week_ui_get_streakcounter(): StreakCounter;
+    function week_ui_get_trackinfo(): TextSprite;
+    function week_ui_get_songprogressbar(): SongProgressbar;
+    function week_ui_get_countdown(): Countdown;
+    function week_ui_get_healthbar(): HealthBar;
     function week_get_stage_layout(): Layout;
-    function ui_get_camera(): Camera;
-    function ui_get_strums_count(): number;
-    //function ui_get_strums(strums_id:number): Strums;
-    //function week_ui_get_roundstats(): Roundstats;
-    //function week_ui_get_rankingcounter(): Rankingcounter;
-    //function week_ui_get_streakcounter(): Streakcounter;
-    function ui_get_trackinfo(): TextSprite;
-    //function ui_get_songprogressbar(): SongProgressbar;
+    function week_get_healthwatcher(): HealthWatcher;
+    function week_get_missnotefx(): MissNoteFX;
     function week_update_bpm(bpm: number): void;
     function week_update_speed(speed: number): void;
     function week_get_messagebox(): Messagebox;
     function week_get_girlfriend(): Character;
     function week_get_character_count(): number;
-    function week_get_character(index: number): Character;
+    function week_get_conductor(character_index: number): Conductor;
+    function week_get_character(character_index: number): Character;
+    function week_get_playerstats(character_index: number): PlayerStats;
     function week_get_songplayer(): SongPlayer;
     function week_get_current_chart_info(): LuaMultiReturn<[number, number]>;
     function week_get_current_track_info(): LuaMultiReturn<[string, string, number]>;
@@ -615,6 +856,12 @@ declare global {
     function week_end(round_or_week: boolean, loose_or_win: boolean): void;
     function week_get_dialogue(): void;
     function week_set_ui_shader(psshader: PSShader): void;
+    function week_rebuild_ui(): void;
+    function week_unlockdirective_create(name: string, completed_round: boolean, completed_week: boolean, value: number): void;
+    function week_unlockdirective_get(name: string): number | null;
+    function week_unlockdirective_remove(name: string, completed_round: boolean, completed_week: boolean): void;
+
+
 
 
     //
@@ -645,13 +892,15 @@ declare global {
     //
     function fs_readfile(path: string): string;
 
-    // constructors
-    function engine_create_shader(vertex_sourcecode: string, fragment_sourcecode: string): PSShader;
-
     //
     // Modding UI (engine menus only)
     //
+    function modding_set_ui_visibility(visible: boolean): void;
     function modding_get_layout(): Layout;
     function modding_exit(): void;
+    function modding_set_halt(halt: boolean): void;
+    function modding_unlockdirective_create(name: string, value: number): void;
+    function modding_unlockdirective_remove(name: string): void;
+    function modding_unlockdirective_get(name: string): number | null;
 
 }

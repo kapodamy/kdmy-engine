@@ -10,7 +10,7 @@ function f_weekinit(freeplay_index)
     end
     local ____, difficult = week_get_current_track_info()
     if difficult == "HARD" then
-        unlockdirective_create("WEEK3_HARD", true, false, 1)
+        week_unlockdirective_create("WEEK3_HARD", true, false, 1)
     end
 end
 function f_beforeready()

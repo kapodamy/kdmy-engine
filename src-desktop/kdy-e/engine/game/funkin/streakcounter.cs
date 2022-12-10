@@ -21,7 +21,6 @@ namespace Engine.Game {
         private int last_streak;
         private float number_height;
         private float number_gap;
-        private float delay;
         private bool ignore_combo_location;
         private float combo_width;
         private float combo_height;
@@ -51,7 +50,7 @@ namespace Engine.Game {
 
             this.last_streak = -1;
 
-            this.number_height = number_height; this.number_gap = number_gap; this.delay = delay;
+            this.number_height = number_height; this.number_gap = number_gap;
 
             this.ignore_combo_location = true;
 
@@ -237,6 +236,9 @@ namespace Engine.Game {
             return this.drawable.GetModifier();
         }
 
+        public Drawable GetDrawable() {
+            return this.drawable;
+        }
 
         public void SetNumberAnimation(AnimList animlist) {
             if (animlist == null) return;

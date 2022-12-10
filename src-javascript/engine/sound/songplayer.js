@@ -317,7 +317,7 @@ async function songplayer_internal_init_player(path) {
 
             player.oncanplay = function () {
                 player.oncanplay = player.onerror = null;
-                player.currentTime = 0;
+                if (!IO_CHROMIUM_DETECTED) player.currentTime = 0;
                 player.onerror = function () {
                     console.error(
                         `playback error: code=${player.error.code} message=${player.error.message}`

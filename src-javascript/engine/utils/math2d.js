@@ -233,14 +233,13 @@ function math2d_timestamp_to_string(timestamp) {
     let stringbuilder = stringbuilder_init(9);
 
     if (h > 0.0)
-        stringbuilder_add_format(TIME_HOURS, Math.trunc(h), Math.trunc(m), Math.trunc(s));
+        stringbuilder_add_format(stringbuilder, TIME_HOURS, Math.trunc(h), Math.trunc(m), Math.trunc(s));
     else if (m > 0.0)
-        stringbuilder_add_format(TIME_MINUTES, Math.trunc(m), Math.trunc(s));
+        stringbuilder_add_format(stringbuilder, TIME_MINUTES, Math.trunc(m), Math.trunc(s));
     else
-        stringbuilder_add_format(TIME_SECONDS, s);
+        stringbuilder_add_format(stringbuilder, TIME_SECONDS, s);
 
-    let str = stringbuilder.GetCopyKDY();
-    stringbuilder_destroy();
+    let str = stringbuilder_finalize(stringbuilder);
 
     return str;
 }

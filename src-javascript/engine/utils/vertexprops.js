@@ -66,7 +66,16 @@ const LAYOUT_PROP_GROUP_VIEWPORT_Y = 56;
 const LAYOUT_PROP_GROUP_VIEWPORT_WIDTH = 57;
 const LAYOUT_PROP_GROUP_VIEWPORT_HEIGHT = 58;
 
-const TEXTSPRITE_PROP_STRING = 59;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
+const TEXTSPRITE_PROP_BACKGROUND_ENABLED = 59;
+const TEXTSPRITE_PROP_BACKGROUND_SIZE = 60;
+const TEXTSPRITE_PROP_BACKGROUND_OFFSET_X = 61;
+const TEXTSPRITE_PROP_BACKGROUND_OFFSET_Y = 62;
+const TEXTSPRITE_PROP_BACKGROUND_COLOR_R = 63;
+const TEXTSPRITE_PROP_BACKGROUND_COLOR_G = 64;
+const TEXTSPRITE_PROP_BACKGROUND_COLOR_B = 65;
+const TEXTSPRITE_PROP_BACKGROUND_COLOR_A = 66;
+
+const TEXTSPRITE_PROP_STRING = 67;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
 
 
 const CORNER_TOPLEFT = 0;
@@ -261,6 +270,22 @@ function vertexprops_parse_textsprite_property2(property) {
             return TEXTSPRITE_PROP_STRING;
         case "wordbreak":
             return FONT_PROP_WORDBREAK;
+        case "backgroundenabled":
+            return TEXTSPRITE_PROP_BACKGROUND_ENABLED;
+        case "backgroundsize":
+            return TEXTSPRITE_PROP_BACKGROUND_SIZE;
+        case "backgroundoffsetx":
+            return TEXTSPRITE_PROP_BACKGROUND_OFFSET_X;
+        case "backgroundoffsety":
+            return TEXTSPRITE_PROP_BACKGROUND_OFFSET_Y;
+        case "backgroundcolorr":
+            return TEXTSPRITE_PROP_BACKGROUND_COLOR_R;
+        case "backgroundcolorg":
+            return TEXTSPRITE_PROP_BACKGROUND_COLOR_G;
+        case "backgroundcolorb":
+            return TEXTSPRITE_PROP_BACKGROUND_COLOR_B;
+        case "backgroundcolora":
+            return TEXTSPRITE_PROP_BACKGROUND_COLOR_A;
     }
 
     return -1;
@@ -348,7 +373,7 @@ function vertexprops_parse_layout_property(node, name, warn) {
 
 function vertexprops_parse_layout_property2(property) {
     property = property.toLowerCase();// in C dispose this variable!!!
-    
+
     switch (property) {
         case "groupviewportx":
             return LAYOUT_PROP_GROUP_VIEWPORT_X;
@@ -623,7 +648,7 @@ function vertexprops_is_property_enumerable(property_id) {
         case TEXTSPRITE_PROP_ALIGN_PARAGRAPH:
         case TEXTSPRITE_PROP_FORCE_CASE:
         case TEXTSPRITE_PROP_BORDER_ENABLE:
-        case TEXTSPRITE_PROP_BORDER_SIZE:
+        case TEXTSPRITE_PROP_BACKGROUND_ENABLED:
             return 1;
     }
 
@@ -640,6 +665,7 @@ function vertexprops_is_property_boolean(property_id) {
         case SPRITE_PROP_SCALE_SIZE:
         case SPRITE_PROP_SCALE_TRANSLATION:
         case TEXTSPRITE_PROP_BORDER_ENABLE:
+        case TEXTSPRITE_PROP_BACKGROUND_ENABLED:
             return 1;
         default:
             return 0;
