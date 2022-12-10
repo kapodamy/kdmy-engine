@@ -4,7 +4,7 @@ using Engine.Sound;
 namespace Engine.Externals.LuaScriptInterop {
 
     public static class ExportsSongPlayer {
-        private const string SONGPLAYER = "SongPlayer";
+        public const string SONGPLAYER = "SongPlayer";
 
         static int script_songplayer_changesong(LuaState L) {
             SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);

@@ -68,7 +68,7 @@ namespace Engine.Game.Gameplay {
         public string camera_name_opponent;
         public string camera_name_player;
 
-        public bool layout_rollback;// needs lua api
+        public bool layout_rollback;
         public bool show_credits;
         public bool no_healthbar;
     }
@@ -105,6 +105,21 @@ namespace Engine.Game.Gameplay {
         public float trackinfo_fontsize;
         public uint trackinfo_fontcolor;
         public float countdown_height;
+        public float songprogressbar_x;
+        public float songprogressbar_y;
+        public float songprogressbar_z;
+        public float songprogressbar_width;
+        public float songprogressbar_height;
+        public Align songprogressbar_align;
+        public float songprogressbar_bordersize;
+        public float songprogressbar_fontsize;
+        public float songprogressbar_fontbordersize;
+        public bool songprogressbar_isvertical;
+        public bool songprogressbar_showtime;
+        public uint songprogressbar_colorrgba8_text;
+        public uint songprogressbar_colorrgba8_background;
+        public uint songprogressbar_colorrgba8_barback;
+        public uint songprogressbar_colorrgba8_barfront;
     }
 
     public class InitParams {
@@ -180,6 +195,7 @@ namespace Engine.Game.Gameplay {
         public MessageBox messagebox;
         public Camera ui_camera;
         public MissNoteFX missnotefx;
+        public SongProgressbar songprogressbar;
 
         public Layout layout;
 
@@ -292,6 +308,7 @@ namespace Engine.Game.Gameplay {
             if (roundcontext.ui_camera != null) roundcontext.ui_camera.Destroy();
             if (roundcontext.missnotefx != null) roundcontext.missnotefx.Destroy();
             if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
+            if (roundcontext.songprogressbar != null) roundcontext.songprogressbar.Destroy();
 
             //free(roundcontext.events);
             //free(roundcontext.healthbarparams.player_icon_model);
@@ -386,6 +403,21 @@ namespace Engine.Game.Gameplay {
                     trackinfo_fontcolor = 0x00,
                     trackinfo_fontsize = 0x00,
                     countdown_height = 0f,
+                    songprogressbar_x = 0f,
+                    songprogressbar_y = 0f,
+                    songprogressbar_z = 0f,
+                    songprogressbar_width = 0f,
+                    songprogressbar_height = 0f,
+                    songprogressbar_align = Align.NONE,
+                    songprogressbar_bordersize = 0f,
+                    songprogressbar_fontsize = 0f,
+                    songprogressbar_fontbordersize = 0f,
+                    songprogressbar_isvertical = false,
+                    songprogressbar_showtime = false,
+                    songprogressbar_colorrgba8_text = 0x00,
+                    songprogressbar_colorrgba8_background = 0x00,
+                    songprogressbar_colorrgba8_barback = 0x00,
+                    songprogressbar_colorrgba8_barfront = 0x00
                 }
             };
 
@@ -407,6 +439,7 @@ namespace Engine.Game.Gameplay {
                 messagebox = null,
                 ui_camera = new Camera(null, 640f, 480f),
                 missnotefx = null,
+                songprogressbar = null,
                 screen_background = Sprite.InitFromRGB8(0x0),
 
                 has_directive_changes = false,
@@ -575,6 +608,12 @@ namespace Engine.Game.Gameplay {
                 if (roundcontext.healthbar != null) {
                     roundcontext.healthbar.SetHealthPosition2(0.5f);
                     roundcontext.healthbar.HideWarnings();
+                }
+
+                // update songprogressbar
+                if (roundcontext.songprogressbar != null) {
+                    roundcontext.songprogressbar.SetSongplayer(roundcontext.songplayer);
+                    roundcontext.songprogressbar.SetDuration(roundcontext.round_duration);
                 }
 
                 // check if necessary show dialogue if an dialog text is provided
@@ -840,6 +879,27 @@ namespace Engine.Game.Gameplay {
             ui.roundstats_size = (float)((double)layout.GetAttachedValue("ui_roundstats_fontSize", AttachedValueType.FLOAT, 12.0));
             ui.roundstats_fontcolor = (uint)layout.GetAttachedValue("ui_roundstats_fontColor", AttachedValueType.HEX, 0xFFFFFFU);
 
+            placeholder = layout.GetPlaceholder("ui_songprogressbar");
+            if (placeholder == null) {
+                Console.Error.WriteLine("[ERROR] missing layout ui_songprogressbar placeholder");
+                placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
+            }
+            ui.songprogressbar_bordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_borderSize", AttachedValueType.FLOAT, 2.0);
+            ui.songprogressbar_fontsize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontSize", AttachedValueType.FLOAT, 11.0);
+            ui.songprogressbar_fontbordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontBorderSize", AttachedValueType.FLOAT, 1.4);
+            ui.songprogressbar_isvertical = (bool)layout.GetAttachedValue("ui_songprogressbar_isVertical", AttachedValueType.BOOLEAN, false);
+            ui.songprogressbar_showtime = (bool)layout.GetAttachedValue("ui_songprogressbar_showTime", AttachedValueType.BOOLEAN, true);
+            ui.songprogressbar_colorrgba8_text = (uint)layout.GetAttachedValue("ui_songprogressbar_colorRGBA8_text", AttachedValueType.HEX, 0xFFFFFFFFU);
+            ui.songprogressbar_colorrgba8_background = (uint)layout.GetAttachedValue("ui_songprogressbar_colorRGBA8_background", AttachedValueType.HEX, 0x000000FFU);
+            ui.songprogressbar_colorrgba8_barback = (uint)layout.GetAttachedValue("ui_songprogressbar_colorRGBA8_barBack", AttachedValueType.HEX, 0x808080FFU);
+            ui.songprogressbar_colorrgba8_barfront = (uint)layout.GetAttachedValue("ui_songprogressbar_colorRGBA8_barFront", AttachedValueType.HEX, 0xFFFFFFFFU);
+            ui.songprogressbar_x = placeholder.x;
+            ui.songprogressbar_y = placeholder.y;
+            ui.songprogressbar_z = placeholder.z;
+            ui.songprogressbar_width = placeholder.width;
+            ui.songprogressbar_height = placeholder.height;
+            ui.songprogressbar_align = ui.songprogressbar_isvertical ? placeholder.align_vertical : placeholder.align_horizontal;
+
             // pick streakcounter and rankingcounter values
             Week.InternalPickCountersValuesFromLayout(roundcontext);
 
@@ -900,6 +960,13 @@ namespace Engine.Game.Gameplay {
                 ui.roundstats_x = placeholder.x;
                 ui.roundstats_y = placeholder.y;
                 ui.roundstats_z = placeholder.z;
+            }
+
+            placeholder = layout.GetPlaceholder("ui_songprogressbar_inverted");
+            if (placeholder != null) {
+                ui.songprogressbar_x = placeholder.x;
+                ui.songprogressbar_y = placeholder.y;
+                ui.songprogressbar_z = placeholder.z;
             }
 
             placeholder = layout.GetPlaceholder("ui_track_info_inverted");
@@ -1787,6 +1854,7 @@ namespace Engine.Game.Gameplay {
             RankingCounter old_rankingcounter = roundcontext.rankingcounter;
             StreakCounter old_streakcounter = roundcontext.streakcounter;
             Countdown old_countdown = roundcontext.countdown;
+            SongProgressbar old_songprogressbar = roundcontext.songprogressbar;
             if (roundcontext.roundstats != null) roundcontext.roundstats.Destroy();
             if (roundcontext.trackinfo != null) roundcontext.trackinfo.Destroy();
 
@@ -1842,7 +1910,31 @@ namespace Engine.Game.Gameplay {
             );
             roundcontext.roundstats.HideNps(initparams.ui.roundstats_hide);
 
-            // step 1d: initialize countdown
+
+            // step 1d: initialize songprogressbar
+            if (EngineSettings.song_progressbar) {
+                roundcontext.songprogressbar = new SongProgressbar(
+                    initparams.ui.songprogressbar_x, initparams.ui.songprogressbar_y,
+                    initparams.ui.songprogressbar_z,
+                    initparams.ui.songprogressbar_width, initparams.ui.songprogressbar_height,
+                    initparams.ui.songprogressbar_align,
+                    initparams.ui.songprogressbar_bordersize, initparams.ui.songprogressbar_isvertical,
+                    initparams.ui.songprogressbar_showtime,
+                    initparams.font,
+                    initparams.ui.songprogressbar_fontsize, initparams.ui.songprogressbar_fontbordersize,
+                    initparams.ui.songprogressbar_colorrgba8_text,
+                    initparams.ui.songprogressbar_colorrgba8_background,
+                    initparams.ui.songprogressbar_colorrgba8_barback,
+                    initparams.ui.songprogressbar_colorrgba8_barfront
+                );
+                roundcontext.songprogressbar.SetSongplayer(roundcontext.songplayer);
+                roundcontext.songprogressbar.SetDuration(roundcontext.round_duration);
+                if (EngineSettings.song_progressbar_remaining) roundcontext.songprogressbar.ShowElapsed(false);
+            } else {
+                roundcontext.songprogressbar = null;
+            }
+
+            // step 1e: initialize countdown
             roundcontext.countdown = new Countdown(
                 modelholder_countdown,
                 initparams.ui.countdown_height
@@ -1852,7 +1944,7 @@ namespace Engine.Game.Gameplay {
                 initparams.ui_layout_width, initparams.ui_layout_height
             );
 
-            // step 1e: initialize trackinfo
+            // step 1f: initialize trackinfo
             roundcontext.trackinfo = TextSprite.Init2(
                 initparams.font, initparams.ui.trackinfo_fontsize, initparams.ui.trackinfo_fontcolor
             );
@@ -1881,6 +1973,7 @@ namespace Engine.Game.Gameplay {
             if (old_rankingcounter != null) old_rankingcounter.Destroy();
             if (old_streakcounter != null) old_streakcounter.Destroy();
             if (old_countdown != null) old_countdown.Destroy();
+            if (old_songprogressbar != null) old_songprogressbar.Destroy();
         }
 
         public static void InitUIGameover(RoundContext roundcontext) {
@@ -1906,7 +1999,7 @@ namespace Engine.Game.Gameplay {
 
         public static void PlaceInLayout(RoundContext roundcontext) {
             InitParams initparams = roundcontext.initparams;
-            const byte UI_SIZE = 7;// all UI "cosmetics" elements + screen background + dialogue
+            const byte UI_SIZE = 8;// all UI "cosmetics" elements + screen background + dialogue
 
             Layout layout; bool is_ui;
             if (roundcontext.layout != null) {
@@ -1945,22 +2038,25 @@ namespace Engine.Game.Gameplay {
                 0, PVRContextVertex.DRAWABLE, roundcontext.healthbar.GetDrawable(), ui1
             );
             layout.ExternalVertexSetEntry(
-                 1, PVRContextVertex.DRAWABLE, roundcontext.roundstats.GetDrawable(), ui1
+                1, PVRContextVertex.DRAWABLE, roundcontext.roundstats.GetDrawable(), ui1
             );
             layout.ExternalVertexSetEntry(
-                 2, PVRContextVertex.DRAWABLE, roundcontext.countdown.GetDrawable(), ui1
+                2, PVRContextVertex.DRAWABLE, roundcontext.songprogressbar != null ? roundcontext.songprogressbar.GetDrawable() : null, ui1
             );
             layout.ExternalVertexSetEntry(
-                 3, PVRContextVertex.TEXTSPRITE, roundcontext.trackinfo, ui1
+                3, PVRContextVertex.DRAWABLE, roundcontext.countdown.GetDrawable(), ui1
             );
             layout.ExternalVertexSetEntry(
-                 4, PVRContextVertex.DRAWABLE, roundcontext.weekgameover.GetDrawable(), ui2
+                4, PVRContextVertex.TEXTSPRITE, roundcontext.trackinfo, ui1
             );
             layout.ExternalVertexSetEntry(
-                5, PVRContextVertex.SPRITE, roundcontext.screen_background, ui2
+                5, PVRContextVertex.DRAWABLE, roundcontext.weekgameover.GetDrawable(), ui2
             );
             layout.ExternalVertexSetEntry(
-                6, PVRContextVertex.DRAWABLE, roundcontext.dialogue == null ? null : roundcontext.dialogue.GetDrawable(), ui1
+                6, PVRContextVertex.SPRITE, roundcontext.screen_background, ui2
+            );
+            layout.ExternalVertexSetEntry(
+                7, PVRContextVertex.DRAWABLE, roundcontext.dialogue != null ? roundcontext.dialogue.GetDrawable() : null, ui1
             );
 
             // step 3: initialize the ui camera
@@ -2087,6 +2183,12 @@ namespace Engine.Game.Gameplay {
 
             if (round_duration < 0) round_duration = Double.PositiveInfinity;
             if (roundcontext.layout != null) roundcontext.layout.Resume();
+
+            if (roundcontext.songprogressbar != null) {
+                double duration = roundcontext.songplayer != null ? roundcontext.songplayer.GetDuration() : round_duration;
+                roundcontext.songprogressbar.ManualSetPosition(0.0, duration, true);
+                roundcontext.songprogressbar.ManualUpdateEnable(true);
+            }
 
             if (roundcontext.script != null) {
                 roundcontext.script.NotifyTimerSong(0.0);
@@ -2222,6 +2324,7 @@ namespace Engine.Game.Gameplay {
                 roundcontext.layout.TriggerCamera(Week.ROUND_CAMERA_ROUNDSTART);
             }
 
+            if (roundcontext.songprogressbar != null) roundcontext.songprogressbar.ManualUpdateEnable(false);
 
             if (roundcontext.script != null) roundcontext.script.NotifyAftercountdown();
             Week.Halt(roundcontext, true);
@@ -2358,6 +2461,11 @@ namespace Engine.Game.Gameplay {
                     }
                 }
 
+                if (roundcontext.script != null) {
+                    roundcontext.script.NotifyAfterStrumScroll();
+                    if (roundcontext.scriptcontext.halt_flag) Week.Halt(roundcontext, false);
+                }
+
                 if (playerstats != null) {
                     roundcontext.rankingcounter.PeekRanking(playerstats);
                     if (roundcontext.streakcounter.PeekStreak(playerstats)) {
@@ -2433,7 +2541,6 @@ namespace Engine.Game.Gameplay {
                 roundcontext.layout.Animate(elapsed);
                 roundcontext.layout.Draw(pvr_context);
 
-                // JS only
                 if (roundcontext.scriptcontext.halt_flag) Week.Halt(roundcontext, false);
 
                 if (roundcontext.scriptcontext.force_end_flag) {
@@ -2717,7 +2824,7 @@ namespace Engine.Game.Gameplay {
             return roundcontext.players[index].character;
         }
 
-        public static MessageBox UIGetMessagebox(RoundContext roundcontext) {
+        public static MessageBox GetMessagebox(RoundContext roundcontext) {
             return roundcontext.messagebox;
         }
 
@@ -2773,6 +2880,82 @@ namespace Engine.Game.Gameplay {
         public static void SeUIShader(RoundContext roundcontext, PSShader psshader) {
             Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
             layout.SetGroupShader(Week.ROUND_UI_GROUP_NAME, psshader);
+        }
+
+        public static Conductor GetConductor(RoundContext roundcontext, int character_index) {
+            if (character_index < 0 || character_index >= roundcontext.players_size) return null;
+            return roundcontext.players[character_index].conductor;
+        }
+
+        public static HealthWatcher GetHealthwatcher(RoundContext roundcontext) {
+            return roundcontext.healthwatcher;
+        }
+
+        public static MissNoteFX GetMissnotefx(RoundContext roundcontext) {
+            return roundcontext.missnotefx;
+        }
+
+        public static PlayerStats GetPlayerstats(RoundContext roundcontext, int character_index) {
+            if (character_index < 0 || character_index >= roundcontext.players_size) return null;
+            return roundcontext.players[character_index].playerstats;
+        }
+
+        public static void RebuildUI(RoundContext roundcontext) {
+            Week.InitUICosmetics(roundcontext);
+        }
+
+        public static Countdown UIGetcountdown(RoundContext roundcontext) {
+            return roundcontext.countdown;
+        }
+
+        public static HealthBar UIGetHealthbar(RoundContext roundcontext) {
+            return roundcontext.healthbar;
+        }
+
+        public static RankingCounter GetRankingcounter(RoundContext roundcontext) {
+            return roundcontext.rankingcounter;
+        }
+
+        public static RoundStats UIGetroundstats(RoundContext roundcontext) {
+            return roundcontext.roundstats;
+        }
+
+        public static SongProgressbar UIGetSongprogressbar(RoundContext roundcontext) {
+            return roundcontext.songprogressbar;
+        }
+
+        public static RankingCounter UIGetRankingCounter(RoundContext roundcontext) {
+            return roundcontext.rankingcounter;
+        }
+
+        public static StreakCounter UIGetStreakcounter(RoundContext roundcontext) {
+            return roundcontext.streakcounter;
+        }
+
+        public static Strums UIGetStrums(RoundContext roundcontext, int strums_id) {
+            InitParams initparams = roundcontext.initparams;
+            GameplayManifest gameplaymanifest = initparams.gameplaymanifest;
+            int track_index = roundcontext.track_index;
+
+            GameplayManifestPlayer[] players = gameplaymanifest.@default.players;
+            int players_size = gameplaymanifest.@default.players_size;
+            if (gameplaymanifest.tracks[track_index].has_players) {
+                players = gameplaymanifest.tracks[track_index].players;
+                players_size = gameplaymanifest.tracks[track_index].players_size;
+            }
+
+            for (int i = 0 ; i < players_size ; i++) {
+                // obtain the position in the UI layout
+                int layout_strums_id = players[i].layout_strums_id < 0 ? i : players[i].layout_strums_id;
+
+                if (layout_strums_id >= initparams.layout_strums_size) layout_strums_id = -1;
+                if (layout_strums_id < 0 || roundcontext.players[i].type == CharacterType.ACTOR) continue;
+
+                if (layout_strums_id == strums_id) return roundcontext.players[i].strums;
+            }
+
+            // unable to guess the correct player's strums
+            return null;
         }
 
 

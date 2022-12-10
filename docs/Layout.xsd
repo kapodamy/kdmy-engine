@@ -89,6 +89,14 @@
             <xs:enumeration value="paragraphSeparation" />
             <xs:enumeration value="string" />
             <xs:enumeration value="wordbreak" />
+            <xs:enumeration value="backgroundEnabled" />
+            <xs:enumeration value="backgroundSize" />
+            <xs:enumeration value="backgroundOffsetX" />
+            <xs:enumeration value="backgroundOffsetY" />
+            <xs:enumeration value="backgroundColorR" />
+            <xs:enumeration value="backgroundColorG" />
+            <xs:enumeration value="backgroundColorB" />
+            <xs:enumeration value="backgroundColorA" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="props-sound">
@@ -256,6 +264,14 @@
         <xs:attribute name="paragraphseparation" type="xs:float" use="optional" />
         <xs:attribute name="string" type="xs:string" use="optional" />
         <xs:attribute name="wordbreak" type="wordbreak" use="optional" />
+        <xs:attribute name="backgroundEnabled" type="xs:boolean" use="optional" />
+        <xs:attribute name="backgroundSize" type="xs:float" use="optional" />
+        <xs:attribute name="backgroundOffsetX" type="xs:float" use="optional" />
+        <xs:attribute name="backgroundOffsetY" type="xs:float" use="optional" />
+        <xs:attribute name="backgroundColorR" type="xs:float" use="optional" />
+        <xs:attribute name="backgroundColorG" type="xs:float" use="optional" />
+        <xs:attribute name="backgroundColorB" type="xs:float" use="optional" />
+        <xs:attribute name="backgroundColorA" type="xs:float" use="optional" />
     </xs:attributeGroup>
     <xs:attributeGroup name="props-sound">
         <xs:attribute name="volume" type="xs:float" use="optional" default="NaN" />

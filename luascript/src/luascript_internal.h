@@ -33,7 +33,20 @@
 #include "atlas.h"
 #include "drawable.h"
 #include "animsprite.h"
-
+#include "strum.h"
+#include "strums.h"
+#include "conductor.h"
+#include "countdown.h"
+#include "playerstats.h"
+#include "streakcounter.h"
+#include "roundstats.h"
+#include "rankingcounter.h"
+#include "missnotefx.h"
+#include "healthbar.h"
+#include "healthwatcher.h"
+#include "songprogressbar.h"
+#include "modding.h"
+#include "week.h"
 
 #ifdef JAVASCRIPT
 #include <emscripten.h>
@@ -92,6 +105,9 @@ int luascript_parse_forcecase(lua_State* L, const char* forcecase);
 int luascript_parse_wordbreak(lua_State* L, const char* wordbreak);
 int luascript_parse_interpolator(lua_State* L, const char* interpolator);
 Blend luascript_parse_blend(lua_State* L, const char* blend);
+StrumScriptTarget luascript_parse_strumscripttarget(lua_State* L, const char* strumscripttarget);
+StrumScriptOn luascript_parse_strumscripton(lua_State* L, const char* strumscripton);
+ScrollDirection luascript_parse_scrolldirection(lua_State* L, const char* scrolldirection);
 
 const char* luascript_stringify_align(Align align);
 const char* luascript_stringify_actiontype(CharacterActionType actiontype);
@@ -140,8 +156,8 @@ void script_modifier_register(lua_State* L);
 int script_character_new(lua_State* L, Character character);
 void script_character_register(lua_State* L);
 
-#define MESSAGEBOX "Messagebox"
-int script_messagebox_new(lua_State* L, Messagebox messagebox);
+#define MESSAGEBOX "MessageBox"
+int script_messagebox_new(lua_State* L, MessageBox messagebox);
 void script_messagebox_register(lua_State* L);
 
 //#define WEEK "Week"
@@ -200,5 +216,53 @@ void script_drawable_register(lua_State* L);
 #define MODELHOLDER "ModelHolder"
 int script_modelholder_new(lua_State* L, ModelHolder modelholder);
 void script_modelholder_register(lua_State* L);
+
+#define STRUM "Strum"
+int script_strum_new(lua_State* L, Strum strum);
+void script_strum_register(lua_State* L);
+
+#define STRUMS "Strums"
+int script_strums_new(lua_State* L, Strums strums);
+void script_strums_register(lua_State* L);
+
+#define CONDUCTOR "Conductor"
+int script_conductor_new(lua_State* L, Conductor conductor);
+void script_conductor_register(lua_State* L);
+
+#define COUNTDOWN "Countdown"
+int script_countdown_new(lua_State* L, Countdown countdown);
+void script_countdown_register(lua_State* L);
+
+#define PLAYERSTATS "PlayerStats"
+int script_playerstats_new(lua_State* L, PlayerStats playerstats);
+void script_playerstats_register(lua_State* L);
+
+#define STREAKCOUNTER "StreakCounter"
+int script_streakcounter_new(lua_State* L, StreakCounter streakcounter);
+void script_streakcounter_register(lua_State* L);
+
+#define ROUNDSTATS "RoundStats"
+int script_roundstats_new(lua_State* L, RoundStats roundstats);
+void script_roundstats_register(lua_State* L);
+
+#define RANKINGCOUNTER "RankingCounter"
+int script_rankingcounter_new(lua_State* L, RankingCounter rankingcounter);
+void script_rankingcounter_register(lua_State* L);
+
+#define MISSNOTEFX "MissNoteFX"
+int script_missnotefx_new(lua_State* L, MissNoteFX missnotefx);
+void script_healthbar_register(lua_State* L);
+
+#define HEALTHBAR "HealthBar"
+int script_healthbar_new(lua_State* L, HealthBar healthbar);
+void script_healthbar_register(lua_State* L);
+
+#define HEALTHWATCHER "HealthWatcher"
+int script_healthwatcher_new(lua_State* L, HealthWatcher healthwatcher);
+void script_healthwatcher_register(lua_State* L);
+
+#define SONGPROGRESSBAR "SongProgressbar"
+int script_songprogressbar_new(lua_State* L, SongProgressbar songprogressbar);
+void script_songprogressbar_register(lua_State* L);
 
 #endif

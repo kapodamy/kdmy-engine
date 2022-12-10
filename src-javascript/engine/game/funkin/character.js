@@ -933,7 +933,10 @@ function character_animation_restart(character) {
 }
 
 function character_animation_end(character) {
-    if (character.drawable_animation) animsprite_force_end(character.drawable_animation);
+    if (character.drawable_animation) {
+        animsprite_force_end(character.drawable_animation);
+        animsprite_update_drawable(character.drawable_animation, character.drawable, 1);
+    }
 }
 
 function character_set_color_offset(character, r, g, b, a) {
@@ -1470,7 +1473,7 @@ function character_internal_set_beat_stop(/**@type {object}*/character,/**@type 
         character.current_stop_on_beat = -1;
         return;
     }
-    
+
     character.current_stop_on_beat = character.beatwatcher.count + stop_after_beats;
     if (beatwatcher_remaining_until_next(character.beatwatcher) <= (character.beatwatcher.tick * 0.5))
         character.current_stop_on_beat++;

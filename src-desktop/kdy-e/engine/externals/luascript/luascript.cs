@@ -78,6 +78,17 @@ namespace Engine.Externals.LuaScriptInterop {
             if (is_week) {
                 ExportsSongPlayer.script_songplayer_register(lua);
                 ExportsDialogue.script_dialogue_register(lua);
+                ExportsCountdown.script_countdown_register(lua);
+                ExportsHealthBar.script_healthbar_register(lua);
+                ExportsHealthWatcher.script_healthwatcher_register(lua);
+                ExportsMissNoteFX.script_missnotefx_register(lua);
+                ExportsPlayerStats.script_playerstats_register(lua);
+                ExportsRankingCounter.script_rankingcounter_register(lua);
+                ExportsRoundStats.script_roundstats_register(lua);
+                ExportsSongProgressbar.script_songprogressbar_register(lua);
+                ExportsStreakCounter.script_streakcounter_register(lua);
+                ExportsStrum.script_strum_register(lua);
+                ExportsStrums.script_strums_register(lua);
                 ExportsWeek.script_week_register(lua);
             } else {
                 ExportsModding.script_modding_register(lua);
@@ -407,188 +418,12 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.CallPushedGlobalFunction(2);
         }
 
+        public void notify_after_strum_scroll() {
+            const string FUNCTION = "f_after_strum_scroll";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
 
-        ////
-        //// Unimplemented and/or exported functions for lua
-        ////
-        /*
-
-        // unimplemented
-        modelholder_init(src);
-        modelholder_is_invalid(modelholder);
-        modelholder_create_animsprite(modelholder, animation_name, fallback_static, no_return_null);// internal alloc
-        modelholder_get_atlas_entry(modelholder, atlas_entry_name);// managed
-        animlist_init(src);
-        animlist_create_animsprite(animlist, animation_name);// managed
-        atlas_init(src);
-        atlas_get_entry(atlas, entry_name);
-        atlas_apply(atlas, sprite, name, override_draw_size);
-
-
-        math2d_random(min, max);
-        math2d_random_int(min, max);
-        math2d_lerp(start, end, step);
-        math2d_inverselerp(start, end, value);
-        math2d_nearestdown(value, step);
-        math2d_cubicbezier(offset, point0, point1, point2, point3);
-        math2d_points_distance(x1, y1, x2, y2);
-
-
-        healthbar_state_opponent_add(healthbar, icon_mdlhldr, bar_mdlhldr, state_name);
-        healthbar_state_opponent_add2(healthbar, icon_mdlhldr, bar_color_rbb8, state_name);
-        healthbar_state_player_add(healthbar, icon_mdlhldr, bar_mdlhldr, state_name);
-        healthbar_state_player_add2(healthbar, icon_modelholder, bar_color_rgb8, state_name);
-        healthbar_state_background_add(healthbar, modelholder, state_name);
-        healthbar_state_background_add2(healthbar, color_rgb8, animsprite, state_name);
-        healthbar_set_opponent_bar_color(healthbar, color_rgb8);
-        healthbar_set_player_bar_color(healthbar, color_rgb8);
-        healthbar_state_toggle(healthbar, state_name);
-        healthbar_state_toggle_background(healthbar, state_name);
-        healthbar_state_toggle_player(healthbar, state_name);
-        healthbar_state_toggle_opponent(healthbar, state_name);
-
-        healthbar_set_bump_animation(healthbar, animlist);
-        healthbar_set_bump_animation_opponent(healthbar, animsprite);
-        healthbar_set_bump_animation_player(healthbar, animsprite);
-        healthbar_bump_enable(healthbar, enable_bump);
-        healthbar_set_visible(healthbar, visible);
-        healthbar_set_alpha(healthbar, alpha);
-        healthbar_get_modifier(healthbar);
-        healthbar_animation_set(healthbar, animsprite);
-        healthbar_disable_progress_animation(healthbar, disable);
-        healthbar_disable_icon_overlap(healthbar, disable);
-        healthbar_hide_warnings(healthbar);
-        healthbar_show_drain_warning(healthbar, use_fast_drain);
-        healthbar_show_locked_warning(healthbar);
-
-
-        notepool_change_alpha_alone(notepool, alpha);
-        notepool_change_alpha_sustain(notepool, alpha);
-        notepool_change_alpha(notepool, alpha);
-
-
-        playerstats_add_hit(playerstats, multiplier, base_note_duration, hit_time_difference);
-        playerstats_add_sustain(playerstats, quarters, is_released);
-        playerstats_add_penality(playerstats, on_empty_strum);
-        playerstats_add_miss(playerstats, multiplier);
-        playerstats_add_extra_health(playerstats, multiplier);
-        playerstats_enable_health_recover(playerstats, enable);
-        playerstats_get_health(playerstats);
-        playerstats_get_last_ranking(playerstats);
-        playerstats_get_last_difference(playerstats);
-        playerstats_get_combo_streak(playerstats);
-        playerstats_get_combo_breaks(playerstats);
-        playerstats_get_score(playerstats);
-        playerstats_get_hits(playerstats);
-        playerstats_get_misses(playerstats);
-        playerstats_get_penalties(playerstats);
-        playerstats_set_health(playerstats, health);
-        playerstats_add_health(playerstats, health, die_if_negative);
-        playerstats_raise(playerstats, with_full_health);
-
-
-        rankingcounter_add_state(rankingcounter, modelholder, state_name);
-        rankingcounter_toggle_state(rankingcounter, state_name);
-        rankingcounter_reset(rankingcounter);
-        rankingcounter_hide_accuracy(rankingcounter, hide);
-        rankingcounter_use_percent_instead(rankingcounter, use_accuracy_percenter);
-        rankingcounter_set_default_ranking_animation2(rankingcounter, animsprite);
-        rankingcounter_set_default_ranking_text_animation2(rankingcounter, animsprite);
-        rankingcounter_set_alpha(rankingcounter, alpha);
-        rankingcounter_set_offsetcolor(rankingcounter, r, g, b, a);
-        rankingcounter_set_offsetcolor_to_default(rankingcounter);
-        rankingcounter_get_modifier(rankingcounter);
-
-
-        roundstats_hide(roundstats, hide);
-        roundstats_reset(roundstats);
-        roundstats_get_drawable(roundstats);
-        roundstats_tweenlerp_set_on_beat(roundstats, tweenlerp, rollback_beats, beat_duration);
-        roundstats_tweenlerp_set_on_hit(roundstats, tweenlerp, rollback_beats, beat_duration);
-        roundstats_tweenlerp_set_on_miss(roundstats, tweenlerp, rollback_beats, beat_duration);
-
-
-        streakcounter_hide_combo_sprite(streakcounter, hide);
-        streakcounter_set_combo_draw_location(streakcounter, x, y);
-        streakcounter_state_add(streakcounter, combo_modelholder, number_modelholder, state_name);
-        streakcounter_state_toggle(streakcounter, state_name);
-        streakcounter_set_alpha(streakcounter, alpha);
-        streakcounter_set_offsetcolor(streakcounter, r, g, b, a);
-        streakcounter_set_offsetcolor_to_default(streakcounter);
-        streakcounter_get_modifier(streakcounter);
-
-
-        strum_set_scroll_speed(strum, speed);
-        strum_set_scroll_direction(strum, direction);
-        strum_reset(strum, scroll_speed, state_name);
-        strum_force_key_release(strum);
-        strum_get_press_state(strum);
-        strum_get_name(strum);
-        strum_get_marker_duration(strum);
-        strum_set_marker_duration(strum, duration);
-        strum_enable_background(strum, enable);
-        strum_enable_sick_effect(strum, enable);
-        strum_state_add(strum, mdlhldr_mrkr, mdlhldr_sck_ffct, mdlhldr_bckgrnd, state_name);
-        strum_state_toggle(strum, state_name);
-        strum_state_toggle_notes(strum, state_name);
-        strum_state_toggle_sick_effect(strum, state_name);
-        strum_state_toggle_marker(strum, state_name);
-        strum_state_toggle_background(strum, state_name);
-        strum_set_alpha_background(strum, alpha);
-        strum_set_alpha_sick_effect(strum, alpha);
-        strum_set_keep_aspect_ratio_background(strum, enable);
-        strum_set_extra_animation(strum, strum_script_target, strum_script_on, undo, animsprite);// managed
-        strum_set_extra_animation_continuous(strum, strum_script_target, animsprite);// managed
-        strum_set_notesmaker_tweenlerp(strum, tweenlerp, apply_to_marker_too);// not implemented
-        strum_set_sickeffect_size_ratio(strum, size_ratio);
-        strum_set_offsetcolor(strum, r, g, b, a);
-        strum_set_alpha(strum, alpha);
-        strum_set_visible(strum, visible);
-        strum_set_draw_offset(strum, offset_milliseconds);
-        strum_get_modifier(strum);
-        strum_animation_restart(strum);
-        strum_animation_end(strum);
-
-
-
-        conductor_poll_reset(conductor);
-        conductor_set_character(conductor, character);
-        conductor_use_strum_line(conductor, strum);
-        conductor_use_strums(conductor, strums);
-        conductor_disable_strum_line(conductor, strum, should_disable);
-        conductor_remove_strum(conductor, strum);
-        conductor_clear_mapping(conductor);
-        conductor_map_strum_to_player_sing_add(conductor, strum, sing_direction_name);
-        conductor_map_strum_to_player_extra_add(conductor, strum, extra_animation_name);
-        conductor_map_strum_to_player_sing_remove(conductor, strum_name, sing_direction_name);
-        conductor_map_strum_to_player_extra_remove(conductor, strum_name, extra_animation_name);
-        conductor_map_automatically(conductor, should_map_extras);
-        conductor_disable(conductor, disable);
-        conductor_play_idle(conductor);
-        conductor_play_hey(conductor);
-        conductor_get_character(conductor);
-
-
-        countdown_set_bpm(countdown, bpm);
-        countdown_ready(countdown);
-        countdown_start(countdown);
-        countdown_has_ended(countdown);
-
-
-        imgutils_calc_rectangle(x, y, max_width, max_height, src_width, src_height, align_hrzntl, align_vrtcl);// managed + multiple result
-        imgutils_calc_centered_location(x, y, width, height, ref_width, ref_height);
-
-
-
-        drawable_set_antialiasing(drawable, antialiasing);
-        statesprite_set_antialiasing(drawable, antialiasing);
-
-        // engine_feature******
-        healthbar_enable_extra_length(healthbar, extra_enabled);
-        healthbar_disable_warnings(healthbar, disable);
-        playerstats_enable_penality_on_empty_strum(playerstats, enable);
-
-        */
+            lua.CallPushedGlobalFunction(0);
+        }
 
     }
 

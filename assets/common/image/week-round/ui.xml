@@ -30,14 +30,18 @@
 
 
     <!-- ******************* SONGPROGRESSBAR DEFINITION ******************* -->
-	<Placeholder name="ui_songprogressbar" x="400" y="32" width="480" height="12" alignHorizontal="center" />
+	<Placeholder name="ui_songprogressbar" x="400" y="32" z="102" width="480" height="12" alignHorizontal="center" />
 
 	<!-- songprogressbar additional parameters -->
 	<AttachValue name="ui_songprogressbar_borderSize" type="float" value="4" />
-	<AttachValue name="ui_songprogressbar_fontSize" type="float" value="16" />
+	<AttachValue name="ui_songprogressbar_fontSize" type="float" value="22" />
 	<AttachValue name="ui_songprogressbar_fontBorderSize" type="float" value="2" />
 	<AttachValue name="ui_songprogressbar_isVertical" type="boolean" value="false" />
 	<AttachValue name="ui_songprogressbar_showTime" type="boolean" value="true" />
+	<AttachValue name="ui_songprogressbar_colorRGBA8_text"       type="hex" value="0xFFFFFFFF" />
+	<AttachValue name="ui_songprogressbar_colorRGBA8_background" type="hex" value="0x000000FF" />
+	<AttachValue name="ui_songprogressbar_colorRGBA8_barBack"    type="hex" value="0x808080FF" />
+	<AttachValue name="ui_songprogressbar_colorRGBA8_barFront"   type="hex" value="0xFFFFFFFF" />
 
 
 
@@ -119,7 +123,7 @@
 	<!--    In custom layouts with horizontal scrolling, this changes from RIGHTSCROLL to LEFTSCROLL -->
     <Placeholder name="ui_strums_inverted0" x="52" y="0" z="101" height="664" />
     <Placeholder name="ui_strums_inverted1" x="768" y="0" z="101" height="664" />
-	<Placeholder name="ui_songprogressbar_inverted" x="400" y="688" width="480" height="12" alignHorizontal="center" />
+	<Placeholder name="ui_songprogressbar_inverted" x="400" y="688" z="102" width="480" height="12" alignHorizontal="center" />
     <Placeholder name="ui_healthbar_inverted" x="340" y="72" z="100" width="600" height="20" />
     <Placeholder name="ui_roundstats_inverted" x="0" y="20" z="100" />
     <Placeholder name="ui_track_info_inverted" x="8" y="20" z="100" />

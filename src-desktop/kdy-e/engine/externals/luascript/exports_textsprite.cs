@@ -290,6 +290,47 @@ namespace Engine.Externals.LuaScriptInterop {
             return ExportsPSShader.script_psshader_new(L, psshader);
         }
 
+        static int script_textsprite_background_enable(LuaState L) {
+            TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
+            bool enabled = L.lua_toboolean(2);
+
+            textsprite.BackgroundEnable(enabled);
+
+            return 0;
+        }
+
+        static int script_textsprite_background_set_size(LuaState L) {
+            TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
+            float size = (float)L.luaL_checknumber(2);
+
+            textsprite.BackgroundSetSize(size);
+
+            return 0;
+        }
+
+        static int script_textsprite_background_set_offets(LuaState L) {
+            TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
+            float offset_x = (float)L.luaL_checknumber(2);
+            float offset_y = (float)L.luaL_checknumber(3);
+
+            textsprite.BackgroundSetOffets(offset_x, offset_y);
+
+            return 0;
+        }
+
+        static int script_textsprite_background_set_color(LuaState L) {
+            TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
+            float r = (float)L.luaL_checknumber(2);
+            float g = (float)L.luaL_checknumber(3);
+            float b = (float)L.luaL_checknumber(4);
+            float a = (float)L.luaL_checknumber(5);
+
+            textsprite.BackgroundSetColor(r, g, b, a);
+
+            return 0;
+        }
+
+
 
 
         ////////////////////////////////////////////////////////////////////////////////////
@@ -323,6 +364,10 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("set_wordbreak", script_textsprite_set_wordbreak),
             new LuaTableFunction("set_shader", script_textsprite_set_shader),
             new LuaTableFunction("get_shader", script_textsprite_get_shader),
+            new LuaTableFunction("background_enable", script_textsprite_background_enable),
+            new LuaTableFunction("background_set_size", script_textsprite_background_set_size),
+            new LuaTableFunction("background_set_offets", script_textsprite_background_set_offets),
+            new LuaTableFunction("background_set_color", script_textsprite_background_set_color),
             new LuaTableFunction(null, null)
         };
 

@@ -173,5 +173,11 @@ declare namespace KDMYEngine {
      * @param state_name state of the current line (if the line starts with ":dad:" the state name is "dad")
      */
     export function f_dialogue_line_ends(line_index: number, state_name: string): void;
+
+    /**
+     * @summary Called after the strum scrolling is done, at this point all key inputs are processed by all
+     * strum lines and all {@link PlayerStats} are updated.
+     */
+    export function f_after_strum_scroll(): void;
 }
 

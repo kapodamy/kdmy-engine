@@ -207,8 +207,15 @@ void luascript_notify_dialogue_line_ends(Luascript luascript, int line_index, co
     lua_imported_fn(lua, FUNCTION, 2);
 }
 
+void luascript_notify_after_strum_scroll(Luascript luascript) {
+    FUNCTION(luascript, "f_after_strum_scroll");
+
+    lua_imported_fn(lua, FUNCTION, 0);
+}
+
 void luascript_call_function(Luascript luascript, const char* function_name) {
     if (!function_name || !function_name[0]) return;
     FUNCTION(luascript, function_name);
     lua_imported_fn(lua, function_name, 2);
 }
+

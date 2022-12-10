@@ -153,7 +153,7 @@ if (ENVIRONMENT_IS_NODE) {
     });
     process["on"]("unhandledRejection", function (reason) {
         throw reason
-    });// @ts-ignore
+    });//@ts-ignore
     quit_ = (status, toThrow) => {
         if (keepRuntimeAlive()) {
             process["exitCode"] = status;
@@ -163,12 +163,12 @@ if (ENVIRONMENT_IS_NODE) {
         process["exit"](status)
     };
     ModuleFontAtlas["inspect"] = function () {
-        return "[Emscripten Module object]"
+        return "[Emscripten ModuleFontAtlas object]"
     }
 } else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
     if (ENVIRONMENT_IS_WORKER) {
         scriptDirectory = self.location.href
-    } else if (typeof document != "undefined" && document.currentScript) {// @ts-ignore
+    } else if (typeof document != "undefined" && document.currentScript) {//@ts-ignore
         scriptDirectory = document.currentScript.src
     }
     if (scriptDirectory.indexOf("blob:") !== 0) {
@@ -207,7 +207,7 @@ if (ENVIRONMENT_IS_NODE) {
         }
     }
     setWindowTitle = title => document.title = title
-} else { }
+} else {}
 var out = ModuleFontAtlas["print"] || console.log.bind(console);
 var err = ModuleFontAtlas["printErr"] || console.warn.bind(console);
 Object.assign(ModuleFontAtlas, moduleOverrides);
@@ -219,10 +219,11 @@ if (ModuleFontAtlas["thisProgram"])
 if (ModuleFontAtlas["quit"])
     quit_ = ModuleFontAtlas["quit"];
 var POINTER_SIZE = 4;
-function warnOnce(text) {// @ts-ignore
-    if (!warnOnce.shown)// @ts-ignore
-        warnOnce.shown = {};// @ts-ignore
-    if (!warnOnce.shown[text]) {// @ts-ignore
+var POINTER_SIZE = 4;
+function warnOnce(text) {//@ts-ignore
+    if (!warnOnce.shown)//@ts-ignore
+        warnOnce.shown = {};//@ts-ignore
+    if (!warnOnce.shown[text]) {//@ts-ignore
         warnOnce.shown[text] = 1;
         err(text)
     }
@@ -233,7 +234,7 @@ function uleb128Encode(n) {
     }
     return [n % 128 | 128, n >> 7]
 }
-function convertJsFunctionToWasm(func, sig) {// @ts-ignore
+function convertJsFunctionToWasm(func, sig) {//@ts-ignore
     if (typeof WebAssembly.Function == "function") {
         var typeNames = {
             "i": "i32",
@@ -248,7 +249,7 @@ function convertJsFunctionToWasm(func, sig) {// @ts-ignore
         };
         for (var i = 1; i < sig.length; ++i) {
             type.parameters.push(typeNames[sig[i]])
-        }// @ts-ignore
+        }//@ts-ignore
         return new WebAssembly.Function(type, func)
     }
     var typeSection = [1, 96];
@@ -271,8 +272,8 @@ function convertJsFunctionToWasm(func, sig) {// @ts-ignore
         typeSection = typeSection.concat([1, typeCodes[sigRet]])
     }
     typeSection = [1].concat(uleb128Encode(typeSection.length), typeSection);
-    var bytes = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0].concat(typeSection, [2, 7, 1, 1, 101, 1, 102, 0, 0, 7, 5, 1, 1, 102, 0, 0]));
-    var module = new WebAssembly.Module(bytes);
+    var bytes = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0].concat(typeSection, [2, 7, 1, 1, 101, 1, 102, 0, 0, 7, 5, 1, 1, 102, 0, 0]));//@ts-ignore
+    var module = new WebAssembly.ModuleFontAtlas(bytes);
     var instance = new WebAssembly.Instance(module, {
         "e": {
             "f": func
@@ -369,22 +370,13 @@ function ccall(ident, returnType, argTypes, args, opts) {
             }
         }
     }
-    var previousAsync = Asyncify.currData;
     var ret = func.apply(null, cArgs);
     function onDone(ret) {
-        runtimeKeepalivePop();
         if (stack !== 0)
             stackRestore(stack);
         return convertReturnValue(ret)
     }
-    runtimeKeepalivePush();
-    var asyncMode = opts && opts.async;
-    if (Asyncify.currData != previousAsync) {
-        return Asyncify.whenDone().then(onDone)
-    }
     ret = onDone(ret);
-    if (asyncMode)
-        return Promise.resolve(ret);
     return ret
 }
 var UTF8Decoder = typeof TextDecoder != "undefined" ? new TextDecoder("utf8") : undefined;
@@ -583,8 +575,7 @@ function removeRunDependency(id) {
         }
     }
 }
-function abort(what) {
-    {
+function abort(what) { {
         if (ModuleFontAtlas["onAbort"]) {
             ModuleFontAtlas["onAbort"](what)
         }
@@ -657,7 +648,6 @@ function createWasm() {
     };
     function receiveInstance(instance, module) {
         var exports = instance.exports;
-        exports = Asyncify.instrumentWasmExports(exports);
         ModuleFontAtlas["asm"] = exports;
         wasmMemory = ModuleFontAtlas["asm"]["memory"];
         updateGlobalBufferAndViews(wasmMemory.buffer);
@@ -698,10 +688,9 @@ function createWasm() {
     if (ModuleFontAtlas["instantiateWasm"]) {
         try {
             var exports = ModuleFontAtlas["instantiateWasm"](info, receiveInstance);
-            exports = Asyncify.instrumentWasmExports(exports);
             return exports
         } catch (e) {
-            err("Module.instantiateWasm callback failed with error: " + e);
+            err("ModuleFontAtlas.instantiateWasm callback failed with error: " + e);
             return false
         }
     }
@@ -720,13 +709,9 @@ function callRuntimeCallbacks(callbacks) {
         var func = callback.func;
         if (typeof func == "number") {
             if (callback.arg === undefined) {
-                (function () {
-                    dynCall_v.call(null, func)
-                })()
+                getWasmTableEntry(func)()
             } else {
-                (function (a1) {
-                    dynCall_vi.apply(null, [func, a1])
-                })(callback.arg)
+                getWasmTableEntry(func)(callback.arg)
             }
         } else {
             func(callback.arg === undefined ? null : callback.arg)
@@ -752,12 +737,6 @@ function getWasmTableEntry(funcPtr) {
         wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr)
     }
     return func
-}
-function handleException(e) {
-    if (e instanceof ExitStatus || e == "unwind") {
-        return EXITSTATUS
-    }
-    quit_(1, e)
 }
 function jsStackTrace() {
     var error = new Error;
@@ -813,7 +792,7 @@ var PATH = {
     },
     normalize: path => {
         var isAbsolute = PATH.isAbs(path),
-            trailingSlash = path.substr(-1) === "/";
+        trailingSlash = path.substr(-1) === "/";
         path = PATH.normalizeArray(path.split("/").filter(p => !!p), !isAbsolute).join("/");
         if (!path && !isAbsolute) {
             path = "."
@@ -825,8 +804,8 @@ var PATH = {
     },
     dirname: path => {
         var result = PATH.splitPath(path),
-            root = result[0],
-            dir = result[1];
+        root = result[0],
+        dir = result[1];
         if (!root && !dir) {
             return "."
         }
@@ -866,7 +845,7 @@ function getRandomDevice() {
             return function () {
                 return crypto_module["randomBytes"](1)[0]
             }
-        } catch (e) { }
+        } catch (e) {}
     }
     return function () {
         abort("randomDevice")
@@ -875,7 +854,7 @@ function getRandomDevice() {
 var PATH_FS = {
     resolve: function () {
         var resolvedPath = "",
-            resolvedAbsolute = false;
+        resolvedAbsolute = false;
         for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
             var path = i >= 0 ? arguments[i] : FS.cwd();
             if (typeof path != "string") {
@@ -927,8 +906,8 @@ var PATH_FS = {
 };
 var TTY = {
     ttys: [],
-    init: function () { },
-    shutdown: function () { },
+    init: function () {},
+    shutdown: function () {},
     register: function (dev, ops) {
         TTY.ttys[dev] = {
             input: [],
@@ -1019,8 +998,8 @@ var TTY = {
                     result = window.prompt("Input: ");
                     if (result !== null) {
                         result += "\n"
-                    }// @ts-ignore
-                } else if (typeof readline == "function") {// @ts-ignore
+                    }//@ts-ignore
+                } else if (typeof readline == "function") {//@ts-ignore
                     result = readline();
                     if (result !== null) {
                         result += "\n"
@@ -1246,7 +1225,7 @@ var MEMFS = {
                 var new_node;
                 try {
                     new_node = FS.lookupNode(new_dir, new_name)
-                } catch (e) { }
+                } catch (e) {}
                 if (new_node) {
                     for (var i in new_node.contents) {
                         throw new FS.ErrnoError(55)
@@ -1618,7 +1597,7 @@ var FS = {
         try {
             var node = FS.lookupNode(dir, name);
             return 20
-        } catch (e) { }
+        } catch (e) {}
         return FS.nodePermissions(dir, "wx")
     },
     mayDelete: (dir, name, isdir) => {
@@ -1707,7 +1686,7 @@ var FS = {
                     }
                 },
                 position: {
-                    get function() {
+                    get function () {
                         return this.shared.position
                     },
                     set: function (val) {
@@ -1772,8 +1751,8 @@ var FS = {
             return callback(errCode)
         }
         function done(errCode) {
-            if (errCode) {// @ts-ignore
-                if (!done.errored) {// @ts-ignore
+            if (errCode) {//@ts-ignore
+                if (!done.errored) {//@ts-ignore
                     done.errored = true;
                     return doCallback(errCode)
                 }
@@ -1935,8 +1914,8 @@ var FS = {
         var old_name = PATH.basename(old_path);
         var new_name = PATH.basename(new_path);
         var lookup,
-            old_dir,
-            new_dir;
+        old_dir,
+        new_dir;
         lookup = FS.lookupPath(old_path, {
             parent: true
         });
@@ -1962,7 +1941,7 @@ var FS = {
         var new_node;
         try {
             new_node = FS.lookupNode(new_dir, new_name)
-        } catch (e) { }
+        } catch (e) {}
         if (old_node === new_node) {
             return
         }
@@ -1992,8 +1971,7 @@ var FS = {
             old_dir.node_ops.rename(old_node, new_dir, new_name)
         } catch (e) {
             throw e
-        }
-        finally {
+        } finally {
             FS.hashAddNode(old_node)
         }
     },
@@ -2203,7 +2181,7 @@ var FS = {
                     follow: !(flags & 131072)
                 });
                 node = lookup.node
-            } catch (e) { }
+            } catch (e) {}
         }
         var created = false;
         if (flags & 64) {
@@ -2269,8 +2247,7 @@ var FS = {
             }
         } catch (e) {
             throw e
-        }
-        finally {
+        } finally {
             FS.closeStream(stream.fd)
         }
         stream.fd = null
@@ -2584,7 +2561,7 @@ var FS = {
                 follow: !dontResolveLastLink
             });
             path = lookup.path
-        } catch (e) { }
+        } catch (e) {}
         var ret = {
             isRoot: false,
             exists: false,
@@ -2627,7 +2604,7 @@ var FS = {
             var current = PATH.join2(parent, part);
             try {
                 FS.mkdir(current)
-            } catch (e) { }
+            } catch (e) {}
             parent = current
         }
         return current
@@ -2734,11 +2711,11 @@ var FS = {
             this.lengthKnown = false;
             this.chunks = []
         }
-        LazyUint8Array.prototype.get = function LazyUint8Array_get(idx) {// @ts-ignore
+        LazyUint8Array.prototype.get = function LazyUint8Array_get(idx) {//@ts-ignore
             if (idx > this.length - 1 || idx < 0) {
                 return undefined
-            }// @ts-ignore
-            var chunkOffset = idx % this.chunkSize;// @ts-ignore
+            }//@ts-ignore
+            var chunkOffset = idx % this.chunkSize;//@ts-ignore
             var chunkNum = idx / this.chunkSize | 0;
             return this.getter(chunkNum)[chunkOffset]
         };
@@ -2828,7 +2805,7 @@ var FS = {
                 isDevice: false,
                 contents: lazyArray
             }
-        } else {// @ts-ignore
+        } else {//@ts-ignore
             var properties = {
                 isDevice: false,
                 url: url
@@ -2890,14 +2867,14 @@ var FS = {
                 if (onload)
                     onload();
                 removeRunDependency(dep)
-            }// @ts-ignore
+            }//@ts-ignore
             if (Browser.handledByPreloadPlugin(byteArray, fullname, finish, () => {
-                if (onerror)
-                    onerror();
-                removeRunDependency(dep)
-            })) {
-                return
-            }
+                    if (onerror)
+                        onerror();
+                        removeRunDependency(dep)
+                    })) {
+                    return
+                }
             finish(byteArray)
         }
         addRunDependency(dep);
@@ -2907,7 +2884,7 @@ var FS = {
             processData(url)
         }
     },
-    indexedDB: () => {// @ts-ignore
+    indexedDB: () => {//@ts-ignore
         return window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
     },
     DB_NAME: () => {
@@ -2916,8 +2893,8 @@ var FS = {
     DB_VERSION: 20,
     DB_STORE_NAME: "FILE_DATA",
     saveFilesToDB: (paths, onload, onerror) => {
-        onload = onload || (() => { });
-        onerror = onerror || (() => { });
+        onload = onload || (() => {});
+        onerror = onerror || (() => {});
         var indexedDB = FS.indexedDB();
         try {
             var openRequest = indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
@@ -2934,8 +2911,8 @@ var FS = {
             var transaction = db.transaction([FS.DB_STORE_NAME], "readwrite");
             var files = transaction.objectStore(FS.DB_STORE_NAME);
             var ok = 0,
-                fail = 0,
-                total = paths.length;
+            fail = 0,
+            total = paths.length;
             function finish() {
                 if (fail == 0)
                     onload();
@@ -2960,8 +2937,8 @@ var FS = {
         openRequest.onerror = onerror
     },
     loadFilesFromDB: (paths, onload, onerror) => {
-        onload = onload || (() => { });
-        onerror = onerror || (() => { });
+        onload = onload || (() => {});
+        onerror = onerror || (() => {});
         var indexedDB = FS.indexedDB();
         try {
             var openRequest = indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
@@ -2979,8 +2956,8 @@ var FS = {
             }
             var files = transaction.objectStore(FS.DB_STORE_NAME);
             var ok = 0,
-                fail = 0,
-                total = paths.length;
+            fail = 0,
+            total = paths.length;
             function finish() {
                 if (fail == 0)
                     onload();
@@ -3050,9 +3027,9 @@ var SYSCALLS = {
         HEAP32[buf + 24 >> 2] = stat.gid;
         HEAP32[buf + 28 >> 2] = stat.rdev;
         HEAP32[buf + 32 >> 2] = 0;
-        tempI64 = [stat.size >>> 0, (tempDouble = stat.size, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble - + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
-            HEAP32[buf + 40 >> 2] = tempI64[0],
-            HEAP32[buf + 44 >> 2] = tempI64[1];
+        tempI64 = [stat.size >>> 0, (tempDouble = stat.size, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 40 >> 2] = tempI64[0],
+        HEAP32[buf + 44 >> 2] = tempI64[1];
         HEAP32[buf + 48 >> 2] = 4096;
         HEAP32[buf + 52 >> 2] = stat.blocks;
         HEAP32[buf + 56 >> 2] = stat.atime.getTime() / 1e3 | 0;
@@ -3061,9 +3038,9 @@ var SYSCALLS = {
         HEAP32[buf + 68 >> 2] = 0;
         HEAP32[buf + 72 >> 2] = stat.ctime.getTime() / 1e3 | 0;
         HEAP32[buf + 76 >> 2] = 0;
-        tempI64 = [stat.ino >>> 0, (tempDouble = stat.ino, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble - + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
-            HEAP32[buf + 80 >> 2] = tempI64[0],
-            HEAP32[buf + 84 >> 2] = tempI64[1];
+        tempI64 = [stat.ino >>> 0, (tempDouble = stat.ino, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 80 >> 2] = tempI64[0],
+        HEAP32[buf + 84 >> 2] = tempI64[1];
         return 0
     },
     doMsync: function (addr, stream, len, flags, offset) {
@@ -3092,7 +3069,7 @@ function ___syscall_fcntl64(fd, cmd, varargs) {
     try {
         var stream = SYSCALLS.getStreamFromFD(fd);
         switch (cmd) {
-            case 0: {
+        case 0: {
                 var arg = SYSCALLS.get();
                 if (arg < 0) {
                     return -28
@@ -3101,32 +3078,32 @@ function ___syscall_fcntl64(fd, cmd, varargs) {
                 newStream = FS.createStream(stream, arg);
                 return newStream.fd
             }
-            case 1:
-            case 2:
-                return 0;
-            case 3:
-                return stream.flags;
-            case 4: {
+        case 1:
+        case 2:
+            return 0;
+        case 3:
+            return stream.flags;
+        case 4: {
                 var arg = SYSCALLS.get();
                 stream.flags |= arg;
                 return 0
             }
-            case 5: {
+        case 5: {
                 var arg = SYSCALLS.get();
                 var offset = 0;
                 HEAP16[arg + offset >> 1] = 2;
                 return 0
             }
-            case 6:
-            case 7:
-                return 0;
-            case 16:
-            case 8:
-                return -28;
-            case 9:
-                setErrNo(28);
-                return -1;
-            default: {
+        case 6:
+        case 7:
+            return 0;
+        case 16:
+        case 8:
+            return -28;
+        case 9:
+            setErrNo(28);
+            return -1;
+        default: {
                 return -28
             }
         }
@@ -3237,7 +3214,7 @@ function emscripten_realloc_buffer(size) {
         wasmMemory.grow(size - buffer.byteLength + 65535 >>> 16);
         updateGlobalBufferAndViews(wasmMemory.buffer);
         return 1
-    } catch (e) { }
+    } catch (e) {}
 }
 function _emscripten_resize_heap(requestedSize) {
     var oldSize = HEAPU8.length;
@@ -3262,7 +3239,7 @@ var ENV = {};
 function getExecutableName() {
     return thisProgram || "./this.program"
 }
-function getEnvStrings() {// @ts-ignore
+function getEnvStrings() {//@ts-ignore
     if (!getEnvStrings.strings) {
         var lang = (typeof navigator == "object" && navigator.languages && navigator.languages[0] || "C").replace("-", "_") + ".UTF-8";
         var env = {
@@ -3283,9 +3260,9 @@ function getEnvStrings() {// @ts-ignore
         var strings = [];
         for (var x in env) {
             strings.push(x + "=" + env[x])
-        }// @ts-ignore
+        }//@ts-ignore
         getEnvStrings.strings = strings
-    }// @ts-ignore
+    }//@ts-ignore
     return getEnvStrings.strings
 }
 function _environ_get(__environ, environ_buf) {
@@ -3349,7 +3326,7 @@ function _fd_read(fd, iov, iovcnt, pnum) {
         return e.errno
     }
 }
-function convertI32PairToI53Checked(lo, hi) {// @ts-ignore
+function convertI32PairToI53Checked(lo, hi) {//@ts-ignore
     return hi + 2097152 >>> 0 < 4194305 - !!lo ? (lo >>> 0) + hi * 4294967296 : NaN
 }
 function _fd_seek(fd, offset_low, offset_high, whence, newOffset) {
@@ -3359,9 +3336,9 @@ function _fd_seek(fd, offset_low, offset_high, whence, newOffset) {
             return 61;
         var stream = SYSCALLS.getStreamFromFD(fd);
         FS.llseek(stream, offset, whence);
-        tempI64 = [stream.position >>> 0, (tempDouble = stream.position, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble - + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
-            HEAP32[newOffset >> 2] = tempI64[0],
-            HEAP32[newOffset + 4 >> 2] = tempI64[1];
+        tempI64 = [stream.position >>> 0, (tempDouble = stream.position, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[newOffset >> 2] = tempI64[0],
+        HEAP32[newOffset + 4 >> 2] = tempI64[1];
         if (stream.getdents && offset === 0 && whence === 0)
             stream.getdents = null;
         return 0
@@ -3402,189 +3379,6 @@ function _getTempRet0() {
 function _setTempRet0(val) {
     setTempRet0(val)
 }
-function runAndAbortIfError(func) {
-    try {
-        return func()
-    } catch (e) {
-        abort(e)
-    }
-}
-function callUserCallback(func, synchronous) {
-    if (ABORT) {
-        return
-    }
-    if (synchronous) {
-        func();
-        return
-    }
-    try {
-        func()
-    } catch (e) {
-        handleException(e)
-    }
-}
-function runtimeKeepalivePush() { }
-function runtimeKeepalivePop() { }
-var Asyncify = {
-    State: {
-        Normal: 0,
-        Unwinding: 1,
-        Rewinding: 2,
-        Disabled: 3
-    },
-    state: 0,
-    StackSize: 4096,
-    currData: null,
-    handleSleepReturnValue: 0,
-    exportCallStack: [],
-    callStackNameToId: {},
-    callStackIdToName: {},
-    callStackId: 0,
-    asyncPromiseHandlers: null,
-    sleepCallbacks: [],
-    getCallStackId: function (funcName) {
-        var id = Asyncify.callStackNameToId[funcName];
-        if (id === undefined) {
-            id = Asyncify.callStackId++;
-            Asyncify.callStackNameToId[funcName] = id;
-            Asyncify.callStackIdToName[id] = funcName
-        }
-        return id
-    },
-    instrumentWasmExports: function (exports) {
-        var ret = {};
-        for (var x in exports) {
-            (function (x) {
-                var original = exports[x];
-                if (typeof original == "function") {
-                    ret[x] = function () {
-                        Asyncify.exportCallStack.push(x);
-                        try {
-                            return original.apply(null, arguments)
-                        }
-                        finally {
-                            if (!ABORT) {
-                                var y = Asyncify.exportCallStack.pop();
-                                assert(y === x);
-                                Asyncify.maybeStopUnwind()
-                            }
-                        }
-                    }
-                } else {
-                    ret[x] = original
-                }
-            })(x)
-        }
-        return ret
-    },
-    maybeStopUnwind: function () {
-        if (Asyncify.currData && Asyncify.state === Asyncify.State.Unwinding && Asyncify.exportCallStack.length === 0) {
-            Asyncify.state = Asyncify.State.Normal;
-            runAndAbortIfError(ModuleFontAtlas["_asyncify_stop_unwind"]);// @ts-ignore
-            if (typeof Fibers != "undefined") {// @ts-ignore
-                Fibers.trampoline()
-            }
-        }
-    },
-    whenDone: function () {
-        return new Promise((resolve, reject) => {
-            Asyncify.asyncPromiseHandlers = {
-                resolve: resolve,
-                reject: reject
-            }
-        })
-    },
-    allocateData: function () {
-        var ptr = _malloc(12 + Asyncify.StackSize);
-        Asyncify.setDataHeader(ptr, ptr + 12, Asyncify.StackSize);
-        Asyncify.setDataRewindFunc(ptr);
-        return ptr
-    },
-    setDataHeader: function (ptr, stack, stackSize) {
-        HEAP32[ptr >> 2] = stack;
-        HEAP32[ptr + 4 >> 2] = stack + stackSize
-    },
-    setDataRewindFunc: function (ptr) {
-        var bottomOfCallStack = Asyncify.exportCallStack[0];
-        var rewindId = Asyncify.getCallStackId(bottomOfCallStack);
-        HEAP32[ptr + 8 >> 2] = rewindId
-    },
-    getDataRewindFunc: function (ptr) {
-        var id = HEAP32[ptr + 8 >> 2];
-        var name = Asyncify.callStackIdToName[id];
-        var func = ModuleFontAtlas["asm"][name];
-        return func
-    },
-    doRewind: function (ptr) {
-        var start = Asyncify.getDataRewindFunc(ptr);
-        return start()
-    },
-    handleSleep: function (startAsync) {
-        if (ABORT)
-            return;
-        if (Asyncify.state === Asyncify.State.Normal) {
-            var reachedCallback = false;
-            var reachedAfterCallback = false;
-            startAsync(handleSleepReturnValue => {
-                if (ABORT)
-                    return;
-                Asyncify.handleSleepReturnValue = handleSleepReturnValue || 0;
-                reachedCallback = true;
-                if (!reachedAfterCallback) {
-                    return
-                }
-                Asyncify.state = Asyncify.State.Rewinding;
-                runAndAbortIfError(() => ModuleFontAtlas["_asyncify_start_rewind"](Asyncify.currData));// @ts-ignore
-                if (typeof Browser != "undefined" && Browser.mainLoop.func) {// @ts-ignore
-                    Browser.mainLoop.resume()
-                }
-                var asyncWasmReturnValue,
-                    isError = false;
-                try {
-                    asyncWasmReturnValue = Asyncify.doRewind(Asyncify.currData)
-                } catch (err) {
-                    asyncWasmReturnValue = err;
-                    isError = true
-                }
-                var handled = false;
-                if (!Asyncify.currData) {
-                    var asyncPromiseHandlers = Asyncify.asyncPromiseHandlers;
-                    if (asyncPromiseHandlers) {
-                        Asyncify.asyncPromiseHandlers = null;
-                        (isError ? asyncPromiseHandlers.reject : asyncPromiseHandlers.resolve)(asyncWasmReturnValue);
-                        handled = true
-                    }
-                }
-                if (isError && !handled) {
-                    throw asyncWasmReturnValue
-                }
-            });
-            reachedAfterCallback = true;
-            if (!reachedCallback) {
-                Asyncify.state = Asyncify.State.Unwinding;
-                Asyncify.currData = Asyncify.allocateData();
-                runAndAbortIfError(() => ModuleFontAtlas["_asyncify_start_unwind"](Asyncify.currData));// @ts-ignore
-                if (typeof Browser != "undefined" && Browser.mainLoop.func) {// @ts-ignore
-                    Browser.mainLoop.pause()
-                }
-            }
-        } else if (Asyncify.state === Asyncify.State.Rewinding) {
-            Asyncify.state = Asyncify.State.Normal;
-            runAndAbortIfError(ModuleFontAtlas["_asyncify_stop_rewind"]);
-            _free(Asyncify.currData);
-            Asyncify.currData = null;
-            Asyncify.sleepCallbacks.forEach(func => callUserCallback(func))
-        } else {
-            abort("invalid state: " + Asyncify.state)
-        }
-        return Asyncify.handleSleepReturnValue
-    },
-    handleAsync: function (startAsync) {
-        return Asyncify.handleSleep(wakeUp => {
-            startAsync().then(wakeUp)
-        })
-    }
-};
 var FSNode = function (parent, name, mode, rdev) {
     if (!parent) {
         parent = this
@@ -3711,15 +3505,6 @@ var _emscripten_builtin_memalign = ModuleFontAtlas["_emscripten_builtin_memalign
 var _setThrew = ModuleFontAtlas["_setThrew"] = function () {
     return (_setThrew = ModuleFontAtlas["_setThrew"] = ModuleFontAtlas["asm"]["setThrew"]).apply(null, arguments)
 };
-var _emscripten_stack_set_limits = ModuleFontAtlas["_emscripten_stack_set_limits"] = function () {
-    return (_emscripten_stack_set_limits = ModuleFontAtlas["_emscripten_stack_set_limits"] = ModuleFontAtlas["asm"]["emscripten_stack_set_limits"]).apply(null, arguments)
-};
-var _emscripten_stack_get_base = ModuleFontAtlas["_emscripten_stack_get_base"] = function () {
-    return (_emscripten_stack_get_base = ModuleFontAtlas["_emscripten_stack_get_base"] = ModuleFontAtlas["asm"]["emscripten_stack_get_base"]).apply(null, arguments)
-};
-var _emscripten_stack_get_end = ModuleFontAtlas["_emscripten_stack_get_end"] = function () {
-    return (_emscripten_stack_get_end = ModuleFontAtlas["_emscripten_stack_get_end"] = ModuleFontAtlas["asm"]["emscripten_stack_get_end"]).apply(null, arguments)
-};
 var stackSave = ModuleFontAtlas["stackSave"] = function () {
     return (stackSave = ModuleFontAtlas["stackSave"] = ModuleFontAtlas["asm"]["stackSave"]).apply(null, arguments)
 };
@@ -3729,76 +3514,13 @@ var stackRestore = ModuleFontAtlas["stackRestore"] = function () {
 var stackAlloc = ModuleFontAtlas["stackAlloc"] = function () {
     return (stackAlloc = ModuleFontAtlas["stackAlloc"] = ModuleFontAtlas["asm"]["stackAlloc"]).apply(null, arguments)
 };
-var dynCall_iii = ModuleFontAtlas["dynCall_iii"] = function () {
-    return (dynCall_iii = ModuleFontAtlas["dynCall_iii"] = ModuleFontAtlas["asm"]["dynCall_iii"]).apply(null, arguments)
-};
-var dynCall_ii = ModuleFontAtlas["dynCall_ii"] = function () {
-    return (dynCall_ii = ModuleFontAtlas["dynCall_ii"] = ModuleFontAtlas["asm"]["dynCall_ii"]).apply(null, arguments)
-};
-var dynCall_viii = ModuleFontAtlas["dynCall_viii"] = function () {
-    return (dynCall_viii = ModuleFontAtlas["dynCall_viii"] = ModuleFontAtlas["asm"]["dynCall_viii"]).apply(null, arguments)
-};
-var dynCall_vi = ModuleFontAtlas["dynCall_vi"] = function () {
-    return (dynCall_vi = ModuleFontAtlas["dynCall_vi"] = ModuleFontAtlas["asm"]["dynCall_vi"]).apply(null, arguments)
-};
-var dynCall_iiiiii = ModuleFontAtlas["dynCall_iiiiii"] = function () {
-    return (dynCall_iiiiii = ModuleFontAtlas["dynCall_iiiiii"] = ModuleFontAtlas["asm"]["dynCall_iiiiii"]).apply(null, arguments)
-};
-var dynCall_vii = ModuleFontAtlas["dynCall_vii"] = function () {
-    return (dynCall_vii = ModuleFontAtlas["dynCall_vii"] = ModuleFontAtlas["asm"]["dynCall_vii"]).apply(null, arguments)
-};
-var dynCall_iiiii = ModuleFontAtlas["dynCall_iiiii"] = function () {
-    return (dynCall_iiiii = ModuleFontAtlas["dynCall_iiiii"] = ModuleFontAtlas["asm"]["dynCall_iiiii"]).apply(null, arguments)
-};
-var dynCall_iiii = ModuleFontAtlas["dynCall_iiii"] = function () {
-    return (dynCall_iiii = ModuleFontAtlas["dynCall_iiii"] = ModuleFontAtlas["asm"]["dynCall_iiii"]).apply(null, arguments)
-};
-var dynCall_viiii = ModuleFontAtlas["dynCall_viiii"] = function () {
-    return (dynCall_viiii = ModuleFontAtlas["dynCall_viiii"] = ModuleFontAtlas["asm"]["dynCall_viiii"]).apply(null, arguments)
-};
-var dynCall_viiiii = ModuleFontAtlas["dynCall_viiiii"] = function () {
-    return (dynCall_viiiii = ModuleFontAtlas["dynCall_viiiii"] = ModuleFontAtlas["asm"]["dynCall_viiiii"]).apply(null, arguments)
-};
-var dynCall_iiiiiiiiii = ModuleFontAtlas["dynCall_iiiiiiiiii"] = function () {
-    return (dynCall_iiiiiiiiii = ModuleFontAtlas["dynCall_iiiiiiiiii"] = ModuleFontAtlas["asm"]["dynCall_iiiiiiiiii"]).apply(null, arguments)
-};
-var dynCall_viiiiiiii = ModuleFontAtlas["dynCall_viiiiiiii"] = function () {
-    return (dynCall_viiiiiiii = ModuleFontAtlas["dynCall_viiiiiiii"] = ModuleFontAtlas["asm"]["dynCall_viiiiiiii"]).apply(null, arguments)
-};
-var dynCall_iiiiiii = ModuleFontAtlas["dynCall_iiiiiii"] = function () {
-    return (dynCall_iiiiiii = ModuleFontAtlas["dynCall_iiiiiii"] = ModuleFontAtlas["asm"]["dynCall_iiiiiii"]).apply(null, arguments)
-};
-var dynCall_viiiiii = ModuleFontAtlas["dynCall_viiiiii"] = function () {
-    return (dynCall_viiiiii = ModuleFontAtlas["dynCall_viiiiii"] = ModuleFontAtlas["asm"]["dynCall_viiiiii"]).apply(null, arguments)
-};
-var dynCall_iiiiiiii = ModuleFontAtlas["dynCall_iiiiiiii"] = function () {
-    return (dynCall_iiiiiiii = ModuleFontAtlas["dynCall_iiiiiiii"] = ModuleFontAtlas["asm"]["dynCall_iiiiiiii"]).apply(null, arguments)
-};
-var dynCall_v = ModuleFontAtlas["dynCall_v"] = function () {
-    return (dynCall_v = ModuleFontAtlas["dynCall_v"] = ModuleFontAtlas["asm"]["dynCall_v"]).apply(null, arguments)
-};
 var dynCall_jiji = ModuleFontAtlas["dynCall_jiji"] = function () {
     return (dynCall_jiji = ModuleFontAtlas["dynCall_jiji"] = ModuleFontAtlas["asm"]["dynCall_jiji"]).apply(null, arguments)
-};
-var dynCall_iidiiii = ModuleFontAtlas["dynCall_iidiiii"] = function () {
-    return (dynCall_iidiiii = ModuleFontAtlas["dynCall_iidiiii"] = ModuleFontAtlas["asm"]["dynCall_iidiiii"]).apply(null, arguments)
-};
-var _asyncify_start_unwind = ModuleFontAtlas["_asyncify_start_unwind"] = function () {
-    return (_asyncify_start_unwind = ModuleFontAtlas["_asyncify_start_unwind"] = ModuleFontAtlas["asm"]["asyncify_start_unwind"]).apply(null, arguments)
-};
-var _asyncify_stop_unwind = ModuleFontAtlas["_asyncify_stop_unwind"] = function () {
-    return (_asyncify_stop_unwind = ModuleFontAtlas["_asyncify_stop_unwind"] = ModuleFontAtlas["asm"]["asyncify_stop_unwind"]).apply(null, arguments)
-};
-var _asyncify_start_rewind = ModuleFontAtlas["_asyncify_start_rewind"] = function () {
-    return (_asyncify_start_rewind = ModuleFontAtlas["_asyncify_start_rewind"] = ModuleFontAtlas["asm"]["asyncify_start_rewind"]).apply(null, arguments)
-};
-var _asyncify_stop_rewind = ModuleFontAtlas["_asyncify_stop_rewind"] = function () {
-    return (_asyncify_stop_rewind = ModuleFontAtlas["_asyncify_stop_rewind"] = ModuleFontAtlas["asm"]["asyncify_stop_rewind"]).apply(null, arguments)
 };
 function invoke_viiii(index, a1, a2, a3, a4) {
     var sp = stackSave();
     try {
-        dynCall_viiii(index, a1, a2, a3, a4)
+        getWasmTableEntry(index)(a1, a2, a3, a4)
     } catch (e) {
         stackRestore(sp);
         if (e !== e + 0)
@@ -3809,7 +3531,7 @@ function invoke_viiii(index, a1, a2, a3, a4) {
 function invoke_iii(index, a1, a2) {
     var sp = stackSave();
     try {
-        return dynCall_iii(index, a1, a2)
+        return getWasmTableEntry(index)(a1, a2)
     } catch (e) {
         stackRestore(sp);
         if (e !== e + 0)
@@ -3820,7 +3542,7 @@ function invoke_iii(index, a1, a2) {
 function invoke_iiiii(index, a1, a2, a3, a4) {
     var sp = stackSave();
     try {
-        return dynCall_iiiii(index, a1, a2, a3, a4)
+        return getWasmTableEntry(index)(a1, a2, a3, a4)
     } catch (e) {
         stackRestore(sp);
         if (e !== e + 0)
@@ -3831,7 +3553,7 @@ function invoke_iiiii(index, a1, a2, a3, a4) {
 function invoke_v(index) {
     var sp = stackSave();
     try {
-        dynCall_v(index)
+        getWasmTableEntry(index)()
     } catch (e) {
         stackRestore(sp);
         if (e !== e + 0)
@@ -3842,7 +3564,7 @@ function invoke_v(index) {
 function invoke_iiii(index, a1, a2, a3) {
     var sp = stackSave();
     try {
-        return dynCall_iiii(index, a1, a2, a3)
+        return getWasmTableEntry(index)(a1, a2, a3)
     } catch (e) {
         stackRestore(sp);
         if (e !== e + 0)

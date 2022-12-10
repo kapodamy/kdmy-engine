@@ -7,7 +7,6 @@ uniform bool u_offsetcolor_enabled;
 uniform vec4 u_offsetcolor;
 
 #ifdef DOTTED
-varying vec2 v_coord;
 uniform bool u_dotted;
 
 const lowp float MOD_A = 4.0;
@@ -25,7 +24,7 @@ void main() {
     }
 
 #ifdef DOTTED
-    if(u_dotted && mod(v_coord.x, MOD_A) < MOD_B && mod(v_coord.y, MOD_A) < MOD_B) {
+    if(u_dotted && mod(gl_FragCoord.x, MOD_A) < MOD_B && mod(gl_FragCoord.y, MOD_A) < MOD_B) {
         discard;
     }
 #endif

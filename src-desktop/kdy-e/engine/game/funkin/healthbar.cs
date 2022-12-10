@@ -287,8 +287,8 @@ namespace Engine.Game {
             );
         }
 
-        public int StateOpponentAdd2(ModelHolder icon_mdlhldr, uint bar_color_rbb8, string state_name) {
-            HealthBar.STUB_MODELHOLDER.vertex_color_rgb8 = bar_color_rbb8;
+        public int StateOpponentAdd2(ModelHolder icon_mdlhldr, uint bar_color_rgb8, string state_name) {
+            HealthBar.STUB_MODELHOLDER.vertex_color_rgb8 = bar_color_rgb8;
             return InternalAddChrctrState(
                 this.sprite_icon_opponent, this.sprite_bar_opponent,
                 icon_mdlhldr, HealthBar.STUB_MODELHOLDER,
@@ -355,12 +355,19 @@ namespace Engine.Game {
         }
 
 
-        public void SetOpponentBarColor(uint color_rgb8) {
+        public void SetOpponentBarColorRGB8(uint color_rgb8) {
             this.sprite_bar_opponent.SetVertexColorRGB8(color_rgb8);
         }
+        public void SetOpponentBarColor(float r, float g, float b) {
+            this.sprite_bar_opponent.SetVertexColor(r, g, b);
+        }
 
-        public void SetPlayerBarColor(uint color_rgb8) {
+        public void SetPlayerBarColorRGB8(uint color_rgb8) {
             this.sprite_bar_player.SetVertexColorRGB8(color_rgb8);
+        }
+
+        public void SetPlayerBarColor(float r, float g, float b) {
+            this.sprite_bar_player.SetVertexColor(r, g, b);
         }
 
 
@@ -474,9 +481,18 @@ namespace Engine.Game {
         }
 
         public void AnimationEnd() {
-            if (this.bump_animation_opponent != null) this.bump_animation_opponent.ForceEnd();
-            if (this.bump_animation_player != null) this.bump_animation_player.ForceEnd();
-            if (this.drawable_animation != null) this.drawable_animation.ForceEnd();
+            if (this.bump_animation_opponent != null) {
+                this.bump_animation_opponent.ForceEnd();
+                this.bump_animation_opponent.UpdateModifier(this.bump_modifier_opponent, true);
+            }
+            if (this.bump_animation_player != null) {
+                this.bump_animation_player.ForceEnd();
+                this.bump_animation_player.UpdateModifier(this.bump_modifier_player, true);
+            }
+            if (this.drawable_animation != null) {
+                this.drawable_animation.ForceEnd();
+                this.drawable_animation.UpdateDrawable(this.drawable, true);
+            }
 
             this.sprite_background.AnimationEnd();
             this.sprite_bar_opponent.AnimationEnd();

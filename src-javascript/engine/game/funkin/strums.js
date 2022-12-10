@@ -279,10 +279,13 @@ function strums_draw(strums, pvrctx) {
 
     drawable_helper_apply_in_context(strums.drawable, pvrctx);
 
-    for (let i = 0; i < strums.size; i++)
+    for (let i = 0; i < strums.size; i++) {
+        if (!drawable_is_visible(strum_get_drawable(strums.lines[i]))) continue;
         strum_draw(strums.lines[i], pvrctx);
+    }
 
     for (let i = 0; i < strums.size; i++) {
+        if (!drawable_is_visible(strum_get_drawable(strums.lines[i]))) continue;
         if (strums.sick_effects[i] && statesprite_is_visible(strums.sick_effects[i]))
             statesprite_draw(strums.sick_effects[i], pvrctx);
     }
@@ -399,7 +402,10 @@ function strums_animation_restart(strums) {
 }
 
 function strums_animation_end(strums) {
-    if (strums.drawable_animation) animsprite_force_end(strums.drawable_animation);
+    if (strums.drawable_animation) {
+        animsprite_force_end(strums.drawable_animation);
+        animsprite_update_drawable(strums.drawable_animation, strums.drawable, 1);
+    }
 
     for (let i = 0; i < strums.size; i++)
         strum_animation_end(strums.lines[i]);

@@ -12,8 +12,8 @@ using Engine.Utils;
 // it took over four months to create this, the most expensive part of the project
 //
 namespace Engine.Game {
-    public enum StrumPressState {
-        NONE,
+    public enum StrumPressState : int {
+        NONE = 0,
         HIT,
         HIT_SUSTAIN,
         PENALTY_NOTE,
@@ -1571,6 +1571,9 @@ L_discard_key_event:
         public Modifier GetModifier() {
             return this.drawable.GetModifier();
         }
+        public Drawable GetDrawable() {
+            return this.drawable;
+        }
 
         public double GetDuration() {
             double max_duration = 0;
@@ -1729,11 +1732,11 @@ L_discard_key_event:
             if (this.scroll_is_vertical) {
                 width = this.dimmen_opposite;
                 height = this.dimmen_marker;
-                if (this.scroll_is_inverse) state.offset_y += inverse;
+                if (this.scroll_is_inverse) state.offset_y += inverse + height;
             } else {
                 width = dimmen_sick_effect;
                 height = this.dimmen_marker;
-                if (this.scroll_is_inverse) state.offset_x += inverse;
+                if (this.scroll_is_inverse) state.offset_x += inverse + width;
             }
 
             Strum.InternalCalcStateDimmen(

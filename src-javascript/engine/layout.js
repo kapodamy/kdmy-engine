@@ -2159,12 +2159,12 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
     for (let item of unparsed_group.children) {
         switch (item.tagName) {
             case "Action":
-                if (!parent_context) {
+                /*if (!parent_context) {
                     console.warn(
                         "layout_init(): layout_parse_group() action found in the layout root, " +
                         "will be imported as root group action."
                     );
-                }
+                }*/
                 await layout_parse_group_action(item, layout_context.animlist, actions_arraylist);
                 break;
             case "Sprite":

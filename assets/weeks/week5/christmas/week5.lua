@@ -39,7 +39,7 @@ function f_beforeready(from_retry)
     end
     week_set_halt(true)
     stage:trigger_action(nil, "fade_lights")
-    ui_set_visibility(false)
+    week_ui_set_visibility(false)
     place_lemon_demon(stage)
     stage:trigger_action(nil, "lights_on")
     timer_callback_timeout(
@@ -51,7 +51,7 @@ function f_beforeready(from_retry)
                 2500,
                 function()
                     stage:trigger_camera("mall_evil_zoom_out")
-                    ui_set_visibility(true)
+                    week_ui_set_visibility(true)
                     week_set_halt(false)
                 end
             )

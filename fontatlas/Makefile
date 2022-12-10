@@ -5,7 +5,7 @@ WINDOWS_STUBS_SOURCES = $(wildcard src/windows_stubs/*.c)
 HEADERS = $(wildcard src/*.h)
 # KDMYENGINEFLAGS = -DJAVASCRIPT -s EXPORTED_FUNCTIONS=@src/exports.txt -s USE_FREETYPE=1
 KDMYENGINEFLAGS = -DJAVASCRIPT -s EXPORTED_FUNCTIONS=@src/exports.txt -s libs/libfreetype.a
-EMFLAGS = -s STRICT=1 -s LLD_REPORT_UNDEFINED -s ASYNCIFY -s ALLOW_MEMORY_GROWTH=1 ${KDMYENGINEFLAGS} ${CFLAGS}
+EMFLAGS = -s STRICT=1 -s LLD_REPORT_UNDEFINED -s ALLOW_MEMORY_GROWTH=1 ${KDMYENGINEFLAGS} ${CFLAGS}
 
 build-release-dll-x86:
 	windres src/info.rc output/info.o

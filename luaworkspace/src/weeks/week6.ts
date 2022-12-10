@@ -2,7 +2,7 @@
 const PREFIX_DAD: string = ":dad:";
 const PREFIX_BF: string = ":bf:";
 const CHARS_DELAY: number = 40;// milliseconds
-const GAMEPAD_XA = GAMEPAD_X | GAMEPAD_A;
+const GAMEPAD_XA = GamepadButtons.X | GamepadButtons.A;
 
 type DialogLine = { isSenpai: boolean; text: string; };
 
@@ -42,7 +42,7 @@ function f_weekinit(freeplay_index: number): void {
     dialogs_thorns = dialog_parse("/assets/weeks/week6/weeb_but_evil/dialogs/thornsDialogue.txt");
 
     week_enable_credits_on_completed();
-    unlockdirective_create("FNF_COMPLETED", false, true, 9942069);
+    week_unlockdirective_create("FNF_COMPLETED", false, true, 9942069);
 }
 
 function f_beforeready(from_retry: boolean): void {
@@ -98,7 +98,7 @@ function f_beforeready(from_retry: boolean): void {
     if (!dialog_lines) return;
 
     week_set_halt(true);
-    ui_set_visibility(false);
+    week_ui_set_visibility(false);
 
     if (track_index == 0 || track_index == 2) lyt_bg_music.play();
 
@@ -138,7 +138,7 @@ function f_roundend(loose: boolean): void {
     //
 
     week_set_halt(true);
-    ui_set_visibility(false);
+    week_ui_set_visibility(false);
 
     stage.trigger_camera("senpai_dies");
     stage.trigger_action(null, "fade_in_red");
@@ -238,7 +238,7 @@ function dialog_show(dialog_lines: DialogLine[]): void {
 
     timer_callback_timeout(500, function () {
         week_set_halt(false);
-        ui_set_visibility(true);
+        week_ui_set_visibility(true);
     });
 }
 

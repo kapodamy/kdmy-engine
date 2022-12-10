@@ -46,7 +46,19 @@
         "psshader.h": "c",
         "animsprite.h": "c",
         "drawable.h": "c",
-        "modelholder.h": "c"
+        "modelholder.h": "c",
+        "strum.h": "c",
+        "conductor.h": "c",
+        "countdown.h": "c",
+        "missnotefx.h": "c",
+        "roundstats.h": "c",
+        "rankingcounter.h": "c",
+        "healthbar.h": "c",
+        "healthwatcher.h": "c",
+        "modding.h": "c",
+        "tweenlerp.h": "c",
+        "playerstats.h": "c",
+        "messagebox.h": "c"
     },
     "C_Cpp.clang_format_style": "file",
     "C_Cpp.formatting": "clangFormat"

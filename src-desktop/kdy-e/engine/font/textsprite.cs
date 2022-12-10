@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using Engine.Animation;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
@@ -62,6 +63,11 @@ namespace Engine.Font {
         private Blend blend_dst_rgb;
         private Blend blend_src_alpha;
         private Blend blend_dst_alpha;
+        private bool background_enabled;
+        private float background_size;
+        private float background_offset_x;
+        private float background_offset_y;
+        private float[] background_rgba;
         private int id;
 
 
@@ -132,6 +138,12 @@ namespace Engine.Font {
                 blend_dst_rgb = Blend.DEFAULT,
                 blend_src_alpha = Blend.DEFAULT,
                 blend_dst_alpha = Blend.DEFAULT,
+
+                background_enabled = false,
+                background_size = 0,
+                background_offset_x = 0,
+                background_offset_y = 0,
+                background_rgba = new float[] { 0.0f, 0.0f, 0.0f, 0.5f },
 
                 id = TextSprite.IDS++
             };
@@ -740,6 +752,30 @@ namespace Engine.Font {
                 case VertexProps.FONT_PROP_WORDBREAK:
                     this.wordbreak = (int)value;
                     break;
+                case VertexProps.TEXTSPRITE_PROP_BACKGROUND_ENABLED:
+                    this.background_enabled = value == 1.0;
+                    break;
+                case VertexProps.TEXTSPRITE_PROP_BACKGROUND_SIZE:
+                    this.background_size = value;
+                    break;
+                case VertexProps.TEXTSPRITE_PROP_BACKGROUND_OFFSET_X:
+                    this.background_offset_x = value;
+                    break;
+                case VertexProps.TEXTSPRITE_PROP_BACKGROUND_OFFSET_Y:
+                    this.background_offset_y = value;
+                    break;
+                case VertexProps.TEXTSPRITE_PROP_BACKGROUND_COLOR_R:
+                    this.background_rgba[0] = value;
+                    break;
+                case VertexProps.TEXTSPRITE_PROP_BACKGROUND_COLOR_G:
+                    this.background_rgba[1] = value;
+                    break;
+                case VertexProps.TEXTSPRITE_PROP_BACKGROUND_COLOR_B:
+                    this.background_rgba[2] = value;
+                    break;
+                case VertexProps.TEXTSPRITE_PROP_BACKGROUND_COLOR_A:
+                    this.background_rgba[3] = value;
+                    break;
             }
 
             // check if the coordinates was modified
@@ -815,6 +851,17 @@ namespace Engine.Font {
             MatrixCalculate(pvrctx);
 
             string text = this.text_forced_case ?? this.text;
+
+            if (this.background_enabled) {
+                float size = this.background_size * 2;
+                float x = this.last_draw_x - this.background_size + this.background_offset_x;
+                float y = this.last_draw_y - this.background_size + this.background_offset_y;
+                float width = this.last_draw_width + size;
+                float height = this.last_draw_height + size;
+
+                pvrctx.SetVertexAlpha(this.background_rgba[3]);
+                pvrctx.DrawSolidColor(this.background_rgba, x, y, width, height);
+            }
 
             if (this.paragraph_array.Size() < 2) {
                 // let the font handle the draw
@@ -985,6 +1032,28 @@ namespace Engine.Font {
             this.blend_src_alpha = src_alpha;
             this.blend_dst_alpha = dst_alpha;
         }
+
+
+        public void BackgroundEnable(bool enabled) {
+            this.background_enabled = !!enabled;
+        }
+
+        public void BackgroundSetSize(float size) {
+            this.background_size = size;
+        }
+
+        public void BackgroundSetOffets(float offset_x, float offset_y) {
+            if (!Double.IsNaN(offset_x)) this.background_offset_x = offset_x;
+            if (!Double.IsNaN(offset_y)) this.background_offset_y = offset_y;
+        }
+
+        public void BackgroundSetColor(float r, float g, float b, float a) {
+            if (!Double.IsNaN(r)) this.background_rgba[0] = r;
+            if (!Double.IsNaN(g)) this.background_rgba[1] = g;
+            if (!Double.IsNaN(b)) this.background_rgba[2] = b;
+            if (!Double.IsNaN(a)) this.background_rgba[3] = a;
+        }
+
 
 
         private class ParagraphInfo {

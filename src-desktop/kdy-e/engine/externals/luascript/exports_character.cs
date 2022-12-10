@@ -8,7 +8,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
     public static class ExportsCharacter {
 
-        private const string CHARACTER = "Character";
+        public const string CHARACTER = "Character";
 
 
 

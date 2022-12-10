@@ -1,4 +1,3 @@
-using System;
 using Engine.Externals.LuaInterop;
 using Engine.Font;
 using Engine.Game;
@@ -11,24 +10,13 @@ namespace Engine.Externals.LuaScriptInterop {
 
     public static class ExportsWeek {
 
-
-        private static int NotImplemented(LuaState L) {
-            Console.Error.WriteLine("[ERROR] lua function not implemented");
-            L.lua_pushnil();
-            return 1;
-        }
-
-
         static int script_week_unlockdirective_create(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
-            string name = L.luaL_checkstring(1);
+
+            string name = L.luaL_optstring(1, null);
             bool completed_round = L.lua_toboolean(2);
             bool completed_week = L.lua_toboolean(3);
             double value = L.luaL_checknumber(4);
-
-            if (String.IsNullOrEmpty(name)) {
-                return L.luaL_argerror(1, "the directive name cannot be empty.");
-            }
 
             Week.UnlockDirectiveCreate(roundcontext, name, completed_round, completed_week, value);
 
@@ -37,13 +25,10 @@ namespace Engine.Externals.LuaScriptInterop {
 
         static int script_week_unlockdirective_remove(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
-            string name = L.luaL_checkstring(1);
+
+            string name = L.luaL_optstring(1, null);
             bool completed_round = L.lua_toboolean(2);
             bool completed_week = L.lua_toboolean(3);
-
-            if (String.IsNullOrEmpty(name)) {
-                L.luaL_argerror(1, "the directive name cannot be null or empty.");
-            }
 
             Week.UnlockdirectiveRemove(roundcontext, name, completed_round, completed_week);
 
@@ -52,29 +37,18 @@ namespace Engine.Externals.LuaScriptInterop {
 
         static int script_week_unlockdirective_get(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
+
             string name = L.luaL_optstring(1, null);
 
-            if (String.IsNullOrEmpty(name)) {
-                L.luaL_argerror(1, "the directive name cannot be null or empty.");
-            }
-
-            if (Week.UnlockdirectiveHas(roundcontext, name)) {
-                double value = Week.UnlockdirectiveGet(roundcontext, name);
-                L.lua_pushnumber(value);
-            } else {
+            if (!Week.UnlockdirectiveHas(roundcontext, name)) {
                 L.lua_pushnil();
+                return 1;
             }
 
+            double ret = Week.UnlockdirectiveGet(roundcontext, name);
+
+            L.lua_pushnumber(ret);
             return 1;
-        }
-
-        static int script_week_halt(LuaState L) {
-            RoundContext roundcontext = (RoundContext)L.Context;
-            bool should_halt = L.lua_toboolean(1);
-
-            Week.SetHalt(roundcontext, should_halt);
-
-            return 0;
         }
 
         static int script_week_ui_set_visibility(LuaState L) {
@@ -90,26 +64,27 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_ui_get_layout(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            Layout layout = Week.UIGetLayout(roundcontext);
+            Layout ret = Week.UIGetLayout(roundcontext);
 
-            return ExportsLayout.script_layout_new(L, layout);
-        }
-
-        static int script_week_get_stage_layout(LuaState L) {
-            RoundContext roundcontext = (RoundContext)L.Context;
-
-            Layout layout = Week.GetStageLayout(roundcontext);
-
-            return ExportsLayout.script_layout_new(L, layout);
+            return ExportsLayout.script_layout_new(L, ret);
         }
 
         static int script_week_ui_get_camera(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            Layout layout = Week.UIGetLayout(roundcontext);
-            Camera camera = Week.UIGetCamera(roundcontext);
+            Camera ret = Week.UIGetCamera(roundcontext);
 
-            return ExportsCamera.script_camera_new(L, camera);
+            return ExportsCamera.script_camera_new(L, ret);
+        }
+
+        static int script_week_set_halt(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            bool halt = L.lua_toboolean(1);
+
+            Week.SetHalt(roundcontext, halt);
+
+            return 0;
         }
 
         static int script_week_ui_get_strums_count(LuaState L) {
@@ -122,123 +97,187 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_week_ui_get_strums(LuaState L) {
-            return NotImplemented(L);
+            RoundContext roundcontext = (RoundContext)L.Context;
 
-            /*RoundContext roundcontext = (RoundContext)L.Context;
-            int strums_id = (int)L.luaL_checkinteger( 1);
+            int strums_id = (int)L.luaL_checkinteger(1);
 
-            Strums strums = Week.UIGetStrums(roundcontext, strums_id);
+            Strums ret = Week.UIGetStrums(roundcontext, strums_id);
 
-            return ExportsStrums.script_week_strums_new(L, strums);*/
+            return ExportsStrums.script_strums_new(L, ret);
         }
 
         static int script_week_ui_get_roundstats(LuaState L) {
-            return NotImplemented(L);
+            RoundContext roundcontext = (RoundContext)L.Context;
 
-            /*RoundContext roundcontext = (RoundContext)L.Context;
-            Roundstats roundstats = Week.UIGetRoundStats(roundcontext);
-            return ExportsRoundStats.script_week_roundstats_new(L, roundstats);*/
+            RoundStats ret = Week.UIGetroundstats(roundcontext);
+
+            return ExportsRoundStats.script_roundstats_new(L, ret);
         }
 
         static int script_week_ui_get_rankingcounter(LuaState L) {
-            return NotImplemented(L);
+            RoundContext roundcontext = (RoundContext)L.Context;
 
-            /*RoundContext roundcontext = (RoundContext)L.Context;
-            Rankingcounter rankingcounter = Week.UIGetRankingcounter(roundcontext);
-            return ExportsRankingcounter.script_week_rankingcounter_new(L, rankingcounter);*/
+            RankingCounter ret = Week.UIGetRankingCounter(roundcontext);
+
+            return ExportsRankingCounter.script_rankingcounter_new(L, ret);
         }
 
         static int script_week_ui_get_streakcounter(LuaState L) {
-            return NotImplemented(L);
+            RoundContext roundcontext = (RoundContext)L.Context;
 
-            /*RoundContext roundcontext = (RoundContext)L.Context;
-            StreakCounter streakcounter = Week.UIGetStreakCounter(roundcontext);
-            return ExportsStreakCounter.script_week_streakcounter_new(L, streakcounter);*/
+            StreakCounter ret = Week.UIGetStreakcounter(roundcontext);
+
+            return ExportsStreakCounter.script_streakcounter_new(L, ret);
         }
 
         static int script_week_ui_get_trackinfo(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            TextSprite textsprite = Week.UIGetTrackinfo(roundcontext);
+            TextSprite ret = Week.UIGetTrackinfo(roundcontext);
 
-            return ExportsTextSprite.script_textsprite_new(L, textsprite);
+            return ExportsTextSprite.script_textsprite_new(L, ret);
         }
 
         static int script_week_ui_get_songprogressbar(LuaState L) {
-            return NotImplemented(L);
+            RoundContext roundcontext = (RoundContext)L.Context;
 
-            /*RoundContext roundcontext = (RoundContext)L.Context;
-            SongProgressbar songprogressbar = Week.UIGetSongProgressbar(roundcontext);
-            return ExportsSongProgressbar.script_week_songprogressbar_new(L, songprogressbar);*/
+            SongProgressbar ret = Week.UIGetSongprogressbar(roundcontext);
+
+            return ExportsSongProgressbar.script_songprogressbar_new(L, ret);
         }
 
-        static int script_week_set_bpm(LuaState L) {
+        static int script_week_ui_get_countdown(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
+
+            Countdown ret = Week.UIGetcountdown(roundcontext);
+
+            return ExportsCountdown.script_countdown_new(L, ret);
+        }
+
+        static int script_week_ui_get_healthbar(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            HealthBar ret = Week.UIGetHealthbar(roundcontext);
+
+            return ExportsHealthBar.script_healthbar_new(L, ret);
+        }
+
+        static int script_week_get_stage_layout(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            Layout ret = Week.GetStageLayout(roundcontext);
+
+            return ExportsLayout.script_layout_new(L, ret);
+        }
+
+        static int script_week_get_healthwatcher(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            HealthWatcher ret = Week.GetHealthwatcher(roundcontext);
+
+            return ExportsHealthWatcher.script_healthwatcher_new(L, ret);
+        }
+
+        static int script_week_get_missnotefx(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            MissNoteFX ret = Week.GetMissnotefx(roundcontext);
+
+            return ExportsMissNoteFX.script_missnotefx_new(L, ret);
+        }
+
+        static int script_week_update_bpm(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
             float bpm = (float)L.luaL_checknumber(1);
 
             Week.UpdateBpm(roundcontext, bpm);
+
             return 0;
         }
 
-        static int script_week_set_speed(LuaState L) {
+        static int script_week_update_speed(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
-            double speed = L.luaL_checknumber(1);
+
+            float speed = (float)L.luaL_checknumber(1);
 
             Week.UpdateSpeed(roundcontext, speed);
+
             return 0;
         }
 
-        static int script_week_ui_get_messagebox(LuaState L) {
+        static int script_week_get_messagebox(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            MessageBox messagebox = Week.UIGetMessagebox(roundcontext);
+            MessageBox ret = Week.GetMessagebox(roundcontext);
 
-            return ExportsMessageBox.script_messagebox_new(L, messagebox);
+            return ExportsMessageBox.script_messagebox_new(L, ret);
         }
 
         static int script_week_get_girlfriend(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            Character character = Week.GetGirlfriend(roundcontext);
+            Character ret = Week.GetGirlfriend(roundcontext);
 
-            return ExportsCharacter.script_character_new(L, character);
+            return ExportsCharacter.script_character_new(L, ret);
         }
 
         static int script_week_get_character_count(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
-            int count = Week.GetCharacterCount(roundcontext);
 
-            L.lua_pushinteger(count);
+            int ret = Week.GetCharacterCount(roundcontext);
+
+            L.lua_pushinteger(ret);
             return 1;
+        }
+
+        static int script_week_get_conductor(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            int character_index = (int)L.luaL_checkinteger(1);
+
+            Conductor ret = Week.GetConductor(roundcontext, character_index);
+
+            return ExportsConductor.script_conductor_new(L, ret);
         }
 
         static int script_week_get_character(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
-            int index = (int)L.luaL_checkinteger(1);
 
-            Character character = Week.GetCharacter(roundcontext, index);
+            int character_index = (int)L.luaL_checkinteger(1);
 
-            return ExportsCharacter.script_character_new(L, character);
+            Character ret = Week.GetCharacter(roundcontext, character_index);
+
+            return ExportsCharacter.script_character_new(L, ret);
+        }
+
+        static int script_week_get_playerstats(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            int character_index = (int)L.luaL_checkinteger(1);
+
+            PlayerStats ret = Week.GetPlayerstats(roundcontext, character_index);
+
+            return ExportsPlayerStats.script_playerstats_new(L, ret);
         }
 
         static int script_week_get_songplayer(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            SongPlayer songplayer = Week.GetSongplayer(roundcontext);
+            SongPlayer ret = Week.GetSongplayer(roundcontext);
 
-            return ExportsSongPlayer.script_songplayer_new(L, songplayer);
+            return ExportsSongPlayer.script_songplayer_new(L, ret);
         }
 
         static int script_week_get_current_chart_info(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            float bpm; double speed;
-
+            float bpm;
+            double speed;
             Week.GetCurrentChartInfo(roundcontext, out bpm, out speed);
 
             L.lua_pushnumber(bpm);
             L.lua_pushnumber(speed);
-
             return 2;
         }
 
@@ -248,13 +287,11 @@ namespace Engine.Externals.LuaScriptInterop {
             string name;
             string difficult;
             int index;
-
             Week.GetCurrentTrackInfo(roundcontext, out name, out difficult, out index);
 
             L.lua_pushstring(name);
             L.lua_pushstring(difficult);
             L.lua_pushinteger(index);
-
             return 3;
         }
 
@@ -311,9 +348,9 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_get_dialogue(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            Dialogue dialogue = Week.GetDialogue(roundcontext);
+            Week.GetDialogue(roundcontext);
 
-            return ExportsDialogue.script_dialogue_new(L, dialogue);
+            return 0;
         }
 
         static int script_week_set_ui_shader(LuaState L) {
@@ -326,29 +363,41 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_week_rebuild_ui(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            Week.RebuildUI(roundcontext);
+
+            return 0;
+        }
+
+
 
         static readonly LuaTableFunction[] EXPORTS_FUNCTION = {
-            new LuaTableFunction("unlockdirective_create", script_week_unlockdirective_create),
-            new LuaTableFunction("unlockdirective_remove", script_week_unlockdirective_remove),
-            new LuaTableFunction("unlockdirective_get", script_week_unlockdirective_get),
-            new LuaTableFunction("week_set_halt", script_week_halt),
-            new LuaTableFunction("ui_set_visibility", script_week_ui_set_visibility),
-            new LuaTableFunction("ui_get_layout", script_week_ui_get_layout),
+            new LuaTableFunction("week_ui_set_visibility", script_week_ui_set_visibility),
+            new LuaTableFunction("week_ui_get_layout", script_week_ui_get_layout),
+            new LuaTableFunction("week_ui_get_camera", script_week_ui_get_camera),
+            new LuaTableFunction("week_set_halt", script_week_set_halt),
+            new LuaTableFunction("week_ui_get_strums_count", script_week_ui_get_strums_count),
+            new LuaTableFunction("week_ui_get_strums", script_week_ui_get_strums),
+            new LuaTableFunction("week_ui_get_roundstats", script_week_ui_get_roundstats),
+            new LuaTableFunction("week_ui_get_rankingcounter", script_week_ui_get_rankingcounter),
+            new LuaTableFunction("week_ui_get_streakcounter", script_week_ui_get_streakcounter),
+            new LuaTableFunction("week_ui_get_trackinfo", script_week_ui_get_trackinfo),
+            new LuaTableFunction("week_ui_get_songprogressbar", script_week_ui_get_songprogressbar),
+            new LuaTableFunction("week_ui_get_countdown", script_week_ui_get_countdown),
+            new LuaTableFunction("week_ui_get_healthbar", script_week_ui_get_healthbar),
             new LuaTableFunction("week_get_stage_layout", script_week_get_stage_layout),
-            new LuaTableFunction("ui_get_camera", script_week_ui_get_camera),
-            new LuaTableFunction("ui_get_strums_count", script_week_ui_get_strums_count),
-            new LuaTableFunction("ui_get_strums", script_week_ui_get_strums),
-            new LuaTableFunction("ui_get_roundstats", script_week_ui_get_roundstats),
-            new LuaTableFunction("ui_get_rankingcounter", script_week_ui_get_rankingcounter),
-            new LuaTableFunction("ui_get_streakcounter", script_week_ui_get_streakcounter),
-            new LuaTableFunction("ui_get_trackinfo", script_week_ui_get_trackinfo),
-            new LuaTableFunction("ui_get_songprogressbar", script_week_ui_get_songprogressbar),
-            new LuaTableFunction("week_set_bpm", script_week_set_bpm),
-            new LuaTableFunction("week_set_speed", script_week_set_speed),
-            new LuaTableFunction("ui_get_messagebox", script_week_ui_get_messagebox),
+            new LuaTableFunction("week_get_healthwatcher", script_week_get_healthwatcher),
+            new LuaTableFunction("week_get_missnotefx", script_week_get_missnotefx),
+            new LuaTableFunction("week_update_bpm", script_week_update_bpm),
+            new LuaTableFunction("week_update_speed", script_week_update_speed),
+            new LuaTableFunction("week_get_messagebox", script_week_get_messagebox),
             new LuaTableFunction("week_get_girlfriend", script_week_get_girlfriend),
             new LuaTableFunction("week_get_character_count", script_week_get_character_count),
+            new LuaTableFunction("week_get_conductor", script_week_get_conductor),
             new LuaTableFunction("week_get_character", script_week_get_character),
+            new LuaTableFunction("week_get_playerstats", script_week_get_playerstats),
             new LuaTableFunction("week_get_songplayer", script_week_get_songplayer),
             new LuaTableFunction("week_get_current_chart_info", script_week_get_current_chart_info),
             new LuaTableFunction("week_get_current_track_info", script_week_get_current_track_info),
@@ -359,17 +408,21 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("week_end", script_week_end),
             new LuaTableFunction("week_get_dialogue", script_week_get_dialogue),
             new LuaTableFunction("week_set_ui_shader", script_week_set_ui_shader),
+            new LuaTableFunction("week_rebuild_ui", script_week_rebuild_ui),
+            new LuaTableFunction("week_unlockdirective_create", script_week_unlockdirective_create),
+            new LuaTableFunction("week_unlockdirective_get", script_week_unlockdirective_get),
+            new LuaTableFunction("week_unlockdirective_remove", script_week_unlockdirective_remove),
             new LuaTableFunction(null, null)
         };
 
         static readonly LuaIntegerConstant[] EXPORTS_GLOBAL = {
-            new LuaIntegerConstant() { variable = "NOTE_MISS",value = 0},
-            new LuaIntegerConstant() { variable = "NOTE_PENALITY",value = 1},
-            new LuaIntegerConstant() { variable = "NOTE_SHIT",value = 2},
-            new LuaIntegerConstant() { variable = "NOTE_BAD",value = 3},
-            new LuaIntegerConstant() { variable = "NOTE_GOOD",value = 4},
-            new LuaIntegerConstant() { variable = "NOTE_SICK",value = 5},
-            new LuaIntegerConstant() { variable = null, value = -1}
+            new LuaIntegerConstant("NOTE_MISS", 0),
+            new LuaIntegerConstant("NOTE_PENALITY", 1),
+            new LuaIntegerConstant("NOTE_SHIT", 2),
+            new LuaIntegerConstant("NOTE_BAD", 3),
+            new LuaIntegerConstant("NOTE_GOOD", 4),
+            new LuaIntegerConstant("NOTE_SICK", 5),
+            new LuaIntegerConstant(null, -1)
         };
 
 
@@ -380,3 +433,4 @@ namespace Engine.Externals.LuaScriptInterop {
 
     }
 }
+

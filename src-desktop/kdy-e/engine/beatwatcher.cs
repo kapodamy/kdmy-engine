@@ -5,7 +5,7 @@ namespace Engine {
 
     public class BeatWatcher {
 
-        private static double beatwatcher_global_timestamp = 0.0;
+        public static double beatwatcher_global_timestamp = 0.0;
 
         public static void GlobalSetTimestamp(double timestamp) {
             beatwatcher_global_timestamp = timestamp;

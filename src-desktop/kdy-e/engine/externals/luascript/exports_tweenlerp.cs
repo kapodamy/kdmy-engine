@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Engine.Animation;
 using Engine.Externals.LuaInterop;
 using Engine.Utils;
@@ -6,7 +6,6 @@ using Engine.Utils;
 namespace Engine.Externals.LuaScriptInterop {
 
     public static class ExportsTweenLerp {
-
         public const string TWEENLERP = "TweenLerp";
 
         static int script_tweenlerp_init(LuaState L) {
@@ -124,7 +123,7 @@ namespace Engine.Externals.LuaScriptInterop {
             bool ret = tweenlerp.PeekEntryByIndex(index, out out_id, out out_value, out out_duration);
 
             if (ret) {
-                L.lua_pushnumber(out_id);
+                L.lua_pushinteger(out_id);
                 L.lua_pushnumber(out_value);
                 L.lua_pushnumber(out_duration);
                 return 3;
@@ -298,34 +297,34 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         private static readonly LuaTableFunction[] TWEENLERP_FUNCTIONS = {
-            new LuaTableFunction("init", script_tweenlerp_init),
-            new LuaTableFunction("destroy", script_tweenlerp_destroy),
-            new LuaTableFunction("end", script_tweenlerp_end),
-            new LuaTableFunction("mark_as_completed", script_tweenlerp_mark_as_completed),
-            new LuaTableFunction("restart", script_tweenlerp_restart),
-            new LuaTableFunction("animate", script_tweenlerp_animate),
-            new LuaTableFunction("animate_percent", script_tweenlerp_animate_percent),
-            new LuaTableFunction("is_completed", script_tweenlerp_is_completed),
-            new LuaTableFunction("get_elapsed", script_tweenlerp_get_elapsed),
-            new LuaTableFunction("get_entry_count", script_tweenlerp_get_entry_count),
-            new LuaTableFunction("peek_value", script_tweenlerp_peek_value),
-            new LuaTableFunction("peek_value_by_index", script_tweenlerp_peek_value_by_index),
-            new LuaTableFunction("peek_entry_by_index", script_tweenlerp_peek_entry_by_index),
-            new LuaTableFunction("peek_value_by_id", script_tweenlerp_peek_value_by_id),
-            new LuaTableFunction("change_bounds_by_index", script_tweenlerp_change_bounds_by_index),
-            new LuaTableFunction("override_start_with_end_by_index", script_tweenlerp_override_start_with_end_by_index),
-            new LuaTableFunction("change_bounds_by_id", script_tweenlerp_change_bounds_by_id),
-            new LuaTableFunction("change_duration_by_index", script_tweenlerp_change_duration_by_index),
-            new LuaTableFunction("swap_bounds_by_index", script_tweenlerp_swap_bounds_by_index),
-            new LuaTableFunction("add_ease", script_tweenlerp_add_ease),
-            new LuaTableFunction("add_easein", script_tweenlerp_add_easein),
-            new LuaTableFunction("add_easeout", script_tweenlerp_add_easeout),
-            new LuaTableFunction("add_easeinout", script_tweenlerp_add_easeinout),
-            new LuaTableFunction("add_linear", script_tweenlerp_add_linear),
-            new LuaTableFunction("add_steps", script_tweenlerp_add_steps),
-            new LuaTableFunction("add_interpolator", script_tweenlerp_add_interpolator),
-            new LuaTableFunction(null, null),
-        };
+    new LuaTableFunction("init", script_tweenlerp_init),
+    new LuaTableFunction("destroy", script_tweenlerp_destroy),
+    new LuaTableFunction("end", script_tweenlerp_end),
+    new LuaTableFunction("mark_as_completed", script_tweenlerp_mark_as_completed),
+    new LuaTableFunction("restart", script_tweenlerp_restart),
+    new LuaTableFunction("animate", script_tweenlerp_animate),
+    new LuaTableFunction("animate_percent", script_tweenlerp_animate_percent),
+    new LuaTableFunction("is_completed", script_tweenlerp_is_completed),
+    new LuaTableFunction("get_elapsed", script_tweenlerp_get_elapsed),
+    new LuaTableFunction("get_entry_count", script_tweenlerp_get_entry_count),
+    new LuaTableFunction("peek_value", script_tweenlerp_peek_value),
+    new LuaTableFunction("peek_value_by_index", script_tweenlerp_peek_value_by_index),
+    new LuaTableFunction("peek_entry_by_index", script_tweenlerp_peek_entry_by_index),
+    new LuaTableFunction("peek_value_by_id", script_tweenlerp_peek_value_by_id),
+    new LuaTableFunction("change_bounds_by_index", script_tweenlerp_change_bounds_by_index),
+    new LuaTableFunction("override_start_with_end_by_index", script_tweenlerp_override_start_with_end_by_index),
+    new LuaTableFunction("change_bounds_by_id", script_tweenlerp_change_bounds_by_id),
+    new LuaTableFunction("change_duration_by_index", script_tweenlerp_change_duration_by_index),
+    new LuaTableFunction("swap_bounds_by_index", script_tweenlerp_swap_bounds_by_index),
+    new LuaTableFunction("add_ease", script_tweenlerp_add_ease),
+    new LuaTableFunction("add_easein", script_tweenlerp_add_easein),
+    new LuaTableFunction("add_easeout", script_tweenlerp_add_easeout),
+    new LuaTableFunction("add_easeinout", script_tweenlerp_add_easeinout),
+    new LuaTableFunction("add_linear", script_tweenlerp_add_linear),
+    new LuaTableFunction("add_steps", script_tweenlerp_add_steps),
+    new LuaTableFunction("add_interpolator", script_tweenlerp_add_interpolator),
+    new LuaTableFunction(null, null)
+};
 
         static int script_tweenlerp_new(LuaState L, TweenLerp tweenlerp) {
             return L.CreateUserdata(TWEENLERP, tweenlerp);

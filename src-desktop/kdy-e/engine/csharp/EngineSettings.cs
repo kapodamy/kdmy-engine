@@ -21,6 +21,7 @@ namespace CsharpWrapper {
         public static bool penality_on_empty_strum = true;
         public static bool inverse_strum_scroll = false;
         public static bool song_progressbar = false;
+        public static bool song_progressbar_remaining = false;
 
         public static bool show_fps = false;
         public static byte fps_limit = 0;
@@ -38,6 +39,7 @@ namespace CsharpWrapper {
             penality_on_empty_strum = GetBool(true, "penality_on_empty_strum", penality_on_empty_strum);
             inverse_strum_scroll = GetBool(true, "inverse_strum_scroll", inverse_strum_scroll);
             song_progressbar = GetBool(true, "song_progressbar", song_progressbar);
+            song_progressbar_remaining = GetBool(true, "song_progressbar_remaining", song_progressbar_remaining);
             use_funkin_marker_duration = GetBool(true, "use_funkin_marker_duration", use_funkin_marker_duration);
 
             show_fps = GetBool(false, "show_fps", show_fps);

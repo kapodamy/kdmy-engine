@@ -3,7 +3,7 @@ using Engine.Game.Common;
 
 namespace Engine.Externals.LuaScriptInterop {
 
-    public class ExportsMessageBox {
+    public static class ExportsMessageBox {
         private const string MESSAGEBOX = "MessageBox";
 
         static int script_messagebox_set_buttons_text(LuaState L) {

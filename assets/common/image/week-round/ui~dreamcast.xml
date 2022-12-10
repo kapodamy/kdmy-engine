@@ -30,14 +30,18 @@
 
 
     <!-- ******************* SONGPROGRESSBAR DEFINITION ******************* -->
-	<Placeholder name="ui_songprogressbar" x="200" y="22" width="240" height="8" alignHorizontal="center" />
+	<Placeholder name="ui_songprogressbar" x="200" y="12" z="102" width="240" height="8" alignHorizontal="center" />
 
 	<!-- songprogressbar additional parameters -->
 	<AttachValue name="ui_songprogressbar_borderSize" type="float" value="2" />
-	<AttachValue name="ui_songprogressbar_fontSize" type="float" value="11" />
+	<AttachValue name="ui_songprogressbar_fontSize" type="float" value="16" />
 	<AttachValue name="ui_songprogressbar_fontBorderSize" type="float" value="1.4" />
 	<AttachValue name="ui_songprogressbar_isVertical" type="boolean" value="false" />
 	<AttachValue name="ui_songprogressbar_showTime" type="boolean" value="true" />
+	<AttachValue name="ui_songprogressbar_colorRGBA8_text"       type="hex" value="0xFFFFFFFF" />
+	<AttachValue name="ui_songprogressbar_colorRGBA8_background" type="hex" value="0x000000FF" />
+	<AttachValue name="ui_songprogressbar_colorRGBA8_barBack"    type="hex" value="0x808080FF" />
+	<AttachValue name="ui_songprogressbar_colorRGBA8_barFront"   type="hex" value="0xFFFFFFFF" />
 
 
     <!-- ******************* STRUMS DEFINITIONS ******************* -->
@@ -118,7 +122,7 @@
 	<!--    In custom layouts with horizontal scrolling, this changes from RIGHTSCROLL to LEFTSCROLL -->
     <Placeholder name="ui_strums_inverted0" x="26" y="0" z="101" height="456" />
     <Placeholder name="ui_strums_inverted1" x="390" y="0" z="101" height= "456" />
-	<Placeholder name="ui_songprogressbar" x="200" y="22" width="240" height="8" alignHorizontal="center" />
+	<Placeholder name="ui_songprogressbar_inverted" x="200" y="22" z="102" width="240" height="8" alignHorizontal="center" />
     <Placeholder name="ui_healthbar_inverted" x="170" y="432" z="100" width="300" height="8" />
     <Placeholder name="ui_roundstats_inverted" x="0" y="465" z="100" />
     <Placeholder name="ui_track_info_inverted" x="5" y="465" z="100" />

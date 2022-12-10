@@ -12,7 +12,7 @@ let incrementalStageZoomMILF: number = 0;
 function f_beforeready(): void {
     fastCarCanDrive = true;
     limo = week_get_stage_layout();
-    cameraUI = ui_get_camera();
+    cameraUI = week_ui_get_camera();
     cameraStage = limo.get_camera_helper();
 
     let [track_name, track_difficult, track_index] = week_get_current_track_info();
