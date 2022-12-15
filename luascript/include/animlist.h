@@ -1,6 +1,8 @@
 #ifndef __animlist_h
 #define __animlist_h
 
+#include <stdbool.h>
+
 #define ANIM_MACRO_INTERPOLATOR_EASE 0
 #define ANIM_MACRO_INTERPOLATOR_EASE_IN 1
 #define ANIM_MACRO_INTERPOLATOR_EASE_OUT 2
@@ -24,6 +26,7 @@ AnimList animlist_init(const char* src);
 void animlist_destroy(AnimList* animlist);
 AnimListItem animlist_get_animation(AnimList animlist, const char* animation_name);
 bool animlist_is_item_macro_animation(AnimListItem animlist_item);
+bool animlist_is_item_tweenkeyframe_animation(AnimListItem animlist_item);
 bool animlist_is_item_frame_animation(AnimListItem animlist_item);
 
 #endif

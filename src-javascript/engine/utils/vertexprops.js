@@ -623,6 +623,10 @@ function vertexprops_parse_wordbreak2(value) {
 
 function vertexprops_parse_float(node, name, def_value) {
     let value = node.getAttribute(name);
+    return vertexprops_parse_float2(value, def_value);
+}
+
+function vertexprops_parse_float2(value, def_value) {
     let val = Number.parseFloat(value);
     return Number.isNaN(val) ? def_value : val;
 }

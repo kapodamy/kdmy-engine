@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+
+    <!-- milliseconds-based keyframes -->
+    <TweenLerp name="animation_name" referenceDuration="5000" defaultInterpolator="ease-in-out">
+
+        <Keyframe at="1000" id="translateX" interpolator="linear" value="123" />
+
+        <Keyframe at="2500" id="alpha" value="0.0" />
+
+        <Keyframe at="5000" id="alpha" interpolator="steps" stepsMethod="both" stepsCount="24"  value="1.0" />
+
+    </TweenLerp>
+
+    <!-- percent-based keyframes (default) -->
+    <TweenLerp name="animation_name" defaultInterpolator="linear">
+
+        <Keyframe at="0%" id="translateX" value="123" />
+
+        <Keyframe at="15%" id="alpha" value="0.0" />
+
+        <Keyframe at="80%" id="alpha" interpolator="steps" stepsMethod="both" stepsCount="34"  value="1.0" />
+
+    </TweenLerp>
+
+</AnimationList>
+

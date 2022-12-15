@@ -221,7 +221,7 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
         draw_offset_milliseconds: 0,
         player_id: -1,
         inverse_offset: length_dimmen - marker_dimmen,
-		use_fukin_marker_duration: 1
+        use_fukin_marker_duration: 1
     };
 
     // set sprites location and modifier location
@@ -1013,8 +1013,8 @@ function strum_get_marker_duration(strum) {
 }
 
 function strum_use_funkin_maker_duration(strum, enable) {
-	strum.use_fukin_marker_duration = !!enable;
-	strum_internal_calc_marker_duration(strum, strum.scroll_velocity);
+    strum.use_fukin_marker_duration = !!enable;
+    strum_internal_calc_marker_duration(strum, strum.scroll_velocity);
 }
 
 function strum_set_player_id(strum, player_id) {
@@ -1486,9 +1486,9 @@ function strum_set_extra_animation_continuous(strum, strum_script_target, animsp
 }
 
 
-function strum_set_notesmaker_tweenlerp(strum, tweenlerp, apply_to_marker_too) {
+function strum_set_notesmaker_tweenkeyframe(strum, tweenkeyframe, apply_to_marker_too) {
     // the behaviour will be similar to https://developer.mozilla.org/en-US/docs/Web/CSS/@keyframes
-    throw new Error("strum_set_notes_maker_tweenlerp() is not implemented");
+    throw new Error("strum_set_notes_maker_tweenkeyframe() is not implemented");
 }
 
 function strum_set_sickeffect_size_ratio(strum, size_ratio) {
@@ -2017,12 +2017,12 @@ function strum_internal_reset_scrolling(strum) {
 
 function strum_internal_calc_marker_duration(strum, velocity) {
     if (strum.use_fukin_marker_duration)
-		strum.marker_duration = FUNKIN_MARKER_DURATION;
-	else
+        strum.marker_duration = FUNKIN_MARKER_DURATION;
+    else
         strum.marker_duration = Math.abs(strum.dimmen_marker / velocity) * STRUM_ADDITIONAL_MARKER_DURATION_RATIO;
 
     strum.marker_duration *= strum.marker_duration_multiplier;
-	
+
     strum.minimum_sustain_duration = strum.marker_duration * FNF_NOTE_MIN_SUSTAIN_THRESHOLD;
     strum.marker_duration_quarter = strum.marker_duration / 4.0;
 

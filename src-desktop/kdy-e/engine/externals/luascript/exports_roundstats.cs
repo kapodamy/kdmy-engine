@@ -50,44 +50,44 @@ namespace Engine.Externals.LuaScriptInterop {
             return ExportsDrawable.script_drawable_new(L, ret);
         }
 
-        static int script_roundstats_tweenlerp_set_on_beat(LuaState L) {
+        static int script_roundstats_tweenkeyframe_set_on_beat(LuaState L) {
             RoundStats roundstats = L.ReadUserdata<RoundStats>(ROUNDSTATS);
-            TweenLerp tweenlerp = L.ReadNullableUserdata<TweenLerp>(2, ExportsTweenLerp.TWEENLERP);
+            TweenKeyframe tweenkeyframe = L.ReadNullableUserdata<TweenKeyframe>(2, ExportsTweenKeyframe.TWEENKEYFRAME);
             float rollback_beats = (float)L.luaL_checknumber(3);
             float beat_duration = (float)L.luaL_checknumber(4);
 
-            roundstats.TweenlerpSetOnBeat(tweenlerp, rollback_beats, beat_duration);
+            roundstats.TweenkeyframeSetOnBeat(tweenkeyframe, rollback_beats, beat_duration);
 
             return 0;
         }
 
-        static int script_roundstats_tweenlerp_set_on_hit(LuaState L) {
+        static int script_roundstats_tweenkeyframe_set_on_hit(LuaState L) {
             RoundStats roundstats = L.ReadUserdata<RoundStats>(ROUNDSTATS);
-            TweenLerp tweenlerp = L.ReadNullableUserdata<TweenLerp>(2, ExportsTweenLerp.TWEENLERP);
+            TweenKeyframe tweenkeyframe = L.ReadNullableUserdata<TweenKeyframe>(2, ExportsTweenKeyframe.TWEENKEYFRAME);
             float rollback_beats = (float)L.luaL_checknumber(3);
             float beat_duration = (float)L.luaL_checknumber(4);
 
-            roundstats.TweenlerpSetOnHit(tweenlerp, rollback_beats, beat_duration);
+            roundstats.TweenkeyframeSetOnHit(tweenkeyframe, rollback_beats, beat_duration);
 
             return 0;
         }
 
-        static int script_roundstats_tweenlerp_set_on_miss(LuaState L) {
+        static int script_roundstats_tweenkeyframe_set_on_miss(LuaState L) {
             RoundStats roundstats = L.ReadUserdata<RoundStats>(ROUNDSTATS);
-            TweenLerp tweenlerp = L.ReadNullableUserdata<TweenLerp>(2, ExportsTweenLerp.TWEENLERP);
+            TweenKeyframe tweenkeyframe = L.ReadNullableUserdata<TweenKeyframe>(2, ExportsTweenKeyframe.TWEENKEYFRAME);
             float rollback_beats = (float)L.luaL_checknumber(3);
             float beat_duration = (float)L.luaL_checknumber(4);
 
-            roundstats.TweenlerpSetOnMiss(tweenlerp, rollback_beats, beat_duration);
+            roundstats.TweenkeyframeSetOnMiss(tweenkeyframe, rollback_beats, beat_duration);
 
             return 0;
         }
 
-        static int script_roundstats_tweenlerp_set_bpm(LuaState L) {
+        static int script_roundstats_tweenkeyframe_set_bpm(LuaState L) {
             RoundStats roundstats = L.ReadUserdata<RoundStats>(ROUNDSTATS);
             float beats_per_minute = (float)L.luaL_checknumber(2);
 
-            roundstats.TweenlerpSetBpm(beats_per_minute);
+            roundstats.TweenkeyframeSetBpm(beats_per_minute);
 
             return 0;
         }
@@ -101,10 +101,10 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("set_draw_y", script_roundstats_set_draw_y),
             new LuaTableFunction("reset", script_roundstats_reset),
             new LuaTableFunction("get_drawable", script_roundstats_get_drawable),
-            new LuaTableFunction("tweenlerp_set_on_beat", script_roundstats_tweenlerp_set_on_beat),
-            new LuaTableFunction("tweenlerp_set_on_hit", script_roundstats_tweenlerp_set_on_hit),
-            new LuaTableFunction("tweenlerp_set_on_miss", script_roundstats_tweenlerp_set_on_miss),
-            new LuaTableFunction("tweenlerp_set_bpm", script_roundstats_tweenlerp_set_bpm),
+            new LuaTableFunction("tweenkeyframe_set_on_beat", script_roundstats_tweenkeyframe_set_on_beat),
+            new LuaTableFunction("tweenkeyframe_set_on_hit", script_roundstats_tweenkeyframe_set_on_hit),
+            new LuaTableFunction("tweenkeyframe_set_on_miss", script_roundstats_tweenkeyframe_set_on_miss),
+            new LuaTableFunction("tweenkeyframe_set_bpm", script_roundstats_tweenkeyframe_set_bpm),
             new LuaTableFunction(null, null)
         };
 

@@ -87,8 +87,8 @@ EM_JS_PRFX(void, strum_set_extra_animation, (Strum strum, StrumScriptTarget stru
 EM_JS_PRFX(void, strum_set_extra_animation_continuous, (Strum strum, StrumScriptTarget strum_script_target, AnimSprite animsprite), {
     strum_set_extra_animation_continuous(kdmyEngine_obtain(strum), strum_script_target, kdmyEngine_obtain(animsprite));
 });
-EM_JS_PRFX(void, strum_set_notesmaker_tweenlerp, (Strum strum, TweenLerp tweenlerp, bool apply_to_marker_too), {
-    strum_set_notesmaker_tweenlerp(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenlerp), apply_to_marker_too);
+EM_JS_PRFX(void, strum_set_notesmaker_tweenkeyframe, (Strum strum, TweenKeyframe tweenkeyframe, bool apply_to_marker_too), {
+    strum_set_notesmaker_tweenkeyframe(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenkeyframe), apply_to_marker_too);
 });
 EM_JS_PRFX(void, strum_set_sickeffect_size_ratio, (Strum strum, float size_ratio), {
     strum_set_sickeffect_size_ratio(kdmyEngine_obtain(strum), size_ratio);
@@ -367,12 +367,12 @@ static int script_strum_set_extra_animation_continuous(lua_State* L) {
     return 0;
 }
 
-static int script_strum_set_notesmaker_tweenlerp(lua_State* L) {
+static int script_strum_set_notesmaker_tweenkeyframe(lua_State* L) {
     Strum strum = luascript_read_userdata(L, STRUM);
-    TweenLerp tweenlerp = luascript_read_nullable_userdata(L, 2, TWEENLERP);
+    TweenKeyframe tweenkeyframe = luascript_read_nullable_userdata(L, 2, TWEENKEYFRAME);
     bool apply_to_marker_too = (bool)lua_toboolean(L, 3);
 
-    strum_set_notesmaker_tweenlerp(strum, tweenlerp, apply_to_marker_too);
+    strum_set_notesmaker_tweenkeyframe(strum, tweenkeyframe, apply_to_marker_too);
 
     return 0;
 }
@@ -483,7 +483,7 @@ static const luaL_Reg STRUM_FUNCTIONS[] = {
     { "draw_sick_effect_apart", script_strum_draw_sick_effect_apart },
     { "set_extra_animation", script_strum_set_extra_animation },
     { "set_extra_animation_continuous", script_strum_set_extra_animation_continuous },
-    { "set_notesmaker_tweenlerp", script_strum_set_notesmaker_tweenlerp },
+    { "set_notesmaker_tweenkeyframe", script_strum_set_notesmaker_tweenkeyframe },
     { "set_sickeffect_size_ratio", script_strum_set_sickeffect_size_ratio },
     { "set_alpha", script_strum_set_alpha },
     { "set_visible", script_strum_set_visible },

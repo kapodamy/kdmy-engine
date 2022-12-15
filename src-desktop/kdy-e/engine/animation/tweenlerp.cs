@@ -6,116 +6,32 @@ namespace Engine.Animation {
 
     public class TweenLerp : IAnimate {
 
-        private delegate float TweenLerpCallback(TweenLerpEntry tweenlerp_entry, double progress_percent);
-
-        private class TweenLerpEntry {
-            public float duration;
-            public float value;
-            public int id;
-            public float start;
-            public float end;
-            public float[] brezier_points;
-            public float[] steps_bounds;
-            public int steps_count;
-            public Align steps_dir;
-            public TweenLerpCallback callback;
-
-            public TweenLerpEntry Clone() {
-                return new TweenLerpEntry() {
-                    duration = this.duration,
-                    id = this.id,
-                    value = this.value,
-                    start = this.start,
-                    end = this.end,
-                    brezier_points = this.brezier_points,
-                    steps_bounds = this.steps_bounds,
-                    steps_count = this.steps_count,
-                    steps_dir = this.steps_dir
-                };
-            }
-        }
-
-
         private ArrayList<TweenLerpEntry> arraylist;
         private double progress;
         private bool has_completed;
 
-        private TweenLerp() { }
-
-        public static TweenLerp Init() {
-            return new TweenLerp() {
-                arraylist = new ArrayList<TweenLerpEntry>(),
-                progress = 0.0,
-                has_completed = false
-            };
-        }
-
-        public static TweenLerp Init2(AnimListItem animlist_item) {
-            if (!animlist_item.is_tweenlerp) {
-                Console.Error.WriteLine("tweenlerp_init2() the animlist item is not a tweenlerp: " + animlist_item.name);
-                return null;
-            }
-
-            TweenLerp tweenlerp = new TweenLerp() {
-                arraylist = new ArrayList<TweenLerpEntry>(animlist_item.tweenlerp_entries_count),
-                progress = 0.0,
-                has_completed = false
-            };
-
-            for (int i = 0 ; i < animlist_item.tweenlerp_entries_count ; i++) {
-                tweenlerp.InternalAdd(
-                    animlist_item.tweenlerp_entries[i].id,
-                    animlist_item.tweenlerp_entries[i].start,
-                    animlist_item.tweenlerp_entries[i].end,
-                    animlist_item.tweenlerp_entries[i].duration,
-                    animlist_item.tweenlerp_entries[i].interp,
-                    animlist_item.tweenlerp_entries[i].steps_dir,
-                    (int)animlist_item.tweenlerp_entries[i].steps_count
-                );
-            }
-
-            return tweenlerp;
-        }
-
-        public static TweenLerp Init3(AnimList animlist, string tweenlerp_name) {
-            AnimListItem animlist_item = null;
-
-            for (int i = 0 ; i < animlist.entries_count ; i++) {
-                if (animlist.entries[i].name == tweenlerp_name) {
-                    animlist_item = animlist.entries[i];
-                    break;
-                }
-            }
-
-            if (animlist_item == null) {
-                Console.Error.WriteLine("tweenlerp_init3() the animlist does not contains: " + tweenlerp_name);
-                return null;
-            }
-
-            return TweenLerp.Init2(animlist_item);
+        public TweenLerp() {
+            this.arraylist = new ArrayList<TweenLerpEntry>();
+            this.progress = 0;
+            this.has_completed = false;
         }
 
         public void Destroy() {
             this.arraylist.Destroy(false);
-            this.arraylist = null;
             Luascript.DropShared(this);
-            //free(tweenlerp);
+            //free(this);
         }
 
         public TweenLerp Clone() {
-            //if (!this) return null;
-            int array_size = this.arraylist.Size();
             TweenLerp copy = new TweenLerp() {
-                arraylist = new ArrayList<TweenLerpEntry>(array_size),
+                arraylist = this.arraylist.Clone(),
                 progress = this.progress,
                 has_completed = this.has_completed
             };
 
-            TweenLerpEntry[] array_old = this.arraylist.PeekArray();
-            TweenLerpEntry[] array_new = copy.arraylist.PeekArray();
-
-            for (int i = 0 ; i < array_size ; i++) {
-                array_new[i] = array_old[i].Clone();
+            //  (JS & C# only) clone steps_bounds
+            foreach (TweenLerpEntry entry in copy.arraylist) {
+                entry.steps_bounds = new float[] { entry.steps_bounds[0], entry.steps_bounds[1], entry.steps_bounds[2] };
             }
 
             return copy;
@@ -123,12 +39,9 @@ namespace Engine.Animation {
 
 
         public void End() {
-            TweenLerpEntry[] array = this.arraylist.PeekArray();
-            int size = this.arraylist.Size();
-
-            for (int i = 0 ; i < size ; i++) {
-                if (array[i].duration > this.progress) this.progress = array[i].duration;
-                array[i].value = array[i].end;
+            foreach (TweenLerpEntry entry in this.arraylist) {
+                if (entry.duration > this.progress) this.progress = entry.duration;
+                entry.value = entry.end;
             }
 
             this.has_completed = true;
@@ -148,17 +61,7 @@ namespace Engine.Animation {
         public int Animate(float elapsed) {
             if (this.has_completed) return 1;
 
-            this.progress += elapsed;
-
-            TweenLerpEntry[] array = this.arraylist.PeekArray();
-            int size = this.arraylist.Size();
-            int completed = 0;
-
-            for (int i = 0 ; i < size ; i++) {
-                if (TweenLerp.InternalAnimateEntry(array[i], this.progress)) completed++;
-            }
-
-            if (completed >= size) this.has_completed = true;
+            AnimateTimestamp(this.progress + elapsed);
 
             return 0;// keep last "frame" alive
         }
@@ -171,27 +74,29 @@ namespace Engine.Animation {
             int completed = 0;
 
             for (int i = 0 ; i < size ; i++) {
-                if (TweenLerp.InternalAnimateEntry(array[i], timestamp)) completed++;
+                if (TweenLerp.InternalAnimateEntry(array[i], (float)this.progress)) completed++;
             }
 
-            this.has_completed = completed >= size;
+            if (completed >= size) this.has_completed = true;
+
             return completed;
         }
 
         public int AnimatePercent(double percent) {
-            this.progress = -1;// undefined behavoir
+            this.progress = 0.0;// undefined behavoir
 
-            TweenLerpEntry[] array = this.arraylist.PeekArray();
-            int size = this.arraylist.Size();
+            var array = this.arraylist.PeekArray();
+            var size = this.arraylist.Size();
+
             int completed = 0;
 
             percent = Math2D.Clamp(percent, 0.0, 1.0);
 
             for (int i = 0 ; i < size ; i++) {
-                if (TweenLerp.InternalAnimateEntryAbsolute(array[i], percent)) completed++;
+                if (TweenLerp.InternalAnimateEntryAbsolute(array[i], (float)percent)) completed++;
             }
 
-            this.has_completed = completed >= size;
+            this.has_completed = percent >= 1.0;
             return completed;
         }
 
@@ -207,8 +112,8 @@ namespace Engine.Animation {
             return this.arraylist.Size();
         }
 
-
         public float PeekValue() {
+            if (this.arraylist.Size() < 1) return Single.NaN;
             return this.arraylist.Get(0).value;
         }
 
@@ -226,6 +131,7 @@ namespace Engine.Animation {
                 duration = Single.NaN;
                 return false;
             }
+
             id = entry.id;
             value = entry.value;
             duration = entry.duration;
@@ -249,7 +155,7 @@ namespace Engine.Animation {
             if (!Single.IsNaN(new_start)) tweenlerp_entry.start = new_start;
             if (!Single.IsNaN(new_end)) tweenlerp_entry.end = new_end;
 
-            return TweenLerp.InternalAnimateEntry(tweenlerp_entry, this.progress);
+            return TweenLerp.InternalAnimateEntry(tweenlerp_entry, (float)this.progress);
         }
 
         public bool OverrideStartWithEndByIndex(int index) {
@@ -257,18 +163,18 @@ namespace Engine.Animation {
 
             tweenlerp_entry.start = tweenlerp_entry.end;
 
-            return TweenLerp.InternalAnimateEntry(tweenlerp_entry, this.progress);
+            return TweenLerp.InternalAnimateEntry(tweenlerp_entry, (float)this.progress);
         }
 
         public bool ChangeBoundsById(int id, float new_start, float new_end) {
-            TweenLerpEntry[] array = this.arraylist.PeekArray();
-            int size = this.arraylist.Size();
+            var array = this.arraylist.PeekArray();
+            var size = this.arraylist.Size();
 
             for (int i = 0 ; i < size ; i++) {
                 if (array[i].id != id) continue;
                 array[i].start = new_start;
                 array[i].end = new_end;
-                TweenLerp.InternalAnimateEntry(array[i], this.progress);
+                TweenLerp.InternalAnimateEntry(array[i], (float)this.progress);
                 return true;
             }
 
@@ -279,7 +185,7 @@ namespace Engine.Animation {
             TweenLerpEntry tweenlerp_entry = this.arraylist.Get(index);
             tweenlerp_entry.duration = new_duration;
 
-            return TweenLerp.InternalAnimateEntry(tweenlerp_entry, this.progress);
+            return TweenLerp.InternalAnimateEntry(tweenlerp_entry, (float)this.progress);
         }
 
         public bool SwapBoundsByIndex(int index) {
@@ -289,37 +195,37 @@ namespace Engine.Animation {
             tweenlerp_entry.start = tweenlerp_entry.end;
             tweenlerp_entry.end = temp;
 
-            return TweenLerp.InternalAnimateEntry(tweenlerp_entry, this.progress);
+            return TweenLerp.InternalAnimateEntry(tweenlerp_entry, (float)this.progress);
         }
 
 
         public int AddEase(int id, float start, float end, float duration) {
             return InternalAdd(
-                id, start, end, duration, AnimInterpolator.EASE, Align.INVALID, -1
+                id, start, end, duration, AnimInterpolator.EASE, Align.NONE, -1
             );
         }
 
         public int AddEaseIn(int id, float start, float end, float duration) {
             return InternalAdd(
-                id, start, end, duration, AnimInterpolator.EASE_IN, Align.INVALID, -1
+                id, start, end, duration, AnimInterpolator.EASE_IN, Align.NONE, -1
             );
         }
 
         public int AddEaseOut(int id, float start, float end, float duration) {
             return InternalAdd(
-                id, start, end, duration, AnimInterpolator.EASE_OUT, Align.INVALID, -1
+                id, start, end, duration, AnimInterpolator.EASE_OUT, Align.NONE, -1
             );
         }
 
         public int AddEaseInOut(int id, float start, float end, float duration) {
             return InternalAdd(
-                id, start, end, duration, AnimInterpolator.EASE_IN_OUT, Align.INVALID, -1
+                id, start, end, duration, AnimInterpolator.EASE_IN_OUT, Align.NONE, -1
             );
         }
 
         public int AddLinear(int id, float start, float end, float duration) {
             return InternalAdd(
-                id, start, end, duration, AnimInterpolator.LINEAR, Align.INVALID, -1
+                id, start, end, duration, AnimInterpolator.LINEAR, Align.NONE, -1
             );
         }
 
@@ -346,33 +252,32 @@ namespace Engine.Animation {
         }
 
 
-        private static float InternalByBrezier(TweenLerpEntry tweenlerp_entry, double progress) {
-            return MacroExecutor.CalcCubicBezier((float)progress, tweenlerp_entry.brezier_points);
+        private static float InternalByBrezier(TweenLerpEntry tweenlerp_entry, float progress) {
+            return MacroExecutor.CalcCubicBezier(progress, tweenlerp_entry.brezier_points);
         }
 
-        private static float InternalByLinear(TweenLerpEntry tweenlerp_entry, double progress) {
-            return (float)progress;
+        private static float InternalByLinear(TweenLerpEntry tweenlerp_entry, float progress) {
+            return progress;
         }
 
-        private static float InternalBySteps(TweenLerpEntry tweenlerp_entry, double progress) {
-            float completed = Math2D.InverseLerp(0, tweenlerp_entry.duration, (float)progress);
+        private static float InternalBySteps(TweenLerpEntry tweenlerp_entry, float progress) {
+            float completed = Math2D.InverseLerp(0, tweenlerp_entry.duration, progress);
             return MacroExecutor.CalcSteps(
                 completed, tweenlerp_entry.steps_bounds, tweenlerp_entry.steps_count, tweenlerp_entry.steps_dir
             );
         }
 
-        private static bool InternalAnimateEntry(TweenLerpEntry tweenlerp_entry, double progress) {
+        private static bool InternalAnimateEntry(TweenLerpEntry tweenlerp_entry, float progress) {
             // calculate the completed percent
             if (progress > tweenlerp_entry.duration) progress = tweenlerp_entry.duration;
-
-            float progress_percent = Math2D.InverseLerp(0, tweenlerp_entry.duration, (float)progress);
+            float progress_percent = Math2D.InverseLerp(0, tweenlerp_entry.duration, progress);
             float percent = tweenlerp_entry.callback(tweenlerp_entry, progress_percent);
 
             tweenlerp_entry.value = Math2D.Lerp(tweenlerp_entry.start, tweenlerp_entry.end, percent);
             return progress >= tweenlerp_entry.duration;
         }
 
-        private static bool InternalAnimateEntryAbsolute(TweenLerpEntry tweenlerp_entry, double progress_percent) {
+        private static bool InternalAnimateEntryAbsolute(TweenLerpEntry tweenlerp_entry, float progress_percent) {
             float percent = tweenlerp_entry.callback(tweenlerp_entry, progress_percent);
             tweenlerp_entry.value = Math2D.Lerp(tweenlerp_entry.start, tweenlerp_entry.end, percent);
             return percent >= 1.0;
@@ -424,10 +329,27 @@ namespace Engine.Animation {
 
             // if all other entries are completed, check if this entry is completed too
             if (this.has_completed)
-                this.has_completed = TweenLerp.InternalAnimateEntry(tweenlerp_entry, this.progress);
+                this.has_completed = InternalAnimateEntry(tweenlerp_entry, (float)this.progress);
 
             return this.arraylist.Add(tweenlerp_entry) - 1;
         }
+
+
+        private delegate float TweenLerpCallback(TweenLerpEntry tweenlerp_entry, float progress_percent);
+
+        private class TweenLerpEntry {
+            public float duration;
+            public float value;
+            public int id;
+            public float start;
+            public float end;
+            public float[] brezier_points;
+            public float[] steps_bounds;
+            public int steps_count;
+            public Align steps_dir;
+            public TweenLerpCallback callback;
+        }
+
 
     }
 

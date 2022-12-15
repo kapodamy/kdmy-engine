@@ -66,7 +66,7 @@ function countdown_destroy(countdown) {
     ModuleLuaScript.kdmyEngine_drop_shared_object(countdown);
 
     statesprite_destroy(countdown.statesprite);
-    tweenlerp_destroy(countdown.default_animation);
+    if (countdown.default_animation) tweenkeyframe_destroy(countdown.default_animation);
     if (countdown.sound_three) soundplayer_destroy(countdown.sound_three);
     if (countdown.sound_two) soundplayer_destroy(countdown.sound_two);
     if (countdown.sound_one) soundplayer_destroy(countdown.sound_one);
@@ -98,12 +98,6 @@ function countdown_set_layout_viewport(countdown, width, height) {
 function countdown_set_bpm(countdown, bpm) {
     countdown.beat_duration = math2d_beats_per_minute_to_beat_per_milliseconds(bpm);
     countdown.animation_speed = 1000 / countdown.beat_duration;
-
-    if (countdown.default_animation) {
-        let entry_count = tweenlerp_get_entry_count(countdown.default_animation);
-        for (let i = 0; i < entry_count; i++)
-            tweenlerp_change_duration_by_index(countdown.default_animation, i, countdown.beat_duration);
-    }
 }
 
 function countdown_set_default_animation(countdown, animlist) {
@@ -111,7 +105,12 @@ function countdown_set_default_animation(countdown, animlist) {
     let animlist_item = animlist_get_animation(animlist, COUNTDOWN_DEFAULT_ANIMATION);
     if (!animlist_item) return;
 
-    countdown.default_animation = tweenlerp_init2(animlist_item);
+    countdown.default_animation = tweenkeyframe_init2(animlist_item);
+}
+
+function countdown_set_default_animation2(countdown, tweenkeyframe) {
+    if (countdown.default_animation) tweenkeyframe_destroy(countdown.default_animation);
+    countdown.default_animation = tweenkeyframe ? tweenkeyframe_clone(tweenkeyframe) : null;
 }
 
 
@@ -170,10 +169,14 @@ function countdown_animate(countdown, elapsed) {
     let completed;
 
     if (countdown.default_animate) {
-        completed = tweenlerp_animate(countdown.default_animation, elapsed);
-        tweenlerp_vertex_set_properties(
+        let percent = countdown.timer / countdown.beat_duration;
+        if (percent > 1.0) percent = 1.0;
+
+        tweenkeyframe_animate_percent(countdown.default_animation, percent);
+        tweenkeyframe_vertex_set_properties(
             countdown.default_animation, countdown.statesprite, statesprite_set_property
         );
+        completed = percent >= 1.0 ? 1 : 0;
     } else {
         completed = statesprite_animate(countdown.statesprite, elapsed * countdown.animation_speed);
     }
@@ -224,7 +227,6 @@ function countdown_internal_toggle(countdown, state_name) {
     if (statesprite_state_get(countdown.statesprite).animation) {
         countdown.default_animate = 0;
     } else if (countdown.default_animation) {
-        tweenlerp_restart(countdown.default_animation);
         countdown.default_animate = 1;
     } else {
         countdown.default_animate = 0;

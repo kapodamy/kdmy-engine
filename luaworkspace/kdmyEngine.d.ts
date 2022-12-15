@@ -207,9 +207,9 @@ declare global {
     }
     interface AnimListItem {
         readonly name: string;
-        readonly is_frame_animation: boolean;
-        readonly is_item_macro_animation: boolean;
-        readonly is_item_tweenlerp_animation: boolean;
+        readonly isFrameAnimation: boolean;
+        readonly isItemMacroAnimation: boolean;
+        readonly isItemTweenKeyframeAnimation: boolean;
     }
     interface AtlasEntry {
         readonly name: string;
@@ -490,6 +490,7 @@ declare global {
     }
     interface AnimSprite {
         init(animlist_item: AnimListItem): AnimSprite;
+        init_from_tweenlerp(tweenlerp: TweenLerp): AnimSprite;
         destroy(): void;
         set_loop(loop: number): void;
         get_name(): string;
@@ -528,6 +529,21 @@ declare global {
         add_linear(id: number, start: number, end: number, duration: number): number;
         add_steps(id: number, start: number, end: number, duration: number, steps_count: number, steps_method: StepsMethod): number;
         add_interpolator(id: number, start: number, end: number, duration: number, type: AnimInterpolator): number;
+    }
+    interface TweenKeyframe {
+        destroy(): void;
+        animate_percent(percent: number): void;
+        get_ids_count(): number;
+        peek_value(): number;
+        peek_value_by_index(index: number): number;
+        peek_entry_by_index(index: number): LuaMultiReturn<[number, number]> | null;
+        peek_value_by_id(at: number, id: number): number;
+        add_easeout(at: number, id: number, value: number): number;
+        add_easeinout(at: number, id: number, value: number): number;
+        add_linear(at: number, id: number, value: number): number;
+        add_steps(at: number, id: number, value: number, steps_count: number, steps_method: StepsMethod): number;
+        add_interpolator(at: number, id: number, value: number, type: AnimInterpolator): number;
+
     }
     interface Atlas {
         destroy(): void;
@@ -585,7 +601,7 @@ declare global {
         draw_sick_effect_apart(enable: boolean): void;
         set_extra_animation(strum_script_target: StrumScriptTarget, strum_script_on: StrumScriptOn, undo: boolean, animsprite: AnimSprite): void;
         set_extra_animation_continuous(strum_script_target: StrumScriptTarget, animsprite: AnimSprite): void;
-        set_notesmaker_tweenlerp(tweenlerp: TweenLerp, apply_to_marker_too: boolean): void;
+        set_notesmaker_tweenkeyframe(tweenkeyframe: TweenKeyframe, apply_to_marker_too: boolean): void;
         set_sickeffect_size_ratio(size_ratio: number): void;
         set_alpha(alpha: number): void;
         set_visible(visible: boolean): void;
@@ -642,6 +658,7 @@ declare global {
 
     }
     interface Countdown {
+        set_default_animation2(tweenkeyframe: TweenKeyframe): void;
         set_bpm(bpm: number): void;
         get_drawable(): Drawable;
         ready(): boolean;
@@ -704,10 +721,10 @@ declare global {
         set_draw_y(y: number): void;
         reset(): void;
         get_drawable(): Drawable;
-        tweenlerp_set_on_beat(tweenlerp: TweenLerp, rollback_beats: number, beat_duration: number): void;
-        tweenlerp_set_on_hit(tweenlerp: TweenLerp, rollback_beats: number, beat_duration: number): void;
-        tweenlerp_set_on_miss(tweenlerp: TweenLerp, rollback_beats: number, beat_duration: number): void;
-        tweenlerp_set_bpm(beats_per_minute: number): void;
+        tweenkeyframe_set_on_beat(tweenkeyframe: TweenKeyframe, rollback_beats: number, beat_duration: number): void;
+        tweenkeyframe_set_on_hit(tweenkeyframe: TweenKeyframe, rollback_beats: number, beat_duration: number): void;
+        tweenkeyframe_set_on_miss(tweenkeyframe: TweenKeyframe, rollback_beats: number, beat_duration: number): void;
+        tweenkeyframe_set_bpm(beats_per_minute: number): void;
     }
     interface RankingCounter {
         add_state(modelholder: ModelHolder, state_name: string): number;
@@ -805,6 +822,10 @@ declare global {
     interface TweenLerpConstructor {
         init(): TweenLerp;
     } const TweenLerp: TweenLerpConstructor;
+    interface TweenKeyframeConstructor {
+        init(): TweenKeyframe;
+        init2(animlist_item: AnimListItem): TweenKeyframe;
+    } const TweenKeyframe: TweenKeyframeConstructor;
     interface AtlasConstructor {
         init(src: string): Atlas;
     } const AtlasConstructor: AtlasConstructor;

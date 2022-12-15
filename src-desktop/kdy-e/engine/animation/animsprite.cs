@@ -99,8 +99,18 @@ namespace Engine.Animation {
         }
 
         public static AnimSprite InitFromMacroexecutor(string name, int loop, MacroExecutor macroexecutor) {
+            if (macroexecutor == null) return null;
+
             AnimSprite animsprite = AnimSprite.InternalInit(name, loop, 0);
-            animsprite.macroexecutor = macroexecutor;
+            animsprite.macroexecutor = macroexecutor.Clone(true);
+            return animsprite;
+        }
+
+        public static AnimSprite InitFromTweenLerp(string name, int loop, TweenLerp tweenlerp) {
+            if (tweenlerp == null) return null;
+
+            AnimSprite animsprite = AnimSprite.InternalInit(name, loop, 0);
+            animsprite.tweenlerp = tweenlerp.Clone();
             return animsprite;
         }
 
@@ -113,10 +123,9 @@ namespace Engine.Animation {
         public static AnimSprite Init(AnimListItem animlist_item) {
             AnimSprite animsprite;
 
-            if (animlist_item.is_tweenlerp) {
-                animsprite = AnimSprite.InternalInit(animlist_item.name, animlist_item.loop, -1);
-                animsprite.tweenlerp = TweenLerp.Init2(animlist_item);
-                return animsprite;
+            if (animlist_item.is_tweenkeyframe) {
+                // unsupported, use <AnimationMacro/> instead
+                return null;
             }
 
             if (animlist_item.alternate_set_size > 0) {

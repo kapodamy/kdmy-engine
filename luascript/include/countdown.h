@@ -2,6 +2,7 @@
 #define __countdown_h
 
 #include "drawable.h"
+#include "tweenkeyframe.h"
 
 
 typedef struct {
@@ -10,6 +11,7 @@ typedef struct {
 typedef Countdown_t* Countdown;
 
 
+void countdown_set_default_animation2(Countdown countdown, TweenKeyframe tweenkeyframe);
 void countdown_set_bpm(Countdown countdown, float bpm);
 Drawable countdown_get_drawable(Countdown countdown);
 bool countdown_ready(Countdown countdown);

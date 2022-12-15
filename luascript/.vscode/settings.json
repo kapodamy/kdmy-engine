@@ -58,7 +58,9 @@
         "modding.h": "c",
         "tweenlerp.h": "c",
         "playerstats.h": "c",
-        "messagebox.h": "c"
+        "messagebox.h": "c",
+        "textsprite.h": "c",
+        "tweenkeyframe.h": "c"
     },
     "C_Cpp.clang_format_style": "file",
     "C_Cpp.formatting": "clangFormat"

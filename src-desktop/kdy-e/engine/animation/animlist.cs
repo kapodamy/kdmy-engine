@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Diagnostics;
 using Engine.Externals.LuaScriptInterop;
+using Engine.Game;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
@@ -10,9 +12,10 @@ namespace Engine.Animation {
 
     public class AnimListItem {
         public string name;
-        public bool is_tweenlerp;
-        public AnimList.TweenLerpEntry[] tweenlerp_entries;
-        public int tweenlerp_entries_count;
+        public bool is_tweenkeyframe;
+        public AnimInterpolator tweenkeyframe_default_interpolator;
+        public AnimList.TweenKeyframeEntry[] tweenkeyframe_entries;
+        public int tweenkeyframe_entries_count;
         public int loop;
         public float frame_rate;
         public bool alternate_per_loop;
@@ -98,8 +101,8 @@ namespace Engine.Animation {
                     case "AnimationMacro":
                         is_macro = true;
                         break;
-                    case "TweenLerp":
-                        parsed_animations.AddItem(AnimList.ReadTweenlerpAnimation(anims[i]));
+                    case "TweenKeyframe":
+                        parsed_animations.AddItem(AnimList.ReadTweenkeyframeAnimation(anims[i]));
                         continue;
                     default:
                         Console.Error.WriteLine("Unknown animation: " + anims[i].TagName);
@@ -159,7 +162,7 @@ namespace Engine.Animation {
                 //}
 
 
-                //if (this.entries[i].is_tweenlerp) free(this.entries[i].tweenlerp_entries);
+                //if (this.entries[i].is_tweenkeyframe) free(this.entries[i].tweenkeyframe_entries);
 
                 //free(this.entries[i].instructions);
 
@@ -185,7 +188,11 @@ namespace Engine.Animation {
         }
 
         public static bool IsItemFrameAnimation(AnimListItem animlist_item) {
-            return !animlist_item.is_tweenlerp && animlist_item.instructions_count < 1;
+            return !animlist_item.is_tweenkeyframe && animlist_item.instructions_count < 1;
+        }
+
+        public static bool IsItemTweenkeyframeAnimation(AnimListItem animlist_item) {
+            return animlist_item.is_tweenkeyframe;
         }
 
 
@@ -246,7 +253,7 @@ namespace Engine.Animation {
             }
 
             AnimListItem anim = new AnimListItem() {
-                is_tweenlerp = false,
+                is_tweenkeyframe = false,
                 name = name,
                 loop = VertexProps.ParseInteger(entry, "loop", 1),
                 frame_rate = VertexProps.ParseFloat(entry, "frameRate", default_fps),
@@ -376,8 +383,8 @@ namespace Engine.Animation {
         }
 
 
-        private static AnimInterpolator ParseInterpolator(XmlParserNode node) {
-            string type = node.GetAttribute("type");
+        private static AnimInterpolator ParseInterpolator(XmlParserNode node, string name) {
+            string type = node.GetAttribute(name);
 
             if (type == null)
                 return AnimInterpolator.LINEAR;
@@ -511,7 +518,7 @@ namespace Engine.Animation {
         private static AnimListItem ReadMacroAnimation(XmlParserNode entry, Atlas atlas) {
 
             AnimListItem anim = new AnimListItem();
-            anim.is_tweenlerp = false;
+            anim.is_tweenkeyframe = false;
             anim.name = entry.GetAttribute("name");
             anim.loop = VertexProps.ParseInteger(entry, "loop", 1);
             anim.frames = null;
@@ -539,7 +546,7 @@ namespace Engine.Animation {
 
                         instruction = new MacroExecutorInstruction() {
                             type = AnimMacroType.INTERPOLATOR,
-                            interpolator = AnimList.ParseInterpolator(unparsed_list[i]),
+                            interpolator = AnimList.ParseInterpolator(unparsed_list[i], "type"),
                             property = property_id,
                             start = new MacroExecutorValue(),
                             end = new MacroExecutorValue(),
@@ -745,59 +752,120 @@ namespace Engine.Animation {
             return value;
         }
 
-        private static AnimListItem ReadTweenlerpAnimation(XmlParserNode entry) {
-            LinkedList<TweenLerpEntry> linkedlist = new LinkedList<TweenLerpEntry>();
+        private static AnimListItem ReadTweenkeyframeAnimation(XmlParserNode entry) {
+            XmlParserNodeList nodes = entry.GetChildrenList("Keyframe");
+            ArrayList<TweenKeyframeEntry> arraylist = new ArrayList<TweenKeyframeEntry>(nodes.Length);
 
-            foreach (XmlParserNode node in entry.Children) {
-                // <Interpolator id="" type="" start="" end="" duration="" stepsCount="" stepsMethod="" />
+            float reference_duration = 1;
+            if (entry.HasAttribute("referenceDuration")) {
+                reference_duration = VertexProps.ParseFloat(entry, "referenceDuration", Single.NaN);
+                if (Single.IsNaN(reference_duration)) {
+                    Console.Error.WriteLine("[WARN] animlist: invalid tweenkeyframe 'referenceDuration' value: " + entry.OuterHTML);
+                    reference_duration = 1;
+                }
+            }
+
+            foreach (XmlParserNode node in nodes) {
+                // <Keyframe at="80%" id="alpha" interpolator="steps" stepsMethod="both" stepsCount="34" value="1.0" />
+                // <Keyframe at="1000" id="translateX" interpolator="ease" value="123" />
+
+                string unparsed_at = node.GetAttribute("at");
+                if (String.IsNullOrEmpty(unparsed_at)) {
+                    Console.Error.WriteLine("[WARN] animlist: missing Keyframe 'at' attribute: " + node.OuterHTML);
+                    continue;
+                }
+
+                float at = Single.NaN;
+
+                if (unparsed_at.IndexOf('%') >= 0) {
+                    if (reference_duration > 1) {
+                        Console.Error.WriteLine("[WARN] animlist: invalid Keyframe , 'at' is a percent value and TweenKeyframe have 'referenceDuration' attribute: " + node.OuterHTML);
+                        continue;
+                    }
+
+                    if (unparsed_at.Length > 1) {
+                        string str = unparsed_at.SubstringKDY(0, unparsed_at.Length - 1);
+                        at = VertexProps.ParseFloat2(str, Single.NaN);
+                        //free(str);
+                    }
+                } else {
+                    if (reference_duration < 1) {
+                        Console.Error.WriteLine("[WARN] animlist: invalid Keyframe , 'at' is a timestamp value and TweenKeyframe does not have 'referenceDuration' attribute: " + node.OuterHTML);
+                        continue;
+                    }
+                    at = VertexProps.ParseFloat2(unparsed_at, Single.NaN);
+                }
+
+                if (Single.IsNaN(at)) {
+                    Console.Error.WriteLine("[WARN] animlist: invalid 'at' value: " + node.OuterHTML);
+                    continue;
+                }
+
+                if (reference_duration > 1)
+                    at /= reference_duration;
+                else
+                    at /= 100.0f;
+
 
                 int id = AnimList.ParseProperty(node, "id", false);
 
-                AnimInterpolator interp = AnimList.ParseInterpolator(node);
+                AnimInterpolator keyframe_interpolator = AnimList.ParseInterpolator(node, "type");
 
-                float start = VertexProps.ParseFloat2(node.GetAttribute("start"), 0f);
+                int steps_count = VertexProps.ParseInteger(node, "stepsCount", -1);
+                if (keyframe_interpolator == AnimInterpolator.STEPS && steps_count < 0) {
+                    Console.Error.WriteLine("[WARN] animlist: invalid o missing 'stepsCount' value: " + node.OuterHTML);
+                    continue;
+                }
 
-                float end = VertexProps.ParseFloat2(node.GetAttribute("end"), 0f);
+                Align steps_dir = VertexProps.ParseAlign2(node.GetAttribute("stepsMethod"));
+                if (keyframe_interpolator == AnimInterpolator.STEPS && (steps_dir == Align.CENTER || steps_dir < 0)) {
+                    Console.Error.WriteLine("[WARN] animlist: invalid o missing 'stepsMethod' value: " + node.OuterHTML);
+                    continue;
+                }
 
-                float duration = VertexProps.ParseFloat2(node.GetAttribute("duration"), -1f);
+                float value = VertexProps.ParseFloat(node, "value", Single.NaN);
+                if (Single.IsNaN(value)) {
+                    Console.Error.WriteLine("[WARN] animlist: invalid 'value' value: " + node.OuterHTML);
+                    continue;
+                }
 
-                uint steps_count = VertexProps.ParseUnsignedInteger(node.GetAttribute("stepsCount"), 1);
-
-                Align steps_dir = VertexProps.ParseAlign(node, "stepsMethod", false, false);
-
-                linkedlist.AddItem(new TweenLerpEntry() {
+                TweenKeyframeEntry keyframe = new TweenKeyframeEntry() {
+                    at = at,
                     id = id,
-                    start = start,
-                    end = end,
-                    duration = duration,
-                    interp = interp,
+                    value = value,
+                    interpolator = keyframe_interpolator,
                     steps_dir = steps_dir,
                     steps_count = steps_count
-                });
+                };
+
+                arraylist.Add(keyframe);
             }
 
-            int tweenlerp_entries_count = linkedlist.Count();
-            TweenLerpEntry[] tweenlerp_entries = linkedlist.ToSolidArray();
+            AnimInterpolator interpolator = AnimInterpolator.LINEAR;
+            if (entry.HasAttribute("defaultInterpolator"))
+                interpolator = AnimList.ParseInterpolator(entry, "defaultInterpolator");
 
-            linkedlist.Destroy2(/*free*/);
 
-            return new AnimListItem() {
+            AnimListItem item = new AnimListItem() {
                 name = entry.GetAttribute("name"),
-                is_tweenlerp = true,
-                tweenlerp_entries = tweenlerp_entries,
-                tweenlerp_entries_count = tweenlerp_entries_count
+                tweenkeyframe_default_interpolator = interpolator,
+                is_tweenkeyframe = true,
+                tweenkeyframe_entries = null,
+                tweenkeyframe_entries_count = 0
             };
+
+            arraylist.Destroy2(out item.tweenkeyframe_entries_count, ref item.tweenkeyframe_entries);
+
+            return item;
         }
 
-
-        public class TweenLerpEntry {
+        public class TweenKeyframeEntry {
+            public float at;
             public int id;
-            public float start;
-            public float end;
-            public float duration;
-            public AnimInterpolator interp;
+            public float value;
+            public AnimInterpolator interpolator;
             public Align steps_dir;
-            public uint steps_count;
+            public int steps_count;
         }
 
 

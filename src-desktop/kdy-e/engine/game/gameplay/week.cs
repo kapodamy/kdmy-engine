@@ -2129,7 +2129,7 @@ namespace Engine.Game.Gameplay {
         public static void UpdateBpm(RoundContext roundcontext, float bpm) {
             if (roundcontext.healthbar != null) roundcontext.healthbar.SetBpm(bpm);
             if (roundcontext.countdown != null) roundcontext.countdown.SetBpm(bpm);
-            if (roundcontext.roundstats != null) roundcontext.roundstats.TweenlerpSetBpm(bpm);
+            if (roundcontext.roundstats != null) roundcontext.roundstats.TweenkeyframeSetBpm(bpm);
             if (roundcontext.ui_camera != null) roundcontext.ui_camera.SetBpm(bpm);
             if (roundcontext.layout != null) roundcontext.layout.SetBpm(bpm);
             for (int i = 0 ; i < roundcontext.players_size ; i++) {

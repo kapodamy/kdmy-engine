@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Reflection;
 
 namespace Engine.Utils {
 
@@ -162,6 +164,33 @@ namespace Engine.Utils {
             if (new_size < this.size) this.size = Math.Max(new_size, 0);
         }
 
+        public ArrayList<T> Clone() {
+            ArrayList<T> copy = new ArrayList<T>(this.size);
+            copy.size = this.size;
+
+            Type type = typeof(T);
+            if (!type.IsValueType) {
+                MethodInfo inst = type.GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (inst != null) {
+                    for (int i = 0 ; i < this.size ; i++) {
+                        copy.array[i] = (T)inst.Invoke(this.array[i], null);
+                    }
+                    return copy;
+                }
+            }
+
+            for (int i = 0 ; i < this.size ; i++) {
+                copy.array[i] = this.array[i];
+            }
+
+            return copy;
+        }
+
+        public void Sort(SortDelegate sort_fn) {
+            Array.Sort(this.array, 0, this.size, new ArrayListComparer(sort_fn));
+        }
+
+
         public System.Collections.IEnumerator GetEnumerator() {
             return new ArrayListEnumerator(this);
         }
@@ -191,6 +220,22 @@ namespace Engine.Utils {
             }
 
         }
+
+        private sealed class ArrayListComparer : System.Collections.Generic.IComparer<T> {
+
+            private readonly SortDelegate sort_fn;
+
+            public ArrayListComparer(SortDelegate sort_fn) {
+                this.sort_fn = sort_fn;
+            }
+
+            public int Compare(T x, T y) {
+                return sort_fn(x, y);
+            }
+        }
+
+
+        public delegate int SortDelegate(T obj_a, T obj_b);
 
     }
 }

@@ -105,14 +105,12 @@
 
     </AnimationMacro>
 
-    <TweenLerp name="countdown" loop="1">
-        <!--
-            Important:  this animation have a duration of one second (1000ms).
-                        the engine will stretch or shrink this animation toc
-                        fit one beat duration.
-        -->
-        <Interpolator id="alpha" type="ease-out" duration="1000" start="1.0" end="0.0" />
-    </TweenLerp>
+    <TweenKeyframe name="countdown" defaultInterpolator="ease-out">
+        <!-- https://developer.mozilla.org/en-US/docs/Web/CSS/@keyframes -->
+        <Keyframe  at="0%"  id="alpha" value="1.0" />
+        <Keyframe at="25%"  id="alpha" value="1.0" />
+        <Keyframe at="100%" id="alpha" value="0.0" />
+    </TweenKeyframe>
 
     <AnimationMacro name="gameover_text">
         <Interpolator type="linear" property="alpha" start="0" end="1" duration="1500" />

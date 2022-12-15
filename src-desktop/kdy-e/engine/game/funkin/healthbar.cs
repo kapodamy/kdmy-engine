@@ -154,7 +154,7 @@ namespace Engine.Game {
             this.beatwatcher = new BeatWatcher() { };
 
             this.transition_enabled = true;
-            this.tweenlerp = TweenLerp.Init();
+            this.tweenlerp = new TweenLerp();
 
             this.last_health = Single.NaN;
             this.prefix_state_player = HealthBar.ICON_PREFIX_NEUTRAL;

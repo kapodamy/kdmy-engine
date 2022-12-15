@@ -2116,7 +2116,7 @@ function week_toggle_states(roundcontext, gameplaymanifest) {
 function week_update_bpm(roundcontext, bpm) {
     if (roundcontext.healthbar) healthbar_set_bpm(roundcontext.healthbar, bpm);
     if (roundcontext.countdown) countdown_set_bpm(roundcontext.countdown, bpm);
-    if (roundcontext.roundstats) roundstats_tweenlerp_set_bpm(roundcontext.roundstats, bpm);
+    if (roundcontext.roundstats) roundstats_tweenkeyframe_set_bpm(roundcontext.roundstats, bpm);
     if (roundcontext.ui_camera) camera_set_bpm(roundcontext.ui_camera, bpm);
     if (roundcontext.layout) layout_set_bpm(roundcontext.layout, bpm);
     for (let i = 0; i < roundcontext.players_size; i++) {

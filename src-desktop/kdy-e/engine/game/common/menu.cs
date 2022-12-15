@@ -194,7 +194,7 @@ namespace Engine.Game.Common {
             this.drawcallback = null;
 
             if (@params.static_index != 0) {
-                this.tweenlerp = TweenLerp.Init();
+                this.tweenlerp = new TweenLerp();
                 this.tweenlerp.AddLinear(0, 0f, 0f, 100f);
             }
 

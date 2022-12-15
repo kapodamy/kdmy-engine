@@ -1,7 +1,9 @@
 #include "commons.h"
 #include "countdown.h"
 
-
+void countdown_set_default_animation2(Countdown countdown, TweenKeyframe tweenkeyframe) {
+    print_stub("countdown_set_default_animation2", "countdown=%p tweenkeyframe=%p", countdown, tweenkeyframe);
+}
 void countdown_set_bpm(Countdown countdown, float bpm) {
     print_stub("countdown_set_bpm", "countdown=%p bpm=%f", countdown, bpm);
 }

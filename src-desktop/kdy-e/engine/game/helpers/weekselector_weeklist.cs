@@ -296,7 +296,7 @@ namespace Engine.Game.Helpers {
 
         private static TweenLerp InternalCreateTween() {
             const float duration = WeekSelectorWeekList.TWEEN_DURATION;
-            TweenLerp tweenlerp = TweenLerp.Init();
+            TweenLerp tweenlerp = new TweenLerp();
             tweenlerp.AddLinear(VertexProps.SPRITE_PROP_SCALE_X, Single.NaN, Single.NaN, duration);
             tweenlerp.AddLinear(VertexProps.SPRITE_PROP_SCALE_Y, Single.NaN, Single.NaN, duration);
             tweenlerp.AddLinear(VertexProps.SPRITE_PROP_TRANSLATE_X, Single.NaN, Single.NaN, duration);

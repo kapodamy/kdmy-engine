@@ -101,7 +101,7 @@ namespace Engine {
                 oz = this.offset_z;
             }
 
-            this.tweenlerp = TweenLerp.Init();
+            this.tweenlerp = new TweenLerp();
 
             this.tweenlerp.AddInterpolator(-1, px, px, 0, type);
             this.tweenlerp.AddInterpolator(-1, py, py, 0, type);

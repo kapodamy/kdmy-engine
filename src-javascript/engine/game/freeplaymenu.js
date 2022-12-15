@@ -177,8 +177,8 @@ async function freeplaymenu_main() {
     mutex_init(state.mutex, MUTEX_TYPE_NORMAL);
     if (state.background) sprite_set_texture(state.background, null, 0);
 
-    let default_bf = freeplaymenu_internal_get_default_character_manifest(1);
-    let default_gf = freeplaymenu_internal_get_default_character_manifest(0);
+    let default_bf = await freeplaymenu_internal_get_default_character_manifest(1);
+    let default_gf = await freeplaymenu_internal_get_default_character_manifest(0);
 
     if (background_menu_music) {
         soundplayer_pause(background_menu_music);

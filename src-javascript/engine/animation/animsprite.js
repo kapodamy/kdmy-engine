@@ -66,7 +66,15 @@ function animsprite_init_from_animlist(animlist, animation_name) {
 
 function animprite_init_from_macroexecutor(name, loop, macroexecutor) {
     let animsprite = animsprite_internal_init(name, loop, 0);
-    animsprite.macroexecutor = macroexecutor;
+    animsprite.macroexecutor = macroexecutor_clone(macroexecutor, 1);
+    return animsprite;
+}
+
+function animsprite_init_from_tweenlerp(name, loop, tweenlerp) {
+    if (!tweenlerp) return null;
+
+    let animsprite = animsprite_internal_init(name, loop, 0);
+    animsprite.tweenlerp = tweenlerp_clone(tweenlerp);
     return animsprite;
 }
 
@@ -77,12 +85,11 @@ function animsprite_init_as_empty(name) {
 }
 
 function animsprite_init(animlist_item) {
-	let animsprite;
+    let animsprite;
 
-    if (animlist_item.is_tweenlerp) {
-        animsprite = animsprite_internal_init(animlist_item.name, animlist_item.loop, -1);
-        animsprite.tweenlerp = tweenlerp_init2(animlist_item);
-        return animsprite;
+    if (animlist_item.is_tweenkeyframe) {
+        // unsupported, use <AnimationMacro/> instead
+        return null;
     }
 
     if (animlist_item.alternate_set_size > 0) {
@@ -111,9 +118,9 @@ function animsprite_init(animlist_item) {
 
     if (animlist_item.instructions_count > 0) {
         let instructions = clone_array(animlist_item.instructions, animlist_item.instructions_count);
-		for (let i=0 ; i< animlist_item.instructions_count ; i++) {
-			instructions[i].values = clone_array(instructions[i].values, instructions[i].values_size);
-		}
+        for (let i = 0; i < animlist_item.instructions_count; i++) {
+            instructions[i].values = clone_array(instructions[i].values, instructions[i].values_size);
+        }
 
         animsprite.macroexecutor = macroexecutor_init(
             instructions, animlist_item.instructions_count, animsprite.frames, animlist_item.frame_count
@@ -129,8 +136,8 @@ function animsprite_init(animlist_item) {
 }
 
 function animsprite_destroy(animsprite) {
-	if (animsprite.frames != null) {
-        for (let i=0 ; i<animsprite.frame_count ; i++) {
+    if (animsprite.frames != null) {
+        for (let i = 0; i < animsprite.frame_count; i++) {
             animsprite.frames[i].name = undefined;
         }
         animsprite.frames = undefined;
@@ -154,22 +161,22 @@ function animsprite_destroy(animsprite) {
 function animsprite_clone(animsprite) {
     let copy = clone_struct(animsprite);
     if (!copy) return null;
-	
-	copy.id = ANIMSPRITE_IDS++;
-	ANIMSPRITE_POOL.set(copy.id, copy);	
+
+    copy.id = ANIMSPRITE_IDS++;
+    ANIMSPRITE_POOL.set(copy.id, copy);
 
     copy.alternate_set = clone_array(animsprite.alternate_set, animsprite.alternate_size);
     copy.frames = clone_array(animsprite.frames, animsprite.frame_count);
 
     if (copy.macroexecutor) {
-		copy.macroexecutor = macroexecutor_clone(animsprite.macroexecutor, 0);
+        copy.macroexecutor = macroexecutor_clone(animsprite.macroexecutor, 0);
         copy.macroexecutor.frames = copy.frames;
         copy.macroexecutor.frame_count = copy.frame_count;
     }
 
-	if (copy.tweenlerp) {
-		copy.tweenlerp = tweenlerp_clone(animsprite.tweenlerp);
-	}
+    if (copy.tweenlerp) {
+        copy.tweenlerp = tweenlerp_clone(animsprite.tweenlerp);
+    }
 
     return copy;
 }

@@ -22,8 +22,8 @@ namespace Engine.Externals.LuaScriptInterop {
                 case "isItemMacroAnimation":
                     L.lua_pushboolean(AnimList.IsItemMacroAnimation(animlistitem));
                     break;
-                case "isItemTweenlerpAnimation":
-                    L.lua_pushboolean(!AnimList.IsItemFrameAnimation(animlistitem) && !AnimList.IsItemMacroAnimation(animlistitem));
+                case "isItemTweenKeyframeAnimation":
+                    L.lua_pushboolean(AnimList.IsItemTweenkeyframeAnimation(animlistitem));
                     break;
                 default:
                     return L.luaL_error($"unknown field '{field}'");

@@ -9,72 +9,24 @@ function tweenlerp_init() {
     }
 }
 
-function tweenlerp_init2(animlist_item) {
-    if (!animlist_item.is_tweenlerp) {
-        console.error("tweenlerp_init2() the animlist item is not a tweenlerp: " + animlist_item.name);
-        return null;
-    }
-
-    let tweenlerp = {
-        arraylist: arraylist_init2(animlist_item.tweenlerp_entries_count),
-        progress: 0,
-        has_completed: 0
-    }
-
-    for (let i = 0; i < animlist_item.tweenlerp_entries_count; i++) {
-        tweenlerp_internal_add(
-            tweenlerp,
-            animlist_item.tweenlerp_entries[i].id,
-            animlist_item.tweenlerp_entries[i].start,
-            animlist_item.tweenlerp_entries[i].end,
-            animlist_item.tweenlerp_entries[i].duration,
-            animlist_item.tweenlerp_entries[i].interp,
-            animlist_item.tweenlerp_entries[i].steps_dir,
-            animlist_item.tweenlerp_entries[i].steps_count
-        );
-    }
-
-    return tweenlerp;
-}
-
-function tweenlerp_init3(animlist, tweenlerp_name) {
-    let animlist_item = null;
-
-    for (let i = 0; i < animlist.entries_count; i++) {
-        if (animlist.entries[i].name == tweenlerp_name) {
-            animlist_item = animlist.entries[i];
-            break;
-        }
-    }
-
-    if (!animlist_item) {
-        console.warn("tweenlerp_init3() the animlist does not contains: " + tweenlerp_name);
-        return null;
-    }
-
-    return tweenlerp_init2(animlist_item);
-}
-
 function tweenlerp_destroy(tweenlerp) {
-    arraylist_destroy(tweenlerp.arraylist);
+    arraylist_destroy(tweenlerp.arraylist, 0);
     ModuleLuaScript.kdmyEngine_drop_shared_object(tweenlerp);
     tweenlerp = undefined;
 }
 
 function tweenlerp_clone(tweenlerp) {
     if (!tweenlerp) return null;
-    let array_size = arraylist_size(tweenlerp.arraylist);
+
     let copy = {
-        arraylist: arraylist_init2(array_size),
+        arraylist: arraylist_clone(tweenlerp.arraylist),
         progress: tweenlerp.progress,
         has_completed: tweenlerp.has_completed
     };
 
-    let array_old = arraylist_peek_array(tweenlerp.arraylist);
-    let array_new = arraylist_peek_array(copy.arraylist);
-
-    for (let i = 0; i < array_size; i++) {
-        array_new[i] = clone_object(array_old[i]);
+    //  (JS & C# only) clone steps_bounds
+    for (let entry of arraylist_iterate4(copy.arraylist)) {
+        entry.steps_bounds = [entry.steps_bounds[0], entry.steps_bounds[1], entry.steps_bounds[2]];
     }
 
     return copy;
@@ -82,12 +34,9 @@ function tweenlerp_clone(tweenlerp) {
 
 
 function tweenlerp_end(tweenlerp) {
-    const array = arraylist_peek_array(tweenlerp.arraylist);
-    const size = arraylist_size(tweenlerp.arraylist);
-
-    for (let i = 0; i < size; i++) {
-        if (array[i].duration > tweenlerp.progress) tweenlerp.progress = array[i].duration;
-        array[i].value = array[i].end;
+    for (let entry of arraylist_iterate4(tweenlerp.arraylist)) {
+        if (entry.duration > tweenlerp.progress) tweenlerp.progress = entry.duration;
+        entry.value = entry.end;
     }
 
     tweenlerp.has_completed = 1;
@@ -107,17 +56,7 @@ function tweenlerp_restart(tweenlerp) {
 function tweenlerp_animate(tweenlerp, elapsed) {
     if (tweenlerp.has_completed) return 1;
 
-    tweenlerp.progress += elapsed;
-
-    const array = arraylist_peek_array(tweenlerp.arraylist);
-    const size = arraylist_size(tweenlerp.arraylist);
-    let completed = 0;
-
-    for (let i = 0; i < size; i++) {
-        if (tweenlerp_internal_animate_entry(array[i], tweenlerp.progress)) completed++;
-    }
-
-    if (completed >= size) tweenlerp.has_completed = 1;
+    tweenlerp_animate_timestamp(tweenlerp, tweenlerp.progress + elapsed);
 
     return 0;// keep last "frame" alive
 }
@@ -125,20 +64,21 @@ function tweenlerp_animate(tweenlerp, elapsed) {
 function tweenlerp_animate_timestamp(tweenlerp, timestamp) {
     tweenlerp.progress = timestamp;
 
-    const array = arraylist_peek_array(tweenlerp.arraylist);
-    const size = arraylist_size(tweenlerp.arraylist);
+    const array_tweens = arraylist_peek_array(tweenlerp.arraylist);
+    const size_tweens = arraylist_size(tweenlerp.arraylist);
     let completed = 0;
 
-    for (let i = 0; i < size; i++) {
-        if (tweenlerp_internal_animate_entry(array[i], timestamp)) completed++;
+    for (let i = 0; i < size_tweens; i++) {
+        if (tweenlerp_internal_animate_entry(array_tweens[i], tweenlerp.progress)) completed++;
     }
 
-    tweenlerp.has_completed = completed >= size;
+    if (completed >= size_tweens) tweenlerp.has_completed = 1;
+
     return completed;
 }
 
 function tweenlerp_animate_percent(tweenlerp, percent) {
-    tweenlerp.progress = -1;// undefined behavoir
+    tweenlerp.progress = 0.0;// undefined behavoir
 
     const array = arraylist_peek_array(tweenlerp.arraylist);
     const size = arraylist_size(tweenlerp.arraylist);
@@ -150,7 +90,7 @@ function tweenlerp_animate_percent(tweenlerp, percent) {
         if (tweenlerp_internal_animate_entry_absolute(array[i], percent)) completed++;
     }
 
-    tweenlerp.has_completed = completed >= size;
+    tweenlerp.has_completed = percent >= 1.0;
     return completed;
 }
 
@@ -166,20 +106,20 @@ function tweenlerp_get_entry_count(tweenlerp) {
     return arraylist_size(tweenlerp.arraylist);
 }
 
-
 function tweenlerp_peek_value(tweenlerp) {
+    if (arraylist_size(tweenlerp.arraylist) < 1) return NaN;
     return arraylist_get(tweenlerp.arraylist, 0).value;
 }
 
 function tweenlerp_peek_value_by_index(tweenlerp, index) {
-	let entry = arraylist_get(tweenlerp.arraylist, index);
-	if(!entry) return NaN;
+    let entry = arraylist_get(tweenlerp.arraylist, index);
+    if (!entry) return NaN;
     return entry.value;
 }
 
 function tweenlerp_peek_entry_by_index(tweenlerp, index, output_id_value_duration_pair) {
     let entry = arraylist_get(tweenlerp.arraylist, index);
-	if (!entry) return null;
+    if (!entry) return null;
     output_id_value_duration_pair[0] = entry.id;
     output_id_value_duration_pair[1] = entry.value;
     output_id_value_duration_pair[2] = entry.duration;
@@ -343,7 +283,7 @@ function tweenlerp_internal_add(tweenlerp, id, start, end, duration, interp, ste
         value: start,
 
         start, end, duration
-    }
+    };
 
     switch (interp) {
         case ANIM_MACRO_INTERPOLATOR_EASE:

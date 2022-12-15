@@ -30,6 +30,7 @@
 #include "sprite.h"
 #include "textsprite.h"
 #include "tweenlerp.h"
+#include "tweenkeyframe.h"
 #include "atlas.h"
 #include "drawable.h"
 #include "animsprite.h"
@@ -192,6 +193,10 @@ void script_psshader_register(lua_State* L);
 #define TWEENLERP "TweenLerp"
 int script_tweenlerp_new(lua_State* L, TweenLerp tweenlerp);
 void script_tweenlerp_register(lua_State* L);
+
+#define TWEENKEYFRAME "TweenKeyframe"
+int script_tweenkeyframe_new(lua_State* L, TweenKeyframe tweenkeyframe);
+void script_tweenkeyframe_register(lua_State* L);
 
 #define ATLAS "Atlas"
 int script_atlas_new(lua_State* L, Atlas atlas);
