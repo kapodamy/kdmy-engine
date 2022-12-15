@@ -22,7 +22,7 @@ namespace Engine.Game {
         private StateSprite statesprite;
         private float beat_duration;
         private float height;
-        private TweenLerp default_animation;
+        private TweenKeyframe default_animation;
         private bool default_animate;
         private float animation_speed;
         private bool static_ready;
@@ -94,7 +94,7 @@ namespace Engine.Game {
             Luascript.DropShared(this);
 
             this.statesprite.Destroy();
-            this.default_animation.Destroy();
+            if (this.default_animation != null) this.default_animation.Destroy();
             this.sound_three.Destroy();
             this.sound_two.Destroy();
             this.sound_one.Destroy();
@@ -126,12 +126,6 @@ namespace Engine.Game {
         public void SetBpm(float bpm) {
             this.beat_duration = Math2D.BeatsPerMinuteToBeatPerMilliseconds(bpm);
             this.animation_speed = 1000 / this.beat_duration;
-
-            if (this.default_animation != null) {
-                int entry_count = this.default_animation.GetEntryCount();
-                for (int i = 0 ; i < entry_count ; i++)
-                    this.default_animation.ChangeDurationByIndex(i, this.beat_duration);
-            }
         }
 
         public void SetDefaultAnimation(AnimList animlist) {
@@ -139,7 +133,12 @@ namespace Engine.Game {
             AnimListItem animlist_item = animlist.GetAnimation(Countdown.DEFAULT_ANIMATION);
             if (animlist_item == null) return;
 
-            this.default_animation = TweenLerp.Init2(animlist_item);
+            this.default_animation = TweenKeyframe.Init2(animlist_item);
+        }
+
+        public void SetDefaultAnimation2(TweenKeyframe tweenkeyframe) {
+            if (this.default_animation != null) this.default_animation.Destroy();
+            this.default_animation = tweenkeyframe != null ? tweenkeyframe.Clone() : null;
         }
 
 
@@ -198,10 +197,14 @@ namespace Engine.Game {
             int completed;
 
             if (this.default_animate) {
-                completed = this.default_animation.Animate(elapsed);
+                double percent = this.timer / this.beat_duration;
+                if (percent > 1.0) percent = 1.0;
+
+                this.default_animation.AnimatePercent(percent);
                 this.default_animation.VertexSetProperties(
                      this.statesprite
                 );
+                completed = percent >= 1.0 ? 1 : 0;
             } else {
                 completed = this.statesprite.Animate(elapsed * this.animation_speed);
             }
@@ -252,7 +255,6 @@ namespace Engine.Game {
             if (this.statesprite.StateGet().animation != null) {
                 this.default_animate = false;
             } else if (this.default_animation != null) {
-                this.default_animation.Restart();
                 this.default_animate = true;
             } else {
                 this.default_animate = false;

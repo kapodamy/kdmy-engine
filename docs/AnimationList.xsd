@@ -18,6 +18,7 @@
             <xs:enumeration value="start" />
             <xs:enumeration value="end" />
             <xs:enumeration value="both" />
+            <xs:enumeration value="none" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="register">
@@ -26,6 +27,11 @@
             <xs:enumeration value="reg1" />
             <xs:enumeration value="reg2" />
             <xs:enumeration value="reg3" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="percentDuration">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="^\d+(\.\d+)?%?$" />
         </xs:restriction>
     </xs:simpleType>
 
@@ -73,6 +79,14 @@
         <xs:attribute name="register" type="register" use="optional" />
         <xs:attribute name="value" type="xs:anySimpleType" use="optional" />
     </xs:complexType>
+    <xs:complexType name="Keyframe">
+        <xs:attribute name="at" type="percentDuration" use="required" />
+        <xs:attribute name="id" type="xs:integer" use="optional" />
+        <xs:attribute name="value" type="xs:double" use="required" />
+        <xs:attribute name="interpolator" type="Interpolator-type" use="optional" />
+        <xs:attribute name="stepMethods" type="Interpolator-stepsMethod" use="optional" default="none" />
+        <xs:attribute name="stepCount" type="xs:positiveInteger" use="optional" />
+    </xs:complexType>
 
 
     <xs:complexType name="Animation">
@@ -91,7 +105,7 @@
     </xs:complexType>
     <xs:complexType name="AnimationMacro">
         <xs:sequence maxOccurs="unbounded">
-            <xs:element name="TweenLerp" type="Interpolator" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="Interpolator" type="Interpolator" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="Set" type="Set" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="Yield" type="Yield" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="Pause" type="Pause" minOccurs="0" maxOccurs="unbounded" />
@@ -107,10 +121,13 @@
         <xs:attribute name="frameAllowChangeSize" type="xs:boolean" default="false" use="optional" />
         <xs:attribute name="atlasPath" type="xs:anyURI" use="optional" />
     </xs:complexType>
-    <xs:complexType name="TweenLerp">
+    <xs:complexType name="TweenKeyframe">
         <xs:sequence maxOccurs="unbounded">
-            <xs:element name="TweenLerp" type="Interpolator" minOccurs="1" />
+            <xs:element name="Keyframe" type="Keyframe" minOccurs="1" />
         </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="defaultInterpolator" type="Interpolator-type" use="optional" default="linear" />
+        <xs:attribute name="referenceDuration" type="xs:positiveInteger" use="optional" default="1" />
     </xs:complexType>
 
 
@@ -119,7 +136,7 @@
             <xs:sequence minOccurs="0" maxOccurs="unbounded">
                 <xs:element name="Animation" type="Animation" />
                 <xs:element name="AnimationMacro" type="AnimationMacro" />
-                <xs:element name="TweenLerp" type="TweenLerp" />
+                <xs:element name="TweenKeyframe" type="TweenKeyframe" />
             </xs:sequence>
             <xs:attribute name="atlasPath" type="xs:anyURI" use="optional" />
         </xs:complexType>

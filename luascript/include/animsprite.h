@@ -2,6 +2,7 @@
 #define __animsprite_h
 
 #include "animlist.h"
+#include "tweenlerp.h"
 #include "atlas.h"
 
 
@@ -13,6 +14,7 @@ typedef AnimSprite_t* AnimSprite;
 
 AnimSprite animsprite_init_from_atlas(float frame_rate, int32_t loop, Atlas atlas, const char* prefix, bool has_number_suffix);
 AnimSprite animsprite_init_from_animlist(AnimList animlist, const char* animation_name);
+AnimSprite animsprite_init_from_tweenlerp(const char* name, int32_t loop, TweenLerp tweenlerp);
 AnimSprite animsprite_init_as_empty(const char* name);
 AnimSprite animsprite_init(AnimListItem animlist_item);
 void animsprite_destroy(AnimSprite* animsprite);

@@ -1,6 +1,9 @@
 #include "luascript_internal.h"
 
 #ifdef JAVASCRIPT
+EM_JS_PRFX(void, countdown_set_default_animation2, (Countdown countdown, TweenKeyframe tweenkeyframe), {
+    countdown_set_default_animation2(kdmyEngine_obtain(countdown), kdmyEngine_obtain(tweenkeyframe));
+});
 EM_JS_PRFX(void, countdown_set_bpm, (Countdown countdown, float bpm), {
     countdown_set_bpm(kdmyEngine_obtain(countdown), bpm);
 });
@@ -22,6 +25,14 @@ EM_JS_PRFX(bool, countdown_has_ended, (Countdown countdown), {
 });
 #endif
 
+static int script_countdown_set_default_animation2(lua_State* L) {
+    Countdown countdown = luascript_read_userdata(L, COUNTDOWN);
+    TweenKeyframe tweenkeyframe = luascript_read_nullable_userdata(L, 2, TWEENKEYFRAME);
+
+    countdown_set_default_animation2(countdown, tweenkeyframe);
+
+    return 0;
+}
 
 static int script_countdown_set_bpm(lua_State* L) {
     Countdown countdown = luascript_read_userdata(L, COUNTDOWN);
@@ -71,6 +82,7 @@ static int script_countdown_has_ended(lua_State* L) {
 
 
 static const luaL_Reg COUNTDOWN_FUNCTIONS[] = {
+    { "set_default_animation2", script_countdown_set_default_animation2 },
     { "set_bpm", script_countdown_set_bpm },
     { "get_drawable", script_countdown_get_drawable },
     { "ready", script_countdown_ready },

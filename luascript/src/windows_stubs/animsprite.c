@@ -11,6 +11,10 @@ AnimSprite animsprite_init_from_animlist(AnimList animlist, const char* animatio
     print_stub("animsprite_init_from_animlist", "animlist=%p animation_name=%s", animlist, animation_name);
     return &animsprite;
 }
+AnimSprite animsprite_init_from_tweenlerp(const char* name, int32_t loop, TweenLerp tweenlerp) {
+    print_stub("animsprite_init_from_tweenlerp", "name=%s loop=%i tweenlerp=%p", name, loop, tweenlerp);
+    return &animsprite;
+}
 AnimSprite animsprite_init_as_empty(const char* name) {
     print_stub("animsprite_init_as_empty", "name=%s", name);
     return &animsprite;

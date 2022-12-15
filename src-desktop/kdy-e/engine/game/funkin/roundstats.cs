@@ -23,13 +23,13 @@ namespace Engine.Game {
         private AnimSprite drawable_animation;
         private StringBuilder builder;
         private BeatWatcher beatwatcher;
-        private TweenLerpInfo tweenlerp_active;
-        private float tweenlerp_multiplier;
+        private TweenKeyframeInfo tweenkeyframe_active;
+        private float tweenkeyframe_multiplier;
         private int last_count_hit;
         private int last_count_miss;
-        private TweenLerpInfo tweenlerp_beat;
-        private TweenLerpInfo tweenlerp_hit;
-        private TweenLerpInfo tweenlerp_miss;
+        private TweenKeyframeInfo tweenkeyframe_beat;
+        private TweenKeyframeInfo tweenkeyframe_hit;
+        private TweenKeyframeInfo tweenkeyframe_miss;
         private bool enable_nps;
 
 
@@ -43,16 +43,16 @@ namespace Engine.Game {
 
             this.beatwatcher = new BeatWatcher() { };
 
-            this.tweenlerp_active = null;// this can be "tweenlerp_hit" or "tweenlerp_miss"
-            this.tweenlerp_multiplier = 1.0f;
+            this.tweenkeyframe_active = null;// this can be "tweenkeyframe_hit" or "tweenkeyframe_miss"
+            this.tweenkeyframe_multiplier = 1.0f;
 
             this.last_count_hit = 0;
             this.last_count_miss = 0;
             this.enable_nps = false;
 
-            this.tweenlerp_beat = new TweenLerpInfo() { };
-            this.tweenlerp_hit = new TweenLerpInfo() { };
-            this.tweenlerp_miss = new TweenLerpInfo() { };
+            this.tweenkeyframe_beat = new TweenKeyframeInfo() { };
+            this.tweenkeyframe_hit = new TweenKeyframeInfo() { };
+            this.tweenkeyframe_miss = new TweenKeyframeInfo() { };
 
 
             this.beatwatcher.Reset(true, 100.0f);
@@ -102,8 +102,8 @@ namespace Engine.Game {
 
         public void Reset() {
             this.next_clear = 1000.0;
-            this.tweenlerp_active = null;
-            this.tweenlerp_multiplier = 1.0f;
+            this.tweenkeyframe_active = null;
+            this.tweenkeyframe_multiplier = 1.0f;
             this.last_count_hit = 0;
             this.last_count_miss = 0;
 
@@ -111,9 +111,9 @@ namespace Engine.Game {
 
             this.drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
 
-            RoundStats.InternalTweenlerpSetup(this.tweenlerp_beat, false);
-            RoundStats.InternalTweenlerpSetup(this.tweenlerp_hit, false);
-            RoundStats.InternalTweenlerpSetup(this.tweenlerp_miss, false);
+            RoundStats.InternalTweenkeyframeSetup(this.tweenkeyframe_beat, false);
+            RoundStats.InternalTweenkeyframeSetup(this.tweenkeyframe_hit, false);
+            RoundStats.InternalTweenkeyframeSetup(this.tweenkeyframe_miss, false);
         }
 
         public Drawable GetDrawable() {
@@ -163,19 +163,19 @@ namespace Engine.Game {
             this.textsprite.SetTextIntern(true, builder.InternKDY());
 
             //
-            // configure the active tweenlerp
+            // configure the active tweenkeyframe
             //
             int miss_count = playerstats.GetMisses();
             int hit_count = playerstats.GetHits();
-            TweenLerpInfo tweenlerp_active = null;
-            float tweenlerp_multiplier = 1.0f;
+            TweenKeyframeInfo tweenkeyframe_active = null;
+            float tweenkeyframe_multiplier = 1.0f;
 
             if (miss_count > this.last_count_miss) {
-                tweenlerp_active = this.tweenlerp_miss;
-                tweenlerp_multiplier = this.last_count_miss - miss_count;
+                tweenkeyframe_active = this.tweenkeyframe_miss;
+                tweenkeyframe_multiplier = this.last_count_miss - miss_count;
             } else if (hit_count > this.last_count_hit) {
-                tweenlerp_active = this.tweenlerp_hit;
-                tweenlerp_multiplier = this.last_count_hit - hit_count;
+                tweenkeyframe_active = this.tweenkeyframe_hit;
+                tweenkeyframe_multiplier = this.last_count_hit - hit_count;
             } else {
                 return;
             }
@@ -183,38 +183,38 @@ namespace Engine.Game {
             this.last_count_miss = miss_count;
             this.last_count_hit = hit_count;
 
-            if (tweenlerp_active != this.tweenlerp_active) {
-                this.tweenlerp_active = tweenlerp_active;
-                this.tweenlerp_multiplier = tweenlerp_multiplier;
-                RoundStats.InternalTweenlerpSetup(tweenlerp_active, false);
+            if (tweenkeyframe_active != this.tweenkeyframe_active) {
+                this.tweenkeyframe_active = tweenkeyframe_active;
+                this.tweenkeyframe_multiplier = tweenkeyframe_multiplier;
             } else {
-                this.tweenlerp_multiplier += tweenlerp_multiplier;
-                if (this.tweenlerp_active.tweenlerp != null) this.tweenlerp_active.tweenlerp.Restart();
+                this.tweenkeyframe_multiplier += tweenkeyframe_multiplier;
             }
+            RoundStats.InternalTweenkeyframeSetup(tweenkeyframe_active, false);
+
         }
 
 
-        public void TweenlerpSetOnBeat(TweenLerp tweenlerp, float rollback_beats, float beat_duration) {
-            RoundStats.InternalTweenlerpSet(this.tweenlerp_beat, tweenlerp, rollback_beats, beat_duration);
-            InternalTweenlerpDuration(this.tweenlerp_beat, this.beatwatcher.tick);
+        public void TweenkeyframeSetOnBeat(TweenKeyframe tweenkeyframe, float rollback_beats, float beat_duration) {
+            RoundStats.InternalTweenkeyframeSet(this.tweenkeyframe_beat, tweenkeyframe, rollback_beats, beat_duration);
+            InternalTweenkeyframeDuration(this.tweenkeyframe_beat, this.beatwatcher.tick);
         }
 
-        public void TweenlerpSetOnHit(TweenLerp tweenlerp, float rollback_beats, float beat_duration) {
-            RoundStats.InternalTweenlerpSet(this.tweenlerp_hit, tweenlerp, rollback_beats, beat_duration);
-            InternalTweenlerpDuration(this.tweenlerp_hit, this.beatwatcher.tick);
+        public void TweenkeyframeSetOnHit(TweenKeyframe tweenkeyframe, float rollback_beats, float beat_duration) {
+            RoundStats.InternalTweenkeyframeSet(this.tweenkeyframe_hit, tweenkeyframe, rollback_beats, beat_duration);
+            InternalTweenkeyframeDuration(this.tweenkeyframe_hit, this.beatwatcher.tick);
         }
 
-        public void TweenlerpSetOnMiss(TweenLerp tweenlerp, float rollback_beats, float beat_duration) {
-            RoundStats.InternalTweenlerpSet(this.tweenlerp_miss, tweenlerp, rollback_beats, beat_duration);
-            InternalTweenlerpDuration(this.tweenlerp_miss, this.beatwatcher.tick);
+        public void TweenkeyframeSetOnMiss(TweenKeyframe tweenkeyframe, float rollback_beats, float beat_duration) {
+            RoundStats.InternalTweenkeyframeSet(this.tweenkeyframe_miss, tweenkeyframe, rollback_beats, beat_duration);
+            InternalTweenkeyframeDuration(this.tweenkeyframe_miss, this.beatwatcher.tick);
         }
 
-        public void TweenlerpSetBpm(float beats_per_minute) {
+        public void TweenkeyframeSetBpm(float beats_per_minute) {
             this.beatwatcher.ChangeBpm(beats_per_minute);
 
-            InternalTweenlerpDuration(this.tweenlerp_beat, this.beatwatcher.tick);
-            InternalTweenlerpDuration(this.tweenlerp_hit, this.beatwatcher.tick);
-            InternalTweenlerpDuration(this.tweenlerp_miss, this.beatwatcher.tick);
+            InternalTweenkeyframeDuration(this.tweenkeyframe_beat, this.beatwatcher.tick);
+            InternalTweenkeyframeDuration(this.tweenkeyframe_hit, this.beatwatcher.tick);
+            InternalTweenkeyframeDuration(this.tweenkeyframe_miss, this.beatwatcher.tick);
         }
 
 
@@ -222,21 +222,20 @@ namespace Engine.Game {
             if (this.drawable_animation != null) this.drawable_animation.Animate(elapsed);
 
             bool completed = true;
-            bool ignore_beat = this.tweenlerp_beat.tweenlerp == null;// ignore if there no tweenlerp for beats
-            bool beat_rollback_active = this.tweenlerp_beat.rollback_active;
+            bool ignore_beat = this.tweenkeyframe_beat.tweenkeyframe == null;// ignore if there no tweenkeyframe for beats
+            bool beat_rollback_active = this.tweenkeyframe_beat.rollback_active;
 
-            if (this.tweenlerp_active != null) {
-                completed = InternalTweenlerpRun(this.tweenlerp_active, elapsed);
+            if (this.tweenkeyframe_active != null) {
+                completed = InternalTweenkeyframeRun(this.tweenkeyframe_active, elapsed);
 
-                // if the active tweenlerp is completed, do rollback
-                if (!this.tweenlerp_active.rollback_active) {
+                // if the active tweenkeyframe is completed, do rollback
+                if (!this.tweenkeyframe_active.rollback_active) {
                     if (completed) {
-                        RoundStats.InternalTweenlerpSetup(this.tweenlerp_active, true);
+                        RoundStats.InternalTweenkeyframeSetup(this.tweenkeyframe_active, true);
                     } else if (!ignore_beat && !beat_rollback_active) {
                         // still running, ignore beat tweernlerp
                         beat_rollback_active = true;
-                        this.tweenlerp_beat.rollback_active = true;
-                        this.tweenlerp_beat.tweenlerp.MarkAsCompleted();
+                        this.tweenkeyframe_beat.rollback_active = true;
                     }
                 }
             }
@@ -244,13 +243,13 @@ namespace Engine.Game {
             // beat check
             if (this.beatwatcher.Poll()) {
                 elapsed += this.beatwatcher.since;
-                RoundStats.InternalTweenlerpSetup(this.tweenlerp_beat, false);// run again
+                RoundStats.InternalTweenkeyframeSetup(this.tweenkeyframe_beat, false);// run again
             }
 
             if (!ignore_beat) {
-                completed = InternalTweenlerpRun(this.tweenlerp_beat, elapsed);
+                completed = InternalTweenkeyframeRun(this.tweenkeyframe_beat, elapsed);
                 if (completed && !beat_rollback_active)
-                    RoundStats.InternalTweenlerpSetup(this.tweenlerp_beat, true);// do rollback
+                    RoundStats.InternalTweenkeyframeSetup(this.tweenkeyframe_beat, true);// do rollback
             }
 
             float draw_width, draw_height;
@@ -271,72 +270,70 @@ namespace Engine.Game {
 
 
 
-        private static void InternalTweenlerpSet(TweenLerpInfo tweenlerp_info, TweenLerp tweenlerp, float rollback_beats, float beat_duration) {
-            if (tweenlerp_info.tweenlerp != null) tweenlerp_info.tweenlerp.Destroy();
-            tweenlerp_info.tweenlerp = tweenlerp.Clone();
-            tweenlerp_info.rollback_beats = rollback_beats;
-            tweenlerp_info.beat_duration = beat_duration;
+        private static void InternalTweenkeyframeSet(TweenKeyframeInfo tweenkeyframe_info, TweenKeyframe tweenkeyframe, float rollback_beats, float beat_duration) {
+            if (tweenkeyframe_info.tweenkeyframe != null) tweenkeyframe_info.tweenkeyframe.Destroy();
+            tweenkeyframe_info.tweenkeyframe = tweenkeyframe.Clone();
+            tweenkeyframe_info.rollback_beats = rollback_beats;
+            tweenkeyframe_info.beat_duration = beat_duration;
         }
 
-        private static void InternalTweenlerpDuration(TweenLerpInfo tweenlerp_info, float beat_duration) {
-            tweenlerp_info.duration_rollback = tweenlerp_info.rollback_beats * beat_duration;
-            tweenlerp_info.beat_duration = beat_duration * tweenlerp_info.beat_duration;
-            RoundStats.InternalTweenlerpSetup(tweenlerp_info, tweenlerp_info.rollback_active);
+        private static void InternalTweenkeyframeDuration(TweenKeyframeInfo tweenkeyframe_info, float beat_duration) {
+            tweenkeyframe_info.rollback_duration = tweenkeyframe_info.rollback_beats * beat_duration;
+            tweenkeyframe_info.beat_duration = beat_duration * tweenkeyframe_info.beat_duration;
+            RoundStats.InternalTweenkeyframeSetup(tweenkeyframe_info, tweenkeyframe_info.rollback_active);
         }
 
-        private bool InternalTweenlerpRun(TweenLerpInfo tweenlerp_info, float elapsed) {
-            int entry_id; float entry_value, entry_duration;
+        private bool InternalTweenkeyframeRun(TweenKeyframeInfo tweenkeyframe_info, float elapsed) {
+            int entry_id; float entry_value;
 
-            if (tweenlerp_info.tweenlerp == null) return true;
-            if (tweenlerp_info.tweenlerp.IsCompleted()) return true;
+            if (tweenkeyframe_info.tweenkeyframe == null || tweenkeyframe_info.is_completed) return true;
 
-            int completed = tweenlerp_info.tweenlerp.Animate(elapsed);
-            if (completed > 0) return true;
+            tweenkeyframe_info.target_elapsed += elapsed;
 
-            int count = tweenlerp_info.tweenlerp.GetEntryCount();
+            float percent = tweenkeyframe_info.target_elapsed / tweenkeyframe_info.target_duration;
+            tweenkeyframe_info.is_completed = percent >= 1f;
+
+            if (percent > 1f) percent = 1f;
+
+            if (tweenkeyframe_info.rollback_active) percent = 1f - percent;
+
+            tweenkeyframe_info.tweenkeyframe.AnimatePercent(percent);
+
+            int count = tweenkeyframe_info.tweenkeyframe.GetIdsCount();
 
             for (int i = 0 ; i < count ; i++) {
-                tweenlerp_info.tweenlerp.PeekEntryByIndex(i, out entry_id, out entry_value, out entry_duration);
+                tweenkeyframe_info.tweenkeyframe.PeekEntryByIndex(i, out entry_id, out entry_value);
                 if (entry_id == VertexProps.TEXTSPRITE_PROP_STRING) continue;// illegal property
 
                 if (!VertexProps.IsPropertyEnumerable(entry_id))
-                    entry_value *= this.tweenlerp_multiplier;
+                    entry_value *= this.tweenkeyframe_multiplier;
 
                 this.drawable.SetProperty(entry_id, entry_value);
             }
 
-            return false;
+            return tweenkeyframe_info.is_completed;
         }
 
-        private static bool InternalTweenlerpSetup(TweenLerpInfo tweenlerp_info, bool rollback) {
-            int entry_id; float entry_value, entry_duration;
-
-            tweenlerp_info.rollback_active = rollback;
-
-            if (tweenlerp_info.tweenlerp == null) return true;
-
-            int count = tweenlerp_info.tweenlerp.GetEntryCount();
-            float new_duration = rollback ? tweenlerp_info.duration_rollback : tweenlerp_info.beat_duration;
-
-            for (int i = 0 ; i < count ; i++) {
-                tweenlerp_info.tweenlerp.SwapBoundsByIndex(i);
-                tweenlerp_info.tweenlerp.PeekEntryByIndex(i, out entry_id, out entry_value, out entry_duration);
-
-                // only modify entries with negative duration
-                if (entry_duration < 0) tweenlerp_info.tweenlerp.ChangeDurationByIndex(i, new_duration);
-            }
-
-            tweenlerp_info.tweenlerp.Restart();
-            return false;
+        private static bool InternalTweenkeyframeSetup(TweenKeyframeInfo tweenkeyframe_info, bool rollback) {
+            tweenkeyframe_info.is_completed = false;
+            tweenkeyframe_info.rollback_active = rollback;
+            tweenkeyframe_info.target_elapsed = 0f;
+            tweenkeyframe_info.target_duration = rollback ? tweenkeyframe_info.rollback_duration : tweenkeyframe_info.beat_duration;
+            return tweenkeyframe_info.tweenkeyframe == null;
         }
 
-        private class TweenLerpInfo {
-            public TweenLerp tweenlerp;
+
+        private class TweenKeyframeInfo {
+            public TweenKeyframe tweenkeyframe;
             public float rollback_beats;
-            public float duration_rollback;
+            public float rollback_duration;
             public float beat_duration;
             public bool rollback_active;
+            public float target_elapsed;
+            public float target_duration;
+            public bool is_completed;
         }
+
 
     }
 

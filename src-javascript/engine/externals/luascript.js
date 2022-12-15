@@ -864,6 +864,10 @@ function __js__animlist_is_item_macro_animation(animlist_item) {
     let ret = animlist_is_item_macro_animation(kdmyEngine_obtain(animlist_item));
     return ret ? 1 : 0
 }
+function __js__animlist_is_item_tweenkeyframe_animation(animlist_item) {
+    let ret = animlist_is_item_tweenkeyframe_animation(kdmyEngine_obtain(animlist_item));
+    return ret ? 1 : 0
+}
 function __js__animsprite_destroy(animsprite) {
     animsprite_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(animsprite)))
 }
@@ -885,6 +889,10 @@ function __js__animsprite_init_from_animlist(animlist, animation_name) {
 }
 function __js__animsprite_init_from_atlas(frame_rate, loop, atlas, prefix, has_number_suffix) {
     let ret = animsprite_init_from_atlas(frame_rate, loop, kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(prefix), has_number_suffix);
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_init_from_tweenlerp(name, loop, tweenlerp) {
+    let ret = animsprite_init_from_tweenlerp(kdmyEngine_ptrToString(name), loop, kdmyEngine_obtain(tweenlerp));
     return kdmyEngine_obtain(ret)
 }
 function __js__animsprite_is_frame_animation(animsprite) {
@@ -1201,6 +1209,9 @@ function __js__countdown_ready(countdown) {
 }
 function __js__countdown_set_bpm(countdown, bpm) {
     countdown_set_bpm(kdmyEngine_obtain(countdown), bpm)
+}
+function __js__countdown_set_default_animation2(countdown, tweenkeyframe) {
+    countdown_set_default_animation2(kdmyEngine_obtain(countdown), kdmyEngine_obtain(tweenkeyframe))
 }
 function __js__countdown_start(countdown) {
     let ret = countdown_start(kdmyEngine_obtain(countdown));
@@ -1975,17 +1986,17 @@ function __js__roundstats_reset(roundstats) {
 function __js__roundstats_set_draw_y(roundstats, y) {
     roundstats_set_draw_y(kdmyEngine_obtain(roundstats), y)
 }
-function __js__roundstats_tweenlerp_set_bpm(roundstats, beats_per_minute) {
-    roundstats_tweenlerp_set_bpm(kdmyEngine_obtain(roundstats), beats_per_minute)
+function __js__roundstats_tweenkeyframe_set_bpm(roundstats, beats_per_minute) {
+    roundstats_tweenkeyframe_set_bpm(kdmyEngine_obtain(roundstats), beats_per_minute)
 }
-function __js__roundstats_tweenlerp_set_on_beat(roundstats, tweenlerp, rollback_beats, beat_duration) {
-    roundstats_tweenlerp_set_on_beat(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenlerp), rollback_beats, beat_duration)
+function __js__roundstats_tweenkeyframe_set_on_beat(roundstats, tweenkeyframe, rollback_beats, beat_duration) {
+    roundstats_tweenkeyframe_set_on_beat(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenkeyframe), rollback_beats, beat_duration)
 }
-function __js__roundstats_tweenlerp_set_on_hit(roundstats, tweenlerp, rollback_beats, beat_duration) {
-    roundstats_tweenlerp_set_on_hit(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenlerp), rollback_beats, beat_duration)
+function __js__roundstats_tweenkeyframe_set_on_hit(roundstats, tweenkeyframe, rollback_beats, beat_duration) {
+    roundstats_tweenkeyframe_set_on_hit(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenkeyframe), rollback_beats, beat_duration)
 }
-function __js__roundstats_tweenlerp_set_on_miss(roundstats, tweenlerp, rollback_beats, beat_duration) {
-    roundstats_tweenlerp_set_on_miss(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenlerp), rollback_beats, beat_duration)
+function __js__roundstats_tweenkeyframe_set_on_miss(roundstats, tweenkeyframe, rollback_beats, beat_duration) {
+    roundstats_tweenkeyframe_set_on_miss(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenkeyframe), rollback_beats, beat_duration)
 }
 function __js__songplayer_changesong(songplayer, src, prefer_no_copyright) {
     return songplayer_changesong(kdmyEngine_obtain(songplayer), kdmyEngine_ptrToString(src), prefer_no_copyright)
@@ -2300,8 +2311,8 @@ function __js__strum_set_keep_aspect_ratio_background(strum, enable) {
 function __js__strum_set_marker_duration_multiplier(strum, multipler) {
     strum_set_marker_duration_multiplier(kdmyEngine_obtain(strum), multipler)
 }
-function __js__strum_set_notesmaker_tweenlerp(strum, tweenlerp, apply_to_marker_too) {
-    strum_set_notesmaker_tweenlerp(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenlerp), apply_to_marker_too)
+function __js__strum_set_notesmaker_tweenkeyframe(strum, tweenkeyframe, apply_to_marker_too) {
+    strum_set_notesmaker_tweenkeyframe(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenkeyframe), apply_to_marker_too)
 }
 function __js__strum_set_player_id(strum, player_id) {
     strum_set_player_id(kdmyEngine_obtain(strum), player_id)
@@ -2516,6 +2527,63 @@ function __js__textsprite_set_z_offset(textsprite, offset) {
 }
 function __js__timer_ms_gettime32_JS() {
     return Math.trunc(performance.now())
+}
+function __js__tweenkeyframe_add_easeinout(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_easeinout(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_easeout(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_easeout(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_interpolator(tweenkeyframde, at, id, value, type) {
+    let ret = tweenkeyframe_add_interpolator(kdmyEngine_obtain(tweenkeyframde), at, id, value, type);
+    return ret
+}
+function __js__tweenkeyframe_add_linear(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_linear(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_steps(tweenkeyframe, at, id, value, steps_count, steps_method) {
+    let ret = tweenkeyframe_add_steps(kdmyEngine_obtain(tweenkeyframe), at, id, value, steps_count, steps_method);
+    return ret
+}
+function __js__tweenkeyframe_animate_percent(tweenkeyframe, percent) {
+    tweenkeyframe_animate_percent(kdmyEngine_obtain(tweenkeyframe), percent)
+}
+function __js__tweenkeyframe_destroy(tweenkeyframe) {
+    tweenkeyframe_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(tweenkeyframe)))
+}
+function __js__tweenkeyframe_get_ids_count(tweenkeyframe) {
+    let ret = tweenkeyframe_get_ids_count(kdmyEngine_obtain(tweenkeyframe));
+    return ret
+}
+function __js__tweenkeyframe_init() {
+    let ret = tweenkeyframe_init();
+    return kdmyEngine_obtain(ret)
+}
+function __js__tweenkeyframe_init2(animlist_item) {
+    let ret = tweenkeyframe_init2(kdmyEngine_obtain(animlist_item));
+    return kdmyEngine_obtain(ret)
+}
+function __js__tweenkeyframe_peek_entry_by_index(tweenkeyframe, index, out_id, out_value) {
+    const values = [0, 0];
+    let ret = tweenkeyframe_peek_entry_by_index(kdmyEngine_obtain(tweenkeyframe), index, values);
+    kdmyEngine_set_int32(out_id, values[0]);
+    kdmyEngine_set_float32(out_value, values[1]);
+    return ret ? 1 : 0
+}
+function __js__tweenkeyframe_peek_value(tweenkeyframe) {
+    let ret = tweenkeyframe_peek_value(kdmyEngine_obtain(tweenkeyframe));
+    return ret
+}
+function __js__tweenkeyframe_peek_value_by_id(tweenkeyframe, id) {
+    let ret = tweenkeyframe_peek_value_by_id(kdmyEngine_obtain(tweenkeyframe), id);
+    return ret
+}
+function __js__tweenkeyframe_peek_value_by_index(tweenkeyframe, index) {
+    let ret = tweenkeyframe_peek_value_by_index(kdmyEngine_obtain(tweenkeyframe), index);
+    return ret
 }
 function __js__tweenlerp_add_ease(tweenlerp, id, start, end, duration) {
     let ret = tweenlerp_add_ease(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
@@ -6171,12 +6239,14 @@ var asmLibraryArg = {
     "__js__animlist_get_animation": __js__animlist_get_animation,
     "__js__animlist_is_item_frame_animation": __js__animlist_is_item_frame_animation,
     "__js__animlist_is_item_macro_animation": __js__animlist_is_item_macro_animation,
+    "__js__animlist_is_item_tweenkeyframe_animation": __js__animlist_is_item_tweenkeyframe_animation,
     "__js__animsprite_destroy": __js__animsprite_destroy,
     "__js__animsprite_get_name": __js__animsprite_get_name,
     "__js__animsprite_init": __js__animsprite_init,
     "__js__animsprite_init_as_empty": __js__animsprite_init_as_empty,
     "__js__animsprite_init_from_animlist": __js__animsprite_init_from_animlist,
     "__js__animsprite_init_from_atlas": __js__animsprite_init_from_atlas,
+    "__js__animsprite_init_from_tweenlerp": __js__animsprite_init_from_tweenlerp,
     "__js__animsprite_is_frame_animation": __js__animsprite_is_frame_animation,
     "__js__animsprite_restart": __js__animsprite_restart,
     "__js__animsprite_set_delay": __js__animsprite_set_delay,
@@ -6274,6 +6344,7 @@ var asmLibraryArg = {
     "__js__countdown_has_ended": __js__countdown_has_ended,
     "__js__countdown_ready": __js__countdown_ready,
     "__js__countdown_set_bpm": __js__countdown_set_bpm,
+    "__js__countdown_set_default_animation2": __js__countdown_set_default_animation2,
     "__js__countdown_start": __js__countdown_start,
     "__js__dialogue_apply_state": __js__dialogue_apply_state,
     "__js__dialogue_close": __js__dialogue_close,
@@ -6477,10 +6548,10 @@ var asmLibraryArg = {
     "__js__roundstats_hide_nps": __js__roundstats_hide_nps,
     "__js__roundstats_reset": __js__roundstats_reset,
     "__js__roundstats_set_draw_y": __js__roundstats_set_draw_y,
-    "__js__roundstats_tweenlerp_set_bpm": __js__roundstats_tweenlerp_set_bpm,
-    "__js__roundstats_tweenlerp_set_on_beat": __js__roundstats_tweenlerp_set_on_beat,
-    "__js__roundstats_tweenlerp_set_on_hit": __js__roundstats_tweenlerp_set_on_hit,
-    "__js__roundstats_tweenlerp_set_on_miss": __js__roundstats_tweenlerp_set_on_miss,
+    "__js__roundstats_tweenkeyframe_set_bpm": __js__roundstats_tweenkeyframe_set_bpm,
+    "__js__roundstats_tweenkeyframe_set_on_beat": __js__roundstats_tweenkeyframe_set_on_beat,
+    "__js__roundstats_tweenkeyframe_set_on_hit": __js__roundstats_tweenkeyframe_set_on_hit,
+    "__js__roundstats_tweenkeyframe_set_on_miss": __js__roundstats_tweenkeyframe_set_on_miss,
     "__js__songplayer_changesong": __js__songplayer_changesong,
     "__js__songplayer_get_duration": __js__songplayer_get_duration,
     "__js__songplayer_get_timestamp": __js__songplayer_get_timestamp,
@@ -6577,7 +6648,7 @@ var asmLibraryArg = {
     "__js__strum_set_extra_animation_continuous": __js__strum_set_extra_animation_continuous,
     "__js__strum_set_keep_aspect_ratio_background": __js__strum_set_keep_aspect_ratio_background,
     "__js__strum_set_marker_duration_multiplier": __js__strum_set_marker_duration_multiplier,
-    "__js__strum_set_notesmaker_tweenlerp": __js__strum_set_notesmaker_tweenlerp,
+    "__js__strum_set_notesmaker_tweenkeyframe": __js__strum_set_notesmaker_tweenkeyframe,
     "__js__strum_set_player_id": __js__strum_set_player_id,
     "__js__strum_set_scroll_direction": __js__strum_set_scroll_direction,
     "__js__strum_set_scroll_speed": __js__strum_set_scroll_speed,
@@ -6644,6 +6715,20 @@ var asmLibraryArg = {
     "__js__textsprite_set_z_index": __js__textsprite_set_z_index,
     "__js__textsprite_set_z_offset": __js__textsprite_set_z_offset,
     "__js__timer_ms_gettime32_JS": __js__timer_ms_gettime32_JS,
+    "__js__tweenkeyframe_add_easeinout": __js__tweenkeyframe_add_easeinout,
+    "__js__tweenkeyframe_add_easeout": __js__tweenkeyframe_add_easeout,
+    "__js__tweenkeyframe_add_interpolator": __js__tweenkeyframe_add_interpolator,
+    "__js__tweenkeyframe_add_linear": __js__tweenkeyframe_add_linear,
+    "__js__tweenkeyframe_add_steps": __js__tweenkeyframe_add_steps,
+    "__js__tweenkeyframe_animate_percent": __js__tweenkeyframe_animate_percent,
+    "__js__tweenkeyframe_destroy": __js__tweenkeyframe_destroy,
+    "__js__tweenkeyframe_get_ids_count": __js__tweenkeyframe_get_ids_count,
+    "__js__tweenkeyframe_init": __js__tweenkeyframe_init,
+    "__js__tweenkeyframe_init2": __js__tweenkeyframe_init2,
+    "__js__tweenkeyframe_peek_entry_by_index": __js__tweenkeyframe_peek_entry_by_index,
+    "__js__tweenkeyframe_peek_value": __js__tweenkeyframe_peek_value,
+    "__js__tweenkeyframe_peek_value_by_id": __js__tweenkeyframe_peek_value_by_id,
+    "__js__tweenkeyframe_peek_value_by_index": __js__tweenkeyframe_peek_value_by_index,
     "__js__tweenlerp_add_ease": __js__tweenlerp_add_ease,
     "__js__tweenlerp_add_easein": __js__tweenlerp_add_easein,
     "__js__tweenlerp_add_easeinout": __js__tweenlerp_add_easeinout,

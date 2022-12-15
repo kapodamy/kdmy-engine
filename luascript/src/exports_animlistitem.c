@@ -6,6 +6,10 @@ EM_JS_PRFX(bool, animlist_is_item_macro_animation, (AnimListItem animlist_item),
     let ret = animlist_is_item_macro_animation(kdmyEngine_obtain(animlist_item));
     return ret ? 1 : 0;
 });
+EM_JS_PRFX(bool, animlist_is_item_tweenkeyframe_animation, (AnimListItem animlist_item), {
+    let ret = animlist_is_item_tweenkeyframe_animation(kdmyEngine_obtain(animlist_item));
+    return ret ? 1 : 0;
+});
 EM_JS_PRFX(bool, animlist_is_item_frame_animation, (AnimListItem animlist_item), {
     let ret = animlist_is_item_frame_animation(kdmyEngine_obtain(animlist_item));
     return ret ? 1 : 0;
@@ -34,9 +38,9 @@ int script_animlistitem_index(lua_State* L) {
         lua_pushboolean(
             L, animlist_is_item_macro_animation(animlistitem)
         );
-    } else if (string_equals(field, "isItemTweenlerpAnimation")){
+    } else if (string_equals(field, "isItemTweenKeyframeAnimation")){
         lua_pushboolean(
-            L, !animlist_is_item_frame_animation(animlistitem) && !animlist_is_item_macro_animation(animlistitem)
+            L, animlist_is_item_tweenkeyframe_animation(animlistitem)
         );
     } else {
         return luaL_error(L, "unknown field '%s'", field);

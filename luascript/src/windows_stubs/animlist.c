@@ -19,6 +19,10 @@ bool animlist_is_item_macro_animation(AnimListItem animlist_item) {
     print_stub("animlist_is_item_macro_animation", "animlist_item=%p", animlist_item);
     return 0;
 }
+bool animlist_is_item_tweenkeyframe_animation(AnimListItem animlist_item) {
+    print_stub("animlist_is_item_tweenkeyframe_animation", "animlist_item=%p", animlist_item);
+    return 0;
+}
 bool animlist_is_item_frame_animation(AnimListItem animlist_item) {
     print_stub("animlist_is_item_frame_animation", "animlist_item=%p", animlist_item);
     return 0;

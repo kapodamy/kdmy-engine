@@ -251,10 +251,10 @@ namespace Engine.Externals.LuaScriptInterop {
 
         static int script_strum_set_notesmaker_tweenlerp(LuaState L) {
             Strum strum = L.ReadUserdata<Strum>(STRUM);
-            TweenLerp tweenlerp = L.ReadNullableUserdata<TweenLerp>(2, ExportsTweenLerp.TWEENLERP);
+            TweenKeyframe tweenkeyframe = L.ReadNullableUserdata<TweenKeyframe>(2, ExportsTweenKeyframe.TWEENKEYFRAME);
             bool apply_to_marker_too = L.lua_toboolean(3);
 
-            strum.SetNotesmakerTweenlerp(tweenlerp, apply_to_marker_too);
+            strum.SetNotesmakerTweenkeyframe(tweenkeyframe, apply_to_marker_too);
 
             return 0;
         }

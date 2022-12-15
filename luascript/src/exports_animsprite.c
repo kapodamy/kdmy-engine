@@ -9,6 +9,10 @@ EM_JS_PRFX(AnimSprite, animsprite_init_from_animlist, (AnimList animlist, const 
     let ret = animsprite_init_from_animlist(kdmyEngine_obtain(animlist), kdmyEngine_ptrToString(animation_name));
     return kdmyEngine_obtain(ret);
 });
+EM_JS_PRFX(AnimSprite, animsprite_init_from_tweenlerp, (const char* name, int32_t loop, TweenLerp tweenlerp), {
+    let ret = animsprite_init_from_tweenlerp(kdmyEngine_ptrToString(name), loop, kdmyEngine_obtain(tweenlerp));
+    return kdmyEngine_obtain(ret);
+});
 EM_JS_PRFX(AnimSprite, animsprite_init_as_empty, (const char* name), {
     let ret = animsprite_init_as_empty(kdmyEngine_ptrToString(name));
     return kdmyEngine_obtain(ret);
@@ -57,6 +61,16 @@ static int script_animsprite_init_from_animlist(lua_State* L) {
     const char* animation_name = luaL_optstring(L, 2, NULL);
 
     AnimSprite ret = animsprite_init_from_animlist(animlist, animation_name);
+
+    return luascript_userdata_allocnew(L, ANIMSPRITE, ret);
+}
+
+static int script_animsprite_init_from_tweenlerp(lua_State* L) {
+    const char* name = luaL_optstring(L, 1, NULL);
+    int32_t loop = (int32_t)luaL_checkinteger(L, 2);
+    TweenLerp tweenlerp = luascript_read_nullable_userdata(L, 3, TWEENLERP);
+
+    AnimSprite ret = animsprite_init_from_tweenlerp(name, loop, tweenlerp);
 
     return luascript_userdata_allocnew(L, ANIMSPRITE, ret);
 }
@@ -134,6 +148,7 @@ static int script_animsprite_set_delay(lua_State* L) {
 static const luaL_Reg ANIMSPRITE_FUNCTIONS[] = {
     { "init_from_atlas", script_animsprite_init_from_atlas },
     { "init_from_animlist", script_animsprite_init_from_animlist },
+    { "init_from_tweenlerp", script_animsprite_init_from_tweenlerp },
     { "init_as_empty", script_animsprite_init_as_empty },
     { "init", script_animsprite_init },
     { "destroy", script_animsprite_destroy },

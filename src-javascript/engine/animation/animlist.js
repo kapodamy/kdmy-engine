@@ -86,8 +86,8 @@ async function animlist_init(src) {
             case "AnimationMacro":
                 is_macro = 1;
                 break;
-            case "TweenLerp":
-                linkedlist_add_item(parsed_animations, animlist_read_tweenlerp_animation(anims[i]));
+            case "TweenKeyframe":
+                linkedlist_add_item(parsed_animations, animlist_read_tweenkeyframe_animation(anims[i]));
                 continue;
             default:
                 console.warn("Unknown animation: " + anims[i].tagName);
@@ -149,12 +149,12 @@ function animlist_destroy(animlist) {
             animlist.entries[i].instructions[j] = undefined;
         }
 
-        if (animlist.entries[i].is_tweenlerp) animlist.entries[i].tweenlerp_entries = undefined;
+        if (animlist.entries[i].is_tweenkeyframe) animlist.entries[i].tweenkeyframe_entries = undefined;
 
         animlist.entries[i].frames = undefined;
         animlist.entries[i].instructions = undefined;
-        
-        
+
+
         ModuleLuaScript.kdmyEngine_drop_shared_object(animlist.entries[i]);
         animlist.entries[i] = undefined;
     }
@@ -177,7 +177,11 @@ function animlist_is_item_macro_animation(animlist_item) {
 }
 
 function animlist_is_item_frame_animation(animlist_item) {
-    return !animlist_item.is_tweenlerp && animlist_item.instructions_count < 1;
+    return !animlist_item.is_tweenkeyframe && animlist_item.instructions_count < 1;
+}
+
+function animlist_is_item_tweenkeyframe_animation(animlist_item) {
+    return animlist_item.is_tweenkeyframe;
 }
 
 
@@ -238,7 +242,7 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
     }
 
     let anim = {};
-    anim.is_tweenlerp = 0;
+    anim.is_tweenkeyframe = 0;
     anim.name = name;
     anim.loop = vertexprops_parse_integer(entry, "loop", 1);
     anim.frame_rate = vertexprops_parse_float(entry, "frameRate", default_fps);
@@ -371,8 +375,8 @@ function animlist_parse_step_method(node) {
     return vertexprops_parse_align(node, "stepsMethod", 0, 0);
 }
 
-function animlist_parse_interpolator(node) {
-    let type = node.getAttribute("type");
+function animlist_parse_interpolator(node, name) {
+    let type = node.getAttribute(name);
 
     if (!type)
         return ANIM_MACRO_INTERPOLATOR_LINEAR;
@@ -520,7 +524,7 @@ function animlist_parse_float_with_rate(node, attr_name, frame_time, def_value) 
 function animlist_read_macro_animation(entry, atlas) {
 
     let anim = {};
-    anim.is_tweenlerp = 0;
+    anim.is_tweenkeyframe = 0;
     anim.name = entry.getAttribute("name");
     anim.loop = vertexprops_parse_integer(entry, "loop", 1);
     anim.frames = null;
@@ -547,7 +551,7 @@ function animlist_read_macro_animation(entry, atlas) {
 
                 instruction = {
                     type: ANIM_MACRO_INTERPOLATOR,
-                    interpolator: animlist_parse_interpolator(unparsed_list[i]),
+                    interpolator: animlist_parse_interpolator(unparsed_list[i], "type"),
                     property: property_id,
                     start: { reference: -1, literal: NaN, kind: ANIM_MACRO_VALUE_KIND_LITERAL },
                     end: { reference: -1, literal: NaN, kind: ANIM_MACRO_VALUE_KIND_LITERAL },
@@ -754,43 +758,105 @@ function animlist_parse_property(node, name, warn) {
     return value;
 }
 
-function animlist_read_tweenlerp_animation(entry) {
-    let nodes = entry.querySelectorAll("Interpolator");
-    let linkedlist = linkedlist_init();
+function animlist_read_tweenkeyframe_animation(entry) {
+    let nodes = entry.querySelectorAll("Keyframe");
+    let arraylist = arraylist_init2(nodes.length);
 
-    for (let node of nodes) {
-        // <Interpolator id="" type="" start="" end="" duration="" stepsCount="" stepsMethod="" />
-
-        let id = animlist_parse_property(node, "id", false);
-
-        let interp = animlist_parse_interpolator(node);
-
-        let start = parseFloat(node.getAttribute("start"));
-        if (!Number.isFinite(start)) start = 0;
-
-        let end = parseFloat(node.getAttribute("end"));
-        if (!Number.isFinite(end)) end = 0;
-
-        let duration = parseFloat(node.getAttribute("duration"));
-        if (!Number.isFinite(duration)) duration = -1;
-
-        let steps_count = parseFloat(node.getAttribute("stepsCount"));
-        if (!Number.isFinite(steps_count)) steps_count = 1;
-
-        let steps_dir = vertexprops_parse_align(node, "stepsMethod", 0, 0);
-
-        linkedlist_add_item(linkedlist, { id, start, end, duration, interp, steps_dir, steps_count });
+    let reference_duration = 1;
+    if (entry.hasAttribute("referenceDuration")) {
+        reference_duration = vertexprops_parse_float(entry, "referenceDuration", NaN);
+        if (Number.isNaN(reference_duration)) {
+            console.warn("animlist: invalid tweenkeyframe 'referenceDuration' value: " + entry.outerHTML);
+            reference_duration = 1;
+        }
     }
 
-    let tweenlerp_entries_count = linkedlist_count(linkedlist);
-    let tweenlerp_entries = linkedlist_to_solid_array(linkedlist);
-    linkedlist_destroy2(linkedlist, free);
+    for (let node of nodes) {
+        // <Keyframe at="80%" id="alpha" interpolator="steps" stepsMethod="both" stepsCount="34" value="1.0" />
+        // <Keyframe at="1000" id="translateX" interpolator="ease" value="123" />
 
-    return {
+        let unparsed_at = node.getAttribute("at");
+        if (!unparsed_at) {
+            console.warn("animlist: missing Keyframe 'at' attribute: " + node.outerHTML);
+            continue;
+        }
+
+        let at = NaN;
+
+        if (unparsed_at.indexOf('%') >= 0) {
+            if (reference_duration > 1) {
+                console.warn("animlist: invalid Keyframe , 'at' is a percent value and TweenKeyframe have 'referenceDuration' attribute: " + node.outerHTML);
+                continue;
+            }
+
+            if (unparsed_at.length > 1) {
+                let str = unparsed_at.substring(0, unparsed_at.length - 1);
+                at = vertexprops_parse_float2(str, NaN);
+                str = undefined;
+            }
+        } else {
+            if (reference_duration < 1) {
+                console.warn("animlist: invalid Keyframe , 'at' is a timestamp value and TweenKeyframe does not have 'referenceDuration' attribute: " + node.outerHTML);
+                continue;
+            }
+            at = vertexprops_parse_float2(unparsed_at, NaN);
+        }
+
+        if (Number.isNaN(at)) {
+            console.warn("animlist: invalid 'at' value: " + node.outerHTML);
+            continue;
+        }
+
+        if (reference_duration > 1)
+            at /= reference_duration;
+        else
+            at /= 100.0;
+
+
+        let id = animlist_parse_property(node, "id", 0);
+
+        let keyframe_interpolator = animlist_parse_interpolator(node, "type");
+
+        let steps_count = vertexprops_parse_integer(node, "stepsCount", -1);
+        if (keyframe_interpolator == ANIM_MACRO_INTERPOLATOR_STEPS && steps_count < 0) {
+            console.warn("animlist: invalid o missing 'stepsCount' value: " + node.outerHTML);
+            continue;
+        }
+
+        let steps_dir = vertexprops_parse_align2(node.getAttribute("stepsMethod"));
+        if (keyframe_interpolator == ANIM_MACRO_INTERPOLATOR_STEPS && (steps_dir == ALIGN_CENTER || steps_dir < 0)) {
+            console.warn("animlist: invalid o missing 'stepsMethod' value: " + node.outerHTML);
+            continue;
+        }
+
+        let value = vertexprops_parse_float(node, "value", NaN);
+        if (Number.isNaN(value)) {
+            console.warn("animlist: invalid 'value' value: " + node.outerHTML);
+            continue;
+        }
+
+        let keyframe = {
+            at, id, value, interpolator: keyframe_interpolator, steps_dir, steps_count
+        };
+
+        arraylist_add(arraylist, keyframe);
+    }
+
+    let interpolator = ANIM_MACRO_INTERPOLATOR_LINEAR;
+    if (entry.hasAttribute("defaultInterpolator"))
+        interpolator = animlist_parse_interpolator(entry, "defaultInterpolator")
+
+
+    let item = {
         name: entry.getAttribute("name"),
-        is_tweenlerp: 1,
-        tweenlerp_entries: tweenlerp_entries,
-        tweenlerp_entries_count
+        tweenkeyframe_default_interpolator: interpolator,
+        is_tweenkeyframe: 1,
+        tweenkeyframe_entries: null,
+        tweenkeyframe_entries_count: 0
     };
+
+    arraylist_destroy2(arraylist, item, "tweenkeyframe_entries_count", "tweenkeyframe_entries");
+
+    return item;
 }
 

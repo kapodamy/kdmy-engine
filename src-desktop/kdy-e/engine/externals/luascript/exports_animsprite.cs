@@ -31,6 +31,16 @@ namespace Engine.Externals.LuaScriptInterop {
             return L.CreateAllocatedUserdata(ANIMSPRITE, ret);
         }
 
+        static int script_animsprite_init_from_tweenlerp(LuaState L) {
+            string name = L.luaL_optstring(1, null);
+            int loop = (int)L.luaL_checkinteger(2);
+            TweenLerp tweenlerp = L.ReadNullableUserdata<TweenLerp>(3, ExportsTweenLerp.TWEENLERP);
+
+            AnimSprite ret = AnimSprite.InitFromTweenLerp(name, loop, tweenlerp);
+
+            return L.CreateAllocatedUserdata(ANIMSPRITE, ret);
+        }
+
         static int script_animsprite_init_as_empty(LuaState L) {
             string name = L.luaL_checkstring(1);
 
@@ -100,6 +110,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static readonly LuaTableFunction[] ANIMSPRITE_FUNCTIONS = {
             new LuaTableFunction("init_from_atlas", script_animsprite_init_from_atlas),
             new LuaTableFunction("init_from_animlist", script_animsprite_init_from_animlist),
+            new LuaTableFunction("init_from_tweenlerp", script_animsprite_init_from_tweenlerp),
             new LuaTableFunction("init_as_empty", script_animsprite_init_as_empty),
             new LuaTableFunction("init", script_animsprite_init),
             new LuaTableFunction("destroy", script_animsprite_destroy),

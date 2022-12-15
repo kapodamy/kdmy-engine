@@ -202,6 +202,21 @@ function arraylist_cut_size(arraylist, new_size) {
     if (new_size < arraylist.size) arraylist.size = Math.max(new_size, 0);
 }
 
+function arraylist_clone(arraylist) {
+    let copy = arraylist_init2(arraylist.size);
+    copy.size = arraylist.size;
+
+    for (let i = 0; i < arraylist.size; i++)
+        copy.array[i] = clone_object(arraylist.array[i]);
+
+    return copy;
+}
+
+function arraylist_sort(arraylist, sort_fn) {
+    qsort(arraylist.array, arraylist.size, NaN, sort_fn);
+}
+
+
 
 /** @deprecated */
 function arraylist_iterate_prepare(arraylist) {

@@ -4,7 +4,7 @@
 #include "modelholder.h"
 #include "modifier.h"
 #include "drawable.h"
-#include "tweenlerp.h"
+#include "tweenkeyframe.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -69,7 +69,7 @@ void strum_set_keep_aspect_ratio_background(Strum strum, bool enable);
 void strum_draw_sick_effect_apart(Strum strum, bool enable);
 void strum_set_extra_animation(Strum strum, StrumScriptTarget strum_script_target, StrumScriptOn strum_script_on, bool undo, AnimSprite animsprite);
 void strum_set_extra_animation_continuous(Strum strum, StrumScriptTarget strum_script_target, AnimSprite animsprite);
-void strum_set_notesmaker_tweenlerp(Strum strum, TweenLerp tweenlerp, bool apply_to_marker_too);
+void strum_set_notesmaker_tweenkeyframe(Strum strum, TweenKeyframe tweenkeyframe, bool apply_to_marker_too);
 void strum_set_sickeffect_size_ratio(Strum strum, float size_ratio);
 void strum_set_alpha(Strum strum, float alpha);
 void strum_set_visible(Strum strum, bool visible);

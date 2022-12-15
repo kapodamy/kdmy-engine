@@ -7,11 +7,14 @@ const ROUNDSTATS_SEPARATOR = " | ";
 
 function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
     const STRUCT = {
-        tweenlerp: null,
+        tweenkeyframe: null,
         rollback_beats: 0,
         duration_rollback: 0,
         beat_duration: 0,
-        rollback_active: 0
+        rollback_active: 0,
+        target_elapsed: 0,
+        target_duration: 0,
+        is_completed: 0
     };
 
     let roundstats = {
@@ -23,16 +26,16 @@ function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
 
         beatwatcher: {},
 
-        tweenlerp_active: null,// this can be "tweenlerp_hit" or "tweenlerp_miss"
-        tweenlerp_multiplier: 1,
+        tweenkeyframe_active: null,// this can be "tweenkeyframe_hit" or "tweenkeyframe_miss"
+        tweenkeyframe_multiplier: 1,
 
         last_count_hit: 0,
         last_count_miss: 0,
 
         // in C clear all struct fields
-        tweenlerp_beat: clone_struct(STRUCT),
-        tweenlerp_hit: clone_struct(STRUCT),
-        tweenlerp_miss: clone_struct(STRUCT),
+        tweenkeyframe_beat: clone_struct(STRUCT),
+        tweenkeyframe_hit: clone_struct(STRUCT),
+        tweenkeyframe_miss: clone_struct(STRUCT),
         enable_nps: 0
     };
 
@@ -84,8 +87,8 @@ function roundstats_set_draw_y(roundstats, y) {
 
 function roundstats_reset(roundstats) {
     roundstats.next_clear = 1000;
-    roundstats.tweenlerp_active = null;
-    roundstats.tweenlerp_multiplier = 1;
+    roundstats.tweenkeyframe_active = null;
+    roundstats.tweenkeyframe_multiplier = 1;
     roundstats.last_count_hit = 0;
     roundstats.last_count_miss = 0;
 
@@ -93,9 +96,9 @@ function roundstats_reset(roundstats) {
 
     drawable_set_antialiasing(roundstats.drawable, PVR_FLAG_DEFAULT);
 
-    roundstats_internal_tweenlerp_setup(roundstats.tweenlerp_beat, 0);
-    roundstats_internal_tweenlerp_setup(roundstats.tweenlerp_hit, 0);
-    roundstats_internal_tweenlerp_setup(roundstats.tweenlerp_miss, 0);
+    roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_beat, 0);
+    roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_hit, 0);
+    roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_miss, 0);
 }
 
 function roundstats_get_drawable(roundstats) {
@@ -145,19 +148,19 @@ function roundstats_peek_playerstats(roundstats, song_timestamp, playerstats) {
     textsprite_set_text_intern(roundstats.textsprite, 1, stringbuilder_intern(builder));
 
     //
-    // configure the active tweenlerp
+    // configure the active tweenkeyframe
     //
     let miss_count = playerstats_get_misses(playerstats);
     let hit_count = playerstats_get_hits(playerstats);
-    let tweenlerp_active = null;
-    let tweenlerp_multiplier = 1;
+    let tweenkeyframe_active = null;
+    let tweenkeyframe_multiplier = 1;
 
     if (miss_count > roundstats.last_count_miss) {
-        tweenlerp_active = roundstats.tweenlerp_miss;
-        tweenlerp_multiplier = roundstats.last_count_miss - miss_count;
+        tweenkeyframe_active = roundstats.tweenkeyframe_miss;
+        tweenkeyframe_multiplier = roundstats.last_count_miss - miss_count;
     } else if (hit_count > roundstats.last_count_hit) {
-        tweenlerp_active = roundstats.tweenlerp_hit;
-        tweenlerp_multiplier = roundstats.last_count_hit - hit_count;
+        tweenkeyframe_active = roundstats.tweenkeyframe_hit;
+        tweenkeyframe_multiplier = roundstats.last_count_hit - hit_count;
     } else {
         return;
     }
@@ -165,38 +168,37 @@ function roundstats_peek_playerstats(roundstats, song_timestamp, playerstats) {
     roundstats.last_count_miss = miss_count;
     roundstats.last_count_hit = hit_count;
 
-    if (tweenlerp_active != roundstats.tweenlerp_active) {
-        roundstats.tweenlerp_active = tweenlerp_active;
-        roundstats.tweenlerp_multiplier = tweenlerp_multiplier;
-        roundstats_internal_tweenlerp_setup(tweenlerp_active, 0);
+    if (tweenkeyframe_active != roundstats.tweenkeyframe_active) {
+        roundstats.tweenkeyframe_active = tweenkeyframe_active;
+        roundstats.tweenkeyframe_multiplier = tweenkeyframe_multiplier;
     } else {
-        roundstats.tweenlerp_multiplier += tweenlerp_multiplier;
-        if (roundstats.tweenlerp_active.tweenlerp) tweenlerp_restart(roundstats.tweenlerp_active.tweenlerp);
+        roundstats.tweenkeyframe_multiplier += tweenkeyframe_multiplier;
     }
+    roundstats_internal_tweenkeyframe_setup(tweenkeyframe_active, 0);
 }
 
 
-function roundstats_tweenlerp_set_on_beat(roundstats, tweenlerp, rollback_beats, beat_duration) {
-    roundstats_internal_tweenlerp_set(roundstats.tweenlerp_beat, tweenlerp, rollback_beats, beat_duration);
-    roundstats_internal_tweenlerp_duration(roundstats.tweenlerp_beat, roundstats.beatwatcher.tick);
+function roundstats_tweenkeyframe_set_on_beat(roundstats, tweenkeyframe, rollback_beats, beat_duration) {
+    roundstats_internal_tweenkeyframe_set(roundstats.tweenkeyframe_beat, tweenkeyframe, rollback_beats, beat_duration);
+    roundstats_internal_tweenkeyframe_duration(roundstats.tweenkeyframe_beat, roundstats.beatwatcher.tick);
 }
 
-function roundstats_tweenlerp_set_on_hit(roundstats, tweenlerp, rollback_beats, beat_duration) {
-    roundstats_internal_tweenlerp_set(roundstats.tweenlerp_hit, tweenlerp, rollback_beats, beat_duration);
-    roundstats_internal_tweenlerp_duration(roundstats.tweenlerp_hit, roundstats.beatwatcher.tick);
+function roundstats_tweenkeyframe_set_on_hit(roundstats, tweenkeyframe, rollback_beats, beat_duration) {
+    roundstats_internal_tweenkeyframe_set(roundstats.tweenkeyframe_hit, tweenkeyframe, rollback_beats, beat_duration);
+    roundstats_internal_tweenkeyframe_duration(roundstats.tweenkeyframe_hit, roundstats.beatwatcher.tick);
 }
 
-function roundstats_tweenlerp_set_on_miss(roundstats, tweenlerp, rollback_beats, beat_duration) {
-    roundstats_internal_tweenlerp_set(roundstats.tweenlerp_miss, tweenlerp, rollback_beats, beat_duration);
-    roundstats_internal_tweenlerp_duration(roundstats.tweenlerp_miss, roundstats.beatwatcher.tick);
+function roundstats_tweenkeyframe_set_on_miss(roundstats, tweenkeyframe, rollback_beats, beat_duration) {
+    roundstats_internal_tweenkeyframe_set(roundstats.tweenkeyframe_miss, tweenkeyframe, rollback_beats, beat_duration);
+    roundstats_internal_tweenkeyframe_duration(roundstats.tweenkeyframe_miss, roundstats.beatwatcher.tick);
 }
 
-function roundstats_tweenlerp_set_bpm(roundstats, beats_per_minute) {
+function roundstats_tweenkeyframe_set_bpm(roundstats, beats_per_minute) {
     beatwatcher_change_bpm(roundstats.beatwatcher, beats_per_minute);
 
-    roundstats_internal_tweenlerp_duration(roundstats.tweenlerp_beat, roundstats.beatwatcher.tick);
-    roundstats_internal_tweenlerp_duration(roundstats.tweenlerp_hit, roundstats.beatwatcher.tick);
-    roundstats_internal_tweenlerp_duration(roundstats.tweenlerp_miss, roundstats.beatwatcher.tick);
+    roundstats_internal_tweenkeyframe_duration(roundstats.tweenkeyframe_beat, roundstats.beatwatcher.tick);
+    roundstats_internal_tweenkeyframe_duration(roundstats.tweenkeyframe_hit, roundstats.beatwatcher.tick);
+    roundstats_internal_tweenkeyframe_duration(roundstats.tweenkeyframe_miss, roundstats.beatwatcher.tick);
 }
 
 
@@ -204,21 +206,20 @@ function roundstats_animate(roundstats, elapsed) {
     if (roundstats.drawable_animation) animsprite_animate(roundstats.drawable_animation, elapsed);
 
     let completed = 1;
-    let ignore_beat = !roundstats.tweenlerp_beat.tweenlerp;// ignore if there no tweenlerp for beats
-    let beat_rollback_active = roundstats.tweenlerp_beat.rollback_active;
+    let ignore_beat = !roundstats.tweenkeyframe_beat.tweenkeyframe;// ignore if there no tweenkeyframe for beats
+    let beat_rollback_active = roundstats.tweenkeyframe_beat.rollback_active;
 
-    if (roundstats.tweenlerp_active) {
-        completed = roundstats_internal_tweenlerp_run(roundstats, roundstats.tweenlerp_active, elapsed);
+    if (roundstats.tweenkeyframe_active) {
+        completed = roundstats_internal_tweenkeyframe_run(roundstats, roundstats.tweenkeyframe_active, elapsed);
 
-        // if the active tweenlerp is completed, do rollback
-        if (!roundstats.tweenlerp_active.rollback_active) {
+        // if the active tweenkeyframe is completed, do rollback
+        if (!roundstats.tweenkeyframe_active.rollback_active) {
             if (completed) {
-                roundstats_internal_tweenlerp_setup(roundstats.tweenlerp_active, 1);
+                roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_active, 1);
             } else if (!ignore_beat && !beat_rollback_active) {
                 // still running, ignore beat tweernlerp
                 beat_rollback_active = 1;
-                roundstats.tweenlerp_beat.rollback_active = 1;
-                tweenlerp_mark_as_completed(roundstats.tweenlerp_beat.tweenlerp);
+                roundstats.tweenkeyframe_beat.rollback_active = 1;
             }
         }
     }
@@ -226,13 +227,13 @@ function roundstats_animate(roundstats, elapsed) {
     // beat check
     if (beatwatcher_poll(roundstats.beatwatcher)) {
         elapsed += roundstats.beatwatcher.since;
-        roundstats_internal_tweenlerp_setup(roundstats.tweenlerp_beat, 0);// run again
+        roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_beat, 0);// run again
     }
 
     if (!ignore_beat) {
-        completed = roundstats_internal_tweenlerp_run(roundstats, roundstats.tweenlerp_beat, elapsed);
+        completed = roundstats_internal_tweenkeyframe_run(roundstats, roundstats.tweenkeyframe_beat, elapsed);
         if (completed && !beat_rollback_active)
-            roundstats_internal_tweenlerp_setup(roundstats.tweenlerp_beat, 1);// do rollback
+            roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_beat, 1);// do rollback
     }
 
     const draw_size = [0, 0];
@@ -253,62 +254,55 @@ function roundstats_draw(roundstats, pvrctx) {
 
 
 
-function roundstats_internal_tweenlerp_set(tweenlerp_info, tweenlerp, rollback_beats, beat_duration) {
-    if (tweenlerp_info.tweenlerp) tweenlerp_destroy(tweenlerp_info.tweenlerp);
-    tweenlerp_info.tweenlerp = tweenlerp_clone(tweenlerp);
-    tweenlerp_info.rollback_beats = rollback_beats;
-    tweenlerp_info.beat_duration = beat_duration;
+function roundstats_internal_tweenkeyframe_set(tweenkeyframe_info, tweenkeyframe, rollback_beats, beat_duration) {
+    if (tweenkeyframe_info.tweenkeyframe) tweenkeyframe_destroy(tweenkeyframe_info.tweenkeyframe);
+    tweenkeyframe_info.tweenkeyframe = tweenkeyframe_clone(tweenkeyframe);
+    tweenkeyframe_info.rollback_beats = rollback_beats;
+    tweenkeyframe_info.beat_duration = beat_duration;
 }
 
-function roundstats_internal_tweenlerp_duration(tweenlerp_info, beat_duration) {
-    tweenlerp_info.duration_rollback = tweenlerp_info.rollback_beats * beat_duration;
-    tweenlerp_info.beat_duration = beat_duration * tweenlerp_info.beat_duration;
-    roundstats_internal_tweenlerp_setup(tweenlerp_info, tweenlerp_info.rollback_active);
+function roundstats_internal_tweenkeyframe_duration(tweenkeyframe_info, beat_duration) {
+    tweenkeyframe_info.duration_rollback = tweenkeyframe_info.rollback_beats * beat_duration;
+    tweenkeyframe_info.beat_duration = beat_duration * tweenkeyframe_info.beat_duration;
+    roundstats_internal_tweenkeyframe_setup(tweenkeyframe_info, tweenkeyframe_info.rollback_active);
 }
 
-function roundstats_internal_tweenlerp_run(roundstats, tweenlerp_info, elapsed) {
-    const entry = [/*id*/0, /*value*/0, /*duration*/0];
+function roundstats_internal_tweenkeyframe_run(roundstats, tweenkeyframe_info, elapsed) {
+    const entry = [/*id*/0, /*value*/0];
 
-    if (!tweenlerp_info.tweenlerp) return 1;
-    if (tweenlerp_is_completed(tweenlerp_info.tweenlerp)) return 1;
+    if (!tweenkeyframe_info.tweenkeyframe || tweenkeyframe_info.is_completed) return 1;
 
-    let completed = tweenlerp_animate(tweenlerp_info.tweenlerp, elapsed);
-    if (completed) return 1;
+    tweenkeyframe_info.target_elapsed += elapsed;
 
-    let count = tweenlerp_get_entry_count(tweenlerp_info.tweenlerp);
+    let percent = tweenkeyframe_info.target_elapsed / tweenkeyframe_info.target_duration;
+    tweenkeyframe_info.is_completed = percent >= 1.0;
+
+    if (percent > 1.0) percent = 1.0;
+
+    if (tweenkeyframe_info.rollback_active) percent = 1.0 - percent;
+
+    tweenkeyframe_animate_percent(tweenkeyframe_info.tweenkeyframe, percent);
+
+    let count = tweenkeyframe_get_ids_count(tweenkeyframe_info.tweenkeyframe);
 
     for (let i = 0; i < count; i++) {
-        tweenlerp_peek_entry_by_index(tweenlerp_info.tweenlerp, i, entry);
+        tweenkeyframe_peek_entry_by_index(tweenkeyframe_info.tweenkeyframe, i, entry);
         if (entry[0] == TEXTSPRITE_PROP_STRING) continue;// illegal property
 
         if (!vertexprops_is_property_enumerable(entry[0]))
-            entry[1] *= roundstats.tweenlerp_multiplier;
+            entry[1] *= roundstats.tweenkeyframe_multiplier;
 
         textsprite_set_property(roundstats.drawable, entry[0], entry[1]);
     }
 
-    return 0;
+    return tweenkeyframe_info.is_completed;
 }
 
-function roundstats_internal_tweenlerp_setup(tweenlerp_info, rollback) {
-    const entry = [/*id*/0, /*value*/0, /*duration*/0];
-
-    tweenlerp_info.rollback_active = rollback;
-
-    if (!tweenlerp_info.tweenlerp) return 1;
-
-    let count = tweenlerp_get_entry_count(tweenlerp_info.tweenlerp);
-    let new_duration = rollback ? tweenlerp_info.duration_rollback : tweenlerp_info.beat_duration;
-
-    for (let i = 0; i < count; i++) {
-        tweenlerp_swap_bounds_by_index(tweenlerp_info.tweenlerp, i);
-        tweenlerp_peek_entry_by_index(tweenlerp_info.tweenlerp, i, entry);
-
-        // only modify entries with negative duration
-        if (entry[2] < 0) tweenlerp_change_duration_by_index(tweenlerp_info.tweenlerp, i, new_duration);
-    }
-
-    tweenlerp_restart(tweenlerp_info.tweenlerp);
-    return 0;
+function roundstats_internal_tweenkeyframe_setup(tweenkeyframe_info, rollback) {
+    tweenkeyframe_info.is_completed = 0;
+    tweenkeyframe_info.rollback_active = rollback;
+    tweenkeyframe_info.target_elapsed = 0;
+    tweenkeyframe_info.target_duration = rollback ? tweenkeyframe_info.rollback_duration : tweenkeyframe_info.beat_duration;
+    return tweenkeyframe_info.tweenkeyframe == null;
 }
 

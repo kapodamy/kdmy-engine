@@ -1541,9 +1541,9 @@ L_discard_key_event:
         }
 
 
-        public void SetNotesmakerTweenlerp(TweenLerp tweenlerp, bool apply_to_marker_too) {
+        public void SetNotesmakerTweenkeyframe(TweenKeyframe tweenkeyframe, bool apply_to_marker_too) {
             // the behaviour will be similar to https://developer.mozilla.org/en-US/docs/Web/CSS/@keyframes
-            throw new NotImplementedException("strum_set_notes_maker_tweenlerp() is not implemented");
+            throw new NotImplementedException("strum_set_notes_maker_tweenkeyframe() is not implemented");
         }
 
         public void SetSickeffectSizeRatio(float size_ratio) {

@@ -1,3 +1,4 @@
+using Engine.Animation;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
 
@@ -6,6 +7,15 @@ namespace Engine.Externals.LuaScriptInterop {
     public static class ExportsCountdown {
         public const string COUNTDOWN = "Countdown";
 
+
+        static int script_countdown_set_default_animation2(LuaState L) {
+            Countdown countdown = L.ReadUserdata<Countdown>(COUNTDOWN);
+            TweenKeyframe tweenkeyframe = L.ReadNullableUserdata<TweenKeyframe>(2, ExportsTweenKeyframe.TWEENKEYFRAME);
+
+            countdown.SetDefaultAnimation2(tweenkeyframe);
+
+            return 0;
+        }
 
         static int script_countdown_set_bpm(LuaState L) {
             Countdown countdown = L.ReadUserdata<Countdown>(COUNTDOWN);
@@ -55,7 +65,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         static readonly LuaTableFunction[] COUNTDOWN_FUNCTIONS = {
-            new LuaTableFunction("set_bpm", script_countdown_set_bpm),
+            new LuaTableFunction("set_default_animation2", script_countdown_set_default_animation2),
             new LuaTableFunction("get_drawable", script_countdown_get_drawable),
             new LuaTableFunction("ready", script_countdown_ready),
             new LuaTableFunction("start", script_countdown_start),
