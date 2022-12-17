@@ -90,8 +90,14 @@ void strum_set_extra_animation(Strum strum, StrumScriptTarget strum_script_targe
 void strum_set_extra_animation_continuous(Strum strum, StrumScriptTarget strum_script_target, AnimSprite animsprite) {
     print_stub("strum_set_extra_animation_continuous", "strum=%p strum_script_target=%p animsprite=%p", strum, strum_script_target, animsprite);
 }
-void strum_set_notesmaker_tweenkeyframe(Strum strum, TweenKeyframe tweenkeyframe, bool apply_to_marker_too) {
-    print_stub("strum_set_notesmaker_tweenkeyframe", "strum=%p tweenkeyframe=%p apply_to_marker_too=(bool)%i", strum, tweenkeyframe, apply_to_marker_too);
+void strum_disable_beat_synced_idle_and_continous(Strum strum, bool disabled) {
+    print_stub("strum_disable_beat_synced_idle_and_continous", "strum=%p disabled=(bool)%i", strum, disabled);
+}
+void strum_set_bpm(Strum strum, float bpm) {
+    print_stub("strum_set_bpm", "strum=%p bpm=%f", strum, bpm);
+}
+void strum_set_note_tweenkeyframe(Strum strum, TweenKeyframe tweenkeyframe) {
+    print_stub("strum_set_note_tweenkeyframe", "strum=%p tweenkeyframe=%p", strum, tweenkeyframe);
 }
 void strum_set_sickeffect_size_ratio(Strum strum, float size_ratio) {
     print_stub("strum_set_sickeffect_size_ratio", "strum=%p size_ratio=%f", strum, size_ratio);

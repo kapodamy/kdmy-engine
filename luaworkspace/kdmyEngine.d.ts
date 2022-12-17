@@ -157,6 +157,7 @@ declare global {
         SICK_EFFECT = "sick_effect",
         BACKGROUND = "background",
         STRUM_LINE = "strum_line",
+        NOTE = "note",
         ALL = "all"
     }
     const enum StrumScriptOn {
@@ -257,6 +258,7 @@ declare global {
         slide_z_offset(camera: Camera, start: number, end: number): void;
         slide_to_offset(camera: Camera, x: number, y: number, z: number): void;
         to_origin_offset(camera: Camera, should_slide: boolean): void;
+        set_animation(animsprite: AnimSprite): void;
     }
     interface Layout {
         trigger_any(action_triger_camera_interval_name: string): number;
@@ -601,7 +603,9 @@ declare global {
         draw_sick_effect_apart(enable: boolean): void;
         set_extra_animation(strum_script_target: StrumScriptTarget, strum_script_on: StrumScriptOn, undo: boolean, animsprite: AnimSprite): void;
         set_extra_animation_continuous(strum_script_target: StrumScriptTarget, animsprite: AnimSprite): void;
-        set_notesmaker_tweenkeyframe(tweenkeyframe: TweenKeyframe, apply_to_marker_too: boolean): void;
+        disable_beat_synced_idle_and_continous(disabled: boolean): void;
+        set_bpm(bpm: number): void;
+        set_notes_tweenkeyframe(tweenkeyframe: TweenKeyframe): void;
         set_sickeffect_size_ratio(size_ratio: number): void;
         set_alpha(alpha: number): void;
         set_visible(visible: boolean): void;
@@ -617,6 +621,8 @@ declare global {
         set_scroll_speed(speed: number): void;
         set_scroll_direction(direction: ScrollDirection): void;
         set_marker_duration_multiplier(multipler: number): void;
+        disable_beat_synced_idle_and_continous(disabled: boolean): void;
+        set_bpm(bpm: number): void;
         reset(scroll_speed: number, state_name: string): void;
         force_key_release(): void;
         set_alpha(alpha: number): number;

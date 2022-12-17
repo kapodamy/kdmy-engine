@@ -2311,7 +2311,7 @@ function layout_parse_camera(unparsed_camera, layout_context) {
         offset_x: 0, offset_y: 0, offset_z: 1
     };
 
-    //let anim_name = unparsed_camera.getAttribute("animationName");
+    let anim_name = unparsed_camera.getAttribute("animationName");
     let unparsed_move = unparsed_camera.querySelector("Move");
     let unparsed_from = unparsed_camera.querySelector("From");
     let unparsed_to = unparsed_camera.querySelector("To");
@@ -2386,11 +2386,11 @@ function layout_parse_camera(unparsed_camera, layout_context) {
         }
     }
 
-    /*if (anim_name) {
+    if (anim_name) {
         camera_placeholder.animation = animsprite_init_from_animlist(
             layout_context.animlist, anim_name
         );
-    }*/
+    }
 
     arraylist_add(layout_context.camera_list, camera_placeholder);
 }
@@ -3748,7 +3748,7 @@ function layout_helper_parse_action_setblending(unparsed_entry, action_entries) 
 
     let entry = {
         type: LAYOUT_ACTION_SETBLENDING,
-        enabled, 
+        enabled,
         has_enable,
         blend_src_rgb,
         blend_dst_rgb,

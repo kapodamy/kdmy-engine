@@ -338,6 +338,10 @@ function note_state_toggle(note, state_name) {
     return res;
 }
 
+function note_peek_alone_statesprite(note) {
+    return note.sprite_alone;
+}
+
 
 function note_internal_load_part(part, name, suffix, modelholder, state_name) {
     let atlas = modelholder_get_atlas(modelholder);

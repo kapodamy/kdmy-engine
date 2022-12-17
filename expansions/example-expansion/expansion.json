@@ -1,0 +1,9 @@
+{
+    "name": "EXPANSION NAME GOES HERE",
+    "version": "1.10.0-example",
+    "submiter": "<insert-username>",
+    "description": "¡hello world!\nthis is an example expansion",
+    "screenshoot": "path/to/your/screenshot/image.png",
+    "icon": "path/to/your/icon with a ideal size of 32x32.png",
+    "overrideWeeksFolder": false
+}

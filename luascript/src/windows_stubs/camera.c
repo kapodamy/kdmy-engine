@@ -101,3 +101,6 @@ Layout camera_get_parent_layout(Camera camera) {
     print_stub("camera_get_parent_layout", "camera=%p", camera);
     return &stub_layout;
 }
+void camera_set_animation(Camera camera, AnimSprite animsprite) {
+    print_stub("camera_set_animation", "camera=%p animsprite=%p", camera, animsprite);
+}

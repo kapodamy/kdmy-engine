@@ -261,6 +261,14 @@ namespace Engine.Game {
             for (int i = 0 ; i < this.size ; i++) this.lines[i].SetMarkerDurationMultiplier(multipler);
         }
 
+        public void SetBpm(float beats_per_minute) {
+            for (int i = 0 ; i < this.size ; i++) this.lines[i].SetBpm(beats_per_minute);
+        }
+
+        public void DisableBeatSyncedIdleAndContinous(bool disabled) {
+            for (int i = 0 ; i < this.size ; i++) this.lines[i].DisableBeatSyncedIdleAndContinous(disabled);
+        }
+
         public void Reset(double scroll_speed, string state_name) {
             for (int i = 0 ; i < this.size ; i++) {
                 this.lines[i].Reset(scroll_speed, state_name);

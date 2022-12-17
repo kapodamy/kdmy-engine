@@ -82,8 +82,10 @@ namespace Engine.Game.Common {
             FS.SetWorkingFolder(Funkin.WEEKS_FOLDER, false);
 
             FSFolderEnumerator folder_enumerator = new FSFolderEnumerator();
-            if (!FS.FolderEnumerate(Funkin.WEEKS_FOLDER, folder_enumerator)) {
-                Console.Error.WriteLine("[ERROR] + weekenumerator_enumerate() can not read " + Funkin.WEEKS_FOLDER);
+            string weeks_path = Expansions.overrided_weeks_folder ?? Funkin.WEEKS_FOLDER;
+
+            if (!FS.FolderEnumerate(weeks_path, folder_enumerator)) {
+                Console.Error.WriteLine("[ERROR] + weekenumerator_enumerate() can not read " + weeks_path);
                 FS.FolderStackPop();
                 return;
             }

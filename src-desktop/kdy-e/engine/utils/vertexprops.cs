@@ -114,7 +114,11 @@ namespace Engine.Utils {
         public const int TEXTSPRITE_PROP_BACKGROUND_COLOR_B = 65;
         public const int TEXTSPRITE_PROP_BACKGROUND_COLOR_A = 66;
 
-        public const int TEXTSPRITE_PROP_STRING = 67;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
+        public const int CAMERA_PROP_OFFSET_X = 67;
+        public const int CAMERA_PROP_OFFSET_Y = 68;
+        public const int CAMERA_PROP_OFFSET_Z = 69;
+
+        public const int TEXTSPRITE_PROP_STRING = 70;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
 
         public const int PLAYBACK_NONE = 0;
         public const int PLAYBACK_PLAY = 1;
@@ -138,14 +142,14 @@ namespace Engine.Utils {
 
             if (String.IsNullOrEmpty(property)) {
                 Console.Error.WriteLine(
-                    "vertexprops_parse_sprite_property() missing " + name + " attribute", node.OuterHTML
+                    "[WARN] vertexprops_parse_sprite_property() missing " + name + " attribute" + "\n" + node.OuterHTML
                 );
                 return -2;
             }
 
             int id = ParseSpriteProperty2(property);
             if (id < 1 && warn)
-                Console.Error.WriteLine("vertexprops_parse_sprite_property() unknown property " + property, node.OuterHTML);
+                Console.Error.WriteLine("[WARN] vertexprops_parse_sprite_property() unknown property " + property + "\n" + node.OuterHTML);
 
             return id;
         }
@@ -233,14 +237,14 @@ namespace Engine.Utils {
 
             if (String.IsNullOrEmpty(property)) {
                 Console.Error.WriteLine(
-                    "vertexprops_parse_textsprite_property: missing " + name + " attribute", node.OuterHTML
+                    "[WARN] vertexprops_parse_textsprite_property: missing " + name + " attribute" + "\n" + node.OuterHTML
                 );
                 return -2;
             }
 
             int id = ParseTextSpriteProperty2(property);
             if (id < 0 && warn)
-                Console.Error.WriteLine("vertexprops_parse_sprite_property() unknown property " + property, node.OuterHTML);
+                Console.Error.WriteLine("[WARN] vertexprops_parse_sprite_property() unknown property " + property + "\n" + node.OuterHTML);
 
             return id;
         }
@@ -342,14 +346,14 @@ namespace Engine.Utils {
 
             if (String.IsNullOrEmpty(property)) {
                 Console.Error.WriteLine(
-                    "vertexprops_parse_media_property: missing " + name + " attribute", node.OuterHTML
+                    "[WARN] vertexprops_parse_media_property: missing " + name + " attribute" + "\n" + node.OuterHTML
                 );
                 return -2;
             }
 
             int id = ParseMediaProperty2(property);
             if (id < 0 && warn)
-                Console.Error.WriteLine("vertexprops_parse_media_property() unknown property " + property, node.OuterHTML);
+                Console.Error.WriteLine("[WARN] vertexprops_parse_media_property() unknown property " + property + "\n" + node.OuterHTML);
 
             return id;
         }
@@ -375,14 +379,14 @@ namespace Engine.Utils {
 
             if (String.IsNullOrEmpty(property)) {
                 Console.Error.WriteLine(
-                    "[WARN] vertexprops_parse_layout_property: missing " + name + " attribute", node.OuterHTML
+                    "[WARN] vertexprops_parse_layout_property: missing " + name + " attribute" + "\n" + node.OuterHTML
                 );
                 return -2;
             }
 
             int id = ParseLayoutProperty2(property);
             if (id < 0 && warn)
-                Console.Error.WriteLine("[WARN] vertexprops_parse_layout_property() unknown property " + property, node.OuterHTML);
+                Console.Error.WriteLine("[WARN] vertexprops_parse_layout_property() unknown property " + property + "\n" + node.OuterHTML);
 
             return id;
         }
@@ -405,13 +409,46 @@ namespace Engine.Utils {
         }
 
 
+        public static int ParseCameraProperty(XmlParserNode node, string name, bool warn) {
+            string property = node.GetAttribute(name);
+
+            if (String.IsNullOrEmpty(property)) {
+                Console.Error.WriteLine(
+                    "[WARN] vertexprops_parse_camera_property: missing " + name + " attribute" + "\n" + node.OuterHTML
+                );
+                return -2;
+            }
+
+            int id = ParseCameraProperty2(property);
+            if (id < 0 && warn)
+                Console.Error.WriteLine("[WARN] vertexprops_parse_camera_property() unknown property " + property + "\n" + node.OuterHTML);
+
+            return id;
+        }
+
+        public static int ParseCameraProperty2(string property) {
+            if (!String.IsNullOrWhiteSpace(property)) {
+                switch (property.ToLowerInvariant()) {
+                    case "ox":
+                        return CAMERA_PROP_OFFSET_X;
+                    case "oy":
+                        return CAMERA_PROP_OFFSET_Y;
+                    case "oz":
+                        return CAMERA_PROP_OFFSET_Z;
+                }
+            }
+
+            return -1;
+        }
+
+
         public static Align ParseAlign(XmlParserNode node, string name, bool warn_missing, bool reject_bothnone) {
             string value = node.GetAttribute(name);
 
             if (String.IsNullOrEmpty(value)) {
                 if (warn_missing) {
                     Console.Error.WriteLine(
-                        "vertexprops_parse_align() missing " + name + " attribute", node.OuterHTML
+                        "[WARN] vertexprops_parse_align() missing " + name + " attribute" + "\n" + node.OuterHTML
                     );
                 }
                 return Align.START;
@@ -425,7 +462,7 @@ namespace Engine.Utils {
                 id = Align.INVALID;
 
             if (id == Align.INVALID) {
-                Console.Error.WriteLine("vertexprops_parse_align() unknown align value: " + value, node.OuterHTML);
+                Console.Error.WriteLine("[WARN] vertexprops_parse_align() unknown align value: " + value + "\n" + node.OuterHTML);
                 return Align.START;
             }
 
@@ -457,7 +494,7 @@ namespace Engine.Utils {
             if (String.IsNullOrEmpty(value)) {
                 if (warn_missing) {
                     Console.Error.WriteLine(
-                        "vertexprops_parse_playback() missing " + name + " attribute", node.OuterHTML
+                        "[WARN] vertexprops_parse_playback() missing " + name + " attribute" + "\n" + node.OuterHTML
                     );
                 }
                 return PLAYBACK_NONE;
@@ -466,7 +503,7 @@ namespace Engine.Utils {
             int id = ParsePlayback2(value);
 
             if (id == -1) {
-                Console.Error.WriteLine("vertexprops_parse_playback() unknown align value: " + value, node.OuterHTML);
+                Console.Error.WriteLine("[WARN] vertexprops_parse_playback() unknown align value: " + value + "\n" + node.OuterHTML);
                 return PLAYBACK_NONE;
             }
 
@@ -621,7 +658,7 @@ L_invalid:
             if (String.IsNullOrEmpty(value)) {
                 if (warn_missing) {
                     Console.Error.WriteLine(
-                        "vertexprops_parse_wordbreak() missing " + name + " attribute", node.OuterHTML
+                        "[WARN] vertexprops_parse_wordbreak() missing " + name + " attribute" + "\n" + node.OuterHTML
                     );
                 }
                 return FONT_WORDBREAK_BREAK;
@@ -630,7 +667,7 @@ L_invalid:
             int id = ParseWordbreak2(value);
 
             if (id == -1) {
-                Console.Error.WriteLine("vertexprops_parse_wordbreak() unknown wordbreak value: " + value, node.OuterHTML);
+                Console.Error.WriteLine("vertexprops_parse_wordbreak() unknown wordbreak value: " + value + "\n" + node.OuterHTML);
                 return FONT_WORDBREAK_BREAK;
             }
 

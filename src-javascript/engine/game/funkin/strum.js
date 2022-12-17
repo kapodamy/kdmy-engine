@@ -100,18 +100,19 @@ const STRUM_MARKER_SUFFIX_HIT = "press";
 const STRUM_SICK_EFFECT_SUFFIX = "splash";
 const STRUM_BACKGROUND_SUFFIX = "background";
 
-const STRUM_SCRIPT_TARGET_MARKER = "marker";
-const STRUM_SCRIPT_TARGET_SICK_EFFECT = "sick_effect";
-const STRUM_SCRIPT_TARGET_BACKGROUND = "background";
-const STRUM_SCRIPT_TARGET_STRUM_LINE = "strum_line";
-const STRUM_SCRIPT_TARGET_ALL = "target-all";
+const STRUM_SCRIPT_TARGET_MARKER = 0;
+const STRUM_SCRIPT_TARGET_SICK_EFFECT = 1;
+const STRUM_SCRIPT_TARGET_BACKGROUND = 2;
+const STRUM_SCRIPT_TARGET_STRUM_LINE = 3;
+const STRUM_SCRIPT_TARGET_NOTE = 4;
+const STRUM_SCRIPT_TARGET_ALL = 5;
 
-const STRUM_SCRIPT_ON_HIT_DOWN = "hit-down";
-const STRUM_SCRIPT_ON_HIT_UP = "hit-up";
-const STRUM_SCRIPT_ON_MISS = "miss";
-const STRUM_SCRIPT_ON_PENALITY = "penality";
-const STRUM_SCRIPT_ON_IDLE = "idle";
-const STRUM_SCRIPT_ON_ALL = "on-all";
+const STRUM_SCRIPT_ON_HIT_DOWN = 0;
+const STRUM_SCRIPT_ON_HIT_UP = 1;
+const STRUM_SCRIPT_ON_MISS = 2;
+const STRUM_SCRIPT_ON_PENALITY = 3;
+const STRUM_SCRIPT_ON_IDLE = 4;
+const STRUM_SCRIPT_ON_ALL = 5;
 
 /** Default sprite size of the sick effect in relation to the marker sprite size */
 const STRUM_DEFAULT_SICK_EFFECT_RATIO = 2;
@@ -207,6 +208,7 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
 
         // In C the following fields are not pointers
         animation_strum_line: clone_object(attached_animations),
+        animation_note: clone_object(attached_animations),
         animation_marker: clone_object(attached_animations),
         animation_sick_effect: clone_object(attached_animations),
         animation_background: clone_object(attached_animations),
@@ -221,7 +223,10 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
         draw_offset_milliseconds: 0,
         player_id: -1,
         inverse_offset: length_dimmen - marker_dimmen,
-        use_fukin_marker_duration: 1
+        use_fukin_marker_duration: 1,
+        tweenkeyframe_note: null,
+        use_beat_synced_idle_and_continous: 1,
+        beatwatcher: {}
     };
 
     // set sprites location and modifier location
@@ -237,6 +242,7 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
 
     strum_set_scroll_speed(strum, 1.0);
     strum_set_scroll_direction(strum, STRUM_UPSCROLL);
+    strum_set_bpm(strum, 100);
 
     return strum;
 }
@@ -264,6 +270,9 @@ function strum_destroy(strum) {
     strum_internal_extra_destroy_animation(strum.animation_sick_effect);
     strum_internal_extra_destroy_animation(strum.animation_background);
     strum_internal_extra_destroy_animation(strum.animation_strum_line);
+    strum_internal_extra_destroy_animation(strum.animation_note);
+
+    if (strum.tweenkeyframe_note) tweenkeyframe_destroy(strum.tweenkeyframe_note);
 
     arraylist_destroy(strum.sustain_queue, 0);
 
@@ -1025,6 +1034,11 @@ function strum_set_player_id(strum, player_id) {
 function strum_animate(strum, elapsed) {
     if (!strum.strum_name) return 1;
 
+    if (beatwatcher_poll(strum.beatwatcher) && strum.use_beat_synced_idle_and_continous) {
+        statesprite_animation_restart(strum.sprite_marker_nothing);
+        strum_internal_restart_extra_continous(strum);
+    }
+
     let res = 0;
 
     //#region marker animation
@@ -1111,6 +1125,7 @@ function strum_animate(strum, elapsed) {
     }
 
     res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_STRUM_LINE, current_event, 0, elapsed);
+    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_NOTE, current_event, 0, elapsed);
     res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_MARKER, current_event, 0, elapsed);
     res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_SICK_EFFECT, current_event, 0, elapsed);
     res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_BACKGROUND, current_event, 0, elapsed);
@@ -1119,6 +1134,9 @@ function strum_animate(strum, elapsed) {
     //#region execute continuous extra animations
     strum_internal_extra_animate_sprite(
         strum, STRUM_SCRIPT_TARGET_STRUM_LINE, strum.animation_strum_line.continuous.action
+    );
+    strum_internal_extra_animate_sprite(
+        strum, STRUM_SCRIPT_TARGET_NOTE, strum.animation_note.continuous.action
     );
     strum_internal_extra_animate_sprite(
         strum, STRUM_SCRIPT_TARGET_MARKER, strum.animation_marker.continuous.action
@@ -1256,12 +1274,31 @@ function strum_draw(strum, pvrctx) {
 
         scroll_offset *= strum.scroll_velocity;
 
+        if (strum.tweenkeyframe_note) {
+            let percent = Math.abs(scroll_offset / strum.scroll_window);
+            tweenkeyframe_animate_percent(strum.tweenkeyframe_note, percent);
+            tweenkeyframe_vertex_set_properties(
+                strum.tweenkeyframe_note, note_peek_alone_statesprite(drawable_note), statesprite_set_property
+            );
+        }
+
         if (strum.scroll_is_vertical)
             y += scroll_offset;
         else
             x += scroll_offset;
 
         note_draw(drawable_note, pvrctx, strum.scroll_velocity, x, y, note_duration, body_only);
+
+        if (strum.tweenkeyframe_note) {
+            //
+            // after the note is drawn, "attempt" to restore the original values
+            // by running again the TweenKeyframe at 0%.
+            //
+            tweenkeyframe_animate_percent(strum.tweenkeyframe_note, 0.0);
+            tweenkeyframe_vertex_set_properties(
+                strum.tweenkeyframe_note, note_peek_alone_statesprite(drawable_note), statesprite_set_property
+            );
+        }
     }
 
     switch (strum.marker_state) {
@@ -1399,6 +1436,7 @@ function strum_set_extra_animation(strum, strum_script_target, strum_script_on, 
         strum_set_extra_animation(strum, STRUM_SCRIPT_TARGET_SICK_EFFECT, strum_script_on, undo, animsprite);
         strum_set_extra_animation(strum, STRUM_SCRIPT_TARGET_BACKGROUND, strum_script_on, undo, animsprite);
         strum_set_extra_animation(strum, STRUM_SCRIPT_TARGET_STRUM_LINE, strum_script_on, undo, animsprite);
+        strum_set_extra_animation(strum, STRUM_SCRIPT_TARGET_NOTE, strum_script_on, undo, animsprite);
         return;
     }
 
@@ -1463,11 +1501,15 @@ function strum_set_extra_animation_continuous(strum, strum_script_target, animsp
         case STRUM_SCRIPT_TARGET_STRUM_LINE:
             attached_animations = strum.animation_strum_line;
             break;
+        case STRUM_SCRIPT_TARGET_NOTE:
+            attached_animations = strum.animation_note;
+            break;
         case STRUM_SCRIPT_TARGET_ALL:
             strum_set_extra_animation_continuous(strum, STRUM_SCRIPT_TARGET_MARKER, animsprite);
             strum_set_extra_animation_continuous(strum, STRUM_SCRIPT_TARGET_SICK_EFFECT, animsprite);
             strum_set_extra_animation_continuous(strum, STRUM_SCRIPT_TARGET_BACKGROUND, animsprite);
             strum_set_extra_animation_continuous(strum, STRUM_SCRIPT_TARGET_STRUM_LINE, animsprite);
+            strum_set_extra_animation_continuous(strum, STRUM_SCRIPT_TARGET_NOTE, animsprite);
             return;
         default:
             console.warn(
@@ -1486,9 +1528,9 @@ function strum_set_extra_animation_continuous(strum, strum_script_target, animsp
 }
 
 
-function strum_set_notesmaker_tweenkeyframe(strum, tweenkeyframe, apply_to_marker_too) {
-    // the behaviour will be similar to https://developer.mozilla.org/en-US/docs/Web/CSS/@keyframes
-    throw new Error("strum_set_notes_maker_tweenkeyframe() is not implemented");
+function strum_set_note_tweenkeyframe(strum, tweenkeyframe) {
+    if (strum.tweenkeyframe_note) tweenkeyframe_destroy(strum.tweenkeyframe_note);
+    strum.tweenkeyframe_note = tweenkeyframe ? tweenkeyframe_clone(tweenkeyframe) : null;
 }
 
 function strum_set_sickeffect_size_ratio(strum, size_ratio) {
@@ -1513,6 +1555,14 @@ function strum_set_draw_offset(strum, offset_milliseconds) {
     strum.draw_offset_milliseconds = offset_milliseconds;
 }
 
+function strum_set_bpm(strum, beats_per_minute) {
+    strum.beatwatcher.Reset(1, beats_per_minute);
+}
+
+function strum_disable_beat_synced_idle_and_continous(strum, disabled) {
+    strum.use_beat_synced_idle_and_continous = !disabled;
+}
+
 function strum_get_modifier(strum) {
     return drawable_get_modifier(strum.drawable);
 }
@@ -1532,6 +1582,7 @@ function strum_get_duration(strum) {
 
 function strum_animation_restart(strum) {
     strum_internal_extra_batch(strum.animation_strum_line, animsprite_restart);
+    strum_internal_extra_batch(strum.animation_note, animsprite_restart);
     strum_internal_extra_batch(strum.animation_marker, animsprite_restart);
     strum_internal_extra_batch(strum.animation_sick_effect, animsprite_restart);
     strum_internal_extra_batch(strum.animation_background, animsprite_restart);
@@ -1540,6 +1591,7 @@ function strum_animation_restart(strum) {
 
 function strum_animation_end(strum) {
     strum_internal_extra_batch(strum.animation_strum_line, animsprite_force_end);
+    strum_internal_extra_batch(strum.animation_note, animsprite_force_end);
     strum_internal_extra_batch(strum.animation_marker, animsprite_force_end);
     strum_internal_extra_batch(strum.animation_sick_effect, animsprite_force_end);
     strum_internal_extra_batch(strum.animation_background, animsprite_force_end);
@@ -1853,6 +1905,15 @@ function strum_internal_extra_animate_sprite(strum, target, animsprite) {
         case STRUM_SCRIPT_TARGET_STRUM_LINE:
             animsprite_update_drawable(strum.drawable, animsprite, 1);
             break;
+        case STRUM_SCRIPT_TARGET_NOTE:
+            let last_index = strum.chart_notes_id_map_size - 1;
+            for (let i = 0; i < strum.chart_notes_id_map_size; i++) {
+                if (strum.drawable_notes[i]) {
+                    let statesprite = note_peek_alone_statesprite(strum.drawable_notes[i]);
+                    animsprite_update_statesprite(animsprite, statesprite, i == last_index);
+                }
+            }
+            break;
         case STRUM_SCRIPT_TARGET_MARKER:
             animsprite_update_statesprite(animsprite, strum.sprite_marker_confirm, 0);
             animsprite_update_statesprite(animsprite, strum.sprite_marker_nothing, 0);
@@ -1871,6 +1932,8 @@ function strum_internal_extra_get_holder(strum, target) {
     switch (target) {
         case STRUM_SCRIPT_TARGET_STRUM_LINE:
             return strum.animation_strum_line;
+        case STRUM_SCRIPT_TARGET_NOTE:
+            return strum.animation_note;
         case STRUM_SCRIPT_TARGET_MARKER:
             return strum.animation_marker;
         case STRUM_SCRIPT_TARGET_SICK_EFFECT:
@@ -2008,11 +2071,13 @@ function strum_internal_reset_scrolling(strum) {
     strum.animation_marker.last_event = STRUM_SCRIPT_ON_ALL;
     strum.animation_sick_effect.last_event = STRUM_SCRIPT_ON_ALL;
     strum.animation_strum_line.last_event = STRUM_SCRIPT_ON_ALL;
+    strum.animation_note.last_event = STRUM_SCRIPT_ON_ALL;
 
     strum.animation_background.state = STRUM_EXTRA_STATE_NONE;
     strum.animation_marker.state = STRUM_EXTRA_STATE_NONE;
     strum.animation_sick_effect.state = STRUM_EXTRA_STATE_NONE;
     strum.animation_strum_line.state = STRUM_EXTRA_STATE_NONE;
+    strum.animation_note.state = STRUM_EXTRA_STATE_NONE;
 }
 
 function strum_internal_calc_marker_duration(strum, velocity) {
@@ -2030,5 +2095,18 @@ function strum_internal_calc_marker_duration(strum, velocity) {
         strum.key_test_limit = Math.max(strum.chart_notes[0].timestamp - strum.marker_duration, 0);
     else
         strum.key_test_limit = -Infinity;
+}
+
+function strum_internal_restart_extra_continous(strum) {
+    if (strum.animation_strum_line.continuous.action)
+        animsprite_restart(strum.animation_strum_line.continuous.action);
+    if (strum.animation_note.continuous.action)
+        animsprite_restart(strum.animation_note.continuous.action);
+    if (strum.animation_marker.continuous.action)
+        animsprite_restart(strum.animation_marker.continuous.action);
+    if (strum.animation_sick_effect.continuous.action)
+        animsprite_restart(strum.animation_sick_effect.continuous.action);
+    if (strum.animation_background.continuous.action)
+        animsprite_restart(strum.animation_background.continuous.action);
 }
 

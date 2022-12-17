@@ -75,8 +75,11 @@ const TEXTSPRITE_PROP_BACKGROUND_COLOR_G = 64;
 const TEXTSPRITE_PROP_BACKGROUND_COLOR_B = 65;
 const TEXTSPRITE_PROP_BACKGROUND_COLOR_A = 66;
 
-const TEXTSPRITE_PROP_STRING = 67;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
+const CAMERA_PROP_OFFSET_X = 67;
+const CAMERA_PROP_OFFSET_Y = 68;
+const CAMERA_PROP_OFFSET_Z = 69;
 
+const TEXTSPRITE_PROP_STRING = 70;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
 
 const CORNER_TOPLEFT = 0;
 const CORNER_TOPRIGHT = 1;
@@ -383,6 +386,37 @@ function vertexprops_parse_layout_property2(property) {
             return LAYOUT_PROP_GROUP_VIEWPORT_WIDTH;
         case "groupviewportheight":
             return LAYOUT_PROP_GROUP_VIEWPORT_HEIGHT;
+    }
+
+    return -1;
+}
+
+
+function vertexprops_parse_camera_property(node, name, warn) {
+    let property = node.getAttribute(name);
+
+    if (!property) {
+        console.warn("vertexprops_parse_camera_property: missing " + name + " attribute", node.outerHTML);
+        return -2;
+    }
+
+    let id = vertexprops_parse_camera_property2(property);
+    if (id < 0 && warn)
+        console.warn("vertexprops_parse_camera_property() unknown property " + property, node.outerHTML);
+
+    return id;
+}
+
+function vertexprops_parse_camera_property2(property) {
+    if (property) {
+        switch (property.toLowerCase()) {
+            case "ox":
+                return CAMERA_PROP_OFFSET_X;
+            case "oy":
+                return CAMERA_PROP_OFFSET_Y;
+            case "oz":
+                return CAMERA_PROP_OFFSET_Z;
+        }
     }
 
     return -1;

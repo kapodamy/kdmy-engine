@@ -215,6 +215,7 @@ function animsprite_animate(animsprite, elapsed) {
     if (animsprite.is_empty) return 0;
     if (!Number.isFinite(animsprite.loop_progress)) return 1;
     if (animsprite.loop > 0 && animsprite.loop_progress >= animsprite.loop) return 1;
+    if (animsprite.loop_progress == MATH2D_MAX_INT32) return 1;
 
     if (animsprite.delay_active && animsprite.delay > 0) {
         animsprite.delay_progress += elapsed;

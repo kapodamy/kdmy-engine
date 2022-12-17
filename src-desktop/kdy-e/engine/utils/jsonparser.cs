@@ -35,6 +35,20 @@ namespace Engine.Utils {
                 return null;
             }
         }
+        public static JSONParser LoadDirectFrom(string abosolute_src) {
+            string source = System.IO.File.ReadAllText(abosolute_src);
+            if (source == null || source.Length < 1) return null;
+
+            try {
+                JToken json = JToken.Parse(source);
+                JSONParser parser = new JSONParser() { obj = json as JObject, arr = json as JArray };
+                parser.guard = new Guard();
+                return parser;
+            } catch (Exception e) {
+                Console.Error.WriteLine("json_direct_load() can not parse " + abosolute_src + "\n", e.Message);
+                return null;
+            }
+        }
 
         public static void Destroy(JSONParser json) {
             json.guard.disposed = true;

@@ -249,12 +249,29 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
-        static int script_strum_set_notesmaker_tweenlerp(LuaState L) {
+        static int script_strum_disable_beat_synced_idle_and_continous(LuaState L) {
+            Strum strum = L.ReadUserdata<Strum>(STRUM);
+            bool disabled = L.lua_toboolean(2);
+
+            strum.DisableBeatSyncedIdleAndContinous(disabled);
+
+            return 0;
+        }
+
+        static int script_strum_set_bpm(LuaState L) {
+            Strum strum = L.ReadUserdata<Strum>(STRUM);
+            float bpm = (float)L.luaL_checknumber(2);
+
+            strum.SetBpm(bpm);
+
+            return 0;
+        }
+
+        static int script_strum_set_note_tweenkeyframe(LuaState L) {
             Strum strum = L.ReadUserdata<Strum>(STRUM);
             TweenKeyframe tweenkeyframe = L.ReadNullableUserdata<TweenKeyframe>(2, ExportsTweenKeyframe.TWEENKEYFRAME);
-            bool apply_to_marker_too = L.lua_toboolean(3);
 
-            strum.SetNotesmakerTweenkeyframe(tweenkeyframe, apply_to_marker_too);
+            strum.SetNoteTweenkeyframe(tweenkeyframe);
 
             return 0;
         }
@@ -365,7 +382,9 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("draw_sick_effect_apart", script_strum_draw_sick_effect_apart),
             new LuaTableFunction("set_extra_animation", script_strum_set_extra_animation),
             new LuaTableFunction("set_extra_animation_continuous", script_strum_set_extra_animation_continuous),
-            new LuaTableFunction("set_notesmaker_tweenlerp", script_strum_set_notesmaker_tweenlerp),
+            new LuaTableFunction("disable_beat_synced_idle_and_continous", script_strum_disable_beat_synced_idle_and_continous),
+            new LuaTableFunction("set_bpm", script_strum_set_bpm),
+            new LuaTableFunction("set_note_tweenkeyframe", script_strum_set_note_tweenkeyframe),
             new LuaTableFunction("set_sickeffect_size_ratio", script_strum_set_sickeffect_size_ratio),
             new LuaTableFunction("set_alpha", script_strum_set_alpha),
             new LuaTableFunction("set_visible", script_strum_set_visible),

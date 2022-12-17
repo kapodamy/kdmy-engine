@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Windows.Forms;
 using Engine.Externals;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
@@ -21,16 +22,34 @@ namespace CsharpWrapper {
 
         [STAThread]
         static int Main() {
-            // before print, check if is necessary alloc the consoles
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
             bool should_attach_console = true;
             string[] argv = Environment.GetCommandLineArgs();
-            for (int i = 1 ; i < argv.Length ; i++) {
-                if (argv[i].ToLowerInvariant() == "-console") {
-                    should_attach_console = !AllocConsole();
-                    break;
-                }
+
+            // before any print, check if is necessary alloc the consoles
+            if (HasCommandLineSwitch(argv, "-console")) {
+                should_attach_console = !AllocConsole();
             }
             if (should_attach_console) AttachConsole(ATTACH_PARENT_PROCESS);
+
+            // show expansions loader if is necessary
+            if (HasCommandLineSwitch(argv, "-expansionsloader")) {
+                ExpansionsLoader form = new ExpansionsLoader();
+
+                Application.Run(form);
+                Application.Exit();
+
+                bool exit = form.NotLaunchAndExit;
+                EngineSettings.expansion = form.SelectedExpansion;
+                form.Destroy();
+
+                if (exit) return 0;
+
+                Console.WriteLine("Selected expansion: " + (EngineSettings.expansion ?? "<none>"));
+                Console.WriteLine();
+            }
 
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
 
@@ -73,16 +92,17 @@ namespace CsharpWrapper {
                         Console.WriteLine(
                             $"{GameMain.ENGINE_NAME} {GameMain.ENGINE_VERSION}\r\n" +
                             "\r\n" +
-                            $"    {argv[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console]\r\n" +
+                            $"    {argv[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionloader]\r\n" +
                             "\r\n" +
                             "Options:\r\n" +
-                            "    help: show this help message\r\n" +
-                            "    saveslots: number of emulated VMU (Visual Memory Card) availabe. Defaults to 1\r\n" +
-                            "    expansion: folder name inside of '/expansions' folder, this overrides the '/assets' folder contents. Disabled by default\r\n" +
-                            "    style: week name (folder name inside of '/assets/weeks' folder) and picks the folder '/assets/weeks/WEEK_NAME/custom' or the defined in 'about.json' file. Defaults to the last played week\r\n" +
-                            "    fullscreen: starts the engine in fullscreen, toggle to windowed pressing 'F11' key. Defaults to windowed\r\n" +
-                            "    nowidescreen: forces the 4:3 aspect ratio like in the dreamcast. Defaults to 16:9, but changes if resized\r\n" +
-                            "    console: opens a console window for all engine and lua scripts messages" +
+                            "    -help              Show this help message\r\n" +
+                            "    -saveslots         Number of emulated VMU (Visual Memory Card) availabe. Defaults to 1\r\n" +
+                            "    -expansion         Folder name inside of '/expansions' folder, this overrides the '/assets' folder contents. Disabled by default\r\n" +
+                            "    -style             Week name (folder name inside of '/assets/weeks' folder) and picks the folder '/assets/weeks/WEEK_NAME/custom' or the defined in 'about.json' file. Defaults to the last played week\r\n" +
+                            "    -fullscreen        Starts the engine in fullscreen, toggle to windowed pressing 'F11' key. Defaults to windowed\r\n" +
+                            "    -nowidescreen      Forces the 4:3 aspect ratio like in the dreamcast. Defaults to 16:9, but changes if resized\r\n" +
+                            "    -console           Opens a console window for all engine and lua scripts messages" +
+                            "    -expansionloader   Opens a window to choose the expansion to use" +
                             "\r\n" +
                             "Notes:\r\n" +
                             "  -nowidescreen uses the 640x480 window size, otherwise defaults to 950x540. Anyways, the window still can be resized.\r\n" +
@@ -126,6 +146,13 @@ namespace CsharpWrapper {
             if (index >= argv.Length) return;
             int value = (int)val;
             if (Int32.TryParse(argv[index], out value)) val = value;
+        }
+
+        private static bool HasCommandLineSwitch(string[] argv, string arg) {
+            for (int i = 1 ; i < argv.Length ; i++) {
+                if (argv[i].ToLowerInvariant() == arg) return true;
+            }
+            return false;
         }
 
         private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e) {
