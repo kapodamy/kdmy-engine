@@ -1716,6 +1716,7 @@ namespace Engine.Game.Gameplay {
                     roundcontext.players[i].notepool
                 );
                 roundcontext.players[i].strums.SetScrollSpeed(chart.speed);
+                roundcontext.players[i].strums.SetBpm(chart.bpm);
                 roundcontext.players[i].strums.UseFunkinMakerDuration(EngineSettings.use_funkin_marker_duration);
 
                 // attach strums and notes states
@@ -2135,6 +2136,9 @@ namespace Engine.Game.Gameplay {
             for (int i = 0 ; i < roundcontext.players_size ; i++) {
                 if (roundcontext.players[i].character != null) {
                     roundcontext.players[i].character.SetBpm(bpm);
+                }
+                if (roundcontext.players[i].strums != null) {
+                    roundcontext.players[i].strums.SetBpm(bpm);
                 }
             }
             Week.BEAT_WATCHER.ChangeBpm(bpm);

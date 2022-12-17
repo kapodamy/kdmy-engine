@@ -15,6 +15,8 @@ Drawable strums_get_drawable(Strums strums);
 void strums_set_scroll_speed(Strums strums, float speed);
 void strums_set_scroll_direction(Strums strums, ScrollDirection direction);
 void strums_set_marker_duration_multiplier(Strums strums, float multipler);
+void strums_set_bpm(Strums strums, float bpm);
+void strums_disable_beat_synced_idle_and_continous(Strums strums, bool disabled);
 void strums_reset(Strums strums, float scroll_speed, const char* state_name);
 void strums_force_key_release(Strums strums);
 float strums_set_alpha(Strums strums, float alpha);

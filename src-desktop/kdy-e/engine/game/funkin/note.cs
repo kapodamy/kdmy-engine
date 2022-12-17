@@ -364,6 +364,10 @@ namespace Engine.Game {
             return res;
         }
 
+        public StateSprite PeekAloneStateSprite() {
+            return this.sprite_alone;
+        }
+
 
         private static StateSpriteState InternalLoadPart(StateSprite part, string name, string suffix, ModelHolder modelholder, string state_name) {
             Atlas atlas = modelholder.GetAtlas();

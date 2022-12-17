@@ -14,6 +14,12 @@ EM_JS_PRFX(void, strums_set_scroll_direction, (Strums strums, ScrollDirection di
 EM_JS_PRFX(void, strums_set_marker_duration_multiplier, (Strums strums, float multipler), {
     strums_set_marker_duration_multiplier(kdmyEngine_obtain(strums), multipler);
 });
+EM_JS_PRFX(void, strums_set_bpm, (Strums strums, float bpm), {
+    strums_set_bpm(kdmyEngine_obtain(strums), bpm);
+});
+EM_JS_PRFX(void, strums_disable_beat_synced_idle_and_continous, (Strums strums, bool disabled), {
+    strums_disable_beat_synced_idle_and_continous(kdmyEngine_obtain(strums), disabled);
+});
 EM_JS_PRFX(void, strums_reset, (Strums strums, float scroll_speed, const char* state_name), {
     strums_reset(kdmyEngine_obtain(strums), scroll_speed, kdmyEngine_ptrToString(state_name));
 });
@@ -107,6 +113,24 @@ static int script_strums_set_marker_duration_multiplier(lua_State* L) {
     float multipler = (float)luaL_checknumber(L, 2);
 
     strums_set_marker_duration_multiplier(strums, multipler);
+
+    return 0;
+}
+
+static int script_strums_disable_beat_synced_idle_and_continous(lua_State* L) {
+    Strums strums = luascript_read_userdata(L, STRUMS);
+    bool disabled = (bool)lua_toboolean(L, 2);
+
+    strums_disable_beat_synced_idle_and_continous(strums, disabled);
+
+    return 0;
+}
+
+static int script_strums_set_bpm(lua_State* L) {
+    Strums strums = luascript_read_userdata(L, STRUMS);
+    float bpm = (float)luaL_checknumber(L, 2);
+
+    strums_set_bpm(strums, bpm);
 
     return 0;
 }
@@ -285,6 +309,8 @@ static const luaL_Reg STRUMS_FUNCTIONS[] = {
     { "set_scroll_speed", script_strums_set_scroll_speed },
     { "set_scroll_direction", script_strums_set_scroll_direction },
     { "set_marker_duration_multiplier", script_strums_set_marker_duration_multiplier },
+    { "disable_beat_synced_idle_and_continous", script_strums_disable_beat_synced_idle_and_continous },
+    { "set_bpm", script_strums_set_bpm },
     { "reset", script_strums_reset },
     { "force_key_release", script_strums_force_key_release },
     { "set_alpha", script_strums_set_alpha },

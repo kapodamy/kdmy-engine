@@ -287,6 +287,7 @@ namespace Engine.Animation {
             if (this.is_empty) return 0;
             if (Single.IsNaN(this.loop_progress)) return 1;
             if (this.loop > 0 && this.loop_progress >= this.loop) return 1;
+            if (this.loop_progress == Int32.MaxValue) return 1;
 
             if (this.delay_active && this.delay > 0) {
                 this.delay_progress += elapsed;

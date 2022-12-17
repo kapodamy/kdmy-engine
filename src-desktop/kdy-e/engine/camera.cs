@@ -6,7 +6,7 @@ using Engine.Utils;
 
 namespace Engine {
 
-    public class Camera : IAnimate {
+    public class Camera : IAnimate, ISetProperty {
 
         public const AnimInterpolator DEFAULT_INTERPOLATOR = AnimInterpolator.LINEAR;
         public const int PX = 0;
@@ -34,6 +34,7 @@ namespace Engine {
         private float offset_y;
         private float offset_z;
         private Layout parent_layout;
+        private AnimSprite animation;
 
 
         public Camera(Modifier modifier, float viewport_width, float viewport_height) {
@@ -49,6 +50,7 @@ namespace Engine {
             this.parallax_x = 0.0f; this.parallax_y = 0.0f; this.parallax_z = 1.0f;
             this.offset_x = 0.0f; this.offset_y = 0.0f; this.offset_z = 1.0f;
             this.parent_layout = null;
+            this.animation = null;
 
             if (this.internal_modifier) {
                 // no modifier provided used the internal one
@@ -71,7 +73,9 @@ namespace Engine {
                 Luascript.DropShared(this.modifier);
                 //free(this.modifier);
             }
-            
+
+            if (this.animation != null) this.animation.Destroy();
+
             Luascript.DropShared(this);
             //free(camera);
         }
@@ -182,6 +186,8 @@ namespace Engine {
 
 
         public void Move(float end_x, float end_y, float end_z) {
+            InternalDropAnimation();
+
             this.tweenlerp.ChangeBoundsByIndex(Camera.PX, Single.NaN, end_x);
             this.tweenlerp.ChangeBoundsByIndex(Camera.PY, Single.NaN, end_y);
             this.tweenlerp.ChangeBoundsByIndex(Camera.PZ, Single.NaN, end_z);
@@ -190,6 +196,8 @@ namespace Engine {
         }
 
         public void MoveOffset(float end_x, float end_y, float end_z) {
+            InternalDropAnimation();
+
             this.tweenlerp.ChangeBoundsByIndex(Camera.OX, Single.NaN, end_x);
             this.tweenlerp.ChangeBoundsByIndex(Camera.OY, Single.NaN, end_y);
             this.tweenlerp.ChangeBoundsByIndex(Camera.OZ, Single.NaN, end_z);
@@ -199,6 +207,8 @@ namespace Engine {
         }
 
         public void Slide(float start_x, float start_y, float start_z, float end_x, float end_y, float end_z) {
+            InternalDropAnimation();
+
             this.tweenlerp.ChangeBoundsByIndex(Camera.PX, start_x, end_x);
             this.tweenlerp.ChangeBoundsByIndex(Camera.PY, start_y, end_y);
             this.tweenlerp.ChangeBoundsByIndex(Camera.PZ, start_z, end_z);
@@ -207,6 +217,8 @@ namespace Engine {
         }
 
         public void SlideOffset(float start_x, float start_y, float start_z, float end_x, float end_y, float end_z) {
+            InternalDropAnimation();
+
             this.tweenlerp.ChangeBoundsByIndex(Camera.OX, start_x, end_x);
             this.tweenlerp.ChangeBoundsByIndex(Camera.OY, start_y, end_y);
             this.tweenlerp.ChangeBoundsByIndex(Camera.OZ, start_z, end_z);
@@ -216,6 +228,8 @@ namespace Engine {
         }
 
         public void SlideX(float start, float end) {
+            InternalDropAnimation();
+
             this.tweenlerp.ChangeBoundsByIndex(Camera.PX, start, end);
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.PY);
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.PZ);
@@ -223,6 +237,8 @@ namespace Engine {
         }
 
         public void SlideXOffset(float start, float end) {
+            InternalDropAnimation();
+
             this.tweenlerp.ChangeBoundsByIndex(Camera.OX, start, end);
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.OY);
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.OZ);
@@ -231,6 +247,8 @@ namespace Engine {
         }
 
         public void SlideY(float start, float end) {
+            InternalDropAnimation();
+
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.PX);
             this.tweenlerp.ChangeBoundsByIndex(Camera.PY, start, end);
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.PZ);
@@ -238,6 +256,8 @@ namespace Engine {
         }
 
         public void SlideYOffset(float start, float end) {
+            InternalDropAnimation();
+
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.OX);
             this.tweenlerp.ChangeBoundsByIndex(Camera.OY, start, end);
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.OZ);
@@ -246,6 +266,8 @@ namespace Engine {
         }
 
         public void SlideZ(float start, float end) {
+            InternalDropAnimation();
+
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.PX);
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.PY);
             this.tweenlerp.ChangeBoundsByIndex(Camera.PZ, start, end);
@@ -253,6 +275,8 @@ namespace Engine {
         }
 
         public void SlideZOffset(float start, float end) {
+            InternalDropAnimation();
+
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.OX);
             this.tweenlerp.OverrideStartWithEndByIndex(Camera.OY);
             this.tweenlerp.ChangeBoundsByIndex(Camera.OZ, start, end);
@@ -260,6 +284,8 @@ namespace Engine {
         }
 
         public void SlideTo(float x, float y, float z) {
+            InternalDropAnimation();
+
             float start_x = this.tweenlerp.PeekValueByIndex(Camera.PX);
             float start_y = this.tweenlerp.PeekValueByIndex(Camera.PY);
             float start_z = this.tweenlerp.PeekValueByIndex(Camera.PZ);
@@ -276,6 +302,8 @@ namespace Engine {
         }
 
         public void SlideToOffset(float x, float y, float z) {
+            InternalDropAnimation();
+
             float start_x = this.tweenlerp.PeekValueByIndex(Camera.OX);
             float start_y = this.tweenlerp.PeekValueByIndex(Camera.OY);
             float start_z = this.tweenlerp.PeekValueByIndex(Camera.OZ);
@@ -302,6 +330,11 @@ namespace Engine {
             CameraPlaceholder camera_placeholder = layout.GetCameraPlaceholder(camera_name);
             if (camera_placeholder == null) return false;
 
+            if (camera_placeholder.animation != null) {
+                this.SetAnimation(camera_placeholder.animation);
+                return true;
+            }
+
             if (!camera_placeholder.is_empty || camera_placeholder.has_duration) {
                 SetTransitionDuration(camera_placeholder.duration_in_beats, camera_placeholder.duration);
             }
@@ -309,6 +342,7 @@ namespace Engine {
             if (camera_placeholder.is_empty) {
                 return false;
             }
+            InternalDropAnimation();
 
             if (camera_placeholder.has_parallax_offset_only) {
                 SetOffset(
@@ -358,6 +392,8 @@ namespace Engine {
         }
 
         public void ToOrigin(bool should_slide) {
+            InternalDropAnimation();
+
             if (should_slide) {
                 SlideTo(0f, 0f, 1f);
                 Repeat();
@@ -367,6 +403,8 @@ namespace Engine {
         }
 
         public void ToOriginOffset(bool should_slide) {
+            InternalDropAnimation();
+
             if (should_slide) {
                 SlideToOffset(0f, 0f, 1f);
                 Repeat();
@@ -384,8 +422,20 @@ namespace Engine {
             this.parent_layout = layout;
         }
 
+        public void SetAnimation(AnimSprite animsprite) {
+            if (this.animation != null) this.animation.Destroy();
+            this.animation = animsprite != null ? animsprite.Clone() : null;
+            this.transition_completed = true;
+        }
+
 
         public void Repeat() {
+            if (this.animation != null) {
+                this.animation.Restart();
+                this.animation.UpdateUsingCallback(this, true);
+                return;
+            }
+
             this.progress = 0.0;
             this.transition_completed = false;
             this.tweenlerp.Restart();
@@ -394,6 +444,11 @@ namespace Engine {
         public void Stop() {
             this.progress = this.duration;
             this.transition_completed = true;
+
+            if (this.animation != null) {
+                this.animation.Stop();
+                return;
+            }
 
             this.parallax_x = this.tweenlerp.PeekValueByIndex(Camera.PX);
             this.parallax_y = this.tweenlerp.PeekValueByIndex(Camera.PY);
@@ -407,6 +462,12 @@ namespace Engine {
         }
 
         public void End() {
+            if (this.animation != null) {
+                this.animation.ForceEnd();
+                this.animation.UpdateUsingCallback(this, true);
+                return;
+            }
+
             this.tweenlerp.End();
 
             this.progress = this.duration;
@@ -426,6 +487,12 @@ namespace Engine {
 
 
         public int Animate(float elapsed) {
+            if (this.animation != null) {
+                int completed = this.animation.Animate(elapsed);
+                if (completed < 1) this.animation.UpdateUsingCallback(this, true);
+                return completed;
+            }
+
             if (this.transition_completed) {
                 if (this.force_update) {
                     this.force_update = false;
@@ -449,9 +516,9 @@ namespace Engine {
         }
 
         public void Apply(PVRContext pvrctx) {
-            if (this.transition_completed) {
-                this.modifier.translate_x = this.modifier.x = this.parallax_x;
-                this.modifier.translate_y = this.modifier.y = this.parallax_y;
+            if (this.transition_completed || this.animation != null) {
+                this.modifier.translate_x = this.parallax_x;
+                this.modifier.translate_y = this.parallax_y;
                 this.modifier.scale_x = this.parallax_z;
                 this.modifier.scale_y = this.parallax_z;
             } else {
@@ -459,8 +526,8 @@ namespace Engine {
                 float y = this.tweenlerp.PeekValueByIndex(Camera.PY);
                 float z = this.tweenlerp.PeekValueByIndex(Camera.PZ);
 
-                if (!Single.IsNaN(x)) this.modifier.translate_x = this.modifier.x = x;
-                if (!Single.IsNaN(y)) this.modifier.translate_y = this.modifier.y = y;
+                if (!Single.IsNaN(x)) this.modifier.translate_x = x;
+                if (!Single.IsNaN(y)) this.modifier.translate_y = y;
                 if (!Single.IsNaN(z)) this.modifier.scale_x = this.modifier.scale_y = z;
             }
 
@@ -474,7 +541,7 @@ namespace Engine {
         }
 
         public void ApplyOffset(SH4Matrix destination_matrix) {
-            if (this.has_transition_offset) {
+            if (this.animation == null && this.has_transition_offset) {
                 float x = this.tweenlerp.PeekValueByIndex(Camera.OX);
                 float y = this.tweenlerp.PeekValueByIndex(Camera.OY);
                 float z = this.tweenlerp.PeekValueByIndex(Camera.OZ);
@@ -494,8 +561,32 @@ namespace Engine {
         }
 
         public bool IsCompleted() {
+            if (this.animation != null) return this.animation.IsCompleted();
             if (this.transition_completed && this.force_update) return false;
             return this.progress >= this.duration;
+        }
+
+        public void SetProperty(int id, float value) {
+            switch (id) {
+                case VertexProps.SPRITE_PROP_X:
+                    this.parallax_x = value;
+                    break;
+                case VertexProps.SPRITE_PROP_Y:
+                    this.parallax_y = value;
+                    break;
+                case VertexProps.SPRITE_PROP_Z:
+                    this.parallax_z = value;
+                    break;
+                case VertexProps.CAMERA_PROP_OFFSET_X:
+                    this.offset_x = value;
+                    break;
+                case VertexProps.CAMERA_PROP_OFFSET_Y:
+                    this.offset_y = value;
+                    break;
+                case VertexProps.CAMERA_PROP_OFFSET_Z:
+                    this.offset_z = value;
+                    break;
+            }
         }
 
 
@@ -506,6 +597,13 @@ namespace Engine {
 
         public void InternalTweenlerpAbsolute(int index, float value) {
             this.tweenlerp.ChangeBoundsByIndex(index, value, value);
+        }
+
+        private void InternalDropAnimation() {
+            if (this.animation != null) {
+                this.animation.Destroy();
+                this.animation = null;
+            }
         }
 
     }

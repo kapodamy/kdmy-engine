@@ -2388,9 +2388,6 @@ namespace Engine {
                 from_offset_y = Single.NaN,
                 from_offset_z = Single.NaN,
 
-                //
-                // Not implemented= requires a rework in the camera helper (camera.cs)
-                //
                 animation = null,
 
                 from_x = Single.NaN,
@@ -2404,7 +2401,7 @@ namespace Engine {
                 offset_z = 1
             };
 
-            //let anim_name = unparsed_camera.getAttribute("animationName");
+            string anim_name = unparsed_camera.GetAttribute("animationName");
             XmlParserNode unparsed_move = unparsed_camera.GetChildren("Move");
             XmlParserNode unparsed_from = unparsed_camera.GetChildren("From");
             XmlParserNode unparsed_to = unparsed_camera.GetChildren("To");
@@ -2479,11 +2476,11 @@ namespace Engine {
                 }
             }
 
-            /*if (!String.IsNullOrEmpty(anim_name)) {
+            if (!String.IsNullOrEmpty(anim_name)) {
                 camera_placeholder.animation = AnimSprite.InitFromAnimlist(
                     layout_context.animlist, anim_name
                 );
-            }*/
+            }
 
             layout_context.camera_list.Add(camera_placeholder);
         }

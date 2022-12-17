@@ -1697,6 +1697,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
             roundcontext.players[i].notepool
         );
         strums_set_scroll_speed(roundcontext.players[i].strums, chart.speed);
+        strums_set_bpm(roundcontext.players[i].strums, chart.bpm);
         strums_use_funkin_maker_duration(roundcontext.players[i].strums, SETTINGS.use_funkin_marker_duration);
 
         // attach strums and notes states
@@ -2122,6 +2123,9 @@ function week_update_bpm(roundcontext, bpm) {
     for (let i = 0; i < roundcontext.players_size; i++) {
         if (roundcontext.players[i].character) {
             character_set_bpm(roundcontext.players[i].character, bpm);
+        }
+        if (roundcontext.players[i].strums) {
+            strums_set_bpm(roundcontext.players[i].strums, bpm);
         }
     }
     beatwatcher_change_bpm(WEEK_BEAT_WATCHER, bpm);

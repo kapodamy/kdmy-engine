@@ -84,6 +84,8 @@ namespace Engine.Externals.LuaScriptInterop {
                     return StrumScriptTarget.BACKGROUND;
                 case "strum_line":
                     return StrumScriptTarget.STRUM_LINE;
+                case "note":
+                    return StrumScriptTarget.NOTE;
                 case "all":
                     return StrumScriptTarget.ALL;
             }

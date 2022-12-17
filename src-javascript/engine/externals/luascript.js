@@ -982,6 +982,9 @@ function __js__camera_set_absolute_position(camera, x, y) {
 function __js__camera_set_absolute_zoom(camera, z) {
     camera_set_absolute_zoom(kdmyEngine_obtain(camera), z)
 }
+function __js__camera_set_animation(camera, animsprite) {
+    camera_set_animation(kdmyEngine_obtain(camera), kdmyEngine_obtain(animsprite))
+}
 function __js__camera_set_interpolator_type(camera, type) {
     camera_set_interpolator_type(kdmyEngine_obtain(camera), type)
 }
@@ -2242,6 +2245,9 @@ function __js__strum_animation_end(strum) {
 function __js__strum_animation_restart(strum) {
     strum_animation_restart(kdmyEngine_obtain(strum))
 }
+function __js__strum_disable_beat_synced_idle_and_continous(strum, disabled) {
+    strum_disable_beat_synced_idle_and_continous(kdmyEngine_obtain(strum), disabled)
+}
 function __js__strum_draw_sick_effect_apart(strum, enable) {
     strum_draw_sick_effect_apart(kdmyEngine_obtain(strum), enable)
 }
@@ -2296,6 +2302,9 @@ function __js__strum_set_alpha_sick_effect(strum, alpha) {
     let ret = strum_set_alpha_sick_effect(kdmyEngine_obtain(strum), alpha);
     return ret
 }
+function __js__strum_set_bpm(strum, bpm) {
+    strum_set_bpm(kdmyEngine_obtain(strum), bpm)
+}
 function __js__strum_set_draw_offset(strum, offset_milliseconds) {
     strum_set_draw_offset(kdmyEngine_obtain(strum), offset_milliseconds)
 }
@@ -2311,8 +2320,8 @@ function __js__strum_set_keep_aspect_ratio_background(strum, enable) {
 function __js__strum_set_marker_duration_multiplier(strum, multipler) {
     strum_set_marker_duration_multiplier(kdmyEngine_obtain(strum), multipler)
 }
-function __js__strum_set_notesmaker_tweenkeyframe(strum, tweenkeyframe, apply_to_marker_too) {
-    strum_set_notesmaker_tweenkeyframe(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenkeyframe), apply_to_marker_too)
+function __js__strum_set_note_tweenkeyframe(strum, tweenkeyframe) {
+    strum_set_note_tweenkeyframe(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenkeyframe))
 }
 function __js__strum_set_player_id(strum, player_id) {
     strum_set_player_id(kdmyEngine_obtain(strum), player_id)
@@ -2364,6 +2373,9 @@ function __js__strums_animation_restart(strums) {
 function __js__strums_animation_set(strums, animsprite) {
     strums_animation_set(kdmyEngine_obtain(strums), kdmyEngine_obtain(animsprite))
 }
+function __js__strums_disable_beat_synced_idle_and_continous(strums, disabled) {
+    strums_disable_beat_synced_idle_and_continous(kdmyEngine_obtain(strums), disabled)
+}
 function __js__strums_enable_background(strums, enable) {
     strums_enable_background(kdmyEngine_obtain(strums), enable)
 }
@@ -2397,6 +2409,9 @@ function __js__strums_set_alpha_background(strums, alpha) {
 }
 function __js__strums_set_alpha_sick_effect(strums, alpha) {
     strums_set_alpha_sick_effect(kdmyEngine_obtain(strums), alpha)
+}
+function __js__strums_set_bpm(strums, bpm) {
+    strums_set_bpm(kdmyEngine_obtain(strums), bpm)
 }
 function __js__strums_set_draw_offset(strums, offset_milliseconds) {
     strums_set_draw_offset(kdmyEngine_obtain(strums), offset_milliseconds)
@@ -6271,6 +6286,7 @@ var asmLibraryArg = {
     "__js__camera_repeat": __js__camera_repeat,
     "__js__camera_set_absolute_position": __js__camera_set_absolute_position,
     "__js__camera_set_absolute_zoom": __js__camera_set_absolute_zoom,
+    "__js__camera_set_animation": __js__camera_set_animation,
     "__js__camera_set_interpolator_type": __js__camera_set_interpolator_type,
     "__js__camera_set_offset": __js__camera_set_offset,
     "__js__camera_set_transition_duration": __js__camera_set_transition_duration,
@@ -6628,6 +6644,7 @@ var asmLibraryArg = {
     "__js__streakcounter_state_toggle": __js__streakcounter_state_toggle,
     "__js__strum_animation_end": __js__strum_animation_end,
     "__js__strum_animation_restart": __js__strum_animation_restart,
+    "__js__strum_disable_beat_synced_idle_and_continous": __js__strum_disable_beat_synced_idle_and_continous,
     "__js__strum_draw_sick_effect_apart": __js__strum_draw_sick_effect_apart,
     "__js__strum_enable_background": __js__strum_enable_background,
     "__js__strum_enable_sick_effect": __js__strum_enable_sick_effect,
@@ -6643,12 +6660,13 @@ var asmLibraryArg = {
     "__js__strum_set_alpha": __js__strum_set_alpha,
     "__js__strum_set_alpha_background": __js__strum_set_alpha_background,
     "__js__strum_set_alpha_sick_effect": __js__strum_set_alpha_sick_effect,
+    "__js__strum_set_bpm": __js__strum_set_bpm,
     "__js__strum_set_draw_offset": __js__strum_set_draw_offset,
     "__js__strum_set_extra_animation": __js__strum_set_extra_animation,
     "__js__strum_set_extra_animation_continuous": __js__strum_set_extra_animation_continuous,
     "__js__strum_set_keep_aspect_ratio_background": __js__strum_set_keep_aspect_ratio_background,
     "__js__strum_set_marker_duration_multiplier": __js__strum_set_marker_duration_multiplier,
-    "__js__strum_set_notesmaker_tweenkeyframe": __js__strum_set_notesmaker_tweenkeyframe,
+    "__js__strum_set_note_tweenkeyframe": __js__strum_set_note_tweenkeyframe,
     "__js__strum_set_player_id": __js__strum_set_player_id,
     "__js__strum_set_scroll_direction": __js__strum_set_scroll_direction,
     "__js__strum_set_scroll_speed": __js__strum_set_scroll_speed,
@@ -6664,6 +6682,7 @@ var asmLibraryArg = {
     "__js__strums_animation_end": __js__strums_animation_end,
     "__js__strums_animation_restart": __js__strums_animation_restart,
     "__js__strums_animation_set": __js__strums_animation_set,
+    "__js__strums_disable_beat_synced_idle_and_continous": __js__strums_disable_beat_synced_idle_and_continous,
     "__js__strums_enable_background": __js__strums_enable_background,
     "__js__strums_enable_post_sick_effect_draw": __js__strums_enable_post_sick_effect_draw,
     "__js__strums_force_key_release": __js__strums_force_key_release,
@@ -6674,6 +6693,7 @@ var asmLibraryArg = {
     "__js__strums_set_alpha": __js__strums_set_alpha,
     "__js__strums_set_alpha_background": __js__strums_set_alpha_background,
     "__js__strums_set_alpha_sick_effect": __js__strums_set_alpha_sick_effect,
+    "__js__strums_set_bpm": __js__strums_set_bpm,
     "__js__strums_set_draw_offset": __js__strums_set_draw_offset,
     "__js__strums_set_keep_aspect_ratio_background": __js__strums_set_keep_aspect_ratio_background,
     "__js__strums_set_marker_duration_multiplier": __js__strums_set_marker_duration_multiplier,

@@ -743,6 +743,7 @@ namespace Engine.Animation {
             if (value < 0) value = VertexProps.ParseSpriteProperty(node, name, warn);
             if (value < 0) value = VertexProps.ParseMediaProperty(node, name, warn);
             if (value < 0) value = VertexProps.ParseLayoutProperty(node, name, warn);
+            if (value < 0) value = VertexProps.ParseCameraProperty(node, name, warn);
 
             if (value == VertexProps.TEXTSPRITE_PROP_STRING) {
                 Console.Error.WriteLine("animlist_parse_property() illegal property: string", node.OuterHTML);

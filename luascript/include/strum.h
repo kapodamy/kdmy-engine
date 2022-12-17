@@ -31,7 +31,8 @@ typedef int32_t StrumPressState;
 #define STRUM_SCRIPT_TARGET_SICK_EFFECT 1
 #define STRUM_SCRIPT_TARGET_BACKGROUND 2
 #define STRUM_SCRIPT_TARGET_STRUM_LINE 3
-#define STRUM_SCRIPT_TARGET_ALL 4
+#define STRUM_SCRIPT_TARGET_NOTE 4
+#define STRUM_SCRIPT_TARGET_ALL 5
 typedef int32_t StrumScriptTarget;
 
 #define STRUM_SCRIPT_ON_HIT_DOWN 0
@@ -69,7 +70,9 @@ void strum_set_keep_aspect_ratio_background(Strum strum, bool enable);
 void strum_draw_sick_effect_apart(Strum strum, bool enable);
 void strum_set_extra_animation(Strum strum, StrumScriptTarget strum_script_target, StrumScriptOn strum_script_on, bool undo, AnimSprite animsprite);
 void strum_set_extra_animation_continuous(Strum strum, StrumScriptTarget strum_script_target, AnimSprite animsprite);
-void strum_set_notesmaker_tweenkeyframe(Strum strum, TweenKeyframe tweenkeyframe, bool apply_to_marker_too);
+void strum_disable_beat_synced_idle_and_continous(Strum strum, bool disabled);
+void strum_set_bpm(Strum strum, float bpm);
+void strum_set_note_tweenkeyframe(Strum strum, TweenKeyframe tweenkeyframe);
 void strum_set_sickeffect_size_ratio(Strum strum, float size_ratio);
 void strum_set_alpha(Strum strum, float alpha);
 void strum_set_visible(Strum strum, bool visible);

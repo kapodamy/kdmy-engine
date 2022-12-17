@@ -41,6 +41,24 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_strums_disable_beat_synced_idle_and_continous(LuaState L) {
+            Strums strums = L.ReadUserdata<Strums>(STRUMS);
+            bool disabled = (bool)L.lua_toboolean(2);
+
+            strums.DisableBeatSyncedIdleAndContinous(disabled);
+
+            return 0;
+        }
+
+        static int script_strums_set_bpm(LuaState L) {
+            Strums strums = L.ReadUserdata<Strums>(STRUMS);
+            float bpm = (float)L.luaL_checknumber(2);
+
+            strums.SetBpm(bpm);
+
+            return 0;
+        }
+
         static int script_strums_reset(LuaState L) {
             Strums strums = L.ReadUserdata<Strums>(STRUMS);
             float scroll_speed = (float)L.luaL_checknumber(2);
@@ -211,30 +229,32 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         static readonly LuaTableFunction[] STRUMS_FUNCTIONS = {
-    new LuaTableFunction("get_drawable", script_strums_get_drawable),
-    new LuaTableFunction("set_scroll_speed", script_strums_set_scroll_speed),
-    new LuaTableFunction("set_scroll_direction", script_strums_set_scroll_direction),
-    new LuaTableFunction("set_marker_duration_multiplier", script_strums_set_marker_duration_multiplier),
-    new LuaTableFunction("reset", script_strums_reset),
-    new LuaTableFunction("force_key_release", script_strums_force_key_release),
-    new LuaTableFunction("set_alpha", script_strums_set_alpha),
-    new LuaTableFunction("enable_background", script_strums_enable_background),
-    new LuaTableFunction("set_keep_aspect_ratio_background", script_strums_set_keep_aspect_ratio_background),
-    new LuaTableFunction("set_alpha_background", script_strums_set_alpha_background),
-    new LuaTableFunction("set_alpha_sick_effect", script_strums_set_alpha_sick_effect),
-    new LuaTableFunction("set_draw_offset", script_strums_set_draw_offset),
-    new LuaTableFunction("state_add", script_strums_state_add),
-    new LuaTableFunction("state_toggle", script_strums_state_toggle),
-    new LuaTableFunction("state_toggle_notes", script_strums_state_toggle_notes),
-    new LuaTableFunction("state_toggle_marker_and_sick_effect", script_strums_state_toggle_marker_and_sick_effect),
-    new LuaTableFunction("get_lines_count", script_strums_get_lines_count),
-    new LuaTableFunction("get_strum_line", script_strums_get_strum_line),
-    new LuaTableFunction("enable_post_sick_effect_draw", script_strums_enable_post_sick_effect_draw),
-    new LuaTableFunction("animation_set", script_strums_animation_set),
-    new LuaTableFunction("animation_restart", script_strums_animation_restart),
-    new LuaTableFunction("animation_end", script_strums_animation_end),
-    new LuaTableFunction(null, null)
-};
+            new LuaTableFunction("get_drawable", script_strums_get_drawable),
+            new LuaTableFunction("set_scroll_speed", script_strums_set_scroll_speed),
+            new LuaTableFunction("set_scroll_direction", script_strums_set_scroll_direction),
+            new LuaTableFunction("set_marker_duration_multiplier", script_strums_set_marker_duration_multiplier),
+            new LuaTableFunction("disable_beat_synced_idle_and_continous", script_strums_disable_beat_synced_idle_and_continous),
+            new LuaTableFunction("set_bpm", script_strums_set_bpm),
+            new LuaTableFunction("reset", script_strums_reset),
+            new LuaTableFunction("force_key_release", script_strums_force_key_release),
+            new LuaTableFunction("set_alpha", script_strums_set_alpha),
+            new LuaTableFunction("enable_background", script_strums_enable_background),
+            new LuaTableFunction("set_keep_aspect_ratio_background", script_strums_set_keep_aspect_ratio_background),
+            new LuaTableFunction("set_alpha_background", script_strums_set_alpha_background),
+            new LuaTableFunction("set_alpha_sick_effect", script_strums_set_alpha_sick_effect),
+            new LuaTableFunction("set_draw_offset", script_strums_set_draw_offset),
+            new LuaTableFunction("state_add", script_strums_state_add),
+            new LuaTableFunction("state_toggle", script_strums_state_toggle),
+            new LuaTableFunction("state_toggle_notes", script_strums_state_toggle_notes),
+            new LuaTableFunction("state_toggle_marker_and_sick_effect", script_strums_state_toggle_marker_and_sick_effect),
+            new LuaTableFunction("get_lines_count", script_strums_get_lines_count),
+            new LuaTableFunction("get_strum_line", script_strums_get_strum_line),
+            new LuaTableFunction("enable_post_sick_effect_draw", script_strums_enable_post_sick_effect_draw),
+            new LuaTableFunction("animation_set", script_strums_animation_set),
+            new LuaTableFunction("animation_restart", script_strums_animation_restart),
+            new LuaTableFunction("animation_end", script_strums_animation_end),
+            new LuaTableFunction(null, null)
+        };
 
         public static int script_strums_new(LuaState L, Strums strums) {
             return L.CreateUserdata(STRUMS, strums);

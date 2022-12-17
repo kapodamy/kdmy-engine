@@ -110,7 +110,7 @@
                 "displayName",
                 "songs"
             ],
-            "title": "About (week manifest)"
+            "title": "About (week descriptor)"
         },
         "CustomDifficulty": {
             "type": "object",

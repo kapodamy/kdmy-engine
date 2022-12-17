@@ -587,6 +587,7 @@
             <xs:element name="ToOffset" type="Camera-offsetmovefromto" maxOccurs="1" />
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="optional" />
+        <xs:attribute name="animationName" type="xs:string" use="optional" default="null" />
         <xs:attribute name="durationInBeats" type="xs:float" use="optional" default="NaN" />
         <xs:attribute name="duration" type="xs:float" use="optional" default="NaN" />
     </xs:complexType>

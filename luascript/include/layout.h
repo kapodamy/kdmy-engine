@@ -4,13 +4,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "camera.h"
 #include "sprite.h"
 #include "textsprite.h"
 #include "global.h"
 #include "soundplayer.h"
 #include "modifier.h"
 #include "psshader.h"
+#include "camera.h"
 
 
 typedef struct _Layout_t {

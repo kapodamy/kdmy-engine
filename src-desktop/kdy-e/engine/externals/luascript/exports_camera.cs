@@ -313,6 +313,16 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_camera_set_animation(LuaState L) {
+            Camera camera = L.ReadUserdata<Camera>(CAMERA);
+
+            AnimSprite animsprite = L.ReadNullableUserdata<AnimSprite>(2, ExportsAnimSprite.ANIMSPRITE);
+
+            camera.SetAnimation(animsprite);
+
+            return 0;
+        }
+
 
 
         ////////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +357,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("slide_z_offset", script_camera_slide_z_offset),
             new LuaTableFunction("slide_to_offset", script_camera_slide_to_offset),
             new LuaTableFunction("to_origin_offset", script_camera_to_origin_offset),
+            new LuaTableFunction("set_animation", script_camera_set_animation),
             new LuaTableFunction(null, null)
         };
 

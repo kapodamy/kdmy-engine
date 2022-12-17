@@ -51,7 +51,7 @@ Explained here [FEATURES.MD](FEATURES.MD "FEATURES.MD")
 
 * ~~Post-processing shaders~~. ¡DONE!
 * ~~Dialogues (waht a shame)~~. ¡DONE!
-* Expansions loader (a.k.a mods loader).
+* ~~Expansions loader (a.k.a mods loader).~~. ¡DONE!
 * ~~Lua API to manipulate strums, states and UI cosmetics~~. ¡DONE!
 * Documentation (a lot).
 * Video playback (kinda optional).

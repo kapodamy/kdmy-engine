@@ -17,6 +17,12 @@ void strums_set_scroll_direction(Strums strums, ScrollDirection direction) {
 void strums_set_marker_duration_multiplier(Strums strums, float multipler) {
     print_stub("strums_set_marker_duration_multiplier", "strums=%p multipler=%f", strums, multipler);
 }
+void strums_set_bpm(Strums strums, float bpm) {
+    print_stub("strums_set_bpm", "strums=%p bpm=%f", strums, bpm);
+}
+void strums_disable_beat_synced_idle_and_continous(Strums strums, bool disabled) {
+    print_stub("strums_disable_beat_synced_idle_and_continous", "strums=%p disabled=(bool)%i", strums, disabled);
+}
 void strums_reset(Strums strums, float scroll_speed, const char* state_name) {
     print_stub("strums_reset", "strums=%p scroll_speed=%f state_name=%s", strums, scroll_speed, state_name);
 }

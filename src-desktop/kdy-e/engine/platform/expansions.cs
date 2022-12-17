@@ -9,11 +9,13 @@ namespace Engine.Platform {
         private const string FUNKIN_EXPANSION_NAME = "funkin";
         private const string FUNKIN_EXPANSION_PATH = SYMBOLIC_PATH + FUNKIN_EXPANSION_NAME;
         private const string CHAIN_FILENAME = "chain.ini";
+        public const string ABOUT_FILENAME = "expansion.json";
         private const char COMMENT_CHAR = ';';
         private const string SELF_NAME = "/self/";
 
         public static string[] chain_array;
         public static int chain_array_size;
+        public static string overrided_weeks_folder;
 
         static Expansions() {
             chain_array = null;
@@ -36,6 +38,19 @@ namespace Engine.Platform {
             }
 
             InternalLoadDependency(chain, expansion_name);
+            Expansions.overrided_weeks_folder = null;
+
+            string expansion_base_path = Expansions.SYMBOLIC_PATH + expansion_name + FS.CHAR_SEPARATOR;
+            string about_path = expansion_base_path + Expansions.ABOUT_FILENAME;
+            bool has_about = IO.ResourceExists(about_path, true, false);
+
+            if (has_about) {
+                JSONParser json = JSONParser.LoadDirectFrom(about_path);
+                bool override_weeks_folder = JSONParser.ReadBoolean(json, "overrideWeeksFolder", false);
+                JSONParser.Destroy(json);
+
+                if (override_weeks_folder) overrided_weeks_folder = expansion_base_path + "weeks";
+            }
 
             chain_array_size = chain.Trim();
             chain_array = chain.PeekArray();

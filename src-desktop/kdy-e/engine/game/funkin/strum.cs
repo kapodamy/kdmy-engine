@@ -107,6 +107,7 @@ namespace Engine.Game {
             SICK_EFFECT,
             BACKGROUND,
             STRUM_LINE,
+            NOTE,
             ALL
         }
 
@@ -179,6 +180,7 @@ namespace Engine.Game {
         private float markers_scale;
         private string selected_notes_state;
         private AttachedAnimations animation_strum_line;
+        private AttachedAnimations animation_note;
         private AttachedAnimations animation_marker;
         private AttachedAnimations animation_sick_effect;
         private AttachedAnimations animation_background;
@@ -191,6 +193,9 @@ namespace Engine.Game {
         public int player_id;
         private float inverse_offset;
         private bool use_fukin_marker_duration;
+        private TweenKeyframe tweenkeyframe_note;
+        private bool use_beat_synced_idle_and_continous;
+        private BeatWatcher beatwatcher;
 
         public Strum(int id, string name, float x, float y, float marker_dimmen, float invdimmen, float length_dimmen, bool keep_markers_scale) {
 
@@ -260,6 +265,7 @@ namespace Engine.Game {
             this.selected_notes_state = null;
 
             this.animation_strum_line = new AttachedAnimations() { };
+            this.animation_note = new AttachedAnimations() { };
             this.animation_marker = new AttachedAnimations() { };
             this.animation_sick_effect = new AttachedAnimations() { };
             this.animation_background = new AttachedAnimations() { };
@@ -275,6 +281,9 @@ namespace Engine.Game {
             this.player_id = -1;
             this.inverse_offset = length_dimmen - marker_dimmen;
             this.use_fukin_marker_duration = true;
+            this.tweenkeyframe_note = null;
+            this.use_beat_synced_idle_and_continous = true;
+            this.beatwatcher = new BeatWatcher();
 
 
             // set sprites location and modifier location
@@ -290,7 +299,7 @@ namespace Engine.Game {
 
             SetScrollSpeed(1.0f);
             SetScrollDirection(ScrollDirection.UPSCROLL);
-
+            SetBpm(100);
 
         }
 
@@ -317,6 +326,9 @@ namespace Engine.Game {
             Strum.InternalExtraDestroyAnimation(this.animation_sick_effect);
             Strum.InternalExtraDestroyAnimation(this.animation_background);
             Strum.InternalExtraDestroyAnimation(this.animation_strum_line);
+            Strum.InternalExtraDestroyAnimation(this.animation_note);
+
+            if (this.tweenkeyframe_note != null) this.tweenkeyframe_note.Destroy();
 
             this.sustain_queue.Destroy(false);
 
@@ -1080,6 +1092,11 @@ L_discard_key_event:
         public int Animate(float elapsed) {
             if (String.IsNullOrEmpty(this.strum_name)) return 1;
 
+            if (this.beatwatcher.Poll() && this.use_beat_synced_idle_and_continous) {
+                this.sprite_marker_nothing.AnimationRestart();
+                InternalRestartExtraContinous();
+            }
+
             int res = 0;
 
             #region marker animation
@@ -1166,6 +1183,7 @@ L_discard_key_event:
             }
 
             res += InternalExtraAnimate(StrumScriptTarget.STRUM_LINE, current_event, false, elapsed);
+            res += InternalExtraAnimate(StrumScriptTarget.NOTE, current_event, false, elapsed);
             res += InternalExtraAnimate(StrumScriptTarget.MARKER, current_event, false, elapsed);
             res += InternalExtraAnimate(StrumScriptTarget.SICK_EFFECT, current_event, false, elapsed);
             res += InternalExtraAnimate(StrumScriptTarget.BACKGROUND, current_event, false, elapsed);
@@ -1174,6 +1192,9 @@ L_discard_key_event:
             #region execute continuous extra animations
             InternalExtraAnimateSprite(
                 StrumScriptTarget.STRUM_LINE, this.animation_strum_line.continuous.action
+            );
+            InternalExtraAnimateSprite(
+                StrumScriptTarget.NOTE, this.animation_note.continuous.action
             );
             InternalExtraAnimateSprite(
                 StrumScriptTarget.MARKER, this.animation_marker.continuous.action
@@ -1312,12 +1333,32 @@ L_discard_key_event:
 
                 scroll_offset *= this.scroll_velocity;
 
+                if (this.tweenkeyframe_note != null) {
+                    double percent = Math.Abs(scroll_offset / this.scroll_window);
+                    this.tweenkeyframe_note.AnimatePercent(percent);
+                    this.tweenkeyframe_note.VertexSetProperties(
+                        drawable_note.PeekAloneStateSprite()
+                    );
+                }
+
                 if (this.scroll_is_vertical)
                     y += scroll_offset;
                 else
                     x += scroll_offset;
 
+
                 drawable_note.Draw(pvrctx, this.scroll_velocity, x, y, note_duration, body_only);
+
+                if (this.tweenkeyframe_note != null) {
+                    //
+                    // after the note is drawn, "attempt" to restore the original values
+                    // by running again the TweenKeyframe at 0%.
+                    //
+                    this.tweenkeyframe_note.AnimatePercent(0.0);
+                    this.tweenkeyframe_note.VertexSetProperties(
+                        drawable_note.PeekAloneStateSprite()
+                    );
+                }
             }
 
             switch (this.marker_state) {
@@ -1454,6 +1495,7 @@ L_discard_key_event:
                 SetExtraAnimation(StrumScriptTarget.SICK_EFFECT, strum_script_on, undo, animsprite);
                 SetExtraAnimation(StrumScriptTarget.BACKGROUND, strum_script_on, undo, animsprite);
                 SetExtraAnimation(StrumScriptTarget.STRUM_LINE, strum_script_on, undo, animsprite);
+                SetExtraAnimation(StrumScriptTarget.NOTE, strum_script_on, undo, animsprite);
                 return;
             }
 
@@ -1518,11 +1560,15 @@ L_discard_key_event:
                 case StrumScriptTarget.STRUM_LINE:
                     attached_animations = this.animation_strum_line;
                     break;
+                case StrumScriptTarget.NOTE:
+                    attached_animations = this.animation_note;
+                    break;
                 case StrumScriptTarget.ALL:
                     SetExtraAnimationContinuous(StrumScriptTarget.MARKER, animsprite);
                     SetExtraAnimationContinuous(StrumScriptTarget.SICK_EFFECT, animsprite);
                     SetExtraAnimationContinuous(StrumScriptTarget.BACKGROUND, animsprite);
                     SetExtraAnimationContinuous(StrumScriptTarget.STRUM_LINE, animsprite);
+                    SetExtraAnimationContinuous(StrumScriptTarget.NOTE, animsprite);
                     return;
                 default:
                     Console.Error.WriteLine("[WARN]" +
@@ -1541,9 +1587,9 @@ L_discard_key_event:
         }
 
 
-        public void SetNotesmakerTweenkeyframe(TweenKeyframe tweenkeyframe, bool apply_to_marker_too) {
-            // the behaviour will be similar to https://developer.mozilla.org/en-US/docs/Web/CSS/@keyframes
-            throw new NotImplementedException("strum_set_notes_maker_tweenkeyframe() is not implemented");
+        public void SetNoteTweenkeyframe(TweenKeyframe tweenkeyframe) {
+            if (this.tweenkeyframe_note != null) this.tweenkeyframe_note.Destroy();
+            this.tweenkeyframe_note = tweenkeyframe != null ? tweenkeyframe.Clone() : null;
         }
 
         public void SetSickeffectSizeRatio(float size_ratio) {
@@ -1568,9 +1614,19 @@ L_discard_key_event:
             this.draw_offset_milliseconds = offset_milliseconds;
         }
 
+        public void SetBpm(float beats_per_minute) {
+            this.beatwatcher.Reset(true, beats_per_minute);
+        }
+
+        public void DisableBeatSyncedIdleAndContinous(bool disabled) {
+            this.use_beat_synced_idle_and_continous = !disabled;
+        }
+
+
         public Modifier GetModifier() {
             return this.drawable.GetModifier();
         }
+
         public Drawable GetDrawable() {
             return this.drawable;
         }
@@ -1584,9 +1640,9 @@ L_discard_key_event:
             return max_duration;
         }
 
-
         public void AnimationRestart() {
             Strum.InternalExtraBatch(this.animation_strum_line, true);
+            Strum.InternalExtraBatch(this.animation_note, true);
             Strum.InternalExtraBatch(this.animation_marker, true);
             Strum.InternalExtraBatch(this.animation_sick_effect, true);
             Strum.InternalExtraBatch(this.animation_background, true);
@@ -1595,6 +1651,7 @@ L_discard_key_event:
 
         public void AnimationEnd() {
             Strum.InternalExtraBatch(this.animation_strum_line, false);
+            Strum.InternalExtraBatch(this.animation_note, false);
             Strum.InternalExtraBatch(this.animation_marker, false);
             Strum.InternalExtraBatch(this.animation_sick_effect, false);
             Strum.InternalExtraBatch(this.animation_background, false);
@@ -1908,6 +1965,15 @@ L_discard_key_event:
                 case StrumScriptTarget.STRUM_LINE:
                     animsprite.UpdateDrawable(this.drawable, true);
                     break;
+                case StrumScriptTarget.NOTE:
+                    int last_index = this.chart_notes_id_map_size - 1;
+                    for (int i = 0 ; i < this.chart_notes_id_map_size ; i++) {
+                        if (this.drawable_notes[i] != null) {
+                            StateSprite statesprite = this.drawable_notes[i].PeekAloneStateSprite();
+                            animsprite.UpdateStatesprite(statesprite, i == last_index);
+                        }
+                    }
+                    break;
                 case StrumScriptTarget.MARKER:
                     animsprite.UpdateStatesprite(this.sprite_marker_confirm, false);
                     animsprite.UpdateStatesprite(this.sprite_marker_nothing, false);
@@ -1926,6 +1992,8 @@ L_discard_key_event:
             switch (target) {
                 case StrumScriptTarget.STRUM_LINE:
                     return this.animation_strum_line;
+                case StrumScriptTarget.NOTE:
+                    return this.animation_note;
                 case StrumScriptTarget.MARKER:
                     return this.animation_marker;
                 case StrumScriptTarget.SICK_EFFECT:
@@ -2067,11 +2135,13 @@ L_discard_key_event:
             this.animation_marker.last_event = StrumScriptOn.ALL;
             this.animation_sick_effect.last_event = StrumScriptOn.ALL;
             this.animation_strum_line.last_event = StrumScriptOn.ALL;
+            this.animation_note.last_event = StrumScriptOn.ALL;
 
             this.animation_background.state = StrumExtraState.NONE;
             this.animation_marker.state = StrumExtraState.NONE;
             this.animation_sick_effect.state = StrumExtraState.NONE;
             this.animation_strum_line.state = StrumExtraState.NONE;
+            this.animation_note.state = StrumExtraState.NONE;
         }
 
         private void InternalCalcMarkerDuration(double velocity) {
@@ -2089,6 +2159,19 @@ L_discard_key_event:
                 this.key_test_limit = Math.Max(this.chart_notes[0].timestamp - this.marker_duration, 0);
             else
                 this.key_test_limit = double.NegativeInfinity;
+        }
+
+        private void InternalRestartExtraContinous() {
+            if (this.animation_strum_line.continuous.action != null)
+                this.animation_strum_line.continuous.action.Restart();
+            if (this.animation_note.continuous.action != null)
+                this.animation_note.continuous.action.Restart();
+            if (this.animation_marker.continuous.action != null)
+                this.animation_marker.continuous.action.Restart();
+            if (this.animation_sick_effect.continuous.action != null)
+                this.animation_sick_effect.continuous.action.Restart();
+            if (this.animation_background.continuous.action != null)
+                this.animation_background.continuous.action.Restart();
         }
 
 

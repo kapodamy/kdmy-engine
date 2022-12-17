@@ -98,6 +98,9 @@ EM_JS_PRFX(Layout, camera_get_parent_layout, (Camera camera), {
     let ret = camera_get_parent_layout(kdmyEngine_obtain(camera));
     return kdmyEngine_obtain(ret);
 });
+EM_JS_PRFX(void, camera_set_animation, (Camera camera, AnimSprite animsprite), {
+    camera_set_animation(kdmyEngine_obtain(camera), kdmyEngine_obtain(animsprite));
+});
 #endif
 
 
@@ -407,6 +410,16 @@ static int script_camera_to_origin_offset(lua_State* L) {
     return 0;
 }
 
+static int script_camera_set_animation(lua_State* L) {
+    Camera camera = luascript_read_userdata(L, CAMERA);
+
+    AnimSprite animsprite = luascript_read_nullable_userdata(L, 2, ANIMSPRITE);
+
+    camera_set_animation(camera, animsprite);
+
+    return 0;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -441,6 +454,7 @@ static const luaL_Reg CAMERA_FUNCTIONS[] = {
     {"slide_z_offset", script_camera_slide_z_offset},
     {"slide_to_offset", script_camera_slide_to_offset},
     {"to_origin_offset", script_camera_to_origin_offset},
+    {"set_animation", script_camera_set_animation},
     {NULL, NULL}
 };
 

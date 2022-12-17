@@ -716,7 +716,7 @@ namespace Engine.Game {
                     ini_key = "song_progressbar"
                 },
                 new SettingOption() {
-                    name = "SONG PROGRESS BAR REMAINING TIME",
+                    name = "SONG PROGRESS BAR REMAINING",
                     description = "Shows the remaining song duration instead of time elapsed",
                     is_bool = true,
                     value_bool = false,

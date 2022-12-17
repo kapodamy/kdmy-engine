@@ -8,7 +8,7 @@
 #include "animlist.h"
 #include "modifier.h"
 #include "pvrctx.h"
-#include "global.h"
+#include "animsprite.h"
 
 typedef struct _Camera_t {
     int dummy;
@@ -45,6 +45,7 @@ void camera_slide_z_offset(Camera camera, float start, float end);
 void camera_slide_to_offset(Camera camera, float x, float y, float z);
 void camera_to_origin_offset(Camera camera, bool should_slide);
 Layout camera_get_parent_layout(Camera camera);
+void camera_set_animation(Camera camera, AnimSprite animsprite);
 
 #endif
 

@@ -87,8 +87,14 @@ EM_JS_PRFX(void, strum_set_extra_animation, (Strum strum, StrumScriptTarget stru
 EM_JS_PRFX(void, strum_set_extra_animation_continuous, (Strum strum, StrumScriptTarget strum_script_target, AnimSprite animsprite), {
     strum_set_extra_animation_continuous(kdmyEngine_obtain(strum), strum_script_target, kdmyEngine_obtain(animsprite));
 });
-EM_JS_PRFX(void, strum_set_notesmaker_tweenkeyframe, (Strum strum, TweenKeyframe tweenkeyframe, bool apply_to_marker_too), {
-    strum_set_notesmaker_tweenkeyframe(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenkeyframe), apply_to_marker_too);
+EM_JS_PRFX(void, strum_disable_beat_synced_idle_and_continous, (Strum strum, bool disabled), {
+    strum_disable_beat_synced_idle_and_continous(kdmyEngine_obtain(strum), disabled);
+});
+EM_JS_PRFX(void, strum_set_bpm, (Strum strum, float bpm), {
+    strum_set_bpm(kdmyEngine_obtain(strum), bpm);
+});
+EM_JS_PRFX(void, strum_set_note_tweenkeyframe, (Strum strum, TweenKeyframe tweenkeyframe), {
+    strum_set_note_tweenkeyframe(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenkeyframe));
 });
 EM_JS_PRFX(void, strum_set_sickeffect_size_ratio, (Strum strum, float size_ratio), {
     strum_set_sickeffect_size_ratio(kdmyEngine_obtain(strum), size_ratio);
@@ -367,12 +373,29 @@ static int script_strum_set_extra_animation_continuous(lua_State* L) {
     return 0;
 }
 
-static int script_strum_set_notesmaker_tweenkeyframe(lua_State* L) {
+static int script_strum_disable_beat_synced_idle_and_continous(lua_State* L) {
+    Strum strum = luascript_read_userdata(L, STRUM);
+    bool disabled = (bool)lua_toboolean(L, 2);
+
+    strum_disable_beat_synced_idle_and_continous(strum, disabled);
+
+    return 0;
+}
+
+static int script_strum_set_bpm(lua_State* L) {
+    Strum strum = luascript_read_userdata(L, STRUM);
+    float bpm = (float)luaL_checknumber(L, 2);
+
+    strum_set_bpm(strum, bpm);
+
+    return 0;
+}
+
+static int script_strum_set_note_tweenkeyframe(lua_State* L) {
     Strum strum = luascript_read_userdata(L, STRUM);
     TweenKeyframe tweenkeyframe = luascript_read_nullable_userdata(L, 2, TWEENKEYFRAME);
-    bool apply_to_marker_too = (bool)lua_toboolean(L, 3);
 
-    strum_set_notesmaker_tweenkeyframe(strum, tweenkeyframe, apply_to_marker_too);
+    strum_set_note_tweenkeyframe(strum, tweenkeyframe);
 
     return 0;
 }
@@ -483,7 +506,9 @@ static const luaL_Reg STRUM_FUNCTIONS[] = {
     { "draw_sick_effect_apart", script_strum_draw_sick_effect_apart },
     { "set_extra_animation", script_strum_set_extra_animation },
     { "set_extra_animation_continuous", script_strum_set_extra_animation_continuous },
-    { "set_notesmaker_tweenkeyframe", script_strum_set_notesmaker_tweenkeyframe },
+    { "disable_beat_synced_idle_and_continous", script_strum_disable_beat_synced_idle_and_continous },
+    { "set_bpm", script_strum_set_bpm },
+    { "set_note_tweenkeyframe", script_strum_set_note_tweenkeyframe },
     { "set_sickeffect_size_ratio", script_strum_set_sickeffect_size_ratio },
     { "set_alpha", script_strum_set_alpha },
     { "set_visible", script_strum_set_visible },

@@ -39,7 +39,7 @@
 	<Group>
 		<Sprite rgba="0x0000007F">
 			<Action>
-				<Location x="0" y="628" z="1" />
+				<Location x="0" y="628" z="2" />
 				<Size width="1280" height="96"/>
 			</Action>
 		</Sprite>

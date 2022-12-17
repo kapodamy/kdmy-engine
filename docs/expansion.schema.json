@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$ref": "#/definitions/About",
+    "definitions": {
+        "About": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "version": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "submiter": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "description": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "screenshoot": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "icon": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "overrideWeeksFolder": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "title": "About (expansion descriptor)"           
+        }
+    }
+}

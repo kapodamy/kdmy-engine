@@ -199,6 +199,14 @@ function strums_set_marker_duration_multiplier(strums, multipler) {
     for (let i = 0; i < strums.size; i++) strum_set_marker_duration_multiplier(strums.lines[i], multipler);
 }
 
+function strums_set_bpm(strums, beats_per_minute) {
+    for (let i = 0; i < strums.size; i++)  strum_set_bpm(strums.lines[i], beats_per_minute);
+}
+
+function strums_disable_beat_synced_idle_and_continous(strums, disabled) {
+    for (let i = 0; i < strums.size; i++)  strum_disable_beat_synced_idle_and_continous(strums.lines[i], disabled);
+}
+
 function strums_reset(strums, scroll_speed, state_name) {
     for (let i = 0; i < strums.size; i++) {
         strum_reset(strums.lines[i], scroll_speed, state_name);

@@ -394,6 +394,8 @@ StrumScriptTarget luascript_parse_strumscripttarget(lua_State* L, const char* st
         return STRUM_SCRIPT_TARGET_BACKGROUND;
     if (string_equals(strumscripttarget, "strum_line"))
         return STRUM_SCRIPT_TARGET_STRUM_LINE;
+    if (string_equals(strumscripttarget, "note"))
+        return STRUM_SCRIPT_TARGET_NOTE;
     if (string_equals(strumscripttarget, "all"))
         return STRUM_SCRIPT_TARGET_ALL;
 

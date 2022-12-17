@@ -749,6 +749,7 @@ function animlist_parse_property(node, name, warn) {
     if (value < 0) value = vertexprops_parse_sprite_property(node, name, warn);
     if (value < 0) value = vertexprops_parse_media_property(node, name, warn);
     if (value < 0) value = vertexprops_parse_layout_property(node, name, warn);
+    if (value < 0) value = vertexprops_parse_camera_property(node, name, warn);
 
     if (value == TEXTSPRITE_PROP_STRING) {
         console.error("animlist_parse_property() illegal property: string", node.outerHTML);
