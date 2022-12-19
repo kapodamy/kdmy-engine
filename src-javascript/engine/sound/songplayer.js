@@ -3,6 +3,8 @@
 const SONGPLAYER_SUFFIX_INSTRUMENTAL = "-inst";
 const SONGPLAYER_SUFFIX_VOICES = "-voices";
 const SONGPLAYER_SUFFIX_ALTERNATIVE = "-alt";
+const SONGPLAYER_NAME_INSTRUMENTAL = "Inst";
+const SONGPLAYER_NAME_VOICES = "Voices";
 
 const SONGPLAYER_SILENCE = { playbacks: null, playbacks_size: 0, paused: 1 };
 
@@ -240,7 +242,7 @@ async function songplayer_helper_get_tracks(src, prefer_alternative, output_path
     if (!src) return is_not_splitted;
 
     let dot_index = src.lastIndexOf('.');
-    if (dot_index < 1) throw new Error("missing file extension : " + src);
+    if (dot_index < 0) throw new Error("missing file extension : " + src);
 
 
     if (prefer_alternative) {
@@ -251,8 +253,24 @@ async function songplayer_helper_get_tracks(src, prefer_alternative, output_path
         is_not_splitted = 1;
     } else {
         // check if the song is splited in voices and instrumental
-        let voices = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_VOICES);
-        let instrumental = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_INSTRUMENTAL);
+        let voices, instrumental;
+
+        if (dot_index == 0 || src[dot_index - 1] == FS_CHAR_SEPARATOR) {
+            if (dot_index > 0) {
+                let folder_path = src.substring(0, dot_index - 1);
+                if (!await fs_folder_exists(folder_path)) {
+                    console.warn("songplayer_init() folder not found: " + src);
+                }
+                folder_path = undefined;
+            }
+            // src points to a folder, load files with names "Voices.ogg" and "Inst.ogg"
+            voices = string_copy_and_insert(src, dot_index, SONGPLAYER_NAME_VOICES);
+            instrumental = string_copy_and_insert(src, dot_index, SONGPLAYER_NAME_INSTRUMENTAL);
+        } else {
+            // absolute filenames "songame-voices.ogg" and "songname-inst.ogg"
+            voices = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_VOICES);
+            instrumental = string_copy_and_insert(src, dot_index, SONGPLAYER_SUFFIX_INSTRUMENTAL);
+        }
 
         if (await fs_file_exists(voices)) {
             path_voices = voices;

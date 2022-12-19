@@ -59,6 +59,12 @@ namespace Engine.Game.Gameplay.Helpers {
             internal bool has_hey;
         }
 
+        public class AdditionalState {
+            public string name;
+            public string model;
+            public Actions actions;
+        }
+
         public string model_character;
         public Actions actions;
         public bool left_facing;
@@ -67,10 +73,13 @@ namespace Engine.Game.Gameplay.Helpers {
         public bool actions_apply_chart_speed;
         public bool continuous_idle;
         public bool has_reference_size;
+        public bool allow_alternate_idle;
         public float reference_width;
         public float reference_height;
         public string sing_suffix;
         public string sing_alternate_suffix;
+        public string sing_prefix;
+        public string sing_alternate_prefix;
         public Opposite opposite_directions;
         public string model_health_icons;
         public string model_week_selector;
@@ -79,10 +88,10 @@ namespace Engine.Game.Gameplay.Helpers {
         public float offset_x;
         public float offset_y;
         public bool week_selector_enable_beat;
+        public AdditionalState[] additional_states;
+        public int additional_states_size;
 
         public CharacterManifest(string src, bool gameplay_required_models_only) {
-            double offset_x, offset_y;
-
             JSONParser json = JSONParser.LoadFrom(src);
             if (json == null) throw new Exception("missing or invalid file: " + src);
 
@@ -113,6 +122,9 @@ namespace Engine.Game.Gameplay.Helpers {
 
             this.sing_suffix = JSONParser.ReadString(json, "singSuffix", null);
             this.sing_alternate_suffix = JSONParser.ReadString(json, "singAlternateSuffix", null);
+            this.sing_prefix = JSONParser.ReadString(json, "singPrefix", null);
+            this.sing_alternate_prefix = JSONParser.ReadString(json, "singAlternatePrefix", null);
+            this.allow_alternate_idle = JSONParser.ReadBoolean(json, "allowAlternateIdle", false);
             this.continuous_idle = JSONParser.ReadBoolean(json, "continuousIdle", false);
             this.actions_apply_chart_speed = JSONParser.ReadBoolean(json, "actionsApplyChartSpeed", false);
 
@@ -148,83 +160,7 @@ namespace Engine.Game.Gameplay.Helpers {
 
 
             JSONToken json_actions = JSONParser.ReadObject(json, "actions");
-
-            JSONToken sing_array = JSONParser.ReadArray(json_actions, "sing");
-            int sing_array_size = JSONParser.ReadArrayLength(sing_array);
-            JSONToken miss_array = JSONParser.ReadArray(json_actions, "miss");
-            int miss_array_size = JSONParser.ReadArrayLength(miss_array);
-            JSONToken extras_array = JSONParser.ReadArray(json_actions, "extras");
-            int extras_array_size = JSONParser.ReadArrayLength(extras_array);
-
-            if (sing_array_size > 0) {
-                this.actions.sing = new Sing[sing_array_size];
-                this.actions.sing_size = sing_array_size;
-            }
-            if (miss_array_size > 0) {
-                this.actions.miss = new Miss[miss_array_size];
-                this.actions.miss_size = miss_array_size;
-            }
-            if (extras_array_size > 0) {
-                this.actions.extras = new Extra[extras_array_size];
-                this.actions.extras_size = extras_array_size;
-            }
-
-            for (int i = 0 ; i < this.actions.sing_size ; i++) {
-                JSONToken item_json = JSONParser.ReadArrayItemObject(sing_array, i);
-                InternalReadOffsets(item_json, out offset_x, out offset_y);
-
-                this.actions.sing[i] = new Sing() {
-                    direction = JSONParser.ReadString(item_json, "direction", null),
-                    anim = JSONParser.ReadString(item_json, "anim", null),
-                    anim_hold = JSONParser.ReadString(item_json, "animHold", null),
-                    anim_rollback = JSONParser.ReadString(item_json, "animRollback", null),
-                    rollback = JSONParser.ReadBoolean(item_json, "rollback", false),
-                    follow_hold = JSONParser.ReadBoolean(item_json, "followHold", false),
-                    full_sustain = JSONParser.ReadBoolean(item_json, "fullSustain", false),
-                    model_src = InternalPathOf(item_json, "model", null),
-                    offset_x = (float)offset_x,
-                    offset_y = (float)offset_y
-                };
-
-                if (String.IsNullOrEmpty(this.actions.sing[i].direction)) {
-                    throw new Exception($"missing actions.sing[{i}].direction in '{src}'");
-                }
-            }
-            for (int i = 0 ; i < this.actions.miss_size ; i++) {
-                JSONToken item_json = JSONParser.ReadArrayItemObject(miss_array, i);
-                InternalReadOffsets(item_json, out offset_x, out offset_y);
-
-                this.actions.miss[i] = new Miss() {
-                    direction = JSONParser.ReadString(item_json, "direction", null),
-                    anim = JSONParser.ReadString(item_json, "anim", null),
-                    stop_after_beats = (int)JSONParser.ReadNumberLong(item_json, "stopAfterBeats", 1L),
-                    model_src = InternalPathOf(item_json, "model", null),
-                    offset_x = (float)offset_x,
-                    offset_y = (float)offset_y
-                };
-
-                if (String.IsNullOrEmpty(this.actions.miss[i].direction)) {
-                    throw new Exception("missing actions.miss[" + i + "].direction in '" + src + "'");
-                }
-            }
-            for (int i = 0 ; i < this.actions.extras_size ; i++) {
-                JSONToken item_json = JSONParser.ReadArrayItemObject(extras_array, i);
-
-                this.actions.extras[i] = new Extra() { };
-                InternalParseExtra(item_json, false, this.actions.extras[i]);
-            }
-
-            this.actions.has_idle = JSONParser.HasPropertyObject(json_actions, "idle");
-            if (this.actions.has_idle) {
-                JSONToken json_extra = JSONParser.ReadObject(json_actions, "idle");
-                InternalParseExtra(json_extra, true, this.actions.idle);
-            }
-
-            this.actions.has_hey = JSONParser.HasPropertyObject(json_actions, "hey");
-            if (this.actions.has_hey) {
-                JSONToken json_extra = JSONParser.ReadObject(json_actions, "hey");
-                InternalParseExtra(json_extra, true, this.actions.hey);
-            }
+            CharacterManifest.InternalParseActions(json_actions, this.actions, src);
 
             this.align_vertical = InternalAlign(json, "alignVertical", true);
             this.align_horizontal = InternalAlign(json, "alignHorizontal", false);
@@ -272,6 +208,12 @@ namespace Engine.Game.Gameplay.Helpers {
 
             }
 
+            JSONToken json_additional_states = JSONParser.ReadArray(json, "additionalStates");
+            ArrayList<AdditionalState> additional_states = CharacterManifest.InternalReadAdditionalStates(
+                json_additional_states, src
+            );
+            additional_states.Destroy2(out this.additional_states_size, ref this.additional_states);
+
             JSONParser.Destroy(json);
             FS.FolderStackPop();
 
@@ -283,44 +225,10 @@ namespace Engine.Game.Gameplay.Helpers {
             //free(this.model_health_icons);
             //free(this.sing_suffix);
             //free(this.sing_alternate_suffix);
+            //free(this.sing_alternate_prefix);
+            //free(this.allow_alternate_idle);
 
-            //for (int i = 0 ; i < this.actions.sing_size ; i++) {
-            //    free(this.actions.sing[i].direction);
-            //    free(this.actions.sing[i].anim);
-            //    free(this.actions.sing[i].anim_hold);
-            //    free(this.actions.sing[i].anim_rollback);
-            //    free(this.actions.sing[i].model_src);
-            //}
-
-            //for (int i = 0 ; i < this.actions.miss_size ; i++) {
-            //    free(this.actions.miss[i].direction);
-            //    free(this.actions.miss[i].anim);
-            //    free(this.actions.miss[i].model_src);
-            //}
-
-            //for (int i = 0 ; i < this.actions.extra_size ; i++) {
-            //    free(this.actions.extras[i].name);
-            //    free(this.actions.extras[i].anim);
-            //    free(this.actions.extras[i].anim_hold);
-            //    free(this.actions.extras[i].anim_rollback);
-            //    free(this.actions.extras[i].model_src);
-            //}
-
-            //if (this.actions.has_hey) {
-            //    free(this.actions.hey.name);
-            //    free(this.actions.hey.anim);
-            //    free(this.actions.hey.anim_hold);
-            //    free(this.actions.hey.anim_rollback);
-            //    free(this.actions.hey.model_src);
-            //}
-
-            //if (this.actions.has_idle) {
-            //    free(this.actions.idle.name);
-            //    free(this.actions.idle.anim);
-            //    free(this.actions.idle.anim_hold);
-            //    free(this.actions.idle.anim_rollback);
-            //    free(this.actions.idle.model_src);
-            //}
+            CharacterManifest.InternalDestroyActions(this.actions);
 
             //if (this.opposite_directions.from != CHARACTERMANIFEST_DEFAULT_OPPOSITE_DIR_FROM) {
             //    for (int i = 0 ; i < this.opposite_directions.sizes ; i++) {
@@ -336,6 +244,11 @@ namespace Engine.Game.Gameplay.Helpers {
             //    free(this.opposite_directions.to);
             //}
 
+            for (int i = 0 ; i < this.additional_states_size ; i++) {
+                //free(this.additional_states[i].name);
+                CharacterManifest.InternalDestroyActions(this.additional_states[i].actions);
+            }
+            //free(this.additional_states);
 
             //free(this);
         }
@@ -402,6 +315,161 @@ namespace Engine.Game.Gameplay.Helpers {
             offset_y = JSONParser.ReadNumberDouble(json, "offsetY", 0);
         }
 
+        private static void InternalParseActions(JSONToken json_actions, Actions actions, string src) {
+            double offset_x, offset_y;
+
+            JSONToken sing_array = JSONParser.ReadArray(json_actions, "sing");
+            int sing_array_size = JSONParser.ReadArrayLength(sing_array);
+            JSONToken miss_array = JSONParser.ReadArray(json_actions, "miss");
+            int miss_array_size = JSONParser.ReadArrayLength(miss_array);
+            JSONToken extras_array = JSONParser.ReadArray(json_actions, "extras");
+            int extras_array_size = JSONParser.ReadArrayLength(extras_array);
+
+            if (sing_array_size > 0) {
+                actions.sing = new Sing[sing_array_size];
+                actions.sing_size = sing_array_size;
+            }
+            if (miss_array_size > 0) {
+                actions.miss = new Miss[miss_array_size];
+                actions.miss_size = miss_array_size;
+            }
+            if (extras_array_size > 0) {
+                actions.extras = new Extra[extras_array_size];
+                actions.extras_size = extras_array_size;
+            }
+
+            for (int i = 0 ; i < actions.sing_size ; i++) {
+                JSONToken item_json = JSONParser.ReadArrayItemObject(sing_array, i);
+                InternalReadOffsets(item_json, out offset_x, out offset_y);
+
+                actions.sing[i] = new Sing() {
+                    direction = JSONParser.ReadString(item_json, "direction", null),
+                    anim = JSONParser.ReadString(item_json, "anim", null),
+                    anim_hold = JSONParser.ReadString(item_json, "animHold", null),
+                    anim_rollback = JSONParser.ReadString(item_json, "animRollback", null),
+                    rollback = JSONParser.ReadBoolean(item_json, "rollback", false),
+                    follow_hold = JSONParser.ReadBoolean(item_json, "followHold", false),
+                    full_sustain = JSONParser.ReadBoolean(item_json, "fullSustain", false),
+                    model_src = InternalPathOf(item_json, "model", null),
+                    offset_x = (float)offset_x,
+                    offset_y = (float)offset_y
+                };
+
+                if (String.IsNullOrEmpty(actions.sing[i].direction)) {
+                    throw new Exception($"missing actions.sing[{i}].direction in '{src}'");
+                }
+            }
+            for (int i = 0 ; i < actions.miss_size ; i++) {
+                JSONToken item_json = JSONParser.ReadArrayItemObject(miss_array, i);
+                InternalReadOffsets(item_json, out offset_x, out offset_y);
+
+                actions.miss[i] = new Miss() {
+                    direction = JSONParser.ReadString(item_json, "direction", null),
+                    anim = JSONParser.ReadString(item_json, "anim", null),
+                    stop_after_beats = (int)JSONParser.ReadNumberLong(item_json, "stopAfterBeats", 1L),
+                    model_src = InternalPathOf(item_json, "model", null),
+                    offset_x = (float)offset_x,
+                    offset_y = (float)offset_y
+                };
+
+                if (String.IsNullOrEmpty(actions.miss[i].direction)) {
+                    throw new Exception("missing actions.miss[" + i + "].direction in '" + src + "'");
+                }
+            }
+            for (int i = 0 ; i < actions.extras_size ; i++) {
+                JSONToken item_json = JSONParser.ReadArrayItemObject(extras_array, i);
+
+                actions.extras[i] = new Extra() { };
+                InternalParseExtra(item_json, false, actions.extras[i]);
+            }
+
+            actions.has_idle = JSONParser.HasPropertyObject(json_actions, "idle");
+            if (actions.has_idle) {
+                JSONToken json_extra = JSONParser.ReadObject(json_actions, "idle");
+                InternalParseExtra(json_extra, true, actions.idle);
+            }
+
+            actions.has_hey = JSONParser.HasPropertyObject(json_actions, "hey");
+            if (actions.has_hey) {
+                JSONToken json_extra = JSONParser.ReadObject(json_actions, "hey");
+                InternalParseExtra(json_extra, true, actions.hey);
+            }
+        }
+
+        private static void InternalDestroyActions(Actions actions) {
+            //for (int i = 0 ; i < actions.sing_size ; i++) {
+            //    free(actions.sing[i].direction);
+            //    free(actions.sing[i].anim);
+            //    free(actions.sing[i].anim_hold);
+            //    free(actions.sing[i].anim_rollback);
+            //    free(actions.sing[i].model_src);
+            //}
+
+            //for (int i = 0 ; i < actions.miss_size ; i++) {
+            //    free(actions.miss[i].direction);
+            //    free(actions.miss[i].anim);
+            //    free(actions.miss[i].model_src);
+            //}
+
+            //for (int i = 0 ; i < actions.extra_size ; i++) {
+            //    free(actions.extras[i].name);
+            //    free(actions.extras[i].anim);
+            //    free(actions.extras[i].anim_hold);
+            //    free(actions.extras[i].anim_rollback);
+            //    free(actions.extras[i].model_src);
+            //}
+
+            //if (actions.has_hey) {
+            //    free(actions.hey.name);
+            //    free(actions.hey.anim);
+            //    free(actions.hey.anim_hold);
+            //    free(actions.hey.anim_rollback);
+            //    free(actions.hey.model_src);
+            //}
+
+            //if (actions.has_idle) {
+            //    free(actions.idle.name);
+            //    free(actions.idle.anim);
+            //    free(actions.idle.anim_hold);
+            //    free(actions.idle.anim_rollback);
+            //    free(actions.idle.model_src);
+            //}
+        }
+
+        private static ArrayList<AdditionalState> InternalReadAdditionalStates(JSONToken json_array, string src) {
+            ArrayList<AdditionalState> additional_states = new ArrayList<AdditionalState>();
+
+            int size = JSONParser.ReadArrayLength(json_array);
+            for (int i = 0 ; i < size ; i++) {
+                JSONToken item = JSONParser.ReadArrayItemObject(json_array, i);
+
+                AdditionalState state = new AdditionalState() {
+                    name = JSONParser.ReadString(item, "name", null),
+                    actions = new Actions() {
+                        extras = null,
+                        extras_size = 0,
+                        has_hey = false,
+                        has_idle = false,
+                        hey = new Extra() { },
+                        idle = new Extra() { },
+                        miss = null,
+                        miss_size = 0,
+                        sing = null,
+                        sing_alt = null,
+                        sing_size = 0
+                    }
+                };
+
+                JSONToken json_actions = JSONParser.ReadObject(item, "actions");
+                if (!JSONParser.IsPropertyNull(item, "actions")) {
+                    CharacterManifest.InternalParseActions(json_actions, state.actions, src);
+                }
+
+                additional_states.Add(state);
+            }
+
+            return additional_states;
+        }
 
     }
 }

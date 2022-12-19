@@ -1,7 +1,7 @@
 using System;
-using System.Media;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
+using Engine.Utils;
 using KallistiOS.THD;
 
 namespace Engine.Sound {
@@ -15,6 +15,8 @@ namespace Engine.Sound {
         private const string SUFFIX_INSTRUMENTAL = "-inst";
         private const string SUFFIX_VOICES = "-voices";
         private const string SUFFIX_ALTERNATIVE = "-alt";
+        private const string NAME_INSTRUMENTAL = "Inst";
+        private const string NAME_VOICES = "Voices";
 
         private static readonly SongPlayer SILENCE = new SongPlayer();
 
@@ -247,7 +249,7 @@ namespace Engine.Sound {
             if (String.IsNullOrWhiteSpace(src)) return is_not_splitted;
 
             int dot_index = src.LastIndexOf('.');
-            if (dot_index < 1) throw new Exception("missing file extension : " + src);
+            if (dot_index < 0) throw new Exception("missing file extension : " + src);
 
 
             if (prefer_alternative) {
@@ -258,8 +260,24 @@ namespace Engine.Sound {
                 is_not_splitted = true;
             } else {
                 // check if the song is splited in voices and instrumental
-                string voices = src.Insert(dot_index, SongPlayer.SUFFIX_VOICES);
-                string instrumental = src.Insert(dot_index, SongPlayer.SUFFIX_INSTRUMENTAL);
+                string voices, instrumental;
+
+                if (dot_index == 0 || src[dot_index - 1] == FS.CHAR_SEPARATOR) {
+                    if (dot_index > 0) {
+                        string folder_path = src.SubstringKDY(0, dot_index - 1);
+                        if (!FS.FolderExists(folder_path)) {
+                            Console.Error.WriteLine("[WARN] songplayer_init() folder not found: " + src);
+                        }
+                        //free(folder_path);
+                    }
+                    // src points to a folder, load files with names "Voices.ogg" and "Inst.ogg"
+                    voices = src.Insert(dot_index, SongPlayer.NAME_VOICES);
+                    instrumental = src.Insert(dot_index, SongPlayer.NAME_INSTRUMENTAL);
+                } else {
+                    // absolute filenames "songame-voices.ogg" and "songname-inst.ogg"
+                    voices = src.Insert(dot_index, SongPlayer.SUFFIX_VOICES);
+                    instrumental = src.Insert(dot_index, SongPlayer.SUFFIX_INSTRUMENTAL);
+                }
 
                 if (FS.FileExists(voices)) {
                     path_voices = voices;

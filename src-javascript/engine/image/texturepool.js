@@ -16,7 +16,7 @@ function texturepool_destroy(texpool) {
 }
 
 function texturepool_add(texpool, texture) {
-    if (!texture.src_filename) return;// illegal operation
+    if (!texture || texture.src_filename) return;// illegal operation
 
     // check if already present
     for (const tex of linkedlist_iterate4(texpool.list)) {

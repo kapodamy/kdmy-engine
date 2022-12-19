@@ -2412,7 +2412,7 @@ namespace Engine {
             XmlParserNode unparsed_to_offset = unparsed_camera.GetChildren("ToOffset");
 
             if (
-                /*anim_name == null && */
+                anim_name == null &&
                 unparsed_move == null && unparsed_from == null && unparsed_to == null &&
                 unparsed_offset == null &&
                 unparsed_move_offset == null && unparsed_from_offset == null && unparsed_to_offset == null
@@ -2586,9 +2586,9 @@ namespace Engine {
                 trigger.loop_delay = Layout.HelperParseFloat(unparsed_trigger, "loopDelay", 0f);
             }
 
-            if (unparsed_trigger.HasAttribute("startDelayInBeats")) {
+            if (unparsed_trigger.HasAttribute("startDelayBeats")) {
                 trigger.start_delay_beats_in_beats = true;
-                trigger.start_delay_beats = Layout.HelperParseFloat(unparsed_trigger, "startDelayInBeats", 0f);
+                trigger.start_delay_beats = Layout.HelperParseFloat(unparsed_trigger, "startDelayBeats", 0f);
             } else if (unparsed_trigger.HasAttribute("startDelay")) {
                 trigger.start_delay_beats_in_beats = false;
                 trigger.start_delay = Layout.HelperParseFloat(unparsed_trigger, "startDelay", 0f);

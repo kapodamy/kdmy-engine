@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+        "$ref": "#/definitions/CharacterInfo"
+    },
+    "definitions": {
+        "CharacterInfo": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "manifest": {
+                    "type": "string"
+                },
+                "hideIfLocked": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "unlockDirectiveName": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "animationNameChoosen": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "animationNameIdle": {
+                    "type": ["string", "null"],
+                    "default": null
+                }
+            },
+            "required": [
+                "name",
+                "manifest"
+            ],
+            "title": "KDMY-Engine playable character information"
+        }
+    }
+}

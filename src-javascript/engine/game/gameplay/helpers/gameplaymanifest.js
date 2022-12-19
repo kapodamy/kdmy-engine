@@ -747,8 +747,8 @@ function gameplaymanifest_parse_players(json, obj, ptr_players, ptr_players_size
             is_opponent: 0,
         };
 
-        if (json_has_property_boolean(json, "isOpponent")) {
-            players[i].is_opponent = json_read_boolean(json, "isOpponent", false);
+        if (json_has_property_boolean(player_json, "isOpponent")) {
+            players[i].is_opponent = json_read_boolean(player_json, "isOpponent", false);
         } else {
             //
             // bot players:   can_die=false  can_recover=false

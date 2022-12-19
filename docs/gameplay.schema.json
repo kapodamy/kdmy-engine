@@ -62,9 +62,6 @@
                     }
                 }
             },
-            "required": [
-                "players"
-            ],
             "title": "Default"
         },
         "Distribution": {
@@ -325,7 +322,7 @@
                 },
                 "barColor": {
                     "type": ["integer", "string", "null"],
-                    "default": "0x000000",
+                    "default": "0x000000"
                 }
             },
             "required": [
@@ -346,7 +343,7 @@
                 },
                 "barColor": {
                     "type": ["integer", "string", "null"],
-                    "default": "0x00FF00",
+                    "default": "0x00FF00"
                 }
             },
             "required": [
@@ -378,6 +375,15 @@
                 },
                 "distributionIndex": {
                     "type": "integer"
+                },
+                "isOpponent": {
+                    "type": "boolean"
+                },
+                "canDie": {
+                    "type": "boolean"
+                },
+                "canRecover": {
+                    "type": "boolean"
                 }
             },
             "required": [

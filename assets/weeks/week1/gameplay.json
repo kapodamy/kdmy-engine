@@ -3,8 +3,8 @@
         "stage":  "theater2.xml",
 		"script": "week1.lua",
         "players": [
-            { "manifest": "./DD/DADDYDEAREST.json", "strumId": 0 },
-            { "manifest": "#boyfriend", "strumId": 1, "controller": 0 }
+            { "manifest": "./DD/DADDYDEAREST.json", "strumsInLayoutId": 0 },
+            { "manifest": "#boyfriend", "strumsInLayoutId": 1, "controller": 0 }
         ]
     },
     "tracks": [

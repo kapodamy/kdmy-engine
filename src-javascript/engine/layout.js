@@ -2322,7 +2322,7 @@ function layout_parse_camera(unparsed_camera, layout_context) {
     let unparsed_to_offset = unparsed_camera.querySelector("ToOffset");
 
     if (
-        /*!anim_name && */
+        !anim_name &&
         !unparsed_move && !unparsed_from && !unparsed_to &&
         !unparsed_offset &&
         !unparsed_move_offset && !unparsed_from_offset && !unparsed_to_offset
@@ -2495,9 +2495,9 @@ function layout_parse_triggers(unparsed_trigger, layout_context) {
         trigger.loop_delay = layout_helper_parse_float(unparsed_trigger, "loopDelay", 0);
     }
 
-    if (unparsed_trigger.hasAttribute("startDelayInBeats")) {
+    if (unparsed_trigger.hasAttribute("startDelayBeats")) {
         trigger.start_delay_beats_in_beats = 1;
-        trigger.start_delay_beats = layout_helper_parse_float(unparsed_trigger, "startDelayInBeats", 0);
+        trigger.start_delay_beats = layout_helper_parse_float(unparsed_trigger, "startDelayBeats", 0);
     } else if (unparsed_trigger.hasAttribute("startDelay")) {
         trigger.start_delay_beats_in_beats = 0;
         trigger.start_delay = layout_helper_parse_float(unparsed_trigger, "startDelay", 0);

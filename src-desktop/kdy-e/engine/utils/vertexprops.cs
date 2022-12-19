@@ -148,7 +148,7 @@ namespace Engine.Utils {
             }
 
             int id = ParseSpriteProperty2(property);
-            if (id < 1 && warn)
+            if (id < 0 && warn)
                 Console.Error.WriteLine("[WARN] vertexprops_parse_sprite_property() unknown property " + property + "\n" + node.OuterHTML);
 
             return id;

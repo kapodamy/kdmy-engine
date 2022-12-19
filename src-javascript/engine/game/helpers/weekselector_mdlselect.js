@@ -125,6 +125,8 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
 
         mdlselect.list[index] = {
             name: json_read_string(json_obj, "name", null),
+            anim_name_choosen: json_read_string(json_obj, "animationNameChoosen", null),
+            anim_name_idle: json_read_string(json_obj, "animationNameIdle", null),
             is_locked: is_locked,
             imported: 1,
             left_facing: 0,
@@ -405,12 +407,14 @@ async function weekselector_mdlselect_internal_load_async(mdlselect) {
         mdlselect.preview, modelholder,
         mdlselect.placeholder_character,
         week_selector_enable_beat,
+        character_info.anim_name_idle ?? WEEKSELECTOR_MDLSELECT_IDLE,
         WEEKSELECTOR_MDLSELECT_IDLE
     );
     weekselector_mdlselect_helper_import(
         mdlselect.preview, modelholder,
         mdlselect.placeholder_character,
         0,
+        character_info.anim_name_choosen ?? WEEKSELECTOR_MDLSELECT_HEY,
         WEEKSELECTOR_MDLSELECT_HEY
     );
     modelholder_destroy(modelholder);
@@ -425,8 +429,9 @@ async function weekselector_mdlselect_internal_load_async(mdlselect) {
     return null;
 }
 
-function weekselector_mdlselect_helper_import(statesprite, mdlhldr, placeholder, enable_beat, name) {
-    let statesprite_state = statesprite_state_add(statesprite, mdlhldr, name, name);
+function weekselector_mdlselect_helper_import(statesprite, mdlhldr, placeholder, enable_beat, anim_name, name) {
+    if (!anim_name) return;
+    let statesprite_state = statesprite_state_add(statesprite, mdlhldr, anim_name, name);
     if (!statesprite_state) return;
 
     imgutils_calc_rectangle_in_statesprite_state(

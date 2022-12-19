@@ -69,7 +69,7 @@ namespace Engine.Utils {
             for (int i = 0 ; i < strings.Length ; i++) {
                 string src = strings[i];
                 if (String.IsNullOrEmpty(src)) continue;
-                if (i > 0) str += "\x20";
+                if (str.Length > 0) str += "\x20";
                 str += src;
             }
             return str;

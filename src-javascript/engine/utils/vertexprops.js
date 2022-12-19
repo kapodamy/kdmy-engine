@@ -132,7 +132,7 @@ function vertexprops_parse_sprite_property(node, name, warn) {
     }
 
     let id = vertexprops_parse_sprite_property2(property);
-    if (id < 1 && warn)
+    if (id < 0 && warn)
         console.warn("vertexprops_parse_sprite_property() unknown property " + property, node.outerHTML);
 
     return id;

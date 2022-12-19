@@ -881,7 +881,7 @@ declare global {
     function week_override_common_folder(custom_common_path: string): void;
     function week_enable_credits_on_completed(): void;
     function week_end(round_or_week: boolean, loose_or_win: boolean): void;
-    function week_get_dialogue(): void;
+    function week_get_dialogue(): Dialogue;
     function week_set_ui_shader(psshader: PSShader): void;
     function week_rebuild_ui(): void;
     function week_unlockdirective_create(name: string, completed_round: boolean, completed_week: boolean, value: number): void;
