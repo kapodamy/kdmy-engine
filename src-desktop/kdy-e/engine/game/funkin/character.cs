@@ -32,9 +32,6 @@ namespace Engine.Game {
         private StateSprite statesprite;
         private int current_texture_id;
         private ArrayList<CharacterTextureInfo> textures;
-        private int sing_size;
-        private int miss_size;
-        private int extras_size;
         private int all_extras_names_size;
         private int all_directions_names_size;
         private string[] all_directions_names;
@@ -80,14 +77,18 @@ namespace Engine.Game {
 
 
         public Character(CharacterManifest charactermanifest) {
-            int sing_size = charactermanifest.actions.sing_size;
-            int miss_size = charactermanifest.actions.miss_size;
-            int extras_size = charactermanifest.actions.extras_size;
+            CharacterImportContext import_context = new CharacterImportContext {
+                all_directions_names = new ArrayList<string>(),
+                all_extras_names = new ArrayList<string>(),
+                charactermanifest = charactermanifest,
+                modelholder_arraylist = new ArrayList<CharacterModelInfo>(4),
+                textures = new ArrayList<CharacterTextureInfo>(4),
+                states = new ArrayList<CharacterState>(4)
+            };
 
-            ArrayList<CharacterModelInfo> modelholder_arraylist = new ArrayList<CharacterModelInfo>();
-            Character.InternalGetModelholder(modelholder_arraylist, charactermanifest.model_character, false);
-
-
+            Character.InternalGetModelholder(
+                import_context.modelholder_arraylist, charactermanifest.model_character, false
+            );
 
             // DEBUG ONLY
             //name= charactermanifest.model_character;
@@ -95,14 +96,12 @@ namespace Engine.Game {
             this.statesprite = StateSprite.InitFromTexture(null);
 
             this.current_texture_id = -1;
-            this.textures = new ArrayList<CharacterTextureInfo>();
-
-            this.sing_size = sing_size; this.miss_size = miss_size; this.extras_size = extras_size;
+            this.textures = import_context.textures;
 
             this.all_extras_names_size = -1; this.all_extras_names = null;
             this.all_directions_names_size = -1; this.all_directions_names = null;
 
-            this.states = new ArrayList<CharacterState>(4);
+            this.states = import_context.states;
             this.default_state = null;
             this.current_state = null;
 
@@ -136,7 +135,7 @@ namespace Engine.Game {
             this.manifest_align_vertical = charactermanifest.align_vertical;
             this.manifest_align_horizontal = charactermanifest.align_horizontal;
 
-            this.reference_width = 0f; reference_height = 0f;
+            this.reference_width = 0f; this.reference_height = 0f;
             this.enable_reference_size = false;
 
             this.offset_x = 0; this.offset_y = 0;
@@ -162,105 +161,21 @@ namespace Engine.Game {
             this.statesprite.SetVisible(false);
             this.statesprite.FlipRenderedTextureEnableCorrection(false);
 
-            ArrayList<string> all_directions_names = new ArrayList<string>(sing_size);
-            ArrayList<string> all_extras_names = new ArrayList<string>(extras_size);
+            // import default actions
+            this.default_state = Character.InternalImportActions(import_context, charactermanifest.actions, null);
+            this.current_state = this.default_state;
 
-            // default state
-            CharacterState state = Character.InternalStateCreate(null, sing_size, miss_size, extras_size);
-            this.default_state = this.current_state = state;
-            this.states.Add(state);
-
-            // import all sign actions
-            for (int i = 0 ; i < sing_size ; i++) {
-                int index = InternalIndexName(
-                    all_directions_names, charactermanifest.actions.sing[i].direction, true
-                );
-
-                ModelHolder modelholder = Character.InternalGetModelholder(
-                    modelholder_arraylist, charactermanifest.actions.sing[i].model_src, true
-                );
-
-                state.sing[i].id_texture = state.sing_alt[i].id_texture = Character.InternalAddTexture(
-                    this.textures, modelholder
-                );
-
-                Character.InternalImportSing(
-                     state.sing[i],
-                     modelholder, charactermanifest.actions.sing[i],
-                     index,
-                     charactermanifest.sing_suffix
-                 );
-                Character.InternalImportSing(
-                    state.sing_alt[i],
-                    modelholder,
-                    charactermanifest.actions.sing[i],
-                    index,
-                    charactermanifest.sing_alternate_suffix
-                );
+            // import additional actions as states
+            for (int i = 0 ; i < charactermanifest.additional_states_size ; i++) {
+                CharacterManifest.AdditionalState additionalstate = charactermanifest.additional_states[i];
+                CharacterState state = Character.InternalImportActions(import_context, additionalstate.actions, additionalstate.name);
             }
-
-            // import all miss actions
-            for (int i = 0 ; i < miss_size ; i++) {
-                int index = InternalIndexName(
-                    all_directions_names, charactermanifest.actions.miss[i].direction, true
-                );
-
-                ModelHolder modelholder = Character.InternalGetModelholder(
-                    modelholder_arraylist, charactermanifest.actions.miss[i].model_src, true
-                );
-
-                state.miss[i].id_texture = Character.InternalAddTexture(
-                    this.textures, modelholder
-                );
-
-                Character.InternalImportMiss(
-                    state.miss[i], modelholder, charactermanifest.actions.miss[i], index
-                );
-            }
-
-            // import all extras names
-            for (int i = 0 ; i < extras_size ; i++) {
-                int index = InternalIndexName(
-                    all_extras_names, charactermanifest.actions.extras[i].name, true
-                );
-
-
-                Character.InternalImportExtra(
-                    state.extras[i],
-                    modelholder_arraylist,
-                    this.textures,
-                    charactermanifest.actions.extras[i],
-                    index
-                );
-            }
-
-
-            Character.InternalImportExtra(
-                state.hey,
-                modelholder_arraylist,
-                this.textures,
-                charactermanifest.actions.hey,
-                -10
-            );
-
-
-            Character.InternalImportExtra(
-                state.idle,
-                modelholder_arraylist,
-                this.textures,
-                charactermanifest.actions.idle,
-                -11
-            );
 
             this.drawable = new Drawable(0, this, this);
 
-            this.all_directions_names_size = all_directions_names.Trim();
-            this.all_directions_names = all_directions_names.PeekArray();
-            all_directions_names.Destroy(true);
-
-            this.all_extras_names_size = all_extras_names.Trim();
-            this.all_extras_names = all_extras_names.PeekArray();
-            all_extras_names.Destroy(true);
+            import_context.modelholder_arraylist.Destroy3(Character.InternalDestroyModelholder);
+            import_context.all_directions_names.Destroy2(out this.all_directions_names_size, ref this.all_directions_names);
+            import_context.all_extras_names.Destroy2(out this.all_extras_names_size, ref this.all_extras_names);
 
             this.inverted_size = charactermanifest.opposite_directions.sizes;
             if (this.inverted_size > 0) {
@@ -276,9 +191,6 @@ namespace Engine.Game {
             PlayIdle();
             //Character.face_as_opponent(this.is_left_facing);
 
-            modelholder_arraylist.Destroy3(Character.InternalDestroyModelholder);
-
-
         }
 
         public void Destroy() {
@@ -291,7 +203,7 @@ namespace Engine.Game {
             for (int i = 0 ; i < states_size ; i++) {
                 CharacterState state = this.states.Get(i);
 
-                for (int j = 0 ; j < this.sing_size ; j++) {
+                for (int j = 0 ; j < state.sing_size ; j++) {
                     if (state.sing[j].@base != null) state.sing[j].@base.Destroy();
                     if (state.sing[j].hold != null) state.sing[j].hold.Destroy();
                     if (state.sing[j].rollback != null) state.sing[j].rollback.Destroy();
@@ -301,11 +213,11 @@ namespace Engine.Game {
                     if (state.sing_alt[j].rollback != null) state.sing_alt[j].rollback.Destroy();
                 }
 
-                for (int j = 0 ; j < this.miss_size ; j++) {
+                for (int j = 0 ; j < state.miss_size ; j++) {
                     if (state.miss[j].animation != null) state.miss[j].animation.Destroy();
                 }
 
-                for (int j = 0 ; j < this.extras_size ; j++) {
+                for (int j = 0 ; j < state.extras_size ; j++) {
                     if (state.extras[j].@base != null) state.extras[j].@base.Destroy();
                     if (state.extras[j].hold != null) state.extras[j].hold.Destroy();
                     if (state.extras[j].rollback != null) state.extras[j].rollback.Destroy();
@@ -313,9 +225,15 @@ namespace Engine.Game {
 
                 if (state.hey.@base != null) state.hey.@base.Destroy();
                 if (state.hey.hold != null) state.hey.hold.Destroy();
+                if (state.hey.rollback != null) state.hey.rollback.Destroy();
 
                 if (state.idle.@base != null) state.idle.@base.Destroy();
                 if (state.idle.hold != null) state.idle.hold.Destroy();
+                if (state.idle.rollback != null) state.idle.rollback.Destroy();
+
+                if (state.idle_alt.@base != null) state.idle_alt.@base.Destroy();
+                if (state.idle_alt.hold != null) state.idle_alt.hold.Destroy();
+                if (state.idle_alt.rollback != null) state.idle_alt.rollback.Destroy();
 
                 //free(state.name);
                 //free(state.sing);
@@ -409,12 +327,12 @@ namespace Engine.Game {
 
             int id_texture = InternalAddTexture(this.textures, modelholder);
             CharacterState default_state = this.states.Get(0);
-            CharacterState state = InternalStateCreate(
-                state_name, this.sing_size, this.miss_size, this.extras_size
+            CharacterState state = Character.InternalStateCreate(
+                state_name, default_state.sing_size, default_state.miss_size, default_state.extras_size
             );
 
 
-            for (int i = 0 ; i < this.sing_size ; i++) {
+            for (int i = 0 ; i < default_state.sing_size ; i++) {
                 state.sing[i].id_texture = id_texture;
                 Character.InternalStateOfSing(state.sing[i], modelholder, state_name, default_state.sing[i]);
 
@@ -422,7 +340,7 @@ namespace Engine.Game {
                 Character.InternalStateOfSing(state.sing_alt[i], modelholder, state_name, default_state.sing_alt[i]);
             }
 
-            for (int i = 0 ; i < this.miss_size ; i++) {
+            for (int i = 0 ; i < default_state.miss_size ; i++) {
                 AnimSprite animation = Character.InternalImportAnimation3(modelholder, state_name, default_state.miss[i].animation, false);
 
                 state.miss[i].id_direction = default_state.miss[i].id_direction;
@@ -433,7 +351,7 @@ namespace Engine.Game {
                 state.miss[i].offset_y = default_state.miss[i].offset_y;
             }
 
-            for (int i = 0 ; i < this.extras_size ; i++) {
+            for (int i = 0 ; i < default_state.extras_size ; i++) {
                 state.extras[i].id_texture = id_texture;
                 Character.InternalStateOfExtra(state.extras[i], modelholder, state_name, default_state.extras[i]);
             }
@@ -467,6 +385,11 @@ namespace Engine.Game {
             Debug.Assert(this.current_state != null, "this.current_state was NULL");
 
             CharacterActionExtra extra_info = this.current_state.hey;
+
+            if (!extra_info.is_valid && this.current_state != this.default_state) {
+                // attempt use default state
+                extra_info = this.default_state.hey;
+            }
 
             if (!extra_info.is_valid) {
                 InternalFallbackIdle();
@@ -530,9 +453,19 @@ namespace Engine.Game {
                     break;
             }
 
-            CharacterActionExtra extra_info = this.current_state.idle;
+            CharacterState state = this.current_state;
+            CharacterActionExtra extra_info = null;
+
+L_read_state:
+            extra_info = state.idle;
+            if (this.alt_enabled && state.idle_alt.is_valid) extra_info = state.idle_alt;
 
             if (!extra_info.is_valid) {
+                if (state != this.default_state) {
+                    // attempt use default state
+                    state = this.default_state;
+                    goto L_read_state;
+                }
                 this.played_actions_count--;
                 return 0;
             }
@@ -572,10 +505,12 @@ namespace Engine.Game {
                 return false;
             };
 
-            CharacterActionSing[] array = this.alt_enabled ? this.current_state.sing_alt : this.current_state.sing;
             CharacterActionSing sing_info = null;
+            CharacterState state = this.current_state;
 
-            for (int i = 0 ; i < this.sing_size ; i++) {
+L_read_state:
+            CharacterActionSing[] array = this.alt_enabled ? state.sing_alt : state.sing;
+            for (int i = 0 ; i < state.sing_size ; i++) {
                 if (array[i].id_direction == id_direction) {
                     sing_info = array[i];
                     break;
@@ -585,15 +520,20 @@ namespace Engine.Game {
             if (sing_info == null || (sing_info.@base == null && sing_info.hold == null)) {
                 // attempt to use the non-alt sing direction
                 if (this.alt_enabled) {
-                    for (int i = 0 ; i < this.sing_size ; i++) {
-                        if (this.current_state.sing[i].id_direction == id_direction) {
-                            sing_info = this.current_state.sing[i];
+                    for (int i = 0 ; i < state.sing_size ; i++) {
+                        if (state.sing[i].id_direction == id_direction) {
+                            sing_info = state.sing[i];
                             break;
                         }
                     }
                 }
 
                 if (sing_info == null || (sing_info.@base == null && sing_info.hold == null)) {
+                    if (state != this.default_state) {
+                        // attempt use default state
+                        state = this.default_state;
+                        goto L_read_state;
+                    }
                     //throw new Exception("unknown sing direction: " + direction);
                     InternalFallbackIdle();
                     return false;
@@ -647,14 +587,22 @@ namespace Engine.Game {
             };
 
             CharacterActionMiss miss_info = null;
-            for (int i = 0 ; i < this.miss_size ; i++) {
-                if (this.current_state.miss[i].id_direction == id_direction) {
-                    miss_info = this.current_state.miss[i];
+            CharacterState state = this.current_state;
+
+L_read_state:
+            for (int i = 0 ; i < this.default_state.miss_size ; i++) {
+                if (state.miss[i].id_direction == id_direction) {
+                    miss_info = state.miss[i];
                     break;
                 }
             }
 
             if (miss_info == null || miss_info.animation == null) {
+                if (state != this.default_state) {
+                    // attempt use default state
+                    state = this.default_state;
+                    goto L_read_state;
+                }
                 InternalFallbackIdle();
                 return 0;
             }
@@ -694,14 +642,22 @@ namespace Engine.Game {
             }
 
             CharacterActionExtra extra_info = null;
-            for (int i = 0 ; i < this.extras_size ; i++) {
-                if (this.current_state.extras[i].id_extra == id_extra) {
-                    extra_info = this.current_state.extras[i];
+            CharacterState state = this.current_state;
+
+L_read_state:
+            for (int i = 0 ; i < state.extras_size ; i++) {
+                if (state.extras[i].id_extra == id_extra) {
+                    extra_info = state.extras[i];
                     break;
                 }
             }
 
             if (extra_info == null || !extra_info.is_valid) {
+                if (state != this.default_state) {
+                    // attempt use default state
+                    state = this.default_state;
+                    goto L_read_state;
+                }
                 InternalFallbackIdle();
                 return false;
             }
@@ -1044,11 +1000,11 @@ namespace Engine.Game {
 
 
 
-        private static void InternalImportSing(CharacterActionSing sing_info, ModelHolder modelholder, CharacterManifest.Sing sing_entry, int id_direction, string suffix) {
+        private static void InternalImportSing(CharacterActionSing sing_info, ModelHolder modelholder, CharacterManifest.Sing sing_entry, int id_direction, string prefix, string suffix) {
 
-            sing_info.@base = Character.InternalImportAnimation(modelholder, sing_entry.anim, suffix, false);
-            sing_info.hold = Character.InternalImportAnimation(modelholder, sing_entry.anim_hold, suffix, true);
-            sing_info.rollback = Character.InternalImportAnimation(modelholder, sing_entry.anim_rollback, suffix, false);
+            sing_info.@base = Character.InternalImportAnimation(modelholder, sing_entry.anim, prefix, suffix, false);
+            sing_info.hold = Character.InternalImportAnimation(modelholder, sing_entry.anim_hold, prefix, suffix, true);
+            sing_info.rollback = Character.InternalImportAnimation(modelholder, sing_entry.anim_rollback, prefix, suffix, false);
 
             sing_info.id_direction = id_direction;
             sing_info.follow_hold = sing_entry.follow_hold;
@@ -1071,7 +1027,7 @@ namespace Engine.Game {
         }
 
         private static void InternalImportMiss(CharacterActionMiss miss_info, ModelHolder modelholder, CharacterManifest.Miss miss_entry, int id_direction) {
-            miss_info.animation = Character.InternalImportAnimation(modelholder, miss_entry.anim, null, false);
+            miss_info.animation = Character.InternalImportAnimation(modelholder, miss_entry.anim, null, null, false);
 
             miss_info.id_direction = id_direction;
             miss_info.stop_after_beats = miss_entry.stop_after_beats;
@@ -1079,7 +1035,7 @@ namespace Engine.Game {
             miss_info.offset_y = miss_entry.offset_y;
         }
 
-        private static void InternalImportExtra(CharacterActionExtra extra_info, ArrayList<CharacterModelInfo> mdlhldr_rrlst, ArrayList<CharacterTextureInfo> txtr_rrlst, CharacterManifest.Extra extra_entry, int id_extra) {
+        private static void InternalImportExtra(CharacterActionExtra extra_info, ArrayList<CharacterModelInfo> mdlhldr_rrlst, ArrayList<CharacterTextureInfo> txtr_rrlst, CharacterManifest.Extra extra_entry, int id_extra, string prefix, string suffix) {
             if (extra_entry == null) {
                 extra_info.id_extra = -1;
                 extra_info.is_valid = false;
@@ -1103,18 +1059,18 @@ namespace Engine.Game {
             if (extra_entry.anim != null && extra_entry.anim.Length < 1)
                 extra_info.@base = null;
             else
-                extra_info.@base = Character.InternalImportAnimation(modelholder, extra_entry.anim, null, false);
+                extra_info.@base = Character.InternalImportAnimation(modelholder, extra_entry.anim, prefix, suffix, false);
 
             if (extra_entry.anim_hold != null && extra_entry.anim_hold.Length < 1) {
                 extra_info.hold = null;
             } else {
-                extra_info.hold = Character.InternalImportAnimation(modelholder, extra_entry.anim_hold, null, true);
+                extra_info.hold = Character.InternalImportAnimation(modelholder, extra_entry.anim_hold, prefix, suffix, true);
             }
 
             if (extra_entry.anim_rollback != null && extra_entry.anim_rollback.Length < 1) {
                 extra_info.rollback = null;
             } else {
-                extra_info.rollback = Character.InternalImportAnimation(modelholder, extra_entry.anim_rollback, null, false);
+                extra_info.rollback = Character.InternalImportAnimation(modelholder, extra_entry.anim_rollback, prefix, suffix, false);
             }
 
             extra_info.id_extra = id_extra;
@@ -1126,10 +1082,10 @@ namespace Engine.Game {
 
 
 
-        private static AnimSprite InternalImportAnimation(ModelHolder mdlhldr, string anim_name, string suffix, bool is_sustain) {
+        private static AnimSprite InternalImportAnimation(ModelHolder mdlhldr, string anim_name, string prefix, string suffix, bool is_sustain) {
             if (String.IsNullOrEmpty(anim_name)) return null;
 
-            anim_name = StringUtils.ConcatForStateName(anim_name, suffix);
+            anim_name = StringUtils.ConcatForStateName(prefix, anim_name, suffix);
             AnimSprite animsprite = InternalImportAnimation2(mdlhldr, anim_name, is_sustain);
 
             //if (!String.IsNullOrEmpty(anim_name)) free(anim_name);
@@ -1175,13 +1131,16 @@ namespace Engine.Game {
 
 
 
-        private static CharacterState InternalStateCreate(string name, int size_sing, int size_miss, int size_extras) {
+        private static CharacterState InternalStateCreate(string name, int sing_size, int miss_size, int extras_size) {
             CharacterState state = new CharacterState() {
                 name = name,
-                sing = new CharacterActionSing[size_sing],
-                sing_alt = new CharacterActionSing[size_sing],
-                miss = new CharacterActionMiss[size_miss],
-                extras = new CharacterActionExtra[size_extras],
+                sing_size = sing_size,
+                miss_size = miss_size,
+                extras_size = extras_size,
+                sing = new CharacterActionSing[sing_size],
+                sing_alt = new CharacterActionSing[sing_size],
+                miss = new CharacterActionMiss[miss_size],
+                extras = new CharacterActionExtra[extras_size],
                 hey = new CharacterActionExtra() {
                     @base = null,
                     hold = null,
@@ -1205,13 +1164,25 @@ namespace Engine.Game {
                     static_until_beat = false,
                     offset_x = 0f,
                     offset_y = 0f
+                },
+                idle_alt = new CharacterActionExtra() {
+                    @base = null,
+                    hold = null,
+                    rollback = null,
+                    stop_after_beats = 0,
+                    id_extra = -1,
+                    id_texture = -1,
+                    is_valid = false,
+                    static_until_beat = false,
+                    offset_x = 0f,
+                    offset_y = 0f
                 }
             };
 
-            for (int i = 0 ; i < size_sing ; i++) state.sing[i] = new CharacterActionSing();
-            for (int i = 0 ; i < size_sing ; i++) state.sing_alt[i] = new CharacterActionSing();
-            for (int i = 0 ; i < size_miss ; i++) state.miss[i] = new CharacterActionMiss();
-            for (int i = 0 ; i < size_extras ; i++) state.extras[i] = new CharacterActionExtra();
+            for (int i = 0 ; i < state.sing_size ; i++) state.sing[i] = new CharacterActionSing();
+            for (int i = 0 ; i < state.sing_size ; i++) state.sing_alt[i] = new CharacterActionSing();
+            for (int i = 0 ; i < state.miss_size ; i++) state.miss[i] = new CharacterActionMiss();
+            for (int i = 0 ; i < state.extras_size ; i++) state.extras[i] = new CharacterActionExtra();
 
             return state;
         }
@@ -1291,7 +1262,7 @@ namespace Engine.Game {
             return -1;
         }
 
-        private int InternalIndexName(ArrayList<string> arraylist, string name, bool add_if_not_found) {
+        private static int InternalIndexName(ArrayList<string> arraylist, string name, bool add_if_not_found) {
             if (name == null) return -1;
 
             string[] array = arraylist.PeekArray();
@@ -1545,6 +1516,115 @@ namespace Engine.Game {
                 this.current_stop_on_beat++;
         }
 
+        private static CharacterState InternalImportActions(CharacterImportContext context, CharacterManifest.Actions actions, string state_name) {
+            CharacterState state = Character.InternalStateCreate(state_name, actions.sing_size, actions.miss_size, actions.extras_size);
+            context.states.Add(state);
+
+            // import all sing actions
+            for (int i = 0 ; i < actions.sing_size ; i++) {
+                int index = Character.InternalIndexName(
+                    context.all_directions_names, actions.sing[i].direction, true
+                );
+
+                ModelHolder modelholder = Character.InternalGetModelholder(
+                    context.modelholder_arraylist, actions.sing[i].model_src, true
+                );
+
+                state.sing[i].id_texture = state.sing_alt[i].id_texture = Character.InternalAddTexture(
+                    context.textures, modelholder
+                );
+
+                Character.InternalImportSing(
+                     state.sing[i],
+                     modelholder, actions.sing[i],
+                     index,
+                     context.charactermanifest.sing_prefix,
+                     context.charactermanifest.sing_suffix
+                 );
+                Character.InternalImportSing(
+                    state.sing_alt[i],
+                    modelholder,
+                    actions.sing[i],
+                    index,
+                    context.charactermanifest.sing_alternate_prefix,
+                    context.charactermanifest.sing_alternate_suffix
+                );
+            }
+
+            // import all miss actions
+            for (int i = 0 ; i < actions.miss_size ; i++) {
+                int index = Character.InternalIndexName(
+                    context.all_directions_names, actions.miss[i].direction, true
+                );
+
+                ModelHolder modelholder = Character.InternalGetModelholder(
+                    context.modelholder_arraylist, actions.miss[i].model_src, true
+                );
+
+                state.miss[i].id_texture = Character.InternalAddTexture(
+                    context.textures, modelholder
+                );
+
+                Character.InternalImportMiss(
+                    state.miss[i], modelholder, actions.miss[i], index
+                );
+            }
+
+            // import all extras names
+            for (int i = 0 ; i < actions.extras_size ; i++) {
+                int index = Character.InternalIndexName(
+                    context.all_extras_names, actions.extras[i].name, true
+                );
+
+
+                Character.InternalImportExtra(
+                    state.extras[i],
+                    context.modelholder_arraylist,
+                    context.textures,
+                    actions.extras[i],
+                    index,
+                    null,
+                    null
+                );
+            }
+
+
+            Character.InternalImportExtra(
+                state.hey,
+                context.modelholder_arraylist,
+                context.textures,
+                actions.hey,
+                -10,
+                null,
+                null
+            );
+
+
+            Character.InternalImportExtra(
+                state.idle,
+                context.modelholder_arraylist,
+                context.textures,
+                actions.idle,
+                -11,
+                context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_prefix : null,
+                context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_suffix : null
+            );
+
+            if (context.charactermanifest.allow_alternate_idle) {
+                Character.InternalImportExtra(
+                    state.idle_alt,
+                    context.modelholder_arraylist,
+                    context.textures,
+                    actions.idle,
+                    -11,
+                    context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_alternate_prefix : null,
+                    context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_alternate_suffix : null
+                );
+            }
+
+            return state;
+        }
+
 
         private class CharacterModelInfo {
             public string model_src;
@@ -1590,12 +1670,24 @@ namespace Engine.Game {
         }
         private class CharacterState {
             public string name;
+            public int sing_size;
+            public int miss_size;
+            public int extras_size;
             public CharacterActionSing[] sing;
             public CharacterActionSing[] sing_alt;
             public CharacterActionMiss[] miss;
             public CharacterActionExtra[] extras;
             public CharacterActionExtra hey;
             public CharacterActionExtra idle;
+            public CharacterActionExtra idle_alt;
+        }
+        private class CharacterImportContext {
+            public ArrayList<string> all_directions_names;
+            public ArrayList<string> all_extras_names;
+            public ArrayList<CharacterTextureInfo> textures;
+            public ArrayList<CharacterModelInfo> modelholder_arraylist;
+            public ArrayList<CharacterState> states;
+            public CharacterManifest charactermanifest;
         }
 
     }

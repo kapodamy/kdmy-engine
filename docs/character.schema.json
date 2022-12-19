@@ -69,6 +69,38 @@
                 "referenceSize": {
                     "$ref": "#/definitions/ReferenceSize"
                 },
+                "singPrefix": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "singAlternatePrefix": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "allowAlternateIdle": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "actions": {
+                    "$ref": "#/definitions/Actions"
+                },
+                "additionalStates": {
+                    "type": ["null", "array"],
+                    "items": {
+                        "$ref": "#/definitions/AdditionalState"
+                    }
+                }
+            },
+            "required": [
+                "healthIconsModel",
+                "healthbarColor"
+            ],
+            "title": "Character manifest"
+        },
+        "Actions": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
                 "sing": {
                     "type": "array",
                     "items": {
@@ -82,10 +114,7 @@
                     }
                 },
                 "idle": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Extra"
-                    }
+                    "$ref": "#/definitions/Extra"
                 },
                 "hey": {
                     "type": "array",
@@ -99,15 +128,7 @@
                         "$ref": "#/definitions/Extra"
                     }
                 }
-            },
-            "required": [
-                "healthIconsModel",
-                "healthbarColor",
-                "idle",
-                "model",
-                "sing"
-            ],
-            "title": "Character manifest"
+            }
         },
         "Extra": {
             "type": "object",
@@ -273,6 +294,26 @@
                 "direction"
             ],
             "title": "Sing"
+        },
+        "AdditionalState": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "actions":{
+                    "$ref": "#/definitions/Actions"
+                }
+            },
+            "required": [
+                "name",
+                "actions"
+            ]
         }
     }
 }

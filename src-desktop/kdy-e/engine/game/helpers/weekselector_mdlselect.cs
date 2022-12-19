@@ -161,6 +161,8 @@ namespace Engine.Game.Helpers {
 
                 this.list[index] = new CharacterInfo() {
                     name = JSONParser.ReadString(json_obj, "name", null),
+                    anim_name_choosen = JSONParser.ReadString(json_obj, "animationNameChoosen", null),
+                    anim_name_idle = JSONParser.ReadString(json_obj, "animationNameIdle", null),
                     is_locked = is_locked,
                     imported = true,
                     left_facing = false,
@@ -442,12 +444,14 @@ namespace Engine.Game.Helpers {
              mdlselect.preview, modelholder,
              mdlselect.placeholder_character,
              week_selector_enable_beat,
+             character_info.anim_name_idle ?? WeekSelectorMdlSelect.IDLE,
              WeekSelectorMdlSelect.IDLE
          );
             WeekSelectorMdlSelect.HelperImport(
                  mdlselect.preview, modelholder,
                  mdlselect.placeholder_character,
                  false,
+                 character_info.anim_name_choosen ?? WeekSelectorMdlSelect.HEY,
                  WeekSelectorMdlSelect.HEY
              );
             modelholder.Destroy();
@@ -462,8 +466,9 @@ namespace Engine.Game.Helpers {
             return null;
         }
 
-        public static void HelperImport(StateSprite statesprite, ModelHolder mdlhldr, LayoutPlaceholder placeholder, bool enable_beat, string name) {
-            StateSpriteState statesprite_state = statesprite.StateAdd(mdlhldr, name, name);
+        public static void HelperImport(StateSprite statesprite, ModelHolder mdlhldr, LayoutPlaceholder placeholder, bool enable_beat, string anim_name, string name) {
+            if (String.IsNullOrEmpty(anim_name)) return;
+            StateSpriteState statesprite_state = statesprite.StateAdd(mdlhldr, anim_name, name);
             if (statesprite_state == null) return;
 
             ImgUtils.CalcRectangleInStateSpriteState(
@@ -499,6 +504,8 @@ namespace Engine.Game.Helpers {
             public bool left_facing;
             public bool week_selector_enable_beat;
             public string model_week_selector;
+            public string anim_name_idle;
+            public string anim_name_choosen;
             public string manifest;
         };
 

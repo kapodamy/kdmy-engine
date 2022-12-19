@@ -20,31 +20,34 @@ const CharacterAnimType = {
 
 
 async function character_init(charactermanifest) {
-    const sing_size = charactermanifest.actions.sing_size;
-    const miss_size = charactermanifest.actions.miss_size;
-    const extras_size = charactermanifest.actions.extras_size;
+    const import_context = {
+        all_directions_names: arraylist_init(),
+        all_extras_names: arraylist_init(),
+        charactermanifest: charactermanifest,
+        modelholder_arraylist: arraylist_init2(4),
+        textures: arraylist_init2(4),
+        states: arraylist_init2(4)
+    };
 
-    let modelholder_arraylist = arraylist_init();
-    await character_internal_get_modelholder(modelholder_arraylist, charactermanifest.model_character, 0);
-
+    await character_internal_get_modelholder(
+        import_context.modelholder_arraylist, charactermanifest.model_character, 0
+    );
 
 
     let character = {
         // DEBUG ONLY
         //name: charactermanifest.model_character,
-        is_bf: charactermanifest.model_character.includes("BOYFRIEND"),
+        //is_bf: charactermanifest.model_character.includes("BOYFRIEND"),
 
         statesprite: statesprite_init_from_texture(null),
 
         current_texture_id: -1,
-        textures: arraylist_init(),
-
-        sing_size, miss_size, extras_size,
+        textures: import_context.textures,
 
         all_extras_names_size: -1, all_extras_names: null,
         all_directions_names_size: -1, all_directions_names: null,
 
-        states: arraylist_init2(4),
+        states: import_context.states,
         default_state: null,
         current_state: null,
 
@@ -105,102 +108,21 @@ async function character_init(charactermanifest) {
     statesprite_set_visible(character.statesprite, 0);
     statesprite_flip_texture_enable_correction(character.statesprite, 0);
 
-    let all_directions_names = arraylist_init2(sing_size);
-    let all_extras_names = arraylist_init2(extras_size);
+    // import default actions
+    character.default_state = await character_internal_import_actions(import_context, charactermanifest.actions, null);
+    character.current_state = character.default_state;
 
-    // default state
-    let state = character_internal_state_create(null, sing_size, miss_size, extras_size);
-    character.default_state = character.current_state = state;
-    arraylist_add(character.states, state);
-
-    // import all sign actions
-    for (let i = 0; i < sing_size; i++) {
-        let index = character_internal_index_name(
-            all_directions_names, charactermanifest.actions.sing[i].direction, 1
-        );
-
-        let modelholder = await character_internal_get_modelholder(
-            modelholder_arraylist, charactermanifest.actions.sing[i].model_src, 1
-        );
-
-        state.sing[i].id_texture = state.sing_alt[i].id_texture = character_internal_add_texture(
-            character.textures, modelholder
-        );
-
-        character_internal_import_sing(
-            state.sing[i],
-            modelholder, charactermanifest.actions.sing[i],
-            index,
-            charactermanifest.sing_suffix
-        );
-        character_internal_import_sing(
-            state.sing_alt[i],
-            modelholder,
-            charactermanifest.actions.sing[i],
-            index,
-            charactermanifest.sing_alternate_suffix
-        );
+    // import additional actions as states
+    for (let i = 0; i < charactermanifest.additional_states_size; i++) {
+        let additionalstate = charactermanifest.additional_states[i];
+        await character_internal_import_actions(import_context, additionalstate.actions, additionalstate.name);
     }
-
-    // import all miss actions
-    for (let i = 0; i < miss_size; i++) {
-        let index = character_internal_index_name(
-            all_directions_names, charactermanifest.actions.miss[i].direction, 1
-        );
-
-        let modelholder = await character_internal_get_modelholder(
-            modelholder_arraylist, charactermanifest.actions.miss[i].model_src, 1
-        );
-
-        state.miss[i].id_texture = character_internal_add_texture(
-            character.textures, modelholder
-        );
-
-        character_internal_import_miss(
-            state.miss[i], modelholder, charactermanifest.actions.miss[i], index
-        );
-    }
-
-    // import all extras names
-    for (let i = 0; i < extras_size; i++) {
-        let index = character_internal_index_name(
-            all_extras_names, charactermanifest.actions.extras[i].name, 1
-        );
-
-        await character_internal_import_extra(
-            state.extras[i],
-            modelholder_arraylist,
-            character.textures,
-            charactermanifest.actions.extras[i],
-            index
-        );
-    }
-
-    await character_internal_import_extra(
-        state.hey,
-        modelholder_arraylist,
-        character.textures,
-        charactermanifest.actions.hey,
-        -10
-    );
-
-    await character_internal_import_extra(
-        state.idle,
-        modelholder_arraylist,
-        character.textures,
-        charactermanifest.actions.idle,
-        -11
-    );
 
     character.drawable = drawable_init(0, character, character_draw, character_animate);
 
-    character.all_directions_names_size = arraylist_trim(all_directions_names);
-    character.all_directions_names = arraylist_peek_array(all_directions_names);
-    arraylist_destroy(all_directions_names, 1);
-
-    character.all_extras_names_size = arraylist_trim(all_extras_names);
-    character.all_extras_names = arraylist_peek_array(all_extras_names);
-    arraylist_destroy(all_extras_names, 1);
+    arraylist_destroy3(import_context.modelholder_arraylist, character_internal_destroy_modelholder);
+    arraylist_destroy2(import_context.all_directions_names, character, "all_directions_names_size", "all_directions_names");
+    arraylist_destroy2(import_context.all_extras_names, character, "all_extras_names_size", "all_extras_names");
 
     character.inverted_size = charactermanifest.opposite_directions.sizes;
     if (character.inverted_size > 0) {
@@ -216,8 +138,6 @@ async function character_init(charactermanifest) {
     character_play_idle(character);
     //character_face_as_opponent(character, character.is_left_facing);
 
-    arraylist_destroy3(modelholder_arraylist, character_internal_destroy_modelholder);
-
     return character;
 }
 
@@ -231,7 +151,7 @@ function character_destroy(character) {
     for (let i = 0; i < states_size; i++) {
         let state = arraylist_get(character.states, i);
 
-        for (let j = 0; j < character.sing_size; j++) {
+        for (let j = 0; j < state.sing_size; j++) {
             if (state.sing[j].base) animsprite_destroy(state.sing[j].base);
             if (state.sing[j].hold) animsprite_destroy(state.sing[j].hold);
             if (state.sing[j].rollback) animsprite_destroy(state.sing[j].rollback);
@@ -241,11 +161,11 @@ function character_destroy(character) {
             if (state.sing_alt[j].rollback) animsprite_destroy(state.sing_alt[j].rollback);
         }
 
-        for (let j = 0; j < character.miss_size; j++) {
+        for (let j = 0; j < state.miss_size; j++) {
             if (state.miss[j].animation) animsprite_destroy(state.miss[j].animation);
         }
 
-        for (let j = 0; j < character.extras_size; j++) {
+        for (let j = 0; j < state.extras_size; j++) {
             if (state.extras[j].base) animsprite_destroy(state.extras[j].base);
             if (state.extras[j].hold) animsprite_destroy(state.extras[j].hold);
             if (state.extras[j].rollback) animsprite_destroy(state.extras[j].rollback);
@@ -253,9 +173,15 @@ function character_destroy(character) {
 
         if (state.hey.base) animsprite_destroy(state.hey.base);
         if (state.hey.hold) animsprite_destroy(state.hey.hold);
+        if (state.hey.rollback) animsprite_destroy(state.hey.rollback);
 
         if (state.idle.base) animsprite_destroy(state.idle.base);
         if (state.idle.hold) animsprite_destroy(state.idle.hold);
+        if (state.idle.rollback) animsprite_destroy(state.idle.rollback);
+
+        if (state.idle_alt.base) animsprite_destroy(state.idle_alt.base);
+        if (state.idle_alt.hold) animsprite_destroy(state.idle_alt.hold);
+        if (state.idle_alt.rollback) animsprite_destroy(state.idle_alt.rollback);
 
         state.name = undefined;
         state.sing = undefined;
@@ -350,11 +276,11 @@ function character_state_add(character, modelholder, state_name) {
     let id_texture = character_internal_add_texture(character.textures, modelholder);
     let default_state = arraylist_get(character.states, 0);
     let state = character_internal_state_create(
-        state_name, character.sing_size, character.miss_size, character.extras_size
+        state_name, default_state.sing_size, default_state.miss_size, default_state.extras_size
     );
 
 
-    for (let i = 0; i < character.sing_size; i++) {
+    for (let i = 0; i < default_state.sing_size; i++) {
         state.sing[i].id_texture = id_texture;
         character_internal_state_of_sing(state.sing[i], modelholder, state_name, default_state.sing[i]);
 
@@ -362,7 +288,7 @@ function character_state_add(character, modelholder, state_name) {
         character_internal_state_of_sing(state.sing_alt[i], modelholder, state_name, default_state.sing_alt[i]);
     }
 
-    for (let i = 0; i < character.miss_size; i++) {
+    for (let i = 0; i < default_state.miss_size; i++) {
         let animation = character_internal_import_animation3(modelholder, state_name, default_state.miss[i].animation, 0);
 
         state.miss[i].id_direction = default_state.miss[i].id_direction;
@@ -373,7 +299,7 @@ function character_state_add(character, modelholder, state_name) {
         state.miss[i].offset_y = default_state.miss[i].offset_y;
     }
 
-    for (let i = 0; i < character.extras_size; i++) {
+    for (let i = 0; i < default_state.extras_size; i++) {
         state.extras[i].id_texture = id_texture;
         character_internal_state_of_extra(state.extras[i], modelholder, state_name, default_state.extras[i]);
     }
@@ -407,6 +333,11 @@ function character_play_hey(character) {
     console.assert(character.current_state != null, "character.current_state was NULL");
 
     let extra_info = character.current_state.hey;
+
+    if (!extra_info.is_valid && character.current_state != character.default_state) {
+        // attempt use default state
+        extra_info = character.default_state.hey;
+    }
 
     if (!extra_info.is_valid) {
         character_internal_fallback_idle(character);
@@ -470,11 +401,24 @@ function character_play_idle(character) {
             break;
     }
 
-    let extra_info = character.current_state.idle;
+    let state = character.current_state;
+    let extra_info = null;
 
-    if (!extra_info.is_valid) {
-        character.played_actions_count--;
-        return 0;
+    L_read_state: for (; ;) {
+        extra_info = state.idle;
+        if (character.alt_enabled && state.idle_alt.is_valid) extra_info = state.idle_alt;
+
+        if (!extra_info.is_valid) {
+            if (state != character.default_state) {
+                // attempt use default state
+                state = character.default_state;
+                continue L_read_state;
+            }
+            character.played_actions_count--;
+            return 0;
+        }
+
+        break;// JS only
     }
 
     if (character.current_action_type != CharacterActionType.IDLE) {
@@ -512,32 +456,42 @@ function character_play_sing(character, direction, prefer_sustain) {
         return 0;
     };
 
-    let array = character.alt_enabled ? character.current_state.sing_alt : character.current_state.sing;
     let sing_info = null;
+    let state = character.current_state;
 
-    for (let i = 0; i < character.sing_size; i++) {
-        if (array[i].id_direction == id_direction) {
-            sing_info = array[i];
-            break;
-        }
-    }
-
-    if (!sing_info || (!sing_info.base && !sing_info.hold)) {
-        // attempt to use the non-alt sing direction
-        if (character.alt_enabled) {
-            for (let i = 0; i < character.sing_size; i++) {
-                if (character.current_state.sing[i].id_direction == id_direction) {
-                    sing_info = character.current_state.sing[i];
-                    break;
-                }
+    L_read_state: for (; ;) {
+        let array = character.alt_enabled ? state.sing_alt : state.sing;
+        for (let i = 0; i < state.sing_size; i++) {
+            if (array[i].id_direction == id_direction) {
+                sing_info = array[i];
+                break;
             }
         }
 
         if (!sing_info || (!sing_info.base && !sing_info.hold)) {
-            //throw new Error("unknown sing direction: " + direction);
-            character_internal_fallback_idle(character);
-            return 0;
+            // attempt to use the non-alt sing direction
+            if (character.alt_enabled) {
+                for (let i = 0; i < state.sing_size; i++) {
+                    if (state.sing[i].id_direction == id_direction) {
+                        sing_info = state.sing[i];
+                        break;
+                    }
+                }
+            }
+
+            if (!sing_info || (!sing_info.base && !sing_info.hold)) {
+                if (state != character.default_state) {
+                    // attempt use default state
+                    state = character.default_state;
+                    continue L_read_state;
+                }
+                //throw new Error("unknown sing direction: " + direction);
+                character_internal_fallback_idle(character);
+                return 0;
+            }
         }
+
+        break;// JS only
     }
 
     // end current action
@@ -587,16 +541,27 @@ function character_play_miss(character, direction, keep_in_hold) {
     };
 
     let miss_info = null;
-    for (let i = 0; i < character.miss_size; i++) {
-        if (character.current_state.miss[i].id_direction == id_direction) {
-            miss_info = character.current_state.miss[i];
-            break;
-        }
-    }
+    let state = character.current_state;
 
-    if (!miss_info || !miss_info.animation) {
-        character_internal_fallback_idle(character);
-        return 0;
+    L_read_state: for (; ;) {
+        for (let i = 0; i < state.miss_size; i++) {
+            if (state.miss[i].id_direction == id_direction) {
+                miss_info = state.miss[i];
+                break;
+            }
+        }
+
+        if (!miss_info || !miss_info.animation) {
+            if (state != character.default_state) {
+                // attempt use default state
+                state = character.default_state;
+                continue L_read_state;
+            }
+            character_internal_fallback_idle(character);
+            return 0;
+        }
+
+        break;// JS only
     }
 
     // end current action
@@ -634,17 +599,27 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
         return 0;
     }
 
+    let state = character.current_state;
     let extra_info = null;
-    for (let i = 0; i < character.extras_size; i++) {
-        if (character.current_state.extras[i].id_extra == id_extra) {
-            extra_info = character.current_state.extras[i];
-            break;
+    L_read_state: for (; ;) {
+        for (let i = 0; i < state.extras_size; i++) {
+            if (state.extras[i].id_extra == id_extra) {
+                extra_info = state.extras[i];
+                break;
+            }
         }
-    }
 
-    if (!extra_info || !extra_info.is_valid) {
-        character_internal_fallback_idle(character);
-        return 0;
+        if (!extra_info || !extra_info.is_valid) {
+            if (state != character.default_state) {
+                // attempt use default state
+                state = character.default_state;
+                continue L_read_state;
+            }
+            character_internal_fallback_idle(character);
+            return 0;
+        }
+
+        break;// JS only
     }
 
     // end current action
@@ -984,11 +959,11 @@ function character_has_direction(character, name, is_extra) {
 
 
 
-function character_internal_import_sing(sing_info, modelholder, sing_entry, id_direction, suffix) {
+function character_internal_import_sing(sing_info, modelholder, sing_entry, id_direction, prefix, suffix) {
 
-    sing_info.base = character_internal_import_animation(modelholder, sing_entry.anim, suffix, 0);
-    sing_info.hold = character_internal_import_animation(modelholder, sing_entry.anim_hold, suffix, 1);
-    sing_info.rollback = character_internal_import_animation(modelholder, sing_entry.direction, suffix, 0);
+    sing_info.base = character_internal_import_animation(modelholder, sing_entry.anim, prefix, suffix, 0);
+    sing_info.hold = character_internal_import_animation(modelholder, sing_entry.anim_hold, prefix, suffix, 1);
+    sing_info.rollback = character_internal_import_animation(modelholder, sing_entry.direction, prefix, suffix, 0);
 
     sing_info.id_direction = id_direction;
     sing_info.follow_hold = sing_entry.follow_hold;
@@ -1011,7 +986,7 @@ function character_internal_import_sing(sing_info, modelholder, sing_entry, id_d
 }
 
 function character_internal_import_miss(miss_info, modelholder, miss_entry, id_direction) {
-    miss_info.animation = character_internal_import_animation(modelholder, miss_entry.anim, null, 0);
+    miss_info.animation = character_internal_import_animation(modelholder, miss_entry.anim, null, null, 0);
 
     miss_info.id_direction = id_direction;
     miss_info.stop_after_beats = miss_entry.stop_after_beats;
@@ -1019,7 +994,7 @@ function character_internal_import_miss(miss_info, modelholder, miss_entry, id_d
     miss_info.offset_y = miss_entry.offset_y;
 }
 
-async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_rrlst, extra_entry, id_extra) {
+async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_rrlst, extra_entry, id_extra, prefix, suffix) {
     if (!extra_entry) {
         extra_info.id_extra = -1;
         extra_info.is_valid = false;
@@ -1043,20 +1018,20 @@ async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_r
     if (extra_entry.anim != null && extra_entry.anim.length < 1)
         extra_info.base = null;
     else
-        extra_info.base = character_internal_import_animation(modelholder, extra_entry.anim, null, 0);
+        extra_info.base = character_internal_import_animation(modelholder, extra_entry.anim, prefix, suffix, 0);
 
     if (extra_entry.anim_hold != null && extra_entry.anim_hold.length < 1) {
         extra_info.hold = null;
     } else {
         extra_info.hold = character_internal_import_animation(
-            modelholder, extra_entry.anim_hold, null, 1
+            modelholder, extra_entry.anim_hold, prefix, suffix, 1
         );
     }
 
     if (extra_entry.anim_rollback != null && extra_entry.anim_rollback.length < 1) {
         extra_info.rollback = null;
     } else {
-        extra_info.rollback = character_internal_import_animation(modelholder, extra_entry.anim_rollback, null, 0);
+        extra_info.rollback = character_internal_import_animation(modelholder, extra_entry.anim_rollback, prefix, suffix, 0);
     }
 
     extra_info.id_extra = id_extra;
@@ -1068,9 +1043,9 @@ async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_r
 
 
 
-function character_internal_import_animation(mdlhldr, anim_name, suffix, is_sustain) {
+function character_internal_import_animation(mdlhldr, anim_name, prefix, suffix, is_sustain) {
     if (!anim_name) return null;
-    anim_name = string_concat_for_state_name(2, anim_name, suffix);
+    anim_name = string_concat_for_state_name(3, prefix, anim_name, suffix);
 
     let animsprite = character_internal_import_animation2(mdlhldr, anim_name, is_sustain);
     if (!anim_name) anim_name = undefined;
@@ -1116,13 +1091,16 @@ function character_internal_import_animation3(modelholder, state_name, animation
 
 
 
-function character_internal_state_create(name, size_sing, size_miss, size_extras) {
+function character_internal_state_create(name, sing_size, miss_size, extras_size) {
     let state = {
         name: strdup(name),
-        sing: new Array(size_sing),
-        sing_alt: new Array(size_sing),
-        miss: new Array(size_miss),
-        extras: new Array(size_extras),
+        sing_size: sing_size,
+        miss_size: miss_size,
+        extras_size: extras_size,
+        sing: new Array(sing_size),
+        sing_alt: new Array(sing_size),
+        miss: new Array(miss_size),
+        extras: new Array(extras_size),
         hey: {
             base: null, hold: null, rollback: null,
             beat_stop: 0, id_extra: -1, id_texture: -1, is_valid: 0, static_until_beat: 0,
@@ -1132,14 +1110,19 @@ function character_internal_state_create(name, size_sing, size_miss, size_extras
             base: null, hold: null, rollback: null,
             beat_stop: 0, id_extra: -1, id_texture: -1, is_valid: 0, static_until_beat: 0,
             offset_x: 0, offset_y: 0
+        },
+        idle_alt: {
+            base: null, hold: null, rollback: null,
+            beat_stop: 0, id_extra: -1, id_texture: -1, is_valid: 0, static_until_beat: 0,
+            offset_x: 0, offset_y: 0
         }
     };
 
     // JS only (C# needs implementation, array items can not be null)
-    clone_struct_as_array_items(state.sing, size_sing, {});
-    clone_struct_as_array_items(state.sing_alt, size_sing, {});
-    clone_struct_as_array_items(state.miss, size_miss, {});
-    clone_struct_as_array_items(state.extras, size_extras, {});
+    clone_struct_as_array_items(state.sing, sing_size, {});
+    clone_struct_as_array_items(state.sing_alt, sing_size, {});
+    clone_struct_as_array_items(state.miss, miss_size, {});
+    clone_struct_as_array_items(state.extras, extras_size, {});
 
     return state;
 }
@@ -1477,5 +1460,109 @@ function character_internal_set_beat_stop(/**@type {object}*/character,/**@type 
     character.current_stop_on_beat = character.beatwatcher.count + stop_after_beats;
     if (beatwatcher_remaining_until_next(character.beatwatcher) <= (character.beatwatcher.tick * 0.5))
         character.current_stop_on_beat++;
+}
+
+async function character_internal_import_actions(context, actions, state_name) {
+    let state = character_internal_state_create(state_name, actions.sing_size, actions.miss_size, actions.extras_size);
+    arraylist_add(context.states, state);
+
+    // import all sign actions
+    for (let i = 0; i < actions.sing_size; i++) {
+        let index = character_internal_index_name(
+            context.all_directions_names, actions.sing[i].direction, 1
+        );
+
+        let modelholder = await character_internal_get_modelholder(
+            context.modelholder_arraylist, actions.sing[i].model_src, 1
+        );
+
+        state.sing[i].id_texture = state.sing_alt[i].id_texture = character_internal_add_texture(
+            context.textures, modelholder
+        );
+
+        character_internal_import_sing(
+            state.sing[i],
+            modelholder, actions.sing[i],
+            index,
+            context.charactermanifest.sing_suffix
+        );
+        character_internal_import_sing(
+            state.sing_alt[i],
+            modelholder,
+            actions.sing[i],
+            index,
+            context.charactermanifest.sing_alternate_suffix
+        );
+    }
+
+    // import all miss actions
+    for (let i = 0; i < actions.miss_size; i++) {
+        let index = character_internal_index_name(
+            context.all_directions_names, actions.miss[i].direction, 1
+        );
+
+        let modelholder = await character_internal_get_modelholder(
+            context.modelholder_arraylist, actions.miss[i].model_src, 1
+        );
+
+        state.miss[i].id_texture = character_internal_add_texture(
+            context.textures, modelholder
+        );
+
+        character_internal_import_miss(
+            state.miss[i], modelholder, actions.miss[i], index
+        );
+    }
+
+    // import all extras names
+    for (let i = 0; i < actions.extras_size; i++) {
+        let index = character_internal_index_name(
+            context.all_extras_names, actions.extras[i].name, 1
+        );
+
+        await character_internal_import_extra(
+            state.extras[i],
+            context.modelholder_arraylist,
+            context.textures,
+            actions.extras[i],
+            index,
+            null,
+            null
+        );
+    }
+
+    await character_internal_import_extra(
+        state.hey,
+        context.modelholder_arraylist,
+        context.textures,
+        actions.hey,
+        -10,
+        null,
+        null
+    );
+
+    await character_internal_import_extra(
+        state.idle,
+        context.modelholder_arraylist,
+        context.textures,
+        actions.idle,
+        -11,
+        context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_prefix : null,
+        context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_suffix : null
+    );
+
+    if (context.charactermanifest.allow_alternate_idle) {
+        await character_internal_import_extra(
+            state.idle_alt,
+            context.modelholder_arraylist,
+            context.textures,
+            actions.idle,
+            -11,
+            context.charactermanifest.sing_alternate_prefix,
+            context.charactermanifest.sing_alternate_suffix
+        );
+    }
+
+    return state;
 }
 

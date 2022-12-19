@@ -10,6 +10,7 @@ namespace Engine.Game.Helpers {
 
     public class WeekSelectorWeekList : IDraw, IAnimate {
 
+        public const string TITLE_ANIM_NAME = "weektitle";
         private const int VISIBLE_SIZE = 4;
         private const float TWEEN_DURATION = 120;
 
@@ -263,13 +264,37 @@ namespace Engine.Game.Helpers {
                     weekinfo.unlock_directive
                 );
 
-                string title_src = WeekEnumerator.GetTitleTexture(weekinfo);
-                Texture texture = Texture.Init(title_src);
-                //free(title_src);
+                Texture texture = null;
+                AnimSprite animsprite = null;
+
+                if (!String.IsNullOrEmpty(weekinfo.week_title_model)) {
+                    if (ModelHolder.UtilsIsKnownExtension(weekinfo.week_title_model)) {
+                        ModelHolder modelholder = ModelHolder.Init(weekinfo.week_title_model);
+                        if (modelholder != null) {
+                            texture = modelholder.GetTexture(true);
+                            animsprite = modelholder.CreateAnimsprite(
+                                weekinfo.week_title_model_animation_name ?? WeekSelectorWeekList.TITLE_ANIM_NAME,
+                                true,
+                                false
+                            );
+                            modelholder.Destroy();
+                        }
+                    } else {
+                        texture = Texture.Init(weekinfo.week_title_model);
+                    }
+                } else {
+                    string title_src = WeekEnumerator.GetTitleTexture(weekinfo);
+                    texture = Texture.Init(title_src);
+                    //free(title_src);
+                }
 
                 // add title texture to the texturepool and dispose the previous one
                 this.texturepool.Add(texture);
+
                 this.list_visible[i].sprite_title.DestroyTexture();
+                this.list_visible[i].sprite_title.DestroyAllAnimations();
+
+                this.list_visible[i].sprite_title.ExternalAnimationSet(animsprite);
                 this.list_visible[i].sprite_title.SetTexture(texture, true);
                 this.list_visible[i].sprite_title.SetDrawSizeFromSourceSize();
             }
@@ -486,14 +511,28 @@ namespace Engine.Game.Helpers {
             int host_statesprite_id = weeklist.host_statesprite.id;
             WeekInfo weekinfo = Funkin.weeks_array.array[weeklist.index];
             bool host_flip, host_beat; ModelHolder modelholder;
+            string anim_name_hey = WeekSelectorMdlSelect.HEY;
+            string anim_name_idle = WeekSelectorMdlSelect.IDLE;
 
-            if (!String.IsNullOrEmpty(weekinfo.week_host_manifest)) {
-                CharacterManifest charactermanifest = new CharacterManifest(weekinfo.week_host_manifest, false);
+            if (!String.IsNullOrEmpty(weekinfo.week_host_character_manifest)) {
+                CharacterManifest charactermanifest = new CharacterManifest(weekinfo.week_host_character_manifest, false);
                 host_flip = charactermanifest.left_facing;// face to the right
                 host_beat = charactermanifest.week_selector_enable_beat;
 
                 modelholder = ModelHolder.Init(charactermanifest.model_week_selector);
                 charactermanifest.Destroy();
+            } else if (!String.IsNullOrEmpty(weekinfo.week_host_model)) {
+                host_flip = weekinfo.host_flip_sprite;
+                host_beat = weekinfo.host_enable_beat;
+
+                if (!String.IsNullOrEmpty(weekinfo.week_host_model_idle_animation_name)) {
+                    anim_name_idle = weekinfo.week_host_model_idle_animation_name;
+                }
+                if (!String.IsNullOrEmpty(weekinfo.week_host_model_choosen_animation_name)) {
+                    anim_name_hey = weekinfo.week_host_model_choosen_animation_name;
+                }
+
+                modelholder = ModelHolder.Init(weekinfo.week_host_model);
             } else {
                 host_flip = weekinfo.host_flip_sprite;
                 host_beat = weekinfo.host_enable_beat;
@@ -532,6 +571,7 @@ namespace Engine.Game.Helpers {
                     modelholder,
                     weeklist.host_placeholder,
                     host_beat,
+                    anim_name_idle,
                     WeekSelectorMdlSelect.IDLE
                 );
                 WeekSelectorMdlSelect.HelperImport(
@@ -539,6 +579,7 @@ namespace Engine.Game.Helpers {
                     modelholder,
                     weeklist.host_placeholder,
                     false,
+                    anim_name_hey,
                     WeekSelectorMdlSelect.HEY
                 );
 

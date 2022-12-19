@@ -1,8 +1,8 @@
 {
 	"default": {
 		"players": [
-			{ "controller": -1, "isOpponent": true, "strumId": 0, "manifest": "PICO/PICO.json" },
-			{ "controller": 0, "isOpponent": false, "strumId": 1, "manifest": "#boyfriend" }
+			{ "controller": -1, "isOpponent": true, "strumsInLayoutId": 0, "manifest": "PICO/PICO.json" },
+			{ "controller": 0, "isOpponent": false, "strumsInLayoutId": 1, "manifest": "#boyfriend" }
 		],
 		"girlfriend": { "manifest": "#girlfriend" },
 		"stage": "philly/layout.xml",

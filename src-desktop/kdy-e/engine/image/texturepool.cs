@@ -26,7 +26,7 @@ namespace Engine.Image {
         }
 
         public void Add(Texture texture) {
-            if (texture.src_filename == null) return;// illegal operation
+            if (texture == null || texture.src_filename == null) return;// illegal operation
 
             // check if already present
             foreach (Texture tex in this.list) {

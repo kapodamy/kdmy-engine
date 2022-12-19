@@ -1,5 +1,6 @@
 "use strict";
 
+const WEEKSELECTOR_WEEKLIST_TITLE_ANIM_NAME = "weektitle";
 const WEEKSELECTOR_WEEKLIST_VISIBLE_SIZE = 4;
 const WEEKSELECTOR_WEEKLIST_TWEEN_DURATION = 120;
 
@@ -88,7 +89,7 @@ async function weekselector_weeklist_init(animlist, modelholder, layout, texture
         let visible_item = weeklist.list_visible[i];
         tweenlerp_animate_percent(visible_item.tweenlerp_locked, percent);
         tweenlerp_animate_percent(visible_item.tweenlerp_title, percent);
-        
+
         tweenlerp_vertex_set_properties(
             visible_item.tweenlerp_locked, visible_item.icon_locked, sprite_set_property
         );
@@ -238,13 +239,38 @@ async function weekselector_weeklist_select(weeklist, index) {
             weekinfo.unlock_directive
         );
 
-        let title_src = weekenumerator_get_title_texture(weekinfo);
-        let texture = await texture_init(title_src);
-        title_src = undefined;
+        let texture = null;
+        let animsprite = null;
+
+        if (weekinfo.week_title_model) {
+            if (modelholder_utils_is_known_extension(weekinfo.week_title_model)) {
+                let modelholder = await modelholder_init(weekinfo.week_title_model);
+                if (modelholder) {
+                    texture = modelholder_get_texture(modelholder, 1);
+                    animsprite = modelholder_create_animsprite(
+                        modelholder,
+                        weekinfo.week_title_model_animation_name ?? WEEKSELECTOR_WEEKLIST_TITLE_ANIM_NAME,
+                        1,
+                        0
+                    );
+                    modelholder_destroy(modelholder);
+                }
+            } else {
+                texture = await texture_init(weekinfo.week_title_model);
+            }
+        } else {
+            let title_src = weekenumerator_get_title_texture(weekinfo);
+            texture = await texture_init(title_src);
+            title_src = undefined;
+        }
 
         // add title texture to the texturepool and dispose the previous one
         texturepool_add(weeklist.texturepool, texture);
+
         sprite_destroy_texture(weeklist.list_visible[i].sprite_title);
+        sprite_destroy_all_animations(weeklist.list_visible[i].sprite_title);
+
+        sprite_external_animation_set(weeklist.list_visible[i].sprite_title, animsprite);
         sprite_set_texture(weeklist.list_visible[i].sprite_title, texture, 1);
         sprite_set_draw_size_from_source_size(weeklist.list_visible[i].sprite_title);
     }
@@ -459,14 +485,28 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
     let host_statesprite_id = weeklist.host_statesprite.id;
     let weekinfo = weeks_array.array[weeklist.index];
     let host_flip, host_beat, modelholder;
+    let anim_name_hey = WEEKSELECTOR_MDLSELECT_HEY;
+    let anim_name_idle = WEEKSELECTOR_MDLSELECT_IDLE;
 
-    if (weekinfo.week_host_manifest) {
-        let charactermanifest = await charactermanifest_init(weekinfo.week_host_manifest, 0);
+    if (weekinfo.week_host_character_manifest) {
+        let charactermanifest = await charactermanifest_init(weekinfo.week_host_character_manifest, 0);
         host_flip = charactermanifest.left_facing;// face to the right
         host_beat = charactermanifest.week_selector_enable_beat;
 
         modelholder = await modelholder_init(charactermanifest.model_week_selector);
         charactermanifest_destroy(charactermanifest);
+    } else if (weekinfo.week_host_model) {
+        host_flip = weekinfo.host_flip_sprite;
+        host_beat = weekinfo.host_enable_beat;
+
+        if (weekinfo.week_host_model_idle_animation_name) {
+            anim_name_idle = weekinfo.week_host_model_idle_animation_name;
+        }
+        if (weekinfo.week_host_model_choosen_animation_name) {
+            anim_name_hey = weekinfo.week_host_model_choosen_animation_name;
+        }
+
+        modelholder = await modelholder_init(weekinfo.week_host_model);
     } else {
         host_flip = weekinfo.host_flip_sprite;
         host_beat = weekinfo.host_enable_beat;
@@ -505,6 +545,7 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
             modelholder,
             weeklist.host_placeholder,
             host_beat,
+            anim_name_idle,
             WEEKSELECTOR_MDLSELECT_IDLE
         );
         weekselector_mdlselect_helper_import(
@@ -512,6 +553,7 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
             modelholder,
             weeklist.host_placeholder,
             0,
+            anim_name_hey,
             WEEKSELECTOR_MDLSELECT_HEY
         );
 

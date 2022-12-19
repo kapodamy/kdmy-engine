@@ -14,6 +14,14 @@
                     "type": ["string", "null"],
                     "default": null
                 },
+                "weekTitleModel": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "weekTitleModelAnimationName": {
+                    "type": ["string", "null"],
+                    "default": "weektitle"
+                },
                 "hostFlipSprite": {
                     "type": "boolean",
                     "default": false
@@ -22,9 +30,21 @@
                     "type": "boolean",
                     "default": true
                 },
-                "weekHostManifest": {
+                "hostCharacterManifest": {
                     "type": ["string", "null"],
                     "default": null
+                },
+                "hostModel": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "hostModelIdleAnimationName": {
+                    "type": ["string", "null"],
+                    "default": "idle"
+                },
+                "hostModelChoosenAnimationName": {
+                    "type": ["string", "null"],
+                    "default": "hey"
                 },
                 "songs": {
                     "type": "array",
@@ -74,7 +94,7 @@
                     "type": ["string", "null"],
                     "default": null
                 },
-                "sensibleContentMessage": {
+                "contentAdvisoryMessage": {
                     "type": ["string", "null"],
                     "default": null
                 },

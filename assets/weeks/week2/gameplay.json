@@ -3,8 +3,8 @@
         "stage":  "halloween/halloween.xml",
         "script": "halloween/week2.lua",
         "players": [
-            { "manifest": "./SPKY/SPOOKY_KIDS.json", "strumId": 0, "isOpponent": true },
-            { "manifest": "#boyfriend", "strumId": 1, "controller": 0 }
+            { "manifest": "./SPKY/SPOOKY_KIDS.json", "strumsInLayoutId": 0, "isOpponent": true },
+            { "manifest": "#boyfriend", "strumsInLayoutId": 1, "controller": 0 }
         ]
     },
     "tracks": [
@@ -12,8 +12,8 @@
 		{ 
 			"name": "Monster",
 			"players": [
-				{ "manifest": "./LMNDMN/LEMON_DEMON.json", "strumId": 0, "isOpponent": true },
-				{ "manifest": "#boyfriend", "strumId": 1, "controller": 0 }
+				{ "manifest": "./LMNDMN/LEMON_DEMON.json", "strumsInLayoutId": 0, "isOpponent": true },
+				{ "manifest": "#boyfriend", "strumsInLayoutId": 1, "controller": 0 }
 			]
 		}
     ]

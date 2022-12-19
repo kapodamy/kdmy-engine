@@ -1556,7 +1556,7 @@ function strum_set_draw_offset(strum, offset_milliseconds) {
 }
 
 function strum_set_bpm(strum, beats_per_minute) {
-    strum.beatwatcher.Reset(1, beats_per_minute);
+   beatwatcher_reset(strum.beatwatcher, 1, beats_per_minute);
 }
 
 function strum_disable_beat_synced_idle_and_continous(strum, disabled) {

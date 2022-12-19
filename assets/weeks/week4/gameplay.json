@@ -1,8 +1,8 @@
 {
 	"default": {
 		"players": [
-			{ "controller": -1, "isOpponent": true, "strumId": 0, "manifest": "MM/MOMMY_MEAREST.json" },
-			{ "controller": 0, "isOpponent": false, "strumId": 1, "manifest": "funkin/BOYFRIEND_CAR.json" }
+			{ "controller": -1, "isOpponent": true, "strumsInLayoutId": 0, "manifest": "MM/MOMMY_MEAREST.json" },
+			{ "controller": 0, "isOpponent": false, "strumsInLayoutId": 1, "manifest": "funkin/BOYFRIEND_CAR.json" }
 		],
 		"girlfriend": { "manifest": "funkin/GIRLFRIEND_CAR.json" },
 		"stage": "limo/layout.xml",

@@ -36,7 +36,7 @@
     </xs:simpleType>
 
     <xs:complexType name="Interpolator">
-        <xs:attribute name="id" type="xs:anySimpleType" use="optional" default="-1" />
+        <xs:attribute name="property" type="xs:anySimpleType" use="optional" default="-1" />
         <xs:attribute name="type" type="Interpolator-type" use="optional" default="linear" />
         <xs:attribute name="start" type="xs:anySimpleType" use="optional" default="0" />
         <xs:attribute name="end" type="xs:anySimpleType" use="optional" default="0" />
@@ -55,7 +55,7 @@
         <xs:attribute name="entryName" type="xs:string" use="optional" />
     </xs:complexType>
     <xs:complexType name="Pause">
-        <xs:attribute name="duration" type="xs:positiveInteger" use="optional" default="1" />
+        <xs:attribute name="duration" type="xs:nonNegativeInteger" use="optional" default="1" />
     </xs:complexType>
     <xs:complexType name="Set">
         <xs:attribute name="property" type="xs:string" use="optional" default="1" />
@@ -90,7 +90,7 @@
 
 
     <xs:complexType name="Animation">
-        <xs:sequence maxOccurs="unbounded">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
             <xs:element name="FrameArray" type="FrameArray" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="Frame" type="Frame" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="Pause" type="Pause" minOccurs="0" maxOccurs="unbounded" />
@@ -104,7 +104,7 @@
         <xs:attribute name="atlasPath" type="xs:anyURI" use="optional" />
     </xs:complexType>
     <xs:complexType name="AnimationMacro">
-        <xs:sequence maxOccurs="unbounded">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
             <xs:element name="Interpolator" type="Interpolator" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="Set" type="Set" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="Yield" type="Yield" minOccurs="0" maxOccurs="unbounded" />
@@ -134,9 +134,9 @@
     <xs:element name="AnimationList">
         <xs:complexType>
             <xs:sequence minOccurs="0" maxOccurs="unbounded">
-                <xs:element name="Animation" type="Animation" />
-                <xs:element name="AnimationMacro" type="AnimationMacro" />
-                <xs:element name="TweenKeyframe" type="TweenKeyframe" />
+                <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
+                <xs:element name="AnimationMacro" type="AnimationMacro" minOccurs="0" maxOccurs="unbounded" />
+                <xs:element name="TweenKeyframe" type="TweenKeyframe" minOccurs="0" maxOccurs="unbounded" />
             </xs:sequence>
             <xs:attribute name="atlasPath" type="xs:anyURI" use="optional" />
         </xs:complexType>

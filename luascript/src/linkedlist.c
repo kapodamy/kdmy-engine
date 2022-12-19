@@ -104,6 +104,7 @@ void* linkedlist_remove_item_at(Linkedlist linkedlist, int32_t index) {
     if (linkedlist->count == 1) {
         item = linkedlist->head->item;
         free(linkedlist->head);
+        linkedlist->head = NULL;
         linkedlist->tail = NULL;
         linkedlist->count = 0;
         return item;

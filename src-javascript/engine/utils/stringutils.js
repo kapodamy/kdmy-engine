@@ -13,7 +13,7 @@ function string_concat_for_state_name(amount, ...strings) {
     for (let i = 0; i < amount; i++) {
         let src = strings[i];
         if (src == null || !src) continue;
-        if (i > 0) str += "\x20";
+        if (str.length > 0) str += "\x20";
         str += src;
     }
     return str;

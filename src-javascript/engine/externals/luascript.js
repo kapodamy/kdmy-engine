@@ -44,8 +44,8 @@ const kdmyEngine_forget = function (target_id) {
 const kdmyEngine_drop_shared_object = function (target_obj) {
     for (let [obj, idx] of kdmyEngine_objectMap) {
         if (obj == target_obj) {
-            kdmyEngine_objectMap.delete(obj);
             _luascript_drop_shared(idx);
+            kdmyEngine_objectMap.delete(obj);
         }
     }
 };

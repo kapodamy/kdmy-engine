@@ -41,10 +41,14 @@ namespace Engine.Game.Common {
         public string name;
         public string display_name;
         public string description;
-        //public string  week_title_model;
+        public string  week_title_model;
+        public string  week_title_model_animation_name;
         public bool host_flip_sprite;
         public bool host_enable_beat;
-        public string week_host_manifest;
+        public string week_host_character_manifest;
+        public string week_host_model;
+        public string week_host_model_idle_animation_name;
+        public string week_host_model_choosen_animation_name;
         public Song[] songs;
         public int songs_count;
         public uint selector_background_color;
@@ -240,10 +244,14 @@ namespace Engine.Game.Common {
                     name = week_name,
                     display_name = JSONParser.ReadString(json, "displayName", null),
                     description = JSONParser.ReadString(json, "description", null),
-                    //week_title_model= ParsePath(json, "weekTitleModel"),
+                    week_title_model= ParsePath(json, "weekTitleModel"),
+                    week_title_model_animation_name = JSONParser.ReadString(json, "weekTitleModelAnimationName", null),
                     host_flip_sprite = JSONParser.ReadBoolean(json, "hostFlipSprite", false),
                     host_enable_beat = JSONParser.ReadBoolean(json, "hostEnableBeat", true),
-                    week_host_manifest = ParsePath(json, "weekHostManifest"),
+                    week_host_character_manifest = ParsePath(json, "hostCharacterManifest"),
+                    week_host_model = ParsePath(json, "hostModel"),
+                    week_host_model_idle_animation_name = JSONParser.ReadString(json, "hostModelIdleAnimationName", null),
+                    week_host_model_choosen_animation_name = JSONParser.ReadString(json, "hostModelChoosenAnimationName", null),
                     songs = songs,
                     songs_count = json_songs_size,
                     selector_background_color = JSONParser.ReadHex(json, "selectorBackgroundColor", 0x000000),

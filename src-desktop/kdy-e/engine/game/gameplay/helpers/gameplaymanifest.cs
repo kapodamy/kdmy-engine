@@ -854,8 +854,8 @@ namespace Engine.Game.Gameplay.Helpers {
                     is_opponent = false,
                 };
 
-                if (JSONParser.HasPropertyBoolean(json, "isOpponent")) {
-                    players[i].is_opponent = JSONParser.ReadBoolean(json, "isOpponent", false);
+                if (JSONParser.HasPropertyBoolean(player_json, "isOpponent")) {
+                    players[i].is_opponent = JSONParser.ReadBoolean(player_json, "isOpponent", false);
                 } else {
                     //
                     // bot players:   can_die=false  can_recover=false

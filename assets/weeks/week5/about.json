@@ -10,7 +10,7 @@
     "unlockDirectiveName": "WEEK4",
     "emitUnlockDirectiveName": "WEEK5",
 
-    "copyrightWarnMessage": null,
+    "warningMessage": null,
     "contentAdvisoryMessage": null,
 
     "disallowCustomBoyfriend": true,

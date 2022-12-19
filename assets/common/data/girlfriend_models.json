@@ -1,3 +1,10 @@
 [
-    { "name": "GIRLFRIEND", "manifest": "GIRLFRIEND.json", "hideIfLocked": false, "unlockDirectiveName": null }
+    { 
+        "name": "GIRLFRIEND",
+        "manifest": "GIRLFRIEND.json",
+        "hideIfLocked": false,
+        "unlockDirectiveName": null,
+        "animationNameChoosen": null,
+        "animationNameIdle":  null
+    }
 ]
