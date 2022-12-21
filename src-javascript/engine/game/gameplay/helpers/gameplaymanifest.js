@@ -317,7 +317,7 @@ function gameplaymanifest_parse_track(track, json_track, players_count) {
     track.has_ui_layout = json_has_property(json_track, "UILayout");
 
     track.dialogue_params = json_read_string(json_track, "dialogueParams", null);
-    track.dialog_text = json_read_string(json_track, "dialogueText", null);
+    track.dialog_text = json_read_string(json_track, "dialogText", null);
 
     track.pause_menu = json_read_string(json_track, "pauseMenu", null);
     track.has_pause_menu = json_has_property(json_track, "pauseMenu");

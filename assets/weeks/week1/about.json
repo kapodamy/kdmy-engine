@@ -8,5 +8,5 @@
 	"songsDefaultFreeplayHostIconModel": "DD/icon-dad.xml",
     "unlockDirectiveName": "TTRL",
     "emitUnlockDirectiveName": "WEEK1",
-    "weekHostManifest": "DD/DADDYDEAREST.json"
+    "hostCharacterManifest": "DD/DADDYDEAREST.json"
 }

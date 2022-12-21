@@ -1,4 +1,4 @@
-<TextureAtlas imagePath="boyfriend.png">
+<TextureAtlas imagePath="boyfriend_preview.png">
 	<SubTexture name="dance0" x="412" y="1642" width="406" height="392"/>
 	<SubTexture name="dance1" x="412" y="1245" width="408" height="393"/>
 	<SubTexture name="dance2" x="414" y="830" width="405" height="398"/>

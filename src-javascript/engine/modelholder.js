@@ -27,27 +27,26 @@ async function modelholder_init(src) {
     let manifest_atlas = null;
     let manifest_animlist = null;
     let vertex_color = 0xFFFFFF;
-    let from_manifest = string_lowercase_ends_with(src, ".json");
+    let from_manifest = string_lowercase_ends_with(full_path, ".json");
 
     if (from_manifest) {
-        if (!await fs_file_exists(src)) {
+        if (!await fs_file_exists(full_path)) {
             // C and C# only
             //fs_folder_stack_pop();
             return null;
         }
-        let json = await json_load_from(src);
+        let json = await json_load_from(full_path);
         manifest_texture = json_read_string(json, "texture", null);
         manifest_atlas = json_read_string(json, "atlas", null);
         manifest_animlist = json_read_string(json, "animlist", null);
         vertex_color = json_read_hex(json, "vertexColor", vertex_color)
         json_destroy(json);
     } else {
-        let temp = src;
-        let from_atlas = atlas_utils_is_known_extension(src);
+        let temp = full_path;
+        let from_atlas = atlas_utils_is_known_extension(full_path);
 
-        if (from_atlas) temp = fs_get_filename_without_extension(src);
-        manifest_texture = string_concat(2, temp, ".png");
-        manifest_atlas = from_atlas ? strdup(src) : string_concat(2, temp, ".xml");
+        if (from_atlas) temp = fs_get_filename_without_extension(full_path);
+        manifest_atlas = from_atlas ? strdup(full_path) : string_concat(2, temp, ".xml");
         manifest_animlist = string_concat(2, temp, "_anims.xml");
         if (from_atlas) temp = undefined;
     }
@@ -78,23 +77,24 @@ async function modelholder_init(src) {
         if (animlist) modelholder.animlist = animlist;
     }
 
-    if (manifest_texture && await fs_file_exists(manifest_texture)) {
-        modelholder.texture = await texture_init(manifest_texture);
-    } else {
+    if (modelholder.atlas && modelholder.atlas != MODELHOLDER_STUB_ATLAS) {
         let altas_texture = atlas_get_texture_path(modelholder.atlas);
-        if (altas_texture) {
-            if ((await fs_file_exists(altas_texture))) {
-                modelholder.texture = await texture_init(altas_texture);
-            } else {
-                console.warn(
-                    "modelholder_init() missing texture '" +
-                    altas_texture +
-                    "' of atlas '" +
-                    manifest_atlas +
-                    "'"
-                );
-            }
+        if (altas_texture && await fs_file_exists(altas_texture)) {
+            modelholder.texture = await texture_init(altas_texture);
+        } else if (!manifest_texture) {
+            console.warn(
+                "modelholder_init() missing texture '" +
+                altas_texture +
+                "' of atlas '" +
+                manifest_atlas +
+                "'"
+            );
         }
+    }
+
+    if (!modelholder.texture && manifest_texture && await fs_file_exists(manifest_texture)) {
+        modelholder.texture = await texture_init(manifest_texture);
+        console.warn("modelholder_init() expected texture '" + manifest_texture + "'");
     }
 
     manifest_atlas = undefined;

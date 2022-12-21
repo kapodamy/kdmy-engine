@@ -9,6 +9,7 @@ using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace Engine.Game.Gameplay {
 
@@ -71,8 +72,6 @@ namespace Engine.Game.Gameplay {
         private StringBuilder current_dialog_buffer;
         private bool draw_portraits_on_top;
         private Gamepad gamepad;
-        private SH4Matrix viewport_matrix;
-        private int viewport_changes;
         private Drawable self_drawable;
         private bool self_hidden;
 
@@ -263,15 +262,12 @@ namespace Engine.Game.Gameplay {
                 dialog_external = null,
                 is_completed = false,
                 chars_per_second = 0,
-                viewport_matrix = new SH4Matrix(),
-                viewport_changes = -1,
                 self_drawable = null,
                 self_hidden = false
             };
 
             dialogue.self_drawable = new Drawable(300, dialogue, dialogue);
 
-            dialogue.viewport_matrix.Clear();
             dialogue.gamepad.SetButtonsDelay(200);
 
             audios.Destroy2(out dialogue.audios_size, ref dialogue.audios);
@@ -314,7 +310,7 @@ namespace Engine.Game.Gameplay {
             }
 
             // create textsprite speech if not customized
-            dialogue.texsprite_speech = TextSprite.Init(null, false, 24f, 0x00000);
+            dialogue.texsprite_speech = TextSprite.Init(null, false, 36f, 0x00000);
             dialogue.texsprite_speech.SetParagraphSpace(8f);
             dialogue.texsprite_speech.SetWordbreak(VertexProps.FONT_WORDBREAK_LOOSE);
 
@@ -619,21 +615,6 @@ namespace Engine.Game.Gameplay {
         public void Draw(PVRContext pvrctx) {
             if (this.self_hidden || this.is_completed) return;
 
-            int viewport_changes = pvrctx.resolution_changes;
-            if (viewport_changes != this.viewport_changes) {
-                this.viewport_changes = viewport_changes;
-                this.viewport_matrix.Clear();
-
-                float scale_x = pvrctx.ScreenWidth / (float)Funkin.SCREEN_RESOLUTION_WIDTH;
-                float scale_y = pvrctx.ScreenHeight / (float)Funkin.SCREEN_RESOLUTION_HEIGHT;
-                float scale = Math.Min(scale_x, scale_y);
-
-                this.viewport_matrix.Scale(scale, scale);
-            }
-
-            pvrctx.Save();
-            pvrctx.CurrentMatrix.MultiplyWithMatrix(this.viewport_matrix);
-
             pvrctx.Save();
             this.self_drawable.HelperApplyInContext(pvrctx);
 
@@ -642,7 +623,6 @@ namespace Engine.Game.Gameplay {
             InternalDrawSpeech(pvrctx);
             if (this.draw_portraits_on_top) InternalDrawPortraits(pvrctx);
 
-            pvrctx.Restore();
             pvrctx.Restore();
         }
 
@@ -679,6 +659,7 @@ namespace Engine.Game.Gameplay {
             this.do_exit = false;
             this.current_dialog_line = 0;
             this.self_hidden = false;
+            this.is_completed = false;
             this.self_drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
             this.self_drawable.SetAlpha(1f);
             this.self_drawable.SetOffsetColorToDefault();
@@ -908,9 +889,20 @@ namespace Engine.Game.Gameplay {
                         }
                         break;
                     case Type.PORTRAIT_REMOVEALL:
-                        for (int i = 0 ; i < this.portraits_size ; i++) {
-                            this.portraits[i].is_added = false;
-                            this.portraits[i].is_removed = true;
+                        if (action.animate_remove) {
+                            foreach (Portrait portrait in this.visible_portraits) {
+                                portrait.is_added = false;
+                                portrait.is_removed = true;
+                            }
+
+                            if (this.anims_ui.portrait_left_out != null)
+                                this.anims_ui.portrait_left_out.Restart();
+                            if (this.anims_ui.portrait_center_out != null)
+                                this.anims_ui.portrait_center_out.Restart();
+                            if (this.anims_ui.portrait_right_out != null)
+                                this.anims_ui.portrait_right_out.Restart();
+                        } else {
+                            this.visible_portraits.Clear();
                         }
                         break;
                     case Type.AUDIO_UI:
@@ -1024,8 +1016,15 @@ namespace Engine.Game.Gameplay {
 
                 this.current_speechimage.statesprite.AnimationRestart();
 
-                float x = this.current_speechimage.offset_x;
-                float y = this.current_speechimage.offset_y + (Funkin.SCREEN_RESOLUTION_HEIGHT / 2f);
+                float x, y;
+
+                if (this.current_speechimage.disable_vertical_center) {
+                    x = 0;
+                    y = 0;
+                } else {
+                    x = this.current_speechimage.offset_x;
+                    y = this.current_speechimage.offset_y + (Funkin.SCREEN_RESOLUTION_HEIGHT / 2f);
+                }
 
                 // set speech background location
                 this.current_speechimage.statesprite.SetDrawLocation(x, y);
@@ -1394,6 +1393,7 @@ namespace Engine.Game.Gameplay {
                         break;
                     case "PortraitRemoveAll":
                         action.type = Type.PORTRAIT_REMOVEALL;
+                        action.animate_remove = VertexProps.ParseBoolean(node, "animateRemove", false);
                         break;
                     case "AudioUI":
                         action.type = Type.AUDIO_UI;
@@ -1597,6 +1597,7 @@ namespace Engine.Game.Gameplay {
             float offset_idle_y = 0f;
             float offset_open_x = 0f;
             float offset_open_y = 0f;
+            bool disable_vertical_center = true;
 
 
             foreach (XmlParserNode node in root_node.Children) {
@@ -1616,6 +1617,7 @@ namespace Engine.Game.Gameplay {
                         speechimage.title_y = title_y;
                         speechimage.offset_x = offset_x;
                         speechimage.offset_y = offset_y;
+                        speechimage.disable_vertical_center = disable_vertical_center;
 
                         foreach (StateSpriteState state in speechimage.statesprite.StateList()) {
                             switch (state.state_name) {
@@ -1648,6 +1650,7 @@ namespace Engine.Game.Gameplay {
                     case "Offset":
                         offset_x = VertexProps.ParseFloat(node, "x", offset_x);
                         offset_y = VertexProps.ParseFloat(node, "y", offset_y);
+                        disable_vertical_center = VertexProps.ParseBoolean(node, "disableVerticalCenter", false);
                         break;
                     case "OffsetIdle":
                         offset_idle_x = VertexProps.ParseFloat(node, "x", offset_x);
@@ -2627,6 +2630,7 @@ L_return:
             public Align align_horizontal;
             public Align align_paragraph;
             public bool no_speak;
+            public bool animate_remove;
         }
 
         private class MultipleChoice {
@@ -2687,6 +2691,7 @@ L_return:
             public float portrait_line_x;
             public float portrait_line_y;
             public float portrait_line_width;
+            public bool disable_vertical_center;
         }
 
 

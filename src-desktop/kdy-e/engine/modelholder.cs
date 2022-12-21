@@ -48,26 +48,25 @@ namespace Engine {
             string manifest_atlas = null;
             string manifest_animlist = null;
             uint vertex_color = 0xFFFFFF;
-            bool from_manifest = src.LowercaseEndsWithKDY(".json");
+            bool from_manifest = full_path.LowercaseEndsWithKDY(".json");
 
             if (from_manifest) {
-                if (!FS.FileExists(src)) {
+                if (!FS.FileExists(full_path)) {
                     FS.FolderStackPop();
                     return null;
                 }
-                JSONParser json = JSONParser.LoadFrom(src);
+                JSONParser json = JSONParser.LoadFrom(full_path);
                 manifest_texture = JSONParser.ReadString(json, "texture", null);
                 manifest_atlas = JSONParser.ReadString(json, "atlas", null);
                 manifest_animlist = JSONParser.ReadString(json, "animlist", null);
                 vertex_color = JSONParser.ReadHex(json, "vertexColor", vertex_color);
                 JSONParser.Destroy(json);
             } else {
-                string temp = src;
-                bool from_atlas = Atlas.UtilsIsKnownExtension(src);
+                string temp = full_path;
+                bool from_atlas = Atlas.UtilsIsKnownExtension(full_path);
 
-                if (from_atlas) temp = FS.GetFilenameWithoutExtension(src);
-                manifest_texture = StringUtils.Concat(temp, ".png");
-                manifest_atlas = from_atlas ? src : StringUtils.Concat(temp, ".xml");
+                if (from_atlas) temp = FS.GetFilenameWithoutExtension(full_path);
+                manifest_atlas = from_atlas ? full_path : StringUtils.Concat(temp, ".xml");
                 manifest_animlist = StringUtils.Concat(temp, "_anims.xml");
                 //if (from_atlas) free(temp);
             }
@@ -98,23 +97,25 @@ namespace Engine {
                 if (animlist != null) modelholder.animlist = animlist;
             }
 
-            if (!String.IsNullOrEmpty(manifest_texture) && FS.FileExists(manifest_texture)) {
-                modelholder.texture = Texture.Init(manifest_texture);
-            } else {
+
+            if (modelholder.atlas != null && modelholder.atlas != ModelHolder.STUB_ATLAS) {
                 string altas_texture = modelholder.atlas.GetTexturePath();
-                if (!String.IsNullOrEmpty(altas_texture)) {
-                    if ((FS.FileExists(altas_texture))) {
-                        modelholder.texture = Texture.Init(altas_texture);
-                    } else {
-                        Console.Error.WriteLine(
-                            "modelholder_init() missing texture '" +
-                            altas_texture +
-                            "' of atlas '" +
-                            manifest_atlas +
-                            "'"
-                        );
-                    }
+                if (!String.IsNullOrEmpty(altas_texture) && FS.FileExists(altas_texture)) {
+                    modelholder.texture = Texture.Init(altas_texture);
+                } else if (String.IsNullOrEmpty(manifest_texture)) {
+                    Console.Error.WriteLine(
+                        "[WARN] modelholder_init() missing texture '" +
+                        altas_texture +
+                        "' of atlas '" +
+                        manifest_atlas +
+                        "'"
+                    );
                 }
+            }
+
+            if (modelholder.texture == null && !String.IsNullOrEmpty(manifest_texture) && FS.FileExists(manifest_texture)) {
+                modelholder.texture = Texture.Init(manifest_texture);
+                Console.Error.WriteLine("[WARN] modelholder_init() expected texture '" + manifest_texture + "'");
             }
 
             //free(manifest_atlas);
