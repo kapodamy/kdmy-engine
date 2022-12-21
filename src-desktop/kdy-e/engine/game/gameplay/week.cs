@@ -618,7 +618,7 @@ namespace Engine.Game.Gameplay {
 
                 // check if necessary show dialogue if an dialog text is provided
                 bool show_dialog = false;
-                if (!String.IsNullOrEmpty(gameplaymanifest.tracks[roundcontext.track_index].dialog_text)) {
+                if (!retry && !String.IsNullOrEmpty(gameplaymanifest.tracks[roundcontext.track_index].dialog_text)) {
                     string dialog_text = gameplaymanifest.tracks[roundcontext.track_index].dialog_text;
                     if (roundcontext.dialogue == null) {
                         Console.Error.WriteLine($"[ERROR] week_round() can not load '{dialog_text}' there no dialogue instance");
@@ -2057,7 +2057,7 @@ namespace Engine.Game.Gameplay {
                 6, PVRContextVertex.SPRITE, roundcontext.screen_background, ui2
             );
             layout.ExternalVertexSetEntry(
-                7, PVRContextVertex.DRAWABLE, roundcontext.dialogue != null ? roundcontext.dialogue.GetDrawable() : null, ui1
+                7, PVRContextVertex.DRAWABLE, roundcontext.dialogue != null ? roundcontext.dialogue.GetDrawable() : null, ui2
             );
 
             // step 3: initialize the ui camera

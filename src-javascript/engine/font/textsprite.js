@@ -980,8 +980,8 @@ function textsprite_has_font(textsprite) {
 
 function textsprite_change_font(textsprite, fontholder) {
     if (fontholder == null) throw new Error("fontholder can not be null");
-    textsprite.font = textsprite.font;
-    textsprite.font_from_atlas = textsprite.font_from_atlas;
+    textsprite.font = fontholder.font;
+    textsprite.font_from_atlas = fontholder.font_from_atlas;
 }
 
 function textsprite_set_shader(textsprite, psshader) {

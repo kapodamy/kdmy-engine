@@ -432,6 +432,9 @@
                         "$ref": "#/definitions/Player"                        
                     }
                 },
+                "girlfriend": {
+                    "$ref": "#/definitions/Girlfriend"
+                },
                 "UILayout": {
                     "type": ["string", "null"],
                     "default": null

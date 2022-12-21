@@ -616,7 +616,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
         // check if necessary show dialogue if an dialog text is provided
         let show_dialog = false;
-        if (gameplaymanifest.tracks[roundcontext.track_index].dialog_text) {
+        if (!retry && gameplaymanifest.tracks[roundcontext.track_index].dialog_text) {
             let dialog_text = gameplaymanifest.tracks[roundcontext.track_index].dialog_text;
             if (roundcontext.dialogue == null) {
                 console.error(`[ERROR] week_round() can not load '${dialog_text}' there no dialogue instance`);
@@ -2044,7 +2044,7 @@ function week_place_in_layout(roundcontext) {
         layout, 6, VERTEX_SPRITE, roundcontext.screen_background, ui2
     );
     layout_external_vertex_set_entry(
-        layout, 7, VERTEX_DRAWABLE, roundcontext.dialogue ? dialogue_get_drawable(roundcontext.dialogue) : null, ui1
+        layout, 7, VERTEX_DRAWABLE, roundcontext.dialogue ? dialogue_get_drawable(roundcontext.dialogue) : null, ui2
     );
 
     // step 3: initialize the ui camera
