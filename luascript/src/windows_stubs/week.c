@@ -163,8 +163,9 @@ void week_enable_credits_on_completed(RoundContext roundcontext) {
 void week_end(RoundContext roundcontext, bool round_or_week, bool loose_or_win) {
     print_stub("week_end", "roundcontext=%p round_or_week=(bool)%i loose_or_win=(bool)%i", roundcontext, round_or_week, loose_or_win);
 }
-void week_get_dialogue(RoundContext roundcontext) {
+Dialogue week_get_dialogue(RoundContext roundcontext) {
     print_stub("week_get_dialogue", "roundcontext=%p", roundcontext);
+    return &stub_dialogue;
 }
 void week_set_ui_shader(RoundContext roundcontext, PSShader psshader) {
     print_stub("week_set_ui_shader", "roundcontext=%p psshader=%p", roundcontext, psshader);

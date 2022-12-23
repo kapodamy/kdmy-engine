@@ -46,6 +46,8 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
         border_tintcolor: [0.0, 0.0, 0.0, 0.0],
         border_size: 0,
         border_enable: 0,
+        border_offset_x: 0,
+        border_offset_y: 0,
         frame_time: 0,
         frame_progress: 0,
     };
@@ -213,6 +215,11 @@ function fontglyph_set_border_size(fontglyph, size) {
     fontglyph.border_size = size;
 }
 
+function fontglyph_set_border_offset(fontglyph, x, y) {
+    fontglyph.border_offset_x = x;
+    fontglyph.border_offset_y = y;
+}
+
 function fontglyph_enable_border(fontglyph, enable) {
     fontglyph.border_enable = enable;
 }
@@ -345,6 +352,9 @@ function fontglyph_draw_text(fontglyph, pvrctx, height, x, y, text_index, text_s
             let sdy = dy - fontglyph.border_size;
             let sdw = dw + outline_size;
             let sdh = dh + outline_size;
+
+            sdx += fontglyph.border_offset_x;
+            sdy += fontglyph.border_offset_y;
 
             glyphrenderer_append_glyph(
                 fontglyph.texture, 0, 1,

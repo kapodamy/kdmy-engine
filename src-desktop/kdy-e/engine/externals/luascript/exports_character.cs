@@ -358,6 +358,16 @@ namespace Engine.Externals.LuaScriptInterop {
             return 1;
         }
 
+        static int script_character_freeze_animation(LuaState L) {
+            Character character = L.ReadUserdata<Character>(CHARACTER);
+
+            bool enabled = L.lua_toboolean(2);
+
+            character.FreezeAnimation(enabled);
+
+            return 0;
+        }
+
 
 
         ////////////////////////////////////////////////////////////////////////////////////
@@ -398,6 +408,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("has_direction", script_character_has_direction),
             new LuaTableFunction("get_play_calls", script_character_get_play_calls),
             new LuaTableFunction("get_current_action", script_character_get_current_action),
+            new LuaTableFunction("freeze_animation", script_character_freeze_animation),
             new LuaTableFunction(null, null)
         };
 

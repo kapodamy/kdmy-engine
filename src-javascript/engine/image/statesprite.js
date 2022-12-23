@@ -109,7 +109,7 @@ function statesprite_draw(statesprite, pvrctx) {
     }
 
     pvr_context_save(pvrctx);
-    pvr_context_set_vertex_alpha(pvrctx, statesprite.alpha);
+    pvr_context_set_vertex_alpha(pvrctx, statesprite.alpha * statesprite.alpha2);
     pvr_context_set_vertex_offsetcolor(pvrctx, statesprite.offsetcolor);
     if (statesprite.psshader) pvr_context_add_shader(pvrctx, statesprite.psshader);
     
@@ -205,6 +205,7 @@ function statesprite_init_from_texture(texture) {
     statesprite.draw_height = -1;
 
     statesprite.alpha = 1.0;
+    statesprite.alpha2 = 1.0;
     statesprite.visible = 1;
     statesprite.z_index = 1;
     statesprite.z_offset = 0;
@@ -478,6 +479,9 @@ function statesprite_set_property(statesprite, property_id, value) {
             statesprite.flip_correction = value >= 1.0;
             statesprite.vertex_dirty = true;
             break;
+        case SPRITE_PROP_ALPHA2:
+            statesprite.alpha2 = value;
+            break;
     }
 }
 
@@ -554,7 +558,7 @@ function statesprite_get_draw_location(statesprite, location) {
 }
 
 function statesprite_get_alpha(statesprite) {
-    return statesprite.alpha;
+    return statesprite.alpha * statesprite.alpha2;
 }
 
 function statesprite_get_offset_source_size(statesprite, size) {

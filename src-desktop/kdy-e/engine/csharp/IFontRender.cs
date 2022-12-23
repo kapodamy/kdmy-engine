@@ -10,6 +10,7 @@ namespace Engine.Font {
         float Measure(float height, string text, int text_index, int text_size);
         void SetAlpha(float alpha);
         void SetBorder(bool enable, float size, float[] rgba);
+        void SetBorderOffset(float x, float y);
         void SetBorderColor(float r, float g, float b, float a);
         void SetBorderColorRGBA8(uint rbga8_color);
         void SetBorderSize(float size);

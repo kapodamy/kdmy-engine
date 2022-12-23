@@ -41,4 +41,8 @@ double soundplayer_get_position(SoundPlayer soundplayer) {
 void soundplayer_seek(SoundPlayer soundplayer, double timestamp) {
     print_stub("soundplayer_get_position", "soundplayer=%p timestamp=%f", soundplayer, timestamp);
 }
+bool soundplayer_has_ended(SoundPlayer soundplayer) {
+    print_stub("soundplayer_has_ended", "soundplayer=%p", soundplayer);
+    return false;
+}
 

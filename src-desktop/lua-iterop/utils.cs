@@ -27,6 +27,8 @@ namespace Engine.Externals.LuaInterop {
         public string value;
     }
 
+    public delegate int LuaUserdataNew<T>(LuaState L, T obj);
+
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int LuaCallback(LuaState lua);

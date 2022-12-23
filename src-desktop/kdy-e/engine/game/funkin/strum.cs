@@ -878,6 +878,7 @@ L_discard_key_event:
                                 playerstats.AddMiss(attribute_notes[note.id].hurt_ratio);
                         } else if (!attribute_notes[note.id].ignore_hit) {
                             float heal_ratio = attribute_notes[note.id].heal_ratio;
+                            note.hit_diff = 0.0;
                             playerstats.AddHit(heal_ratio, marker_duration, note.hit_diff);
 
                             // keep the marker in press state for a while
@@ -893,8 +894,6 @@ L_discard_key_event:
                             else
                                 weekscript.NotifyNoteHit(this, notes_peek_index, playerstats);
                         }
-
-                        note.hit_diff = 0.0;
 
                         if (is_sustain) this.sustain_queue.Add(note);
                         else notes_cleared++;

@@ -579,9 +579,13 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         week_change_character_camera_name(roundcontext, 1, WEEKROUND_CAMERA_OPONNENT);
         week_change_character_camera_name(roundcontext, 0, WEEKROUND_CAMERA_PLAYER);
 
+        week_toggle_states(roundcontext, gameplaymanifest);
         messagebox_set_image_sprite(roundcontext.messagebox, null);
-        for (let i = 0; i < roundcontext.players_size; i++)
-            character_use_alternate_sing_animations(roundcontext.players[i].character, 0);
+        for (let i = 0; i < roundcontext.players_size; i++) {
+            character_use_alternate_sing_animations(roundcontext.players[i].character, 0);   
+            caracter_freeze_animation(roundcontext.players[i].character, 0);
+            caracter_set_visible(roundcontext.players[i].character, 1);
+        }
         roundcontext.scriptcontext.halt_flag = 0;
         layout_set_single_item_to_draw(roundcontext.layout, null);
         if (roundcontext.songplayer) songplayer_mute(roundcontext.songplayer, 0);
@@ -615,13 +619,13 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         }
 
         // check if necessary show dialogue if an dialog text is provided
-        let show_dialog = false;
+        let show_dialog = 0;
         if (!retry && gameplaymanifest.tracks[roundcontext.track_index].dialog_text) {
             let dialog_text = gameplaymanifest.tracks[roundcontext.track_index].dialog_text;
             if (roundcontext.dialogue == null) {
                 console.error(`[ERROR] week_round() can not load '${dialog_text}' there no dialogue instance`);
             } else if (await dialogue_show_dialog(roundcontext.dialogue, dialog_text)) {
-                show_dialog = true;
+                show_dialog = 1;
             } else {
                 console.error(`week_round() failed to read '${dialog_text}' file`);
             }
@@ -2222,7 +2226,14 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         layout_animate(roundcontext.layout, elapsed);
         layout_draw(roundcontext.layout, pvr_context);
 
-        if (dialogue_is_completed(roundcontext.dialogue)) show_dialog = false;
+        if (dialogue_is_completed(roundcontext.dialogue)) {
+            show_dialog = 0;
+            for (let i = 0 ; i < roundcontext.players_size ; i++) {
+                if (roundcontext.players[i].controller != null) {
+                  gamepad_clear_buttons(roundcontext.players[i].controller);// antibounce
+                }
+            }
+        }
     }
 
     if (check_ready) countdown_ready(roundcontext.countdown);

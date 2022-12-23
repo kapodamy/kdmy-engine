@@ -450,6 +450,10 @@
                 "dialogText": {
                     "type": ["string", "null"],
                     "default": null
+                },
+                "duration": {
+                    "type": "number",
+                    "default": -1
                 }
             },
             "required": [

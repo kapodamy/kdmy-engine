@@ -78,6 +78,9 @@ void textsprite_border_set_size(TextSprite textsprite, float border_size) {
 void textsprite_border_set_color(TextSprite textsprite, float r, float g, float b, float a) {
     print_stub("textsprite_border_set_color", "textsprite=%p r=%f g=%f b=%f a=%f", textsprite, r, g, b, a);
 }
+void textsprite_border_set_offset(TextSprite textsprite, float x, float y) {
+    print_stub("textsprite_border_set_offset", "textsprite=%p x=%f y=%f b=%f a=%f", textsprite, x, y);
+}
 void textsprite_set_antialiasing(TextSprite textsprite, PVRFlag antialiasing) {
     print_stub("textsprite_set_antialiasing", "textsprite=%p antialiasing=%i", textsprite, antialiasing);
 }

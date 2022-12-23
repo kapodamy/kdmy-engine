@@ -1,43 +1,43 @@
 <AnimationList>
 
     <AnimationMacro name="portrait-add-left" loop="1">
-        <Interpolator type="linear" property="alpha" start="0.0" end="1.0" duration="50" />
+        <Interpolator type="linear" property="alpha2" start="0.0" end="1.0" duration="50" />
         <Interpolator type="linear" property="translateX" start="-200" end="0" duration="150" />
     </AnimationMacro>
     <AnimationMacro name="portrait-add-center" loop="1">
-        <Interpolator type="linear" property="alpha" start="0.0" end="1.0" duration="50" />
+        <Interpolator type="linear" property="alpha2" start="0.0" end="1.0" duration="50" />
         <Interpolator type="linear" property="translateY" start="200" end="0" duration="150" />
     </AnimationMacro>
     <AnimationMacro name="portrait-add-right" loop="1">
-        <Interpolator type="linear" property="alpha" start="0.0" end="1.0" duration="50" />
+        <Interpolator type="linear" property="alpha2" start="0.0" end="1.0" duration="50" />
         <Interpolator type="linear" property="translateX" start="200" end="0" duration="150" />
     </AnimationMacro>
 
     <AnimationMacro name="portrait-remove-left" loop="1">
-        <Interpolator type="linear" property="translateX" start="0" end="200" duration="150" />
-        <Interpolator type="linear" property="alpha" start="0.0" end="1.0" duration="50" />
+        <Interpolator type="linear" property="translateX" start="-200" end="0" duration="150" />
+        <Interpolator type="linear" property="alpha2" start="1.0" end="0.0" duration="50" />
     </AnimationMacro>
     <AnimationMacro name="portrait-remove-center" loop="1">
         <Interpolator type="linear" property="translateY" start="0" end="200" duration="150" />
-        <Interpolator type="linear" property="alpha" start="0.0" end="1.0" duration="50" />
+        <Interpolator type="linear" property="alpha2" start="1.0" end="0.0" duration="50" />
     </AnimationMacro>
     <AnimationMacro name="portrait-remove-right" loop="1">
         <Interpolator type="linear" property="translateX" start="0" end="200" duration="150" />
-        <Interpolator type="linear" property="alpha" start="0.0" end="1.0" duration="50" />
+        <Interpolator type="linear" property="alpha2" start="1.0" end="0.0" duration="50" />
     </AnimationMacro>
 
     <AnimationMacro name="background-in">
-        <Interpolator type="linear" property="alpha" start="0.0" end="1.0" duration="500" />
+        <Interpolator type="linear" property="alpha2" start="0.0" end="1.0" duration="500" />
     </AnimationMacro>
     <AnimationMacro name="background-out">
-        <Interpolator type="linear" property="alpha" start="1.0" end="0.0" duration="500" />
+        <Interpolator type="linear" property="alpha2" start="1.0" end="0.0" duration="500" />
     </AnimationMacro>
 
     <AnimationMacro name="open">
-        <Interpolator type="linear" property="alpha" start="0.0" end="1.0" duration="100" />
+        <Interpolator type="linear" property="alpha2" start="0.0" end="1.0" duration="100" />
     </AnimationMacro>
     <AnimationMacro name="close">
-        <Interpolator type="linear" property="alpha" start="1.0" end="0.0" duration="1000" />
+        <Interpolator type="linear" property="alpha2" start="1.0" end="0.0" duration="500" />
     </AnimationMacro>
 
 

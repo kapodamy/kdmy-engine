@@ -144,7 +144,7 @@ function playerstats_add_hit(playerstats, multiplier, base_note_duration, hit_ti
     }
 
     health_gain *= multiplier;
-    if (playerstats.can_recover || (health_gain > 0 && !playerstats.can_recover)) {
+    if (playerstats.can_recover || (health_gain < 0 && !playerstats.can_recover)) {
         let health = health_gain + playerstats.health;
         if (playerstats.health < 0 && multiplier < 0) playerstats.deads_by_fault++;
         playerstats.health = Math.min(health, playerstats.health_max);
@@ -196,7 +196,7 @@ function playerstats_add_sustain_delayed_hit(playerstats, multiplier, hit_time_d
     playerstats.iterations++;
 
     let health_gain = FUNKIN_HEALTH_DIFF_OVER_SHIT * multiplier;
-    if (playerstats.can_recover || (health_gain > 0.0 && !playerstats.can_recover)) {
+    if (playerstats.can_recover || (health_gain < 0.0 && !playerstats.can_recover)) {
         let health = health_gain + playerstats.health;
         if (playerstats.health < 0.0 && multiplier < 0) playerstats.deads_by_fault++;
         playerstats.health = Math.min(health, playerstats.health_max);

@@ -40,6 +40,8 @@ namespace Engine.Font {
         private float[] border_tintcolor;
         private float border_size;
         private bool border_enable;
+        private float border_offset_x;
+        private float border_offset_y;
         private double frame_time;
         private double frame_progress;
 
@@ -81,6 +83,9 @@ namespace Engine.Font {
                 border_tintcolor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f },
                 border_size = 0f,
                 border_enable = false,
+                border_offset_x = 0f,
+                border_offset_y = 0f,
+
                 frame_time = 0f,
                 frame_progress = 0f,
             };
@@ -248,6 +253,11 @@ namespace Engine.Font {
             this.border_size = size;
         }
 
+        public void SetBorderOffset(float x, float y) {
+            this.border_offset_x = x;
+            this.border_offset_y = y;
+        }
+
         public void EnableBorder(bool enable) {
             this.border_enable = enable;
         }
@@ -380,6 +390,9 @@ namespace Engine.Font {
                     float sdy = dy - this.border_size;
                     float sdw = dw + outline_size;
                     float sdh = dh + outline_size;
+
+                    sdx += this.border_offset_x;
+                    sdy += this.border_offset_y;
 
                     GlyphRenderer.AppendGlyph(
                         this.texture, false, true,

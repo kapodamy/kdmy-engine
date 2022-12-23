@@ -22,6 +22,6 @@ bool soundplayer_is_playing(SoundPlayer soundplayer);
 double soundplayer_get_duration(SoundPlayer soundplayer);
 double soundplayer_get_position(SoundPlayer soundplayer);
 void soundplayer_seek(SoundPlayer soundplayer, double timestamp);
-
+bool soundplayer_has_ended(SoundPlayer soundplayer);
 #endif
 

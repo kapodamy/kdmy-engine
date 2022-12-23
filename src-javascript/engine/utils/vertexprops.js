@@ -79,7 +79,12 @@ const CAMERA_PROP_OFFSET_X = 67;
 const CAMERA_PROP_OFFSET_Y = 68;
 const CAMERA_PROP_OFFSET_Z = 69;
 
-const TEXTSPRITE_PROP_STRING = 70;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
+const SPRITE_PROP_ALPHA2 = 70;
+
+const TEXTSPRITE_PROP_BORDER_OFFSET_X = 71;
+const TEXTSPRITE_PROP_BORDER_OFFSET_Y = 72;
+
+const TEXTSPRITE_PROP_STRING = 73;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
 
 const CORNER_TOPLEFT = 0;
 const CORNER_TOPRIGHT = 1;
@@ -210,6 +215,8 @@ function vertexprops_parse_sprite_property2(property) {
             return SPRITE_PROP_ANTIALIASING;
         case "flipcorrection":
             return SPRITE_PROP_FLIP_CORRECTION;
+        case "alpha2":
+            return SPRITE_PROP_ALPHA2;
     }
 
     return -1;
@@ -289,6 +296,10 @@ function vertexprops_parse_textsprite_property2(property) {
             return TEXTSPRITE_PROP_BACKGROUND_COLOR_B;
         case "backgroundcolora":
             return TEXTSPRITE_PROP_BACKGROUND_COLOR_A;
+        case "borderoffsetx":
+            return TEXTSPRITE_PROP_BORDER_OFFSET_X;
+        case "borderoffsety":
+            return TEXTSPRITE_PROP_BORDER_OFFSET_Y;
     }
 
     return -1;

@@ -118,7 +118,12 @@ namespace Engine.Utils {
         public const int CAMERA_PROP_OFFSET_Y = 68;
         public const int CAMERA_PROP_OFFSET_Z = 69;
 
-        public const int TEXTSPRITE_PROP_STRING = 70;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
+        public const int SPRITE_PROP_ALPHA2 = 70;
+
+        public const int TEXTSPRITE_PROP_BORDER_OFFSET_X = 71;
+        public const int TEXTSPRITE_PROP_BORDER_OFFSET_Y = 72;
+
+        public const int TEXTSPRITE_PROP_STRING = 73;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
 
         public const int PLAYBACK_NONE = 0;
         public const int PLAYBACK_PLAY = 1;
@@ -226,6 +231,8 @@ namespace Engine.Utils {
                     return SPRITE_PROP_ANTIALIASING;
                 case "flipcorrection":
                     return SPRITE_PROP_FLIP_CORRECTION;
+                case "alpha2":
+                    return SPRITE_PROP_ALPHA2;
             }
 
             return -1;
@@ -305,6 +312,10 @@ namespace Engine.Utils {
                     return TEXTSPRITE_PROP_BACKGROUND_COLOR_B;
                 case "backgroundcolora":
                     return TEXTSPRITE_PROP_BACKGROUND_COLOR_A;
+                case "borderoffsetx":
+                    return TEXTSPRITE_PROP_BORDER_OFFSET_X;
+                case "borderoffsety":
+                    return TEXTSPRITE_PROP_BORDER_OFFSET_Y;
             }
 
             return -1;

@@ -38,6 +38,7 @@ void textsprite_get_draw_size(TextSprite textsprite, float* draw_width, float* d
 void textsprite_border_enable(TextSprite textsprite, bool enable);
 void textsprite_border_set_size(TextSprite textsprite, float border_size);
 void textsprite_border_set_color(TextSprite textsprite, float r, float g, float b, float a);
+void textsprite_border_set_offset(TextSprite textsprite, float x, float y);
 void textsprite_set_antialiasing(TextSprite textsprite, PVRFlag antialiasing);
 void textsprite_set_wordbreak(TextSprite textsprite, FontWordBreak wordbreak);
 void textsprite_set_shader(TextSprite textsprite, PSShader psshader);

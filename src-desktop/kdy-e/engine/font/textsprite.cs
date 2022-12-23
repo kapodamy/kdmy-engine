@@ -30,6 +30,7 @@ namespace Engine.Font {
         private float y;
         private float z;
         private float alpha;
+        private float alpha2;
         private float z_offset;
         private Align align_vertical;
         private Align align_horizontal;
@@ -54,6 +55,8 @@ namespace Engine.Font {
         private bool border_enable;
         private float border_size;
         private float[] border_color;
+        private float border_offset_x;
+        private float border_offset_y;
         private float font_paragraph_separation;
         private PVRContextFlag antialiasing;
         private int wordbreak;
@@ -91,6 +94,7 @@ namespace Engine.Font {
                 y = 0.0f,
                 z = 0.0f,
                 alpha = 1.0f,
+                alpha2 = 1.0f,
                 z_offset = 0.0f,
 
                 align_vertical = Align.START,
@@ -124,6 +128,8 @@ namespace Engine.Font {
                 border_enable = false,
                 border_size = 0.0f,
                 border_color = new float[] { 1.0f, 1.0f, 1.0f, 1.0f },
+                border_offset_x = 0.0f,
+                border_offset_y = 0.0f,
 
                 font_paragraph_separation = 0,
 
@@ -661,6 +667,12 @@ namespace Engine.Font {
                 case VertexProps.TEXTSPRITE_PROP_BORDER_COLOR_A:
                     this.border_color[3] = value;
                     break;
+                case VertexProps.TEXTSPRITE_PROP_BORDER_OFFSET_X:
+                    this.border_offset_x = value;
+                    break;
+                case VertexProps.TEXTSPRITE_PROP_BORDER_OFFSET_Y:
+                    this.border_offset_y = value;
+                    break;
                 /////////////////////////////////////////////////////////////////////////////////////////////////
                 case VertexProps.SPRITE_PROP_X:
                     this.x = value;
@@ -776,6 +788,9 @@ namespace Engine.Font {
                 case VertexProps.TEXTSPRITE_PROP_BACKGROUND_COLOR_A:
                     this.background_rgba[3] = value;
                     break;
+                case VertexProps.SPRITE_PROP_ALPHA2:
+                    this.alpha2 = value;
+                    break;
             }
 
             // check if the coordinates was modified
@@ -830,10 +845,12 @@ namespace Engine.Font {
             this.font.SetBorder(
                  this.border_enable, this.border_size, this.border_color
             );
+            this.font.SetBorderOffset(this.border_offset_x, this.border_offset_y);
             this.font.SetLinesSeparation(this.font_paragraph_separation);
 
 
             pvrctx.Save();
+            pvrctx.SetGlobalAlpha(this.alpha2);
             if (this.psshader != null) pvrctx.AddShader(this.psshader);
 
             pvrctx.SetVertexBlend(
@@ -988,6 +1005,11 @@ namespace Engine.Font {
 
         public void BorderSetColorRGBA8(uint rbga8_color) {
             Math2D.ColorBytesToFloats(rbga8_color, true, this.border_color);
+        }
+
+        public void BorderSetOffset(float x, float y) {
+            if (!Single.IsNaN(x)) this.border_offset_x = x;
+            if (!Single.IsNaN(y)) this.border_offset_y = y;
         }
 
 

@@ -820,6 +820,7 @@ function strum_scroll_auto(strum, song_timestamp, playerstats, weekscript) {
                         playerstats_add_miss(playerstats, attribute_notes[note.id].hurt_ratio);
                 } else if (!attribute_notes[note.id].ignore_hit) {
                     let heal_ratio = attribute_notes[note.id].heal_ratio;
+                    note.hit_diff = 0.0;
                     playerstats_add_hit(playerstats, heal_ratio, marker_duration, note.hit_diff);
 
                     // keep the marker in press state for a while
@@ -835,8 +836,6 @@ function strum_scroll_auto(strum, song_timestamp, playerstats, weekscript) {
                     else
                         weekscript_notify_note_hit(weekscript, strum, notes_peek_index, playerstats);
                 }
-
-                note.hit_diff = 0.0;
 
                 if (is_sustain) arraylist_add(strum.sustain_queue, note);
                 else notes_cleared++;

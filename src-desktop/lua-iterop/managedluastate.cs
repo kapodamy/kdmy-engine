@@ -153,6 +153,20 @@ namespace Engine.Externals.LuaInterop {
             }
         }
 
+        public void RegisterConstantUserdata<T>(string variable, LuaUserdataNew<T> userdata_new, T obj) {
+            unsafe {
+                if (userdata_new != null) {
+                    if (userdata_new(this.LuaStateHandle, obj) < 1) {
+                        return;
+                    }
+                } else {
+                    LUA.lua_pushnil(this.L);
+                }
+
+                LUA.lua_setglobal(this.L, variable);
+            }
+        }
+
         public void RegisterStructMetaTable(string name, LuaCallback gc, LuaCallback tostring, LuaCallback index, LuaCallback newindex) {
             unsafe {
                 lua_State* lua = this.L;

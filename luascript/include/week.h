@@ -65,7 +65,7 @@ void week_disable_layout_rollback(RoundContext roundcontext, bool disable);
 void week_override_common_folder(RoundContext roundcontext, const char* custom_common_path);
 void week_enable_credits_on_completed(RoundContext roundcontext);
 void week_end(RoundContext roundcontext, bool round_or_week, bool loose_or_win);
-void week_get_dialogue(RoundContext roundcontext);
+Dialogue week_get_dialogue(RoundContext roundcontext);
 void week_set_ui_shader(RoundContext roundcontext, PSShader psshader);
 void week_rebuild_ui(RoundContext roundcontext);
 

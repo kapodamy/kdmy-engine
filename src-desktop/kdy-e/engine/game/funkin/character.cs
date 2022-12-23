@@ -74,6 +74,7 @@ namespace Engine.Game {
         private int[] inverted_to;
         private float character_scale;
         private int played_actions_count;
+        private bool animation_freezed;
 
 
         public Character(CharacterManifest charactermanifest) {
@@ -150,6 +151,7 @@ namespace Engine.Game {
 
             this.character_scale = 1.0f;
             this.played_actions_count = 0;
+            this.animation_freezed = false;
 
             this.beatwatcher.Reset(true, 100f);
 
@@ -760,6 +762,17 @@ L_read_state:
                 this.drawable_animation.UpdateDrawable(this.drawable, true);
             }
 
+            if (this.animation_freezed) {
+                if (this.current_use_frame_rollback)
+                    this.current_anim.Rollback(0f);
+                else
+                    this.current_anim.Animate(0f);
+
+                this.current_anim.UpdateStatesprite(this.statesprite, true);
+                InternalCalculateLocation();
+                return 1;
+            }
+
             bool completed;
             CharacterActionType current_action_type = this.current_action_type;
             bool has_beat_stop = this.beatwatcher.count >= this.current_stop_on_beat;
@@ -998,6 +1011,9 @@ L_read_state:
             return false;
         }
 
+        public void FreezeAnimation(bool enabled) {
+            this.animation_freezed = enabled;
+        }
 
 
         private static void InternalImportSing(CharacterActionSing sing_info, ModelHolder modelholder, CharacterManifest.Sing sing_entry, int id_direction, string prefix, string suffix) {

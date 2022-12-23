@@ -110,6 +110,9 @@ EM_JS_PRFX(int32_t, character_get_play_calls, (Character character), {
 EM_JS_PRFX(CharacterActionType, character_get_current_action, (Character character), {
     return character_get_current_action(kdmyEngine_obtain(character));
 });
+EM_JS_PRFX(void, character_freeze_animation, (Character character, bool enabled), {
+    character_freeze_animation(kdmyEngine_obtain(character), enabled);
+});
 #endif
 
 
@@ -460,6 +463,15 @@ static int script_character_get_current_action(lua_State* L) {
     return 1;
 }
 
+static int script_character_freeze_animation(lua_State* L) {
+    Character character = luascript_read_userdata(L, CHARACTER);
+
+    bool enabled = lua_toboolean(L, 2);
+
+    character_freeze_animation(character, enabled);
+
+    return 0;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -500,6 +512,7 @@ static const luaL_Reg CHARACTER_FUNCTIONS[] = {
     {"has_direction", script_character_has_direction},
     {"get_play_calls", script_character_get_play_calls},
     {"get_current_action", script_character_get_current_action},
+    {"freeze_animation", script_character_freeze_animation},
     {NULL, NULL}
 };
 

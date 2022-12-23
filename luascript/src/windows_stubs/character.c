@@ -118,3 +118,6 @@ CharacterActionType character_get_current_action(Character character) {
     print_stub("character_get_current_action", "character=%p", character);
     return CHARACTER_ACTION_TYPE_IDLE;
 }
+void character_freeze_animation(Character character, bool enabled) {
+    print_stub("character_get_current_action", "character=%p enabled=(bool)%i", character, enabled);
+}

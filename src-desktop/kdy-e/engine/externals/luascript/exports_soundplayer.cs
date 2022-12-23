@@ -117,6 +117,15 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_soundplayer_has_ended(LuaState L) {
+            SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
+
+            bool ret = soundplayer.HasEnded();
+
+            L.lua_pushboolean(ret);
+            return 1;
+        }
+
 
         ////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +143,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("get_duration", script_soundplayer_get_duration),
             new LuaTableFunction("get_position", script_soundplayer_get_position),
             new LuaTableFunction("seek", script_soundplayer_seek),
+            new LuaTableFunction("has_ended", script_soundplayer_has_ended),
             new LuaTableFunction(null, null)
         };
 

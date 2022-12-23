@@ -537,6 +537,11 @@ EM_JS_PRFX(void, kdmyEngine_forget_obtained, (void* obj_id), {
     if (!ret) throw new Error("Uknown object id:" + obj_id);
 });
 
+EM_JS_PRFX(void*, kdmyEngine_read_window_object, (const char* variable_name), {
+    let obj = window[kdmyEngine_ptrToString(variable_name)];
+    return obj === undefined ? 0 : kdmyEngine_obtain(obj);
+});
+
 EM_JS_PRFX(void, kdmyEngine_write_prop_double, (void* obj_id, const char* field_name, double value), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
@@ -581,6 +586,7 @@ EM_JS_PRFX(void, kdmyEngine_write_prop_boolean, (void* obj_id, const char* field
 });
 
 
+
 double kdmy_read_prop_double(void* obj_id, const char* field_name) {
     return kdmyEngine_read_prop_double(obj_id, field_name);
 }
@@ -606,6 +612,9 @@ void kdmy_forget_obtained(void* obj_id) {
     return kdmyEngine_forget_obtained(obj_id);
 }
 
+void* kdmy_read_window_object(const char* variable_name) {
+    return kdmyEngine_read_window_object(variable_name);
+}
 
 void kdmy_write_prop_double(void* obj_id, const char* field_name, double value) {
     return kdmyEngine_write_prop_double(obj_id, field_name, value);
@@ -625,6 +634,7 @@ void kdmy_write_prop_object(void* obj_id, const char* field_name, void* value) {
 void kdmy_write_prop_boolean(void* obj_id, const char* field_name, bool value) {
     return kdmyEngine_write_prop_boolean(obj_id, field_name, value);
 }
+
 
 #endif
 
