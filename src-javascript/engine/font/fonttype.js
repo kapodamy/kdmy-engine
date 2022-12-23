@@ -29,6 +29,8 @@ async function fonttype_init(src) {
         border_color: [1.0, 1.0, 1.0, 1.0],
         border_size: 0,
         border_enable: 0,
+        border_offset_x: 0,
+        border_offset_y: 0,
 
         instance_id: FONTTYPE_IDS++,
         instance_references: 1,
@@ -246,6 +248,11 @@ function fonttype_set_border_color_rgba8(fonttype, rbga8_color) {
     math2d_color_bytes_to_floats(rbga8_color, 1, fonttype.border_color);
 }
 
+function fonttype_set_border_offset(fonttype, x, y) {
+    fonttype.border_offset_x = x;
+    fonttype.border_offset_y = y;
+}
+
 function fonttype_enable_border(fonttype, enable) {
     fonttype.border_enable = enable;
 }
@@ -383,6 +390,9 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
                 let sdy = dy - fonttype.border_size;
                 let sdw = dw + outline_size;
                 let sdh = dh + outline_size;
+
+                sdx += fonttype.border_offset_x;
+                sdy += fonttype.border_offset_y;
 
                 // queue outlined glyph for batch rendering
                 glyphrenderer_append_glyph(

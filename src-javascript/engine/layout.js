@@ -35,6 +35,7 @@ const LAYOUT_ACTION_REMOVESHADER = 20;
 const LAYOUT_ACTION_SETSHADERUNIFORM = 22;
 const LAYOUT_ACTION_SETBLENDING = 23;
 const LAYOUT_ACTION_VIEWPORT = 24;
+const LAYOUT_ACTION_TEXTBORDEROFFSET = 25;
 
 const LAYOUT_GROUP_ROOT = Symbol("root-group");
 const LAYOUT_BPM_STEPS = 32;// 1/32 beats
@@ -814,6 +815,7 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
 
         visible: 1,
         alpha: 1.0,
+        alpha2: 1.0,
         offsetcolor: [],
         modifier: {},
         parallax: { x: 1.0, y: 1.0, z: 1.0 },
@@ -1572,7 +1574,8 @@ function layout_helper_stack_groups(parent_group) {
     let group = parent_group.context.next_child;
 
     while (group) {
-        group.context.visible = parent_visible && group.visible && group.alpha > 0;
+        let group_alpha = group.alpha * group.alpha2;
+        group.context.visible = parent_visible && group.visible && group_alpha > 0;
         group.context.parent_group = parent_group;
 
         if (group.context.visible) {
@@ -1584,7 +1587,7 @@ function layout_helper_stack_groups(parent_group) {
             sh4matrix_copy_to(parent_group.context.matrix, group.context.matrix);
             sh4matrix_apply_modifier(group.context.matrix, group.modifier);
 
-            group.context.alpha = group.alpha * parent_group.context.alpha;
+            group.context.alpha = group_alpha * parent_group.context.alpha;
 
             if (group.antialiasing == PVR_FLAG_DEFAULT)
                 group.context.antialiasing = parent_group.context.antialiasing;
@@ -1655,6 +1658,9 @@ function layout_helper_group_set_property(group, property_id, value) {
             break;
         case SPRITE_PROP_ANTIALIASING:
             group.antialiasing = Math.trunc(value);
+            break;
+        case SPRITE_PROP_ALPHA2:
+            group.alpha2 = value;
             break;
         default:
             pvrctx_helper_set_modifier_property(group.modifier, property_id, value);
@@ -2108,6 +2114,7 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
 
         visible: vertexprops_parse_boolean(unparsed_group, "visible", 1),
         alpha: layout_helper_parse_float(unparsed_group, "alpha", 1.0),
+        alpha2: 1.0,
         antialiasing: vertexprops_parse_flag(unparsed_group, "antialiasing", PVR_FLAG_DEFAULT),
         offsetcolor: [],
         modifier: {},
@@ -2649,7 +2656,7 @@ async function layout_parse_sprite_action(unparsed_action, animlist, atlas, acti
                 layout_helper_add_action_setshaderuniform(unparsed_entry, entries);
                 break;
             case "SetBlending":
-                layout_helper_parse_action_setblending(unparsed_entry, entries);
+                layout_helper_add_action_setblending(unparsed_entry, entries);
                 break;
             default:
                 console.warn("Unknown action entry: " + unparsed_entry.tagName);
@@ -2698,6 +2705,9 @@ async function layout_parse_text_action(unparsed_action, animlist, action_entrie
             case "Border":
                 layout_helper_add_action_textborder(unparsed_entry, entries);
                 break;
+            case "BorderOffset":
+                layout_helper_add_action_textborderoffset(unparsed_entry, entries);
+                break;
             case "Animation":
                 layout_helper_add_action_animation(unparsed_entry, animlist, entries);
                 break;
@@ -2727,7 +2737,7 @@ async function layout_parse_text_action(unparsed_action, animlist, action_entrie
                 layout_helper_add_action_setshaderuniform(unparsed_entry, entries);
                 break;
             case "SetBlending":
-                layout_helper_parse_action_setblending(unparsed_entry, entries);
+                layout_helper_add_action_setblending(unparsed_entry, entries);
                 break;
             default:
                 console.warn("Unknown Text action entry:" + unparsed_entry.tagName);
@@ -2791,10 +2801,10 @@ async function layout_parse_group_action(unparsed_action, animlist, action_entri
                 layout_helper_add_action_setshaderuniform(unparsed_entry, entries);
                 break;
             case "SetBlending":
-                layout_helper_parse_action_setblending(unparsed_entry, entries);
+                layout_helper_add_action_setblending(unparsed_entry, entries);
                 break;
             case "Viewport":
-                layout_helper_parse_action_viewport(unparsed_entry, entries);
+                layout_helper_add_action_viewport(unparsed_entry, entries);
                 break;
         }
     }
@@ -3012,6 +3022,9 @@ function layout_helper_execute_action_in_textsprite(action, item, viewport_width
                 textsprite_border_set_color(
                     textsprite, entry.rgba[0], entry.rgba[1], entry.rgba[2], entry.rgba[3]
                 );
+                break;
+            case LAYOUT_ACTION_TEXTBORDEROFFSET:
+                textsprite_border_set_offset(textsprite, action.x, action.y);
                 break;
             case LAYOUT_ACTION_PROPERTY:
                 if (entry.property == TEXTSPRITE_PROP_STRING)
@@ -3737,7 +3750,7 @@ function layout_helper_add_action_setshaderuniform(unparsed_entry, action_entrie
     arraylist_add(action_entries, entry);
 }
 
-function layout_helper_parse_action_setblending(unparsed_entry, action_entries) {
+function layout_helper_add_action_setblending(unparsed_entry, action_entries) {
     let has_enable = unparsed_entry.hasAttribute("enabled");
     let enabled = vertexprops_parse_boolean(unparsed_entry, "enabled", 1);
 
@@ -3759,7 +3772,7 @@ function layout_helper_parse_action_setblending(unparsed_entry, action_entries) 
     arraylist_add(action_entries, entry);
 }
 
-function layout_helper_parse_action_viewport(unparsed_entry, action_entries) {
+function layout_helper_add_action_viewport(unparsed_entry, action_entries) {
     let x = vertexprops_parse_float(unparsed_entry, "x", NaN);
     let y = vertexprops_parse_float(unparsed_entry, "y", NaN);
     let width = vertexprops_parse_float(unparsed_entry, "width", NaN);
@@ -3770,6 +3783,18 @@ function layout_helper_parse_action_viewport(unparsed_entry, action_entries) {
         x, y, width, height
     };
 
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_add_action_textborderoffset(unparsed_entry, action_entries) {
+    let offset_x = layout_helper_parse_float(unparsed_entry, "offsetX", NaN);
+    let offset_y = layout_helper_parse_float(unparsed_entry, "offsetY", NaN);
+    if (Number.isNaN(offset_x) && Number.isNaN(offset_y)) {
+        console.error("layout_helper_add_action_borderoffser() invalid offset: " + unparsed_entry.outerHTML);
+        return;
+    }
+
+    let entry = { type: LAYOUT_ACTION_TEXTBORDEROFFSET, x: offset_x, y: offset_y };
     arraylist_add(action_entries, entry);
 }
 

@@ -108,7 +108,7 @@ function sprite_draw(sprite, pvrctx) {
     }
 
     pvr_context_save(pvrctx);
-    pvr_context_set_vertex_alpha(pvrctx, sprite.alpha);
+    pvr_context_set_vertex_alpha(pvrctx, sprite.alpha * sprite.alpha2);
     pvr_context_set_vertex_offsetcolor(pvrctx, sprite.offsetcolor);
     if (sprite.psshader) pvr_context_add_shader(pvrctx, sprite.psshader);
     
@@ -201,6 +201,7 @@ function sprite_init(src_texture) {
     sprite.draw_height = -1;
 
     sprite.alpha = 1.0;
+    sprite.alpha2 = 1.0;
     sprite.visible = 1;
     sprite.z_index = 1;
     sprite.z_offset = 0;
@@ -394,7 +395,7 @@ function sprite_set_alpha(sprite, alpha) {
 }
 
 function sprite_get_alpha(sprite) {
-    return sprite.alpha;
+    return sprite.alpha * sprite.alpha2;
 }
 
 function sprite_set_visible(sprite, visible) {
@@ -682,6 +683,9 @@ function sprite_set_property(sprite, property_id, value) {
         case SPRITE_PROP_FLIP_CORRECTION:
             sprite.flip_correction = value >= 1.0;
             sprite.vertex_dirty = true;
+            break;
+        case SPRITE_PROP_ALPHA2:
+            sprite.alpha2 = value;
             break;
     }
 }

@@ -151,8 +151,9 @@ EM_JS_PRFX(void, week_enable_credits_on_completed, (RoundContext roundcontext), 
 EM_JS_PRFX(void, week_end, (RoundContext roundcontext, bool round_or_week, bool loose_or_win), {
     week_end(kdmyEngine_obtain(roundcontext), round_or_week, loose_or_win);
 });
-EM_JS_PRFX(void, week_get_dialogue, (RoundContext roundcontext), {
-    week_get_dialogue(kdmyEngine_obtain(roundcontext));
+EM_JS_PRFX(Dialogue, week_get_dialogue, (RoundContext roundcontext), {
+    let ret = week_get_dialogue(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret);
 });
 EM_JS_PRFX(void, week_set_ui_shader, (RoundContext roundcontext, PSShader psshader), {
     week_set_ui_shader(kdmyEngine_obtain(roundcontext), kdmyEngine_obtain(psshader));
@@ -562,9 +563,9 @@ static int script_week_get_dialogue(lua_State* L) {
     RoundContext roundcontext = (RoundContext)luascript->context;
 
 
-    week_get_dialogue(roundcontext);
+    Dialogue dialogue = week_get_dialogue(roundcontext);
 
-    return 0;
+    return script_dialogue_new(L, dialogue);
 }
 
 static int script_week_set_ui_shader(lua_State* L) {

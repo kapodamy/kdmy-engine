@@ -67,6 +67,7 @@
             <xs:enumeration value="flipY" />
             <xs:enumeration value="antialiasing" />
             <xs:enumeration value="flipCorrection" />
+            <xs:enumeration value="alpha2" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="props-text">
@@ -86,6 +87,8 @@
             <xs:enumeration value="borderColorG" />
             <xs:enumeration value="borderColorB" />
             <xs:enumeration value="borderColorA" />
+            <xs:enumeration value="borderOffsetX" />
+            <xs:enumeration value="borderOffsetY" />
             <xs:enumeration value="paragraphSeparation" />
             <xs:enumeration value="string" />
             <xs:enumeration value="wordbreak" />
@@ -137,6 +140,7 @@
             <xs:enumeration value="groupViewportY" />
             <xs:enumeration value="groupViewportWidth" />
             <xs:enumeration value="groupViewportHeight" />
+            <xs:enumeration value="alpha2" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="wordbreak">
@@ -244,6 +248,7 @@
         <xs:attribute name="flipY" type="xs:boolean" use="optional" />
         <xs:attribute name="antialiasing" type="antialiasing" use="optional" />
         <xs:attribute name="flipCorrection" type="xs:boolean" use="optional" />
+        <xs:attribute name="alpha2" type="xs:float" use="optional" />
     </xs:attributeGroup>
     <xs:attributeGroup name="props-text">
         <xs:attribute name="fontSize" type="xs:float" use="optional" />
@@ -261,6 +266,8 @@
         <xs:attribute name="borderColorG" type="xs:float" use="optional" />
         <xs:attribute name="borderColorB" type="xs:float" use="optional" />
         <xs:attribute name="borderColorA" type="xs:float" use="optional" />
+        <xs:attribute name="borderOffsetX" type="xs:float" use="optional" />
+        <xs:attribute name="borderOffsetY" type="xs:float" use="optional" />
         <xs:attribute name="paragraphSeparation" type="xs:float" use="optional" />
         <xs:attribute name="string" type="xs:string" use="optional" />
         <xs:attribute name="wordbreak" type="wordbreak" use="optional" />
@@ -380,6 +387,10 @@
         <xs:attribute name="alpha" type="xs:float" use="optional" default="NaN" />
         <xs:attributeGroup ref="colors" />
     </xs:complexType>
+    <xs:complexType name="BorderOffset">
+        <xs:attribute name="offsetX" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="offsetY" type="xs:float" use="optional" default="NaN" />
+    </xs:complexType>
     <xs:complexType name="Property-sound">
         <xs:attribute name="name" type="props-sound" use="required" />
         <xs:attribute name="value" type="xs:anySimpleType" use="required" />
@@ -417,6 +428,7 @@
         <xs:attribute name="scaleDirectionY" type="xs:float" use="optional" default="NaN" />
         <xs:attribute name="rotatePivotU" type="xs:float" use="optional" default="NaN" />
         <xs:attribute name="rotatePivotV" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="alpha2" type="xs:float" use="optional" default="NaN" />
     </xs:complexType>
     <xs:complexType name="Camera-offsetmovefromto">
         <xs:attribute name="x" type="xs:float" use="optional" default="NaN" />
@@ -498,6 +510,7 @@
                         <xs:element name="MaxSize" type="Size" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="String" type="String" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Border" type="Border" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="BorderOffset" type="BorderOffset" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="unbounded" />

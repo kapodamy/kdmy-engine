@@ -1057,6 +1057,9 @@ function __js__character_face_as_opponent(character, face_as_opponent) {
 function __js__character_flip_orientation(character, enable) {
     return character_flip_orientation(kdmyEngine_obtain(character), enable)
 }
+function __js__character_freeze_animation(character, enabled) {
+    character_freeze_animation(kdmyEngine_obtain(character), enabled)
+}
 function __js__character_get_current_action(character) {
     return character_get_current_action(kdmyEngine_obtain(character))
 }
@@ -1501,6 +1504,10 @@ function __js__kdmyEngine_read_prop_string(obj_id, field_name) {
     let field = kdmyEngine_ptrToString(field_name);
     let ret = obj[field];
     return kdmyEngine_stringToPtr(ret)
+}
+function __js__kdmyEngine_read_window_object(variable_name) {
+    let obj = window[kdmyEngine_ptrToString(variable_name)];
+    return obj === undefined ? 0 : kdmyEngine_obtain(obj)
 }
 function __js__kdmyEngine_write_prop_boolean(obj_id, field_name, value) {
     let obj = kdmyEngine_obtain(obj_id);
@@ -2090,6 +2097,9 @@ function __js__soundplayer_get_duration(soundplayer) {
 function __js__soundplayer_get_position(soundplayer) {
     return soundplayer_get_position(kdmyEngine_obtain(soundplayer))
 }
+function __js__soundplayer_has_ended(soundplayer) {
+    return soundplayer_has_ended(kdmyEngine_obtain(soundplayer))
+}
 function __js__soundplayer_is_muted(soundplayer) {
     return soundplayer_is_muted(kdmyEngine_obtain(soundplayer))
 }
@@ -2460,6 +2470,9 @@ function __js__textsprite_border_enable(textsprite, enable) {
 function __js__textsprite_border_set_color(textsprite, r, g, b, a) {
     textsprite_border_set_color(kdmyEngine_obtain(textsprite), r, g, b, a)
 }
+function __js__textsprite_border_set_offset(textsprite, x, y) {
+    textsprite_border_set_offset(kdmyEngine_obtain(textsprite), x, y)
+}
 function __js__textsprite_border_set_size(textsprite, border_size) {
     textsprite_border_set_size(kdmyEngine_obtain(textsprite), border_size)
 }
@@ -2749,7 +2762,8 @@ function __js__week_get_current_track_info(roundcontext, name, difficult, index)
     kdmyEngine_set_int32(index, values.index)
 }
 function __js__week_get_dialogue(roundcontext) {
-    week_get_dialogue(kdmyEngine_obtain(roundcontext))
+    let ret = week_get_dialogue(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_get_girlfriend(roundcontext) {
     let ret = week_get_girlfriend(kdmyEngine_obtain(roundcontext));
@@ -6311,6 +6325,7 @@ var asmLibraryArg = {
     "__js__character_enable_reference_size": __js__character_enable_reference_size,
     "__js__character_face_as_opponent": __js__character_face_as_opponent,
     "__js__character_flip_orientation": __js__character_flip_orientation,
+    "__js__character_freeze_animation": __js__character_freeze_animation,
     "__js__character_get_current_action": __js__character_get_current_action,
     "__js__character_get_modifier": __js__character_get_modifier,
     "__js__character_get_play_calls": __js__character_get_play_calls,
@@ -6436,6 +6451,7 @@ var asmLibraryArg = {
     "__js__kdmyEngine_read_prop_integer": __js__kdmyEngine_read_prop_integer,
     "__js__kdmyEngine_read_prop_object": __js__kdmyEngine_read_prop_object,
     "__js__kdmyEngine_read_prop_string": __js__kdmyEngine_read_prop_string,
+    "__js__kdmyEngine_read_window_object": __js__kdmyEngine_read_window_object,
     "__js__kdmyEngine_write_prop_boolean": __js__kdmyEngine_write_prop_boolean,
     "__js__kdmyEngine_write_prop_double": __js__kdmyEngine_write_prop_double,
     "__js__kdmyEngine_write_prop_float": __js__kdmyEngine_write_prop_float,
@@ -6597,6 +6613,7 @@ var asmLibraryArg = {
     "__js__soundplayer_fade": __js__soundplayer_fade,
     "__js__soundplayer_get_duration": __js__soundplayer_get_duration,
     "__js__soundplayer_get_position": __js__soundplayer_get_position,
+    "__js__soundplayer_has_ended": __js__soundplayer_has_ended,
     "__js__soundplayer_is_muted": __js__soundplayer_is_muted,
     "__js__soundplayer_is_playing": __js__soundplayer_is_playing,
     "__js__soundplayer_loop_enable": __js__soundplayer_loop_enable,
@@ -6709,6 +6726,7 @@ var asmLibraryArg = {
     "__js__textsprite_background_set_size": __js__textsprite_background_set_size,
     "__js__textsprite_border_enable": __js__textsprite_border_enable,
     "__js__textsprite_border_set_color": __js__textsprite_border_set_color,
+    "__js__textsprite_border_set_offset": __js__textsprite_border_set_offset,
     "__js__textsprite_border_set_size": __js__textsprite_border_set_size,
     "__js__textsprite_force_case": __js__textsprite_force_case,
     "__js__textsprite_get_draw_size": __js__textsprite_get_draw_size,

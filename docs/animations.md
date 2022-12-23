@@ -175,6 +175,7 @@ This list is not complete (missing textsprite and layoutgroup properties), only 
 - `flipX flipY` mirror the texture. (Defaults to zero)
 - `flipCorrection` mirror the texture from the center, keeping the same draw location. (Defaults to one)
 - `zoffset` offset to z index, avoids overwritting the z index value. (Defaults to zero)
+- `alpha2` secondary sprite alpha, use this value instead of `alpha` to avoid mess-up colors
 
 </br>
 

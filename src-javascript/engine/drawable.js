@@ -8,10 +8,11 @@ function drawable_init(z, private_data, callback_draw, callback_animate) {
         id: DRAWABLE_IDS++,
 
         alpha: 1.0,
+        alpha2: 1.0,
         offsetcolor: [],
         modifier: {},
         psshader: null,
-                
+
         blend_enabled: true,
         blend_src_rgb: BLEND_DEFAULT,
         blend_dst_rgb: BLEND_DEFAULT,
@@ -66,7 +67,7 @@ function drawable_set_alpha(drawable, alpha) {
 }
 
 function drawable_get_alpha(drawable) {
-    return drawable.alpha;
+    return drawable.alpha * drawable.alpha2;
 }
 
 function drawable_set_offsetcolor(drawable, r, g, b, a) {
@@ -193,18 +194,21 @@ function drawable_set_property(drawable, property_id, value) {
         case SPRITE_PROP_ANTIALIASING:
             drawable.antialiasing = Math.trunc(value);
             break;
+        case SPRITE_PROP_ALPHA2:
+            drawable.alpha2 = value;
+            break;
     }
 }
 
 function drawable_helper_apply_in_context(drawable, pvrctx) {
     pvr_context_apply_modifier(pvrctx, drawable.modifier);
-    pvr_context_set_vertex_alpha(pvrctx, drawable.alpha);
-    pvr_context_set_vertex_offsetcolor(pvrctx, drawable.offsetcolor);
+    pvr_context_set_global_alpha(pvrctx, drawable.alpha * drawable.alpha2);
+    pvr_context_set_global_offsetcolor(pvrctx, drawable.offsetcolor);
     if (drawable.antialiasing != PVR_FLAG_DEFAULT) {
         pvr_context_set_global_antialiasing(pvrctx, drawable.antialiasing);
     }
     if (drawable.psshader) pvr_context_add_shader(pvrctx, drawable.psshader);
-    
+
     pvr_context_set_vertex_blend(
         pvrctx,
         drawable.blend_enabled,

@@ -133,7 +133,7 @@ namespace Engine.Game {
             }
 
             health_gain *= multiplier;
-            if (this.can_recover || (health_gain > 0.0 && !this.can_recover)) {
+            if (this.can_recover || (health_gain < 0.0 && !this.can_recover)) {
                 double health = health_gain + this.health;
                 if (this.health < 0.0 && multiplier < 0) this.deads_by_fault++;
                 this.health = Math.Min(health, this.health_max);
@@ -185,7 +185,7 @@ namespace Engine.Game {
             this.iterations++;
 
             double health_gain = Funkin.HEALTH_DIFF_OVER_SHIT * multiplier;
-            if (this.can_recover || (health_gain > 0.0 && !this.can_recover)) {
+            if (this.can_recover || (health_gain < 0.0 && !this.can_recover)) {
                 double health = health_gain + this.health;
                 if (this.health < 0.0 && multiplier < 0) this.deads_by_fault++;
                 this.health = Math.Min(health, this.health_max);

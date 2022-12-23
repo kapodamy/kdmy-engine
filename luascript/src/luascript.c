@@ -96,6 +96,7 @@ static void luascript_register_objects(lua_State* L, bool is_week) {
     script_textsprite_register(L);
     script_psshader_register(L);
     script_tweenlerp_register(L);
+    script_tweenkeyframe_register(L);
     script_atlas_register(L);
     script_animlist_register(L);
     script_animlistitem_register(L);
@@ -113,6 +114,16 @@ static void luascript_register_objects(lua_State* L, bool is_week) {
     script_math2d_register(L);
     script_timer_register(L);
     script_fs_register(L);
+    script_enginesettings_register(L);
+
+    // set engine settings
+#ifdef JAVASCRIPT
+    script_enginesettings_new(L, kdmy_read_window_object("SETTINGS"));
+    lua_setglobal(L, "Settings");
+#else
+    script_enginesettings_new(L, &SETTINGS);
+    lua_setglobal(L, "Settings");
+#endif
 }
 
 static void luascript_register_sandbox(lua_State* L) {

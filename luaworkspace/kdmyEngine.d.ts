@@ -343,6 +343,7 @@ declare global {
         border_enable(enable: boolean): void;
         border_set_size(border_size: number): void;
         border_set_color(r: number, g: number, b: number, a: number): void;
+        border_set_offset(x: number, y: number): void;
         set_antialiasing(antialiasing: PVRFlag): void;
         set_wordbreak(wordbreak: FontWordBreak): void;
         set_shader(textsprite: TextSprite, psshader: PSShader): void;
@@ -365,6 +366,7 @@ declare global {
         get_duration(): number;
         get_position(): number;
         seek(timestamp: number): void;
+        has_ended(): boolean;
     }
     interface Messagebox {
         set_buttons_text(left_text: string, right_text: string): void;
@@ -422,6 +424,7 @@ declare global {
         has_direction(name: string, is_extra: boolean): boolean;
         get_play_calls(): number;
         get_current_action(): CharacterActionType;
+        freeze_animation(enabled: boolean): void;
     }
     interface SongPlayer {
         changesong(src: string, prefer_no_copyright: boolean): boolean;
@@ -812,6 +815,12 @@ declare global {
         animation_restart(): void;
         animation_end(): void;
     }
+    interface EngineSettings {
+        readonly distractionsEnabled: boolean;
+        readonly flahsingLightsEnabled: boolean;
+        readonly inversedScrollEnabled: boolean;
+        readonly songProgressbarEnabled: boolean;
+    }
 
     //
     // Global metatables initializers (class static contructors in typescript/javascript)
@@ -930,4 +939,8 @@ declare global {
     function modding_unlockdirective_remove(name: string): void;
     function modding_unlockdirective_get(name: string): number | null;
 
+    //
+    // Engine settings
+    //
+    const Settings: EngineSettings;
 }

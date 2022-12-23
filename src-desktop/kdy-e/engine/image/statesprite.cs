@@ -41,6 +41,7 @@ namespace Engine.Image {
         private float draw_width;
         private float draw_height;
         private float alpha;
+        private float alpha2;
         private bool visible;
         private float z_index;
         private float z_offset;
@@ -185,7 +186,7 @@ namespace Engine.Image {
             }
 
             pvrctx.Save();
-            pvrctx.SetVertexAlpha(this.alpha);
+            pvrctx.SetVertexAlpha(this.alpha * this.alpha2);
             pvrctx.SetVertexOffsetColor(this.offsetcolor);
             if (this.psshader != null) pvrctx.AddShader(this.psshader);
 
@@ -279,6 +280,7 @@ namespace Engine.Image {
             statesprite.draw_height = -1;
 
             statesprite.alpha = 1.0f;
+            statesprite.alpha2 = 1.0f;
             statesprite.visible = true;
             statesprite.z_index = 1;
             statesprite.z_offset = 0;
@@ -549,6 +551,9 @@ namespace Engine.Image {
                     this.flip_correction = value >= 1.0f;
                     this.vertex_dirty = true;
                     break;
+                case VertexProps.SPRITE_PROP_ALPHA2:
+                    this.alpha2 = value;
+                    break;
             }
         }
 
@@ -623,7 +628,7 @@ namespace Engine.Image {
         }
 
         public float GetAlpha() {
-            return this.alpha;
+            return this.alpha * this.alpha2;
         }
 
         public void GetOffsetSourceSize(out float width, out float height) {

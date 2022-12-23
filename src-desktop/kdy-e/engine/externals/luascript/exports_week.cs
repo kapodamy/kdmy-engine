@@ -348,9 +348,9 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_week_get_dialogue(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            Week.GetDialogue(roundcontext);
+            Dialogue dialogue = Week.GetDialogue(roundcontext);
 
-            return 0;
+            return ExportsDialogue.script_dialogue_new(L, dialogue);
         }
 
         static int script_week_set_ui_shader(LuaState L) {

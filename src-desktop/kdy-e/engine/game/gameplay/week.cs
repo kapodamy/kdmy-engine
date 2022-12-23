@@ -581,9 +581,13 @@ namespace Engine.Game.Gameplay {
                 Week.ChangeCharacterCameraName(roundcontext, true, Week.ROUND_CAMERA_OPONNENT);
                 Week.ChangeCharacterCameraName(roundcontext, false, Week.ROUND_CAMERA_PLAYER);
 
+                Week.ToggleStates(roundcontext, gameplaymanifest);
                 roundcontext.messagebox.SetImageSprite(null);
-                for (int i = 0 ; i < roundcontext.players_size ; i++)
+                for (int i = 0 ; i < roundcontext.players_size ; i++) {
                     roundcontext.players[i].character.UseAlternateSingAnimations(false);
+                    roundcontext.players[i].character.FreezeAnimation(false);
+                    roundcontext.players[i].character.SetVisible(true);
+                }
                 roundcontext.scriptcontext.halt_flag = false;
                 roundcontext.layout.SetSingleItemToDraw(null);
                 if (roundcontext.songplayer != null) roundcontext.songplayer.Mute(false);
@@ -2234,7 +2238,14 @@ namespace Engine.Game.Gameplay {
                 roundcontext.layout.Animate(elapsed);
                 roundcontext.layout.Draw(pvr_context);
 
-                if (roundcontext.dialogue.IsCompleted()) show_dialog = false;
+                if (roundcontext.dialogue.IsCompleted()) {
+                    show_dialog = false;
+                    for (int i = 0 ; i < roundcontext.players_size ; i++) {
+                        if (roundcontext.players[i].controller != null) {
+                            roundcontext.players[i].controller.ClearButtons();// antibounce
+                        }
+                    }
+                }
             }
 
             if (check_ready) roundcontext.countdown.Ready();

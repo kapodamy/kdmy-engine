@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using CsharpWrapper;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
+using Engine.Game.Gameplay;
 using Engine.Platform;
 
 namespace Engine.Externals.LuaScriptInterop {
@@ -69,6 +71,7 @@ namespace Engine.Externals.LuaScriptInterop {
             ExportsTextSprite.script_textsprite_register(lua);
             ExportsPSShader.script_psshader_register(lua);
             ExportsTweenLerp.script_tweenlerp_register(lua);
+            ExportsTweenKeyframe.script_tweenkeyframe_register(lua);
             ExportsAtlas.script_atlas_register(lua);
             ExportsAnimList.script_animlist_register(lua);
             ExportsAnimListItem.script_animlistitem_register(lua);
@@ -97,6 +100,10 @@ namespace Engine.Externals.LuaScriptInterop {
             ExportsMath2D.script_math2d_register(lua);
             ExportsTimer.script_timer_register(lua);
             ExportsFS.script_fs_register(lua);
+            ExportsEngineSettings.script_enginesettings_register(lua);
+
+            // set engine settings
+            lua.RegisterConstantUserdata<object>("Settings", ExportsEngineSettings.script_enginesettings_new, EngineSettings.ini);
         }
 
         private static void RegisterSandbox(ManagedLuaState lua) {

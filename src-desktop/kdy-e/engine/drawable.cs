@@ -16,6 +16,7 @@ namespace Engine {
 
         private int id;
         private float alpha;
+        private float alpha2;
         private float[] offsetcolor;
         private Modifier modifier;
         private float z_index;
@@ -48,6 +49,7 @@ namespace Engine {
             this.id = Drawable.IDS++;
 
             this.alpha = 1.0f;
+            this.alpha2 = 1.0f;
             this.offsetcolor = new float[4];
             this.modifier = new Modifier();
 
@@ -103,7 +105,7 @@ namespace Engine {
         }
 
         public float GetAlpha() {
-            return this.alpha;
+            return this.alpha * this.alpha2;
         }
 
         public void SetOffsetColor(float r, float g, float b, float a) {
@@ -226,13 +228,16 @@ namespace Engine {
                 case VertexProps.SPRITE_PROP_ANTIALIASING:
                     this.antialiasing = (PVRContextFlag)((int)Math.Truncate(value));
                     break;
+                case VertexProps.SPRITE_PROP_ALPHA2:
+                    this.alpha2 = value;
+                    break;
             }
         }
 
         public void HelperApplyInContext(PVRContext pvrctx) {
             pvrctx.ApplyModifier(this.modifier);
-            pvrctx.SetVertexAlpha(this.alpha);
-            pvrctx.SetVertexOffsetColor(this.offsetcolor);
+            pvrctx.SetGlobalAlpha(this.alpha * this.alpha2);
+            pvrctx.SetGlobalOffsetColor(this.offsetcolor);
             if (this.antialiasing != PVRContextFlag.DEFAULT) {
                 pvrctx.SetGlobalAntialiasing(this.antialiasing);
             }

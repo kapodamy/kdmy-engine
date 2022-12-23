@@ -720,10 +720,27 @@ namespace Engine.Game {
                     description = "Shows the remaining song duration instead of time elapsed",
                     is_bool = true,
                     value_bool = false,
-                    ini_key="song_progressbar_remaining"
+                    ini_key = "song_progressbar_remaining"
                 },
+                new SettingOption() {
+                    name = "DISTRACTIONS",
+                    description = "Enables/disables stage distractions during the gameplay.\n" +
+                                  "(Depends on the week if honours this setting)",
+                    is_bool = true,
+                    value_bool = false,
+                    ini_key = "gameplay_enabled_distractions"
+                },
+                new SettingOption() {
+                    name = "FLASHING LIGHTS",
+                    description = "Rhythm games often use flashing lights, sometimes they can be annoying or cause seizures.\n" +
+                                  "(Depends on the week if honours this setting)",
+                    is_bool = true,
+                    value_bool = false,
+                    ini_key = "gameplay_enabled_flashinglights"
+                },
+
             };
-            int options_size = 6;
+            int options_size = options.Length;
 
             // load current settings
             for (int i = 0 ; i < options_size ; i++) {

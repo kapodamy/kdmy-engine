@@ -95,7 +95,8 @@ async function character_init(charactermanifest) {
         inverted_to: null,
 
         character_scale: 1.0,
-        played_actions_count: 0
+        played_actions_count: 0,
+        animation_freezed: 0
     };
 
     beatwatcher_reset(character.beatwatcher, 1, 100);
@@ -720,6 +721,18 @@ function character_animate(character, elapsed) {
         animsprite_update_drawable(character.drawable_animation, character.drawable, 1);
     }
 
+    if (character.animation_freezed) {
+        if (character.current_use_frame_rollback)
+            animsprite_rollback(character.current_anim, elapsed * CHARACTER_ROLLBACK_SPEED);
+        else
+            animsprite_animate(character.current_anim, elapsed);
+
+        animsprite_update_statesprite(character.current_anim, character.statesprite, 1);
+        character_internal_calculate_location(character);
+        return 1;
+    }
+
+
     let completed;
     const current_action_type = character.current_action_type;
     let has_beat_stop = character.beatwatcher.count >= character.current_stop_on_beat;
@@ -955,6 +968,10 @@ function character_has_direction(character, name, is_extra) {
     }
 
     return 0;
+}
+
+function character_freeze_animation(character, enabled) {
+    character.animation_freezed = enabled;
 }
 
 

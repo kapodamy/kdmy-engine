@@ -79,6 +79,9 @@ EM_JS_PRFX(void, textsprite_border_set_size, (TextSprite textsprite, float borde
 EM_JS_PRFX(void, textsprite_border_set_color, (TextSprite textsprite, float r, float g, float b, float a), {
     textsprite_border_set_color(kdmyEngine_obtain(textsprite), r, g, b, a);
 });
+EM_JS_PRFX(void, textsprite_border_set_offset, (TextSprite textsprite, float x, float y), {
+    textsprite_border_set_offset(kdmyEngine_obtain(textsprite), x, y);
+});
 EM_JS_PRFX(void, textsprite_set_antialiasing, (TextSprite textsprite, PVRFlag antialiasing), {
     textsprite_set_antialiasing(kdmyEngine_obtain(textsprite), antialiasing);
 });
@@ -348,6 +351,17 @@ static int script_textsprite_border_set_color(lua_State* L) {
     return 0;
 }
 
+static int script_textsprite_border_set_offset(lua_State* L) {
+    TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
+
+    float x = (float)luaL_optnumber(L, 2, NAN);
+    float y = (float)luaL_optnumber(L, 3, NAN);
+
+    textsprite_border_set_offset(textsprite, x, y);
+
+    return 0;
+}
+
 static int script_textsprite_set_antialiasing(lua_State* L) {
     TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
 
@@ -454,6 +468,7 @@ static const luaL_Reg TEXTSPRITE_FUNCTIONS[] = {
     {"border_enable", script_textsprite_border_enable},
     {"border_set_size", script_textsprite_border_set_size},
     {"border_set_color", script_textsprite_border_set_color},
+    {"border_set_offset", script_textsprite_border_set_offset},
     {"set_antialiasing", script_textsprite_set_antialiasing},
     {"set_wordbreak", script_textsprite_set_wordbreak},
     {"set_shader", script_textsprite_set_shader},

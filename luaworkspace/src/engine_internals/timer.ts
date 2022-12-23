@@ -9,12 +9,14 @@ type TimerMapEntry = {
     is_song_driven: boolean;
     callback: TimerCallback;
     args: any[];
+    id: number;
 };
 
 
 let ______kdmyEngine_timer_ids: number = 0;
-let ______kdmyEngine_timer_table: LuaTable<number, TimerMapEntry> = new LuaTable<number, TimerMapEntry>();
+let ______kdmyEngine_timer_table = new LuaTable<number, TimerMapEntry>();
 let ______kdmyEngine_timer_last_sngts = 0.0;
+let ______kdmyEngine_timer_removes = 0;
 
 function ______kdmyEngine_timer_add(intrv: boolean, sng: boolean, dly: number, cb: TimerCallback, args: any): number {
     if (typeof cb !== "function")
@@ -24,7 +26,6 @@ function ______kdmyEngine_timer_add(intrv: boolean, sng: boolean, dly: number, c
     if (typeof dly !== "number" || dly != dly || dly == Infinity || dly == -Infinity)
         error("The delay is not a finite number");
 
-    let id = ______kdmyEngine_timer_ids;
     let timestamp: number;
 
     if (sng) {
@@ -44,31 +45,39 @@ function ______kdmyEngine_timer_add(intrv: boolean, sng: boolean, dly: number, c
         is_interval: intrv,
         is_song_driven: sng,
         callback: cb,
-        args: args
+        args: args,
+        id: ______kdmyEngine_timer_ids
     };
 
-    ______kdmyEngine_timer_table.set(id, entry);
+    table.insert(______kdmyEngine_timer_table as any, entry);
     ______kdmyEngine_timer_ids++;
 
-    return id;
+    return entry.id;
 }
 function ______kdmyEngine_timer_run(timestamp: number, song_driven_only: boolean) {
     if (song_driven_only) ______kdmyEngine_timer_last_sngts = timestamp;
 
-    for (const [id, entry] of ______kdmyEngine_timer_table) {
-        if (!entry.callback) {
-            ______kdmyEngine_timer_table.delete(id);
-        } else if (entry.is_song_driven == song_driven_only && timestamp >= entry.timestamp) {
+    // keep referene until iteration is done
+    let removes = ______kdmyEngine_timer_removes;
+
+    for (let i = 1, length = ______kdmyEngine_timer_table.length(); i <= length; i++) {
+        let entry = ______kdmyEngine_timer_table.get(i);
+        if (entry && entry.is_song_driven == song_driven_only && timestamp >= entry.timestamp) {
             if (entry.is_interval) {
                 entry.timestamp += entry.delay;
             } else {
-                ______kdmyEngine_timer_table.delete(id);
+                ______kdmyEngine_timer_table.delete(i);
             }
 
             let [result, error] = pcall(entry.callback, ...table.unpack(entry.args));
             if (!result) print(error);
 
-            if (______kdmyEngine_timer_table.length() < 1) break;
+            // check if any callback was calceled, start again
+            if (removes != ______kdmyEngine_timer_removes) {
+                i = 0;
+                length = ______kdmyEngine_timer_table.length();
+                removes = ______kdmyEngine_timer_removes;
+            }
         }
     }
 }
@@ -89,14 +98,22 @@ function timer_songcallback_timeout(delay: number, fn: TimerCallback, ...args: a
 function timer_callback_cancel(callback_id: number): boolean {
     if (callback_id < 0) return false;
 
-    let entry = ______kdmyEngine_timer_table.get(callback_id);
-    if (entry) entry.callback = null;
+    for (let i = 1, length = ______kdmyEngine_timer_table.length(); i <= length; i++) {
+        let entry = ______kdmyEngine_timer_table.get(i);
+        if (entry && entry.id == callback_id) {
+            ______kdmyEngine_timer_removes++;
+            ______kdmyEngine_timer_table.delete(i);
+            return true;
+        }
+    }
 
-    return entry != null;
+    return false;
 }
 function timer_callback_cancel_all(): number {
     let length = ______kdmyEngine_timer_table.length();
+
     ______kdmyEngine_timer_table = new LuaTable<number, TimerMapEntry>();
+    ______kdmyEngine_timer_removes++;
 
     collectgarbage();
     return length;

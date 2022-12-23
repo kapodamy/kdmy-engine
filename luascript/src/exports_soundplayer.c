@@ -40,6 +40,9 @@ EM_JS_PRFX(double, soundplayer_get_position, (SoundPlayer soundplayer), {
 EM_JS_PRFX(void, soundplayer_seek, (SoundPlayer soundplayer, double timestamp), {
     return soundplayer_seek(kdmyEngine_obtain(soundplayer), timestamp);
 });
+EM_JS_PRFX(bool, soundplayer_has_ended, (SoundPlayer soundplayer), {
+    return soundplayer_has_ended(kdmyEngine_obtain(soundplayer));
+});
 #endif
 
 
@@ -154,6 +157,15 @@ static int script_soundplayer_seek(lua_State* L) {
     return 0;
 }
 
+static int script_soundplayer_has_ended(lua_State* L) {
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
+
+    bool ret = soundplayer_has_ended(soundplayer);
+
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +183,7 @@ static const luaL_Reg SOUNDPLAYER_FUNCTIONS[] = {
     {"get_duration", script_soundplayer_get_duration},
     {"get_position", script_soundplayer_get_position},
     {"seek", script_soundplayer_seek},
+    {"has_ended", script_soundplayer_has_ended},
     {NULL, NULL}
 };
 

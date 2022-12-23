@@ -21,6 +21,7 @@
 			<Offset x="123" y="456" />
 			<OffsetIdle x="123" y="456" />
 			<OffsetOpen x="123" y="456" />
+            <PortraitAlign vertical="center|start|end" horizontal="center|start|end" />
 			<SpeechImage scale="1.0" name="normal" openAnim="Speech Bubble Normal Open" idleAnim="speech bubble normal" idleLooped="true|false"/>
 			<SpeechImage scale="1.0" name="loud" src="/assets/image/model.xml" openAnim="middle speech bubble loud open" idleAnim="AHH speech bubble" />
 		</SpeechImageList>
@@ -63,8 +64,9 @@
 		<BackgroundChange name="stage1" />
 		<BackgroundRemove />
 
-		<Lua function="abc" /><!-- calls an function named "abc" -->
+		<Lua function="abc" /><!-- calls an function named "abc" without arguments -->
 		<Lua>
+            -- evals lua code
 			local nro = 123
 			some_function(nro, "abc", false)
 			print("hello world")
@@ -91,6 +93,7 @@
 		<TextFont font="vcr" />
 		<TextColor rgba="0xFFFFFF7F" rgb="0xFFFFFF" alpha="0.8" />
 		<TextBorderColor rgba="0xFFFFFF7F" rgb="0xFFFFFF" alpha="0.8" />
+		<TextBorderOffset offsetX="0" offsetY="0" />
 		<TextSize size="123" />
 		<TextParagraphSpace size="123" />
 		<TextAlign horizontal="start|center|end" vertical="start|center|end" paragraph="start|center|end" />

@@ -33,12 +33,13 @@ const DIALOGUE_TYPE_SPEECH_BACKGROUND = 18;
 const DIALOGUE_TYPE_TEXT_FONT = 19;
 const DIALOGUE_TYPE_TEXT_COLOR = 20;
 const DIALOGUE_TYPE_TEXT_BORDERCOLOR = 21;
-const DIALOGUE_TYPE_TEXT_PARAGRAPHSPACE = 22;
-const DIALOGUE_TYPE_TEXT_SIZE = 23;
-const DIALOGUE_TYPE_TEXT_ALIGN = 24;
-const DIALOGUE_TYPE_RUNMULTIPLECHOICE = 25;
-const DIALOGUE_TYPE_TITLE = 26;
-const DIALOGUE_TYPE_NOWAIT = 27;
+const DIALOGUE_TYPE_TEXT_BORDEROFFSET = 22;
+const DIALOGUE_TYPE_TEXT_PARAGRAPHSPACE = 23;
+const DIALOGUE_TYPE_TEXT_SIZE = 24;
+const DIALOGUE_TYPE_TEXT_ALIGN = 25;
+const DIALOGUE_TYPE_RUNMULTIPLECHOICE = 26;
+const DIALOGUE_TYPE_TITLE = 27;
+const DIALOGUE_TYPE_NOWAIT = 28;
 
 const DIALOGUE_REPEATANIM_NONE = 0;
 const DIALOGUE_REPEATANIM_ONCE = 1;
@@ -452,6 +453,8 @@ function dialogue_animate(dialogue, elapsed) {
         let exists;
         let anim;
 
+        let completed = statesprite_animate(portrait.statesprite, elapsed);
+
         if (portrait.is_added) {
             // guess the correct animation direction
             if (portrait.position < 0.5) {
@@ -477,6 +480,7 @@ function dialogue_animate(dialogue, elapsed) {
 
                 if (dialogue.is_speaking && (toggled_default || toggled_speak)) {
                     portrait.is_speaking = 1;
+                    statesprite_animation_restart(portrait.statesprite);
                 } else {
                     // no speak animation, fallback to idle
                     portrait.is_speaking = 0;
@@ -505,13 +509,29 @@ function dialogue_animate(dialogue, elapsed) {
                 portrait.is_removed = 0;
                 linkedlist_remove_item(dialogue.visible_portraits, portrait);
             }
-        } else if (statesprite_animate(portrait.statesprite, elapsed) >= 0 && portrait.is_speaking) {
-            if (dialogue.is_speaking) {
-                statesprite_animation_restart(portrait.statesprite);
-            } else {
-                portrait.is_speaking = 0;
-                statesprite_state_toggle(portrait.statesprite, DIALOGUE_IDLE);
-            }
+        } else if (completed < 1) {
+            // the animation is not completed, nothing to do
+            continue;
+        }
+
+        // if the speak animation is completed and there not longer speech switch to idle
+        if (!this.is_speaking && portrait.is_speaking) {
+            portrait.is_speaking = false;
+            dialogue_internal_stop_portrait_animation(portrait);
+            continue;
+        }
+
+        // check if the animation should be looped again
+        if (!(portrait.is_speaking ? portrait.speak_anim_looped : portrait.idle_anim_looped)) {
+            continue;
+        }
+
+        // only loop if the desired state is applied and exists
+        let can_loop = portrait.is_speaking ? portrait.has_speak : portrait.has_idle;
+
+        // restart the animation if necessary
+        if (can_loop || (!portrait.has_speak && !portrait.has_idle)) {
+          statesprite_animation_restart(portrait.statesprite);
         }
     }
 
@@ -595,12 +615,14 @@ function dialogue_draw(dialogue, pvrctx) {
 
     pvr_context_save(pvrctx);
     drawable_helper_apply_in_context(dialogue.self_drawable, pvrctx);
+    pvr_context_save(pvrctx);
 
     dialogue_internal_draw_background(dialogue, pvrctx);
     if (!dialogue.draw_portraits_on_top) dialogue_internal_draw_portraits(dialogue, pvrctx);
     dialogue_internal_draw_speech(dialogue, pvrctx);
     if (dialogue.draw_portraits_on_top) dialogue_internal_draw_portraits(dialogue, pvrctx);
 
+    pvr_context_restore(pvrctx);
     pvr_context_restore(pvrctx);
 }
 
@@ -658,6 +680,14 @@ async function dialogue_show_dialog(dialogue, src_dialog) {
 
     dialogue_internal_prepare_print_text(dialogue);
 
+    if (dialogue.anims_ui.open) animsprite_restart(dialogue.anims_ui.open);
+    if (dialogue.anims_ui.close) animsprite_restart(dialogue.anims_ui.close);
+
+    if (dialogue.current_speechimage == null && dialogue.speechimages_size > 0) {
+        console.warn("dialogue_show_dialog() no speech background choosen, auto-choosing the first one declared");
+        dialogue.current_speechimage = dialogue.speechimages[0];
+    }
+
     return 1;
 }
 
@@ -670,7 +700,7 @@ async function dialogue_close(dialogue) {
     for (let i = 0; i < dialogue.audios_size; i++) {
         if (soundplayer_is_playing(dialogue.audios[i].soundplayer)) {
             if (dialogue.anims_ui.close)
-                soundplayer_fade(dialogue.audios[i].soundplayer, 0, 1000.0);
+                soundplayer_fade(dialogue.audios[i].soundplayer, 0, 500.0);
             else
                 soundplayer_stop(dialogue.audios[i].soundplayer);
         }
@@ -694,6 +724,7 @@ function dialogue_resume(dialogue) {
     for (let i = 0; i < dialogue.audios_size; i++) {
         if (dialogue.audios[i].was_playing) soundplayer_play(dialogue.audios[i].soundplayer);
     }
+    gamepad_clear_buttons(dialogue.gamepad);
 }
 
 function dialogue_get_modifier(dialogue) {
@@ -952,6 +983,10 @@ function dialogue_internal_apply_state(dialogue, state) {
                 if (dialogue.texsprite_speech == null) break;
                 textsprite_border_set_color(dialogue.texsprite_speech, action.rgba[0], action.rgba[1], action.rgba[2], action.rgba[3]);
                 break;
+            case DIALOGUE_TYPE_TEXT_BORDEROFFSET:
+                if (dialogue.texsprite_speech == null) break;
+                textsprite_border_set_offset(dialogue.texsprite_speech, action.offset_x, action.offset_y);
+                break;
             case DIALOGUE_TYPE_TEXT_SIZE:
                 if (dialogue.texsprite_speech == null) break;
                 if (!Number.isNaN(action.size)) textsprite_set_font_size(dialogue.texsprite_speech, action.size);
@@ -1061,12 +1096,32 @@ function dialogue_internal_draw_portraits(dialogue, pvrctx) {
         statesprite_get_draw_size(portrait.statesprite, draw_size);
 
         let draw_x = portrait.position * portrait_line_width;
-        let draw_y = draw_size[1] / -20;
+        let draw_y = 0;
 
-        if (portrait.position == 0.5) {
-            draw_x -= draw_size[0] / 2.0;
-        } else if (portrait.position > 0.5) {
-            draw_x -= draw_size[0];
+        switch (dialogue.current_speechimage.align_horizontal) {
+            case ALIGN_NONE:
+                if (portrait.position == 0.5) {
+                    draw_x -= draw_size[0] / 2.0;
+                } else if (portrait.position > 0.5) {
+                    draw_x -= draw_size[0];
+                }
+                break;
+            case ALIGN_END:
+                draw_x -= draw_size[0];
+                break;
+            case ALIGN_CENTER:
+                draw_x -= draw_size[0] / 2;
+                break;
+        }
+
+        switch (dialogue.current_speechimage.align_vertical) {
+            case ALIGN_NONE:
+            case ALIGN_CENTER:
+                draw_y = draw_size[1] / -2;
+                break;
+            case ALIGN_END:
+                draw_y -= draw_size[1];
+                break;
         }
 
         if (portrait.is_speaking) {
@@ -1214,9 +1269,11 @@ function dialogue_internal_toggle_idle(dialogue) {
     for (let portrait of linkedlist_iterate4(dialogue.visible_portraits)) {
         if (!portrait.is_speaking) continue;
         portrait.is_speaking = false;
-        if (statesprite_state_toggle(portrait.statesprite, DIALOGUE_IDLE)) {
+        if (statesprite_state_toggle(portrait.statesprite, DIALOGUE_IDLE) || statesprite_state_toggle(portrait.statesprite, null)) {
             let anim = statesprite_state_get(portrait.statesprite).animation;
             if (anim) animsprite_restart(anim);
+        } else {
+            dialogue_internal_stop_portrait_animation(portrait);
         }
     }
 }
@@ -1301,20 +1358,20 @@ async function dialogue_internal_parse_portraitlist(root_node, portraits) {
 
 async function dialogue_internal_parse_animationui(root_node, anims_ui) {
     let animation_list = root_node.getAttribute("animationList");
-    if (!animation_list) {
-        console.error("dialogue_internal_parse_animationui() missing animationList: " + root_node.outerHTML);
-        return;
-    }
+    let animlist = null;
 
-    let animlist = await animlist_init(animation_list);
-    if (!animation_list) {
-        console.error("dialogue_internal_parse_animationui() can not initialize: " + root_node.outerHTML);
-        return;
+    if (animation_list) {
+        animlist = await animlist_init(animation_list);
+        if (!animlist) {
+            console.error("dialogue_internal_parse_animationui() can not initialize: " + root_node.outerHTML);
+            return;
+        }
     }
 
     for (let node of root_node.children) {
         switch (node.tagName) {
             case "Set":
+            case "UnSet":
                 dialogue_internal_parse_animationui_set(node, animlist, anims_ui);
                 break;
             default:
@@ -1322,6 +1379,8 @@ async function dialogue_internal_parse_animationui(root_node, anims_ui) {
                 break;
         }
     }
+
+    if (animlist) animlist_destroy(animlist);
 }
 
 function dialogue_internal_parse_state(root_node, states) {
@@ -1439,6 +1498,11 @@ function dialogue_internal_parse_state(root_node, states) {
             case "TextBorderColor":
                 action.type = DIALOGUE_TYPE_TEXT_BORDERCOLOR;
                 dialogue_internal_read_color(node, action.rgba);
+                break;
+            case "TextBorderOffset":
+                action.type = DIALOGUE_TYPE_TEXT_BORDEROFFSET;
+                action.offset_x = vertexprops_parse_float(node, "offsetX", NaN);
+                action.offset_y = vertexprops_parse_float(node, "offsetY", NaN);
                 break;
             case "TextSize":
                 action.type = DIALOGUE_TYPE_TEXT_SIZE;
@@ -1589,6 +1653,8 @@ async function dialogue_internal_parse_speechimagelist(root_node, speechimages) 
     let offset_open_x = 0.0;
     let offset_open_y = 0.0;
     let disable_vertical_center = 0;
+    let align_vertical = ALIGN_NONE;
+    let align_horizontal = ALIGN_NONE;
 
 
     for (let node of root_node.children) {
@@ -1609,6 +1675,8 @@ async function dialogue_internal_parse_speechimagelist(root_node, speechimages) 
                 speechimage.offset_x = offset_x;
                 speechimage.offset_y = offset_y;
                 speechimage.disable_vertical_center = disable_vertical_center;
+                speechimage.align_vertical = align_vertical;
+                speechimage.align_horizontal = align_horizontal;
 
                 for (let state of linkedlist_iterate4(statesprite_state_list(speechimage.statesprite))) {
                     switch (state.state_name) {
@@ -1650,6 +1718,10 @@ async function dialogue_internal_parse_speechimagelist(root_node, speechimages) 
             case "OffsetOpen":
                 offset_open_x = vertexprops_parse_float(node, "x", offset_x);
                 offset_open_y = vertexprops_parse_float(node, "y", offset_y);
+                break;
+            case "PortraitAlign":
+                align_vertical = dialogue_internal_read_align(node, "vertical");
+                align_horizontal = dialogue_internal_read_align(node, "horizontal");
                 break;
             default:
                 console.error("dialogue_internal_parse_speechimagelist() unknown node: " + node.tagName);
@@ -1919,7 +1991,7 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
     let simple_anim_looped = vertexprops_parse_boolean(node, "animLooped", 1);
     let mirror = vertexprops_parse_boolean(node, "mirror", false);
     let position = vertexprops_parse_float(node, "positionPercent", 0.0);
-    let position_align = vertexprops_parse_align2(node.getAttribute("position"));
+    let position_align = node.getAttribute("position");
     let x = vertexprops_parse_float(node, "x", 0.0);
     let y = vertexprops_parse_float(node, "y", 0.0);
     let offset_speak_x = vertexprops_parse_float(node, "offestSpeakX", 0.0);
@@ -1933,14 +2005,20 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
     }
 
     switch (position_align) {
-        case ALIGN_START:
+        case "left":
             position = 0.0;
             break;
-        case ALIGN_CENTER:
+        case "center":
             position = 0.5;
             break;
-        case ALIGN_END:
+        case "right":
             position = 1.0;
+            break;
+        case "":
+        case null:
+            break;
+        default:
+            console.warn("dialogue_internal_parse_portrait() unknown position: " + node.outerHTML);
             break;
     }
 
@@ -1967,8 +2045,8 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
         statesprite_set_draw_location(statesprite, 0.0, 0.0);
 
         dialogue_internal_add_state(statesprite, modelholder, simple_anim, null, scale, simple_anim_looped);
-        dialogue_internal_add_state(statesprite, modelholder, idle_anim, DIALOGUE_IDLE, scale, idle_anim_looped);
-        dialogue_internal_add_state(statesprite, modelholder, speak_anim, DIALOGUE_SPEAK, scale, speak_anim_looped);
+        dialogue_internal_add_state(statesprite, modelholder, idle_anim, DIALOGUE_IDLE, scale, false);
+        dialogue_internal_add_state(statesprite, modelholder, speak_anim, DIALOGUE_SPEAK, scale, false);
 
         modelholder_destroy(modelholder);
     } else {
@@ -2007,6 +2085,10 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
         offset_speak_y: offset_speak_y,
         offset_idle_x: offset_idle_x,
         offset_idle_y: offset_idle_y,
+        has_speak: statesprite_state_has(statesprite, DIALOGUE_SPEAK),
+        has_idle: statesprite_state_has(statesprite, DIALOGUE_IDLE),
+        speak_anim_looped: speak_anim_looped,
+        idle_anim_looped: idle_anim_looped
     };
 
     arraylist_add(portraits, portrait);
@@ -2015,6 +2097,7 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
 function dialogue_internal_parse_animationui_set(node, animlist, anims_ui) {
     //<Set name="backgroundIn|backgroundOut" anim="anim123" />
     //<Set name="portraitLeftIn|portraitCenterIn|portraitRightIn" anim="anim123" />
+    //<Set name="portraitIn|portraitOut" anim="anim123" />
     //<Set name="portraitLeftOut|portraitCenterOut|portraitRightOut" anim="anim123" />
 
     let name = node.getAttribute("name");
@@ -2027,6 +2110,10 @@ function dialogue_internal_parse_animationui_set(node, animlist, anims_ui) {
 
     let animsprite = null;
     if (anim) {
+        if (!animlist) {
+            console.error("dialogue_internal_parse_animation_ui_set() can not initialize without animlist: " + node.outerHTML);
+            return;
+        }
         animsprite = animsprite_init_from_animlist(animlist, anim);
         if (!animsprite) {
             console.error("dialogue_internal_parse_animation_ui_set() can not initialize: " + node.outerHTML);
@@ -2037,6 +2124,24 @@ function dialogue_internal_parse_animationui_set(node, animlist, anims_ui) {
     let old_anim = null;
 
     switch (name.toLowerCase()) {
+        case "portraitin":
+            if (anims_ui.portrait_left_in) animsprite_destroy(anims_ui.portrait_left_in);
+            if (anims_ui.portrait_center_in) animsprite_destroy(anims_ui.portrait_center_in);
+            if (anims_ui.portrait_right_in) animsprite_destroy(anims_ui.portrait_right_in);
+
+            anims_ui.portrait_left_in = animsprite ? animsprite_clone(animsprite) : null;
+            anims_ui.portrait_center_in = animsprite ? animsprite_clone(animsprite) : null;
+            anims_ui.portrait_right_in = animsprite ? animsprite_clone(animsprite) : null;
+            break;
+        case "portraitout":
+            if (anims_ui.portrait_center_out) animsprite_destroy(anims_ui.portrait_center_out);
+            if (anims_ui.portrait_right_out) animsprite_destroy(anims_ui.portrait_right_out);
+            if (anims_ui.portrait_right_out) animsprite_destroy(anims_ui.portrait_right_out);
+
+            anims_ui.portrait_left_out = animsprite ? animsprite_clone(animsprite) : null;
+            anims_ui.portrait_center_out = animsprite ? animsprite_clone(animsprite) : null;
+            anims_ui.portrait_right_out = animsprite ? animsprite_clone(animsprite) : null;
+            break;
         case "portraitleftin":
             old_anim = anims_ui.portrait_left_in;
             anims_ui.portrait_left_in = animsprite;
@@ -2496,6 +2601,14 @@ function dialogue_internal_add_state(statesprite, modelholder, anim_name, state_
     imgutils_get_statesprite_original_size(state, orig_size);
     state.draw_width = orig_size[0] * scale;
     state.draw_height = orig_size[1] * scale;
+}
+
+function dialogue_internal_stop_portrait_animation(portrait) {
+    let state = statesprite_state_get(portrait.statesprite);
+    if (state && state.animation) {
+        animsprite_force_end3(state.animation, portrait.statesprite);
+        animsprite_stop(state.animation);
+    }
 }
 
 

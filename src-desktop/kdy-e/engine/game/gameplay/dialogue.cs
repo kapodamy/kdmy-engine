@@ -9,7 +9,6 @@ using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace Engine.Game.Gameplay {
 
@@ -260,7 +259,7 @@ namespace Engine.Game.Gameplay {
                 current_dialog_line = -1,
                 gamepad = new Gamepad(-1),
                 dialog_external = null,
-                is_completed = false,
+                is_completed = true,
                 chars_per_second = 0,
                 self_drawable = null,
                 self_hidden = false
@@ -310,7 +309,7 @@ namespace Engine.Game.Gameplay {
             }
 
             // create textsprite speech if not customized
-            dialogue.texsprite_speech = TextSprite.Init(null, false, 36f, 0x00000);
+            dialogue.texsprite_speech = TextSprite.Init(null, false, 34f, 0x00000);
             dialogue.texsprite_speech.SetParagraphSpace(8f);
             dialogue.texsprite_speech.SetWordbreak(VertexProps.FONT_WORDBREAK_LOOSE);
 
@@ -474,6 +473,8 @@ namespace Engine.Game.Gameplay {
                 bool exists;
                 AnimSprite anim;
 
+                int completed = portrait.statesprite.Animate(elapsed);
+
                 if (portrait.is_added) {
                     // guess the correct animation direction
                     if (portrait.position < 0.5f) {
@@ -499,6 +500,7 @@ namespace Engine.Game.Gameplay {
 
                         if (this.is_speaking && (toggled_default || toggled_speak)) {
                             portrait.is_speaking = true;
+                            portrait.statesprite.AnimationRestart();
                         } else {
                             // no speak animation, fallback to idle
                             portrait.is_speaking = false;
@@ -527,13 +529,29 @@ namespace Engine.Game.Gameplay {
                         portrait.is_removed = false;
                         this.visible_portraits.RemoveItem(portrait);
                     }
-                } else if (portrait.statesprite.Animate(elapsed) >= 0 && portrait.is_speaking) {
-                    if (this.is_speaking) {
-                        portrait.statesprite.AnimationRestart();
-                    } else {
-                        portrait.is_speaking = false;
-                        portrait.statesprite.StateToggle(Dialogue.IDLE);
-                    }
+                } else if (completed < 1) {
+                    // the animation is not completed, nothing to do
+                    continue;
+                }
+
+                // if the speak animation is completed and there not longer speech switch to idle
+                if (!this.is_speaking && portrait.is_speaking) {
+                    portrait.is_speaking = false;
+                    Dialogue.InternalStopPortraitAnimation(portrait);
+                    continue;
+                }
+
+                // check if the animation should be looped again
+                if (!(portrait.is_speaking ? portrait.speak_anim_looped : portrait.idle_anim_looped)) {
+                    continue;
+                }
+
+                // only loop if the desired state is applied and exists
+                bool can_loop = portrait.is_speaking ? portrait.has_speak : portrait.has_idle;
+
+                // restart the animation if necessary
+                if (can_loop || (!portrait.has_speak && !portrait.has_idle)) {
+                    portrait.statesprite.AnimationRestart();
                 }
             }
 
@@ -617,12 +635,14 @@ namespace Engine.Game.Gameplay {
 
             pvrctx.Save();
             this.self_drawable.HelperApplyInContext(pvrctx);
+            pvrctx.Save();
 
             InternalDrawBackground(pvrctx);
             if (!this.draw_portraits_on_top) InternalDrawPortraits(pvrctx);
             InternalDrawSpeech(pvrctx);
             if (this.draw_portraits_on_top) InternalDrawPortraits(pvrctx);
 
+            pvrctx.Restore();
             pvrctx.Restore();
         }
 
@@ -680,6 +700,14 @@ namespace Engine.Game.Gameplay {
 
             InternalPreparePrintText();
 
+            if (this.anims_ui.open != null) this.anims_ui.open.Restart();
+            if (this.anims_ui.close != null) this.anims_ui.close.Restart();
+
+            if (this.current_speechimage == null && this.speechimages_size > 0) {
+                Console.Error.WriteLine("[WARN] dialogue_show_dialog() no speech background choosen, auto-choosing the first one declared");
+                this.current_speechimage = this.speechimages[0];
+            }
+
             return true;
         }
 
@@ -691,7 +719,7 @@ namespace Engine.Game.Gameplay {
             for (int i = 0 ; i < this.audios_size ; i++) {
                 if (this.audios[i].soundplayer.IsPlaying()) {
                     if (this.anims_ui.close != null)
-                        this.audios[i].soundplayer.Fade(false, 1000f);
+                        this.audios[i].soundplayer.Fade(false, 500f);
                     else
                         this.audios[i].soundplayer.Stop();
                 }
@@ -715,6 +743,7 @@ namespace Engine.Game.Gameplay {
             for (int i = 0 ; i < this.audios_size ; i++) {
                 if (this.audios[i].was_playing) this.audios[i].soundplayer.Play();
             }
+            this.gamepad.ClearButtons();
         }
 
         public Modifier GetModifier() {
@@ -971,6 +1000,10 @@ namespace Engine.Game.Gameplay {
                         if (this.texsprite_speech == null) break;
                         this.texsprite_speech.BorderSetColor(action.rgba[0], action.rgba[1], action.rgba[2], action.rgba[3]);
                         break;
+                    case Type.TEXT_BORDEROFFSET:
+                        if (this.texsprite_speech == null) break;
+                        this.texsprite_speech.BorderSetOffset(action.offset_x, action.offset_y);
+                        break;
                     case Type.TEXT_SIZE:
                         if (this.texsprite_speech == null) break;
                         if (!Single.IsNaN(action.size)) this.texsprite_speech.SetFontSize(action.size);
@@ -1076,12 +1109,32 @@ namespace Engine.Game.Gameplay {
                 portrait.statesprite.GetDrawSize(out draw_width, out draw_height);
 
                 float draw_x = portrait.position * portrait_line_width;
-                float draw_y = draw_height / -2f;
+                float draw_y = 0;
 
-                if (portrait.position == 0.5f) {
-                    draw_x -= draw_width / 2f;
-                } else if (portrait.position > 0.5f) {
-                    draw_x -= draw_width;
+                switch (this.current_speechimage.align_horizontal) {
+                    case Align.NONE:
+                        if (portrait.position == 0.5f) {
+                            draw_x -= draw_width / 2f;
+                        } else if (portrait.position > 0.5f) {
+                            draw_x -= draw_width;
+                        }
+                        break;
+                    case Align.END:
+                        draw_x -= draw_width;
+                        break;
+                    case Align.CENTER:
+                        draw_x -= draw_width / 2f;
+                        break;
+                }
+
+                switch (this.current_speechimage.align_vertical) {
+                    case Align.NONE:
+                    case Align.CENTER:
+                        draw_y = draw_height / -2f;
+                        break;
+                    case Align.END:
+                        draw_y -= draw_height;
+                        break;
                 }
 
                 if (portrait.is_speaking) {
@@ -1224,9 +1277,11 @@ namespace Engine.Game.Gameplay {
             foreach (Portrait portrait in this.visible_portraits) {
                 if (!portrait.is_speaking) continue;
                 portrait.is_speaking = false;
-                if (portrait.statesprite.StateToggle(Dialogue.IDLE)) {
+                if (portrait.statesprite.StateToggle(Dialogue.IDLE) || portrait.statesprite.StateToggle(null)) {
                     AnimSprite anim = portrait.statesprite.StateGet().animation;
                     if (anim != null) anim.Restart();
+                } else {
+                    Dialogue.InternalStopPortraitAnimation(portrait);
                 }
             }
         }
@@ -1310,20 +1365,20 @@ namespace Engine.Game.Gameplay {
 
         private static void InternalParseAnimationUI(XmlParserNode root_node, AnimsUI anims_ui) {
             string animation_list = root_node.GetAttribute("animationList");
-            if (String.IsNullOrEmpty(animation_list)) {
-                Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animationui() missing animationList: " + root_node.OuterHTML);
-                return;
-            }
+            AnimList animlist = null;
 
-            AnimList animlist = AnimList.Init(animation_list);
-            if (String.IsNullOrEmpty(animation_list)) {
-                Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animationui() can not initialize: " + root_node.OuterHTML);
-                return;
+            if (!String.IsNullOrEmpty(animation_list)) {
+                animlist = AnimList.Init(animation_list);
+                if (String.IsNullOrEmpty(animation_list)) {
+                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animationui() can not initialize: " + root_node.OuterHTML);
+                    return;
+                }
             }
 
             foreach (XmlParserNode node in root_node.Children) {
                 switch (node.TagName) {
                     case "Set":
+                    case "UnSet":
                         Dialogue.InternalParseAnimationUISet(node, animlist, anims_ui);
                         break;
                     default:
@@ -1331,6 +1386,8 @@ namespace Engine.Game.Gameplay {
                         break;
                 }
             }
+
+            if (animlist != null) animlist.Destroy();
         }
 
         private static void InternalParseState(XmlParserNode root_node, ArrayList<State> states) {
@@ -1448,6 +1505,11 @@ namespace Engine.Game.Gameplay {
                     case "TextBorderColor":
                         action.type = Type.TEXT_BORDERCOLOR;
                         Dialogue.InternalReadColor(node, action.rgba);
+                        break;
+                    case "TextBorderOffset":
+                        action.type = Type.TEXT_BORDEROFFSET;
+                        action.offset_x = VertexProps.ParseFloat(node, "offsetX", Single.NaN);
+                        action.offset_y = VertexProps.ParseFloat(node, "offsetY", Single.NaN);
                         break;
                     case "TextSize":
                         action.type = Type.TEXT_SIZE;
@@ -1598,6 +1660,7 @@ namespace Engine.Game.Gameplay {
             float offset_open_x = 0f;
             float offset_open_y = 0f;
             bool disable_vertical_center = true;
+            Align align_vertical = Align.NONE, align_horizontal = Align.NONE;
 
 
             foreach (XmlParserNode node in root_node.Children) {
@@ -1618,6 +1681,8 @@ namespace Engine.Game.Gameplay {
                         speechimage.offset_x = offset_x;
                         speechimage.offset_y = offset_y;
                         speechimage.disable_vertical_center = disable_vertical_center;
+                        speechimage.align_vertical = align_vertical;
+                        speechimage.align_horizontal = align_horizontal;
 
                         foreach (StateSpriteState state in speechimage.statesprite.StateList()) {
                             switch (state.state_name) {
@@ -1659,6 +1724,10 @@ namespace Engine.Game.Gameplay {
                     case "OffsetOpen":
                         offset_open_x = VertexProps.ParseFloat(node, "x", offset_x);
                         offset_open_y = VertexProps.ParseFloat(node, "y", offset_y);
+                        break;
+                    case "PortraitAlign":
+                        align_vertical = Dialogue.InternalReadAlign(node, "vertical");
+                        align_horizontal = Dialogue.InternalReadAlign(node, "horizontal");
                         break;
                     default:
                         Console.Error.WriteLine("[ERROR] dialogue_internal_parse_speechimagelist() unknown node: " + node.TagName);
@@ -1923,7 +1992,7 @@ namespace Engine.Game.Gameplay {
             bool simple_anim_looped = VertexProps.ParseBoolean(node, "animLooped", true);
             bool mirror = VertexProps.ParseBoolean(node, "mirror", false);
             float position = VertexProps.ParseFloat(node, "positionPercent", 0f);
-            Align position_align = VertexProps.ParseAlign2(node.GetAttribute("position"));
+            string position_align = node.GetAttribute("position");
             float x = VertexProps.ParseFloat(node, "x", 0f);
             float y = VertexProps.ParseFloat(node, "y", 0f);
             float offset_speak_x = VertexProps.ParseFloat(node, "offestSpeakX", 0f);
@@ -1937,14 +2006,20 @@ namespace Engine.Game.Gameplay {
             }
 
             switch (position_align) {
-                case Align.START:
+                case "left":
                     position = 0f;
                     break;
-                case Align.CENTER:
+                case "center":
                     position = 0.5f;
                     break;
-                case Align.END:
+                case "right":
                     position = 1f;
+                    break;
+                case "":
+                case null:
+                    break;
+                default:
+                    Console.Error.WriteLine("[WARN] dialogue_internal_parse_portrait() unknown position: " + node.OuterHTML);
                     break;
             }
 
@@ -1970,8 +2045,8 @@ namespace Engine.Game.Gameplay {
                 statesprite.SetDrawLocation(0f, 0f);
 
                 Dialogue.InternalAddState(statesprite, modelholder, simple_anim, null, scale, simple_anim_looped);
-                Dialogue.InternalAddState(statesprite, modelholder, idle_anim, Dialogue.IDLE, scale, idle_anim_looped);
-                Dialogue.InternalAddState(statesprite, modelholder, speak_anim, Dialogue.SPEAK, scale, speak_anim_looped);
+                Dialogue.InternalAddState(statesprite, modelholder, idle_anim, Dialogue.IDLE, scale, false);
+                Dialogue.InternalAddState(statesprite, modelholder, speak_anim, Dialogue.SPEAK, scale, false);
 
                 modelholder.Destroy();
             } else {
@@ -2010,6 +2085,10 @@ L_check_failed:
                 offset_speak_y = offset_speak_y,
                 offset_idle_x = offset_idle_x,
                 offset_idle_y = offset_idle_y,
+                has_speak = statesprite.StateHas(Dialogue.SPEAK),
+                has_idle = statesprite.StateHas(Dialogue.IDLE),
+                speak_anim_looped = speak_anim_looped,
+                idle_anim_looped = idle_anim_looped
             };
 
             portraits.Add(portrait);
@@ -2018,6 +2097,7 @@ L_check_failed:
         private static void InternalParseAnimationUISet(XmlParserNode node, AnimList animlist, AnimsUI anims_ui) {
             //<Set name="backgroundIn|backgroundOut" anim="anim123" />
             //<Set name="portraitLeftIn|portraitCenterIn|portraitRightIn" anim="anim123" />
+            //<Set name="portraitIn|portraitOut" anim="anim123" />
             //<Set name="portraitLeftOut|portraitCenterOut|portraitRightOut" anim="anim123" />
 
             string name = node.GetAttribute("name");
@@ -2030,6 +2110,10 @@ L_check_failed:
 
             AnimSprite animsprite = null;
             if (!String.IsNullOrEmpty(anim)) {
+                if (animlist == null) {
+                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animation_ui_set() can not initialize without animlist: " + node.OuterHTML);
+                    return;
+                }
                 animsprite = AnimSprite.InitFromAnimlist(animlist, anim);
                 if (animsprite == null) {
                     Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animation_ui_set() can not initialize: " + node.OuterHTML);
@@ -2040,6 +2124,24 @@ L_check_failed:
             AnimSprite old_anim = null;
 
             switch (name.ToLower()) {
+                case "portraitin":
+                    if (anims_ui.portrait_left_in != null) anims_ui.portrait_left_in.Destroy();
+                    if (anims_ui.portrait_center_in != null) anims_ui.portrait_center_in.Destroy();
+                    if (anims_ui.portrait_right_in != null) anims_ui.portrait_right_in.Destroy();
+
+                    anims_ui.portrait_left_in = animsprite != null ? animsprite.Clone() : null;
+                    anims_ui.portrait_center_in = animsprite != null ? animsprite.Clone() : null;
+                    anims_ui.portrait_right_in = animsprite != null ? animsprite.Clone() : null;
+                    break;
+                case "portraitout":
+                    if (anims_ui.portrait_center_out != null) anims_ui.portrait_center_out.Destroy();
+                    if (anims_ui.portrait_right_out != null) anims_ui.portrait_right_out.Destroy();
+                    if (anims_ui.portrait_right_out != null) anims_ui.portrait_right_out.Destroy();
+
+                    anims_ui.portrait_left_out = animsprite != null ? animsprite.Clone() : null;
+                    anims_ui.portrait_center_out = animsprite != null ? animsprite.Clone() : null;
+                    anims_ui.portrait_right_out = animsprite != null ? animsprite.Clone() : null;
+                    break;
                 case "portraitleftin":
                     old_anim = anims_ui.portrait_left_in;
                     anims_ui.portrait_left_in = animsprite;
@@ -2499,7 +2601,13 @@ L_return:
             state.draw_height = orig_height * scale;
         }
 
-
+        private static void InternalStopPortraitAnimation(Portrait portrait) {
+            StateSpriteState state = portrait.statesprite.StateGet();
+            if (state != null && state.animation != null) {
+                state.animation.ForceEnd3(portrait.statesprite);
+                state.animation.Stop();
+            }
+        }
 
         private Audio InternalGetAudio(string name) {
             if (String.IsNullOrEmpty(name) && this.audios_size > 0) {
@@ -2587,6 +2695,10 @@ L_return:
             public float offset_speak_y;
             public float offset_idle_x;
             public float offset_idle_y;
+            public bool has_speak;
+            public bool has_idle;
+            public bool speak_anim_looped;
+            public bool idle_anim_looped;
         }
 
         private class AnimsUI {
@@ -2631,6 +2743,8 @@ L_return:
             public Align align_paragraph;
             public bool no_speak;
             public bool animate_remove;
+            public float offset_x;
+            public float offset_y;
         }
 
         private class MultipleChoice {
@@ -2692,6 +2806,8 @@ L_return:
             public float portrait_line_y;
             public float portrait_line_width;
             public bool disable_vertical_center;
+            public Align align_vertical;
+            public Align align_horizontal;
         }
 
 
@@ -2718,6 +2834,7 @@ L_return:
             TEXT_FONT,
             TEXT_COLOR,
             TEXT_BORDERCOLOR,
+            TEXT_BORDEROFFSET,
             TEXT_PARAGRAPHSPACE,
             TEXT_SIZE,
             TEXT_ALIGN,

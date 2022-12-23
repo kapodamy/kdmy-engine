@@ -247,6 +247,17 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_textsprite_border_set_offset(LuaState L) {
+            TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
+
+            float x = (float)L.luaL_optnumber(2, Double.NaN);
+            float y = (float)L.luaL_optnumber(3, Double.NaN);
+
+            textsprite.BorderSetOffset(x, y);
+
+            return 0;
+        }
+
         static int script_textsprite_set_antialiasing(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
@@ -360,6 +371,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("border_enable", script_textsprite_border_enable),
             new LuaTableFunction("border_set_size", script_textsprite_border_set_size),
             new LuaTableFunction("border_set_color", script_textsprite_border_set_color),
+            new LuaTableFunction("border_set_offset", script_textsprite_border_set_offset),
             new LuaTableFunction("set_antialiasing", script_textsprite_set_antialiasing),
             new LuaTableFunction("set_wordbreak", script_textsprite_set_wordbreak),
             new LuaTableFunction("set_shader", script_textsprite_set_shader),

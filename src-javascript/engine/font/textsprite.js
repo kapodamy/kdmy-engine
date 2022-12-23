@@ -28,6 +28,7 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
         y: 0,
         z: 0,
         alpha: 1.0,
+        alpha2: 1.0,
         z_offset: 0,
 
         align_vertical: ALIGN_START,
@@ -61,6 +62,8 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
         border_enable: 0,
         border_size: 0,
         border_color: [1.0, 1.0, 1.0, 1.0],
+        border_offset_x: 0,
+        border_offset_y: 0,
 
         font_paragraph_separation: 0,
 
@@ -606,6 +609,12 @@ function textsprite_set_property(textsprite, property_id, value) {
         case TEXTSPRITE_PROP_BORDER_COLOR_A:
             textsprite.border_color[3] = value;
             break;
+        case TEXTSPRITE_PROP_BORDER_OFFSET_X:
+            textsprite.border_offset_x = value;
+            break;
+        case TEXTSPRITE_PROP_BORDER_OFFSET_Y:
+            textsprite.border_offset_y = value;
+            break;
         /////////////////////////////////////////////////////////////////////////////////////////////////
         case SPRITE_PROP_X:
             textsprite.x = value;
@@ -721,6 +730,9 @@ function textsprite_set_property(textsprite, property_id, value) {
         case TEXTSPRITE_PROP_BACKGROUND_COLOR_A:
             textsprite.background_rgba[3] = value;
             break;
+        case SPRITE_PROP_ALPHA2:
+            textsprite.alpha2 = value;
+            break;
     }
 
     // check if the coordinates was modified
@@ -776,6 +788,7 @@ function textsprite_draw_internal(textsprite, pvrctx) {
     let color_fn;
     let draw_fn;
     let borderset_fn;
+    let borderoffsetset_fn;
     let separation_fn;
 
     if (textsprite.font_from_atlas) {
@@ -783,12 +796,14 @@ function textsprite_draw_internal(textsprite, pvrctx) {
         color_fn = fontglyph_set_color;
         draw_fn = fontglyph_draw_text;
         borderset_fn = fontglyph_set_border;
+        borderoffsetset_fn = fontglyph_set_border_offset;
         separation_fn = fontglyph_set_lines_separation;
     } else {
         alpha_fn = fonttype_set_alpha;
         color_fn = fonttype_set_color;
         draw_fn = fonttype_draw_text;
         borderset_fn = fonttype_set_border;
+        borderoffsetset_fn = fonttype_set_border_offset;
         separation_fn = fonttype_set_lines_separation;
     }
     alpha_fn(textsprite.font, textsprite.alpha);
@@ -796,10 +811,12 @@ function textsprite_draw_internal(textsprite, pvrctx) {
     borderset_fn(
         textsprite.font, textsprite.border_enable, textsprite.border_size, textsprite.border_color
     );
+    borderoffsetset_fn(textsprite.font, textsprite.border_offset_x, textsprite.border_offset_y);
     separation_fn(textsprite.font, textsprite.font_paragraph_separation);
 
 
     pvr_context_save(pvrctx);
+    pvr_context_set_global_alpha(pvrctx, textsprite.alpha2);
 
     if (textsprite.psshader) pvr_context_add_shader(pvrctx, textsprite.psshader);
 
@@ -958,6 +975,11 @@ function textsprite_border_set_color(textsprite, r, g, b, a) {
 
 function textsprite_border_set_color_rgba8(textsprite, rbga8_color) {
     math2d_color_bytes_to_floats(rbga8_color, 1, textsprite.border_color);
+}
+
+function textsprite_border_set_offset(textsprite, x, y) {
+    if (!Number.isNaN(x)) textsprite.border_offset_x = x;
+    if (!Number.isNaN(y)) textsprite.border_offset_y = y;
 }
 
 

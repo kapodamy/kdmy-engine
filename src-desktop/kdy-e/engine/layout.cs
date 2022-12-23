@@ -98,6 +98,7 @@ namespace Engine {
         private const int ACTION_SETSHADERUNIFORM = 22;
         private const int LAYOUT_ACTION_SETBLENDING = 23;
         private const int LAYOUT_ACTION_VIEWPORT = 24;
+        private const int ACTION_BORDEROFFSET = 25;
 
         public const string GROUP_ROOT = "___root-group___";
         private const float BPM_STEPS = 32;// 1/32 beats
@@ -927,6 +928,7 @@ namespace Engine {
 
                 visible = true,
                 alpha = 1.0f,
+                alpha2 = 1.0f,
                 offsetcolor = new float[4],
                 modifier = new Modifier(),
                 parallax = new LayoutParallax() { x = 1.0f, y = 1.0f, z = 1.0f },
@@ -1658,7 +1660,8 @@ namespace Engine {
             Group group = parent_group.context.next_child;
 
             while (group != null) {
-                group.context.visible = parent_visible && group.visible && group.alpha > 0;
+                float group_alpha = group.alpha * group.alpha2;
+                group.context.visible = parent_visible && group.visible && group_alpha > 0;
                 group.context.parent_group = parent_group;
 
                 if (group.context.visible) {
@@ -1670,7 +1673,7 @@ namespace Engine {
                     parent_group.context.matrix.CopyTo(group.context.matrix);
                     group.context.matrix.ApplyModifier(group.modifier);
 
-                    group.context.alpha = group.alpha * parent_group.context.alpha;
+                    group.context.alpha = group_alpha * parent_group.context.alpha;
 
                     if (group.antialiasing == PVRContextFlag.DEFAULT)
                         group.context.antialiasing = parent_group.context.antialiasing;
@@ -1741,6 +1744,9 @@ namespace Engine {
                     break;
                 case VertexProps.SPRITE_PROP_ANTIALIASING:
                     group.antialiasing = (PVRContextFlag)(int)value;
+                    break;
+                case VertexProps.SPRITE_PROP_ALPHA2:
+                    group.alpha2 = value;
                     break;
                 default:
                     group.modifier.SetProperty(property_id, value);
@@ -2195,6 +2201,7 @@ namespace Engine {
 
                 visible = VertexProps.ParseBoolean(unparsed_group, "visible", true),
                 alpha = Layout.HelperParseFloat(unparsed_group, "alpha", 1.0f),
+                alpha2 = 1.0f,
                 antialiasing = VertexProps.ParseFlag(unparsed_group, "antialiasing", PVRContextFlag.DEFAULT),
                 offsetcolor = new float[4],
                 modifier = new Modifier(),
@@ -2790,6 +2797,9 @@ namespace Engine {
                     case "Border":
                         Layout.HelperAddActionTextborder(unparsed_entry, entries);
                         break;
+                    case "BorderOffset":
+                        Layout.HelperAddActionTextBorderOffset(unparsed_entry, entries);
+                        break;
                     case "Animation":
                         Layout.HelperAddActionAnimation(unparsed_entry, animlist, entries);
                         break;
@@ -3104,6 +3114,9 @@ namespace Engine {
                         textsprite.BorderSetColor(
                             entry.rgba[0], entry.rgba[1], entry.rgba[2], entry.rgba[3]
                         );
+                        break;
+                    case Layout.ACTION_BORDEROFFSET:
+                        textsprite.BorderSetOffset(entry.x, entry.y);
                         break;
                     case Layout.ACTION_PROPERTY:
                         if (entry.property == VertexProps.TEXTSPRITE_PROP_STRING)
@@ -3870,6 +3883,18 @@ namespace Engine {
             action_entries.Add(entry);
         }
 
+        private static void HelperAddActionTextBorderOffset(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            float offset_x = Layout.HelperParseFloat(unparsed_entry, "offsetX", Single.NaN);
+            float offset_y = Layout.HelperParseFloat(unparsed_entry, "offsetY", Single.NaN);
+            if (Single.IsNaN(offset_x) && Single.IsNaN(offset_y)) {
+                Console.Error.WriteLine("[ERROR] layout_helper_add_action_borderoffser() invalid offset: " + unparsed_entry.OuterHTML);
+                return;
+            }
+            
+            ActionEntry entry = new ActionEntry() { type = Layout.ACTION_BORDEROFFSET, x = offset_x, y = offset_y };
+            action_entries.Add(entry);
+        }
+
 
         private class ZBufferEntry {
             public Item item; public float z_index; public bool visible;
@@ -4014,6 +4039,7 @@ namespace Engine {
             public string initial_action_name;
             public SH4Matrix static_screen;
             public PVRContextFlag antialiasing;
+            public float alpha2;
             public PSShader psshader;
             public PSFramebuffer psframebuffer;
             public bool blend_enabled;

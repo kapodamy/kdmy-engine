@@ -48,6 +48,7 @@
 #include "songprogressbar.h"
 #include "modding.h"
 #include "week.h"
+#include "engine_settings.h"
 
 #ifdef JAVASCRIPT
 #include <emscripten.h>
@@ -67,6 +68,8 @@ void* kdmy_read_prop_object(void* obj_id, const char* field_name);
 bool kdmy_read_prop_boolean(void* obj_id, const char* field_name);
 bool kdmy_read_prop_floatboolean(void* obj_id, const char* field_name);
 void kdmy_forget_obtained(void* obj_id);
+
+void* kdmy_read_window_object(const char* variable_name);
 
 void kdmy_write_prop_double(void* obj_id, const char* field_name, double value);
 void kdmy_write_prop_float(void* obj_id, const char* field_name, float value);
@@ -269,5 +272,10 @@ void script_healthwatcher_register(lua_State* L);
 #define SONGPROGRESSBAR "SongProgressbar"
 int script_songprogressbar_new(lua_State* L, SongProgressbar songprogressbar);
 void script_songprogressbar_register(lua_State* L);
+
+
+#define ENGINESETTINGS "EngineSettings"
+int script_enginesettings_new(lua_State* L, EngineSettings_t* enginesettings);
+void script_enginesettings_register(lua_State* L);
 
 #endif

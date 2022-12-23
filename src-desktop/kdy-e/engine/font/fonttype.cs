@@ -25,6 +25,8 @@ namespace Engine.Font {
         private float[] border_color;
         private float border_size;
         private bool border_enable;
+        private float border_offset_x;
+        private float border_offset_y;
         private int instance_id;
         private int instance_references;
         private string instance_path;
@@ -60,8 +62,10 @@ namespace Engine.Font {
                 alpha = 1.0f,
 
                 border_color = new float[] { 1.0f, 1.0f, 1.0f, 1.0f },
-                border_size = 0,
+                border_size = 0f,
                 border_enable = false,
+                border_offset_x = 0f,
+                border_offset_y = 0f,
 
                 instance_id = FontType.IDS++,
                 instance_references = 1,
@@ -302,6 +306,11 @@ namespace Engine.Font {
             SetBorderColor(rgba[0], rgba[1], rgba[2], rgba[3]);
         }
 
+        public void SetBorderOffset(float x, float y) {
+            this.border_offset_x = x;
+            this.border_offset_y = y;
+        }
+
         public float DrawText(PVRContext pvrctx, float height, float x, float y, int text_index, int text_size, string text) {
             if (text == null || text.Length < 1) return 0;
 
@@ -428,6 +437,9 @@ namespace Engine.Font {
                         float sdy = dy - this.border_size;
                         float sdw = dw + outline_size;
                         float sdh = dh + outline_size;
+
+                        dx += this.border_offset_x;
+                        dy += this.border_offset_y;
 
                         // queue outlined glyph for batch rendering
                         GlyphRenderer.AppendGlyph(

@@ -26,6 +26,8 @@ namespace CsharpWrapper {
         public static bool show_fps = false;
         public static byte fps_limit = 0;
         public static bool use_funkin_marker_duration = true;
+        public static bool gameplay_enabled_distractions = true;
+        public static bool gameplay_enabled_flashinglights = true;
 
         internal static void LoadINI() {
             if (ini == null) {
@@ -41,6 +43,8 @@ namespace CsharpWrapper {
             song_progressbar = GetBool(true, "song_progressbar", song_progressbar);
             song_progressbar_remaining = GetBool(true, "song_progressbar_remaining", song_progressbar_remaining);
             use_funkin_marker_duration = GetBool(true, "use_funkin_marker_duration", use_funkin_marker_duration);
+            gameplay_enabled_distractions = GetBool(true, "gameplay_enabled_distractions", gameplay_enabled_distractions);
+            gameplay_enabled_flashinglights = GetBool(true, "gameplay_enabled_flashinglights", gameplay_enabled_flashinglights);
 
             show_fps = GetBool(false, "show_fps", show_fps);
             switch (GetString(false, "fps_limit", null)) {
