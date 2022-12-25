@@ -162,6 +162,10 @@ function soundplayer_seek(soundplayer, timestamp) {
     soundplayer.handler.currentTime = timestamp / 1000.0;
 }
 
+function soundplayer_has_ended(soundplayer) {
+    return soundplayer.handler.ended
+}
+
 
 function soundplayer_is_muted(soundplayer) {
     return soundplayer.handler.muted;

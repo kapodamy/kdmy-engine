@@ -9,6 +9,7 @@ function statesprite_draw(statesprite, pvrctx) {
     if (statesprite.alpha <= 0) return;
 
     let sprite_vertex = statesprite.vertex;
+    let render_alpha = statesprite.alpha * statesprite.alpha2;
 
     // apply offsets from the current state
     let draw_x = statesprite.draw_x + statesprite.offset_x;
@@ -109,7 +110,7 @@ function statesprite_draw(statesprite, pvrctx) {
     }
 
     pvr_context_save(pvrctx);
-    pvr_context_set_vertex_alpha(pvrctx, statesprite.alpha * statesprite.alpha2);
+    pvr_context_set_vertex_alpha(pvrctx, render_alpha);
     pvr_context_set_vertex_offsetcolor(pvrctx, statesprite.offsetcolor);
     if (statesprite.psshader) pvr_context_add_shader(pvrctx, statesprite.psshader);
     
@@ -139,6 +140,26 @@ function statesprite_draw(statesprite, pvrctx) {
             draw_x, draw_y, statesprite.draw_width, statesprite.draw_height
         );
         pvr_context_flush(pvrctx);
+    }
+
+    // draw sprites trail if necessary
+    if (!statesprite.trailing_disabled && statesprite.trailing_used > 0) {
+        pvr_context_set_vertex_textured_darken(pvrctx, statesprite.trailing_darken);
+
+        for (let i = 0 ; i < statesprite.trailing_used ; i++) {
+            const trail = statesprite.trailing_buffer[i];
+            pvr_context_set_vertex_alpha(pvrctx, trail.alpha * render_alpha);
+            pvr_context_draw_texture(
+                pvrctx,
+                statesprite.texture,
+                trail.sx, trail.sy, trail.sw, trail.sh,
+                trail.dx, trail.dy, trail.dw, trail.dh
+            );
+        }
+
+        // restore previous values
+        pvr_context_set_vertex_textured_darken(pvrctx, 0);
+        pvr_context_set_vertex_alpha(pvrctx, render_alpha);
     }
 
     // draw the vertex
@@ -251,6 +272,18 @@ function statesprite_init_from_texture(texture) {
     statesprite.blend_src_alpha = BLEND_DEFAULT;
     statesprite.blend_dst_alpha = BLEND_DEFAULT;
 
+    statesprite.trailing_buffer = Array(10);
+    statesprite.trailing_used = 0;
+    statesprite.trailing_length = 10;
+    statesprite.trailing_alpha = 0.9;
+    statesprite.trailing_delay = 0;
+    statesprite.trailing_darken = 1;
+    statesprite.trailing_disabled = 1;
+    statesprite.trailing_progress = 0.0;
+
+    // JS only
+    clone_struct_as_array_items(statesprite.trailing_buffer, 10, {}, NaN);
+
     return statesprite;
 }
 
@@ -280,6 +313,7 @@ function statesprite_destroy(statesprite) {
     linkedlist_destroy2(statesprite.state_list, free);
 
     STATESPRITE_POOL.delete(statesprite.id);
+    statesprite.trailing_buffer = undefined;
     statesprite = undefined;
 }
 
@@ -532,6 +566,54 @@ function statesprite_animate(statesprite, elapsed) {
 
     let result = animsprite_animate(statesprite.animation_external, elapsed);
     animsprite_update_statesprite(statesprite.animation_external, statesprite, 1);
+
+    // check delay for next trail
+    let wait = statesprite.trailing_progress < statesprite.trailing_delay;
+    statesprite.trailing_progress += elapsed;
+
+    if (wait) return result;
+    statesprite.trailing_progress = 0.0;
+
+    // compute trailing using the cached vertex
+    let insert_vertex = statesprite.trailing_used < statesprite.trailing_length;
+    if (statesprite.trailing_used > 0) {
+        // check if the last vertex equals to the current vertex
+        const trail = statesprite.trailing_buffer[0];
+        let source = trail.sx == statesprite.vertex[0] && trail.sy == statesprite.vertex[1] && trail.sw == statesprite.vertex[2] && trail.sh == statesprite.vertex[3];
+        let draw = trail.dx == statesprite.vertex[4] && trail.dy == statesprite.vertex[5] && trail.dw == statesprite.vertex[6] && trail.dh == statesprite.vertex[7];
+
+        if (source && draw) {
+            // drop first entry
+            for (let i = 0, j = 1 ; j < statesprite.trailing_used ; i++, j++) {
+                statesprite.trailing_buffer[i] = statesprite.trailing_buffer[j];
+            }
+            insert_vertex = false;
+            statesprite.trailing_used--;
+        }
+    }
+
+    if (insert_vertex) {
+        // shift all entries to the end
+        for (let i = statesprite.trailing_used - 2, j = statesprite.trailing_used - 1 ; i >= 0 ; i--, j--) {
+            statesprite.trailing_buffer[j] = statesprite.trailing_buffer[i];
+        }
+        
+        // add new trail
+        statesprite.trailing_buffer[0].sx = statesprite.vertex[0];
+        statesprite.trailing_buffer[0].sy = statesprite.vertex[1];
+        statesprite.trailing_buffer[0].sw = statesprite.vertex[2];
+        statesprite.trailing_buffer[0].sh = statesprite.vertex[3];
+        statesprite.trailing_buffer[0].dx = statesprite.vertex[4];
+        statesprite.trailing_buffer[0].dy = statesprite.vertex[5];
+        statesprite.trailing_buffer[0].dw = statesprite.vertex[6];
+        statesprite.trailing_buffer[0].dh = statesprite.vertex[7];
+        statesprite.trailing_used++;
+    }
+
+    // update alpha of each trail
+    for (let i = 0 ; i < statesprite.trailing_used ; i++) {
+        statesprite.trailing_buffer[i].alpha = (1.0 - (i / statesprite.trailing_length)) * statesprite.trailing_alpha;
+    }
 
     return result;
 }
@@ -943,3 +1025,23 @@ function statesprite_blend_set(statesprite, src_rgb, dst_rgb, src_alpha, dst_alp
     statesprite.blend_src_alpha = src_alpha;
     statesprite.blend_dst_alpha = dst_alpha;
 }
+
+function statesprite_trailing_enabled(statesprite, enabled) {
+    statesprite.trailing_disabled = !enabled;
+}
+
+function statesprite_trailing_set_params(statesprite, length, trail_delay, trail_alpha, darken_colors) {
+    if (length > 0) {
+        realloc(statesprite.trailing_buffer, length);
+        console.assert(statesprite.trailing_buffer, "cannot reallocate the statesprite trailing buffer");
+        statesprite.trailing_length = length;
+    }
+    if (darken_colors != null) statesprite.trailing_darken = darken_colors ? 1 : 0;
+    if (statesprite.trailing_used > length) statesprite.trailing_used = length;
+    if (!Number.isNaN(trail_delay)) statesprite.trailing_delay = trail_delay;
+    if (!Number.isNaN(trail_alpha)) statesprite.trailing_alpha = trail_alpha;
+
+    // force update
+    statesprite.trailing_progress = Infinity;
+}
+

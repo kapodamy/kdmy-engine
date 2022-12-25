@@ -213,6 +213,9 @@ namespace Engine.Platform {
                 gl.uniform1i(this.program_textured.u_offsetcolor_mul_or_diff, use_multiply ? 1 : 0);
             }
 
+            // enable/disable rgb color components be multiplied by the render alpha
+            gl.uniform1i(this.program_textured.u_darken, this.program_textured.darken_enabled ? 1 : 0);
+
             // draw the quad (2 triangles, 6 vertices)
             gl.drawArrays(gl.TRIANGLES, 0, 6);
 
@@ -556,6 +559,9 @@ void main() { mainImage(FragColor, TexCoord); }
         internal WebGLUniformLocation u_offsetcolor_mul_or_diff;
         internal WebGLUniformLocation u_offsetcolor_enabled;
         internal WebGLUniformLocation u_offsetcolor;
+        internal WebGLUniformLocation u_darken;
+
+        internal bool darken_enabled;
 
 
         internal WebGLContextProgram(WebGL2RenderingContext gl, WebGLProgram program) {
@@ -577,6 +583,7 @@ void main() { mainImage(FragColor, TexCoord); }
             this.u_offsetcolor_enabled = gl.getUniformLocation(program, "u_offsetcolor_enabled");
             this.u_offsetcolor = gl.getUniformLocation(program, "u_offsetcolor");
             this.u_vertex_color = gl.getUniformLocation(program, "u_vertex_color");
+            this.u_darken = gl.getUniformLocation(program, "u_darken");
         }
 
         internal void ResizeProyection(WebGL2RenderingContext gl, float[] proyection_matrix) {

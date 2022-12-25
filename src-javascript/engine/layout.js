@@ -36,6 +36,7 @@ const LAYOUT_ACTION_SETSHADERUNIFORM = 22;
 const LAYOUT_ACTION_SETBLENDING = 23;
 const LAYOUT_ACTION_VIEWPORT = 24;
 const LAYOUT_ACTION_TEXTBORDEROFFSET = 25;
+const LAYOUT_ACTION_SPRITE_TRAILING = 26;
 
 const LAYOUT_GROUP_ROOT = Symbol("root-group");
 const LAYOUT_BPM_STEPS = 32;// 1/32 beats
@@ -2658,6 +2659,9 @@ async function layout_parse_sprite_action(unparsed_action, animlist, atlas, acti
             case "SetBlending":
                 layout_helper_add_action_setblending(unparsed_entry, entries);
                 break;
+            case "SetTrailing":
+                layout_helper_add_action_spritetrailing(unparsed_entry, entries);
+                break;
             default:
                 console.warn("Unknown action entry: " + unparsed_entry.tagName);
                 break;
@@ -3006,6 +3010,10 @@ function layout_helper_execute_action_in_sprite(action, item, viewport_width, vi
             case LAYOUT_ACTION_SETBLENDING:
                 if (entry.has_enable) sprite_blend_enable(sprite, entry.enable);
                 sprite_blend_set(sprite, entry.blend_src_rgb, entry.blend_dst_rgb, entry.blend_src_alpha, entry.blend_dst_alpha);
+                break;
+            case LAYOUT_ACTION_SPRITE_TRAILING:
+                if (entry.has_enable) sprite_trailing_enabled(sprite, entry.enable);
+                sprite_trailing_set_params(sprite, entry.length, entry.trail_delay, entry.trail_alpha, entry.has_darken ? entry.darken : null);
                 break;
         }
     }
@@ -3795,6 +3803,29 @@ function layout_helper_add_action_textborderoffset(unparsed_entry, action_entrie
     }
 
     let entry = { type: LAYOUT_ACTION_TEXTBORDEROFFSET, x: offset_x, y: offset_y };
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_add_action_spritetrailing(unparsed_entry, action_entries) {
+    let enable = vertexprops_parse_boolean(unparsed_entry, "enable", 0);
+    let has_enable = unparsed_entry.hasAttribute("enable");
+    let length = vertexprops_parse_integer(unparsed_entry, "length", -1);
+    let trail_delay = vertexprops_parse_float(unparsed_entry, "trailDelay", NaN);
+    let trail_alpha = vertexprops_parse_float(unparsed_entry, "trailAlpha", NaN);
+    let darken = vertexprops_parse_boolean(unparsed_entry, "darkenColors", false);
+    let has_darken = unparsed_entry.hasAttribute("darkenColors");
+
+    let entry = {
+        type: LAYOUT_ACTION_SPRITE_TRAILING,
+        enable: enable,
+        has_enable: has_enable,
+        length: length,
+        trail_delay: trail_delay,
+        trail_alpha: trail_alpha,
+        darken: darken,
+        has_darken: has_darken
+    };
+
     arraylist_add(action_entries, entry);
 }
 

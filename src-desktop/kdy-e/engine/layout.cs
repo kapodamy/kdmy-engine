@@ -4,6 +4,7 @@ using System.Text;
 using Engine.Animation;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Font;
+using Engine.Game;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
@@ -96,9 +97,10 @@ namespace Engine {
         private const int ACTION_SETSHADER = 19;
         private const int ACTION_REMOVESHADER = 20;
         private const int ACTION_SETSHADERUNIFORM = 22;
-        private const int LAYOUT_ACTION_SETBLENDING = 23;
-        private const int LAYOUT_ACTION_VIEWPORT = 24;
+        private const int ACTION_SETBLENDING = 23;
+        private const int ACTION_VIEWPORT = 24;
         private const int ACTION_BORDEROFFSET = 25;
+        private const int ACTION_SPRITE_TRAILING = 26;
 
         public const string GROUP_ROOT = "___root-group___";
         private const float BPM_STEPS = 32;// 1/32 beats
@@ -2750,6 +2752,9 @@ namespace Engine {
                     case "SetBlending":
                         Layout.HelperAddActionSetblending(unparsed_entry, entries);
                         break;
+                    case "SetTrailing":
+                        Layout.HelperAddActionSpriteTrailing(unparsed_entry, entries);
+                        break;
                     default:
                         Console.Error.WriteLine("[WARN] Unknown action entry: " + unparsed_entry.TagName);
                         break;
@@ -3095,9 +3100,13 @@ namespace Engine {
                         PSShader psshader = sprite.GetShader();
                         Layout.HelperSetShaderUniform(psshader, entry);
                         break;
-                    case LAYOUT_ACTION_SETBLENDING:
+                    case Layout.ACTION_SETBLENDING:
                         if (entry.has_enable) sprite.BlendEnable(entry.enable);
                         sprite.BlendSet(entry.blend_src_rgb, entry.blend_dst_rgb, entry.blend_src_alpha, entry.blend_dst_alpha);
+                        break;
+                    case Layout.ACTION_SPRITE_TRAILING:
+                        if (entry.has_enable) sprite.TrailingEnabled(entry.enable);
+                        sprite.TrailingSetParams(entry.length, entry.trail_delay, entry.trail_alpha, entry.has_darken ? (bool?)entry.darken : null);
                         break;
                 }
             }
@@ -3181,7 +3190,7 @@ namespace Engine {
                         PSShader psshader = textsprite.GetShader();
                         Layout.HelperSetShaderUniform(psshader, entry);
                         break;
-                    case LAYOUT_ACTION_SETBLENDING:
+                    case ACTION_SETBLENDING:
                         if (entry.has_enable) textsprite.BlendEnable(entry.enable);
                         textsprite.BlendSet(entry.blend_src_rgb, entry.blend_dst_rgb, entry.blend_src_alpha, entry.blend_dst_alpha);
                         break;
@@ -3247,14 +3256,14 @@ namespace Engine {
                     case Layout.ACTION_SETSHADERUNIFORM:
                         Layout.HelperSetShaderUniform(group.psshader, entry);
                         break;
-                    case LAYOUT_ACTION_SETBLENDING:
+                    case ACTION_SETBLENDING:
                         if (entry.has_enable) group.blend_enabled = entry.enable;
                         group.blend_src_rgb = entry.blend_src_rgb;
                         group.blend_dst_rgb = entry.blend_dst_rgb;
                         group.blend_src_alpha = entry.blend_src_alpha;
                         group.blend_dst_alpha = entry.blend_dst_alpha;
                         break;
-                    case LAYOUT_ACTION_VIEWPORT:
+                    case ACTION_VIEWPORT:
                         if (!Single.IsNaN(entry.x)) group.viewport_x = entry.x;
                         if (!Single.IsNaN(entry.y)) group.viewport_y = entry.y;
                         if (!Single.IsNaN(entry.width)) group.viewport_width = entry.width;
@@ -3855,7 +3864,7 @@ namespace Engine {
             Blend blend_dst_alpha = VertexProps.ParseBlending(unparsed_entry.GetAttribute("dstAlpha"));
 
             ActionEntry entry = new ActionEntry() {
-                type = LAYOUT_ACTION_SETBLENDING,
+                type = ACTION_SETBLENDING,
                 enabled = has_enabled,
                 blend_src_rgb = blend_src_rgb,
                 blend_dst_rgb = blend_dst_rgb,
@@ -3873,7 +3882,7 @@ namespace Engine {
             float height = VertexProps.ParseFloat(unparsed_entry, "height", Single.NaN);
 
             ActionEntry entry = new ActionEntry() {
-                type = LAYOUT_ACTION_VIEWPORT,
+                type = ACTION_VIEWPORT,
                 x = x,
                 y = y,
                 width = width,
@@ -3890,11 +3899,33 @@ namespace Engine {
                 Console.Error.WriteLine("[ERROR] layout_helper_add_action_borderoffser() invalid offset: " + unparsed_entry.OuterHTML);
                 return;
             }
-            
+
             ActionEntry entry = new ActionEntry() { type = Layout.ACTION_BORDEROFFSET, x = offset_x, y = offset_y };
             action_entries.Add(entry);
         }
 
+        private static void HelperAddActionSpriteTrailing(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            bool enable = VertexProps.ParseBoolean(unparsed_entry, "enable", false);
+            bool has_enable = unparsed_entry.HasAttribute("enable");
+            int length = VertexProps.ParseInteger(unparsed_entry, "length", -1);
+            float trail_delay = VertexProps.ParseFloat(unparsed_entry, "trailDelay", Single.NaN);
+            float trail_alpha = VertexProps.ParseFloat(unparsed_entry, "trailAlpha", Single.NaN);
+            bool darken = VertexProps.ParseBoolean(unparsed_entry, "darkenColors", false);
+            bool has_darken = unparsed_entry.HasAttribute("darkenColors");
+
+            ActionEntry entry = new ActionEntry() {
+                type = Layout.ACTION_SPRITE_TRAILING,
+                enable = enable,
+                has_enable = has_enable,
+                length = length,
+                trail_delay = trail_delay,
+                trail_alpha = trail_alpha,
+                darken = darken,
+                has_darken = has_darken
+            };
+
+            action_entries.Add(entry);
+        }
 
         private class ZBufferEntry {
             public Item item; public float z_index; public bool visible;
@@ -4023,6 +4054,11 @@ namespace Engine {
             public Blend blend_dst_rgb;
             public Blend blend_src_alpha;
             public Blend blend_dst_alpha;
+            public int length;
+            public float trail_delay;
+            public float trail_alpha;
+            public bool darken;
+            public bool has_darken;
         }
         private class Group : ISetProperty {
             public Action[] actions;

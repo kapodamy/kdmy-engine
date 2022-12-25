@@ -24,7 +24,7 @@ class PVRContextState {
 }
 
 class PVRContext {
-    /**@type {HTMLCanvasElement}*/ _html5canvas = null;
+    /**@type {HTMLCanvasElement|OffscreenCanvas}*/ _html5canvas = null;
     /**@type {WebGL2Context}*/ webopengl = null;
     /**@type {PVRContextState[]}*/ stack = new Array(16);
     /**@type {number}*/ resolution_changes = 0;
@@ -202,6 +202,7 @@ function pvr_context_reset(pvrctx) {
     pvrctx.shader_stack = new Array();
     PSFramebuffer.UseScreenFramebuffer(pvrctx);
     webopengl_set_blend(pvrctx, 1, BLEND_DEFAULT, BLEND_DEFAULT, BLEND_DEFAULT, BLEND_DEFAULT);
+    pvrctx.webopengl.program_textured.darken_enabled = false;
 }
 
 /** @param {PVRContext} pvrctx */
@@ -348,6 +349,11 @@ function pvr_context_vertex_offsetcolor_multiply(pvrctx, flag) {
 /** @param {PVRContext} pvrctx*/
 function pvr_context_set_vertex_blend(pvrctx, enabled, src_rgb, dst_rgb, src_alpha, dst_alpha) {
     webopengl_set_blend(pvrctx, enabled, src_rgb, dst_rgb, src_alpha, dst_alpha);
+}
+
+/** @param {PVRContext} pvrctx*/
+function pvr_context_set_vertex_textured_darken(pvrctx, enabled) {
+    pvrctx.webopengl.program_textured.darken_enabled = enabled;
 }
 
 

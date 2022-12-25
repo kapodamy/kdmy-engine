@@ -7,6 +7,7 @@ uniform float u_alpha;
 uniform bool u_offsetcolor_mul_or_diff;
 uniform bool u_offsetcolor_enabled;
 uniform vec4 u_offsetcolor;
+uniform bool u_darken;
 
 void main() {
     vec4 color = texture(u_texture, v_texcoord);
@@ -24,6 +25,9 @@ void main() {
 
     if(color.a <= 0.0)
         discard;
+        
+    if (u_darken)
+        color.rgb *= u_alpha;
 
     FragColor = color;
 }

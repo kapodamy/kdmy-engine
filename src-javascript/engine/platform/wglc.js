@@ -60,6 +60,10 @@ class WebGLContextProgram {
     /**@type {WebGLUniformLocation}*/u_offsetcolor;
     /**@type {WebGLUniformLocation}*/u_dotted;
 
+    /**@type {WebGLUniformLocation}*/u_darken;
+
+    /**@type {bool}*/darken_enabled;
+
 
     constructor(/**@type {WebGL2RenderingContext}*/gl, /**@type {WebGLProgram}*/program) {
         this.program = program;
@@ -80,6 +84,7 @@ class WebGLContextProgram {
         this.u_offsetcolor_enabled = gl.getUniformLocation(program, "u_offsetcolor_enabled");
         this.u_offsetcolor = gl.getUniformLocation(program, "u_offsetcolor");
         this.u_vertex_color = gl.getUniformLocation(program, "u_vertex_color");
+        this.u_darken = gl.getUniformLocation(program, "u_darken");
         this.u_dotted = gl.getUniformLocation(program, "u_dotted");
     }
 
@@ -981,6 +986,9 @@ function webopengl_draw_texture(/**@type {PVRContext}*/pvrctx, tex, sx, sy, sw, 
         gl.uniform4fv(wglc.program_textured.u_offsetcolor, pvrctx.render_offsetcolor);
         gl.uniform1i(wglc.program_textured.u_offsetcolor_mul_or_diff, pvrctx.render_offsetcolor_multiply ? 1 : 0);
     }
+
+    // enable/disable rgb color components be multiplied by the render alpha
+    gl.uniform1i(wglc.program_textured.u_darken, wglc.program_textured.darken_enabled ? 1 : 0);
 
     // @ts-ignore
     if (window.ENABLE_DOTTED) wglc.gl.uniform1i(wglc.program_textured.u_dotted, wglc.draw_dotted);

@@ -94,6 +94,12 @@ PSShader textsprite_get_shader(TextSprite textsprite) {
     print_stub("textsprite_get_shader", "textsprite=%p", textsprite);
     return &stub_psshader;
 }
+void textsprite_blend_enable(TextSprite textsprite, bool enabled) {
+    print_stub("textsprite_blend_enable", "textsprite=%p enabled=(bool)%i", textsprite, enabled);
+}
+void textsprite_blend_set(TextSprite textsprite, Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha) {
+    print_stub("textsprite_blend_set", "textsprite=%p src_rgb=%i dst_rgb=%i src_alpha=%i dst_alpha=%i", textsprite, src_rgb, dst_rgb, src_alpha, dst_alpha);
+}
 void textsprite_background_enable(TextSprite textsprite, bool enabled) {
     print_stub("textsprite_background_enable", "textsprite=%p enabled=(bool)%i", textsprite, enabled);
 }

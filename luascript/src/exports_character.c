@@ -113,6 +113,12 @@ EM_JS_PRFX(CharacterActionType, character_get_current_action, (Character charact
 EM_JS_PRFX(void, character_freeze_animation, (Character character, bool enabled), {
     character_freeze_animation(kdmyEngine_obtain(character), enabled);
 });
+EM_JS_PRFX(void, character_trailing_enabled, (Character character, bool enabled), {
+    character_trailing_enabled(kdmyEngine_obtain(character), enabled);
+});
+EM_JS_PRFX(void, character_trailing_set_params, (Character character, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors), {
+    character_trailing_set_params(kdmyEngine_obtain(character), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors));
+});
 #endif
 
 
@@ -473,6 +479,33 @@ static int script_character_freeze_animation(lua_State* L) {
     return 0;
 }
 
+static int script_character_trailing_enabled(lua_State* L) {
+    Character character = luascript_read_userdata(L, CHARACTER);
+    bool enabled = (bool)lua_toboolean(L, 2);
+
+    character_trailing_enabled(character, enabled);
+
+    return 0;
+}
+
+static int script_character_trailing_set_params(lua_State* L) {
+    Character character = luascript_read_userdata(L, CHARACTER);
+    int32_t length = (int32_t)luaL_checkinteger(L, 2);
+    float trail_delay = (float)luaL_checknumber(L, 3);
+    float trail_alpha = (float)luaL_checknumber(L, 4);
+    
+    bool darken_colors = false;
+    bool* darken_colors_ptr = &darken_colors;
+    if (lua_isnil(L, 5))
+        darken_colors_ptr = NULL;
+    else
+        darken_colors = lua_toboolean(L, 5);
+
+    character_trailing_set_params(character, length, trail_delay, trail_alpha, darken_colors_ptr);
+
+    return 0;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -513,6 +546,8 @@ static const luaL_Reg CHARACTER_FUNCTIONS[] = {
     {"get_play_calls", script_character_get_play_calls},
     {"get_current_action", script_character_get_current_action},
     {"freeze_animation", script_character_freeze_animation},
+    {"trailing_enabled", script_character_trailing_enabled},
+    {"trailing_set_params", script_character_trailing_set_params},
     {NULL, NULL}
 };
 

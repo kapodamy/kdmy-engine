@@ -2,6 +2,7 @@ using System;
 using Engine.Externals.LuaInterop;
 using Engine.Image;
 using Engine.Platform;
+using Engine.Utils;
 
 namespace Engine.Externals.LuaScriptInterop {
 
@@ -272,6 +273,53 @@ namespace Engine.Externals.LuaScriptInterop {
             return ExportsPSShader.script_psshader_new(L, psshader);
         }
 
+        static int script_sprite_blend_enable(LuaState L) {
+            Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
+            bool enabled = L.lua_toboolean(2);
+
+            sprite.BlendEnable(enabled);
+
+            return 0;
+        }
+
+        static int script_sprite_blend_set(LuaState L) {
+            Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
+            Blend src_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(2, null));
+            Blend dst_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(3, null));
+            Blend src_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(4, null));
+            Blend dst_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(5, null));
+
+            sprite.BlendSet(src_rgb, dst_rgb, src_alpha, dst_alpha);
+
+            return 0;
+        }
+
+        static int script_sprite_trailing_enabled(LuaState L) {
+            Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
+            bool enabled = L.lua_toboolean(2);
+
+            sprite.TrailingEnabled(enabled);
+
+            return 0;
+        }
+
+        static int script_sprite_trailing_set_params(LuaState L) {
+            Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
+            int length = (int)L.luaL_checkinteger(2);
+            float trail_delay = (float)L.luaL_checknumber(3);
+            float trail_alpha = (float)L.luaL_checknumber(4);
+
+            bool? darken_colors;
+            if (L.lua_isnil(5))
+                darken_colors = null;
+            else
+                darken_colors = L.lua_toboolean(5);
+
+            sprite.TrailingSetParams(length, trail_delay, trail_alpha, darken_colors);
+
+            return 0;
+        }
+
 
         static int script_sprite_flip_rendered_texture(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
@@ -326,6 +374,10 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("flip_rendered_texture_enable_correction", script_sprite_flip_rendered_texture_enable_correction),
             new LuaTableFunction("set_shader", script_sprite_set_shader),
             new LuaTableFunction("get_shader", script_sprite_get_shader),
+            new LuaTableFunction("blend_enable", script_sprite_blend_enable),
+            new LuaTableFunction("blend_set", script_sprite_blend_set),
+            new LuaTableFunction("trailing_enabled", script_sprite_trailing_enabled),
+            new LuaTableFunction("trailing_set_params", script_sprite_trailing_set_params),
             new LuaTableFunction(null, null)
         };
 

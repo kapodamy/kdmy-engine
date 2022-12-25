@@ -121,3 +121,9 @@ CharacterActionType character_get_current_action(Character character) {
 void character_freeze_animation(Character character, bool enabled) {
     print_stub("character_get_current_action", "character=%p enabled=(bool)%i", character, enabled);
 }
+void character_trailing_enabled(Character character, bool enabled) {
+    print_stub("character_trailing_enabled", "character=%p enabled=(bool)%i", character, enabled);
+}
+void character_trailing_set_params(Character character, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors) {
+    print_stub("character_trailing_set_params", "character=%p length=%i trail_delay=%f trail_alpha=%f darken_colors=%p", character, length, trail_delay, trail_alpha, darken_colors);
+}

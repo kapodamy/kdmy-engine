@@ -82,7 +82,6 @@ EM_JS_PRFX(void, sprite_center_draw_location, (Sprite sprite, float x, float y, 
 EM_JS_PRFX(void, sprite_set_antialiasing, (Sprite sprite, PVRFlag antialiasing), {
     sprite_set_antialiasing(kdmyEngine_obtain(sprite), antialiasing);
 });
-
 EM_JS_PRFX(void, sprite_flip_rendered_texture, (Sprite sprite, int flip_x, int flip_y), {
     sprite_flip_rendered_texture(kdmyEngine_obtain(sprite), flip_x < 0 ? null : flip_x, flip_y < 0 ? null : flip_y);
 });
@@ -95,6 +94,18 @@ EM_JS_PRFX(void, sprite_set_shader, (Sprite sprite, PSShader psshader), {
 EM_JS_PRFX(PSShader, sprite_get_shader, (Sprite sprite), {
     let psshader = sprite_get_shader(kdmyEngine_obtain(sprite));
     return kdmyEngine_obtain(psshader);
+});
+EM_JS_PRFX(void, sprite_blend_enable, (Sprite sprite, bool enabled), {
+    sprite_blend_enable(kdmyEngine_obtain(sprite), enabled);
+});
+EM_JS_PRFX(void, sprite_blend_set, (Sprite sprite, Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha), {
+    sprite_blend_set(kdmyEngine_obtain(sprite), src_rgb, dst_rgb, src_alpha, dst_alpha);
+});
+EM_JS_PRFX(void, sprite_trailing_enabled, (Sprite sprite, bool enabled), {
+    sprite_trailing_enabled(kdmyEngine_obtain(sprite), enabled);
+});
+EM_JS_PRFX(void, sprite_trailing_set_params, (Sprite sprite, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors), {
+    sprite_trailing_set_params(kdmyEngine_obtain(sprite), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors));
 });
 #endif
 
@@ -381,6 +392,55 @@ static int script_sprite_get_shader(lua_State* L) {
     return script_psshader_new(L, psshader);
 }
 
+static int script_sprite_blend_enable(lua_State* L) {
+    Sprite sprite = luascript_read_userdata(L, SPRITE);
+    bool enabled = (bool)lua_toboolean(L, 2);
+
+    sprite_blend_enable(sprite, enabled);
+
+    return 0;
+}
+
+static int script_sprite_blend_set(lua_State* L) {
+    Sprite sprite = luascript_read_userdata(L, SPRITE);
+    Blend src_rgb = luascript_parse_blend(L, luaL_optstring(L, 2, NULL));
+    Blend dst_rgb = luascript_parse_blend(L, luaL_optstring(L, 3, NULL));
+    Blend src_alpha = luascript_parse_blend(L, luaL_optstring(L, 4, NULL));
+    Blend dst_alpha = luascript_parse_blend(L, luaL_optstring(L, 5, NULL));
+
+    sprite_blend_set(sprite, src_rgb, dst_rgb, src_alpha, dst_alpha);
+
+    return 0;
+}
+
+static int script_sprite_trailing_enabled(lua_State* L) {
+    Sprite sprite = luascript_read_userdata(L, SPRITE);
+    bool enabled = (bool)lua_toboolean(L, 2);
+
+    sprite_trailing_enabled(sprite, enabled);
+
+    return 0;
+}
+
+static int script_sprite_trailing_set_params(lua_State* L) {
+    Sprite sprite = luascript_read_userdata(L, SPRITE);
+    int32_t length = (int32_t)luaL_checkinteger(L, 2);
+    float trail_delay = (float)luaL_checknumber(L, 3);
+    float trail_alpha = (float)luaL_checknumber(L, 4);
+    
+    bool darken_colors = false;
+    bool* darken_colors_ptr = &darken_colors;
+    if (lua_isnil(L, 5))
+        darken_colors_ptr = NULL;
+    else
+        darken_colors = lua_toboolean(L, 5);
+
+    sprite_trailing_set_params(sprite, length, trail_delay, trail_alpha, darken_colors_ptr);
+
+    return 0;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -412,6 +472,10 @@ static const luaL_Reg SPRITE_FUNCTIONS[] = {
     {"flip_rendered_texture_enable_correction", script_sprite_flip_rendered_texture_enable_correction},
     {"set_shader", script_sprite_set_shader},
     {"get_shader", script_sprite_get_shader},
+    {"blend_enable", script_sprite_blend_enable},
+    {"blend_set", script_sprite_blend_set},
+    {"trailing_enabled", script_sprite_trailing_enabled},
+    {"trailing_set_params", script_sprite_trailing_set_params},
     {NULL, NULL}
 };
 

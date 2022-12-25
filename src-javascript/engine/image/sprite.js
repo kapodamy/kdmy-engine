@@ -9,6 +9,7 @@ function sprite_draw(sprite, pvrctx) {
     if (sprite.alpha <= 0) return;
 
     let sprite_vertex = sprite.vertex;
+    let render_alpha = sprite.alpha * sprite.alpha2;
 
     if (sprite.vertex_dirty) {
         let draw_x = sprite.draw_x;
@@ -108,10 +109,10 @@ function sprite_draw(sprite, pvrctx) {
     }
 
     pvr_context_save(pvrctx);
-    pvr_context_set_vertex_alpha(pvrctx, sprite.alpha * sprite.alpha2);
+    pvr_context_set_vertex_alpha(pvrctx, render_alpha);
     pvr_context_set_vertex_offsetcolor(pvrctx, sprite.offsetcolor);
     if (sprite.psshader) pvr_context_add_shader(pvrctx, sprite.psshader);
-    
+
     pvr_context_set_vertex_blend(
         pvrctx,
         sprite.blend_enabled,
@@ -127,6 +128,26 @@ function sprite_draw(sprite, pvrctx) {
 
     // apply transformation matrix
     sprite_matrix_calculate(sprite, pvrctx);
+
+    // draw sprites trail if necessary
+    if (!sprite.trailing_disabled && sprite.trailing_used > 0) {
+        pvr_context_set_vertex_textured_darken(pvrctx, sprite.trailing_darken);
+
+        for (let i = 0; i < sprite.trailing_used; i++) {
+            const trail = sprite.trailing_buffer[i];
+            pvr_context_set_vertex_alpha(pvrctx, trail.alpha * render_alpha);
+            pvr_context_draw_texture(
+                pvrctx,
+                sprite.texture,
+                trail.sx, trail.sy, trail.sw, trail.sh,
+                trail.dx, trail.dy, trail.dw, trail.dh
+            );
+        }
+
+        // restore previous values
+        pvr_context_set_vertex_textured_darken(pvrctx, 0);
+        pvr_context_set_vertex_alpha(pvrctx, render_alpha);
+    }
 
     // draw the vertex
     if (sprite.texture) {
@@ -228,7 +249,7 @@ function sprite_init(src_texture) {
     sprite.crop_enabled = 0;
 
     sprite.antialiasing = PVR_FLAG_DEFAULT;
-    
+
     sprite.psshader = null;
 
     sprite.blend_enabled = 1;
@@ -236,6 +257,18 @@ function sprite_init(src_texture) {
     sprite.blend_dst_rgb = BLEND_DEFAULT;
     sprite.blend_src_alpha = BLEND_DEFAULT;
     sprite.blend_dst_alpha = BLEND_DEFAULT;
+
+    sprite.trailing_buffer = Array(10);
+    sprite.trailing_used = 0;
+    sprite.trailing_length = 10;
+    sprite.trailing_alpha = 0.9;
+    sprite.trailing_delay = 0;
+    sprite.trailing_darken = 1;
+    sprite.trailing_disabled = 1;
+    sprite.trailing_progress = 0.0;
+
+    // JS only
+    clone_struct_as_array_items(sprite.trailing_buffer, 10, {}, NaN);
 
     return sprite;
 }
@@ -250,6 +283,7 @@ function sprite_destroy(sprite) {
     SPRITE_POOL.delete(sprite.id);
     ModuleLuaScript.kdmyEngine_drop_shared_object(sprite.matrix_source);
     ModuleLuaScript.kdmyEngine_drop_shared_object(sprite);
+    sprite.trailing_buffer = undefined;
     sprite = undefined;
 }
 
@@ -531,6 +565,54 @@ function sprite_animate(sprite, elapsed) {
     if (sprite.animation_external) {
         result = animsprite_animate(sprite.animation_external, elapsed);
         animsprite_update_sprite(sprite.animation_external, sprite, 0);
+    }
+
+    // check delay for next trail
+    let wait = sprite.trailing_progress < sprite.trailing_delay;
+    sprite.trailing_progress += elapsed;
+
+    if (wait) return result;
+    sprite.trailing_progress = 0.0;
+
+    // compute trailing using the cached vertex
+    let insert_vertex = sprite.trailing_used < sprite.trailing_length;
+    if (sprite.trailing_used > 0) {
+        // check if the last vertex equals to the current vertex
+        const trail = sprite.trailing_buffer[0];
+        let source = trail.sx == sprite.vertex[0] && trail.sy == sprite.vertex[1] && trail.sw == sprite.vertex[2] && trail.sh == sprite.vertex[3];
+        let draw = trail.dx == sprite.vertex[4] && trail.dy == sprite.vertex[5] && trail.dw == sprite.vertex[6] && trail.dh == sprite.vertex[7];
+
+        if (source && draw) {
+            // drop first entry
+            for (let i = 0, j = 1; j < sprite.trailing_used; i++, j++) {
+                sprite.trailing_buffer[i] = sprite.trailing_buffer[j];
+            }
+            insert_vertex = false;
+            sprite.trailing_used--;
+        }
+    }
+
+    if (insert_vertex) {
+        // shift all entries to the end
+        for (let i = sprite.trailing_used - 2, j = sprite.trailing_used - 1; i >= 0; i--, j--) {
+            sprite.trailing_buffer[j] = sprite.trailing_buffer[i];
+        }
+
+        // add new trail
+        sprite.trailing_buffer[0].sx = sprite.vertex[0];
+        sprite.trailing_buffer[0].sy = sprite.vertex[1];
+        sprite.trailing_buffer[0].sw = sprite.vertex[2];
+        sprite.trailing_buffer[0].sh = sprite.vertex[3];
+        sprite.trailing_buffer[0].dx = sprite.vertex[4];
+        sprite.trailing_buffer[0].dy = sprite.vertex[5];
+        sprite.trailing_buffer[0].dw = sprite.vertex[6];
+        sprite.trailing_buffer[0].dh = sprite.vertex[7];
+        sprite.trailing_used++;
+    }
+
+    // update alpha of each trail
+    for (let i = 0; i < sprite.trailing_used; i++) {
+        sprite.trailing_buffer[i].alpha = (1.0 - (i / sprite.trailing_length)) * sprite.trailing_alpha;
     }
 
     return result;
@@ -933,5 +1015,24 @@ function sprite_blend_set(sprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
     sprite.blend_dst_rgb = dst_rgb;
     sprite.blend_src_alpha = src_alpha;
     sprite.blend_dst_alpha = dst_alpha;
+}
+
+function sprite_trailing_enabled(sprite, enabled) {
+    sprite.trailing_disabled = !enabled;
+}
+
+function sprite_trailing_set_params(sprite, length, trail_delay, trail_alpha, darken_colors) {
+    if (length > 0) {
+        realloc(sprite.trailing_buffer, length);
+        console.assert(sprite.trailing_buffer, "cannot reallocate the sprite trailing buffer");
+        sprite.trailing_length = length;
+    }
+    if (darken_colors != null) sprite.trailing_darken = darken_colors ? 1 : 0;
+    if (sprite.trailing_used > length) sprite.trailing_used = length;
+    if (!Number.isNaN(trail_delay)) sprite.trailing_delay = trail_delay;
+    if (!Number.isNaN(trail_alpha)) sprite.trailing_alpha = trail_alpha;
+
+    // force update
+    sprite.trailing_progress = Infinity;
 }
 

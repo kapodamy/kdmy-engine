@@ -5,6 +5,7 @@
 #include "modifier.h"
 #include "pvrctx.h"
 #include "psshader.h"
+#include "vertexprops.h"
 
 typedef struct _Sprite_t {
     int dummy;
@@ -38,5 +39,9 @@ void sprite_flip_rendered_texture(Sprite sprite, int flip_x, int flip_y);
 void sprite_flip_rendered_texture_enable_correction(Sprite sprite, bool enabled);
 void sprite_set_shader(Sprite sprite, PSShader psshader);
 PSShader sprite_get_shader(Sprite sprite);
+void sprite_blend_enable(Sprite sprite, bool enabled);
+void sprite_blend_set(Sprite sprite, Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha);
+void sprite_trailing_enabled(Sprite sprite, bool enabled);
+void sprite_trailing_set_params(Sprite sprite, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors);
 
 #endif
