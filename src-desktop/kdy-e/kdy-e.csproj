@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7C76AA79-86A1-4580-A743-2610DAF56995}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>Engine</RootNamespace>
     <AssemblyName>kdy-e</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
@@ -100,6 +100,7 @@
     <Compile Include="engine\csharp\ISetProperty.cs" />
     <Compile Include="engine\csharp\ISetPropertyObject.cs" />
     <Compile Include="engine\csharp\IVertex.cs" />
+    <Compile Include="engine\csharp\PreloadCache.cs" />
     <Compile Include="engine\drawable.cs" />
     <Compile Include="engine\externals\exports_drawable.cs" />
     <Compile Include="engine\externals\exports_layoutplaceholder.cs" />
@@ -109,6 +110,7 @@
     <Compile Include="engine\externals\glfw_delegates.cs" />
     <Compile Include="engine\externals\glfw.cs" />
     <Compile Include="engine\externals\luascript\exports_animlist.cs" />
+    <Compile Include="engine\externals\luascript\exports_enginesettings.cs" />
     <Compile Include="engine\externals\luascript\exports_animlistitem.cs" />
     <Compile Include="engine\externals\luascript\exports_animsprite.cs" />
     <Compile Include="engine\externals\luascript\exports_atlas.cs" />
@@ -129,6 +131,7 @@
     <Compile Include="engine\externals\luascript\exports_tweenlerp.cs" />
     <Compile Include="engine\externals\luascript\luascript_helpers.cs" />
     <Compile Include="engine\externals\luascript\exports_tweenkeyframe.cs" />
+    <Compile Include="engine\externals\opengl_pixeldatabuffer.cs" />
     <Compile Include="engine\game\freeplaymenu.cs" />
     <Compile Include="engine\game\funkin\songprogressbar.cs" />
     <Compile Include="engine\game\gameplay\dialogue.cs" />

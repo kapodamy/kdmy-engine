@@ -303,13 +303,24 @@ namespace Engine.Image {
         }
 
         private static Atlas ParseFromPlainText(string src_txt) {
+            // create fake path to texture, assume the format is PNG
+            string path = FS.GetFullPath(src_txt);
+            int index = path.LastIndexOf('.');
+            string subpath = path.SubstringKDY(0, index);
+            string fake_texture_filename = StringUtils.Concat(subpath, ".png");
+            //free(path);
+            //free(subpath);
+
             string text = FS.ReadText(src_txt);
-            if (text == null) return null;
+            if (text == null) {
+                //free(fake_texture_filename);
+                return null;
+            }
 
             Atlas atlas = new Atlas() {
                 //name = src,
                 glyph_fps = 0.0f,
-                texture_filename = null,
+                texture_filename = fake_texture_filename,
                 resolution_width = Funkin.SCREEN_RESOLUTION_WIDTH,
                 resolution_height = Funkin.SCREEN_RESOLUTION_HEIGHT,
                 has_declared_resolution = false,

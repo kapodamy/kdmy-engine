@@ -40,7 +40,7 @@
             this.button_launch = new System.Windows.Forms.Button();
             this.button_refreshList = new System.Windows.Forms.Button();
             this.button_openExpansionsFolder = new System.Windows.Forms.Button();
-            this.textBox_description = new System.Windows.Forms.TextBox();
+            this.richTextBox_description = new System.Windows.Forms.RichTextBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_screenshoot)).BeginInit();
             this.SuspendLayout();
@@ -89,7 +89,7 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.textBox_description);
+            this.groupBox1.Controls.Add(this.richTextBox_description);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.label_submiter);
             this.groupBox1.Controls.Add(this.label4);
@@ -176,16 +176,18 @@
             // 
             // textBox_description
             // 
-            this.textBox_description.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.richTextBox_description.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox_description.Location = new System.Drawing.Point(6, 304);
-            this.textBox_description.Multiline = true;
-            this.textBox_description.Name = "textBox_description";
-            this.textBox_description.ReadOnly = true;
-            this.textBox_description.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox_description.Size = new System.Drawing.Size(381, 65);
-            this.textBox_description.TabIndex = 5;
+            this.richTextBox_description.Location = new System.Drawing.Point(6, 304);
+            this.richTextBox_description.Multiline = true;
+            this.richTextBox_description.Name = "richTextBox_description";
+            this.richTextBox_description.ReadOnly = true;
+            this.richTextBox_description.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Both;
+            this.richTextBox_description.DetectUrls = true;
+            this.richTextBox_description.Size = new System.Drawing.Size(381, 65);
+            this.richTextBox_description.TabIndex = 5;
+            this.richTextBox_description.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(richTextBox_description_LinkClicked);
             // 
             // ExpansionsLoader
             // 
@@ -222,7 +224,7 @@
         private System.Windows.Forms.Button button_launch;
         private System.Windows.Forms.Button button_refreshList;
         private System.Windows.Forms.Button button_openExpansionsFolder;
-        private System.Windows.Forms.TextBox textBox_description;
+        private System.Windows.Forms.RichTextBox richTextBox_description;
     }
 }
 

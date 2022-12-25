@@ -1,4 +1,4 @@
-<TextureAtlas imagePath="sprites.png">
+<TextureAtlas imagePath="icon-mom.png">
 	<SubTexture name="neutral" x="12" y="2" width="108" height="120"/>
 	<SubTexture name="loosing" x="162" y="2" width="108" height="120"/>
 </TextureAtlas>

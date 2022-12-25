@@ -75,3 +75,5 @@ internal delegate GLenum glCheckFramebufferStatus(GLenum target);
 internal delegate void DglGetActiveUniform(GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, IntPtr name);
 internal delegate void glInvalidateFramebuffer(GLenum target, GLsizei numAttachments, const GLenum * attachments);
 internal delegate void glDeleteFramebuffers(GLsizei n, GLuint* framebuffers);
+internal delegate IntPtr glMapBuffer(GLenum target, GLenum access);
+internal delegate IntPtr glUnmapBuffer(GLenum target);

@@ -100,7 +100,10 @@ namespace Engine.Externals {
         GL_DST_ALPHA = 0x0304,
         GL_DST_COLOR = 0x0306,
         GL_CONSTANT_ALPHA = 0x8003,
-        GL_CONSTANT_COLOR = 0x8001
+        GL_CONSTANT_COLOR = 0x8001,
+        GL_PIXEL_UNPACK_BUFFER = 0x88EC,
+        GL_STREAM_DRAW = 0x88E0,
+        GL_WRITE_ONLY = 0x88B9
     }
 
     public partial class WebGL2RenderingContext {
@@ -192,6 +195,9 @@ namespace Engine.Externals {
         public readonly GLenum DST_COLOR = GLenum.GL_DST_COLOR;
         public readonly GLenum CONSTANT_ALPHA = GLenum.GL_CONSTANT_ALPHA;
         public readonly GLenum CONSTANT_COLOR = GLenum.GL_CONSTANT_COLOR;
+        public readonly GLenum PIXEL_UNPACK_BUFFER = GLenum.GL_PIXEL_UNPACK_BUFFER;
+        public readonly GLenum STREAM_DRAW = GLenum.GL_STREAM_DRAW;
+        public readonly GLenum WRITE_ONLY = GLenum.GL_WRITE_ONLY;
     }
 
 }

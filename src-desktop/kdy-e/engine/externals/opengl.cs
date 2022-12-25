@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using Engine.Platform;
 
 namespace Engine.Externals {
 
@@ -384,6 +385,15 @@ namespace Engine.Externals {
             handle.Free();
         }
 
+        internal void bufferData(GLenum target, int maxelements, byte[] srcData, GLenum usage) {
+            GCHandle handle = GCHandle.Alloc(srcData, GCHandleType.Pinned);
+            IntPtr data = handle.AddrOfPinnedObject();
+
+            NativeMethods.glBufferData(target, new IntPtr(maxelements * sizeof(byte)), data, usage);
+
+            handle.Free();
+        }
+
         internal void deleteTexture(WebGLTexture texture) {
             uint[] values = { texture.value };
             NativeMethods.glDeleteTextures(1, values);
@@ -495,6 +505,14 @@ namespace Engine.Externals {
         internal void drawElementsInstanced(GLenum mode, int count, GLenum type, int offset, int primcount) {
             KDY_draw_calls_count++;
             NativeMethods.glDrawElementsInstanced(mode, count, type, (IntPtr)offset, primcount);
+        }
+
+        internal IntPtr mapBuffer(GLenum target, GLenum access) {
+            return NativeMethods.glMapBuffer(target, access);
+        }
+
+        internal bool unmapBuffer(GLenum target) {
+            return NativeMethods.glUnmapBuffer(target) != 0;
         }
 
 #pragma warning restore IDE1006

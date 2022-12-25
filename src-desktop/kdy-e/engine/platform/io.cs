@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text;
-using Engine.Externals;
 using Engine.Utils;
 
 namespace Engine.Platform {
@@ -15,14 +14,24 @@ namespace Engine.Platform {
         }
 
         public static ImageData ReadTexture(string src) {
-            src = IO.GetAbsolutePath(src, true, true);
-            return TextureLoader.ReadTexture(src);
+            string absolute_path = IO.GetAbsolutePath(src, true, true);
+            Stream stream = PreloadCache.RetrieveStream(absolute_path);
+
+            if (stream != null)
+                return TextureLoader.ReadTexture(stream);
+            else
+                return TextureLoader.ReadTexture(absolute_path);
         }
 
         internal static string ReadText(string src) {
             try {
-                src = IO.GetAbsolutePath(src, true, true);
-                return File.ReadAllText(src, Encoding.UTF8);
+                string absolute_path = IO.GetAbsolutePath(src, true, true);
+                byte[] buffer = PreloadCache.RetrieveBuffer(absolute_path);
+
+                if (buffer != null)
+                    return Encoding.UTF8.GetString(buffer);
+                else
+                    return File.ReadAllText(absolute_path, Encoding.UTF8);
             } catch (Exception e) {
                 Console.Error.WriteLine("read_text() src=" + src + ":\r\n" + e.Message);
                 return null;
@@ -31,8 +40,13 @@ namespace Engine.Platform {
 
         internal static byte[] ReadArrayBuffer(string src) {
             try {
-                src = IO.GetAbsolutePath(src, true, true);
-                return File.ReadAllBytes(src);
+                string absolute_path = IO.GetAbsolutePath(src, true, true);
+                byte[] buffer = PreloadCache.RetrieveBuffer(absolute_path);
+
+                if (buffer != null)
+                    return buffer;
+                else
+                    return File.ReadAllBytes(absolute_path);
             } catch (Exception e) {
                 Console.Error.WriteLine("read_text() src=" + src + ":\r\n" + e.Message);
                 return null;
@@ -79,8 +93,8 @@ namespace Engine.Platform {
                         break;
                 }
 
-                if (!path.StartsWith("assets")) {
-                    Console.Error.WriteLine("io_get_absolute_path() path outside of 'assets' folder: " + path);
+                if (!path.StartsWith("assets") && !path.StartsWith("expansions")) {
+                    Console.Error.WriteLine("io_get_absolute_path() path outside of 'assets' or 'expansions' folder: " + path);
                     path = "assets/" + path;
                 }
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Text;
 using Engine.Externals;
 using Engine.Externals.LuaScriptInterop;
@@ -11,6 +12,7 @@ namespace Engine.Sound {
 
         private int stream_id;
         private IntPtr filehandle;
+        private GCHandle gchandle;
         private bool is_muted;
 
         private SoundPlayer() {
@@ -29,13 +31,24 @@ namespace Engine.Sound {
 
             full_path = IO.GetAbsolutePath(full_path, true, true);
 
-            byte[] full_path_ptr = new byte[Encoding.UTF8.GetByteCount(full_path) + 1];
-            Encoding.UTF8.GetBytes(full_path, 0, full_path.Length, full_path_ptr, 0);
+            byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
+            GCHandle gchandle;
+            IntPtr filehandle;
 
-            IntPtr filehandle = AICA.filehandle_init(full_path_ptr);
-            if (filehandle == IntPtr.Zero) {
-                Console.Error.WriteLine("soundplayer_init() filehandle_init failed for: " + src);
-                return null;
+            if (buffer != null) {
+                gchandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+                filehandle = AICA.filehandle_init2(gchandle.AddrOfPinnedObject(), buffer.Length);
+            } else {
+                byte[] full_path_ptr = new byte[Encoding.UTF8.GetByteCount(full_path) + 1];
+                Encoding.UTF8.GetBytes(full_path, 0, full_path.Length, full_path_ptr, 0);
+
+                filehandle = AICA.filehandle_init(full_path_ptr);
+                if (filehandle == IntPtr.Zero) {
+                    Console.Error.WriteLine("soundplayer_init() filehandle_init failed for: " + src);
+                    return null;
+                }
+
+                gchandle = new GCHandle();
             }
 
             int stream_id = AICA.sndbridge_queue_ogg(filehandle);
@@ -45,7 +58,7 @@ namespace Engine.Sound {
                 return null;
             }
 
-            return new SoundPlayer() { filehandle = filehandle, stream_id = stream_id };
+            return new SoundPlayer() { filehandle = filehandle, stream_id = stream_id, gchandle = gchandle };
         }
 
         public void Destroy() {
@@ -54,6 +67,7 @@ namespace Engine.Sound {
             AICA.sndbridge_dispose(this.stream_id);
             AICA.filehandle_destroy(this.filehandle);
             this.filehandle = IntPtr.Zero;
+            if (this.gchandle.IsAllocated) this.gchandle.Free();
         }
 
 
@@ -133,6 +147,10 @@ namespace Engine.Sound {
 
         public bool IsPlaying() {
             return AICA.sndbridge_is_active(this.stream_id);
+        }
+
+        public bool IsFadding() {
+            return AICA.sndbridge_is_fade_active(this.stream_id);
         }
 
         public double GetDuration() {

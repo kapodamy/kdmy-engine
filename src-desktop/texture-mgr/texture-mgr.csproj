@@ -41,6 +41,8 @@
     <Compile Include="iconloader.cs" />
     <Compile Include="imagedata.cs" />
     <Compile Include="imagewritter.cs" />
+    <Compile Include="memory.cs" />
+    <Compile Include="pixeldatabuffer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="textureloader.cs" />
   </ItemGroup>

@@ -488,6 +488,11 @@ namespace Engine.Game {
 
             FunkinSave.SetLastPlayed(gameplay_weekinfo.name, gameplay_difficult);
 
+            // (C# only) before run check if necessary preload files
+            int preload_id = PreloadCache.AddFileList(
+                WeekEnumerator.GetAsset(gameplay_weekinfo, PreloadCache.PRELOAD_FILENAME)
+            );
+
             int week_result = Week.Main(
                 gameplay_weekinfo,
                 gameplay_alternative_tracks,
@@ -497,6 +502,9 @@ namespace Engine.Game {
                 null,
                 -1
             );
+
+            // forget all preloaded files
+            PreloadCache.ClearById(preload_id);
 
             GameMain.background_menu_music = SoundPlayer.Init(Funkin.BACKGROUND_MUSIC);
             if (GameMain.background_menu_music != null) {

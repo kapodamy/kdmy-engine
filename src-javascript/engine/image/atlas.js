@@ -92,9 +92,9 @@ async function atlas_init(src) {
 }
 
 function atlas_destroy(atlas) {
-	for (let i=0 ; i< atlas.size ; i++) {
-		atlas.entries[i].name = undefined;
-	}
+    for (let i = 0; i < atlas.size; i++) {
+        atlas.entries[i].name = undefined;
+    }
 
     atlas.entries = undefined;
     atlas.size = undefined;
@@ -197,7 +197,7 @@ function atlas_name_has_number_suffix(atlas_entry_name, start_index) {
                     case 0x09:// tabulation
                     case 0x20:// white space
                     case 0xff:// hard space
-                    // case 0x5F:// underscore (used in plain-text atlas)
+                        // case 0x5F:// underscore (used in plain-text atlas)
                         ignore_space = 0;
                         continue;
                 }
@@ -237,11 +237,11 @@ function atlas_parse_resolution(atlas, resolution_string) {
     }
 
     let width = vertexprops_parse_unsigned_integer(
-		resolution_string.substring(0, index), NaN
-	);
+        resolution_string.substring(0, index), NaN
+    );
     let height = vertexprops_parse_unsigned_integer(
-		resolution_string.substring(index + 1, resolution_string.Length), NaN
-	);
+        resolution_string.substring(index + 1, resolution_string.Length), NaN
+    );
 
     if (!Number.isFinite(width) || !Number.isFinite(height)) {
         console.error("atlas_parse_resolution() invalid resolution", resolution_string);
@@ -258,13 +258,24 @@ function atlas_utils_is_known_extension(src) {
 }
 
 async function atlas_parse_from_plain_text(src_txt) {
+    // create fake path to texture, assume the format is PNG
+    let path = fs_get_full_path(src_txt);
+    let index = path.lastIndexOf('.');
+    let subpath = path.substring(0, index);
+    let fake_texture_filename = string_concat(2, subpath, ".png");
+    path = undefined;
+    subpath = undefined;
+
     let text = await fs_readtext(src_txt);
-    if (!text) return null;
+    if (!text) {
+        fake_texture_filename = undefined;
+        return null;
+    }
 
     let atlas = {
         //name : src,
         glyph_fps: 0.0,
-        texture_filename: null,
+        texture_filename: fake_texture_filename,
         resolution_width: FUNKIN_SCREEN_RESOLUTION_WIDTH,
         resolution_height: FUNKIN_SCREEN_RESOLUTION_HEIGHT,
         has_declared_resolution: 0,
@@ -366,8 +377,8 @@ function atlas_parse_tileset(arraylist, unparsed_tileset) {
         return;
     }
 
-	if (!Number.isFinite(sub_x)) sub_x = 0;
-	if (!Number.isFinite(sub_y)) sub_y = 0;
+    if (!Number.isFinite(sub_x)) sub_x = 0;
+    if (!Number.isFinite(sub_y)) sub_y = 0;
 
     // truncate should not be necessary
     let rows = Math.trunc(sub_width / tile_width);
@@ -386,7 +397,7 @@ function atlas_parse_tileset(arraylist, unparsed_tileset) {
         }
 
         let tile_index = vertexprops_parse_integer(unparsed_tile, "index", -1);
-		if (tile_index < 0) tile_index = index;
+        if (tile_index < 0) tile_index = index;
 
         let tile_name = unparsed_tile.getAttribute("name");
         let tile_x = tile_index % rows;
@@ -407,7 +418,7 @@ function atlas_parse_tileset(arraylist, unparsed_tileset) {
             frame_x: 0, frame_y: 0, frame_width: 0, frame_height: 0, pivot_x: 0, pivot_y: 0,
         });
 
-		index++;
+        index++;
     }
 
 }

@@ -140,6 +140,19 @@ namespace CsharpWrapper {
                     }
                 }
 
+                if (expansion.submiter != null) {
+                    expansion.submiter = expansion.submiter.Replace("\r", "").Replace("\n", "\r\n");
+                }
+                if (expansion.description != null) {
+                    expansion.description = expansion.description.Replace("\r", "").Replace("\n", "\r\n");
+                }
+                if (expansion.version != null) {
+                    expansion.version = expansion.version.Replace("\r", "").Replace("\n", "\r\n");
+                }
+                if (expansion.name != null) {
+                    expansion.name = expansion.name.Replace("\r", "").Replace("\n", "\r\n");
+                }
+
                 expansions.Add(expansion);
             }
 
@@ -156,7 +169,7 @@ namespace CsharpWrapper {
             if (selections.Count < 1) {
                 this.pictureBox_screenshoot.Image = null;
                 this.label_submiter.Text = null;
-                this.textBox_description.Text = null;
+                this.richTextBox_description.Text = null;
                 return;
             }
 
@@ -164,7 +177,7 @@ namespace CsharpWrapper {
 
             this.pictureBox_screenshoot.Image = expansion.screenshoot;
             this.label_submiter.Text = expansion.submiter;
-            this.textBox_description.Text = expansion.description;
+            this.richTextBox_description.Text = expansion.description;
         }
 
         private void button_launch_Click(object sender, EventArgs e) {
@@ -201,6 +214,14 @@ namespace CsharpWrapper {
                 FileName = expansions_dir,
                 UseShellExecute = true,
                 Verb = "open"
+            });
+        }
+
+        private void richTextBox_description_LinkClicked(object sender, LinkClickedEventArgs e) {
+            Process.Start(new ProcessStartInfo() {
+                //Verb = "open",
+                FileName = e.LinkText,
+                UseShellExecute = true
             });
         }
 

@@ -1,31 +1,59 @@
 ﻿#define PARALLEL
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
-using Engine.Externals;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 
 namespace Engine.Platform {
 
     public static class TextureLoader {
 
-        private const int CHUNK_SIZE = UInt16.MaxValue + 1;
+        private const int CHUNK_SIZE = 4096 * 1024; // 4MiB
+        public const PixelFormat FORMAT = PixelFormat.Format32bppArgb;
+        private static IPixelDataBufferBuilder buffer_builder;
+
+        public static IPixelDataBufferBuilder SetPixelBufferBuilder(IPixelDataBufferBuilder builder) {
+            IPixelDataBufferBuilder old = buffer_builder;
+            buffer_builder = builder;
+            return old;
+        }
 
 
         public static ImageData ReadTexture(string src) {
-            const PixelFormat FORMAT = PixelFormat.Format32bppArgb;
-
             Bitmap bitmap;
+
             try {
-                bitmap = new Bitmap(src, false);
+                bitmap = new Bitmap(src);
             } catch (Exception e) {
                 Console.Error.WriteLine(
-                    $"[ERROR] read_texture() failed to read/parse: {src}\n" + e.Message
+                    $"[ERROR] read_texture_from_path() failed to read/parse: {src}\n" + e.Message
                 );
                 return null;
             }
 
+            return ReadTexture(bitmap);
+        }
+
+        public static ImageData ReadTexture(Stream stream) {
+            Bitmap bitmap;
+
+            try {
+                bitmap = new Bitmap(stream);
+            } catch (Exception e) {
+                Console.Error.WriteLine(
+                    $"[ERROR] read_texture_from_stream() failed to read/parse:\n" + e.Message
+                );
+                return null;
+            }
+
+            return ReadTexture(bitmap);
+        }
+
+        private static ImageData ReadTexture(Bitmap bitmap) {
             int tex_width = PowerOfTwoCalc(bitmap.Width);
             int tex_height = PowerOfTwoCalc(bitmap.Height);
             int width = bitmap.Width;
@@ -33,44 +61,57 @@ namespace Engine.Platform {
 
             // ¿what is going on here?
             //      - read the image file
-            //      - if required, allocate memory for the texture with power-of-two size
+            //      - allocate memory for the texture with power-of-two size
             //      - and create a fake bitmap and draw the image pixels
             //      - change format from ARGB --> RGBA
             //      - return texture pointer and his dimmensions
 
-            ImageData image_data = new ImageData(width, height, tex_width, tex_height);
-            int total_pixels = tex_width * tex_height;
+            int total_pixels = width * height;
+            int total_pixels_pow2 = tex_width * tex_height;
+            int total_bytes_pow2 = total_pixels_pow2 * sizeof(uint);
+            ImageData image_data = null;
+            IPixelDataBuffer buffer = null;
 
-            if (tex_width == width && tex_height == height && bitmap.PixelFormat == FORMAT) {
-                image_data.SetBitmap(bitmap);
-            } else {
-                IntPtr ptr;
-                try {
-                    int length = image_data.Length;
-                    ptr = Marshal.AllocHGlobal(length);
-#if PARALLEL
-                    unsafe { Parallel_For(ptr, total_pixels, Zeros4); }
-#else
-                    Zeros(length, ptr);
-#endif
-                } catch (OutOfMemoryException) {
-                    Console.Error.WriteLine($"[ERROR] read_texture() not enough RAM for {src}\n");
+            if (buffer_builder != null && buffer_builder.CanCreatePixelDataBuffer()) {
+                buffer = buffer_builder.CreatePixelDataBuffer(total_bytes_pow2);
+                if (buffer == null) {
+                    Console.Error.WriteLine("[ERROR] TextureLoader::ReadTexture() pixel data buffer creation failed");
                     bitmap.Dispose();
                     return null;
                 }
+                image_data = new ImageData(buffer, width, height, tex_width, tex_height);
+            }
 
-                int stride = tex_width * sizeof(uint);
-                image_data.SetPointer(ptr);
+
+            if (tex_width == width && tex_height == height && bitmap.PixelFormat == FORMAT) {
+                if (image_data != null) {
+                    // copy bitmap pixels to pixel buffer object
+                    Rectangle rectangle = new Rectangle(0, 0, width, height);
+                    BitmapData data = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, FORMAT);
+                    unsafe { Memory.Copy((byte*)image_data.Addr, (byte*)data.Scan0, image_data.size); }
+                    bitmap.UnlockBits(data);
+                } else {
+                    image_data = new ImageData(bitmap, tex_width, tex_height);
+                }
+            } else {
+                if (image_data == null) {
+                    IntPtr buffer_ptr = Marshal.AllocHGlobal(total_bytes_pow2);
+                    image_data = new ImageData(buffer_ptr, width, height, tex_width, tex_height);
+                }
 
                 try {
-                    using (Bitmap dest = new Bitmap(tex_width, tex_height, stride, FORMAT, ptr)) {
+                    int stride = tex_width * sizeof(uint);
+                    using (Bitmap dest = new Bitmap(tex_width, tex_height, stride, FORMAT, image_data.Addr)) {
                         using (Graphics graphics_dest = Graphics.FromImage(dest)) {
+                            graphics_dest.Clear(Color.Transparent);
+                            graphics_dest.CompositingMode = CompositingMode.SourceCopy;
+                            graphics_dest.CompositingQuality = CompositingQuality.HighQuality;
                             graphics_dest.DrawImage(bitmap, 0, 0, bitmap.Width, bitmap.Height);
                         }
                     }
                 } catch (Exception e) {
                     Console.Error.WriteLine(
-                        $"[ERROR] read_texture() failed to reallocate pixels {src}\n" + e.Message
+                        $"[ERROR] read_texture_from_bitmap() failed to reallocate pixels\n" + e.Message
                     );
                     image_data.Dispose();
                     return null;
@@ -79,18 +120,21 @@ namespace Engine.Platform {
                 }
             }
 
+            //
             // OpenGL expects RGBA but must be in platform "endian" stored
+            // shift all pixels but exclude the filler part
+            //
             unsafe {
 #if PARALLEL
                 if (BitConverter.IsLittleEndian)
-                    Parallel_For(image_data.Addr, total_pixels, ToRGBA_FromLittleEndian);
+                    Parallel_For(image_data.Addr, total_pixels_pow2, ToRGBA_FromLittleEndian);
                 else
-                    Parallel_For(image_data.Addr, total_pixels, ToRGBA_FromBigEndian);
+                    Parallel_For(image_data.Addr, total_pixels_pow2, ToRGBA_FromBigEndian);
 #else
                 if (BitConverter.IsLittleEndian)
-                    ToRGBA_FromLittleEndian(length, (uint*)image_data.Addr);
+                    ToRGBA_FromLittleEndian(total_pixels_pow2, (uint*)image_data.Addr);
                 else
-                    ToRGBA_FromBigEndian(length, (uint*)image_data.Addr);
+                    ToRGBA_FromBigEndian(total_pixels_pow2, (uint*)image_data.Addr);
 #endif
             }
 
@@ -107,23 +151,6 @@ namespace Engine.Platform {
 
             return current;
         }
-
-        private static unsafe void Zeros(int length, IntPtr ptr) {
-            if (length % sizeof(ulong) == 0) {
-                length /= sizeof(ulong);
-                ulong* ptr_ulong = (ulong*)ptr;
-                for (int i = 0 ; i < length ; i++) ptr_ulong[i] = 0UL;
-            } else {
-                length /= sizeof(uint);
-                uint* ptr_uint = (uint*)ptr;
-                for (int i = 0 ; i < length ; i++) ptr_uint[i] = 0U;
-            }
-        }
-
-        internal static unsafe void Zeros4(int length, uint* ptr) {
-            for (int i = 0 ; i < length ; i++) ptr[i] = 0U;
-        }
-
 
         internal static unsafe void ToRGBA_FromLittleEndian(int length, uint* texture_data) {
             // argb --> abgr

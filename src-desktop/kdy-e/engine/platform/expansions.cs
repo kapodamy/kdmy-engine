@@ -4,7 +4,7 @@ using Engine.Utils;
 namespace Engine.Platform {
 
     public static class Expansions {
-        private const string PATH = "/expansions/";
+        public const string PATH = "/expansions/";
         private const string SYMBOLIC_PATH = "/~expansions/";
         private const string FUNKIN_EXPANSION_NAME = "funkin";
         private const string FUNKIN_EXPANSION_PATH = SYMBOLIC_PATH + FUNKIN_EXPANSION_NAME;
@@ -24,12 +24,20 @@ namespace Engine.Platform {
 
 
         public static void Load(string expansion_name) {
+            if (expansion_name != null && FS.IsInvalidFilename(expansion_name)) {
+                Console.Error.WriteLine($"[ERROR] Expansions::Load() invalid expansion name, ilegal filename: ${expansion_name}");
+                return;
+            }
+
             //for (int i = 0 ; i < chain_array_size ; i++) {
             //    if (chain_array[i] != FUNKIN_EXPANSION_PATH) {
             //        //free(chain_array[i]);
             //    }
             //}
             //free(chain_array);
+
+            // force clear preload cache 
+            PreloadCache.ClearCache();
 
             ArrayList<string> chain = new ArrayList<string>();
 
@@ -122,6 +130,11 @@ namespace Engine.Platform {
                 Console.Error.WriteLine($"[ERROR] expansions_load() '{expansion_name}' not found in {Expansions.PATH}");
                 //free(expansion_path);
                 return;
+            }
+
+            string expansion_preload_ini_path = expansion_path + FS.CHAR_SEPARATOR + PreloadCache.PRELOAD_FILENAME;
+            if (IO.ResourceExists(expansion_preload_ini_path, true, false)) {
+                PreloadCache.AddFileList(expansion_preload_ini_path);
             }
 
             string chain_ini_path = expansion_path + FS.CHAR_SEPARATOR + Expansions.CHAIN_FILENAME;
