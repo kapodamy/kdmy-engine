@@ -80,6 +80,8 @@ namespace Engine.Platform {
         public WebGLTexture CreateTexture(int pow2_tex_width, int pow2_tex_height, ImageData bitmap_data) {
             WebGL2RenderingContext gl = this.gl;
 
+            PixelUnPackBuffer pixelDataBuffer = (PixelUnPackBuffer)bitmap_data.pixelDataBuffer;
+
             // clear any previous error
             gl.getError();
 
@@ -88,7 +90,24 @@ namespace Engine.Platform {
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, tex);
 
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap_data);
+            if (pixelDataBuffer != null) {
+                gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pixelDataBuffer.pbo);
+
+                if (pixelDataBuffer.mapped_buffer != IntPtr.Zero) {
+                    gl.unmapBuffer(gl.PIXEL_UNPACK_BUFFER);
+                    pixelDataBuffer.mapped_buffer = IntPtr.Zero;
+                }
+
+                gl.texImage2D(
+                    gl.TEXTURE_2D, 0, gl.RGBA,
+                    bitmap_data.pow2_width, bitmap_data.pow2_height, 0,
+                    gl.RGBA, gl.UNSIGNED_BYTE, IntPtr.Zero
+                );
+
+                gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, WebGLBuffer.Null);
+            } else {
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap_data);
+            }
 
             GLenum error = gl.getError();
             if (error != GLenum.GL_NONE) {

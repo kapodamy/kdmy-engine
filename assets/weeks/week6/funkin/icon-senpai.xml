@@ -1,4 +1,4 @@
-<TextureAtlas imagePath="sprites.png">
+<TextureAtlas imagePath="icon-senpai.png">
 	<SubTexture name="neutral" x="9" y="12" width="121" height="118"/>
 	<SubTexture name="lossing" x="157" y="10" width="121" height="118"/>
 </TextureAtlas>

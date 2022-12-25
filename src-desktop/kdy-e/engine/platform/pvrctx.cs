@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using CsharpWrapper;
+using Engine.Externals;
 using Engine.Externals.GLFW;
 using Engine.Font;
 using Engine.Game.Common;
@@ -386,6 +387,11 @@ namespace Engine.Platform {
             this.shader_framebuffer_front = new PSFramebuffer(this);
             this.shader_framebuffer_back = new PSFramebuffer(this);
             PSFramebuffer.ResizeQuadScreen(this);
+
+            if (EngineSettings.pixelbufferobjects) {
+                // partial implementation, needs async texture loading
+                TextureLoader.SetPixelBufferBuilder(new PixelUnPackBufferBuilder(this.webopengl.gl));
+            }
 
             Console.Error.WriteLine("PowerVR backend init completed\n");
         }

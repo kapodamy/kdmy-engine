@@ -49,7 +49,6 @@ namespace Engine.Platform {
             }
 
             raw_data = Marshal.AllocHGlobal(size);
-            TextureLoader.Zeros4(size / sizeof(uint), (uint*)raw_data);
 
             for (int i = 0, icn_offset = 0 ; i < header->count ; i++) {
                 IconEntry* entry = (IconEntry*)(ptr + offset);
@@ -64,6 +63,7 @@ namespace Engine.Platform {
                 using (Bitmap dest_bitmap = new Bitmap(entry->width, entry->height, stride, FORMAT, icn)) {
                     using (Icon icon = new Icon(stream, entry->width, entry->height)) {
                         using (Graphics g = Graphics.FromImage(dest_bitmap)) {
+                            g.Clear(Color.Transparent);
                             g.DrawIcon(icon, 0, 0);
                         }
                     }

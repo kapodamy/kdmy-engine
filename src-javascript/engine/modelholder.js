@@ -77,24 +77,24 @@ async function modelholder_init(src) {
         if (animlist) modelholder.animlist = animlist;
     }
 
-    if (modelholder.atlas && modelholder.atlas != MODELHOLDER_STUB_ATLAS) {
+    if (modelholder.atlas && modelholder.atlas != MODELHOLDER_STUB_ATLAS && !manifest_texture) {
         let altas_texture = atlas_get_texture_path(modelholder.atlas);
         if (altas_texture && await fs_file_exists(altas_texture)) {
             modelholder.texture = await texture_init(altas_texture);
-        } else if (!manifest_texture) {
-            console.warn(
-                "modelholder_init() missing texture '" +
-                altas_texture +
-                "' of atlas '" +
-                manifest_atlas +
-                "'"
-            );
+            if (!modelholder.texture) {
+                console.error(
+                    `modelholder_init() atlas texture not found: atlas=${manifest_atlas} texture=${altas_texture}`
+                );
+            }
         }
     }
 
-    if (!modelholder.texture && manifest_texture && await fs_file_exists(manifest_texture)) {
-        modelholder.texture = await texture_init(manifest_texture);
-        console.warn("modelholder_init() expected texture '" + manifest_texture + "'");
+    if (!modelholder.texture && manifest_texture) {
+        if (await fs_file_exists(manifest_texture)) {
+            modelholder.texture = await texture_init(manifest_texture);
+        } else {
+            console.error(`modelholder_init() missing manifest texture: ${manifest_texture}`);
+        }
     }
 
     manifest_atlas = undefined;

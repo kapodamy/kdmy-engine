@@ -11,6 +11,7 @@ typedef struct {
     long size;
     long offset;
     uint8_t* buffer;
+    bool internal_allocated;
 } Data;
 
 
@@ -82,6 +83,7 @@ extern FileHandle_t* filehandle_init(const char* fullpath) {
         FileHandle_t* filehandle = malloc(sizeof(FileHandle_t));
         assert(filehandle);
         filehandle->handle = file;
+        filehandle->is_file = true;
         filehandle->read = read_file;
         filehandle->seek = seek_file;
         filehandle->tell = tell_file;
@@ -91,6 +93,7 @@ extern FileHandle_t* filehandle_init(const char* fullpath) {
     Data* data = calloc(1, sizeof(Data));
     assert(data);
 
+    data->internal_allocated = true;
     data->size = length;
     data->buffer = malloc(length);
     if (!data->buffer) {
@@ -110,6 +113,26 @@ extern FileHandle_t* filehandle_init(const char* fullpath) {
     FileHandle_t* filehandle = malloc(sizeof(FileHandle_t));
     assert(filehandle);
     filehandle->handle = data;
+    filehandle->is_file = false;
+    filehandle->read = read_data;
+    filehandle->seek = seek_data;
+    filehandle->tell = tell_data;
+    return filehandle;
+}
+
+extern FileHandle_t* filehandle_init2(const uint8_t* buffer, int32_t size) {  
+    if (!buffer) return NULL;
+
+    Data* data = calloc(1, sizeof(Data));
+    assert(data);
+    data->size = size;
+    data->buffer = (uint8_t*)buffer;
+    data->internal_allocated = false;
+
+    FileHandle_t* filehandle = malloc(sizeof(FileHandle_t));
+    assert(filehandle);
+    filehandle->handle = data;
+    filehandle->is_file = false;
     filehandle->read = read_data;
     filehandle->seek = seek_data;
     filehandle->tell = tell_data;
@@ -118,6 +141,14 @@ extern FileHandle_t* filehandle_init(const char* fullpath) {
 
 extern void filehandle_destroy(FileHandle_t* filehandle) {
     if (!filehandle) return;
+
+    if (filehandle->is_file) {
+        fclose(filehandle->handle);
+    } else {
+        Data* data = filehandle->handle;
+        if (data->internal_allocated) free(data->buffer);
+        free(data);
+    }
 
     filehandle->handle = NULL;
     filehandle->read = NULL;

@@ -3,70 +3,78 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-namespace Engine.Externals {
+namespace Engine.Platform {
 
     public class ImageData : IDisposable {
-        public int size;
-        public int orig_width;
-        public int orig_height;
-        public int pow2_width;
-        public int pow2_height;
+        public readonly int size;
+        public readonly int orig_width;
+        public readonly int orig_height;
+        public readonly int pow2_width;
+        public readonly int pow2_height;
 
-        private IntPtr data;
-
+        private IPixelDataBuffer pixelbuffer;
+        private IntPtr ptr;
         private Bitmap bitmap;
-        private BitmapData bitmap_data;
+        private BitmapData bitmapdata;
 
-
-        public ImageData(int orig_width, int orig_height, int pow2_width, int pow2_height) {
+        public ImageData(IPixelDataBuffer buffer, int orig_width, int orig_height, int pow2_width, int pow2_height) {
             this.orig_width = orig_width;
             this.orig_height = orig_height;
             this.pow2_width = pow2_width;
             this.pow2_height = pow2_height;
+            this.size = pow2_width * pow2_height * sizeof(uint);
+            this.pixelbuffer = buffer;
+            this.ptr = IntPtr.Zero;
+            this.bitmap = null;
+            this.bitmapdata = null;
         }
 
-        public void SetBitmap(Bitmap bitmap) {
-            this.Dispose();
+        public ImageData(IntPtr ptr, int orig_width, int orig_height, int pow2_width, int pow2_height) {
+            this.orig_width = orig_width;
+            this.orig_height = orig_height;
+            this.pow2_width = pow2_width;
+            this.pow2_height = pow2_height;
+            this.size = pow2_width * pow2_height * sizeof(uint);
+            this.pixelbuffer = null;
+            this.ptr = ptr;
+            this.bitmap = null;
+            this.bitmapdata = null;
+        }
+
+        public ImageData(Bitmap bitmap, int pow2_width, int pow2_height) {
+            this.orig_width = bitmap.Width;
+            this.orig_height = bitmap.Height;
+            this.pow2_width = pow2_width;
+            this.pow2_height = pow2_height;
+            this.size = pow2_width * pow2_height * sizeof(uint);
+            this.pixelbuffer = null;
+
+            Rectangle rectangle = new Rectangle(0, 0, orig_width, orig_height);
 
             this.bitmap = bitmap;
-            this.bitmap_data = bitmap.LockBits(
-                 new Rectangle(0, 0, pow2_width, pow2_height),
-                 ImageLockMode.ReadOnly,
-                 bitmap.PixelFormat//PixelFormat.DontCare
-             );
-        }
-
-        public void SetPointer(IntPtr data) {
-            this.Dispose();
-
-            this.data = data;
+            this.bitmapdata = bitmap.LockBits(rectangle, ImageLockMode.ReadWrite, TextureLoader.FORMAT);
+            this.ptr = this.bitmapdata.Scan0;
         }
 
         public void Dispose() {
-            if (data != IntPtr.Zero) Marshal.FreeHGlobal(data);
-
-            if (bitmap != null) {
-                bitmap.UnlockBits(bitmap_data);
+            if (pixelbuffer != null) {
+                pixelbuffer.Dispose();
+                pixelbuffer = null;
+            } else if (bitmap != null) {
+                bitmap.UnlockBits(bitmapdata);
                 bitmap.Dispose();
-            }
-
-            //size = orig_width = orig_height = pow2_width = pow2_height = -1;
-            bitmap = null;
-            bitmap_data = null;
-            data = IntPtr.Zero;
-        }
-
-        public IntPtr Addr {
-            get
-            {
-                if (this.bitmap != null) return this.bitmap_data.Scan0;
-                return this.data;
+                bitmap = null;
+                bitmapdata = null;
+            } else if (ptr != IntPtr.Zero) {
+                Marshal.FreeHGlobal(ptr);
+                ptr = IntPtr.Zero;
             }
         }
 
-        public int Length {
-            get => this.pow2_width * this.pow2_height * sizeof(uint);
-        }
+        public IntPtr Addr { get => this.pixelbuffer != null ? this.pixelbuffer.DataPointer : this.ptr; }
+
+        public IPixelDataBuffer pixelDataBuffer { get => this.pixelbuffer; }
 
     }
+
 }

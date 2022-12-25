@@ -16,6 +16,7 @@ namespace CsharpWrapper {
         public static string expansion = null;// folder name inside of "/expansions/"
         public static string style = null;// folder name inside of "/expansions/"
         public static bool widescreen = true;// uses 1280x720 (like Funkin) instead of 640x480
+        public static bool pixelbufferobjects = false;// uses the OpenGL PBO (no async support)
 
         public static int input_offset = 0;
         public static bool penality_on_empty_strum = true;
@@ -45,6 +46,7 @@ namespace CsharpWrapper {
             use_funkin_marker_duration = GetBool(true, "use_funkin_marker_duration", use_funkin_marker_duration);
             gameplay_enabled_distractions = GetBool(true, "gameplay_enabled_distractions", gameplay_enabled_distractions);
             gameplay_enabled_flashinglights = GetBool(true, "gameplay_enabled_flashinglights", gameplay_enabled_flashinglights);
+            pixelbufferobjects = GetBool(false, "pixelbufferobjects", pixelbufferobjects);
 
             show_fps = GetBool(false, "show_fps", show_fps);
             switch (GetString(false, "fps_limit", null)) {

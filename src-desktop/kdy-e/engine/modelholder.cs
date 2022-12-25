@@ -98,24 +98,24 @@ namespace Engine {
             }
 
 
-            if (modelholder.atlas != null && modelholder.atlas != ModelHolder.STUB_ATLAS) {
+            if (modelholder.atlas != null && modelholder.atlas != ModelHolder.STUB_ATLAS && String.IsNullOrEmpty(manifest_texture)) {
                 string altas_texture = modelholder.atlas.GetTexturePath();
                 if (!String.IsNullOrEmpty(altas_texture) && FS.FileExists(altas_texture)) {
                     modelholder.texture = Texture.Init(altas_texture);
-                } else if (String.IsNullOrEmpty(manifest_texture)) {
-                    Console.Error.WriteLine(
-                        "[WARN] modelholder_init() missing texture '" +
-                        altas_texture +
-                        "' of atlas '" +
-                        manifest_atlas +
-                        "'"
-                    );
+                    if (modelholder.texture == null) {
+                        Console.Error.WriteLine(
+                            $"[ERROR] modelholder_init() atlas texture not found: atlas={manifest_atlas} texture={altas_texture}"
+                        );
+                    }
                 }
             }
 
-            if (modelholder.texture == null && !String.IsNullOrEmpty(manifest_texture) && FS.FileExists(manifest_texture)) {
-                modelholder.texture = Texture.Init(manifest_texture);
-                Console.Error.WriteLine("[WARN] modelholder_init() expected texture '" + manifest_texture + "'");
+            if (modelholder.texture == null && !String.IsNullOrEmpty(manifest_texture)) {
+                if (FS.FileExists(manifest_texture)) {
+                    modelholder.texture = Texture.Init(manifest_texture);
+                } else {
+                    Console.Error.WriteLine($"[ERROR] modelholder_init() missing manifest texture: {manifest_texture}");
+                }
             }
 
             //free(manifest_atlas);

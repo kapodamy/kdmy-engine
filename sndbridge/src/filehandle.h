@@ -2,6 +2,7 @@
 #define _filehandle_h
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef int32_t(*filehandle_read)(void* stream, void* buffer, int32_t buffer_size);
 typedef int64_t(*filehandle_seek)(void* stream, int64_t offset, int32_t whence);
@@ -9,6 +10,7 @@ typedef int64_t(*filehandle_tell)(void* stream);
 
 typedef struct {
     void* handle;
+    bool is_file;
     filehandle_read read;
     filehandle_seek seek;
     filehandle_tell tell;

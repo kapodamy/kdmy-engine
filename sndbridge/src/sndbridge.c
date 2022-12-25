@@ -657,6 +657,14 @@ extern bool sndbridge_is_active(StreamID stream_id) {
     return Pa_IsStreamActive(stream->pastream) == 0x01;
 }
 
+extern bool sndbridge_is_fade_active(StreamID stream_id) {
+    GET_STREAM(stream_id);
+    if (!stream) return false;
+    
+    if (Pa_IsStreamActive(stream->pastream) != 0x01) return false;
+    return stream->fade_progress < stream->fade_duration && stream->fade_duration > 0;
+}
+
 extern bool sndbridge_has_ended(StreamID stream_id) {
     GET_STREAM(stream_id);
     if (!stream) return false;
