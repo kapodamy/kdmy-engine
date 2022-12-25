@@ -300,6 +300,27 @@ namespace Engine.Externals.LuaScriptInterop {
 
             return ExportsPSShader.script_psshader_new(L, psshader);
         }
+        
+        static int script_textsprite_blend_enable(LuaState L) {
+            TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
+            bool enabled = L.lua_toboolean(2);
+
+            textsprite.BlendEnable(enabled);
+
+            return 0;
+        }
+
+        static int script_textsprite_blend_set(LuaState L) {
+            TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
+            Blend src_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(2, null));
+            Blend dst_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(3, null));
+            Blend src_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(4, null));
+            Blend dst_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(5, null));
+
+            textsprite.BlendSet(src_rgb, dst_rgb, src_alpha, dst_alpha);
+
+            return 0;
+        }
 
         static int script_textsprite_background_enable(LuaState L) {
             TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
@@ -376,6 +397,8 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("set_wordbreak", script_textsprite_set_wordbreak),
             new LuaTableFunction("set_shader", script_textsprite_set_shader),
             new LuaTableFunction("get_shader", script_textsprite_get_shader),
+            new LuaTableFunction("blend_enable", script_textsprite_blend_enable),
+            new LuaTableFunction("blend_set", script_textsprite_blend_set),
             new LuaTableFunction("background_enable", script_textsprite_background_enable),
             new LuaTableFunction("background_set_size", script_textsprite_background_set_size),
             new LuaTableFunction("background_set_offets", script_textsprite_background_set_offets),

@@ -368,6 +368,32 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_character_trailing_enabled(LuaState L) {
+            Character character = L.ReadUserdata<Character>(CHARACTER);
+            bool enabled = L.lua_toboolean(2);
+
+            character.TrailingEnabled(enabled);
+
+            return 0;
+        }
+
+        static int script_character_trailing_set_params(LuaState L) {
+            Character character = L.ReadUserdata<Character>(CHARACTER);
+            int length = (int)L.luaL_checkinteger(2);
+            float trail_delay = (float)L.luaL_checknumber(3);
+            float trail_alpha = (float)L.luaL_checknumber(4);
+
+            bool? darken_colors;
+            if (L.lua_isnil(5))
+                darken_colors = null;
+            else
+                darken_colors = L.lua_toboolean(5);
+
+            character.TrailingSetParams(length, trail_delay, trail_alpha, darken_colors);
+
+            return 0;
+        }
+
 
 
         ////////////////////////////////////////////////////////////////////////////////////
@@ -409,6 +435,8 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("get_play_calls", script_character_get_play_calls),
             new LuaTableFunction("get_current_action", script_character_get_current_action),
             new LuaTableFunction("freeze_animation", script_character_freeze_animation),
+            new LuaTableFunction("trailing_enabled", script_character_trailing_enabled),
+            new LuaTableFunction("trailing_set_params", script_character_trailing_set_params),
             new LuaTableFunction(null, null)
         };
 

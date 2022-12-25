@@ -974,6 +974,14 @@ function character_freeze_animation(character, enabled) {
     character.animation_freezed = enabled;
 }
 
+function character_trailing_enabled(character, enabled) {
+    statesprite_trailing_enabled(character.statesprite, enabled);
+}
+
+function character_trailing_set_params(character, length, trail_delay, trail_alpha, darken_colors) {
+    statesprite_trailing_set_params(character.statesprite, length, trail_delay, trail_alpha, darken_colors);
+}
+
 
 
 function character_internal_import_sing(sing_info, modelholder, sing_entry, id_direction, prefix, suffix) {

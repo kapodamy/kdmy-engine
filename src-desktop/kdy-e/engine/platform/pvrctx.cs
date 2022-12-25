@@ -452,7 +452,7 @@ namespace Engine.Platform {
             this.shader_stack.Clear();
             PSFramebuffer.UseScreenFramebuffer(this);
             this.webopengl.SetBlend(this, true, Blend.DEFAULT, Blend.DEFAULT, Blend.DEFAULT, Blend.DEFAULT);
-
+            this.webopengl.program_textured.darken_enabled = false;
         }
 
         public void ApplyModifier(Modifier modifier) {
@@ -594,6 +594,10 @@ namespace Engine.Platform {
 
         public void SetVertexBlend(bool enabled, Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha) {
             this.webopengl.SetBlend(this, enabled, src_rgb, dst_rgb, src_alpha, dst_alpha);
+        }
+
+        public void SetVertexTexturedDarken(bool enabled) {
+            this.webopengl.program_textured.darken_enabled = enabled;
         }
 
 

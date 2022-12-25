@@ -107,6 +107,12 @@ EM_JS_PRFX(void, textsprite_background_set_offets, (TextSprite textsprite, float
 EM_JS_PRFX(void, textsprite_background_set_color, (TextSprite textsprite, float r, float g, float b, float a), {
     textsprite_background_set_color(kdmyEngine_obtain(textsprite), r, g, b, a);
 });
+EM_JS_PRFX(void, textsprite_blend_enable, (TextSprite textsprite, bool enabled), {
+    textsprite_blend_enable(kdmyEngine_obtain(textsprite), enabled);
+});
+EM_JS_PRFX(void, textsprite_blend_set, (TextSprite textsprite, Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha), {
+    textsprite_blend_set(kdmyEngine_obtain(textsprite), src_rgb, dst_rgb, src_alpha, dst_alpha);
+});
 #endif
 
 
@@ -400,6 +406,27 @@ static int script_textsprite_get_shader(lua_State* L) {
     return script_psshader_new(L, psshader);
 }
 
+static int script_textsprite_blend_enable(lua_State* L) {
+    TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
+    bool enabled = (bool)lua_toboolean(L, 2);
+
+    textsprite_blend_enable(textsprite, enabled);
+
+    return 0;
+}
+
+static int script_textsprite_blend_set(lua_State* L) {
+    TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
+    Blend src_rgb = luascript_parse_blend(L, luaL_optstring(L, 2, NULL));
+    Blend dst_rgb = luascript_parse_blend(L, luaL_optstring(L, 3, NULL));
+    Blend src_alpha = luascript_parse_blend(L, luaL_optstring(L, 4, NULL));
+    Blend dst_alpha = luascript_parse_blend(L, luaL_optstring(L, 5, NULL));
+
+    textsprite_blend_set(textsprite, src_rgb, dst_rgb, src_alpha, dst_alpha);
+
+    return 0;
+}
+
 static int script_textsprite_background_enable(lua_State* L) {
     TextSprite textsprite = luascript_read_userdata(L, TEXTSPRITE);
     bool enabled = (bool)lua_toboolean(L, 2);
@@ -473,10 +500,12 @@ static const luaL_Reg TEXTSPRITE_FUNCTIONS[] = {
     {"set_wordbreak", script_textsprite_set_wordbreak},
     {"set_shader", script_textsprite_set_shader},
     {"get_shader", script_textsprite_get_shader},
-    { "background_enable", script_textsprite_background_enable },
-    { "background_set_size", script_textsprite_background_set_size },
-    { "background_set_offets", script_textsprite_background_set_offets },
-    { "background_set_color", script_textsprite_background_set_color },
+    {"blend_enable", script_textsprite_blend_enable},
+    {"blend_set", script_textsprite_blend_set},
+    {"background_enable", script_textsprite_background_enable},
+    {"background_set_size", script_textsprite_background_set_size},
+    {"background_set_offets", script_textsprite_background_set_offets},
+    {"background_set_color", script_textsprite_background_set_color},
     {NULL, NULL}
 };
 

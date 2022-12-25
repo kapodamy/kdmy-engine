@@ -461,6 +461,13 @@
         <xs:attribute name="width" type="xs:float" use="optional" default="-1" />
         <xs:attribute name="height" type="xs:float" use="optional" default="-1" />
     </xs:complexType>
+    <xs:complexType name="SetTrailing">
+        <xs:attribute name="enable" type="xs:boolean" use="optional" />
+        <xs:attribute name="length" type="xs:positiveInteger" use="optional" />
+        <xs:attribute name="trailDelay" type="xs:float" use="optional" />
+        <xs:attribute name="trailAlpha" type="xs:float" use="optional" />
+        <xs:attribute name="darkenColors" type="xs:boolean" use="optional" />
+    </xs:complexType>
 
     <xs:complexType name="Sprite">
         <xs:sequence maxOccurs="unbounded">
@@ -487,6 +494,7 @@
                         <xs:element name="RemoveShader" type="RemoveShader" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="SetShaderUniform" type="SetShaderUniform" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="SetBlending" type="SetBlending" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetTrailing" type="SetTrailing" minOccurs="0" maxOccurs="unbounded" />
                     </xs:sequence>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>

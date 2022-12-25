@@ -1015,6 +1015,14 @@ L_read_state:
             this.animation_freezed = enabled;
         }
 
+        public void TrailingEnabled(bool enabled) {
+            this.statesprite.TrailingEnabled(enabled);
+        }
+
+        public void TrailingSetParams(int length, float trail_delay, float trail_alpha, bool? darken_colors) {
+            this.statesprite.TrailingSetParams(length, trail_delay, trail_alpha, darken_colors);
+        }
+
 
         private static void InternalImportSing(CharacterActionSing sing_info, ModelHolder modelholder, CharacterManifest.Sing sing_entry, int id_direction, string prefix, string suffix) {
 

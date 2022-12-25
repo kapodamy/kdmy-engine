@@ -1133,6 +1133,12 @@ function __js__character_state_add(character, modelholder, state_name) {
 function __js__character_state_toggle(character, state_name) {
     return character_state_toggle(kdmyEngine_obtain(character), kdmyEngine_ptrToString(state_name))
 }
+function __js__character_trailing_enabled(character, enabled) {
+    character_trailing_enabled(kdmyEngine_obtain(character), enabled)
+}
+function __js__character_trailing_set_params(character, length, trail_delay, trail_alpha, darken_colors) {
+    character_trailing_set_params(kdmyEngine_obtain(character), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors))
+}
 function __js__character_update_reference_size(character, width, height) {
     character_update_reference_size(kdmyEngine_obtain(character), width, height)
 }
@@ -2127,6 +2133,12 @@ function __js__soundplayer_set_volume(soundplayer, volume) {
 function __js__soundplayer_stop(soundplayer) {
     soundplayer_stop(kdmyEngine_obtain(soundplayer))
 }
+function __js__sprite_blend_enable(sprite, enabled) {
+    sprite_blend_enable(kdmyEngine_obtain(sprite), enabled)
+}
+function __js__sprite_blend_set(sprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    sprite_blend_set(kdmyEngine_obtain(sprite), src_rgb, dst_rgb, src_alpha, dst_alpha)
+}
 function __js__sprite_center_draw_location(sprite, x, y, ref_width, ref_height, applied_draw_x, applied_draw_y) {
     const values = [0, 0];
     sprite_center_draw_location(kdmyEngine_obtain(sprite), x, y, ref_width, ref_height, values);
@@ -2215,6 +2227,12 @@ function __js__sprite_set_z_index(sprite, index) {
 }
 function __js__sprite_set_z_offset(sprite, offset) {
     sprite_set_z_offset(kdmyEngine_obtain(sprite), offset)
+}
+function __js__sprite_trailing_enabled(sprite, enabled) {
+    sprite_trailing_enabled(kdmyEngine_obtain(sprite), enabled)
+}
+function __js__sprite_trailing_set_params(sprite, length, trail_delay, trail_alpha, darken_colors) {
+    sprite_trailing_set_params(kdmyEngine_obtain(sprite), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors))
 }
 function __js__streakcounter_animation_end(streakcounter) {
     streakcounter_animation_end(kdmyEngine_obtain(streakcounter))
@@ -2463,6 +2481,12 @@ function __js__textsprite_background_set_offets(textsprite, offset_x, offset_y) 
 }
 function __js__textsprite_background_set_size(textsprite, size) {
     textsprite_background_set_size(kdmyEngine_obtain(textsprite), size)
+}
+function __js__textsprite_blend_enable(textsprite, enabled) {
+    textsprite_blend_enable(kdmyEngine_obtain(textsprite), enabled)
+}
+function __js__textsprite_blend_set(textsprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    textsprite_blend_set(kdmyEngine_obtain(textsprite), src_rgb, dst_rgb, src_alpha, dst_alpha)
 }
 function __js__textsprite_border_enable(textsprite, enable) {
     textsprite_border_enable(kdmyEngine_obtain(textsprite), enable)
@@ -6350,6 +6374,8 @@ var asmLibraryArg = {
     "__js__character_set_z_offset": __js__character_set_z_offset,
     "__js__character_state_add": __js__character_state_add,
     "__js__character_state_toggle": __js__character_state_toggle,
+    "__js__character_trailing_enabled": __js__character_trailing_enabled,
+    "__js__character_trailing_set_params": __js__character_trailing_set_params,
     "__js__character_update_reference_size": __js__character_update_reference_size,
     "__js__character_use_alternate_sing_animations": __js__character_use_alternate_sing_animations,
     "__js__conductor_clear_mapping": __js__conductor_clear_mapping,
@@ -6623,6 +6649,8 @@ var asmLibraryArg = {
     "__js__soundplayer_set_mute": __js__soundplayer_set_mute,
     "__js__soundplayer_set_volume": __js__soundplayer_set_volume,
     "__js__soundplayer_stop": __js__soundplayer_stop,
+    "__js__sprite_blend_enable": __js__sprite_blend_enable,
+    "__js__sprite_blend_set": __js__sprite_blend_set,
     "__js__sprite_center_draw_location": __js__sprite_center_draw_location,
     "__js__sprite_crop": __js__sprite_crop,
     "__js__sprite_crop_enable": __js__sprite_crop_enable,
@@ -6649,6 +6677,8 @@ var asmLibraryArg = {
     "__js__sprite_set_visible": __js__sprite_set_visible,
     "__js__sprite_set_z_index": __js__sprite_set_z_index,
     "__js__sprite_set_z_offset": __js__sprite_set_z_offset,
+    "__js__sprite_trailing_enabled": __js__sprite_trailing_enabled,
+    "__js__sprite_trailing_set_params": __js__sprite_trailing_set_params,
     "__js__streakcounter_animation_end": __js__streakcounter_animation_end,
     "__js__streakcounter_animation_restart": __js__streakcounter_animation_restart,
     "__js__streakcounter_animation_set": __js__streakcounter_animation_set,
@@ -6724,6 +6754,8 @@ var asmLibraryArg = {
     "__js__textsprite_background_set_color": __js__textsprite_background_set_color,
     "__js__textsprite_background_set_offets": __js__textsprite_background_set_offets,
     "__js__textsprite_background_set_size": __js__textsprite_background_set_size,
+    "__js__textsprite_blend_enable": __js__textsprite_blend_enable,
+    "__js__textsprite_blend_set": __js__textsprite_blend_set,
     "__js__textsprite_border_enable": __js__textsprite_border_enable,
     "__js__textsprite_border_set_color": __js__textsprite_border_set_color,
     "__js__textsprite_border_set_offset": __js__textsprite_border_set_offset,

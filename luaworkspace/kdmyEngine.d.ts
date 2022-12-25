@@ -315,9 +315,12 @@ declare global {
         set_antialiasing(antialiasing: PVRFlag): void;
         flip_rendered_texture(flip_x?: boolean, flip_y?: boolean): void;
         flip_rendered_texture_enable_correction(enabled: boolean): void;
-        set_shader(sprite: Sprite, psshader: PSShader): void;
-        get_shader(sprite: Sprite): PSShader;
-
+        set_shader(psshader: PSShader): void;
+        get_shader(): PSShader;
+        blend_enable(enabled: boolean): void;
+        blend_set(src_rgb: Blend, dst_rgb: Blend, src_alpha: Blend, dst_alpha: Blend): void;
+        trailing_enabled(enabled: boolean): void;
+        trailing_set_params(length: number, trail_delay: number, trail_alpha: number, darken_colors?: boolean): void;
     }
     interface TextSprite {
         set_text(text: string): void;
@@ -348,6 +351,8 @@ declare global {
         set_wordbreak(wordbreak: FontWordBreak): void;
         set_shader(textsprite: TextSprite, psshader: PSShader): void;
         get_shader(textsprite: TextSprite): PSShader;
+        blend_enable(enabled: boolean): void;
+        blend_set(src_rgb: Blend, dst_rgb: Blend, src_alpha: Blend, dst_alpha: Blend): void;
         background_enable(enabled: boolean): void;
         background_set_size(size: number): void;
         background_set_offets(offset_x: number, offset_y: number): void;
@@ -425,6 +430,8 @@ declare global {
         get_play_calls(): number;
         get_current_action(): CharacterActionType;
         freeze_animation(enabled: boolean): void;
+        trailing_enabled(enabled: boolean): void;
+        trailing_set_params(length: number, trail_delay: number, trail_alpha: number, darken_colors?: boolean): void;
     }
     interface SongPlayer {
         changesong(src: string, prefer_no_copyright: boolean): boolean;

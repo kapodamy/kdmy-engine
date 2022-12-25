@@ -65,6 +65,14 @@ namespace Engine.Image {
         private Blend blend_src_alpha;
         private Blend blend_dst_alpha;
 
+        private Trail[] trailing_buffer;
+        private int trailing_used;
+        private int trailing_length;
+        private float trailing_alpha;
+        private float trailing_delay;
+        private float trailing_progress;
+        private bool trailing_darken;
+        private bool trailing_disabled;
 
 
         public void Draw(PVRContext pvrctx) {
@@ -72,6 +80,7 @@ namespace Engine.Image {
             if (this.alpha <= 0f) return;
 
             float[] sprite_vertex = this.vertex;
+            float render_alpha = this.alpha * this.alpha2;
 
             if (this.vertex_dirty) {
                 float draw_x = this.draw_x;
@@ -171,7 +180,7 @@ namespace Engine.Image {
             }
 
             pvrctx.Save();
-            pvrctx.SetVertexAlpha(this.alpha * this.alpha2);
+            pvrctx.SetVertexAlpha(render_alpha);
             pvrctx.SetVertexOffsetColor(this.offsetcolor);
             if (this.psshader != null) pvrctx.AddShader(this.psshader);
 
@@ -189,6 +198,25 @@ namespace Engine.Image {
 
             // apply transformation matrix
             MatrixCalculate(pvrctx);
+
+            // draw sprites trail if necessary
+            if (!this.trailing_disabled && this.trailing_used > 0) {
+                pvrctx.SetVertexTexturedDarken(this.trailing_darken);
+
+                for (int i = 0 ; i < this.trailing_used ; i++) {
+                    Trail trail = this.trailing_buffer[i];
+                    pvrctx.SetVertexAlpha(trail.alpha * render_alpha);
+                    pvrctx.DrawTexture(
+                        this.texture,
+                        trail.sx, trail.sy, trail.sw, trail.sh,
+                        trail.dx, trail.dy, trail.dw, trail.dh
+                    );
+                }
+
+                // restore previous values
+                pvrctx.SetVertexTexturedDarken(false);
+                pvrctx.SetVertexAlpha(render_alpha);
+            }
 
             // draw the vertex
             if (this.texture != null) {
@@ -296,6 +324,15 @@ namespace Engine.Image {
             sprite.blend_src_alpha = Blend.DEFAULT;
             sprite.blend_dst_alpha = Blend.DEFAULT;
 
+            sprite.trailing_buffer = new Trail[10];
+            sprite.trailing_used = 0;
+            sprite.trailing_length = 10;
+            sprite.trailing_alpha = 0.9f;
+            sprite.trailing_delay = 0;
+            sprite.trailing_darken = true;
+            sprite.trailing_disabled = true;
+            sprite.trailing_progress = 0f;
+
             return sprite;
         }
 
@@ -309,6 +346,7 @@ namespace Engine.Image {
             Sprite.POOL.Delete(this.id);
             Luascript.DropShared(this.matrix_source);
             Luascript.DropShared(this);
+            //free(this.trailing_buffer);
             //free(this);
         }
 
@@ -582,6 +620,56 @@ namespace Engine.Image {
             if (this.animation_external != null) {
                 result = this.animation_external.Animate(elapsed);
                 this.animation_external.UpdateSprite(this, false);
+            }
+
+            if (this.trailing_disabled) return result;
+
+            // check delay for next trail
+            bool wait = this.trailing_progress < this.trailing_delay;
+            this.trailing_progress += elapsed;
+
+            if (wait) return result;
+            this.trailing_progress = 0f;
+
+            // compute trailing using the cached vertex
+            bool insert_vertex = this.trailing_used < this.trailing_length;
+            if (this.trailing_used > 0) {
+                // check if the last vertex equals to the current vertex
+                Trail trail = this.trailing_buffer[0];
+                bool source = trail.sx == this.vertex[0] && trail.sy == this.vertex[1] && trail.sw == this.vertex[2] && trail.sh == this.vertex[3];
+                bool draw = trail.dx == this.vertex[4] && trail.dy == this.vertex[5] && trail.dw == this.vertex[6] && trail.dh == this.vertex[7];
+
+                if (source && draw) {
+                    // drop first entry
+                    for (int i = 0, j = 1 ; j < this.trailing_used ; i++, j++) {
+                        this.trailing_buffer[i] = this.trailing_buffer[j];
+                    }
+                    insert_vertex = false;
+                    this.trailing_used--;
+                }
+            }
+
+            if (insert_vertex) {
+                // shift all entries to the end
+                for (int i = this.trailing_used - 2, j = this.trailing_used - 1 ; i >= 0 ; i--, j--) {
+                    this.trailing_buffer[j] = this.trailing_buffer[i];
+                }
+
+                // add new trail
+                this.trailing_buffer[0].sx = this.vertex[0];
+                this.trailing_buffer[0].sy = this.vertex[1];
+                this.trailing_buffer[0].sw = this.vertex[2];
+                this.trailing_buffer[0].sh = this.vertex[3];
+                this.trailing_buffer[0].dx = this.vertex[4];
+                this.trailing_buffer[0].dy = this.vertex[5];
+                this.trailing_buffer[0].dw = this.vertex[6];
+                this.trailing_buffer[0].dh = this.vertex[7];
+                this.trailing_used++;
+            }
+
+            // update alpha of each trail
+            for (int i = 0 ; i < this.trailing_used ; i++) {
+                this.trailing_buffer[i].alpha = (1f - (i / this.trailing_length)) * this.trailing_alpha;
             }
 
             return result;
@@ -966,6 +1054,7 @@ namespace Engine.Image {
         public PSShader GetShader() {
             return this.psshader;
         }
+
         public void BlendEnable(bool enabled) {
             this.blend_enabled = enabled;
         }
@@ -975,6 +1064,29 @@ namespace Engine.Image {
             this.blend_dst_rgb = dst_rgb;
             this.blend_src_alpha = src_alpha;
             this.blend_dst_alpha = dst_alpha;
+        }
+
+        public void TrailingEnabled(bool enabled) {
+            this.trailing_disabled = !enabled;
+        }
+
+        public void TrailingSetParams(int length, float trail_delay, float trail_alpha, bool? darken_colors) {
+            if (length > 0) {
+                Array.Resize(ref this.trailing_buffer, length);
+                this.trailing_length = length;
+            }
+            if (darken_colors != null) this.trailing_darken = (bool)darken_colors;
+            if (this.trailing_used > length) this.trailing_used = length;
+            if (!Single.IsNaN(trail_delay)) this.trailing_delay = trail_delay;
+            if (!Single.IsNaN(trail_alpha)) this.trailing_alpha = trail_alpha;
+
+            // force update
+            this.trailing_progress = Single.PositiveInfinity;
+        }
+
+
+        private struct Trail {
+            public float sx, sy, sw, sh, dx, dy, dw, dh, alpha;
         }
 
     }

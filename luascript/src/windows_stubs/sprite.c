@@ -95,4 +95,15 @@ PSShader sprite_get_shader(Sprite sprite) {
     print_stub("sprite_get_shader", "sprite=%p", sprite);
     return &stub_psshader;
 }
-
+void sprite_blend_enable(Sprite sprite, bool enabled) {
+    print_stub("sprite_blend_enable", "sprite=%p enabled=(bool)%i", sprite, enabled);
+}
+void sprite_blend_set(Sprite sprite, Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha) {
+    print_stub("sprite_blend_set", "sprite=%p src_rgb=%i dst_rgb=%i src_alpha=%i dst_alpha=%i", sprite, src_rgb, dst_rgb, src_alpha, dst_alpha);
+}
+void sprite_trailing_enabled(Sprite sprite, bool enabled) {
+    print_stub("sprite_trailing_enabled", "sprite=%p enabled=(bool)%i", sprite, enabled);
+}
+void sprite_trailing_set_params(Sprite sprite, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors) {
+    print_stub("sprite_trailing_set_params", "sprite=%p length=%i trail_delay=%f trail_alpha=%f darken_colors=%p", sprite, length, trail_delay, trail_alpha, darken_colors);
+}
