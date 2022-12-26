@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -38,8 +39,8 @@ namespace CsharpWrapper {
 
         }
 
-        public const int ICON_WIDTH = 32;
-        public const int ICON_HEIGHT = 32;
+        public const int ICON_WIDTH = 80;
+        public const int ICON_HEIGHT = 45;
 
 
         [DllImport("uxtheme", CharSet = CharSet.Unicode)]
@@ -52,6 +53,9 @@ namespace CsharpWrapper {
         private readonly ImageList imagelist;
         private bool do_launch;
         private Icon icon;
+        private int list_width;
+        private int group_x;
+        private int group_width;
 
         public ExpansionsLoader() {
             expansions_dir = Path.Combine(EngineSettings.EngineDir, "expansions");
@@ -76,6 +80,10 @@ namespace CsharpWrapper {
                 icon = new Icon(stream);
             }
             Icon = icon;
+
+            list_width = listView.Width;
+            group_x = groupBox1.Location.X;
+            group_width = groupBox1.Width;
         }
 
         public string SelectedExpansion { get => selected_expansion_name; }
@@ -193,8 +201,13 @@ namespace CsharpWrapper {
             foreach (Expansion expansion in expansions) expansion.Dispose();
             expansions = LoadExpansions();
 
+            foreach (Image thumbnail in imagelist.Images) thumbnail.Dispose();
             imagelist.Images.Clear();
-            foreach (Expansion expansion in expansions) imagelist.Images.Add(expansion.icon ?? blank_bitmap);
+
+            foreach (Expansion expansion in expansions) {
+                Image thumbnail = CreateThumbnail(expansion.icon ?? blank_bitmap);
+                imagelist.Images.Add(thumbnail);
+            }
 
             listView.BeginUpdate();
 
@@ -223,6 +236,29 @@ namespace CsharpWrapper {
                 FileName = e.LinkText,
                 UseShellExecute = true
             });
+        }
+
+        private Image CreateThumbnail(Image image) {
+            Bitmap bitmap = new Bitmap(ICON_WIDTH, ICON_HEIGHT, PixelFormat.Format32bppArgb);
+
+            using (Graphics graphics = Graphics.FromImage(bitmap)) {
+                float width = (float)ICON_WIDTH / image.Width;
+                float height = (float)ICON_HEIGHT / image.Height;
+                float scale = width > height ? width : height;
+
+                width = image.Width * scale;
+                height = image.Height * scale;
+
+                float x = (ICON_WIDTH - width) / 2f;
+                float y = (ICON_HEIGHT - height) / 2f;
+
+                graphics.Clear(Color.Transparent);
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.DrawImage(image, x, y, width, height);
+            }
+
+            return bitmap;
         }
 
     }
