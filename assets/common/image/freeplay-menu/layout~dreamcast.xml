@@ -154,13 +154,13 @@
     <Group>
         <Sprite r="0" g="0" b="0" a="0.25">
             <Action>
-                <Location x="0" y="694" z="2" />
+                <Location x="0" y="694" z="5" />
                 <Size width="960" height="30" />
             </Action>
         </Sprite>
         <Text fontName="vcr" fontSize="17" rgb="0xFFFFFF">
             <Action>
-                <Location x="6" y="698" z="2.1" />
+                <Location x="6" y="698" z="5" />
                 <String>UP/DOWN: choose song. LEFT/RIGHT: choose difficult. For songs with alternative tracks press X.</String>
             </Action>
         </Text>

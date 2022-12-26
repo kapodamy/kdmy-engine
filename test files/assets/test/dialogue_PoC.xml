@@ -18,7 +18,7 @@
 			<TextBox x="62" y="138" width="1026" height="118" />
 			<PortraitLine x="0" y="70" width="1026" />
 			<TitleLocation x="60" y="130" />
-			<Offset x="123" y="456" />
+			<Offset x="123" y="456" disableVerticalCenter="false|true" />
 			<OffsetIdle x="123" y="456" />
 			<OffsetOpen x="123" y="456" />
             <PortraitAlign vertical="center|start|end" horizontal="center|start|end" />
@@ -36,16 +36,20 @@
 		</PortraitList>
 		<AnimationsUI animationList="/assets/anims/dialog-ui.xml">
 			<Set name="backgroundIn|backgroundOut" anim="anim123" />
+			<Set name="portraitIn|portraitOut" anim="anim123" />
 			<Set name="portraitLeftIn|portraitCenterIn|portraitRightIn" anim="anim123" />
 			<Set name="portraitLeftOut|portraitCenterOut|portraitRightOut" anim="anim123" />
+			<UnSet name="backgroundIn|backgroundOut" />
+			<UnSet name="portraitIn|portraitOut" />
+			<UnSet name="portraitLeftIn|portraitCenterIn|portraitRightIn" />
+			<UnSet name="portraitLeftOut|portraitCenterOut|portraitRightOut" />
 		</AnimationsUI>
 		<Font name="vcr" src="/assets/common/font/vcr.ttf" />
 		<Font name="alphabet_bold" src="/assets/common/font/alphabet.xml" glyphSuffix="bold" glyphAnimated="true|false" />
-		<Font name="alphabet" src="/assets/common/font/alphabet.xml" colorByDifference="true" />
+		<Font name="alphabet" src="/assets/common/font/alphabet.xml" colorByDifference="false|true" />
 		<Font name="pixel" src="/assets/common/font/pixel.otf" />
+		<ImportPortraitList dialogueSrc="another_dialogue.xml" />
 	</Definition>
-	
-	<ImportPortraitList dialogueSrc="another_dialogue.xml" />
 	
 	<State initial="true|false">
 		<!-- place all initializers here -->
@@ -93,7 +97,7 @@
 		<TextFont font="vcr" />
 		<TextColor rgba="0xFFFFFF7F" rgb="0xFFFFFF" alpha="0.8" />
 		<TextBorderColor rgba="0xFFFFFF7F" rgb="0xFFFFFF" alpha="0.8" />
-		<TextBorderOffset offsetX="0" offsetY="0" />
+		<TextBorderOffset x="0" y="0" />
 		<TextSize size="123" />
 		<TextParagraphSpace size="123" />
 		<TextAlign horizontal="start|center|end" vertical="start|center|end" paragraph="start|center|end" />
