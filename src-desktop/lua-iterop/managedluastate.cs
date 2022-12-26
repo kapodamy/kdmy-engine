@@ -191,9 +191,14 @@ namespace Engine.Externals.LuaInterop {
             }
         }
 
-        public int EvaluateString(string lua_sourcecode) {
+        public bool EvaluateString(string eval_string) {
             unsafe {
-                return LUA.luaL_dostring(this.L, lua_sourcecode);
+                int result = LUA.luaL_loadstring(this.L, eval_string);
+                if (result != LUA.OK) return false;
+
+                int ret = LuaInteropHelpers.luascript_pcallk(this.L, 0, LUA.MULTRET);
+
+                return ret == LUA.OK;
             }
         }
 
@@ -202,11 +207,11 @@ namespace Engine.Externals.LuaInterop {
                 //int filename_index = LUA.lua_gettop(L) + 1;
                 //LUA.lua_pushstring(L, $"@{filename}");
 
-                // parse the lua sourcode and give a false filename
+                // parse the lua sourcecode and give a false filename
                 int status = LUA.luaL_loadbufferx(L, lua_sourcecode, $"@{fake_filename}");
                 //LUA.lua_remove(L, filename_index);
 
-                if (status == 0) status = LUA.lua_pcall(L, 0, LUA.MULTRET, 0);
+                if (status == 0) status = LuaInteropHelpers.luascript_pcallk(L, 0, LUA.MULTRET);
 
                 return status;
             }
@@ -228,7 +233,7 @@ namespace Engine.Externals.LuaInterop {
                 string fn_name = this.last_pushed_function_name;
                 this.last_pushed_function_name = null;
 
-                if (LUA.lua_pcallk(this.L, arguments_count, 0, 0, 0, null) == 0) {
+                if (LuaInteropHelpers.luascript_pcallk(this.L, arguments_count, 0) == 0) {
                     return 0;
                 }
 

@@ -249,7 +249,7 @@ int luascript_userdata_destroy(lua_State* L, const char* check_metatable_name, D
 bool luascript_userdata_is_allocated(lua_State* L, const char* check_metatable_name) {
     LuascriptObject* udata = read_luascript_object(L, 1, check_metatable_name);
 
-    if (!udata)  return false;
+    if (!udata) return false;
 
     return udata->was_allocated_by_lua;
 }
@@ -310,7 +310,7 @@ int luascript_parse_pvrflag(lua_State* L, const char* pvrflag) {
 }
 
 int luascript_parse_forcecase(lua_State* L, const char* forcecase) {
-     if (!forcecase || forcecase[0] == '\0' || string_equals(forcecase, "none"))
+    if (!forcecase || forcecase[0] == '\0' || string_equals(forcecase, "none"))
         return TEXTSPRITE_FORCECASE_NONE;
     else if (string_equals(forcecase, "upper"))
         return TEXTSPRITE_FORCECASE_UPPER;
@@ -321,7 +321,7 @@ int luascript_parse_forcecase(lua_State* L, const char* forcecase) {
 }
 
 int luascript_parse_wordbreak(lua_State* L, const char* wordbreak) {
-     if (!wordbreak || wordbreak[0] == '\0' || string_equals(wordbreak, "none"))
+    if (!wordbreak || wordbreak[0] == '\0' || string_equals(wordbreak, "none"))
         return FONT_WORDBREAK_NONE;
     else if (string_equals(wordbreak, "loose"))
         return FONT_WORDBREAK_LOOSE;
@@ -381,8 +381,8 @@ Blend luascript_parse_blend(lua_State* L, const char* blend) {
         return BLEND_ONE_MINUS_CONSTANT_ALPHA;
     else if (string_equals("BLEND_SRC_ALPHA_SATURATE", blend))
         return BLEND_SRC_ALPHA_SATURATE;
-    
-    return luaL_error(L, "invalid blend: %s", blend); 
+
+    return luaL_error(L, "invalid blend: %s", blend);
 }
 
 StrumScriptTarget luascript_parse_strumscripttarget(lua_State* L, const char* strumscripttarget) {
@@ -428,7 +428,7 @@ ScrollDirection luascript_parse_scrolldirection(lua_State* L, const char* scroll
         return STRUM_DOWNSCROLL;
     else if (string_equals(scrolldirection, "RIGHTSCROLL"))
         return STRUM_RIGHTSCROLL;
-    
+
     return luaL_error(L, "invalid scrolldirection: %s", scrolldirection);
 }
 
@@ -465,6 +465,28 @@ const char* luascript_stringify_actiontype(CharacterActionType actiontype) {
 }
 
 
+static int luascript_handle_error(lua_State* L) {
+    const char* msg = lua_tostring(L, -1);
+    luaL_traceback(L, L, msg, 2);
+    lua_remove(L, -2);
+
+    // keep the error (message & traceback)  in the stack
+    return 1;
+}
+
+int luascript_pcallk(lua_State* L, int arguments_count, int results_count) {
+    // push error handler
+    lua_pushcfunction(L, luascript_handle_error);
+    lua_insert(L, 1);
+
+    int result = lua_pcallk(L, arguments_count, results_count, 1, 0, NULL);
+
+    // remove error handler
+    lua_remove(L, 1);
+
+    return result;
+}
+
 #ifdef JAVASCRIPT
 //
 // javascript imported functions are always static, warp them
@@ -472,25 +494,25 @@ const char* luascript_stringify_actiontype(CharacterActionType actiontype) {
 EM_JS_PRFX(double, kdmyEngine_read_prop_double, (void* obj_id, const char* field_name), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     let ret = obj[field];
-    
+
     return ret;
 });
 EM_JS_PRFX(float, kdmyEngine_read_prop_float, (void* obj_id, const char* field_name), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     let ret = obj[field];
-    
+
     return ret;
 });
 EM_JS_PRFX(char*, kdmyEngine_read_prop_string, (void* obj_id, const char* field_name), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     let ret = obj[field];
 
@@ -499,7 +521,7 @@ EM_JS_PRFX(char*, kdmyEngine_read_prop_string, (void* obj_id, const char* field_
 EM_JS_PRFX(int32_t, kdmyEngine_read_prop_integer, (void* obj_id, const char* field_name), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     let ret = obj[field];
 
@@ -508,28 +530,28 @@ EM_JS_PRFX(int32_t, kdmyEngine_read_prop_integer, (void* obj_id, const char* fie
 EM_JS_PRFX(void*, kdmyEngine_read_prop_object, (void* obj_id, const char* field_name), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     let ret = obj[field];
-    
+
     return kdmyEngine_obtain((typeof ret === 'object') ? ret : null);
 });
 EM_JS_PRFX(bool, kdmyEngine_read_prop_boolean, (void* obj_id, const char* field_name), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     let ret = obj[field];
-    
+
     return ret ? 1 : 0;
 });
 EM_JS_PRFX(bool, kdmyEngine_read_prop_floatboolean, (void* obj_id, const char* field_name), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     let ret = obj[field];
-    
+
     return ret >= 1.0 || ret === true;
 });
 EM_JS_PRFX(void, kdmyEngine_forget_obtained, (void* obj_id), {
@@ -545,42 +567,42 @@ EM_JS_PRFX(void*, kdmyEngine_read_window_object, (const char* variable_name), {
 EM_JS_PRFX(void, kdmyEngine_write_prop_double, (void* obj_id, const char* field_name, double value), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     obj[field] = value;
 });
 EM_JS_PRFX(void, kdmyEngine_write_prop_float, (void* obj_id, const char* field_name, float value), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     obj[field] = value;
 });
 EM_JS_PRFX(void, kdmyEngine_write_prop_string, (void* obj_id, const char* field_name, char* value), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     obj[field] = kdmyEngine_ptrToString(value);
 });
 EM_JS_PRFX(void, kdmyEngine_write_prop_integer, (void* obj_id, const char* field_name, int32_t value), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     obj[field] = value;
 });
 EM_JS_PRFX(void, kdmyEngine_write_prop_object, (void* obj_id, const char* field_name, void* value), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     obj[field] = kdmyEngine_obtain(value);
 });
 EM_JS_PRFX(void, kdmyEngine_write_prop_boolean, (void* obj_id, const char* field_name, bool value), {
     let obj = kdmyEngine_obtain(obj_id);
     if (!obj) throw new Error("Uknown object id:" + obj_id);
-    
+
     let field = kdmyEngine_ptrToString(field_name);
     obj[field] = value;
 });
@@ -594,7 +616,7 @@ float kdmy_read_prop_float(void* obj_id, const char* field_name) {
     return kdmyEngine_read_prop_float(obj_id, field_name);
 }
 char* kdmy_read_prop_string(void* obj_id, const char* field_name) {
-    return  kdmyEngine_read_prop_string(obj_id, field_name);
+    return kdmyEngine_read_prop_string(obj_id, field_name);
 }
 int32_t kdmy_read_prop_integer(void* obj_id, const char* field_name) {
     return kdmyEngine_read_prop_integer(obj_id, field_name);
@@ -623,7 +645,7 @@ void kdmy_write_prop_float(void* obj_id, const char* field_name, float value) {
     return kdmyEngine_write_prop_float(obj_id, field_name, value);
 }
 void kdmy_write_prop_string(void* obj_id, const char* field_name, char* value) {
-    return  kdmyEngine_write_prop_string(obj_id, field_name, value);
+    return kdmyEngine_write_prop_string(obj_id, field_name, value);
 }
 void kdmy_write_prop_integer(void* obj_id, const char* field_name, int32_t value) {
     return kdmyEngine_write_prop_integer(obj_id, field_name, value);
@@ -637,4 +659,3 @@ void kdmy_write_prop_boolean(void* obj_id, const char* field_name, bool value) {
 
 
 #endif
-

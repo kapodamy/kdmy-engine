@@ -141,8 +141,8 @@ namespace Engine.Externals.LuaScriptInterop {
                 "newproxy = nil\n";
 
 
-            int result = lua.EvaluateString(SANDBOX);
-            Debug.Assert(result == 0, "luascript_register_sandbox() failed");
+            bool result = lua.EvaluateString(SANDBOX);
+            Debug.Assert(result, "luascript_register_sandbox() failed");
         }
 
         public static Luascript Init(string lua_sourcecode, string filename, object context, bool is_week) {
@@ -182,7 +182,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
         public bool Eval(string eval_string) {
             if (String.IsNullOrEmpty(eval_string)) return true;
-            return this.lua.EvaluateString(eval_string) == 0;
+            return this.lua.EvaluateString(eval_string);
         }
 
         public void CallFunction(string function_name) {

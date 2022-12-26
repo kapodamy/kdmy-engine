@@ -116,6 +116,8 @@ ScrollDirection luascript_parse_scrolldirection(lua_State* L, const char* scroll
 const char* luascript_stringify_align(Align align);
 const char* luascript_stringify_actiontype(CharacterActionType actiontype);
 
+int luascript_pcallk(lua_State* L, int arguments_count, int results_count);
+
 int script_atlas_push_atlas_entry(lua_State* L, AtlasEntry entry);
 
 #define LuaL_add_table_field(L, field_name, lua_function_setter, value) \

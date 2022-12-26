@@ -17,6 +17,9 @@ namespace LuaNativeMethods {
     internal struct lua_State { }
     internal struct lua_KFunction { }
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal unsafe delegate int lua_CFunction(lua_State* L);
+
 
 
     internal unsafe static class LUA {
@@ -116,6 +119,15 @@ namespace LuaNativeMethods {
 
         public static int lua_upvalueindex(int i) {
             return LUA.REGISTRYINDEX - i;
+        }
+
+        public static void luaL_traceback(lua_State* L, lua_State* L1, string msg, int level) {
+            fixed (byte* ptr = MarshalString(msg))
+                luaL_traceback(L, L1, ptr, level);
+        }
+
+        public static void lua_insert(lua_State* L, int idx) {
+            lua_rotate(L, (idx), 1);
         }
 
 
@@ -287,6 +299,8 @@ namespace LuaNativeMethods {
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void luaL_unref(lua_State* L, int t, int @ref);
 
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void luaL_traceback(lua_State* L, lua_State* L1, byte* msg, int level);
 
 
         private static byte[] STRING_BUFFER = new byte[256];

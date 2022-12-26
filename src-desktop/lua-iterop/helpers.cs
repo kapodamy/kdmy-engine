@@ -17,6 +17,7 @@ namespace Engine.Externals.LuaInterop {
 
         public const int SHARED_ARRAY_CHUNK_SIZE = 16;
 
+        private static lua_CFunction delegate_handle_error = luascript_handle_error;
         private static readonly object key_object;
         public static readonly void* luascript_key_ptr;
 
@@ -282,6 +283,29 @@ L_store_and_return:
             if (udata == null) return false;
 
             return udata->was_allocated_by_lua;
+        }
+
+
+        internal static int luascript_handle_error(lua_State* L) {
+            string msg = LUA.lua_tostring(L, -1);
+            LUA.luaL_traceback(L, L, msg, 2);
+            LUA.lua_remove(L, -2);
+
+            // keep the error (message & traceback)  in the stack
+            return 1;
+        }
+
+        internal static int luascript_pcallk(lua_State* L, int arguments_count, int results_count) {
+            // push error handler
+            LUA.lua_pushcfunction(L, delegate_handle_error);
+            LUA.lua_insert(L, 1);
+
+            int result = LUA.lua_pcallk(L, arguments_count, results_count, 1, 0, null);
+
+            // remove error handler
+            LUA.lua_remove(L, 1);
+
+            return result;
         }
 
 

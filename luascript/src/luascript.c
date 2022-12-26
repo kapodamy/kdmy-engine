@@ -191,7 +191,7 @@ Luascript luascript_init(const char* lua_sourcecode, const char* filename, void*
     int status = luaL_loadbufferx(L, lua_sourcecode, strlen(lua_sourcecode), lua_tostring(L, -1), NULL);
     lua_remove(L, filename_index);
 
-    if (!status) status = lua_pcall(L, 0, LUA_MULTRET, 0);
+    if (!status) status = luascript_pcallk(L, 0, LUA_MULTRET);
 
     if (status != LUA_OK) {
         const char* error_message = lua_tostring(L, -1);
@@ -219,9 +219,15 @@ void luascript_destroy(Luascript* luascript) {
     *luascript = NULL;
 }
 
-int luascript_eval(Luascript luascript, const char* eval_string) {
+bool luascript_eval(Luascript luascript, const char* eval_string) {
     if (!eval_string || !eval_string[0]) return LUA_OK;
-    return luaL_dostring(luascript->L, eval_string) == LUA_OK;
+
+    int result = luaL_loadstring(luascript->L, eval_string);
+    if (result != LUA_OK) return false;
+
+    int ret = luascript_pcallk(luascript->L, 0, LUA_MULTRET);
+
+    return ret == LUA_OK;
 }
 
 void luascript_drop_shared(void* obj_ptr) {
