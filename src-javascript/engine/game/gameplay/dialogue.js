@@ -515,7 +515,7 @@ function dialogue_animate(dialogue, elapsed) {
         }
 
         // if the speak animation is completed and there not longer speech switch to idle
-        if (!this.is_speaking && portrait.is_speaking) {
+        if (!dialogue.is_speaking && portrait.is_speaking) {
             portrait.is_speaking = false;
             dialogue_internal_stop_portrait_animation(portrait);
             continue;
@@ -531,7 +531,7 @@ function dialogue_animate(dialogue, elapsed) {
 
         // restart the animation if necessary
         if (can_loop || (!portrait.has_speak && !portrait.has_idle)) {
-          statesprite_animation_restart(portrait.statesprite);
+            statesprite_animation_restart(portrait.statesprite);
         }
     }
 
@@ -614,6 +614,15 @@ function dialogue_draw(dialogue, pvrctx) {
     if (dialogue.self_hidden || dialogue.is_completed) return;
 
     pvr_context_save(pvrctx);
+
+    // JS only
+    if (!pvrctx_is_widescreen()) {
+        const scale = 640 / 1280;
+        const translate = (480 - (720 * scale)) / 2;
+        sh4matrix_scale(pvrctx.current_matrix, scale, scale);
+        sh4matrix_translate(pvrctx.current_matrix, 0, translate);
+    }
+
     drawable_helper_apply_in_context(dialogue.self_drawable, pvrctx);
     pvr_context_save(pvrctx);
 
@@ -1153,7 +1162,7 @@ function dialogue_internal_prepare_print_text(dialogue) {
     if (!dialogue.current_dialog) return;
 
     if (dialogue.current_dialog_line < dialogue.current_dialog.lines_size) {
-        dialogue_internal_apply_state(
+        dialogue_apply_state(
             dialogue, dialogue.current_dialog.lines[dialogue.current_dialog_line].target_state_name
         );
         if (dialogue.do_exit) return;
@@ -1501,8 +1510,8 @@ function dialogue_internal_parse_state(root_node, states) {
                 break;
             case "TextBorderOffset":
                 action.type = DIALOGUE_TYPE_TEXT_BORDEROFFSET;
-                action.offset_x = vertexprops_parse_float(node, "offsetX", NaN);
-                action.offset_y = vertexprops_parse_float(node, "offsetY", NaN);
+                action.offset_x = vertexprops_parse_float(node, "x", NaN);
+                action.offset_y = vertexprops_parse_float(node, "y", NaN);
                 break;
             case "TextSize":
                 action.type = DIALOGUE_TYPE_TEXT_SIZE;

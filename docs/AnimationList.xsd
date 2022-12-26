@@ -3,6 +3,79 @@
     <!-- For writting anims's xml files -->
     <!-- TODO: add assertions -->
 
+    <xs:simpleType name="VertexProps">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="x" />
+            <xs:enumeration value="y" />
+            <xs:enumeration value="width" />
+            <xs:enumeration value="height" />
+            <xs:enumeration value="rotate" />
+            <xs:enumeration value="scaleX" />
+            <xs:enumeration value="scaleY" />
+            <xs:enumeration value="skewX" />
+            <xs:enumeration value="skewY" />
+            <xs:enumeration value="translateX" />
+            <xs:enumeration value="translateY" />
+            <xs:enumeration value="alpha" />
+            <xs:enumeration value="z" />
+            <xs:enumeration value="vertexColorR" />
+            <xs:enumeration value="vertexColorG" />
+            <xs:enumeration value="vertexColorB" />
+            <xs:enumeration value="vertexColorOffsetR" />
+            <xs:enumeration value="vertexColorOffsetG" />
+            <xs:enumeration value="vertexColorOffsetB" />
+            <xs:enumeration value="vertexColorOffsetA" />
+            <xs:enumeration value="flipX" />
+            <xs:enumeration value="flipY" />
+            <xs:enumeration value="rotatePivotEnable" />
+            <xs:enumeration value="rotatePivotU" />
+            <xs:enumeration value="rotatePivotV" />
+            <xs:enumeration value="scaleDirectionX" />
+            <xs:enumeration value="scaleDirectionY" />
+            <xs:enumeration value="translateRotation" />
+            <xs:enumeration value="scaleSize" />
+            <xs:enumeration value="animationloop" />
+            <xs:enumeration value="frameindex" />
+            <xs:enumeration value="fontSize" />
+            <xs:enumeration value="alignH" />
+            <xs:enumeration value="alignV" />
+            <xs:enumeration value="alignParagraph" />
+            <xs:enumeration value="forceCase" />
+            <xs:enumeration value="fontColor" />
+            <xs:enumeration value="maxLines" />
+            <xs:enumeration value="maxWidth" />
+            <xs:enumeration value="maxHeight" />
+            <xs:enumeration value="borderEnable" />
+            <xs:enumeration value="borderSize" />
+            <xs:enumeration value="borderColorR" />
+            <xs:enumeration value="borderColorG" />
+            <xs:enumeration value="borderColorB" />
+            <xs:enumeration value="borderColorA" />
+            <xs:enumeration value="paragraphSeparation" />
+            <xs:enumeration value="zOffset" />
+            <xs:enumeration value="scaleTranslation" />
+            <xs:enumeration value="flipCorrection" />
+            <xs:enumeration value="groupViewportX" />
+            <xs:enumeration value="groupViewportY" />
+            <xs:enumeration value="groupViewportWidth" />
+            <xs:enumeration value="groupViewportHeight" />
+            <xs:enumeration value="backgroundEnabled" />
+            <xs:enumeration value="backgroundSize" />
+            <xs:enumeration value="backgroundOffsetX" />
+            <xs:enumeration value="backgroundOffsetY" />
+            <xs:enumeration value="backgroundColorR" />
+            <xs:enumeration value="backgroundColorG" />
+            <xs:enumeration value="backgroundColorB" />
+            <xs:enumeration value="backgroundColorA" />
+            <xs:enumeration value="offsetX" />
+            <xs:enumeration value="offsetY" />
+            <xs:enumeration value="offsetZ" />
+            <xs:enumeration value="alpha2" />
+            <xs:enumeration value="borderOffsetX" />
+            <xs:enumeration value="borderOffsetY" />
+        </xs:restriction>
+    </xs:simpleType>
+
     <xs:simpleType name="Interpolator-type">
         <xs:restriction base="xs:string">
             <xs:enumeration value="linear" />
@@ -36,13 +109,14 @@
     </xs:simpleType>
 
     <xs:complexType name="Interpolator">
-        <xs:attribute name="property" type="xs:anySimpleType" use="optional" default="-1" />
+        <xs:attribute name="property" type="VertexProps" use="required" />
         <xs:attribute name="type" type="Interpolator-type" use="optional" default="linear" />
         <xs:attribute name="start" type="xs:anySimpleType" use="optional" default="0" />
         <xs:attribute name="end" type="xs:anySimpleType" use="optional" default="0" />
-        <xs:attribute name="duration" type="xs:float" use="optional" default="-1" />
+        <xs:attribute name="duration" type="xs:float" use="required" />
         <xs:attribute name="stepsCount" type="xs:integer" use="optional" default="-1" />
-        <xs:attribute name="stepsMethod" type="Interpolator-stepsMethod" use="optional" default="start" />
+        <xs:attribute name="stepsMethod" type="Interpolator-stepsMethod" use="optional"
+            default="start" />
     </xs:complexType>
     <xs:complexType name="FrameArray">
         <xs:attribute name="entryPrefixName" type="xs:string" use="optional" />
@@ -58,7 +132,7 @@
         <xs:attribute name="duration" type="xs:nonNegativeInteger" use="optional" default="1" />
     </xs:complexType>
     <xs:complexType name="Set">
-        <xs:attribute name="property" type="xs:string" use="optional" default="1" />
+        <xs:attribute name="property" type="VertexProps" use="required" />
         <xs:attribute name="value" type="xs:anySimpleType" use="optional" default="1" />
     </xs:complexType>
     <xs:complexType name="Yield">
@@ -69,22 +143,23 @@
         <xs:attribute name="end" type="xs:float" use="optional" default="NaN" />
     </xs:complexType>
     <xs:complexType name="RandomExact">
-        <xs:attribute name="values" type="xs:anySimpleType" use="required" />
+        <xs:attribute name="values" type="xs:string" use="required" />
     </xs:complexType>
     <xs:complexType name="RegisterProp">
         <xs:attribute name="register" type="register" use="required" />
-        <xs:attribute name="property" type="xs:string" use="required" />
+        <xs:attribute name="property" type="VertexProps" use="required" />
     </xs:complexType>
     <xs:complexType name="RegisterSet">
         <xs:attribute name="register" type="register" use="optional" />
-        <xs:attribute name="value" type="xs:anySimpleType" use="optional" />
+        <xs:attribute name="value" type="xs:string" use="optional" />
     </xs:complexType>
     <xs:complexType name="Keyframe">
         <xs:attribute name="at" type="percentDuration" use="required" />
-        <xs:attribute name="id" type="xs:integer" use="optional" />
+        <xs:attribute name="id" type="xs:string" use="optional" />
         <xs:attribute name="value" type="xs:double" use="required" />
         <xs:attribute name="interpolator" type="Interpolator-type" use="optional" />
-        <xs:attribute name="stepMethods" type="Interpolator-stepsMethod" use="optional" default="none" />
+        <xs:attribute name="stepMethods" type="Interpolator-stepsMethod" use="optional"
+            default="none" />
         <xs:attribute name="stepCount" type="xs:positiveInteger" use="optional" />
     </xs:complexType>
 
@@ -126,7 +201,8 @@
             <xs:element name="Keyframe" type="Keyframe" minOccurs="1" />
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="required" />
-        <xs:attribute name="defaultInterpolator" type="Interpolator-type" use="optional" default="linear" />
+        <xs:attribute name="defaultInterpolator" type="Interpolator-type" use="optional"
+            default="linear" />
         <xs:attribute name="referenceDuration" type="xs:positiveInteger" use="optional" default="1" />
     </xs:complexType>
 
@@ -135,8 +211,10 @@
         <xs:complexType>
             <xs:sequence minOccurs="0" maxOccurs="unbounded">
                 <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
-                <xs:element name="AnimationMacro" type="AnimationMacro" minOccurs="0" maxOccurs="unbounded" />
-                <xs:element name="TweenKeyframe" type="TweenKeyframe" minOccurs="0" maxOccurs="unbounded" />
+                <xs:element name="AnimationMacro" type="AnimationMacro" minOccurs="0"
+                    maxOccurs="unbounded" />
+                <xs:element name="TweenKeyframe" type="TweenKeyframe" minOccurs="0"
+                    maxOccurs="unbounded" />
             </xs:sequence>
             <xs:attribute name="atlasPath" type="xs:anyURI" use="optional" />
         </xs:complexType>

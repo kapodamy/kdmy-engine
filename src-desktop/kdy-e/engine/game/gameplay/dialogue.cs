@@ -1508,8 +1508,8 @@ namespace Engine.Game.Gameplay {
                         break;
                     case "TextBorderOffset":
                         action.type = Type.TEXT_BORDEROFFSET;
-                        action.offset_x = VertexProps.ParseFloat(node, "offsetX", Single.NaN);
-                        action.offset_y = VertexProps.ParseFloat(node, "offsetY", Single.NaN);
+                        action.offset_x = VertexProps.ParseFloat(node, "x", Single.NaN);
+                        action.offset_y = VertexProps.ParseFloat(node, "y", Single.NaN);
                         break;
                     case "TextSize":
                         action.type = Type.TEXT_SIZE;
