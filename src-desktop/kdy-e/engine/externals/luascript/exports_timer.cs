@@ -158,8 +158,8 @@ namespace Engine.Externals.LuaScriptInterop {
         "    return length\n" +
         "end\n";
 
-            int result = lua.EvaluateString(timer_sourcecode);
-            Debug.Assert(result == 0, "register_timer() failed");
+            bool result = lua.EvaluateString(timer_sourcecode);
+            Debug.Assert(result, "register_timer() failed");
         }
 
     }

@@ -583,8 +583,8 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         messagebox_set_image_sprite(roundcontext.messagebox, null);
         for (let i = 0; i < roundcontext.players_size; i++) {
             character_use_alternate_sing_animations(roundcontext.players[i].character, 0);   
-            caracter_freeze_animation(roundcontext.players[i].character, 0);
-            caracter_set_visible(roundcontext.players[i].character, 1);
+            character_freeze_animation(roundcontext.players[i].character, 0);
+            character_set_visible(roundcontext.players[i].character, 1);
         }
         roundcontext.scriptcontext.halt_flag = 0;
         layout_set_single_item_to_draw(roundcontext.layout, null);

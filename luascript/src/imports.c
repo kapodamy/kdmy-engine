@@ -1,24 +1,28 @@
-#include "timer.h"
 #include "luascript_internal.h"
+#include "timer.h"
 
-#define FUNCTION(luascript, function_name)      lua_State* lua = luascript->L; \
-                                                const char* FUNCTION = function_name; \
-                                                if (lua_getglobal(lua, FUNCTION) != LUA_TFUNCTION) { \
-                                                    lua_pop(lua, 1); \
-                                                    return; \
-                                                } \
+#define FUNCTION(luascript, function_name)               \
+    lua_State* lua = luascript->L;                       \
+    const char* FUNCTION = function_name;                \
+    if (lua_getglobal(lua, FUNCTION) != LUA_TFUNCTION) { \
+        lua_pop(lua, 1);                                 \
+        return;                                          \
+    }
 
 
-static int lua_imported_fn(lua_State* lua, const char* fn_name, int arguments_count) {
-    if (!lua_pcallk(lua, arguments_count, 0, 0, 0, 0)) return 0;
+static int lua_imported_fn(lua_State* L, const char* fn_name, int arguments_count) {
+    int result = luascript_pcallk(L, arguments_count, 0);
+    if (result == LUA_OK) return 0;
 
-    const char* error_message = lua_tostring(lua, -1);
+    const char* error_message = lua_tostring(L, -1);
+    lua_pop(L, 1);
+
     fprintf(stderr, "lua_imported_fn() call to '%s' failed.\n%s\n", fn_name, error_message);
     // fflush(stdout);
-    lua_pop(lua, 1);
 
     return 1;
 }
+
 
 void luascript_notify_weekinit(Luascript luascript, int32_t freeplay_index) {
     FUNCTION(luascript, "f_weekinit");
@@ -216,6 +220,7 @@ void luascript_notify_after_strum_scroll(Luascript luascript) {
 void luascript_call_function(Luascript luascript, const char* function_name) {
     if (!function_name || !function_name[0]) return;
     FUNCTION(luascript, function_name);
-    lua_imported_fn(lua, function_name, 2);
+
+    lua_imported_fn(lua, function_name, 0);
 }
 
