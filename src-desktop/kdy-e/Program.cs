@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Engine.Externals;
+using Engine.Externals.GLFW;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
 using Engine.Platform;
@@ -137,6 +139,15 @@ namespace CsharpWrapper {
             if (!EngineSettings.ini_exists && !Directory.Exists(EngineSettings.EngineDir + "saves")) {
                 // skip save selector for fresh installations
                 FunkinSave.WriteToVMU();
+            }
+
+            string gamecontrollerdb_path = EngineSettings.EngineDir + Glfw.GAMECONTROLLERDB;
+            if (File.Exists(gamecontrollerdb_path)) {
+                Console.WriteLine("detected 'gamecontrollerdb.txt' file, updating mappings");
+                string mappings = File.ReadAllText(gamecontrollerdb_path, Encoding.ASCII);
+                if (!Glfw.glfwUpdateGamepadMappings(mappings)) {
+                    Console.Error.WriteLine("[ERROR] failed to import " + gamecontrollerdb_path);
+                }
             }
 
             return GameMain.Main(argv, argv.Length);
