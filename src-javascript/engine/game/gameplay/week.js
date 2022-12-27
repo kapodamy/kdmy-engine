@@ -584,7 +584,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         week_toggle_states(roundcontext, gameplaymanifest);
         messagebox_set_image_sprite(roundcontext.messagebox, null);
         for (let i = 0; i < roundcontext.players_size; i++) {
-            character_use_alternate_sing_animations(roundcontext.players[i].character, 0);   
+            character_use_alternate_sing_animations(roundcontext.players[i].character, 0);
             character_freeze_animation(roundcontext.players[i].character, 0);
             character_set_visible(roundcontext.players[i].character, 1);
         }
@@ -1826,21 +1826,72 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
 }
 
 async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
+    // default values to guess positions
+    const STREAK = { x: -355.0, y: -115.0, z: +0.13, height: 136.0, width: 0.0 };
+    const RANK = { x: -350.0, y: -250.0, z: +0.11, height: 148.0 };
+    const ACCURACY = { x: +305.0, y: -165.0, z: +0.12, height: 80.0 };
+
     const initparams = roundcontext.initparams;
     const viewport_size = [0, 0];
     let layout = roundcontext.layout ? roundcontext.layout : roundcontext.ui_layout;
 
     layout_get_viewport_size(roundcontext.ui_layout, viewport_size);
 
+    let auto_compute_location_from = layout_get_attached_value(
+        layout, "ui_autoplace_cosmetic_from_placeholder", LAYOUT_TYPE_STRING, null
+    );
+    let auto_compute_location = !!auto_compute_location_from;
+    let auto_compute_reference = null;
+
+    if (auto_compute_location) {
+        auto_compute_reference = layout_get_placeholder(layout, auto_compute_location_from);
+        if (!auto_compute_reference) {
+            auto_compute_location = false;
+            console.warn(`week_init_ui_cosmetics() missing '${auto_compute_location_from}' placeholder, autoplace failed.`);
+        }
+    }
+
     let placeholder_streakcounter = week_internal_read_placeholder_counter(
-        layout, "ui_streakcounter"
+        layout, "ui_streakcounter", !auto_compute_location
     );
     let placeholder_rankingcounter_rank = week_internal_read_placeholder_counter(
-        layout, "ui_rankingcounter_rank"
+        layout, "ui_rankingcounter_rank", !auto_compute_location
     );
     let placeholder_rankingcounter_accuracy = week_internal_read_placeholder_counter(
-        layout, "ui_rankingcounter_accuracy"
+        layout, "ui_rankingcounter_accuracy", !auto_compute_location
     );
+
+    // guess the position of streakcounter and rankingcounter if has missing placeholders
+    if (auto_compute_location) {
+        if (!placeholder_streakcounter) {
+            placeholder_streakcounter = STREAK;
+            placeholder_streakcounter.x += auto_compute_reference.x;
+            placeholder_streakcounter.y += auto_compute_reference.y;
+            placeholder_streakcounter.z += auto_compute_reference.z;
+        }
+        if (!placeholder_rankingcounter_rank) {
+            placeholder_rankingcounter_rank = RANK;
+            placeholder_rankingcounter_rank.x += auto_compute_reference.x;
+            placeholder_rankingcounter_rank.y += auto_compute_reference.y;
+            placeholder_rankingcounter_rank.z += auto_compute_reference.z;
+        }
+        if (!placeholder_rankingcounter_accuracy) {
+            placeholder_rankingcounter_accuracy = ACCURACY;
+            placeholder_rankingcounter_accuracy.x += auto_compute_reference.x;
+            placeholder_rankingcounter_accuracy.y += auto_compute_reference.y;
+            placeholder_rankingcounter_accuracy.z += auto_compute_reference.z;
+        }
+    }
+
+    if (!SETTINGS.gameplay_enabled_uicosmetics) {
+        // drawn away
+        placeholder_streakcounter.x = -Infinity;
+        placeholder_streakcounter.y = -Infinity;
+        placeholder_rankingcounter_rank.x = -Infinity;
+        placeholder_rankingcounter_rank.y = -Infinity;
+        placeholder_rankingcounter_accuracy.x = -Infinity;
+        placeholder_rankingcounter_accuracy.y = -Infinity;
+    }
 
     // keep a copy of the old values
     let old_rankingcounter = roundcontext.rankingcounter;
@@ -2230,9 +2281,9 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
         if (dialogue_is_completed(roundcontext.dialogue)) {
             show_dialog = 0;
-            for (let i = 0 ; i < roundcontext.players_size ; i++) {
+            for (let i = 0; i < roundcontext.players_size; i++) {
                 if (roundcontext.players[i].controller != null) {
-                  gamepad_clear_buttons(roundcontext.players[i].controller);// antibounce
+                    gamepad_clear_buttons(roundcontext.players[i].controller);// antibounce
                 }
             }
         }
@@ -3140,9 +3191,9 @@ function week_internal_pick_counters_values_from_layout(/**@type {RoundContext}*
     );
 }
 
-function week_internal_read_placeholder_counter(layout, name) {
+function week_internal_read_placeholder_counter(layout, name, warn) {
     let placeholder = layout_get_placeholder(layout, name);
-    if (!placeholder) console.error(`week: missing layout '${name}' placeholder`);
+    if (warn && !placeholder) console.error(`week: missing layout '${name}' placeholder`);
     return placeholder;
 }
 

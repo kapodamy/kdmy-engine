@@ -738,6 +738,14 @@ namespace Engine.Game {
                     value_bool = true,
                     ini_key = "gameplay_enabled_flashinglights"
                 },
+                new SettingOption() {
+                    name = "UI COSMETICS",
+                    description = "Hides away the accuracy, rank, and streak counters.\n" +
+                                  "These elements normally are shown near or surrounding girlfriend's speakers",
+                    is_bool = true,
+                    value_bool = true,
+                    ini_key = "gameplay_enabled_ui_cosmetics"
+                },
 
             };
             int options_size = options.Length;
