@@ -515,6 +515,10 @@ namespace Engine.Externals {
             return NativeMethods.glUnmapBuffer(target) != 0;
         }
 
+        internal void finish() {
+            NativeMethods.glFinish();
+        }
+
 #pragma warning restore IDE1006
 
     }

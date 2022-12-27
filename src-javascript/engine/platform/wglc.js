@@ -26,6 +26,8 @@ class WebGL2Context {
     /**@type {WebGLShader}*/stock_shadervertex;
     /**@type {WebGLShader}*/stock_shaderfragment;
 
+    /**@type {bool}*/has_texture_uploads;
+
     constructor(/**@type {HTMLCanvasElement}*/canvas) {
         this.gl = canvas.getContext("webgl2", {
             alpha: false,
@@ -856,6 +858,8 @@ async function webopengl_init(canvas) {
         gl, webopengl_patch_shader(await webopengl_internal_load_shader("stock", false), false), false, true
     );
 
+    this.has_texture_uploads = 0;
+
     return wglc;
 }
 
@@ -883,6 +887,8 @@ function webopengl_create_texture(/**@type {WebGL2Context}*/wglc, texture_width,
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     }
+
+    wglc.has_texture_uploads = 1;
 
     return tex;
 }
@@ -1228,7 +1234,7 @@ function webopengl_internal_enable_dotted(/**@type {WebGL2Context}*/wglc, enable
     wglc.draw_dotted = enable ? 1 : 0;
 }
 
-function webopengl_set_shader_version(sourcecode) { 
+function webopengl_set_shader_version(sourcecode) {
     if (window["ENABLE_DOTTED"]) {
         const DOTTED = "#define DOTTED\n";
         sourcecode = DOTTED + sourcecode;

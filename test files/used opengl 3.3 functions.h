@@ -77,3 +77,4 @@ internal delegate void glInvalidateFramebuffer(GLenum target, GLsizei numAttachm
 internal delegate void glDeleteFramebuffers(GLsizei n, GLuint* framebuffers);
 internal delegate IntPtr glMapBuffer(GLenum target, GLenum access);
 internal delegate IntPtr glUnmapBuffer(GLenum target);
+internal delegate void glFinish();
