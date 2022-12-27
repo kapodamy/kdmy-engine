@@ -91,7 +91,7 @@ namespace Engine.Platform {
 
         private static void Destroy(FSTLS fs_tls) {
             //free(fs_tls.fs_cwd);
-            //linkedlist_destroy2(fs_tls.fs_stk, free);
+            fs_tls.fs_stk.Destroy2(/*free*/);
             //free(fs_tls);
         }
 

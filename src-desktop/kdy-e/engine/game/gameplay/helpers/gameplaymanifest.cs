@@ -854,7 +854,9 @@ namespace Engine.Game.Gameplay.Helpers {
                     is_opponent = false,
                 };
 
-                if (JSONParser.HasPropertyBoolean(player_json, "isOpponent")) {
+                bool has_is_opponent = JSONParser.HasPropertyBoolean(player_json, "isOpponent");
+
+                if (has_is_opponent) {
                     players[i].is_opponent = JSONParser.ReadBoolean(player_json, "isOpponent", false);
                 } else {
                     //
@@ -867,9 +869,14 @@ namespace Engine.Game.Gameplay.Helpers {
 
                 if (JSONParser.HasPropertyBoolean(player_json, "canDie")) {
                     players[i].can_die = JSONParser.ReadBoolean(player_json, "canDie", false);
+                } else if (has_is_opponent) {
+                    players[i].can_die = !players[i].is_opponent;
                 }
+
                 if (JSONParser.HasPropertyBoolean(player_json, "canRecover")) {
                     players[i].can_recover = JSONParser.ReadBoolean(player_json, "canRecover", false);
+                } else if (has_is_opponent) {
+                    players[i].can_recover = !players[i].is_opponent;
                 }
 
                 players[i].refer = GameplayManifest.HasDefaultModel(players[i].manifest);

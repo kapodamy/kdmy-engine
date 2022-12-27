@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using Engine.Platform;
 using Engine.Utils;
@@ -152,6 +153,7 @@ L_return:
         }
 
 
+        [DebuggerDisplay("id={id} absolute_path={absolute_path} data={data}")]
         private struct CacheEntry {
             public int id;
             public string absolute_path;
