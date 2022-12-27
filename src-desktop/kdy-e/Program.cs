@@ -120,7 +120,12 @@ namespace CsharpWrapper {
                 i++;
             }
 
-            Expansions.Load(EngineSettings.expansion);
+            Thread thread = new Thread(delegate () {
+                FS.Init();
+                Expansions.Load(EngineSettings.expansion);
+            });
+            thread.Start();
+            thread.Join();
 
             PVRContext.InitializeGlobalContext();
             KallistiOS.MAPLE.maple_mappings.LoadKeyboardMappings();

@@ -747,7 +747,8 @@ function gameplaymanifest_parse_players(json, obj, ptr_players, ptr_players_size
             is_opponent: 0,
         };
 
-        if (json_has_property_boolean(player_json, "isOpponent")) {
+        let has_is_opponent = json_has_property_boolean(player_json, "isOpponent");
+        if (has_is_opponent) {
             players[i].is_opponent = json_read_boolean(player_json, "isOpponent", false);
         } else {
             //
@@ -760,9 +761,14 @@ function gameplaymanifest_parse_players(json, obj, ptr_players, ptr_players_size
 
         if (json_has_property_boolean(player_json, "canDie")) {
             players[i].can_die = json_read_boolean(player_json, "canDie", false);
+        } else if (has_is_opponent) {
+            players[i].can_die = !players[i].is_opponent;
         }
+
         if (json_has_property_boolean(player_json, "canRecover")) {
             players[i].can_recover = json_read_boolean(player_json, "canRecover", false);
+        } else if (has_is_opponent) {
+            players[i].can_recover = !players[i].is_opponent;
         }
 
         players[i].refer = gameplaymanifest_has_default_model(players[i].manifest);
