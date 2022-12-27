@@ -67,7 +67,7 @@ namespace CsharpWrapper {
             for (int i = 1 ; i < argv.Length ; i++) {
                 switch (argv[i].ToLowerInvariant()) {
                     case "-expansion":
-                        NextArgAs(argv, i, ref EngineSettings.expansion);
+                        NextArgAs(argv, i + 1, ref EngineSettings.expansion);
                         if (String.IsNullOrEmpty(EngineSettings.expansion)) {
                             EngineSettings.expansion = null;
                             break;
@@ -78,7 +78,7 @@ namespace CsharpWrapper {
                         }
                         break;
                     case "-style":
-                        NextArgAs(argv, i, ref EngineSettings.style);
+                        NextArgAs(argv, i + 1, ref EngineSettings.style);
                         break;
                     case "-fullscreen":
                         force_fullscreen = true;
