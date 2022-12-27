@@ -2846,8 +2846,8 @@ function week_ui_set_visibility(/**@type {RoundContext} */ roundcontext, visible
 }
 
 function week_get_current_chart_info(/**@type {RoundContext} */ roundcontext, chartinfo) {
-    chartinfo.bpm = roundcontext.settings.bpm;
-    chartinfo.speed = roundcontext.settings.speed;
+    chartinfo.bpm = roundcontext.settings.original_bpm;
+    chartinfo.speed = roundcontext.settings.camera_name_player;
 }
 
 function week_get_current_track_info(/**@type {RoundContext} */ roundcontext, trackinfo) {

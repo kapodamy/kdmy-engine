@@ -2858,8 +2858,8 @@ namespace Engine.Game.Gameplay {
         }
 
         public static void GetCurrentChartInfo(RoundContext roundcontext, out float bpm, out double speed) {
-            bpm = roundcontext.settings.bpm;
-            speed = roundcontext.settings.speed;
+            bpm = roundcontext.settings.original_bpm;
+            speed = roundcontext.settings.original_speed;
         }
 
         public static void GetCurrentTrackInfo(RoundContext roundcontext, out string name, out string difficult, out int index) {
