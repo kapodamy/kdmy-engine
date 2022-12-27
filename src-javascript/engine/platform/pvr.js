@@ -48,6 +48,12 @@ const VERTEX_SHAPE = 4;
  */
 function pvrctx_wait_ready() {
 
+    if (pvr_context.webopengl.has_texture_uploads) {
+        // wait until all textures are completely uploaded
+        pvr_context.webopengl.has_texture_uploads = false;
+        pvr_context.webopengl.gl.flush();
+    }
+
     // flush front framebuffer if there anything drawn
     pvr_context.FlushFramebuffer();
     pvr_context.shader_framebuffer_front.Invalidate();

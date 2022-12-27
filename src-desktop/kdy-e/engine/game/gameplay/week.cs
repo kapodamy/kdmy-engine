@@ -580,6 +580,8 @@ namespace Engine.Game.Gameplay {
                 Week.QUARTER_WATCHER.Reset(false, roundcontext.settings.original_bpm);
                 Week.ChangeCharacterCameraName(roundcontext, true, Week.ROUND_CAMERA_OPONNENT);
                 Week.ChangeCharacterCameraName(roundcontext, false, Week.ROUND_CAMERA_PLAYER);
+                roundcontext.ui_camera.ToOrigin(false);
+                Week.ROUND_UI_MATRIX.CopyTo(Week.ROUND_UI_MATRIX_CAMERA);
 
                 Week.ToggleStates(roundcontext, gameplaymanifest);
                 roundcontext.messagebox.SetImageSprite(null);

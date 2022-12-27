@@ -211,7 +211,7 @@ namespace Engine.Font {
             gl.drawElementsInstanced(
                 gl.TRIANGLES, total_indices, gl.UNSIGNED_INT, 0, glyphrenderer_glyphs_total
             );
-            gl.flush();
+            //gl.flush();
 
 
             // unbind textures

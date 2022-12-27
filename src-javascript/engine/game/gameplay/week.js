@@ -578,6 +578,8 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         beatwatcher_reset(WEEK_QUARTER_WATCHER, 0, roundcontext.settings.original_bpm);
         week_change_character_camera_name(roundcontext, 1, WEEKROUND_CAMERA_OPONNENT);
         week_change_character_camera_name(roundcontext, 0, WEEKROUND_CAMERA_PLAYER);
+        camera_to_origin(roundcontext.ui_camera, 0);
+        sh4matrix_copy_to(WEEKROUND_UI_MATRIX, WEEKROUND_UI_MATRIX_CAMERA);
 
         week_toggle_states(roundcontext, gameplaymanifest);
         messagebox_set_image_sprite(roundcontext.messagebox, null);

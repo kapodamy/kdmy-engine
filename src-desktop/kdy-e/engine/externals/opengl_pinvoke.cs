@@ -96,6 +96,7 @@ namespace Engine.Externals {
             internal delegate void DglDeleteFramebuffers(GLsizei n, [In, Out] GLuint[] framebuffers);
             internal delegate IntPtr DglMapBuffer(GLenum target, GLenum access);
             internal delegate GLboolean DglUnmapBuffer(GLenum target);
+            internal delegate void DglFinish();
 
 #pragma warning disable CS0649
             internal static readonly DglViewport glViewport;
@@ -176,6 +177,7 @@ namespace Engine.Externals {
             internal static readonly DglDeleteFramebuffers glDeleteFramebuffers;
             internal static readonly DglMapBuffer glMapBuffer;
             internal static readonly DglUnmapBuffer glUnmapBuffer;
+            internal static readonly DglFinish glFinish;
 #pragma warning restore CS0649
 
 

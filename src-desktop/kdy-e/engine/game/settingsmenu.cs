@@ -727,7 +727,7 @@ namespace Engine.Game {
                     description = "Enables/disables stage distractions during the gameplay.\n" +
                                   "(Depends on the week if honours this setting)",
                     is_bool = true,
-                    value_bool = false,
+                    value_bool = true,
                     ini_key = "gameplay_enabled_distractions"
                 },
                 new SettingOption() {
@@ -735,7 +735,7 @@ namespace Engine.Game {
                     description = "Rhythm games often use flashing lights, sometimes they can be annoying or cause seizures.\n" +
                                   "(Depends on the week if honours this setting)",
                     is_bool = true,
-                    value_bool = false,
+                    value_bool = true,
                     ini_key = "gameplay_enabled_flashinglights"
                 },
 

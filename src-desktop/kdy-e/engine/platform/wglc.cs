@@ -29,6 +29,8 @@ namespace Engine.Platform {
 
         public WebGLBuffer position_buffer;
 
+        public bool has_texture_uploads;
+
         internal WebGLShader stock_shadervertex;
         internal WebGLShader stock_shaderfragment;
 
@@ -75,6 +77,7 @@ namespace Engine.Platform {
                 gl, WebGLContext.InternalPatchShader(WebGLContext.InternalLoadShader("stock", false), false), false, true
             );
 
+            this.has_texture_uploads = false;
         }
 
         public WebGLTexture CreateTexture(int pow2_tex_width, int pow2_tex_height, ImageData bitmap_data) {
@@ -120,6 +123,8 @@ namespace Engine.Platform {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
             //gl.generateMipmap(gl.TEXTURE_2D);
+
+            this.has_texture_uploads = true;
 
             return tex;
         }
@@ -225,7 +230,7 @@ namespace Engine.Platform {
             gl.bindVertexArray(WebGLVertexArrayObject.Null);
 
             // required to avoid GL_OUT_OF_MEMORY
-            gl.flush();
+            //gl.flush();
         }
 
         public void DrawSolid(PVRContext pvrctx, float[] rgb_color, float dx, float dy, float dw, float dh) {
@@ -337,7 +342,7 @@ namespace Engine.Platform {
         }
 
         public void Flush() {
-            this.gl.flush();
+            //this.gl.flush();
         }
 
         public IntPtr ReadFrameBuffer(out int width, out int height) {
