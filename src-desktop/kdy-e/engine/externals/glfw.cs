@@ -13,6 +13,8 @@ namespace Engine.Externals.GLFW {
         public const int PROFILE_CORE = 0x00032001;
         public const int WINDOWATTRIBUTE_FOCUSED = 0x00020001;
 
+        public const string GAMECONTROLLERDB = "gamecontrollerdb.txt";
+
 
         [DllImport(GLFW, EntryPoint = "glfwInit", CallingConvention = CallingConvention.Cdecl)]
         public static extern bool Init();
@@ -107,6 +109,8 @@ namespace Engine.Externals.GLFW {
         [DllImport(GLFW, EntryPoint = "glfwSetWindowCloseCallback", CallingConvention = CallingConvention.Cdecl)]
         public static extern WindowCallback SetCloseCallback(Window window, WindowCallback closeCallback);
 
+        [DllImport(GLFW, EntryPoint = "glfwUpdateGamepadMappings", CallingConvention = CallingConvention.Cdecl)]
+        public static extern bool glfwUpdateGamepadMappings([MarshalAs(UnmanagedType.LPStr)] string mappings);
 
         public static string GetJoystickName(int joystick) {
             return StringFromPtr(glfwGetJoystickName(joystick));
