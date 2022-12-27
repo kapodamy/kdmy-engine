@@ -29,6 +29,7 @@ namespace CsharpWrapper {
         public static bool use_funkin_marker_duration = true;
         public static bool gameplay_enabled_distractions = true;
         public static bool gameplay_enabled_flashinglights = true;
+        public static bool gameplay_enabled_uicosmetics = true;
 
         internal static void LoadINI() {
             if (ini == null) {
@@ -46,6 +47,7 @@ namespace CsharpWrapper {
             use_funkin_marker_duration = GetBool(true, "use_funkin_marker_duration", use_funkin_marker_duration);
             gameplay_enabled_distractions = GetBool(true, "gameplay_enabled_distractions", gameplay_enabled_distractions);
             gameplay_enabled_flashinglights = GetBool(true, "gameplay_enabled_flashinglights", gameplay_enabled_flashinglights);
+            gameplay_enabled_uicosmetics = GetBool(true, "gameplay_enabled_uicosmetics", true);
             pixelbufferobjects = GetBool(false, "pixelbufferobjects", pixelbufferobjects);
 
             show_fps = GetBool(false, "show_fps", show_fps);

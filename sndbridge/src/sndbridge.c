@@ -420,9 +420,18 @@ extern void sndbridge_dispose(StreamID stream_id) {
     GET_STREAM(stream_id);
     if (!stream) return;
 
+    // FIXME: there a race condition which keeps the stream alive
     mutex_adquire(stream->mutex);
-    Pa_CloseStream(stream->pastream);
+    stream->volume = 0.0;
     mutex_release(stream->mutex);
+
+    Pa_CloseStream(stream->pastream);
+
+    for (long i = 0; i < 5000; i += 100) {
+        if (!Pa_IsStreamActive(stream))
+            break;
+        Pa_Sleep(i);
+    }
 
     linkedlist_remove_item(streams, stream);
     oggdecoder_destroy(stream->oggdecoder);

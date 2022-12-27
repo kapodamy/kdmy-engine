@@ -1841,21 +1841,72 @@ namespace Engine.Game.Gameplay {
         }
 
         public static void InitUICosmetics(RoundContext roundcontext) {
+            // default values to guess positions
+            var STREAK = new LayoutPlaceholder() { x = -355f, y = -115f, z = +0.13f, height = 136f, width = 0f };
+            var RANK = new LayoutPlaceholder() { x = -350f, y = -250f, z = +0.11f, height = 148f };
+            var ACCURACY = new LayoutPlaceholder() { x = +305f, y = -165f, z = +0.12f, height = 80f };
+
             InitParams initparams = roundcontext.initparams;
             float viewport_width = 0f, viewport_height = 0f;
             Layout layout = roundcontext.layout != null ? roundcontext.layout : roundcontext.ui_layout;
 
             roundcontext.ui_layout.GetViewportSize(out viewport_width, out viewport_height);
 
+            string auto_compute_location_from = (string)layout.GetAttachedValue(
+                "ui_autoplace_cosmetic_from_placeholder", AttachedValueType.STRING, null
+            );
+            bool auto_compute_location = !String.IsNullOrEmpty(auto_compute_location_from);
+            LayoutPlaceholder auto_compute_reference = null;
+
+            if (auto_compute_location) {
+                auto_compute_reference = layout.GetPlaceholder(auto_compute_location_from);
+                if (auto_compute_reference == null) {
+                    auto_compute_location = false;
+                    Console.Error.WriteLine($"[WARN] week_init_ui_cosmetics() missing '{auto_compute_location_from}' placeholder, autoplace failed.");
+                }
+            }
+
             LayoutPlaceholder placeholder_streakcounter = Week.InternalReadPlaceholderCounter(
-                layout, "ui_streakcounter"
+                layout, "ui_streakcounter", !auto_compute_location
             );
             LayoutPlaceholder placeholder_rankingcounter_rank = Week.InternalReadPlaceholderCounter(
-                layout, "ui_rankingcounter_rank"
+                layout, "ui_rankingcounter_rank", !auto_compute_location
             );
             LayoutPlaceholder placeholder_rankingcounter_accuracy = Week.InternalReadPlaceholderCounter(
-                layout, "ui_rankingcounter_accuracy"
+                layout, "ui_rankingcounter_accuracy", !auto_compute_location
             );
+
+            // guess the position of streakcounter and rankingcounter if has missing placeholders
+            if (auto_compute_location) {
+                if (placeholder_streakcounter == null) {
+                    placeholder_streakcounter = STREAK;
+                    placeholder_streakcounter.x += auto_compute_reference.x;
+                    placeholder_streakcounter.y += auto_compute_reference.y;
+                    placeholder_streakcounter.z += auto_compute_reference.z;
+                }
+                if (placeholder_rankingcounter_rank == null) {
+                    placeholder_rankingcounter_rank = RANK;
+                    placeholder_rankingcounter_rank.x += auto_compute_reference.x;
+                    placeholder_rankingcounter_rank.y += auto_compute_reference.y;
+                    placeholder_rankingcounter_rank.z += auto_compute_reference.z;
+                }
+                if (placeholder_rankingcounter_accuracy == null) {
+                    placeholder_rankingcounter_accuracy = ACCURACY;
+                    placeholder_rankingcounter_accuracy.x += auto_compute_reference.x;
+                    placeholder_rankingcounter_accuracy.y += auto_compute_reference.y;
+                    placeholder_rankingcounter_accuracy.z += auto_compute_reference.z;
+                }
+            }
+
+            if (!EngineSettings.gameplay_enabled_uicosmetics) {
+                // drawn away
+                placeholder_streakcounter.x = Single.NegativeInfinity;
+                placeholder_streakcounter.y = Single.NegativeInfinity;
+                placeholder_rankingcounter_rank.x = Single.NegativeInfinity;
+                placeholder_rankingcounter_rank.y = Single.NegativeInfinity;
+                placeholder_rankingcounter_accuracy.x = Single.NegativeInfinity;
+                placeholder_rankingcounter_accuracy.y = Single.NegativeInfinity;
+            }
 
             // keep a copy of the old values
             RankingCounter old_rankingcounter = roundcontext.rankingcounter;
@@ -3131,9 +3182,9 @@ namespace Engine.Game.Gameplay {
             );
         }
 
-        private static LayoutPlaceholder InternalReadPlaceholderCounter(Layout layout, string name) {
+        private static LayoutPlaceholder InternalReadPlaceholderCounter(Layout layout, string name, bool warn) {
             LayoutPlaceholder placeholder = layout.GetPlaceholder(name);
-            if (placeholder == null) Console.Error.WriteLine($"[ERROR] week: missing layout '{name}' placeholder");
+            if (warn && placeholder == null) Console.Error.WriteLine($"[ERROR] week: missing layout '{name}' placeholder");
             return placeholder;
         }
 
