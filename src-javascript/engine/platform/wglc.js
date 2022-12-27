@@ -858,7 +858,7 @@ async function webopengl_init(canvas) {
         gl, webopengl_patch_shader(await webopengl_internal_load_shader("stock", false), false), false, true
     );
 
-    this.has_texture_uploads = 0;
+    wglc.has_texture_uploads = 0;
 
     return wglc;
 }
