@@ -26,6 +26,7 @@ async function modelholder_init(src) {
     let manifest_texture = null;
     let manifest_atlas = null;
     let manifest_animlist = null;
+    let fallback_texture_path = null;
     let vertex_color = 0xFFFFFF;
     let from_manifest = string_lowercase_ends_with(full_path, ".json");
 
@@ -46,9 +47,18 @@ async function modelholder_init(src) {
         let from_atlas = atlas_utils_is_known_extension(full_path);
 
         if (from_atlas) temp = fs_get_filename_without_extension(full_path);
-        manifest_atlas = from_atlas ? strdup(full_path) : string_concat(2, temp, ".xml");
-        manifest_animlist = string_concat(2, temp, "_anims.xml");
+        let atlas_filename = from_atlas ? strdup(full_path) : string_concat(2, temp, ".xml");
+        let animlist_filename = string_concat(2, temp, "_anims.xml");
+        let fallback_texture_filename = string_concat(2, temp, ".png");
         if (from_atlas) temp = undefined;
+
+        manifest_atlas = fs_build_path2(full_path, atlas_filename);
+        manifest_animlist = fs_build_path2(full_path, animlist_filename);
+        fallback_texture_path = fs_build_path2(full_path, fallback_texture_filename);
+
+        atlas_filename = undefined;
+        animlist_filename = undefined;
+        fallback_texture_filename = undefined;
     }
 
     // JS only
@@ -89,14 +99,16 @@ async function modelholder_init(src) {
         }
     }
 
-    if (!modelholder.texture && manifest_texture) {
-        if (await fs_file_exists(manifest_texture)) {
-            modelholder.texture = await texture_init(manifest_texture);
+    if (!modelholder.texture) {
+        let texture_src = manifest_texture ?? fallback_texture_path;
+        if (await fs_file_exists(texture_src)) {
+            modelholder.texture = await texture_init(texture_src);
         } else {
-            console.error(`modelholder_init() missing manifest texture: ${manifest_texture}`);
+            console.error(`modelholder_init() missing manifest texture: ${texture_src}`);
         }
     }
 
+    fallback_texture_path = undefined;
     manifest_atlas = undefined;
     manifest_texture = undefined;
     manifest_animlist = undefined;

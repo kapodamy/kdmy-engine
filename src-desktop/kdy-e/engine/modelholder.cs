@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Engine.Animation;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
@@ -47,6 +48,7 @@ namespace Engine {
             string manifest_texture = null;
             string manifest_atlas = null;
             string manifest_animlist = null;
+            string fallback_texture_path = null;
             uint vertex_color = 0xFFFFFF;
             bool from_manifest = full_path.LowercaseEndsWithKDY(".json");
 
@@ -66,9 +68,18 @@ namespace Engine {
                 bool from_atlas = Atlas.UtilsIsKnownExtension(full_path);
 
                 if (from_atlas) temp = FS.GetFilenameWithoutExtension(full_path);
-                manifest_atlas = from_atlas ? full_path : StringUtils.Concat(temp, ".xml");
-                manifest_animlist = StringUtils.Concat(temp, "_anims.xml");
+                string atlas_filename = from_atlas ? full_path : StringUtils.Concat(temp, ".xml");
+                string animlist_filename = StringUtils.Concat(temp, "_anims.xml");
+                string fallback_texture_filename = StringUtils.Concat(temp, ".png");
                 //if (from_atlas) free(temp);
+
+                manifest_atlas = FS.BuildPath2(full_path, atlas_filename);
+                manifest_animlist = FS.BuildPath2(full_path, animlist_filename);
+                fallback_texture_path = FS.BuildPath2(full_path, fallback_texture_filename);
+
+                //free(atlas_filename);
+                //free(animlist_filename);
+                //free(fallback_texture_filename);
             }
 
             // JS only
@@ -110,14 +121,17 @@ namespace Engine {
                 }
             }
 
-            if (modelholder.texture == null && !String.IsNullOrEmpty(manifest_texture)) {
-                if (FS.FileExists(manifest_texture)) {
-                    modelholder.texture = Texture.Init(manifest_texture);
+            if (modelholder.texture == null) {
+                string texture_src = manifest_texture ?? fallback_texture_path;
+                if (FS.FileExists(texture_src)) {
+                    modelholder.texture = Texture.Init(texture_src);
                 } else {
-                    Console.Error.WriteLine($"[ERROR] modelholder_init() missing manifest texture: {manifest_texture}");
+                    Console.Error.WriteLine($"modelholder_init() missing manifest texture: {manifest_texture}");
+                    Console.Error.WriteLine($"modelholder_init() missing manifest texture: {texture_src}");
                 }
             }
 
+            //free(fallback_texture_path);
             //free(manifest_atlas);
             //free(manifest_texture);
             //free(manifest_animlist);
