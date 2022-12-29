@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 
 #include "linkedlist.h"
 #include "sndbridge.h"
 #include "portaudio.h"
 #include "pa_win_wasapi.h"
 #include "oggdecoder.h"
-#include "mutex.h"
 #include "filehandle.h"
 
 typedef unsigned long ulong;
@@ -22,7 +22,7 @@ typedef PaStreamCallbackFlags CbFlags;
 #define PI_HALF 1.5707963267948966f
 #define DESIRED_API_NAME "DSound"
 #define DESIRED_API_ENUM paDirectSound
-#define MIN_DURATION_MS_KEEP_ALIVE 100// 100 milliseconds
+#define MIN_DURATION_MS_KEEP_ALIVE 500// 500 milliseconds
 
 
 typedef struct {
@@ -41,6 +41,7 @@ typedef struct {
     volatile bool fetching;
     volatile bool keep_alive;
     volatile bool halt;
+    volatile bool callback_running;
 
     volatile PaTime timestamp;
     volatile PaTime played_time;
@@ -50,8 +51,6 @@ typedef struct {
     uint8_t buffer[SAMPLE_BUFFER_SIZE];
     int16_t queue[SAMPLE_BUFFER_SIZE];
     size_t buffer_used;
-
-    Mutex mutex;
 
     float fade_duration;
     float fade_progress;
@@ -83,6 +82,7 @@ static __attribute__((constructor)) void sndbridge_constructor() {
 static void completed_cb(void* userdata) {
     Stream_t* stream = (Stream_t*)userdata;
     stream->completed = true;
+    stream->callback_running = false;
 
 #ifdef DEBUG
     printf(
@@ -93,6 +93,14 @@ static void completed_cb(void* userdata) {
 
 }
 
+static void wait_and_halt(Stream_t* stream, bool halt) {
+    int32_t elapsed = 0;
+    while (stream->callback_running && elapsed < 1000) {
+        Pa_Sleep(10);
+        elapsed += 10;
+    }
+    stream->halt = halt;
+}
 
 static inline float calc_s_curve(float percent) {
     if (percent <= 0.0f) return 0.0f;
@@ -212,12 +220,12 @@ static int read_cb(const void* ib, void* output, ulong frameCount, CbTimeInfo ti
     const int32_t frames_total = frameCount * stream->channels;
     float* output_float = (float*)output;
 
-    mutex_adquire(stream->mutex);
+    stream->callback_running = true;
 
     if (stream->halt) {
         // playback ended, silence output to keep alive the stream
         memset(output_float, 0x00, frames_total * sizeof(float));
-        mutex_release(stream->mutex);
+        stream->callback_running = false;
         return paContinue;
     }
 
@@ -239,7 +247,7 @@ static int read_cb(const void* ib, void* output, ulong frameCount, CbTimeInfo ti
     sndbridge_apply_fade(stream, frames_total, output_float);
 
 L_prepare_return:
-    mutex_release(stream->mutex);
+    stream->callback_running = false;
 
     if ((ulong)readed_frames < frameCount) {
         if (!stream->keep_alive) return paComplete;
@@ -399,6 +407,7 @@ extern StreamID sndbridge_queue_ogg(FileHandle_t* ogg_filehandle) {
     stream->completed = false;
     stream->pastream = NULL;
     stream->keep_alive = duration < MIN_DURATION_MS_KEEP_ALIVE;
+    stream->callback_running = false;
     stream->sample_rate = sample_rate;
 
     sndbridge_create_pastream(stream);
@@ -410,7 +419,6 @@ extern StreamID sndbridge_queue_ogg(FileHandle_t* ogg_filehandle) {
     }
 
     // ¡success!
-    stream->mutex = mutex_init();
     linkedlist_add_item(streams, stream);
     return stream->id;
 }
@@ -421,21 +429,13 @@ extern void sndbridge_dispose(StreamID stream_id) {
     if (!stream) return;
 
     // FIXME: there a race condition which keeps the stream alive
-    mutex_adquire(stream->mutex);
     stream->volume = 0.0;
-    mutex_release(stream->mutex);
+    Pa_Sleep(1);
 
     Pa_CloseStream(stream->pastream);
 
-    for (long i = 0; i < 5000; i += 100) {
-        if (!Pa_IsStreamActive(stream))
-            break;
-        Pa_Sleep(i);
-    }
-
     linkedlist_remove_item(streams, stream);
     oggdecoder_destroy(stream->oggdecoder);
-    mutex_destroy(stream->mutex);
     free(stream);
 
     //sndbridge_dispose_backend();
@@ -489,7 +489,7 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
         }
     }
 
-    mutex_adquire(stream->mutex);
+    if (stream->keep_alive) wait_and_halt(stream, status == 1);
 
     stream->buffer_used = 0;
     stream->played_time = milliseconds / 1000.0;
@@ -498,7 +498,7 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
     if (milliseconds >= stream->duration) {
         stream->completed = true;
         stream->fetching = true;
-        goto L_release_mutex_and_return;
+        return;
     }
 
     stream->completed = false;
@@ -507,7 +507,7 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
     if (status == 1) {
         if (stream->keep_alive) {
             stream->halt = false;
-            goto L_release_mutex_and_return;
+            return;
         }
 
         status = Pa_StartStream(stream->pastream);
@@ -516,9 +516,6 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
         }
     }
 
-L_release_mutex_and_return:
-    mutex_release(stream->mutex);
-    return;
 }
 
 extern void sndbridge_play(StreamID stream_id) {
@@ -550,6 +547,7 @@ extern void sndbridge_play(StreamID stream_id) {
     stream->fetching = false;
     stream->completed = false;
     stream->buffer_used = 0;
+    stream->halt = false;
 
     err = Pa_StartStream(stream->pastream);
     if (err != paNoError) {
@@ -585,14 +583,12 @@ extern void sndbridge_pause(StreamID stream_id) {
         }
     }
 
-    mutex_adquire(stream->mutex);
-    if (stream->keep_alive) stream->halt = true;
+    if (stream->keep_alive) wait_and_halt(stream, true);
     stream->buffer_used = 0;
     stream->fade_duration = 0.0;
     stream->fetching = false;
     stream->completed = false;
     oggdecoder_seek(stream->oggdecoder, stream->played_time * 1000.0);
-    mutex_release(stream->mutex);
 }
 
 extern void sndbridge_stop(StreamID stream_id) {
@@ -618,15 +614,13 @@ extern void sndbridge_stop(StreamID stream_id) {
     }
 
 L_reset_stream:
-    mutex_adquire(stream->mutex);
-    if (stream->keep_alive) stream->halt = true;
+    if (stream->keep_alive) wait_and_halt(stream, true);
     stream->buffer_used = 0;
     stream->played_time = 0.0;
     stream->fade_duration = 0.0;
     stream->completed = false;
     stream->fetching = false;
     oggdecoder_seek(stream->oggdecoder, 0.0);
-    mutex_release(stream->mutex);
 }
 
 
@@ -650,11 +644,9 @@ extern void sndbridge_do_fade(StreamID stream_id, bool fade_in_or_out, float mil
     GET_STREAM(stream_id);
     if (!stream) return;
 
-    mutex_adquire(stream->mutex);
     stream->fade_in_or_out = fade_in_or_out;
     stream->fade_progress = 0.0f;
     stream->fade_duration = milliseconds * stream->milliseconds_to_samples;
-    mutex_release(stream->mutex);
 }
 
 extern bool sndbridge_is_active(StreamID stream_id) {
@@ -794,14 +786,15 @@ int main() {
         }
     }*/
 
-    while (true) {
+    /*while (true) {
         sndbridge_play(stream_id);
         Pa_Sleep(2000);
         sndbridge_pause(stream_id);
         Pa_Sleep(2000);
         //sndbridge_seek(stream_id, 0.0);
-    }
+    }*/
 
+    sndbridge_stop(stream_id);
     sndbridge_play(stream_id);
 
     while (true) {
