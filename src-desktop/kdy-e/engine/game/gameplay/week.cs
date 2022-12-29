@@ -2048,9 +2048,23 @@ namespace Engine.Game.Gameplay {
 
         private static bool InitDialogue(RoundContext roundcontext, string dialogue_params) {
             if (String.IsNullOrEmpty(dialogue_params)) return false;
+
+            // dettach from the layout
+            Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
+            int group_id = layout.GetGroupId(Week.ROUND_UI_GROUP_NAME2);
+
             if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
             roundcontext.dialogue = Dialogue.Init(dialogue_params);
-            if (roundcontext.dialogue != null) roundcontext.dialogue.SetScript(roundcontext.script);
+            
+            if (roundcontext.dialogue != null) {
+                roundcontext.dialogue.SetScript(roundcontext.script);
+                layout.ExternalVertexSetEntry(
+                    7, PVRContextVertex.DRAWABLE, roundcontext.dialogue.GetDrawable(), group_id
+                );
+            } else {
+                layout.ExternalVertexSetEntry(7, PVRContextVertex.DRAWABLE, null, group_id);
+            }
+            
             return roundcontext.dialogue != null;
         }
 

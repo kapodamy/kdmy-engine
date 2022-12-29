@@ -87,8 +87,8 @@ namespace Engine.Game.Gameplay {
             XmlParser xml = XmlParser.Init(src);
             if (xml == null || xml.GetRoot() == null) {
                 if (xml != null) xml.Destroy();
-                //free(src);
                 Console.Error.WriteLine("[ERROR] dialogue_init() can not load dialogue xml file: " + src);
+                //free(src);
                 return null;
             }
 
@@ -1008,6 +1008,14 @@ namespace Engine.Game.Gameplay {
                         if (this.texsprite_speech == null) break;
                         if (!Single.IsNaN(action.size)) this.texsprite_speech.SetFontSize(action.size);
                         break;
+                    case Type.TEXT_BORDERSIZE:
+                        if (this.texsprite_speech == null) break;
+                        if (!Single.IsNaN(action.size)) this.texsprite_speech.BorderSetSize(action.size);
+                        break;
+                    case Type.TEXT_BORDERENABLE:
+                        if (this.texsprite_speech == null) break;
+                        this.texsprite_speech.BorderEnable(action.enabled);
+                        break;
                     case Type.TEXT_PARAGRAPHSPACE:
                         if (this.texsprite_speech == null) break;
                         if (!Single.IsNaN(action.size)) this.texsprite_speech.SetParagraphSpace(action.size);
@@ -1515,6 +1523,14 @@ namespace Engine.Game.Gameplay {
                         action.type = Type.TEXT_SIZE;
                         action.size = VertexProps.ParseFloat(node, "size", 18f);
                         break;
+                    case "TextBorderSize":
+                        action.type = Type.TEXT_BORDERSIZE;
+                        action.size = VertexProps.ParseFloat(node, "size", 2f);
+                        break;
+                    case "TextBorderEnable":
+                        action.type = Type.TEXT_BORDERENABLE;
+                        action.enabled = VertexProps.ParseBoolean(node, "enabled", false);
+                        break;
                     case "TextParagraphSpace":
                         action.type = Type.TEXT_PARAGRAPHSPACE;
                         action.size = VertexProps.ParseFloat(node, "size", 0f);
@@ -1659,7 +1675,7 @@ namespace Engine.Game.Gameplay {
             float offset_idle_y = 0f;
             float offset_open_x = 0f;
             float offset_open_y = 0f;
-            bool disable_vertical_center = true;
+            bool disable_vertical_center = false;
             Align align_vertical = Align.NONE, align_horizontal = Align.NONE;
 
 
@@ -2743,6 +2759,7 @@ L_return:
             public Align align_paragraph;
             public bool no_speak;
             public bool animate_remove;
+            public bool enabled;
             public float offset_x;
             public float offset_y;
         }
@@ -2840,7 +2857,9 @@ L_return:
             TEXT_ALIGN,
             RUNMULTIPLECHOICE,
             TITLE,
-            NOWAIT
+            NOWAIT,
+            TEXT_BORDERSIZE,
+            TEXT_BORDERENABLE
         }
         private enum RepeatAnim {
             ONCE, WHILESPEAKS, ALWAYS, NONE

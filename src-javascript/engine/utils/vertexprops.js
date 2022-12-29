@@ -421,11 +421,11 @@ function vertexprops_parse_camera_property(node, name, warn) {
 function vertexprops_parse_camera_property2(property) {
     if (property) {
         switch (property.toLowerCase()) {
-            case "ox":
+            case "offsetx":
                 return CAMERA_PROP_OFFSET_X;
-            case "oy":
+            case "offsety":
                 return CAMERA_PROP_OFFSET_Y;
-            case "oz":
+            case "offsetz":
                 return CAMERA_PROP_OFFSET_Z;
         }
     }

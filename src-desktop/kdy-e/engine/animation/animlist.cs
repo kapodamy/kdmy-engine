@@ -740,14 +740,18 @@ namespace Engine.Animation {
 
         private static int ParseProperty(XmlParserNode node, string name, bool warn) {
             int value = VertexProps.ParseTextSpriteProperty(node, name, false);
-            if (value < 0) value = VertexProps.ParseSpriteProperty(node, name, warn);
-            if (value < 0) value = VertexProps.ParseMediaProperty(node, name, warn);
-            if (value < 0) value = VertexProps.ParseLayoutProperty(node, name, warn);
-            if (value < 0) value = VertexProps.ParseCameraProperty(node, name, warn);
+            if (value < 0) value = VertexProps.ParseSpriteProperty(node, name, false);
+            if (value < 0) value = VertexProps.ParseMediaProperty(node, name, false);
+            if (value < 0) value = VertexProps.ParseLayoutProperty(node, name, false);
+            if (value < 0) value = VertexProps.ParseCameraProperty(node, name, false);
 
             if (value == VertexProps.TEXTSPRITE_PROP_STRING) {
-                Console.Error.WriteLine("animlist_parse_property() illegal property: string", node.OuterHTML);
+                Console.Error.WriteLine("[ERROR] animlist_parse_property() illegal property: string", node.OuterHTML);
                 return -1;
+            }
+
+            if (value < 0 && warn) {
+                Console.Error.WriteLine("[WARN] animlist_parse_property() unknown property: " + node.OuterHTML);
             }
 
             return value;

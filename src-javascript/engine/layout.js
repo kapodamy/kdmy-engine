@@ -2013,7 +2013,18 @@ async function layout_parse_sprite(unparsed_sprite, layout_context, group_id) {
     let atlas_texture_path = null;
     if (atlas_filename) {
         atlas = await layout_helper_get_resource(layout_context.resource_pool, atlas_filename, 0);
-        if (atlas) atlas_texture_path = atlas_get_texture_path(atlas);
+        if (atlas && !texture_filename) {
+            atlas_texture_path = atlas_get_texture_path(atlas);
+            if (!await fs_file_exists(atlas_texture_path)) {
+                // the imagePath attribute has an invalid filename
+                console.warn(`layout_parse_sprite() texture pointed by imagePath='${atlas_texture_path}' not found in atlas '${atlas_filename}'`);
+                let temp_value = fs_get_filename_without_extension(atlas_filename);
+                let temp_texture_filename = string_concat(2, temp_value, ".png");
+                atlas_texture_path = fs_build_path2(atlas_filename, temp_texture_filename);
+                temp_value = undefined;
+                temp_texture_filename = undefined;
+            }
+        }
     } else {
         atlas = null;
     }
@@ -2395,9 +2406,13 @@ function layout_parse_camera(unparsed_camera, layout_context) {
     }
 
     if (anim_name) {
-        camera_placeholder.animation = animsprite_init_from_animlist(
-            layout_context.animlist, anim_name
-        );
+        if (layout_context.animlist) {
+            camera_placeholder.animation = animsprite_init_from_animlist(
+                layout_context.animlist, anim_name
+            );
+        } else {
+            console.warn(`layout_parse_camera() can not import '${anim_name}', layout does not have an animlist`);
+        }
     }
 
     arraylist_add(layout_context.camera_list, camera_placeholder);
