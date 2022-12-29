@@ -238,7 +238,7 @@ function fontglyph_enable_color_by_difference(fontglyph, enable) {
 function fontglyph_draw_text(fontglyph, pvrctx, height, x, y, text_index, text_size, text) {
     const grapheme = { code: 0, size: 0 };
     const by_diff = fontglyph.color_by_difference;
-    const has_border = fontglyph.border_enable && fontglyph.border_tintcolor[3] > 0 && fontglyph.border_size > 0;
+    const has_border = fontglyph.border_enable && fontglyph.border_tintcolor[3] > 0 && fontglyph.border_size >= 0;
     const outline_size = fontglyph.border_size * 2;
     const text_end_index = text_index + text_size;
     const text_length = text.length;

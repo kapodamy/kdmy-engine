@@ -2307,11 +2307,7 @@ namespace Engine.Game.Gameplay {
 
                 if (roundcontext.dialogue.IsCompleted()) {
                     show_dialog = false;
-                    for (int i = 0 ; i < roundcontext.players_size ; i++) {
-                        if (roundcontext.players[i].controller != null) {
-                            roundcontext.players[i].controller.ClearButtons();// antibounce
-                        }
-                    }
+                    Week.InternalDoAntibounce(roundcontext);
                 }
             }
 
@@ -2719,6 +2715,8 @@ namespace Engine.Game.Gameplay {
                     return;
                 }
             }
+
+            Week.InternalDoAntibounce(roundcontext);
 
             Console.Error.WriteLine("[LOG] week_halt() wait done");
         }
@@ -3224,6 +3222,14 @@ namespace Engine.Game.Gameplay {
             Week.ROUND_UI_MATRIX.Scale(scale, scale);
 
             Week.ROUND_UI_MATRIX.CopyTo(Week.ROUND_UI_MATRIX_CAMERA);
+        }
+
+        private static void InternalDoAntibounce(RoundContext roundcontext) {
+            for (int i = 0 ; i < roundcontext.players_size ; i++) {
+                if (roundcontext.players[i].controller != null) {
+                    roundcontext.players[i].controller.ClearButtons();// antibounce
+                }
+            }
         }
 
     }

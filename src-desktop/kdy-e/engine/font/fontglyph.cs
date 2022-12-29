@@ -276,7 +276,7 @@ namespace Engine.Font {
         public float DrawText(PVRContext pvrctx, float height, float x, float y, int text_index, int text_size, string text) {
             Grapheme grapheme = new Grapheme();
             bool by_diff = this.color_by_difference;
-            bool has_border = this.border_enable && this.border_tintcolor[3] > 0 && this.border_size > 0;
+            bool has_border = this.border_enable && this.border_tintcolor[3] > 0 && this.border_size >= 0;
             float outline_size = this.border_size * 2;
             int text_end_index = text_index + text_size;
             int text_length = text.Length;

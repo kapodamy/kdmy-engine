@@ -2295,11 +2295,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
         if (dialogue_is_completed(roundcontext.dialogue)) {
             show_dialog = 0;
-            for (let i = 0; i < roundcontext.players_size; i++) {
-                if (roundcontext.players[i].controller != null) {
-                    gamepad_clear_buttons(roundcontext.players[i].controller);// antibounce
-                }
-            }
+            week_internal_do_antibounce(roundcontext);
         }
     }
 
@@ -2705,6 +2701,8 @@ async function week_halt(/** @type {RoundContext} */roundcontext, poke_global_be
             return;
         }
     }
+
+    week_internal_do_antibounce(roundcontext);
 
     console.log("week_halt() wait done");
 }
@@ -3233,5 +3231,13 @@ function week_internal_check_screen_resolution(/**@type {RoundContext} */roundco
     sh4matrix_scale(WEEKROUND_UI_MATRIX, scale, scale);
 
     sh4matrix_copy_to(WEEKROUND_UI_MATRIX, WEEKROUND_UI_MATRIX_CAMERA);
+}
+
+function week_internal_do_antibounce(/**@type {RoundContext} */roundcontext) {
+    for (let i = 0; i < roundcontext.players_size; i++) {
+        if (roundcontext.players[i].controller != null) {
+            gamepad_clear_buttons(roundcontext.players[i].controller);// antibounce
+        }
+    }
 }
 
