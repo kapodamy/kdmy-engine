@@ -746,14 +746,18 @@ function animlist_parse_randomexact(unparsed_randomexact, out_size) {
 
 function animlist_parse_property(node, name, warn) {
     let value = vertexprops_parse_textsprite_property(node, name, 0);
-    if (value < 0) value = vertexprops_parse_sprite_property(node, name, warn);
-    if (value < 0) value = vertexprops_parse_media_property(node, name, warn);
-    if (value < 0) value = vertexprops_parse_layout_property(node, name, warn);
-    if (value < 0) value = vertexprops_parse_camera_property(node, name, warn);
+    if (value < 0) value = vertexprops_parse_sprite_property(node, name, 0);
+    if (value < 0) value = vertexprops_parse_media_property(node, name, 0);
+    if (value < 0) value = vertexprops_parse_layout_property(node, name, 0);
+    if (value < 0) value = vertexprops_parse_camera_property(node, name, 0);
 
     if (value == TEXTSPRITE_PROP_STRING) {
         console.error("animlist_parse_property() illegal property: string", node.outerHTML);
         return -1;
+    }
+
+    if (value < 0 && warn) {
+        console.warn("animlist_parse_property() unknown property: ", node.outerHTML);
     }
 
     return value;

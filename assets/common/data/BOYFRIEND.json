@@ -40,14 +40,15 @@
         "hey": {  "anim": "BF HEY!!",       "stopAfterBeats": 2, "animHold": null },
 
         "extras": [
-            { "name": "shaking",     "stopAfterBeats": 2,   "anim": null,                "animHold": "BF idle shaking" },
+            { "name": "shaking",     "stopAfterBeats": 2,  "anim": null,                "animHold": "BF idle shaking" },
             { "name": "dodge",       "stopAfterBeats": 0,  "anim": "boyfriend dodge",   "animHold": null },
             { "name": "pre-attack",  "stopAfterBeats": 0,  "anim": "bf pre attack",     "animHold": null },
             { "name": "attack",      "stopAfterBeats": 0,  "anim": "boyfriend attack",  "animHold": null},
             { "name": "hit",         "stopAfterBeats": 0,  "anim": "BF hit",            "animHold": null},
             { "name": "dies",        "stopAfterBeats": 0,  "anim": "BF dies",           "animHold": "BF Dead Loop" },
             { "name": "retry",       "stopAfterBeats": 0,  "anim": "BF Dead confirm",   "animHold": null },
-            { "name": "giveup",      "stopAfterBeats": 0,  "anim": "BF Dead Loop",      "animHold": null }
+            { "name": "giveup",      "stopAfterBeats": 0,  "anim": "BF Dead Loop",      "animHold": null },
+            { "name": "static-idle", "stopAfterBeats": 0,  "anim": "BF idle dance",     "animHold": null }
         ]
     }
 }

@@ -40,6 +40,8 @@ const DIALOGUE_TYPE_TEXT_ALIGN = 25;
 const DIALOGUE_TYPE_RUNMULTIPLECHOICE = 26;
 const DIALOGUE_TYPE_TITLE = 27;
 const DIALOGUE_TYPE_NOWAIT = 28;
+const DIALOGUE_TYPE_TEXT_BORDERSIZE = 29;
+const DIALOGUE_TYPE_TEXT_BORDERENABLE = 30;
 
 const DIALOGUE_REPEATANIM_NONE = 0;
 const DIALOGUE_REPEATANIM_ONCE = 1;
@@ -61,8 +63,8 @@ async function dialogue_init(src) {
     }
     if (!xml || !xml.documentElement) {
         if (xml) xml = undefined;
-        src = undefined;
         console.error("dialogue_init() can not load dialogue xml file: " + src);
+        src = undefined;
         return null;
     }
 
@@ -927,7 +929,7 @@ function dialogue_internal_apply_state(dialogue, state) {
                 }
                 break;
             case DIALOGUE_TYPE_AUDIO_UI:
-                if (action.click_char) {
+                if (action.click_char != null) {
                     audio = dialogue_internal_get_audio(dialogue, action.name);
                     if (dialogue.click_char) soundplayer_stop(dialogue.click_char);
 
@@ -936,7 +938,7 @@ function dialogue_internal_apply_state(dialogue, state) {
                     else
                         dialogue.click_char = null;
                 }
-                if (action.click_text) {
+                if (action.click_text != null) {
                     audio = dialogue_internal_get_audio(dialogue, action.name);
                     if (dialogue.click_text) soundplayer_stop(dialogue.click_text);
 
@@ -999,6 +1001,14 @@ function dialogue_internal_apply_state(dialogue, state) {
             case DIALOGUE_TYPE_TEXT_SIZE:
                 if (dialogue.texsprite_speech == null) break;
                 if (!Number.isNaN(action.size)) textsprite_set_font_size(dialogue.texsprite_speech, action.size);
+                break;
+            case DIALOGUE_TYPE_TEXT_BORDERSIZE:
+                if (dialogue.texsprite_speech == null) break;
+                if (!Number.isNaN(action.size)) textsprite_border_set_size(dialogue.texsprite_speech, action.size);
+                break;
+            case DIALOGUE_TYPE_TEXT_BORDERENABLE:
+                if (dialogue.texsprite_speech == null) break;
+                textsprite_border_enable(dialogue.texsprite_speech, action.enabled);
                 break;
             case DIALOGUE_TYPE_TEXT_PARAGRAPHSPACE:
                 if (dialogue.texsprite_speech == null) break;
@@ -1516,6 +1526,14 @@ function dialogue_internal_parse_state(root_node, states) {
             case "TextSize":
                 action.type = DIALOGUE_TYPE_TEXT_SIZE;
                 action.size = vertexprops_parse_float(node, "size", 18.0);
+                break;
+            case "TextBorderSize":
+                action.type = DIALOGUE_TYPE_TEXT_BORDERSIZE;
+                action.size = vertexprops_parse_float(node, "size", 2.0);
+                break;
+            case "TextBorderEnable":
+                action.type = DIALOGUE_TYPE_TEXT_BORDERENABLE;
+                action.enabled = vertexprops_parse_boolean(node, "enabled", 0);
                 break;
             case "TextParagraphSpace":
                 action.type = DIALOGUE_TYPE_TEXT_PARAGRAPHSPACE;

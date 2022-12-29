@@ -2033,11 +2033,25 @@ async function week_init_ui_gameover(/**@type {RoundContext}*/roundcontext) {
     if (old_weekgameover) week_gameover_destroy(old_weekgameover);
 }
 
-async function week_init_dialogue(roundcontext, dialogue_params) {
+async function week_init_dialogue(/**@type {RoundContext}*/roundcontext, dialogue_params) {
     if (!dialogue_params) return;
-    if (roundcontext.dialogue != null) dialogue_destroy(roundcontext.dialogue);
+
+    // dettach from the layout
+    let layout = roundcontext.layout ?? roundcontext.ui_layout;
+    let group_id = layout_get_group_id(layout, WEEKROUND_UI_GROUP_NAME2)
+
+    if (roundcontext.dialogue) dialogue_destroy(roundcontext.dialogue);
     roundcontext.dialogue = await dialogue_init(dialogue_params);
-    if (roundcontext.dialogue != null) dialogue_set_script(roundcontext.dialogue, roundcontext.script);
+
+    if (roundcontext.dialogue) {
+        dialogue_set_script(roundcontext.dialogue, roundcontext.script);
+        layout_external_vertex_set_entry(
+            layout, 7, VERTEX_DRAWABLE, dialogue_get_drawable(roundcontext.dialogue), group_id
+        );
+    } else {
+        layout_external_vertex_set_entry(layout, 7, VERTEX_DRAWABLE, null, group_id);
+    }
+
     return roundcontext.dialogue != null;
 }
 

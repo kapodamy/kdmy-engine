@@ -440,11 +440,11 @@ namespace Engine.Utils {
         public static int ParseCameraProperty2(string property) {
             if (!String.IsNullOrWhiteSpace(property)) {
                 switch (property.ToLowerInvariant()) {
-                    case "ox":
+                    case "offsetx":
                         return CAMERA_PROP_OFFSET_X;
-                    case "oy":
+                    case "offsety":
                         return CAMERA_PROP_OFFSET_Y;
-                    case "oz":
+                    case "offsetz":
                         return CAMERA_PROP_OFFSET_Z;
                 }
             }

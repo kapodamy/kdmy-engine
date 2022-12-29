@@ -256,6 +256,9 @@
     <xs:complexType name="Text-Size">
         <xs:attribute name="size" type="xs:float" use="required" />
     </xs:complexType>
+    <xs:complexType name="TextBorderEnable">
+        <xs:attribute name="enabled" type="xs:boolean" use="optional" default="false" />
+    </xs:complexType>
     <xs:complexType name="TextAlign">
         <xs:attribute name="horizontal" type="Align" use="optional" />
         <xs:attribute name="vertical" type="Align" use="optional" />
@@ -314,6 +317,8 @@
             <xs:element name="TextBorderColor" type="Text-Color" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="TextBorderOffset" type="Coord" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="TextSize" type="Text-Size" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="TextBorderSize" type="Text-Size" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="TextBorderEnable" type="TextBorderEnable" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="TextParagraphSpace" type="Text-Size" minOccurs="0"
                 maxOccurs="unbounded" />
             <xs:element name="TextAlign" type="TextAlign" minOccurs="0" maxOccurs="unbounded" />
