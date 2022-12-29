@@ -272,7 +272,7 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
     const primary_texture = fonttype.fontcharmap_primary_texture;
     const secondary = fonttype.fontcharmap_secondary;
     const secondary_texture = fonttype.fontcharmap_secondary_texture;
-    const has_border = fonttype.border_enable && fonttype.border_color[3] > 0 && fonttype.border_size > 0;
+    const has_border = fonttype.border_enable && fonttype.border_color[3] > 0 && fonttype.border_size >= 0;
     const outline_size = fonttype.border_size * 2;
     const scale = height / FONTTYPE_GLYPHS_HEIGHT;
     const ascender = (primary ?? secondary).ascender * scale;

@@ -597,10 +597,12 @@ function dialogue_animate(dialogue, elapsed) {
             dialogue.current_dialog_elapsed = dialogue.current_dialog_duration;
             preapare_next_line = 1;
         } else if ((buttons & (GAMEPAD_START | GAMEPAD_BACK)) != 0x00) {
-            if (dialogue.is_speaking)
+            if (dialogue.is_speaking) {
                 dialogue.do_no_wait = 1;
-            else
+            } else {
                 dialogue.do_exit = 1;
+                dialogue_close(dialogue);
+            }
         }
 
         if (dialogue.is_speaking)
@@ -930,7 +932,7 @@ function dialogue_internal_apply_state(dialogue, state) {
                 break;
             case DIALOGUE_TYPE_AUDIO_UI:
                 if (action.click_char != null) {
-                    audio = dialogue_internal_get_audio(dialogue, action.name);
+                    audio = dialogue_internal_get_audio(dialogue, action.click_char);
                     if (dialogue.click_char) soundplayer_stop(dialogue.click_char);
 
                     if (audio)
@@ -939,7 +941,7 @@ function dialogue_internal_apply_state(dialogue, state) {
                         dialogue.click_char = null;
                 }
                 if (action.click_text != null) {
-                    audio = dialogue_internal_get_audio(dialogue, action.name);
+                    audio = dialogue_internal_get_audio(dialogue, action.click_text);
                     if (dialogue.click_text) soundplayer_stop(dialogue.click_text);
 
                     if (audio)
@@ -1051,25 +1053,21 @@ function dialogue_internal_apply_state(dialogue, state) {
 
         statesprite_animation_restart(dialogue.current_speechimage.statesprite);
 
-        let x, y;
-
-        if (dialogue.current_speechimage.disable_vertical_center) {
-            x = 0;
-            y = 0;
-        } else {
-            x = dialogue.current_speechimage.offset_x;
-            y = dialogue.current_speechimage.offset_y + (FUNKIN_SCREEN_RESOLUTION_HEIGHT / 2.0);
-        }
-
         // set speech background location
-        statesprite_set_draw_location(dialogue.current_speechimage.statesprite, x, y);
+        statesprite_set_draw_location(
+            dialogue.current_speechimage.statesprite,
+            dialogue.current_speechimage.offset_x,
+            dialogue.current_speechimage.offset_y
+        );
 
         // set speech text bounds
-        textsprite_set_draw_location(
-            dialogue.texsprite_speech,
-            dialogue.current_speechimage.text_x + x,
-            dialogue.current_speechimage.text_y + y
-        );
+        let text_x = dialogue.current_speechimage.text_x;
+        let text_y = dialogue.current_speechimage.text_y;
+        if (dialogue.current_speechimage.text_is_relative) {
+            text_x += dialogue.current_speechimage.offset_x;
+            text_y += dialogue.current_speechimage.offset_y;
+        }
+        textsprite_set_draw_location(dialogue.texsprite_speech, text_x, text_y);
         textsprite_set_max_draw_size(
             dialogue.texsprite_speech,
             dialogue.current_speechimage.text_width,
@@ -1077,11 +1075,13 @@ function dialogue_internal_apply_state(dialogue, state) {
         );
 
         // set title location
-        textsprite_set_draw_location(
-            dialogue.texsprite_title,
-            dialogue.current_speechimage.title_x + x,
-            dialogue.current_speechimage.title_y + y
-        );
+        let title_x = dialogue.current_speechimage.title_x;
+        let title_y = dialogue.current_speechimage.title_y;
+        if (dialogue.current_speechimage.title_is_relative) {
+            title_x += dialogue.current_speechimage.offset_x;
+            title_y += dialogue.current_speechimage.offset_y;
+        }
+        textsprite_set_draw_location(dialogue.texsprite_title, title_x, title_y);
     }
 
     return 1;
@@ -1096,18 +1096,20 @@ function dialogue_internal_draw_background(dialogue, pvrctx) {
 }
 
 function dialogue_internal_draw_portraits(dialogue, pvrctx) {
-    const draw_location = [0, 0];
     const draw_size = [0, 0];
-    let portrait_line_width;
+    let portrait_line_x, portrait_line_y, portrait_line_width;
 
     if (dialogue.current_speechimage) {
-        statesprite_get_draw_location(dialogue.current_speechimage.statesprite, draw_location);
-        draw_location[0] += dialogue.current_speechimage.portrait_line_x;
-        draw_location[1] += dialogue.current_speechimage.portrait_line_y;
+        portrait_line_x = dialogue.current_speechimage.portrait_line_x;
+        portrait_line_y = dialogue.current_speechimage.portrait_line_y;
         portrait_line_width = dialogue.current_speechimage.portrait_line_width;
+        if (dialogue.current_speechimage.portrait_line_is_relative) {
+            portrait_line_x += dialogue.current_speechimage.offset_x;
+            portrait_line_y += dialogue.current_speechimage.offset_y;
+        }
     } else {
-        draw_location[0] = 0;
-        draw_location[1] = FUNKIN_SCREEN_RESOLUTION_HEIGHT / 2.0;
+        portrait_line_x = 0;
+        portrait_line_y = FUNKIN_SCREEN_RESOLUTION_HEIGHT / 2.0;
         portrait_line_width = 0.9 * FUNKIN_SCREEN_RESOLUTION_WIDTH;
     }
 
@@ -1134,10 +1136,10 @@ function dialogue_internal_draw_portraits(dialogue, pvrctx) {
         }
 
         switch (dialogue.current_speechimage.align_vertical) {
-            case ALIGN_NONE:
             case ALIGN_CENTER:
                 draw_y = draw_size[1] / -2;
                 break;
+            case ALIGN_NONE:
             case ALIGN_END:
                 draw_y -= draw_size[1];
                 break;
@@ -1152,7 +1154,7 @@ function dialogue_internal_draw_portraits(dialogue, pvrctx) {
         }
 
         pvr_context_save(pvrctx);
-        sh4matrix_translate(pvrctx.current_matrix, draw_x + draw_location[0], draw_y + draw_location[1]);
+        sh4matrix_translate(pvrctx.current_matrix, draw_x + portrait_line_x, draw_y + portrait_line_y);
         statesprite_draw(portrait.statesprite, pvrctx);
         pvr_context_restore(pvrctx);
     }
@@ -1679,9 +1681,11 @@ async function dialogue_internal_parse_speechimagelist(root_node, speechimages) 
     let offset_idle_y = 0.0;
     let offset_open_x = 0.0;
     let offset_open_y = 0.0;
-    let disable_vertical_center = 0;
     let align_vertical = ALIGN_NONE;
     let align_horizontal = ALIGN_NONE;
+    let portrait_line_is_relative = 0;
+    let title_is_relative = 0;
+    let text_is_relative = 0;
 
 
     for (let node of root_node.children) {
@@ -1701,7 +1705,9 @@ async function dialogue_internal_parse_speechimagelist(root_node, speechimages) 
                 speechimage.title_y = title_y;
                 speechimage.offset_x = offset_x;
                 speechimage.offset_y = offset_y;
-                speechimage.disable_vertical_center = disable_vertical_center;
+                speechimage.portrait_line_is_relative = portrait_line_is_relative;
+                speechimage.title_is_relative = title_is_relative;
+                speechimage.text_is_relative = text_is_relative;
                 speechimage.align_vertical = align_vertical;
                 speechimage.align_horizontal = align_horizontal;
 
@@ -1723,28 +1729,30 @@ async function dialogue_internal_parse_speechimagelist(root_node, speechimages) 
                 text_y = vertexprops_parse_float(node, "y", text_y);
                 text_width = vertexprops_parse_float(node, "width", text_width);
                 text_height = vertexprops_parse_float(node, "height", text_height);
+                text_is_relative = vertexprops_parse_boolean(node, "isRelative", text_is_relative);
                 break;
             case "PortraitLine":
                 portrait_line_x = vertexprops_parse_float(node, "x", portrait_line_x);
                 portrait_line_y = vertexprops_parse_float(node, "y", portrait_line_y);
                 portrait_line_width = vertexprops_parse_float(node, "width", portrait_line_width);
+                portrait_line_is_relative = vertexprops_parse_boolean(node, "isRelative", portrait_line_is_relative);
                 break;
             case "TitleLocation":
                 title_x = vertexprops_parse_float(node, "titleLeft", title_x);
                 title_y = vertexprops_parse_float(node, "titleBottom", title_y);
+                title_is_relative = vertexprops_parse_boolean(node, "isRelative", title_is_relative);
                 break;
-            case "Offset":
+            case "Location":
                 offset_x = vertexprops_parse_float(node, "x", offset_x);
                 offset_y = vertexprops_parse_float(node, "y", offset_y);
-                disable_vertical_center = vertexprops_parse_boolean(node, "disableVerticalCenter", 0);
                 break;
             case "OffsetIdle":
-                offset_idle_x = vertexprops_parse_float(node, "x", offset_x);
-                offset_idle_y = vertexprops_parse_float(node, "y", offset_y);
+                offset_idle_x = vertexprops_parse_float(node, "x", offset_idle_x);
+                offset_idle_y = vertexprops_parse_float(node, "y", offset_idle_y);
                 break;
             case "OffsetOpen":
-                offset_open_x = vertexprops_parse_float(node, "x", offset_x);
-                offset_open_y = vertexprops_parse_float(node, "y", offset_y);
+                offset_open_x = vertexprops_parse_float(node, "x", offset_open_x);
+                offset_open_y = vertexprops_parse_float(node, "y", offset_open_y);
                 break;
             case "PortraitAlign":
                 align_vertical = dialogue_internal_read_align(node, "vertical");

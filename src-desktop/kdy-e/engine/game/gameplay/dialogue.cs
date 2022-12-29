@@ -615,10 +615,12 @@ namespace Engine.Game.Gameplay {
                     this.current_dialog_elapsed = this.current_dialog_duration;
                     preapare_next_line = true;
                 } else if ((buttons & (GamepadButtons.START | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
-                    if (this.is_speaking)
+                    if (this.is_speaking) {
                         this.do_no_wait = true;
-                    else
+                    } else {
                         this.do_exit = true;
+                        Close();
+                    }
                 }
 
                 if (this.is_speaking)
@@ -936,7 +938,7 @@ namespace Engine.Game.Gameplay {
                         break;
                     case Type.AUDIO_UI:
                         if (action.click_char != null) {
-                            audio = InternalGetAudio(action.name);
+                            audio = InternalGetAudio(action.click_char);
                             if (this.click_char != null) this.click_char.Stop();
 
                             if (audio != null)
@@ -945,7 +947,7 @@ namespace Engine.Game.Gameplay {
                                 this.click_char = null;
                         }
                         if (action.click_text != null) {
-                            audio = InternalGetAudio(action.name);
+                            audio = InternalGetAudio(action.click_text);
                             if (this.click_text != null) this.click_text.Stop();
 
                             if (audio != null)
@@ -1057,34 +1059,33 @@ namespace Engine.Game.Gameplay {
 
                 this.current_speechimage.statesprite.AnimationRestart();
 
-                float x, y;
-
-                if (this.current_speechimage.disable_vertical_center) {
-                    x = 0;
-                    y = 0;
-                } else {
-                    x = this.current_speechimage.offset_x;
-                    y = this.current_speechimage.offset_y + (Funkin.SCREEN_RESOLUTION_HEIGHT / 2f);
-                }
-
                 // set speech background location
-                this.current_speechimage.statesprite.SetDrawLocation(x, y);
+                this.current_speechimage.statesprite.SetDrawLocation(
+                    this.current_speechimage.offset_x,
+                    this.current_speechimage.offset_y
+                );
 
                 // set speech text bounds
-                this.texsprite_speech.SetDrawLocation(
-                    this.current_speechimage.text_x + x,
-                    this.current_speechimage.text_y + y
-                );
+                float text_x = this.current_speechimage.text_x;
+                float text_y = this.current_speechimage.text_y;
+                if (this.current_speechimage.text_is_relative) {
+                    text_x += this.current_speechimage.offset_x;
+                    text_y += this.current_speechimage.offset_y;
+                }
+                this.texsprite_speech.SetDrawLocation(text_x, text_y);
                 this.texsprite_speech.SetMaxDrawSize(
                     this.current_speechimage.text_width,
                     this.current_speechimage.text_height
                 );
 
                 // set title location
-                this.texsprite_title.SetDrawLocation(
-                    this.current_speechimage.title_x + x,
-                    this.current_speechimage.title_y + y
-                );
+                float title_x = this.current_speechimage.title_x;
+                float title_y = this.current_speechimage.title_y;
+                if (this.current_speechimage.title_is_relative) {
+                    title_x += this.current_speechimage.offset_x;
+                    title_y += this.current_speechimage.offset_y;
+                }
+                this.texsprite_title.SetDrawLocation(title_x, title_y);
             }
 
             return true;
@@ -1100,16 +1101,19 @@ namespace Engine.Game.Gameplay {
 
         private void InternalDrawPortraits(PVRContext pvrctx) {
             float draw_width, draw_height;
-            float x, y, portrait_line_width;
+            float portrait_line_x, portrait_line_y, portrait_line_width;
 
             if (this.current_speechimage != null) {
-                this.current_speechimage.statesprite.GetDrawLocation(out x, out y);
-                x += this.current_speechimage.portrait_line_x;
-                y += this.current_speechimage.portrait_line_y;
+                portrait_line_x = this.current_speechimage.portrait_line_x;
+                portrait_line_y = this.current_speechimage.portrait_line_y;
                 portrait_line_width = this.current_speechimage.portrait_line_width;
+                if (this.current_speechimage.portrait_line_is_relative) {
+                    portrait_line_x += this.current_speechimage.offset_x;
+                    portrait_line_y += this.current_speechimage.offset_y;
+                }
             } else {
-                x = 0;
-                y = Funkin.SCREEN_RESOLUTION_HEIGHT / 2f;
+                portrait_line_x = 0;
+                portrait_line_y = Funkin.SCREEN_RESOLUTION_HEIGHT / 2.0f;
                 portrait_line_width = 0.9f * Funkin.SCREEN_RESOLUTION_WIDTH;
             }
 
@@ -1136,10 +1140,10 @@ namespace Engine.Game.Gameplay {
                 }
 
                 switch (this.current_speechimage.align_vertical) {
-                    case Align.NONE:
                     case Align.CENTER:
                         draw_y = draw_height / -2f;
                         break;
+                    case Align.NONE:
                     case Align.END:
                         draw_y -= draw_height;
                         break;
@@ -1154,7 +1158,7 @@ namespace Engine.Game.Gameplay {
                 }
 
                 pvrctx.Save();
-                pvrctx.CurrentMatrix.Translate(draw_x + x, draw_y + y);
+                pvrctx.CurrentMatrix.Translate(draw_x + portrait_line_x, draw_y + portrait_line_y);
                 portrait.statesprite.Draw(pvrctx);
                 pvrctx.Restore();
             }
@@ -1675,8 +1679,11 @@ namespace Engine.Game.Gameplay {
             float offset_idle_y = 0f;
             float offset_open_x = 0f;
             float offset_open_y = 0f;
-            bool disable_vertical_center = false;
-            Align align_vertical = Align.NONE, align_horizontal = Align.NONE;
+            Align align_vertical = Align.NONE;
+            Align align_horizontal = Align.NONE;
+            bool portrait_line_is_relative = false;
+            bool title_is_relative = false;
+            bool text_is_relative = false;
 
 
             foreach (XmlParserNode node in root_node.Children) {
@@ -1696,7 +1703,9 @@ namespace Engine.Game.Gameplay {
                         speechimage.title_y = title_y;
                         speechimage.offset_x = offset_x;
                         speechimage.offset_y = offset_y;
-                        speechimage.disable_vertical_center = disable_vertical_center;
+                        speechimage.portrait_line_is_relative = portrait_line_is_relative;
+                        speechimage.title_is_relative = title_is_relative;
+                        speechimage.text_is_relative = text_is_relative;
                         speechimage.align_vertical = align_vertical;
                         speechimage.align_horizontal = align_horizontal;
 
@@ -1718,28 +1727,30 @@ namespace Engine.Game.Gameplay {
                         text_y = VertexProps.ParseFloat(node, "y", text_y);
                         text_width = VertexProps.ParseFloat(node, "width", text_width);
                         text_height = VertexProps.ParseFloat(node, "height", text_height);
+                        text_is_relative = VertexProps.ParseBoolean(node, "isRelative", text_is_relative);
                         break;
                     case "PortraitLine":
                         portrait_line_x = VertexProps.ParseFloat(node, "x", portrait_line_x);
                         portrait_line_y = VertexProps.ParseFloat(node, "y", portrait_line_y);
                         portrait_line_width = VertexProps.ParseFloat(node, "width", portrait_line_width);
+                        portrait_line_is_relative = VertexProps.ParseBoolean(node, "isRelative", portrait_line_is_relative);
                         break;
                     case "TitleLocation":
                         title_x = VertexProps.ParseFloat(node, "titleLeft", title_x);
                         title_y = VertexProps.ParseFloat(node, "titleBottom", title_y);
+                        title_is_relative = VertexProps.ParseBoolean(node, "isRelative", title_is_relative);
                         break;
-                    case "Offset":
+                    case "Location":
                         offset_x = VertexProps.ParseFloat(node, "x", offset_x);
                         offset_y = VertexProps.ParseFloat(node, "y", offset_y);
-                        disable_vertical_center = VertexProps.ParseBoolean(node, "disableVerticalCenter", false);
                         break;
                     case "OffsetIdle":
-                        offset_idle_x = VertexProps.ParseFloat(node, "x", offset_x);
-                        offset_idle_y = VertexProps.ParseFloat(node, "y", offset_y);
+                        offset_idle_x = VertexProps.ParseFloat(node, "x", offset_idle_x);
+                        offset_idle_y = VertexProps.ParseFloat(node, "y", offset_idle_y);
                         break;
                     case "OffsetOpen":
-                        offset_open_x = VertexProps.ParseFloat(node, "x", offset_x);
-                        offset_open_y = VertexProps.ParseFloat(node, "y", offset_y);
+                        offset_open_x = VertexProps.ParseFloat(node, "x", offset_open_x);
+                        offset_open_y = VertexProps.ParseFloat(node, "y", offset_open_y);
                         break;
                     case "PortraitAlign":
                         align_vertical = Dialogue.InternalReadAlign(node, "vertical");
@@ -2822,9 +2833,11 @@ L_return:
             public float portrait_line_x;
             public float portrait_line_y;
             public float portrait_line_width;
-            public bool disable_vertical_center;
             public Align align_vertical;
             public Align align_horizontal;
+            public bool portrait_line_is_relative;
+            public bool title_is_relative;
+            public bool text_is_relative;
         }
 
 

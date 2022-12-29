@@ -15,13 +15,13 @@
 			<Color name="faded_red" r="1.0" g="0.0" b="0.0" a="0.7" />
 		</BackgroundList>
 		<SpeechImageList baseSrc="/assets/image/dialogue/speech_bubble_talking.xml">
-			<TextBox x="62" y="138" width="1026" height="118" />
-			<PortraitLine x="0" y="70" width="1026" />
-			<TitleLocation x="60" y="130" />
-			<Offset x="123" y="456" disableVerticalCenter="false|true" />
+			<TextBox x="62" y="138" width="1026" height="118" isRelative="false|true" />
+			<PortraitLine x="0" y="70" width="1026" isRelative="false|true" />
+			<TitleLocation x="60" y="130" isRelative="false|true" />
+			<Location x="123" y="456" />
 			<OffsetIdle x="123" y="456" />
 			<OffsetOpen x="123" y="456" />
-            <PortraitAlign vertical="center|start|end" horizontal="center|start|end" />
+            <PortraitAlign vertical="end|center|start" horizontal="center|start|end" />
 			<SpeechImage scale="1.0" name="normal" openAnim="Speech Bubble Normal Open" idleAnim="speech bubble normal" idleLooped="true|false"/>
 			<SpeechImage scale="1.0" name="loud" src="/assets/image/model.xml" openAnim="middle speech bubble loud open" idleAnim="AHH speech bubble" />
 		</SpeechImageList>
@@ -99,6 +99,8 @@
 		<TextBorderColor rgba="0xFFFFFF7F" rgb="0xFFFFFF" alpha="0.8" />
 		<TextBorderOffset x="0" y="0" />
 		<TextSize size="123" />
+		<TextBorderSize size="123" />
+		<TextBorderEnable enabled="false|true" />
 		<TextParagraphSpace size="123" />
 		<TextAlign horizontal="start|center|end" vertical="start|center|end" paragraph="start|center|end" />
 		

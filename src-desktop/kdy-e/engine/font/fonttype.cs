@@ -319,7 +319,7 @@ namespace Engine.Font {
             Texture primary_texture = this.fontcharmap_primary_texture;
             FontCharMap secondary = this.fontcharmap_secondary;
             Texture secondary_texture = this.fontcharmap_secondary_texture;
-            bool has_border = this.border_enable && this.border_color[3] > 0 && this.border_size > 0;
+            bool has_border = this.border_enable && this.border_color[3] > 0 && this.border_size >= 0;
             float outline_size = this.border_size * 2;
             float scale = height / FontType.GLYPHS_HEIGHT;
             float ascender = (primary ?? secondary).ascender * scale;

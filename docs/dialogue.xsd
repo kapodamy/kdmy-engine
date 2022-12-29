@@ -114,6 +114,7 @@
                     <xs:attribute name="y" type="xs:float" use="optional" />
                     <xs:attribute name="width" type="xs:float" use="optional" />
                     <xs:attribute name="height" type="xs:float" use="optional" />
+                    <xs:attribute name="isRelative" type="xs:boolean" use="optional" default="false" />
                 </xs:complexType>
             </xs:element>
             <xs:element name="PortraitLine" minOccurs="0" maxOccurs="unbounded">
@@ -121,15 +122,22 @@
                     <xs:attribute name="x" type="xs:float" use="optional" />
                     <xs:attribute name="y" type="xs:float" use="optional" />
                     <xs:attribute name="width" type="xs:float" use="optional" />
+                    <xs:attribute name="isRelative" type="xs:boolean" use="optional" default="false" />
                 </xs:complexType>
             </xs:element>
-            <xs:element name="TitleLocation" type="Coord" minOccurs="0" maxOccurs="unbounded" />
-            <xs:element name="Offset" type="SpeechImageList-Offset" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="TitleLocation" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:attribute name="x" type="xs:float" use="optional" />
+                    <xs:attribute name="y" type="xs:float" use="optional" />
+                    <xs:attribute name="isRelative" type="xs:boolean" use="optional" default="false" />
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Location" type="SpeechImageList-Location" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="OffsetIdle" type="Coord" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="OffsetOpen" type="Coord" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="PortraitAlign" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
-                    <xs:attribute name="vertical" type="Align" use="optional" />
+                    <xs:attribute name="vertical" type="Align" use="optional" default="end" />
                     <xs:attribute name="horizontal" type="Align" use="optional" />
                 </xs:complexType>
             </xs:element>
@@ -201,8 +209,7 @@
     <xs:complexType name="ImportPortraitList">
         <xs:attribute name="dialogueSrc" type="xs:anyURI" use="required" />
     </xs:complexType>
-    <xs:complexType name="SpeechImageList-Offset">
-        <xs:attribute name="disableVerticalCenter" type="xs:boolean" use="optional" default="false" />
+    <xs:complexType name="SpeechImageList-Location">
         <xs:attribute name="x" type="xs:float" use="optional" />
         <xs:attribute name="y" type="xs:float" use="optional" />
     </xs:complexType>
