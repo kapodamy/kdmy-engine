@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters;
+using System.Text;
 using Engine.Externals.LuaInterop;
 using LuaNativeMethods;
 
@@ -18,6 +19,8 @@ namespace Engine.Externals.LuaInterop {
         public const int SHARED_ARRAY_CHUNK_SIZE = 16;
 
         private static lua_CFunction delegate_handle_error = luascript_handle_error;
+        public static lua_CFunction delegate_print = luascript_print;
+        public static lua_WarnFunction delegate_print_warning = luascript_print_warning;
         private static readonly object key_object;
         public static readonly void* luascript_key_ptr;
 
@@ -308,6 +311,41 @@ L_store_and_return:
             return result;
         }
 
+        internal static void luascript_print_warning(void* ud, char* msg, int tocont) {
+            if (msg == null) {
+                if (tocont != 0) Console.WriteLine();
+                return;
+            }
+
+            int length = 0;
+            while (msg[length] != '\0') length++;
+
+            string str = LUA.MarshalStringBack(msg, (IntPtr)length);
+
+            if (tocont != 0)
+                Console.Write(str);
+            else
+                Console.WriteLine(str);
+        }
+
+        internal static int luascript_print(lua_State* L) {
+            int args_count = LUA.lua_gettop(L);
+            StringBuilder message = new StringBuilder(128);
+
+            for (int i = 1 ; i <= args_count ; i++) {
+                IntPtr len;
+                char* str = LUA.luaL_tolstring(L, i, out len);
+
+                // lua adds a tab character between each argument
+                if (i > 1) message.Append('\t');
+
+                message.Append(LUA.MarshalStringBack(str, len));
+                LUA.lua_pop(L, 1);
+            }
+
+            Console.WriteLine(message.ToString());
+            return 0;
+        }
 
     }
 

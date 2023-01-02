@@ -32,6 +32,13 @@ namespace Engine.Externals.LuaInterop {
 
             LUA.luaL_openlibs(L);
 
+            // overwrite print because the stdout can be redirected
+            LUA.lua_pushcfunction(this.L, LuaInteropHelpers.delegate_print);
+            LUA.lua_setglobal(this.L, "print");
+
+            // allow lua scripts to emit warnings
+            LUA.lua_setwarnf(this.L, LuaInteropHelpers.delegate_print_warning, null);
+
             LuaInteropHelpers.luascript_set_instance(this);
         }
 

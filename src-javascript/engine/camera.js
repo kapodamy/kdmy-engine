@@ -534,11 +534,6 @@ function camera_apply_offset(camera, destination_matrix) {
     sh4matrix_scale(destination_matrix, camera.offset_z, camera.offset_z);
 }
 
-function camera_unapply_offset(camera, destination_matrix) {
-    sh4matrix_scale(destination_matrix, 1.0 / camera.offset_z, 1.0 / camera.offset_z);
-    sh4matrix_translate(destination_matrix, -camera.offset_x, -camera.offset_y);
-}
-
 function camera_is_completed(camera) {
     if (camera.animation) return animsprite_is_completed(camera.animation);
     if (camera.transition_completed && camera.force_update) return 0;

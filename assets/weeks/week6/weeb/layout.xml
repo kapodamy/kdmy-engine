@@ -113,8 +113,8 @@
 		<Action>
 			<Static />
 			<Hide />
-			<Properties translateX="-40" translateY="-25" />
-			<Properties scaleSize="true" scaleDirectionX="-0.5" scaleDirectionY="-0.5" scaleX="1.5" scaleY="1.5" />
+			<Properties translateX="-7" />
+			<Properties scaleSize="true" scaleDirectionX="-0.5" scaleDirectionY="-0.5" scaleX="1.3" scaleY="1.3" />
 			<Property name="alpha" value="1.0" />
 		</Action>
 		<Action name="fade_out_group">
