@@ -1029,10 +1029,10 @@ namespace Engine.Game.Gameplay {
             // initialize dialogue
             if (!String.IsNullOrEmpty(trackmanifest.dialogue_params)) {
                 roundcontext.dialogue_from_default = false;
-                if (Week.InitDialogue(roundcontext, trackmanifest.dialogue_params)) updated_ui = true;
+                Week.InitDialogue(roundcontext, trackmanifest.dialogue_params);
             } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
                 roundcontext.dialogue_from_default = true;
-                if (Week.InitDialogue(roundcontext, gameplaymanifest.@default.dialogue_params)) updated_ui = true;
+                Week.InitDialogue(roundcontext, gameplaymanifest.@default.dialogue_params);
             }
 
             // reload the music only  
@@ -1047,12 +1047,10 @@ namespace Engine.Game.Gameplay {
                 string src = trackmanifest.ui_layout;
                 if (String.IsNullOrEmpty(src)) src = gameplaymanifest.@default.ui_layout;
 
-
                 Week.InitUILayout(src, initparams, roundcontext);
                 roundcontext.ui_from_default = true;
                 updated_ui = true;
             } else if (roundcontext.ui_layout == null || !roundcontext.ui_from_default) {
-
                 Week.InitUILayout(gameplaymanifest.@default.ui_layout, initparams, roundcontext);
                 roundcontext.ui_from_default = true;
                 updated_ui = true;
@@ -2046,8 +2044,8 @@ namespace Engine.Game.Gameplay {
             if (old_weekgameover != null) old_weekgameover.Destroy();
         }
 
-        private static bool InitDialogue(RoundContext roundcontext, string dialogue_params) {
-            if (String.IsNullOrEmpty(dialogue_params)) return false;
+        private static void InitDialogue(RoundContext roundcontext, string dialogue_params) {
+            if (String.IsNullOrEmpty(dialogue_params)) return;
 
             // dettach from the layout
             Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
@@ -2064,8 +2062,6 @@ namespace Engine.Game.Gameplay {
             } else {
                 layout.ExternalVertexSetEntry(7, PVRContextVertex.DRAWABLE, null, group_id);
             }
-            
-            return roundcontext.dialogue != null;
         }
 
 

@@ -1022,10 +1022,10 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     // initialize dialogue
     if (trackmanifest.dialogue_params) {
         roundcontext.dialogue_from_default = 0;
-        if (await week_init_dialogue(roundcontext, trackmanifest.dialogue_params)) updated_ui = 1;
+        await week_init_dialogue(roundcontext, trackmanifest.dialogue_params);
     } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
         roundcontext.dialogue_from_default = 1;
-        if (await week_init_dialogue(roundcontext, gameplaymanifest.default.dialogue_params)) updated_ui = 1;
+        await week_init_dialogue(roundcontext, gameplaymanifest.default.dialogue_params);
     }
 
     // reload the music only
@@ -2052,7 +2052,6 @@ async function week_init_dialogue(/**@type {RoundContext}*/roundcontext, dialogu
         layout_external_vertex_set_entry(layout, 7, VERTEX_DRAWABLE, null, group_id);
     }
 
-    return roundcontext.dialogue != null;
 }
 
 
