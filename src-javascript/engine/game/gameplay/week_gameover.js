@@ -206,6 +206,9 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         if (playerstats_is_dead(roundcontext.players[i].playerstats)) {
             dead_player_index = i;
             character_play_extra(roundcontext.players[i].character, FUNKIN_PLAYER_DIES, 0);
+
+            let prefix = roundcontext.players[i].is_opponent? WEEKROUND_CAMERA_OPONNENT : WEEKROUND_CAMERA_PLAYER;
+            week_camera_focus(roundcontext.layout, prefix, i);
         } else {
             character_play_extra(roundcontext.players[i].character, FUNKIN_PLAYER_SCARED, 0);
         }

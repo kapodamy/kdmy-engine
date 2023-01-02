@@ -230,6 +230,9 @@ namespace Engine.Game.Gameplay {
                 if (roundcontext.players[i].playerstats.IsDead()) {
                     dead_player_index = i;
                     roundcontext.players[i].character.PlayExtra(Funkin.PLAYER_DIES, false);
+
+                    string prefix = roundcontext.players[i].is_opponent? Week.ROUND_CAMERA_OPONNENT : Week.ROUND_CAMERA_PLAYER;
+                    Week.CameraFocus(roundcontext.layout, prefix, i);
                 } else {
                     roundcontext.players[i].character.PlayExtra(Funkin.PLAYER_SCARED, false);
                 }

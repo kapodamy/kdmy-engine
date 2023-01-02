@@ -3115,7 +3115,7 @@ async function week_internal_load_gameplay_manifest(src) {
     return gameplaymanifest;
 }
 
-function week_internal_camera_focus(layout, character_prefix, index) {
+function week_camera_focus(layout, character_prefix, index) {
     if (!layout) return 1;
     let camera = layout_get_camera_helper(layout);
 
@@ -3154,7 +3154,7 @@ function week_internal_camera_focus_guess(/**@type {RoundContext} */ roundcontex
 
     if (index < 0) return;
 
-    week_internal_camera_focus(roundcontext.layout, WEEKROUND_CAMERA_PLAYER, index);
+    week_camera_focus(roundcontext.layout, WEEKROUND_CAMERA_PLAYER, index);
 }
 
 function week_internal_reset_players_and_girlfriend(/**@type {RoundContext} */ roundcontext) {

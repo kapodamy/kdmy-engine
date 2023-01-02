@@ -3107,7 +3107,7 @@ namespace Engine.Game.Gameplay {
             return gameplaymanifest;
         }
 
-        private static bool InternalCameraFocus(Layout layout, string character_prefix, int index) {
+        internal static bool CameraFocus(Layout layout, string character_prefix, int index) {
             if (layout == null) return true;
             Camera camera = layout.GetCameraHelper();
 
@@ -3146,7 +3146,7 @@ namespace Engine.Game.Gameplay {
 
             if (index < 0) return;
 
-            Week.InternalCameraFocus(roundcontext.layout, Week.ROUND_CAMERA_PLAYER, index);
+            Week.CameraFocus(roundcontext.layout, Week.ROUND_CAMERA_PLAYER, index);
         }
 
         private static void InternalResetPlayersAndGirlfriend(RoundContext roundcontext) {
