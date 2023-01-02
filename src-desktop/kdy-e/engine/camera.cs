@@ -555,11 +555,6 @@ namespace Engine {
             destination_matrix.Scale(this.offset_z, this.offset_z);
         }
 
-        public void UnapplyOffset(SH4Matrix destination_matrix) {
-            destination_matrix.Scale(1.0f / this.offset_z, 1.0f / this.offset_z);
-            destination_matrix.Translate(-this.offset_x, -this.offset_y);
-        }
-
         public bool IsCompleted() {
             if (this.animation != null) return this.animation.IsCompleted();
             if (this.transition_completed && this.force_update) return false;

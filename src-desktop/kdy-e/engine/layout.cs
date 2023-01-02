@@ -108,8 +108,13 @@ namespace Engine {
         private static readonly HelperZbufferSortImpl HelperZbufferSort = new HelperZbufferSortImpl();
 
 
-        private Layout() { }
+        private Layout() {
+            this.MATRIX_VIEWPORT = new SH4Matrix();
+            this.MATRIX_SCREEN = new SH4Matrix();
+        }
 
+        private readonly SH4Matrix MATRIX_VIEWPORT;
+        private readonly SH4Matrix MATRIX_SCREEN;
 
         private float animation_speed;
         private Camera camera_helper;
@@ -1212,14 +1217,18 @@ namespace Engine {
                 }
             }
 
-            SH4Matrix pvr_matrix = new SH4Matrix();
-            pvrctx.CurrentMatrix.CopyTo(pvr_matrix);
+            // backup PVR screen matrix required for groups marked as "static_screen"
+            pvrctx.CurrentMatrix.CopyTo(this.MATRIX_SCREEN);
 
+            // apply viewport modifier to PVR screen matrix and backup for elements marked as "static_camera"
             pvrctx.ApplyModifier(this.modifier_viewport);
+            pvrctx.CurrentMatrix.CopyTo(this.MATRIX_VIEWPORT);
 
+            // transform PVR screen matrix with secondary camera offset+focus
             this.camera_secondary_helper.ApplyOffset(pvrctx.CurrentMatrix);
             pvrctx.ApplyModifier(this.modifier_camera_secondary);
 
+            // transform PVR screen matrix with primary camera offset.Note: the focus is used later as parallax
             this.camera_helper.ApplyOffset(pvrctx.CurrentMatrix);
 
             // step 1: sort z_buffer
@@ -1308,20 +1317,24 @@ namespace Engine {
 
                 SH4Matrix matrix = pvrctx.CurrentMatrix;
 
-                // apply group context (¿should be applied after the camera?)
-                matrix.MultiplyWithMatrix(group.context.matrix);
+                // apply group context
                 pvrctx.SetGlobalAlpha(group.psframebuffer != null ? 1.0f : group.context.alpha);
                 pvrctx.SetGlobalAntialiasing(group.context.antialiasing);
                 pvrctx.SetGlobalOffsetColor(group.context.offsetcolor);
 
                 if (item_is_static_to_camera || group.static_camera || group.static_screen != null) {
+
                     if (group.static_screen != null) {
-                        pvr_matrix.CopyTo(matrix);
+                        // restore backup for the current group marked as "static_screen"
+                        this.MATRIX_SCREEN.CopyTo(matrix);
                         matrix.MultiplyWithMatrix(group.static_screen);
                     } else {
-                        this.camera_helper.UnapplyOffset(matrix);
+                        // restore backup with viewport transform applied for elements marked as "static_camera"
+                        this.MATRIX_VIEWPORT.CopyTo(matrix);
                     }
 
+                    // apply group context matrix
+                    matrix.MultiplyWithMatrix(group.context.matrix);
                     //pvrctx.Flush();
 
                     switch (vertex_type) {
@@ -1340,6 +1353,8 @@ namespace Engine {
                     continue;
                 }
 
+                // apply group context matrix
+                matrix.MultiplyWithMatrix(group.context.matrix);
 
                 float translate_x = this.modifier_camera.translate_x;
                 float translate_y = this.modifier_camera.translate_y;
@@ -2500,7 +2515,7 @@ namespace Engine {
                     );
                 } else {
                     Console.Error.WriteLine($"[WARN] layout_parse_camera() can not import '{anim_name}', layout does not have an animlist");
-                }                    
+                }
             }
 
             layout_context.camera_list.Add(camera_placeholder);

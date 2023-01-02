@@ -26,7 +26,7 @@
     </Text>
 	
 	<AttachValue name="menu_isVertical" type="boolean"  value="true" />
-    <AttachValue name="menu_fontSize" type="float"  value="46" />
+    <AttachValue name="menu_fontSize" type="float"  value="34" />
     <AttachValue name="menu_itemGap" type="float"  value="38" />
     <AttachValue name="menu_fontBorderSize" type="float"  value="2" />
 	<Placeholder name="menu" x="100" y="180" z="2" width="1090" height="480" />

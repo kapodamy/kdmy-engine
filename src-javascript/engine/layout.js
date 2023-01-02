@@ -1084,7 +1084,10 @@ function layout_animate(layout, elapsed) {
     return completed;
 }
 
-function layout_draw(layout, pvrctx) {
+function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
+    const MATRIX_SCREEN = new Float32Array(16);
+    const MATRIX_VIEWPORT = new Float32Array(16);
+
     pvr_context_save(pvrctx);
     if (layout.psshader) pvr_context_add_shader(pvrctx, layout.psshader);
 
@@ -1100,14 +1103,18 @@ function layout_draw(layout, pvrctx) {
         layout.resolution_changes = pvrctx.resolution_changes;
     }
 
-    const pvr_matrix = new Float32Array(SH4MATRIX_SIZE);
-    sh4matrix_copy_to(pvrctx.current_matrix, pvr_matrix);
+    // backup PVR screen matrix required for groups marked as "static_screen"
+    sh4matrix_copy_to(pvrctx.current_matrix, MATRIX_SCREEN);
 
+    // apply viewport modifier to PVR screen matrix and backup for elements marked as "static_camera"
     pvr_context_apply_modifier(pvrctx, layout.modifier_viewport);
+    sh4matrix_copy_to(pvrctx.current_matrix, MATRIX_VIEWPORT);
 
+    // transform PVR screen matrix with secondary camera offset+focus
     camera_apply_offset(layout.camera_secondary_helper, pvrctx.current_matrix);
     pvr_context_apply_modifier(pvrctx, layout.modifier_camera_secondary);
 
+    // transform PVR screen matrix with primary camera offset.Note: the focus is used later as parallax
     camera_apply_offset(layout.camera_helper, pvrctx.current_matrix);
 
     // step 1: sort z_buffer
@@ -1198,19 +1205,23 @@ function layout_draw(layout, pvrctx) {
         const matrix = pvrctx.current_matrix;
         let draw_fn;
 
-        sh4matrix_multiply_with_matrix(matrix, group.context.matrix);
+        // apply group context
         pvr_context_set_global_alpha(pvrctx, group.psframebuffer ? 1.0 : group.context.alpha);
         pvr_context_set_global_antialiasing(pvrctx, group.context.antialiasing);
         pvr_context_set_global_offsetcolor(pvrctx, group.context.offsetcolor);
 
         if (item_is_static_to_camera || group.static_camera || group.static_screen) {
             if (group.static_screen) {
-                sh4matrix_copy_to(pvr_matrix, matrix);
+                // restore backup for the current group marked as "static_screen"
+                sh4matrix_copy_to(MATRIX_SCREEN, matrix);
                 sh4matrix_multiply_with_matrix(matrix, group.static_screen);
             } else {
-                camera_unapply_offset(layout.camera_helper, matrix);
+                // restore backup with viewport transform applied for elements marked as "static_camera"
+                sh4matrix_copy_to(MATRIX_VIEWPORT, matrix);
             }
 
+            // apply group context matrix
+            sh4matrix_multiply_with_matrix(matrix, group.context.matrix);
             pvr_context_flush(pvrctx);
 
             switch (vertex_type) {
@@ -1249,6 +1260,9 @@ function layout_draw(layout, pvrctx) {
                 draw_fn = drawable_draw;
                 break;
         }
+
+        // apply group context matrix
+        sh4matrix_multiply_with_matrix(matrix, group.context.matrix);
 
         let translate_x = layout.modifier_camera.translate_x;
         let translate_y = layout.modifier_camera.translate_y;

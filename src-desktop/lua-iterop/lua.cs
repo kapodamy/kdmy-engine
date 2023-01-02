@@ -20,6 +20,9 @@ namespace LuaNativeMethods {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate int lua_CFunction(lua_State* L);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal unsafe delegate void lua_WarnFunction(void* ud, char* msg, int tocont);
+
 
 
     internal unsafe static class LUA {
@@ -302,6 +305,12 @@ namespace LuaNativeMethods {
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void luaL_traceback(lua_State* L, lua_State* L1, byte* msg, int level);
 
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern char* luaL_tolstring(lua_State* L, int idx, out IntPtr len);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void lua_setwarnf(lua_State* L, lua_WarnFunction f, void* ud);
+
 
         private static byte[] STRING_BUFFER = new byte[256];
         private static byte[] MarshalString(string str) {
@@ -314,7 +323,7 @@ namespace LuaNativeMethods {
             STRING_BUFFER[size - 1] = 0x00;
             return STRING_BUFFER;
         }
-        private static string MarshalStringBack(char* ptr, IntPtr len) {
+        internal static string MarshalStringBack(char* ptr, IntPtr len) {
             if (ptr == null) return null;
 
             int size = (int)len;

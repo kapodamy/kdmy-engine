@@ -162,6 +162,16 @@ static void luascript_register_sandbox(lua_State* L) {
     assert(result == 0 /*luascript_register_sandbox() failed*/);
 }
 
+static void luascript_print_warning(void *ud, const char *msg, int tocont) {
+    (void)ud;
+    (void)tocont;
+
+    if (tocont)
+        printf("%s", msg);
+    else
+        printf("%s\n", msg);
+}
+
 
 Luascript luascript_init(const char* lua_sourcecode, const char* filename, void* context, bool is_week) {
     lua_State* L = luaL_newstate();
@@ -172,6 +182,9 @@ Luascript luascript_init(const char* lua_sourcecode, const char* filename, void*
     }
 
     luaL_openlibs(L);
+    
+    // allow lua scripts to emit warnings
+    lua_setwarnf(L, luascript_print_warning, NULL);
 
     Luascript luascript = malloc(sizeof(struct Luascript_t));
     luascript->L = L;
