@@ -441,8 +441,9 @@ function strums_force_rebuild(strums, x, y, z, dimmen, invdimmen, length_dimmen,
         strums.modifier.height = invlength;
     }
 
+    strums_internal_update_draw_location(strums);
+
     for (let i = 0; i < strums.size; i++) {
-        strum_update_draw_location(strums.lines[i], x, y);
         strum_force_rebuild(strums.lines[i], dimmen, invdimmen, length_dimmen, keep_markers_scale);
     }
 }

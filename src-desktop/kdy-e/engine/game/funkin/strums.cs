@@ -505,8 +505,9 @@ namespace Engine.Game {
                 this.modifier.height = invlength;
             }
 
+            InternalUpdateDrawLocation();
+
             for (int i = 0 ; i < this.size ; i++) {
-                this.lines[i].UpdateDrawLocation(x, y);
                 this.lines[i].ForceRebuild(dimmen, invdimmen, length_dimmen, keep_markers_scale);
             }
         }
