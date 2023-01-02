@@ -609,18 +609,19 @@ namespace Engine.Game.Gameplay {
                 bool preapare_next_line = false;
 
                 GamepadButtons buttons = this.gamepad.HasPressedDelayed(
-                    GamepadButtons.A | GamepadButtons.START | GamepadButtons.X | GamepadButtons.BACK
+                    GamepadButtons.A | GamepadButtons.X | GamepadButtons.START | GamepadButtons.BACK
                 );
-                if ((buttons & (GamepadButtons.A | GamepadButtons.X)) != GamepadButtons.NOTHING) {
+                if ((buttons & GamepadButtons.A) != GamepadButtons.NOTHING) {
                     this.current_dialog_elapsed = this.current_dialog_duration;
                     preapare_next_line = true;
-                } else if ((buttons & (GamepadButtons.START | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
-                    if (this.is_speaking) {
+                } else if ((buttons & GamepadButtons.X) != GamepadButtons.NOTHING) {
+                    if (this.is_speaking)
                         this.do_no_wait = true;
-                    } else {
-                        this.do_exit = true;
-                        Close();
-                    }
+                    else
+                        preapare_next_line = true;
+                } else if ((buttons & (GamepadButtons.START | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+                    this.do_exit = true;
+                    Close();
                 }
 
                 if (this.is_speaking)

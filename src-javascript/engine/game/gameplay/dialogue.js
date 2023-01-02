@@ -591,18 +591,19 @@ function dialogue_animate(dialogue, elapsed) {
         let preapare_next_line = 0;
 
         let buttons = gamepad_has_pressed_delayed(
-            dialogue.gamepad, GAMEPAD_A | GAMEPAD_START | GAMEPAD_X | GAMEPAD_BACK
+            dialogue.gamepad, GAMEPAD_A | GAMEPAD_X | GAMEPAD_START | GAMEPAD_BACK
         );
-        if ((buttons & (GAMEPAD_A | GAMEPAD_X)) != 0x00) {
+        if ((buttons & GAMEPAD_A) != 0x00) {
             dialogue.current_dialog_elapsed = dialogue.current_dialog_duration;
             preapare_next_line = 1;
-        } else if ((buttons & (GAMEPAD_START | GAMEPAD_BACK)) != 0x00) {
-            if (dialogue.is_speaking) {
+        } else if ((buttons & GAMEPAD_X) != 0x00) {
+            if (dialogue.is_speaking)
                 dialogue.do_no_wait = 1;
-            } else {
-                dialogue.do_exit = 1;
-                dialogue_close(dialogue);
-            }
+            else
+                preapare_next_line = 1;
+        } else if ((buttons & (GAMEPAD_START | GAMEPAD_BACK)) != 0x00) {
+            dialogue.do_exit = 1;
+            dialogue_close(dialogue);
         }
 
         if (dialogue.is_speaking)
