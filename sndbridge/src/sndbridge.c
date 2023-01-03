@@ -375,6 +375,8 @@ L_check_device:
     }
 }
 
+
+
 extern StreamID sndbridge_queue_ogg(FileHandle_t* ogg_filehandle) {
     PaError err = paNoError;
     Stream_t* stream = NULL;
@@ -423,7 +425,6 @@ extern StreamID sndbridge_queue_ogg(FileHandle_t* ogg_filehandle) {
     return stream->id;
 }
 
-
 extern void sndbridge_dispose(StreamID stream_id) {
     GET_STREAM(stream_id);
     if (!stream) return;
@@ -440,6 +441,7 @@ extern void sndbridge_dispose(StreamID stream_id) {
 
     //sndbridge_dispose_backend();
 }
+
 
 extern double sndbridge_duration(StreamID stream_id) {
     GET_STREAM(stream_id);
@@ -471,6 +473,7 @@ extern double sndbridge_position(StreamID stream_id) {
     //if (position >= stream->duration) return stream->duration;
     return position;
 }
+
 
 extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
     GET_STREAM(stream_id);
@@ -658,12 +661,16 @@ extern bool sndbridge_is_active(StreamID stream_id) {
     return Pa_IsStreamActive(stream->pastream) == 0x01;
 }
 
-extern bool sndbridge_is_fade_active(StreamID stream_id) {
+extern StreamFading sndbridge_has_fade_active(StreamID stream_id) {
     GET_STREAM(stream_id);
     if (!stream) return false;
     
     if (Pa_IsStreamActive(stream->pastream) != 0x01) return false;
-    return stream->fade_progress < stream->fade_duration && stream->fade_duration > 0;
+    
+    if (stream->fade_duration > 0)
+        return stream->fade_in_or_out ? StreamFading_IN : StreamFading_OUT;
+    else
+        return StreamFading_NONE;
 }
 
 extern bool sndbridge_has_ended(StreamID stream_id) {

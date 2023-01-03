@@ -2,7 +2,7 @@
 
 // this file contains all shared data across the game
 const ENGINE_NAME = "kdmy-engine";
-const ENGINE_VERSION = "0.49.1";
+const ENGINE_VERSION = "0.49.2";
 
 
 /**
@@ -122,7 +122,7 @@ async function main(argc, argv) {
     if (background_menu_music) soundplayer_loop_enable(background_menu_music, 1);
 
     /*await week_main(
-        weeks_array.array[0],
+        weeks_array.array[7],
         0,
         "NORMAL",
         "/assets/common/data/BOYFRIEND.json",

@@ -973,7 +973,10 @@ function layout_suspend(layout) {
     for (let i = 0; i < layout.sound_list_size; i++) {
         let soundplayer = layout.sound_list[i].soundplayer;
         layout.sound_list[i].was_playing = soundplayer_is_playing(soundplayer);
-        if (layout.sound_list[i].was_playing) soundplayer_pause(soundplayer);
+        if (layout.sound_list[i].was_playing) {
+            soundplayer_pause(soundplayer);
+            if (soundplayer_has_fading(soundplayer) == FADDING_OUT) soundplayer_set_volume(soundplayer, 0);
+        }
     }
     layout.suspended = 1;
 }

@@ -737,7 +737,10 @@ namespace Engine.Game.Gameplay {
             if (this.is_completed) return;
             for (int i = 0 ; i < this.audios_size ; i++) {
                 this.audios[i].was_playing = this.audios[i].soundplayer.IsPlaying();
-                if (this.audios[i].was_playing) this.audios[i].soundplayer.Pause();
+                if (this.audios[i].was_playing) {
+                    this.audios[i].soundplayer.Pause();
+                    if (this.audios[i].soundplayer.HasFadding() == Fading.OUT) this.audios[i].soundplayer.SetVolume(0f);
+                }
             }
         }
 

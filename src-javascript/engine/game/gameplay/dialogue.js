@@ -729,7 +729,10 @@ function dialogue_suspend(dialogue) {
     if (dialogue.is_completed) return;
     for (let i = 0; i < dialogue.audios_size; i++) {
         dialogue.audios[i].was_playing = soundplayer_is_playing(dialogue.audios[i].soundplayer);
-        if (dialogue.audios[i].was_playing) soundplayer_pause(dialogue.audios[i].soundplayer);
+        if (dialogue.audios[i].was_playing) {
+            soundplayer_pause(dialogue.audios[i].soundplayer);
+            if (soundplayer_has_fading(dialogue.audios[i].soundplayer) == FADDING_OUT) soundplayer_set_volume(dialogue.audios[i].soundplayer, 0);
+        }
     }
 }
 

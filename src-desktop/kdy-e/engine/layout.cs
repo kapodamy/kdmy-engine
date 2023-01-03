@@ -1090,7 +1090,10 @@ namespace Engine {
             for (int i = 0 ; i < this.sound_list_size ; i++) {
                 SoundPlayer soundplayer = this.sound_list[i].soundplayer;
                 this.sound_list[i].was_playing = soundplayer.IsPlaying();
-                if (this.sound_list[i].was_playing) soundplayer.Pause();
+                if (this.sound_list[i].was_playing) {
+                    soundplayer.Pause();
+                    if (soundplayer.HasFadding() == Fading.OUT) soundplayer.SetVolume(0f);
+                }
             }
             this.suspended = true;
         }
