@@ -61,6 +61,7 @@ namespace Engine.Image {
 
             if (xml == null) {
                 Console.Error.WriteLine("[ERROR] atlas_init() error loading " + src);
+                return null;
             }
 
             XmlParserNode xml_atlas = xml.GetRoot();

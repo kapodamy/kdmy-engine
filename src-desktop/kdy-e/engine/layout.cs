@@ -2119,14 +2119,17 @@ namespace Engine {
             string atlas_texture_path = null;
             if (!String.IsNullOrEmpty(atlas_filename)) {
                 atlas = (Atlas)Layout.HelperGetResource(layout_context.resource_pool, atlas_filename, false);
-                if (!FS.FileExists(atlas_texture_path)) {
-                    // the imagePath attribute has an invalid filename
-                    Console.Error.WriteLine($"[WARN] layout_parse_sprite() texture pointed by imagePath='{atlas_texture_path}' not found in atlas '{atlas_filename}'");
-                    string temp_value = FS.GetFilenameWithoutExtension(atlas_filename);
-                    string temp_texture_filename = StringUtils.Concat(temp_value, ".png");
-                    atlas_texture_path = FS.BuildPath2(atlas_filename, temp_texture_filename);
-                    //free(temp_value);
-                    //free(temp_texture_filename);
+                if (atlas != null && String.IsNullOrEmpty(texture_filename)) {
+                    atlas_texture_path = atlas.GetTexturePath();
+                    if (!FS.FileExists(atlas_texture_path)) {
+                        // the imagePath attribute has an invalid filename
+                        Console.Error.WriteLine($"[WARN] layout_parse_sprite() texture pointed by imagePath='{atlas_texture_path}' not found in atlas '{atlas_filename}'");
+                        string temp_value = FS.GetFilenameWithoutExtension(atlas_filename);
+                        string temp_texture_filename = StringUtils.Concat(temp_value, ".png");
+                        atlas_texture_path = FS.BuildPath2(atlas_filename, temp_texture_filename);
+                        //free(temp_value);
+                        //free(temp_texture_filename);
+                    }
                 }
             } else {
                 atlas = null;
