@@ -11,7 +11,7 @@ namespace Engine.Externals {
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr filehandle_init(/* const char* */byte[] fullpath);
-        
+
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr filehandle_init2(/* const byte* */IntPtr data, int size);
 
@@ -45,7 +45,7 @@ namespace Engine.Externals {
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern bool sndbridge_is_active(int stream_id);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool sndbridge_is_fade_active(int stream_id);
+        public static extern int sndbridge_has_fade_active(int stream_id);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern bool sndbridge_has_ended(int stream_id);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]

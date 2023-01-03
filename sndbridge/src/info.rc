@@ -8,11 +8,11 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "kapodamy"
       VALUE "FileDescription", "KDMY-Engine sound streaming"
-      VALUE "FileVersion", "1.4.0"
+      VALUE "FileVersion", "1.4.1"
       VALUE "InternalName", "sndthread"
       VALUE "OriginalFilename", "kdy_AICA.dll"
       VALUE "ProductName", "KDMY-Engine AICA backend using PortAudio"
-      VALUE "ProductVersion", "1.4.0"
+      VALUE "ProductVersion", "1.4.1"
     END
   END
   BLOCK "VarFileInfo"

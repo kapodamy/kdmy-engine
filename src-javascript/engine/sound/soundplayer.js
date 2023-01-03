@@ -1,3 +1,8 @@
+"use strict";
+
+const FADDING_NONE = 0;
+const FADDING_IN = 1;
+const FADDING_OUT = 2;
 
 async function soundplayer_init(src) {
     // TODO: C version
@@ -28,6 +33,7 @@ async function soundplayer_init2(src) {
     let soundplayer = {
         handler: new Audio(src),
         fade_id: 0,
+        fade_status: FADDING_NONE,
         blob_url
     };
 
@@ -67,6 +73,7 @@ function soundplayer_destroy(soundplayer) {
 
 function soundplayer_replay(soundplayer) {
     soundplayer.fade_id++;
+    soundplayer.fade_status = FADDING_NONE;
     if (soundplayer.handler.paused)
         soundplayer_internal_handle_play(soundplayer);
     else
@@ -75,18 +82,21 @@ function soundplayer_replay(soundplayer) {
 
 function soundplayer_play(soundplayer) {
     soundplayer.fade_id++;
+    soundplayer.fade_status = FADDING_NONE;
     if (!soundplayer.handler.paused) return;
     soundplayer_internal_handle_play(soundplayer);
 }
 
 function soundplayer_pause(soundplayer) {
     soundplayer.fade_id++;
+    soundplayer.fade_status = FADDING_NONE;
     if (soundplayer.handler.paused) return;
     soundplayer.handler.pause();
 }
 
 function soundplayer_stop(soundplayer) {
     soundplayer.fade_id++;
+    soundplayer.fade_status = FADDING_NONE;
     soundplayer.handler.pause();
     soundplayer.handler.currentTime = 0;
 }
@@ -97,6 +107,7 @@ function soundplayer_loop_enable(soundplayer, enable) {
 
 function soundplayer_fade(soundplayer, in_or_out, duration) {
     soundplayer.handler.volume = in_or_out ? 0.0 : 1.0;
+    soundplayer.fade_status = in_or_out ? FADDING_IN : FADDING_OUT;
 
     let last_timestamp = -1;
     const fade_out = !in_or_out;
@@ -110,7 +121,10 @@ function soundplayer_fade(soundplayer, in_or_out, duration) {
         let percent = elapsed / duration;
         if (fade_out) percent = 1.0 - percent;
 
-        if (elapsed > duration) return;
+        if (elapsed > duration) {
+            soundplayer.fade_status = FADDING_NONE;
+            return;
+        }
 
         soundplayer.handler.volume = percent;// macroexecutor_calc_log(percent);
         requestAnimationFrame(ontimeupdate);
@@ -173,6 +187,11 @@ function soundplayer_is_muted(soundplayer) {
 
 function soundplayer_is_playing(soundplayer) {
     return !soundplayer.handler.paused;
+}
+
+function soundplayer_has_fading(soundplayer) {
+
+    return FADDING_NONE;
 }
 
 function soundplayer_get_duration(soundplayer) {

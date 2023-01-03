@@ -8,6 +8,12 @@ using Engine.Utils;
 
 namespace Engine.Sound {
 
+    public enum Fading : int {
+        NONE = 0,
+        IN = 1,
+        OUT = 2
+    }
+
     public class SoundPlayer {
 
         private int stream_id;
@@ -149,8 +155,8 @@ namespace Engine.Sound {
             return AICA.sndbridge_is_active(this.stream_id);
         }
 
-        public bool IsFadding() {
-            return AICA.sndbridge_is_fade_active(this.stream_id);
+        public Fading HasFadding() {
+            return (Fading)AICA.sndbridge_has_fade_active(this.stream_id);
         }
 
         public double GetDuration() {
