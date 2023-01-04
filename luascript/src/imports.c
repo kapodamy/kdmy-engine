@@ -193,22 +193,24 @@ void luascript_notify_timersong_run(Luascript luascript, double song_timestamp) 
     lua_imported_fn(lua, FUNCTION, 2);
 }
 
-void luascript_notify_dialogue_line_starts(Luascript luascript, int line_index, const char* state_name) {
+void luascript_notify_dialogue_line_starts(Luascript luascript, int line_index, const char* state_name, const char* text) {
     FUNCTION(luascript, "f_dialogue_line_starts");
 
     lua_pushinteger(lua, line_index);
     lua_pushstring(lua, state_name);
+    lua_pushstring(lua, text);
 
-    lua_imported_fn(lua, FUNCTION, 2);
+    lua_imported_fn(lua, FUNCTION, 3);
 }
 
-void luascript_notify_dialogue_line_ends(Luascript luascript, int line_index, const char* state_name) {
+void luascript_notify_dialogue_line_ends(Luascript luascript, int line_index, const char* state_name, const char* text) {
     FUNCTION(luascript, "f_dialogue_line_ends");
 
     lua_pushinteger(lua, line_index);
     lua_pushstring(lua, state_name);
+    lua_pushstring(lua, text);
 
-    lua_imported_fn(lua, FUNCTION, 2);
+    lua_imported_fn(lua, FUNCTION, 3);
 }
 
 void luascript_notify_after_strum_scroll(Luascript luascript) {

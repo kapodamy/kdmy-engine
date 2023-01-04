@@ -350,6 +350,7 @@ function dialogue_destroy(dialogue) {
             dialogue.states[i].actions[j].title = undefined;
         }
         dialogue.states[i].name = undefined;
+        dialogue.states[i].if_line = undefined;
         dialogue.states[i].actions = undefined;
     }
     for (let i = 0; i < dialogue.multiplechoices_size; i++) {
@@ -406,9 +407,18 @@ function dialogue_destroy(dialogue) {
 
 
 function dialogue_apply_state(dialogue, state_name) {
+    return dialogue_apply_state2(dialogue, state_name, null);
+}
+
+function dialogue_apply_state2(dialogue, state_name, if_line_label) {
     if (dialogue.do_exit) return 0;
 
-    let state = dialogue_internal_get_state(dialogue, state_name);
+    let state = null;
+    for (let i = 0; i < dialogue.states_size; i++) {
+        if (dialogue.states[i].name == state_name && dialogue.states[i].if_line == if_line_label) {
+            return dialogue.states[i];
+        }
+    }
     if (!state) return 0;
 
     return dialogue_internal_apply_state(dialogue, state);
@@ -681,7 +691,7 @@ async function dialogue_show_dialog(dialogue, src_dialog) {
     linkedlist_clear(dialogue.visible_portraits);
 
     // apply any initial state
-    dialogue_apply_state(dialogue, null);
+    dialogue_apply_state2(dialogue, null, null);
     for (let i = 0; i < dialogue.states_size; i++) {
         if (dialogue.states[i].initial) await dialogue_internal_apply_state(dialogue, dialogue.states[i]);
     }
@@ -1178,9 +1188,9 @@ function dialogue_internal_prepare_print_text(dialogue) {
     if (!dialogue.current_dialog) return;
 
     if (dialogue.current_dialog_line < dialogue.current_dialog.lines_size) {
-        dialogue_apply_state(
-            dialogue, dialogue.current_dialog.lines[dialogue.current_dialog_line].target_state_name
-        );
+        let dialog_line = dialogue.current_dialog.lines[dialogue.current_dialog_line];
+        dialogue_apply_state2(dialogue, dialog_line.target_state_name, null);
+        dialogue_apply_state2(dialogue, dialog_line.target_state_name, dialog_line.text);
         if (dialogue.do_exit) return;
     }
 
@@ -1325,11 +1335,12 @@ function dialogue_internal_notify_script(dialogue, is_line_start) {
 
     let current_dialog_line = dialogue.current_dialog_line;
     let state_name = dialogue.current_dialog.lines[dialogue.current_dialog_line].target_state_name;
+    let text = dialogue.current_dialog.lines[dialogue.current_dialog_line].text;
 
     if (is_line_start)
-        _dialogue_lua_call(dialogue.script, "luascript_notify_dialogue_line_starts", current_dialog_line, state_name);
+        _dialogue_lua_call(dialogue.script, "luascript_notify_dialogue_line_starts", current_dialog_line, state_name, text);
     else
-        _dialogue_lua_call(dialogue.script, "luascript_notify_dialogue_line_ends", current_dialog_line, state_name);
+        _dialogue_lua_call(dialogue.script, "luascript_notify_dialogue_line_ends", current_dialog_line, state_name, text);
 
 }
 
@@ -1411,6 +1422,7 @@ async function dialogue_internal_parse_animationui(root_node, anims_ui) {
 function dialogue_internal_parse_state(root_node, states) {
     let initial = vertexprops_parse_boolean(root_node, "initial", 0);
     let name = root_node.getAttribute("name");
+    let if_line = root_node.getAttribute("ifLine");
     let actions = arraylist_init();
 
     for (let node of root_node.children) {
@@ -1571,6 +1583,7 @@ function dialogue_internal_parse_state(root_node, states) {
 
     let state = {
         name: name,
+        if_line: if_line,
         initial: initial,
         actions: null,
         actions_size: 0
@@ -2693,15 +2706,6 @@ function dialogue_internal_get_background_index(dialogue, name) {
         }
     }
     return -1;
-}
-
-function dialogue_internal_get_state(dialogue, name) {
-    for (let i = 0; i < dialogue.states_size; i++) {
-        if (dialogue.states[i].name == name) {
-            return dialogue.states[i];
-        }
-    }
-    return null;
 }
 
 function dialogue_internal_get_multiplechoice(dialogue, name) {

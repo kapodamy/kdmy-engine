@@ -490,6 +490,7 @@ declare global {
     }
     interface Dialogue {
         apply_state(state_name: string): boolean;
+        apply_state2(state_name: string, if_line_label: string): boolean;
         is_completed(): boolean;
         is_hidden(): boolean;
         show_dialog(dialog_src: string): boolean;

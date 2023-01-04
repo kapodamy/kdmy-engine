@@ -12,6 +12,7 @@ typedef struct _Dialogue_t {
 typedef Dialogue_t* Dialogue;
 
 bool dialogue_apply_state(Dialogue dialogue, const char* state_name);
+bool dialogue_apply_state2(Dialogue dialogue, const char* state_name, const char* if_line_label);
 bool dialogue_is_completed(Dialogue dialogue);
 bool dialogue_is_hidden(Dialogue dialogue);
 bool dialogue_show_dialog(Dialogue dialogue, const char* dialog_src);

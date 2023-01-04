@@ -48,11 +48,20 @@
 		<Font name="alphabet_bold" src="/assets/common/font/alphabet.xml" glyphSuffix="bold" glyphAnimated="true|false" />
 		<Font name="alphabet" src="/assets/common/font/alphabet.xml" colorByDifference="false|true" />
 		<Font name="pixel" src="/assets/common/font/pixel.otf" />
+        
 		<ImportPortraitList dialogueSrc="another_dialogue.xml" />
+        <!-- Compatibilty for PsychEngine portrait list -->
+		<ImportPortraitList dialogueSrc="bf.json" />
 	</Definition>
 	
 	<State initial="true|false">
 		<!-- place all initializers here -->
+	</State>
+	
+    <!-- Compatibilty for KadeEngine dialogs, executes if the line content equals to "ifLine" content -->
+	<State name="BGCHANGE" ifLine="cutscenes/CUT3">
+        <TextSkip /><!-- do not display "cutscenes/CUT3" on screen -->
+		<BackgroundChange name="scene3" />
 	</State>
 	
 

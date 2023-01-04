@@ -369,6 +369,7 @@ namespace Engine.Game.Gameplay {
                     //free(this.states[i].actions[j].title);
                 }
                 //free(this.states[i].name);
+                //free(this.states[i].if_line);
                 //free(this.states[i].actions);
             }
             for (int i = 0 ; i < this.multiplechoices_size ; i++) {
@@ -424,9 +425,19 @@ namespace Engine.Game.Gameplay {
         }
 
         public bool ApplyState(string state_name) {
+            return ApplyState2(state_name, null);
+        }
+
+        public bool ApplyState2(string state_name, string if_line_label) {
             if (this.do_exit) return false;
 
-            State state = InternalGetState(state_name);
+            State state = null;
+            for (int i = 0 ; i < this.states_size ; i++) {
+                if (this.states[i].name == state_name && this.states[i].if_line == if_line_label) {
+                    state = this.states[i];
+                    break;
+                }
+            }
             if (state == null) return false;
 
             return InternalApplyState(state);
@@ -690,7 +701,7 @@ namespace Engine.Game.Gameplay {
             this.visible_portraits.Clear();
 
             // apply any initial state
-            this.ApplyState(null);
+            this.ApplyState2(null, null);
             for (int i = 0 ; i < this.states_size ; i++) {
                 if (this.states[i].initial) this.InternalApplyState(this.states[i]);
             }
@@ -1181,7 +1192,9 @@ namespace Engine.Game.Gameplay {
             if (this.current_dialog == null) return;
 
             if (this.current_dialog_line < this.current_dialog.lines_size) {
-                ApplyState(this.current_dialog.lines[this.current_dialog_line].target_state_name);
+                DialogLine dialog_line = this.current_dialog.lines[this.current_dialog_line];
+                ApplyState2(dialog_line.target_state_name, null);
+                ApplyState2(dialog_line.target_state_name, dialog_line.text);
                 if (this.do_exit) return;
             }
 
@@ -1324,11 +1337,12 @@ namespace Engine.Game.Gameplay {
 
             int current_dialog_line = this.current_dialog_line;
             string state_name = this.current_dialog.lines[this.current_dialog_line].target_state_name;
+            string text = this.current_dialog.lines[this.current_dialog_line].text;
 
             if (is_line_start)
-                this.script.notify_dialogue_line_starts(current_dialog_line, state_name);
+                this.script.notify_dialogue_line_starts(current_dialog_line, state_name, text);
             else
-                this.script.notify_dialogue_line_ends(current_dialog_line, state_name);
+                this.script.notify_dialogue_line_ends(current_dialog_line, state_name, text);
         }
 
 
@@ -1409,6 +1423,7 @@ namespace Engine.Game.Gameplay {
         private static void InternalParseState(XmlParserNode root_node, ArrayList<State> states) {
             bool initial = VertexProps.ParseBoolean(root_node, "initial", false);
             string name = root_node.GetAttribute("name");
+            string if_line = root_node.GetAttribute("ifLine");
             ArrayList<Action> actions = new ArrayList<Action>();
 
             foreach (XmlParserNode node in root_node.Children) {
@@ -1569,6 +1584,7 @@ namespace Engine.Game.Gameplay {
 
             State state = new State() {
                 name = name,
+                if_line = if_line,
                 initial = initial,
                 actions = null,
                 actions_size = 0
@@ -2684,15 +2700,6 @@ L_return:
             return -1;
         }
 
-        private State InternalGetState(string name) {
-            for (int i = 0 ; i < this.states_size ; i++) {
-                if (this.states[i].name == name) {
-                    return this.states[i];
-                }
-            }
-            return null;
-        }
-
         private MultipleChoice InternalGetMultiplechoice(string name) {
             if (String.IsNullOrEmpty(name) && this.multiplechoices_size > 0) {
                 // random choose
@@ -2747,6 +2754,7 @@ L_return:
 
         private class State {
             public string name;
+            public string if_line;
             public bool initial;
             public Action[] actions;
             public int actions_size;
