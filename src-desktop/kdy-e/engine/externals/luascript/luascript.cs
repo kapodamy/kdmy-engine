@@ -403,26 +403,28 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.CallPushedGlobalFunction(2);
         }
 
-        public void notify_dialogue_line_starts(int line_index, string state_name) {
+        public void notify_dialogue_line_starts(int line_index, string state_name, string text) {
             const string FUNCTION = "f_dialogue_line_starts";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
 
             L.lua_pushinteger(line_index);
             L.lua_pushstring(state_name);
+            L.lua_pushstring(text);
 
-            lua.CallPushedGlobalFunction(2);
+            lua.CallPushedGlobalFunction(3);
         }
 
-        public void notify_dialogue_line_ends(int line_index, string state_name) {
+        public void notify_dialogue_line_ends(int line_index, string state_name, string text) {
             const string FUNCTION = "f_dialogue_line_ends";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
 
             L.lua_pushinteger(line_index);
             L.lua_pushstring(state_name);
+            L.lua_pushstring(text);
 
-            lua.CallPushedGlobalFunction(2);
+            lua.CallPushedGlobalFunction(3);
         }
 
         public void notify_after_strum_scroll() {

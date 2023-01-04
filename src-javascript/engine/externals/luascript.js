@@ -1232,6 +1232,9 @@ function __js__countdown_start(countdown) {
 function __js__dialogue_apply_state(dialogue, state_name) {
     return dialogue_apply_state(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name))
 }
+function __js__dialogue_apply_state2(dialogue, state_name, if_line_label) {
+    return dialogue_apply_state2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name), kdmyEngine_ptrToString(if_line_label))
+}
 function __js__dialogue_close(dialogue) {
     dialogue_close(kdmyEngine_obtain(dialogue))
 }
@@ -6404,6 +6407,7 @@ var asmLibraryArg = {
     "__js__countdown_set_default_animation2": __js__countdown_set_default_animation2,
     "__js__countdown_start": __js__countdown_start,
     "__js__dialogue_apply_state": __js__dialogue_apply_state,
+    "__js__dialogue_apply_state2": __js__dialogue_apply_state2,
     "__js__dialogue_close": __js__dialogue_close,
     "__js__dialogue_get_modifier": __js__dialogue_get_modifier,
     "__js__dialogue_hide": __js__dialogue_hide,

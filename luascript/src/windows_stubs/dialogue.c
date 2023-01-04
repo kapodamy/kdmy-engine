@@ -6,6 +6,10 @@ bool dialogue_apply_state(Dialogue dialogue, const char* state_name) {
     print_stub("dialogue_apply_state", "dialogue=%p state_name=%s", dialogue, state_name);
     return 0;
 }
+bool dialogue_apply_state2(Dialogue dialogue, const char* state_name, const char* if_line_label) {
+    print_stub("dialogue_apply_state", "dialogue=%p state_name=%s if_line_label=%s", dialogue, state_name, if_line_label);
+    return 0;
+}
 bool dialogue_is_completed(Dialogue dialogue) {
     print_stub("dialogue_is_completed", "dialogue=%p", dialogue);
     return 0;

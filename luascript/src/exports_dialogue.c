@@ -7,6 +7,9 @@
 EM_JS_PRFX(bool, dialogue_apply_state, (Dialogue dialogue, const char* state_name), {
     return dialogue_apply_state(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name));
 });
+EM_JS_PRFX(bool, dialogue_apply_state2, (Dialogue dialogue, const char* state_name, const char* if_line_label), {
+    return dialogue_apply_state2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name), kdmyEngine_ptrToString(if_line_label));
+});
 EM_JS_PRFX(bool, dialogue_is_completed, (Dialogue dialogue), {
     return dialogue_is_completed(kdmyEngine_obtain(dialogue));
 });
@@ -44,6 +47,18 @@ static int script_dialogue_apply_state(lua_State* L) {
     const char* state_name = luaL_optstring(L, 2, NULL);
 
     bool ret = dialogue_apply_state(dialogue, state_name);
+
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
+static int script_dialogue_apply_state2(lua_State* L) {
+    Dialogue dialogue = luascript_read_userdata(L, DIALOGUE);
+
+    const char* state_name = luaL_optstring(L, 2, NULL);
+    const char* if_line_label = luaL_optstring(L, 3, NULL);
+
+    bool ret = dialogue_apply_state2(dialogue, state_name, if_line_label);
 
     lua_pushboolean(L, ret);
     return 1;
@@ -144,6 +159,7 @@ static int script_dialogue_set_set_antialiasing(lua_State* L) {
 
 static const luaL_Reg DIALOGUE_FUNCTIONS[] = {
     {"apply_state", script_dialogue_apply_state},
+    {"apply_state2", script_dialogue_apply_state2},
     {"is_completed", script_dialogue_is_completed},
     {"is_hidden", script_dialogue_is_hidden},
     {"show_dialog", script_dialogue_show_dialog},

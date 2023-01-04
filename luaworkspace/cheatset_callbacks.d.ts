@@ -163,16 +163,18 @@ declare namespace KDMYEngine {
     /**
      * @summary Called before the dialogue prints any text
      * @param line_index the line index in the dialog text file (txt file)
-     * @param state_name state of the current line (if the line starts with ":dad:" the state name is "dad")
+     * @param state_name state of the current line (if the line starts with ":bf:" the state name is "bf")
+     * @param text text content of the line (if the line is ":bf:beep!" the text is "beep!")
      */
-    export function f_dialogue_line_starts(line_index: number, state_name: string): void;
+    export function f_dialogue_line_starts(line_index: number, state_name: string, text: string): void;
     
     /**
      * @summary Called after the dialogue ends printing the current dialog line
      * @param line_index the line index in the dialog text file (txt file)
-     * @param state_name state of the current line (if the line starts with ":dad:" the state name is "dad")
+     * @param state_name state of the current line (if the line starts with ":bf:" the state name is "bf")
+     * @param text text content of the line (if the line is ":bf:beep!" the text is "beep!")
      */
-    export function f_dialogue_line_ends(line_index: number, state_name: string): void;
+    export function f_dialogue_line_ends(line_index: number, state_name: string, text: string): void;
 
     /**
      * @summary Called after the strum scrolling is done, at this point all key inputs are processed by all
