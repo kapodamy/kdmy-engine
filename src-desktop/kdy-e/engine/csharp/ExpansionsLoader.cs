@@ -8,6 +8,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Engine.Utils;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace CsharpWrapper {
 
@@ -127,6 +128,11 @@ namespace CsharpWrapper {
                 }
 
                 JSONParser json = JSONParser.LoadDirectFrom(about_src);
+                if (json == null) {
+                    Console.Error.WriteLine("ExpansionsLoader::LoadExpansions() can not open: " + about_src);
+                    continue;
+                }
+
                 expansion.name = JSONParser.ReadString(json, "name", dir.Name);
                 expansion.version = JSONParser.ReadString(json, "version", null);
                 expansion.submiter = JSONParser.ReadString(json, "submiter", null);
@@ -186,6 +192,15 @@ namespace CsharpWrapper {
             this.pictureBox_screenshoot.Image = expansion.screenshoot;
             this.label_submiter.Text = expansion.submiter;
             this.richTextBox_description.Text = expansion.description;
+        }
+
+        private void listView1_DoubleClick(object sender, MouseEventArgs e) {
+            ListViewHitTestInfo info = listView.HitTest(e.X, e.Y);
+            ListViewItem item = info.Item;
+
+            if (item == null) return;
+
+            button_launch_Click(sender, EventArgs.Empty);
         }
 
         private void button_launch_Click(object sender, EventArgs e) {

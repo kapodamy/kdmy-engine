@@ -58,12 +58,13 @@
             this.listView.MultiSelect = false;
             this.listView.Name = "listView";
             this.listView.ShowGroups = false;
-            this.listView.Size = new System.Drawing.Size(415, 404);
+            this.listView.Size = new System.Drawing.Size(380, 404);
             this.listView.TabIndex = 0;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
             this.listView.FullRowSelect = true;
             this.listView.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
+            this.listView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView1_DoubleClick);
             // 
             // columnHeader1
             // 
@@ -80,7 +81,7 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 9);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(105, 13);
+            this.label1.Size = new System.Drawing.Size(70, 13);
             this.label1.TabIndex = 1;
             this.label1.Text = "Installed expansions:";
             // 
@@ -94,9 +95,9 @@
             this.groupBox1.Controls.Add(this.label_submiter);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.pictureBox_screenshoot);
-            this.groupBox1.Location = new System.Drawing.Point(433, 25);
+            this.groupBox1.Location = new System.Drawing.Point(398, 25);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(393, 375);
+            this.groupBox1.Size = new System.Drawing.Size(428, 375);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Selected expansion";
@@ -136,7 +137,7 @@
             this.pictureBox_screenshoot.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.pictureBox_screenshoot.Location = new System.Drawing.Point(10, 19);
             this.pictureBox_screenshoot.Name = "pictureBox_screenshoot";
-            this.pictureBox_screenshoot.Size = new System.Drawing.Size(377, 224);
+            this.pictureBox_screenshoot.Size = new System.Drawing.Size(412, 224);
             this.pictureBox_screenshoot.TabIndex = 0;
             this.pictureBox_screenshoot.TabStop = false;
             this.pictureBox_screenshoot.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -144,9 +145,9 @@
             // button_launch
             // 
             this.button_launch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button_launch.Location = new System.Drawing.Point(433, 406);
+            this.button_launch.Location = new System.Drawing.Point(398, 406);
             this.button_launch.Name = "button_launch";
-            this.button_launch.Size = new System.Drawing.Size(126, 23);
+            this.button_launch.Size = new System.Drawing.Size(138, 23);
             this.button_launch.TabIndex = 3;
             this.button_launch.Text = "Launch";
             this.button_launch.UseVisualStyleBackColor = true;
@@ -155,9 +156,9 @@
             // button_refreshList
             // 
             this.button_refreshList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button_refreshList.Location = new System.Drawing.Point(565, 406);
+            this.button_refreshList.Location = new System.Drawing.Point(543, 406);
             this.button_refreshList.Name = "button_refreshList";
-            this.button_refreshList.Size = new System.Drawing.Size(129, 23);
+            this.button_refreshList.Size = new System.Drawing.Size(139, 23);
             this.button_refreshList.TabIndex = 4;
             this.button_refreshList.Text = "Refresh list";
             this.button_refreshList.UseVisualStyleBackColor = true;
@@ -166,9 +167,9 @@
             // button_openExpansionsFolder
             // 
             this.button_openExpansionsFolder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.button_openExpansionsFolder.Location = new System.Drawing.Point(700, 406);
+            this.button_openExpansionsFolder.Location = new System.Drawing.Point(689, 406);
             this.button_openExpansionsFolder.Name = "button_openExpansionsFolder";
-            this.button_openExpansionsFolder.Size = new System.Drawing.Size(126, 23);
+            this.button_openExpansionsFolder.Size = new System.Drawing.Size(138, 23);
             this.button_openExpansionsFolder.TabIndex = 5;
             this.button_openExpansionsFolder.Text = "Open expansions folder";
             this.button_openExpansionsFolder.UseVisualStyleBackColor = true;
@@ -185,7 +186,7 @@
             this.richTextBox_description.ReadOnly = true;
             this.richTextBox_description.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Both;
             this.richTextBox_description.DetectUrls = true;
-            this.richTextBox_description.Size = new System.Drawing.Size(381, 65);
+            this.richTextBox_description.Size = new System.Drawing.Size(416, 65);
             this.richTextBox_description.TabIndex = 5;
             this.richTextBox_description.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(richTextBox_description_LinkClicked);
             // 
