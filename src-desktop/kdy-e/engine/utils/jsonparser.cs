@@ -51,6 +51,7 @@ namespace Engine.Utils {
         }
 
         public static void Destroy(JSONParser json) {
+            if (json == null) return;
             json.guard.disposed = true;
         }
 
