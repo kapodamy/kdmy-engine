@@ -193,6 +193,18 @@ void luascript_notify_timersong_run(Luascript luascript, double song_timestamp) 
     lua_imported_fn(lua, FUNCTION, 2);
 }
 
+void luascript_notify_dialogue_builtin_open(Luascript luascript, const char* dialog_src) {
+    FUNCTION(luascript, "f_dialogue_builtin_open");
+
+    lua_pushstring(lua, dialog_src);
+
+#ifdef JAVASCRIPT
+    free((char*)dialog_src);
+#endif
+
+    lua_imported_fn(lua, FUNCTION, 1);
+}
+
 void luascript_notify_dialogue_line_starts(Luascript luascript, int line_index, const char* state_name, const char* text) {
     FUNCTION(luascript, "f_dialogue_line_starts");
 

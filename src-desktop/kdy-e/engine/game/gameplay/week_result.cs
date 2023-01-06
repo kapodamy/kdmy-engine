@@ -178,8 +178,10 @@ namespace Engine.Game.Gameplay {
 
                 if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
 
-                roundcontext.layout.Animate(elapsed);
-                roundcontext.layout.Draw(PVRContext.global_context);
+                if (layout != null) {
+                    roundcontext.layout.Animate(elapsed);
+                    roundcontext.layout.Draw(PVRContext.global_context);
+                }
 
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);

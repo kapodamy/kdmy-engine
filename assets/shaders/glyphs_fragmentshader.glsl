@@ -47,11 +47,11 @@ void main() {
         float luminance = texture_color.r;
 
 		#ifdef SDF_FONT
-        if(is_outline) {
+        /*if(is_outline) {
             luminance = 1.0 - smoothstep(THICKNESS + u_sdf_width, THICKNESS + u_sdf_width + u_sdf_edge, 1.0 - luminance);
-        } else {
+        } else {*/
             luminance = 1.0 - smoothstep(u_sdf_width, u_sdf_width + u_sdf_edge, 1.0 - luminance);
-        }
+        /*}*/
 		#endif
 
         color = vec4(1.0, 1.0, 1.0, luminance) * source_color;

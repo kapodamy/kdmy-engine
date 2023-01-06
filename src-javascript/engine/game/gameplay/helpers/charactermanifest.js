@@ -360,6 +360,7 @@ function character_manifest_internal_read_additional_states(json_array, src) {
 
         let state = {
             name: json_read_string(item, "name", null),
+            model: charactermanifest_internal_path_of(item, "model", src),
             actions: {
                 extras: null,
                 extras_size: 0,

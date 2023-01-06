@@ -46,6 +46,7 @@ void luascript_notify_beat(Luascript luascript, int32_t current_beat, float sinc
 void luascript_notify_quarter(Luascript luascript, int32_t current_quarter, float since);
 void luascript_notify_timer_run(Luascript luascript, double kos_timestamp);
 void luascript_notify_timersong_run(Luascript luascript, double song_timestamp);
+void luascript_notify_dialogue_builtin_open(Luascript luascript, const char* dialog_src);
 void luascript_notify_dialogue_line_starts(Luascript luascript, int line_index, const char* state_name, const char* if_line_label);
 void luascript_notify_dialogue_line_ends(Luascript luascript, int line_index, const char* state_name, const char* if_line_label);
 void luascript_notify_after_strum_scroll(Luascript luascript);

@@ -142,6 +142,7 @@ namespace Engine.Game.Gameplay {
         public string difficult;
         public string default_boyfriend;
         public string default_girlfriend;
+        public bool single_track;
 
         public WeekInfo weekinfo;
     }
@@ -356,6 +357,7 @@ namespace Engine.Game.Gameplay {
                 difficult = difficult,
                 default_boyfriend = default_bf,
                 default_girlfriend = default_gf,
+                single_track = single_track_index >= 0,
 
                 layout_strums = null,
                 layout_strums_size = 0,
@@ -547,7 +549,7 @@ namespace Engine.Game.Gameplay {
             }
             if (gameplaymanifest == null) {
                 Texture.DisableDefering(false);
-                return 0;
+                return 1;
             }
 
             // step 2: initialize the first track (round n° 1)
@@ -565,7 +567,16 @@ namespace Engine.Game.Gameplay {
             bool single_track = single_track_index >= 0;
 
             for (int i = 0 ; i < gameplaymanifest.tracks_size ; i++) tracks_attempts[i] = 0;
-            if (single_track) roundcontext.track_index = single_track_index;
+
+            if (single_track) {
+                if (single_track_index > gameplaymanifest.tracks_size) {
+                    Console.Error.WriteLine("[ERROR] week_main() is out of bounds, check your gameplay manifest");
+                    gameplaymanifest.Destroy();
+                    //free(tracks_attempts);
+                    return 1;
+                }
+                roundcontext.track_index = single_track_index;
+            }
 
             // step 3: start the round cycle
             while (roundcontext.track_index < gameplaymanifest.tracks_size) {
@@ -624,11 +635,15 @@ namespace Engine.Game.Gameplay {
 
                 // check if necessary show dialogue if an dialog text is provided
                 bool show_dialog = false;
-                if (!retry && !String.IsNullOrEmpty(gameplaymanifest.tracks[roundcontext.track_index].dialog_text)) {
+                bool dialog_on_freeplay = !gameplaymanifest.tracks[roundcontext.track_index].dialog_ignore_on_freeplay;
+                if (!retry && (!single_track || (single_track && dialog_on_freeplay))) {
                     string dialog_text = gameplaymanifest.tracks[roundcontext.track_index].dialog_text;
-                    if (roundcontext.dialogue == null) {
+                    if (String.IsNullOrEmpty(dialog_text)) {
+                        // nothing to do
+                    } else if (roundcontext.dialogue == null) {
                         Console.Error.WriteLine($"[ERROR] week_round() can not load '{dialog_text}' there no dialogue instance");
                     } else if (roundcontext.dialogue.ShowDialog(dialog_text)) {
+                        if (roundcontext.script != null) roundcontext.script.NotifyDialogueBuiltinOpen(dialog_text);
                         show_dialog = true;
                     } else {
                         Console.Error.WriteLine($"[ERROR] week_round() failed to read '{dialog_text}' file");
@@ -722,9 +737,10 @@ namespace Engine.Game.Gameplay {
                 }
 
                 // dispose all allocated resources
+                //free(tracks_attempts);
                 Week.Destroy(roundcontext, gameplaymanifest);
 
-                // if true, goto weekselector
+                // if false, goto weekselector
                 return mainmenu ? 0 : 1;
             }
 
@@ -791,6 +807,7 @@ namespace Engine.Game.Gameplay {
             bool show_credits = !gameover && roundcontext.settings.show_credits;
 
             // dispose all allocated resources
+            //free(tracks_attempts);
             Week.Destroy(roundcontext, gameplaymanifest);
 
             if (show_credits) {
@@ -1029,10 +1046,18 @@ namespace Engine.Game.Gameplay {
             // initialize dialogue
             if (!String.IsNullOrEmpty(trackmanifest.dialogue_params)) {
                 roundcontext.dialogue_from_default = false;
-                Week.InitDialogue(roundcontext, trackmanifest.dialogue_params);
+                Week.InitDialogue(
+                    roundcontext,
+                    trackmanifest.dialogue_params,
+                    trackmanifest.dialog_ignore_on_freeplay && initparams.single_track
+                );
             } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
                 roundcontext.dialogue_from_default = true;
-                Week.InitDialogue(roundcontext, gameplaymanifest.@default.dialogue_params);
+                Week.InitDialogue(
+                    roundcontext,
+                    gameplaymanifest.@default.dialogue_params,
+                    trackmanifest.dialog_ignore_on_freeplay && initparams.single_track
+                );
             }
 
             // reload the music only  
@@ -1496,8 +1521,9 @@ namespace Engine.Game.Gameplay {
 
             if (!String.IsNullOrEmpty(script_src)) {
                 roundcontext.script = WeekScript.Init(script_src, roundcontext, true);
-                if (roundcontext.dialogue != null) roundcontext.dialogue.SetScript(roundcontext.script);
             }
+
+            if (roundcontext.dialogue != null) roundcontext.dialogue.SetScript(roundcontext.script);
 
             for (int i = 0 ; i < roundcontext.players_size ; i++) {
                 if (roundcontext.players[i].strums != null) {
@@ -2044,7 +2070,7 @@ namespace Engine.Game.Gameplay {
             if (old_weekgameover != null) old_weekgameover.Destroy();
         }
 
-        private static void InitDialogue(RoundContext roundcontext, string dialogue_params) {
+        private static void InitDialogue(RoundContext roundcontext, string dialogue_params, bool dialog_ignore_on_freeplay) {
             if (String.IsNullOrEmpty(dialogue_params)) return;
 
             // dettach from the layout
@@ -2052,8 +2078,12 @@ namespace Engine.Game.Gameplay {
             int group_id = layout.GetGroupId(Week.ROUND_UI_GROUP_NAME2);
 
             if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
-            roundcontext.dialogue = Dialogue.Init(dialogue_params);
-            
+
+            if (dialog_ignore_on_freeplay)
+                roundcontext.dialogue = null;
+            else
+                roundcontext.dialogue = Dialogue.Init(dialogue_params);
+
             if (roundcontext.dialogue != null) {
                 roundcontext.dialogue.SetScript(roundcontext.script);
                 layout.ExternalVertexSetEntry(

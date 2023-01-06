@@ -135,7 +135,7 @@
                         <label><input type="radio" name="item-bind-type" value="accuracy"> Accuracy counter (displays
                             10.2ms, 20ms, etc.)</label>
                         <br>
-                        <label><input type="radio" name="item-bind-type" value="character" list="predefined-character-manifest"> Character (animated sprite
+                        <label><input type="radio" name="item-bind-type" value="character" list="predefined-characterManifest"> Character (animated sprite
                             using charactermanifest)</label>
                     </fieldset>
                 </div>
@@ -174,7 +174,7 @@
                     <br>
                     <label><input id="bind-character_facing" type="checkbox" /> Invert character facing (needs rebind)</label>
                     <br>
-                    <label>Character manifest: <input id="bind-character_manifest" type="text" value="/assets/common/data/BOYFRIEND.json" list="predefined-character-manifest"/></label>
+                    <label>Character manifest: <input id="bind-character_manifest" type="text" value="/assets/common/data/BOYFRIEND.json" list="predefined-characterManifest"/></label>
                 </fieldset>
                 <div style="text-align: center;margin-top: 8px;">
                     <button id="item-bind-confirm" style="padding-left: 50px; padding-right: 50px;">Set placeholder
@@ -233,7 +233,7 @@
         </fieldset>
         <fieldset>
             <legend>Layout</legend>
-            <label>Base folder for layout: <input type="text" name="base-folder" list="predefined-base-layout-folder" /></label>
+            <label>Base folder for layout: <input type="text" name="base-folder" list="predefined-baseLayoutFolder" /></label>
             <br>
             <div style="height: 4px;"></div>
             <label>Load layout: <input type="file" id="load-layout-file" /></label>
@@ -323,7 +323,10 @@
     <script src="engine/game/main.js"></script>
     <script src="engine/game/layoutvisor.js"></script>
 	
-	<datalist id="predefined-character-manifest">
+	<datalist id="predefined-characterManifest"></datalist>
+    <datalist id="predefined-baseLayoutFolder"></datalist>
+    
+        <datalist id="predefined-characterManifest-default">
 		<option value="/assets/common/data/BOYFRIEND.json"></option>
 		<option value="/assets/common/data/GIRLFRIEND.json"></option>
 		<option value="/assets/weeks/week1/DD/DADDYDEAREST.json"></option>
@@ -336,8 +339,10 @@
 		<option value="/assets/weeks/week6/funkin/SENPAI.json"></option>
 		<option value="/assets/weeks/week6/funkin/SENPAI_ANGRY.json"></option>
 		<option value="/assets/weeks/week6/funkin/SPIRIT.json"></option>
-	</datalist>
-	<datalist id="predefined-base-layout-folder">
+    </datalist>
+        <datalist id="predefined-baseLayoutFolder-default">
+		<option value="/assets"></option>
+		<option value="/expansions"></option>
 		<option value="/assets/weeks/tutorial/stage"></option>
 		<option value="/assets/weeks/week1"></option>
 		<option value="/assets/weeks/week2/halloween"></option>

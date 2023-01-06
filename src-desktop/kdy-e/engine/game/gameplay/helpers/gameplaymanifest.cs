@@ -86,6 +86,7 @@ namespace Engine.Game.Gameplay.Helpers {
         public bool has_girlfriend;
         public string dialogue_params;
         public string dialog_text;
+        public bool dialog_ignore_on_freeplay;
     }
     public class GameplayManifestDefault {
         public Distribution[] distributions;
@@ -416,6 +417,7 @@ namespace Engine.Game.Gameplay.Helpers {
             track.has_script = JSONParser.HasProperty(json_track, "script");
 
             track.duration = JSONParser.ReadNumberDouble(json_track, "duration", -1.0);
+            if (track.duration >= 0) track.duration *= 1000.0;// convert to milliseconds
 
             track.selected_state_name = JSONParser.ReadString(json_track, "selectedStateName", null);
             track.has_selected_state_name = JSONParser.HasProperty(json_track, "selectedStateName");
@@ -428,6 +430,7 @@ namespace Engine.Game.Gameplay.Helpers {
 
             track.dialogue_params = JSONParser.ReadString(json_track, "dialogueParams", null);
             track.dialog_text = JSONParser.ReadString(json_track, "dialogText", null);
+            track.dialog_ignore_on_freeplay = JSONParser.ReadBoolean(json_track, "dialogIgnoreOnFreeplay", true);
 
             track.selected_state_name_per_player = null;
             track.selected_state_name_per_player_size = 0;

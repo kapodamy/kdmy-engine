@@ -110,13 +110,13 @@ async function character_init(charactermanifest) {
     statesprite_flip_texture_enable_correction(character.statesprite, 0);
 
     // import default actions
-    character.default_state = await character_internal_import_actions(import_context, charactermanifest.actions, null);
+    character.default_state = await character_internal_import_actions(import_context, charactermanifest.actions, null, null);
     character.current_state = character.default_state;
 
     // import additional actions as states
     for (let i = 0; i < charactermanifest.additional_states_size; i++) {
         let additionalstate = charactermanifest.additional_states[i];
-        await character_internal_import_actions(import_context, additionalstate.actions, additionalstate.name);
+        await character_internal_import_actions(import_context, additionalstate.actions, additionalstate.model, additionalstate.name);
     }
 
     character.drawable = drawable_init(0, character, character_draw, character_animate);
@@ -1019,7 +1019,7 @@ function character_internal_import_miss(miss_info, modelholder, miss_entry, id_d
     miss_info.offset_y = miss_entry.offset_y;
 }
 
-async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_rrlst, extra_entry, id_extra, prefix, suffix) {
+async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_rrlst, extra_entry, id_extra, prefix, suffix, model_src) {
     if (!extra_entry) {
         extra_info.id_extra = -1;
         extra_info.is_valid = false;
@@ -1032,7 +1032,7 @@ async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_r
     }
 
     let modelholder = await character_internal_get_modelholder(
-        mdlhldr_rrlst, extra_entry.model_src, 1
+        mdlhldr_rrlst, extra_entry.model_src ?? model_src, 1
     );
     extra_info.id_texture = character_internal_add_texture(
         txtr_rrlst, modelholder
@@ -1432,6 +1432,7 @@ function character_internal_add_texture(texture_arraylist, modelholder) {
     let size = arraylist_size(texture_arraylist);
 
     const texture = modelholder_get_texture(modelholder, 0);
+    if (!texture) return -1;
 
     for (let i = 0; i < size; i++) {
         if (array[i].texture == texture) return i;
@@ -1487,7 +1488,7 @@ function character_internal_set_beat_stop(/**@type {object}*/character,/**@type 
         character.current_stop_on_beat++;
 }
 
-async function character_internal_import_actions(context, actions, state_name) {
+async function character_internal_import_actions(context, actions, model_src, state_name) {
     let state = character_internal_state_create(state_name, actions.sing_size, actions.miss_size, actions.extras_size);
     arraylist_add(context.states, state);
 
@@ -1498,7 +1499,7 @@ async function character_internal_import_actions(context, actions, state_name) {
         );
 
         let modelholder = await character_internal_get_modelholder(
-            context.modelholder_arraylist, actions.sing[i].model_src, 1
+            context.modelholder_arraylist, actions.sing[i].model_src ?? model_src, 1
         );
 
         state.sing[i].id_texture = state.sing_alt[i].id_texture = character_internal_add_texture(
@@ -1527,7 +1528,7 @@ async function character_internal_import_actions(context, actions, state_name) {
         );
 
         let modelholder = await character_internal_get_modelholder(
-            context.modelholder_arraylist, actions.miss[i].model_src, 1
+            context.modelholder_arraylist, actions.miss[i].model_src ?? model_src, 1
         );
 
         state.miss[i].id_texture = character_internal_add_texture(
@@ -1539,7 +1540,7 @@ async function character_internal_import_actions(context, actions, state_name) {
         );
     }
 
-    // import all extras names
+    // import all extras
     for (let i = 0; i < actions.extras_size; i++) {
         let index = character_internal_index_name(
             context.all_extras_names, actions.extras[i].name, 1
@@ -1552,7 +1553,8 @@ async function character_internal_import_actions(context, actions, state_name) {
             actions.extras[i],
             index,
             null,
-            null
+            null,
+            model_src
         );
     }
 
@@ -1563,7 +1565,8 @@ async function character_internal_import_actions(context, actions, state_name) {
         actions.hey,
         -10,
         null,
-        null
+        null,
+        model_src
     );
 
     await character_internal_import_extra(
@@ -1573,7 +1576,8 @@ async function character_internal_import_actions(context, actions, state_name) {
         actions.idle,
         -11,
         context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_prefix : null,
-        context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_suffix : null
+        context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_suffix : null,
+        model_src
     );
 
     if (context.charactermanifest.allow_alternate_idle) {
@@ -1584,7 +1588,8 @@ async function character_internal_import_actions(context, actions, state_name) {
             actions.idle,
             -11,
             context.charactermanifest.sing_alternate_prefix,
-            context.charactermanifest.sing_alternate_suffix
+            context.charactermanifest.sing_alternate_suffix,
+            model_src
         );
     }
 

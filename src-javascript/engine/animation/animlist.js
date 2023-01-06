@@ -161,6 +161,7 @@ function animlist_destroy(animlist) {
 
     animlist.entries = undefined;
     ModuleLuaScript.kdmyEngine_drop_shared_object(animlist);
+    ANIMLIST_POOL.delete(animlist.id);
     animlist = undefined;
 }
 

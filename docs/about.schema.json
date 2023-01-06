@@ -185,6 +185,10 @@
                     "type": "boolean",
                     "default": false
                 },
+                "freeplayHideIfLocked": {
+                    "type": "boolean",
+                    "default": false
+                },
 				"freeplayTrackIndexInGameplayManifest": {
                     "type": "integer",
                     "default": -1

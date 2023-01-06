@@ -172,8 +172,10 @@ async function week_result_helper_show_summary(weekresult, roundcontext, attempt
 
         if (roundcontext.script) await weekscript_notify_frame(roundcontext.script, elapsed);
 
-        layout_animate(roundcontext.layout, elapsed);
-        layout_draw(roundcontext.layout, pvr_context);
+        if (roundcontext.layout) {
+            layout_animate(roundcontext.layout, elapsed);
+            layout_draw(roundcontext.layout, pvr_context);
+        }
 
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);

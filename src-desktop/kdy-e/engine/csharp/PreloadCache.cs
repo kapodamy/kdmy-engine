@@ -53,7 +53,7 @@ namespace Engine.Platform {
 
                 absolute_path = IO.GetAbsolutePath(path, true, true);
                 if (!File.Exists(absolute_path)) {
-                    Console.Error.WriteLine($"[WARN] PreCache::AddFileList() file not found ${line} (resolved as ${path})");
+                    Console.Error.WriteLine($"[WARN] PreCache::AddFileList() file not found {line} (resolved as {path})");
                     continue;
                 }
 
