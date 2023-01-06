@@ -290,7 +290,6 @@
                 }
             },
             "required": [
-                "anim",
                 "direction"
             ],
             "title": "Sing"

@@ -164,13 +164,13 @@ namespace Engine.Game {
             this.statesprite.FlipRenderedTextureEnableCorrection(false);
 
             // import default actions
-            this.default_state = Character.InternalImportActions(import_context, charactermanifest.actions, null);
+            this.default_state = Character.InternalImportActions(import_context, charactermanifest.actions, null, null);
             this.current_state = this.default_state;
 
             // import additional actions as states
             for (int i = 0 ; i < charactermanifest.additional_states_size ; i++) {
                 CharacterManifest.AdditionalState additionalstate = charactermanifest.additional_states[i];
-                CharacterState state = Character.InternalImportActions(import_context, additionalstate.actions, additionalstate.name);
+                CharacterState state = Character.InternalImportActions(import_context, additionalstate.actions, additionalstate.model, additionalstate.name);
             }
 
             this.drawable = new Drawable(0, this, this);
@@ -1059,7 +1059,7 @@ L_read_state:
             miss_info.offset_y = miss_entry.offset_y;
         }
 
-        private static void InternalImportExtra(CharacterActionExtra extra_info, ArrayList<CharacterModelInfo> mdlhldr_rrlst, ArrayList<CharacterTextureInfo> txtr_rrlst, CharacterManifest.Extra extra_entry, int id_extra, string prefix, string suffix) {
+        private static void InternalImportExtra(CharacterActionExtra extra_info, ArrayList<CharacterModelInfo> mdlhldr_rrlst, ArrayList<CharacterTextureInfo> txtr_rrlst, CharacterManifest.Extra extra_entry, int id_extra, string prefix, string suffix, string model_src) {
             if (extra_entry == null) {
                 extra_info.id_extra = -1;
                 extra_info.is_valid = false;
@@ -1072,7 +1072,7 @@ L_read_state:
             }
 
             ModelHolder modelholder = Character.InternalGetModelholder(
-                mdlhldr_rrlst, extra_entry.model_src, true
+                mdlhldr_rrlst, extra_entry.model_src ?? model_src, true
             );
             extra_info.id_texture = Character.InternalAddTexture(
                 txtr_rrlst, modelholder
@@ -1485,6 +1485,7 @@ L_read_state:
             int size = texture_arraylist.Size();
 
             Texture texture = modelholder.GetTexture(false);
+            if (texture == null) return -1;
 
             for (int i = 0 ; i < size ; i++) {
                 if (array[i].texture == texture) return i;
@@ -1540,7 +1541,7 @@ L_read_state:
                 this.current_stop_on_beat++;
         }
 
-        private static CharacterState InternalImportActions(CharacterImportContext context, CharacterManifest.Actions actions, string state_name) {
+        private static CharacterState InternalImportActions(CharacterImportContext context, CharacterManifest.Actions actions, string model_src, string state_name) {
             CharacterState state = Character.InternalStateCreate(state_name, actions.sing_size, actions.miss_size, actions.extras_size);
             context.states.Add(state);
 
@@ -1551,7 +1552,7 @@ L_read_state:
                 );
 
                 ModelHolder modelholder = Character.InternalGetModelholder(
-                    context.modelholder_arraylist, actions.sing[i].model_src, true
+                    context.modelholder_arraylist, actions.sing[i].model_src ?? model_src, true
                 );
 
                 state.sing[i].id_texture = state.sing_alt[i].id_texture = Character.InternalAddTexture(
@@ -1582,7 +1583,7 @@ L_read_state:
                 );
 
                 ModelHolder modelholder = Character.InternalGetModelholder(
-                    context.modelholder_arraylist, actions.miss[i].model_src, true
+                    context.modelholder_arraylist, actions.miss[i].model_src ?? model_src, true
                 );
 
                 state.miss[i].id_texture = Character.InternalAddTexture(
@@ -1594,7 +1595,7 @@ L_read_state:
                 );
             }
 
-            // import all extras names
+            // import all extras
             for (int i = 0 ; i < actions.extras_size ; i++) {
                 int index = Character.InternalIndexName(
                     context.all_extras_names, actions.extras[i].name, true
@@ -1608,7 +1609,8 @@ L_read_state:
                     actions.extras[i],
                     index,
                     null,
-                    null
+                    null,
+                    model_src
                 );
             }
 
@@ -1620,7 +1622,8 @@ L_read_state:
                 actions.hey,
                 -10,
                 null,
-                null
+                null,
+                model_src
             );
 
 
@@ -1631,7 +1634,8 @@ L_read_state:
                 actions.idle,
                 -11,
                 context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_prefix : null,
-                context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_suffix : null
+                context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_suffix : null,
+                model_src
             );
 
             if (context.charactermanifest.allow_alternate_idle) {
@@ -1642,13 +1646,14 @@ L_read_state:
                     actions.idle,
                     -11,
                     context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_alternate_prefix : null,
-                    context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_alternate_suffix : null
+                    context.charactermanifest.allow_alternate_idle ? context.charactermanifest.sing_alternate_suffix : null,
+                    model_src
                 );
             }
 
             return state;
         }
-
+        
 
         private class CharacterModelInfo {
             public string model_src;
