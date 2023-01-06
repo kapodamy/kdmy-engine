@@ -58,6 +58,7 @@ namespace Engine.Platform {
         public const char CHAR_SEPARATOR_REJECT = '\\';
         private const string FILENAME_INVALID_CHARS = "<>:\"/\\|?*";
         public const string ASSETS_FOLDER = "/assets";
+        public const string EXPANSIONS_FOLDER = "/expansions";
         public const string ASSETS_COMMON_FOLDER = "/assets/common/";
         public const string NO_OVERRIDE_COMMON = "/~assets/common/";
 
@@ -373,7 +374,7 @@ L_exit:
             temp_path = FS.ResolvePath(resolved_path);
             //free(resolved_path);
 
-            if (!temp_path.StartsWith(FS.ASSETS_FOLDER)) {
+            if (!temp_path.StartsWith(FS.ASSETS_FOLDER) && !resolved_path.StartsWith(FS.EXPANSIONS_FOLDER)) {
                 throw new IOException("fs_set_working_folder() failed for: " + base_path);
             }
 
@@ -388,7 +389,7 @@ L_exit:
             string resolved_path = FS.ResolvePath(temp_path);
             //free(temp_path);
 
-            if (!resolved_path.StartsWith(FS.ASSETS_FOLDER)) {
+            if (!resolved_path.StartsWith(FS.ASSETS_FOLDER) && !resolved_path.StartsWith(FS.EXPANSIONS_FOLDER)) {
                 throw new IOException("fs_set_working_subfolder() failed, cwd=" + fs_tls.fs_cwd + " sub_path=" + sub_path);
             }
 

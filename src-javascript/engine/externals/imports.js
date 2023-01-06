@@ -26,6 +26,7 @@
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_quarter
  * @property {function(ModuleLuaScript,number):void} _luascript_notify_timer_run
  * @property {function(ModuleLuaScript,number):void} _luascript_notify_timersong_run
+ * @property {function(ModuleLuaScript,number,string):void} luascript_notify_dialogue_builtin_open
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_dialogue_line_starts
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_dialogue_line_ends
  * @property {function(ModuleLuaScript):void} _luascript_notify_after_strum_scroll

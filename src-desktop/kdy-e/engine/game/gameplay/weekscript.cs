@@ -181,6 +181,11 @@ namespace Engine.Game.Gameplay {
             this.luascript.notify_after_strum_scroll();
         }
 
+        public void NotifyDialogueBuiltinOpen(string dialog_src) {
+            this.luascript.notify_dialogue_builtin_open(dialog_src);
+        }
+
+
         public Luascript GetLuaScript() {
             return this.luascript;
         }

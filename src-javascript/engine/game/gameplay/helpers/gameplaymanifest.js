@@ -309,6 +309,7 @@ function gameplaymanifest_parse_track(track, json_track, players_count) {
     track.has_script = json_has_property(json_track, "script");
 
     track.duration = json_read_number(json_track, "duration", -1);
+    if (track.duration >= 0) track.duration *= 1000.0;// convert to milliseconds
 
     track.selected_state_name = json_read_string(json_track, "selectedStateName", null);
     track.has_selected_state_name = json_has_property(json_track, "selectedStateName");
@@ -318,6 +319,7 @@ function gameplaymanifest_parse_track(track, json_track, players_count) {
 
     track.dialogue_params = json_read_string(json_track, "dialogueParams", null);
     track.dialog_text = json_read_string(json_track, "dialogText", null);
+    track.dialog_ignore_on_freeplay = json_read_boolean(json_track, "dialogIgnoreOnFreeplay", true);
 
     track.pause_menu = json_read_string(json_track, "pauseMenu", null);
     track.has_pause_menu = json_has_property(json_track, "pauseMenu");

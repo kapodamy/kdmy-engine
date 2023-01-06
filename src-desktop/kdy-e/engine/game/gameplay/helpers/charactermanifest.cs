@@ -445,6 +445,7 @@ namespace Engine.Game.Gameplay.Helpers {
 
                 AdditionalState state = new AdditionalState() {
                     name = JSONParser.ReadString(item, "name", null),
+                    model = CharacterManifest.InternalPathOf(item, "model", src),
                     actions = new Actions() {
                         extras = null,
                         extras_size = 0,

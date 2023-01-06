@@ -98,14 +98,21 @@ async function freeplaymenu_main() {
     for (let i = 0; i < weeks_array.size; i++) {
         for (let j = 0; j < weeks_array.array[i].songs_count; j++) {
             let should_hide = weeks_array.array[i].songs[j].freeplay_hide_if_week_locked;
-            let is_locked = !funkinsave_contains_unlock_directive(weeks_array.array[i].unlock_directive);
+            let is_locked1 = !funkinsave_contains_unlock_directive(weeks_array.array[i].unlock_directive);
+            if (should_hide && is_locked1) continue;
 
-            if (should_hide && is_locked) continue;
+            should_hide = weeks_array.array[i].songs[j].freeplay_hide_if_locked;
+            let is_locked2 = !funkinsave_contains_unlock_directive(weeks_array.array[i].songs[j].freeplay_unlock_directive);
+            if (should_hide && is_locked2) continue;
+
+            let gameplaymanifest_index = weeks_array.array[i].songs[j].freeplay_track_index_in_gameplaymanifest;
+            if (gameplaymanifest_index < 0) gameplaymanifest_index = j;
 
             arraylist_add(songs, {
                 song_index: j,
                 week_index: i,
-                is_locked: is_locked
+                gameplaymanifest_index: gameplaymanifest_index,
+                is_locked: is_locked1 || is_locked2
             });
         }
     }
@@ -200,7 +207,7 @@ async function freeplaymenu_main() {
         layout_suspend(layout);
         let ret = await week_main(
             weekinfo, state.use_alternative, difficult, default_bf, default_gf,
-            gameplaymanifest, state.map.song_index
+            gameplaymanifest, state.map.gameplaymanifest_index
         );
         if (ret == 0) break;// back to main menu
 

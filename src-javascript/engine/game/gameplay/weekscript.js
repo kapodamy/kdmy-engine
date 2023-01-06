@@ -250,6 +250,12 @@ function weekscript_notify_after_strum_scroll(script) {
     return _weekscript_call(ModuleLuaScript._luascript_notify_after_strum_scroll, script);
 }
 
+function weekscript_notify_dialogue_builtin_open(script, dialog_src) {
+    // (JS only) allocate string in WASM memory, the caller deallocates it.
+    let dialog_src_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(dialog_src);
+    return _weekscript_call(ModuleLuaScript.luascript_notify_dialogue_builtin_open, script, dialog_src_ptr);
+}
+
 function weekscript_get_luascript(script) {
     return script;
 }

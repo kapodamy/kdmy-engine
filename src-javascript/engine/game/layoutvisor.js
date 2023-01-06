@@ -187,10 +187,10 @@ function main_layout_add_listeners() {
     // @ts-ignore
     // @ts-ignore
     input_basefolder.addEventListener("change", function (e) {
-        localStorage.setItem("basefolder", this.value);
+        layoutvisor_localstorage_save("baseLayoutFolder", this.value);
     }, false);
     // @ts-ignore
-    input_basefolder.value = localStorage.getItem("basefolder") ?? "/assets/test";
+    input_basefolder.value = layoutvisor_localstorage_load("baseLayoutFolder");
 
     document.getElementById("widescreen").addEventListener("change", function (e) {
         // @ts-ignore
@@ -198,8 +198,8 @@ function main_layout_add_listeners() {
 
         pvr_context._html5canvas.width = PVR_WIDTH = checked ? 864 : 640;
         pvr_context._html5canvas.height = PVR_HEIGHT = checked ? 486 : 480;
-		pvr_context.resolution_changes++;
-        webopengl_resize_projection(pvr_context.webopengl,0 ,0 ,PVR_WIDTH, PVR_HEIGHT);
+        pvr_context.resolution_changes++;
+        webopengl_resize_projection(pvr_context.webopengl, 0, 0, PVR_WIDTH, PVR_HEIGHT);
 
         let classlist = document.querySelector(".layoutvisor").classList;
 
@@ -493,13 +493,14 @@ function main_layout_add_listeners() {
     });
 
     let character_manifest = document.getElementById("bind-character_manifest");
-    let value = localStorage.getItem("character_manifest");
+    let value = layoutvisor_localstorage_load("characterManifest");
+
     // @ts-ignore
     if (value) character_manifest.value = value;
 
     character_manifest.addEventListener("change", function () {
         // @ts-ignore
-        localStorage.setItem("character_manifest", this.value);
+        layoutvisor_localstorage_save("characterManifest", this.value);
     });
 
     document.getElementById("sing").addEventListener("change", function () {
@@ -585,9 +586,9 @@ async function layoutvisor_load(e) {
     items.selectedIndex = -1;
     for (let i = 0; i < layoutvisor_layout.vertex_list_size; i++) {
         let name = layoutvisor_layout.vertex_list[i].name;
-		if (!name && layoutvisor_layout.vertex_list[i].placeholder) {
-			name = layoutvisor_layout.vertex_list[i].placeholder.name;
-		} else if (!name) {
+        if (!name && layoutvisor_layout.vertex_list[i].placeholder) {
+            name = layoutvisor_layout.vertex_list[i].placeholder.name;
+        } else if (!name) {
             let vertex = layoutvisor_layout.vertex_list[i].vertex;
             switch (layoutvisor_layout.vertex_list[i].type) {
                 case VERTEX_SPRITE:
@@ -604,12 +605,12 @@ async function layoutvisor_load(e) {
                     }
                     break;
                 case VERTEX_TEXTSPRITE:
-					if (vertex.text) {
-						name = vertex.text.substring(0, 16);
-						if (vertex.text.length >= 16) name += "...";
-					} else {
-						name = "<textsprite @ " + i + ">";
-					}
+                    if (vertex.text) {
+                        name = vertex.text.substring(0, 16);
+                        if (vertex.text.length >= 16) name += "...";
+                    } else {
+                        name = "<textsprite @ " + i + ">";
+                    }
                     name = "<text=" + name + ">";
                     break;
             }
@@ -769,8 +770,10 @@ function layoutvisor_mousemove(evt) {
     dy *= 3;
 
     if (layoutvisor_viewmode_viewonly && layoutvisor_layoutcamera) {
-        layoutvisor_layoutcamera.offset_x += dx;
-        layoutvisor_layoutcamera.offset_y += dy;
+        let x = layoutvisor_layoutcamera.offset_x += dx;
+        let y = layoutvisor_layoutcamera.offset_y += dy;
+        camera_move_offset(layoutvisor_layoutcamera, x, y, NaN);
+        camera_apply(layoutvisor_layoutcamera, null);
     }
     if (layoutvisor_viewmode_bycamera && layoutvisor_layoutcamera) {
         dx += layoutvisor_layoutcamera.parallax_x;
@@ -819,7 +822,7 @@ function layoutvisor_drawable_draw_hook(drawable, pvrctx) {
 
     if (layoutvisor_hookedvertexindex >= 0) {
         let item = layoutvisor_layout.vertex_list[layoutvisor_hookedvertexindex];
-		if (item.placeholder) item = item.placeholder;
+        if (item.placeholder) item = item.placeholder;
         if (item.vertex == drawable) {
             x = item.x;
             y = item.y;
@@ -897,7 +900,7 @@ function layoutvisor_draw_hook_for(index) {
     let item = layoutvisor_layout.vertex_list[index];
     switch (item.type) {
         case VERTEX_DRAWABLE:
-			item = item.placeholder;
+            item = item.placeholder;
             layoutvisor_bindbutton.disabled = false;
             layoutvisor_placeholderalign.disabled = false;
             layoutvisor_hookedfndrawname = "drawable_draw";
@@ -996,7 +999,7 @@ function layoutvisor_pick_items_values(index) {
 
     switch (item.type) {
         case VERTEX_DRAWABLE:
-			item = item.placeholder;
+            item = item.placeholder;
             x = item.x;
             y = item.y;
             width = item.width;
@@ -1042,7 +1045,7 @@ function layoutvisor_handle_item_event(evt) {
     let align_horizontal = parseInt(layoutvisor_placeholderalinghorizontal.value);
     let item = layoutvisor_layout.vertex_list[layoutvisor_hookedvertexindex];
 
-	if (item.placeholder) item = item.placeholder;
+    if (item.placeholder) item = item.placeholder;
 
     switch (evt.target.id) {
         case "item-width":
@@ -1076,7 +1079,7 @@ function layoutvisor_move_item(index, x, y) {
 
     switch (item.type) {
         case VERTEX_DRAWABLE:
-			item = item.placeholder;
+            item = item.placeholder;
             item.x = x;
             item.y = y;
             layoutvisor_drawable_update(item);
@@ -1095,7 +1098,7 @@ function layoutvisor_resize_item(index, width, height) {
 
     switch (item.type) {
         case VERTEX_DRAWABLE:
-			item = item.placeholder;
+            item = item.placeholder;
             item.width = width;
             item.height = height;
             layoutvisor_drawable_update(item);
@@ -1179,7 +1182,7 @@ async function layoutvisor_update_character(layout_placeholder) {
     character_set_draw_align(character, layout_placeholder.align_vertical, layout_placeholder.align_horizontal);
     character_state_toggle(character, null);
 
-	if (character_facing) character_flip_orientation(character, character_facing);
+    if (character_facing) character_flip_orientation(character, character_facing);
 
     // obligatory, otherwise, does not render nothing if the animation is disabled
     character_animate(character, 0);
@@ -1267,13 +1270,13 @@ function layoutvisor_update_none(layout_placeholder) {
     layoutvisor_dispose_character(layout_placeholder);
     layout_placeholder.vertex = null;
 
-	let index = -1;
-	for (let i=0 ; i<layoutvisor_layout.vertex_list_size ; i++) {
-		if (layoutvisor_layout.vertex_list[i].placeholder == layout_placeholder) {
-			index = i;
-			break;
-		}
-	}
+    let index = -1;
+    for (let i = 0; i < layoutvisor_layout.vertex_list_size; i++) {
+        if (layoutvisor_layout.vertex_list[i].placeholder == layout_placeholder) {
+            index = i;
+            break;
+        }
+    }
 
     if (index < 0) index = 0;
     layoutvisor_set_placeholder(layout_placeholder, index);
@@ -1306,3 +1309,62 @@ function layoutvisor_camera_prompt(x, y, z, is_offset) {
     ];
 }
 
+function layoutvisor_localstorage_save(key_name, value) {
+    /**@type {string[]} */
+    let array;
+    let item = localStorage.getItem(key_name); 1
+
+    if (item)
+        array = JSON.parse(item);
+    else
+        array = new Array();
+
+    value = value.replace(/\\/g, '/');
+
+    array.unshift(value);
+
+    for (let i = 1; i < array.length; i++) {
+        if (array[i] != value) continue;
+        array.splice(i, 1);
+        i--;
+    }
+
+    localStorage.setItem(key_name, JSON.stringify(array));
+}
+
+function layoutvisor_localstorage_load(key_name) {
+    /**@type {string[]} */
+    let array;
+    let item = localStorage.getItem(key_name);
+
+    if (item) {
+        array = JSON.parse(item);
+    } else {
+        array = new Array();
+
+        /**@type {HTMLDataListElement} */// @ts-ignore
+        let datalist = document.getElementById(`predefined-${key_name}-default`);
+
+        for (let value of datalist.options) {
+            array.push(value.value)
+        }
+
+        localStorage.setItem(key_name, JSON.stringify(array));
+    }
+
+    /**@type {HTMLDataListElement} */// @ts-ignore
+    let loaded_datalist = document.getElementById(`predefined-${key_name}`);
+
+    // clear datalist
+    loaded_datalist.replaceChildren();
+
+    for (let value of array) {
+        let item = document.createElement("option");
+        item.value = value;
+        loaded_datalist.appendChild(item);
+    }
+
+    if (array.length < 1) return "";
+
+    return array[0];
+}

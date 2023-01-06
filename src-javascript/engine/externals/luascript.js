@@ -6969,6 +6969,9 @@ var _luascript_notify_timer_run = ModuleLuaScript["_luascript_notify_timer_run"]
 var _luascript_notify_timersong_run = ModuleLuaScript["_luascript_notify_timersong_run"] = function () {
     return (_luascript_notify_timersong_run = ModuleLuaScript["_luascript_notify_timersong_run"] = ModuleLuaScript["asm"]["luascript_notify_timersong_run"]).apply(null, arguments)
 };
+var _luascript_notify_dialogue_builtin_open = ModuleLuaScript["_luascript_notify_dialogue_builtin_open"] = function () {
+    return (_luascript_notify_dialogue_builtin_open = ModuleLuaScript["_luascript_notify_dialogue_builtin_open"] = ModuleLuaScript["asm"]["luascript_notify_dialogue_builtin_open"]).apply(null, arguments)
+};
 var _luascript_notify_dialogue_line_starts = ModuleLuaScript["_luascript_notify_dialogue_line_starts"] = function () {
     return (_luascript_notify_dialogue_line_starts = ModuleLuaScript["_luascript_notify_dialogue_line_starts"] = ModuleLuaScript["asm"]["luascript_notify_dialogue_line_starts"]).apply(null, arguments)
 };

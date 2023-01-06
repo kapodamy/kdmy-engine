@@ -166,6 +166,7 @@ const CHARACTERTYPE = {
  * @property {string} difficult
  * @property {string} default_boyfriend
  * @property {string} default_girlfriend
+ * @property {bool} single_track
  * 
  * @property {object} weekinfo
  * 
@@ -351,6 +352,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         difficult: difficult,
         default_boyfriend: default_bf,
         default_girlfriend: default_gf,
+        single_track: single_track_index >= 0,
 
         layout_strums: null,
         layout_strums_size: 0,
@@ -545,7 +547,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     }
     if (!gameplaymanifest) {
         texture_disable_defering(0);
-        return 0;
+        return 1;
     }
 
     // step 2: initialize the first track (round n° 1)
@@ -563,7 +565,16 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     let single_track = single_track_index >= 0;
 
     for (let i = 0; i < gameplaymanifest.tracks_size; i++) tracks_attempts[i] = 0;
-    if (single_track) roundcontext.track_index = single_track_index;
+
+    if (single_track) {
+        if (single_track_index > gameplaymanifest.tracks_size) {
+            console.error("week_main() single_track_index is out of bounds, check your gameplay manifest");
+            gameplaymanifest_destroy(gameplaymanifest);
+            tracks_attempts = undefined;
+            return 1;
+        }
+        roundcontext.track_index = single_track_index;
+    }
 
     // step 3: start the round cycle
     while (roundcontext.track_index < gameplaymanifest.tracks_size) {
@@ -622,11 +633,15 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
         // check if necessary show dialogue if an dialog text is provided
         let show_dialog = 0;
-        if (!retry && gameplaymanifest.tracks[roundcontext.track_index].dialog_text) {
+        let dialog_on_freeplay = !gameplaymanifest.tracks[roundcontext.track_index].dialog_ignore_on_freeplay;
+        if (!retry && (!single_track || (single_track && dialog_on_freeplay))) {
             let dialog_text = gameplaymanifest.tracks[roundcontext.track_index].dialog_text;
-            if (roundcontext.dialogue == null) {
+            if (!dialog_text) {
+                // nothing to do
+            } else if (roundcontext.dialogue == null) {
                 console.error(`[ERROR] week_round() can not load '${dialog_text}' there no dialogue instance`);
             } else if (await dialogue_show_dialog(roundcontext.dialogue, dialog_text)) {
+                if (roundcontext.script != null) weekscript_notify_dialogue_builtin_open(roundcontext.script, dialog_text);
                 show_dialog = 1;
             } else {
                 console.error(`week_round() failed to read '${dialog_text}' file`);
@@ -720,9 +735,10 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         }
 
         // dispose all allocated resources
+        tracks_attempts = undefined;
         week_destroy(roundcontext, gameplaymanifest);
 
-        // if true, goto weekselector
+        // if false, goto weekselector
         return mainmenu ? 0 : 1;
     }
 
@@ -786,6 +802,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     let show_credits = !gameover && roundcontext.settings.show_credits;
 
     // dispose all allocated resources
+    tracks_attempts = undefined;
     week_destroy(roundcontext, gameplaymanifest);
 
     if (show_credits) {
@@ -1022,10 +1039,18 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     // initialize dialogue
     if (trackmanifest.dialogue_params) {
         roundcontext.dialogue_from_default = 0;
-        await week_init_dialogue(roundcontext, trackmanifest.dialogue_params);
+        await week_init_dialogue(
+            roundcontext,
+            trackmanifest.dialogue_params,
+            trackmanifest.dialog_ignore_on_freeplay && initparams.single_track
+        );
     } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
         roundcontext.dialogue_from_default = 1;
-        await week_init_dialogue(roundcontext, gameplaymanifest.default.dialogue_params);
+        await week_init_dialogue(
+            roundcontext,
+            gameplaymanifest.default.dialogue_params,
+            trackmanifest.dialog_ignore_on_freeplay && initparams.single_track
+        );
     }
 
     // reload the music only
@@ -1474,8 +1499,9 @@ async function week_init_script(/**@type {RoundContext}*/roundcontext, script_sr
 
     if (script_src) {
         roundcontext.script = await weekscript_init(script_src, roundcontext, 1);
-        if (roundcontext.dialogue != null) dialogue_set_script(roundcontext.dialogue, roundcontext.script);
     }
+
+    if (roundcontext.dialogue != null) dialogue_set_script(roundcontext.dialogue, roundcontext.script);
 
     for (let i = 0; i < roundcontext.players_size; i++) {
         if (roundcontext.players[i].strums) {
@@ -2033,7 +2059,7 @@ async function week_init_ui_gameover(/**@type {RoundContext}*/roundcontext) {
     if (old_weekgameover) week_gameover_destroy(old_weekgameover);
 }
 
-async function week_init_dialogue(/**@type {RoundContext}*/roundcontext, dialogue_params) {
+async function week_init_dialogue(/**@type {RoundContext}*/roundcontext, dialogue_params, dialog_ignore_on_freeplay) {
     if (!dialogue_params) return;
 
     // dettach from the layout
@@ -2041,7 +2067,11 @@ async function week_init_dialogue(/**@type {RoundContext}*/roundcontext, dialogu
     let group_id = layout_get_group_id(layout, WEEKROUND_UI_GROUP_NAME2)
 
     if (roundcontext.dialogue) dialogue_destroy(roundcontext.dialogue);
-    roundcontext.dialogue = await dialogue_init(dialogue_params);
+
+    if (dialog_ignore_on_freeplay)
+        roundcontext.dialogue = null;
+    else
+        roundcontext.dialogue = await dialogue_init(dialogue_params);
 
     if (roundcontext.dialogue) {
         dialogue_set_script(roundcontext.dialogue, roundcontext.script);

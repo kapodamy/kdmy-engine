@@ -686,6 +686,7 @@ async function dialogue_show_dialog(dialogue, src_dialog) {
     dialogue.is_completed = 0;
     drawable_set_antialiasing(dialogue.self_drawable, PVR_FLAG_DEFAULT);
     drawable_set_alpha(dialogue.self_drawable, 1.0);
+    drawable_set_property(dialogue.self_drawable, SPRITE_PROP_ALPHA2, 1.0);
     drawable_set_offsetcolor_to_default(dialogue.self_drawable);
     pvrctx_helper_clear_modifier(drawable_get_modifier(dialogue.self_drawable));
     linkedlist_clear(dialogue.visible_portraits);
@@ -850,7 +851,14 @@ function dialogue_internal_apply_state(dialogue, state) {
                 background_changed = 1;
                 break;
             case DIALOGUE_TYPE_LUA:
-                if (dialogue.script) _dialogue_lua_call(dialogue.script, "luascript_eval", action.luascript_eval);
+                if (!dialogue.script) {
+                    console.error("dialogue_internal_apply_state() no lua script attached");
+                    break;
+                }
+                if (action.lua_function)
+                    _dialogue_lua_call(dialogue.script, "luascript_call_function", action.lua_function);
+                if (action.luascript_eval)
+                    _dialogue_lua_call(dialogue.script, "luascript_eval", action.luascript_eval);
                 break;
             case DIALOGUE_TYPE_EXIT:
                 dialogue_close(dialogue);
@@ -2149,6 +2157,7 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
 function dialogue_internal_parse_animationui_set(node, animlist, anims_ui) {
     //<Set name="backgroundIn|backgroundOut" anim="anim123" />
     //<Set name="portraitLeftIn|portraitCenterIn|portraitRightIn" anim="anim123" />
+    //<Set name="open|close" anim="anim123" />
     //<Set name="portraitIn|portraitOut" anim="anim123" />
     //<Set name="portraitLeftOut|portraitCenterOut|portraitRightOut" anim="anim123" />
 
@@ -2349,8 +2358,12 @@ async function dialogue_internal_parse_speechimage(node, base_src, speechimages)
         let texture = await texture_init(src);
         if (!texture) break L_load;
 
+        const orig_size = [0, 0];
+        texture_get_original_dimmensions(texture, orig_size);
+
         statesprite = statesprite_init_from_texture(texture);
         statesprite_set_draw_location(statesprite, 0.0, 0.0);
+        statesprite_set_draw_size(statesprite, orig_size[0], orig_size[1]);
     }
 
     if (!statesprite) {
@@ -2518,8 +2531,16 @@ async function dialogue_internal_parse_dialog(src, dialogs) {
     let buffered_line = null;
     while ((line = tokenizer_read_next(tokenizer)) != null) {
         let end_index = -1;
+        let line_length = line.length;
 
-        if (line.length > 0 && line[0] == ':') {
+        if (line_length > 0 && line[line_length - 1] == '\r') {
+            let tmp = line.substring(0, line_length - 1);
+            line = undefined;
+            line = tmp;
+            line_length--;
+        }
+
+        if (line_length > 0 && line[0] == ':') {
             end_index = line.indexOf(':', 1);
         }
 
@@ -2530,7 +2551,7 @@ async function dialogue_internal_parse_dialog(src, dialogs) {
             buffered_line = tmp;
         } else {
             let state = line.substring(1, end_index);
-            let tmp_line = line.substring(end_index + 1, line.length);
+            let tmp_line = line.substring(end_index + 1, line_length);
             let final_line = string_concat(2, buffered_line, tmp_line);
 
             tmp_line = undefined;

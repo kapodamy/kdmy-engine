@@ -454,6 +454,10 @@
                 "duration": {
                     "type": "number",
                     "default": -1
+                },
+                "dialogIgnoreOnFreeplay": {
+                    "type": "boolean",
+                    "default": true
                 }
             },
             "required": [

@@ -115,14 +115,21 @@ namespace Engine.Game {
             for (int i = 0 ; i < Funkin.weeks_array.size ; i++) {
                 for (int j = 0 ; j < Funkin.weeks_array.array[i].songs_count ; j++) {
                     bool should_hide = Funkin.weeks_array.array[i].songs[j].freeplay_hide_if_week_locked;
-                    bool is_locked = !FunkinSave.ContainsUnlockDirective(Funkin.weeks_array.array[i].unlock_directive);
+                    bool is_locked1 = !FunkinSave.ContainsUnlockDirective(Funkin.weeks_array.array[i].unlock_directive);
+                    if (should_hide && is_locked1) continue;
 
-                    if (should_hide && is_locked) continue;
+                    should_hide = Funkin.weeks_array.array[i].songs[j].freeplay_hide_if_locked;
+                    bool is_locked2 = !FunkinSave.ContainsUnlockDirective(Funkin.weeks_array.array[i].songs[j].freeplay_unlock_directive);
+                    if (should_hide && is_locked2) continue;
+
+                    int gameplaymanifest_index = Funkin.weeks_array.array[i].songs[j].freeplay_track_index_in_gameplaymanifest;
+                    if (gameplaymanifest_index < 0) gameplaymanifest_index = j;
 
                     songs.Add(new MappedSong() {
                         song_index = j,
+                        gameplaymanifest_index = gameplaymanifest_index,
                         week_index = i,
-                        is_locked = is_locked
+                        is_locked = is_locked1 || is_locked2
                     });
                 }
             }
@@ -207,7 +214,7 @@ namespace Engine.Game {
                 layout.Suspend();
                 int ret = Week.Main(
                     weekinfo, state.use_alternative, difficult, default_bf, default_gf,
-                    gameplaymanifest, state.map.song_index
+                    gameplaymanifest, state.map.gameplaymanifest_index
                 );
                 if (ret == 0) break;// back to main menu
 
@@ -667,6 +674,7 @@ L_return:
             public int song_index;
             public int week_index;
             public bool is_locked;
+            public int gameplaymanifest_index;
         }
 
         private struct Difficult {

@@ -134,7 +134,8 @@ declare namespace KDMYEngine {
 
     /**
      * @summary Called on every beat.
-     * This function is not called exactly when an event occurs beacuse the check is done on every frame (before {@link f_frame}).
+     * This function is not called exactly when an event occurs beacuse the check is done 
+     * on every frame (before {@link f_frame}).
      * The milliseconds spent waiting for the frame is passed in the parameter __since__.
      * @param current_beat The beat number (also known as count).
      * @param since How many milliseconds transcurred since the new beat
@@ -143,12 +144,25 @@ declare namespace KDMYEngine {
 
     /**
      * @summary Called on every quarter (a quarter is 1/4 of a beat).
-     * This function is not called exactly when an event occurs beacuse the check is done on every frame (before {@link f_frame}).
+     * This function is not called exactly when an event occurs beacuse the check is done 
+     * on every frame (before {@link f_frame}).
      * The milliseconds spent waiting for the frame is passed in the parameter __since__.
      * @param current_quarter The quarter number (also known as count).
      * @param since How many milliseconds transcurred since the new quarter.
      */
     export function f_quarter(current_quarter: number, since: number): void;
+
+    /**
+     * @summary Called when the engine display load and show a dialogue declared
+     * in the gameplay manifest (gameplay.json file).
+     * This happens if the track contains the "dialogText" property set.
+     * Note 1: the engine calls this function before {@link f_beforeready}.
+     * Note 2: while the dialog is shown the user can pause the game.
+     * Note 3: if the user restarts the song, the dialog is ignored.
+     * Note 4: if the initial states contains lua code, these runs first.
+     * @param dialog_src the dialog text file as-is was defined in the gameplay manifest.
+     */
+    export function f_dialogue_builtin_open(dialog_src: string): void;
 
     /**
      * @summary Called when the dialogue is playing the close animation

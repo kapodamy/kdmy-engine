@@ -5,6 +5,7 @@ const FS_CHAR_SEPARATOR_REJECT = '\\';
 const FS_FILENAME_INVALID_CHARS = `<>:"/\\|?*`;
 const FS_TEMP_MAX_LENGTH = 192;
 const FS_ASSETS_FOLDER = "/assets";
+const FS_EXPANSIONS_FOLDER = "/expansions";
 const FS_ASSETS_COMMON_FOLDER = "/assets/common/";
 const FS_NO_OVERRIDE_COMMON = "/~assets/common/";
 
@@ -407,7 +408,7 @@ function fs_set_working_folder(base_path, get_parent_of_base_path) {
     temp_path = fs_resolve_path(resolved_path);
     resolved_path = undefined;
 
-    if (!temp_path.startsWith(FS_ASSETS_FOLDER)) {
+    if (!temp_path.startsWith(FS_ASSETS_FOLDER) && !temp_path.startsWith(FS_EXPANSIONS_FOLDER)) {
         throw new KDMYEngineIOError(`fs_set_working_folder() failed for: ${base_path}`);
     }
 
@@ -422,7 +423,7 @@ function fs_set_working_subfolder(sub_path) {
     let resolved_path = fs_resolve_path(temp_path);
     temp_path = undefined;
 
-    if (!resolved_path.startsWith(FS_ASSETS_FOLDER)) {
+    if (!resolved_path.startsWith(FS_ASSETS_FOLDER) && !resolved_path.startsWith(FS_EXPANSIONS_FOLDER)) {
         throw new KDMYEngineIOError(
             `fs_set_working_subfolder() failed, cwd=${fs_tls.fs_cwd} sub_path=${sub_path}`
         );

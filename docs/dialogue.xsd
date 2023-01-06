@@ -26,6 +26,8 @@
     </xs:simpleType>
     <xs:simpleType name="AnimUI">
         <xs:restriction base="xs:string">
+            <xs:enumeration value="open" />
+            <xs:enumeration value="close" />
             <xs:enumeration value="backgroundIn" />
             <xs:enumeration value="backgroundOut" />
             <xs:enumeration value="portraitIn" />
@@ -222,7 +224,7 @@
     </xs:complexType>
     <xs:complexType name="Audio-Volume">
         <xs:attribute name="name" type="xs:string" use="required" />
-        <xs:attribute name="duration" type="xs:float" use="required" />
+        <xs:attribute name="volume" type="xs:float" use="required" />
     </xs:complexType>
     <xs:complexType name="Lua-Call">
         <xs:simpleContent>
@@ -339,7 +341,7 @@
 
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="optional" />
-        <xs:attribute name="if_line" type="xs:string" use="optional" />
+        <xs:attribute name="ifLine" type="xs:string" use="optional" />
         <xs:attribute name="initial" type="xs:boolean" use="optional" default="false" />
     </xs:complexType>
     <xs:complexType name="MultipleChoice">

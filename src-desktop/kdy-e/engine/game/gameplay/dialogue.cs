@@ -696,6 +696,7 @@ namespace Engine.Game.Gameplay {
             this.is_completed = false;
             this.self_drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
             this.self_drawable.SetAlpha(1f);
+            this.self_drawable.SetProperty(VertexProps.SPRITE_PROP_ALPHA2, 1f);
             this.self_drawable.SetOffsetColorToDefault();
             this.self_drawable.GetModifier().Clear();
             this.visible_portraits.Clear();
@@ -858,7 +859,14 @@ namespace Engine.Game.Gameplay {
                         background_changed = true;
                         break;
                     case Type.LUA:
-                        this.script.Eval(action.lua_eval);
+                        if (this.script == null) {
+                            Console.Error.WriteLine("[ERROR] dialogue_internal_apply_state() no lua script attached");
+                            break;
+                        }
+                        if (!String.IsNullOrEmpty(action.lua_function))
+                            this.script.CallFunction(action.lua_function);
+                        if (!String.IsNullOrEmpty(action.lua_eval))
+                            this.script.Eval(action.lua_eval);
                         break;
                     case Type.EXIT:
                         Close();
@@ -2343,8 +2351,12 @@ L_check_failed:
                 Texture texture = Texture.Init(src);
                 if (texture == null) goto L_check_failed;
 
+                float width, height;
+                texture.GetOriginalDimmensions(out width, out height);
+
                 statesprite = StateSprite.InitFromTexture(texture);
                 statesprite.SetDrawLocation(0f, 0f);
+                statesprite.SetDrawSize(width, height);
             }
 
 L_check_failed:
@@ -2512,8 +2524,16 @@ L_return:
             string buffered_line = null;
             while ((line = tokenizer.ReadNext()) != null) {
                 int end_index = -1;
+                int line_length = line.Length;
 
-                if (line.Length > 0 && line[0] == ':') {
+                if (line_length > 0 && line[line_length - 1] == '\r') {
+                    string tmp = line.SubstringKDY(0, line_length - 1);
+                    //free(line);
+                    line = tmp;
+                    line_length--;
+                }
+
+                if (line_length > 0 && line[0] == ':') {
                     end_index = line.IndexOf(':', 1);
                 }
 
@@ -2524,7 +2544,7 @@ L_return:
                     buffered_line = tmp;
                 } else {
                     string state = line.SubstringKDY(1, end_index);
-                    string tmp_line = line.SubstringKDY(end_index + 1, line.Length);
+                    string tmp_line = line.SubstringKDY(end_index + 1, line_length);
                     string final_line = StringUtils.Concat(buffered_line, tmp_line);
 
                     //free(tmp_line);

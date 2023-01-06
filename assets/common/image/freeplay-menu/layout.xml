@@ -160,7 +160,7 @@
         </Sprite>
         <Text fontName="vcr" fontSize="14" rgb="0xFFFFFF">
             <Action>
-                <Location x="8" y="698" z="2.1" />
+                <Location x="8" y="698" z="5" />
                 <String>UP/DOWN: choose song. LEFT/RIGHT: choose difficult. For songs with alternative tracks press the binded key.</String>
             </Action>
         </Text>

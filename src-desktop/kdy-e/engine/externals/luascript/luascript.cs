@@ -403,6 +403,16 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.CallPushedGlobalFunction(2);
         }
 
+        public void notify_dialogue_builtin_open(string dialog_src) {
+            const string FUNCTION = "f_dialogue_line_starts";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+
+            L.lua_pushstring(dialog_src);
+
+            lua.CallPushedGlobalFunction(1);
+        }
+
         public void notify_dialogue_line_starts(int line_index, string state_name, string text) {
             const string FUNCTION = "f_dialogue_line_starts";
             if (lua.PushGlobalFunction(FUNCTION)) return;

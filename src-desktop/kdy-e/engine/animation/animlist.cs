@@ -172,6 +172,7 @@ namespace Engine.Animation {
 
             //free(this.entries);
             Luascript.DropShared(this);
+            AnimList.POOL.Delete(this.id);
             //free(animlist);
         }
 
