@@ -776,7 +776,7 @@ namespace Engine.Image {
                     if (this.animation_selected != null)
                         this.animation_selected.SetLoop((int)value);
                     break;
-                case VertexProps.SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+                case VertexProps.SPRITE_PROP_ROTATE_PIVOT_ENABLED:
                     MatrixRotatePivotEnable(value >= 1.0f);
                     break;
                 case VertexProps.SPRITE_PROP_ROTATE_PIVOT_U:

@@ -308,7 +308,7 @@ function pvrctx_helper_set_modifier_property(modifier, property, value) {
         case SPRITE_PROP_SKEW_Y:
             modifier.skew_y = value;
             break;
-        case SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+        case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
             modifier.rotate_pivot_enabled = value;
             break;
         case SPRITE_PROP_ROTATE_PIVOT_U:

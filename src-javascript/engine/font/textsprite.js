@@ -670,7 +670,7 @@ function textsprite_set_property(textsprite, property_id, value) {
             if (textsprite.animation_selected)
                 animsprite_set_loop(textsprite.animation_selected, value);
             break;
-        case SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+        case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
             textsprite_matrix_rotate_pivot_enable(textsprite, value >= 1);
             break;
         case SPRITE_PROP_ROTATE_PIVOT_U:

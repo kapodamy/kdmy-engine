@@ -550,7 +550,7 @@ namespace Engine.Image {
                 case VertexProps.SPRITE_PROP_ANIMATIONLOOP:
                     Console.Error.WriteLine("statesprite_set_property() SPRITE_PROP_ANIMATIONLOOP is not supported");
                     break;
-                case VertexProps.SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+                case VertexProps.SPRITE_PROP_ROTATE_PIVOT_ENABLED:
                     MatrixRotatePivotEnable(value >= 1.0f);
                     break;
                 case VertexProps.SPRITE_PROP_ROTATE_PIVOT_U:

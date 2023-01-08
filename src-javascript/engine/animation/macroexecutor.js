@@ -273,7 +273,7 @@ function macroexecutor_state_from_modifier(macroexecutor, modifier) {
     macroexecutor.state[SPRITE_PROP_TRANSLATE_Y] = modifier.translate_y;
     macroexecutor.state[SPRITE_PROP_SKEW_X] = modifier.skew_x;
     macroexecutor.state[SPRITE_PROP_SKEW_Y] = modifier.skew_y;
-    macroexecutor.state[SPRITE_PROP_ROTATE_PIVOT_ENABLE] = modifier.rotate_pivot_enabled;
+    macroexecutor.state[SPRITE_PROP_ROTATE_PIVOT_ENABLED] = modifier.rotate_pivot_enabled;
     macroexecutor.state[SPRITE_PROP_ROTATE_PIVOT_U] = modifier.rotate_pivot_u;
     macroexecutor.state[SPRITE_PROP_ROTATE_PIVOT_V] = modifier.rotate_pivot_v;
     macroexecutor.state[SPRITE_PROP_SCALE_DIRECTION_X] = modifier.scale_direction_x;

@@ -60,7 +60,7 @@ namespace Engine.Utils {
         public const int SPRITE_PROP_VERTEX_COLOR_OFFSET_A = 19;
         public const int SPRITE_PROP_FLIP_X = 20;
         public const int SPRITE_PROP_FLIP_Y = 21;
-        public const int SPRITE_PROP_ROTATE_PIVOT_ENABLE = 22;
+        public const int SPRITE_PROP_ROTATE_PIVOT_ENABLED = 22;
         public const int SPRITE_PROP_ROTATE_PIVOT_U = 23;
         public const int SPRITE_PROP_ROTATE_PIVOT_V = 24;
         public const int SPRITE_PROP_SCALE_DIRECTION_X = 25;
@@ -205,11 +205,11 @@ namespace Engine.Utils {
                     return SPRITE_PROP_VERTEX_COLOR_OFFSET_B;
                 case "offsetcolora":
                     return SPRITE_PROP_VERTEX_COLOR_OFFSET_A;
-                case "pivotenable":
-                    return SPRITE_PROP_ROTATE_PIVOT_ENABLE;
-                case "pivotu":
+                case "rotatepivotenabled":
+                    return SPRITE_PROP_ROTATE_PIVOT_ENABLED;
+                case "rotatepivotu":
                     return SPRITE_PROP_ROTATE_PIVOT_U;
-                case "pivotv":
+                case "rotatepivotv":
                     return SPRITE_PROP_ROTATE_PIVOT_V;
                 case "scaledirectionx":
                     return SPRITE_PROP_SCALE_DIRECTION_X;
@@ -774,7 +774,7 @@ L_invalid:
             switch (property_id) {
                 case SPRITE_PROP_FLIP_X:
                 case SPRITE_PROP_FLIP_Y:
-                case SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+                case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
                 case SPRITE_PROP_ROTATE_PIVOT_U:
                 case SPRITE_PROP_ROTATE_PIVOT_V:
                 case SPRITE_PROP_SCALE_DIRECTION_X:
@@ -802,7 +802,7 @@ L_invalid:
                 case SPRITE_PROP_FLIP_X:
                 case SPRITE_PROP_FLIP_Y:
                 case SPRITE_PROP_FLIP_CORRECTION:
-                case SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+                case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
                 case SPRITE_PROP_TRANSLATE_ROTATION:
                 case SPRITE_PROP_SCALE_SIZE:
                 case SPRITE_PROP_SCALE_TRANSLATION:

@@ -61,6 +61,17 @@ namespace Engine.Externals.LuaScriptInterop {
             return 1;
         }
 
+        static int script_dialogue_show_dialog2(LuaState L) {
+            Dialogue dialogue = L.ReadUserdata<Dialogue>(DIALOGUE);
+
+            string text_dialog_content = L.luaL_checkstring(2);
+
+            bool ret = dialogue.ShowDialog2(text_dialog_content);
+
+            L.lua_pushboolean(ret);
+            return 1;
+        }
+
         static int script_dialogue_close(LuaState L) {
             Dialogue dialogue = L.ReadUserdata<Dialogue>(DIALOGUE);
 
@@ -130,6 +141,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("is_completed", script_dialogue_is_completed),
             new LuaTableFunction("is_hidden", script_dialogue_is_hidden),
             new LuaTableFunction("show_dialog", script_dialogue_show_dialog),
+            new LuaTableFunction("show_dialog2", script_dialogue_show_dialog2),
             new LuaTableFunction("close", script_dialogue_close),
             new LuaTableFunction("hide", script_dialogue_hide),
             new LuaTableFunction("get_modifier", script_dialogue_get_modifier),

@@ -198,7 +198,7 @@ namespace Engine {
                     break;
                 case VertexProps.SPRITE_PROP_ANIMATIONLOOP:
                     break;
-                case VertexProps.SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+                case VertexProps.SPRITE_PROP_ROTATE_PIVOT_ENABLED:
                     this.modifier.rotate_pivot_enabled = value >= 1.0f;
                     break;
                 case VertexProps.SPRITE_PROP_ROTATE_PIVOT_U:

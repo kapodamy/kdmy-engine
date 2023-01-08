@@ -3418,7 +3418,7 @@ namespace Engine {
                 float value_float = Single.NaN;
 
                 switch (name) {
-                    case "rotatepivotenable":
+                    case "rotatepivotenabled":
                     case "scalesize":
                     case "scaletranslation":
                     case "translaterotation":
@@ -3624,7 +3624,8 @@ namespace Engine {
             int loop = VertexProps.ParseInteger(unparsed_entry, "loop", 1);
             bool has_number_suffix = VertexProps.ParseBoolean(unparsed_entry, "hasNumberSuffix", true);
 
-            AnimSprite animsprite = AnimSprite.InitFromAtlas(Funkin.DEFAULT_ANIMATIONS_FRAMERATE, loop, atlas, anim_name, has_number_suffix);
+            float fps = atlas.GetGlyphFPS();
+            AnimSprite animsprite = AnimSprite.InitFromAtlas(fps, loop, atlas, anim_name, has_number_suffix);
 
             if (animsprite == null) {
                 Console.Error.WriteLine("[WARN] Missing animation '" + anim_name + "': " + unparsed_entry.OuterHTML);

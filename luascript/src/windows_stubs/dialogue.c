@@ -22,6 +22,10 @@ bool dialogue_show_dialog(Dialogue dialogue, const char* dialog_src) {
     print_stub("dialogue_show_dialog", "dialogue=%p dialog_src=%s", dialogue, dialog_src);
     return 0;
 }
+bool dialogue_show_dialog2(Dialogue dialogue, const char* text_dialog_content) {
+    print_stub("dialogue_show_dialog2", "dialogue=%p text_dialog_content=%s", dialogue, text_dialog_content);
+    return 0;
+}
 void dialogue_close(Dialogue dialogue) {
     print_stub("dialogue_close", "dialogue=%p", dialogue);
 }

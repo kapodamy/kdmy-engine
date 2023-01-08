@@ -22,7 +22,7 @@ const SPRITE_PROP_VERTEX_COLOR_OFFSET_B = 18;
 const SPRITE_PROP_VERTEX_COLOR_OFFSET_A = 19;
 const SPRITE_PROP_FLIP_X = 20;
 const SPRITE_PROP_FLIP_Y = 21;
-const SPRITE_PROP_ROTATE_PIVOT_ENABLE = 22;
+const SPRITE_PROP_ROTATE_PIVOT_ENABLED = 22;
 const SPRITE_PROP_ROTATE_PIVOT_U = 23;
 const SPRITE_PROP_ROTATE_PIVOT_V = 24;
 const SPRITE_PROP_SCALE_DIRECTION_X = 25;
@@ -189,11 +189,11 @@ function vertexprops_parse_sprite_property2(property) {
             return SPRITE_PROP_VERTEX_COLOR_OFFSET_B;
         case "offsetcolora":
             return SPRITE_PROP_VERTEX_COLOR_OFFSET_A;
-        case "pivotenable":
-            return SPRITE_PROP_ROTATE_PIVOT_ENABLE;
-        case "pivotu":
+        case "rotatepivotenabled":
+            return SPRITE_PROP_ROTATE_PIVOT_ENABLED;
+        case "rotatepivotu":
             return SPRITE_PROP_ROTATE_PIVOT_U;
-        case "pivotv":
+        case "rotatepivotv":
             return SPRITE_PROP_ROTATE_PIVOT_V;
         case "scaledirectionx":
             return SPRITE_PROP_SCALE_DIRECTION_X;
@@ -680,7 +680,7 @@ function vertexprops_is_property_enumerable(property_id) {
     switch (property_id) {
         case SPRITE_PROP_FLIP_X:
         case SPRITE_PROP_FLIP_Y:
-        case SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+        case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
         case SPRITE_PROP_ROTATE_PIVOT_U:
         case SPRITE_PROP_ROTATE_PIVOT_V:
         case SPRITE_PROP_SCALE_DIRECTION_X:
@@ -709,7 +709,7 @@ function vertexprops_is_property_boolean(property_id) {
         case SPRITE_PROP_FLIP_X:
         case SPRITE_PROP_FLIP_Y:
         case SPRITE_PROP_FLIP_CORRECTION:
-        case SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+        case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
         case SPRITE_PROP_TRANSLATE_ROTATION:
         case SPRITE_PROP_SCALE_SIZE:
         case SPRITE_PROP_SCALE_TRANSLATION:

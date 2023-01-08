@@ -494,6 +494,7 @@ declare global {
         is_completed(): boolean;
         is_hidden(): boolean;
         show_dialog(dialog_src: string): boolean;
+        show_dialog2(text_dialog_content: string): boolean;
         close(): void;
         hide(hidden: boolean): void;
         get_modifier(): Modifier;

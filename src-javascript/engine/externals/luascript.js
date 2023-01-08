@@ -773,6 +773,7 @@ function createWasm() {
 var tempDouble;
 var tempI64;
 
+
 function __asyncjs__animlist_init(src) {
     return Asyncify.handleAsync(async() => {
         let ret = await animlist_init(kdmyEngine_ptrToString(src));
@@ -788,6 +789,11 @@ function __asyncjs__atlas_init(src) {
 function __asyncjs__dialogue_show_dialog(dialogue, dialog_src) {
     return Asyncify.handleAsync(async() => {
         return await dialogue_show_dialog(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(dialog_src))
+    })
+}
+function __asyncjs__dialogue_show_dialog2(dialogue, text_dialog_content) {
+    return Asyncify.handleAsync(async() => {
+        return await dialogue_show_dialog2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(text_dialog_content))
     })
 }
 function __asyncjs__fs_readfile(path, buffer_ptr, size_ptr) {
@@ -2896,6 +2902,7 @@ function __js__week_update_bpm(roundcontext, bpm) {
 function __js__week_update_speed(roundcontext, speed) {
     week_update_speed(kdmyEngine_obtain(roundcontext), speed)
 }
+
 
 
 function callRuntimeCallbacks(callbacks) {
@@ -6284,6 +6291,7 @@ var asmLibraryArg = {
     "__asyncjs__animlist_init": __asyncjs__animlist_init,
     "__asyncjs__atlas_init": __asyncjs__atlas_init,
     "__asyncjs__dialogue_show_dialog": __asyncjs__dialogue_show_dialog,
+    "__asyncjs__dialogue_show_dialog2": __asyncjs__dialogue_show_dialog2,
     "__asyncjs__fs_readfile": __asyncjs__fs_readfile,
     "__asyncjs__messagebox_set_image_from_atlas": __asyncjs__messagebox_set_image_from_atlas,
     "__asyncjs__messagebox_set_image_from_texture": __asyncjs__messagebox_set_image_from_texture,

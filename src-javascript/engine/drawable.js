@@ -164,7 +164,7 @@ function drawable_set_property(drawable, property_id, value) {
             break;
         case SPRITE_PROP_ANIMATIONLOOP:
             break;
-        case SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+        case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
             drawable.modifier.rotate_pivot_enabled = value >= 1.0;
             break;
         case SPRITE_PROP_ROTATE_PIVOT_U:

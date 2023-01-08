@@ -121,7 +121,7 @@ namespace Engine {
                 case VertexProps.SPRITE_PROP_SKEW_Y:
                     this.skew_y = value;
                     break;
-                case VertexProps.SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+                case VertexProps.SPRITE_PROP_ROTATE_PIVOT_ENABLED:
                     this.rotate_pivot_enabled = value >= 1.0;
                     break;
                 case VertexProps.SPRITE_PROP_ROTATE_PIVOT_U:

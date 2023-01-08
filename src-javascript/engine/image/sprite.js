@@ -724,7 +724,7 @@ function sprite_set_property(sprite, property_id, value) {
             if (sprite.animation_selected)
                 animsprite_set_loop(sprite.animation_selected, value);
             break;
-        case SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+        case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
             sprite_matrix_rotate_pivot_enable(sprite, value >= 1.0);
             break;
         case SPRITE_PROP_ROTATE_PIVOT_U:

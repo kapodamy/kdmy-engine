@@ -27,7 +27,7 @@
             <xs:enumeration value="vertexColorOffsetA" />
             <xs:enumeration value="flipX" />
             <xs:enumeration value="flipY" />
-            <xs:enumeration value="rotatePivotEnable" />
+            <xs:enumeration value="rotatePivotEnabled" />
             <xs:enumeration value="rotatePivotU" />
             <xs:enumeration value="rotatePivotV" />
             <xs:enumeration value="scaleDirectionX" />

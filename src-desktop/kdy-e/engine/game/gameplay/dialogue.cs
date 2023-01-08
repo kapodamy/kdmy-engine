@@ -9,6 +9,8 @@ using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
+using static System.Windows.Forms.LinkLabel;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace Engine.Game.Gameplay {
 
@@ -669,61 +671,48 @@ namespace Engine.Game.Gameplay {
         }
 
         public bool ShowDialog(string src_dialog) {
-            if (src_dialog == null) return false;
+            if (String.IsNullOrEmpty(src_dialog)) return false;
 
-            ArrayList<Dialog> dialogs = new ArrayList<Dialog>(this.dialogs_size);
-            for (int i = 0 ; i < this.dialogs_size ; i++) dialogs.Add(this.dialogs[i]);
-            if (this.dialog_external != null) dialogs.Add(this.dialog_external);
+            string full_path = FS.GetFullPathAndOverride(src_dialog);
+            this.current_dialog = null;
 
-            int total = dialogs.Size();
-            int id = Dialogue.InternalParseDialog(src_dialog, dialogs);
-            if (id < 0) {
-                dialogs.Destroy(false);
-                return false;
-            } else if (id >= total) {
-                InternalDestroyExternalDialog();
-                this.dialog_external = dialogs.Get(id);
-                dialogs.Destroy(false);
+            if (this.dialog_external != null && this.dialog_external.full_path == full_path) {
+                this.current_dialog = this.dialog_external;
+            } else {
+                // check if the dialog is already parsed
+                for (int i = 0 ; i < this.dialogs_size ; i++) {
+                    if (this.dialogs[i].full_path == full_path) {
+                        InternalDestroyExternalDialog();
+                        this.current_dialog = this.dialogs[i];
+                        break;
+                    }
+                }
             }
 
-            this.current_dialog = this.dialog_external;
-            this.do_skip = false;
-            this.do_instant_print = false;
-            this.do_multiplechoice = null;
-            this.do_exit = false;
-            this.current_dialog_line = 0;
-            this.self_hidden = false;
-            this.is_completed = false;
-            this.self_drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
-            this.self_drawable.SetAlpha(1f);
-            this.self_drawable.SetProperty(VertexProps.SPRITE_PROP_ALPHA2, 1f);
-            this.self_drawable.SetOffsetColorToDefault();
-            this.self_drawable.GetModifier().Clear();
-            this.visible_portraits.Clear();
-
-            // apply any initial state
-            this.ApplyState2(null, null);
-            for (int i = 0 ; i < this.states_size ; i++) {
-                if (this.states[i].initial) this.InternalApplyState(this.states[i]);
+            if (this.current_dialog != null) {
+                //free(full_path);
+                return InternalPrepareDialog();
             }
 
-            if (!this.texsprite_speech.HasFont()) {
-                Console.Error.WriteLine("[ERROR] dialogue_show_dialog() speech textsprite does not have font");
-                this.do_exit = true;
+            // load and parse dialog txt file
+            string source = FS.ReadText(full_path);
+            if (source != null) {
+                InternalParseExternalDialog(source);
+                this.dialog_external.full_path = full_path;
+                //free(source);
+            } else {
+                Console.Error.WriteLine("[ERROR] dialogue_show_dialog() can not read: " + src_dialog);
+                //free(full_path);
                 return false;
             }
+            return InternalPrepareDialog();
+        }
 
-            InternalPreparePrintText();
+        public bool ShowDialog2(string text_dialog_content) {
+            if (String.IsNullOrEmpty(text_dialog_content)) return false;
 
-            if (this.anims_ui.open != null) this.anims_ui.open.Restart();
-            if (this.anims_ui.close != null) this.anims_ui.close.Restart();
-
-            if (this.current_speechimage == null && this.speechimages_size > 0) {
-                Console.Error.WriteLine("[WARN] dialogue_show_dialog() no speech background choosen, auto-choosing the first one declared");
-                this.current_speechimage = this.speechimages[0];
-            }
-
-            return true;
+            InternalParseExternalDialog(text_dialog_content);
+            return InternalPrepareDialog();
         }
 
         public void Close() {
@@ -791,6 +780,46 @@ namespace Engine.Game.Gameplay {
                 this.script = null;
         }
 
+
+        public bool InternalPrepareDialog() {
+            this.do_skip = false;
+            this.do_instant_print = false;
+            this.do_multiplechoice = null;
+            this.do_exit = false;
+            this.current_dialog_line = 0;
+            this.self_hidden = false;
+            this.is_completed = false;
+            this.self_drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
+            this.self_drawable.SetAlpha(1.0f);
+            this.self_drawable.SetProperty(VertexProps.SPRITE_PROP_ALPHA2, 1.0f);
+            this.self_drawable.SetOffsetColorToDefault();
+            this.self_drawable.GetModifier().Clear();
+            this.visible_portraits.Clear();
+
+            // apply any initial state
+            ApplyState2(null, null);
+            for (int i = 0 ; i < this.states_size ; i++) {
+                if (this.states[i].initial) InternalApplyState(this.states[i]);
+            }
+
+            if (!this.texsprite_speech.HasFont()) {
+                Console.Error.WriteLine("[ERROR] dialogue_internal_prepare_dialog() speech textsprite does not have font");
+                this.do_exit = true;
+                return false;
+            }
+
+            InternalPreparePrintText();
+
+            if (this.anims_ui.open != null) this.anims_ui.open.Restart();
+            if (this.anims_ui.close != null) this.anims_ui.close.Restart();
+
+            if (this.current_speechimage == null && this.speechimages_size > 0) {
+                Console.Error.WriteLine("[WARN] dialogue_internal_prepare_dialog() no speech background choosen, auto-choosing the first one declared");
+                this.current_speechimage = this.speechimages[0];
+            }
+
+            return true;
+        }
 
         private bool InternalApplyState(State state) {
             if (this.do_exit) return false;
@@ -1338,6 +1367,15 @@ namespace Engine.Game.Gameplay {
             //free(this.dialog_external.full_path);
             //free(this.dialog_external);
             this.dialog_external = null;
+        }
+
+        private void InternalParseExternalDialog(string source) {
+            InternalDestroyExternalDialog();
+            Dialog new_dialog = new Dialog() { lines = null, lines_size = 0, full_path = null };
+
+            Dialogue.InternalParseDialogFromString(source, new_dialog);
+            this.dialog_external = new_dialog;
+            this.current_dialog = this.dialog_external;
         }
 
         private void InternalNotifyScript(bool is_line_start) {
@@ -2271,7 +2309,7 @@ L_check_failed:
             int dialog_id = -1;
 
             if (!String.IsNullOrEmpty(dialogs_file))
-                dialog_id = Dialogue.InternalParseDialog(dialogs_file, dialogs);
+                dialog_id = Dialogue.InternalParseDialogFromFile(dialogs_file, dialogs);
 
             Choice choice = new Choice() {
                 text = text,
@@ -2496,13 +2534,13 @@ L_return:
             JSONParser.Destroy(json);
         }
 
-        private static int InternalParseDialog(string src, ArrayList<Dialog> dialogs) {
+        private static int InternalParseDialogFromFile(string src, ArrayList<Dialog> dialogs) {
             string full_path = FS.GetFullPathAndOverride(src);
 
             // check if is already loaded
             int id = 0;
             foreach (Dialog existing_dialog in dialogs) {
-                if (existing_dialog.full_path == full_path) return id;
+                if (existing_dialog.full_path != null && existing_dialog.full_path == full_path) return id;
                 id++;
             }
 
@@ -2515,6 +2553,19 @@ L_return:
                 return -1;
             }
 
+            Dialog dialog = new Dialog();
+            InternalParseDialogFromString(source, dialog);
+
+            // add to the arraylist 
+            id = dialogs.Size();
+            dialog.full_path = full_path;
+            dialogs.Add(dialog);
+
+            //free(source);
+            return id;
+        }
+
+        private static void InternalParseDialogFromString(string source, Dialog dialog_ref) {
             Tokenizer tokenizer = Tokenizer.Init("\n", false, false, source);
             Debug.Assert(tokenizer != null);
 
@@ -2580,19 +2631,12 @@ L_return:
             }
 
             tokenizer.Destroy();
-            //free(source);
 
-            Dialog dialog = new Dialog() {
-                full_path = full_path,
-                lines = null,
-                lines_size = 0
-            };
+            dialog_ref.full_path = null;
+            dialog_ref.lines = null;
+            dialog_ref.lines_size = 0;
 
-            lines.Destroy2(out dialog.lines_size, ref dialog.lines);
-            id = dialogs.Size();
-            dialogs.Add(dialog);
-
-            return id;
+            lines.Destroy2(out dialog_ref.lines_size, ref dialog_ref.lines);
         }
 
         private static void InternalReadColor(XmlParserNode node, float[] rgba) {

@@ -3323,7 +3323,7 @@ function layout_helper_add_action_modifier(unparsed_entry, action_entries) {
         let value;
 
         switch (name) {
-            case "rotatepivotenable":
+            case "rotatepivotenabled":
             case "scalesize":
             case "scaletranslation":
             case "translaterotation":
@@ -3528,7 +3528,8 @@ function layout_helper_add_action_animationfromatlas(unparsed_entry, atlas, acti
     let loop = vertexprops_parse_integer(unparsed_entry, "loop", 1);
     let has_number_suffix = vertexprops_parse_boolean(unparsed_entry, "hasNumberSuffix", 1);
 
-    let animsprite = animsprite_init_from_atlas(FUNKIN_DEFAULT_ANIMATIONS_FRAMERATE, loop, atlas, anim_name, has_number_suffix);
+    let fps = atlas_get_glyph_fps(atlas);
+    let animsprite = animsprite_init_from_atlas(fps, loop, atlas, anim_name, has_number_suffix);
 
     if (!animsprite) {
         console.warn(`Missing animation '${anim_name}': ${unparsed_entry.outerHTML}`);

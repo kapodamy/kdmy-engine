@@ -19,6 +19,9 @@ EM_JS_PRFX(bool, dialogue_is_hidden, (Dialogue dialogue), {
 EM_ASYNC_JS_PRFX(bool, dialogue_show_dialog, (Dialogue dialogue, const char* dialog_src), {
     return await dialogue_show_dialog(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(dialog_src));
 });
+EM_ASYNC_JS_PRFX(bool, dialogue_show_dialog2, (Dialogue dialogue, const char* text_dialog_content), {
+    return await dialogue_show_dialog2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(text_dialog_content));
+});
 EM_JS_PRFX(void, dialogue_close, (Dialogue dialogue), {
     dialogue_close(kdmyEngine_obtain(dialogue));
 });
@@ -88,6 +91,17 @@ static int script_dialogue_show_dialog(lua_State* L) {
     const char* dialog_src = luaL_optstring(L, 2, NULL);
 
     bool ret = dialogue_show_dialog(dialogue, dialog_src);
+
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
+static int script_dialogue_show_dialog2(lua_State* L) {
+    Dialogue dialogue = luascript_read_userdata(L, DIALOGUE);
+
+    const char* text_dialog_content = luaL_checkstring(L, 2);
+
+    bool ret = dialogue_show_dialog2(dialogue, text_dialog_content);
 
     lua_pushboolean(L, ret);
     return 1;
@@ -163,6 +177,7 @@ static const luaL_Reg DIALOGUE_FUNCTIONS[] = {
     {"is_completed", script_dialogue_is_completed},
     {"is_hidden", script_dialogue_is_hidden},
     {"show_dialog", script_dialogue_show_dialog},
+    {"show_dialog2", script_dialogue_show_dialog2},
     {"close", script_dialogue_close},
     {"hide", script_dialogue_hide},
     {"get_modifier", script_dialogue_get_modifier},

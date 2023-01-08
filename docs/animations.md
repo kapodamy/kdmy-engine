@@ -166,8 +166,8 @@ This list is not complete (missing textsprite and layoutgroup properties), only 
 - `frameIndex`: If an atlas was applied, this set what frame should use. (Defaults to zero whatever there an atlas or not)
 - `vertexColorR` `vertexColorG` `vertexColorB`: vertex color RGB components in the range [0.0, 1.0]. (Defaults to zero)
 - `offsetColorR` `offsetColorG` `offsetColorB` `offsetColorA`: vertex color RGBA components in the range [0.0, 1.0]. (Defaults to one)
-- `pivotEnable`: (1)Enable or (0)disable the rotation from inside of the sprite. (Defaults to zero)
-- `pivotU` `pivotV`: Rotation pivot coordinates. (Defaults to zero)
+- `rotatePivotEnabled`: (1)Enable or (0)disable the rotation from inside of the sprite. (Defaults to zero)
+- `rotatePivotU` `rotatePivotV`: Rotation pivot coordinates. (Defaults to zero)
 - `scaleDirectionX` `scaleDirectionY`: Defines the `scaleX` `scaleY` direction. Use *0* to scale from left/top to bottom/right, *-1* to scale in the inverse direction (from bottom/right to top/left) or *-0.5* to stretch the sprite keeping the center in the same position. (Defaults to zero)
 - `translateRotation`  Indicates if should apply translate before rotate. (Defaults to zero)
 - `scaleSize`  Indicates if only the draw size should be scaled. (Defaults to zero)
@@ -353,7 +353,7 @@ Same as [RegisterSet](#yield-instruction), but picks a value from a sprite prope
 1. In `width`/`height` sprite property set the value/start/end to **-1** to use the "frame size" (`frameWidth`/`frameHeight` from the atlas).
 2. In all sprite properties use value **rnd** to assing a random value, you must setup the random range first using [RandomSetup](#randomsetup-instruction) instruction and generate a value using [RandomChoose](#randomchoose-instruction).
 3. In all sprite properties use value **reg0**, **reg1**, **reg2** or **reg3** to use the values stored in these registers.
-4. Use `pivotU`=0.5 and `pivotV`=0.5 to rotate the sprite from his center.
+4. Use `rotatePivotU`=0.5 and `rotatePivotV`=0.5 to rotate the sprite from his center.
 5. In [Yield](#yield-instruction) and [Pause](#pause-instruction) instructions is posible use **reg0**, **reg1**, **reg2**, **reg3** and **rnd** as well.
 6. In the [Interpolator](#interpolator-instruction) instruction ignore `start` or `end` attibute to use the actual sprite property value as `start` or `end` value.
 7. In [RegisterSet](#yield-instruction) and [RegisterProp](#yield-instruction) instructions omit the attribute `register` to set the value to all registers.

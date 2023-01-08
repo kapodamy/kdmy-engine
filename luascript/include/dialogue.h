@@ -16,6 +16,7 @@ bool dialogue_apply_state2(Dialogue dialogue, const char* state_name, const char
 bool dialogue_is_completed(Dialogue dialogue);
 bool dialogue_is_hidden(Dialogue dialogue);
 bool dialogue_show_dialog(Dialogue dialogue, const char* dialog_src);
+bool dialogue_show_dialog2(Dialogue dialogue, const char* text_dialog_content);
 void dialogue_close(Dialogue dialogue);
 void dialogue_hide(Dialogue dialogue, bool hidden);
 Modifier dialogue_get_modifier(Dialogue dialogue);

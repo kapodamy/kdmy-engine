@@ -471,7 +471,7 @@ function statesprite_set_property(statesprite, property_id, value) {
         case SPRITE_PROP_ANIMATIONLOOP:
             console.log("statesprite_set_property() SPRITE_PROP_ANIMATIONLOOP is not supported");
             break;
-        case SPRITE_PROP_ROTATE_PIVOT_ENABLE:
+        case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
             statesprite_matrix_rotate_pivot_enable(statesprite, value >= 1.0);
             break;
         case SPRITE_PROP_ROTATE_PIVOT_U:

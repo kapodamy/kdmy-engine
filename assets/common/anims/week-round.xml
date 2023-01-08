@@ -60,9 +60,9 @@
     </AnimationMacro>
 
     <AnimationMacro name="streak_text" loop="1">
-        <Set property="pivotEnable" value="1" />
-        <Set property="pivotU" value="0.5" />
-        <Set property="pivotU" value="0.5" />
+        <Set property="rotatePivotEnabled" value="1" />
+        <Set property="rotatePivotU" value="0.5" />
+        <Set property="rotatePivotV" value="0.5" />
         <Set property="translateRotation" value="1" /><!-- OBLIGATORY -->
         <Set property="alpha" value="1.0" />
         <Set property="rotate" value="0.0" />
