@@ -830,6 +830,12 @@ declare global {
         readonly inversedScrollEnabled: boolean;
         readonly songProgressbarEnabled: boolean;
     }
+    interface Environment {
+        get_language(): string;
+        get_username(): string;
+        get_cmdargs(): string;
+        exit(exit_code: number): string;
+    }
 
     //
     // Global metatables initializers (class static contructors in typescript/javascript)

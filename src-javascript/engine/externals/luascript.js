@@ -1459,6 +1459,41 @@ function __js__healthwatcher_has_deads(healthwatcher, in_players_or_opponents) {
 function __js__healthwatcher_reset_opponents(healthwatcher) {
     healthwatcher_reset_opponents(kdmyEngine_obtain(healthwatcher))
 }
+function __js__kdmyEngine_get_language() {
+    const code = window.navigator.language;
+    const lang = new Intl.DisplayNames([code], {
+        type: "language"
+    });
+    const name = lang.of(code);
+    return kdmyEngine_stringToPtr(name)
+}
+function __js__kdmyEngine_get_locationquery() {
+    let query = location.search;
+    if (query.length > 0 && query[0] == "?")
+        query = query.substring(1);
+    let name = location.pathname;
+    let idx = name.lastIndexOf("/");
+    if (idx >= 0)
+        name = name.substring(idx + 1);
+    let str = name + " ";
+    for (let part of query.split("&")) {
+        let idx = part.indexOf("=");
+        if (idx < 0) {
+            str += decodeURIComponent(part) + " ";
+            continue
+        }
+        let key = part.substring(0, idx);
+        let value = part.substring(idx + 1);
+        if (value.includes(" ") && value[0] != '"' && value[value.length - 1] != '"') {
+            value = '"' + value + '"'
+        }
+        str += "-" + decodeURIComponent(key) + " " + value + " "
+    }
+    return kdmyEngine_stringToPtr(str)
+}
+function __js__kdmyEngine_get_useragent() {
+    return kdmyEngine_stringToPtr(navigator.userAgent)
+}
 function __js__kdmyEngine_forget_obtained(obj_id) {
     let ret = kdmyEngine_forget(obj_id);
     if (!ret)

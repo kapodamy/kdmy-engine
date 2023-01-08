@@ -275,9 +275,13 @@ void script_healthwatcher_register(lua_State* L);
 int script_songprogressbar_new(lua_State* L, SongProgressbar songprogressbar);
 void script_songprogressbar_register(lua_State* L);
 
-
 #define ENGINESETTINGS "EngineSettings"
 int script_enginesettings_new(lua_State* L, EngineSettings_t* enginesettings);
 void script_enginesettings_register(lua_State* L);
+
+#define ENVIRONMENT "Environment"
+//int script_environment_new(lua_State* L);
+void script_environment_register(lua_State* L);
+
 
 #endif

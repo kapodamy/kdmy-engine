@@ -115,6 +115,7 @@ static void luascript_register_objects(lua_State* L, bool is_week) {
     script_timer_register(L);
     script_fs_register(L);
     script_enginesettings_register(L);
+    script_environment_register(L);
 
     // set engine settings
 #ifdef JAVASCRIPT

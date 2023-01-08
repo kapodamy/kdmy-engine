@@ -107,6 +107,7 @@
     <Compile Include="engine\externals\luascript\exports_conductor.cs" />
     <Compile Include="engine\externals\luascript\exports_countdown.cs" />
     <Compile Include="engine\externals\luascript\exports_dialogue.cs" />
+    <Compile Include="engine\externals\luascript\exports_environment.cs" />
     <Compile Include="engine\externals\luascript\exports_healthbar.cs" />
     <Compile Include="engine\externals\luascript\exports_healthwatcher.cs" />
     <Compile Include="engine\externals\luascript\exports_missnotefx.cs" />

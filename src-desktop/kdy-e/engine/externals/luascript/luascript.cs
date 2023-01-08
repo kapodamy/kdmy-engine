@@ -101,6 +101,7 @@ namespace Engine.Externals.LuaScriptInterop {
             ExportsTimer.script_timer_register(lua);
             ExportsFS.script_fs_register(lua);
             ExportsEngineSettings.script_enginesettings_register(lua);
+            ExportsEnvironment.script_environment_register(lua);
 
             // set engine settings
             lua.RegisterConstantUserdata<object>("Settings", ExportsEngineSettings.script_enginesettings_new, EngineSettings.ini);
