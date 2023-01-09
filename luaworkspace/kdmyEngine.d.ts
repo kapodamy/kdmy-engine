@@ -955,7 +955,11 @@ declare global {
     function modding_unlockdirective_get(name: string): number | null;
 
     //
-    // Engine settings
+    // Engine objects
     //
     const Settings: EngineSettings;
+    const Environment: Environment;
+
+    function importScript(lua_script_filename: string): boolean;
+    function evalScript(lua_script_filename: string): any;
 }

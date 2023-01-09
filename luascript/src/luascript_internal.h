@@ -182,6 +182,10 @@ void script_timer_register(lua_State* L);
 // int script_fs_new(lua_State* L);
 void script_fs_register(lua_State* L);
 
+//#define SCRIPT "Script"
+// int script_script_new(lua_State* L);
+void script_script_register(lua_State* L);
+
 
 //#define MODDING "Modding"
 // int script_modding_new(lua_State* L);

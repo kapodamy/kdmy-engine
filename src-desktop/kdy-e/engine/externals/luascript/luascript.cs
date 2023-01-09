@@ -100,6 +100,7 @@ namespace Engine.Externals.LuaScriptInterop {
             ExportsMath2D.script_math2d_register(lua);
             ExportsTimer.script_timer_register(lua);
             ExportsFS.script_fs_register(lua);
+            ExportsScript.script_script_register(lua);
             ExportsEngineSettings.script_enginesettings_register(lua);
             ExportsEnvironment.script_environment_register(lua);
 

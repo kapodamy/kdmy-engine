@@ -119,6 +119,7 @@
     <Compile Include="engine\externals\luascript\exports_streakcounter.cs" />
     <Compile Include="engine\externals\luascript\exports_strum.cs" />
     <Compile Include="engine\externals\luascript\exports_strums.cs" />
+    <Compile Include="engine\externals\luascript\exports_script.cs" />
     <Compile Include="engine\externals\luascript\exports_tweenlerp.cs" />
     <Compile Include="engine\externals\luascript\luascript_helpers.cs" />
     <Compile Include="engine\externals\luascript\exports_tweenkeyframe.cs" />
