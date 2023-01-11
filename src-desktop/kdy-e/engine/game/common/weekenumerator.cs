@@ -1,5 +1,6 @@
 using System;
 using Engine.Platform;
+using Engine.Sound;
 using Engine.Utils;
 
 namespace Engine.Game.Common {
@@ -42,8 +43,8 @@ namespace Engine.Game.Common {
         public string name;
         public string display_name;
         public string description;
-        public string  week_title_model;
-        public string  week_title_model_animation_name;
+        public string week_title_model;
+        public string week_title_model_animation_name;
         public bool host_flip_sprite;
         public bool host_enable_beat;
         public string week_host_character_manifest;
@@ -246,7 +247,7 @@ namespace Engine.Game.Common {
                     name = week_name,
                     display_name = JSONParser.ReadString(json, "displayName", null),
                     description = JSONParser.ReadString(json, "description", null),
-                    week_title_model= ParsePath(json, "weekTitleModel"),
+                    week_title_model = ParsePath(json, "weekTitleModel"),
                     week_title_model_animation_name = JSONParser.ReadString(json, "weekTitleModelAnimationName", null),
                     host_flip_sprite = JSONParser.ReadBoolean(json, "hostFlipSprite", false),
                     host_enable_beat = JSONParser.ReadBoolean(json, "hostEnableBeat", true),
@@ -299,6 +300,10 @@ namespace Engine.Game.Common {
                 Console.Error.WriteLine("[ERROR] weekenumerator_parse_path() invalid '" + json_property_name + "' found");
                 //free(path);
                 return null;
+            }
+
+            if (json_property_name == "freeplaySongFilename") {
+                return SongPlayer.HelperGetTracksFullPath(path);
             }
 
             if (path.IndexOf(FS.CHAR_SEPARATOR_REJECT, 0) >= 0) {

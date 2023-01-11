@@ -17,6 +17,7 @@ namespace Engine.Sound {
         private const string SUFFIX_ALTERNATIVE = "-alt";
         private const string NAME_INSTRUMENTAL = "Inst";
         private const string NAME_VOICES = "Voices";
+        public const char TRACKS_SEPARATOR = '|';
 
         private static readonly SongPlayer SILENCE = new SongPlayer();
 
@@ -245,8 +246,18 @@ namespace Engine.Sound {
             path_voices = null;
             path_instrumental = null;
             bool is_not_splitted = false;
+            int parts = src.IndexOf('|');
 
             if (String.IsNullOrWhiteSpace(src)) return is_not_splitted;
+
+            int separator_index = src.IndexOf(TRACKS_SEPARATOR);
+            if (separator_index >= 0) {
+                // parse "voices.ogg|inst.ogg" format
+                path_voices = SongPlayer.InternalSeparePaths(0, separator_index, src, true);
+                path_instrumental = SongPlayer.InternalSeparePaths(separator_index + 1, src.Length, src, true);
+
+                return is_not_splitted;
+            }
 
             int dot_index = src.LastIndexOf('.');
             if (dot_index < 0) throw new Exception("missing file extension : " + src);
@@ -299,6 +310,53 @@ namespace Engine.Sound {
             }
 
             return is_not_splitted;
+        }
+
+        public static string HelperGetTracksFullPath(string src) {
+            int separator_index = src.IndexOf(SongPlayer.TRACKS_SEPARATOR);
+
+            if (separator_index < 0) {
+                string path = FS.GetFullPath(src);
+                //free(src);
+                return path;
+            }
+
+            // parse "voices.ogg|inst.ogg" format
+            string path_voices = SongPlayer.InternalSeparePaths(0, separator_index, src, false);
+            string path_instrumental = SongPlayer.InternalSeparePaths(separator_index + 1, src.Length, src, false);
+
+            //free(src);
+
+            if (path_voices != null) {
+                string tmp = FS.GetFullPath(path_voices);
+                //free(path_voices);
+                path_voices = tmp;
+            }
+
+            if (path_instrumental != null) {
+                string tmp = FS.GetFullPath(path_instrumental);
+                //free(path_instrumental);
+                path_instrumental = tmp;
+            }
+
+            src = StringUtils.Concat(path_voices, SongPlayer.TRACKS_SEPARATOR.ToString(), path_instrumental);
+
+            //free(path_voices);
+            //free(path_instrumental);
+            return src;
+        }
+
+        private static string InternalSeparePaths(int start, int end, string src, bool check_if_exists) {
+            if (start == end) return null;
+
+            string path = src.SubstringKDY(start, end);
+
+            if (!check_if_exists || FS.FileExists(path)) return path;
+
+            Console.Error.WriteLine("[WARN] songplayer_internal_separe_paths() missing: " + path);
+
+            //free(path);
+            return null;
         }
 
     }

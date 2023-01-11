@@ -196,7 +196,7 @@
 				"freeplaySongFilename": {
                     "type": "string",
 					"default": null,
-					"description": "if this field is ommited, the name is used in lower case and spaces are replaced by dashes"
+					"description": "if this field is ommited, the name is used in lower case and spaces are replaced by dashes.\nTo specify the tracks independently use the format: VOICES.ogg|INSTRUMENTAL.ogg"
                 },
                 "freeplayDescription": {
                     "type": ["string", "null"],

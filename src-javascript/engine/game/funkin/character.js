@@ -1070,7 +1070,7 @@ async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_r
 
 function character_internal_import_animation(mdlhldr, anim_name, prefix, suffix, is_sustain) {
     if (!anim_name) return null;
-    anim_name = string_concat_for_state_name(3, prefix, anim_name, suffix);
+    anim_name = string_concat(3, prefix, anim_name, suffix);
 
     let animsprite = character_internal_import_animation2(mdlhldr, anim_name, is_sustain);
     if (!anim_name) anim_name = undefined;

@@ -39,7 +39,12 @@ EM_JS_PRFX(char*, kdmyEngine_get_locationquery, (), {
 
     return kdmyEngine_stringToPtr(str);
 });
+#else
+static const char* language = "English";
+static const char* username = "Cosme Fulanito";
+static const char* cmdargs = "";
 #endif
+
 
 static int script_environment_get_language(lua_State* L) {
 
@@ -48,7 +53,7 @@ static int script_environment_get_language(lua_State* L) {
     lua_pushstring(L, language);
     free(language);
 #else
-    lua_pushstring(L, "English");
+    lua_pushstring(L, language);
 #endif
 
     return 1;
@@ -61,7 +66,7 @@ static int script_environment_get_username(lua_State* L) {
     lua_pushstring(L, useragent);
     free(useragent);
 #else
-    lua_pushstring(L, "Cosme Fulanito");
+    lua_pushstring(L, username);
 #endif
 
     return 1;
@@ -74,7 +79,7 @@ static int script_environment_get_cmdargs(lua_State* L) {
     lua_pushstring(L, locationquery);
     free(locationquery);
 #else
-    lua_pushstring(L, "");
+    lua_pushstring(L, cmdargs);
 #endif
 
     return 1;
@@ -94,7 +99,38 @@ static const luaL_Reg ENVIRONMENT_FUNCTIONS[] = {
     { "exit", script_environment_exit },
 };
 
+static int script_environment_gc(lua_State* L) {
+    // nothing to do
+    (void)L;
+    return 0;
+}
+
+static int script_environment_tostring(lua_State* L) {
+#ifdef JAVASCRIPT
+    char* language = kdmyEngine_get_language();
+    char* username = kdmyEngine_get_useragent();
+    char* cmdargs = kdmyEngine_get_locationquery();
+#endif
+
+    lua_pushfstring(
+        L,
+        "{language=\"%s\" username=\"%s\" cmdargs=\"%s\"}",
+        language,
+        username,
+        cmdargs
+    );
+
+#ifdef JAVASCRIPT
+    free(language);
+    free(username);
+    free(cmdargs);
+#endif
+
+    return 0;
+}
+
+
 void script_environment_register(lua_State* L) {
-    luascript_register(L, ENVIRONMENT, NULL, NULL, ENVIRONMENT_FUNCTIONS);
+    luascript_register(L, ENVIRONMENT, script_environment_gc, script_environment_tostring, ENVIRONMENT_FUNCTIONS);
 }
 

@@ -294,9 +294,14 @@ namespace Engine.Game.Helpers {
                 this.list_visible[i].sprite_title.DestroyTexture();
                 this.list_visible[i].sprite_title.DestroyAllAnimations();
 
-                this.list_visible[i].sprite_title.ExternalAnimationSet(animsprite);
                 this.list_visible[i].sprite_title.SetTexture(texture, true);
-                this.list_visible[i].sprite_title.SetDrawSizeFromSourceSize();
+
+                if (animsprite != null) {
+                    this.list_visible[i].sprite_title.ExternalAnimationSet(animsprite);
+                    animsprite.UpdateSprite(this.list_visible[i].sprite_title, true);
+                } else {
+                    this.list_visible[i].sprite_title.SetDrawSizeFromSourceSize();
+                }
             }
 
             this.host_load_id++;

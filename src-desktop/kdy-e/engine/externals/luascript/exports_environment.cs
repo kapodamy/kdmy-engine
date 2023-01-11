@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using Engine.Animation;
 using Engine.Externals.LuaInterop;
 
 namespace Engine.Externals.LuaScriptInterop {
@@ -38,8 +39,28 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("exit", script_environment_exit),
         };
 
+        static int script_enviroment_gc(LuaState L) {
+            // nothind to do
+            return 0;
+        }
+
+        static int script_enviroment_tostring(LuaState L) {
+            string str = String.Format(
+                "{{language=\"{0}\" username=\"{1}\" cmdargs=\"{2}\"}}",
+                CultureInfo.InstalledUICulture.DisplayName,
+                Environment.UserName,
+                Environment.CommandLine
+            );
+
+            L.lua_pushstring(str);
+            return 1;
+        }
+
+        private static readonly LuaCallback delegate_gc = script_enviroment_gc;
+        private static readonly LuaCallback delegate_tostring = script_enviroment_tostring;
+
         public static void script_environment_register(ManagedLuaState L) {
-            L.RegisterMetaTable(ENVIRONMENT, null, null, ENVIRONMENT_FUNCTIONS);
+            L.RegisterMetaTable(ENVIRONMENT, delegate_gc, delegate_tostring, ENVIRONMENT_FUNCTIONS);
         }
 
     }

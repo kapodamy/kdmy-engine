@@ -1109,7 +1109,7 @@ L_read_state:
         private static AnimSprite InternalImportAnimation(ModelHolder mdlhldr, string anim_name, string prefix, string suffix, bool is_sustain) {
             if (String.IsNullOrEmpty(anim_name)) return null;
 
-            anim_name = StringUtils.ConcatForStateName(prefix, anim_name, suffix);
+            anim_name = StringUtils.Concat(prefix, anim_name, suffix);
             AnimSprite animsprite = InternalImportAnimation2(mdlhldr, anim_name, is_sustain);
 
             //if (!String.IsNullOrEmpty(anim_name)) free(anim_name);

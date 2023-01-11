@@ -8,8 +8,8 @@
         "noHeader": false
     },
     "compilerOptions": {
-        "target": "esnext",
-        "lib": ["esnext"],
+        "target": "ESNext",
+        "lib": ["ESNext"],
         "moduleResolution": "node",
         "types": ["@typescript-to-lua/language-extensions", "./kdmyEngine", "lua-types/5.3"],
         "strict": true,

@@ -231,6 +231,10 @@ async function weekenumerator_parse_path(json, json_property_name) {
         return null;
     }
 
+    if (json_property_name == "freeplaySongFilename") {
+        return await songplayer_helper_get_tracks_full_path(path);
+    }
+
     if (path.indexOf(FS_CHAR_SEPARATOR_REJECT, 0) >= 0) {
         console.error(`weekenumerator_parse_path() invalid char separator in: ${path}`);
         path = undefined;

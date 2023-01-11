@@ -3623,8 +3623,13 @@ namespace Engine {
 
             int loop = VertexProps.ParseInteger(unparsed_entry, "loop", 1);
             bool has_number_suffix = VertexProps.ParseBoolean(unparsed_entry, "hasNumberSuffix", true);
+            float fps  = VertexProps.ParseFloat(unparsed_entry, "fps", 0);
 
-            float fps = atlas.GetGlyphFPS();
+            if (fps < 1) {
+                fps = atlas.GetGlyphFPS();
+                if (fps < 1) fps = Funkin.DEFAULT_ANIMATIONS_FRAMERATE;
+            }
+
             AnimSprite animsprite = AnimSprite.InitFromAtlas(fps, loop, atlas, anim_name, has_number_suffix);
 
             if (animsprite == null) {

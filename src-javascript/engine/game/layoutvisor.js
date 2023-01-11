@@ -448,9 +448,24 @@ function main_layout_add_listeners() {
         let target_input = "input[name=item-bind-ranking]";
 
         if (layout_placeholder.name != null) {
-            if (layout_placeholder.name.startsWith("character_"))
+            if (layout_placeholder.name.startsWith("character_")) {
                 target_input = "[name=item-bind-type][value=character]";
-            else if (layout_placeholder.name == "ui_rankingcounter_rank")
+
+                /**@type {HTMLInputElement} */// @ts-ignore
+                let input_scale = document.getElementById("bind-character_scale");
+
+                // pick attached value "character_girlfriend_scale" or "character_scale_###"
+                let name = layout_placeholder.name;
+                if (name == "character_girlfriend")
+                    name = "character_girlfriend_scale";
+                else
+                    name = name.replace(/^(character)(_.+)/, "$1_scale$2")
+
+                let scale = layout_get_attached_value_as_float(layoutvisor_layout, name, NaN);
+
+                if (Number.isFinite(scale)) input_scale.valueAsNumber = scale;
+
+            } else if (layout_placeholder.name == "ui_rankingcounter_rank")
                 target_input = "[name=item-bind-type][value=ranking]";
             else if (layout_placeholder.name == "ui_rankingcounter_accuracy")
                 target_input = "[name=item-bind-type][value=accuracy]";

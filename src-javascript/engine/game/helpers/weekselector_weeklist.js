@@ -270,9 +270,14 @@ async function weekselector_weeklist_select(weeklist, index) {
         sprite_destroy_texture(weeklist.list_visible[i].sprite_title);
         sprite_destroy_all_animations(weeklist.list_visible[i].sprite_title);
 
-        sprite_external_animation_set(weeklist.list_visible[i].sprite_title, animsprite);
         sprite_set_texture(weeklist.list_visible[i].sprite_title, texture, 1);
-        sprite_set_draw_size_from_source_size(weeklist.list_visible[i].sprite_title);
+
+        if (animsprite) {
+            sprite_external_animation_set(weeklist.list_visible[i].sprite_title, animsprite);
+            animsprite_update_sprite(animsprite, weeklist.list_visible[i].sprite_title, 1);
+        } else {
+            sprite_set_draw_size_from_source_size(weeklist.list_visible[i].sprite_title);
+        }
     }
 
     weeklist.host_load_id++;

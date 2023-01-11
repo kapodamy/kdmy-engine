@@ -5,6 +5,7 @@ const SONGPLAYER_SUFFIX_VOICES = "-voices";
 const SONGPLAYER_SUFFIX_ALTERNATIVE = "-alt";
 const SONGPLAYER_NAME_INSTRUMENTAL = "Inst";
 const SONGPLAYER_NAME_VOICES = "Voices";
+const SONGPLAYER_TRACKS_SEPARATOR = '|';
 
 const SONGPLAYER_SILENCE = { playbacks: null, playbacks_size: 0, paused: 1 };
 
@@ -235,11 +236,22 @@ function songplayer_set_volume_track(songplayer, vocals_or_instrumental, volume)
 
 
 async function songplayer_helper_get_tracks(src, prefer_alternative, output_paths) {
-    let path_instrumental = null;
     let path_voices = null;
+    let path_instrumental = null;
     let is_not_splitted = 0;
 
     if (!src) return is_not_splitted;
+
+    let separator_index = src.indexOf(SONGPLAYER_TRACKS_SEPARATOR);
+    if (separator_index >= 0) {
+        // parse "voices.ogg|inst.ogg" format
+        path_voices = await songplayer_internal_separe_paths(0, separator_index, src, 1);
+        path_instrumental = await songplayer_internal_separe_paths(separator_index + 1, src.Length, src, 1);
+
+        output_paths[0] = path_voices;
+        output_paths[1] = path_instrumental;
+        return is_not_splitted;
+    }
 
     let dot_index = src.lastIndexOf('.');
     if (dot_index < 0) throw new Error("missing file extension : " + src);
@@ -296,6 +308,53 @@ async function songplayer_helper_get_tracks(src, prefer_alternative, output_path
     return is_not_splitted;
 }
 
+
+async function songplayer_helper_get_tracks_full_path(src) {
+    let separator_index = src.indexOf(SONGPLAYER_TRACKS_SEPARATOR);
+
+    if (separator_index < 0) {
+        let path = fs_get_full_path(src);
+        src = undefined;
+        return path;
+    }
+
+    // parse "voices.ogg|inst.ogg" format
+    let path_voices = await songplayer_internal_separe_paths(0, separator_index, src, false);
+    let path_instrumental = await songplayer_internal_separe_paths(separator_index + 1, src.length, src, false);
+
+    src = undefined;
+
+    if (path_voices != null) {
+        let tmp = fs_get_full_path(path_voices);
+        path_voices = undefined;
+        path_voices = tmp;
+    }
+
+    if (path_instrumental != null) {
+        let tmp = fs_get_full_path(path_instrumental);
+        path_instrumental = undefined;
+        path_instrumental = tmp;
+    }
+
+    src = string_concat(3, path_voices, SONGPLAYER_TRACKS_SEPARATOR, path_instrumental);
+
+    path_voices = undefined;
+    path_instrumental = undefined;
+    return src;
+}
+
+async function songplayer_internal_separe_paths(start, end, src, check_if_exists) {
+    if (start == end) return null;
+
+    let path = src.substring(start, end);
+
+    if (!check_if_exists || await fs_file_exists(path)) return path;
+
+    console.warn("songplayer_internal_separe_paths() missing: " + path);
+
+    path = undefined;
+    return null;
+}
 
 
 
