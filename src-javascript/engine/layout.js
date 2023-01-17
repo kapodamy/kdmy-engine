@@ -40,9 +40,11 @@ const LAYOUT_ACTION_SPRITE_TRAILING = 26;
 const LAYOUT_ACTION_SPRITE_TRAILINGOFFSETCOLOR = 27;
 const LAYOUT_ACTION_TEXTBACKGROUND = 28;
 const LAYOUT_ACTION_TEXTBACKGROUNDCOLOR = 29;
+const LAYOUT_ACTION_SOUNDFADE = 30;
 
 const LAYOUT_GROUP_ROOT = Symbol("root-group");
 const LAYOUT_BPM_STEPS = 32;// 1/32 beats
+var LAYOUT_DEBUG_PRINT_TRIGGER_CALLS = false;
 
 
 async function layout_init(src) {
@@ -358,6 +360,7 @@ function layout_destroy(layout) {
         layout.trigger_list[i].action_name = undefined;
         layout.trigger_list[i].camera_name = undefined;
         layout.trigger_list[i].trigger_name = undefined;
+        layout.trigger_list[i].stop_trigger_name = undefined;
 
     }
     layout.trigger_list = undefined;
@@ -376,6 +379,7 @@ function layout_destroy(layout) {
             layout.macro_list[i].actions[j].target_name = undefined;
             layout.macro_list[i].actions[j].action_name = undefined;
             layout.macro_list[i].actions[j].trigger_name = undefined;
+            layout.macro_list[i].actions[j].stop_trigger_name = undefined;
             layout.macro_list[i].actions[j].camera_name = undefined;
         }
         layout.macro_list[i].actions = undefined;
@@ -396,16 +400,28 @@ function layout_destroy(layout) {
 
 
 function layout_trigger_any(layout, action_triger_camera_interval_name) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+        console.log(`layout_trigger_any() target='{action_triger_camera_interval_name}'`);
+    }
     let res = 0;
     res += layout_trigger_action(layout, null, action_triger_camera_interval_name);
     res += layout_trigger_camera(layout, action_triger_camera_interval_name) ? 1 : 0;
     res += layout_trigger_trigger(layout, action_triger_camera_interval_name);
+
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+        console.log(`layout_trigger_any() target='{action_triger_camera_interval_name}' result={res}`);
+    }
+
     return res;
 }
 
 function layout_trigger_action(layout, target_name, action_name) {
     let count = 0;
     let initial_action_name;
+
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+        console.log(`layout_trigger_action() target='{target_name}' action='{action_name}'`);
+    }
 
     for (let i = 0; i < layout.vertex_list_size; i++) {
         if (target_name != null && layout.vertex_list[i].name != target_name) continue;
@@ -459,6 +475,10 @@ function layout_trigger_action(layout, target_name, action_name) {
                 count++;
             }
         }
+    }
+
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+        console.log(`layout_trigger_action() target='{target_name}' action='{action_name}' res={count}`);
     }
 
     return count;
@@ -562,16 +582,28 @@ function layout_camera_is_completed(layout) {
 }
 
 function layout_trigger_camera(layout, camera_name) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+        console.log(`layout_trigger_camera() target='{camera_name}'`);
+    }
     return camera_from_layout(layout.camera_helper, layout, camera_name);
 }
 
 function layout_trigger_trigger(layout, trigger_name) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+        console.log(`layout_trigger_trigger() target='{trigger_name}'`);
+    }
+
     let count = 0;
     for (let i = 0; i < layout.trigger_list_size; i++) {
         if (layout.trigger_list[i].name == trigger_name) {
             layout_helper_execute_trigger(layout, layout.trigger_list[i]);
         }
     }
+
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+        console.log(`layout_trigger_trigger() target='{trigger_name}' res={count}`);
+    }
+
     return count;
 }
 
@@ -1898,6 +1930,9 @@ function layout_helper_commit_trigger(layout, trigger) {
     if (trigger.camera_name != null && !layout_trigger_camera(layout, trigger.camera_name)) {
         console.warn(`layout_helper_commit_trigger() no camera with name: ${trigger.camera_name}`);
     }
+    if (trigger.stop_trigger_name != null) {
+        layout_stop_trigger(layout, trigger.stop_trigger_name);
+    }
     if (trigger.trigger_name == null) {
         return;
     }
@@ -2510,6 +2545,7 @@ function layout_parse_triggers(unparsed_trigger, layout_context) {
         action_name: unparsed_trigger.getAttribute("action"),
         camera_name: unparsed_trigger.getAttribute("camera"),
         trigger_name: unparsed_trigger.getAttribute("trigger"),
+        stop_trigger_name: unparsed_trigger.getAttribute("stopTrigger"),
 
         loop: vertexprops_parse_integer(unparsed_trigger, "loop", 1),// 1 means execute once
 
@@ -2878,6 +2914,10 @@ function layout_parse_sound_action(unparsed_action, animlist, action_entries) {
             case "Properties":
                 layout_helper_add_action_mediaproperties(unparsed_entry, entries);
                 break;
+            case "FadeIn":
+            case "FadeOut":
+                layout_helper_add_action_soundfade(unparsed_entry, entries);
+                break;
             /*case "Animation":
                 layout_helper_add_action_animation(unparsed_entry, animlist, entries);
                 break;
@@ -2908,6 +2948,7 @@ function layout_parse_macro_actions(unparsed_actions, macro) {
         let target_name = null;
         let action_name = null;
         let trigger_name = null;
+        let stop_trigger_name = null;
         let camera_name = null;
 
         switch (unparsed_action.tagName) {
@@ -2924,6 +2965,7 @@ function layout_parse_macro_actions(unparsed_actions, macro) {
                 target_name = unparsed_action.getAttribute("target");
                 action_name = unparsed_action.getAttribute("action");
                 trigger_name = unparsed_action.getAttribute("trigger");
+                stop_trigger_name = unparsed_action.getAttribute("stopTrigger");
                 camera_name = unparsed_action.getAttribute("camera");
                 break;
             default:
@@ -2936,6 +2978,7 @@ function layout_parse_macro_actions(unparsed_actions, macro) {
             target_name = undefined;
             action_name = undefined;
             trigger_name = undefined;
+            stop_trigger_name = undefined;
             camera_name = undefined;
             continue;
         }
@@ -2947,6 +2990,7 @@ function layout_parse_macro_actions(unparsed_actions, macro) {
             target_name,
             action_name,
             trigger_name,
+            stop_trigger_name,
             camera_name
         };
 
@@ -3242,6 +3286,9 @@ function layout_helper_execute_action_in_sound(action, item) {
         switch (entry.type) {
             case LAYOUT_ACTION_PROPERTY:
                 soundplayer_set_property(soundplayer, entry.property, entry.value);
+                break;
+            case LAYOUT_ACTION_SOUNDFADE:
+                soundplayer_fade(soundplayer, entry.enable, entry.size);
                 break;
             /*case LAYOUT_ACTION_ANIMATION:
                 if (!entry.misc && !item.animation) break;
@@ -3799,7 +3846,7 @@ function layout_helper_add_action_setshaderuniform(unparsed_entry, action_entrie
         let str;
 
         while ((str = tokenizer_read_next(tokenizer)) != null) {
-            let temp_value = vertexprops_parse_double2(str, Number.NaN);
+            let temp_value = vertexprops_parse_double2(str, NaN);
             if (Number.isNaN(temp_value)) {
                 console.warn("layout_helper_add_action_setshaderuniform() invalid value: " + str);
                 temp_value = 0.0;
@@ -3925,6 +3972,16 @@ function layout_helper_add_action_spritetrailingoffsetcolor(unparsed_entry, acti
     };
 
     layout_helper_parse_color(unparsed_entry, entry.rgba);
+
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_add_action_soundfade(unparsed_entry, action_entries) {
+    let entry = {
+        type: LAYOUT_ACTION_SOUNDFADE,
+        enable: unparsed_entry.tagName == "FadeIn",
+        size: layout_helper_parse_float(unparsed_entry, "duration", 1000.0)
+    };
 
     arraylist_add(action_entries, entry);
 }

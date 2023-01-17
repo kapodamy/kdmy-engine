@@ -268,7 +268,7 @@ namespace Engine.Game {
 
             SoundPlayer sound_asterik = SoundPlayer.Init("/assets/common/sound/asterikMenu.ogg");
 
-            if (menu.GetSelectedIndex() < 0) {
+            if (menu.GetSelectedIndex() < 0 && menu.GetItemsCount() > 0) {
                 menu.SelectIndex(0);
 
                 state.map = songs.Get(menu.GetSelectedIndex());
@@ -276,6 +276,7 @@ namespace Engine.Game {
                 FreeplayMenu.InternalBuildDifficulties(state);
                 FreeplayMenu.InternalShowInfo(state);
                 FreeplayMenu.InternalSongLoad(state, true);
+                InternalTriggerActionMenu(state, true, false);
             }
 
 
@@ -340,6 +341,7 @@ namespace Engine.Game {
                     continue;
                 }
 
+                int old_index = menu.GetSelectedIndex();
                 if (!menu.SelectVertical(offset)) {
                     int index = menu.GetSelectedIndex();
                     if (index < 1)
@@ -350,15 +352,22 @@ namespace Engine.Game {
                     menu.SelectIndex(index);
                 }
 
-                state.map = songs.Get(menu.GetSelectedIndex());
+                int selected_index = menu.GetSelectedIndex();
+                if (selected_index != old_index) InternalTriggerActionMenu(state, false, false);
+
+                state.map = songs.Get(selected_index);
                 state.use_alternative = false;
                 FreeplayMenu.InternalBuildDifficulties(state);
                 FreeplayMenu.InternalShowInfo(state);
                 FreeplayMenu.InternalSongLoad(state, true);
+
+                if (selected_index != old_index) InternalTriggerActionMenu(state, true, false);
             }
 
             if (sound_asterik != null) sound_asterik.Destroy();
             gamepad.Destroy();
+
+            if (map_index >= 0) InternalTriggerActionMenu(state, false, true);
 
             return map_index;
         }
@@ -690,6 +699,19 @@ L_return:
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
             }
+        }
+
+        private static void InternalTriggerActionMenu(State state, bool selected, bool choosen) {
+            if (state.map.week_index < 0 || state.map.week_index >= Funkin.weeks_array.size) return;
+            WeekInfo weekinfo = Funkin.weeks_array.array[state.map.week_index];
+
+            if (state.map.song_index < 0 || state.map.song_index >= weekinfo.songs_count) return;
+            WeekInfo.Song[] songs = weekinfo.songs;
+
+            string week_name = weekinfo.display_name ?? weekinfo.name;
+            string song_name = songs[state.map.song_index].name;
+
+            GameMain.HelperTriggerActionMenu(state.layout, week_name, song_name, selected, choosen);
         }
 
         public struct MappedSong {

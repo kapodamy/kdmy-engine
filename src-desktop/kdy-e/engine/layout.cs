@@ -105,9 +105,11 @@ namespace Engine {
         private const int ACTION_SPRITE_TRAILINGOFFSETCOLOR = 27;
         private const int ACTION_TEXTBACKGROUND = 28;
         private const int ACTION_TEXTBACKGROUNDCOLOR = 29;
+        private const int ACTION_SOUNDFADE = 30;
 
         public const string GROUP_ROOT = "___root-group___";
         private const float BPM_STEPS = 32;// 1/32 beats
+        public static bool DEBUG_PRINT_TRIGGER_CALLS = false;
 
         private static readonly HelperZbufferSortImpl HelperZbufferSort = new HelperZbufferSortImpl();
 
@@ -478,6 +480,7 @@ namespace Engine {
                 //free(this.trigger_list[i].action_name);
                 //free(this.trigger_list[i].camera_name);
                 //free(this.trigger_list[i].trigger_name);
+                //free(this.trigger_list[i].stop_trigger_name);
 
             }
             //free(this.trigger_list);
@@ -496,6 +499,7 @@ namespace Engine {
                     //free(this.macro_list[i].actions[j].target_name);
                     //free(this.macro_list[i].actions[j].action_name);
                     //free(this.macro_list[i].actions[j].trigger_name);
+                    //free(this.macro_list[i].actions[j].stop_trigger_name);
                     //free(this.macro_list[i].actions[j].camera_name);
                 }
                 //free(this.macro_list[i].actions);
@@ -516,16 +520,28 @@ namespace Engine {
 
 
         public int TriggerAny(string action_triger_camera_interval_name) {
+            if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+                Console.WriteLine($"layout_trigger_any() target='{action_triger_camera_interval_name}'");
+            }
             int res = 0;
             res += TriggerAction(null, action_triger_camera_interval_name);
             res += TriggerCamera(action_triger_camera_interval_name) ? 1 : 0;
             res += TriggerTrigger(action_triger_camera_interval_name);
+
+            if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+                Console.WriteLine($"layout_trigger_any() target='{action_triger_camera_interval_name}' result={res}");
+            }
+
             return res;
         }
 
         public int TriggerAction(string target_name, string action_name) {
             int count = 0;
             string initial_action_name;
+
+            if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+                Console.WriteLine($"layout_trigger_action() target='{target_name}' action='{action_name}'");
+            }
 
             for (int i = 0 ; i < this.vertex_list_size ; i++) {
                 if (target_name != null && this.vertex_list[i].name != target_name) continue;
@@ -579,6 +595,10 @@ namespace Engine {
                         count++;
                     }
                 }
+            }
+
+            if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+                Console.WriteLine($"layout_trigger_action() target='{target_name}' action='{action_name}' res={count}");
             }
 
             return count;
@@ -682,16 +702,28 @@ namespace Engine {
         }
 
         public bool TriggerCamera(string camera_name) {
+            if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+                Console.WriteLine($"layout_trigger_camera() target='{camera_name}'");
+            }
             return this.camera_helper.FromLayout(this, camera_name);
         }
 
         public int TriggerTrigger(string trigger_name) {
+            if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+                Console.WriteLine($"layout_trigger_trigger() target='{trigger_name}'");
+            }
+
             int count = 0;
             for (int i = 0 ; i < this.trigger_list_size ; i++) {
                 if (this.trigger_list[i].name == trigger_name) {
                     HelperExecuteTrigger(this.trigger_list[i]);
                 }
             }
+
+            if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+                Console.WriteLine($"layout_trigger_trigger() target='{trigger_name}' res={count}");
+            }
+
             return count;
         }
 
@@ -1988,6 +2020,9 @@ namespace Engine {
             if (trigger.camera_name != null && !TriggerCamera(trigger.camera_name)) {
                 Console.Error.WriteLine("[WARN] layout_helper_commit_trigger() no camera with name: " + trigger.camera_name);
             }
+            if (trigger.stop_trigger_name != null) {
+                StopTrigger(trigger.stop_trigger_name);
+            }
             if (trigger.trigger_name == null) {
                 return;
             }
@@ -2003,7 +2038,7 @@ namespace Engine {
                     continue;
                 }
 
-                Console.Error.WriteLine("layout_helper_commit_trigger() self - trigger avoided: " + trigger.action_name);
+                Console.Error.WriteLine("layout_helper_commit_trigger() self-trigger avoided: " + trigger.action_name);
             }
 
             trigger.context.reject_recursive = false;
@@ -2604,6 +2639,7 @@ namespace Engine {
                 action_name = unparsed_trigger.GetAttribute("action"),
                 camera_name = unparsed_trigger.GetAttribute("camera"),
                 trigger_name = unparsed_trigger.GetAttribute("trigger"),
+                stop_trigger_name = unparsed_trigger.GetAttribute("stopTrigger"),
 
                 loop = VertexProps.ParseInteger(unparsed_trigger, "loop", 1),// 1 means execute once
 
@@ -2973,6 +3009,10 @@ namespace Engine {
                     case "Properties":
                         Layout.HelperAddActionMediaproperties(unparsed_entry, entries);
                         break;
+                    case "FadeIn":
+                    case "FadeOut":
+                        Layout.HelperAddActionSoundfade(unparsed_entry, entries);
+                        break;
                     /*case "Animation":
                         Layout.HelperAddActionAnimation(unparsed_entry, animlist, entries);
                         break;
@@ -3003,6 +3043,7 @@ namespace Engine {
                 string target_name = null;
                 string action_name = null;
                 string trigger_name = null;
+                string stop_trigger_name = null;
                 string camera_name = null;
 
                 switch (unparsed_action.TagName) {
@@ -3019,6 +3060,7 @@ namespace Engine {
                         target_name = unparsed_action.GetAttribute("target");
                         action_name = unparsed_action.GetAttribute("action");
                         trigger_name = unparsed_action.GetAttribute("trigger");
+                        stop_trigger_name = unparsed_action.GetAttribute("stopTrigger");
                         camera_name = unparsed_action.GetAttribute("camera");
                         break;
                     default:
@@ -3031,6 +3073,7 @@ namespace Engine {
                     //free(target_name);
                     //free(action_name);
                     //free(trigger_name);
+                    //free(stop_trigger_name);
                     //free(camera_name);
                     continue;
                 }
@@ -3042,6 +3085,7 @@ namespace Engine {
                     target_name = target_name,
                     action_name = action_name,
                     trigger_name = trigger_name,
+                    stop_trigger_name = stop_trigger_name,
                     camera_name = camera_name
                 };
 
@@ -3337,6 +3381,9 @@ namespace Engine {
                 switch (entry.type) {
                     case Layout.ACTION_PROPERTY:
                         soundplayer.SetProperty(entry.property, entry.value);
+                        break;
+                    case Layout.ACTION_SOUNDFADE:
+                        soundplayer.Fade(entry.enable, entry.size);
                         break;
                         /*case Layout.ACTION_ANIMATION:
                             if (entry.misc == null && item.animation == null) break;
@@ -4030,6 +4077,16 @@ namespace Engine {
             action_entries.Add(entry);
         }
 
+        private static void HelperAddActionSoundfade(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            ActionEntry entry = new ActionEntry() {
+                type = Layout.ACTION_SOUNDFADE,
+                enable = unparsed_entry.TagName == "FadeIn",
+                size = Layout.HelperParseFloat(unparsed_entry, "duration", 1000f)
+            };
+
+            action_entries.Add(entry);
+        }
+
         private class ZBufferEntry {
             public Item item; public float z_index; public bool visible;
         }
@@ -4058,6 +4115,7 @@ namespace Engine {
             public string action_name;
             public string camera_name;
             public string trigger_name;
+            public string stop_trigger_name;
 
             public int loop;
 
@@ -4114,6 +4172,7 @@ namespace Engine {
             public string target_name;
             public string action_name;
             public string trigger_name;
+            public string stop_trigger_name;
             public string camera_name;
         }
         private class Action {

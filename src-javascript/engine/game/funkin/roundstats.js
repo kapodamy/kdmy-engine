@@ -2,7 +2,7 @@
 
 const ROUNDSTATS_FONT_COLOR = 0xFFFFFF;// white
 const ROUNDSTATS_FONT_BORDER_COLOR = 0x000000FF;// black
-const ROUNDSTATS_FONT_BORDER_SIZE = 1;// black
+const ROUNDSTATS_FONT_BORDER_SIZE = 2.5;
 const ROUNDSTATS_SEPARATOR = " | ";
 
 function roundstats_init(x, y, z, fontholder, font_size, layout_width) {

@@ -103,6 +103,10 @@ class STATE {
 
     default_background_color = 0x00;
     custom_layout;
+
+    /**@type {bool} */
+    bg_music_paused;
+    bg_music = {};
 }
 
 function weekselector_show_week_info(/**@type {UI}*/ui, weekinfo, score) {
@@ -182,14 +186,31 @@ async function weekselector_load_custom_week_background(/**@type {STATE}*/state)
         state.custom_layout = null;
     }
 
-    if (!state.weekinfo.custom_selector_layout) return;
+    if (!state.weekinfo.custom_selector_layout) {
+        if (state.bg_music_paused && state.bg_music) soundplayer_play(state.bg_music);
+        return;
+    }
 
+    let has_custom_bg_music = 0;
     let path = weekenumerator_get_asset(state.weekinfo, state.weekinfo.custom_selector_layout);
     state.custom_layout = await layout_init(path);
     path = undefined;
     if (state.custom_layout != null) {
         layout_trigger_any(state.custom_layout, "principal-show");
         if (!state.week_unlocked) layout_trigger_any(state.custom_layout, "week-locked");
+        
+        has_custom_bg_music = layout_get_attached_value(
+            state.custom_layout, "has_background_music", LAYOUT_TYPE_BOOLEAN, has_custom_bg_music
+        );
+    }
+
+    if (state.bg_music) {
+        if (!state.bg_music_paused && has_custom_bg_music)
+            soundplayer_play(state.bg_music);
+        else if (state.bg_music_paused && !has_custom_bg_music)
+            soundplayer_pause(state.bg_music);
+
+        state.bg_music_paused = has_custom_bg_music;
     }
 }
 
@@ -200,6 +221,13 @@ function weekselector_set_text(layout, name, format, text_or_integer) {
         textsprite_set_text_formated(textsprite, format, text_or_integer);
     else
         textsprite_set_text_intern(textsprite, 1, text_or_integer);
+}
+
+function weekselector_trigger_menu_action(ui, state, name, selected, choosen) {
+    if (!state.weekinfo) return;
+    main_helper_trigger_action_menu(
+        ui.layout, state.weekinfo.display_name ?? state.weekinfo.name, name, selected, choosen
+    );
 }
 
 
@@ -331,8 +359,14 @@ async function weekselector_main() {
         quit: 0,
         back_to_main_menu: 0,
 
-        custom_layout: null
+        custom_layout: null,
+        bg_music_paused: 0,
+        bg_music: layout_get_soundplayer(layout, "background_music") ?? background_menu_music
     };
+
+    if (state.bg_music != background_menu_music && background_menu_music) {
+        soundplayer_pause(background_menu_music);
+    }
 
     if (ui.week_background_color)
         state.default_background_color = sprite_get_vertex_color_rgb8(ui.week_background_color);
@@ -340,6 +374,7 @@ async function weekselector_main() {
     weekselector_change_page(ui, state.page_selected_ui);
     state.week_unlocked = funkinsave_contains_unlock_directive(state.weekinfo.unlock_directive);
     await weekselector_load_custom_week_background(state);
+    weekselector_trigger_menu_action(ui, state, "weeklist", 1, 0);
 
     while (!state.quit) {
         let elapsed = await pvrctx_wait_ready();
@@ -400,7 +435,7 @@ async function weekselector_main() {
         if (sound_cancel) soundplayer_replay(sound_cancel);
         layout_trigger_any(layout, "back-to-main-menu");
     } else {
-        if (background_menu_music) soundplayer_stop(background_menu_music);
+        if (state.bg_music) soundplayer_stop(state.bg_music);
         weekselector_change_page(ui, 0);
         if (sound_confirm) soundplayer_replay(sound_confirm);
 
@@ -567,6 +602,8 @@ async function weekselector_page0(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         return;
     }
 
+    weekselector_trigger_menu_action(ui, state, "weeklist", 0, 0);
+
     state.weekinfo = weekselector_weeklist_get_selected(ui.weeklist);
     state.week_unlocked = funkinsave_contains_unlock_directive(state.weekinfo.unlock_directive);
     state.play_sound = WEEKSELECTOR_SND_SCROLL;
@@ -578,9 +615,8 @@ async function weekselector_page0(/**@type {UI}*/ui, /**@type {STATE}*/state) {
     weekselector_mdlselect_select_default(ui.mdl_boyfriend);
     weekselector_mdlselect_select_default(ui.mdl_girlfriend);
 
-    if (state.weekinfo.background_layout) {
-        await weekselector_load_custom_week_background(state);
-    }
+    await weekselector_load_custom_week_background(state);
+    weekselector_trigger_menu_action(ui, state, "weeklist", 1, 0);
 }
 
 async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {

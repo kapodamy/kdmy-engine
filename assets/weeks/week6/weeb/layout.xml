@@ -161,7 +161,7 @@
 				<Location x="50" y="85" z="12.1" />
 				<MaxSize width="160" height="40" />
 				<Color argb="0xFF3F2021"/>
-				<Border argb="0xFFD89494" size="0.5" enable="true" />
+				<Border argb="0xFFD89494" size="1" enable="true" />
 				<Property name="paragraphSeparation" value="2.5" />
 				<Property name="wordbreak" value="loose" />
 			</Action>

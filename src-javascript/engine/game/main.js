@@ -2,7 +2,7 @@
 
 // this file contains all shared data across the game
 const ENGINE_NAME = "kdmy-engine";
-const ENGINE_VERSION = "0.49.6";
+const ENGINE_VERSION = "0.49.9";
 
 
 /**
@@ -145,6 +145,35 @@ async function main(argc, argv) {
     }
 
     return 1;
+}
+
+function main_helper_trigger_action_menu(layout, prefix, name, selected, choosen) {
+    if (!layout || !name) return;
+
+    let suffix;
+
+    if (choosen)
+        suffix = "choosen";
+    else if (selected)
+        suffix = "selected";
+    else
+        suffix = "unselected";
+
+    let target;
+
+    if (prefix)
+        target = string_concat(5, prefix, "-", name, "-", suffix);
+    else
+        target = string_concat(3, name, "-", suffix);
+
+    layout_trigger_any(layout, target);
+    target = undefined;
+}
+
+function main_helper_trigger_action_menu2(layout, menu_manifest, index, prefix, selected, choosen) {
+    if (index < 0 || index >= menu_manifest.items_size) return;
+    let name = menu_manifest.items[index].name ?? menu_manifest.items[index].text;
+    main_helper_trigger_action_menu(layout, prefix, name, selected, choosen);
 }
 
 function main_get_weekinfo_from_week_name(week_name) {

@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Engine.Game.Common;
 using Engine.Game.Gameplay.Helpers;
 using Engine.Platform;
@@ -174,6 +175,7 @@ namespace Engine.Game {
             Menu menu = new Menu(MainMenu.MENU_MANIFEST, x, y, z, size_width, size_height);
             menu.TrasitionIn();
             menu.SelectIndex(0);
+            GameMain.HelperTriggerActionMenu2(layout, MainMenu.MENU_MANIFEST, 0, null, true, false);
 
             if (menu_placeholder != null) {
                 menu_placeholder.vertex = menu.GetDrawable();
@@ -197,6 +199,7 @@ namespace Engine.Game {
 
             bool option_was_selected = false;
             int selected_index = -1;
+            int last_selected_index = 0;
 
             while (true) {
                 int selection_offset_x = 0;
@@ -235,6 +238,10 @@ namespace Engine.Game {
                 if (success) {
                     if (sound_asterik != null) sound_asterik.Stop();
                     if (sound_scroll != null) sound_scroll.Replay();
+
+                    GameMain.HelperTriggerActionMenu2(layout, MainMenu.MENU_MANIFEST, last_selected_index, null, false, false);
+                    last_selected_index = menu.GetSelectedIndex();
+                    GameMain.HelperTriggerActionMenu2(layout, MainMenu.MENU_MANIFEST, last_selected_index, null, true, false);
                 } else {
                     if (sound_scroll != null) sound_scroll.Stop();
                     if (sound_asterik != null) sound_asterik.Replay();
@@ -249,6 +256,9 @@ namespace Engine.Game {
             if (option_was_selected) menu.ToggleChoosen(true);
             else menu.TrasitionOut();
 
+            if (option_was_selected) {
+                GameMain.HelperTriggerActionMenu2(layout, MainMenu.MENU_MANIFEST, selected_index, null, false, true);
+            }
 
             float total_elapsed = 0f;
 

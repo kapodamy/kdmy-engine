@@ -2032,7 +2032,7 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
     );
     textsprite_set_z_index(roundcontext.trackinfo, initparams.ui.trackinfo_z);
     textsprite_border_enable(roundcontext.trackinfo, 1);
-    textsprite_border_set_size(roundcontext.trackinfo, 2);
+    textsprite_border_set_size(roundcontext.trackinfo, 2.5);
     textsprite_border_set_color_rgba8(roundcontext.trackinfo, 0x000000FF);// black
 
     // step 2: dispose all modelholders used

@@ -165,6 +165,7 @@ async function mainmenu_main() {
     let menu = await menu_init(MAINMENU_MENU_MANIFEST, x, y, z, size[0], size[1]);
     menu_trasition_in(menu);
     menu_select_index(menu, 0);
+    main_helper_trigger_action_menu2(layout, MAINMENU_MENU_MANIFEST, 0, null, 1, 0);
 
     if (menu_placeholder) {
         menu_placeholder.vertex = menu_get_drawable(menu);
@@ -188,6 +189,7 @@ async function mainmenu_main() {
 
     let option_was_selected = 0;
     let selected_index = -1;
+    let last_selected_index = 0;
 
     while (1) {
         let selection_offset_x = 0;
@@ -226,6 +228,10 @@ async function mainmenu_main() {
         if (success > 0) {
             if (sound_asterik) soundplayer_stop(sound_asterik);
             if (sound_scroll) soundplayer_replay(sound_scroll);
+
+            main_helper_trigger_action_menu2(layout, MAINMENU_MENU_MANIFEST, last_selected_index, null, 0, 0);
+            last_selected_index = menu.GetSelectedIndex();
+            main_helper_trigger_action_menu2(layout, MAINMENU_MENU_MANIFEST, last_selected_index, null, 1, 0);
         } else {
             if (sound_scroll) soundplayer_stop(sound_scroll);
             if (sound_asterik) soundplayer_replay(sound_asterik);
@@ -240,6 +246,9 @@ async function mainmenu_main() {
     if (option_was_selected) menu_toggle_choosen(menu, 1);
     else menu_trasition_out(menu);
 
+    if (option_was_selected) {
+        main_helper_trigger_action_menu2(layout, MAINMENU_MENU_MANIFEST, selected_index, null, 0, 1);
+    }
 
     let total_elapsed = 0;
 

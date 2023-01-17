@@ -255,7 +255,7 @@ namespace Engine.Game {
             }
 
             while (true) {
-                int selected_option = InCommonMenu(layout, gamepad, menu, options_help);
+                int selected_option = InCommonMenu("Settings", layout, gamepad, menu, options_help);
                 switch (selected_option) {
                     case 0:
                         InGameplayBinding(anim_binding, anim_binding_rollback);
@@ -617,15 +617,18 @@ namespace Engine.Game {
             KallistiOS.MAPLE.maple_mappings.LoadKeyboardMappings();
         }
 
-        private static int InCommonMenu(Layout layout, Gamepad gamepad, Menu menu, SettingOption[] options) {
+        private static int InCommonMenu(string title, Layout layout, Gamepad gamepad, Menu menu, SettingOption[] options) {
             TextSprite hint = layout.GetTextsprite("hint");
             gamepad.SetButtonsDelay((int)(SettingsMenu.DELAY_SECONDS * 1000));
 
             layout.TriggerAny(null);
 
+            int last_selected_index = -1;
             int selected_index = menu.GetSelectedIndex();
             if (selected_index >= 0 && selected_index < menu.GetItemsCount() && hint != null) {
                 hint.SetTextIntern(true, options[selected_index].description);
+                last_selected_index = selected_index;
+                GameMain.HelperTriggerActionMenu2(layout, SettingsMenu.MENU_COMMON, selected_index, title, true, false);
             }
 
             int option = -1;
@@ -665,6 +668,13 @@ namespace Engine.Game {
                     hint.SetTextIntern(true, options[selected_index].description);
                 }
 
+                GameMain.HelperTriggerActionMenu2(layout, SettingsMenu.MENU_COMMON, last_selected_index, title, false, false);
+                last_selected_index = selected_index;
+                GameMain.HelperTriggerActionMenu2(layout, SettingsMenu.MENU_COMMON, selected_index, title, true, false);
+            }
+
+            if (option >= 0) {
+                GameMain.HelperTriggerActionMenu2(layout, SettingsMenu.MENU_COMMON, option, title, false, true);
             }
 
             return option;
@@ -892,7 +902,7 @@ namespace Engine.Game {
             if (setting_name != null) setting_name.SetTextIntern(true, options[0].name);
 
             while (true) {
-                int selected_option = InCommonMenu(layout, gamepad, menu, options);
+                int selected_option = InCommonMenu(title, layout, gamepad, menu, options);
                 if (selected_option < 0) break;
 
                 if (setting_name != null) setting_name.SetTextIntern(true, options[selected_option].name);

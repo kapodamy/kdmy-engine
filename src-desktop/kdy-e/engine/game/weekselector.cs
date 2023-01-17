@@ -111,6 +111,9 @@ namespace Engine.Game {
 
             public uint default_background_color;
             public Layout custom_layout;
+
+            public bool bg_music_paused;
+            public SoundPlayer bg_music;
         }
 
 
@@ -165,6 +168,7 @@ namespace Engine.Game {
 
             state.custom_layout.TriggerAny("change-difficult");
 
+
             if (empty) return;
 
             string default_difficult = ui.weekdifficult.GetSelected();
@@ -191,14 +195,31 @@ namespace Engine.Game {
                 state.custom_layout = null;
             }
 
-            if (String.IsNullOrEmpty(state.weekinfo.custom_selector_layout)) return;
+            if (String.IsNullOrEmpty(state.weekinfo.custom_selector_layout)) {
+                if (state.bg_music_paused && state.bg_music != null) state.bg_music.Play();
+                return;
+            }
 
+            bool has_custom_bg_music = false;
             string path = WeekEnumerator.GetAsset(state.weekinfo, state.weekinfo.custom_selector_layout);
             state.custom_layout = Layout.Init(path);
             //free(path);
             if (state.custom_layout != null) {
                 state.custom_layout.TriggerAny("show-principal");
                 if (!state.week_unlocked) state.custom_layout.TriggerAny("week-locked");
+
+                has_custom_bg_music = (bool)state.custom_layout.GetAttachedValue(
+                    "has_background_music", AttachedValueType.BOOLEAN, has_custom_bg_music
+                );
+            }
+
+            if (state.bg_music != null) {
+                if (!state.bg_music_paused && has_custom_bg_music)
+                    state.bg_music.Play();
+                else if (state.bg_music_paused && !has_custom_bg_music)
+                    state.bg_music.Pause();
+
+                state.bg_music_paused = has_custom_bg_music;
             }
         }
 
@@ -209,6 +230,13 @@ namespace Engine.Game {
                 textsprite.SetTextFormated(format, text);
             else
                 textsprite.SetTextIntern(true, (string)text);
+        }
+
+        private static void TriggerMenuAction(UI ui, STATE state, string name, bool selected, bool choosen) {
+            if (state.weekinfo == null) return;
+            GameMain.HelperTriggerActionMenu(
+                ui.layout, state.weekinfo.display_name ?? state.weekinfo.name, name, selected, choosen
+            );
         }
 
 
@@ -335,8 +363,15 @@ namespace Engine.Game {
                 quit = false,
                 back_to_main_menu = false,
 
-                custom_layout = null
+                custom_layout = null,
+
+                bg_music_paused = false,
+                bg_music = layout.GetSoundplayer("background_music") ?? GameMain.background_menu_music
             };
+
+            if (state.bg_music != GameMain.background_menu_music && GameMain.background_menu_music != null) {
+                GameMain.background_menu_music.Pause();
+            }
 
             if (ui.week_background_color != null)
                 state.default_background_color = ui.week_background_color.GetVertexColorRGB8();
@@ -344,6 +379,7 @@ namespace Engine.Game {
             WeekSelector.ChangePage(ui, state.page_selected_ui);
             state.week_unlocked = FunkinSave.ContainsUnlockDirective(state.weekinfo.unlock_directive);
             WeekSelector.LoadCustomWeekBackground(state);
+            TriggerMenuAction(ui, state, "weeklist", true, false);
 
             while (!state.quit) {
                 float elapsed = PVRContext.global_context.WaitReady();
@@ -404,7 +440,7 @@ namespace Engine.Game {
                 if (sound_cancel != null) sound_cancel.Replay();
                 layout.TriggerAny("back-to-main-menu");
             } else {
-                if (GameMain.background_menu_music != null) GameMain.background_menu_music.Stop();
+                if (state.bg_music != null) state.bg_music.Stop();
                 WeekSelector.ChangePage(ui, 0);
                 if (sound_confirm != null) sound_confirm.Replay();
 
@@ -578,6 +614,8 @@ namespace Engine.Game {
                 return;
             }
 
+            TriggerMenuAction(ui, state, "weeklist", false, false);
+
             state.weekinfo = ui.weeklist.GetSelected();
             state.week_unlocked = FunkinSave.ContainsUnlockDirective(state.weekinfo.unlock_directive);
             state.play_sound = SND.SCROLL;
@@ -590,6 +628,7 @@ namespace Engine.Game {
             ui.mdl_girlfriend.SelectDefault();
 
             WeekSelector.LoadCustomWeekBackground(state);
+            TriggerMenuAction(ui, state, "weeklist", true, false);
         }
 
         private static void Page1(UI ui, STATE state) {

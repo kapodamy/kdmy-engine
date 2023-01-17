@@ -1,6 +1,7 @@
 using System;
 using Engine.Font;
 using Engine.Game.Common;
+using Engine.Game.Gameplay.Helpers;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
@@ -13,7 +14,7 @@ namespace Engine.Game {
 
         // this file contains all shared data across the game
         public const string ENGINE_NAME = "kdmy-engine";
-        public const string ENGINE_VERSION = "0.49.6";
+        public const string ENGINE_VERSION = "0.49.9";
 
         /**
          * The background music used in all menus, inherited from introscreen
@@ -131,6 +132,35 @@ namespace Engine.Game {
             }
 
             return 1;
+        }
+
+        public static void HelperTriggerActionMenu(Layout layout, string prefix, string name, bool selected, bool choosen) {
+            if (layout == null || String.IsNullOrEmpty(name)) return;
+
+            string suffix;
+
+            if (choosen)
+                suffix = "choosen";
+            else if (selected)
+                suffix = "selected";
+            else
+                suffix = "unselected";
+
+            string target;
+
+            if (!String.IsNullOrEmpty(prefix))
+                target = String.Concat(prefix, "-", name, "-", suffix);
+            else
+                target = String.Concat(name, "-", suffix);
+
+            layout.TriggerAny(target);
+            //free(target);
+        }
+
+        public static void HelperTriggerActionMenu2(Layout layout, MenuManifest menu_manifest, int index, string prefix, bool selected, bool choosen) {
+            if (index < 0 || index >= menu_manifest.items_size) return;
+            string name = menu_manifest.items[index].name ?? menu_manifest.items[index].text;
+            GameMain.HelperTriggerActionMenu(layout, prefix, name, selected, choosen);
         }
 
         public static object SpawnCoroutine(Layout background_layout, Func<object, object> function_routine, object argument_routine) {

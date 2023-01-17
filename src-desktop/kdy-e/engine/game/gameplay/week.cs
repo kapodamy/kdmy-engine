@@ -2043,7 +2043,7 @@ namespace Engine.Game.Gameplay {
             );
             roundcontext.trackinfo.SetZIndex(initparams.ui.trackinfo_z);
             roundcontext.trackinfo.BorderEnable(true);
-            roundcontext.trackinfo.BorderSetSize(1f);
+            roundcontext.trackinfo.BorderSetSize(2.5f);
             roundcontext.trackinfo.BorderSetColorRGBA8(0x000000FF);// black
 
             // step 2: dispose all modelholders used

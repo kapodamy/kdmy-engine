@@ -263,7 +263,7 @@ async function freeplaymenu_show(menu, state, songs) {
 
     let sound_asterik = await soundplayer_init("/assets/common/sound/asterikMenu.ogg");
 
-    if (menu_get_selected_index(menu) < 0) {
+    if (menu_get_selected_index(menu) < 0 && menu_get_items_count(menu) > 0) {
         menu_select_index(menu, 0);
 
         state.map = arraylist_get(songs, menu_get_selected_index(menu));
@@ -271,6 +271,8 @@ async function freeplaymenu_show(menu, state, songs) {
         freeplaymenu_internal_build_difficulties(state);
         freeplaymenu_internal_show_info(state);
         freeplaymenu_internal_song_load(state, 1);
+
+        freeplaymenu_internal_trigger_action_menu(state, 1, 0);
     }
 
 
@@ -335,6 +337,7 @@ async function freeplaymenu_show(menu, state, songs) {
             continue;
         }
 
+        let old_index = menu_get_selected_index(menu);
         if (!menu_select_vertical(menu, offset)) {
             let index = menu_get_selected_index(menu);
             if (index < 1)
@@ -345,15 +348,22 @@ async function freeplaymenu_show(menu, state, songs) {
             menu_select_index(menu, index);
         }
 
+        let selected_index = menu_get_selected_index(menu);
+        if (selected_index != old_index) freeplaymenu_internal_trigger_action_menu(state, 0, 0);
+
         state.map = arraylist_get(songs, menu_get_selected_index(menu));
         state.use_alternative = 0;
         freeplaymenu_internal_build_difficulties(state);
         freeplaymenu_internal_show_info(state);
         freeplaymenu_internal_song_load(state, 1);
+
+        if (selected_index != old_index) freeplaymenu_internal_trigger_action_menu(state, 1, 0);
     }
 
     if (sound_asterik) soundplayer_destroy(sound_asterik);
     gamepad_destroy(gamepad);
+
+    if (map_index >= 0) freeplaymenu_internal_trigger_action_menu(state, 0, 1);
 
     return map_index;
 }
@@ -681,3 +691,17 @@ async function freeplaymenu_internal_wait_transition(layout, what, duration) {
         layout_draw(layout, pvr_context);
     }
 }
+
+function freeplaymenu_internal_trigger_action_menu(state, selected, choosen) {
+    if (state.map.week_index < 0 || state.map.week_index >= weeks_array.size) return;
+    const weekinfo = weeks_array.array[state.map.week_index];
+
+    if (state.map.song_index < 0 || state.map.song_index >= weekinfo.songs_count) return;
+    const songs = weekinfo.songs;
+
+    let week_name = weekinfo.display_name ?? weekinfo.name;
+    let song_name = songs[state.map.song_index].name;
+
+    main_helper_trigger_action_menu(state.layout, week_name, song_name, selected, choosen);
+}
+

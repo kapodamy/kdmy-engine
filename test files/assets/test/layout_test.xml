@@ -57,6 +57,9 @@
 
     <!-- Trigger to trigger another Trigger -->
     <Trigger action="action_name" camera="camera_name" trigger="another_trigger" />
+    
+    <!-- Trigger to stop another Trigger -->
+    <Trigger stopTrigger="another_trigger" />
 
     <!-- Trigger is executed with "layout_trigger_trigger()" and Action is executed with "layout_trigger_action()" -->
     <!-- In this example "layout_trigger_action('chainloader')" will execute both action and trigger named "abc" -->
@@ -88,6 +91,9 @@
 
         <!-- execute all actions with that name -->
         <Execute id="1" action="idle" />
+        
+        <!-- stops a running trigger -->
+        <Execute stopTrigger="another_trigger" />
 
         <!-- attach to a single layout item -->
         <Puppet id="2" target="fast_car" />

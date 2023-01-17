@@ -13,7 +13,7 @@ namespace Engine.Game {
 
         private const uint FONT_COLOR = 0xFFFFFF;// white
         private const uint FONT_BORDER_COLOR = 0x000000FF;// black
-        private const uint FONT_BORDER_SIZE = 1;// black
+        private const float FONT_BORDER_SIZE = 2.5f;
         private const string SEPARATOR = " | ";
 
 
