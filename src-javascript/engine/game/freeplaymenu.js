@@ -3,6 +3,7 @@
 const FREEPLAYMENU_BACKGROUND_ANIM_OR_ATLAS_ENTRY_NAME = "freeplay-background";
 const FREEPLAYMENU_PERSONAL_BEST = "PERSONAL BEST SCORE: $l";
 const FREEPLAYMENU_INFO = "$s  -  $s  -  $s";
+const FREEPLAYMENU_BG_INFO_NAME = "background_song_info";
 const FREEPLAYMENU_LAYOUT = "/assets/common/image/freeplay-menu/layout.xml";
 const FREEPLAYMENU_LAYOUT_DREAMCAST = "/assets/common/image/freeplay-menu/layout~dreamcast.xml";
 
@@ -93,17 +94,26 @@ async function freeplaymenu_main() {
     let dt_playsong = layout_get_attached_value_as_float(layout, "durationTransition_playSong", 0.0);
     let dt_screenout = layout_get_attached_value_as_float(layout, "durationTransition_screenOut", 0.0);
 
+    let bg_info_width = -1.0;
+    let bg_info = layout_get_sprite(layout, FREEPLAYMENU_BG_INFO_NAME);
+    if (bg_info != null) {
+        const draw_size = [0, 0];
+        sprite_get_draw_size(bg_info, draw_size);
+        bg_info_width = draw_size[0];
+    }
+
     // step 3: count required tracks
     let songs = arraylist_init2(weeks_array.size * 3);
     for (let i = 0; i < weeks_array.size; i++) {
+        let is_week_locked = !funkinsave_contains_unlock_directive(weeks_array.array[i].unlock_directive);
+
         for (let j = 0; j < weeks_array.array[i].songs_count; j++) {
             let should_hide = weeks_array.array[i].songs[j].freeplay_hide_if_week_locked;
-            let is_locked1 = !funkinsave_contains_unlock_directive(weeks_array.array[i].unlock_directive);
-            if (should_hide && is_locked1) continue;
+            if (should_hide && is_week_locked) continue;
 
             should_hide = weeks_array.array[i].songs[j].freeplay_hide_if_locked;
-            let is_locked2 = !funkinsave_contains_unlock_directive(weeks_array.array[i].songs[j].freeplay_unlock_directive);
-            if (should_hide && is_locked2) continue;
+            let is_song_locked = !funkinsave_contains_unlock_directive(weeks_array.array[i].songs[j].freeplay_unlock_directive);
+            if (should_hide && is_song_locked) continue;
 
             let gameplaymanifest_index = weeks_array.array[i].songs[j].freeplay_track_index_in_gameplaymanifest;
             if (gameplaymanifest_index < 0) gameplaymanifest_index = j;
@@ -112,7 +122,7 @@ async function freeplaymenu_main() {
                 song_index: j,
                 week_index: i,
                 gameplaymanifest_index: gameplaymanifest_index,
-                is_locked: is_locked1 || is_locked2
+                is_locked: is_week_locked || is_song_locked
             });
         }
     }
@@ -179,7 +189,8 @@ async function freeplaymenu_main() {
         difficulties: null,
         difficulties_size: 0,
         running_threads: 0,
-        mutex: {}
+        mutex: {},
+        bg_info_width: bg_info_width
     };
     mutex_init(state.mutex, MUTEX_TYPE_NORMAL);
     if (state.background) sprite_set_texture(state.background, null, 0);
@@ -301,7 +312,7 @@ async function freeplaymenu_show(menu, state, songs) {
             switch_difficult = 1;
         } else if ((btns & (GAMEPAD_A | GAMEPAD_START)) != 0x00) {
             let index = menu_get_selected_index(menu);
-            if (index < 0 || index >= menu_get_items_count(menu) || state.difficult_locked) {
+            if (index < 0 || index >= menu_get_items_count(menu) || state.difficult_locked || state.map.is_locked) {
                 if (sound_asterik) soundplayer_replay(sound_asterik);
                 continue;
             }
@@ -507,6 +518,8 @@ function freeplaymenu_internal_show_info(state) {
     if (!weekinfo.display_name) week_name = weekinfo.name;
 
     let difficult, is_locked, score;
+    let bg_info_width = state.bg_info_width;
+    const text_size = [0, 0];
 
     if (state.difficult_index >= 0 && state.difficult_index < state.difficulties_size) {
         difficult = state.difficulties[state.difficult_index].name;
@@ -518,11 +531,22 @@ function freeplaymenu_internal_show_info(state) {
         difficult = null;
     }
 
-    if (state.personal_best)
-        textsprite_set_text_formated(state.personal_best, FREEPLAYMENU_PERSONAL_BEST, score);
+    if (state.map.is_locked) is_locked = 1;
 
-    if (state.info)
+    if (state.personal_best) {
+        textsprite_set_text_formated(state.personal_best, FREEPLAYMENU_PERSONAL_BEST, score);
+        textsprite_get_draw_size(state.personal_best, text_size);
+        if (text_size[0] > bg_info_width) bg_info_width = text_size[0] * 1.1;
+    }
+
+    if (state.info) {
         textsprite_set_text_formated(state.info, FREEPLAYMENU_INFO, week_name, song_name, difficult);
+        textsprite_get_draw_size(state.info, text_size);
+        if (text_size[0] > bg_info_width) bg_info_width = text_size[0] * 1.1;
+    }
+
+    let bg_info = layout_get_sprite(layout, FREEPLAYMENU_BG_INFO_NAME);
+    if (bg_info) sprite_set_draw_size(bg_info, bg_info_width, NaN);
 
     if (desc) {
         if (state.description)

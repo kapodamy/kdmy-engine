@@ -503,7 +503,7 @@ namespace Engine.Game.Helpers {
         }
 
         private void InternalHostDraw(PVRContext pvrctx) {
-            if (this.host_loading) return;
+            if (this.host_loading || !this.host_statesprite.IsVisible()) return;
             pvrctx.Save();
             this.host_statesprite.Draw(pvrctx);
             pvrctx.Restore();
@@ -518,6 +518,10 @@ namespace Engine.Game.Helpers {
             bool host_flip, host_beat; ModelHolder modelholder;
             string anim_name_hey = WeekSelectorMdlSelect.HEY;
             string anim_name_idle = WeekSelectorMdlSelect.IDLE;
+            bool hidden = false;
+
+            if (weekinfo.host_hide_if_week_locked)
+                hidden = weeklist.list_visible[weeklist.index].is_locked && weekinfo.host_hide_if_week_locked;
 
             if (!String.IsNullOrEmpty(weekinfo.week_host_character_manifest)) {
                 CharacterManifest charactermanifest = new CharacterManifest(weekinfo.week_host_character_manifest, false);
@@ -593,6 +597,13 @@ namespace Engine.Game.Helpers {
                 else
                     weeklist.host_statesprite.StateToggle(WeekSelectorMdlSelect.IDLE);
 
+                // set defaults
+                weeklist.host_statesprite.SetAlpha(1.0f);
+                weeklist.host_statesprite.SetProperty(VertexProps.SPRITE_PROP_ALPHA2, 1f);
+                weeklist.host_statesprite.SetOffsetColor(1f, 1f, 1f, -1f);
+                weeklist.host_statesprite.MatrixReset();
+
+                weeklist.host_statesprite.SetVisible(!hidden && texture != null);
                 weeklist.host_statesprite.FlipTexture(host_flip, false);
                 weeklist.host_statesprite.StateApply(null);
                 weeklist.host_statesprite.Animate(weeklist.beatwatcher.RemainingUntilNext());

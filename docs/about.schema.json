@@ -46,6 +46,10 @@
                     "type": ["string", "null"],
                     "default": "hey"
                 },
+                "hostHideIfWeekLocked": {
+                    "type": "boolean",
+                    "default": "false"
+                },
                 "songs": {
                     "type": "array",
                     "items": {

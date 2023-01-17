@@ -38,6 +38,8 @@ const LAYOUT_ACTION_VIEWPORT = 24;
 const LAYOUT_ACTION_TEXTBORDEROFFSET = 25;
 const LAYOUT_ACTION_SPRITE_TRAILING = 26;
 const LAYOUT_ACTION_SPRITE_TRAILINGOFFSETCOLOR = 27;
+const LAYOUT_ACTION_TEXTBACKGROUND = 28;
+const LAYOUT_ACTION_TEXTBACKGROUNDCOLOR = 29;
 
 const LAYOUT_GROUP_ROOT = Symbol("root-group");
 const LAYOUT_BPM_STEPS = 32;// 1/32 beats
@@ -2748,6 +2750,12 @@ async function layout_parse_text_action(unparsed_action, animlist, action_entrie
             case "BorderOffset":
                 layout_helper_add_action_textborderoffset(unparsed_entry, entries);
                 break;
+            case "Background":
+                layout_helper_add_action_textbackground(unparsed_entry, entries);
+                break;
+            case "BackgroundColor":
+                layout_helper_add_action_textbackgroundcolor(unparsed_entry, entries);
+                break;
             case "Animation":
                 layout_helper_add_action_animation(unparsed_entry, animlist, entries);
                 break;
@@ -3072,6 +3080,14 @@ function layout_helper_execute_action_in_textsprite(action, item, viewport_width
                 break;
             case LAYOUT_ACTION_TEXTBORDEROFFSET:
                 textsprite_border_set_offset(textsprite, action.x, action.y);
+                break;
+            case LAYOUT_ACTION_TEXTBACKGROUND:
+                if (entry.has_enable) textsprite_background_enable(textsprite, entry.enable);
+                textsprite_background_set_offets(textsprite, entry.x, entry.y);
+                if (!Number.isNaN(entry.size)) textsprite_background_set_size(textsprite, entry.size);
+                break;
+            case LAYOUT_ACTION_TEXTBACKGROUNDCOLOR:
+                textsprite_background_set_color(textsprite, entry.rgba[0], entry.rgba[1], entry.rgba[2], entry.rgba[3]);
                 break;
             case LAYOUT_ACTION_PROPERTY:
                 if (entry.property == TEXTSPRITE_PROP_STRING)
@@ -3848,6 +3864,34 @@ function layout_helper_add_action_textborderoffset(unparsed_entry, action_entrie
     }
 
     let entry = { type: LAYOUT_ACTION_TEXTBORDEROFFSET, x: offset_x, y: offset_y };
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_add_action_textbackground(unparsed_entry, action_entries) {
+    let enable = vertexprops_parse_boolean(unparsed_entry, "enable", 0);
+    let has_enable = unparsed_entry.hasAttribute("enable");
+    let size = layout_helper_parse_float(unparsed_entry, "size", NaN);
+    let offset_x = layout_helper_parse_float(unparsed_entry, "offsetX", NaN);
+    let offset_y = layout_helper_parse_float(unparsed_entry, "offsetY", NaN);
+
+    let entry = {
+        type: LAYOUT_ACTION_TEXTBACKGROUND,
+        size: size,
+        x: offset_x, y: offset_y,
+        has_enable: has_enable,
+        enable: enable
+    };
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_add_action_textbackgroundcolor(unparsed_entry, action_entries) {
+    let entry = {
+        type: LAYOUT_ACTION_TEXTBACKGROUNDCOLOR,
+        rgba: [NaN, NaN, NaN, NaN]
+    };
+
+    layout_helper_parse_color(unparsed_entry, entry.rgba);
+
     arraylist_add(action_entries, entry);
 }
 

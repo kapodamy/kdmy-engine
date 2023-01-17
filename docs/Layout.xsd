@@ -392,6 +392,12 @@
         <xs:attribute name="offsetX" type="xs:float" use="optional" default="NaN" />
         <xs:attribute name="offsetY" type="xs:float" use="optional" default="NaN" />
     </xs:complexType>
+    <xs:complexType name="Text-Background">
+        <xs:attribute name="size" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="enable" type="xs:boolean" use="optional" />
+        <xs:attribute name="offsetX" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="offsetY" type="xs:float" use="optional" default="NaN" />
+    </xs:complexType>
     <xs:complexType name="Property-sound">
         <xs:attribute name="name" type="props-sound" use="required" />
         <xs:attribute name="value" type="xs:anySimpleType" use="required" />
@@ -521,6 +527,8 @@
                         <xs:element name="String" type="String" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Border" type="Border" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="BorderOffset" type="BorderOffset" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Background" type="Text-Background" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="BackgroundColor" type="Color-any" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="unbounded" />

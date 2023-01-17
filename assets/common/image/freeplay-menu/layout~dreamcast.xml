@@ -27,7 +27,7 @@
 
     <!-- song info -->
     <Group>
-        <Sprite r="0" g="0" b="0" a="0.5">
+        <Sprite name="background_song_info" r="0" g="0" b="0" a="0.5">
             <Action>
                 <Location x="0" y="0" z="2" />
                 <Size width="392" height="82" />
@@ -57,16 +57,18 @@
             <Hide />
         </Action>
 
-        <Sprite r="0" g="0" b="0" a="0.5">
+        <!--<Sprite r="0" g="0" b="0" a="0.5">
             <Action>
                 <Location x="0" y="82" z="2" />
                 <Size width="960" height="96" />
             </Action>
-        </Sprite>
+        </Sprite>-->
         <Text fontName="vcr" fontSize="18" rgb="0xFFFFFF" name="description">
             <Action>
-                <Location x="12" y="82" z="3.2" />
+                <Location x="8" y="82" z="3.2" />
                 <MaxSize width="936" />
+                <Background enable="true" size="8" offsetY="8" />
+                <BackgroundColor r="0" g="0" b="0" a="0.5" />
                 <!--<String>¡Rap-battle against Daddy Dearest!&#10;Composed by kawaisprite</String>-->
             </Action>
         </Text>

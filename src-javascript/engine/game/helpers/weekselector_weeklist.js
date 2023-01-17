@@ -479,7 +479,7 @@ function weekselector_weeklist_internal_calc_row_sizes(weeklist, vertex, row1, r
 }
 
 function weekselector_weeklist_internal_host_draw(weeklist, pvrctx) {
-    if (weeklist.host_loading) return;
+    if (weeklist.host_loading || !statesprite_is_visible(weeklist.host_statesprite)) return;
     pvr_context_save(pvrctx);
     statesprite_draw(weeklist.host_statesprite, pvrctx);
     pvr_context_restore(pvrctx);
@@ -492,6 +492,10 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
     let host_flip, host_beat, modelholder;
     let anim_name_hey = WEEKSELECTOR_MDLSELECT_HEY;
     let anim_name_idle = WEEKSELECTOR_MDLSELECT_IDLE;
+    let hidden = 0;
+
+    if (weekinfo.host_hide_if_week_locked)
+        hidden = weeklist.list_visible[weeklist.index].is_locked && weekinfo.host_hide_if_week_locked;
 
     if (weekinfo.week_host_character_manifest) {
         let charactermanifest = await charactermanifest_init(weekinfo.week_host_character_manifest, 0);
@@ -567,6 +571,13 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
         else
             statesprite_state_toggle(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_IDLE);
 
+        // set defaults
+        statesprite_set_alpha(weeklist.host_statesprite, 1.0);
+        statesprite_set_property(weeklist.host_statesprite, SPRITE_PROP_ALPHA2, 1.0);
+        statesprite_set_offsetcolor(weeklist.host_statesprite, 1.0, 1.0, 1.0, -1.0);
+        statesprite_matrix_reset(weeklist.host_statesprite,);
+
+        statesprite_set_visible(weeklist.host_statesprite, !hidden && texture);
         statesprite_flip_texture(weeklist.host_statesprite, host_flip, 0);
         statesprite_state_apply(weeklist.host_statesprite, null);
         statesprite_animate(weeklist.host_statesprite, beatwatcher_remaining_until_next(weeklist.beatwatcher));

@@ -47,6 +47,7 @@ namespace Engine.Game.Common {
         public string week_title_model_animation_name;
         public bool host_flip_sprite;
         public bool host_enable_beat;
+        public bool host_hide_if_week_locked;
         public string week_host_character_manifest;
         public string week_host_model;
         public string week_host_model_idle_animation_name;
@@ -251,6 +252,7 @@ namespace Engine.Game.Common {
                     week_title_model_animation_name = JSONParser.ReadString(json, "weekTitleModelAnimationName", null),
                     host_flip_sprite = JSONParser.ReadBoolean(json, "hostFlipSprite", false),
                     host_enable_beat = JSONParser.ReadBoolean(json, "hostEnableBeat", true),
+                    host_hide_if_week_locked = JSONParser.ReadBoolean(json, "hostHideIfWeekLocked", false),
                     week_host_character_manifest = ParsePath(json, "hostCharacterManifest"),
                     week_host_model = ParsePath(json, "hostModel"),
                     week_host_model_idle_animation_name = JSONParser.ReadString(json, "hostModelIdleAnimationName", null),

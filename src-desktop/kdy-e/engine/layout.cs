@@ -10,6 +10,7 @@ using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
+using static Engine.Platform.FSFolderEnumerator;
 
 namespace Engine {
 
@@ -99,9 +100,11 @@ namespace Engine {
         private const int ACTION_SETSHADERUNIFORM = 22;
         private const int ACTION_SETBLENDING = 23;
         private const int ACTION_VIEWPORT = 24;
-        private const int ACTION_BORDEROFFSET = 25;
+        private const int ACTION_TEXTBORDEROFFSET = 25;
         private const int ACTION_SPRITE_TRAILING = 26;
         private const int ACTION_SPRITE_TRAILINGOFFSETCOLOR = 27;
+        private const int ACTION_TEXTBACKGROUND = 28;
+        private const int ACTION_TEXTBACKGROUNDCOLOR = 29;
 
         public const string GROUP_ROOT = "___root-group___";
         private const float BPM_STEPS = 32;// 1/32 beats
@@ -2842,6 +2845,12 @@ namespace Engine {
                     case "BorderOffset":
                         Layout.HelperAddActionTextBorderOffset(unparsed_entry, entries);
                         break;
+                    case "Background":
+                        Layout.HelperAddActionTextBackground(unparsed_entry, entries);
+                        break;
+                    case "BackgroundColor":
+                        Layout.HelperAddActionTextBackground(unparsed_entry, entries);
+                        break;
                     case "Animation":
                         Layout.HelperAddActionAnimation(unparsed_entry, animlist, entries);
                         break;
@@ -3164,8 +3173,16 @@ namespace Engine {
                             entry.rgba[0], entry.rgba[1], entry.rgba[2], entry.rgba[3]
                         );
                         break;
-                    case Layout.ACTION_BORDEROFFSET:
+                    case Layout.ACTION_TEXTBORDEROFFSET:
                         textsprite.BorderSetOffset(entry.x, entry.y);
+                        break;
+                    case Layout.ACTION_TEXTBACKGROUND:
+                        if (entry.has_enable) textsprite.BackgroundEnable(entry.enable);
+                        textsprite.BackgroundSetOffets(entry.x, entry.y);
+                        if (!Single.IsNaN(entry.size)) textsprite.BackgroundSetSize(entry.size);
+                        break;
+                    case Layout.ACTION_TEXTBACKGROUNDCOLOR:
+                        textsprite.BackgroundSetColor(entry.rgba[0], entry.rgba[1], entry.rgba[2], entry.rgba[3]);
                         break;
                     case Layout.ACTION_PROPERTY:
                         if (entry.property == VertexProps.TEXTSPRITE_PROP_STRING)
@@ -3946,7 +3963,36 @@ namespace Engine {
                 return;
             }
 
-            ActionEntry entry = new ActionEntry() { type = Layout.ACTION_BORDEROFFSET, x = offset_x, y = offset_y };
+            ActionEntry entry = new ActionEntry() { type = Layout.ACTION_TEXTBORDEROFFSET, x = offset_x, y = offset_y };
+            action_entries.Add(entry);
+        }
+
+        private static void HelperAddActionTextBackground(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            bool enable = VertexProps.ParseBoolean(unparsed_entry, "enable", false);
+            bool has_enable = unparsed_entry.HasAttribute("enable");
+            float size = Layout.HelperParseFloat(unparsed_entry, "size", Single.NaN);
+            float offset_x = Layout.HelperParseFloat(unparsed_entry, "offsetX", Single.NaN);
+            float offset_y = Layout.HelperParseFloat(unparsed_entry, "offsetY", Single.NaN);
+
+            ActionEntry entry = new ActionEntry() {
+                type = Layout.ACTION_TEXTBACKGROUND,
+                size = size,
+                x = offset_x,
+                y = offset_y,
+                has_enable = has_enable,
+                enable = enable
+            };
+            action_entries.Add(entry);
+        }
+
+        private static void HelperAddActionTextBackgroundColor(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            ActionEntry entry = new ActionEntry() {
+                type = Layout.ACTION_TEXTBACKGROUNDCOLOR,
+                rgba = new float[] { Single.NaN, Single.NaN, Single.NaN, Single.NaN }
+            };
+
+            Layout.HelperParseColor(unparsed_entry, entry.rgba);
+
             action_entries.Add(entry);
         }
 

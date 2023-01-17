@@ -19,6 +19,7 @@ namespace Engine.Game {
         private const string BACKGROUND_ANIM_OR_ATLAS_ENTRY_NAME = "freeplay-background";
         private const string PERSONAL_BEST = "PERSONAL BEST SCORE: $l";
         private const string INFO = "$s  -  $s  -  $s";
+        private const string BG_INFO_NAME = "background_song_info";
         private const string LAYOUT = "/assets/common/image/freeplay-menu/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/freeplay-menu/layout~dreamcast.xml";
 
@@ -110,17 +111,24 @@ namespace Engine.Game {
             float dt_playsong = layout.GetAttachedValueAsFloat("durationTransition_playSong", 0f);
             float dt_screenout = layout.GetAttachedValueAsFloat("durationTransition_screenOut", 0f);
 
+            float bg_info_width = -1;
+            Sprite bg_info = layout.GetSprite(FreeplayMenu.BG_INFO_NAME);
+            if (bg_info != null) {
+                bg_info.GetDrawSize(out bg_info_width, out _);
+            }
+
             // step 3: count required tracks
             ArrayList<MappedSong> songs = new ArrayList<MappedSong>(Funkin.weeks_array.size * 3);
             for (int i = 0 ; i < Funkin.weeks_array.size ; i++) {
+                bool is_week_locked = !FunkinSave.ContainsUnlockDirective(Funkin.weeks_array.array[i].unlock_directive);
+
                 for (int j = 0 ; j < Funkin.weeks_array.array[i].songs_count ; j++) {
                     bool should_hide = Funkin.weeks_array.array[i].songs[j].freeplay_hide_if_week_locked;
-                    bool is_locked1 = !FunkinSave.ContainsUnlockDirective(Funkin.weeks_array.array[i].unlock_directive);
-                    if (should_hide && is_locked1) continue;
+                    if (should_hide && is_week_locked) continue;
 
                     should_hide = Funkin.weeks_array.array[i].songs[j].freeplay_hide_if_locked;
-                    bool is_locked2 = !FunkinSave.ContainsUnlockDirective(Funkin.weeks_array.array[i].songs[j].freeplay_unlock_directive);
-                    if (should_hide && is_locked2) continue;
+                    bool is_song_locked = !FunkinSave.ContainsUnlockDirective(Funkin.weeks_array.array[i].songs[j].freeplay_unlock_directive);
+                    if (should_hide && is_song_locked) continue;
 
                     int gameplaymanifest_index = Funkin.weeks_array.array[i].songs[j].freeplay_track_index_in_gameplaymanifest;
                     if (gameplaymanifest_index < 0) gameplaymanifest_index = j;
@@ -129,7 +137,7 @@ namespace Engine.Game {
                         song_index = j,
                         gameplaymanifest_index = gameplaymanifest_index,
                         week_index = i,
-                        is_locked = is_locked1 || is_locked2
+                        is_locked = is_week_locked || is_song_locked
                     });
                 }
             }
@@ -186,7 +194,8 @@ namespace Engine.Game {
                 difficulties = null,
                 difficulties_size = 0,
                 running_threads = 0,
-                mutex = null
+                mutex = null,
+                bg_info_width = bg_info_width
             };
             mutex.Init(out state.mutex, mutex.TYPE_NORMAL);
             if (state.background != null) state.background.SetTexture(null, false);
@@ -308,7 +317,7 @@ namespace Engine.Game {
                     switch_difficult = true;
                 } else if ((btns & (GamepadButtons.A | GamepadButtons.START)) != GamepadButtons.NOTHING) {
                     int index = menu.GetSelectedIndex();
-                    if (index < 0 || index >= menu.GetItemsCount() || state.difficult_locked) {
+                    if (index < 0 || index >= menu.GetItemsCount() || state.difficult_locked || state.map.is_locked) {
                         if (sound_asterik != null) sound_asterik.Replay();
                         continue;
                     }
@@ -518,6 +527,8 @@ L_return:
 
             string difficult;
             bool is_locked;
+            float bg_info_width = state.bg_info_width;
+            float text_width;
 
             long score;
             if (state.difficult_index >= 0 && state.difficult_index < state.difficulties_size) {
@@ -530,11 +541,22 @@ L_return:
                 difficult = null;
             }
 
-            if (state.personal_best != null)
-                state.personal_best.SetTextFormated(FreeplayMenu.PERSONAL_BEST, score);
+            if (state.map.is_locked) is_locked = true;
 
-            if (state.info != null)
+            if (state.personal_best != null) {
+                state.personal_best.SetTextFormated(FreeplayMenu.PERSONAL_BEST, score);
+                state.personal_best.GetDrawSize(out text_width, out _);
+                if (text_width > bg_info_width) bg_info_width = text_width * 1.1f;
+            }
+
+            if (state.info != null) {
                 state.info.SetTextFormated(FreeplayMenu.INFO, week_name, song_name, difficult);
+                state.info.GetDrawSize(out text_width, out _);
+                if (text_width > bg_info_width) bg_info_width = text_width * 1.1f;
+            }
+
+            Sprite bg_info = layout.GetSprite(FreeplayMenu.BG_INFO_NAME);
+            if (bg_info != null) bg_info.SetDrawSize(bg_info_width, Single.NaN);
 
             if (desc != null) {
                 if (state.description != null)
@@ -705,6 +727,8 @@ L_return:
 
             public Difficult[] difficulties;
             public int difficulties_size;
+
+            public float bg_info_width;
         }
 
     }

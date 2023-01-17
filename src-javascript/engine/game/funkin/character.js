@@ -982,7 +982,7 @@ function character_trailing_set_params(character, length, trail_delay, trail_alp
     statesprite_trailing_set_params(character.statesprite, length, trail_delay, trail_alpha, darken_colors);
 }
 
-function character_trailing_set_params(character, r, g, b) {
+function character_trailing_set_offsetcolor(character, r, g, b) {
     statesprite_trailing_set_offsetcolor(character.statesprite, r, g, b);
 }
 

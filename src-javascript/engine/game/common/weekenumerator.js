@@ -180,6 +180,7 @@ async function weekenumerator_parse_week(week_name) {
             week_title_model_animation_name: json_read_string(json, "weekTitleModelAnimationName", null),
             host_flip_sprite: json_read_boolean(json, "hostFlipSprite", false),
             host_enable_beat: json_read_boolean(json, "hostEnableBeat", true),
+            host_hide_if_week_locked: json_read_boolean(json, "hostHideIfWeekLocked", false),
             week_host_character_manifest: await weekenumerator_parse_path(json, "hostCharacterManifest"),
             week_host_model: await weekenumerator_parse_path(json, "hostModel"),
             week_host_model_idle_animation_name: json_read_string(json, "hostModelIdleAnimationName", null),
