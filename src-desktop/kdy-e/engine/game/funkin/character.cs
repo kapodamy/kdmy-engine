@@ -1023,6 +1023,10 @@ L_read_state:
             this.statesprite.TrailingSetParams(length, trail_delay, trail_alpha, darken_colors);
         }
 
+        public void TrailingSetOffsetcolor(float r, float g, float b) {
+            this.statesprite.TrailingSetOffsetcolor(r, g, b);
+        }
+
 
         private static void InternalImportSing(CharacterActionSing sing_info, ModelHolder modelholder, CharacterManifest.Sing sing_entry, int id_direction, string prefix, string suffix) {
 

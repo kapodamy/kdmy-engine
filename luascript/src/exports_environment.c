@@ -97,6 +97,7 @@ static const luaL_Reg ENVIRONMENT_FUNCTIONS[] = {
     { "get_username", script_environment_get_username },
     { "get_cmdargs", script_environment_get_cmdargs },
     { "exit", script_environment_exit },
+    { NULL, NULL }
 };
 
 static int script_environment_gc(lua_State* L) {

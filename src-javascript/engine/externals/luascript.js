@@ -1142,6 +1142,9 @@ function __js__character_state_toggle(character, state_name) {
 function __js__character_trailing_enabled(character, enabled) {
     character_trailing_enabled(kdmyEngine_obtain(character), enabled)
 }
+function __js__character_trailing_set_offsetcolor(character, r, g, b) {
+    character_trailing_set_offsetcolor(kdmyEngine_obtain(character), r, g, b)
+}
 function __js__character_trailing_set_params(character, length, trail_delay, trail_alpha, darken_colors) {
     character_trailing_set_params(kdmyEngine_obtain(character), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors))
 }
@@ -1459,6 +1462,11 @@ function __js__healthwatcher_has_deads(healthwatcher, in_players_or_opponents) {
 function __js__healthwatcher_reset_opponents(healthwatcher) {
     healthwatcher_reset_opponents(kdmyEngine_obtain(healthwatcher))
 }
+function __js__kdmyEngine_forget_obtained(obj_id) {
+    let ret = kdmyEngine_forget(obj_id);
+    if (!ret)
+        throw new Error("Uknown object id:" + obj_id)
+}
 function __js__kdmyEngine_get_language() {
     const code = window.navigator.language;
     const lang = new Intl.DisplayNames([code], {
@@ -1493,11 +1501,6 @@ function __js__kdmyEngine_get_locationquery() {
 }
 function __js__kdmyEngine_get_useragent() {
     return kdmyEngine_stringToPtr(navigator.userAgent)
-}
-function __js__kdmyEngine_forget_obtained(obj_id) {
-    let ret = kdmyEngine_forget(obj_id);
-    if (!ret)
-        throw new Error("Uknown object id:" + obj_id)
 }
 function __js__kdmyEngine_read_prop_boolean(obj_id, field_name) {
     let obj = kdmyEngine_obtain(obj_id);
@@ -2937,7 +2940,6 @@ function __js__week_update_bpm(roundcontext, bpm) {
 function __js__week_update_speed(roundcontext, speed) {
     week_update_speed(kdmyEngine_obtain(roundcontext), speed)
 }
-
 
 
 function callRuntimeCallbacks(callbacks) {
@@ -6421,6 +6423,7 @@ var asmLibraryArg = {
     "__js__character_state_add": __js__character_state_add,
     "__js__character_state_toggle": __js__character_state_toggle,
     "__js__character_trailing_enabled": __js__character_trailing_enabled,
+    "__js__character_trailing_set_offsetcolor": __js__character_trailing_set_offsetcolor,
     "__js__character_trailing_set_params": __js__character_trailing_set_params,
     "__js__character_update_reference_size": __js__character_update_reference_size,
     "__js__character_use_alternate_sing_animations": __js__character_use_alternate_sing_animations,

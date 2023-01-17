@@ -87,6 +87,7 @@ static void luascript_register_objects(lua_State* L, bool is_week) {
     // register all objects (metatables) and functions
     script_camera_register(L);
     script_character_register(L);
+    script_conductor_register(L);
     script_layout_register(L);
     script_layoutplaceholder_register(L);
     script_messagebox_register(L);
@@ -135,7 +136,7 @@ static void luascript_register_sandbox(lua_State* L) {
                                   "debug = nil\n"
                                   "dofile = nil\n"
                                   "io = nil\n"
-                                  "load = nil\n"
+                                  //"load = nil\n"
                                   "loadfile = nil\n"
                                   "dofile = nil\n"
                                   "os.execute = nil\n"
@@ -158,7 +159,7 @@ static void luascript_register_sandbox(lua_State* L) {
                                   "package.searchpath= nil\n"
                                   "package.searchers= nil\n"
                                   "package = nil\n"
-                                  "require = nil\n"
+                                  //"require = nil\n"
                                   "newproxy = nil\n"
     );
     assert(result == 0 /*luascript_register_sandbox() failed*/);

@@ -80,7 +80,7 @@
 
 
     <!-- ******************* ROUNDSTATS DEFINITION ******************* -->
-    <Placeholder name="ui_roundstats" x="0" y="465" z="100" />
+    <Placeholder name="ui_roundstats" x="0" y="465" z="102" />
 
     <!-- roundstats additional parameters -->
     <AttachValue name="ui_roundstats_hidden" type="boolean" value="false" />
@@ -106,7 +106,7 @@
 
 
     <!-- ******************* TRACK NAME & DIFFICULTY DEFINITION ******************* -->
-    <Placeholder name="ui_track_info" x="5" y="465" z="100" />
+    <Placeholder name="ui_track_info" x="5" y="465" z="101" />
 
     <!-- rankingcounter additional parameters -->
     <AttachValue name="ui_track_info_fontSize" type="float" value="10" />
@@ -124,8 +124,8 @@
     <Placeholder name="ui_strums_inverted1" x="390" y="0" z="101" height= "456" />
 	<Placeholder name="ui_songprogressbar_inverted" x="200" y="22" z="102" width="240" height="8" alignHorizontal="center" />
     <Placeholder name="ui_healthbar_inverted" x="170" y="432" z="100" width="300" height="8" />
-    <Placeholder name="ui_roundstats_inverted" x="0" y="465" z="100" />
-    <Placeholder name="ui_track_info_inverted" x="5" y="465" z="100" />
+    <Placeholder name="ui_roundstats_inverted" x="0" y="465" z="102" />
+    <Placeholder name="ui_track_info_inverted" x="5" y="465" z="101" />
 	
 
 	<!-- **************************************************************************************************** -->

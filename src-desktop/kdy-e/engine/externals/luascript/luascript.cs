@@ -62,6 +62,7 @@ namespace Engine.Externals.LuaScriptInterop {
             // register all objects (metatables) and functions
             ExportsCamera.script_camera_register(lua);
             ExportsCharacter.script_character_register(lua);
+            ExportsConductor.script_conductor_register(lua);
             ExportsLayout.script_layout_register(lua);
             ExportsLayoutPlaceholder.script_layoutplaceholder_register(lua);
             ExportsMessageBox.script_messagebox_register(lua);
@@ -116,7 +117,7 @@ namespace Engine.Externals.LuaScriptInterop {
                 "debug = nil\n" +
                 "dofile = nil\n" +
                 "io = nil\n" +
-                "load = nil\n" +
+                //"load = nil\n" +
                 "loadfile = nil\n" +
                 "dofile = nil\n" +
                 "os.execute = nil\n" +
@@ -139,7 +140,7 @@ namespace Engine.Externals.LuaScriptInterop {
                 "package.searchpath= nil\n" +
                 "package.searchers= nil\n" +
                 "package = nil\n" +
-                "require = nil\n" +
+                //"require = nil\n" +
                 "newproxy = nil\n";
 
 

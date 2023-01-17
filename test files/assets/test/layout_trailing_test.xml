@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout width="640" height="480" animationSpeed="1.0" animationList="layout_trailing_test_anims.xml">
+
+    <Placeholder name="stub" width="1" height="1" x="0" y="0" />
+
+    <Sprite rgb="0x333300">
+        <Action>
+            <Location x="0" y="0" z="0" />
+            <Size width="640" height="480" />
+            <Static />
+        </Action>
+    </Sprite>
+
+    <Sprite rgb="0xFFFFFF">
+        <Action>
+            <Location x="0" y="300" z="1" />
+            <Size width="100" height="100" />
+            <Property name="z" value="5" />
+            <Parallax x="2" z="2" y="2" />
+            <Animation name="move" />
+        </Action>
+        <Action name="enable trailing">
+            <SetTrailing enable="true" />
+        </Action>
+        <Action name="disable trailing">
+            <SetTrailing enable="false" />
+        </Action>
+        <Action name="trailing config 10|100|0.5|true">
+            <SetTrailing length="10" trailDelay="100" trailAlpha="0.5" darkenColors="true" />
+        </Action>
+        <Action name="trailing config 10|100|0.5|false">
+            <SetTrailing length="10" trailDelay="100" trailAlpha="0.5" darkenColors="false" />
+        </Action>
+        <Action name="trailing config 50|10|0.5|false">
+            <SetTrailing length="50" trailDelay="10" trailAlpha="0.5" darkenColors="false" />
+        </Action>
+        <Action name="trailing config 50|500|0.5|false">
+            <SetTrailing length="50" trailDelay="500" trailAlpha="0.5" darkenColors="false" />
+        </Action>
+        <Action name="trailing config 50|1|0.5|true">
+            <SetTrailing length="50" trailDelay="1" trailAlpha="0.5" darkenColors="false" />
+        </Action>
+        <Action name="trailing config 50|16|0.5|true">
+            <SetTrailing length="50" trailDelay="16" trailAlpha="0.5" darkenColors="true" />
+        </Action>
+    </Sprite>
+
+</Layout>

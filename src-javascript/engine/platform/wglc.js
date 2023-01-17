@@ -1062,6 +1062,9 @@ function webopengl_draw_solid(/**@type {PVRContext}*/pvrctx, rgb_color, dx, dy, 
     WEBGL_RGBA[3] = pvrctx.render_alpha;
     gl.uniform4fv(wglc.program_solid.u_vertex_color, WEBGL_RGBA);
 
+    // enable/disable rgb color components be multiplied by the render alpha
+    gl.uniform1i(wglc.program_solid.u_darken, wglc.program_solid.darken_enabled ? 1 : 0);
+
     // @ts-ignore
     if (window.ENABLE_DOTTED) wglc.gl.uniform1i(wglc.program_solid.u_dotted, wglc.draw_dotted);
 

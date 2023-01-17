@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList>
+    <AnimationMacro name="move" loop="-1">
+        <Interpolator type="linear" property="x" start="80" end="300" duration="500"/>
+        <Yield />
+        <Interpolator type="linear" property="x" start="300" end="80" duration="500"/>
+    </AnimationMacro>
+</AnimationList>

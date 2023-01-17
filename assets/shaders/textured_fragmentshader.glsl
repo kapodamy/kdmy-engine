@@ -38,7 +38,7 @@ void main() {
 
     if(color.a <= 0.0)
         discard;
-        
+
     if (u_darken)
         color.rgb *= u_alpha;
 

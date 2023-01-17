@@ -5,6 +5,7 @@ uniform vec4 u_vertex_color;
 uniform bool u_offsetcolor_mul_or_diff;
 uniform bool u_offsetcolor_enabled;
 uniform vec4 u_offsetcolor;
+uniform bool u_darken;
 
 #ifdef DOTTED
 uniform bool u_dotted;
@@ -28,6 +29,9 @@ void main() {
         discard;
     }
 #endif
+
+    if (u_darken)
+        color.rgb *= color.a;
 
     FragColor = color;
 }

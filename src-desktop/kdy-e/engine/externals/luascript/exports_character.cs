@@ -379,9 +379,9 @@ namespace Engine.Externals.LuaScriptInterop {
 
         static int script_character_trailing_set_params(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
-            int length = (int)L.luaL_checkinteger(2);
-            float trail_delay = (float)L.luaL_checknumber(3);
-            float trail_alpha = (float)L.luaL_checknumber(4);
+            int length = (int)L.luaL_optinteger(2, -1);
+            float trail_delay = (float)L.luaL_optnumber(3, Single.NaN);
+            float trail_alpha = (float)L.luaL_optnumber(4, Single.NaN);
 
             bool? darken_colors;
             if (L.lua_isnil(5))
@@ -390,6 +390,17 @@ namespace Engine.Externals.LuaScriptInterop {
                 darken_colors = L.lua_toboolean(5);
 
             character.TrailingSetParams(length, trail_delay, trail_alpha, darken_colors);
+
+            return 0;
+        }
+
+        static int script_character_trailing_set_offsetcolor(LuaState L) {
+            Character character = L.ReadUserdata<Character>(CHARACTER);
+            float r = (float)L.luaL_optnumber(3, Single.NaN);
+            float g = (float)L.luaL_optnumber(4, Single.NaN);
+            float b = (float)L.luaL_optnumber(5, Single.NaN);
+
+            character.TrailingSetOffsetcolor(r, g, b);
 
             return 0;
         }
@@ -437,6 +448,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("freeze_animation", script_character_freeze_animation),
             new LuaTableFunction("trailing_enabled", script_character_trailing_enabled),
             new LuaTableFunction("trailing_set_params", script_character_trailing_set_params),
+            new LuaTableFunction("trailing_set_offsetcolor", script_character_trailing_set_offsetcolor),
             new LuaTableFunction(null, null)
         };
 

@@ -270,6 +270,9 @@ namespace LuaNativeMethods {
         public static extern lua_Number luaL_optnumber(lua_State* L, int arg, lua_Number def);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern lua_Integer luaL_optinteger(lua_State* L, int arg, lua_Integer def);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int lua_toboolean(lua_State* L, int idx);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]

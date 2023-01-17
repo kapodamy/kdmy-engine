@@ -432,6 +432,7 @@ declare global {
         freeze_animation(enabled: boolean): void;
         trailing_enabled(enabled: boolean): void;
         trailing_set_params(length: number, trail_delay: number, trail_alpha: number, darken_colors?: boolean): void;
+        trailing_set_offsetcolor(r: number, g: number, b: number): void;
     }
     interface SongPlayer {
         changesong(src: string, prefer_no_copyright: boolean): boolean;

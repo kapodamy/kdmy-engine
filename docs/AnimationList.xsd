@@ -21,10 +21,10 @@
             <xs:enumeration value="vertexColorR" />
             <xs:enumeration value="vertexColorG" />
             <xs:enumeration value="vertexColorB" />
-            <xs:enumeration value="vertexColorOffsetR" />
-            <xs:enumeration value="vertexColorOffsetG" />
-            <xs:enumeration value="vertexColorOffsetB" />
-            <xs:enumeration value="vertexColorOffsetA" />
+            <xs:enumeration value="offsetColorR" />
+            <xs:enumeration value="offsetColorG" />
+            <xs:enumeration value="offsetColorB" />
+            <xs:enumeration value="offsetColorA" />
             <xs:enumeration value="flipX" />
             <xs:enumeration value="flipY" />
             <xs:enumeration value="rotatePivotEnabled" />

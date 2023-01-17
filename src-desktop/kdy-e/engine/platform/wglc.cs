@@ -272,6 +272,9 @@ namespace Engine.Platform {
             WebGLContext.RGBA[3] = pvrctx.render_alpha;
             gl.uniform4fv(this.program_solid.u_vertex_color, WebGLContext.RGBA);
 
+            // enable/disable rgb color components be multiplied by the render alpha
+            gl.uniform1i(this.program_solid.u_darken, this.program_solid.darken_enabled ? 1 : 0);
+
             // draw the quad (2 triangles, 6 vertices)
             gl.drawArrays(gl.TRIANGLES, 0, 6);
 

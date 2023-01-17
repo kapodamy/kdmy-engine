@@ -66,7 +66,7 @@
         }
     </style>
 
-    <section class="layoutvisor">
+    <section class="layoutvisor widescreen">
         <fieldset>
             <legend>Layout item parameters</legend>
             <div style="display: flex;">
@@ -216,7 +216,7 @@
             <div>
                 <label><input type="radio" name="displaymode" id="displaymode-render" checked />Render only</label>
                 <label><input type="radio" name="displaymode" id="displaymode-animate" />Animate</label>
-                <label><input type="checkbox" id="widescreen" value="false" />Widescreen</label>
+                <label><input type="checkbox" id="widescreen" checked="true" />Widescreen</label>
                 <label><input type="checkbox" id="sing" value="false" checked />Sing simulation</label>
             </div>
         </fieldset>
@@ -246,7 +246,8 @@
         </div>
     </div>
 
-    <canvas width="640" height="480" style="border: 1px black solid;"></canvas>
+    <!-- <canvas width="640" height="480" style="border: 1px black solid;"></canvas> -->
+    <canvas width="864" height="486" style="border: 1px black solid;"></canvas>
     <div>
         <i>kdmy-engine layout visor</i>
     </div>

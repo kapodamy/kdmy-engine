@@ -37,6 +37,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("get_username", script_environment_get_username),
             new LuaTableFunction("get_cmdargs", script_environment_get_cmdargs),
             new LuaTableFunction("exit", script_environment_exit),
+            new LuaTableFunction(null, null),
         };
 
         static int script_enviroment_gc(LuaState L) {

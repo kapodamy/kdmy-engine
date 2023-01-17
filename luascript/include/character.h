@@ -59,6 +59,7 @@ CharacterActionType character_get_current_action(Character character);
 void character_freeze_animation(Character character, bool enabled);
 void character_trailing_enabled(Character character, bool enabled);
 void character_trailing_set_params(Character character, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors);
+void character_trailing_set_offsetcolor(Character character, float r, float g, float b);
 
 #endif
 

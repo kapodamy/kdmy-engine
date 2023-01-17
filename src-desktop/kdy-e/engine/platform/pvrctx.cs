@@ -604,6 +604,7 @@ namespace Engine.Platform {
 
         public void SetVertexTexturedDarken(bool enabled) {
             this.webopengl.program_textured.darken_enabled = enabled;
+            this.webopengl.program_solid.darken_enabled = enabled;
         }
 
 

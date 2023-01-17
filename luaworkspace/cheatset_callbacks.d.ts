@@ -110,7 +110,7 @@ declare namespace KDMYEngine {
      * @param duration duration in milliseconds.
      * @param data {@link double} number attached (4° index in the note definition as readed from the chart). 0 by default
      * @param special {@link true} if notes of that ID are marked as special in the "notepool" (defined in gameplay.json file). Defaults to {@link false}
-     * @param player_id Index (base-zero) of the player, normally 0 means the opponent and 1 the player.
+     * @param player_id Index (base-zero) of the character, normally 0 means the opponent and 1 the player.
      * @param state the state of the note
      */
     export function f_note(timestamp: number, id: number, duration: number, data: number, special: boolean, player_id: number, state: NoteState): void;

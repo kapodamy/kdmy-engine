@@ -127,3 +127,6 @@ void character_trailing_enabled(Character character, bool enabled) {
 void character_trailing_set_params(Character character, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors) {
     print_stub("character_trailing_set_params", "character=%p length=%i trail_delay=%f trail_alpha=%f darken_colors=%p", character, length, trail_delay, trail_alpha, darken_colors);
 }
+void character_trailing_set_offsetcolor(Character character, float r, float g, float b){
+    print_stub("character_trailing_set_offsetcolor", "character=%p r=%f g=%f b=%f", character, r ,g ,b);
+}

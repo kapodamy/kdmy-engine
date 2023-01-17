@@ -101,6 +101,7 @@ namespace Engine {
         private const int ACTION_VIEWPORT = 24;
         private const int ACTION_BORDEROFFSET = 25;
         private const int ACTION_SPRITE_TRAILING = 26;
+        private const int ACTION_SPRITE_TRAILINGOFFSETCOLOR = 27;
 
         public const string GROUP_ROOT = "___root-group___";
         private const float BPM_STEPS = 32;// 1/32 beats
@@ -2788,6 +2789,9 @@ namespace Engine {
                     case "SetTrailing":
                         Layout.HelperAddActionSpriteTrailing(unparsed_entry, entries);
                         break;
+                    case "SetTrailingOffsetcolor":
+                        Layout.HelperAddActionSpriteTrailingOffsetcolor(unparsed_entry, entries);
+                        break;
                     default:
                         Console.Error.WriteLine("[WARN] Unknown action entry: " + unparsed_entry.TagName);
                         break;
@@ -3140,6 +3144,9 @@ namespace Engine {
                     case Layout.ACTION_SPRITE_TRAILING:
                         if (entry.has_enable) sprite.TrailingEnabled(entry.enable);
                         sprite.TrailingSetParams(entry.length, entry.trail_delay, entry.trail_alpha, entry.has_darken ? (bool?)entry.darken : null);
+                        break;
+                    case Layout.ACTION_SPRITE_TRAILINGOFFSETCOLOR:
+                        sprite.TrailingSetOffsetcolor(entry.rgba[0], entry.rgba[1], entry.rgba[2]);
                         break;
                 }
             }
@@ -3623,7 +3630,7 @@ namespace Engine {
 
             int loop = VertexProps.ParseInteger(unparsed_entry, "loop", 1);
             bool has_number_suffix = VertexProps.ParseBoolean(unparsed_entry, "hasNumberSuffix", true);
-            float fps  = VertexProps.ParseFloat(unparsed_entry, "fps", 0);
+            float fps = VertexProps.ParseFloat(unparsed_entry, "fps", 0);
 
             if (fps < 1) {
                 fps = atlas.GetGlyphFPS();
@@ -3962,6 +3969,17 @@ namespace Engine {
                 darken = darken,
                 has_darken = has_darken
             };
+
+            action_entries.Add(entry);
+        }
+
+        private static void HelperAddActionSpriteTrailingOffsetcolor(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            ActionEntry entry = new ActionEntry() {
+                type = Layout.ACTION_SPRITE_TRAILINGOFFSETCOLOR,
+                rgba = new float[] { Single.NaN, Single.NaN, Single.NaN, Single.NaN }
+            };
+
+            Layout.HelperParseColor(unparsed_entry, entry.rgba);
 
             action_entries.Add(entry);
         }

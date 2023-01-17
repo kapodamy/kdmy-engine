@@ -37,6 +37,7 @@ const LAYOUT_ACTION_SETBLENDING = 23;
 const LAYOUT_ACTION_VIEWPORT = 24;
 const LAYOUT_ACTION_TEXTBORDEROFFSET = 25;
 const LAYOUT_ACTION_SPRITE_TRAILING = 26;
+const LAYOUT_ACTION_SPRITE_TRAILINGOFFSETCOLOR = 27;
 
 const LAYOUT_GROUP_ROOT = Symbol("root-group");
 const LAYOUT_BPM_STEPS = 32;// 1/32 beats
@@ -2694,6 +2695,9 @@ async function layout_parse_sprite_action(unparsed_action, animlist, atlas, acti
             case "SetTrailing":
                 layout_helper_add_action_spritetrailing(unparsed_entry, entries);
                 break;
+            case "SetTrailingOffsetcolor":
+                layout_helper_add_action_spritetrailingoffsetcolor(unparsed_entry, entries);
+                break;
             default:
                 console.warn("Unknown action entry: " + unparsed_entry.tagName);
                 break;
@@ -3046,6 +3050,9 @@ function layout_helper_execute_action_in_sprite(action, item, viewport_width, vi
             case LAYOUT_ACTION_SPRITE_TRAILING:
                 if (entry.has_enable) sprite_trailing_enabled(sprite, entry.enable);
                 sprite_trailing_set_params(sprite, entry.length, entry.trail_delay, entry.trail_alpha, entry.has_darken ? entry.darken : null);
+                break;
+            case LAYOUT_ACTION_SPRITE_TRAILINGOFFSETCOLOR:
+                sprite_trailing_set_offsetcolor(sprite, entry.rgba[0], entry.rgba[1], entry.rgba[2]);
                 break;
         }
     }
@@ -3863,6 +3870,17 @@ function layout_helper_add_action_spritetrailing(unparsed_entry, action_entries)
         darken: darken,
         has_darken: has_darken
     };
+
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_add_action_spritetrailingoffsetcolor(unparsed_entry, action_entries) {
+    let entry = {
+        type: LAYOUT_ACTION_SPRITE_TRAILINGOFFSETCOLOR,
+        rgba: [NaN, NaN, NaN, NaN]
+    };
+
+    layout_helper_parse_color(unparsed_entry, entry.rgba);
 
     arraylist_add(action_entries, entry);
 }

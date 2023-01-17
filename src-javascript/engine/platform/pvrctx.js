@@ -354,6 +354,7 @@ function pvr_context_set_vertex_blend(pvrctx, enabled, src_rgb, dst_rgb, src_alp
 /** @param {PVRContext} pvrctx*/
 function pvr_context_set_vertex_textured_darken(pvrctx, enabled) {
     pvrctx.webopengl.program_textured.darken_enabled = enabled;
+    pvrctx.webopengl.program_solid.darken_enabled = enabled;
 }
 
 

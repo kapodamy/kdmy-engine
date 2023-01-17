@@ -1,4 +1,5 @@
 using System;
+using System.Security.Policy;
 using Engine.Animation;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
@@ -73,6 +74,7 @@ namespace Engine.Image {
         private float trailing_progress;
         private bool trailing_darken;
         private bool trailing_disabled;
+        private float[] trailing_offsetcolor;
 
 
         public void Draw(PVRContext pvrctx) {
@@ -180,8 +182,6 @@ namespace Engine.Image {
             }
 
             pvrctx.Save();
-            pvrctx.SetVertexAlpha(render_alpha);
-            pvrctx.SetVertexOffsetColor(this.offsetcolor);
             if (this.psshader != null) pvrctx.AddShader(this.psshader);
 
             pvrctx.SetVertexBlend(
@@ -201,22 +201,43 @@ namespace Engine.Image {
 
             // draw sprites trail if necessary
             if (!this.trailing_disabled && this.trailing_used > 0) {
+                float[] trailing_offsetcolor = {
+                    this.trailing_offsetcolor[0], this.trailing_offsetcolor[1], this.trailing_offsetcolor[2], 1f
+                };
+                if (this.offsetcolor[3] >= 0) {
+                    trailing_offsetcolor[0] *= this.offsetcolor[0];
+                    trailing_offsetcolor[1] *= this.offsetcolor[1];
+                    trailing_offsetcolor[2] *= this.offsetcolor[2];
+                    trailing_offsetcolor[3] *= this.offsetcolor[3];
+                }
+
+                pvrctx.SetVertexOffsetColor(trailing_offsetcolor);
                 pvrctx.SetVertexTexturedDarken(this.trailing_darken);
 
                 for (int i = 0 ; i < this.trailing_used ; i++) {
                     Trail trail = this.trailing_buffer[i];
                     pvrctx.SetVertexAlpha(trail.alpha * render_alpha);
-                    pvrctx.DrawTexture(
-                        this.texture,
-                        trail.sx, trail.sy, trail.sw, trail.sh,
-                        trail.dx, trail.dy, trail.dw, trail.dh
-                    );
+
+                    if (this.texture != null) {
+                        pvrctx.DrawTexture(
+                            this.texture,
+                            trail.sx, trail.sy, trail.sw, trail.sh,
+                            trail.dx, trail.dy, trail.dw, trail.dh
+                        );
+                    } else {
+                        pvrctx.DrawSolidColor(
+                            this.vertex_color,
+                            trail.dx, trail.dy, trail.dw, trail.dh
+                        );
+                    }
                 }
 
                 // restore previous values
                 pvrctx.SetVertexTexturedDarken(false);
-                pvrctx.SetVertexAlpha(render_alpha);
             }
+
+            pvrctx.SetVertexAlpha(render_alpha);
+            pvrctx.SetVertexOffsetColor(this.offsetcolor);
 
             // draw the vertex
             if (this.texture != null) {
@@ -332,6 +353,7 @@ namespace Engine.Image {
             sprite.trailing_darken = true;
             sprite.trailing_disabled = true;
             sprite.trailing_progress = 0f;
+            sprite.trailing_offsetcolor = new float[] { 1f, 1f, 1f };
 
             return sprite;
         }
@@ -629,47 +651,48 @@ namespace Engine.Image {
             this.trailing_progress += elapsed;
 
             if (wait) return result;
-            this.trailing_progress = 0f;
+            this.trailing_progress -= this.trailing_delay;
 
             // compute trailing using the cached vertex
-            bool insert_vertex = this.trailing_used < this.trailing_length;
+            bool insert_vertex = true;
             if (this.trailing_used > 0) {
                 // check if the last vertex equals to the current vertex
-                Trail trail = this.trailing_buffer[0];
+                ref Trail trail = ref this.trailing_buffer[0];
                 bool source = trail.sx == this.vertex[0] && trail.sy == this.vertex[1] && trail.sw == this.vertex[2] && trail.sh == this.vertex[3];
                 bool draw = trail.dx == this.vertex[4] && trail.dy == this.vertex[5] && trail.dw == this.vertex[6] && trail.dh == this.vertex[7];
+                bool color = this.vertex_color[0] == trail.r && this.vertex_color[1] == trail.g && this.vertex_color[2] == trail.b;
+                insert_vertex = !source || !draw || !color;
 
-                if (source && draw) {
-                    // drop first entry
-                    for (int i = 0, j = 1 ; j < this.trailing_used ; i++, j++) {
+                if (insert_vertex) {
+                    // do right shift (this should be optimized to shift only used trails)
+                    for (int i = this.trailing_length - 1, j = this.trailing_length - 2 ; j >= 0 ; j--, i--) {
                         this.trailing_buffer[i] = this.trailing_buffer[j];
                     }
-                    insert_vertex = false;
+                } else {
                     this.trailing_used--;
                 }
             }
 
             if (insert_vertex) {
-                // shift all entries to the end
-                for (int i = this.trailing_used - 2, j = this.trailing_used - 1 ; i >= 0 ; i--, j--) {
-                    this.trailing_buffer[j] = this.trailing_buffer[i];
-                }
-
+                ref Trail trail = ref this.trailing_buffer[0];
                 // add new trail
-                this.trailing_buffer[0].sx = this.vertex[0];
-                this.trailing_buffer[0].sy = this.vertex[1];
-                this.trailing_buffer[0].sw = this.vertex[2];
-                this.trailing_buffer[0].sh = this.vertex[3];
-                this.trailing_buffer[0].dx = this.vertex[4];
-                this.trailing_buffer[0].dy = this.vertex[5];
-                this.trailing_buffer[0].dw = this.vertex[6];
-                this.trailing_buffer[0].dh = this.vertex[7];
-                this.trailing_used++;
+                trail.sx = this.vertex[0];
+                trail.sy = this.vertex[1];
+                trail.sw = this.vertex[2];
+                trail.sh = this.vertex[3];
+                trail.dx = this.vertex[4];
+                trail.dy = this.vertex[5];
+                trail.dw = this.vertex[6];
+                trail.dh = this.vertex[7];
+                trail.r = this.vertex_color[0];
+                trail.g = this.vertex_color[1];
+                trail.b = this.vertex_color[2];
+                if (this.trailing_used < this.trailing_length) this.trailing_used++;
             }
 
             // update alpha of each trail
             for (int i = 0 ; i < this.trailing_used ; i++) {
-                this.trailing_buffer[i].alpha = (1f - (i / this.trailing_length)) * this.trailing_alpha;
+                this.trailing_buffer[i].alpha = (1f - (i / this.trailing_used)) * this.trailing_alpha;
             }
 
             return result;
@@ -1068,25 +1091,32 @@ namespace Engine.Image {
 
         public void TrailingEnabled(bool enabled) {
             this.trailing_disabled = !enabled;
+            if (this.trailing_disabled) this.trailing_used = 0;
         }
 
         public void TrailingSetParams(int length, float trail_delay, float trail_alpha, bool? darken_colors) {
             if (length > 0) {
                 Array.Resize(ref this.trailing_buffer, length);
                 this.trailing_length = length;
+                if (this.trailing_used > length) this.trailing_used = length;
             }
             if (darken_colors != null) this.trailing_darken = (bool)darken_colors;
-            if (this.trailing_used > length) this.trailing_used = length;
             if (!Single.IsNaN(trail_delay)) this.trailing_delay = trail_delay;
             if (!Single.IsNaN(trail_alpha)) this.trailing_alpha = trail_alpha;
 
             // force update
-            this.trailing_progress = Single.PositiveInfinity;
+            this.trailing_progress = this.trailing_delay;
+        }
+
+        public void TrailingSetOffsetcolor(float r, float g, float b) {
+            if (!Single.IsNaN(r)) this.trailing_offsetcolor[0] = r;
+            if (!Single.IsNaN(g)) this.trailing_offsetcolor[1] = g;
+            if (!Single.IsNaN(b)) this.trailing_offsetcolor[2] = b;
         }
 
 
         private struct Trail {
-            public float sx, sy, sw, sh, dx, dy, dw, dh, alpha;
+            public float sx, sy, sw, sh, dx, dy, dw, dh, alpha, r, g, b;
         }
 
     }

@@ -119,6 +119,9 @@ EM_JS_PRFX(void, character_trailing_enabled, (Character character, bool enabled)
 EM_JS_PRFX(void, character_trailing_set_params, (Character character, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors), {
     character_trailing_set_params(kdmyEngine_obtain(character), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors));
 });
+EM_JS_PRFX(void, character_trailing_set_offsetcolor, (Character character, float r, float g, float b), {
+    character_trailing_set_offsetcolor(kdmyEngine_obtain(character), r, g, b);
+});
 #endif
 
 
@@ -490,9 +493,9 @@ static int script_character_trailing_enabled(lua_State* L) {
 
 static int script_character_trailing_set_params(lua_State* L) {
     Character character = luascript_read_userdata(L, CHARACTER);
-    int32_t length = (int32_t)luaL_checkinteger(L, 2);
-    float trail_delay = (float)luaL_checknumber(L, 3);
-    float trail_alpha = (float)luaL_checknumber(L, 4);
+    int32_t length = (int32_t)luaL_optinteger(L, 2, -1);
+    float trail_delay = (float)luaL_optnumber(L, 3, NAN);
+    float trail_alpha = (float)luaL_optnumber(L, 4, NAN);
     
     bool darken_colors = false;
     bool* darken_colors_ptr = &darken_colors;
@@ -502,6 +505,17 @@ static int script_character_trailing_set_params(lua_State* L) {
         darken_colors = lua_toboolean(L, 5);
 
     character_trailing_set_params(character, length, trail_delay, trail_alpha, darken_colors_ptr);
+
+    return 0;
+}
+
+static int script_character_trailing_set_offsetcolor(lua_State* L) {
+    Character character = luascript_read_userdata(L, CHARACTER);
+    float r = (float)luaL_optnumber(L, 2, NAN);
+    float g = (float)luaL_optnumber(L, 3, NAN);
+    float b = (float)luaL_optnumber(L, 4, NAN);
+
+    character_trailing_set_offsetcolor(character, r, g, b);
 
     return 0;
 }
@@ -548,6 +562,7 @@ static const luaL_Reg CHARACTER_FUNCTIONS[] = {
     {"freeze_animation", script_character_freeze_animation},
     {"trailing_enabled", script_character_trailing_enabled},
     {"trailing_set_params", script_character_trailing_set_params},
+    {"trailing_set_offsetcolor", script_character_trailing_set_offsetcolor},
     {NULL, NULL}
 };
 
