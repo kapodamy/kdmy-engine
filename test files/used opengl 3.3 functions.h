@@ -78,3 +78,4 @@ internal delegate void glDeleteFramebuffers(GLsizei n, GLuint* framebuffers);
 internal delegate IntPtr glMapBuffer(GLenum target, GLenum access);
 internal delegate IntPtr glUnmapBuffer(GLenum target);
 internal delegate void glFinish();
+internal delegate void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels);

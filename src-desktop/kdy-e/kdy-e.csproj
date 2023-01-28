@@ -95,6 +95,7 @@
     <Compile Include="engine\externals\exports_drawable.cs" />
     <Compile Include="engine\externals\exports_layoutplaceholder.cs" />
     <Compile Include="engine\externals\exports_modelholder.cs" />
+    <Compile Include="engine\externals\ffgraph.cs" />
     <Compile Include="engine\externals\glfw_struct.cs" />
     <Compile Include="engine\externals\glfw_enum.cs" />
     <Compile Include="engine\externals\glfw_delegates.cs" />
@@ -234,6 +235,7 @@
     <Compile Include="engine\utils\tokenizer.cs" />
     <Compile Include="engine\utils\vertexprops.cs" />
     <Compile Include="engine\utils\xmlparser.cs" />
+    <Compile Include="engine\video\videoplayer.cs" />
     <Compile Include="kallistios\arch.cs" />
     <Compile Include="kallistios\mutex.cs" />
     <Compile Include="kallistios\utsname.cs" />

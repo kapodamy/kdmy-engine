@@ -1,34 +1,38 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "linkedlist.h"
-#include "sndbridge.h"
-#include "portaudio.h"
-#include "pa_win_wasapi.h"
-#include "oggdecoder.h"
 #include "filehandle.h"
+#include "linkedlist.h"
+#include "oggdecoder.h"
+#include "pa_win_wasapi.h"
+#include "portaudio.h"
+#include "sndbridge.h"
 
 typedef unsigned long ulong;
 typedef const PaStreamCallbackTimeInfo* CbTimeInfo;
 typedef PaStreamCallbackFlags CbFlags;
 
-#define SAMPLE_BUFFER_SIZE (32 * 1024)
-#define BUFFER_SIZE_BYTES (SAMPLE_BUFFER_SIZE * (int32_t)sizeof(int16_t))
-#define HOLE -3// retured by ov_read and op_read, means bad/missing packets in the file
+#define SAMPLE_BUFFER_SIZE (8 * 1024 * 2)
+#define BUFFER_SIZE_BYTES (SAMPLE_BUFFER_SIZE * sizeof(float))
+#define HOLE -3 // retured by ov_read and op_read, means bad/missing packets in the file
 #define PI 3.141592653589793f
 #define PI_HALF 1.5707963267948966f
 #define DESIRED_API_NAME "DSound"
 #define DESIRED_API_ENUM paDirectSound
-#define MIN_DURATION_MS_KEEP_ALIVE 500// 500 milliseconds
+#define MIN_DURATION_MS_KEEP_ALIVE 500 // 500 milliseconds
 
+#define DECODER_DESTROY(dec) dec->destroy_func(dec->decoder);
+#define DECODER_READ(dec, buffer, buffer_size) dec->read_func(dec->decoder, buffer, buffer_size);
+#define DECODER_INFO(dec, rate, channels, duration) dec->info_func(dec->decoder, rate, channels, duration);
+#define DECODER_SEEK(dec, timestamp) dec->seek_func(dec->decoder, timestamp);
 
 typedef struct {
     StreamID id;
-    OggDecoder* oggdecoder;
-    int32_t bytes_per_channel;
+    ExternalDecoder* decoder;
+    int32_t bytes_per_sample_per_channel;
     int32_t channels;
     int32_t sample_rate;
 
@@ -48,13 +52,12 @@ typedef struct {
     double duration;
     float milliseconds_to_samples;
 
-    uint8_t buffer[SAMPLE_BUFFER_SIZE];
-    int16_t queue[SAMPLE_BUFFER_SIZE];
-    size_t buffer_used;
-
     float fade_duration;
     float fade_progress;
     bool fade_in_or_out;
+
+    size_t buffer_used;
+    float buffer[SAMPLE_BUFFER_SIZE];
 
 } Stream_t;
 
@@ -90,7 +93,6 @@ static void completed_cb(void* userdata) {
         stream->id, (Pa_GetStreamTime(stream->pastream) - stream->timestamp) * 1000.0
     );
 #endif
-
 }
 
 static void wait_and_halt(Stream_t* stream, bool halt) {
@@ -108,13 +110,6 @@ static inline float calc_s_curve(float percent) {
     return (sinf((PI * percent) - PI_HALF) / 2.0f) + 0.5f;
 }
 
-static inline float sndbridge_tofloat(int16_t sample) {
-    float samplef = (float)sample / 32768.0f;
-    if (samplef > 1.0f) samplef = 1.0f;
-    if (samplef < -1.0f) samplef = -1.0f;
-    return samplef;
-}
-
 static void sndbridge_dispose_backend() {
     if (linkedlist_count(streams) > 0) return;
     Pa_Terminate();
@@ -129,86 +124,96 @@ static Stream_t* sndbridge_get_stream(StreamID stream) {
     return NULL;
 }
 
-static inline int32_t sndbridge_read_ogg_samples(Stream_t* stream, ulong frameCount, int16_t* output) {
+static inline int32_t sndbridge_read_samples(Stream_t* stream, ulong frameCount, float* output) {
     assert(frameCount < SAMPLE_BUFFER_SIZE);
 
-    int32_t to_write = frameCount * stream->bytes_per_channel;
-    int32_t total_readed = stream->buffer_used;
-    int32_t required_bytes = to_write - total_readed;
-    uint8_t* buf = stream->buffer + total_readed;
+    // check if necessary refill the internal buffer;
+    size_t buffer_used = stream->buffer_used;
+    if (buffer_used >= frameCount) goto L_copy_and_return;
 
-    while (required_bytes > 0) {
-        int32_t readed = oggdecoder_read(stream->oggdecoder, buf, required_bytes);
+    int32_t available_space = (SAMPLE_BUFFER_SIZE / stream->channels) - buffer_used;
+    int32_t minimun_can_read = 64 * stream->channels;
+    float* buf = stream->buffer + (buffer_used * stream->channels);
+
+    while (available_space > minimun_can_read) {
+        int32_t readed = DECODER_READ(stream->decoder, buf, available_space);
         if (readed < 1) {
             if (readed == HOLE) continue;
 
-            // if looped seek to the start
+            // EOF reached, if looped seek to the start
             if (stream->looped) {
-                oggdecoder_seek(stream->oggdecoder, 0.0);
+                DECODER_SEEK(stream->decoder, 0.0);
                 stream->played_time = 0.0;
                 stream->fetching = false;
                 continue;
             }
             break;
         }
-        required_bytes -= readed;
-        buf += readed;
-        total_readed += readed;
+
+        buf += readed * stream->channels;
+        available_space -= readed;
+        buffer_used += readed;
     }
 
-    if (total_readed < to_write) {
-        // EOF reached add silece at the end of the output
-        memcpy(output, stream->buffer, total_readed);
-        //memset(output + total_readed, 0x00, to_write - total_readed);
-        return total_readed / stream->bytes_per_channel;
-    }
+    if ((ulong)buffer_used < frameCount) frameCount = buffer_used;
 
-    memcpy(output, stream->buffer, to_write);
-    stream->buffer_used = total_readed - to_write;
-    memmove(stream->buffer, stream->buffer + to_write, stream->buffer_used);
+L_copy_and_return:
+    buffer_used -= frameCount;
 
-    return to_write / stream->bytes_per_channel;
+    int32_t required_bytes = frameCount * stream->bytes_per_sample_per_channel;
+    int32_t remaining_bytes = buffer_used * stream->bytes_per_sample_per_channel;
+    stream->buffer_used = buffer_used;
+
+    memcpy(output, stream->buffer, required_bytes);
+    memmove(stream->buffer, required_bytes + (uint8_t*)stream->buffer, remaining_bytes);
+
+    return frameCount;
 }
 
-static inline void sndbridge_apply_fade(Stream_t* stream, int32_t frames_total, float output_float[]) {
+static inline void sndbridge_apply_fade(Stream_t* stream, int32_t samples_per_channel, float output_float[]) {
     if (stream->fade_duration < 1) return;
-
 
     register float fade_duration = stream->fade_duration;
     register float fade_progress = stream->fade_progress;
     register int32_t channels = stream->channels;
+    register int32_t offset = 0;
 
     if (stream->fade_in_or_out) {
-        for (int32_t i = 0, j = 0;i < frames_total;i++, j++) {
+        for (int32_t s = 0; s < samples_per_channel; s++) {
+            register float percent = fade_progress / fade_duration;
 #ifdef SNDBRIDGE_SCURVE
-            output_float[i] *= calc_s_curve(fade_progress / fade_duration);
-#else
-            output_float[i] *= fade_progress / fade_duration;
+            percent = calc_s_curve(percent);
 #endif
-            if (j >= channels) {
-                j = 0;
-                fade_progress++;
-            }
-        }
-    }
-    else {
-        for (int32_t i = 0, j = 0;i < frames_total;i++, j++) {
-            output_float[i] *= 1.0f - fade_progress / fade_duration;
             fade_progress++;
-            if (j >= channels) {
-                j = 0;
-                fade_progress++;
-            }
+            for (int32_t c = 0; c < channels; c++) output_float[offset++] *= percent;
         }
-
+    } else {
+        for (int32_t s = 0; s < samples_per_channel; s++) {
+            register float percent = 1.0f - (fade_progress / fade_duration);
+#ifdef SNDBRIDGE_SCURVE
+            percent = calc_s_curve(percent);
+#endif
+            fade_progress++;
+            for (int32_t c = 0; c < channels; c++) output_float[offset++] *= percent;
+        }
     }
 
     if (fade_progress >= fade_duration) {
         stream->fade_duration = 0.0f;
-        if (!stream->fade_in_or_out)  stream->volume = 0.0f;
-    }
-    else {
+        if (!stream->fade_in_or_out) stream->volume = 0.0f;
+    } else {
         stream->fade_progress = fade_progress;
+    }
+}
+
+static inline void sndbridge_change_volume(Stream_t* stream, float* output_float, ulong frameCount) {
+    if (stream->volume == 1.0f && master_volume == 1.0f) return;
+
+    register const float volume = stream->volume * master_volume;
+    register const size_t total_samples = frameCount * stream->channels;
+
+    for (register size_t i = 0; i < total_samples; i++) {
+        output_float[i] *= volume;
     }
 }
 
@@ -217,34 +222,31 @@ static int read_cb(const void* ib, void* output, ulong frameCount, CbTimeInfo ti
     (void)sf;
 
     Stream_t* stream = (Stream_t*)userdata;
-    const int32_t frames_total = frameCount * stream->channels;
+    const int32_t total_samples = frameCount * stream->channels;
     float* output_float = (float*)output;
 
     stream->callback_running = true;
 
     if (stream->halt) {
         // playback ended, silence output to keep alive the stream
-        memset(output_float, 0x00, frames_total * sizeof(float));
+        memset(output_float, 0x00, total_samples);
         stream->callback_running = false;
         return paContinue;
     }
 
     // read samples
-    int32_t readed_frames = sndbridge_read_ogg_samples(stream, frameCount, stream->queue);
+    int32_t readed_frames = sndbridge_read_samples(stream, frameCount, output_float);
 
     if (stream->muted) {
-        memset(output_float, 0x00, frames_total * sizeof(float));
+        memset(output_float, 0x00, total_samples);
         goto L_prepare_return;
     }
 
-    // do sample conversion and apply volume
-    register float divisor = 32768.0f / (stream->volume * master_volume);
-    for (int32_t i = 0;i < frames_total;i++) {
-        output_float[i] = stream->queue[i] / divisor;
-    }
+    // change volume if required
+    sndbridge_change_volume(stream, output_float, frameCount);
 
     // do fade if required
-    sndbridge_apply_fade(stream, frames_total, output_float);
+    sndbridge_apply_fade(stream, frameCount, output_float);
 
 L_prepare_return:
     stream->callback_running = false;
@@ -256,7 +258,7 @@ L_prepare_return:
         PaTime remaing_frames = frameCount;
 
         stream->completed = true;
-        //stream->fetching = true;
+        // stream->fetching = true;
         stream->halt = true;
         stream->played_time = ti->outputBufferDacTime + (remaing_frames / stream->sample_rate);
 
@@ -378,9 +380,23 @@ L_check_device:
 
 
 extern StreamID sndbridge_queue_ogg(FileHandle_t* ogg_filehandle) {
+    ExternalDecoder* oggdecoder = oggdecoder_init(ogg_filehandle);
+    if (!oggdecoder) {
+        return StreamID_DECODER_FAILED;
+    }
+
+    StreamID stream = sndbridge_queue(oggdecoder);
+
+    if (stream < 0) {
+        DECODER_DESTROY(oggdecoder);
+    }
+
+    return stream;
+}
+
+extern StreamID sndbridge_queue(ExternalDecoder* external_decoder) {
     PaError err = paNoError;
     Stream_t* stream = NULL;
-    OggDecoder* oggdecoder = NULL;
 
     if (backend_initialize) {
         err = Pa_Initialize();
@@ -388,22 +404,17 @@ extern StreamID sndbridge_queue_ogg(FileHandle_t* ogg_filehandle) {
         backend_initialize = false;
     }
 
-    oggdecoder = oggdecoder_init(ogg_filehandle);
-    if (!oggdecoder) {
-        return StreamID_DECODER_FAILED;
-    }
-
     int32_t sample_rate, channels;
     double duration;
-    oggdecoder_get_info(oggdecoder, &sample_rate, &channels, &duration);
+    DECODER_INFO(external_decoder, &sample_rate, &channels, &duration);
 
     stream = calloc(1, sizeof(Stream_t));
     stream->id = STREAM_IDS++;
-    stream->oggdecoder = oggdecoder;
+    stream->decoder = external_decoder;
     stream->volume = 1.0f;
     stream->duration = duration;
     stream->milliseconds_to_samples = sample_rate / 1000.0f;
-    stream->bytes_per_channel = channels * 2;
+    stream->bytes_per_sample_per_channel = channels * sizeof(float);
     stream->channels = channels;
     stream->looped = false;
     stream->completed = false;
@@ -415,7 +426,6 @@ extern StreamID sndbridge_queue_ogg(FileHandle_t* ogg_filehandle) {
     sndbridge_create_pastream(stream);
     if (!stream->pastream) {
         free(stream);
-        oggdecoder_destroy(oggdecoder);
         sndbridge_dispose_backend();
         return StreamID_BACKEND_FAILED;
     }
@@ -436,10 +446,10 @@ extern void sndbridge_dispose(StreamID stream_id) {
     Pa_CloseStream(stream->pastream);
 
     linkedlist_remove_item(streams, stream);
-    oggdecoder_destroy(stream->oggdecoder);
+    DECODER_DESTROY(stream->decoder);
     free(stream);
 
-    //sndbridge_dispose_backend();
+    // sndbridge_dispose_backend();
 }
 
 
@@ -457,20 +467,20 @@ extern double sndbridge_position(StreamID stream_id) {
     PaError err = Pa_IsStreamStopped(stream->pastream);
 
     switch (err) {
-    case 1:
-        break;
-    case 0:
-        if (stream->fetching && !stream->halt)
-            position += Pa_GetStreamTime(stream->pastream) - stream->timestamp;
-        break;
-    default:
-        LOG_ERROR("sndbridge_position() failed on stream %i: %s", stream_id, Pa_GetErrorText(err));
-        return -1.0;
+        case 1:
+            break;
+        case 0:
+            if (stream->fetching && !stream->halt)
+                position += Pa_GetStreamTime(stream->pastream) - stream->timestamp;
+            break;
+        default:
+            LOG_ERROR("sndbridge_position() failed on stream %i: %s", stream_id, Pa_GetErrorText(err));
+            return -1.0;
     }
 
     position *= 1000.0;
 
-    //if (position >= stream->duration) return stream->duration;
+    // if (position >= stream->duration) return stream->duration;
     return position;
 }
 
@@ -479,6 +489,8 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
     GET_STREAM(stream_id);
     if (!stream) return;
 
+    if (milliseconds < 0.0 || __isnan(milliseconds)) milliseconds = 0.0;
+
     PaError status = Pa_IsStreamActive(stream->pastream);
     if (status != 1 && status != 0) {
         LOG_ERROR("sndbridge_seek() status failed on stream %i: %s", stream_id, Pa_GetErrorText(status));
@@ -486,9 +498,9 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
     }
 
     if (status == 1 && !stream->keep_alive) {
-        status = Pa_AbortStream(stream->pastream);
-        if (status != paNoError) {
-            LOG_ERROR("sndbridge_seek() failed to abort stream %i: %s", stream_id, Pa_GetErrorText(status));
+        PaError ret = Pa_AbortStream(stream->pastream);
+        if (ret != paNoError) {
+            LOG_ERROR("sndbridge_seek() failed to abort stream %i: %s", stream_id, Pa_GetErrorText(ret));
         }
     }
 
@@ -496,7 +508,7 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
 
     stream->buffer_used = 0;
     stream->played_time = milliseconds / 1000.0;
-    oggdecoder_seek(stream->oggdecoder, milliseconds);
+    DECODER_SEEK(stream->decoder, milliseconds);
 
     if (milliseconds >= stream->duration) {
         stream->completed = true;
@@ -518,7 +530,6 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
             LOG_ERROR("sndbridge_seek() failed to resume stream %i: %s", stream_id, Pa_GetErrorText(status));
         }
     }
-
 }
 
 extern void sndbridge_play(StreamID stream_id) {
@@ -527,17 +538,17 @@ extern void sndbridge_play(StreamID stream_id) {
 
     PaError err = Pa_IsStreamActive(stream->pastream);
     switch (err) {
-    case 1:
-        if (stream->halt) {
-            sndbridge_stop(stream_id);
-            stream->halt = false;
-        }
-        return;
-    case 0:
-        break;
-    default:
-        LOG_ERROR("sndbridge_play() status failed on stream %i: %s", stream_id, Pa_GetErrorText(err));
-        return;
+        case 1:
+            if (stream->halt) {
+                sndbridge_stop(stream_id);
+                stream->halt = false;
+            }
+            return;
+        case 0:
+            break;
+        default:
+            LOG_ERROR("sndbridge_play() status failed on stream %i: %s", stream_id, Pa_GetErrorText(err));
+            return;
     }
 
     // seek to the beginning if the playback has ended
@@ -565,14 +576,14 @@ extern void sndbridge_pause(StreamID stream_id) {
 
     PaError err = Pa_IsStreamStopped(stream->pastream);
     switch (err) {
-    case 1:
-        return;
-    case 0:
-        if (stream->halt) return;
-        break;
-    default:
-        LOG_ERROR("sndbridge_pause() status failed on stream %i: %s", stream_id, Pa_GetErrorText(err));
-        return;
+        case 1:
+            return;
+        case 0:
+            if (stream->halt) return;
+            break;
+        default:
+            LOG_ERROR("sndbridge_pause() status failed on stream %i: %s", stream_id, Pa_GetErrorText(err));
+            return;
     }
 
     if (stream->fetching) {
@@ -591,7 +602,7 @@ extern void sndbridge_pause(StreamID stream_id) {
     stream->fade_duration = 0.0;
     stream->fetching = false;
     stream->completed = false;
-    oggdecoder_seek(stream->oggdecoder, stream->played_time * 1000.0);
+    DECODER_SEEK(stream->decoder, stream->played_time * 1000.0);
 }
 
 extern void sndbridge_stop(StreamID stream_id) {
@@ -600,14 +611,14 @@ extern void sndbridge_stop(StreamID stream_id) {
 
     PaError err = Pa_IsStreamStopped(stream->pastream);
     switch (err) {
-    case 1:
-        goto L_reset_stream;
-    case 0:
-        if (stream->keep_alive) goto L_reset_stream;
-        break;
-    default:
-        LOG_ERROR("sndbridge_stop() status failed on stream %i: %s", stream_id, Pa_GetErrorText(err));
-        return;
+        case 1:
+            goto L_reset_stream;
+        case 0:
+            if (stream->keep_alive) goto L_reset_stream;
+            break;
+        default:
+            LOG_ERROR("sndbridge_stop() status failed on stream %i: %s", stream_id, Pa_GetErrorText(err));
+            return;
     }
 
     err = Pa_AbortStream(stream->pastream);
@@ -623,7 +634,7 @@ L_reset_stream:
     stream->fade_duration = 0.0;
     stream->completed = false;
     stream->fetching = false;
-    oggdecoder_seek(stream->oggdecoder, 0.0);
+    DECODER_SEEK(stream->decoder, 0.0);
 }
 
 
@@ -664,9 +675,9 @@ extern bool sndbridge_is_active(StreamID stream_id) {
 extern StreamFading sndbridge_has_fade_active(StreamID stream_id) {
     GET_STREAM(stream_id);
     if (!stream) return false;
-    
+
     if (Pa_IsStreamActive(stream->pastream) != 0x01) return false;
-    
+
     if (stream->fade_duration > 0)
         return stream->fade_in_or_out ? StreamFading_IN : StreamFading_OUT;
     else
@@ -718,16 +729,14 @@ extern const char* sndbridge_get_runtime_info() {
         const PaHostApiInfo* info = Pa_GetHostApiInfo(index);
         if (info->type != DESIRED_API_ENUM) continue;
 
-        desired_api_name = DESIRED_API_NAME;//info->name;
+        desired_api_name = DESIRED_API_NAME; // info->name;
         if (info->defaultOutputDevice != paNoDevice) {
             device_name = Pa_GetDeviceInfo(info->defaultOutputDevice)->name;
         }
         break;
     }
 
-    int size = snprintf(runtime_info, sizeof(runtime_info), "%s\nAudio API: default=%s desired=%s output=%s",
-        Pa_GetVersionText(), default_name, desired_api_name, device_name
-    );
+    int size = snprintf(runtime_info, sizeof(runtime_info), "%s\nAudio API: default=%s desired=%s output=%s", Pa_GetVersionText(), default_name, desired_api_name, device_name);
     runtime_info[size] = '\0';
     return runtime_info;
 }
@@ -801,8 +810,10 @@ int main() {
         //sndbridge_seek(stream_id, 0.0);
     }*/
 
-    sndbridge_stop(stream_id);
+    //sndbridge_stop(stream_id);
     sndbridge_play(stream_id);
+    Pa_Sleep(3000);
+    sndbridge_seek(stream_id, 1000);
 
     while (true) {
         double duration = sndbridge_duration(stream_id);

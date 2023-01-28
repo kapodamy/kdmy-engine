@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// exclude OGG vorbis static callbacks
+#define OV_EXCLUDE_STATIC_CALLBACKS
+
 #include "vorbis/codec.h"
 #include "vorbis/vorbisfile.h"
 
@@ -25,7 +28,7 @@ typedef OggVorbisDecoder_t* OggVorbisDecoder;
 OggVorbisDecoder oggvorbisdecoder_init(FileHandle_t* file_hnd);
 void oggvorbisdecoder_destroy(OggVorbisDecoder oggvorbisdecoder);
 
-int32_t oggvorbisdecoder_read(OggVorbisDecoder oggvorbisdecoder, uint8_t* buffer, int32_t buffer_size);
+int32_t oggvorbisdecoder_read(OggVorbisDecoder oggvorbisdecoder, float* buffer, int32_t samples_per_channel);
 void oggvorbisdecoder_get_info(OggVorbisDecoder oggvorbisdecoder, int32_t* rate, int32_t* channels, double* duration);
 bool oggvorbisdecoder_seek(OggVorbisDecoder oggvorbisdecoder, double timestamp);
 
@@ -40,7 +43,7 @@ typedef struct {
     OggOpusFile* op;
 
     double duration;
-    int bytes_per_channel;
+    int channels;
 
     FileHandle_t* file_hnd;
 } OggOpusDecoder_t;
@@ -50,7 +53,7 @@ typedef OggOpusDecoder_t* OggOpusDecoder;
 OggOpusDecoder oggopusdecoder_init(FileHandle_t* file_hnd);
 void oggopusdecoder_destroy(OggOpusDecoder oggopusdecoder);
 
-int32_t oggopusdecoder_read(OggOpusDecoder oggopusdecoder, uint8_t* buffer, int32_t buffer_size);
+int32_t oggopusdecoder_read(OggOpusDecoder oggopusdecoder, float* buffer, int32_t samples_per_channel);
 void oggopusdecoder_get_info(OggOpusDecoder oggopusdecoder, int32_t* rate, int32_t* channels, double* duration);
 bool oggopusdecoder_seek(OggOpusDecoder oggopusdecoder, double timestamp);
 #endif

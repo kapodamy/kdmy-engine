@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "oggdecoder.h"
+#include "filehandle.h"
 
 static FileHandle_t filehandle;
 
@@ -24,23 +25,23 @@ int main2() {
     filehandle.read = read;
     filehandle.seek = seek;
     filehandle.tell = tell;
-    OggDecoder* oggdecoder = oggdecoder_init(&filehandle);
+    ExternalDecoder* oggdecoder = oggdecoder_init(&filehandle);
     assert(oggdecoder);
 
     const int size = 64 * 1024;
-    unsigned char buffer[size];
+    float buffer[size];
 
     FILE* out = fopen("./audio.pcm", "wb+");
 
     while (1) {
-        int32_t readed = oggdecoder_read(oggdecoder, buffer, size);
+        int32_t readed = oggdecoder->read_func(oggdecoder, buffer, size);
         if (readed < 1) break;
-        fwrite(buffer, 1, readed, out);
+        fwrite(buffer, sizeof(float), readed, out);
     }
 
     fflush(out);
     fclose(out);
-    oggdecoder_destroy(oggdecoder);
+    oggdecoder->destroy_func(oggdecoder);
     fclose(file);
 
     return 0;

@@ -90,7 +90,7 @@ namespace Engine.Platform {
 
             WebGLTexture tex = gl.createTexture();
 
-            gl.activeTexture(gl.TEXTURE0);
+            //gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, tex);
 
             if (pixelDataBuffer != null) {

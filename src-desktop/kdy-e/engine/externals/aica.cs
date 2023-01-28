@@ -1,7 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Engine.Externals {
+
     internal static class AICA {
         private const string DLL = "kdy_AICA";
 
@@ -16,11 +18,16 @@ namespace Engine.Externals {
         public static extern IntPtr filehandle_init2(/* const byte* */IntPtr data, int size);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr filehandle_init3(/* const char* */byte[] fullpath);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void filehandle_destroy(IntPtr handle);
 
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int sndbridge_queue_ogg(IntPtr ogg_filehandle);
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int sndbridge_queue(IntPtr external_decoder);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void sndbridge_dispose(int stream);
 

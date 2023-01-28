@@ -11,6 +11,9 @@
             "environment": [],
             "externalConsole": false,
             "windows": {
+                "name": "GDB debug",
+                "type": "cppdbg",
+                "request": "launch",
                 "MIMode": "gdb",
                 "miDebuggerPath": "gdb.exe",
                 "program": "${workspaceFolder}/output/main.exe"

@@ -14,7 +14,7 @@
             "windows": {
                 "command": "mingw32-make",
                 "args": [
-                    "build-debug"
+                    "build-debug-x64"
                 ]
             }
         },
@@ -31,7 +31,7 @@
             "windows": {
                 "command": "mingw32-make",
                 "args": [
-                    "build-release"
+                    "build-release-x64"
                 ]
             }
         },

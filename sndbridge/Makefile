@@ -15,7 +15,11 @@ INCLUDE = -Iinclude
 
 build-debug:
 	windres src/info.rc output/info.o
-	$(CC) -o output/main.exe $(CFLAGS) -g $(SOURCES) $(INCLUDE) $(LIBSx86) output/info.o -DDEBUG 
+	$(CC) -o output/main.exe $(CFLAGS) -ggdb3 $(SOURCES) $(INCLUDE) $(LIBSx86) output/info.o -DDEBUG
+
+build-debug-x64:
+	windres src/info.rc output/info.o
+	$(CC) -o output/main.exe $(CFLAGS) -ggdb3 $(SOURCES) $(INCLUDE) $(LIBSx64) output/info.o -DDEBUG
 
 build-release:
 	$(info "TODO: export ONLY sndbridge_* functions...")

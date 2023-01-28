@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using Engine.Platform;
+using static System.Windows.Forms.DataFormats;
 
 namespace Engine.Externals {
 
@@ -517,6 +518,10 @@ namespace Engine.Externals {
 
         internal void finish() {
             NativeMethods.glFinish();
+        }
+
+        internal void texSubImage2D(GLenum target, int level, int xoffset, int yoffset, int width, int height, GLenum format, GLenum type, IntPtr pixels) {
+            NativeMethods.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
         }
 
 #pragma warning restore IDE1006

@@ -74,10 +74,9 @@ function soundplayer_destroy(soundplayer) {
 function soundplayer_replay(soundplayer) {
     soundplayer.fade_id++;
     soundplayer.fade_status = FADDING_NONE;
+    soundplayer.handler.currentTime = 0;
     if (soundplayer.handler.paused)
         soundplayer_internal_handle_play(soundplayer);
-    else
-        soundplayer.handler.currentTime = 0;
 }
 
 function soundplayer_play(soundplayer) {
@@ -190,8 +189,7 @@ function soundplayer_is_playing(soundplayer) {
 }
 
 function soundplayer_has_fading(soundplayer) {
-
-    return FADDING_NONE;
+    return soundplayer.fade_status;
 }
 
 function soundplayer_get_duration(soundplayer) {

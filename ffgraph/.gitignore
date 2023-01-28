@@ -1,0 +1,17 @@
+
+# ignore due license incompatibility
+/include/avcodec/
+/include/avformat/
+/include/avutil/
+/include/swresample/
+/include/swscale/
+
+# ignore due license incompatibility
+/lib/x64/avcodec-59.dll
+/lib/x64/avformat-59.dll
+/lib/x64/avutil-57.dll
+/lib/x64/swresample-4.dll
+/lib/x64/swscale-6.dll
+
+# generated files
+/output/

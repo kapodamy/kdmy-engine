@@ -153,7 +153,7 @@
     </Sound>
 
     <!-- This is a combination of <Sound> and <Sprite> -->
-    <!-- Requires a constant call to layout_animate() to poll media streams -->
+    <!-- Requires a constant call to layout_draw() to poll video streams -->
     <Video name="test_video" loop="1" volume="1.0">
         <Action name="test_props">
             <Modifier skewX="100" />

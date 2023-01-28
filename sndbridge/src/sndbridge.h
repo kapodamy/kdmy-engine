@@ -1,9 +1,10 @@
 #ifndef _sndbridge_h
 #define _sndbridge_h
 
-#include <stdint.h>
-#include <stdbool.h>
 #include "filehandle.h"
+#include "externaldecoder.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #define StreamID_INVALID -1
 #define StreamID_DECODER_FAILED -2
@@ -17,6 +18,7 @@ typedef int32_t StreamID;
 typedef int32_t StreamFading;
 
 extern StreamID sndbridge_queue_ogg(FileHandle_t* ogg_filehandle);
+extern StreamID sndbridge_queue(ExternalDecoder* external_decoder);
 extern void sndbridge_dispose(StreamID stream_id);
 
 extern double sndbridge_duration(StreamID stream_id);

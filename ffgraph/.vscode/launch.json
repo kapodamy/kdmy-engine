@@ -1,0 +1,44 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}\\output",
+            "environment": [],
+            "externalConsole": false,
+            "linux": {
+                "type": "cppdbg",
+                "request": "launch",
+                "name": "Launch (linux)",
+                "MIMode": "gdb",
+                "miDebuggerPath": "gdb",
+                "program": "${workspaceFolder}/output/test"
+            },
+            "osx": {
+                "type": "cppdbg",
+                "request": "launch",
+                "name": "Launch (osx)",
+                "MIMode": "lldb",
+                "miDebuggerPath": "lldb-mi",
+                "program": "${workspaceFolder}/output/test"
+            },
+            "windows": {
+                "type": "cppdbg",
+                "request": "launch",
+                "name": "Launch (Windows)",
+                "MIMode": "gdb",
+                "miDebuggerPath": "gdb.exe",
+                "program": "${workspaceFolder}/output/test.exe",
+                "args": [
+                    "${workspaceFolder}/output/video.webm"
+                ]
+            },
+            "preLaunchTask": "build windows (debug)",
+            "program": ""
+        }
+    ]
+}

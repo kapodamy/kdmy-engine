@@ -58,6 +58,7 @@ namespace CsharpWrapper {
             Console.Error.WriteLine("AICA:" + AICA.sndbridge_get_runtime_info());
             Console.Error.WriteLine("FontAtlas: FreeType V" + ModuleFontAtlas.fontatlas_get_version());
             Console.Error.WriteLine("LuaScript: " + ManagedLuaState.GetVersion());
+            Console.Error.WriteLine("FFGraph: " + FFgraph.ffgraph_get_runtime_info() ?? "<not loaded>");
 
             Thread.CurrentThread.Name = "MainThread";// used in texture loading
             EngineSettings.LoadINI();

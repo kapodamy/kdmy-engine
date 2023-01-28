@@ -1,53 +1,82 @@
-#include <stdlib.h>
-#include <stdint.h>
 #include <assert.h>
 #include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-#include "oggdecoders.h"
 #include "oggdecoder.h"
+#include "oggdecoders.h"
 #include "oggutil.h"
 
 
-extern OggDecoder* oggdecoder_init(FileHandle_t* filehandle) {
-    assert(filehandle);
-    assert(filehandle->read);
-    assert(filehandle->seek);
-    assert(filehandle->tell);
+typedef struct {
+    void* oggdecoder;
+    ExternalDecoder extdec;
+    ExternalDecoderDestroyCB destroy_func;
+    ExternalDecoderReadCB read_func;
+    ExternalDecoderInfoCB info_func;
+    ExternalDecoderSeekCB seek_func;
+} WrapperOggDecoder;
 
-    OggDecoder* oggdecoder = malloc(sizeof(OggDecoder));
-    oggdecoder->filehandle = filehandle;
-    assert(oggdecoder);
+typedef void* (*InitFn)(FileHandle_t* file_hnd);
 
-    int result = oggutil_get_ogg_codec(filehandle);
-    cb_init init = NULL;
+
+static void wrapper_destroy(WrapperOggDecoder* wrapper) {
+    wrapper->destroy_func(wrapper->oggdecoder);
+    free(wrapper);
+}
+
+static int32_t wrapper_read(WrapperOggDecoder* wrapper, float* buffer, int32_t samples_per_channel) {
+    return wrapper->read_func(wrapper->oggdecoder, buffer, samples_per_channel);
+}
+
+static void wrapper_info(WrapperOggDecoder* wrapper, int32_t* rate, int32_t* channels, double* duration) {
+    wrapper->info_func(wrapper->oggdecoder, rate, channels, duration);
+}
+
+static bool wrapper_seek(WrapperOggDecoder* wrapper, double timestamp) {
+    return wrapper->seek_func(wrapper->oggdecoder, timestamp);
+}
+
+
+ExternalDecoder* oggdecoder_init(FileHandle_t* file_hnd) {
+    assert(file_hnd);
+    assert(file_hnd->read);
+    assert(file_hnd->seek);
+    assert(file_hnd->tell);
+
+    WrapperOggDecoder* wrapper = malloc(sizeof(WrapperOggDecoder));
+    assert(wrapper);
+
+    int result = oggutil_get_ogg_codec(file_hnd);
+    InitFn init = NULL;
 
     switch (result) {
-    case OGGUTIL_CODEC_VORBIS:;
-        init = (cb_init)oggvorbisdecoder_init;
-        oggdecoder->destroy = (cb_destroy)oggvorbisdecoder_destroy;
-        oggdecoder->get_info = (cb_get_info)oggvorbisdecoder_get_info;
-        oggdecoder->read = (cb_read)oggvorbisdecoder_read;
-        oggdecoder->seek = (cb_seek)oggvorbisdecoder_seek;
-        break;
+        case OGGUTIL_CODEC_VORBIS:;
+            init = (InitFn)oggvorbisdecoder_init;
+            wrapper->destroy_func = (ExternalDecoderDestroyCB)oggvorbisdecoder_destroy;
+            wrapper->info_func = (ExternalDecoderInfoCB)oggvorbisdecoder_get_info;
+            wrapper->read_func = (ExternalDecoderReadCB)oggvorbisdecoder_read;
+            wrapper->seek_func = (ExternalDecoderSeekCB)oggvorbisdecoder_seek;
+            break;
 #ifdef SNDBRIDGE_OPUS_DECODING
-    case OGGUTIL_CODEC_OPUS:;
-        init = (cb_init)oggopusdecoder_init;
-        oggdecoder->destroy = (cb_destroy)oggopusdecoder_destroy;
-        oggdecoder->get_info = (cb_get_info)oggopusdecoder_get_info;
-        oggdecoder->read = (cb_read)oggopusdecoder_read;
-        oggdecoder->seek = (cb_seek)oggopusdecoder_seek;
-        break;
+        case OGGUTIL_CODEC_OPUS:;
+            init = (InitFn)oggopusdecoder_init;
+            wrapper->destroy_func = (ExternalDecoderDestroyCB)oggopusdecoder_destructor;
+            wrapper->info_func = (ExternalDecoderInfoCB)oggopusdecoder_get_info;
+            wrapper->read_func = (ExternalDecoderReadCB)oggopusdecoder_read;
+            wrapper->seek_func = (ExternalDecoderSeekCB)oggopusdecoder_seek;
+            break;
 #endif
-    case OGGUTIL_CODEC_ERROR:
-        fprintf(stderr, "oggdecoder_init() can not identify the audio codec\n");
-        goto L_failed;
-    case OGGUTIL_CODEC_UNKNOWN:
-        fprintf(stderr, "oggdecoder_init() unknown audio codec\n");
-        goto L_failed;
+        case OGGUTIL_CODEC_ERROR:
+            fprintf(stderr, "oggdecoder_init() can not identify the audio codec\n");
+            goto L_failed;
+        case OGGUTIL_CODEC_UNKNOWN:
+            fprintf(stderr, "oggdecoder_init() unknown audio codec\n");
+            goto L_failed;
     }
 
-    oggdecoder->decoder_handle = init(filehandle);
-    if (!oggdecoder->decoder_handle) {
+    wrapper->oggdecoder = init(file_hnd);
+    if (!wrapper->oggdecoder) {
         fprintf(
             stderr,
             "oggdecoder_init() can not initialize the decoder for: %s\n",
@@ -56,28 +85,16 @@ extern OggDecoder* oggdecoder_init(FileHandle_t* filehandle) {
         goto L_failed;
     }
 
-    return oggdecoder;
+    wrapper->extdec.decoder = wrapper;
+    wrapper->extdec.destroy_func = (ExternalDecoderDestroyCB)wrapper_destroy;
+    wrapper->extdec.info_func = (ExternalDecoderInfoCB)wrapper_info;
+    wrapper->extdec.read_func = (ExternalDecoderReadCB)wrapper_read;
+    wrapper->extdec.seek_func = (ExternalDecoderSeekCB)wrapper_seek;
+
+    // mimic IDisposable interface
+    return &wrapper->extdec;
 
 L_failed:
-    free(oggdecoder);
+    free(wrapper);
     return NULL;
-}
-
-extern void oggdecoder_destroy(OggDecoder* oggdecoder) {
-    oggdecoder->destroy(oggdecoder->decoder_handle);
-    free(oggdecoder);
-}
-
-
-extern int32_t oggdecoder_read(OggDecoder* oggdecoder, uint8_t* buffer, int32_t buffer_size) {
-    return oggdecoder->read(oggdecoder->decoder_handle, buffer, buffer_size);
-}
-
-extern void oggdecoder_get_info(OggDecoder* oggdecoder, int32_t* rate, int32_t* channels, double* duration) {
-    return oggdecoder->get_info(oggdecoder->decoder_handle, rate, channels, duration);
-}
-
-extern bool oggdecoder_seek(OggDecoder* oggdecoder, double timestamp) {
-    if (timestamp < 0.0) timestamp = 0.0;
-    return oggdecoder->seek(oggdecoder->decoder_handle, timestamp);
 }

@@ -41,7 +41,7 @@ struct OggPacket_t {
 uint8_t oggutil_get_ogg_codec(FileHandle_t* ogg_fd) {
     struct OggPacket_t oggheader;
     const ssize_t oggheader_size = sizeof(struct OggPacket_t);
-    int64_t original_offset = file_tell(ogg_fd);
+    int64_t original_offset = filehandle_tell(ogg_fd);
 
 #ifdef SNDBRIDGE_OPUS_DECODING
     const uint8_t max_codec_size = CODEC_VORBIS_SIZE > CODEC_OPUS_SIZE ? CODEC_VORBIS_SIZE : CODEC_OPUS_SIZE;
@@ -49,7 +49,7 @@ uint8_t oggutil_get_ogg_codec(FileHandle_t* ogg_fd) {
     const uint8_t max_codec_size = CODEC_VORBIS_SIZE;
 #endif
 
-    if (file_read(ogg_fd, &oggheader, oggheader_size) != oggheader_size) goto L_error;
+    if (filehandle_read(ogg_fd, &oggheader, oggheader_size) != oggheader_size) goto L_error;
     if (oggheader.magic != OggS) {
         fprintf(stderr, "soundplayer_get_ogg_codec() OggS failed, ¿endianess problem?\n");
         goto L_error;
@@ -61,7 +61,7 @@ uint8_t oggutil_get_ogg_codec(FileHandle_t* ogg_fd) {
     // read segment table
     uint8_t* segmentTable = malloc(oggheader.segmentTableSize);
     assert(segmentTable);
-    if (file_read(ogg_fd, segmentTable, oggheader.segmentTableSize) != oggheader.segmentTableSize) {
+    if (filehandle_read(ogg_fd, segmentTable, oggheader.segmentTableSize) != oggheader.segmentTableSize) {
         free(segmentTable);
         goto L_error;
     }
@@ -78,7 +78,7 @@ uint8_t oggutil_get_ogg_codec(FileHandle_t* ogg_fd) {
     // read codec data
     uint8_t* codec_data = malloc(segment_length);
     assert(codec_data);
-    if (file_read(ogg_fd, codec_data, segment_length) != segment_length) {
+    if (filehandle_read(ogg_fd, codec_data, segment_length) != segment_length) {
         free(codec_data);
         goto L_error;
     }
@@ -107,9 +107,9 @@ uint8_t oggutil_get_ogg_codec(FileHandle_t* ogg_fd) {
 
 L_return:
     free(codec_data);
-    file_seek(ogg_fd, original_offset, SEEK_SET);
+    filehandle_seek(ogg_fd, original_offset, SEEK_SET);
     return codec;
 L_error:
-    file_seek(ogg_fd, original_offset, SEEK_SET);
+    filehandle_seek(ogg_fd, original_offset, SEEK_SET);
     return OGGUTIL_CODEC_ERROR;
 }

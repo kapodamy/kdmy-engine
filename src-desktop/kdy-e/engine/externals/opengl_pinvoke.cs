@@ -97,6 +97,7 @@ namespace Engine.Externals {
             internal delegate IntPtr DglMapBuffer(GLenum target, GLenum access);
             internal delegate GLboolean DglUnmapBuffer(GLenum target);
             internal delegate void DglFinish();
+            internal delegate void DglTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, IntPtr pixels);
 
 #pragma warning disable CS0649
             internal static readonly DglViewport glViewport;
@@ -178,6 +179,7 @@ namespace Engine.Externals {
             internal static readonly DglMapBuffer glMapBuffer;
             internal static readonly DglUnmapBuffer glUnmapBuffer;
             internal static readonly DglFinish glFinish;
+            internal static readonly DglTexSubImage2D glTexSubImage2D;
 #pragma warning restore CS0649
 
 

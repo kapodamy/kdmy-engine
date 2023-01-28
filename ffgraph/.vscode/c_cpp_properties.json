@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/include",
+                "${workspaceFolder}"
+            ],
+            "defines": [
+                "DEBUG",
+                "UNICODE"
+            ],
+            "windowsSdkVersion": "8.1",
+            "compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
+            "cStandard": "c99",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64",
+            "configurationProvider": "ms-vscode.makefile-tools",
+            "compilerArgs": [
+                "-Wall",
+                "-Wextra",
+                "-Wfloat-conversion"
+            ]
+        }
+    ],
+    "version": 4
+}

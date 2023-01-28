@@ -9,18 +9,18 @@
 
 
 static int read_func(void* stream, unsigned char* ptr, int nbytes) {
-    return (int)file_read((FileHandle_t*)stream, ptr, nbytes);
+    return (int)filehandle_read((FileHandle_t*)stream, ptr, nbytes);
 }
 static int seek_func(void* stream, opus_int64 offset, int whence) {
     int ret;
-    if (file_seek((FileHandle_t*)stream, (_off64_t)offset, whence) < 0)
+    if (filehandle_seek((FileHandle_t*)stream, (_off64_t)offset, whence) < 0)
         ret = -1;
     else
         ret = 0;
     return ret;
 }
 static opus_int64 tell_func(void* stream) {
-    return (opus_int64)file_tell((FileHandle_t*)stream);
+    return (opus_int64)filehandle_tell((FileHandle_t*)stream);
 }
 
 
@@ -31,7 +31,7 @@ static struct OpusFileCallbacks callbacks = {
     .read = read_func,
     .seek = seek_func,
     .close = NULL,
-    .tell = tell_func };
+    .tell = tell_func};
 
 
 OggOpusDecoder oggopusdecoder_init(FileHandle_t* file_hnd) {
@@ -46,6 +46,7 @@ OggOpusDecoder oggopusdecoder_init(FileHandle_t* file_hnd) {
 
     oggopusdecoder->op = op;
     oggopusdecoder->duration = op_pcm_total(oggopusdecoder->op, -1) * OPUS_RATE_CONV;
+    oggopusdecoder->channels = op_channel_count(oggopusdecoder->op, -1);
     oggopusdecoder->file_hnd = file_hnd;
     oggopusdecoder->bytes_per_channel = op_channel_count(oggopusdecoder->op, -1) * 2;
 
@@ -58,15 +59,14 @@ void oggopusdecoder_destroy(OggOpusDecoder oggopusdecoder) {
 }
 
 
-int32_t oggopusdecoder_read(OggOpusDecoder oggopusdecoder, uint8_t* buffer, int32_t buffer_size) {
-    int buf_size = (int)(buffer_size / sizeof(int16_t));
-    int res = op_read(oggopusdecoder->op, (opus_int16*)buffer, buf_size, NULL);
-    return (int32_t)(oggopusdecoder->bytes_per_channel * res);
+int32_t oggopusdecoder_read(OggOpusDecoder oggopusdecoder, float* buffer, int32_t samples_per_channel) {
+    int buf_size = samples_per_channel * oggopusdecoder->channels;
+    return op_read_float(oggopusdecoder->op, buffer, buf_size, NULL);
 }
 
 void oggopusdecoder_get_info(OggOpusDecoder oggopusdecoder, int32_t* rate, int32_t* channels, double* duration) {
     *rate = OPUS_RATE;
-    *channels = op_channel_count(oggopusdecoder->op, -1);
+    *channels = oggopusdecoder->channels;
     *duration = oggopusdecoder->duration;
 }
 
