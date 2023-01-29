@@ -478,6 +478,9 @@
     <xs:complexType name="Sound-Fade">
         <xs:attribute name="duration" type="xs:float" use="optional" default="1000.0" />
     </xs:complexType>
+    <xs:complexType name="Seek">
+        <xs:attribute name="position" type="xs:double" use="optional" default="0.0" />
+    </xs:complexType>
 
     <xs:complexType name="Sprite">
         <xs:sequence maxOccurs="unbounded">
@@ -559,15 +562,64 @@
             <xs:element name="Action" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
                     <xs:sequence maxOccurs="unbounded">
-                        <xs:element name="Stop" minOccurs="0" maxOccurs="unbounded"></xs:element>
-                        <xs:element name="Play" minOccurs="0" maxOccurs="unbounded"></xs:element>
-                        <xs:element name="Pause" minOccurs="0" maxOccurs="unbounded"></xs:element>
-                        <xs:element name="Mute" minOccurs="0" maxOccurs="unbounded"></xs:element>
-                        <xs:element name="Unmute" minOccurs="0" maxOccurs="unbounded"></xs:element>
+                        <xs:element name="Stop" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="Play" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="Pause" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="Mute" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="Unmute" minOccurs="0" maxOccurs="unbounded"/>
                         <xs:element name="Property" type="Property-sound" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Properties" type="Properties-sound" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="FadeIn" type="Sound-Fade" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="FadeOut" type="Sound-Fade" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Seek" type="Seek" minOccurs="0" maxOccurs="unbounded" />
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string" use="optional" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="optional" />
+        <xs:attribute name="initialAction" type="xs:string" use="optional" />
+        <xs:attribute name="src" type="xs:anyURI" use="required" />
+        <xs:attribute name="volume" type="xs:float" use="optional" default="1" />
+        <xs:attribute name="looped" type="xs:boolean" use="optional" default="false" />
+    </xs:complexType>
+    <xs:complexType name="Video">
+        <xs:sequence maxOccurs="unbounded">
+            <xs:element name="Action" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence maxOccurs="unbounded">
+                        <xs:element name="Stop" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="Play" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="Pause" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="Mute" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="Unmute" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="Property" type="Property-sound" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Properties" type="Properties-sound" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="FadeIn" type="Sound-Fade" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="FadeOut" type="Sound-Fade" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Seek" type="Seek" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Location" type="Location" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Size" type="Size" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="OffsetColor" type="Color-any" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Color" type="Color-any" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Property" type="Property-sprite" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Properties" type="Properties-sprite" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AtlasApply" type="AtlasApply" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Resize" type="Resize" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationFromAtlas" type="AnimationFromAtlas" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Modifier" type="Modifier" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Hide" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Show" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetShader" type="SetShader" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="RemoveShader" type="RemoveShader" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetShaderUniform" type="SetShaderUniform" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetBlending" type="SetBlending" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetTrailing" type="SetTrailing" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="SetTrailingOffsetcolor" type="Color-any" minOccurs="0" maxOccurs="unbounded" />
                     </xs:sequence>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>

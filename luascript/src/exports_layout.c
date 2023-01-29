@@ -53,6 +53,10 @@ EM_JS_PRFX(SoundPlayer, layout_get_soundplayer, (Layout layout, const char* name
     const soundplayer = layout_get_soundplayer(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
     return kdmyEngine_obtain(soundplayer);
 });
+EM_JS_PRFX(VideoPlayer, layout_get_videoplayer, (Layout layout, const char* name), {
+    let ret = layout_get_videoplayer(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(ret);
+});
 EM_JS_PRFX(void, layout_get_viewport_size, (Layout layout, float* viewport_width, float* viewport_height), {
     const values = [ 0, 0 ];
     layout_get_viewport_size(kdmyEngine_obtain(layout), values);
@@ -268,6 +272,15 @@ static int script_layout_get_soundplayer(lua_State* L) {
     return script_soundplayer_new(L, soundplayer);
 }
 
+static int script_layout_get_videoplayer(lua_State* L) {
+    Layout layout = luascript_read_userdata(L, LAYOUT);
+    const char* name = luaL_optstring(L, 2, NULL);
+
+    VideoPlayer ret = layout_get_videoplayer(layout, name);
+
+    return script_videoplayer_new(L, ret);
+}
+
 static int script_layout_get_sprite(lua_State* L) {
     Layout layout = luascript_read_userdata(L, LAYOUT);
 
@@ -461,6 +474,7 @@ static const luaL_Reg LAYOUT_FUNCTIONS[] = {
     {"get_textsprite", script_layout_get_textsprite},
     {"get_sprite", script_layout_get_sprite},
     {"get_soundplayer", script_layout_get_soundplayer},
+    {"get_videoplayer", script_layout_get_videoplayer},
     {"get_viewport_size", script_layout_get_viewport_size},
     {"get_attached_value", script_layout_get_attached_value},
     {"set_group_visibility", script_layout_set_group_visibility},

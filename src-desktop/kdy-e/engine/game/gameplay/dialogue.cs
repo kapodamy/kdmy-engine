@@ -2640,10 +2640,12 @@ L_return:
         }
 
         private static void InternalReadColor(XmlParserNode node, float[] rgba) {
-            uint rgb;
-            if (VertexProps.ParseHex(node.GetAttribute("rgb"), out rgb, false)) {
-                Math2D.ColorBytesToFloats(rgb, false, rgba);
+            uint color;
+            if (VertexProps.ParseHex(node.GetAttribute("rgb"), out color, false)) {
+                Math2D.ColorBytesToFloats(color, false, rgba);
                 rgba[3] = VertexProps.ParseFloat(node, "alpha", 1f);
+            } else if (VertexProps.ParseHex(node.GetAttribute("rgba"), out color, false)) {
+                Math2D.ColorBytesToFloats(color, true, rgba);
             } else {
                 rgba[0] = VertexProps.ParseFloat(node, "r", rgba[0]);
                 rgba[1] = VertexProps.ParseFloat(node, "g", rgba[1]);

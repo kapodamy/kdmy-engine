@@ -343,6 +343,8 @@ function statesprite_set_texture(statesprite, texture, update_offset_source_size
     statesprite.texture = texture;
 
     if (update_offset_source_size && texture) {
+        statesprite.src_x = 0;
+        statesprite.src_y = 0;
         statesprite.src_width = statesprite.texture.original_width;
         statesprite.src_height = statesprite.texture.original_height;
         statesprite.vertex_dirty = 1;
@@ -582,10 +584,12 @@ function statesprite_animation_completed(statesprite) {
 function statesprite_animate(statesprite, elapsed) {
     //if (!Number.isFinite(elapsed)) throw new Error("Invalid elapsed value:" + elapsed);
 
-    if (!statesprite.animation_external) return 1;
+    let result = 1;
 
-    let result = animsprite_animate(statesprite.animation_external, elapsed);
-    animsprite_update_statesprite(statesprite.animation_external, statesprite, 1);
+    if (statesprite.animation_external) {
+        result = animsprite_animate(statesprite.animation_external, elapsed);
+        animsprite_update_statesprite(statesprite.animation_external, statesprite, 1);
+    }
 
     if (statesprite.trailing_disabled) return result;
 

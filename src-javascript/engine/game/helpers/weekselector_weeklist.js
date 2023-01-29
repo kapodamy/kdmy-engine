@@ -214,7 +214,7 @@ function weekselector_weeklist_peek_title_sprite(weeklist) {
     return weeklist.list_visible[weeklist.do_reverse ? 2 : 1].sprite_title;
 }
 
-function weekselector_weeklist_scroll(weeklist, offset) {
+/*async */function weekselector_weeklist_scroll(weeklist, offset) {
     return weekselector_weeklist_select(weeklist, weeklist.index + offset);
 }
 
@@ -275,9 +275,9 @@ async function weekselector_weeklist_select(weeklist, index) {
         if (animsprite) {
             sprite_external_animation_set(weeklist.list_visible[i].sprite_title, animsprite);
             animsprite_update_sprite(animsprite, weeklist.list_visible[i].sprite_title, 1);
-        } else {
-            sprite_set_draw_size_from_source_size(weeklist.list_visible[i].sprite_title);
         }
+
+        sprite_set_draw_size_from_source_size(weeklist.list_visible[i].sprite_title);
     }
 
     weeklist.host_load_id++;
@@ -538,6 +538,7 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
             statesprite_state_remove(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_IDLE);
         }
         statesprite_set_texture(weeklist.host_statesprite, null, 0);
+        statesprite_set_visible(weeklist.host_statesprite, 0);
         weeklist.host_loading = 0;
         return null;
     }

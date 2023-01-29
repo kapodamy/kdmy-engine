@@ -343,6 +343,8 @@ function sprite_set_texture(sprite, texture, update_offset_source_size) {
     sprite.texture = texture;
 
     if (update_offset_source_size && texture) {
+        sprite.src_x = 0;
+        sprite.src_y = 0;
         sprite.src_width = sprite.texture.original_width;
         sprite.src_height = sprite.texture.original_height;
         sprite.vertex_dirty = 1;
@@ -442,6 +444,7 @@ function sprite_set_draw_size(sprite, width, height) {
 function sprite_set_draw_size_from_source_size(sprite) {
     sprite.draw_width = sprite.src_width;
     sprite.draw_height = sprite.src_height;
+    sprite.vertex_dirty = 1;
 }
 
 function sprite_set_alpha(sprite, alpha) {

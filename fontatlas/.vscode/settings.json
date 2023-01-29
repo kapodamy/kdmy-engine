@@ -50,17 +50,17 @@
       "wchar.h": "c"
     },
     "terminal.integrated.profiles.windows": {
-        "mingw32-shell": {
+        "mingw64-shell": {
           "path": "C:\\msys64\\usr\\bin\\bash.exe",
           "args": [
             "--login"
           ]
         }
       },
-    "terminal.integrated.defaultProfile.windows": "mingw32-shell",
+    "terminal.integrated.defaultProfile.windows": "mingw64-shell",
     "makefile.makePath": "C:\\msys64\\mingw32\\bin\\mingw32-make.exe",
     "terminal.integrated.env.windows": {
         "CHERE_INVOKING": "1",
-        "MSYSTEM": "MINGW32",
+        "MSYSTEM": "MINGW64",
     },
 }

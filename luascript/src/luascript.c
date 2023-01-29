@@ -93,6 +93,7 @@ static void luascript_register_objects(lua_State* L, bool is_week) {
     script_messagebox_register(L);
     script_modifier_register(L);
     script_soundplayer_register(L);
+    script_videoplayer_register(L);
     script_sprite_register(L);
     script_textsprite_register(L);
     script_psshader_register(L);

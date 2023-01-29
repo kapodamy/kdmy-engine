@@ -123,6 +123,7 @@ namespace Engine.Video {
 
             IntPtr buffer_front = IntPtr.Zero, buffer_back = IntPtr.Zero;
             int texture_data_size = 0;
+            bool frame_available = false;
             if (info.video_has_stream) {
                 texture_data_size = info.video_width * info.video_height * 3/*rgb*/;
                 buffer_front = Marshal.AllocHGlobal(texture_data_size);
@@ -136,7 +137,10 @@ namespace Engine.Video {
 
                 tex_managed = Texture.InitFromRAW(
                    tex, texture_data_size, true, info.video_width, info.video_height, info.video_width, info.video_height
-               );
+                );
+
+                // adquire first video frame
+                frame_available = FFgraph.ffgraph_read_video_frame2(ffgraph, buffer_front, texture_data_size) >= 0;
             }
 
             bool longest_is_video = info.video_has_stream && info.video_seconds_duration > info.audio_seconds_duration;
@@ -164,7 +168,7 @@ namespace Engine.Video {
                 decoder_running = false,
                 current_buffer_is_front = true,
                 video_track_ended = !info.video_has_stream,
-                frame_available = false,
+                frame_available = frame_available,
                 longest_is_video = longest_is_video,
                 loop_enabled = false,
                 last_video_playback_time = 0.0,

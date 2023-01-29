@@ -68,6 +68,7 @@ namespace Engine.Externals.LuaScriptInterop {
             ExportsMessageBox.script_messagebox_register(lua);
             ExportsModifier.script_modifier_register(lua);
             ExportsSoundPlayer.script_soundplayer_register(lua);
+            ExportsVideoPlayer.script_videoplayer_register(lua);
             ExportsSprite.script_sprite_register(lua);
             ExportsTextSprite.script_textsprite_register(lua);
             ExportsPSShader.script_psshader_register(lua);

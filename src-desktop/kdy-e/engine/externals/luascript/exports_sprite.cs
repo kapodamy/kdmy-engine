@@ -1,5 +1,6 @@
 using System;
 using Engine.Externals.LuaInterop;
+using Engine.Game;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Utils;
@@ -320,6 +321,17 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_sprite_trailing_set_offsetcolor(LuaState L) {
+            Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
+            float r = (float)L.luaL_optnumber(2, Single.NaN);
+            float g = (float)L.luaL_optnumber(3, Single.NaN);
+            float b = (float)L.luaL_optnumber(4, Single.NaN);
+
+            sprite.TrailingSetOffsetcolor(r, g, b);
+
+            return 0;
+        }
+
 
         static int script_sprite_flip_rendered_texture(LuaState L) {
             Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
@@ -378,6 +390,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("blend_set", script_sprite_blend_set),
             new LuaTableFunction("trailing_enabled", script_sprite_trailing_enabled),
             new LuaTableFunction("trailing_set_params", script_sprite_trailing_set_params),
+            new LuaTableFunction("trailing_set_offsetcolor", script_sprite_trailing_set_offsetcolor),
             new LuaTableFunction(null, null)
         };
 

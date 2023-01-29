@@ -37,7 +37,7 @@
             }
         },
         {
-            "label": "build (release)",
+            "label": "build (release) (WASM)",
             "type": "process",
             "group": {
                 "kind": "build",
@@ -144,7 +144,7 @@
             }
         },
         {
-            "label": "build dll (x86) (release)",
+            "label": "build dll (x64) (release)",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -156,7 +156,7 @@
             "windows": {
                 "command": "mingw32-make",
                 "args": [
-                    "build-release-dll-x86"
+                    "build-release-dll-x64"
                 ]
             }
         },

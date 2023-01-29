@@ -5,7 +5,7 @@
 ///////////////////////
 
 async function videoplayer_init(src) {
-    let full_path = fs_get_full_path_and_override(src);
+    let full_path = await fs_get_full_path_and_override(src);
 
     if (!await fs_file_exists(full_path)) { return null; }
 
@@ -36,13 +36,13 @@ async function videoplayer_init(src) {
     const gl = pvr_context.webopengl.gl;
     const width = video.videoWidth, height = video.videoHeight;
 
-    let size = width * height * 3/*RGB*/;
+    let size = width * height * 4/*RGBA*/;
     let texture = null;
 
     if (width > 0 && height > 0) {
         let gl_texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.bindTexture(gl.TEXTURE_2D, null);
 
         texture = texture_init_from_raw(gl_texture, size, 1, width, height, width, height);
@@ -50,15 +50,15 @@ async function videoplayer_init(src) {
 
     let sprite = sprite_init_from_rgb8(0x000000);
     sprite_set_draw_size(sprite, width, height);
-    if (texture) sprite_set_texture(texture, 0);
-
+    if (texture) sprite_set_texture(sprite, texture, 0);
 
     return {
         handler: video,
         texture: texture,
+        sprite: sprite,
         fade_id: 0,
         fade_status: FADDING_NONE,
-        last_time: NaN
+        last_time: -1
     };
 }
 
@@ -93,8 +93,8 @@ var videoplayer_set_volume = soundplayer_set_volume;
 
 var videoplayer_set_mute = soundplayer_set_mute;
 
-function videoplayer_seek(videoplayer) {
-    soundplayer_seek(videoplayer);
+function videoplayer_seek(videoplayer, timestamp) {
+    soundplayer_seek(videoplayer, timestamp);
     videoplayer.last_time = NaN;
 }
 
@@ -133,17 +133,25 @@ function videoplayer_has_audio_track(videoplayer) {
 }
 
 function videoplayer_poll_streams(videoplayer) {
+    const video = videoplayer.handler;
+
+    if (!videoplayer.texture) return;
+
     // check if time to show the next frame
-    const time = videoplayer.currentTime;
-    if (time != videoplayer.last_time) return;
+    const time = video.currentTime;
+    if (time == videoplayer.last_time) return;
+
+    if (videoplayer.last_time < 0) {
+        // force seeking to adquire the first frame of the video
+        video.currentTime = 0.001;
+    }
 
     // do texture update
     const gl = pvr_context.webopengl.gl;
-    const video = videoplayer.video;
     const width = video.videoWidth, height = video.videoHeight;
 
-    gl.bindTexture(gl.TEXTURE_2D, videoplayer.texture);
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGB, gl.UNSIGNED_BYTE, video);
+    gl.bindTexture(gl.TEXTURE_2D, videoplayer.texture.data_vram);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, video);
     gl.bindTexture(gl.TEXTURE_2D, null);
 
     videoplayer.last_time = time;

@@ -732,6 +732,8 @@ function character_animate(character, elapsed) {
         return 1;
     }
 
+    // required to compute trailing fx
+    statesprite_animate(character.statesprite, elapsed);
 
     let completed;
     const current_action_type = character.current_action_type;

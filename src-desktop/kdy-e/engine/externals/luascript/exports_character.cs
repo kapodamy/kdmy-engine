@@ -396,9 +396,9 @@ namespace Engine.Externals.LuaScriptInterop {
 
         static int script_character_trailing_set_offsetcolor(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
-            float r = (float)L.luaL_optnumber(3, Single.NaN);
-            float g = (float)L.luaL_optnumber(4, Single.NaN);
-            float b = (float)L.luaL_optnumber(5, Single.NaN);
+            float r = (float)L.luaL_optnumber(2, Single.NaN);
+            float g = (float)L.luaL_optnumber(3, Single.NaN);
+            float b = (float)L.luaL_optnumber(4, Single.NaN);
 
             character.TrailingSetOffsetcolor(r, g, b);
 

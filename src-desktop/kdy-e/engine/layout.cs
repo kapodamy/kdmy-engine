@@ -10,6 +10,7 @@ using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
+using Engine.Video;
 using static Engine.Platform.FSFolderEnumerator;
 
 namespace Engine {
@@ -106,6 +107,7 @@ namespace Engine {
         private const int ACTION_TEXTBACKGROUND = 28;
         private const int ACTION_TEXTBACKGROUNDCOLOR = 29;
         private const int ACTION_SOUNDFADE = 30;
+        private const int ACTION_SEEK = 31;
 
         public const string GROUP_ROOT = "___root-group___";
         private const float BPM_STEPS = 32;// 1/32 beats
@@ -147,6 +149,8 @@ namespace Engine {
         private int trigger_list_size;
         private Item[] sound_list;
         private int sound_list_size;
+        private Item[] video_list;
+        private int video_list_size;
         private Texture[] textures;
         private int textures_size;
         private ZBufferEntry[] z_buffer;
@@ -184,6 +188,7 @@ namespace Engine {
                 camera_list = new ArrayList<CameraPlaceholder>(),
                 trigger_list = new ArrayList<Trigger>(),
                 sound_list = new ArrayList<Item>(),
+                video_list = new ArrayList<Item>(),
                 resource_pool = new ResourcePool() { textures = new ArrayList<ResourcePoolEntry>(), atlas = new ArrayList<ResourcePoolEntry>() },
                 fonts = null,
                 fonts_size = -1,
@@ -262,6 +267,9 @@ namespace Engine {
                 sound_list = null,
                 sound_list_size = -1,
 
+                video_list = null,
+                video_list_size = -1,
+
                 textures = null,
                 textures_size = 0,
 
@@ -305,6 +313,7 @@ namespace Engine {
             layout_context.camera_list.Destroy2(out layout.camera_list_size, ref layout.camera_list);
             layout_context.trigger_list.Destroy2(out layout.trigger_list_size, ref layout.trigger_list);
             layout_context.sound_list.Destroy2(out layout.sound_list_size, ref layout.sound_list);
+            layout_context.video_list.Destroy2(out layout.video_list_size, ref layout.video_list);
 
             // step 7: build textures array
             layout.textures_size = layout_context.resource_pool.textures.Size();
@@ -399,6 +408,29 @@ namespace Engine {
                     Console.Error.WriteLine("[WARN] layout_init() initial action not found" + initial_action_name);
             }
 
+            for (int i = 0 ; i < layout.video_list_size ; i++) {
+                string initial_action_name = layout.video_list[i].initial_action_name;
+                bool intial_action_found = initial_action_name == null;
+
+                for (int j = 0 ; j < layout.video_list[i].actions_size ; j++) {
+                    String action_name = layout.video_list[i].actions[j].name;
+
+                    if (action_name == null || action_name == initial_action_name) {
+                        if (action_name == initial_action_name) intial_action_found = true;
+
+                        Item item_sprite = layout.vertex_list[layout.video_list[i].in_vertex_list_index];
+                        Layout.HelperExecuteActionInVideo(
+                              layout.video_list[i].actions[j], layout.video_list[i],
+                              item_sprite, layout.viewport_width, layout.viewport_height
+                        );
+                    }
+
+                }
+
+                if (!intial_action_found)
+                    Console.Error.WriteLine("[WARN] layout_init() initial action not found" + initial_action_name);
+            }
+
             for (int i = 0 ; i < layout.trigger_list_size ; i++) {
                 if (layout.trigger_list[i].name != null) continue;
                 layout.HelperExecuteTrigger(layout.trigger_list[i]);
@@ -426,6 +458,8 @@ namespace Engine {
                 HelperDestroyActions(this.vertex_list[i].actions, this.vertex_list[i].actions_size);
                 //free(this.vertex_list[i].name);
                 //free(this.vertex_list[i].initial_action_name);
+
+                if (this.vertex_list[i].videoplayer != null) continue;
 
                 switch (this.vertex_list[i].type) {
                     case PVRContextVertex.SPRITE:
@@ -493,6 +527,15 @@ namespace Engine {
 
             }
             //free(this.sound_list);
+
+            for (int i = 0 ; i < this.video_list_size ; i++) {
+                HelperDestroyActions(this.video_list[i].actions, this.video_list[i].actions_size);
+                //free(this.video_list[i].name);
+                //free(this.video_list[i].initial_action_name);
+                this.video_list[i].videoplayer.Destroy();
+
+            }
+            //free(this.video_list);
 
             for (int i = 0 ; i < this.macro_list_size ; i++) {
                 for (int j = 0 ; j < this.macro_list[i].actions_size ; j++) {
@@ -597,6 +640,29 @@ namespace Engine {
                 }
             }
 
+            for (int i = 0 ; i < this.video_list_size ; i++) {
+                if (target_name != null && this.video_list[i].name != target_name) continue;
+
+                for (int j = 0 ; j < this.video_list[i].actions_size ; j++) {
+                    Action action = this.video_list[i].actions[j];
+
+                    if (action_name == null && this.video_list[i].initial_action_name != null)
+                        initial_action_name = this.video_list[i].initial_action_name;
+                    else
+                        initial_action_name = action_name;
+
+                    if (action.name == initial_action_name || action.name == action_name) {
+                        Item item_video = this.video_list[i];
+                        Item item_sprite = this.vertex_list[item_video.in_vertex_list_index];
+                        HelperExecuteActionInVideo(
+                            action, item_video,
+                            item_sprite, this.viewport_width, this.viewport_height
+                        );
+                        count++;
+                    }
+                }
+            }
+
             if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
                 Console.WriteLine($"layout_trigger_action() target='{target_name}' action='{action_name}' res={count}");
             }
@@ -627,6 +693,13 @@ namespace Engine {
                 if (this.sound_list[i].name != item_name) continue;
                 for (int j = 0 ; j < this.sound_list[i].actions_size ; j++) {
                     if (this.sound_list[i].actions[j].name == action_name) count++;
+                }
+            }
+
+            for (int i = 0 ; i < this.video_list_size ; i++) {
+                if (this.video_list[i].name != item_name) continue;
+                for (int j = 0 ; j < this.video_list[i].actions_size ; j++) {
+                    if (this.video_list[i].actions[j].name == action_name) count++;
                 }
             }
 
@@ -806,6 +879,15 @@ namespace Engine {
             for (int i = 0 ; i < this.sound_list_size ; i++) {
                 if (this.sound_list[i].name == name) {
                     return this.sound_list[i].soundplayer;
+                }
+            }
+            return null;
+        }
+
+        public VideoPlayer GetVideoplayer(string name) {
+            for (int i = 0 ; i < this.video_list_size ; i++) {
+                if (this.video_list[i].name == name) {
+                    return this.video_list[i].videoplayer;
                 }
             }
             return null;
@@ -1131,6 +1213,14 @@ namespace Engine {
                     if (soundplayer.HasFadding() == Fading.OUT) soundplayer.SetVolume(0f);
                 }
             }
+            for (int i = 0 ; i < this.video_list_size ; i++) {
+                VideoPlayer videoplayer = this.video_list[i].videoplayer;
+                this.video_list[i].was_playing = videoplayer.IsPlaying();
+                if (this.video_list[i].was_playing) {
+                    videoplayer.Pause();
+                    if (videoplayer.HasFaddingAudio() == Fading.OUT) videoplayer.SetVolume(0f);
+                }
+            }
             this.suspended = true;
         }
 
@@ -1138,6 +1228,10 @@ namespace Engine {
             for (int i = 0 ; i < this.sound_list_size ; i++) {
                 SoundPlayer soundplayer = this.sound_list[i].soundplayer;
                 if (this.sound_list[i].was_playing) soundplayer.Play();
+            }
+            for (int i = 0 ; i < this.video_list_size ; i++) {
+                VideoPlayer videoplayer = this.video_list[i].videoplayer;
+                if (this.video_list[i].was_playing) videoplayer.Play();
             }
             this.suspended = false;
         }
@@ -1267,7 +1361,7 @@ namespace Engine {
             this.camera_secondary_helper.ApplyOffset(pvrctx.CurrentMatrix);
             pvrctx.ApplyModifier(this.modifier_camera_secondary);
 
-            // transform PVR screen matrix with primary camera offset.Note: the focus is used later as parallax
+            // transform PVR screen matrix with primary camera offset. Note: the focus is used later as parallax
             this.camera_helper.ApplyOffset(pvrctx.CurrentMatrix);
 
             // step 1: sort z_buffer
@@ -1339,6 +1433,9 @@ namespace Engine {
                     item_is_static_to_camera = this.z_buffer[i].item.placeholder.static_camera;
                     vertex = this.z_buffer[i].item.placeholder.vertex;
                     item_parallax = this.z_buffer[i].item.placeholder.parallax;
+                }
+                if (this.z_buffer[i].item.videoplayer != null) {
+                    this.z_buffer[i].item.videoplayer.PollStreams();
                 }
 
                 if (!group.context.visible) continue;
@@ -1527,8 +1624,10 @@ namespace Engine {
                 //free(path);
             }
 
-            ResourcePoolEntry new_definition = new ResourcePoolEntry() { data = data, src = src, is_texture = is_texture };
-            pool.Add(new_definition);
+            if (data != null) {
+                ResourcePoolEntry new_definition = new ResourcePoolEntry() { data = data, src = src, is_texture = is_texture };
+                pool.Add(new_definition);
+            }
 
             return data;
         }
@@ -1657,6 +1756,7 @@ namespace Engine {
 
         private IVertex HelperGetVertex(PVRContextVertex type, string name) {
             for (int i = 0 ; i < this.vertex_list_size ; i++) {
+                if (this.vertex_list[i].videoplayer != null) continue;
                 if (this.vertex_list[i].type == type && this.vertex_list[i].name == name) {
                     return this.vertex_list[i].vertex;
                 }
@@ -2354,6 +2454,9 @@ namespace Engine {
                     case "Sound":
                         Layout.ParseSound(item, layout_context);
                         break;
+                    case "Video":
+                        Layout.ParseVideo(item, layout_context, group.group_id);
+                        break;
                     case "AttachValue":
                     case "Font":
                         break;
@@ -2702,7 +2805,7 @@ namespace Engine {
             Item sound = new Item() {
                 name = unparsed_sound.GetAttribute("name"),
                 initial_action_name = unparsed_sound.GetAttribute("initialAction"),
-                soundplayer = SoundPlayer.Init(src),
+                soundplayer = soundplayer,
 
                 actions_size = 0,
                 actions = null,
@@ -2721,6 +2824,69 @@ namespace Engine {
             actions_arraylist.Destroy2(out sound.actions_size, ref sound.actions);
 
             layout_context.sound_list.Add(sound);
+        }
+
+        private static void ParseVideo(XmlParserNode unparsed_video, LayoutContext layout_context, int group_id) {
+            string src = unparsed_video.GetAttribute("src");
+            if (String.IsNullOrEmpty(src)) {
+                Console.Error.WriteLine("[ERROR] layout_parse_video() missing video 'src'");
+                return;
+            }
+
+            VideoPlayer videoplayer = VideoPlayer.Init(src);
+            if (videoplayer == null) {
+                Console.Error.WriteLine("[WARN] layout_parse_video() can not load:" + src);
+                return;
+            }
+
+            float volume = Layout.HelperParseFloat(unparsed_video, "volume", 1.0f);
+            bool looped = VertexProps.ParseBoolean(unparsed_video, "looped", false);
+            //float pan = Layout.HelperParseFloat(unparsed_video, "pan", 0.0f);
+            //bool muted = vertexprops.ParseBoolean(unparsed_video, "muted", false);
+            XmlParserNodeList actions = unparsed_video.GetChildrenList("Action");
+            ArrayList<Action> actions_arraylist = new ArrayList<Action>(actions.Length);
+
+            Item video = new Item() {
+                name = unparsed_video.GetAttribute("name"),
+                initial_action_name = unparsed_video.GetAttribute("initialAction"),
+                videoplayer = videoplayer,
+
+                actions_size = 0,
+                actions = null,
+
+                was_playing = false,
+                in_vertex_list_index = layout_context.vertex_list.Size()
+            };
+
+            if (video == null) return;
+
+            video.videoplayer.SetVolume(volume);
+            video.videoplayer.LoopEnable(looped);
+
+            foreach (XmlParserNode action in actions) {
+                ParseVideoAction(action, layout_context.animlist, actions_arraylist);
+            }
+            actions_arraylist.Destroy2(out video.actions_size, ref video.actions);
+
+            Item sprite = new Item() {
+                actions = null,
+                actions_size = 0,
+                animation = null,
+                group_id = group_id,
+                initial_action_name = null,
+                name = null,
+                parallax = new LayoutParallax() { x = 1f, y = 1f, z = 1f },
+                placeholder = null,
+                soundplayer = null,
+                videoplayer = videoplayer,
+                static_camera = false,
+                type = PVRContextVertex.SPRITE,
+                vertex = videoplayer.GetSprite(),
+                was_playing = false
+            };
+
+            layout_context.vertex_list.Add(sprite);
+            layout_context.video_list.Add(video);
         }
 
         private static void ParseMacro(XmlParserNode unparsed_root, LayoutContext layout_context) {
@@ -3013,6 +3179,9 @@ namespace Engine {
                     case "FadeOut":
                         Layout.HelperAddActionSoundfade(unparsed_entry, entries);
                         break;
+                    case "Seek":
+                        Layout.HelperAddActionSeek(unparsed_entry, entries);
+                        break;
                     /*case "Animation":
                         Layout.HelperAddActionAnimation(unparsed_entry, animlist, entries);
                         break;
@@ -3021,6 +3190,41 @@ namespace Engine {
                     default:
                         if (Layout.HelperAddActionMedia(unparsed_entry, entries))
                             Console.Error.WriteLine("[WARN] Unknown Sound action entry:" + unparsed_entry.TagName);
+                        break;
+                }
+            }
+
+            Action action = new Action() {
+                name = unparsed_action.GetAttribute("name"),
+                entries = null,
+                entries_size = -1
+            };
+
+            entries.Destroy2(out action.entries_size, ref action.entries);
+            action_entries.Add(action);
+        }
+
+        private static void ParseVideoAction(XmlParserNode unparsed_action, AnimList animlist, ArrayList<Action> action_entries) {
+            ArrayList<ActionEntry> entries = new ArrayList<ActionEntry>(unparsed_action.Children.Length);
+
+            foreach (XmlParserNode unparsed_entry in unparsed_action.Children) {
+                switch (unparsed_entry.TagName) {
+                    case "Property":
+                        Layout.HelperAddActionMediaproperty(unparsed_entry, entries);
+                        break;
+                    case "Properties":
+                        Layout.HelperAddActionMediaproperties(unparsed_entry, entries);
+                        break;
+                    case "FadeIn":
+                    case "FadeOut":
+                        Layout.HelperAddActionSoundfade(unparsed_entry, entries);
+                        break;
+                    case "Seek":
+                        Layout.HelperAddActionSeek(unparsed_entry, entries);
+                        break;
+                    default:
+                        if (!Layout.HelperAddActionMedia(unparsed_entry, entries)) break;
+                        Layout.ParseSpriteAction(unparsed_action, animlist, null, action_entries);
                         break;
                 }
             }
@@ -3385,6 +3589,9 @@ namespace Engine {
                     case Layout.ACTION_SOUNDFADE:
                         soundplayer.Fade(entry.enable, entry.size);
                         break;
+                    case Layout.ACTION_SEEK:
+                        soundplayer.Seek(entry.position);
+                        break;
                         /*case Layout.ACTION_ANIMATION:
                             if (entry.misc == null && item.animation == null) break;
                             if (entry.misc != null) item.animation = (AnimSprite)entry.misc;
@@ -3400,6 +3607,27 @@ namespace Engine {
                         case Layout.ACTION_ANIMATIONEND:
                             soundplayer.AnimationEnd();
                             break;*/
+                }
+            }
+        }
+
+        private static void HelperExecuteActionInVideo(Action action, Item item_video, Item item_sprite, float viewport_width, float viewport_height) {
+            VideoPlayer videoplayer = item_video.videoplayer;
+            for (int i = 0 ; i < action.entries_size ; i++) {
+                ActionEntry entry = action.entries[i];
+                switch (entry.type) {
+                    case Layout.ACTION_PROPERTY:
+                        videoplayer.SetProperty(entry.property, entry.value);
+                        break;
+                    case Layout.ACTION_SOUNDFADE:
+                        videoplayer.FadeAudio(entry.enable, entry.size);
+                        break;
+                    case Layout.ACTION_SEEK:
+                        videoplayer.Seek(entry.position);
+                        break;
+                    default:
+                        Layout.HelperExecuteActionInSprite(action, item_sprite, viewport_width, viewport_height);
+                        break;
                 }
             }
         }
@@ -4087,6 +4315,15 @@ namespace Engine {
             action_entries.Add(entry);
         }
 
+        private static void HelperAddActionSeek(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
+            ActionEntry entry = new ActionEntry() {
+                type = Layout.ACTION_SEEK,
+                position = VertexProps.ParseDouble(unparsed_entry, "position", 0.0)
+            };
+
+            action_entries.Add(entry);
+        }
+
         private class ZBufferEntry {
             public Item item; public float z_index; public bool visible;
         }
@@ -4134,6 +4371,7 @@ namespace Engine {
             public Macro[] macro_list;
             public AnimList animlist;
             public ArrayList<Item> sound_list;
+            public ArrayList<Item> video_list;
             public ArrayList<Item> vertex_list;
             public ArrayList<Group> group_list;
             public ArrayList<Trigger> trigger_list;
@@ -4150,6 +4388,8 @@ namespace Engine {
             public PVRContextVertex type;
             public int group_id;
             public SoundPlayer soundplayer;
+            public VideoPlayer videoplayer;
+            public int in_vertex_list_index;
             public LayoutPlaceholder placeholder;
             public IVertex vertex;
             public LayoutParallax parallax;
@@ -4221,6 +4461,7 @@ namespace Engine {
             public float trail_alpha;
             public bool darken;
             public bool has_darken;
+            public double position;
         }
         private class Group : ISetProperty {
             public Action[] actions;

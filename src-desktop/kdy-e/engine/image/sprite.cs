@@ -404,6 +404,8 @@ namespace Engine.Image {
             this.texture = texture;
 
             if (update_offset_source_size && texture != null) {
+                this.src_x = 0f;
+                this.src_y = 0f;
                 this.src_width = this.texture.original_width;
                 this.src_height = this.texture.original_height;
                 this.vertex_dirty = true;
@@ -503,6 +505,7 @@ namespace Engine.Image {
         public void SetDrawSizeFromSourceSize() {
             this.draw_width = this.src_width;
             this.draw_height = this.src_height;
+            this.vertex_dirty = true;
         }
 
         public void SetAlpha(float alpha) {

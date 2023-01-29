@@ -695,6 +695,21 @@ async function layoutvisor_load(e) {
             actions.appendChild(option).textContent = name;
         }
     }
+    for (let i = 0; i < layoutvisor_layout.video_list_size; i++) {
+        let video = layoutvisor_layout.video_list[i];
+        for (let j = 0; j < video.actions_size; j++) {
+            let name = video.actions[j].name;
+
+            if (added.includes(name)) continue;
+            added.push(name);
+
+            let option = document.createElement("option");
+            option.setAttribute("isnull", (name == null).toString());
+
+            if (!name) name = "<null>";
+            actions.appendChild(option).textContent = name;
+        }
+    }
 
     // @ts-ignore
     if (items.selectedIndex >= 0) layoutvisor_pick_items_values(items.selectedIndex);

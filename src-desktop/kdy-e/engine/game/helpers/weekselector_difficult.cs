@@ -287,7 +287,7 @@ namespace Engine.Game.Helpers {
                         WeekInfo.CustomDifficult difficult = weekinfo.custom_difficults[i];
                         this.list[index++] = new Item() {
                             name = difficult.name,
-                            is_locked = FunkinSave.ContainsUnlockDirective(difficult.unlock_directive),
+                            is_locked = !FunkinSave.ContainsUnlockDirective(difficult.unlock_directive),
                             is_common = false
                         };
                         this.sprite_customs.StateAdd(

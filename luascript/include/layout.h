@@ -8,6 +8,7 @@
 #include "textsprite.h"
 #include "global.h"
 #include "soundplayer.h"
+#include "videoplayer.h"
 #include "modifier.h"
 #include "psshader.h"
 #include "camera.h"
@@ -82,6 +83,7 @@ Camera layout_get_secondary_camera_helper(Layout layout);
 TextSprite layout_get_textsprite(Layout layout, const char* name);
 Sprite layout_get_sprite(Layout layout, const char* name);
 SoundPlayer layout_get_soundplayer(Layout layout, const char* name);
+VideoPlayer layout_get_videoplayer(Layout layout, const char* name);
 void layout_get_viewport_size(Layout layout, float* viewport_width, float* viewport_height);
 int layout_get_attached_value2(Layout layout, const char* name, void* result);
 LAYOUT_TYPE layout_get_attached_value_type(Layout layout, const char* name);

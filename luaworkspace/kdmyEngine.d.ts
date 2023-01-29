@@ -276,6 +276,7 @@ declare global {
         get_textsprite(name: string): TextSprite;
         get_sprite(name: string): Sprite;
         get_soundplayer(name: string): SoundPlayer;
+        get_videoplayer(name: string): VideoPlayer;
         get_viewport_size(): LuaMultiReturn<[number, number]>;
         get_attached_value(name: string): number | string | boolean | null;
         set_group_visibility(group_name: string, visible: boolean): void;
@@ -321,6 +322,7 @@ declare global {
         blend_set(src_rgb: Blend, dst_rgb: Blend, src_alpha: Blend, dst_alpha: Blend): void;
         trailing_enabled(enabled: boolean): void;
         trailing_set_params(length: number, trail_delay: number, trail_alpha: number, darken_colors?: boolean): void;
+        trailing_set_offsetcolor(r: number, g: number, b: number): void;
     }
     interface TextSprite {
         set_text(text: string): void;
@@ -372,6 +374,25 @@ declare global {
         get_position(): number;
         seek(timestamp: number): void;
         has_ended(): boolean;
+    }
+    interface VideoPlayer {
+        get_sprite(): Sprite;
+        replay(): void;
+        play(): void;
+        pause(): void;
+        stop(): void;
+        loop_enable(enable: boolean): void;
+        fade_audio(in_or_out: boolean, duration: number): void;
+        set_volume(volume: number): void;
+        set_mute(muted: boolean): void;
+        seek(timestamp: number): void;
+        is_muted(): boolean;
+        is_playing(): boolean;
+        get_duration(): number;
+        get_position(): number;
+        has_ended(): boolean;
+        has_video_track(): boolean;
+        has_audio_track(): boolean;
     }
     interface Messagebox {
         set_buttons_text(left_text: string, right_text: string): void;

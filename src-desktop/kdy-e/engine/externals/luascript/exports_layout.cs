@@ -4,6 +4,7 @@ using Engine.Font;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
+using Engine.Video;
 
 namespace Engine.Externals.LuaScriptInterop {
 
@@ -143,6 +144,16 @@ namespace Engine.Externals.LuaScriptInterop {
             SoundPlayer soundplayer = layout.GetSoundplayer(name);
 
             return ExportsSoundPlayer.script_soundplayer_new(L, soundplayer);
+        }
+
+        static int script_layout_get_videoplayer(LuaState L) {
+            Layout layout = L.ReadUserdata<Layout>(LAYOUT);
+
+            string name = L.luaL_optstring(2, null);
+
+            VideoPlayer videoplayer = layout.GetVideoplayer(name);
+
+            return ExportsVideoPlayer.script_videoplayer_new(L, videoplayer);
         }
 
         static int script_layout_get_sprite(LuaState L) {
@@ -336,6 +347,7 @@ namespace Engine.Externals.LuaScriptInterop {
            new LuaTableFunction("get_textsprite", script_layout_get_textsprite),
            new LuaTableFunction("get_sprite", script_layout_get_sprite),
            new LuaTableFunction("get_soundplayer", script_layout_get_soundplayer),
+           new LuaTableFunction("get_videoplayer", script_layout_get_videoplayer),
            new LuaTableFunction("get_viewport_size", script_layout_get_viewport_size),
            new LuaTableFunction("get_attached_value", script_layout_get_attached_value),
            new LuaTableFunction("set_group_visibility", script_layout_set_group_visibility),

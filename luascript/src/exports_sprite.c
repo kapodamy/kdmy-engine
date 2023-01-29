@@ -107,6 +107,9 @@ EM_JS_PRFX(void, sprite_trailing_enabled, (Sprite sprite, bool enabled), {
 EM_JS_PRFX(void, sprite_trailing_set_params, (Sprite sprite, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors), {
     sprite_trailing_set_params(kdmyEngine_obtain(sprite), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors));
 });
+EM_JS_PRFX(void, sprite_trailing_set_offsetcolor, (Sprite sprite, float r, float g, float b), {
+    sprite_trailing_set_offsetcolor(kdmyEngine_obtain(sprite), r, g, b);
+});
 #endif
 
 
@@ -440,6 +443,17 @@ static int script_sprite_trailing_set_params(lua_State* L) {
     return 0;
 }
 
+static int script_sprite_trailing_set_offsetcolor(lua_State* L) {
+    Sprite sprite = luascript_read_userdata(L, SPRITE);
+    float r = (float)luaL_optnumber(L, 2, NAN);
+    float g = (float)luaL_optnumber(L, 3, NAN);
+    float b = (float)luaL_optnumber(L, 4, NAN);
+
+    sprite_trailing_set_offsetcolor(sprite, r, g, b);
+
+    return 0;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -476,6 +490,7 @@ static const luaL_Reg SPRITE_FUNCTIONS[] = {
     {"blend_set", script_sprite_blend_set},
     {"trailing_enabled", script_sprite_trailing_enabled},
     {"trailing_set_params", script_sprite_trailing_set_params},
+    {"trailing_set_offsetcolor", script_sprite_trailing_set_offsetcolor},
     {NULL, NULL}
 };
 

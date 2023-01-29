@@ -66,6 +66,10 @@ SoundPlayer layout_get_soundplayer(Layout layout, const char* name) {
     print_stub("layout_get_soundplayer", "layout=%p name=%s", layout, name);
     return &stub_soundplayer;
 }
+VideoPlayer layout_get_videoplayer(Layout layout, const char* name) {
+    print_stub("layout_get_videoplayer", "layout=%p name=%s", layout, name);
+    return NULL;
+}
 void layout_get_viewport_size(Layout layout, float* viewport_width, float* viewport_height) {
     *viewport_width = 640.0f;
     *viewport_height = 480.0f;

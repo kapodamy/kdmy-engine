@@ -259,7 +259,7 @@ async function weekselector_difficult_load(weekdifficult, weekinfo, default_diff
                 let difficult = weekinfo.custom_difficults[i];
                 weekdifficult.list[index++] = {
                     name: difficult.name,
-                    is_locked: funkinsave_contains_unlock_directive(difficult.unlock_directive),
+                    is_locked: !funkinsave_contains_unlock_directive(difficult.unlock_directive),
                     is_common: 0
                 };
                 statesprite_state_add(

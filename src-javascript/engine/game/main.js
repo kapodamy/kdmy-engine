@@ -2,7 +2,7 @@
 
 // this file contains all shared data across the game
 const ENGINE_NAME = "kdmy-engine";
-const ENGINE_VERSION = "0.49.9";
+const ENGINE_VERSION = "0.50";
 
 
 /**

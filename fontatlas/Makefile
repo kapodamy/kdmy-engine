@@ -12,9 +12,6 @@ build-release-dll-x86:
 	$(CC) -shared -o output/kdy_fontatlas.dll -Wall -std=c99 -O2 $(SOURCES) -Iinclude libs/x86/freetype.dll output/info.o
 
 build-release-dll-x64:
-	$(info "Note: build-release-dll-x64 requires a x64 build environment")
-	$(info "      if is not configured tweak the 'compilerPath' and 'terminal.integrated.*' vscode settings")
-	$(info "      or run this make file with 'MSYS2 MinGW 64-bit' instead")
 	windres src/info.rc output/info.o
 	$(CC) -shared -o output/kdy_fontatlas.dll -Wall -std=c99 -O2 $(SOURCES) -Iinclude libs/x64/freetype.dll output/info.o
 

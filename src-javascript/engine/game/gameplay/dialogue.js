@@ -2646,10 +2646,12 @@ function dialogue_internal_parse_dialog_from_string(source, dialog_ref) {
 }
 
 function dialogue_internal_read_color(node, rgba) {
-    let rgb = [0];
-    if (vertexprops_parse_hex(node.getAttribute("rgb"), rgb, 0)) {
-        math2d_color_bytes_to_floats(rgb[0], 0, rgba);
+    let color = [0];
+    if (vertexprops_parse_hex(node.getAttribute("rgb"), color, 0)) {
+        math2d_color_bytes_to_floats(color[0], 0, rgba);
         rgba[3] = vertexprops_parse_float(node, "alpha", 1.0);
+    } else if (vertexprops_parse_hex(node.getAttribute("rgba"), color, 0)) {
+        math2d_color_bytes_to_floats(color[0], 1, rgba);
     } else {
         rgba[0] = vertexprops_parse_float(node, "r", rgba[0]);
         rgba[1] = vertexprops_parse_float(node, "g", rgba[1]);

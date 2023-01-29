@@ -423,6 +423,8 @@ namespace Engine.Image {
             this.texture = texture;
 
             if (update_offset_source_size && texture != null) {
+                this.src_x = 0f;
+                this.src_y = 0f;
                 this.src_width = this.texture.original_width;
                 this.src_height = this.texture.original_height;
                 this.vertex_dirty = true;
@@ -659,10 +661,12 @@ namespace Engine.Image {
         public int Animate(float elapsed) {
             if (Single.IsNaN(elapsed)) throw new ArgumentException("elapsed", "Invalid elapsed value:" + elapsed);
 
-            if (this.animation_external == null) return 1;
+            int result = 1;
 
-            int result = this.animation_external.Animate(elapsed);
-            this.animation_external.UpdateStatesprite(this, true);
+            if (this.animation_external != null) {
+                result = this.animation_external.Animate(elapsed);
+                this.animation_external.UpdateStatesprite(this, true);
+            }
 
             if (this.trailing_disabled) return result;
 
@@ -1095,6 +1099,7 @@ namespace Engine.Image {
         public PSShader GetShader() {
             return this.psshader;
         }
+        
         public void BlendEnable(bool enabled) {
             this.blend_enabled = enabled;
         }

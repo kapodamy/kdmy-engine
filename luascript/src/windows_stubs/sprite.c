@@ -107,3 +107,6 @@ void sprite_trailing_enabled(Sprite sprite, bool enabled) {
 void sprite_trailing_set_params(Sprite sprite, int32_t length, float trail_delay, float trail_alpha, bool* darken_colors) {
     print_stub("sprite_trailing_set_params", "sprite=%p length=%i trail_delay=%f trail_alpha=%f darken_colors=%p", sprite, length, trail_delay, trail_alpha, darken_colors);
 }
+void sprite_trailing_set_offsetcolor(Sprite sprite, float r, float g, float b) {
+    print_stub("sprite_trailing_set_offsetcolor", "sprite=%p r=%f g=%f b=%f", sprite, r ,g ,b);
+}

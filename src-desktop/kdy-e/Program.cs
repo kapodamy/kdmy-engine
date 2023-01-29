@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Engine;
 using Engine.Externals;
 using Engine.Externals.GLFW;
 using Engine.Externals.LuaInterop;
@@ -87,6 +88,9 @@ namespace CsharpWrapper {
                     case "-nowidescreen":
                         EngineSettings.widescreen = false;
                         break;
+                    case "-layoutdebugtriggercalls":
+                        Layout.DEBUG_PRINT_TRIGGER_CALLS = true;
+                        break;
                     case "-h":
                     case "-help":
                     case "--help":
@@ -95,17 +99,18 @@ namespace CsharpWrapper {
                         Console.WriteLine(
                             $"{GameMain.ENGINE_NAME} {GameMain.ENGINE_VERSION}\r\n" +
                             "\r\n" +
-                            $"    {argv[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionloader]\r\n" +
+                            $"    {argv[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionloader] [-layoutdebugtriggercalls]\r\n" +
                             "\r\n" +
                             "Options:\r\n" +
-                            "    -help              Show this help message\r\n" +
-                            "    -saveslots         Number of emulated VMU (Visual Memory Card) availabe. Defaults to 1\r\n" +
-                            "    -expansion         Folder name inside of '/expansions' folder, this overrides the '/assets' folder contents. Disabled by default\r\n" +
-                            "    -style             Week name (folder name inside of '/assets/weeks' folder) and picks the folder '/assets/weeks/WEEK_NAME/custom' or the defined in 'about.json' file. Defaults to the last played week\r\n" +
-                            "    -fullscreen        Starts the engine in fullscreen, toggle to windowed pressing 'F11' key. Defaults to windowed\r\n" +
-                            "    -nowidescreen      Forces the 4:3 aspect ratio like in the dreamcast. Defaults to 16:9, but changes if resized\r\n" +
-                            "    -console           Opens a console window for all engine and lua scripts messages" +
-                            "    -expansionloader   Opens a window to choose the expansion to use" +
+                            "    -help                      Show this help message\r\n" +
+                            "    -saveslots                 Number of emulated VMU (Visual Memory Card) availabe. Defaults to 1\r\n" +
+                            "    -expansion                 Folder name inside of '/expansions' folder, this overrides the '/assets' folder contents. Disabled by default\r\n" +
+                            "    -style                     Week name (folder name inside of '/assets/weeks' folder) and picks the folder '/assets/weeks/WEEK_NAME/custom' or the defined in 'about.json' file. Defaults to the last played week\r\n" +
+                            "    -fullscreen                Starts the engine in fullscreen, toggle to windowed pressing 'F11' key. Defaults to windowed\r\n" +
+                            "    -nowidescreen              Forces the 4:3 aspect ratio like in the dreamcast. Defaults to 16:9, but changes if resized\r\n" +
+                            "    -console                   Opens a console window for all engine and lua scripts messages\r\n" +
+                            "    -expansionloader           Opens a window to choose the expansion to use\r\n" +
+                            "    -layoutdebugtriggercalls   Prints in console all layout_triger_***() calls\r\n" +
                             "\r\n" +
                             "Notes:\r\n" +
                             "  -nowidescreen uses the 640x480 window size, otherwise defaults to 950x540. Anyways, the window still can be resized.\r\n" +

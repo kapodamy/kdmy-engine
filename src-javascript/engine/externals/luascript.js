@@ -1681,6 +1681,10 @@ function __js__layout_get_textsprite(layout, name) {
     const textsprite = layout_get_textsprite(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
     return kdmyEngine_obtain(textsprite)
 }
+function __js__layout_get_videoplayer(layout, name) {
+    let ret = layout_get_videoplayer(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(ret)
+}
 function __js__layout_get_viewport_size(layout, viewport_width, viewport_height) {
     const values = [0, 0];
     layout_get_viewport_size(kdmyEngine_obtain(layout), values);
@@ -2278,6 +2282,9 @@ function __js__sprite_set_z_offset(sprite, offset) {
 function __js__sprite_trailing_enabled(sprite, enabled) {
     sprite_trailing_enabled(kdmyEngine_obtain(sprite), enabled)
 }
+function __js__sprite_trailing_set_offsetcolor(sprite, r, g, b) {
+    sprite_trailing_set_offsetcolor(kdmyEngine_obtain(sprite), r, g, b)
+}
 function __js__sprite_trailing_set_params(sprite, length, trail_delay, trail_alpha, darken_colors) {
     sprite_trailing_set_params(kdmyEngine_obtain(sprite), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors))
 }
@@ -2787,6 +2794,65 @@ function __js__tweenlerp_restart(tweenlerp) {
 function __js__tweenlerp_swap_bounds_by_index(tweenlerp, index) {
     let ret = tweenlerp_swap_bounds_by_index(kdmyEngine_obtain(tweenlerp), index);
     return ret ? 1 : 0
+}
+function __js__videoplayer_fade_audio(videoplayer, in_or_out, duration) {
+    videoplayer_fade_audio(kdmyEngine_obtain(videoplayer), in_or_out, duration)
+}
+function __js__videoplayer_get_duration(videoplayer) {
+    let ret = videoplayer_get_duration(kdmyEngine_obtain(videoplayer));
+    return ret
+}
+function __js__videoplayer_get_position(videoplayer) {
+    let ret = videoplayer_get_position(kdmyEngine_obtain(videoplayer));
+    return ret
+}
+function __js__videoplayer_get_sprite(videoplayer) {
+    let ret = videoplayer_get_sprite(kdmyEngine_obtain(videoplayer));
+    return kdmyEngine_obtain(ret)
+}
+function __js__videoplayer_has_audio_track(videoplayer) {
+    let ret = videoplayer_has_audio_track(kdmyEngine_obtain(videoplayer));
+    return ret ? 1 : 0
+}
+function __js__videoplayer_has_ended(videoplayer) {
+    let ret = videoplayer_has_ended(kdmyEngine_obtain(videoplayer));
+    return ret ? 1 : 0
+}
+function __js__videoplayer_has_video_track(videoplayer) {
+    let ret = videoplayer_has_video_track(kdmyEngine_obtain(videoplayer));
+    return ret ? 1 : 0
+}
+function __js__videoplayer_is_muted(videoplayer) {
+    let ret = videoplayer_is_muted(kdmyEngine_obtain(videoplayer));
+    return ret ? 1 : 0
+}
+function __js__videoplayer_is_playing(videoplayer) {
+    let ret = videoplayer_is_playing(kdmyEngine_obtain(videoplayer));
+    return ret ? 1 : 0
+}
+function __js__videoplayer_loop_enable(videoplayer, enable) {
+    videoplayer_loop_enable(kdmyEngine_obtain(videoplayer), enable)
+}
+function __js__videoplayer_pause(videoplayer) {
+    videoplayer_pause(kdmyEngine_obtain(videoplayer))
+}
+function __js__videoplayer_play(videoplayer) {
+    videoplayer_play(kdmyEngine_obtain(videoplayer))
+}
+function __js__videoplayer_replay(videoplayer) {
+    videoplayer_replay(kdmyEngine_obtain(videoplayer))
+}
+function __js__videoplayer_seek(videoplayer, timestamp) {
+    videoplayer_seek(kdmyEngine_obtain(videoplayer), timestamp)
+}
+function __js__videoplayer_set_mute(videoplayer, muted) {
+    videoplayer_set_mute(kdmyEngine_obtain(videoplayer), muted)
+}
+function __js__videoplayer_set_volume(videoplayer, volume) {
+    videoplayer_set_volume(kdmyEngine_obtain(videoplayer), volume)
+}
+function __js__videoplayer_stop(videoplayer) {
+    videoplayer_stop(kdmyEngine_obtain(videoplayer))
 }
 function __js__week_change_character_camera_name(roundcontext, opponent_or_player, new_name) {
     week_change_character_camera_name(kdmyEngine_obtain(roundcontext), opponent_or_player, kdmyEngine_ptrToString(new_name))
@@ -6552,6 +6618,7 @@ var asmLibraryArg = {
     "__js__layout_get_soundplayer": __js__layout_get_soundplayer,
     "__js__layout_get_sprite": __js__layout_get_sprite,
     "__js__layout_get_textsprite": __js__layout_get_textsprite,
+    "__js__layout_get_videoplayer": __js__layout_get_videoplayer,
     "__js__layout_get_viewport_size": __js__layout_get_viewport_size,
     "__js__layout_resume": __js__layout_resume,
     "__js__layout_set_group_alpha": __js__layout_set_group_alpha,
@@ -6731,6 +6798,7 @@ var asmLibraryArg = {
     "__js__sprite_set_z_index": __js__sprite_set_z_index,
     "__js__sprite_set_z_offset": __js__sprite_set_z_offset,
     "__js__sprite_trailing_enabled": __js__sprite_trailing_enabled,
+    "__js__sprite_trailing_set_offsetcolor": __js__sprite_trailing_set_offsetcolor,
     "__js__sprite_trailing_set_params": __js__sprite_trailing_set_params,
     "__js__streakcounter_animation_end": __js__streakcounter_animation_end,
     "__js__streakcounter_animation_restart": __js__streakcounter_animation_restart,
@@ -6878,6 +6946,23 @@ var asmLibraryArg = {
     "__js__tweenlerp_peek_value_by_index": __js__tweenlerp_peek_value_by_index,
     "__js__tweenlerp_restart": __js__tweenlerp_restart,
     "__js__tweenlerp_swap_bounds_by_index": __js__tweenlerp_swap_bounds_by_index,
+    "__js__videoplayer_fade_audio": __js__videoplayer_fade_audio,
+    "__js__videoplayer_get_duration": __js__videoplayer_get_duration,
+    "__js__videoplayer_get_position": __js__videoplayer_get_position,
+    "__js__videoplayer_get_sprite": __js__videoplayer_get_sprite,
+    "__js__videoplayer_has_audio_track": __js__videoplayer_has_audio_track,
+    "__js__videoplayer_has_ended": __js__videoplayer_has_ended,
+    "__js__videoplayer_has_video_track": __js__videoplayer_has_video_track,
+    "__js__videoplayer_is_muted": __js__videoplayer_is_muted,
+    "__js__videoplayer_is_playing": __js__videoplayer_is_playing,
+    "__js__videoplayer_loop_enable": __js__videoplayer_loop_enable,
+    "__js__videoplayer_pause": __js__videoplayer_pause,
+    "__js__videoplayer_play": __js__videoplayer_play,
+    "__js__videoplayer_replay": __js__videoplayer_replay,
+    "__js__videoplayer_seek": __js__videoplayer_seek,
+    "__js__videoplayer_set_mute": __js__videoplayer_set_mute,
+    "__js__videoplayer_set_volume": __js__videoplayer_set_volume,
+    "__js__videoplayer_stop": __js__videoplayer_stop,
     "__js__week_change_character_camera_name": __js__week_change_character_camera_name,
     "__js__week_disable_layout_rollback": __js__week_disable_layout_rollback,
     "__js__week_enable_credits_on_completed": __js__week_enable_credits_on_completed,

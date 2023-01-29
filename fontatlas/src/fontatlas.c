@@ -186,7 +186,7 @@ static inline void pick_metrics(FT_GlyphSlot glyph, CharData* chardata, int32_t 
     chardata->width = glyph->bitmap.width;// glyph->metrics.width >> 6;
     chardata->height = glyph->bitmap.rows;// glyph->metrics.height >> 6;
     chardata->offset_x = glyph->bitmap_left;
-    chardata->offset_y = font_height - glyph->bitmap_top;
+    chardata->offset_y = font_height - (glyph->metrics.horiBearingY >> 6);
     chardata->advancex = glyph->metrics.horiAdvance >> 6;
     chardata->kernings = NULL;
     chardata->kernings_size = 0;

@@ -773,6 +773,9 @@ L_read_state:
                 return 1;
             }
 
+            // required to compute trailing fx
+            this.statesprite.Animate(elapsed);
+
             bool completed;
             CharacterActionType current_action_type = this.current_action_type;
             bool has_beat_stop = this.beatwatcher.count >= this.current_stop_on_beat;

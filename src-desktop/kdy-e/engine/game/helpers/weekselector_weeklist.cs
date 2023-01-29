@@ -299,9 +299,9 @@ namespace Engine.Game.Helpers {
                 if (animsprite != null) {
                     this.list_visible[i].sprite_title.ExternalAnimationSet(animsprite);
                     animsprite.UpdateSprite(this.list_visible[i].sprite_title, true);
-                } else {
-                    this.list_visible[i].sprite_title.SetDrawSizeFromSourceSize();
                 }
+
+                this.list_visible[i].sprite_title.SetDrawSizeFromSourceSize();
             }
 
             this.host_load_id++;
@@ -413,8 +413,8 @@ namespace Engine.Game.Helpers {
             if (this.list_visible[0].sprite_title != null) {
                 tweenlerp = this.list_visible[0].tweenlerp_title;
                 InternalCalcRowSizes(
-            this.list_visible[0].sprite_title, row1, row2
-        );
+                    this.list_visible[0].sprite_title, row1, row2
+                );
                 float x1 = this.width / 2.0f;
                 float x2 = (this.width - row1[2]) / 2.0f;
                 float y1 = -height1;
@@ -430,8 +430,8 @@ namespace Engine.Game.Helpers {
             if (this.list_visible[1].sprite_title != null) {
                 tweenlerp = this.list_visible[1].tweenlerp_title;
                 InternalCalcRowSizes(
-            this.list_visible[1].sprite_title, row1, row2
-        );
+                    this.list_visible[1].sprite_title, row1, row2
+                );
                 float x1 = (this.width - row1[2]) / 2.0f;
                 float x2 = (this.width - row2[2]) / 2.0f;
                 float y1 = (height1 - row1[3]) / 2.0f;
@@ -447,8 +447,8 @@ namespace Engine.Game.Helpers {
             if (this.list_visible[2].sprite_title != null) {
                 tweenlerp = this.list_visible[2].tweenlerp_title;
                 InternalCalcRowSizes(
-            this.list_visible[2].sprite_title, row1, row2
-        );
+                    this.list_visible[2].sprite_title, row1, row2
+                );
                 float x1 = (this.width - row2[2]) / 2.0f;
                 float x2 = (this.width - row1[2]) / 2.0f;
                 float y1 = ((this.row_height * 2.0f) - row2[3]) / 2.0f;
@@ -464,8 +464,8 @@ namespace Engine.Game.Helpers {
             if (this.list_visible[3].sprite_title != null) {
                 tweenlerp = this.list_visible[3].tweenlerp_title;
                 InternalCalcRowSizes(
-            this.list_visible[3].sprite_title, row1, row2
-        );
+                    this.list_visible[3].sprite_title, row1, row2
+                );
                 float x1 = (this.width - row1[2]) / 2.0f;
                 float x2 = this.width / 2.0f;
                 float y1 = (height1 - row1[3]) / 2.0f;
@@ -564,6 +564,7 @@ namespace Engine.Game.Helpers {
                     weeklist.host_statesprite.StateRemove(WeekSelectorMdlSelect.IDLE);
                 }
                 weeklist.host_statesprite.SetTexture(null, false);
+                weeklist.host_statesprite.SetVisible(false);
                 weeklist.host_loading = false;
                 return null;
             }

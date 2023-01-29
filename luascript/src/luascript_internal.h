@@ -150,6 +150,10 @@ void script_camera_register(lua_State* L);
 int script_soundplayer_new(lua_State* L, SoundPlayer soundplayer);
 void script_soundplayer_register(lua_State* L);
 
+#define VIDEOPLAYER "VideoPlayer"
+int script_videoplayer_new(lua_State* L, VideoPlayer videoplayer);
+void script_videoplayer_register(lua_State* L);
+
 #define SONGPLAYER "SongPlayer"
 int script_songplayer_new(lua_State* L, SongPlayer soundplayer);
 void script_songplayer_register(lua_State* L);

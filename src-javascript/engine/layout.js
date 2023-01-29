@@ -41,6 +41,7 @@ const LAYOUT_ACTION_SPRITE_TRAILINGOFFSETCOLOR = 27;
 const LAYOUT_ACTION_TEXTBACKGROUND = 28;
 const LAYOUT_ACTION_TEXTBACKGROUNDCOLOR = 29;
 const LAYOUT_ACTION_SOUNDFADE = 30;
+const LAYOUT_ACTION_SEEK = 31;
 
 const LAYOUT_GROUP_ROOT = Symbol("root-group");
 const LAYOUT_BPM_STEPS = 32;// 1/32 beats
@@ -67,6 +68,7 @@ async function layout_init(src) {
         camera_list: arraylist_init(),
         trigger_list: arraylist_init(),
         sound_list: arraylist_init(),
+        video_list: arraylist_init(),
         resource_pool: { textures: arraylist_init(), atlas: arraylist_init() },
         fonts: null, fonts_size: -1,
         values: null, values_size: -1,
@@ -142,6 +144,9 @@ async function layout_init(src) {
         sound_list: null,
         sound_list_size: -1,
 
+        video_list: null,
+        video_list_size: -1,
+
         textures: null,
         textures_size: 0,
 
@@ -186,6 +191,7 @@ async function layout_init(src) {
     arraylist_destroy2(layout_context.camera_list, layout, "camera_list_size", "camera_list");
     arraylist_destroy2(layout_context.trigger_list, layout, "trigger_list_size", "trigger_list");
     arraylist_destroy2(layout_context.sound_list, layout, "sound_list_size", "sound_list");
+    arraylist_destroy2(layout_context.video_list, layout, "video_list_size", "video_list");
 
     // step 7: build textures array
     layout.textures_size = arraylist_size(layout_context.resource_pool.textures);
@@ -280,6 +286,29 @@ async function layout_init(src) {
             console.warn("layout_init() initial action not found" + initial_action_name);
     }
 
+    for (let i = 0; i < layout.video_list_size; i++) {
+        let initial_action_name = layout.video_list[i].initial_action_name;
+        let intial_action_found = initial_action_name == null;
+
+        for (let j = 0; j < layout.video_list[i].actions_size; j++) {
+            let action_name = layout.video_list[i].actions[j].name;
+
+            if (action_name == null || action_name == initial_action_name) {
+                if (action_name == initial_action_name) intial_action_found = true;
+
+                const item_sprite = layout.vertex_list[layout.video_list[i].in_vertex_list_index];
+                layout_helper_execute_action_in_video(
+                    layout.video_list[i].actions[j], layout.video_list[i],
+                    item_sprite, layout.viewport_width, layout.viewport_height
+                );
+            }
+
+        }
+
+        if (!intial_action_found)
+            console.warn("layout_init() initial action not found" + initial_action_name);
+    }
+
     for (let i = 0; i < layout.trigger_list_size; i++) {
         if (layout.trigger_list[i].name != null) continue;
         layout_helper_execute_trigger(layout, layout.trigger_list[i]);
@@ -307,6 +336,8 @@ function layout_destroy(layout) {
         layout_helper_destroy_actions(layout.vertex_list[i].actions, layout.vertex_list[i].actions_size);
         layout.vertex_list[i].name = undefined;
         layout.vertex_list[i].initial_action_name = undefined;
+
+        if (layout.vertex_list[i].videoplayer) continue;
 
         switch (layout.vertex_list[i].type) {
             case VERTEX_SPRITE:
@@ -373,6 +404,15 @@ function layout_destroy(layout) {
 
     }
     layout.sound_list = undefined;
+
+    for (let i = 0; i < layout.video_list_size; i++) {
+        layout_helper_destroy_actions(layout.video_list[i].actions, layout.video_list[i].actions_size);
+        layout.video_list[i].name = undefined;
+        layout.video_list[i].initial_action_name = undefined;
+        videoplayer_destroy(layout.video_list[i].videoplayer);
+
+    }
+    layout.video_list = undefined;
 
     for (let i = 0; i < layout.macro_list_size; i++) {
         for (let j = 0; j < layout.macro_list[i].actions_size; j++) {
@@ -477,6 +517,29 @@ function layout_trigger_action(layout, target_name, action_name) {
         }
     }
 
+    for (let i = 0; i < layout.video_list_size; i++) {
+        if (target_name != null && layout.video_list[i].name != target_name) continue;
+
+        for (let j = 0; j < layout.video_list[i].actions_size; j++) {
+            let action = layout.video_list[i].actions[j];
+
+            if (action_name == null && layout.video_list[i].initial_action_name != null)
+                initial_action_name = layout.video_list[i].initial_action_name;
+            else
+                initial_action_name = action_name;
+
+            if (action.name == initial_action_name || action.name == action_name) {
+                const item_video = layout.video_list[i];
+                const item_sprite = layout.vertex_list[item_video.in_vertex_list_index];
+                layout_helper_execute_action_in_video(
+                    action, item_video,
+                    item_sprite, layout.viewport_width, layout.viewport_height
+                );
+                count++;
+            }
+        }
+    }
+
     if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
         console.log(`layout_trigger_action() target='{target_name}' action='{action_name}' res={count}`);
     }
@@ -507,6 +570,13 @@ function layout_contains_action(layout, action_name, item_name) {
         if (layout.sound_list[i].name != item_name) continue;
         for (let j = 0; j < layout.sound_list[i].actions_size; j++) {
             if (layout.sound_list[i].actions[j].name == action_name) count++;
+        }
+    }
+
+    for (let i = 0; i < layout.video_list_size; i++) {
+        if (layout.video_list[i].name != item_name) continue;
+        for (let j = 0; j < layout.video_list[i].actions_size; j++) {
+            if (layout.video_list[i].actions[j].name == action_name) count++;
         }
     }
 
@@ -686,6 +756,15 @@ function layout_get_soundplayer(layout, name) {
     for (let i = 0; i < layout.sound_list_size; i++) {
         if (layout.sound_list[i].name == name) {
             return layout.sound_list[i].soundplayer;
+        }
+    }
+    return null;
+}
+
+function layout_get_videoplayer(layout, name) {
+    for (let i = 0; i < layout.video_list_size; i++) {
+        if (layout.video_list[i].name == name) {
+            return layout.video_list[i].videoplayer;
         }
     }
     return null;
@@ -1013,6 +1092,14 @@ function layout_suspend(layout) {
             if (soundplayer_has_fading(soundplayer) == FADDING_OUT) soundplayer_set_volume(soundplayer, 0);
         }
     }
+    for (let i = 0; i < layout.video_list_size; i++) {
+        let videoplayer = layout.video_list[i].videoplayer;
+        layout.video_list[i].was_playing = videoplayer_is_playing(videoplayer);
+        if (layout.video_list[i].was_playing) {
+            videoplayer_pause(videoplayer);
+            if (videoplayer_has_fading_audio(videoplayer) == FADDING_OUT) videoplayer_set_volume(videoplayer, 0);
+        }
+    }
     layout.suspended = 1;
 }
 
@@ -1020,6 +1107,10 @@ function layout_resume(layout) {
     for (let i = 0; i < layout.sound_list_size; i++) {
         let soundplayer = layout.sound_list[i].soundplayer;
         if (layout.sound_list[i].was_playing) soundplayer_play(soundplayer);
+    }
+    for (let i = 0; i < layout.video_list_size; i++) {
+        let videoplayer = layout.video_list[i].videoplayer;
+        if (layout.video_list[i].was_playing) videoplayer_play(videoplayer);
     }
     layout.suspended = 0;
 }
@@ -1152,7 +1243,7 @@ function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
     camera_apply_offset(layout.camera_secondary_helper, pvrctx.current_matrix);
     pvr_context_apply_modifier(pvrctx, layout.modifier_camera_secondary);
 
-    // transform PVR screen matrix with primary camera offset.Note: the focus is used later as parallax
+    // transform PVR screen matrix with primary camera offset. Note: the focus is used later as parallax
     camera_apply_offset(layout.camera_helper, pvrctx.current_matrix);
 
     // step 1: sort z_buffer
@@ -1224,6 +1315,9 @@ function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
             item_is_static_to_camera = layout.z_buffer[i].item.placeholder.static_camera;
             vertex = layout.z_buffer[i].item.placeholder.vertex;
             item_parallax = layout.z_buffer[i].item.placeholder.parallax;
+        }
+        if (layout.z_buffer[i].item.videoplayer != null) {
+            videoplayer_poll_streams(layout.z_buffer[i].item.videoplayer);
         }
 
         if (!group.context.visible) continue;
@@ -1434,8 +1528,10 @@ async function layout_helper_get_resource(resource_pool, src, is_texture) {
         path = undefined;
     }
 
-    let new_definition = { data: data, src: strdup(src), is_texture: is_texture };
-    arraylist_add(pool, new_definition);
+    if (data) {
+        let new_definition = { data: data, src: strdup(src), is_texture: is_texture };
+        arraylist_add(pool, new_definition);
+    }
 
     return data;
 }
@@ -1565,11 +1661,9 @@ function layout_helper_parse_color(node, rgba) {
 
 function layout_helper_get_vertex(layout, type, name) {
     for (let i = 0; i < layout.vertex_list_size; i++) {
+        if (layout.vertex_list[i].videoplayer) continue;
         if (layout.vertex_list[i].type == type && layout.vertex_list[i].name == name) {
-            if (type == VERTEX_DRAWABLE)
-                return layout.vertex_list[i].placeholder;
-            else
-                return layout.vertex_list[i].vertex;
+            return layout.vertex_list[i].vertex;
         }
     }
     return null;
@@ -2264,6 +2358,9 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
             case "Sound":
                 await layout_parse_sound(item, layout_context);
                 break;
+            case "Video":
+                await layout_parse_video(item, layout_context, group.group_id);
+                break;
             case "AttachValue":
             case "Font":
                 break;
@@ -2627,6 +2724,67 @@ async function layout_parse_sound(unparsed_sound, layout_context) {
     arraylist_add(layout_context.sound_list, sound);
 }
 
+async function layout_parse_video(unparsed_video, layout_context, group_id) {
+    let src = unparsed_video.getAttribute("src");
+    if (!src) {
+        console.error("layout_parse_video() missing video 'src'");
+        return;
+    }
+
+    let videoplayer = await videoplayer_init(src);
+    if (!videoplayer) {
+        console.warn("layout_parse_video() can not load:" + src);
+        return;
+    }
+
+    let volume = layout_helper_parse_float(unparsed_video, "volume", 1.0);
+    let looped = vertexprops_parse_boolean(unparsed_video, "looped", 0);
+    //let pan = layout_helper_parse_float(unparsed_video, "pan", 0.0);
+    //let muted = vertexprops_parse_boolean(unparsed_video, "muted", 0);
+    let actions = unparsed_video.querySelectorAll("Action");
+    let actions_arraylist = arraylist_init2(actions.length);
+
+    let video = {
+        name: unparsed_video.getAttribute("name"),
+        initial_action_name: unparsed_video.getAttribute("initialAction"),
+        videoplayer: videoplayer,
+
+        actions_size: 0,
+        actions: null,
+
+        was_playing: 0,
+        in_vertex_list_index: arraylist_size(layout_context.vertex_list)
+    };
+
+    videoplayer_set_volume(video.videoplayer, volume);
+    videoplayer_loop_enable(video.videoplayer, looped);
+
+    for (let action of actions) {
+        await layout_parse_video_action(action, layout_context.animlist, actions_arraylist);
+    }
+    arraylist_destroy2(actions_arraylist, video, "actions_size", "actions");
+
+    let sprite = {
+        actions: null,
+        actions_size: 0,
+        animation: null,
+        group_id: group_id,
+        initial_action_name: null,
+        name: null,
+        parallax: { x: 1.0, y: 1.0, z: 1.0 },
+        placeholder: null,
+        soundplayer: null,
+        videoplayer: videoplayer,
+        static_camera: false,
+        type: VERTEX_SPRITE,
+        vertex: videoplayer_get_sprite(videoplayer),
+        was_playing: false
+    };
+
+    arraylist_add(layout_context.vertex_list, sprite);
+    arraylist_add(layout_context.video_list, video);
+}
+
 function layout_parse_macro(/** @type {Element} */ unparsed_root, layout_context) {
     //let list = unparsed_root.querySelectorAll(":scope > Macro");
     let list = unparsed_root.querySelectorAll("Macro");
@@ -2918,6 +3076,9 @@ function layout_parse_sound_action(unparsed_action, animlist, action_entries) {
             case "FadeOut":
                 layout_helper_add_action_soundfade(unparsed_entry, entries);
                 break;
+            case "Seek":
+                layout_helper_add_action_seek(unparsed_entry, entries);
+                break;
             /*case "Animation":
                 layout_helper_add_action_animation(unparsed_entry, animlist, entries);
                 break;
@@ -2926,6 +3087,41 @@ function layout_parse_sound_action(unparsed_action, animlist, action_entries) {
             default:
                 if (layout_helper_add_action_media(unparsed_entry, entries))
                     console.warn("Unknown Sound action entry:" + unparsed_entry.tagName);
+                break;
+        }
+    }
+
+    let action = {
+        name: unparsed_action.getAttribute("name"),
+        entries: null,
+        entries_size: -1
+    };
+
+    arraylist_destroy2(entries, action, "entries_size", "entries");
+    arraylist_add(action_entries, action);
+}
+
+async function layout_parse_video_action(unparsed_action, animlist, action_entries) {
+    let entries = arraylist_init2(unparsed_action.children.length);
+
+    for (let unparsed_entry of unparsed_action.children) {
+        switch (unparsed_entry.tagName) {
+            case "Property":
+                layout_helper_add_action_mediaproperty(unparsed_entry, entries);
+                break;
+            case "Properties":
+                layout_helper_add_action_mediaproperties(unparsed_entry, entries);
+                break;
+            case "FadeIn":
+            case "FadeOut":
+                layout_helper_add_action_soundfade(unparsed_entry, entries);
+                break;
+            case "Seek":
+                layout_helper_add_action_seek(unparsed_entry, entries);
+                break;
+            default:
+                if (!layout_helper_add_action_media(unparsed_entry, entries)) break;
+                await layout_parse_sprite_action(unparsed_action, animlist, null, action_entries);
                 break;
         }
     }
@@ -3290,6 +3486,9 @@ function layout_helper_execute_action_in_sound(action, item) {
             case LAYOUT_ACTION_SOUNDFADE:
                 soundplayer_fade(soundplayer, entry.enable, entry.size);
                 break;
+            case LAYOUT_ACTION_SEEK:
+                soundplayer_seek(soundplayer, entry.position);
+                break;
             /*case LAYOUT_ACTION_ANIMATION:
                 if (!entry.misc && !item.animation) break;
                 if (entry.misc) item.animation = entry.misc;
@@ -3305,6 +3504,27 @@ function layout_helper_execute_action_in_sound(action, item) {
             case LAYOUT_ACTION_ANIMATIONEND:
                 soundplayer_animation_end(soundplayer);
                 break;*/
+        }
+    }
+}
+
+function layout_helper_execute_action_in_video(action, item_video, item_sprite, viewport_width, viewport_height) {
+    let videoplayer = item_video.videoplayer;
+    for (let i = 0; i < action.entries_size; i++) {
+        let entry = action.entries[i];
+        switch (entry.type) {
+            case LAYOUT_ACTION_PROPERTY:
+                videoplayer_set_property(videoplayer, entry.property, entry.value);
+                break;
+            case LAYOUT_ACTION_SOUNDFADE:
+                videoplayer_fade_audio(videoplayer, entry.enable, entry.size);
+                break;
+            case LAYOUT_ACTION_SEEK:
+                videoplayer_seek(videoplayer, entry.position);
+                break;
+            default:
+                layout_helper_execute_action_in_sprite(action, item_sprite, viewport_width, viewport_height);
+                break;
         }
     }
 }
@@ -3981,6 +4201,15 @@ function layout_helper_add_action_soundfade(unparsed_entry, action_entries) {
         type: LAYOUT_ACTION_SOUNDFADE,
         enable: unparsed_entry.tagName == "FadeIn",
         size: layout_helper_parse_float(unparsed_entry, "duration", 1000.0)
+    };
+
+    arraylist_add(action_entries, entry);
+}
+
+function layout_helper_add_action_seek(unparsed_entry, action_entries) {
+    let entry = {
+        type: LAYOUT_ACTION_SEEK,
+        position: vertexprops_parse_double(unparsed_entry, "position", 0.0)
     };
 
     arraylist_add(action_entries, entry);

@@ -14,7 +14,7 @@ namespace Engine.Game {
 
         // this file contains all shared data across the game
         public const string ENGINE_NAME = "kdmy-engine";
-        public const string ENGINE_VERSION = "0.49.9";
+        public const string ENGINE_VERSION = "0.50";
 
         /**
          * The background music used in all menus, inherited from introscreen
