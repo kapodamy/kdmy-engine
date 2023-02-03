@@ -858,6 +858,24 @@ declare global {
         get_cmdargs(): string;
         exit(exit_code: number): string;
     }
+    interface Menu {
+        //destroy(menu: Menu): void;
+        get_drawable(menu: Menu): Drawable;
+        trasition_in(menu: Menu): void;
+        trasition_out(menu: Menu): void;
+        select_item(menu: Menu, name: string): void;
+        select_index(menu: Menu, index: number): void;
+        select_vertical(menu: Menu, offset: number): boolean;
+        select_horizontal(menu: Menu, offset: number): boolean;
+        toggle_choosen(menu: Menu, enable: boolean): void;
+        get_selected_index(menu: Menu): number;
+        get_items_count(menu: Menu): number;
+        set_item_text(menu: Menu, index: number, text: string): boolean;
+        set_item_visibility(menu: Menu, index: number, visible: boolean): boolean;
+        get_item_rect(menu: Menu, index: number): LuaMultiReturn<[number, number, number, number]> | null;
+        get_selected_item_name(menu: Menu): string;
+        set_text_force_case(menu: Menu, none_or_lowercase_or_uppercase: TextSpriteForceCase): void;
+    }
 
     //
     // Global metatables initializers (class static contructors in typescript/javascript)
@@ -883,13 +901,13 @@ declare global {
     } const AtlasConstructor: AtlasConstructor;
     interface AnimListConstructor {
         init(): AnimList;
-
     } const AnimList: AnimListConstructor;
     interface ConductorConstructor {
         init(): Conductor;
-
     } const Conductor: ConductorConstructor;
-
+    interface MenuConstructor {
+        init(menumanifest: MenuManifest, x: number, y: number, z: number, width: number, height: number): Menu;
+    } const Menu: MenuConstructor;
 
 
     //
@@ -966,8 +984,9 @@ declare global {
     function fs_readfile(path: string): string;
 
     //
-    // Modding UI (engine menus only)
+    // Modding UI (engine screens/menus only)
     //
+    type BasicValue = string | number | boolean | null;
     function modding_set_ui_visibility(visible: boolean): void;
     function modding_get_layout(): Layout;
     function modding_exit(): void;
@@ -975,6 +994,86 @@ declare global {
     function modding_unlockdirective_create(name: string, value: number): void;
     function modding_unlockdirective_remove(name: string): void;
     function modding_unlockdirective_get(name: string): number | null;
+    function modding_get_active_menu(): Menu;
+    function modding_choose_native_menu_option(name: string): boolean;
+    function modding_get_native_menu(): Menu;
+    function modding_set_active_menu(menu: Menu): void;
+    function modding_get_native_background_music(): SoundPlayer;
+    function modding_replace_native_background_music(music_src: string): SoundPlayer;
+    function modding_spawn_screen(layout_src: string, script_src: string, arg: BasicValue): BasicValue;
+    function modding_set_exit_delay(delay_ms: number): void;
+    function modding_get_messagebox(): Messagebox;
+
+    //
+    // MenuManifest helpers (modding context only)
+    //
+
+    type MenuManifestParameters = {
+        font_color: number;
+        atlas: string;
+        animlist: string;
+        font: string;
+        font_size: number;
+        font_glyph_suffix: string;
+        font_color_by_difference: boolean;
+        font_border_color: number;
+        anim_discarded: string;
+        anim_idle: string;
+        anim_rollback: string;
+        anim_selected: string;
+        anim_choosen: string;
+        anim_in: string;
+        anim_out: string;
+        anim_transition_in_delay: number;
+        anim_transition_out_delay: number;
+        is_vertical: boolean;
+        items_align: Align;
+        items_gap: number;
+        is_sparse: boolean;
+        static_index: number;
+        is_per_page: boolean;
+        items_dimmen: number;
+        font_border_size: number;
+        texture_scale: number;
+        enable_horizontal_text_correction: boolean;
+        suffix_selected: string;
+        suffix_choosen: string;
+        suffix_discarded: string;
+        suffix_idle: string;
+        suffix_rollback: string;
+        suffix_in: string;
+        suffix_out: string;
+    }
+    type MenuManifestPlacement = {
+        gap: number;
+        x: number;
+        y: number;
+        dimmen: number;
+    }
+    type MenuManifestItem = {
+        placement: MenuManifestPlacement;
+        has_font_color: boolean;
+        font_color: number;
+        text: string;
+        modelholder: string;
+        texture_scale: number;
+        name: string;
+        anim_selected: string;
+        anim_choosen: string;
+        anim_discarded: string;
+        anim_idle: string;
+        anim_rollback: string;
+        anim_in: string;
+        anim_out: string;
+        gap: number;
+        hidden: boolean;
+    }
+    type MenuManifest = {
+        parameters: MenuManifestParameters;
+        items: MenuManifestItem[];
+        items_size: number;
+    }
+    function menumanifest_parse_from_file(src: string): MenuManifest;
 
     //
     // Engine objects

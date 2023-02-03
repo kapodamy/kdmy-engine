@@ -110,6 +110,8 @@ static void luascript_register_objects(lua_State* L, bool is_week) {
         script_dialogue_register(L);
         script_week_register(L);
     } else {
+        script_menumanifest_register(L);
+        script_menu_register(L);
         script_modding_register(L);
     }
 
@@ -240,6 +242,11 @@ bool luascript_eval(Luascript luascript, const char* eval_string) {
     if (!eval_string || !eval_string[0]) return LUA_OK;
 
     int result = luaL_loadstring(luascript->L, eval_string);
+    
+#ifdef JAVASCRIPT
+    free((char*)eval_string);
+#endif
+
     if (result != LUA_OK) return false;
 
     int ret = luascript_pcallk(luascript->L, 0, LUA_MULTRET);

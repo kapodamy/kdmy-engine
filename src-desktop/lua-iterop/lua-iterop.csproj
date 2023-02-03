@@ -32,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="helpers.cs" />
+    <Compile Include="luatablehelpers.cs" />
     <Compile Include="ReferenceList.cs" />
     <Compile Include="utils.cs" />
     <Compile Include="lua.cs" />

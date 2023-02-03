@@ -92,9 +92,11 @@
     <Compile Include="engine\csharp\IVertex.cs" />
     <Compile Include="engine\csharp\PreloadCache.cs" />
     <Compile Include="engine\drawable.cs" />
-    <Compile Include="engine\externals\exports_drawable.cs" />
-    <Compile Include="engine\externals\exports_layoutplaceholder.cs" />
-    <Compile Include="engine\externals\exports_modelholder.cs" />
+    <Compile Include="engine\externals\luascript\exports_drawable.cs" />
+    <Compile Include="engine\externals\luascript\exports_layoutplaceholder.cs" />
+    <Compile Include="engine\externals\luascript\exports_menu.cs" />
+    <Compile Include="engine\externals\luascript\exports_menumanifest.cs" />
+    <Compile Include="engine\externals\luascript\exports_modelholder.cs" />
     <Compile Include="engine\externals\ffgraph.cs" />
     <Compile Include="engine\externals\glfw_struct.cs" />
     <Compile Include="engine\externals\glfw_enum.cs" />
@@ -130,6 +132,7 @@
     <Compile Include="engine\game\funkin\songprogressbar.cs" />
     <Compile Include="engine\game\gameplay\dialogue.cs" />
     <Compile Include="engine\game\helpers\freeplay_songicons.cs" />
+    <Compile Include="engine\game\screenmenu.cs" />
     <Compile Include="engine\game\settingsmenu.cs" />
     <Compile Include="engine\platform\expansions.cs" />
     <Compile Include="engine\externals\aica.cs" />

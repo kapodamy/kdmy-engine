@@ -39,7 +39,7 @@ static inline char* read_text(const char* path) {
     return buffer;
 }
 
-int main() {
+int main3() {
     char* lua_text = read_text(".\\timer_test.lua");
     Luascript luascript = luascript_init(lua_text, "timer_test.lua", &roundcontext, false);
     free(lua_text);
@@ -76,6 +76,18 @@ int main2() {
 
     luascript_destroy(&luascript);
 
+    return 0;
+}
+
+
+int main() {
+    char* lua_text = read_text(".\\mm_test.lua");
+    Luascript luascript = luascript_init(lua_text, "mm.lua", &roundcontext, false);
+    free(lua_text);
+
+    luascript_call_function(luascript, "run_test");
+
+    printf("done!\n");
     return 0;
 }
 

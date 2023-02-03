@@ -1,6 +1,7 @@
 #ifndef __vertexprops_h
 #define __vertexprops_h
 
+#define ALIGN_INVALID -1
 #define ALIGN_START 0
 #define ALIGN_CENTER 1
 #define ALIGN_END 2

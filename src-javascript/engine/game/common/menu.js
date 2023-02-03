@@ -178,6 +178,8 @@ async function menu_init(menumanifest, x, y, z, width, height) {
 }
 
 function menu_destroy(menu) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(menu);
+
     if (menu.fontholder) fontholder_destroy(menu.fontholder);
 
     for (let i = 0; i < menu.items_size; i++) {
@@ -413,10 +415,10 @@ function menu_draw(menu, pvrctx) {
 }
 
 
-function menu_get_selected_item_rect(menu, output_location, output_size) {
-    if (menu.index_selected < 0 || menu.index_selected >= menu.items_size) return 0;
+function menu_get_item_rect(menu, index, output_location, output_size) {
+    if (index < 0 || index >= menu.items_size) return 0;
 
-    let item = menu.items[menu.index_selected];
+    let item = menu.items[index];
     if (item.is_text) {
         textsprite_get_draw_location(item.vertex, output_location);
         textsprite_get_draw_size(item.vertex, output_size);
@@ -431,6 +433,10 @@ function menu_get_selected_item_rect(menu, output_location, output_size) {
         output_location[0] += menu.render_distance;
 
     return 1;
+}
+
+function menu_get_selected_item_rect(menu, output_location, output_size) {
+    return menu_get_item_rect(menu, menu.index_selected, output_location, output_size);
 }
 
 function menu_get_selected_item_name(menu) {

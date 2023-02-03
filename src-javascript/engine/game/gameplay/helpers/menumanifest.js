@@ -111,6 +111,8 @@ async function menumanifest_init(src) {
 }
 
 function menumanifest_destroy(menumanifest) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(menumanifest);
+
     for (let i = 0; i < menumanifest.items_size; i++) {
         menumanifest.items[i].name = undefined;
         menumanifest.items[i].text = undefined;

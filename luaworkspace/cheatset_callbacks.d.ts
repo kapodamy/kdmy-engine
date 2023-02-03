@@ -5,14 +5,14 @@ declare namespace KDMYEngine {
      * @summary This is a cheatset of functions to write in the lua script
      * This contains all functions called by the engine.
      * All these functions are optional, so you can implement (write in your lua script) only the functions you need
-     * 
+     *
      * also.... ¡¡¡¡DO NOT IMPORT THIS FILE!!!!
      */
 
     /**
-     * Called when the week is loaded (with the first track). If the week is initialized from the freeplay menu 
+     * Called when the week is loaded (with the first track). If the week is initialized from the freeplay menu
      * an index of the choosen song is passed.
-     * 
+     *
      * Note: In "freeplay mode" you should avoid/skip any cutscenes, distractions or dialogues if necessary.
      * @param freeplay_index index of the song in "about.json" file or "freeplayTrackIndexInGameplayManifest" field value, otherwise, -1.
      */
@@ -117,7 +117,7 @@ declare namespace KDMYEngine {
 
     /**
      * Called after strums are scrolled and before {@link f_frame}
-     * @param player_id Index (base-zero) of the player controller/gamepad.
+     * @param player_id Index (base-zero) of the player controller/gamepad, in modding context indicates this value is -1.
      * @param buttons An usigned number indicating the buttons pressed in the controller. These are bit flags/fields defined in GAMEPAD_* constants
      */
     export function f_buttons(player_id: number, buttons: GamepadButtons): void;
@@ -134,7 +134,7 @@ declare namespace KDMYEngine {
 
     /**
      * @summary Called on every beat.
-     * This function is not called exactly when an event occurs beacuse the check is done 
+     * This function is not called exactly when an event occurs beacuse the check is done
      * on every frame (before {@link f_frame}).
      * The milliseconds spent waiting for the frame is passed in the parameter __since__.
      * @param current_beat The beat number (also known as count).
@@ -144,7 +144,7 @@ declare namespace KDMYEngine {
 
     /**
      * @summary Called on every quarter (a quarter is 1/4 of a beat).
-     * This function is not called exactly when an event occurs beacuse the check is done 
+     * This function is not called exactly when an event occurs beacuse the check is done
      * on every frame (before {@link f_frame}).
      * The milliseconds spent waiting for the frame is passed in the parameter __since__.
      * @param current_quarter The quarter number (also known as count).
@@ -168,12 +168,12 @@ declare namespace KDMYEngine {
      * @summary Called when the dialogue is playing the close animation
      */
     export function f_dialogue_closing(): void;
-    
+
     /**
      * @summary Called when the the dialogue is closed or "<Exit />" is used on a state
      */
     export function f_dialogue_exit(): void;
-    
+
     /**
      * @summary Called before the dialogue prints any text
      * @param line_index the line index in the dialog text file (txt file)
@@ -181,7 +181,7 @@ declare namespace KDMYEngine {
      * @param text text content of the line (if the line is ":bf:beep!" the text is "beep!")
      */
     export function f_dialogue_line_starts(line_index: number, state_name: string, text: string): void;
-    
+
     /**
      * @summary Called after the dialogue ends printing the current dialog line
      * @param line_index the line index in the dialog text file (txt file)
@@ -195,5 +195,47 @@ declare namespace KDMYEngine {
      * strum lines and all {@link PlayerStats} are updated.
      */
     export function f_after_strum_scroll(): void;
+
+
+    /**
+     * @summary (modding context only) Called when a menu option is selected
+     * @param menu the target menu
+     * @param index (base zero) selected option index
+     * @param name name of the option or text label
+     */
+    export function f_modding_menu_option_selected(menu: Menu, index: number, name: string): void;
+
+    /**
+     * @summary (modding context only) Called when a menu option is choosen, this leaves the current
+     * screen and loads another (example from main screen to freeplay screen).
+     * @param menu the target menu
+     * @param index (base zero) selected option index
+     * @param name name of the option or text label
+     * @return boolean true to cancel, otherwise, false.
+     */
+    export function f_modding_menu_option_choosen(menu: Menu, index: number, name: string): boolean;
+
+    /**
+     * @summary (modding context only) Called when the user is attempting go to the previous screen.
+     * @return boolean true to cancel, otherwise, false.
+     */
+    export function f_modding_back(): boolean;
+
+    /**
+     * @summary (modding context only) Called before the script is disposed. From here is possible return
+     * a value to the previous screen script (waiting on {@link modding_spawn_screen}).
+     * @return BasicValue the value to return.
+     */
+    export function f_modding_exit(): BasicValue;
+
+    /**
+     * @summary (modding context only) Called when the script is loaded from a previous screen. The parameters
+     * passed are the arguments of the call to {@link modding_spawn_screen} if applicable.
+     * @param arg values passed by {@link modding_spawn_screen}, is null if called by the engine.
+     */
+    export function f_modding_init(arg: BasicValue): void;
+    
+    
+
 }
 

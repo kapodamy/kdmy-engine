@@ -19,6 +19,12 @@ typedef struct Luascript_t {
     size_t shared_size;
 } * Luascript;
 
+typedef union {
+    char* as_string;
+    double as_number;
+    bool as_boolean;
+} LuaValue;
+
 
 Luascript luascript_init(const char* lua_sourcecode, const char* filename, void* context, bool is_week);
 void luascript_destroy(Luascript* luascript);
@@ -50,5 +56,11 @@ void luascript_notify_dialogue_builtin_open(Luascript luascript, const char* dia
 void luascript_notify_dialogue_line_starts(Luascript luascript, int line_index, const char* state_name, const char* if_line_label);
 void luascript_notify_dialogue_line_ends(Luascript luascript, int line_index, const char* state_name, const char* if_line_label);
 void luascript_notify_after_strum_scroll(Luascript luascript);
+void luascript_call_function(Luascript luascript, const char* function_name);
+void luascript_notify_modding_menu_option_selected(Luascript luascript, void* menu, int index, const char* name);
+bool luascript_notify_modding_menu_option_choosen(Luascript luascript, void* menu, int index, const char* name);
+bool luascript_notify_modding_back(Luascript luascript);
+void luascript_notify_modding_exit(Luascript luascript, int* return_lua_type, LuaValue* return_lua_value);
+void luascript_notify_modding_init(Luascript luascript, int value_type, LuaValue* value);
 void luascript_call_function(Luascript luascript, const char* function_name);
 #endif

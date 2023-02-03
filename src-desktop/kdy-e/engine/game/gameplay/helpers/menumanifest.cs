@@ -1,4 +1,5 @@
 using System;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using Engine.Utils;
 
@@ -185,6 +186,8 @@ namespace Engine.Game.Gameplay.Helpers {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             for (int i = 0 ; i < this.items_size ; i++) {
                 //free(this.items[i].name);
                 //free(this.items[i].text);

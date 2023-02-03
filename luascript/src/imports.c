@@ -1,5 +1,6 @@
 #include "luascript_internal.h"
 #include "timer.h"
+#include "string.h"
 
 #define FUNCTION(luascript, function_name)               \
     lua_State* lua = luascript->L;                       \
@@ -9,10 +10,55 @@
         return;                                          \
     }
 
+#define FUNCTION_WITH_DEFAULT_RETURN(luascript, function_name, def_ret)               \
+    lua_State* lua = luascript->L;                       \
+    const char* FUNCTION = function_name;                \
+    if (lua_getglobal(lua, FUNCTION) != LUA_TFUNCTION) { \
+        lua_pop(lua, 1);                                 \
+        return def_ret;                                          \
+    }
+
 
 static int lua_imported_fn(lua_State* L, const char* fn_name, int arguments_count) {
     int result = luascript_pcallk(L, arguments_count, 0);
     if (result == LUA_OK) return 0;
+
+    const char* error_message = lua_tostring(L, -1);
+    lua_pop(L, 1);
+
+    fprintf(stderr, "lua_imported_fn() call to '%s' failed.\n%s\n", fn_name, error_message);
+    // fflush(stdout);
+
+    return 1;
+}
+
+static int lua_imported_fn_with_return(lua_State* L, const char* fn_name, int arguments_count, int* return_lua_type, LuaValue* return_lua_value) {
+    int result = luascript_pcallk(L, arguments_count, 1);
+    if (result == LUA_OK) {
+        switch (lua_type(L, -1)) {
+            case LUA_TBOOLEAN:
+                return_lua_value->as_boolean = lua_toboolean(L, -1);
+                *return_lua_type = LUA_TBOOLEAN;
+                break;
+            case LUA_TNUMBER:
+                return_lua_value->as_number = lua_tonumber(L, -1);
+                *return_lua_type = LUA_TNUMBER;
+                break;
+            case LUA_TSTRING:
+                return_lua_value->as_string = strdup(lua_tostring(L, -1));
+                *return_lua_type = LUA_TSTRING;
+                break;
+            case LUA_TNIL:
+            case LUA_TNONE:
+                return_lua_value->as_string = NULL;
+                *return_lua_type = LUA_TNIL;
+                break;
+            default:
+                printf("lua_imported_fn_with_return() unknown lua return type");
+                break;
+        }
+        return 0;
+    }
 
     const char* error_message = lua_tostring(L, -1);
     lua_pop(L, 1);
@@ -212,6 +258,11 @@ void luascript_notify_dialogue_line_starts(Luascript luascript, int line_index, 
     lua_pushstring(lua, state_name);
     lua_pushstring(lua, text);
 
+#ifdef JAVASCRIPT
+    free((char*)state_name);
+    free((char*)text);
+#endif
+
     lua_imported_fn(lua, FUNCTION, 3);
 }
 
@@ -222,6 +273,11 @@ void luascript_notify_dialogue_line_ends(Luascript luascript, int line_index, co
     lua_pushstring(lua, state_name);
     lua_pushstring(lua, text);
 
+#ifdef JAVASCRIPT
+    free((char*)state_name);
+    free((char*)text);
+#endif
+
     lua_imported_fn(lua, FUNCTION, 3);
 }
 
@@ -231,10 +287,109 @@ void luascript_notify_after_strum_scroll(Luascript luascript) {
     lua_imported_fn(lua, FUNCTION, 0);
 }
 
+void luascript_notify_modding_menu_option_selected(Luascript luascript, void* menu, int index, const char* name) {
+    FUNCTION(luascript, "f_modding_menu_option_selected");
+
+    luascript_create_userdata(luascript, menu, MENU, false);
+    lua_pushinteger(luascript->L, index);
+    lua_pushstring(luascript->L, name);
+
+#ifdef JAVASCRIPT
+    free((char*)name);
+#endif
+
+    lua_imported_fn(lua, FUNCTION, 3);
+}
+
+bool luascript_notify_modding_menu_option_choosen(Luascript luascript, void* menu, int index, const char* name) {
+    FUNCTION_WITH_DEFAULT_RETURN(luascript, "f_modding_menu_option_choosen", false);
+
+    luascript_create_userdata(luascript, menu, MENU, false);
+    lua_pushinteger(luascript->L, index);
+    lua_pushstring(luascript->L, name);
+
+#ifdef JAVASCRIPT
+    free((char*)name);
+#endif
+
+    int ret_type;
+    LuaValue ret_value;
+
+    if (!lua_imported_fn_with_return(luascript->L, FUNCTION, 3, &ret_type, &ret_value)) {
+        return false;
+    }
+
+    switch (ret_type) {
+        case LUA_TNUMBER:
+            return ret_value.as_number != 1.0;
+        case LUA_TSTRING: {
+            bool ret = ret_value.as_string || ret_value.as_string[0] != '\0';
+            free(ret_value.as_string);
+            return ret;
+        }
+        default:
+            return false;
+    }
+}
+
+bool luascript_notify_modding_back(Luascript luascript) {
+    FUNCTION_WITH_DEFAULT_RETURN(luascript, "f_modding_back", false);
+
+    int ret_type;
+    LuaValue ret_value;
+
+    if (!lua_imported_fn_with_return(luascript->L, FUNCTION, 0, &ret_type, &ret_value)) {
+        return false;
+    }
+
+    switch (ret_type) {
+        case LUA_TNUMBER:
+            return ret_value.as_number != 1.0;
+        case LUA_TSTRING: {
+            bool ret = ret_value.as_string || ret_value.as_string[0] != '\0';
+            free(ret_value.as_string);
+            return ret;
+        }
+        default:
+            return false;
+    }
+}
+
+void luascript_notify_modding_exit(Luascript luascript, int* return_lua_type, LuaValue* return_lua_value) {
+    FUNCTION(luascript, "f_modding_exit");
+
+    lua_imported_fn_with_return(luascript->L, FUNCTION, 0, return_lua_type, return_lua_value);
+}
+
+void luascript_notify_modding_init(Luascript luascript, int value_type, LuaValue* value) {
+    FUNCTION(luascript, "f_modding_init");
+
+    switch (value_type) {
+        case LUA_TNUMBER:
+            lua_pushnumber(luascript->L, value->as_number);
+            break;
+        case LUA_TSTRING:
+            lua_pushstring(luascript->L, value->as_string);
+            free(value->as_string);
+            break;
+        case LUA_TBOOLEAN:
+            lua_pushboolean(luascript->L, value->as_boolean);
+            break;
+        default:
+            lua_pushnil(luascript->L);
+            break;
+    }
+
+    lua_imported_fn(luascript->L, FUNCTION, 1);
+}
+
 void luascript_call_function(Luascript luascript, const char* function_name) {
     if (!function_name || !function_name[0]) return;
     FUNCTION(luascript, function_name);
 
     lua_imported_fn(lua, function_name, 0);
-}
 
+#ifdef JAVASCRIPT
+    free((char*)function_name);
+#endif
+}

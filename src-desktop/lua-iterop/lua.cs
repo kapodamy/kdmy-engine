@@ -276,6 +276,9 @@ namespace LuaNativeMethods {
         public static extern int lua_toboolean(lua_State* L, int idx);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern double lua_tonumber(lua_State* L, int idx);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void lua_pushboolean(lua_State* L, int b);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
@@ -313,6 +316,9 @@ namespace LuaNativeMethods {
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void lua_setwarnf(lua_State* L, lua_WarnFunction f, void* ud);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern ulong lua_rawlen(lua_State* L, int index);
 
 
         private static byte[] STRING_BUFFER = new byte[256];

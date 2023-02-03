@@ -310,6 +310,7 @@ async function dialogue_init(src) {
 }
 
 function dialogue_destroy(dialogue) {
+    ModuleLuaScript.kdmyEngine_drop_shared_object(dialogue);
     dialogue_internal_destroy_external_dialog(dialogue);
 
     for (let i = 0; i < dialogue.audios_size; i++) {
@@ -589,7 +590,7 @@ function dialogue_animate(dialogue, elapsed) {
         if (dialogue.anims_ui.close && animsprite_animate(dialogue.anims_ui.close, elapsed) < 1) {
             animsprite_update_drawable(dialogue.anims_ui.close, dialogue.self_drawable, 1);
         } else {
-            if (dialogue.script) _dialogue_lua_call(dialogue.script, "luascript_call_function", "f_dialogue_exit");
+            if (dialogue.script) _dialogue_lua_call(dialogue.script, luascript_call_function, "f_dialogue_exit");
             dialogue.is_completed = 1;
             for (let i = 0; i < dialogue.audios_size; i++) soundplayer_stop(dialogue.audios[i].soundplayer);
             return 0;
@@ -705,7 +706,7 @@ async function dialogue_show_dialog2(dialogue, text_dialog_content) {
 }
 
 async function dialogue_close(dialogue) {
-    if (dialogue.script) _dialogue_lua_call(dialogue.script, "luascript_call_function", "f_dialogue_closing");
+    if (dialogue.script) _dialogue_lua_call(dialogue.script, luascript_call_function, "f_dialogue_closing");
 
     dialogue.do_exit = 1;
     dialogue.current_dialog = null;
@@ -883,9 +884,9 @@ function dialogue_internal_apply_state(dialogue, state) {
                     break;
                 }
                 if (action.lua_function)
-                    _dialogue_lua_call(dialogue.script, "luascript_call_function", action.lua_function);
+                    _dialogue_lua_call(dialogue.script, luascript_call_function, action.lua_function);
                 if (action.luascript_eval)
-                    _dialogue_lua_call(dialogue.script, "luascript_eval", action.luascript_eval);
+                    _dialogue_lua_call(dialogue.script, luascript_eval, action.luascript_eval);
                 break;
             case DIALOGUE_TYPE_EXIT:
                 dialogue_close(dialogue);
@@ -1382,9 +1383,9 @@ function dialogue_internal_notify_script(dialogue, is_line_start) {
     let text = dialogue.current_dialog.lines[dialogue.current_dialog_line].text;
 
     if (is_line_start)
-        _dialogue_lua_call(dialogue.script, "luascript_notify_dialogue_line_starts", current_dialog_line, state_name, text);
+        _dialogue_lua_call(dialogue.script, luascript_notify_dialogue_line_starts, current_dialog_line, state_name, text);
     else
-        _dialogue_lua_call(dialogue.script, "luascript_notify_dialogue_line_ends", current_dialog_line, state_name, text);
+        _dialogue_lua_call(dialogue.script, luascript_notify_dialogue_line_ends, current_dialog_line, state_name, text);
 
 }
 
@@ -2789,30 +2790,17 @@ function dialogue_internal_get_multiplechoice(dialogue, name) {
     return null;
 }
 
-function _dialogue_lua_call(luascript_ptr, fn_name, ...args) {
-    // JS only
-    let allocated_strings = [];
-    for (let i = 0; i < args.length; i++) {
-        if (typeof (args[i]) === "string" || args[i] === null) {
-            let ptr = ModuleLuaScript.kdmyEngine_stringToPtr(args[i]);
-            allocated_strings.push(ptr);
-            args[i] = ptr;
-        }
-    }
-
+function _dialogue_lua_call(luascript_ptr, fn, ...args) {
     args.unshift(luascript_ptr);
 
-    ModuleLuaScript[`_${fn_name}`].apply(null, args);
+    let ret = fn.apply(null, args);
 
-    if (ModuleLuaScript.kdmyEngine_hasAsyncPending()) {
+    if (ret instanceof Promise) {
         console.warn(
             "_dialogue_lua_call() the call to " +
-            fn_name +
+            fn.name +
             " or a previous lua call was was asynchronous, this will result in out-of-order execution of lua code"
         );
     }
-
-    // this can lead to read-after-free if the call was async
-    for (let ptr of allocated_strings) ModuleLuaScript.kdmyEngine_deallocate(ptr);
 }
 

@@ -283,7 +283,14 @@ void luascript_register(lua_State* lua, const char* name, const lua_CFunction gc
 }
 
 
-int luascript_parse_align(lua_State* L, const char* align) {
+Align luascript_parse_align(lua_State* L, const char* align) {
+    Align value = luascript_parse_align2(align);
+    if (value != ALIGN_INVALID) return value;
+
+    return luaL_error(L, "invalid align: %s", align);
+}
+
+Align luascript_parse_align2(const char* align) {
     if (!align || align[0] == '\0' || string_equals(align, "NONE"))
         return ALIGN_NONE;
     if (string_equals(align, "START"))
@@ -295,7 +302,7 @@ int luascript_parse_align(lua_State* L, const char* align) {
     else if (string_equals(align, "BOTH"))
         return ALIGN_BOTH;
 
-    return luaL_error(L, "invalid align: %s", align);
+    return ALIGN_INVALID;
 }
 
 int luascript_parse_pvrflag(lua_State* L, const char* pvrflag) {
@@ -559,6 +566,13 @@ EM_JS_PRFX(void, kdmyEngine_forget_obtained, (void* obj_id), {
     if (!ret) throw new Error("Uknown object id:" + obj_id);
 });
 
+EM_JS_PRFX(void*, kdmyEngine_create_object, (), {
+    return kdmyEngine_obtain(new Object());
+});
+EM_JS_PRFX(void*, kdmyEngine_create_array, (size_t size), {
+    return kdmyEngine_obtain(new Array(size));
+});
+
 EM_JS_PRFX(void*, kdmyEngine_read_window_object, (const char* variable_name), {
     let obj = window[kdmyEngine_ptrToString(variable_name)];
     return obj === undefined ? 0 : kdmyEngine_obtain(obj);
@@ -607,6 +621,43 @@ EM_JS_PRFX(void, kdmyEngine_write_prop_boolean, (void* obj_id, const char* field
     obj[field] = value;
 });
 
+EM_JS_PRFX(void, kdmyEngine_write_in_array_double, (void* array_id, int32_t index, double value), {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array) throw new Error("Uknown array id:" + array_id);
+
+    array[index] = value;
+});
+EM_JS_PRFX(void, kdmyEngine_write_in_array_float, (void* array_id, int32_t index, float value), {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array) throw new Error("Uknown array id:" + array_id);
+
+    array[index] = value;
+});
+EM_JS_PRFX(void, kdmyEngine_write_in_array_string, (void* array_id, int32_t index, char* value), {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array) throw new Error("Uknown array id:" + array_id);
+
+    array[index] = kdmyEngine_ptrToString(value);
+});
+EM_JS_PRFX(void, kdmyEngine_write_in_array_integer, (void* array_id, int32_t index, int32_t value), {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array) throw new Error("Uknown array id:" + array_id);
+
+    array[index] = value;
+});
+EM_JS_PRFX(void, kdmyEngine_write_in_array_object, (void* array_id, int32_t index, void* value), {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array) throw new Error("Uknown array id:" + array_id);
+
+    array[index] = kdmyEngine_obtain(value);
+});
+EM_JS_PRFX(void, kdmyEngine_write_in_array_boolean, (void* array_id, int32_t index, bool value), {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array) throw new Error("Uknown array id:" + array_id);
+
+    array[index] = value;
+});
+
 
 
 double kdmy_read_prop_double(void* obj_id, const char* field_name) {
@@ -634,6 +685,13 @@ void kdmy_forget_obtained(void* obj_id) {
     return kdmyEngine_forget_obtained(obj_id);
 }
 
+void* kdmy_create_object() {
+    return kdmyEngine_create_object();
+}
+void* kdmy_create_array(int32_t size) {
+    return kdmyEngine_create_array(size);
+}
+
 void* kdmy_read_window_object(const char* variable_name) {
     return kdmyEngine_read_window_object(variable_name);
 }
@@ -657,5 +715,23 @@ void kdmy_write_prop_boolean(void* obj_id, const char* field_name, bool value) {
     return kdmyEngine_write_prop_boolean(obj_id, field_name, value);
 }
 
+void kdmy_write_in_array_double(void* array_id, int32_t index, double value) {
+    kdmyEngine_write_in_array_double(array_id, index, value);
+}
+void kdmy_write_in_array_float(void* array_id, int32_t index, float value) {
+    kdmyEngine_write_in_array_float(array_id, index, value);
+}
+void kdmy_write_in_array_string(void* array_id, int32_t index, char* value) {
+    kdmyEngine_write_in_array_string(array_id, index, value);
+}
+void kdmy_write_in_array_integer(void* array_id, int32_t index, int32_t value) {
+    kdmyEngine_write_in_array_integer(array_id, index, value);
+}
+void kdmy_write_in_array_object(void* array_id, int32_t index, void* value) {
+    kdmyEngine_write_in_array_object(array_id, index, value);
+}
+void kdmy_write_in_array_boolean(void* array_id, int32_t index, bool value) {
+    kdmyEngine_write_in_array_boolean(array_id, index, value);
+}
 
 #endif

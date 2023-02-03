@@ -49,6 +49,8 @@
 #include "modding.h"
 #include "week.h"
 #include "engine_settings.h"
+#include "menu.h"
+#include "menumanifest.h"
 
 #ifdef JAVASCRIPT
 #include <emscripten.h>
@@ -69,6 +71,9 @@ bool kdmy_read_prop_boolean(void* obj_id, const char* field_name);
 bool kdmy_read_prop_floatboolean(void* obj_id, const char* field_name);
 void kdmy_forget_obtained(void* obj_id);
 
+void* kdmy_create_object();
+void* kdmy_create_array(int32_t size);
+
 void* kdmy_read_window_object(const char* variable_name);
 
 void kdmy_write_prop_double(void* obj_id, const char* field_name, double value);
@@ -77,6 +82,13 @@ void kdmy_write_prop_string(void* obj_id, const char* field_name, char* value);
 void kdmy_write_prop_integer(void* obj_id, const char* field_name, int32_t value);
 void kdmy_write_prop_object(void* obj_id, const char* field_name, void* value);
 void kdmy_write_prop_boolean(void* obj_id, const char* field_name, bool value);
+
+void kdmy_write_in_array_double(void* array_id, int32_t index, double value);
+void kdmy_write_in_array_float(void* array_id, int32_t index, float value);
+void kdmy_write_in_array_string(void* array_id, int32_t index, char* value);
+void kdmy_write_in_array_integer(void* array_id, int32_t index, int32_t value);
+void kdmy_write_in_array_object(void* array_id, int32_t index, void* value);
+void kdmy_write_in_array_boolean(void* array_id, int32_t index, bool value);
 
 #endif
 
@@ -103,7 +115,8 @@ bool luascript_userdata_is_allocated(lua_State* L, const char* check_metatable_n
 
 void luascript_register(lua_State* lua, const char* name, const lua_CFunction gc, const lua_CFunction tostring, const luaL_Reg fns[]);
 
-int luascript_parse_align(lua_State* L, const char* align);
+Align luascript_parse_align(lua_State* L, const char* align);
+Align luascript_parse_align2(const char* align);
 int luascript_parse_pvrflag(lua_State* L, const char* pvrflag);
 int luascript_parse_forcecase(lua_State* L, const char* forcecase);
 int luascript_parse_wordbreak(lua_State* L, const char* wordbreak);
@@ -194,6 +207,10 @@ void script_script_register(lua_State* L);
 //#define MODDING "Modding"
 // int script_modding_new(lua_State* L);
 void script_modding_register(lua_State* L);
+
+//#define MENUMANIFEST "MenuManifest"
+// int script_menumanifest_new(lua_State* L);
+void script_menumanifest_register(lua_State* L);
 
 #define DIALOGUE "Dialogue"
 int script_dialogue_new(lua_State* L, Dialogue dialogue);
@@ -291,5 +308,8 @@ void script_enginesettings_register(lua_State* L);
 //int script_environment_new(lua_State* L);
 void script_environment_register(lua_State* L);
 
+#define MENU "Menu"
+int script_menu_new(lua_State* L, Menu menu);
+void script_menu_register(lua_State* L);
 
 #endif

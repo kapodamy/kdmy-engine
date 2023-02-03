@@ -126,13 +126,19 @@ function kdmyEngine_set_float64(address, value) {
 function kdmyEngine_get_uint32(address) {
     return kdmyEngine_dataView.getFloat64(address, kdmyEngine_endianess);
 }
+function kdmyEngine_get_ram() {
+    return new DataView(buffer);
+}
 
 ModuleLuaScript.kdmyEngine_stringToPtr = kdmyEngine_stringToPtr;
+ModuleLuaScript.kdmyEngine_ptrToString = kdmyEngine_ptrToString;
 ModuleLuaScript.kdmyEngine_deallocate = kdmyEngine_deallocate;
 ModuleLuaScript.kdmyEngine_obtain = kdmyEngine_obtain;
 ModuleLuaScript.kdmyEngine_yieldAsync = kdmyEngine_yieldAsync;
 ModuleLuaScript.kdmyEngine_hasAsyncPending = kdmyEngine_hasAsyncPending;
 ModuleLuaScript.kdmyEngine_drop_shared_object = kdmyEngine_drop_shared_object;
+ModuleLuaScript.kdmyEngine_get_ram = kdmyEngine_get_ram;
+ModuleLuaScript.kdmyEngine_endianess = kdmyEngine_endianess;
 
 var moduleOverrides = Object.assign({}, ModuleLuaScript);
 var arguments_ = [];
@@ -819,6 +825,19 @@ function __asyncjs__fs_readfile(path, buffer_ptr, size_ptr) {
         }
     })
 }
+function __asyncjs__menu_init(menumanifest, x, y, z, width, height) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await menu_init(kdmyEngine_obtain(menumanifest), x, y, z, width, height);
+        kdmyEngine_forget(menumanifest);
+        return kdmyEngine_obtain(ret)
+    })
+}
+function __asyncjs__menumanifest_init(src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await menumanifest_init(kdmyEngine_ptrToString(src));
+        return kdmyEngine_obtain(ret)
+    })
+}
 function __asyncjs__messagebox_set_image_from_atlas(messagebox, filename, entry_name, is_animation) {
     return Asyncify.handleAsync(async() => {
         await messagebox_set_image_from_atlas(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(filename), kdmyEngine_ptrToString(entry_name), is_animation)
@@ -827,6 +846,66 @@ function __asyncjs__messagebox_set_image_from_atlas(messagebox, filename, entry_
 function __asyncjs__messagebox_set_image_from_texture(messagebox, filename) {
     return Asyncify.handleAsync(async() => {
         await messagebox_set_image_from_texture(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(filename))
+    })
+}
+function __asyncjs__modding_get_messagebox(modding) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await modding_get_messagebox(kdmyEngine_obtain(modding));
+        return kdmyEngine_obtain(ret)
+    })
+}
+function __asyncjs__modding_replace_native_background_music(modding, music_src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await modding_replace_native_background_music(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(music_src));
+        return kdmyEngine_obtain(ret)
+    })
+}
+function __asyncjs__modding_spawn_screen(modding, layout_src, script_src, value) {
+    return Asyncify.handleAsync(async() => {
+        let val = {
+            type: kdmyEngine_get_uint32(value),
+            value: null
+        };
+        let value_value_ptr = value + 4;
+        switch (val.type) {
+        case BASIC_VALUE_TYPE_DOUBLE:
+            val.value = kdmyEngine_dataView.getFloat64(value_value_ptr, kdmyEngine_endianess);
+            break;
+        case BASIC_VALUE_TYPE_NULL:
+            break;
+        case BASIC_VALUE_TYPE_STRING:
+            let string_ptr = kdmyEngine_get_uint32(value_value_ptr);
+            val.value = kdmyEngine_ptrToString(string_ptr);
+            _free(string_ptr);
+            break;
+        case BASIC_VALUE_TYPE_BOOLEAN:
+            val.value = kdmyEngine_get_uint32(value) ? true : false;
+            break;
+        default:
+            throw new Error("value type " + val.type + "not implemented")
+        }
+        _free(value);
+        let ret = await modding_spawn_screen(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(layout_src), kdmyEngine_ptrToString(script_src), val);
+        let r = _malloc(4 + 8);
+        HEAPU32[r + 0] = ret.type;
+        let r_value_ptr = r + 4;
+        switch (ret.type) {
+        case BASIC_VALUE_TYPE_DOUBLE:
+            kdmyEngine_set_float64(r_value_ptr, ret.value);
+            break;
+        case BASIC_VALUE_TYPE_NULL:
+            kdmyEngine_set_uint32(r_value_ptr, 0);
+            break;
+        case BASIC_VALUE_TYPE_STRING:
+            kdmyEngine_set_float64(r_value_ptr, kdmyEngine_stringToPtr(ret.value));
+            break;
+        case BASIC_VALUE_TYPE_BOOLEAN:
+            kdmyEngine_set_uint32(r_value_ptr, ret.value ? 1 : 0);
+            break;
+        default:
+            throw new Error("value type " + ret.type + "not implemented")
+        }
+        return r
     })
 }
 function __asyncjs__modelholder_init(src) {
@@ -1462,6 +1541,12 @@ function __js__healthwatcher_has_deads(healthwatcher, in_players_or_opponents) {
 function __js__healthwatcher_reset_opponents(healthwatcher) {
     healthwatcher_reset_opponents(kdmyEngine_obtain(healthwatcher))
 }
+function __js__kdmyEngine_create_array(size) {
+    return kdmyEngine_obtain(new Array(size))
+}
+function __js__kdmyEngine_create_object() {
+    return kdmyEngine_obtain(new Object)
+}
 function __js__kdmyEngine_forget_obtained(obj_id) {
     let ret = kdmyEngine_forget(obj_id);
     if (!ret)
@@ -1561,6 +1646,42 @@ function __js__kdmyEngine_read_prop_string(obj_id, field_name) {
 function __js__kdmyEngine_read_window_object(variable_name) {
     let obj = window[kdmyEngine_ptrToString(variable_name)];
     return obj === undefined ? 0 : kdmyEngine_obtain(obj)
+}
+function __js__kdmyEngine_write_in_array_boolean(array_id, index, value) {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array)
+        throw new Error("Uknown array id:" + array_id);
+    array[index] = value
+}
+function __js__kdmyEngine_write_in_array_double(array_id, index, value) {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array)
+        throw new Error("Uknown array id:" + array_id);
+    array[index] = value
+}
+function __js__kdmyEngine_write_in_array_float(array_id, index, value) {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array)
+        throw new Error("Uknown array id:" + array_id);
+    array[index] = value
+}
+function __js__kdmyEngine_write_in_array_integer(array_id, index, value) {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array)
+        throw new Error("Uknown array id:" + array_id);
+    array[index] = value
+}
+function __js__kdmyEngine_write_in_array_object(array_id, index, value) {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array)
+        throw new Error("Uknown array id:" + array_id);
+    array[index] = kdmyEngine_obtain(value)
+}
+function __js__kdmyEngine_write_in_array_string(array_id, index, value) {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array)
+        throw new Error("Uknown array id:" + array_id);
+    array[index] = kdmyEngine_ptrToString(value)
 }
 function __js__kdmyEngine_write_prop_boolean(obj_id, field_name, value) {
     let obj = kdmyEngine_obtain(obj_id);
@@ -1730,6 +1851,73 @@ function __js__layout_trigger_camera(layout, camera_name) {
 function __js__layout_trigger_trigger(layout, trigger_name) {
     return layout_trigger_trigger(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(trigger_name))
 }
+function __js__menu_destroy(menu) {
+    let ret = menu_destroy(kdmyEngine_obtain(menu));
+    return kdmyEngine_obtain(ret)
+}
+function __js__menu_get_drawable(menu) {
+    let ret = menu_get_drawable(kdmyEngine_obtain(menu));
+    return kdmyEngine_obtain(ret)
+}
+function __js__menu_get_item_rect(menu, index, x, y, width, height) {
+    const output_location = [0, 0];
+    const output_size = [0, 0];
+    let ret = menu_get_item_rect(kdmyEngine_obtain(menu), index, output_location, output_size);
+    kdmyEngine_set_float32(x, output_location[0]);
+    kdmyEngine_set_float32(y, output_location[1]);
+    kdmyEngine_set_float32(width, output_size[2]);
+    kdmyEngine_set_float32(height, output_size[3]);
+    return ret ? 1 : 0
+}
+function __js__menu_get_items_count(menu) {
+    let ret = menu_get_items_count(kdmyEngine_obtain(menu));
+    return ret
+}
+function __js__menu_get_selected_index(menu) {
+    let ret = menu_get_selected_index(kdmyEngine_obtain(menu));
+    return ret
+}
+function __js__menu_get_selected_item_name(menu) {
+    let ret = menu_get_selected_item_name(kdmyEngine_obtain(menu));
+    return kdmyEngine_stringToPtr(ret)
+}
+function __js__menu_select_horizontal(menu, offset) {
+    let ret = menu_select_horizontal(kdmyEngine_obtain(menu), offset);
+    return ret ? 1 : 0
+}
+function __js__menu_select_index(menu, index) {
+    menu_select_index(kdmyEngine_obtain(menu), index)
+}
+function __js__menu_select_item(menu, name) {
+    menu_select_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name))
+}
+function __js__menu_select_vertical(menu, offset) {
+    let ret = menu_select_vertical(kdmyEngine_obtain(menu), offset);
+    return ret ? 1 : 0
+}
+function __js__menu_set_item_text(menu, index, text) {
+    let ret = menu_set_item_text(kdmyEngine_obtain(menu), index, kdmyEngine_ptrToString(text));
+    return ret ? 1 : 0
+}
+function __js__menu_set_item_visibility(menu, index, visible) {
+    let ret = menu_set_item_visibility(kdmyEngine_obtain(menu), index, visible);
+    return ret ? 1 : 0
+}
+function __js__menu_set_text_force_case(menu, none_or_lowercase_or_uppercase) {
+    menu_set_text_force_case(kdmyEngine_obtain(menu), kdmyEngine_obtain(none_or_lowercase_or_uppercase))
+}
+function __js__menu_toggle_choosen(menu, enable) {
+    menu_toggle_choosen(kdmyEngine_obtain(menu), enable)
+}
+function __js__menu_trasition_in(menu) {
+    menu_trasition_in(kdmyEngine_obtain(menu))
+}
+function __js__menu_trasition_out(menu) {
+    menu_trasition_out(kdmyEngine_obtain(menu))
+}
+function __js__menumanifest_destroy(menumanifest) {
+    menumanifest_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(menumanifest)))
+}
 function __js__messagebox_get_modifier(messagebox) {
     const modifier = messagebox_get_modifier(kdmyEngine_obtain(messagebox));
     return kdmyEngine_obtain(modifier)
@@ -1785,32 +1973,57 @@ function __js__messagebox_use_small_size(messagebox, small_or_normal) {
 function __js__missnotefx_play_effect(missnotefx) {
     missnotefx_play_effect(kdmyEngine_obtain(missnotefx))
 }
-function __js__modding_exit(moddingcontext) {
-    modding_exit(kdmyEngine_obtain(moddingcontext))
-}
-function __js__modding_get_layout(moddingcontext) {
-    let ret = modding_get_layout(kdmyEngine_obtain(moddingcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__modding_set_halt(moddingcontext, halt) {
-    modding_set_halt(kdmyEngine_obtain(moddingcontext), halt)
-}
-function __js__modding_set_ui_visibility(moddingcontext, visible) {
-    modding_set_ui_visibility(kdmyEngine_obtain(moddingcontext), visible)
-}
-function __js__modding_unlockdirective_create(moddingcontext, name, value) {
-    modding_unlockdirective_create(kdmyEngine_obtain(moddingcontext), kdmyEngine_ptrToString(name), value)
-}
-function __js__modding_unlockdirective_get(moddingcontext, name) {
-    let ret = modding_unlockdirective_get(kdmyEngine_obtain(moddingcontext), kdmyEngine_ptrToString(name));
-    return ret
-}
-function __js__modding_unlockdirective_has(moddingcontext, name) {
-    let ret = modding_unlockdirective_has(kdmyEngine_obtain(moddingcontext), kdmyEngine_ptrToString(name));
+function __js__modding_choose_native_menu_option(modding, name) {
+    let ret = modding_choose_native_menu_option(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name));
     return ret ? 1 : 0
 }
-function __js__modding_unlockdirective_remove(moddingcontext, name) {
-    modding_unlockdirective_remove(kdmyEngine_obtain(moddingcontext), kdmyEngine_ptrToString(name))
+function __js__modding_exit(modding) {
+    modding_exit(kdmyEngine_obtain(modding))
+}
+function __js__modding_get_active_menu(modding) {
+    let ret = modding_get_active_menu(kdmyEngine_obtain(modding));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modding_get_layout(modding) {
+    let ret = modding_get_layout(kdmyEngine_obtain(modding));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modding_get_native_background_music(modding) {
+    let ret = modding_get_native_background_music(kdmyEngine_obtain(modding));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modding_get_native_menu(modding) {
+    let ret = modding_get_native_menu(kdmyEngine_obtain(modding));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modding_set_active_menu(modding, menu) {
+    modding_set_active_menu(kdmyEngine_obtain(modding), kdmyEngine_obtain(menu))
+}
+function __js__modding_set_exit_delay(modding, delay_ms) {
+    modding_set_exit_delay(kdmyEngine_obtain(modding), delay_ms)
+}
+function __js__modding_set_halt(modding, halt) {
+    modding_set_halt(kdmyEngine_obtain(modding), halt)
+}
+function __js__modding_set_menu_in_layout_placeholder(modding, placeholder_name, menu) {
+    modding_set_menu_in_layout_placeholder(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(placeholder_names), kdmyEngine_obtain(menu))
+}
+function __js__modding_set_ui_visibility(modding, visible) {
+    modding_set_ui_visibility(kdmyEngine_obtain(modding), visible)
+}
+function __js__modding_unlockdirective_create(modding, name, value) {
+    modding_unlockdirective_create(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name), value)
+}
+function __js__modding_unlockdirective_get(modding, name) {
+    let ret = modding_unlockdirective_get(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name));
+    return ret
+}
+function __js__modding_unlockdirective_has(modding, name) {
+    let ret = modding_unlockdirective_has(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
+}
+function __js__modding_unlockdirective_remove(modding, name) {
+    modding_unlockdirective_remove(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name))
 }
 function __js__modelholder_create_animsprite(modelholder, animation_name, fallback_static, no_return_null) {
     let ret = modelholder_create_animsprite(kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), fallback_static, no_return_null);
@@ -3006,6 +3219,7 @@ function __js__week_update_bpm(roundcontext, bpm) {
 function __js__week_update_speed(roundcontext, speed) {
     week_update_speed(kdmyEngine_obtain(roundcontext), speed)
 }
+
 
 
 function callRuntimeCallbacks(callbacks) {
@@ -6396,8 +6610,13 @@ var asmLibraryArg = {
     "__asyncjs__dialogue_show_dialog": __asyncjs__dialogue_show_dialog,
     "__asyncjs__dialogue_show_dialog2": __asyncjs__dialogue_show_dialog2,
     "__asyncjs__fs_readfile": __asyncjs__fs_readfile,
+    "__asyncjs__menu_init": __asyncjs__menu_init,
+    "__asyncjs__menumanifest_init": __asyncjs__menumanifest_init,
     "__asyncjs__messagebox_set_image_from_atlas": __asyncjs__messagebox_set_image_from_atlas,
     "__asyncjs__messagebox_set_image_from_texture": __asyncjs__messagebox_set_image_from_texture,
+    "__asyncjs__modding_get_messagebox": __asyncjs__modding_get_messagebox,
+    "__asyncjs__modding_replace_native_background_music": __asyncjs__modding_replace_native_background_music,
+    "__asyncjs__modding_spawn_screen": __asyncjs__modding_spawn_screen,
     "__asyncjs__modelholder_init": __asyncjs__modelholder_init,
     "__asyncjs__modelholder_init2": __asyncjs__modelholder_init2,
     "__asyncjs__songplayer_play": __asyncjs__songplayer_play,
@@ -6585,6 +6804,8 @@ var asmLibraryArg = {
     "__js__healthwatcher_enable_recover": __js__healthwatcher_enable_recover,
     "__js__healthwatcher_has_deads": __js__healthwatcher_has_deads,
     "__js__healthwatcher_reset_opponents": __js__healthwatcher_reset_opponents,
+    "__js__kdmyEngine_create_array": __js__kdmyEngine_create_array,
+    "__js__kdmyEngine_create_object": __js__kdmyEngine_create_object,
     "__js__kdmyEngine_forget_obtained": __js__kdmyEngine_forget_obtained,
     "__js__kdmyEngine_get_language": __js__kdmyEngine_get_language,
     "__js__kdmyEngine_get_locationquery": __js__kdmyEngine_get_locationquery,
@@ -6597,6 +6818,12 @@ var asmLibraryArg = {
     "__js__kdmyEngine_read_prop_object": __js__kdmyEngine_read_prop_object,
     "__js__kdmyEngine_read_prop_string": __js__kdmyEngine_read_prop_string,
     "__js__kdmyEngine_read_window_object": __js__kdmyEngine_read_window_object,
+    "__js__kdmyEngine_write_in_array_boolean": __js__kdmyEngine_write_in_array_boolean,
+    "__js__kdmyEngine_write_in_array_double": __js__kdmyEngine_write_in_array_double,
+    "__js__kdmyEngine_write_in_array_float": __js__kdmyEngine_write_in_array_float,
+    "__js__kdmyEngine_write_in_array_integer": __js__kdmyEngine_write_in_array_integer,
+    "__js__kdmyEngine_write_in_array_object": __js__kdmyEngine_write_in_array_object,
+    "__js__kdmyEngine_write_in_array_string": __js__kdmyEngine_write_in_array_string,
     "__js__kdmyEngine_write_prop_boolean": __js__kdmyEngine_write_prop_boolean,
     "__js__kdmyEngine_write_prop_double": __js__kdmyEngine_write_prop_double,
     "__js__kdmyEngine_write_prop_float": __js__kdmyEngine_write_prop_float,
@@ -6633,6 +6860,23 @@ var asmLibraryArg = {
     "__js__layout_trigger_any": __js__layout_trigger_any,
     "__js__layout_trigger_camera": __js__layout_trigger_camera,
     "__js__layout_trigger_trigger": __js__layout_trigger_trigger,
+    "__js__menu_destroy": __js__menu_destroy,
+    "__js__menu_get_drawable": __js__menu_get_drawable,
+    "__js__menu_get_item_rect": __js__menu_get_item_rect,
+    "__js__menu_get_items_count": __js__menu_get_items_count,
+    "__js__menu_get_selected_index": __js__menu_get_selected_index,
+    "__js__menu_get_selected_item_name": __js__menu_get_selected_item_name,
+    "__js__menu_select_horizontal": __js__menu_select_horizontal,
+    "__js__menu_select_index": __js__menu_select_index,
+    "__js__menu_select_item": __js__menu_select_item,
+    "__js__menu_select_vertical": __js__menu_select_vertical,
+    "__js__menu_set_item_text": __js__menu_set_item_text,
+    "__js__menu_set_item_visibility": __js__menu_set_item_visibility,
+    "__js__menu_set_text_force_case": __js__menu_set_text_force_case,
+    "__js__menu_toggle_choosen": __js__menu_toggle_choosen,
+    "__js__menu_trasition_in": __js__menu_trasition_in,
+    "__js__menu_trasition_out": __js__menu_trasition_out,
+    "__js__menumanifest_destroy": __js__menumanifest_destroy,
     "__js__messagebox_get_modifier": __js__messagebox_get_modifier,
     "__js__messagebox_hide": __js__messagebox_hide,
     "__js__messagebox_hide_image": __js__messagebox_hide_image,
@@ -6651,9 +6895,16 @@ var asmLibraryArg = {
     "__js__messagebox_show_buttons_icons": __js__messagebox_show_buttons_icons,
     "__js__messagebox_use_small_size": __js__messagebox_use_small_size,
     "__js__missnotefx_play_effect": __js__missnotefx_play_effect,
+    "__js__modding_choose_native_menu_option": __js__modding_choose_native_menu_option,
     "__js__modding_exit": __js__modding_exit,
+    "__js__modding_get_active_menu": __js__modding_get_active_menu,
     "__js__modding_get_layout": __js__modding_get_layout,
+    "__js__modding_get_native_background_music": __js__modding_get_native_background_music,
+    "__js__modding_get_native_menu": __js__modding_get_native_menu,
+    "__js__modding_set_active_menu": __js__modding_set_active_menu,
+    "__js__modding_set_exit_delay": __js__modding_set_exit_delay,
     "__js__modding_set_halt": __js__modding_set_halt,
+    "__js__modding_set_menu_in_layout_placeholder": __js__modding_set_menu_in_layout_placeholder,
     "__js__modding_set_ui_visibility": __js__modding_set_ui_visibility,
     "__js__modding_unlockdirective_create": __js__modding_unlockdirective_create,
     "__js__modding_unlockdirective_get": __js__modding_unlockdirective_get,
@@ -7114,6 +7365,21 @@ var _luascript_notify_dialogue_line_ends = ModuleLuaScript["_luascript_notify_di
 };
 var _luascript_notify_after_strum_scroll = ModuleLuaScript["_luascript_notify_after_strum_scroll"] = function () {
     return (_luascript_notify_after_strum_scroll = ModuleLuaScript["_luascript_notify_after_strum_scroll"] = ModuleLuaScript["asm"]["luascript_notify_after_strum_scroll"]).apply(null, arguments)
+};
+var _luascript_notify_modding_menu_option_selected = ModuleLuaScript["_luascript_notify_modding_menu_option_selected"] = function () {
+    return (_luascript_notify_modding_menu_option_selected = ModuleLuaScript["_luascript_notify_modding_menu_option_selected"] = ModuleLuaScript["asm"]["luascript_notify_modding_menu_option_selected"]).apply(null, arguments)
+};
+var _luascript_notify_modding_menu_option_choosen = ModuleLuaScript["_luascript_notify_modding_menu_option_choosen"] = function () {
+    return (_luascript_notify_modding_menu_option_choosen = ModuleLuaScript["_luascript_notify_modding_menu_option_choosen"] = ModuleLuaScript["asm"]["luascript_notify_modding_menu_option_choosen"]).apply(null, arguments)
+};
+var _luascript_notify_modding_back = ModuleLuaScript["_luascript_notify_modding_back"] = function () {
+    return (_luascript_notify_modding_back = ModuleLuaScript["_luascript_notify_modding_back"] = ModuleLuaScript["asm"]["luascript_notify_modding_back"]).apply(null, arguments)
+};
+var _luascript_notify_modding_exit = ModuleLuaScript["_luascript_notify_modding_exit"] = function () {
+    return (_luascript_notify_modding_exit = ModuleLuaScript["_luascript_notify_modding_exit"] = ModuleLuaScript["asm"]["luascript_notify_modding_exit"]).apply(null, arguments)
+};
+var _luascript_notify_modding_init = ModuleLuaScript["_luascript_notify_modding_init"] = function () {
+    return (_luascript_notify_modding_init = ModuleLuaScript["_luascript_notify_modding_init"] = ModuleLuaScript["asm"]["luascript_notify_modding_init"]).apply(null, arguments)
 };
 var _luascript_call_function = ModuleLuaScript["_luascript_call_function"] = function () {
     return (_luascript_call_function = ModuleLuaScript["_luascript_call_function"] = ModuleLuaScript["asm"]["luascript_call_function"]).apply(null, arguments)

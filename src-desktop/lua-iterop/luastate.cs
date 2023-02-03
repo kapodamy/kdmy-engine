@@ -5,6 +5,19 @@ using LuaNativeMethods;
 
 namespace Engine.Externals.LuaInterop {
 
+    public enum LuaType : int {
+        TNONE = -1,
+        TNIL = 0,
+        TBOOLEAN = 1,
+        TLIGHTUSERDATA = 2,
+        TNUMBER = 3,
+        TSTRING = 4,
+        TTABLE = 5,
+        TFUNCTION = 6,
+        TUSERDATA = 7,
+        TTHREAD = 8
+    }
+
     public struct LuaState {
 
         internal unsafe lua_State* L;
@@ -109,7 +122,7 @@ namespace Engine.Externals.LuaInterop {
             }
         }
 
-        public long luaL_optinteger(int arg, int def) {
+        public long luaL_optinteger(int arg, long def) {
             unsafe {
                 long value = LUA.luaL_optinteger(L, arg, def);
                 return value;
@@ -120,6 +133,12 @@ namespace Engine.Externals.LuaInterop {
             unsafe {
                 int value = LUA.lua_toboolean(L, arg);
                 return value != 0;
+            }
+        }
+
+        public double lua_tonumber(int arg) {
+            unsafe {
+                return LUA.lua_tonumber(L, arg);
             }
         }
 
@@ -243,6 +262,48 @@ L_destroyed:
             }
         }
 
+        public LuaType lua_type(int idx) {
+            unsafe {
+                return (LuaType)LUA.lua_type(L, idx);
+            }
+        }
+
+        public LuaType lua_getfield(int idx, string k) {
+            unsafe {
+                return (LuaType)LUA.lua_getfield(L, idx, k);
+            }
+        }
+
+        public void lua_pop(int n) {
+            unsafe {
+                LUA.lua_pop(L, n);
+            }
+        }
+
+        public LuaType lua_gettable(int idx) {
+            unsafe {
+                return (LuaType)LUA.lua_gettable(L, idx);
+            }
+
+        }
+
+        public ulong lua_rawlen(int index) {
+            unsafe {
+                return LUA.lua_rawlen(L, index);
+            }
+        }
+
+        public void lua_createtable(int narr, int nrec) {
+            unsafe {
+                LUA.lua_createtable(L, narr, nrec);
+            }
+        }
+
+        public void lua_settable(int idx) {
+            unsafe {
+                LUA.lua_settable(L, idx);
+            }
+        }
     }
 
 }

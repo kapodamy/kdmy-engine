@@ -4,7 +4,6 @@ using System.Diagnostics;
 using CsharpWrapper;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
-using Engine.Game.Gameplay;
 using Engine.Platform;
 
 namespace Engine.Externals.LuaScriptInterop {
@@ -96,6 +95,8 @@ namespace Engine.Externals.LuaScriptInterop {
                 ExportsStrums.script_strums_register(lua);
                 ExportsWeek.script_week_register(lua);
             } else {
+                ExportsMenuManifest.script_menumanifest_register(lua);
+                ExportsMenu.script_menu_register(lua);
                 ExportsModding.script_modding_register(lua);
             }
 
@@ -446,6 +447,51 @@ namespace Engine.Externals.LuaScriptInterop {
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
             lua.CallPushedGlobalFunction(0);
+        }
+
+        public void notify_modding_menu_option_selected(object menu, int index, string name) {
+            const string FUNCTION = "f_modding_menu_option_selected";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            L.CreateUserdata(ExportsMenu.MENU, menu);
+            L.lua_pushinteger(index);
+            L.lua_pushstring(name);
+
+            lua.CallPushedGlobalFunction(3);
+        }
+
+        public bool notify_modding_menu_option_choosen(object menu, int index, string name) {
+            const string FUNCTION = "f_modding_menu_option_choosen";
+            if (lua.PushGlobalFunction(FUNCTION)) return false;
+
+            L.CreateUserdata(ExportsMenu.MENU, menu);
+            L.lua_pushinteger(index);
+            L.lua_pushstring(name);
+
+            return (bool)lua.CallPushedGlobalFunctionWithReturn(3);
+        }
+
+        public bool notify_modding_back() {
+            const string FUNCTION = "f_modding_back";
+            if (lua.PushGlobalFunction(FUNCTION)) return false;
+
+            return (bool)lua.CallPushedGlobalFunctionWithReturn(0);
+        }
+
+        public object notify_modding_exit() {
+            const string FUNCTION = "f_modding_exit";
+            if (lua.PushGlobalFunction(FUNCTION)) return false;
+
+            return lua.CallPushedGlobalFunctionWithReturn(0);
+        }
+
+        public void notify_modding_init(object value) {
+            const string FUNCTION = "f_modding_init";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            LuascriptHelpers.PushBasicValue(lua.LuaStateHandle, value);
+
+            lua.CallPushedGlobalFunction(1);
         }
 
     }

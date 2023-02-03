@@ -1,4 +1,5 @@
-﻿using Engine.Animation;
+﻿using System;
+using Engine.Animation;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
 using Engine.Platform;
@@ -160,6 +161,42 @@ namespace Engine.Externals.LuaScriptInterop {
                 default:
                     return "none";
             }
+        }
+
+        public static object ToBasicValue(LuaState L, int idx) {
+            object value = null;
+            switch (L.lua_type(-1)) {
+                case LuaType.TBOOLEAN:
+                    value = L.lua_toboolean(-1);
+                    break;
+                case LuaType.TNUMBER:
+                    value = L.lua_tonumber(-1);
+                    break;
+                case LuaType.TSTRING:
+                    value = L.lua_tostring(-1);
+                    break;
+                case LuaType.TNIL:
+                case LuaType.TNONE:
+                    break;
+                default:
+                    Console.Error.WriteLine("[ERROR] luascripthelpers_to_basic_value() invalid value at idx " + idx);
+                    break;
+            }
+
+            return value;
+        }
+
+        public static void PushBasicValue(LuaState L, object value) {
+            if (value is string)
+                L.lua_pushstring((string)value);
+            else if (value is long)
+                L.lua_pushnumber((long)value);
+            else if (value is double)
+                L.lua_pushnumber((double)value);
+            else if (value is bool)
+                L.lua_pushboolean((bool)value);
+            else
+                L.lua_pushnil();
         }
 
     }

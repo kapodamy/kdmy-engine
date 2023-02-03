@@ -253,6 +253,44 @@ namespace Engine.Externals.LuaInterop {
             return 1;
         }
 
+        public object CallPushedGlobalFunctionWithReturn(int arguments_count) {
+            unsafe {
+                string fn_name = this.last_pushed_function_name;
+                this.last_pushed_function_name = null;
+
+                if (LuaInteropHelpers.luascript_pcallk(this.L, arguments_count, 1) == 0) {
+
+                    object value = null;
+                    switch (LUA.lua_type(this.L, -1)) {
+                        case LUA.TBOOLEAN:
+                            value = LUA.lua_toboolean(this.L, -1);
+                            break;
+                        case LUA.TNUMBER:
+                            value = LUA.lua_tonumber(this.L, -1);
+                            break;
+                        case LUA.TSTRING:
+                            value = LUA.lua_tostring(this.L, -1);
+                            break;
+                        case LUA.TNIL:
+                        case LUA.TNONE:
+                            break;
+                        default:
+                            Console.Error.WriteLine("[ERROR] ManagedLuaState::CallPushedGlobalFunctionWithReturn() unknown lua return type");
+                            break;
+                    }
+
+                    return value;
+                }
+
+                string error_message = LUA.lua_tostring(L, -1);
+                Console.Error.WriteLine("lua_imported_fn() call to '{0}' failed.\n{1}\n", fn_name, error_message);
+                //Console.Error.Flush();
+                LUA.lua_pop(this.L, 1);
+            }
+
+            return null;
+        }
+
         public void DropSharedObject(object obj) {
             unsafe {
                 void* obj_ptr = this.handle_references.GetReference(obj);

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Engine.Animation;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Font;
 using Engine.Game.Gameplay.Helpers;
 using Engine.Image;
@@ -221,6 +222,8 @@ namespace Engine.Game.Common {
         }
 
         public void Destroy() {
+            Luascript.DropShared(this);
+
             if (this.fontholder != null) this.fontholder.Destroy();
 
             for (int i = 0 ; i < this.items_size ; i++) {
@@ -447,13 +450,13 @@ namespace Engine.Game.Common {
         }
 
 
-        public bool GetSelectedItemRect(out float x, out float y, out float width, out float height) {
-            if (this.index_selected < 0 || this.index_selected >= this.items_size) {
+        public bool GetItemRect(int index, out float x, out float y, out float width, out float height) {
+            if (index < 0 || index >= this.items_size) {
                 x = y = width = height = Single.NaN;
                 return false;
             }
 
-            MenuItem item = this.items[this.index_selected];
+            MenuItem item = this.items[index];
             if (item.is_text) {
                 item.vertex.GetDrawLocation(out x, out y);
                 item.vertex.GetDrawSize(out width, out height);
@@ -468,6 +471,10 @@ namespace Engine.Game.Common {
                 x += this.render_distance;
 
             return true;
+        }
+
+        public bool GetSelectedItemRect(out float x, out float y, out float width, out float height) {
+            return GetItemRect(this.index_selected, out x, out y, out width, out height);
         }
 
 
