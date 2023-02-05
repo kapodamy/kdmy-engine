@@ -72,7 +72,11 @@ EM_JS_PRFX(const char*, menu_get_selected_item_name, (Menu menu), {
     return kdmyEngine_stringToPtr(ret);
 });
 EM_JS_PRFX(void, menu_set_text_force_case, (Menu menu, TextSpriteForceCase none_or_lowercase_or_uppercase), {
-    menu_set_text_force_case(kdmyEngine_obtain(menu), kdmyEngine_obtain(none_or_lowercase_or_uppercase));
+    menu_set_text_force_case(kdmyEngine_obtain(menu), none_or_lowercase_or_uppercase);
+});
+EM_JS_PRFX(bool, menu_has_item, (Menu menu, const char* name), {
+    let ret = menu_has_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0;
 });
 
 static void menumanifest_destroy_JS(MenuManifest* menumanifest) {
@@ -190,6 +194,7 @@ static MenuManifest menumanifest_as_object_JS(MenuManifest mm) {
         kdmy_write_prop_string(items, "anim_out", mm->items[i].anim_out);
         kdmy_write_prop_float(items, "gap", mm->items[i].gap);
         kdmy_write_prop_boolean(items, "hidden", mm->items[i].hidden);
+        kdmy_write_prop_string(items, "description", mm->items[i].description);
 
         kdmy_forget_obtained(item);
     }
@@ -211,7 +216,7 @@ static lua_Integer GET_FIELD_INTEGER(lua_State* L, int idx, const char* name, lu
 
 static char* GET_FIELD_STRING(lua_State* L, int idx, const char* name, const char* def_value) {
     lua_getfield(L, idx, name);
-    char* ret = strdup(luaL_optstring(L, lua_gettop(L), def_value));
+    char* ret = luascript_get_string_copy(L, lua_gettop(L), def_value);
     lua_pop(L, 1);
     return ret;
 }
@@ -363,6 +368,7 @@ static MenuManifest table_to_menumanifest(lua_State* L, int idx) {
                 mm->items[i].anim_out = GET_FIELD_STRING(L, idx4, "anim_out", NULL);
                 mm->items[i].gap = (float)GET_FIELD_NUMBER(L, idx4, "gap", NAN_DOUBLE);
                 mm->items[i].hidden = GET_FIELD_BOOLEAN(L, idx4, "hidden", false);
+                mm->items[i].description = GET_FIELD_STRING(L, idx4, "description", NULL);
 
                 lua_pop(L, 1);
             }
@@ -577,6 +583,16 @@ static int script_menu_set_text_force_case(lua_State* L) {
     return 0;
 }
 
+static int script_menu_has_item(lua_State* L) {
+    Menu menu = luascript_read_userdata(L, MENU);
+    const char* name = luaL_optstring(L, 2, NULL);
+
+    bool ret = menu_has_item(menu, name);
+
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
 
 
 
@@ -598,6 +614,7 @@ static const luaL_Reg MENU_FUNCTIONS[] = {
     { "get_item_rect", script_menu_get_item_rect },
     { "get_selected_item_name", script_menu_get_selected_item_name },
     { "set_text_force_case", script_menu_set_text_force_case },
+    { "has_item", script_menu_has_item },
     { NULL, NULL }
 };
 

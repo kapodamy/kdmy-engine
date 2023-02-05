@@ -2897,6 +2897,16 @@ namespace Engine.Game.Gameplay {
             return FunkinSave.ContainsUnlockDirective(name);
         }
 
+        public static uint StorageGet(RoundContext roundcontext, string name, out byte[] data) {
+            return FunkinSave.StorageGet(roundcontext.initparams.weekinfo.name, name, out data);
+        }
+
+        public static bool StorageSet(RoundContext roundcontext, string name, byte[] data, uint data_size) {
+            bool ret = FunkinSave.StorageSet(roundcontext.initparams.weekinfo.name, name, data, data_size);
+            if (ret) roundcontext.has_directive_changes = true;
+            return ret;
+        }
+
         public static SongPlayer GetSongplayer(RoundContext roundcontext) {
             return roundcontext.songplayer;
         }

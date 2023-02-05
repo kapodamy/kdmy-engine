@@ -371,6 +371,43 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_week_storage_get_blob(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            string name = L.luaL_optstring(1, null);
+
+            byte[] data;
+            uint ret = Week.StorageGet(roundcontext, name, out data);
+
+            if (data == null)
+                L.lua_pushnil();
+            else
+                L.lua_pushlstring(data, (int)ret);
+
+            return 1;
+        }
+
+        static int script_week_storage_set_blob(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            string name = L.luaL_checkstring(1);
+            byte[] data;
+            uint data_size;
+
+            if (L.lua_isnil(2)) {
+                data = null;
+                data_size = 0;
+            } else {
+                data = L.luaL_checklstring(2);
+                data_size = data == null ? 0 : (uint)data.Length;
+            }
+
+            bool ret = Week.StorageSet(roundcontext, name, data, data_size);
+
+            L.lua_pushboolean(ret);
+            return 1;
+        }
+
 
 
         static readonly LuaTableFunction[] EXPORTS_FUNCTION = {
@@ -412,6 +449,8 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("week_unlockdirective_create", script_week_unlockdirective_create),
             new LuaTableFunction("week_unlockdirective_get", script_week_unlockdirective_get),
             new LuaTableFunction("week_unlockdirective_remove", script_week_unlockdirective_remove),
+            new LuaTableFunction("week_storage_get_blob", script_week_storage_get_blob),
+            new LuaTableFunction("week_storage_set_blob", script_week_storage_set_blob),
             new LuaTableFunction(null, null)
         };
 

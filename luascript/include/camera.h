@@ -10,6 +10,11 @@
 #include "pvrctx.h"
 #include "animsprite.h"
 
+// foward declaration
+struct _Layout_t;
+typedef struct _Layout_t Layout_t;
+typedef Layout_t* Layout;
+
 typedef struct _Camera_t {
     int dummy;
 } Camera_t;

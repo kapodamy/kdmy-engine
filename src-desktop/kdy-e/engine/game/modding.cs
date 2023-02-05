@@ -17,11 +17,13 @@ namespace Engine.Game {
     }
 
     public class Modding {
+
+        public const string NATIVE_MENU_SCREEN = "__NATIVE_SCREEN__";
+
         public readonly WeekScript script;
         public readonly Layout layout;
         public bool has_exit;
         public bool has_halt;
-        public bool ui_visible;
         public bool has_funkinsave_changes;
         public Menu native_menu;
         public Menu active_menu;
@@ -38,14 +40,13 @@ namespace Engine.Game {
             this.layout = layout;
             this.has_exit = false;
             this.has_halt = false;
-            this.ui_visible = true;
             this.has_funkinsave_changes = false;
 
             this.native_menu = null;
             this.active_menu = null;
             this.callback_option = null;
             this.exit_delay_ms = 0.0;
-            this.custom_menu_gamepad_delay = 0.0;
+            this.custom_menu_gamepad_delay = 200.0;
             this.custom_menu_active_gamepad_delay = 0.0;
             this.last_pressed = GamepadButtons.NOTHING;
             this.messagebox = null;
@@ -75,10 +76,6 @@ namespace Engine.Game {
         }
 
 
-        public void SetUiVisibility(bool visible) {
-            this.ui_visible = !!visible;
-        }
-
         public void UnlockdirectiveCreate(string name, double value) {
             this.has_funkinsave_changes = true;
             FunkinSave.CreateUnlockDirective(name, value);
@@ -98,6 +95,17 @@ namespace Engine.Game {
             this.has_funkinsave_changes = true;
             FunkinSave.DeleteUnlockDirective(name);
         }
+
+        public bool StorageSet(string week_name, string name, byte[] data, uint data_size) {
+            bool ret = FunkinSave.StorageSet(week_name, name, data, data_size);
+            if (ret) this.has_funkinsave_changes = true;
+            return ret;
+        }
+
+        public uint StorageGet(string week_name, string name, out byte[] data) {
+            return FunkinSave.StorageGet(week_name, name, out data);
+        }
+
 
 
         public bool ChooseNativeMenuOption(string name) {
@@ -155,7 +163,7 @@ namespace Engine.Game {
 
 
         public ModdingHelperResult HelperHandleCustomMenu(Gamepad gamepad, float elapsed) {
-            Luascript script = this.script.GetLuaScript();
+            Luascript script = this.script?.GetLuaScript();
             GamepadButtons pressed = gamepad.GetPressed();
 
             if (script != null) {
@@ -168,7 +176,7 @@ namespace Engine.Game {
             }
 
             Menu menu = this.active_menu;
-            if (this.has_halt || menu == null) return ModdingHelperResult.CONTINUE;
+            if (this.has_halt || menu == null || menu == this.native_menu) return ModdingHelperResult.CONTINUE;
 
             if (this.custom_menu_active_gamepad_delay > 0f) {
                 this.custom_menu_active_gamepad_delay -= elapsed;
@@ -242,6 +250,25 @@ namespace Engine.Game {
             return script.notify_modding_menu_option_choosen(this.active_menu, index, name);
         }
 
+        public bool HelperNotifyOption2(bool selected_or_choosen, Menu menu, int index, string name) {
+            if (this.script == null) return false;
+
+            Luascript script = this.script.GetLuaScript();
+
+            if (selected_or_choosen) {
+                script.notify_modding_menu_option_selected(menu, index, name);
+                return false;
+            }
+
+            return script.notify_modding_menu_option_choosen(menu, index, name);
+        }
+
+        public void HelperNotifyFrame(float elapsed, double song_timestamp) {
+            if (this.script == null) return;
+            if (song_timestamp >= 0.0) this.script.NotifyTimerSong(song_timestamp);
+            this.script.NotifyFrame(elapsed);
+        }
+
         public bool HelperNotifyBack() {
             if (this.script == null) return false;
             return this.script.GetLuaScript().notify_modding_back();
@@ -252,9 +279,19 @@ namespace Engine.Game {
             return this.script.GetLuaScript().notify_modding_exit();
         }
 
+        public void HelperNotifyExit2() {
+            object ret = HelperNotifyExit();
+            //if (ret is string) free(ret);
+        }
+
         public void HelperNotifyInit(object arg) {
             if (this.script == null) return;
             this.script.GetLuaScript().notify_modding_init(arg);
+        }
+
+        public void HelperNotifyModdingEvent(string evt) {
+            if (this.script == null) return;
+            this.script.GetLuaScript().notify_modding_event(evt);
         }
 
         public void SetMenuInLayoutPlaceholder(string placeholder_name, Menu menu) {
@@ -263,6 +300,73 @@ namespace Engine.Game {
             if (placeholder == null) return;
             placeholder.vertex = menu == null ? null : menu.GetDrawable();
         }
+
+
+        public WeekInfo[] GetLoadedWeeks(out int size) {
+            size = Funkin.weeks_array.size;
+            return Funkin.weeks_array.array;
+        }
+
+        public int LaunchWeek(string week_name, string difficult, bool alt_tracks, string bf, string gf, string gameplay_manifest, int track_idx) {
+            WeekInfo gameplay_weekinfo = null;
+
+            for (int i = 0 ; i < Funkin.weeks_array.size ; i++) {
+                if (Funkin.weeks_array.array[i].name == week_name) {
+                    gameplay_weekinfo = Funkin.weeks_array.array[i];
+                }
+            }
+
+            if (gameplay_weekinfo == null) return -1;
+
+            FunkinSave.SetLastPlayed(gameplay_weekinfo.name, difficult);
+
+            if (String.IsNullOrEmpty(bf)) bf = FreeplayMenu.HelperGetDefaultCharacterManifest(true);
+            if (String.IsNullOrEmpty(gf)) gf = FreeplayMenu.HelperGetDefaultCharacterManifest(false);
+
+            // (C# only) before run check if necessary preload files
+            int preload_id = PreloadCache.AddFileList(
+                WeekEnumerator.GetAsset(gameplay_weekinfo, PreloadCache.PRELOAD_FILENAME)
+            );
+
+            int week_result = Week.Main(
+                gameplay_weekinfo,
+                alt_tracks,
+                difficult,
+                bf,
+                gf,
+                gameplay_manifest,
+                track_idx
+            );
+
+            // forget all preloaded files
+            PreloadCache.ClearById(preload_id);
+            return week_result;
+        }
+
+        public void LaunchCredits() {
+            Credits.Main();
+        }
+
+        public bool LaunchStartScreen() {
+            return StartScreen.Main();
+        }
+
+        public bool LaunchMainMenu() {
+            return MainMenu.Main();
+        }
+
+        public void LaunchSettings() {
+            SettingsMenu.Main();
+        }
+
+        public void LaunchFreeplay() {
+            FreeplayMenu.Main();
+        }
+
+        public int LaunchWeekSelector() {
+            return WeekSelector.Main();
+        }
+
 
     }
 

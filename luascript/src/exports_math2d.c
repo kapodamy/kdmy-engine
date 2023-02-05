@@ -75,11 +75,13 @@ void script_math2d_register(lua_State* L) {
         lua_setglobal(L, EXPORTS_FUNCTION[i].name);
     }
 
-    luaL_dostring(L, 
+    int ret = luaL_dostring(L, 
         "function math2d_random_boolean(chance)\n"
         "local value = math.random(0, 100)\n"
         "return value < chance\n"
         "end\n"
     );
+
+    assert(ret == LUA_OK);
 }
 

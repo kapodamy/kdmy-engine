@@ -65,6 +65,7 @@ namespace Engine.Game {
         };
 
         private const byte DIRECTIVE_TYPE_UNLOCK = 0x00;
+        private const ushort MAX_INDEXED_NAME = 0xFFFF - 1;
 
 
         public static uint maple_port;
@@ -585,6 +586,61 @@ namespace Engine.Game {
         }
 
 
+        public static bool StorageSet(string week_name, string name, byte[] data, uint data_size) {
+            int week_id;
+
+            if (week_name == null) {
+                week_id = FunkinSave.MAX_INDEXED_NAME;
+            } else {
+                week_id = FunkinSave.InternalNameIndex(FunkinSave.weeks_names, week_name);
+                if (week_id < 0) return false;
+            }
+
+            Storage storage = null;
+
+            foreach (Storage s in FunkinSave.storages) {
+                if (s.week_id == week_id && s.name == name) {
+                    storage = s;
+                    break;
+                }
+            }
+
+            if (data_size < 1) {
+                if (storage != null) {
+                    FunkinSave.storages.RemoveItem(storage);
+                    //free(storage.data);
+                    //free(storage);
+                }
+                return true;
+            }
+
+            if (storage == null) storage = new Storage();
+
+            data = CloneUtils.CloneArray(data, (int)data_size);
+
+            //free(storage.data);
+            storage.data = data;
+            storage.data_size = data_size;
+            storage.week_id = (ushort)week_id;
+
+            return true;
+        }
+
+        public static uint StorageGet(string week_name, string name, out byte[] data) {
+            int week_id = week_name == null ? FunkinSave.MAX_INDEXED_NAME : FunkinSave.weeks_names.IndexOf(name);
+
+            foreach (Storage storage in FunkinSave.storages) {
+                if (storage.week_id == week_id && storage.name == name) {
+                    data = storage.data;
+                    return storage.data_size;
+                }
+            }
+
+            data = null;
+            return 0;
+        }
+
+
         public static bool HasSavedataInVMU(uint port, uint unit) {
             maple_device_t dev = maple.enum_dev(port, unit);
             if (dev == null) return false;
@@ -700,9 +756,14 @@ namespace Engine.Game {
         }
 
         private static int InternalNameIndex(LinkedList<string> linkedlist, string name) {
+            if (name == null) return -1;
             int index = linkedlist.IndexOf(name);
             if (index < 0) {
                 index = linkedlist.Count();
+                if (index >= FunkinSave.MAX_INDEXED_NAME) {
+                    Console.Error.WriteLine("funkinsave_internal_name_index() failed, ran out of indices");
+                    return -1;
+                }
                 linkedlist.AddItem(name);
             }
             return index;

@@ -6,6 +6,7 @@ using Engine.Game.Gameplay;
 using Engine.Game.Gameplay.Helpers;
 using Engine.Image;
 using Engine.Platform;
+using Engine.Utils;
 
 namespace Engine.Game {
 
@@ -146,12 +147,19 @@ namespace Engine.Game {
         private float gap;
         private float invdimmen;
         private bool is_vertical;
+        private bool is_inverse;
         private DDRKeysFIFO ddrkeys_fifo;
         private Drawable drawable;
         private AnimSprite drawable_animation;
         private Modifier modifier;
         private PlayerStats playerstats;
         private WeekScript weekscript;
+        private double decorators_scroll_velocity;
+        private double decorators_last_song_timestamp;
+        private ArrayList<Decorator> decorators;
+        private float decorators_alpha;
+        private double decorators_offset_milliseconds;
+
 
 
         public Strums(float x, float y, float z, float dimmen, float invdimmen, float length, float gap, int player_id, bool is_vertical, bool keep_marker_scale, DistributionStrum[] strumsdefs, int strumsdefs_size) {
@@ -168,11 +176,13 @@ namespace Engine.Game {
             this.drawable_animation = null;
             this.modifier = null;
 
-
             this.drawable = new Drawable(z, this, this);
             this.modifier = this.drawable.GetModifier();
             this.modifier.x = x;
             this.modifier.x = y;
+
+            this.is_vertical = is_vertical;
+            this.is_inverse = false;
 
             float space = gap + invdimmen;
 
@@ -199,7 +209,10 @@ namespace Engine.Game {
                 this.modifier.height = invlength;
             }
 
-
+            this.decorators_scroll_velocity = 1.0;
+            this.decorators = new ArrayList<Decorator>(1);
+            this.decorators_alpha = 1f;
+            this.decorators_offset_milliseconds = 0.0;
         }
 
         public void Destroy() {
@@ -211,10 +224,13 @@ namespace Engine.Game {
             this.drawable.Destroy();
             if (this.drawable_animation != null) this.drawable_animation.Destroy();
 
+            foreach (Decorator decorator in this.decorators)
+                decorator.statesprite.Destroy();
+            decorators.Destroy(false);
+
             //free(this.lines);
             //free(this.sick_effects);
             //free(this);
-
         }
 
         public void SetParams(DDRKeymon ddrkeymon, PlayerStats playerstats, WeekScript weekscript) {
@@ -246,6 +262,8 @@ namespace Engine.Game {
         public void SetScrollDirection(ScrollDirection direction) {
             bool is_vertical = direction == ScrollDirection.UPSCROLL || direction == ScrollDirection.DOWNSCROLL;
 
+            this.is_inverse = direction == ScrollDirection.DOWNSCROLL || direction == ScrollDirection.RIGHTSCROLL;
+
             if (is_vertical != this.is_vertical) {
                 float temp = this.modifier.width;
                 this.modifier.width = this.modifier.height;
@@ -274,9 +292,14 @@ namespace Engine.Game {
                 this.lines[i].Reset(scroll_speed, state_name);
             }
             this.drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
+            this.DecoratorsSetScrollSpeed(scroll_speed);
+            this.DecoratorsSetVisible(-1.0, true);
+            this.decorators_last_song_timestamp = 0.0;
         }
 
         public int ScrollFull(double song_timestamp) {
+            this.decorators_last_song_timestamp = song_timestamp;
+
             if (this.ddrkeys_fifo == null) {
                 // this never should happen, use ScrollAuto() instead
                 for (int i = 0 ; i < this.size ; i++)
@@ -322,6 +345,8 @@ namespace Engine.Game {
                 // drop all key events, they are useless
                 this.ddrkeys_fifo.available = 0;
             }
+
+            this.decorators_last_song_timestamp = song_timestamp;
         }
 
         public void ForceKeyRelease() {
@@ -340,6 +365,11 @@ namespace Engine.Game {
 
             for (int i = 0 ; i < this.size ; i++)
                 res += this.lines[i].Animate(elapsed);
+
+            Decorator[] decorators_array = this.decorators.PeekArray();
+            int decorators_size = this.decorators.Size();
+            for (int i = 0 ; i < decorators_size ; i++)
+                res += decorators_array[i].statesprite.Animate(elapsed);
 
             return res;
         }
@@ -360,6 +390,45 @@ namespace Engine.Game {
                     this.sick_effects[i].Draw(pvrctx);
             }
 
+            pvrctx.Save();
+            pvrctx.SetGlobalAlpha(this.decorators_alpha);
+
+            int decorators_size = this.decorators.Size();
+            Decorator[] decorators_array = this.decorators.PeekArray();
+            double song_timestamp = this.decorators_last_song_timestamp + this.decorators_offset_milliseconds;
+            double draw_x = this.modifier.x;
+            double draw_y = this.modifier.y;
+
+            //
+            // Draw all decorators and let the PVRContext decide what is visible, because
+            // decorators can have different dimmensions. The marker duration and scroll window
+            // does not apply here.
+            //
+            for (int i = 0 ; i < decorators_size ; i++) {
+                double decorator_timestamp = decorators_array[i].timestamp;
+                double scroll_offset;
+                double x = draw_x;
+                double y = draw_y;
+
+                if (this.is_inverse) {
+                    scroll_offset = song_timestamp - decorator_timestamp;
+                } else {
+                    scroll_offset = decorator_timestamp - song_timestamp;
+                }
+
+                scroll_offset *= this.decorators_scroll_velocity;
+
+                if (this.is_vertical)
+                    y += scroll_offset;
+                else
+                    x += scroll_offset;
+
+                StateSprite statesprite = decorators_array[i].statesprite;
+                statesprite.SetDrawLocation((float)x, (float)y);
+                statesprite.Draw(pvrctx);
+            }
+
+            pvrctx.Restore();
             pvrctx.Restore();
         }
 
@@ -394,6 +463,7 @@ namespace Engine.Game {
         public void SetDrawOffset(double offset_milliseconds) {
             for (int i = 0 ; i < this.size ; i++)
                 this.lines[i].SetDrawOffset(offset_milliseconds);
+            this.decorators_offset_milliseconds = offset_milliseconds;
         }
 
 
@@ -471,6 +541,11 @@ namespace Engine.Game {
 
             for (int i = 0 ; i < this.size ; i++)
                 this.lines[i].AnimationRestart();
+
+            Decorator[] decorators_array = this.decorators.PeekArray();
+            int decorators_size = this.decorators.Size();
+            for (int i = 0 ; i < decorators_size ; i++)
+                decorators_array[i].statesprite.AnimationRestart();
         }
 
         public void AnimationEnd() {
@@ -481,6 +556,67 @@ namespace Engine.Game {
 
             for (int i = 0 ; i < this.size ; i++)
                 this.lines[i].AnimationEnd();
+
+            Decorator[] decorators_array = this.decorators.PeekArray();
+            int decorators_size = this.decorators.Size();
+            for (int i = 0 ; i < decorators_size ; i++)
+                decorators_array[i].statesprite.AnimationEnd();
+        }
+
+
+        public int DecoratorsGetCount() {
+            return this.decorators.Size();
+        }
+
+        public bool DecoratorsAdd(ModelHolder modelholder, string animation_name, double timestamp) {
+            return DecoratorsAdd2(modelholder, animation_name, timestamp, 0, this.size - 1);
+        }
+
+        public bool DecoratorsAdd2(ModelHolder modelholder, string animation_name, double timestamp, int from_strum_index, int to_strum_index) {
+            if (modelholder == null || timestamp < 0 || Double.IsNaN(timestamp)) return false;
+            if (from_strum_index < 0 || to_strum_index >= this.size || to_strum_index < from_strum_index) return false;
+
+            StateSprite statesprite = StateSprite.InitFromVertexColor(modelholder.GetVertexColor());
+            StateSpriteState state = statesprite.StateAdd(modelholder, animation_name, null);
+
+            if (state == null) {
+                statesprite.Destroy();
+                return false;
+            }
+
+            InternalCalcDecoratorBounds(state, from_strum_index, to_strum_index);
+            statesprite.StateApply(state);
+
+            Decorator decorator = new Decorator() {
+                timestamp = timestamp,
+                statesprite = statesprite,
+                to_strum_index = to_strum_index,
+                from_strum_index = from_strum_index,
+                is_visible = true
+            };
+
+            this.decorators.Add(decorator);
+
+            return true;
+        }
+
+        public void DecoratorsSetScrollSpeed(double speed) {
+            this.decorators_scroll_velocity = Funkin.CHART_SCROLL_VELOCITY * speed;
+
+            // Use half of the scolling speed if the screen aspect ratio is 4:3 (dreamcast)
+            if (!PVRContext.global_context.IsWidescreen()) this.decorators_scroll_velocity *= 0.5;
+        }
+
+        public void DecoratorsSetAlpha(float alpha) {
+            this.decorators_alpha = alpha;
+        }
+
+        public void DecoratorsSetVisible(double decorator_timestamp, bool visible) {
+            foreach (Decorator decorator in this.decorators) {
+                if (decorator_timestamp < 0.0 || decorator.timestamp == decorator_timestamp) {
+                    decorator.is_visible = visible;
+                }
+            }
         }
 
 
@@ -490,6 +626,7 @@ namespace Engine.Game {
             this.modifier.x = x;
             this.modifier.y = y;
             this.is_vertical = is_vertical;
+            this.is_inverse = false;
             this.gap = gap;
             this.invdimmen = invdimmen;
 
@@ -523,8 +660,57 @@ namespace Engine.Game {
                 if (this.is_vertical) x += space;
                 else y += space;
             }
+
+            foreach (Decorator decorator in this.decorators) {
+                StateSpriteState state = decorator.statesprite.StateGet();
+                InternalCalcDecoratorBounds(state, decorator.from_strum_index, decorator.to_strum_index);
+                decorator.statesprite.StateApply(state);
+            }
         }
 
+        private void InternalCalcDecoratorBounds(StateSpriteState state, int from_strum_index, int to_strum_index) {
+            float offset_start = (this.gap + this.invdimmen) * from_strum_index;
+            float offset_end = (this.gap + this.invdimmen) * to_strum_index;
+            float length = offset_end - offset_start;
+
+            float x, y;
+            float width, height;
+            Align horizontal, vertical;
+
+            if (this.is_vertical) {
+                x = offset_start;
+                y = 0f;
+                width = length;
+                height = -1f;
+                horizontal = Align.CENTER;
+                vertical = this.is_inverse ? Align.END : Align.START;
+            } else {
+                x = 0f;
+                y = offset_start;
+                width = -1;
+                height = length;
+                horizontal = this.is_inverse ? Align.END : Align.START;
+                vertical = Align.CENTER;
+            }
+
+            if (state.texture != null) {
+                ImgUtils.CalcRectangleInStateSpriteState(x, y, width, height, horizontal, vertical, state);
+            } else {
+                state.offset_x = x;
+                state.offset_y = y;
+                state.draw_width = this.is_vertical ? length : this.invdimmen;
+                state.draw_height = this.is_vertical ? this.invdimmen : length;
+            }
+        }
+
+
+        private class Decorator {
+            public double timestamp;
+            public StateSprite statesprite;
+            public int from_strum_index;
+            public int to_strum_index;
+            public bool is_visible;
+        }
     }
 
 }

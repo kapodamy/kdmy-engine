@@ -231,7 +231,7 @@ declare namespace KDMYEngine {
     /**
      * @summary (modding context only) Called when the script is loaded from a previous screen. The parameters
      * passed are the arguments of the call to {@link modding_spawn_screen} if applicable.
-     * @param arg values passed by {@link modding_spawn_screen}, is null if called by the engine.
+     * @param arg values passed by {@link modding_spawn_screen}, is "__NATIVE_SCREEN__" if called by the engine.
      */
     export function f_modding_init(arg: BasicValue): void;
     

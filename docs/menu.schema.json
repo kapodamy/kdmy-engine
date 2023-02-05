@@ -72,7 +72,11 @@
                 "hidden": {
                     "type": "boolean",
                     "default": false
-                }
+                },
+                "description": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
             },
             "required": [
                 "name",

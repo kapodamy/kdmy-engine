@@ -31,7 +31,7 @@ float tweenkeyframe_peek_value_by_index(TweenKeyframe tweenkeyframe, int32_t ind
 }
 bool tweenkeyframe_peek_entry_by_index(TweenKeyframe tweenkeyframe, int32_t index, int32_t* out_id,  float* out_value) {
     *out_id = 123;
-    *out_value = 45.6;
+    *out_value = 45.6f;
     print_stub("tweenkeyframe_peek_entry_by_index", "tweenkeyframe=%p index=%i out_id=%p out_value=%p", tweenkeyframe, index, out_id, out_value);
     return 0;
 }

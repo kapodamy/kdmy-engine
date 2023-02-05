@@ -304,6 +304,20 @@ L_destroyed:
                 LUA.lua_settable(L, idx);
             }
         }
+
+        public byte[] luaL_checklstring(int idx) {
+            unsafe {
+                IntPtr length;
+                char* ptr = LUA.luaL_checklstring(L, idx, out length);
+
+                if (ptr == null) return null;
+
+                byte[] buffer = new byte[(uint)length];
+                Marshal.Copy((IntPtr)ptr, buffer, 0, buffer.Length);
+
+                return buffer;
+            }
+        }
     }
 
 }

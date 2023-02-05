@@ -670,34 +670,34 @@ namespace Engine {
             return count;
         }
 
-        public int ContainsAction(string action_name, string item_name) {
-            if (item_name == null) throw new ArgumentNullException("entry_name", "entry_name is required");
+        public int ContainsAction(string target_name, string action_name) {
+            if (action_name == null) throw new ArgumentNullException("action_name", "action_name is required");
 
             int count = 0;
 
             for (int i = 0 ; i < this.vertex_list_size ; i++) {
-                if (this.vertex_list[i].name != item_name) continue;
+                if (this.vertex_list[i].name != target_name) continue;
                 for (int j = 0 ; j < this.vertex_list[i].actions_size ; j++) {
                     if (this.vertex_list[i].actions[j].name == action_name) count++;
                 }
             }
 
             for (int i = 0 ; i < this.group_list_size ; i++) {
-                if (this.group_list[i].name != item_name) continue;
+                if (this.group_list[i].name != target_name) continue;
                 for (int j = 0 ; j < this.group_list[i].actions_size ; j++) {
                     if (this.group_list[i].actions[j].name == action_name) count++;
                 }
             }
 
             for (int i = 0 ; i < this.sound_list_size ; i++) {
-                if (this.sound_list[i].name != item_name) continue;
+                if (this.sound_list[i].name != target_name) continue;
                 for (int j = 0 ; j < this.sound_list[i].actions_size ; j++) {
                     if (this.sound_list[i].actions[j].name == action_name) count++;
                 }
             }
 
             for (int i = 0 ; i < this.video_list_size ; i++) {
-                if (this.video_list[i].name != item_name) continue;
+                if (this.video_list[i].name != target_name) continue;
                 for (int j = 0 ; j < this.video_list[i].actions_size ; j++) {
                     if (this.video_list[i].actions[j].name == action_name) count++;
                 }

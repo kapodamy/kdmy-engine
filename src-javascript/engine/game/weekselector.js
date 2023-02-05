@@ -47,6 +47,7 @@ const WEEKSELECTOR_BUTTONS_OK = GAMEPAD_X | GAMEPAD_A;
 
 const WEEKSELECTOR_LAYOUT = "/assets/common/image/week-selector/layout.xml";
 const WEEKSELECTOR_LAYOUT_DREAMCAST = "/assets/common/image/week-selector/layout~dreamcast.xml";
+const WEEKSELECTOR_MODDING_SCRIPT = "/assets/data/scripts/weekselector.lua";
 
 class UI {
     /**@type {GamepadKDY} */
@@ -107,6 +108,8 @@ class STATE {
     /**@type {bool} */
     bg_music_paused;
     bg_music = {};
+
+    modding = null;
 }
 
 function weekselector_show_week_info(/**@type {UI}*/ui, weekinfo, score) {
@@ -155,29 +158,27 @@ function weekselector_change_page(/**@type {UI}*/ui, page) {
     weekselector_helptext_set_visible(ui.helptext_start, 0);
 }
 
-function weekselector_trigger_difficult_change(/**@type {UI}*/ui,/**@type {STATE}*/state, empty) {
-    if (!state.custom_layout) return;
-
-    layout_trigger_any(state.custom_layout, "change-difficult");
+async function weekselector_trigger_difficult_change(/**@type {UI}*/ui,/**@type {STATE}*/state, empty) {
+    await weekselector_trigger_event(ui, state, "change-difficult");
 
     if (empty) return;
 
     let default_difficult = weekselector_difficult_get_selected(ui.weekdifficult);
     if (default_difficult) {
         let difficult_action = "selected-difficult-" + default_difficult;
-        layout_trigger_any(state.custom_layout, difficult_action);
+        await weekselector_trigger_event(ui, state, difficult_action);
         difficult_action = undefined;
     }
 }
 
-function weekselector_trigger_alternate_change(/**@type {STATE}*/state) {
-    if (!state.custom_layout) return;
-
+async function weekselector_trigger_alternate_change(ui, /**@type {STATE}*/state) {
     let alternate_action;
     if (state.has_choosen_alternate) alternate_action = "selected-no-alternate";
     else alternate_action = "selected-alternate";
 
-    layout_trigger_any(state.custom_layout, alternate_action);
+    if (state.custom_layout) layout_trigger_any(state.custom_layout, alternate_action);
+    layout_trigger_any(ui.layout, alternate_action);
+    await modding_helper_notify_event(state.modding, alternate_action);
 }
 
 async function weekselector_load_custom_week_background(/**@type {STATE}*/state) {
@@ -198,7 +199,7 @@ async function weekselector_load_custom_week_background(/**@type {STATE}*/state)
     if (state.custom_layout != null) {
         layout_trigger_any(state.custom_layout, "principal-show");
         if (!state.week_unlocked) layout_trigger_any(state.custom_layout, "week-locked");
-        
+
         has_custom_bg_music = layout_get_attached_value(
             state.custom_layout, "has_background_music", LAYOUT_TYPE_BOOLEAN, has_custom_bg_music
         );
@@ -228,6 +229,12 @@ function weekselector_trigger_menu_action(ui, state, name, selected, choosen) {
     main_helper_trigger_action_menu(
         ui.layout, state.weekinfo.display_name ?? state.weekinfo.name, name, selected, choosen
     );
+}
+
+async function weekselector_trigger_event(ui, state, name) {
+    if (state.custom_layout) layout_trigger_any(state.custom_layout, name);
+    layout_trigger_any(ui.layout, name);
+    await modding_helper_notify_event(state.modding, name);
 }
 
 
@@ -339,6 +346,11 @@ async function weekselector_main() {
 
     gamepad_set_buttons_delay(ui.maple_pads, WEEKSELECTOR_BUTTON_DELAY);
 
+    let modding = await modding_init(layout, WEEKSELECTOR_MODDING_SCRIPT);
+    modding.native_menu = null;
+    modding.callback_option = null;
+    await modding_init(modding, MODDING_NATIVE_MENU_SCREEN);
+
     /** @type {STATE} */
     const state = {
         weekinfo: weekselector_weeklist_get_selected(ui.weeklist),
@@ -361,7 +373,8 @@ async function weekselector_main() {
 
         custom_layout: null,
         bg_music_paused: 0,
-        bg_music: layout_get_soundplayer(layout, "background_music") ?? background_menu_music
+        bg_music: layout_get_soundplayer(layout, "background_music") ?? background_menu_music,
+        modding: null
     };
 
     if (state.bg_music != background_menu_music && background_menu_music) {
@@ -382,16 +395,26 @@ async function weekselector_main() {
 
         beatwatcher_global_set_timestamp_from_kos_timer();
 
-        switch (page_selected_ui) {
-            case 0:
-                await weekselector_page0(ui, state);
-                break;
-            case 1:
-                await weekselector_page1(ui, state);
-                break;
-            case 2:
-                await weekselector_page2(ui, state);
-                break;
+        let res = await modding_helper_handle_custom_menu(state.modding, ui.maple_pads, elapsed);
+
+        if (state.modding.has_exit || res == MODDING_HELPER_RESULT_BACK) {
+            state.back_to_main_menu = 1;
+            state.quit = 1;
+            break;
+        }
+
+        if (!state.modding.has_halt) {
+            switch (page_selected_ui) {
+                case 0:
+                    await weekselector_page0(ui, state);
+                    break;
+                case 1:
+                    await weekselector_page1(ui, state);
+                    break;
+                case 2:
+                    await weekselector_page2(ui, state);
+                    break;
+            }
         }
 
         if (state.play_sound) {
@@ -446,6 +469,7 @@ async function weekselector_main() {
         // trigger in the main layout
         if (!no_anim_out) layout_trigger_any(layout, "week-choosen");
 
+        await modding_helper_notify_event(state.modding, "week-choosen");
         layout_set_group_visibility(layout, "ui_game_progress", 0);
         weekselector_weektitle_move_difficult(ui.weektitle, ui.weekdifficult);
         weekselector_mdlselect_toggle_choosen(ui.mdl_boyfriend);
@@ -459,6 +483,7 @@ async function weekselector_main() {
         total_elapsed += elapsed;
 
         beatwatcher_global_set_timestamp_from_kos_timer();
+        await modding_helper_notify_frame(modding, elapsed, -1.0);
 
         pvr_context_reset(pvr_context);
         layout_animate(layout, elapsed);
@@ -479,6 +504,8 @@ async function weekselector_main() {
     let gameplay_alternative_tracks = state.has_choosen_alternate;
     let gameplay_model_boyfriend = weekselector_mdlselect_get_manifest(ui.mdl_boyfriend);
     let gameplay_model_girlfriend = weekselector_mdlselect_get_manifest(ui.mdl_girlfriend);
+
+    await modding_helper_notify_exit2(modding);
 
     // dispose everything used
     weekselector_weeklist_destroy(ui.weeklist);
@@ -509,6 +536,7 @@ async function weekselector_main() {
 
     layout_destroy(layout);
     texturepool_destroy(texpool);
+    await modding_destroy(modding);
 
     if (state.back_to_main_menu) return 0;
 
@@ -590,9 +618,9 @@ async function weekselector_page0(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         return;
     }
 
-    if (state.page_selected_ui == 1 && state.custom_layout != null) {
-        layout_trigger_any(state.custom_layout, "principal-hide");
-        layout_trigger_any(state.custom_layout, "difficult-selector-show");
+    if (state.page_selected_ui == 1) {
+        weekselector_trigger_event(ui, state, "principal-hide");
+        weekselector_trigger_event(ui, state, "difficult-selector-show");
     }
 
     if (seek_offset == 0) return;
@@ -642,8 +670,8 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         weekselector_difficult_relayout(ui.weekdifficult, has_warnings);
 
         weekselector_helptext_set_visible(ui.helptext_start, !has_warnings);
-        weekselector_trigger_difficult_change(ui, state, 0);
-        weekselector_trigger_alternate_change(state);
+        await weekselector_trigger_difficult_change(ui, state, 0);
+        await weekselector_trigger_alternate_change(ui, state);
     }
 
     let buttons = gamepad_has_pressed_delayed(
@@ -662,7 +690,7 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
             weekselector_helptext_use_alt(ui.helptext_alternate, state.has_choosen_alternate);
             weekselector_weekmsg_disabled(ui.weekmsg_alternate, state.has_choosen_alternate);
             state.play_sound = WEEKSELECTOR_SND_SCROLL;
-            weekselector_trigger_alternate_change(state);
+            await weekselector_trigger_alternate_change(ui, state);
         }
     } else if (buttons & (GAMEPAD_B | GAMEPAD_BACK)) {
         state.page_selected_ui = 0;
@@ -692,9 +720,9 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
 
     if (seek_offset == 0) return;
 
-    if (state.page_selected_ui == 0 && state.custom_layout) {
-        layout_trigger_any(state.custom_layout, "difficult-selector-hide");
-        layout_trigger_any(state.custom_layout, "principal-show");
+    if (state.page_selected_ui == 0) {
+        await weekselector_trigger_event(ui, state, "difficult-selector-hide");
+        await weekselector_trigger_event(ui, state, "principal-show");
     }
 
     if (weekselector_difficult_scroll(ui.weekdifficult, seek_offset)) {
@@ -702,7 +730,7 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         state.can_start = 1;
         state.difficult = weekselector_difficult_get_selected(ui.weekdifficult);
 
-        weekselector_trigger_difficult_change(ui, state, 0);
+        await weekselector_trigger_difficult_change(ui, state, 0);
         weekselector_show_week_info(
             ui, state.weekinfo, funkinsave_get_week_score(state.weekinfo.name, state.difficult)
         );
@@ -725,8 +753,7 @@ async function weekselector_page2(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         weekselector_mdlselect_enable_arrows(ui.mdl_boyfriend, state.choosing_boyfriend);
         weekselector_mdlselect_enable_arrows(ui.mdl_girlfriend, !state.choosing_boyfriend);
 
-        if (state.custom_layout)
-            layout_trigger_any(state.custom_layout, "model-change-show");
+        await weekselector_trigger_event(ui, state, "model-change-show");
     }
 
     let buttons = gamepad_has_pressed_delayed(
@@ -774,8 +801,8 @@ async function weekselector_page2(/**@type {UI}*/ui, /**@type {STATE}*/state) {
             state.quit = 1;
     }
 
-    if (state.page_selected_ui != 2 && state.custom_layout)
-        layout_trigger_any(state.custom_layout, "model-change-hide");
+    if (state.page_selected_ui != 2)
+        weekselector_trigger_event(ui, state, "model-change-hide");
 
     if (character_model_seek != 0) {
         let old_choose_boyfriend = state.choosing_boyfriend;
@@ -791,6 +818,10 @@ async function weekselector_page2(/**@type {UI}*/ui, /**@type {STATE}*/state) {
             state.play_sound = WEEKSELECTOR_SND_SCROLL;
             weekselector_mdlselect_enable_arrows(ui.mdl_boyfriend, state.choosing_boyfriend);
             weekselector_mdlselect_enable_arrows(ui.mdl_girlfriend, !state.choosing_boyfriend);
+
+            weekselector_trigger_event(
+                ui, state, state.choosing_boyfriend ? "model-change-bf" : "model-change-gf"
+            );
         }
     }
 

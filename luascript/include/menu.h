@@ -30,5 +30,6 @@ bool menu_set_item_visibility(Menu menu, int32_t index, bool visible);
 bool menu_get_item_rect(Menu menu, int32_t index, float* x, float* y, float* width, float* height);
 const char* menu_get_selected_item_name(Menu menu);
 void menu_set_text_force_case(Menu menu, TextSpriteForceCase none_or_lowercase_or_uppercase);
+bool menu_has_item(Menu menu, const char* name);
 
 #endif

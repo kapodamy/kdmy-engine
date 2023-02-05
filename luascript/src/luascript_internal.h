@@ -73,6 +73,7 @@ void kdmy_forget_obtained(void* obj_id);
 
 void* kdmy_create_object();
 void* kdmy_create_array(int32_t size);
+void* kdmy_read_array_item_object(void* array_id, int32_t index);
 
 void* kdmy_read_window_object(const char* variable_name);
 
@@ -128,6 +129,12 @@ ScrollDirection luascript_parse_scrolldirection(lua_State* L, const char* scroll
 
 const char* luascript_stringify_align(Align align);
 const char* luascript_stringify_actiontype(CharacterActionType actiontype);
+
+char* luascript_get_string_copy(lua_State* L, int idx, const char* def);
+char* luascript_get_string_copy2(const char* def);
+
+void* luascript_parse_and_allocate_modding_value(lua_State* L, int idx, ModdingValueType* output_type, bool throw_error);
+int luascript_push_and_deallocate_modding_value(lua_State* L, ModdingValueType type, void* value);
 
 int luascript_pcallk(lua_State* L, int arguments_count, int results_count);
 

@@ -22,6 +22,7 @@ namespace Engine.Game {
         private const string BG_INFO_NAME = "background_song_info";
         private const string LAYOUT = "/assets/common/image/freeplay-menu/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/freeplay-menu/layout~dreamcast.xml";
+        private const string MODDING_SCRIPT = "/assets/data/scripts/freeplaymenu.lua";
 
 
         private static readonly MenuManifest MENU_SONGS = new MenuManifest() {
@@ -177,6 +178,10 @@ namespace Engine.Game {
             FreeplaySongIcons songicons = new FreeplaySongIcons(songs, icons_dimmen, @params.font_size);
             menu_songs.SetDrawCallback(false, songicons.DrawItemIcon);
 
+            // step 8: initialize modding
+            Modding modding = new Modding(layout, FreeplayMenu.MODDING_SCRIPT);
+            modding.native_menu = modding.active_menu = menu_songs;
+            modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
 
             State state = new State() {
                 difficult_index = -1,
@@ -195,22 +200,27 @@ namespace Engine.Game {
                 difficulties_size = 0,
                 running_threads = 0,
                 mutex = null,
-                bg_info_width = bg_info_width
+                bg_info_width = bg_info_width,
+                modding = modding
             };
             mutex.Init(out state.mutex, mutex.TYPE_NORMAL);
             if (state.background != null) state.background.SetTexture(null, false);
 
-            string default_bf = FreeplayMenu.InternalGetDefaultCharacterManifest(true);
-            string default_gf = FreeplayMenu.InternalGetDefaultCharacterManifest(false);
+            string default_bf = FreeplayMenu.HelperGetDefaultCharacterManifest(true);
+            string default_gf = FreeplayMenu.HelperGetDefaultCharacterManifest(false);
 
             if (GameMain.background_menu_music != null) {
                 GameMain.background_menu_music.Pause();
             }
 
             layout.TriggerAny("transition-in");
+            modding.HelperNotifyModdingEvent("transition-in");
 
             while (true) {
-                int map_index = Show(menu_songs, state, songs);
+                modding.has_exit = false;
+                modding.has_halt = false;
+
+                int map_index = FreeplayMenu.Show(menu_songs, state, songs);
                 if (map_index < 0) break;// back to main menu
 
                 string difficult = state.difficulties[state.difficult_index].name;
@@ -218,7 +228,7 @@ namespace Engine.Game {
                 string gameplaymanifest = weekinfo.songs[state.map.song_index].freeplay_gameplaymanifest;
                 InternalDropSoundplayer(state);
 
-                FreeplayMenu.InternalWaitTransition(layout, "before-play-song", dt_playsong);
+                FreeplayMenu.InternalWaitTransition(state, "before-play-song", dt_playsong);
 
                 layout.Suspend();
                 int ret = Week.Main(
@@ -228,7 +238,7 @@ namespace Engine.Game {
                 if (ret == 0) break;// back to main menu
 
                 layout.Resume();
-                FreeplayMenu.InternalWaitTransition(layout, "after-play-song", dt_playsong);
+                FreeplayMenu.InternalWaitTransition(state, "after-play-song", dt_playsong);
                 FreeplayMenu.InternalSongLoad(state, false);
             }
 
@@ -242,8 +252,10 @@ namespace Engine.Game {
             }
             thd.pass();
 
-            FreeplayMenu.InternalWaitTransition(layout, "transition-out", dt_screenout);
+            FreeplayMenu.InternalWaitTransition(state, "transition-out", dt_screenout);
             FreeplayMenu.InternalDropCustomBackground(state);
+
+            modding.HelperNotifyExit2();
 
             //free(default_bf);
             //free(default_gf);
@@ -254,6 +266,7 @@ namespace Engine.Game {
             menu_songs.Destroy();
             songs.Destroy(false);
             layout.Destroy();
+            modding.Destroy();
 
             if (GameMain.background_menu_music != null) {
                 GameMain.background_menu_music.Play();
@@ -277,13 +290,25 @@ namespace Engine.Game {
                 FreeplayMenu.InternalShowInfo(state);
                 FreeplayMenu.InternalSongLoad(state, true);
                 InternalTriggerActionMenu(state, true, false);
+                state.modding.HelperNotifyModdingEvent("|track-noalt|");
             }
 
 
-            while (true) {
+            while (!state.modding.has_exit) {
                 float elapsed = PVRContext.global_context.WaitReady();
+                PVRContext.global_context.Reset();
+
+                if (state.running_threads < 1 && state.modding.script != null && state.soundplayer != null) {
+                    state.modding.script.NotifyTimerSong(state.soundplayer.GetPosition());
+                }
+                if (state.modding.HelperHandleCustomMenu(gamepad, elapsed) != ModdingHelperResult.CONTINUE) {
+                    break;
+                }
+
                 state.layout.Animate(elapsed);
                 state.layout.Draw(PVRContext.global_context);
+
+                if (state.modding.has_halt) continue;
 
                 GamepadButtons btns = gamepad.HasPressedDelayed(
                     GamepadButtons.DPAD_UP | GamepadButtons.DPAD_DOWN |
@@ -295,33 +320,36 @@ namespace Engine.Game {
                 int offset;
                 bool switch_difficult;
 
-                if ((btns & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+                if ((btns & (GamepadButtons.B | GamepadButtons.BACK)).Bool() && !state.modding.HelperNotifyBack()) {
                     break;
-                } else if ((btns & (GamepadButtons.X)) != GamepadButtons.NOTHING) {
+                } else if ((btns & (GamepadButtons.X)).Bool()) {
                     WeekInfo weeinfo = Funkin.weeks_array.array[state.map.week_index];
-                    if (!String.IsNullOrEmpty(weeinfo.warning_message))
+                    if (!String.IsNullOrEmpty(weeinfo.warning_message)) {
                         state.use_alternative = !state.use_alternative;
-                    else if (sound_asterik != null)
+                        state.modding.HelperNotifyModdingEvent(state.use_alternative ? "|track-alt|" : "|track-noalt|");
+                    } else if (sound_asterik != null) {
                         sound_asterik.Replay();
+                    }
                     continue;
-                } else if ((btns & GamepadButtons.DPAD_UP) != GamepadButtons.NOTHING) {
+                } else if ((btns & GamepadButtons.DPAD_UP).Bool()) {
                     offset = -1;
                     switch_difficult = false;
-                } else if ((btns & GamepadButtons.DPAD_DOWN) != GamepadButtons.NOTHING) {
+                } else if ((btns & GamepadButtons.DPAD_DOWN).Bool()) {
                     offset = 1;
                     switch_difficult = false;
-                } else if ((btns & GamepadButtons.DPAD_LEFT) != GamepadButtons.NOTHING) {
+                } else if ((btns & GamepadButtons.DPAD_LEFT).Bool()) {
                     offset = -1;
                     switch_difficult = true;
-                } else if ((btns & GamepadButtons.DPAD_RIGHT) != GamepadButtons.NOTHING) {
+                } else if ((btns & GamepadButtons.DPAD_RIGHT).Bool()) {
                     offset = 1;
                     switch_difficult = true;
-                } else if ((btns & (GamepadButtons.A | GamepadButtons.START)) != GamepadButtons.NOTHING) {
+                } else if ((btns & (GamepadButtons.A | GamepadButtons.START)).Bool()) {
                     int index = menu.GetSelectedIndex();
                     if (index < 0 || index >= menu.GetItemsCount() || state.difficult_locked || state.map.is_locked) {
                         if (sound_asterik != null) sound_asterik.Replay();
                         continue;
                     }
+                    if (!FreeplayMenu.InternalModdingNotifyOption(state, false)) continue;
 
                     map_index = index;
                     break;
@@ -337,6 +365,14 @@ namespace Engine.Game {
                         state.difficult_index = new_index;
                         state.difficult_locked = state.difficulties[new_index].is_locked;
                         FreeplayMenu.InternalShowInfo(state);
+
+                        if (state.difficult_locked) {
+                            string name = StringUtils.Concat(state.difficulties[new_index].name, "|locked");
+                            state.modding.HelperNotifyModdingEvent(name);
+                            //free(name);
+                        } else {
+                            state.modding.HelperNotifyModdingEvent(state.difficulties[new_index].name);
+                        }
                     }
                     continue;
                 }
@@ -361,7 +397,10 @@ namespace Engine.Game {
                 FreeplayMenu.InternalShowInfo(state);
                 FreeplayMenu.InternalSongLoad(state, true);
 
-                if (selected_index != old_index) InternalTriggerActionMenu(state, true, false);
+                if (selected_index != old_index) {
+                    InternalTriggerActionMenu(state, true, false);
+                    state.modding.HelperNotifyModdingEvent("|track-noalt|");
+                }
             }
 
             if (sound_asterik != null) sound_asterik.Destroy();
@@ -652,7 +691,7 @@ L_return:
 
         }
 
-        private static string InternalGetDefaultCharacterManifest(bool is_boyfriend) {
+        public static string HelperGetDefaultCharacterManifest(bool is_boyfriend) {
             string src = is_boyfriend ? WeekSelectorMdlSelect.MODELS_BF : WeekSelectorMdlSelect.MODELS_GF;
             JSONParser json = JSONParser.LoadFrom(src);
 
@@ -689,13 +728,19 @@ L_return:
             mutex.Unlock(state.mutex);
         }
 
-        private static void InternalWaitTransition(Layout layout, string what, float duration) {
+        private static void InternalWaitTransition(State state, string what, float duration) {
+            Layout layout = state.layout;
+            Modding modding = state.modding;
+
+            state.modding.HelperNotifyModdingEvent(what);
+
             if (duration < 1) return;
             if (layout.TriggerAny(what) < 1) return;
 
             while (duration > 0) {
                 float elapsed = PVRContext.global_context.WaitReady();
                 duration -= elapsed;
+                modding.HelperNotifyFrame(elapsed, -1.0);
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
             }
@@ -711,7 +756,25 @@ L_return:
             string week_name = weekinfo.display_name ?? weekinfo.name;
             string song_name = songs[state.map.song_index].name;
 
+            if (selected) FreeplayMenu.InternalModdingNotifyOption(state, true);
+
             GameMain.HelperTriggerActionMenu(state.layout, week_name, song_name, selected, choosen);
+        }
+
+        private static bool InternalModdingNotifyOption(State state, bool selected_or_choosen) {
+            WeekInfo weekinfo = Funkin.weeks_array.array[state.map.week_index];
+            WeekInfo.Song[] songs = weekinfo.songs;
+            Menu menu = state.modding.native_menu;
+
+            string week_name = weekinfo.display_name ?? weekinfo.name;
+            string song_name = songs[state.map.song_index].name;
+            string name = StringUtils.Concat(week_name, "|", song_name);
+            int index = menu.GetSelectedIndex();
+
+            bool ret = state.modding.HelperNotifyOption2(selected_or_choosen, menu, index, name);
+            //free(name);
+
+            return ret;
         }
 
         public struct MappedSong {
@@ -751,6 +814,7 @@ L_return:
             public int difficulties_size;
 
             public float bg_info_width;
+            public Modding modding;
         }
 
     }

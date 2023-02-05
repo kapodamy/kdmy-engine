@@ -13,7 +13,7 @@ void psshader_destroy(PSShader* psshader) {
 }
 
 int32_t psshader_set_uniform_any(PSShader psshader, const char* name, const double values[]) {
-    print_stub("psshader_set_uniform_any", "psshader=%p name=%s values=%p", psshader, values);
+    print_stub("psshader_set_uniform_any", "psshader=%p name=%s values=%p", psshader, name, values);
     return 0;
 }
 bool psshader_set_uniform1f(PSShader psshader, const char* name, float value) {

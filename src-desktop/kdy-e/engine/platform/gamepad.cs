@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Engine.Utils;
 using KallistiOS;
 using KallistiOS.MAPLE;
@@ -359,6 +360,14 @@ namespace Engine.Platform {
             status.joy2y = 0;
         }
 
+    }
+
+    public static class GamepadButtonsExtensions {
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Bool(this GamepadButtons buttons) {
+            return buttons != GamepadButtons.NOTHING;
+        }
     }
 
 }

@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wfloat-conversion -Wextra
+CFLAGS = -Wall -Wfloat-conversion -Wextra -std=c17
 EMCC = emcc
 SOURCES = $(wildcard src/*.c)
 WINDOWS_STUBS_SOURCES = $(wildcard src/windows_stubs/*.c)
@@ -16,4 +16,4 @@ wasm-build-debug:
 	# cp .\output\luascript.wasm .\..\engine\externals\luascript.wasm
 
 windows-build-debug:
-	$(CC) $(WINDOWS_STUBS_SOURCES) $(SOURCES) lib/lua54.dll -Iinclude -O0 -g -std=c99 -o output/main.exe
+	$(CC) $(WINDOWS_STUBS_SOURCES) $(SOURCES) lib/lua54.dll -Iinclude -O0 -g ${CFLAGS} -o output/main.exe

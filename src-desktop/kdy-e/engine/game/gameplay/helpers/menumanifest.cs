@@ -68,6 +68,7 @@ namespace Engine.Game.Gameplay.Helpers {
             public string anim_out;
             public float gap;
             public bool hidden;
+            public string description;
         }
 
         public Parameters parameters;
@@ -153,7 +154,7 @@ namespace Engine.Game.Gameplay.Helpers {
                 },
 
                 items = new Item[array_items_length],
-                items_size = array_items_length
+                items_size = array_items_length,
             };
 
             for (int i = 0 ; i < array_items_length ; i++) {
@@ -164,6 +165,7 @@ namespace Engine.Game.Gameplay.Helpers {
                     name = JSONParser.ReadString(json_item, "name", null),
                     text = JSONParser.ReadString(json_item, "text", null),
                     hidden = JSONParser.ReadBoolean(json_item, "hidden", false),
+                    description = JSONParser.ReadString(json_item, "description", null),
 
                     placement = new Placement() {
                         x = (float)JSONParser.ReadNumberDouble(json_placement, "x", 0.0),
@@ -191,6 +193,7 @@ namespace Engine.Game.Gameplay.Helpers {
             for (int i = 0 ; i < this.items_size ; i++) {
                 //free(this.items[i].name);
                 //free(this.items[i].text);
+                //free(this.items[i].description);
                 //free(this.items[i].anim_selected);
                 //free(this.items[i].anim_choosen);
                 //free(this.items[i].anim_discarded);

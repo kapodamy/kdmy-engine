@@ -163,7 +163,7 @@ namespace Engine.Externals.LuaScriptInterop {
             }
         }
 
-        public static object ToBasicValue(LuaState L, int idx) {
+        public static object ParseModdingValue(LuaState L, int idx) {
             object value = null;
             switch (L.lua_type(-1)) {
                 case LuaType.TBOOLEAN:
@@ -186,7 +186,7 @@ namespace Engine.Externals.LuaScriptInterop {
             return value;
         }
 
-        public static void PushBasicValue(LuaState L, object value) {
+        public static void PushModdingValue(LuaState L, object value) {
             if (value is string)
                 L.lua_pushstring((string)value);
             else if (value is long)

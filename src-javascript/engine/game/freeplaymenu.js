@@ -6,6 +6,7 @@ const FREEPLAYMENU_INFO = "$s  -  $s  -  $s";
 const FREEPLAYMENU_BG_INFO_NAME = "background_song_info";
 const FREEPLAYMENU_LAYOUT = "/assets/common/image/freeplay-menu/layout.xml";
 const FREEPLAYMENU_LAYOUT_DREAMCAST = "/assets/common/image/freeplay-menu/layout~dreamcast.xml";
+const FREEPLAYMENU_MODDING_SCRIPT = "/assets/data/scripts/freeplaymenu.lua";
 
 const FREEPLAYMENU_MENU_SONGS = {
     parameters: {
@@ -172,6 +173,11 @@ async function freeplaymenu_main() {
     let songicons = await freeplaymenu_songicons_init(songs, icons_dimmen, params.font_size);
     menu_set_draw_callback(menu_songs, 0, freeplaymenu_songicons_draw_item_icon, songicons);
 
+    // step 8: initialize modding
+    let modding = await modding_init(layout, FREEPLAYMENU_MODDING_SCRIPT);
+    modding.native_menu = modding.active_menu = menu_songs;
+    await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
+
 
     const state = {
         difficult_index: -1,
@@ -190,21 +196,26 @@ async function freeplaymenu_main() {
         difficulties_size: 0,
         running_threads: 0,
         mutex: {},
-        bg_info_width: bg_info_width
+        bg_info_width: bg_info_width,
+        modding: modding
     };
     mutex_init(state.mutex, MUTEX_TYPE_NORMAL);
     if (state.background) sprite_set_texture(state.background, null, 0);
 
-    let default_bf = await freeplaymenu_internal_get_default_character_manifest(1);
-    let default_gf = await freeplaymenu_internal_get_default_character_manifest(0);
+    let default_bf = await freeplaymenu_helper_get_default_character_manifest(1);
+    let default_gf = await freeplaymenu_helper_get_default_character_manifest(0);
 
     if (background_menu_music) {
         soundplayer_pause(background_menu_music);
     }
 
     layout_trigger_any(layout, "transition-in");
+    await modding_helper_notify_event(modding, "transition-in");
 
     while (1) {
+        modding.has_exit = 0;
+        modding.has_halt = 0;
+
         let map_index = await freeplaymenu_show(menu_songs, state, songs);
         if (map_index < 0) break;// back to main menu
 
@@ -213,7 +224,7 @@ async function freeplaymenu_main() {
         let gameplaymanifest = weekinfo.songs[state.map.song_index].freeplay_gameplaymanifest;
         freeplaymenu_internal_drop_soundplayer(state);
 
-        await freeplaymenu_internal_wait_transition(layout, "before-play-song", dt_playsong);
+        await freeplaymenu_internal_wait_transition(state, "before-play-song", dt_playsong);
 
         layout_suspend(layout);
         let ret = await week_main(
@@ -223,7 +234,7 @@ async function freeplaymenu_main() {
         if (ret == 0) break;// back to main menu
 
         layout_resume(layout);
-        await freeplaymenu_internal_wait_transition(layout, "after-play-song", dt_playsong);
+        await freeplaymenu_internal_wait_transition(state, "after-play-song", dt_playsong);
         freeplaymenu_internal_song_load(state, 0);
     }
 
@@ -237,8 +248,10 @@ async function freeplaymenu_main() {
     }
     thd_pass();
 
-    await freeplaymenu_internal_wait_transition(layout, "transition-out", dt_screenout);
+    await freeplaymenu_internal_wait_transition(state, "transition-out", dt_screenout);
     freeplaymenu_internal_drop_custom_background(state);
+
+    modding_helper_notify_exit2(modding);
 
     default_bf = undefined;
     default_gf = undefined;
@@ -249,6 +262,7 @@ async function freeplaymenu_main() {
     menu_destroy(menu_songs);
     arraylist_destroy(songs, 0);
     layout_destroy(layout);
+    await modding_destroy(modding);
 
     if (background_menu_music) {
         soundplayer_play(background_menu_music);
@@ -272,14 +286,26 @@ async function freeplaymenu_show(menu, state, songs) {
         freeplaymenu_internal_show_info(state);
         freeplaymenu_internal_song_load(state, 1);
 
-        freeplaymenu_internal_trigger_action_menu(state, 1, 0);
+        await freeplaymenu_internal_trigger_action_menu(state, 1, 0);
+        modding_helper_notify_event(state.modding, "|track-noalt|");
     }
 
 
-    while (1) {
+    while (!state.modding.has_exit) {
         let elapsed = await pvrctx_wait_ready();
+        pvr_context_reset(pvr_context);
+
+        if (state.running_threads < 1 && state.modding.script != null && state.soundplayer != null) {
+            await weekscript_notify_timersong(state.modding.script, soundplayer_get_position(state.soundplayer));
+        }
+        if (await modding_helper_handle_custom_menu(state.modding, gamepad, elapsed) != MODDING_HELPER_RESULT_CONTINUE) {
+            break;
+        }
+
         layout_animate(state.layout, elapsed);
         layout_draw(state.layout, pvr_context);
+
+        if (state.modding.has_halt) continue;
 
         let btns = gamepad_has_pressed_delayed(gamepad,
             GAMEPAD_DPAD_UP | GAMEPAD_DPAD_DOWN |
@@ -291,14 +317,16 @@ async function freeplaymenu_show(menu, state, songs) {
         let offset;
         let switch_difficult;
 
-        if ((btns & (GAMEPAD_B | GAMEPAD_BACK)) != 0x00) {
+        if ((btns & (GAMEPAD_B | GAMEPAD_BACK)) != 0x00 && !await modding_helper_notify_back(state.modding)) {
             break;
         } else if ((btns & (GAMEPAD_X)) != 0x00) {
             let weeinfo = weeks_array.array[state.map.week_index];
-            if (!weeinfo.warning_message)
+            if (!weeinfo.warning_message) {
                 state.use_alternative = !state.use_alternative;
-            else if (sound_asterik)
+                await modding_helper_notify_event(state.modding, state.use_alternative ? "|track-alt|" : "|track-noalt|");
+            } else if (sound_asterik) {
                 soundplayer_replay(sound_asterik);
+            }
             continue;
         } else if ((btns & GAMEPAD_DPAD_UP) != 0x00) {
             offset = -1;
@@ -318,6 +346,7 @@ async function freeplaymenu_show(menu, state, songs) {
                 if (sound_asterik) soundplayer_replay(sound_asterik);
                 continue;
             }
+            if (!await freeplaymenu_internal_modding_notify_option(state, 0)) continue;
 
             map_index = index;
             break;
@@ -333,6 +362,14 @@ async function freeplaymenu_show(menu, state, songs) {
                 state.difficult_index = new_index;
                 state.difficult_locked = state.difficulties[new_index].is_locked;
                 freeplaymenu_internal_show_info(state);
+
+                if (state.difficult_locked) {
+                    let name = string_concat(2, state.difficulties[new_index].name, "|locked");
+                    await modding_helper_notify_event(state.modding, name);
+                    name = undefined;
+                } else {
+                    await modding_helper_notify_event(state.modding, state.difficulties[new_index].name);
+                }
             }
             continue;
         }
@@ -349,7 +386,7 @@ async function freeplaymenu_show(menu, state, songs) {
         }
 
         let selected_index = menu_get_selected_index(menu);
-        if (selected_index != old_index) freeplaymenu_internal_trigger_action_menu(state, 0, 0);
+        if (selected_index != old_index) await freeplaymenu_internal_trigger_action_menu(state, 0, 0);
 
         state.map = arraylist_get(songs, menu_get_selected_index(menu));
         state.use_alternative = 0;
@@ -357,7 +394,10 @@ async function freeplaymenu_show(menu, state, songs) {
         freeplaymenu_internal_show_info(state);
         freeplaymenu_internal_song_load(state, 1);
 
-        if (selected_index != old_index) freeplaymenu_internal_trigger_action_menu(state, 1, 0);
+        if (selected_index != old_index) {
+            await freeplaymenu_internal_trigger_action_menu(state, 1, 0);
+            await modding_helper_notify_event(state.modding, "|track-noalt|");
+        }
     }
 
     if (sound_asterik) soundplayer_destroy(sound_asterik);
@@ -643,7 +683,7 @@ function freeplaymenu_internal_build_difficulties(state) {
 
 }
 
-async function freeplaymenu_internal_get_default_character_manifest(is_boyfriend) {
+async function freeplaymenu_helper_get_default_character_manifest(is_boyfriend) {
     let src = is_boyfriend ? WEEKSELECTOR_MDLSELECT_MODELS_BF : WEEKSELECTOR_MDLSELECT_MODELS_GF;
     let json = await json_load_from(src);
 
@@ -680,19 +720,25 @@ function freeplaymenu_internal_song_load(state, with_bg) {
     mutex_unlock(state.mutex);
 }
 
-async function freeplaymenu_internal_wait_transition(layout, what, duration) {
+async function freeplaymenu_internal_wait_transition(state, what, duration) {
+    const layout = state.layout;
+    const modding = state.modding;
+
+    await modding_helper_notify_event(state.modding, what);
+
     if (duration < 1) return;
     if (layout_trigger_any(layout, what) < 1) return;
 
     while (duration > 0) {
         let elapsed = await pvrctx_wait_ready();
         duration -= elapsed;
+        await modding_helper_notify_frame(state.modding, elapsed, -1.0);
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
     }
 }
 
-function freeplaymenu_internal_trigger_action_menu(state, selected, choosen) {
+async function freeplaymenu_internal_trigger_action_menu(state, selected, choosen) {
     if (state.map.week_index < 0 || state.map.week_index >= weeks_array.size) return;
     const weekinfo = weeks_array.array[state.map.week_index];
 
@@ -702,6 +748,24 @@ function freeplaymenu_internal_trigger_action_menu(state, selected, choosen) {
     let week_name = weekinfo.display_name ?? weekinfo.name;
     let song_name = songs[state.map.song_index].name;
 
+    if (selected) await freeplaymenu_internal_modding_notify_option(state, true);
+
     main_helper_trigger_action_menu(state.layout, week_name, song_name, selected, choosen);
+}
+
+async function freeplaymenu_internal_modding_notify_option(state, selected_or_choosen) {
+    let weekinfo = weeks_array.array[state.map.week_index];
+    let songs = weekinfo.songs;
+    let menu = state.modding.native_menu;
+
+    let week_name = weekinfo.display_name ?? weekinfo.name;
+    let song_name = songs[state.map.song_index].name;
+    let name = string_concat(3, week_name, "|", song_name);
+    let index = menu_get_selected_index(menu);
+
+    let ret = await modding_helper_notify_option2(state.modding, selected_or_choosen, menu, index, name);
+    name = undefined;
+
+    return ret;
 }
 

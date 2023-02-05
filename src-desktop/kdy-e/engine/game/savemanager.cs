@@ -19,6 +19,7 @@ namespace Engine.Game {
         private const float SCAN_INTERVAL = 1000f;
         private const string LAYOUT = "/assets/common/image/save-manager/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/save-manager/layout~dreamcast.xml";
+        private const string MODDING_SCRIPT = "/assets/data/scripts/savemanager.lua";
 
         public static readonly MenuManifest MENU_MANIFEST = new MenuManifest() {
             parameters = new MenuManifest.Parameters() {
@@ -207,7 +208,10 @@ namespace Engine.Game {
             bool last_saved_selected = false;
             bool confirm_leave = false;
 
-            while (true) {
+            Modding modding = new Modding(this.layout, SaveManager.MODDING_SCRIPT);
+            modding.native_menu = modding.active_menu = this.menu;
+
+            while (!modding.has_exit) {
                 int selection_offset_x = 0;
                 int selection_offset_y = 0;
                 float elapsed = PVRContext.global_context.WaitReady();
@@ -227,6 +231,9 @@ namespace Engine.Game {
                             this.layout.TriggerAny("save-not-selected");
                             last_saved_selected = false;
                         }
+
+                        if (modding.active_menu == modding.native_menu) modding.active_menu = this.menu;
+                        modding.native_menu = this.menu;
                     }
 
                     if (last_vmu_size > 0 != this.vmu_size > 0) {
@@ -254,6 +261,10 @@ namespace Engine.Game {
                     this.selected_label.SetVisible(false);
                 }
 
+                ModdingHelperResult res = modding.HelperHandleCustomMenu(this.maple_pad, elapsed);
+                if (res != ModdingHelperResult.CONTINUE) break;
+                if (modding.has_halt || modding.active_menu != this.menu) buttons = GamepadButtons.NOTHING;
+
                 PVRContext.global_context.Reset();
                 this.layout.Animate(elapsed);
                 this.layout.Draw(PVRContext.global_context);
@@ -262,11 +273,11 @@ namespace Engine.Game {
                     this.messagebox.Animate(elapsed);
                     this.messagebox.Draw(PVRContext.global_context);
 
-                    if ((buttons & GamepadButtons.A) != GamepadButtons.NOTHING) {
+                    if ((buttons & GamepadButtons.A).Bool()) {
                         SaveManager.game_withoutsavedata = true;
                         break;
                     }
-                    if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) confirm_leave = false;
+                    if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) confirm_leave = false;
                     continue;
                 }
 
@@ -274,21 +285,21 @@ namespace Engine.Game {
                     this.messagebox.HideButtons();
                     this.messagebox.Show(false);
 
-
                     InternalShowError(this.error_code);
 
                     this.error_code = 0;
                     continue;
                 }
 
-                if ((buttons & MainMenu.GAMEPAD_OK) != GamepadButtons.NOTHING) {
+                if ((buttons & MainMenu.GAMEPAD_OK).Bool()) {
                     selected_index = this.menu.GetSelectedIndex();
                     if (selected_index >= 0 && selected_index < this.menu.GetItemsCount()) {
+
                         save_or_load_success = InternalCommit(selected_index);
                         SaveManager.game_withoutsavedata = save_or_load_success;
                         if (save_or_load_success) break;
                     }
-                } else if ((buttons & MainMenu.GAMEPAD_CANCEL) != GamepadButtons.NOTHING) {
+                } else if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool() && !modding.HelperNotifyBack()) {
                     confirm_leave = true;
                     this.messagebox.SetButtonsIcons("a", "b");
                     this.messagebox.SetButtonsText("Yes", "No");
@@ -298,13 +309,13 @@ namespace Engine.Game {
                     );
                     this.messagebox.Show(true);
                     continue;
-                } else if ((buttons & GamepadButtons.AD_DOWN) != GamepadButtons.NOTHING)
+                } else if ((buttons & GamepadButtons.AD_DOWN).Bool())
                     selection_offset_y++;
-                else if ((buttons & GamepadButtons.AD_UP) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_UP).Bool())
                     selection_offset_y--;
-                else if ((buttons & GamepadButtons.AD_LEFT) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_LEFT).Bool())
                     selection_offset_x--;
-                else if ((buttons & GamepadButtons.AD_RIGHT) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_RIGHT).Bool())
                     selection_offset_x++;
 
                 if (selection_offset_x == 0 && selection_offset_y == 0) continue;
@@ -332,19 +343,26 @@ namespace Engine.Game {
             }
 
             this.layout.TriggerAny("outro");
+            modding.HelperNotifyModdingEvent("outro");
 
             if (save_or_load_success) {
-                while (true) {
+                while (!modding.has_exit) {
                     float elapsed = PVRContext.global_context.WaitReady();
                     PVRContext.global_context.Reset();
+
+                    ModdingHelperResult res = modding.HelperHandleCustomMenu(this.maple_pad, elapsed);
+                    if (res != ModdingHelperResult.CONTINUE) break;
+
                     this.layout.Animate(elapsed);
                     this.layout.Draw(PVRContext.global_context);
 
+                    if (modding.has_halt) continue;
                     if (this.layout.AnimationIsCompleted("transition_effect") > 0) break;
                 }
-                return;
             }
 
+            modding.HelperNotifyExit2();
+            modding.Destroy();
         }
 
         public static int ShouldShow(bool attempt_to_save_or_load) {
@@ -400,6 +418,7 @@ namespace Engine.Game {
                     anim_in = null,
                     anim_out = null,
                     hidden = false,
+                    description = null,
                     gap = 0f,
                     texture_scale = 0f,
                     modelholder = null
@@ -508,8 +527,8 @@ namespace Engine.Game {
                     this.messagebox.Animate(elapsed);
                     this.messagebox.Draw(PVRContext.global_context);
 
-                    if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) return false;
-                    if ((buttons & GamepadButtons.A) != GamepadButtons.NOTHING) break;
+                    if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) return false;
+                    if ((buttons & GamepadButtons.A).Bool()) break;
                 }
             }
 
@@ -619,7 +638,7 @@ namespace Engine.Game {
                 this.messagebox.Animate(elapsed);
                 this.messagebox.Draw(PVRContext.global_context);
 
-                if (buttons != GamepadButtons.NOTHING) break;
+                if (buttons.Bool()) break;
             }
 
             return false;

@@ -6,6 +6,7 @@ const SAVEMANAGER_SCAN_INTERVAL = 1000;
 
 const SAVEMANAGER_LAYOUT = "/assets/common/image/save-manager/layout.xml";
 const SAVEMANAGER_LAYOUT_DREAMCAST = "/assets/common/image/save-manager/layout~dreamcast.xml";
+const SAVEMANAGER_MODDING_SCRIPT = "/assets/data/scripts/savemanager.lua";
 
 const SAVEMANAGER_MENU_MANIFEST = {
     parameters: {
@@ -175,7 +176,10 @@ async function savemanager_show(savemanager) {
     let last_saved_selected = 0;
     let confirm_leave = 0;
 
-    while (1) {
+    let modding = await modding_init(savemanager.layout, SAVEMANAGER_MODDING_SCRIPT);
+    modding.native_menu = modding.active_menu = savemanager.menu;
+
+    while (!modding.has_exit) {
         let selection_offset_x = 0;
         let selection_offset_y = 0;
         let elapsed = await pvrctx_wait_ready();
@@ -194,6 +198,9 @@ async function savemanager_show(savemanager) {
                     layout_trigger_any(savemanager.layout, "save-not-selected");
                     last_saved_selected = 0;
                 }
+
+                if (modding.active_menu == modding.native_menu) modding.active_menu = savemanager.menu;
+                modding.native_menu = savemanager.menu;
             }
 
             if (last_vmu_size > 0 != savemanager.vmu_size > 0) {
@@ -220,6 +227,10 @@ async function savemanager_show(savemanager) {
             sprite_set_visible(savemanager.selected_background, 0);
             textsprite_set_visible(savemanager.selected_label, 0);
         }
+
+        let res = await modding_helper_handle_custom_menu(modding, savemanager.maple_pad, elapsed);
+        if (res != MODDING_HELPER_RESULT_CONTINUE) break;
+        if (modding.has_halt || modding.active_menu != savemanager.menu) buttons = 0x00;
 
         pvr_context_reset(pvr_context);
         layout_animate(savemanager.layout, elapsed);
@@ -254,7 +265,7 @@ async function savemanager_show(savemanager) {
                 savemanager_game_withoutsavedata = save_or_load_success;
                 if (save_or_load_success) break;
             }
-        } else if (buttons & MAINMENU_GAMEPAD_CANCEL) {
+        } else if (buttons & MAINMENU_GAMEPAD_CANCEL && !await modding_helper_notify_back(modding)) {
             confirm_leave = 1;
             messagebox_set_buttons_icons(savemanager.messagebox, "a", "b");
             messagebox_set_buttons_text(savemanager.messagebox, "Yes", "No");
@@ -307,19 +318,26 @@ async function savemanager_show(savemanager) {
     }
 
     layout_trigger_any(savemanager.layout, "outro");
+    await modding_helper_notify_event(modding, "outro");
 
     if (save_or_load_success) {
-        while (1) {
+        while (!modding.has_exit) {
             let elapsed = await pvrctx_wait_ready();
             pvr_context_reset(pvr_context);
+
+            let res = await modding_helper_handle_custom_menu(modding, savemanager.maple_pad, elapsed);
+            if (res != MODDING_HELPER_RESULT_CONTINUE) break;
+
             layout_animate(savemanager.layout, elapsed);
             layout_draw(savemanager.layout, pvr_context);
 
+            if (modding.has_halt) continue;
             if (layout_animation_is_completed(savemanager.layout, "transition_effect")) break;
         }
-        return;
     }
 
+    await modding_helper_notify_exit2(modding);
+    await modding_destroy(modding);
 }
 
 async function savemanager_should_show(attempt_to_save_or_load) {
@@ -375,6 +393,7 @@ async function savemanager_internal_build_list(savemanager) {
             anim_in: null,
             anim_out: null,
             hidden: 0,
+            description: null,
             gap: 0,
             texture_scale: 0,
             modelholder: null

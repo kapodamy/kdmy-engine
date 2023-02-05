@@ -88,6 +88,7 @@ namespace Engine.Externals.LuaScriptInterop {
                         LuaTableHelpers.AddFieldString(L, "anim_out", mm.items[i].anim_out);
                         LuaTableHelpers.AddFieldNumber(L, "gap", mm.items[i].gap);
                         LuaTableHelpers.AddFieldBoolean(L, "hidden", mm.items[i].hidden);
+                        LuaTableHelpers.AddFieldString(L, "description", mm.items[i].description);
                     }
                     L.lua_settable(-3);
                 }

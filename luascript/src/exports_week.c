@@ -20,6 +20,31 @@ EM_JS_PRFX(double, week_unlockdirective_get, (RoundContext roundcontext, const c
     let ret = week_unlockdirective_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
     return ret;
 });
+EM_JS_PRFX(bool, week_storage_set, (RoundContext roundcontext, const char* name, const uint8_t* data, uint32_t data_size), {
+    let arraybuffer = data == 0x00 ? null : new ArrayBuffer(data_size);
+    if (arraybuffer) {
+        new Uint8Array(arraybuffer).set(HEAPU8.subarray(data, data + data_size), 0);
+    }
+
+    let ret = week_storage_set(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), arraybuffer, data_size);
+    return ret ? 1 : 0;
+});
+EM_JS_PRFX(uint32_t, week_storage_get, (RoundContext roundcontext, const char* name, uint8_t** data), {
+    let arraybuffer = [null];
+
+    let ret = week_storage_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), arraybuffer);
+
+    let ptr;
+    if (arraybuffer[0]) {
+        ptr = _malloc(ret);
+        if (ptr != 0x00) HEAPU8.set(new Uint8Array(arraybuffer[0]), ptr);
+    } else {
+        ptr = 0x00;
+    }
+
+    kdmyEngine_set_uint32(data, ptr);
+    return ret;
+});
 EM_JS_PRFX(void, week_ui_set_visibility, (RoundContext roundcontext, bool visible), {
     week_ui_set_visibility(kdmyEngine_obtain(roundcontext), visible);
 });
@@ -589,6 +614,48 @@ static int script_week_rebuild_ui(lua_State* L) {
     return 0;
 }
 
+static int script_week_storage_get(lua_State* L) {
+    Luascript luascript = luascript_get_instance(L);
+    RoundContext roundcontext = (RoundContext)luascript->context;
+
+    const char* name = luaL_optstring(L, 1, NULL);
+    uint8_t* data;
+
+    uint32_t ret = week_storage_get(roundcontext, name, &data);
+
+    if (!data)
+        lua_pushnil(L);
+    else
+        lua_pushlstring(L, (const char*)data, (size_t)ret);
+
+#ifdef JAVASCRIPT
+    free(data);
+#endif
+
+    return 1;
+}
+
+static int script_week_storage_set(lua_State* L) {
+    Luascript luascript = luascript_get_instance(L);
+    RoundContext roundcontext = (RoundContext)luascript->context;
+
+    const char* name = luaL_optstring(L, 1, NULL);
+    const uint8_t* data;
+    size_t data_size;
+
+    if (lua_isnil(L, 2)) {
+        data = NULL;
+        data_size = 0;
+    } else {
+        data = (const uint8_t*) luaL_checklstring(L, 3, &data_size);
+    }
+
+    bool ret = week_storage_set(roundcontext, name, data, (uint32_t)data_size);
+
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
 
 
 static const luaL_Reg WEEK_FUNCTIONS[] = {
@@ -630,6 +697,8 @@ static const luaL_Reg WEEK_FUNCTIONS[] = {
     { "week_unlockdirective_create", script_week_unlockdirective_create },
     { "week_unlockdirective_get", script_week_unlockdirective_get },
     { "week_unlockdirective_remove", script_week_unlockdirective_remove },
+    { "week_storage_set", script_week_storage_set },
+    { "week_storage_get", script_week_storage_get },
     { NULL, NULL }
 };
 

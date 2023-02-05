@@ -55,77 +55,84 @@ namespace Engine.Game.Gameplay {
                 enable_horizontal_text_correction = false// unused
             },
             items = new MenuManifest.Item[] {
-       new MenuManifest.Item() {
-            name= null,
-            text= "RESUME",// unused
-            placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
-            anim_selected= null,// unused
-            anim_choosen= null,// unused
-            anim_discarded= null,// unused
-            anim_idle= null,// unused
-            anim_rollback= null,// unused
-            anim_in= null,// unused
-            anim_out= null,// unused
-            hidden= false
-        },
-       new MenuManifest.Item() {
-            name= null,
-            text= "WEEK MENU",// unused
-            placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
-            anim_selected= null,// unused
-            anim_choosen= null,// unused
-            anim_discarded= null,// unused
-            anim_idle= null,// unused
-            anim_rollback= null,// unused
-            anim_in= null,// unused
-            anim_out= null,// unused
-            hidden= true
-        },
-        new MenuManifest.Item() {
-            name= null,
-            text= "RESTART SONG",// unused
-            placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
-            anim_selected= null,// unused
-            anim_choosen= null,// unused
-            anim_discarded= null,// unused
-            anim_idle= null,// unused
-            anim_rollback= null,// unused
-            anim_in= null,// unused
-            anim_out= null,// unused
-            hidden= false
-        },
-       new MenuManifest.Item()  {
-            name= null,
-            text= "EXIT TO WEEK SELECTOR",// unused
-            placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
-            anim_selected= null,// unused
-            anim_choosen= null,// unused
-            anim_discarded= null,// unused
-            anim_idle= null,// unused
-            anim_rollback= null,// unused
-            anim_in= null,// unused
-            anim_out= null,// unused
-            hidden= false
-        },
-       new MenuManifest.Item() {
-            name= null,
-            text= "EXIT TO MAIN MENU",// unused
-            placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
-            anim_selected= null,// unused
-            anim_choosen= null,// unused
-            anim_discarded= null,// unused
-            anim_idle= null,// unused
-            anim_rollback= null,// unused
-            anim_in= null,// unused
-            anim_out= null,// unused
-            hidden= false
-        }
-    },
+                new MenuManifest.Item() {
+                    name= "resume",
+                    text= "RESUME",// unused
+                    placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
+                    anim_selected= null,// unused
+                    anim_choosen= null,// unused
+                    anim_discarded= null,// unused
+                    anim_idle= null,// unused
+                    anim_rollback= null,// unused
+                    anim_in= null,// unused
+                    anim_out= null,// unused
+                    hidden= false,
+                    description= null// unused
+                },
+                new MenuManifest.Item() {
+                    name= "week-menu",
+                    text= "WEEK MENU",// unused
+                    placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
+                    anim_selected= null,// unused
+                    anim_choosen= null,// unused
+                    anim_discarded= null,// unused
+                    anim_idle= null,// unused
+                    anim_rollback= null,// unused
+                    anim_in= null,// unused
+                    anim_out= null,// unused
+                    hidden= true,
+                    description= null// unused
+                },
+                new MenuManifest.Item() {
+                    name= "restart-song",
+                    text= "RESTART SONG",// unused
+                    placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
+                    anim_selected= null,// unused
+                    anim_choosen= null,// unused
+                    anim_discarded= null,// unused
+                    anim_idle= null,// unused
+                    anim_rollback= null,// unused
+                    anim_in= null,// unused
+                    anim_out= null,// unused
+                    hidden= false,
+                    description= null// unused
+                },
+                new MenuManifest.Item()  {
+                    name= "exit-week-selector",
+                    text= "EXIT TO WEEK SELECTOR",// unused
+                    placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
+                    anim_selected= null,// unused
+                    anim_choosen= null,// unused
+                    anim_discarded= null,// unused
+                    anim_idle= null,// unused
+                    anim_rollback= null,// unused
+                    anim_in= null,// unused
+                    anim_out= null,// unused
+                    hidden= false,
+                    description= null// unused
+                },
+                new MenuManifest.Item() {
+                    name= "exit-main-menu",
+                    text= "EXIT TO MAIN MENU",// unused
+                    placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
+                    anim_selected= null,// unused
+                    anim_choosen= null,// unused
+                    anim_discarded= null,// unused
+                    anim_idle= null,// unused
+                    anim_rollback= null,// unused
+                    anim_in= null,// unused
+                    anim_out= null,// unused
+                    hidden= false,
+                    description= null// unused
+                }
+            },
             items_size = 5
         };
         public const string LAYOUT_WIDESCREEN = "/assets/common/image/week-round/pause.xml";
         public const string LAYOUT_DREAMCAST = "/assets/common/image/week-round/pause~dreamcast.xml";
         public const string NOCONTROLLER = "/assets/common/image/week-round/no_controller.png";
+        private const string MODDING_SCRIPT = "/assets/data/scripts/weekpause.lua";
+        private const string MODDING_MENU = "/assets/data/menus/weekpause.json";
         public const int ANTIBOUNCE = 400;
 
         // messagebox strings
@@ -143,6 +150,8 @@ namespace Engine.Game.Gameplay {
         private LayoutPlaceholder menu_placeholder;
         private Menu menu_external;
         private SoundPlayer background_menu_music;
+        private Modding modding;
+        private int native_option_choosen_index;
 
 
         public WeekPause() {
@@ -161,14 +170,26 @@ namespace Engine.Game.Gameplay {
             );
             WeekPause.MENU.parameters.items_gap = WeekPause.MENU.parameters.font_size;
 
+            MenuManifest menumanifest = WeekPause.MENU;
+            if (FS.FileExists(WeekPause.MODDING_MENU)) {
+                menumanifest = new MenuManifest(WeekPause.MODDING_MENU);
+                if (menumanifest == null) throw new Exception("failed to load " + WeekPause.MODDING_MENU);
+            }
+
             Menu menu = new Menu(
-                WeekPause.MENU,
+                menumanifest,
                 menu_placeholder.x, menu_placeholder.y, menu_placeholder.z,
                 menu_placeholder.width, menu_placeholder.height
             );
 
+            if (menumanifest != WeekPause.MENU) menumanifest.Destroy();
+
             MessageBox messagebox = new MessageBox();
             Sprite sprite_nocontroller = Sprite.Init(Texture.Init(WeekPause.NOCONTROLLER));
+
+            Modding modding = new Modding(layout, WeekPause.MODDING_SCRIPT);
+            modding.native_menu = menu;
+            modding.callback_option = this.InternalHandleOption;
 
             this.menu = menu;
             this.messagebox = messagebox;
@@ -177,6 +198,8 @@ namespace Engine.Game.Gameplay {
             this.menu_placeholder = menu_placeholder;
             this.menu_external = null;
             this.background_menu_music = null;
+            this.modding = modding;
+            this.native_option_choosen_index = -1;
         }
 
         public void Destroy() {
@@ -184,6 +207,7 @@ namespace Engine.Game.Gameplay {
             this.menu.Destroy();
             this.messagebox.Destroy();
             this.sprite_nocontroller.DestroyFull();
+            this.modding.Destroy();
             if (this.menu_external != null) this.menu_external.Destroy();
             if (this.background_menu_music != null) this.background_menu_music.Destroy();
             //free(this);
@@ -275,7 +299,12 @@ namespace Engine.Game.Gameplay {
                 this.messagebox.Show(true);
             }
 
-            while (true) {
+            this.native_option_choosen_index = -1;
+            this.modding.has_exit = false;
+            this.modding.has_halt = false;
+            this.modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+
+            while (!this.modding.has_exit) {
                 bool to_external_menu = false;
                 float elapsed = InternalRender(roundcontext);
 
@@ -283,8 +312,16 @@ namespace Engine.Game.Gameplay {
                     GamepadButtons.START | GamepadButtons.AD_UP | GamepadButtons.AD_DOWN | GamepadButtons.A | GamepadButtons.X | GamepadButtons.B | GamepadButtons.BACK
                 );
 
+                ModdingHelperResult res = this.modding.HelperHandleCustomMenu(controller, elapsed);
+                if (res != ModdingHelperResult.CONTINUE) break;
+                if (this.modding.has_halt || this.modding.active_menu != this.menu) continue;
+                if (this.native_option_choosen_index >= 0) {
+                    selected_option = this.native_option_choosen_index;
+                    break;
+                }
+
                 if (antibounce > 0) {
-                    if (buttons != GamepadButtons.NOTHING)
+                    if (buttons.Bool())
                         antibounce -= elapsed;
                     else
                         antibounce = 0.0f;
@@ -292,11 +329,11 @@ namespace Engine.Game.Gameplay {
                 }
 
                 if (selected_option != 0) {
-                    if ((buttons & (GamepadButtons.A | GamepadButtons.X)) != GamepadButtons.NOTHING) {
+                    if ((buttons & (GamepadButtons.A | GamepadButtons.X)).Bool()) {
                         break;
-                    } else if ((buttons & (GamepadButtons.B | GamepadButtons.START | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+                    } else if ((buttons & (GamepadButtons.B | GamepadButtons.START | GamepadButtons.BACK)).Bool()) {
                         selected_option = 0;
-                        if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+                        if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                             antibounce = 200.0f;
                             this.messagebox.Hide(false);
                         } else {
@@ -328,25 +365,27 @@ namespace Engine.Game.Gameplay {
                     }
                 }
 
-                if ((buttons & GamepadButtons.START) != GamepadButtons.NOTHING) {
-                    if (!current_menu_external) break;
-                } else if ((buttons & GamepadButtons.AD_UP) != GamepadButtons.NOTHING) {
+                if ((buttons & GamepadButtons.START).Bool()) {
+                    if (!current_menu_external && !this.modding.HelperNotifyBack()) break;
+                } else if ((buttons & GamepadButtons.AD_UP).Bool()) {
                     if (!current_menu.SelectVertical(-1))
                         current_menu.SelectIndex(current_menu.GetItemsCount() - 1);
-                } else if ((buttons & GamepadButtons.AD_DOWN) != GamepadButtons.NOTHING) {
+                } else if ((buttons & GamepadButtons.AD_DOWN).Bool()) {
                     if (!current_menu.SelectVertical(1))
                         current_menu.SelectIndex(0);
-                } else if ((buttons & (GamepadButtons.A | GamepadButtons.X)) != GamepadButtons.NOTHING) {
+                } else if ((buttons & (GamepadButtons.A | GamepadButtons.X)).Bool()) {
                     if (current_menu_external) {
                         to_external_menu = true;
-                        buttons = controller.GetPressed();
                     } else {
-                        int option_index = current_menu.GetSelectedIndex();
+                        int option_index = WeekPause.InternalGetNativeOptionIndex(
+                            this.menu.GetSelectedItemName()
+                        );
                         if (option_index == 0) {
                             selected_option = 0;// resume
                             break;
                         } else if (option_index == 1 && this.menu_external != null) {
                             // display week menu
+                            this.modding.HelperNotifyModdingEvent("week-custom-menu");
                             this.menu_external.TrasitionIn();
                             this.menu_placeholder.vertex = this.menu_external.GetDrawable();
                             current_menu_external = true;
@@ -372,19 +411,20 @@ namespace Engine.Game.Gameplay {
                             controller.ClearButtons();
                         }
                     }
-                } else if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+                } else if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                     if (current_menu_external) {
                         current_menu_external = false;
                         this.menu_placeholder.vertex = this.menu.GetDrawable();
                         if (roundcontext.script != null) roundcontext.script.NotifyPauseMenuvisible(false);
+                        this.modding.HelperNotifyModdingEvent("week-pause-menu");
                         this.menu.TrasitionIn();
-                    } else {
+                    } else if (!modding.HelperNotifyBack()) {
                         selected_option = 0;
                         break;
                     }
                 } else if (current_menu_external) {
                     buttons = controller.GetPressed();
-                    to_external_menu = buttons != GamepadButtons.NOTHING;// notify script if has buttons pressed
+                    to_external_menu = buttons.Bool();// notify script if has buttons pressed
                 }
 
                 if (to_external_menu) {
@@ -417,6 +457,8 @@ namespace Engine.Game.Gameplay {
                     if (this.layout.AnimationIsCompleted("transition_effect") > 0) break;
                 }
             }
+
+            this.modding.HelperNotifyExit2();
 
             // selected options:
             //      0 -> resume
@@ -451,6 +493,24 @@ namespace Engine.Game.Gameplay {
             this.messagebox.Draw(PVRContext.global_context);
 
             return elapsed;
+        }
+
+        private bool InternalHandleOption(string option_name) {
+            if (option_name == null) return false;
+
+            this.native_option_choosen_index = WeekPause.InternalGetNativeOptionIndex(option_name);
+
+            return this.native_option_choosen_index >= 0;
+        }
+
+        private static int InternalGetNativeOptionIndex(string option_name) {
+            for (int i = 0 ; i < WeekPause.MENU.items_size ; i++) {
+                if (option_name == WeekPause.MENU.items[i].name) {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
     }

@@ -88,6 +88,7 @@ async function menumanifest_init(src) {
             name: json_read_string(json_item, "name", null),
             text: json_read_string(json_item, "text", null),
             hidden: json_read_boolean(json_item, "hidden", 0),
+            description: json_read_string(json_item, "description", null),
 
             placement: {
                 x: json_read_number(json_placement, "x", 0),
@@ -116,6 +117,7 @@ function menumanifest_destroy(menumanifest) {
     for (let i = 0; i < menumanifest.items_size; i++) {
         menumanifest.items[i].name = undefined;
         menumanifest.items[i].text = undefined;
+        menumanifest.items[i].description = undefined;
         menumanifest.items[i].anim_selected = undefined;
         menumanifest.items[i].anim_choosen = undefined;
         menumanifest.items[i].anim_discarded = undefined;

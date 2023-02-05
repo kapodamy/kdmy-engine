@@ -6,13 +6,16 @@
 
 #include "sprite.h"
 #include "textsprite.h"
-#include "global.h"
 #include "soundplayer.h"
 #include "videoplayer.h"
 #include "modifier.h"
 #include "psshader.h"
 #include "camera.h"
 
+// foward declaration
+struct _Camera_t;
+typedef struct _Camera_t Camera_t;
+typedef Camera_t* Camera;
 
 typedef struct _Layout_t {
     int dummy;

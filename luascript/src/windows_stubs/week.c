@@ -41,6 +41,14 @@ double week_unlockdirective_get(RoundContext roundcontext, const char* name) {
     print_stub("week_unlockdirective_get", "roundcontext=%p name=%s", roundcontext, name);
     return 123;
 }
+bool week_storage_set(RoundContext roundcontext, const char* name, const uint8_t* data, uint32_t data_size) {
+    print_stub("week_storage_set", "roundcontext=%p name=%s data=%p data_size=%u", roundcontext, name, data, data_size);
+    return 0;
+}
+uint32_t week_storage_get(RoundContext roundcontext, const char* name, uint8_t** data) {
+    print_stub("week_storage_get", "roundcontext=%p name=%s data=%p", roundcontext, name, data);
+    return 0;
+}
 void week_ui_set_visibility(RoundContext roundcontext, bool visible) {
     print_stub("week_ui_set_visibility", "roundcontext=%p visible=(bool)%i", roundcontext, visible);
 }
@@ -77,7 +85,7 @@ StreakCounter week_ui_get_streakcounter(RoundContext roundcontext) {
 }
 TextSprite week_ui_get_trackinfo(RoundContext roundcontext) {
     print_stub("week_ui_get_trackinfo", "roundcontext=%p", roundcontext);
-    return NULL;
+    return &stub_textsprite;
 }
 SongProgressbar week_ui_get_songprogressbar(RoundContext roundcontext) {
     print_stub("week_ui_get_songprogressbar", "roundcontext=%p", roundcontext);

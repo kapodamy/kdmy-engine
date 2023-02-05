@@ -675,6 +675,13 @@ declare global {
         animation_set(animsprite: AnimSprite): void;
         animation_restart(): void;
         animation_end(): void;
+        strums_decorators_get_count(): number;
+        strums_decorators_add(modelholder: ModelHolder, animation_name: string, timestamp: number): boolean;
+        strums_decorators_add2(modelholder: ModelHolder, animation_name: string, timestamp: number, from_strum_index: number, to_strum_index: number): boolean;
+        strums_decorators_set_scroll_speed(speed: number): void;
+        strums_decorators_set_alpha(alpha: number): void;
+        strums_decorators_set_visible(decorator_timestamp: number, visible: boolean): void;
+        
     }
     interface Conductor {
         destroy(): void;
@@ -817,6 +824,8 @@ declare global {
         hide_warnings(): void;
         show_drain_warning(use_fast_drain: boolean): void;
         show_locked_warning(): void;
+        healthbar_get_bar_midpoint(): LuaMultiReturn<[number, number]>;
+        healthbar_get_percent(): number;
     }
     interface HealthWatcher {
         add_opponent(playerstats: PlayerStats, can_recover: boolean, can_die: boolean): boolean;
@@ -859,22 +868,23 @@ declare global {
         exit(exit_code: number): string;
     }
     interface Menu {
-        //destroy(menu: Menu): void;
-        get_drawable(menu: Menu): Drawable;
-        trasition_in(menu: Menu): void;
-        trasition_out(menu: Menu): void;
-        select_item(menu: Menu, name: string): void;
-        select_index(menu: Menu, index: number): void;
-        select_vertical(menu: Menu, offset: number): boolean;
-        select_horizontal(menu: Menu, offset: number): boolean;
-        toggle_choosen(menu: Menu, enable: boolean): void;
-        get_selected_index(menu: Menu): number;
-        get_items_count(menu: Menu): number;
-        set_item_text(menu: Menu, index: number, text: string): boolean;
-        set_item_visibility(menu: Menu, index: number, visible: boolean): boolean;
-        get_item_rect(menu: Menu, index: number): LuaMultiReturn<[number, number, number, number]> | null;
-        get_selected_item_name(menu: Menu): string;
-        set_text_force_case(menu: Menu, none_or_lowercase_or_uppercase: TextSpriteForceCase): void;
+        //destroy(): void;
+        get_drawable(): Drawable;
+        trasition_in(): void;
+        trasition_out(): void;
+        select_item(name: string): void;
+        select_index(index: number): void;
+        select_vertical(offset: number): boolean;
+        select_horizontal(offset: number): boolean;
+        toggle_choosen(enable: boolean): void;
+        get_selected_index(): number;
+        get_items_count(): number;
+        set_item_text(index: number, text: string): boolean;
+        set_item_visibility(index: number, visible: boolean): boolean;
+        get_item_rect(index: number): LuaMultiReturn<[number, number, number, number]> | null;
+        get_selected_item_name(): string;
+        set_text_force_case(none_or_lowercase_or_uppercase: TextSpriteForceCase): void;
+        has_item(name: string): boolean;
     }
 
     //
@@ -951,6 +961,8 @@ declare global {
     function week_unlockdirective_create(name: string, completed_round: boolean, completed_week: boolean, value: number): void;
     function week_unlockdirective_get(name: string): number | null;
     function week_unlockdirective_remove(name: string, completed_round: boolean, completed_week: boolean): void;
+    function week_storage_get_blob(blob_name: string): string | null;
+    function week_storage_set_blob(blob_name: string, blob: string): boolean;
 
 
 
@@ -987,13 +999,14 @@ declare global {
     // Modding UI (engine screens/menus only)
     //
     type BasicValue = string | number | boolean | null;
-    function modding_set_ui_visibility(visible: boolean): void;
     function modding_get_layout(): Layout;
     function modding_exit(): void;
     function modding_set_halt(halt: boolean): void;
     function modding_unlockdirective_create(name: string, value: number): void;
     function modding_unlockdirective_remove(name: string): void;
     function modding_unlockdirective_get(name: string): number | null;
+    function modding_storage_get_blob(week_name: string, blob_name: string): string | null;
+    function modding_storage_set_blob(week_name: string, blob_name: string, blob: string): boolean;
     function modding_get_active_menu(): Menu;
     function modding_choose_native_menu_option(name: string): boolean;
     function modding_get_native_menu(): Menu;
@@ -1003,6 +1016,15 @@ declare global {
     function modding_spawn_screen(layout_src: string, script_src: string, arg: BasicValue): BasicValue;
     function modding_set_exit_delay(delay_ms: number): void;
     function modding_get_messagebox(): Messagebox;
+    function modding_get_loaded_weeks(): WeekInfo[];
+    function modding_launch_week(week_name: string, difficult: string, use_alt_tracks: boolean, boyfriend_character_manifest_src: string, girlfriend_character_manifest_src: string, gameplay_manifest_src: string, freeplay_track_index: number): number;
+    function modding_launch_credits(): void;
+    function modding_launch_startscreen(): boolean;
+    function modding_launch_mainmenu(): boolean;
+    function modding_launch_settings(): void;
+    function modding_launch_freeplay(): void;
+    function modding_launch_weekselector(): number;
+
 
     //
     // MenuManifest helpers (modding context only)
@@ -1074,6 +1096,23 @@ declare global {
         items_size: number;
     }
     function menumanifest_parse_from_file(src: string): MenuManifest;
+
+    type WeekInfoSong = {
+        readonly name: string;
+        readonly freeplay_only: boolean;
+        readonly freeplay_unlock_directive: string;
+        readonly freeplay_song_filename: string;
+        readonly freeplay_description: string;
+    };
+    type WeekInfo = {
+        name: string;
+        display_name: string;
+        description: string;
+        custom_folder: string;
+        songs: WeekInfoSong[];
+        unlock_directive: string;
+        emit_directive: string;
+    }
 
     //
     // Engine objects

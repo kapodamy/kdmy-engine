@@ -12,13 +12,17 @@ namespace Engine.Game {
         private const string TEXT_SPARSE = "--";
         private const string LAYOUT = "/assets/common/image/intro-screen/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/intro-screen/layout~dreamcast.xml";
+        private const string MODDING_SCRIPT = "/assets/data/scripts/introscreen.lua";
         private const GamepadButtons SKIP_BUTTONS = GamepadButtons.START | GamepadButtons.A;
 
         public static void Main() {
             Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
             if (layout == null) return;
 
+            Modding modding = new Modding(layout, IntroScreen.MODDING_SCRIPT);
             Gamepad maple_pad = new Gamepad(-1);
+
+            modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
 
             // read delay/durations from layout
             float delay = layout.GetAttachedValueAsFloat("delay", IntroScreen.DELAY);
@@ -27,19 +31,28 @@ namespace Engine.Game {
             );
 
             if (custom_duration > 0.0) {
+                modding.HelperNotifyModdingEvent("custom-intro");
+
                 // custom intro detected wait the requeted time
                 double progress = 0.0;
                 while (progress < custom_duration) {
                     float elapsed = PVRContext.global_context.WaitReady();
-                    progress += elapsed;
-
                     PVRContext.global_context.Reset();
+
+                    ModdingHelperResult res = modding.HelperHandleCustomMenu(maple_pad, elapsed);
+                    if (modding.has_exit || res != ModdingHelperResult.CONTINUE) break;
+
                     layout.Animate(elapsed);
                     layout.Draw(PVRContext.global_context);
+                    if (modding.has_halt) continue;
 
-                    if (maple_pad.HasPressed(IntroScreen.SKIP_BUTTONS) != GamepadButtons.NOTHING) break;
+                    progress += elapsed;
+                    if (maple_pad.HasPressed(IntroScreen.SKIP_BUTTONS).Bool()) break;
                 }
 
+                modding.HelperNotifyExit2();
+
+                if (modding != null) modding.Destroy();
                 layout.Destroy();
                 maple_pad.Destroy();
                 return;
@@ -54,6 +67,7 @@ namespace Engine.Game {
             string self_text = FS.ReadText("/assets/engineText.txt");
             string intro_text = IntroScreen.ReadIntroText("/assets/common/data/introText.txt");
             string week_greetings = null;
+            string funky = (string)layout.GetAttachedValue("funky", AttachedValueType.STRING, Funkin.FUNKY);
 
             // 25% chance of displaying choosen week greetings
             if (Math2D.RandomFloat() <= 0.25f) week_greetings = IntroScreen.ReadWeekGretings();
@@ -69,30 +83,39 @@ namespace Engine.Game {
             if (GameMain.background_menu_music != null) GameMain.background_menu_music.Play();
 
             layout.TriggerAny("intro-engine");
-            IntroScreen.DrawSparseText(self_text, delay, engine_duration, layout, maple_pad);
+            modding.HelperNotifyModdingEvent("intro-engine");
+            IntroScreen.DrawSparseText(self_text, delay, engine_duration, modding, maple_pad);
 
             if (week_greetings != null) {
                 layout.TriggerAny("intro-week-grettings");
-                IntroScreen.DrawSparseText(week_greetings, delay, greetings_duration, layout, maple_pad);
+                modding.HelperNotifyModdingEvent("intro-week-grettings");
+                IntroScreen.DrawSparseText(week_greetings, delay, greetings_duration, modding, maple_pad);
             } else {
                 layout.TriggerAny("intro-greetings");
-                IntroScreen.DrawSparseText(intro_text, delay, greetings_duration, layout, maple_pad);
+                modding.HelperNotifyModdingEvent("intro-greetings");
+                IntroScreen.DrawSparseText(intro_text, delay, greetings_duration, modding, maple_pad);
             }
 
             layout.TriggerAny("intro-funkin");
-            IntroScreen.DrawSparseText(Funkin.FUNKY, delay, funkin_duration, layout, maple_pad);
+            modding.HelperNotifyModdingEvent("intro-funkin");
+            IntroScreen.DrawSparseText(Funkin.FUNKY, delay, funkin_duration, modding, maple_pad);
+
+            modding.HelperNotifyExit2();
 
             // dispose resources used
+            //if (funky != Funkin.FUNKY) free(funky);
             //free(self_text);
             //free(intro_text);
             //free(week_greetings);
+            modding.Destroy();
             layout.Destroy();
             maple_pad.Destroy();
         }
 
-        private static void DrawSparseText(string text, float delay, float duration, Layout layout, Gamepad maple_pad) {
+        private static void DrawSparseText(string text, float delay, float duration, Modding modding, Gamepad maple_pad) {
+            Layout layout = modding.layout;
             TextSprite textsprite = layout.GetTextsprite("greetings");
-            if (textsprite == null || text == null) return;
+            if (textsprite == null || text == null || modding.has_exit) return;
 
             string text_buffer = "";
             int text_length = text.Length;
@@ -118,12 +141,16 @@ namespace Engine.Game {
                 }
 
                 float elapsed = PVRContext.global_context.WaitReady();
-                progress += elapsed;
-
                 PVRContext.global_context.Reset();
+
+                ModdingHelperResult res = modding.HelperHandleCustomMenu(maple_pad, elapsed);
+                if (modding.has_exit || res != ModdingHelperResult.CONTINUE) break;
+
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
+                if (modding.has_halt) continue;
 
+                progress += elapsed;
                 if (maple_pad.HasPressed(IntroScreen.SKIP_BUTTONS) != GamepadButtons.NOTHING) break;
             }
 

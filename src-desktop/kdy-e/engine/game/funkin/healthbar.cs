@@ -94,6 +94,7 @@ namespace Engine.Game {
         private bool transition_enabled;
         private TweenLerp tweenlerp;
         private float last_health;
+        private float last_health_position_opponent;
         private string prefix_state_player;
         private string prefix_state_opponent;
         private AnimSprite drawable_animation;
@@ -157,6 +158,7 @@ namespace Engine.Game {
             this.tweenlerp = new TweenLerp();
 
             this.last_health = Single.NaN;
+            this.last_health_position_opponent = Single.NaN;
             this.prefix_state_player = HealthBar.ICON_PREFIX_NEUTRAL;
             this.prefix_state_opponent = HealthBar.ICON_PREFIX_NEUTRAL;
 
@@ -532,15 +534,15 @@ namespace Engine.Game {
             if (has_bump_opponent) {
                 res += this.bump_animation_opponent.Animate(since_beat);
                 this.bump_animation_opponent.UpdateModifier(
-            this.bump_modifier_opponent, true
-        );
+                    this.bump_modifier_opponent, true
+                );
             }
 
             if (has_bump_player) {
                 res += this.bump_animation_player.Animate(since_beat);
                 this.bump_animation_player.UpdateModifier(
-            this.bump_modifier_player, true
-        );
+                    this.bump_modifier_player, true
+                );
             }
 
             if (this.drawable_animation != null) {
@@ -717,6 +719,37 @@ namespace Engine.Game {
 
 
 
+        public void GetBarMidpoint(out float x, out float y) {
+            float last_health_position_opponent = this.last_health_position_opponent;
+
+            if (Single.IsNaN(last_health_position_opponent)) last_health_position_opponent = 0.0f;
+
+            float dimmen = this.dimmen / 2f;
+            if (this.extra_enabled) last_health_position_opponent -= this.extra_translation;
+
+            x = this.modifier.x + this.border;
+            y = this.modifier.y + this.border;
+
+            if (this.is_vertical) {
+                x += dimmen;
+                y += last_health_position_opponent;
+            } else {
+                x += last_health_position_opponent;
+                y += dimmen;
+            }
+        }
+
+        public float GetPercent() {
+            float health;
+            if (this.transition_enabled)
+                health = this.tweenlerp.PeekValue();
+            else
+                health = this.last_health;
+
+            return Single.IsNaN(health) ? 0f : health;
+        }
+
+
         private void InternalCalcDimmensions() {
             int resolution_bar_width, resolution_bar_height;
             int resolution_icon_width, resolution_icon_height;
@@ -865,6 +898,8 @@ namespace Engine.Game {
                 if (this.is_vertical) this.warning_drain_y -= this.icon_overlap;
                 else this.warning_drain_x -= this.icon_overlap;
             }
+
+            this.last_health_position_opponent = health_position_opponent;
         }
 
 
@@ -1087,12 +1122,12 @@ namespace Engine.Game {
             icon.StateGetOffsets(out offset_x, out offset_y);
 
             pvrctx.ApplyModifier2(
-        bump_modifier,
-        draw_x + offset_x,
-        draw_y + offset_y,
-        draw_width,
-        draw_height
-    );
+                bump_modifier,
+                draw_x + offset_x,
+                draw_y + offset_y,
+                draw_width,
+                draw_height
+            );
             icon.Draw(pvrctx);
 
             pvrctx.Restore();

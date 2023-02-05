@@ -124,13 +124,13 @@ namespace Engine.Game {
         private const float DEFAULT_SICK_EFFECT_RATIO = 2f;
 
         /** Number of notes to draw after the marker */
-        private const float DRAW_PAST_NOTES = 1.1f;
+        public const float DRAW_PAST_NOTES = 1.1f;
 
         /** Marker used in auto-scroll */
         private const StrumMarkerState AUTO_SCROLL_MARKER_STATE = StrumMarkerState.CONFIRM;
 
         /** Increases the marker duration 5% */
-        private const float ADDITIONAL_MARKER_DURATION_RATIO = 1.05f;
+        public const float ADDITIONAL_MARKER_DURATION_RATIO = 1.05f;
 
 
 

@@ -124,6 +124,9 @@ function kdmyEngine_set_float64(address, value) {
     kdmyEngine_dataView.setFloat64(address, value, kdmyEngine_endianess);
 }
 function kdmyEngine_get_uint32(address) {
+    return kdmyEngine_dataView.getUint32(address, kdmyEngine_endianess);
+}
+function kdmyEngine_get_float64(address) {
     return kdmyEngine_dataView.getFloat64(address, kdmyEngine_endianess);
 }
 function kdmyEngine_get_ram() {
@@ -854,58 +857,98 @@ function __asyncjs__modding_get_messagebox(modding) {
         return kdmyEngine_obtain(ret)
     })
 }
+function __asyncjs__modding_launch_credits(modding) {
+    return Asyncify.handleAsync(async() => {
+        modding_launch_credits(kdmyEngine_obtain(modding))
+    })
+}
+function __asyncjs__modding_launch_freeplay(modding) {
+    return Asyncify.handleAsync(async() => {
+        modding_launch_freeplay(kdmyEngine_obtain(modding))
+    })
+}
+function __asyncjs__modding_launch_mainmenu(modding) {
+    return Asyncify.handleAsync(async() => {
+        let ret = modding_launch_mainmenu(kdmyEngine_obtain(modding));
+        return ret ? 1 : 0
+    })
+}
+function __asyncjs__modding_launch_settings(modding) {
+    return Asyncify.handleAsync(async() => {
+        modding_launch_settings(kdmyEngine_obtain(modding))
+    })
+}
+function __asyncjs__modding_launch_startscreen(modding) {
+    return Asyncify.handleAsync(async() => {
+        let ret = modding_launch_startscreen(kdmyEngine_obtain(modding));
+        return ret ? 1 : 0
+    })
+}
+function __asyncjs__modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, track_idx) {
+    return Asyncify.handleAsync(async() => {
+        let ret = modding_launch_week(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(difficult), alt_tracks, kdmyEngine_ptrToString(bf), kdmyEngine_ptrToString(gf), kdmyEngine_ptrToString(gameplay_manifest), track_idx);
+        _free(difficult);
+        _free(bf);
+        _free(gf);
+        _free(gameplay_manifest);
+        return ret
+    })
+}
+function __asyncjs__modding_launch_weekselector(modding) {
+    return Asyncify.handleAsync(async() => {
+        let ret = modding_launch_weekselector(kdmyEngine_obtain(modding));
+        return ret
+    })
+}
 function __asyncjs__modding_replace_native_background_music(modding, music_src) {
     return Asyncify.handleAsync(async() => {
         let ret = await modding_replace_native_background_music(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(music_src));
         return kdmyEngine_obtain(ret)
     })
 }
-function __asyncjs__modding_spawn_screen(modding, layout_src, script_src, value) {
+function __asyncjs__modding_spawn_screen(modding, layout_src, script_src, arg_type, arg_value, ret_type) {
     return Asyncify.handleAsync(async() => {
-        let val = {
-            type: kdmyEngine_get_uint32(value),
-            value: null
-        };
-        let value_value_ptr = value + 4;
-        switch (val.type) {
-        case BASIC_VALUE_TYPE_DOUBLE:
-            val.value = kdmyEngine_dataView.getFloat64(value_value_ptr, kdmyEngine_endianess);
-            break;
-        case BASIC_VALUE_TYPE_NULL:
-            break;
-        case BASIC_VALUE_TYPE_STRING:
-            let string_ptr = kdmyEngine_get_uint32(value_value_ptr);
-            val.value = kdmyEngine_ptrToString(string_ptr);
-            _free(string_ptr);
-            break;
-        case BASIC_VALUE_TYPE_BOOLEAN:
-            val.value = kdmyEngine_get_uint32(value) ? true : false;
-            break;
+        let arg = null;
+        switch (arg_type) {
         default:
-            throw new Error("value type " + val.type + "not implemented")
+        case MODDING_VALUE_TYPE_NULL:
+            arg = null;
+            break;
+        case MODDING_VALUE_TYPE_STRING:
+            arg = kdmyEngine_ptrToString(arg_value);
+            break;
+        case MODDING_VALUE_TYPE_BOOLEAN:
+            arg = kdmyEngine_get_uint32(arg_value) != 0;
+            break;
+        case MODDING_VALUE_TYPE_DOUBLE:
+            arg = kdmyEngine_get_float64(arg_value);
+            break
         }
-        _free(value);
-        let ret = await modding_spawn_screen(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(layout_src), kdmyEngine_ptrToString(script_src), val);
-        let r = _malloc(4 + 8);
-        HEAPU32[r + 0] = ret.type;
-        let r_value_ptr = r + 4;
-        switch (ret.type) {
-        case BASIC_VALUE_TYPE_DOUBLE:
-            kdmyEngine_set_float64(r_value_ptr, ret.value);
-            break;
-        case BASIC_VALUE_TYPE_NULL:
-            kdmyEngine_set_uint32(r_value_ptr, 0);
-            break;
-        case BASIC_VALUE_TYPE_STRING:
-            kdmyEngine_set_float64(r_value_ptr, kdmyEngine_stringToPtr(ret.value));
-            break;
-        case BASIC_VALUE_TYPE_BOOLEAN:
-            kdmyEngine_set_uint32(r_value_ptr, ret.value ? 1 : 0);
-            break;
+        if (arg_value != 0)
+            _free(arg_value);
+        let ret = await modding_spawn_screen(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(layout_src), kdmyEngine_ptrToString(script_src), arg);
+        let ret_ptr = 0;
+        switch (typeof ret) {
         default:
-            throw new Error("value type " + ret.type + "not implemented")
+        case "object":
+            kdmyEngine_set_uint32(ret_type, MODDING_VALUE_TYPE_NULL);
+            break;
+        case "string":
+            kdmyEngine_set_uint32(ret_type, MODDING_VALUE_TYPE_STRING);
+            ret_ptr = kdmyEngine_stringToPtr(ret);
+            break;
+        case "boolean":
+            kdmyEngine_set_uint32(ret_type, MODDING_VALUE_TYPE_BOOLEAN);
+            ret_ptr = _malloc(4);
+            kdmyEngine_set_uint32(ret_ptr, ret ? 1 : 0);
+            break;
+        case "number":
+            kdmyEngine_set_uint32(ret_type, MODDING_VALUE_TYPE_DOUBLE);
+            ret_ptr = _malloc(8);
+            kdmyEngine_set_float64(ret_ptr, ret);
+            break
         }
-        return r
+        return ret_ptr
     })
 }
 function __asyncjs__modelholder_init(src) {
@@ -1421,9 +1464,19 @@ function __js__healthbar_enable_low_health_flash_warning(healthbar, enable) {
 function __js__healthbar_enable_vertical(healthbar, enable_vertical) {
     healthbar_enable_vertical(kdmyEngine_obtain(healthbar), enable_vertical)
 }
+function __js__healthbar_get_bar_midpoint(healthbar, x, y) {
+    const values = [0, 0];
+    healthbar_get_bar_midpoint(kdmyEngine_obtain(healthbar), values);
+    kdmyEngine_set_float32(x, values[0]);
+    kdmyEngine_set_float32(y, values[1])
+}
 function __js__healthbar_get_drawable(healthbar) {
     let ret = healthbar_get_drawable(kdmyEngine_obtain(healthbar));
     return kdmyEngine_obtain(ret)
+}
+function __js__healthbar_get_percent(healthbar) {
+    let ret = healthbar_get_percent(kdmyEngine_obtain(healthbar));
+    return ret
 }
 function __js__healthbar_hide_warnings(healthbar) {
     healthbar_hide_warnings(kdmyEngine_obtain(healthbar))
@@ -1586,6 +1639,13 @@ function __js__kdmyEngine_get_locationquery() {
 }
 function __js__kdmyEngine_get_useragent() {
     return kdmyEngine_stringToPtr(navigator.userAgent)
+}
+function __js__kdmyEngine_read_array_item_object(array_id, index) {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array)
+        throw new Error("Uknown array id:" + array_id);
+    let ret = array[index];
+    return kdmyEngine_obtain(ret)
 }
 function __js__kdmyEngine_read_prop_boolean(obj_id, field_name) {
     let obj = kdmyEngine_obtain(obj_id);
@@ -1881,6 +1941,10 @@ function __js__menu_get_selected_item_name(menu) {
     let ret = menu_get_selected_item_name(kdmyEngine_obtain(menu));
     return kdmyEngine_stringToPtr(ret)
 }
+function __js__menu_has_item(menu, name) {
+    let ret = menu_has_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
+}
 function __js__menu_select_horizontal(menu, offset) {
     let ret = menu_select_horizontal(kdmyEngine_obtain(menu), offset);
     return ret ? 1 : 0
@@ -1904,7 +1968,7 @@ function __js__menu_set_item_visibility(menu, index, visible) {
     return ret ? 1 : 0
 }
 function __js__menu_set_text_force_case(menu, none_or_lowercase_or_uppercase) {
-    menu_set_text_force_case(kdmyEngine_obtain(menu), kdmyEngine_obtain(none_or_lowercase_or_uppercase))
+    menu_set_text_force_case(kdmyEngine_obtain(menu), none_or_lowercase_or_uppercase)
 }
 function __js__menu_toggle_choosen(menu, enable) {
     menu_toggle_choosen(kdmyEngine_obtain(menu), enable)
@@ -1988,6 +2052,12 @@ function __js__modding_get_layout(modding) {
     let ret = modding_get_layout(kdmyEngine_obtain(modding));
     return kdmyEngine_obtain(ret)
 }
+function __js__modding_get_loaded_weeks(modding, out_size) {
+    const size = [0];
+    let ret = modding_get_loaded_weeks(kdmyEngine_obtain(modding), size);
+    kdmyEngine_set_uint32(out_size, size[0]);
+    return kdmyEngine_obtain(ret)
+}
 function __js__modding_get_native_background_music(modding) {
     let ret = modding_get_native_background_music(kdmyEngine_obtain(modding));
     return kdmyEngine_obtain(ret)
@@ -2006,10 +2076,29 @@ function __js__modding_set_halt(modding, halt) {
     modding_set_halt(kdmyEngine_obtain(modding), halt)
 }
 function __js__modding_set_menu_in_layout_placeholder(modding, placeholder_name, menu) {
-    modding_set_menu_in_layout_placeholder(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(placeholder_names), kdmyEngine_obtain(menu))
+    modding_set_menu_in_layout_placeholder(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(placeholder_name), kdmyEngine_obtain(menu))
 }
-function __js__modding_set_ui_visibility(modding, visible) {
-    modding_set_ui_visibility(kdmyEngine_obtain(modding), visible)
+function __js__modding_storage_get(modding, week_name, name, data) {
+    let arraybuffer = [null];
+    let ret = modding_storage_get(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(name), arraybuffer);
+    let ptr;
+    if (arraybuffer[0]) {
+        ptr = _malloc(ret);
+        if (ptr != 0)
+            HEAPU8.set(new Uint8Array(arraybuffer[0]), ptr)
+    } else {
+        ptr = 0
+    }
+    kdmyEngine_set_uint32(data, ptr);
+    return ret
+}
+function __js__modding_storage_set(modding, week_name, name, data, data_size) {
+    let arraybuffer = data == 0 ? null : new ArrayBuffer(data_size);
+    if (arraybuffer) {
+        new Uint8Array(arraybuffer).set(HEAPU8.subarray(data, data + data_size), 0)
+    }
+    let ret = modding_storage_set(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(name), arraybuffer, data_size);
+    return ret ? 1 : 0
 }
 function __js__modding_unlockdirective_create(modding, name, value) {
     modding_unlockdirective_create(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name), value)
@@ -2668,6 +2757,27 @@ function __js__strums_animation_restart(strums) {
 function __js__strums_animation_set(strums, animsprite) {
     strums_animation_set(kdmyEngine_obtain(strums), kdmyEngine_obtain(animsprite))
 }
+function __js__strums_decorators_add(strums, modelholder, animation_name, timestamp) {
+    let ret = strums_decorators_add(kdmyEngine_obtain(strums), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), timestamp);
+    return ret ? 1 : 0
+}
+function __js__strums_decorators_add2(strums, modelholder, animation_name, timestamp, from_strum_index, to_strum_index) {
+    let ret = strums_decorators_add2(kdmyEngine_obtain(strums), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), timestamp, from_strum_index, to_strum_index);
+    return ret ? 1 : 0
+}
+function __js__strums_decorators_get_count(strums) {
+    let ret = strums_decorators_get_count(kdmyEngine_obtain(strums));
+    return ret
+}
+function __js__strums_decorators_set_alpha(strums, alpha) {
+    strums_decorators_set_alpha(kdmyEngine_obtain(strums), alpha)
+}
+function __js__strums_decorators_set_scroll_speed(strums, speed) {
+    strums_decorators_set_scroll_speed(kdmyEngine_obtain(strums), speed)
+}
+function __js__strums_decorators_set_visible(strums, decorator_timestamp, visible) {
+    strums_decorators_set_visible(kdmyEngine_obtain(strums), decorator_timestamp, visible)
+}
 function __js__strums_disable_beat_synced_idle_and_continous(strums, disabled) {
     strums_disable_beat_synced_idle_and_continous(kdmyEngine_obtain(strums), disabled)
 }
@@ -3151,6 +3261,28 @@ function __js__week_set_halt(roundcontext, halt) {
 }
 function __js__week_set_ui_shader(roundcontext, psshader) {
     week_set_ui_shader(kdmyEngine_obtain(roundcontext), kdmyEngine_obtain(psshader))
+}
+function __js__week_storage_get(roundcontext, name, data) {
+    let arraybuffer = [null];
+    let ret = week_storage_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), arraybuffer);
+    let ptr;
+    if (arraybuffer[0]) {
+        ptr = _malloc(ret);
+        if (ptr != 0)
+            HEAPU8.set(new Uint8Array(arraybuffer[0]), ptr)
+    } else {
+        ptr = 0
+    }
+    kdmyEngine_set_uint32(data, ptr);
+    return ret
+}
+function __js__week_storage_set(roundcontext, name, data, data_size) {
+    let arraybuffer = data == 0 ? null : new ArrayBuffer(data_size);
+    if (arraybuffer) {
+        new Uint8Array(arraybuffer).set(HEAPU8.subarray(data, data + data_size), 0)
+    }
+    let ret = week_storage_set(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), arraybuffer, data_size);
+    return ret ? 1 : 0
 }
 function __js__week_ui_get_camera(roundcontext) {
     let ret = week_ui_get_camera(kdmyEngine_obtain(roundcontext));
@@ -6615,6 +6747,13 @@ var asmLibraryArg = {
     "__asyncjs__messagebox_set_image_from_atlas": __asyncjs__messagebox_set_image_from_atlas,
     "__asyncjs__messagebox_set_image_from_texture": __asyncjs__messagebox_set_image_from_texture,
     "__asyncjs__modding_get_messagebox": __asyncjs__modding_get_messagebox,
+    "__asyncjs__modding_launch_credits": __asyncjs__modding_launch_credits,
+    "__asyncjs__modding_launch_freeplay": __asyncjs__modding_launch_freeplay,
+    "__asyncjs__modding_launch_mainmenu": __asyncjs__modding_launch_mainmenu,
+    "__asyncjs__modding_launch_settings": __asyncjs__modding_launch_settings,
+    "__asyncjs__modding_launch_startscreen": __asyncjs__modding_launch_startscreen,
+    "__asyncjs__modding_launch_week": __asyncjs__modding_launch_week,
+    "__asyncjs__modding_launch_weekselector": __asyncjs__modding_launch_weekselector,
     "__asyncjs__modding_replace_native_background_music": __asyncjs__modding_replace_native_background_music,
     "__asyncjs__modding_spawn_screen": __asyncjs__modding_spawn_screen,
     "__asyncjs__modelholder_init": __asyncjs__modelholder_init,
@@ -6770,7 +6909,9 @@ var asmLibraryArg = {
     "__js__healthbar_enable_extra_length": __js__healthbar_enable_extra_length,
     "__js__healthbar_enable_low_health_flash_warning": __js__healthbar_enable_low_health_flash_warning,
     "__js__healthbar_enable_vertical": __js__healthbar_enable_vertical,
+    "__js__healthbar_get_bar_midpoint": __js__healthbar_get_bar_midpoint,
     "__js__healthbar_get_drawable": __js__healthbar_get_drawable,
+    "__js__healthbar_get_percent": __js__healthbar_get_percent,
     "__js__healthbar_hide_warnings": __js__healthbar_hide_warnings,
     "__js__healthbar_load_warnings": __js__healthbar_load_warnings,
     "__js__healthbar_set_alpha": __js__healthbar_set_alpha,
@@ -6810,6 +6951,7 @@ var asmLibraryArg = {
     "__js__kdmyEngine_get_language": __js__kdmyEngine_get_language,
     "__js__kdmyEngine_get_locationquery": __js__kdmyEngine_get_locationquery,
     "__js__kdmyEngine_get_useragent": __js__kdmyEngine_get_useragent,
+    "__js__kdmyEngine_read_array_item_object": __js__kdmyEngine_read_array_item_object,
     "__js__kdmyEngine_read_prop_boolean": __js__kdmyEngine_read_prop_boolean,
     "__js__kdmyEngine_read_prop_double": __js__kdmyEngine_read_prop_double,
     "__js__kdmyEngine_read_prop_float": __js__kdmyEngine_read_prop_float,
@@ -6866,6 +7008,7 @@ var asmLibraryArg = {
     "__js__menu_get_items_count": __js__menu_get_items_count,
     "__js__menu_get_selected_index": __js__menu_get_selected_index,
     "__js__menu_get_selected_item_name": __js__menu_get_selected_item_name,
+    "__js__menu_has_item": __js__menu_has_item,
     "__js__menu_select_horizontal": __js__menu_select_horizontal,
     "__js__menu_select_index": __js__menu_select_index,
     "__js__menu_select_item": __js__menu_select_item,
@@ -6899,13 +7042,15 @@ var asmLibraryArg = {
     "__js__modding_exit": __js__modding_exit,
     "__js__modding_get_active_menu": __js__modding_get_active_menu,
     "__js__modding_get_layout": __js__modding_get_layout,
+    "__js__modding_get_loaded_weeks": __js__modding_get_loaded_weeks,
     "__js__modding_get_native_background_music": __js__modding_get_native_background_music,
     "__js__modding_get_native_menu": __js__modding_get_native_menu,
     "__js__modding_set_active_menu": __js__modding_set_active_menu,
     "__js__modding_set_exit_delay": __js__modding_set_exit_delay,
     "__js__modding_set_halt": __js__modding_set_halt,
     "__js__modding_set_menu_in_layout_placeholder": __js__modding_set_menu_in_layout_placeholder,
-    "__js__modding_set_ui_visibility": __js__modding_set_ui_visibility,
+    "__js__modding_storage_get": __js__modding_storage_get,
+    "__js__modding_storage_set": __js__modding_storage_set,
     "__js__modding_unlockdirective_create": __js__modding_unlockdirective_create,
     "__js__modding_unlockdirective_get": __js__modding_unlockdirective_get,
     "__js__modding_unlockdirective_has": __js__modding_unlockdirective_has,
@@ -7101,6 +7246,12 @@ var asmLibraryArg = {
     "__js__strums_animation_end": __js__strums_animation_end,
     "__js__strums_animation_restart": __js__strums_animation_restart,
     "__js__strums_animation_set": __js__strums_animation_set,
+    "__js__strums_decorators_add": __js__strums_decorators_add,
+    "__js__strums_decorators_add2": __js__strums_decorators_add2,
+    "__js__strums_decorators_get_count": __js__strums_decorators_get_count,
+    "__js__strums_decorators_set_alpha": __js__strums_decorators_set_alpha,
+    "__js__strums_decorators_set_scroll_speed": __js__strums_decorators_set_scroll_speed,
+    "__js__strums_decorators_set_visible": __js__strums_decorators_set_visible,
     "__js__strums_disable_beat_synced_idle_and_continous": __js__strums_disable_beat_synced_idle_and_continous,
     "__js__strums_enable_background": __js__strums_enable_background,
     "__js__strums_enable_post_sick_effect_draw": __js__strums_enable_post_sick_effect_draw,
@@ -7234,6 +7385,8 @@ var asmLibraryArg = {
     "__js__week_override_common_folder": __js__week_override_common_folder,
     "__js__week_set_halt": __js__week_set_halt,
     "__js__week_set_ui_shader": __js__week_set_ui_shader,
+    "__js__week_storage_get": __js__week_storage_get,
+    "__js__week_storage_set": __js__week_storage_set,
     "__js__week_ui_get_camera": __js__week_ui_get_camera,
     "__js__week_ui_get_countdown": __js__week_ui_get_countdown,
     "__js__week_ui_get_healthbar": __js__week_ui_get_healthbar,
@@ -7383,6 +7536,9 @@ var _luascript_notify_modding_init = ModuleLuaScript["_luascript_notify_modding_
 };
 var _luascript_call_function = ModuleLuaScript["_luascript_call_function"] = function () {
     return (_luascript_call_function = ModuleLuaScript["_luascript_call_function"] = ModuleLuaScript["asm"]["luascript_call_function"]).apply(null, arguments)
+};
+var _luascript_notify_modding_event = ModuleLuaScript["_luascript_notify_modding_event"] = function () {
+    return (_luascript_notify_modding_event = ModuleLuaScript["_luascript_notify_modding_event"] = ModuleLuaScript["asm"]["luascript_notify_modding_event"]).apply(null, arguments)
 };
 var _malloc = ModuleLuaScript["_malloc"] = function () {
     return (_malloc = ModuleLuaScript["_malloc"] = ModuleLuaScript["asm"]["malloc"]).apply(null, arguments)

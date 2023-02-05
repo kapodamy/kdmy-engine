@@ -13,6 +13,8 @@ namespace Engine.Game {
         private const int OPTION_SELECTION_DELAY = 200;// milliseconds
         private const string LAYOUT = "/assets/common/image/main-menu/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/main-menu/layout~dreamcast.xml";
+        private const string MODDING_SCRIPT = "/assets/data/scripts/mainmenu.lua";
+        private const string MODDING_MENU = "/assets/data/menus/mainmenu.json";
 
         public static readonly MenuManifest MENU_MANIFEST = new MenuManifest() {
             parameters = new MenuManifest.Parameters() {
@@ -69,7 +71,8 @@ namespace Engine.Game {
                     anim_rollback = null,// unused
                     anim_in = "draw_even_index",
                     anim_out = "no_choosen_even_index",
-                    hidden = false
+                    hidden = false,
+                    description= null// unused
                 },
                 new MenuManifest.Item() {
                     name = "freeplay",
@@ -82,7 +85,8 @@ namespace Engine.Game {
                     anim_rollback = null,// unused
                     anim_in = "draw_odd_index",
                     anim_out = "no_choosen_odd_index",
-                    hidden = false
+                    hidden = false,
+                    description= null// unused
                 },
                 new MenuManifest.Item() {
                     name = "donate",
@@ -95,7 +99,8 @@ namespace Engine.Game {
                     anim_rollback = null,// unused
                     anim_in = "draw_even_index",
                     anim_out = "no_choosen_even_index",
-                    hidden = false
+                    hidden = false,
+                    description= null// unused
                 },
                 new MenuManifest.Item() {
                     name = "options",
@@ -108,7 +113,8 @@ namespace Engine.Game {
                     anim_rollback = null,// unused
                     anim_in = "draw_odd_index",
                     anim_out = "no_choosen_odd_index",
-                    hidden = false
+                    hidden = false,
+                    description= null// unused
                 }
             },
             items_size = 4
@@ -118,8 +124,15 @@ namespace Engine.Game {
         public const GamepadButtons GAMEPAD_CANCEL = GamepadButtons.B | GamepadButtons.Y | GamepadButtons.BACK;
         public const GamepadButtons GAMEPAD_BUTTONS = MainMenu.GAMEPAD_OK | MainMenu.GAMEPAD_CANCEL | GamepadButtons.AD;
 
+        private static int option_index_choosen;
+
         public static bool Main() {
             Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
+            if (layout == null) {
+                Console.Error.WriteLine("[WARN] mainmenu_main() can not load mainmenu layout");
+                return MainMenu.HandleSelectedOption(0);
+            }
+
             LayoutPlaceholder menu_placeholder = layout.GetPlaceholder("menu");
 
             // default values
@@ -172,10 +185,16 @@ namespace Engine.Game {
                 );
             }
 
-            Menu menu = new Menu(MainMenu.MENU_MANIFEST, x, y, z, size_width, size_height);
+            MenuManifest menumanifest = MainMenu.MENU_MANIFEST;
+            if (FS.FileExists(MainMenu.MODDING_MENU)) {
+                menumanifest = new MenuManifest(MainMenu.MODDING_MENU);
+                if (menumanifest == null) throw new Exception("failed to load " + MainMenu.MODDING_MENU);
+            }
+
+            Menu menu = new Menu(menumanifest, x, y, z, size_width, size_height);
             menu.TrasitionIn();
             menu.SelectIndex(0);
-            GameMain.HelperTriggerActionMenu2(layout, MainMenu.MENU_MANIFEST, 0, null, true, false);
+            GameMain.HelperTriggerActionMenu2(layout, menumanifest, 0, null, true, false);
 
             if (menu_placeholder != null) {
                 menu_placeholder.vertex = menu.GetDrawable();
@@ -197,35 +216,54 @@ namespace Engine.Game {
             maple_pad.SetButtonsDelay(MainMenu.OPTION_SELECTION_DELAY);
             maple_pad.ClearButtons();
 
+            Modding modding = new Modding(layout, MainMenu.MODDING_SCRIPT);
+            modding.native_menu = menu;
+            modding.callback_option = MainMenu.HandleOption;
+            MainMenu.option_index_choosen = -1;
+            modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+
             bool option_was_selected = false;
             int selected_index = -1;
             int last_selected_index = 0;
 
-            while (true) {
+            while (!modding.has_exit) {
+                if (MainMenu.option_index_choosen >= 0) {
+                    selected_index = MainMenu.option_index_choosen;
+                    menu.SelectIndex(selected_index);
+                    break;
+                }
+
                 int selection_offset_x = 0;
                 int selection_offset_y = 0;
                 float elapsed = PVRContext.global_context.WaitReady();
                 GamepadButtons buttons = maple_pad.HasPressedDelayed(MainMenu.GAMEPAD_BUTTONS);
 
                 PVRContext.global_context.Reset();
+
+                ModdingHelperResult res = modding.HelperHandleCustomMenu(maple_pad, elapsed);
+                if (res != ModdingHelperResult.CONTINUE) break;
+
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
 
-                if ((buttons & MainMenu.GAMEPAD_OK) != GamepadButtons.NOTHING) {
+                if (modding.has_halt || modding.active_menu != menu) continue;
+
+                if ((buttons & MainMenu.GAMEPAD_OK).Bool()) {
                     selected_index = menu.GetSelectedIndex();
                     if (selected_index >= 0 && selected_index < menu.GetItemsCount()) {
+                        if (modding.HelperNotifyOption(false)) continue;
                         option_was_selected = true;
                         break;
                     }
-                } else if ((buttons & MainMenu.GAMEPAD_CANCEL) != GamepadButtons.NOTHING)
+                } else if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool() && !modding.HelperNotifyBack())
                     break;
-                else if ((buttons & GamepadButtons.AD_DOWN) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_DOWN).Bool())
                     selection_offset_y++;
-                else if ((buttons & GamepadButtons.AD_UP) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_UP).Bool())
                     selection_offset_y--;
-                else if ((buttons & GamepadButtons.AD_LEFT) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_LEFT).Bool())
                     selection_offset_x--;
-                else if ((buttons & GamepadButtons.AD_RIGHT) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_RIGHT).Bool())
                     selection_offset_x++;
 
                 if (selection_offset_x == 0 && selection_offset_y == 0) continue;
@@ -239,9 +277,10 @@ namespace Engine.Game {
                     if (sound_asterik != null) sound_asterik.Stop();
                     if (sound_scroll != null) sound_scroll.Replay();
 
-                    GameMain.HelperTriggerActionMenu2(layout, MainMenu.MENU_MANIFEST, last_selected_index, null, false, false);
+                    GameMain.HelperTriggerActionMenu2(layout, menumanifest, last_selected_index, null, false, false);
                     last_selected_index = menu.GetSelectedIndex();
-                    GameMain.HelperTriggerActionMenu2(layout, MainMenu.MENU_MANIFEST, last_selected_index, null, true, false);
+                    GameMain.HelperTriggerActionMenu2(layout, menumanifest, last_selected_index, null, true, false);
+                    modding.HelperNotifyOption(true);
                 } else {
                     if (sound_scroll != null) sound_scroll.Stop();
                     if (sound_asterik != null) sound_asterik.Replay();
@@ -257,7 +296,7 @@ namespace Engine.Game {
             else menu.TrasitionOut();
 
             if (option_was_selected) {
-                GameMain.HelperTriggerActionMenu2(layout, MainMenu.MENU_MANIFEST, selected_index, null, false, true);
+                GameMain.HelperTriggerActionMenu2(layout, menumanifest, selected_index, null, false, true);
             }
 
             float total_elapsed = 0f;
@@ -291,6 +330,17 @@ namespace Engine.Game {
                 total_elapsed += elapsed;
             }
 
+            selected_index = -1;
+            string selected_option_name = menu.GetSelectedItemName();
+            for (int i = 0 ; i < MainMenu.MENU_MANIFEST.items_size ; i++) {
+                if (MainMenu.MENU_MANIFEST.items[i].name == selected_option_name) {
+                    selected_index = i;
+                    break;
+                }
+            }
+
+            modding.HelperNotifyExit2();
+
             menu.Destroy();
             maple_pad.Destroy();
             if (sound_confirm != null) sound_confirm.Destroy();
@@ -298,6 +348,9 @@ namespace Engine.Game {
             if (sound_cancel != null) sound_cancel.Destroy();
             if (sound_asterik != null) sound_asterik.Destroy();
             layout.Destroy();
+            modding.Destroy();
+
+            if (menumanifest != MainMenu.MENU_MANIFEST) menumanifest.Destroy();
 
             // if no option was selected, jump to the start screen
             if (!option_was_selected) return false;
@@ -335,7 +388,7 @@ namespace Engine.Game {
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
 
-                if (gamepad.HasPressedDelayed(Credits.BUTTONS) != GamepadButtons.NOTHING) break;
+                if (gamepad.HasPressedDelayed(Credits.BUTTONS).Bool()) break;
             }
 
             layout.Destroy();
@@ -353,6 +406,9 @@ namespace Engine.Game {
             // return false to go back to the start-screen, otherwise, reload the main-menu
             //
             switch (selected_index) {
+                case -1:
+                    // from custom menu
+                    return true;
                 case 0:// storymode
                     while (WeekSelector.Main() > 0) { }
                     return true;// main-menu
@@ -371,6 +427,16 @@ namespace Engine.Game {
             }
         }
 
+        public static bool HandleOption(string option_name) {
+            if (option_name == null) return false;
+            for (int i = 0 ; i < MainMenu.MENU_MANIFEST.items_size ; i++) {
+                if (option_name == MainMenu.MENU_MANIFEST.items[i].name) {
+                    MainMenu.option_index_choosen = i;
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
 }

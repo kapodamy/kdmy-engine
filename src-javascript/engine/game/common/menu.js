@@ -459,6 +459,15 @@ function menu_set_draw_callback(menu, before_or_after, callback, privatedata) {
     menu.drawcallback_privatedata = privatedata;
 }
 
+function menu_has_item(menu, name) {
+    for (let i = 0 ; i < menu.items_size ; i++) {
+        if (menu.items[i].name == name) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 
 async function menu_internal_build_item(item, src_item, params, modelholder, fontholder, border) {
     let custom_modelholder = false;

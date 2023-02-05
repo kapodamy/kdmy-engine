@@ -99,6 +99,7 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
         tweenlerp: tweenlerp_init(),
 
         last_health: NaN,
+        last_health_position_opponent: NaN,
         prefix_state_player: HEALTHBAR_ICON_PREFIX_NEUTRAL,
         prefix_state_opponent: HEALTHBAR_ICON_PREFIX_NEUTRAL,
 
@@ -662,6 +663,39 @@ function healthbar_show_locked_warning(healthbar) {
 }
 
 
+function healthbar_get_bar_midpoint(healthbar, output_location) {
+    let last_health_position_opponent = healthbar.last_health_position_opponent;
+
+    if (Number.isNaN(last_health_position_opponent)) last_health_position_opponent = 0.0;
+
+    let dimmen = healthbar.dimmen / 2.0;
+    if (healthbar.extra_enabled) last_health_position_opponent += healthbar.extra_translation;
+
+    let x = healthbar.modifier.x + healthbar.border;
+    let y = healthbar.modifier.y + healthbar.border;
+
+    if (healthbar.is_vertical) {
+        x += dimmen;
+        y += last_health_position_opponent;
+    } else {
+        x += last_health_position_opponent;
+        y += dimmen;
+    }
+
+    output_location[0] = x;
+    output_location[1] = y;
+}
+
+function healthbar_get_percent(healthbar) {
+    let health;
+    if (healthbar.transition_enabled)
+        health = tweenlerp_peek_value(healthbar.tweenlerp);
+    else
+        health = healthbar.last_health;
+
+    return Number.isNaN(health) ? 0.0 : health;
+}
+
 
 function healthbar_internal_calc_dimmensions(healthbar) {
     const resolution_bar = [0, 0];
@@ -812,6 +846,8 @@ function healthbar_internal_calc_health_positions(healthbar, player_health) {
         if (healthbar.is_vertical) healthbar.warning_drain_y -= healthbar.icon_overlap;
         else healthbar.warning_drain_x -= healthbar.icon_overlap;
     }
+
+    healthbar.last_health_position_opponent = health_position_opponent;
 }
 
 

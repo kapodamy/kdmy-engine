@@ -122,6 +122,17 @@ EM_JS_PRFX(void, healthbar_show_drain_warning, (HealthBar healthbar, bool use_fa
 EM_JS_PRFX(void, healthbar_show_locked_warning, (HealthBar healthbar), {
     healthbar_show_locked_warning(kdmyEngine_obtain(healthbar));
 });
+EM_JS_PRFX(void, healthbar_get_bar_midpoint, (HealthBar healthbar, float* x, float* y), {
+    const values = [0, 0];
+    healthbar_get_bar_midpoint(kdmyEngine_obtain(healthbar), values);
+    
+    kdmyEngine_set_float32(x, values[0]);
+    kdmyEngine_set_float32(y, values[1]);
+});
+EM_JS_PRFX(float, healthbar_get_percent, (HealthBar healthbar), {
+    let ret = healthbar_get_percent(kdmyEngine_obtain(healthbar));
+    return ret;
+});
 #endif
 
 
@@ -474,6 +485,26 @@ static int script_healthbar_show_locked_warning(lua_State* L) {
     return 0;
 }
 
+static int script_healthbar_get_bar_midpoint(lua_State* L) {
+    HealthBar healthbar = luascript_read_userdata(L, HEALTHBAR);
+    float x, y;
+
+    healthbar_get_bar_midpoint(healthbar, &x, &y);
+
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, y);
+    return 0;
+}
+
+static int script_healthbar_get_percent(lua_State* L) {
+    HealthBar healthbar = luascript_read_userdata(L, HEALTHBAR);
+
+    float ret = healthbar_get_percent(healthbar);
+
+    lua_pushnumber(L, ret);
+    return 1;
+}
+
 
 
 
@@ -514,6 +545,8 @@ static const luaL_Reg HEALTHBAR_FUNCTIONS[] = {
     { "hide_warnings", script_healthbar_hide_warnings },
     { "show_drain_warning", script_healthbar_show_drain_warning },
     { "show_locked_warning", script_healthbar_show_locked_warning },
+    { "get_bar_midpoint", script_healthbar_get_bar_midpoint },
+    { "get_percent", script_healthbar_get_percent },
     { NULL, NULL }
 };
 

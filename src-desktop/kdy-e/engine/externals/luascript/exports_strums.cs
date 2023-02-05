@@ -1,3 +1,4 @@
+using System;
 using Engine.Animation;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
@@ -150,7 +151,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             int ret = strums.StateToggle(state_name);
 
-            L.lua_pushinteger(ret);
+            L.L.lua_pushinteger(ret);
             return 1;
         }
 
@@ -160,7 +161,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             int ret = strums.StateToggleNotes(state_name);
 
-            L.lua_pushinteger(ret);
+            L.L.lua_pushinteger(ret);
             return 1;
         }
 
@@ -178,7 +179,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             int ret = strums.GetLinesCount();
 
-            L.lua_pushinteger(ret);
+            L.L.lua_pushinteger(ret);
             return 1;
         }
 
@@ -225,6 +226,69 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_strums_decorators_get_count(LuaState L) {
+            Strums strums = L.ReadUserdata<Strums>(STRUMS);
+
+            int ret = strums.DecoratorsGetCount();
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
+        static int script_strums_decorators_add(LuaState L) {
+            Strums strums = L.ReadUserdata<Strums>(STRUMS);
+            ModelHolder modelholder = L.ReadNullableUserdata<ModelHolder>(2, ExportsModelHolder.MODELHOLDER);
+            string animation_name = L.luaL_checkstring(3);
+            double timestamp = L.luaL_checknumber(4);
+
+            bool ret = strums.DecoratorsAdd(modelholder, animation_name, timestamp);
+
+            Llua_pushboolean(ret);
+            return 1;
+        }
+
+        static int script_strums_decorators_add2(LuaState L) {
+            Strums strums = L.ReadUserdata<Strums>(STRUMS);
+            ModelHolder modelholder = L.ReadNullableUserdata<ModelHolder>(2, ExportsModelHolder.MODELHOLDER);
+            string animation_name = L.luaL_checkstring(3);
+            double timestamp = L.luaL_checknumber(4);
+            int from_strum_index = (int)L.luaL_checkinteger(5);
+            int to_strum_index = (int)L.luaL_checkinteger(6);
+
+            bool ret = strums.DecoratorsAdd2(modelholder, animation_name, timestamp, from_strum_index, to_strum_index);
+
+            L.lua_pushboolean(ret);
+            return 1;
+        }
+
+        static int script_strums_decorators_set_scroll_speed(LuaState L) {
+            Strums strums = L.ReadUserdata<Strums>(STRUMS);
+            double speed = L.luaL_checknumber(2);
+
+            strums.DecoratorsSetScrollSpeed(speed);
+
+            return 0;
+        }
+
+        static int script_strums_decorators_set_alpha(LuaState L) {
+            Strums strums = L.ReadUserdata<Strums>(STRUMS);
+            float alpha = (float)L.luaL_checknumber(2);
+
+            strums.DecoratorsSetAlpha(alpha);
+
+            return 0;
+        }
+
+        static int script_strums_decorators_set_visible(LuaState L) {
+            Strums strums = L.ReadUserdata<Strums>(STRUMS);
+            double decorator_timestamp = L.luaL_checknumber(2);
+            bool visible = (bool)L.lua_toboolean(3);
+
+            strums.DecoratorsSetVisible(decorator_timestamp, visible);
+
+            return 0;
+        }
+
 
 
 
@@ -253,6 +317,12 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("animation_set", script_strums_animation_set),
             new LuaTableFunction("animation_restart", script_strums_animation_restart),
             new LuaTableFunction("animation_end", script_strums_animation_end),
+            new LuaTableFunction("decorators_get_count", script_strums_decorators_get_count),
+            new LuaTableFunction("decorators_add", script_strums_decorators_add),
+            new LuaTableFunction("decorators_add2", script_strums_decorators_add2),
+            new LuaTableFunction("decorators_set_scroll_speed", script_strums_decorators_set_scroll_speed),
+            new LuaTableFunction("decorators_set_alpha", script_strums_decorators_set_alpha),
+            new LuaTableFunction("decorators_set_visible", script_strums_decorators_set_visible),
             new LuaTableFunction(null, null)
         };
 

@@ -30,6 +30,7 @@ typedef struct {
     char* anim_out;
     float gap;
     bool hidden;
+    char* description;
 } MenuManifestItem;
 
 typedef struct {

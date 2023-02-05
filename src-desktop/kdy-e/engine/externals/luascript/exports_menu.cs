@@ -98,6 +98,7 @@ namespace Engine.Externals.LuaScriptInterop {
                         mm.items[i].anim_out = LuaTableHelpers.GetFieldString(L, idx4, "anim_out", null);
                         mm.items[i].gap = (float)LuaTableHelpers.GetFieldNumber(L, idx4, "gap", Double.NaN);
                         mm.items[i].hidden = LuaTableHelpers.GetFieldBoolean(L, idx4, "hidden", false);
+                        mm.items[i].description = LuaTableHelpers.GetFieldString(L, idx4, "description", null);
 
                         L.lua_pop(1);
                     }
@@ -292,6 +293,16 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_menu_has_item(LuaState L) {
+            Menu menu = L.ReadUserdata<Menu>(MENU);
+            string name = L.luaL_optstring(2, null);
+
+            bool ret = menu.HasItem(name);
+
+            L.lua_pushboolean(ret);
+            return 1;
+        }
+
 
 
         static readonly LuaTableFunction[] MENU_FUNCTIONS = {
@@ -312,10 +323,11 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("get_item_rect", script_menu_get_item_rect),
             new LuaTableFunction("get_selected_item_name", script_menu_get_selected_item_name),
             new LuaTableFunction("set_text_force_case", script_menu_set_text_force_case),
+            new LuaTableFunction("has_item", script_menu_has_item),
             new LuaTableFunction(null, null)
         };
 
-        
+
         internal static int script_menu_new(LuaState L, Menu menu) {
             return L.CreateUserdata(MENU, menu);
         }
@@ -332,7 +344,7 @@ namespace Engine.Externals.LuaScriptInterop {
             return L.ToString_userdata(MENU);
         }
 
-        
+
         private static readonly LuaCallback gc = script_menu_gc;
         private static readonly LuaCallback tostring = script_menu_tostring;
 

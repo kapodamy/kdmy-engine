@@ -489,11 +489,19 @@ namespace Engine.Externals.LuaScriptInterop {
             const string FUNCTION = "f_modding_init";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
-            LuascriptHelpers.PushBasicValue(lua.LuaStateHandle, value);
+            LuascriptHelpers.PushModdingValue(lua.LuaStateHandle, value);
 
             lua.CallPushedGlobalFunction(1);
         }
 
+        public void notify_modding_event(string event_name) {
+            const string FUNCTION = "f_modding_event";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            lua.LuaStateHandle.lua_pushstring(event_name);
+
+            lua.CallPushedGlobalFunction(1);
+        }
     }
 
 }

@@ -4,11 +4,12 @@ const MODDING_HELPER_RESULT_CONTINUE = 0;
 const MODDING_HELPER_RESULT_BACK = 1;
 const MODDING_HELPER_RESULT_CHOOSEN = 2;
 
-const BASIC_VALUE_TYPE_NULL = 0;
-const BASIC_VALUE_TYPE_STRING = 1;
-const BASIC_VALUE_TYPE_BOOLEAN = 2;
-const BASIC_VALUE_TYPE_DOUBLE = 3;
+const MODDING_VALUE_TYPE_NULL = 0;
+const MODDING_VALUE_TYPE_STRING = 1;
+const MODDING_VALUE_TYPE_BOOLEAN = 2;
+const MODDING_VALUE_TYPE_DOUBLE = 3;
 
+const MODDING_NATIVE_MENU_SCREEN = "__NATIVE_SCREEN__";
 
 async function modding_init(layout, src_script) {
     let modding = {
@@ -16,7 +17,6 @@ async function modding_init(layout, src_script) {
         layout,
         has_exit: 0,
         has_halt: 0,
-        ui_visible: 1,
         has_funkinsave_changes: 0,
 
         native_menu: null,
@@ -24,7 +24,7 @@ async function modding_init(layout, src_script) {
         callback_option: null,
         callback_private_data: null,
         exit_delay_ms: 0.0,
-        custom_menu_gamepad_delay: 0.0,
+        custom_menu_gamepad_delay: 200.0,
         custom_menu_active_gamepad_delay: 0.0,
         last_pressed: 0x00,
         messagebox: null
@@ -56,10 +56,6 @@ function modding_set_halt(modding, halt) {
 }
 
 
-function modding_set_ui_visibility(modding, visible) {
-    modding.ui_visible = !!visible;
-}
-
 function modding_unlockdirective_create(modding, name, value) {
     modding.has_funkinsave_changes = 1;
     funkinsave_create_unlock_directive(name, value);
@@ -78,6 +74,17 @@ function modding_unlockdirective_get(modding, name) {
 function modding_unlockdirective_remove(modding, name) {
     modding.has_funkinsave_changes = 1;
     funkinsave_delete_unlock_directive(name);
+}
+
+
+function modding_storage_set(modding, week_name, name, data, data_size) {
+    let ret = funkinsave_storge_set(week_name, name, data, data_size);
+    if (ret) modding.has_funkinsave_changes = true;
+    return ret;
+}
+
+function modding_storage_get(modding, week_name, name, out_data) {
+    return funkinsave_storge_get(week_name, name, out_data);
 }
 
 
@@ -103,7 +110,7 @@ async function modding_spawn_screen(modding, layout_src, script_src, arg) {
     if (!screenmenu) return null;
 
     let ret = await screenmenu_display(screenmenu, pvr_context, arg);
-    screenmenu_destroy(screenmenu);
+    await screenmenu_destroy(screenmenu);
 
     return ret;
 }
@@ -136,7 +143,7 @@ async function modding_get_messagebox(modding) {
 
 
 async function modding_helper_handle_custom_menu(modding, gamepad, elapsed) {
-    const script = weekscript_get_luascript(modding.script);
+    const script = modding.script != null ? weekscript_get_luascript(modding.script) : null;
     let pressed = gamepad_get_pressed(gamepad);
 
     if (script != null) {
@@ -148,7 +155,7 @@ async function modding_helper_handle_custom_menu(modding, gamepad, elapsed) {
     }
 
     const menu = modding.active_menu;
-    if (modding.has_halt || !menu) return MODDING_HELPER_RESULT_CONTINUE;
+    if (modding.has_halt || !menu || menu == modding.native_menu) return MODDING_HELPER_RESULT_CONTINUE;
 
     if (modding.custom_menu_active_gamepad_delay > 0.0) {
         modding.custom_menu_active_gamepad_delay -= elapsed;
@@ -221,6 +228,25 @@ async function modding_helper_notify_option(modding, selected_or_choosen) {
     return await luascript_notify_modding_menu_option_choosen(script, modding.active_menu, index, name);
 }
 
+async function modding_helper_notify_option2(modding, selected_or_choosen, menu, index, name) {
+    if (modding.script == null) return 0;
+
+    let script = weekscript_get_luascript(modding.script);
+
+    if (selected_or_choosen) {
+        await luascript_notify_modding_menu_option_selected(script, menu, index, name);
+        return 0;
+    }
+
+    return await luascript_notify_modding_menu_option_choosen(script, menu, index, name);
+}
+
+async function modding_helper_notify_frame(modding, elapsed, song_timestamp) {
+    if (modding.script == null) return;
+    if (song_timestamp >= 0.0) await weekscript_notify_timersong(modding.script, song_timestamp);
+    await weekscript_notify_frame(modding.script, elapsed);
+}
+
 async function modding_helper_notify_back(modding) {
     if (modding.script == null) return false;
     return await luascript_notify_modding_back(weekscript_get_luascript(modding.script));
@@ -231,9 +257,19 @@ async function modding_helper_notify_exit(modding) {
     return await luascript_notify_modding_exit(weekscript_get_luascript(modding.script));
 }
 
+async function modding_helper_notify_exit2(modding) {
+    let ret = modding_helper_notify_exit(modding);
+    if (ret) ret = undefined;
+}
+
 async function modding_helper_notify_init(modding, arg) {
     if (modding.script == null) return;
     await luascript_notify_modding_init(weekscript_get_luascript(modding.script), arg);
+}
+
+async function modding_helper_notify_event(modding, event_name) {
+    if (modding.script == null) return;
+    await luascript_notify_modding_event(weekscript_get_luascript(modding.script), event_name);
 }
 
 function modding_set_menu_in_layout_placeholder(modding, placeholder_name, menu) {
@@ -243,3 +279,62 @@ function modding_set_menu_in_layout_placeholder(modding, placeholder_name, menu)
     placeholder.vertex = menu ? menu_get_drawable(menu) : null;
 }
 
+
+function modding_get_loaded_weeks(modding, out_size) {
+    out_size[0] = weeks_array.size;
+    return weeks_array.array;
+}
+
+async function modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, track_idx) {
+    let gameplay_weekinfo = null;
+
+    for (let i = 0; i < weeks_array.size; i++) {
+        if (weeks_array.array[i].name == week_name) {
+            gameplay_weekinfo = weeks_array.array[i];
+        }
+    }
+
+    if (gameplay_weekinfo == null) return -1;
+
+    funkinsave_set_last_played(gameplay_weekinfo.name, difficult);
+
+    if (!bf) bf = await freeplaymenu_helper_get_default_character_manifest(true);
+    if (!gf) gf = await freeplaymenu_helper_get_default_character_manifest(false);
+
+
+    let week_result = await week_main(
+        gameplay_weekinfo,
+        alt_tracks,
+        difficult,
+        bf,
+        gf,
+        gameplay_manifest,
+        track_idx
+    );
+
+    return week_result;
+}
+
+async function modding_launch_credits(modding) {
+    return await credits_main();
+}
+
+async function modding_launch_startscreen(modding) {
+    return await startscreen_main();
+}
+
+async function modding_launch_mainmenu(modding) {
+    return await mainmenu_main();
+}
+
+async function modding_launch_settings(modding) {
+    console.info("modding_launch_settingsmenu() not implemented: settingsmenu_main()");
+}
+
+async function modding_launch_freeplay(modding) {
+    return await freeplaymenu_main();
+}
+
+async function modding_launch_weekselector(modding) {
+    return await weekselector_main();
+}

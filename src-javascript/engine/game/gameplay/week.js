@@ -276,7 +276,7 @@ const CHARACTERTYPE = {
  */
 
 
-function week_destroy(/** @type {RoundContext} */ roundcontext, gameplaymanifest) {
+async function week_destroy(/** @type {RoundContext} */ roundcontext, gameplaymanifest) {
     const initparams = roundcontext.initparams;
 
     texture_disable_defering(0);
@@ -295,7 +295,7 @@ function week_destroy(/** @type {RoundContext} */ roundcontext, gameplaymanifest
     if (roundcontext.girlfriend) character_destroy(roundcontext.girlfriend);
     if (roundcontext.trackinfo) textsprite_destroy(roundcontext.trackinfo);
     if (roundcontext.weekgameover) week_gameover_destroy(roundcontext.weekgameover);
-    if (roundcontext.weekpause) week_pause_destroy(roundcontext.weekpause);
+    if (roundcontext.weekpause) await week_pause_destroy(roundcontext.weekpause);
     if (roundcontext.screen_background) sprite_destroy(roundcontext.screen_background);
     if (roundcontext.weekresult) week_result_destroy(roundcontext.weekresult);
     if (roundcontext.messagebox) messagebox_destroy(roundcontext.messagebox);
@@ -736,7 +736,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
         // dispose all allocated resources
         tracks_attempts = undefined;
-        week_destroy(roundcontext, gameplaymanifest);
+        await week_destroy(roundcontext, gameplaymanifest);
 
         // if false, goto weekselector
         return mainmenu ? 0 : 1;
@@ -803,7 +803,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
     // dispose all allocated resources
     tracks_attempts = undefined;
-    week_destroy(roundcontext, gameplaymanifest);
+    await week_destroy(roundcontext, gameplaymanifest);
 
     if (show_credits) {
         // game ending
@@ -2886,6 +2886,16 @@ function week_unlockdirective_get(roundcontext, name) {
 
 function week_unlockdirective_has(roundcontext, name) {
     return funkinsave_contains_unlock_directive(name);
+}
+
+function week_storage_get(roundcontext, name, out_data) {
+    return funkinsave_storge_get(roundcontext.initparams.weekinfo.name, name, out_data);
+}
+
+function week_storage_set(roundcontext, name, data, data_size) {
+    let ret = funkinsave_storge_set(roundcontext.initparams.weekinfo.name, name, data, data_size);
+    if (ret) roundcontext.has_directive_changes = 1;
+    return ret;
 }
 
 function week_get_songplayer(/**@type {RoundContext}*/roundcontext) {

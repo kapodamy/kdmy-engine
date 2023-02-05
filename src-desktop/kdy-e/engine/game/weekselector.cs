@@ -56,6 +56,7 @@ namespace Engine.Game {
         private const GamepadButtons BUTTONS_OK = GamepadButtons.X | GamepadButtons.A;
         private const string LAYOUT = "/assets/common/image/week-selector/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/week-selector/layout~dreamcast.xml";
+        private const string MODDING_SCRIPT = "/assets/data/scripts/weekselector.lua";
 
 
         private enum SND {
@@ -114,6 +115,7 @@ namespace Engine.Game {
 
             public bool bg_music_paused;
             public SoundPlayer bg_music;
+            public Modding modding;
         }
 
 
@@ -164,29 +166,28 @@ namespace Engine.Game {
         }
 
         private static void TriggerDifficultChange(UI ui, STATE state, bool empty) {
-            if (state.custom_layout == null) return;
-
-            state.custom_layout.TriggerAny("change-difficult");
-
+            WeekSelector.TriggerEvent(ui, state, "change-difficult");
 
             if (empty) return;
 
             string default_difficult = ui.weekdifficult.GetSelected();
             if (default_difficult != null) {
                 string difficult_action = StringUtils.Concat("selected-difficult-", default_difficult);
-                state.custom_layout.TriggerAny(difficult_action);
+
+                WeekSelector.TriggerEvent(ui, state, difficult_action);
+
                 //free(difficult_action);
             }
         }
 
-        private static void TriggerAlternateChange(STATE state) {
-            if (state.custom_layout == null) return;
-
+        private static void TriggerAlternateChange(UI ui, STATE state) {
             string alternate_action;
             if (state.has_choosen_alternate) alternate_action = "selected-no-alternate";
             else alternate_action = "selected-alternate";
 
-            state.custom_layout.TriggerAny(alternate_action);
+            if (state.custom_layout != null) state.custom_layout.TriggerAny(alternate_action);
+            ui.layout.TriggerAny(alternate_action);
+            state.modding.HelperNotifyModdingEvent(alternate_action);
         }
 
         private static void LoadCustomWeekBackground(STATE state) {
@@ -239,6 +240,12 @@ namespace Engine.Game {
             );
         }
 
+        private static void TriggerEvent(UI ui, STATE state, string name) {
+            if (state.custom_layout != null) state.custom_layout.TriggerAny(name);
+            ui.layout.TriggerAny(name);
+            state.modding.HelperNotifyModdingEvent(name);
+        }
+
 
         public static int Main() {
             Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
@@ -246,7 +253,7 @@ namespace Engine.Game {
             ModelHolder modelholder_ui = ModelHolder.Init(WeekSelector.UI_ICONS_MODEL);
             ModelHolder modelholder_buttons_ui = ModelHolder.Init(WeekSelector.BUTTONS_MODEL);
 
-            TexturePool texpool = new TexturePool(128 * 1024 * 1024);// 128MiB
+            TexturePool texpool = new TexturePool(256 * 1024 * 1024);// 256MiB
 
             SoundPlayer sound_confirm = SoundPlayer.Init("/assets/common/sound/confirmMenu.ogg");
             SoundPlayer sound_scroll = SoundPlayer.Init("/assets/common/sound/scrollMenu.ogg");
@@ -344,6 +351,11 @@ namespace Engine.Game {
 
             ui.maple_pads.SetButtonsDelay(WeekSelector.BUTTON_DELAY);
 
+            Modding modding = new Modding(layout, WeekSelector.MODDING_SCRIPT);
+            modding.native_menu = null;
+            modding.callback_option = null;
+            modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+
             STATE state = new STATE() {
                 weekinfo = ui.weeklist.GetSelected(),
                 difficult = last_difficult_played,
@@ -366,7 +378,8 @@ namespace Engine.Game {
                 custom_layout = null,
 
                 bg_music_paused = false,
-                bg_music = layout.GetSoundplayer("background_music") ?? GameMain.background_menu_music
+                bg_music = layout.GetSoundplayer("background_music") ?? GameMain.background_menu_music,
+                modding = modding
             };
 
             if (state.bg_music != GameMain.background_menu_music && GameMain.background_menu_music != null) {
@@ -379,7 +392,7 @@ namespace Engine.Game {
             WeekSelector.ChangePage(ui, state.page_selected_ui);
             state.week_unlocked = FunkinSave.ContainsUnlockDirective(state.weekinfo.unlock_directive);
             WeekSelector.LoadCustomWeekBackground(state);
-            TriggerMenuAction(ui, state, "weeklist", true, false);
+            WeekSelector.TriggerMenuAction(ui, state, "weeklist", true, false);
 
             while (!state.quit) {
                 float elapsed = PVRContext.global_context.WaitReady();
@@ -387,16 +400,26 @@ namespace Engine.Game {
 
                 BeatWatcher.GlobalSetTimestampFromKosTimer();
 
-                switch (page_selected_ui) {
-                    case 0:
-                        WeekSelector.Page0(ui, state);
-                        break;
-                    case 1:
-                        WeekSelector.Page1(ui, state);
-                        break;
-                    case 2:
-                        WeekSelector.Page2(ui, state);
-                        break;
+                ModdingHelperResult res = state.modding.HelperHandleCustomMenu(ui.maple_pads, elapsed);
+
+                if (state.modding.has_exit || res == ModdingHelperResult.BACK) {
+                    state.back_to_main_menu = true;
+                    state.quit = true;
+                    break;
+                }
+
+                if (!state.modding.has_halt) {
+                    switch (page_selected_ui) {
+                        case 0:
+                            WeekSelector.Page0(ui, state);
+                            break;
+                        case 1:
+                            WeekSelector.Page1(ui, state);
+                            break;
+                        case 2:
+                            WeekSelector.Page2(ui, state);
+                            break;
+                    }
                 }
 
                 if (state.play_sound != SND.NONE) {
@@ -451,6 +474,7 @@ namespace Engine.Game {
                 // trigger in the main layout
                 if (!no_anim_out) layout.TriggerAny("week-choosen");
 
+                modding.HelperNotifyModdingEvent("week-choosen");
                 layout.SetGroupVisibility("ui_game_progress", false);
                 ui.weektitle.MoveDifficult(ui.weekdifficult);
                 ui.mdl_boyfriend.ToggleChoosen();
@@ -464,6 +488,7 @@ namespace Engine.Game {
                 total_elapsed += elapsed;
 
                 BeatWatcher.GlobalSetTimestampFromKosTimer();
+                modding.HelperNotifyFrame(elapsed, -1.0);
 
                 PVRContext.global_context.Reset();
                 layout.Animate(elapsed);
@@ -484,6 +509,8 @@ namespace Engine.Game {
             bool gameplay_alternative_tracks = state.has_choosen_alternate;
             string gameplay_model_boyfriend = ui.mdl_boyfriend.GetManifest();
             string gameplay_model_girlfriend = ui.mdl_girlfriend.GetManifest();
+
+            modding.HelperNotifyExit2();
 
             // dispose everything used
             ui.weeklist.Destroy();
@@ -514,6 +541,7 @@ namespace Engine.Game {
 
             layout.Destroy();
             texpool.Destroy();
+            modding.Destroy();
 
             if (state.back_to_main_menu) return 0;
 
@@ -579,32 +607,32 @@ namespace Engine.Game {
                 GamepadButtons.AD_UP | GamepadButtons.AD_DOWN | GamepadButtons.X | GamepadButtons.A | GamepadButtons.START | GamepadButtons.B | GamepadButtons.BACK
             );
 
-            if ((buttons & GamepadButtons.AD_UP) != GamepadButtons.NOTHING) {
+            if ((buttons & GamepadButtons.AD_UP).Bool()) {
                 seek_offset = -1;
-            } else if ((buttons & GamepadButtons.AD_DOWN) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.AD_DOWN).Bool()) {
                 seek_offset = 1;
-            } else if ((buttons & WeekSelector.BUTTONS_OK) != GamepadButtons.NOTHING) {
+            } else if ((buttons & WeekSelector.BUTTONS_OK).Bool()) {
                 if (state.week_unlocked) {
                     state.play_sound = SND.SCROLL;
                     state.page_selected_ui = 1;
                 } else {
                     state.play_sound = SND.ASTERIK;
                 }
-            } else if ((buttons & GamepadButtons.START) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.START).Bool()) {
                 state.quit = state.can_start;
                 if (!state.quit && state.week_unlocked) {
                     state.play_sound = SND.SCROLL;
                     state.page_selected_ui = 1;
                 }
-            } else if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+            } else if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                 state.quit = true;
                 state.back_to_main_menu = true;
                 return;
             }
 
-            if (state.page_selected_ui == 1 && state.custom_layout != null) {
-                state.custom_layout.TriggerAny("principal-hide");
-                state.custom_layout.TriggerAny("difficult-selector-show");
+            if (state.page_selected_ui == 1) {
+                WeekSelector.TriggerEvent(ui, state, "principal-hide");
+                WeekSelector.TriggerEvent(ui, state, "difficult-selector-show");
             }
 
             if (seek_offset == 0) return;
@@ -614,7 +642,7 @@ namespace Engine.Game {
                 return;
             }
 
-            TriggerMenuAction(ui, state, "weeklist", false, false);
+            WeekSelector.TriggerMenuAction(ui, state, "weeklist", false, false);
 
             state.weekinfo = ui.weeklist.GetSelected();
             state.week_unlocked = FunkinSave.ContainsUnlockDirective(state.weekinfo.unlock_directive);
@@ -628,7 +656,7 @@ namespace Engine.Game {
             ui.mdl_girlfriend.SelectDefault();
 
             WeekSelector.LoadCustomWeekBackground(state);
-            TriggerMenuAction(ui, state, "weeklist", true, false);
+            WeekSelector.TriggerMenuAction(ui, state, "weeklist", true, false);
         }
 
         private static void Page1(UI ui, STATE state) {
@@ -654,7 +682,7 @@ namespace Engine.Game {
 
                 ui.helptext_start.SetVisible(!has_warnings);
                 WeekSelector.TriggerDifficultChange(ui, state, false);
-                WeekSelector.TriggerAlternateChange(state);
+                WeekSelector.TriggerAlternateChange(ui, state);
             }
 
             GamepadButtons buttons = ui.maple_pads.HasPressedDelayed(
@@ -662,23 +690,23 @@ namespace Engine.Game {
                 GamepadButtons.T_LR | GamepadButtons.A | GamepadButtons.START | GamepadButtons.BACK
             );
 
-            if ((buttons & GamepadButtons.AD_LEFT) != GamepadButtons.NOTHING) {
+            if ((buttons & GamepadButtons.AD_LEFT).Bool()) {
                 seek_offset = -1;
-            } else if ((buttons & GamepadButtons.AD_RIGHT) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.AD_RIGHT).Bool()) {
                 seek_offset = 1;
-            } else if ((buttons & GamepadButtons.X) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.X).Bool()) {
                 if (!String.IsNullOrEmpty(state.weekinfo.warning_message)) {
                     state.has_choosen_alternate = !state.has_choosen_alternate;
                     ui.helptext_alternate.UseAlt(state.has_choosen_alternate);
                     ui.weekmsg_alternate.Disabled(state.has_choosen_alternate);
                     state.play_sound = SND.SCROLL;
-                    WeekSelector.TriggerAlternateChange(state);
+                    WeekSelector.TriggerAlternateChange(ui, state);
                 }
-            } else if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+            } else if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                 state.page_selected_ui = 0;
                 state.has_choosen_alternate = false;
                 state.play_sound = SND.CANCEL;
-            } else if ((buttons & GamepadButtons.T_LR) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.T_LR).Bool()) {
                 if (state.weekinfo.disallow_custom_boyfriend && state.weekinfo.disallow_custom_girlfriend) {
                     state.play_sound = SND.ASTERIK;
                 } else {
@@ -686,23 +714,23 @@ namespace Engine.Game {
                     state.page_selected_ui = 2;
                     state.play_sound = SND.SCROLL;
                 }
-            } else if ((buttons & GamepadButtons.A) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.A).Bool()) {
                 if (ui.weekdifficult.SelectedIsLocked()) {
                     state.play_sound = SND.ASTERIK;
                 } else {
                     state.page_selected_ui = 0;
                     state.can_start = true;
                 }
-            } else if ((buttons & GamepadButtons.START) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.START).Bool()) {
                 if (ui.weekdifficult.SelectedIsLocked())
                     state.play_sound = SND.ASTERIK;
                 else
                     state.quit = true;
             }
 
-            if (state.page_selected_ui == 0 && state.custom_layout != null) {
-                state.custom_layout.TriggerAny("difficult-selector-hide");
-                state.custom_layout.TriggerAny("principal-show");
+            if (state.page_selected_ui == 0) {
+                WeekSelector.TriggerEvent(ui, state, "difficult-selector-hide");
+                WeekSelector.TriggerEvent(ui, state, "principal-show");
             }
 
             if (seek_offset == 0) return;
@@ -735,23 +763,25 @@ namespace Engine.Game {
                 ui.mdl_boyfriend.EnableArrows(state.choosing_boyfriend);
                 ui.mdl_girlfriend.EnableArrows(!state.choosing_boyfriend);
 
-                if (state.custom_layout != null)
-                    state.custom_layout.TriggerAny("model-change-show");
+                WeekSelector.TriggerEvent(ui, state, "model-change-show");
+                WeekSelector.TriggerEvent(
+                    ui, state, state.choosing_boyfriend ? "model-change-bf" : "model-change-gf"
+                );
             }
 
             GamepadButtons buttons = ui.maple_pads.HasPressedDelayed(
                 GamepadButtons.T_LR | GamepadButtons.AD | GamepadButtons.B | GamepadButtons.A | GamepadButtons.START | GamepadButtons.BACK
             );
 
-            if ((buttons & (GamepadButtons.TRIGGER_LEFT | GamepadButtons.AD_LEFT)) != GamepadButtons.NOTHING) {
+            if ((buttons & (GamepadButtons.TRIGGER_LEFT | GamepadButtons.AD_LEFT)).Bool()) {
                 character_model_seek = -1;
-            } else if ((buttons & (GamepadButtons.TRIGGER_RIGHT | GamepadButtons.AD_RIGHT)) != GamepadButtons.NOTHING) {
+            } else if ((buttons & (GamepadButtons.TRIGGER_RIGHT | GamepadButtons.AD_RIGHT)).Bool()) {
                 character_model_seek = 1;
-            } else if ((buttons & GamepadButtons.AD_UP) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.AD_UP).Bool()) {
                 seek_offset = -1;
-            } else if ((buttons & GamepadButtons.AD_DOWN) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.AD_DOWN).Bool()) {
                 seek_offset = 1;
-            } else if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+            } else if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                 bool has_locked = false;
                 if (ui.mdl_boyfriend.IsSelectedLocked()) {
                     has_locked = true;
@@ -763,7 +793,7 @@ namespace Engine.Game {
                 }
                 state.page_selected_ui = 1;
                 state.play_sound = has_locked ? SND.ASTERIK : SND.CANCEL;
-            } else if ((buttons & GamepadButtons.A) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.A).Bool()) {
                 bool has_locked = ui.mdl_boyfriend.IsSelectedLocked();
                 if (ui.mdl_girlfriend.IsSelectedLocked()) has_locked = true;
 
@@ -773,7 +803,7 @@ namespace Engine.Game {
                     state.page_selected_ui = 0;
                     state.can_start = true;
                 }
-            } else if ((buttons & GamepadButtons.START) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.START).Bool()) {
                 bool has_locked = ui.mdl_boyfriend.IsSelectedLocked();
                 if (ui.mdl_girlfriend.IsSelectedLocked()) has_locked = true;
 
@@ -783,8 +813,7 @@ namespace Engine.Game {
                     state.quit = true;
             }
 
-            if (state.page_selected_ui != 2 && state.custom_layout != null)
-                state.custom_layout.TriggerAny("model-change-hide");
+            if (state.page_selected_ui != 2) WeekSelector.TriggerEvent(ui, state, "model-change-hide");
 
             if (character_model_seek != 0) {
                 bool old_choose_boyfriend = state.choosing_boyfriend;
@@ -800,6 +829,10 @@ namespace Engine.Game {
                     state.play_sound = SND.SCROLL;
                     ui.mdl_boyfriend.EnableArrows(state.choosing_boyfriend);
                     ui.mdl_girlfriend.EnableArrows(!state.choosing_boyfriend);
+
+                    WeekSelector.TriggerEvent(
+                        ui, state, state.choosing_boyfriend ? "model-change-bf" : "model-change-gf"
+                    );
                 }
             }
 

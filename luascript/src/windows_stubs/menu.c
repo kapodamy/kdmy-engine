@@ -65,3 +65,7 @@ const char* menu_get_selected_item_name(Menu menu) {
 void menu_set_text_force_case(Menu menu, TextSpriteForceCase none_or_lowercase_or_uppercase) {
     print_stub("menu_set_text_force_case", "menu=%p none_or_lowercase_or_uppercase=%i", menu, none_or_lowercase_or_uppercase);
 }
+bool menu_has_item(Menu menu, const char* name) {
+    print_stub("menu_has_item", "menu=%p name=%s", menu, name);
+    return false;
+}

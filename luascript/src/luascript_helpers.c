@@ -472,6 +472,96 @@ const char* luascript_stringify_actiontype(CharacterActionType actiontype) {
 }
 
 
+char* luascript_get_string_copy(lua_State* L, int idx, const char* def) {
+    size_t len;
+    const char* str = luaL_optlstring(L, idx, def, &len);
+    if (len < 1) return NULL;
+
+    char* ret = malloc(len + 1);
+    memcpy(ret, str, len);
+    ret[len] = '\0';
+
+    return ret;
+}
+
+char* luascript_get_string_copy2(const char* str) {
+    size_t len = strlen(str);
+    if (len < 1) return NULL;
+
+    char* ret = malloc(len + 1);
+    memcpy(ret, str, len);
+    ret[len] = '\0';
+
+    return ret;
+}
+
+void* luascript_parse_and_allocate_modding_value(lua_State* L, int idx, ModdingValueType* output_type, bool throw_error) {
+    void* ptr;
+    
+    switch (lua_type(L, idx)) {
+        case LUA_TNONE:
+        case LUA_TNIL:
+            *output_type = ModdingValueType_null;
+            ptr = NULL;
+            break;
+        case LUA_TBOOLEAN:
+        {
+            bool* value_bool = ptr = malloc(sizeof(uint32_t));
+            *value_bool = lua_toboolean(L, idx);
+            *output_type = ModdingValueType_boolean;
+            break;
+        }
+        case LUA_TSTRING:
+            ptr = luascript_get_string_copy(L, idx, NULL);
+            *output_type = ModdingValueType_string;
+            break;
+        case LUA_TNUMBER:
+        {
+            double* value_double = ptr = malloc(sizeof(double));
+            *value_double = lua_tonumber(L, idx);
+            *output_type = ModdingValueType_double;
+            break;
+        }
+        default:
+            if (throw_error) {
+                luaL_error(L, "invalid value type at %i, expected: string, nil, number or boolean", idx);
+                return NULL;
+            }
+            
+            printf(
+                "luascript_parse_and_allocate_modding_value() "
+                "invalid value type at %i, expected: string, nil, number or boolean", idx
+            );
+            ptr = NULL;
+            break;
+    }
+
+    return ptr;
+}
+
+int luascript_push_and_deallocate_modding_value(lua_State* L, ModdingValueType type, void* value) {
+    switch (type) {
+        default:
+        case ModdingValueType_null:
+            lua_pushnil(L);
+            break;
+        case ModdingValueType_boolean:
+            lua_pushboolean(L, *((bool*)value));
+            break;
+        case LUA_TSTRING:
+            lua_pushstring(L, (char*)value);
+            break;
+        case LUA_TNUMBER:
+            lua_pushnumber(L, *((double*)value));
+            break;
+    }
+
+    if (value) free(value);
+
+    return 1;
+}
+
+
 static int luascript_handle_error(lua_State* L) {
     const char* msg = lua_tostring(L, -1);
     luaL_traceback(L, L, msg, 2);
@@ -571,6 +661,14 @@ EM_JS_PRFX(void*, kdmyEngine_create_object, (), {
 });
 EM_JS_PRFX(void*, kdmyEngine_create_array, (size_t size), {
     return kdmyEngine_obtain(new Array(size));
+});
+EM_JS_PRFX(void*, kdmyEngine_read_array_item_object, (void* array_id, int32_t index), {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array) throw new Error("Uknown array id:" + array_id);
+
+    let ret = array[index];
+
+    return kdmyEngine_obtain(ret);
 });
 
 EM_JS_PRFX(void*, kdmyEngine_read_window_object, (const char* variable_name), {
@@ -690,6 +788,9 @@ void* kdmy_create_object() {
 }
 void* kdmy_create_array(int32_t size) {
     return kdmyEngine_create_array(size);
+}
+void* kdmy_read_array_item_object(void* array_id, int32_t index) {
+    return kdmyEngine_read_array_item_object(array_id, index);
 }
 
 void* kdmy_read_window_object(const char* variable_name) {

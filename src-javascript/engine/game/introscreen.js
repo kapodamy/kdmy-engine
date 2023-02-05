@@ -6,13 +6,17 @@ const INTROSCREEN_FUNKY = "Friday--Night--Funkin";
 const INTROSCREEN_LAYOUT = "/assets/common/image/intro-screen/layout.xml";
 const INTROSCREEN_LAYOUT_DREAMCAST = "/assets/common/image/intro-screen/layout~dreamcast.xml";
 const INTROSCREEN_SKIP_BUTTONS = GAMEPAD_A | GAMEPAD_START;
+const INTROSCREEN_MODDING_SCRIPT = "/assets/data/scripts/introscreen.lua";
 
 
 async function introscreen_main() {
     let layout = await layout_init(pvrctx_is_widescreen() ? INTROSCREEN_LAYOUT : INTROSCREEN_LAYOUT_DREAMCAST);
     if (!layout) return;
 
+    let modding = await modding_init(layout, INTROSCREEN_MODDING_SCRIPT);
     let maple_pad = gamepad_init(-1);
+
+    await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
 
     // read delay/durations from layout
     let delay = layout_get_attached_value_as_float(layout, "delay", INTROSCREEN_DELAY);
@@ -21,19 +25,28 @@ async function introscreen_main() {
     );
 
     if (custom_duration > 0) {
+        await modding_helper_notify_event(modding, "custom-intro");
+
         // custom intro detected wait the requeted time
         let progress = 0;
         while (progress < custom_duration) {
             let elapsed = await pvrctx_wait_ready();
-            progress += elapsed;
-
             pvr_context_reset(pvr_context);
+
+            let res = await modding_helper_handle_custom_menu(modding, maple_pad, elapsed);
+            if (modding.has_exit || res != MODDING_HELPER_RESULT_CONTINUE) break;
+
             layout_animate(layout, elapsed);
             layout_draw(layout, pvr_context);
+            if (modding.has_halt) continue;
 
+            progress += elapsed;
             if (gamepad_has_pressed(maple_pad, INTROSCREEN_SKIP_BUTTONS) != 0x00) break;
         }
 
+        await modding_helper_notify_exit2(modding);
+
+        await modding_destroy(modding);
         layout_destroy(layout);
         gamepad_destroy(maple_pad);
         return;
@@ -42,6 +55,7 @@ async function introscreen_main() {
     let self_text = await fs_readtext("/assets/engineText.txt");
     let intro_text = await introscreen_read_intro_text("/assets/common/data/introText.txt");
     let week_greetings = null;
+    let funky_intro = layout_get_attached_value(layout, "funky", LAYOUT_TYPE_STRING, INTROSCREEN_FUNKY);
 
     // 25% chance of displaying choosen week greetings
     if (Math.random() <= 0.25) week_greetings = await introscreen_read_week_gretings();
@@ -57,23 +71,31 @@ async function introscreen_main() {
     if (background_menu_music) soundplayer_play(background_menu_music);
 
     layout_trigger_any(layout, "intro-engine");
-    await introscreen_draw_sparse_text(self_text, delay, engine_duration, layout, maple_pad);
+    await modding_helper_notify_event(modding, "intro-engine");
+    await introscreen_draw_sparse_text(self_text, delay, engine_duration, modding, maple_pad);
 
     if (week_greetings) {
         layout_trigger_any(layout, "intro-week-grettings");
-        await introscreen_draw_sparse_text(week_greetings, delay, greetings_duration, layout, maple_pad);
+        await modding_helper_notify_event(modding, "intro-week-grettings");
+        await introscreen_draw_sparse_text(week_greetings, delay, greetings_duration, modding, maple_pad);
     } else {
         layout_trigger_any(layout, "intro-greetings");
-        await introscreen_draw_sparse_text(intro_text, delay, greetings_duration, layout, maple_pad);
+        await modding_helper_notify_event(modding, "intro-greetings");
+        await introscreen_draw_sparse_text(intro_text, delay, greetings_duration, modding, maple_pad);
     }
 
     layout_trigger_any(layout, "intro-funkin");
-    await introscreen_draw_sparse_text(INTROSCREEN_FUNKY, delay, funkin_duration, layout, maple_pad);
+    await modding_helper_notify_event(modding, "intro-funkin");
+    await introscreen_draw_sparse_text(funky_intro, delay, funkin_duration, modding, maple_pad);
+
+    await modding_helper_notify_exit2(modding);
 
     // dispose resources used
+    if (funky_intro !== INTROSCREEN_FUNKY) funky_intro = undefined;
     self_text = undefined;
     intro_text = undefined;
     week_greetings = undefined;
+    await modding_destroy(modding);
     layout_destroy(layout);
     gamepad_destroy(maple_pad);
 }
@@ -90,9 +112,10 @@ async function introscreen_pause(duration, layout) {
     }
 }
 
-async function introscreen_draw_sparse_text(text, delay, duration, layout, maple_pad) {
+async function introscreen_draw_sparse_text(text, delay, duration, modding, maple_pad) {
+    const layout = modding.layout;
     let textsprite = layout_get_textsprite(layout, "greetings");
-    if (!textsprite || !text) return;
+    if (!textsprite || !text || modding.has_exit) return;
 
     let text_length = text.length;
     let text_buffer = "";
@@ -119,12 +142,16 @@ async function introscreen_draw_sparse_text(text, delay, duration, layout, maple
         }
 
         let elapsed = await pvrctx_wait_ready();
-        progress += elapsed;
-
         pvr_context_reset(pvr_context);
+
+        let res = await modding_helper_handle_custom_menu(modding, maple_pad, elapsed);
+        if (modding.has_exit || res != MODDING_HELPER_RESULT_CONTINUE) break;
+
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
+        if (modding.has_halt) continue;
 
+        progress += elapsed;
         if (gamepad_has_pressed(maple_pad, INTROSCREEN_SKIP_BUTTONS) != 0x00) break;
     }
 

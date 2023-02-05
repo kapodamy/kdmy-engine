@@ -16,6 +16,8 @@ namespace Engine.Game {
         private const string KEY_NONE = "(none)";
         private const string KEY_BIND = "(waiting)";
         private const double DELAY_SECONDS = 0.25;
+        private const string MODDING_SCRIPT = "/assets/data/scripts/settigsmenu.lua";
+        private const string MODDING_MENU = "/assets/data/menus/settigsmenu-main.json";
         private static readonly KeyCallback delegate_key_callback = InternalKeyCallback;
 
 
@@ -64,7 +66,7 @@ namespace Engine.Game {
             },
             items = new MenuManifest.Item[] {
                new MenuManifest.Item() {
-                    name= null,
+                    name= "keyboard-bindings-gameplay",
                     text= "KEYBOARD BINDINGS IN GAMEPLAY",// unused
                     placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
                     anim_selected= null,// unused
@@ -74,10 +76,11 @@ namespace Engine.Game {
                     anim_rollback= null,// unused
                     anim_in= null,// unused
                     anim_out= null,// unused
-                    hidden= false
-                },
+                    hidden= false,
+                    description= null// unused
+               },
                new MenuManifest.Item() {
-                    name= null,
+                    name= "keyboard-bindings-menu",
                     text= "KEYBOARD BINDINGS IN MENUS",// unused
                     placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
                     anim_selected= null,// unused
@@ -87,10 +90,11 @@ namespace Engine.Game {
                     anim_rollback= null,// unused
                     anim_in= null,// unused
                     anim_out= null,// unused
-                    hidden= false
-                },
+                    hidden= false,
+                    description= null// unused
+               },
                new MenuManifest.Item() {
-                    name= null,
+                    name= "gameplay-settings",
                     text= "GAMEPLAY SETTINGS",// unused
                     placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
                     anim_selected= null,// unused
@@ -100,10 +104,11 @@ namespace Engine.Game {
                     anim_rollback= null,// unused
                     anim_in= null,// unused
                     anim_out= null,// unused
-                    hidden= false
-                },
+                    hidden= false,
+                    description= null// unused
+               },
                new MenuManifest.Item()  {
-                    name= null,
+                    name= "miscellaneous",
                     text= "MISCELLANEOUS",// unused
                     placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
                     anim_selected= null,// unused
@@ -113,10 +118,11 @@ namespace Engine.Game {
                     anim_rollback= null,// unused
                     anim_in= null,// unused
                     anim_out= null,// unused
-                    hidden= false
-                },
+                    hidden= false,
+                    description= null// unused
+               },
                new MenuManifest.Item() {
-                    name= null,
+                    name= "return-main-menu",
                     text= "RETURN TO THE MAIN MENU",// unused
                     placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
                     anim_selected= null,// unused
@@ -126,8 +132,9 @@ namespace Engine.Game {
                     anim_rollback= null,// unused
                     anim_in= null,// unused
                     anim_out= null,// unused
-                    hidden= false
-                }
+                    hidden= false,
+                    description= null// unused
+               }
             },
             items_size = 5
         };
@@ -182,15 +189,34 @@ namespace Engine.Game {
         private static double next_pressed_timestamp = 0.0;
         private static Keycode last_detected_keycode = Keycode.None;
         private static KeyCallback previous_key_callback = null;
+        private static Menu current_menu = null;
+        private static SettingOption[] current_setting_options = null;
+        private static bool current_menu_choosen = false;
 
 
         public static void Main() {
-            SettingOption[] options_help = {
-                new SettingOption() { description = "Change the assigned key for each strum.\nDirectonial keys are always assigned" },
-                new SettingOption() { description = "Change the keys assigned to navigate between menus.\nDirectonial keys are always assigned" },
-                new SettingOption() { description = "Gameplay settings like ghost-tapping and input offset" },
-                new SettingOption() { description = "Specific engine settings" },
-                new SettingOption() { description = "Returns back to the main menu.\n¡Settings are automatically saved!" }
+
+            SettingOption[] main_options_help = {
+                new SettingOption() {
+                    name = "keyboard-bindings-gameplay",
+                    description = "Change the assigned key for each strum.\nDirectonial keys are always assigned"
+                },
+                new SettingOption() {
+                    name = "keyboard-bindings-menu",
+                    description = "Change the keys assigned to navigate between menus.\nDirectonial keys are always assigned"
+                },
+                new SettingOption() {
+                    name = "gameplay-settings",
+                    description = "Gameplay settings like ghost-tapping and input offset"
+                },
+                new SettingOption() {
+                    name = "miscellaneous",
+                    description = "Specific engine settings"
+                },
+                new SettingOption() {
+                    name = "return-main-menu",
+                    description = "Returns back to the main menu.\n¡Settings are automatically saved!"
+                }
             };
 
             AnimList animlist = AnimList.Init("/assets/common/anims/settings-menu.xml");
@@ -220,10 +246,38 @@ namespace Engine.Game {
                 "menu_itemGap", SettingsMenu.MENU.parameters.items_gap
             );
             LayoutPlaceholder menu_placeholder = layout.GetPlaceholder("menu");
-            if (menu_placeholder == null) throw new System.Exception("Missing menu placeholder");
+            if (menu_placeholder == null) throw new Exception("Missing menu placeholder");
+
+            MenuManifest menumanifest = SettingsMenu.MENU;
+            SettingOption[] options_help = main_options_help;
+
+            if (FS.FileExists(SettingsMenu.MODDING_MENU)) {
+                menumanifest = new MenuManifest(SettingsMenu.MODDING_MENU);
+                if (menumanifest == null) throw new Exception("failed to load " + SettingsMenu.MODDING_MENU);
+
+                // since a custom menu was provided, remap option descriptions
+                options_help = new SettingOption[menumanifest.items_size];
+
+                for (int i = 0 ; i < menumanifest.items_size ; i++) {
+                    options_help[i].description = menumanifest.items[i].description;
+
+                    if (options_help[i].description != null) {
+                        options_help[i].description_changed = true;
+                        continue;
+                    }
+
+                    for (int j = 0 ; j < main_options_help.Length ; j++) {
+                        if (main_options_help[i].name == menumanifest.items[i].name) {
+                            options_help[i].description = main_options_help[i].description;
+                            options_help[i].description_changed = false;
+                            break;
+                        }
+                    }
+                }
+            }
 
             Menu menu = new Menu(
-                SettingsMenu.MENU,
+                menumanifest,
                 menu_placeholder.x, menu_placeholder.y, menu_placeholder.z,
                 menu_placeholder.width, menu_placeholder.height
             );
@@ -254,29 +308,49 @@ namespace Engine.Game {
                 GameMain.background_menu_music.SetVolume(0.5f);
             }
 
-            while (true) {
-                int selected_option = InCommonMenu("Settings", layout, gamepad, menu, options_help);
-                switch (selected_option) {
-                    case 0:
+            SettingsMenu.current_menu = null;
+            SettingsMenu.current_setting_options = null;
+            SettingsMenu.current_menu_choosen = false;
+
+            Modding modding = new Modding(layout, SettingsMenu.MODDING_SCRIPT);
+            modding.callback_option = SettingsMenu.InternalHandleOption;
+            modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+
+            while (modding.has_exit) {
+                int selected_index = InCommonMenu("Settings", layout, gamepad, menu, options_help, modding);
+                string selected_name = menumanifest.items[selected_index].name;
+                switch (selected_name) {
+                    case "keyboard-bindings-gameplay":
                         InGameplayBinding(anim_binding, anim_binding_rollback);
                         continue;
-                    case 1:
+                    case "keyboard-bindings-menu":
                         InMenusBinding(anim_binding, anim_binding_rollback);
                         continue;
-                    case 2:
-                        InGameplaySettings(gamepad);
+                    case "gameplay-settings":
+                        InGameplaySettings(gamepad, modding);
                         continue;
-                    case 3:
-                        InMiscSettings(gamepad);
+                    case "miscellaneous":
+                        InMiscSettings(gamepad, modding);
+                        continue;
+                    case "return-main-menu":
+                        break;
+                    default:
+                        // custom option selected
                         continue;
                 }
                 break;
             }
 
+            modding.HelperNotifyExit2();
+
             anim_binding.Destroy();
             anim_binding_rollback.Destroy();
             menu.Destroy();
             layout.Destroy();
+            modding.Destroy();
+
+            //if (options_help != main_options_help) free(options_help);
+            if (menumanifest != SettingsMenu.MENU) menumanifest.Destroy();
 
             // flush settings to the INI file
             EngineSettings.ini.Flush();
@@ -617,11 +691,16 @@ namespace Engine.Game {
             KallistiOS.MAPLE.maple_mappings.LoadKeyboardMappings();
         }
 
-        private static int InCommonMenu(string title, Layout layout, Gamepad gamepad, Menu menu, SettingOption[] options) {
+        private static int InCommonMenu(string title, Layout layout, Gamepad gamepad, Menu menu, SettingOption[] options, Modding modding) {
             TextSprite hint = layout.GetTextsprite("hint");
             gamepad.SetButtonsDelay((int)(SettingsMenu.DELAY_SECONDS * 1000));
 
+            SettingsMenu.current_menu = modding.native_menu = menu;
+            SettingsMenu.current_setting_options = options;
+            SettingsMenu.current_menu_choosen = false;
+
             layout.TriggerAny(null);
+            modding.HelperNotifyModdingEvent(title);
 
             int last_selected_index = -1;
             int selected_index = menu.GetSelectedIndex();
@@ -634,7 +713,12 @@ namespace Engine.Game {
             int option = -1;
             gamepad.ClearButtons();
 
-            while (true) {
+            while (!modding.has_exit) {
+                if (SettingsMenu.current_menu_choosen) {
+                    option = menu.GetSelectedIndex();
+                    break;
+                }
+
                 float elapsed = PVRContext.global_context.WaitReady();
 
                 layout.Animate(elapsed);
@@ -646,18 +730,22 @@ namespace Engine.Game {
                     GamepadButtons.B | GamepadButtons.A
                 );
 
-                if ((buttons & (GamepadButtons.BACK | GamepadButtons.B)) != GamepadButtons.NOTHING) {
+                ModdingHelperResult res = modding.HelperHandleCustomMenu(gamepad, elapsed);
+                if (res != ModdingHelperResult.CONTINUE) break;
+                if (modding.has_halt || menu != modding.active_menu) continue;
+
+                if ((buttons & (GamepadButtons.BACK | GamepadButtons.B)).Bool() && !modding.HelperNotifyBack()) {
                     break;
-                } else if ((buttons & (GamepadButtons.START | GamepadButtons.A)) != GamepadButtons.NOTHING) {
+                } else if ((buttons & (GamepadButtons.START | GamepadButtons.A)).Bool() && !modding.HelperNotifyOption(false)) {
                     option = menu.GetSelectedIndex();
                     break;
-                } else if ((buttons & GamepadButtons.AD_UP) != GamepadButtons.NOTHING) {
+                } else if ((buttons & GamepadButtons.AD_UP).Bool()) {
                     menu.SelectVertical(-1);
-                } else if ((buttons & GamepadButtons.AD_DOWN) != GamepadButtons.NOTHING) {
+                } else if ((buttons & GamepadButtons.AD_DOWN).Bool()) {
                     menu.SelectVertical(1);
-                } else if ((buttons & GamepadButtons.AD_LEFT) != GamepadButtons.NOTHING) {
+                } else if ((buttons & GamepadButtons.AD_LEFT).Bool()) {
                     menu.SelectHorizontal(-1);
-                } else if ((buttons & GamepadButtons.AD_RIGHT) != GamepadButtons.NOTHING) {
+                } else if ((buttons & GamepadButtons.AD_RIGHT).Bool()) {
                     menu.SelectHorizontal(1);
                 } else {
                     continue;
@@ -671,16 +759,18 @@ namespace Engine.Game {
                 GameMain.HelperTriggerActionMenu2(layout, SettingsMenu.MENU_COMMON, last_selected_index, title, false, false);
                 last_selected_index = selected_index;
                 GameMain.HelperTriggerActionMenu2(layout, SettingsMenu.MENU_COMMON, selected_index, title, true, false);
+                modding.HelperNotifyOption(true);
             }
 
             if (option >= 0) {
                 GameMain.HelperTriggerActionMenu2(layout, SettingsMenu.MENU_COMMON, option, title, false, true);
             }
 
+            modding.has_exit = false;
             return option;
         }
 
-        private static void InGameplaySettings(Gamepad gamepad) {
+        private static void InGameplaySettings(Gamepad gamepad, Modding modding) {
             SettingOption[] options = {
                 new SettingOption() {
                     name = "USE FUNKIN MARKER DURATION",
@@ -765,7 +855,7 @@ namespace Engine.Game {
                 InternalLoadOption(ref options[i], EngineSettings.INI_GAMEPLAY_SECTION);
             }
 
-            ShowCommon("GAMEPLAY SETTINGS", gamepad, options, options_size);
+            ShowCommon("GAMEPLAY SETTINGS", gamepad, options, options_size, modding);
 
             // save settings
             for (int i = 0 ; i < options_size ; i++) {
@@ -773,7 +863,7 @@ namespace Engine.Game {
             }
         }
 
-        private static void InMiscSettings(Gamepad gamepad) {
+        private static void InMiscSettings(Gamepad gamepad, Modding modding) {
             SettingOption[] options = {
                 new SettingOption() {
                     name = "DISPLAY FPS",
@@ -823,7 +913,7 @@ namespace Engine.Game {
                 InternalLoadOption(ref options[i], EngineSettings.INI_MISC_SECTION);
             }
 
-            ShowCommon("MISCELLANEOUS", gamepad, options, options_size);
+            ShowCommon("MISCELLANEOUS", gamepad, options, options_size, modding);
 
             // save settings
             for (int i = 0 ; i < options_size ; i++) {
@@ -831,7 +921,7 @@ namespace Engine.Game {
             }
         }
 
-        private static void ShowCommon(string title, Gamepad gamepad, SettingOption[] options, int options_count) {
+        private static void ShowCommon(string title, Gamepad gamepad, SettingOption[] options, int options_count, Modding modding) {
             Layout layout = Layout.Init("/assets/common/image/settings-menu/common.xml");
 
             if (layout == null) {
@@ -882,7 +972,8 @@ namespace Engine.Game {
                     anim_rollback = null,// unused
                     anim_in = null,// unused
                     anim_out = null,// unused
-                    hidden = false
+                    hidden = false,
+                    description = null// unused
                 };
             }
 
@@ -901,8 +992,8 @@ namespace Engine.Game {
 
             if (setting_name != null) setting_name.SetTextIntern(true, options[0].name);
 
-            while (true) {
-                int selected_option = InCommonMenu(title, layout, gamepad, menu, options);
+            while (modding.has_exit) {
+                int selected_option = InCommonMenu(title, layout, gamepad, menu, options, modding);
                 if (selected_option < 0) break;
 
                 if (setting_name != null) setting_name.SetTextIntern(true, options[selected_option].name);
@@ -954,21 +1045,21 @@ namespace Engine.Game {
                     GamepadButtons.AD
                 );
 
-                if ((buttons & (GamepadButtons.A | GamepadButtons.START)) != GamepadButtons.NOTHING) {
+                if ((buttons & (GamepadButtons.A | GamepadButtons.START)).Bool()) {
                     break;
                 }
-                if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+                if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                     value = orig_value;
                     break;
                 }
 
-                if ((buttons & GamepadButtons.AD_UP) != GamepadButtons.NOTHING)
+                if ((buttons & GamepadButtons.AD_UP).Bool())
                     value++;
-                else if ((buttons & GamepadButtons.AD_DOWN) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_DOWN).Bool())
                     value--;
-                else if ((buttons & GamepadButtons.AD_LEFT) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_LEFT).Bool())
                     value -= 10;
-                else if ((buttons & GamepadButtons.AD_RIGHT) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_RIGHT).Bool())
                     value += 10;
                 else
                     continue;
@@ -1001,10 +1092,10 @@ namespace Engine.Game {
 
                 if (buttons == GamepadButtons.NOTHING) continue;
 
-                if ((buttons & (GamepadButtons.A | GamepadButtons.START)) != GamepadButtons.NOTHING) {
+                if ((buttons & (GamepadButtons.A | GamepadButtons.START)).Bool()) {
                     break;
                 }
-                if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+                if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                     value = orig_value;
                     break;
                 }
@@ -1058,7 +1149,8 @@ namespace Engine.Game {
                     anim_rollback = null,// unused
                     anim_in = null,// unused
                     anim_out = null,// unused
-                    hidden = false
+                    hidden = false,
+                    description = null// unused
                 };
             }
 
@@ -1093,22 +1185,22 @@ namespace Engine.Game {
                     GamepadButtons.AD
                 );
 
-                if ((buttons & (GamepadButtons.A | GamepadButtons.START)) != GamepadButtons.NOTHING) {
+                if ((buttons & (GamepadButtons.A | GamepadButtons.START)).Bool()) {
                     index = menu.GetSelectedIndex();
                     Debug.Assert(index >= 0 && index < menu.GetItemsCount());
                     break;
                 }
-                if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+                if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                     break;
                 }
 
-                if ((buttons & GamepadButtons.AD_UP) != GamepadButtons.NOTHING)
+                if ((buttons & GamepadButtons.AD_UP).Bool())
                     menu.SelectVertical(-1);
-                else if ((buttons & GamepadButtons.AD_DOWN) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_DOWN).Bool())
                     menu.SelectVertical(1);
-                else if ((buttons & GamepadButtons.AD_LEFT) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_LEFT).Bool())
                     menu.SelectHorizontal(-1);
-                else if ((buttons & GamepadButtons.AD_RIGHT) != GamepadButtons.NOTHING)
+                else if ((buttons & GamepadButtons.AD_RIGHT).Bool())
                     menu.SelectHorizontal(1);
                 else if (!first_run)
                     continue;
@@ -1186,7 +1278,7 @@ namespace Engine.Game {
             if (Glfw.GetKey(PVRContext.InternalNativeWindow, Keys.ESCAPE) == InputState.Press)
                 buttons |= GamepadButtons.BACK;
 
-            if (buttons != GamepadButtons.NOTHING)
+            if (buttons.Bool())
                 SettingsMenu.next_pressed_timestamp = now + SettingsMenu.DELAY_SECONDS;
 
             return buttons;
@@ -1247,6 +1339,28 @@ namespace Engine.Game {
             }
         }
 
+        private static bool InternalHandleOption(string option_name) {
+            if (SettingsMenu.current_menu == null || SettingsMenu.current_setting_options == null) {
+                return false;
+            }
+            if (option_name == null) return false;
+
+            if (SettingsMenu.current_menu.HasItem(option_name)) {
+                SettingsMenu.current_menu.SelectItem(option_name);
+                SettingsMenu.current_menu_choosen = true;
+                return true;
+            } else {
+                for (int i = 0, count = SettingsMenu.current_menu.GetItemsCount() ; i < count ; i++) {
+                    if (SettingsMenu.current_setting_options[i].name == option_name) {
+                        SettingsMenu.current_menu.SelectIndex(i);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
 
         private struct Keycode {
             public readonly int scancode;
@@ -1289,6 +1403,7 @@ namespace Engine.Game {
             public string ini_key;
             public string name;
             public string description;
+            public bool description_changed;
 
             public bool is_bool;
             public bool is_int;

@@ -14,9 +14,9 @@ async function screenmenu_init(layout_src, script_src) {
     return { modding, layout };
 }
 
-function screenmenu_destroy(screenmenu) {
+async function screenmenu_destroy(screenmenu) {
     layout_destroy(screenmenu.layout);
-    modding_destroy(screenmenu.modding);
+    await modding_destroy(screenmenu.modding);
     screenmenu = undefined;
 }
 

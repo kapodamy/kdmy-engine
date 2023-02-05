@@ -82,3 +82,25 @@ void strums_animation_restart(Strums strums) {
 void strums_animation_end(Strums strums) {
     print_stub("strums_animation_end", "strums=%p", strums);
 }
+int32_t strums_decorators_get_count(Strums strums) {
+    print_stub("strums_decorators_get_count", "strums=%p", strums);
+    return 0;
+}
+bool strums_decorators_add(Strums strums, ModelHolder modelholder, const char* animation_name, double timestamp) {
+    print_stub("strums_decorators_add", "strums=%p modelholder=%p animation_name=%s timestamp=%f", strums, modelholder, animation_name, timestamp);
+    return 0;
+}
+
+bool strums_decorators_add2(Strums strums, ModelHolder modelholder, const char* animation_name, double timestamp, int32_t from_strum_index, int32_t to_strum_index) {
+    print_stub("strums_decorators_add2", "strums=%p modelholder=%p animation_name=%s timestamp=%f from_strum_index=%i to_strum_index=%i", strums, modelholder, animation_name, timestamp, from_strum_index, to_strum_index);
+    return 0;
+}
+void strums_decorators_set_scroll_speed(Strums strums, double speed) {
+    print_stub("strums_decorators_set_scroll_speed", "strums=%p speed=%f", strums, speed);
+}
+void strums_decorators_set_alpha(Strums strums, float alpha) {
+    print_stub("strums_decorators_set_alpha", "strums=%p alpha=%f", strums, alpha);
+}
+void strums_decorators_set_visible(Strums strums, double decorator_timestamp, bool visible) {
+    print_stub("strums_decorators_set_visible", "strums=%p decorator_timestamp=%f visible=(bool)%i", strums, decorator_timestamp, visible);
+}

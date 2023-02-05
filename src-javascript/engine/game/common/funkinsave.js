@@ -59,6 +59,7 @@ const FUNKINSAVE_VMS_HEADER = new Uint8Array([
 ]);
 
 const FUNKINSAVE_DIRECTIVE_TYPE_UNLOCK = 0x00;
+const FUNKINSAVE_MAX_INDEXED_NAME = 0xFFFF - 1;
 
 
 
@@ -240,15 +241,15 @@ async function funkinsave_read_from_vmu() {
         });
     }
 
-	if (last_played_week_name_index_in_table == 0xFFFF)
-		funkinsave.last_played_week_index = -1;
-	else
-		funkinsave.last_played_week_index = last_played_week_name_index_in_table;
-	
-	if (last_played_difficulty_name_index_in_table == 0xFFFF)
-		funkinsave.last_played_difficulty_index = -1;
-	else
-		funkinsave.last_played_difficulty_index = last_played_difficulty_name_index_in_table;
+    if (last_played_week_name_index_in_table == 0xFFFF)
+        funkinsave.last_played_week_index = -1;
+    else
+        funkinsave.last_played_week_index = last_played_week_name_index_in_table;
+
+    if (last_played_difficulty_name_index_in_table == 0xFFFF)
+        funkinsave.last_played_difficulty_index = -1;
+    else
+        funkinsave.last_played_difficulty_index = last_played_difficulty_name_index_in_table;
 
     // done
     savedata = undefined;
@@ -297,13 +298,13 @@ async function funkinsave_write_to_vmu() {
     let week_names_table_size = 0;
     let difficulty_names_table_size = 0;
 
-	let last_played_week_index = 0xFFFF;
-	let last_played_difficulty_index = 0xFFFF;
+    let last_played_week_index = 0xFFFF;
+    let last_played_difficulty_index = 0xFFFF;
 
-	if (funkinsave.last_played_week_index > 0)
-		last_played_week_index = funkinsave.last_played_week_index;
-	if (funkinsave.last_played_difficulty_index >= 0)
-		last_played_difficulty_index = funkinsave.last_played_difficulty_index;
+    if (funkinsave.last_played_week_index > 0)
+        last_played_week_index = funkinsave.last_played_week_index;
+    if (funkinsave.last_played_difficulty_index >= 0)
+        last_played_difficulty_index = funkinsave.last_played_difficulty_index;
 
     if (funkinsave_internal_is_vmu_missing()) return 1;
 
@@ -557,6 +558,61 @@ function funkinsave_set_setting(setting_id, setting_value) {
 }
 
 
+function funkinsave_storge_set(week_name, name, data, data_size) {
+    let week_id;
+
+    if (week_name == null) {
+        week_id = FUNKINSAVE_MAX_INDEXED_NAME;
+    } else {
+        week_id = funkinsave_internal_name_index(funkinsave.weeks_names, week_name);
+        if (week_id < 0) return 0;
+    }
+
+    let storage = null;
+
+    for (let s of linkedlist_iterate4(funkinsave.storages)) {
+        if (s.week_id == week_id && s.name == name) {
+            storage = s;
+            break;
+        }
+    }
+
+    if (data_size < 1) {
+        if (storage) {
+            linkedlist_remove_item(funkinsave.storages, storage);
+            storage.data = undefined;
+            storage = undefined;
+        }
+        return 1;
+    }
+
+    if (!storage) storage = { week_id: 0, name: null, data_size: 0, data: null };
+
+    data = clone_array(data, data_size, NaN);
+
+    storage.data = undefined;
+    storage.data = data;
+    storage.data_size = data_size;
+    storage.week_id = week_id;
+
+    return 1;
+}
+
+function funkinsave_storge_get(week_name, name, out_data) {
+    let week_id = week_name == null ? FUNKINSAVE_MAX_INDEXED_NAME : funkinsave.weeks_names.indexOf(name);
+
+    for (let storage of linkedlist_iterate4(funkinsave.storages)) {
+        if (storage.week_id == week_id && storage.name == name) {
+            out_data[0] = storage.data;
+            return storage.data_size;
+        }
+    }
+
+    out_data[0] = null;
+    return 0;
+}
+
+
 async function funkinsave_has_savedata_in_vmu(port, unit) {
     let dev = maple_enum_dev(port, unit);
     if (!dev) return 0;
@@ -695,9 +751,14 @@ function funkinsave_internal_calc_crc16(buffer, size, crc) {
 }
 
 function funkinsave_internal_name_index(linkedlist, name) {
+    if (name == null) return -1;
     let index = linkedlist_index_of(linkedlist, name);
     if (index < 0) {
         index = linkedlist_count(linkedlist);
+        if (index >= FUNKINSAVE_MAX_INDEXED_NAME) {
+            console.error("funkinsave_internal_name_index() failed, ran out of indices");
+            return -1;
+        }
         linkedlist_add_item(linkedlist, strdup(name));
     }
     return index;

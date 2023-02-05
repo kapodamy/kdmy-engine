@@ -47,5 +47,6 @@ void healthbar_enable_low_health_flash_warning(HealthBar healthbar, bool enable)
 void healthbar_hide_warnings(HealthBar healthbar);
 void healthbar_show_drain_warning(HealthBar healthbar, bool use_fast_drain);
 void healthbar_show_locked_warning(HealthBar healthbar);
-
+void healthbar_get_bar_midpoint(HealthBar healthbar, float* x, float* y);
+float healthbar_get_percent(HealthBar healthbar);
 #endif

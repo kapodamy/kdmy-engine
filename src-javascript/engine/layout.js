@@ -547,34 +547,34 @@ function layout_trigger_action(layout, target_name, action_name) {
     return count;
 }
 
-function layout_contains_action(layout, action_name, item_name) {
-    if (item_name == null) throw new Error("entry_name is required");
+function layout_contains_action(layout, target_name, action_name) {
+    if (action_name == null) throw new Error("action_name is required");
 
     let count = 0;
 
     for (let i = 0; i < layout.vertex_list_size; i++) {
-        if (layout.vertex_list[i].name != item_name) continue;
+        if (layout.vertex_list[i].name != target_name) continue;
         for (let j = 0; j < layout.vertex_list[i].actions_size; j++) {
             if (layout.vertex_list[i].actions[j].name == action_name) count++;
         }
     }
 
     for (let i = 0; i < layout.group_list_size; i++) {
-        if (layout.group_list[i].name != item_name) continue;
+        if (layout.group_list[i].name != target_name) continue;
         for (let j = 0; j < layout.group_list[i].actions_size; j++) {
             if (layout.group_list[i].actions[j].name == action_name) count++;
         }
     }
 
     for (let i = 0; i < layout.sound_list_size; i++) {
-        if (layout.sound_list[i].name != item_name) continue;
+        if (layout.sound_list[i].name != target_name) continue;
         for (let j = 0; j < layout.sound_list[i].actions_size; j++) {
             if (layout.sound_list[i].actions[j].name == action_name) count++;
         }
     }
 
     for (let i = 0; i < layout.video_list_size; i++) {
-        if (layout.video_list[i].name != item_name) continue;
+        if (layout.video_list[i].name != target_name) continue;
         for (let j = 0; j < layout.video_list[i].actions_size; j++) {
             if (layout.video_list[i].actions[j].name == action_name) count++;
         }

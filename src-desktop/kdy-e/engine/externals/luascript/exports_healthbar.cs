@@ -357,6 +357,26 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_healthbar_get_bar_midpoint(LuaState L) {
+            HealthBar healthbar = L.ReadUserdata<HealthBar>(HEALTHBAR);
+            float x, y;
+
+            healthbar.GetBarMidpoint(out x, out y);
+
+            L.lua_pushnumber(x);
+            L.lua_pushnumber(y);
+            return 0;
+        }
+
+        static int script_healthbar_get_percent(LuaState L) {
+            HealthBar healthbar = L.ReadUserdata<HealthBar>(HEALTHBAR);
+
+            float ret = healthbar.GetPercent();
+
+            L.lua_pushnumber(ret);
+            return 1;
+        }
+
 
 
 
@@ -397,6 +417,8 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("hide_warnings", script_healthbar_hide_warnings),
             new LuaTableFunction("show_drain_warning", script_healthbar_show_drain_warning),
             new LuaTableFunction("show_locked_warning", script_healthbar_show_locked_warning),
+            new LuaTableFunction("get_bar_midpoint", script_healthbar_get_bar_midpoint),
+            new LuaTableFunction("get_percent", script_healthbar_get_percent),
             new LuaTableFunction(null, null)
         };
 

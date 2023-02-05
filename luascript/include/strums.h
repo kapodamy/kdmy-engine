@@ -3,6 +3,7 @@
 
 #include "strum.h"
 #include "drawable.h"
+#include "modelholder.h"
 
 
 typedef struct {
@@ -35,5 +36,12 @@ void strums_enable_post_sick_effect_draw(Strums strums, bool enable);
 void strums_animation_set(Strums strums, AnimSprite animsprite);
 void strums_animation_restart(Strums strums);
 void strums_animation_end(Strums strums);
+
+int32_t strums_decorators_get_count(Strums strums);
+bool strums_decorators_add(Strums strums, ModelHolder modelholder, const char* animation_name, double timestamp);
+bool strums_decorators_add2(Strums strums, ModelHolder modelholder, const char* animation_name, double timestamp, int32_t from_strum_index, int32_t to_strum_index);
+void strums_decorators_set_scroll_speed(Strums strums, double speed);
+void strums_decorators_set_alpha(Strums strums, float alpha);
+void strums_decorators_set_visible(Strums strums, double decorator_timestamp, bool visible);
 
 #endif

@@ -1,8 +1,6 @@
 #include "engine_string.h"
 #include "luascript_internal.h"
 
-
-
 static int script_enginesettings_index(lua_State* L) {
     EngineSettings_t* enginesettings = luascript_read_userdata(L, ENGINESETTINGS);
     const char* field = luaL_checkstring(L, 2);

@@ -32,6 +32,8 @@ void week_unlockdirective_create(RoundContext roundcontext, const char* name, bo
 bool week_unlockdirective_has(RoundContext roundcontext, const char* name);
 void week_unlockdirective_remove(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week);
 double week_unlockdirective_get(RoundContext roundcontext, const char* name);
+bool week_storage_set(RoundContext roundcontext, const char* name, const uint8_t* data, uint32_t data_size);
+uint32_t week_storage_get(RoundContext roundcontext, const char* name, uint8_t** data);
 void week_ui_set_visibility(RoundContext roundcontext, bool visible);
 Layout week_ui_get_layout(RoundContext roundcontext);
 Camera week_ui_get_camera(RoundContext roundcontext);

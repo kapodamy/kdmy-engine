@@ -53,51 +53,46 @@ function luascript_notify_modding_back(luascript) {
 }
 
 function luascript_notify_modding_exit(luascript) {
-    let return_values_ptr = ModuleLuaScript.kdmyEngine_stringToPtr("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
-    let return_lua_type_ptr = return_values_ptr + 0;
-    let return_lua_value_ptr = return_values_ptr + 4;
+    let type_ptr = ModuleLuaScript.kdmyEngine_stringToPtr("\0\0\0\0");
 
     let ret = _luascriptcript_call(
         ModuleLuaScript._luascript_notify_modding_exit,
-        luascript, return_lua_type_ptr, return_lua_value_ptr
+        luascript, type_ptr
     );
 
-    function process_return() {
-        const LUA_TNIL = 0;
-        const LUA_TBOOLEAN = 1;
-        const LUA_TNUMBER = 3;
-        const LUA_TSTRING = 4;
-
-        const dataview = ModuleLuaScript.kdmyEngine_get_ram();
-        let type = dataview.getUint32(return_lua_type_ptr);
+    function process_return(value_ptr) {
+        const ramview = ModuleLuaScript.kdmyEngine_get_ram();
+        let type = ramview.getUint32(type_ptr);
         let value;
 
         switch (type) {
-            case LUA_TBOOLEAN:
-                value = dataview.getUint32(return_lua_value_ptr) != 0;
+            case MODDING_VALUE_TYPE_BOOLEAN:
+                value = ramview.getUint32(value_ptr) != 0;
                 break;
-            case LUA_TNUMBER:
-                value = dataview.getFloat64(return_lua_value_ptr);
+            case MODDING_VALUE_TYPE_DOUBLE:
+                value = ramview.getFloat64(value_ptr);
                 break;
-            case LUA_TSTRING:
-                value = ModuleLuaScript.kdmyEngine_ptrToString(dataview.getUint32(return_lua_value_ptr));
+            case MODDING_VALUE_TYPE_STRING:
+                value = ModuleLuaScript.kdmyEngine_ptrToString(value_ptr);
                 break;
-            case LUA_TNIL:
+            case MODDING_VALUE_TYPE_NULL:
             default:
                 value = null;
                 break;
         }
 
-        ModuleLuaScript.kdmyEngine_deallocate(return_values_ptr);
+        ModuleLuaScript.kdmyEngine_deallocate(type_ptr);
+        ModuleLuaScript.kdmyEngine_deallocate(value_ptr);
+
         return value;
     }
 
     async function process_return_async() {
         try {
-            await ret;
-            return process_return();
+            let value_ptr = await ret;
+            return process_return(value_ptr);
         } catch (e) {
-            ModuleLuaScript.kdmyEngine_deallocate(return_values_ptr);
+            ModuleLuaScript.kdmyEngine_deallocate(type_ptr);
             throw e;
         }
     }
@@ -109,55 +104,35 @@ function luascript_notify_modding_exit(luascript) {
 }
 
 function luascript_notify_modding_init(luascript, value) {
-    const LUA_TNIL = 0;
-    const LUA_TBOOLEAN = 1;
-    const LUA_TNUMBER = 3;
-    const LUA_TSTRING = 4;
+    const ramview = ModuleLuaScript.kdmyEngine_get_ram();
+    let arg_value;
+    let arg_type;
 
-    let value_ptr = ModuleLuaScript.kdmyEngine_stringToPtr("\0\0\0\0\0\0\0\0");
-    let value_type;
-    let val;
-
-    const dataview = ModuleLuaScript.kdmyEngine_get_ram();
-    switch (typeof (value)) {
+    switch (typeof value) {
         case "boolean":
-            value_type = LUA_TBOOLEAN;
-            val = value ? 1 : 0;
-            dataview.setUint32(value_ptr, val, ModuleLuaScript.kdmyEngine_endianess);
+            arg_type = MODDING_VALUE_TYPE_BOOLEAN;
+            arg_value = ModuleLuaScript.kdmyEngine_stringToPtr("\0\0\0\0");
+            ramview.setUint32(arg_value, value ? 1 : 0, ModuleLuaScript.kdmyEngine_endianess);
             break;
         case "string":
-            value_type = LUA_TSTRING;
-            val = ModuleLuaScript.kdmyEngine_stringToPtr(value);
-            dataview.setUint32(value_ptr, val, ModuleLuaScript.kdmyEngine_endianess);
+            arg_type = MODDING_VALUE_TYPE_STRING;
+            arg_value = ModuleLuaScript.kdmyEngine_stringToPtr(value);
             break;
         case "number":
-            value_type = LUA_TNUMBER;
-            dataview.setFloat64(value_ptr, value, ModuleLuaScript.kdmyEngine_endianess);
+            arg_type = MODDING_VALUE_TYPE_DOUBLE;
+            arg_value = ModuleLuaScript.kdmyEngine_stringToPtr("\0\0\0\0\0\0\0\0");
+            ramview.setFloat64(arg_value, value, ModuleLuaScript.kdmyEngine_endianess);
             break;
         default:
-            value_type = LUA_TNIL;
+            arg_type = MODDING_VALUE_TYPE_NULL;
+            arg_value = 0x00;
             break;
     }
 
-
-    let ret = _luascriptcript_call(
+    return _luascriptcript_call(
         ModuleLuaScript._luascript_notify_modding_init,
-        luascript, value_type, value_ptr
+        luascript, arg_type, arg_value
     );
-
-    async function process_return_async() {
-        try {
-            await ret;
-        } finally {
-            ModuleLuaScript.kdmyEngine_deallocate(value_ptr);
-        }
-    }
-
-    if (ret instanceof Promise) {
-        return process_return_async();
-    }
-
-    ModuleLuaScript.kdmyEngine_deallocate(value_ptr);
 }
 
 function luascript_call_function(luascript, function_name) {
@@ -175,6 +150,15 @@ function luascript_eval(luascript, eval_string) {
     return _luascriptcript_call(
         ModuleLuaScript._luascript_call_function,
         luascript, eval_string_ptr
+    );
+}
+
+function luascript_notify_modding_event(luascript, event_name) {
+    let event_name_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(event_name);
+
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_modding_event,
+        luascript, event_name_ptr
     );
 }
 

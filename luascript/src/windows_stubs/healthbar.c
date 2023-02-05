@@ -124,3 +124,13 @@ void healthbar_show_drain_warning(HealthBar healthbar, bool use_fast_drain) {
 void healthbar_show_locked_warning(HealthBar healthbar) {
     print_stub("healthbar_show_locked_warning", "healthbar=%p", healthbar);
 }
+void healthbar_get_bar_midpoint(HealthBar healthbar, float* x, float* y) {
+    *x = 100.0f;
+    *y = 200.0f;
+    print_stub("healthbar_get_bar_midpoint", "healthbar=%p x=%p y=%p", healthbar, x, y);
+}
+float healthbar_get_percent(HealthBar healthbar) {
+    print_stub("healthbar_get_percent", "healthbar=%p", healthbar);
+    return 0;
+}
+

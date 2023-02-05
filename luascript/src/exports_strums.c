@@ -79,6 +79,27 @@ EM_JS_PRFX(void, strums_animation_restart, (Strums strums), {
 EM_JS_PRFX(void, strums_animation_end, (Strums strums), {
     strums_animation_end(kdmyEngine_obtain(strums));
 });
+EM_JS_PRFX(int32_t, strums_decorators_get_count, (Strums strums), {
+    let ret = strums_decorators_get_count(kdmyEngine_obtain(strums));
+    return ret;
+});
+EM_JS_PRFX(bool, strums_decorators_add, (Strums strums, ModelHolder modelholder, const char* animation_name, double timestamp), {
+    let ret = strums_decorators_add(kdmyEngine_obtain(strums), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), timestamp);
+    return ret ? 1 : 0;
+});
+EM_JS_PRFX(bool, strums_decorators_add2, (Strums strums, ModelHolder modelholder, const char* animation_name, double timestamp, int from_strum_index, int to_strum_index), {
+    let ret = strums_decorators_add2(kdmyEngine_obtain(strums), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), timestamp, from_strum_index, to_strum_index);
+    return ret ? 1 : 0;
+});
+EM_JS_PRFX(void, strums_decorators_set_scroll_speed, (Strums strums, double speed), {
+    strums_decorators_set_scroll_speed(kdmyEngine_obtain(strums), speed);
+});
+EM_JS_PRFX(void, strums_decorators_set_alpha, (Strums strums, float alpha), {
+    strums_decorators_set_alpha(kdmyEngine_obtain(strums), alpha);
+});
+EM_JS_PRFX(void, strums_decorators_set_visible, (Strums strums, double decorator_timestamp, bool visible), {
+    strums_decorators_set_visible(kdmyEngine_obtain(strums), decorator_timestamp, visible);
+});
 #endif
 
 
@@ -301,6 +322,69 @@ static int script_strums_animation_end(lua_State* L) {
     return 0;
 }
 
+static int script_strums_decorators_get_count(lua_State* L) {
+    Strums strums = luascript_read_userdata(L, STRUMS);
+
+    int32_t ret = strums_decorators_get_count(strums);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
+static int script_strums_decorators_add(lua_State* L) {
+    Strums strums = luascript_read_userdata(L, STRUMS);
+    ModelHolder modelholder = luascript_read_nullable_userdata(L, 2, MODELHOLDER);
+    const char* animation_name = luaL_checkstring(L, 3);
+    double timestamp = (double)luaL_checknumber(L, 4);
+
+    bool ret = strums_decorators_add(strums, modelholder, animation_name, timestamp);
+
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
+static int script_strums_decorators_add2(lua_State* L) {
+    Strums strums = luascript_read_userdata(L, STRUMS);
+    ModelHolder modelholder = luascript_read_nullable_userdata(L, 2, MODELHOLDER);
+    const char* animation_name = luaL_checkstring(L, 3);
+    double timestamp = (double)luaL_checknumber(L, 4);
+    int32_t from_strum_index = (int32_t)luaL_checkinteger(L, 5);
+    int32_t to_strum_index = (int32_t)luaL_checkinteger(L, 6);
+
+    bool ret = strums_decorators_add2(strums, modelholder, animation_name, timestamp, from_strum_index, to_strum_index);
+
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
+static int script_strums_decorators_set_scroll_speed(lua_State* L) {
+    Strums strums = luascript_read_userdata(L, STRUMS);
+    double speed = (double)luaL_checknumber(L, 2);
+
+    strums_decorators_set_scroll_speed(strums, speed);
+
+    return 0;
+}
+
+static int script_strums_decorators_set_alpha(lua_State* L) {
+    Strums strums = luascript_read_userdata(L, STRUMS);
+    float alpha = (float)luaL_checknumber(L, 2);
+
+    strums_decorators_set_alpha(strums, alpha);
+
+    return 0;
+}
+
+static int script_strums_decorators_set_visible(lua_State* L) {
+    Strums strums = luascript_read_userdata(L, STRUMS);
+    double decorator_timestamp = (double)luaL_checknumber(L, 2);
+    bool visible = (bool)lua_toboolean(L, 3);
+
+    strums_decorators_set_visible(strums, decorator_timestamp, visible);
+
+    return 0;
+}
+
 
 
 
@@ -329,6 +413,12 @@ static const luaL_Reg STRUMS_FUNCTIONS[] = {
     { "animation_set", script_strums_animation_set },
     { "animation_restart", script_strums_animation_restart },
     { "animation_end", script_strums_animation_end },
+    { "decorators_get_count", script_strums_decorators_get_count },
+    { "decorators_add", script_strums_decorators_add },
+    { "decorators_add2", script_strums_decorators_add2 },
+    { "decorators_set_scroll_speed", script_strums_decorators_set_scroll_speed },
+    { "decorators_set_alpha", script_strums_decorators_set_alpha },
+    { "decorators_set_visible", script_strums_decorators_set_visible },
     { NULL, NULL }
 };
 

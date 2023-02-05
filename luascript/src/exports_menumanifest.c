@@ -134,6 +134,7 @@ static int menumanifest_to_table(lua_State* L, MenuManifest mm) {
                 ADD_FIELD_STRING(L, "anim_out", mm->items[i].anim_out);
                 ADD_FIELD_NUMBER(L, "gap", mm->items[i].gap);
                 ADD_FIELD_BOOLEAN(L, "hidden", mm->items[i].hidden);
+                ADD_FIELD_STRING(L, "description", mm->items[i].description);
             }
             lua_settable(L, -3);
         }
