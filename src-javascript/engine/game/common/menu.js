@@ -231,10 +231,11 @@ function menu_select_item(menu, name) {
     for (let i = 0; i < menu.items_size; i++) {
         if (menu.items[i].name == name) {
             menu_internal_set_index_selected(menu, i);
-            return;
+            return 1;
         };
     }
     menu_internal_set_index_selected(menu, -1);
+    return 0;
 }
 
 function menu_select_index(menu, index) {
@@ -309,6 +310,10 @@ function menu_set_item_visibility(menu, index, visible) {
 
     menu_internal_build_map(menu);
     return 1;
+}
+
+function menu_has_valid_selection(menu) {
+    return menu.index_selected >= 0 && menu.index_selected < menu.items_size;
 }
 
 
@@ -877,7 +882,7 @@ function menu_internal_build_map(menu) {
 
     menu.render_distance_end = accumulator;
 
-    if (menu.per_page/* && pages >= 1*/) {
+    if (menu.per_page && pages > 0) {
         menu.map_size = Math.ceil(pages);
         menu.map = new Array(menu.map_size);
     }

@@ -38,7 +38,7 @@ void luascript_notify_pause(Luascript luascript, bool pause_or_resume);
 void luascript_notify_weekleave(Luascript luascript);
 void luascript_notify_afterresults(Luascript luascript);
 void luascript_notify_scriptchange(Luascript luascript);
-void luascript_notify_pause_optionselected(Luascript luascript, int32_t option_index, uint32_t buttons);
+void luascript_notify_pause_option_choosen(Luascript luascript, int32_t option_index);
 void luascript_notify_pause_menuvisible(Luascript luascript, bool shown_or_hidden);
 void luascript_notify_note(Luascript luascript, double timestamp, int32_t id, double duration, double data, bool special, int32_t player_id, uint32_t state);
 void luascript_notify_buttons(Luascript luascript, int32_t player_id, uint32_t buttons);
@@ -58,4 +58,5 @@ bool luascript_notify_modding_back(Luascript luascript);
 void* luascript_notify_modding_exit(Luascript luascript, ModdingValueType* return_type);
 void luascript_notify_modding_init(Luascript luascript, ModdingValueType arg_type, void* arg_value);
 void luascript_notify_modding_event(Luascript luascript, const char* event_name);
+void luascript_notify_modding_handle_custom_option(Luascript luascript, const char* option_name);
 #endif

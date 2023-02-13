@@ -151,7 +151,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             int ret = strums.StateToggle(state_name);
 
-            L.L.lua_pushinteger(ret);
+            L.lua_pushinteger(ret);
             return 1;
         }
 
@@ -161,7 +161,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             int ret = strums.StateToggleNotes(state_name);
 
-            L.L.lua_pushinteger(ret);
+            L.lua_pushinteger(ret);
             return 1;
         }
 
@@ -179,7 +179,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             int ret = strums.GetLinesCount();
 
-            L.L.lua_pushinteger(ret);
+            L.lua_pushinteger(ret);
             return 1;
         }
 
@@ -243,7 +243,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
             bool ret = strums.DecoratorsAdd(modelholder, animation_name, timestamp);
 
-            Llua_pushboolean(ret);
+            L.lua_pushboolean(ret);
             return 1;
         }
 

@@ -2354,6 +2354,11 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
                 case 3:
                     return 3;// back to mainmenu
             }
+
+            for (let i = 0; i < roundcontext.players_size; i++) {
+                const controller = roundcontext.players[i].controller;
+                if (controller) gamepad_clear_buttons(controller);
+            }
             continue;
         }
 

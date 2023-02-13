@@ -1530,6 +1530,7 @@ namespace Engine {
                 if (group.psframebuffer != null && group.context.last_z_index == i) {
 
                     pvrctx.Save();
+                    MATRIX_VIEWPORT.CopyTo(pvrctx.CurrentMatrix);
 
                     // draw group framebuffer
                     pvrctx.SetFramebuffer(null);

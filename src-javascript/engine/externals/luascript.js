@@ -1953,7 +1953,8 @@ function __js__menu_select_index(menu, index) {
     menu_select_index(kdmyEngine_obtain(menu), index)
 }
 function __js__menu_select_item(menu, name) {
-    menu_select_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name))
+    let ret = menu_select_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name))
+    return ret ? 1 : 0;
 }
 function __js__menu_select_vertical(menu, offset) {
     let ret = menu_select_vertical(kdmyEngine_obtain(menu), offset);
@@ -7480,8 +7481,8 @@ var _luascript_notify_afterresults = ModuleLuaScript["_luascript_notify_afterres
 var _luascript_notify_scriptchange = ModuleLuaScript["_luascript_notify_scriptchange"] = function () {
     return (_luascript_notify_scriptchange = ModuleLuaScript["_luascript_notify_scriptchange"] = ModuleLuaScript["asm"]["luascript_notify_scriptchange"]).apply(null, arguments)
 };
-var _luascript_notify_pause_optionselected = ModuleLuaScript["_luascript_notify_pause_optionselected"] = function () {
-    return (_luascript_notify_pause_optionselected = ModuleLuaScript["_luascript_notify_pause_optionselected"] = ModuleLuaScript["asm"]["luascript_notify_pause_optionselected"]).apply(null, arguments)
+var _luascript_notify_pause_option_choosen = ModuleLuaScript["_luascript_notify_pause_option_choosen"] = function () {
+    return (_luascript_notify_pause_option_choosen = ModuleLuaScript["_luascript_notify_pause_option_choosen"] = ModuleLuaScript["asm"]["luascript_notify_pause_option_choosen"]).apply(null, arguments)
 };
 var _luascript_notify_pause_menuvisible = ModuleLuaScript["_luascript_notify_pause_menuvisible"] = function () {
     return (_luascript_notify_pause_menuvisible = ModuleLuaScript["_luascript_notify_pause_menuvisible"] = ModuleLuaScript["asm"]["luascript_notify_pause_menuvisible"]).apply(null, arguments)
@@ -7539,6 +7540,9 @@ var _luascript_call_function = ModuleLuaScript["_luascript_call_function"] = fun
 };
 var _luascript_notify_modding_event = ModuleLuaScript["_luascript_notify_modding_event"] = function () {
     return (_luascript_notify_modding_event = ModuleLuaScript["_luascript_notify_modding_event"] = ModuleLuaScript["asm"]["luascript_notify_modding_event"]).apply(null, arguments)
+};
+var _luascript_notify_modding_handle_custom_option = ModuleLuaScript["_luascript_notify_modding_handle_custom_option"] = function () {
+    return (_luascript_notify_modding_handle_custom_option = ModuleLuaScript["_luascript_notify_modding_handle_custom_option"] = ModuleLuaScript["asm"]["luascript_notify_modding_handle_custom_option"]).apply(null, arguments)
 };
 var _malloc = ModuleLuaScript["_malloc"] = function () {
     return (_malloc = ModuleLuaScript["_malloc"] = ModuleLuaScript["asm"]["malloc"]).apply(null, arguments)

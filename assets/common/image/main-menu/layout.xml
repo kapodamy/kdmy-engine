@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Layout width="1280" height="720" keepAstectRatio="true" animationSpeed="1.0" animationList="animations.xml">
+<Layout width="1280" height="720" keepAspectRatio="true" animationSpeed="1.0" animationList="animations.xml">
 
     <!-- This background color should match the color of the background image -->
     <Sprite rgb="0xFDE871">

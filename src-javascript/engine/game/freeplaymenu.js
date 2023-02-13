@@ -6,7 +6,7 @@ const FREEPLAYMENU_INFO = "$s  -  $s  -  $s";
 const FREEPLAYMENU_BG_INFO_NAME = "background_song_info";
 const FREEPLAYMENU_LAYOUT = "/assets/common/image/freeplay-menu/layout.xml";
 const FREEPLAYMENU_LAYOUT_DREAMCAST = "/assets/common/image/freeplay-menu/layout~dreamcast.xml";
-const FREEPLAYMENU_MODDING_SCRIPT = "/assets/data/scripts/freeplaymenu.lua";
+const FREEPLAYMENU_MODDING_SCRIPT = "/assets/common/data/scripts/freeplaymenu.lua";
 
 const FREEPLAYMENU_MENU_SONGS = {
     parameters: {
@@ -176,6 +176,8 @@ async function freeplaymenu_main() {
     // step 8: initialize modding
     let modding = await modding_init(layout, FREEPLAYMENU_MODDING_SCRIPT);
     modding.native_menu = modding.active_menu = menu_songs;
+    modding.callback_private_data = null;
+    modding.callback_option = null;
     await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
 
 
@@ -251,7 +253,7 @@ async function freeplaymenu_main() {
     await freeplaymenu_internal_wait_transition(state, "transition-out", dt_screenout);
     freeplaymenu_internal_drop_custom_background(state);
 
-    modding_helper_notify_exit2(modding);
+    await modding_helper_notify_exit2(modding);
 
     default_bf = undefined;
     default_gf = undefined;
@@ -287,7 +289,7 @@ async function freeplaymenu_show(menu, state, songs) {
         freeplaymenu_internal_song_load(state, 1);
 
         await freeplaymenu_internal_trigger_action_menu(state, 1, 0);
-        modding_helper_notify_event(state.modding, "|track-noalt|");
+        await freeplaymenu_internal_modding_notify_event(state, 1, 1);
     }
 
 
@@ -295,7 +297,7 @@ async function freeplaymenu_show(menu, state, songs) {
         let elapsed = await pvrctx_wait_ready();
         pvr_context_reset(pvr_context);
 
-        if (state.running_threads < 1 && state.modding.script != null && state.soundplayer != null) {
+        if (state.running_threads < 1 && state.modding.script != null && state.soundplayer) {
             await weekscript_notify_timersong(state.modding.script, soundplayer_get_position(state.soundplayer));
         }
         if (await modding_helper_handle_custom_menu(state.modding, gamepad, elapsed) != MODDING_HELPER_RESULT_CONTINUE) {
@@ -317,36 +319,36 @@ async function freeplaymenu_show(menu, state, songs) {
         let offset;
         let switch_difficult;
 
-        if ((btns & (GAMEPAD_B | GAMEPAD_BACK)) != 0x00 && !await modding_helper_notify_back(state.modding)) {
+        if ((btns & (GAMEPAD_B | GAMEPAD_BACK)) && !await modding_helper_notify_back(state.modding)) {
             break;
-        } else if ((btns & (GAMEPAD_X)) != 0x00) {
+        } else if (btns & GAMEPAD_X) {
             let weeinfo = weeks_array.array[state.map.week_index];
             if (!weeinfo.warning_message) {
                 state.use_alternative = !state.use_alternative;
-                await modding_helper_notify_event(state.modding, state.use_alternative ? "|track-alt|" : "|track-noalt|");
+                await freeplaymenu_internal_modding_notify_event(state, 0, 1);
             } else if (sound_asterik) {
                 soundplayer_replay(sound_asterik);
             }
             continue;
-        } else if ((btns & GAMEPAD_DPAD_UP) != 0x00) {
+        } else if (btns & GAMEPAD_DPAD_UP) {
             offset = -1;
             switch_difficult = 0;
-        } else if ((btns & GAMEPAD_DPAD_DOWN) != 0x00) {
+        } else if (btns & GAMEPAD_DPAD_DOWN) {
             offset = 1;
             switch_difficult = 0;
-        } else if ((btns & GAMEPAD_DPAD_LEFT) != 0x00) {
+        } else if (btns & GAMEPAD_DPAD_LEFT) {
             offset = -1;
-            switch_difficult = 1;
-        } else if ((btns & GAMEPAD_DPAD_RIGHT) != 0x00) {
+            switch_difficult = !state.map.is_locked;
+        } else if (btns & GAMEPAD_DPAD_RIGHT) {
             offset = 1;
-            switch_difficult = 1;
-        } else if ((btns & (GAMEPAD_A | GAMEPAD_START)) != 0x00) {
+            switch_difficult = !state.map.is_locked;
+        } else if (btns & (GAMEPAD_A | GAMEPAD_START)) {
             let index = menu_get_selected_index(menu);
             if (index < 0 || index >= menu_get_items_count(menu) || state.difficult_locked || state.map.is_locked) {
                 if (sound_asterik) soundplayer_replay(sound_asterik);
                 continue;
             }
-            if (!await freeplaymenu_internal_modding_notify_option(state, 0)) continue;
+            if (await freeplaymenu_internal_modding_notify_option(state, 0)) continue;
 
             map_index = index;
             break;
@@ -362,14 +364,7 @@ async function freeplaymenu_show(menu, state, songs) {
                 state.difficult_index = new_index;
                 state.difficult_locked = state.difficulties[new_index].is_locked;
                 freeplaymenu_internal_show_info(state);
-
-                if (state.difficult_locked) {
-                    let name = string_concat(2, state.difficulties[new_index].name, "|locked");
-                    await modding_helper_notify_event(state.modding, name);
-                    name = undefined;
-                } else {
-                    await modding_helper_notify_event(state.modding, state.difficulties[new_index].name);
-                }
+                await freeplaymenu_internal_modding_notify_event(state, 1, 0);
             }
             continue;
         }
@@ -396,7 +391,7 @@ async function freeplaymenu_show(menu, state, songs) {
 
         if (selected_index != old_index) {
             await freeplaymenu_internal_trigger_action_menu(state, 1, 0);
-            await modding_helper_notify_event(state.modding, "|track-noalt|");
+            await freeplaymenu_internal_modding_notify_event(state, 1, 1);
         }
     }
 
@@ -724,7 +719,7 @@ async function freeplaymenu_internal_wait_transition(state, what, duration) {
     const layout = state.layout;
     const modding = state.modding;
 
-    await modding_helper_notify_event(state.modding, what);
+    await modding_helper_notify_event(modding, what);
 
     if (duration < 1) return;
     if (layout_trigger_any(layout, what) < 1) return;
@@ -732,7 +727,7 @@ async function freeplaymenu_internal_wait_transition(state, what, duration) {
     while (duration > 0) {
         let elapsed = await pvrctx_wait_ready();
         duration -= elapsed;
-        await modding_helper_notify_frame(state.modding, elapsed, -1.0);
+        await modding_helper_notify_frame(modding, elapsed, -1.0);
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
     }
@@ -748,7 +743,7 @@ async function freeplaymenu_internal_trigger_action_menu(state, selected, choose
     let week_name = weekinfo.display_name ?? weekinfo.name;
     let song_name = songs[state.map.song_index].name;
 
-    if (selected) await freeplaymenu_internal_modding_notify_option(state, true);
+    if (selected) await freeplaymenu_internal_modding_notify_option(state, 1);
 
     main_helper_trigger_action_menu(state.layout, week_name, song_name, selected, choosen);
 }
@@ -760,12 +755,29 @@ async function freeplaymenu_internal_modding_notify_option(state, selected_or_ch
 
     let week_name = weekinfo.display_name ?? weekinfo.name;
     let song_name = songs[state.map.song_index].name;
-    let name = string_concat(3, week_name, "|", song_name);
+    let name = string_concat(4, week_name, "\n", weekinfo.display_name, "\n", song_name);
     let index = menu_get_selected_index(menu);
 
     let ret = await modding_helper_notify_option2(state.modding, selected_or_choosen, menu, index, name);
     name = undefined;
 
     return ret;
+}
+
+async function freeplaymenu_internal_modding_notify_event(state, difficult, alt_track) {
+    if (difficult && alt_track) {
+        await modding_helper_notify_event(state.modding, state.map.is_locked ? "song-locked" : "song-not-locked");
+    }
+    if (difficult) {
+        await modding_helper_notify_event(state.modding, state.difficult_locked ? "difficult-locked" : "difficult-not-locked");
+
+        if (state.difficult_index >= 0 && state.difficult_index < state.difficulties_size)
+            await modding_helper_notify_event(state.modding, state.difficulties[state.difficult_index].name);
+        else
+            await modding_helper_notify_event(state.modding, null);
+    }
+    if (alt_track) {
+        await modding_helper_notify_event(state.modding, state.use_alternative ? "tracks-alt" : "tracks-not-alt");
+    }
 }
 

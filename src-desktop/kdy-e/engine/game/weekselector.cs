@@ -56,7 +56,7 @@ namespace Engine.Game {
         private const GamepadButtons BUTTONS_OK = GamepadButtons.X | GamepadButtons.A;
         private const string LAYOUT = "/assets/common/image/week-selector/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/week-selector/layout~dreamcast.xml";
-        private const string MODDING_SCRIPT = "/assets/data/scripts/weekselector.lua";
+        private const string MODDING_SCRIPT = "/assets/common/data/scripts/weekselector.lua";
 
 
         private enum SND {
@@ -175,19 +175,13 @@ namespace Engine.Game {
                 string difficult_action = StringUtils.Concat("selected-difficult-", default_difficult);
 
                 WeekSelector.TriggerEvent(ui, state, difficult_action);
-
                 //free(difficult_action);
             }
         }
 
         private static void TriggerAlternateChange(UI ui, STATE state) {
-            string alternate_action;
-            if (state.has_choosen_alternate) alternate_action = "selected-no-alternate";
-            else alternate_action = "selected-alternate";
-
-            if (state.custom_layout != null) state.custom_layout.TriggerAny(alternate_action);
-            ui.layout.TriggerAny(alternate_action);
-            state.modding.HelperNotifyModdingEvent(alternate_action);
+            string what = state.has_choosen_alternate ? "selected-no-alternate" : "selected-alternate";
+            WeekSelector.TriggerEvent(ui, state, what);
         }
 
         private static void LoadCustomWeekBackground(STATE state) {
@@ -243,7 +237,7 @@ namespace Engine.Game {
         private static void TriggerEvent(UI ui, STATE state, string name) {
             if (state.custom_layout != null) state.custom_layout.TriggerAny(name);
             ui.layout.TriggerAny(name);
-            state.modding.HelperNotifyModdingEvent(name);
+            state.modding.HelperNotifyEvent(name);
         }
 
 
@@ -457,24 +451,24 @@ namespace Engine.Game {
                 if (state.update_ui) WeekSelector.ChangePage(ui, state.page_selected_ui);
             }
 
-            bool no_anim_out = false;
-
+            Layout outro_layout = layout;
             if (state.back_to_main_menu) {
                 if (sound_cancel != null) sound_cancel.Replay();
-                layout.TriggerAny("back-to-main-menu");
+                WeekSelector.TriggerEvent(ui, state, "back-to-main-menu");
             } else {
                 if (state.bg_music != null) state.bg_music.Stop();
                 WeekSelector.ChangePage(ui, 0);
                 if (sound_confirm != null) sound_confirm.Replay();
 
-                if (state.custom_layout != null)
-                    no_anim_out = state.custom_layout.TriggerAny("week-choosen") > 0;
+                if (state.custom_layout != null && state.custom_layout.TriggerAny("week-choosen") > 0) {
+                    outro_layout = state.custom_layout;
+                } else {
+                    // if the custom layout does not contains the "week-choosen" action
+                    // trigger in the main layout
+                    layout.TriggerAny("week-choosen");
+                }
 
-                // if the custom layout does not contains the "week-choosen" action
-                // trigger in the main layout
-                if (!no_anim_out) layout.TriggerAny("week-choosen");
-
-                modding.HelperNotifyModdingEvent("week-choosen");
+                modding.HelperNotifyEvent("week-choosen");
                 layout.SetGroupVisibility("ui_game_progress", false);
                 ui.weektitle.MoveDifficult(ui.weekdifficult);
                 ui.mdl_boyfriend.ToggleChoosen();
@@ -482,10 +476,8 @@ namespace Engine.Game {
                 ui.weeklist.ToggleChoosen();
             }
 
-            double total_elapsed = 0;
-            while (total_elapsed < 2400.0) {
+            while (true) {
                 float elapsed = PVRContext.global_context.WaitReady();
-                total_elapsed += elapsed;
 
                 BeatWatcher.GlobalSetTimestampFromKosTimer();
                 modding.HelperNotifyFrame(elapsed, -1.0);
@@ -499,7 +491,7 @@ namespace Engine.Game {
                     state.custom_layout.Draw(PVRContext.global_context);
                 }
 
-                if (state.back_to_main_menu && layout.AnimationIsCompleted("transition_effect") > 0)
+                if (state.back_to_main_menu && outro_layout.AnimationIsCompleted("transition_effect") > 0)
                     break;
             }
 

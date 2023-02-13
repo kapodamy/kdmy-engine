@@ -157,8 +157,8 @@ namespace Engine.Game.Gameplay {
             this.luascript.notify_scriptchange();
         }
 
-        public void NotifyPauseOptionselected(int option_index, GamepadButtons buttons) {
-            this.luascript.notify_pause_optionselected(option_index, (uint)buttons);
+        public void NotifyPauseOptionChoosen(int option_index) {
+            this.luascript.notify_pause_option_choosen(option_index);
         }
 
         public void NotifyPauseMenuvisible(bool shown_or_hidden) {

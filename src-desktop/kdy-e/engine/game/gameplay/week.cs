@@ -2364,6 +2364,11 @@ namespace Engine.Game.Gameplay {
                             return 3;// back to mainmenu
                     }
                     back_pressed = false;
+
+                    for (int i = 0 ; i < roundcontext.players_size ; i++) {
+                        Gamepad controller = roundcontext.players[i].controller;
+                        if (controller != null) controller.ClearButtons();
+                    }
                     continue;
                 }
 

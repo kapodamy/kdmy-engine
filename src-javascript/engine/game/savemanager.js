@@ -6,7 +6,7 @@ const SAVEMANAGER_SCAN_INTERVAL = 1000;
 
 const SAVEMANAGER_LAYOUT = "/assets/common/image/save-manager/layout.xml";
 const SAVEMANAGER_LAYOUT_DREAMCAST = "/assets/common/image/save-manager/layout~dreamcast.xml";
-const SAVEMANAGER_MODDING_SCRIPT = "/assets/data/scripts/savemanager.lua";
+const SAVEMANAGER_MODDING_SCRIPT = "/assets/common/data/scripts/savemanager.lua";
 
 const SAVEMANAGER_MENU_MANIFEST = {
     parameters: {
@@ -178,6 +178,10 @@ async function savemanager_show(savemanager) {
 
     let modding = await modding_init(savemanager.layout, SAVEMANAGER_MODDING_SCRIPT);
     modding.native_menu = modding.active_menu = savemanager.menu;
+    modding.callback_private_data = null;
+    modding.callback_option = null;
+    await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
+    await modding_helper_notify_event(modding, savemanager.save_only ? "do-save" : "do-load");
 
     while (!modding.has_exit) {
         let selection_offset_x = 0;
@@ -263,6 +267,7 @@ async function savemanager_show(savemanager) {
             if (selected_index >= 0 && selected_index < menu_get_items_count(savemanager.menu)) {
                 save_or_load_success = await savemanager_internal_commit(savemanager, selected_index);
                 savemanager_game_withoutsavedata = save_or_load_success;
+                if (save_or_load_success && savemanager.save_only) modding.has_funkinsave_changes = 0;
                 if (save_or_load_success) break;
             }
         } else if (buttons & MAINMENU_GAMEPAD_CANCEL && !await modding_helper_notify_back(modding)) {
@@ -321,6 +326,7 @@ async function savemanager_show(savemanager) {
     await modding_helper_notify_event(modding, "outro");
 
     if (save_or_load_success) {
+        modding.has_exit = modding.has_halt = 0;
         while (!modding.has_exit) {
             let elapsed = await pvrctx_wait_ready();
             pvr_context_reset(pvr_context);

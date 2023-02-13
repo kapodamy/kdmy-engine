@@ -9,7 +9,7 @@ const MODDING_VALUE_TYPE_STRING = 1;
 const MODDING_VALUE_TYPE_BOOLEAN = 2;
 const MODDING_VALUE_TYPE_DOUBLE = 3;
 
-const MODDING_NATIVE_MENU_SCREEN = "__NATIVE_SCREEN__";
+const MODDING_NATIVE_MENU_SCREEN = "NATIVE_SCREEN";
 
 async function modding_init(layout, src_script) {
     let modding = {
@@ -270,6 +270,11 @@ async function modding_helper_notify_init(modding, arg) {
 async function modding_helper_notify_event(modding, event_name) {
     if (modding.script == null) return;
     await luascript_notify_modding_event(weekscript_get_luascript(modding.script), event_name);
+}
+
+async function modding_helper_handle_custom_option(modding, option_name) {
+    if (modding.script == null) return;
+    await luascript_notify_modding_handle_custom_option(weekscript_get_luascript(modding.script), option_name);
 }
 
 function modding_set_menu_in_layout_placeholder(modding, placeholder_name, menu) {

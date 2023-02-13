@@ -211,27 +211,41 @@ declare namespace KDMYEngine {
      * @param menu the target menu
      * @param index (base zero) selected option index
      * @param name name of the option or text label
-     * @return boolean true to cancel, otherwise, false.
+     * @return {boolean} true to cancel, otherwise, false.
      */
     export function f_modding_menu_option_choosen(menu: Menu, index: number, name: string): boolean;
+    
+    /**
+     * @summary (modding context only) Called when something happens in the UI, events can be different
+     * in all engine screen menus.
+     * @param name name of the event
+     */
+    export function f_modding_event(name: string): void;
+    
+    /**
+     * @summary (modding context only) Called when a menu option is choosen but is not recognized by
+     * the engine. This function is only called if native menus contains custom option/entries.
+     * @param option_name name of the option, which is the same as declared in {@link MenuManifestItem.name}
+     */
+    export function f_modding_handle_custom_option(option_name: string): void;
 
     /**
      * @summary (modding context only) Called when the user is attempting go to the previous screen.
-     * @return boolean true to cancel, otherwise, false.
+     * @return {boolean} true to cancel, otherwise, false.
      */
     export function f_modding_back(): boolean;
 
     /**
      * @summary (modding context only) Called before the script is disposed. From here is possible return
-     * a value to the previous screen script (waiting on {@link modding_spawn_screen}).
-     * @return BasicValue the value to return.
+     * a value to the previous screen menu script (only if waiting on {@link modding_spawn_screen}).
+     * @return {BasicValue} the value to return.
      */
     export function f_modding_exit(): BasicValue;
 
     /**
-     * @summary (modding context only) Called when the script is loaded from a previous screen. The parameters
-     * passed are the arguments of the call to {@link modding_spawn_screen} if applicable.
-     * @param arg values passed by {@link modding_spawn_screen}, is "__NATIVE_SCREEN__" if called by the engine.
+     * @summary (modding context only) Called when the script is loaded from a another modding context or
+     * screen menu. The {@param arg} value is the same used in the call to {@link modding_spawn_screen}.
+     * @param arg value passed by {@link modding_spawn_screen} or "NATIVE_SCREEN" if called by the engine.
      */
     export function f_modding_init(arg: BasicValue): void;
     

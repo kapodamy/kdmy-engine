@@ -5,6 +5,9 @@ async function menumanifest_init(src) {
     let json = await json_load_from(src);
     if (!json) throw new Error("menumanifest_init() misssing or invalid file: " + src);
 
+    let json_parameters = json_read_array_item_object(json, "parameters");
+    if (!json_parameters) throw new Error("menumanifest_init() misssing parameters in json: " + src);
+
     fs_folder_stack_push();
     fs_set_working_folder(src, 1);
 
@@ -34,46 +37,46 @@ async function menumanifest_init(src) {
 
     let menumanifest = {
         parameters: {
-            suffix_selected: json_read_string(json, "suffixSelected", "selected"),
-            suffix_choosen: json_read_string(json, "suffixChoosen", "choosen"),
-            suffix_discarded: json_read_string(json, "suffixDiscarded", "discarded"),
-            suffix_idle: json_read_string(json, "suffixIdle", "idle"),
-            suffix_rollback: json_read_string(json, "suffixRollback", "rollback"),
-            suffix_in: json_read_string(json, "suffixIn", "in"),
-            suffix_out: json_read_string(json, "suffixOut", "out"),
+            suffix_selected: json_read_string(json_parameters, "suffixSelected", "selected"),
+            suffix_choosen: json_read_string(json_parameters, "suffixChoosen", "choosen"),
+            suffix_discarded: json_read_string(json_parameters, "suffixDiscarded", "discarded"),
+            suffix_idle: json_read_string(json_parameters, "suffixIdle", "idle"),
+            suffix_rollback: json_read_string(json_parameters, "suffixRollback", "rollback"),
+            suffix_in: json_read_string(json_parameters, "suffixIn", "in"),
+            suffix_out: json_read_string(json_parameters, "suffixOut", "out"),
 
-            atlas: menumanifest_internal_parse_path(json, "atlas"),
-            animlist: menumanifest_internal_parse_path(json, "animlist"),
+            atlas: menumanifest_internal_parse_path(json_parameters, "atlas"),
+            animlist: menumanifest_internal_parse_path(json_parameters, "animlist"),
 
-            anim_selected: json_read_string(json, "animSelected", null),
-            anim_choosen: json_read_string(json, "animChoosen", null),
-            anim_discarded: json_read_string(json, "animDiscarded", null),
-            anim_idle: json_read_string(json, "animIdle", null),
-            anim_rollback: json_read_string(json, "animRollback", null),
-            anim_in: json_read_string(json, "animIn", null),
-            anim_out: json_read_string(json, "animOut", null),
+            anim_selected: json_read_string(json_parameters, "animSelected", null),
+            anim_choosen: json_read_string(json_parameters, "animChoosen", null),
+            anim_discarded: json_read_string(json_parameters, "animDiscarded", null),
+            anim_idle: json_read_string(json_parameters, "animIdle", null),
+            anim_rollback: json_read_string(json_parameters, "animRollback", null),
+            anim_in: json_read_string(json_parameters, "animIn", null),
+            anim_out: json_read_string(json_parameters, "animOut", null),
 
-            anim_transition_in_delay: json_read_number(json, "transitionInDelay", 0),
-            anim_transition_out_delay: json_read_number(json, "transitionOutDelay", 0),
+            anim_transition_in_delay: json_read_number(json_parameters, "transitionInDelay", 0),
+            anim_transition_out_delay: json_read_number(json_parameters, "transitionOutDelay", 0),
 
-            font: json_read_string(json, "fontPath", null),
-            font_glyph_suffix: json_read_string(json, "fontSuffix", null),
-            font_color_by_difference: json_read_boolean(json, "fontColorByDifference", 0),
-            font_size: json_read_number(json, "fontSize", 0),
-            font_color: json_read_hex(json, "fontColor", 0xFFFFFF),
-            font_border_color: json_read_hex(json, "fontBorderColor", 0x0),
-            font_border_size: json_read_number(json, "fontBorderSize", 0),
+            font: json_read_string(json_parameters, "fontPath", null),
+            font_glyph_suffix: json_read_string(json_parameters, "fontSuffix", null),
+            font_color_by_difference: json_read_boolean(json_parameters, "fontColorByDifference", 0),
+            font_size: json_read_number(json_parameters, "fontSize", 0),
+            font_color: json_read_hex(json_parameters, "fontColor", 0xFFFFFF),
+            font_border_color: json_read_hex(json_parameters, "fontBorderColor", 0x0),
+            font_border_size: json_read_number(json_parameters, "fontBorderSize", 0),
 
-            is_sparse: json_read_boolean(json, "isSparse", 0),
-            is_vertical: json_read_boolean(json, "isVertical", 1),
-            is_per_page: json_read_boolean(json, "isPerPage", 0),
+            is_sparse: json_read_boolean(json_parameters, "isSparse", 0),
+            is_vertical: json_read_boolean(json_parameters, "isVertical", 1),
+            is_per_page: json_read_boolean(json_parameters, "isPerPage", 0),
 
             items_align: align,
-            items_gap: json_read_number(json, "itemsGap", 0),
-            items_dimmen: json_read_number(json, "itemsDimmen", 0),
-            static_index: json_read_number(json, "staticIndex", 0),
-            texture_scale: json_read_number(json, "textureScale", NaN),
-            enable_horizontal_text_correction: json_read_boolean(json, "enableHorizontalTextCorrection", 0)
+            items_gap: json_read_number(json_parameters, "itemsGap", 0),
+            items_dimmen: json_read_number(json_parameters, "itemsDimmen", 0),
+            static_index: json_read_number(json_parameters, "staticIndex", 0),
+            texture_scale: json_read_number(json_parameters, "textureScale", NaN),
+            enable_horizontal_text_correction: json_read_boolean(json_parameters, "enableHorizontalTextCorrection", 0)
         },
 
         items: new Array(array_items_length),
@@ -89,6 +92,7 @@ async function menumanifest_init(src) {
             text: json_read_string(json_item, "text", null),
             hidden: json_read_boolean(json_item, "hidden", 0),
             description: json_read_string(json_item, "description", null),
+            texture_scale: json_read_string(json_item, "textureScale", 0.0),
 
             placement: {
                 x: json_read_number(json_placement, "x", 0),
@@ -151,6 +155,15 @@ function menumanifest_destroy(menumanifest) {
 
     menumanifest.items = undefined;
     menumanifest = undefined;
+}
+
+function menumanifest_get_option_index(menumanifest, option_name) {
+    for (let i = 0; i < menumanifest.items_size; i++) {
+        if (menumanifest.items[i].name == option_name) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 

@@ -172,9 +172,10 @@ namespace Engine.Externals.LuaScriptInterop {
             Menu menu = L.ReadUserdata<Menu>(MENU);
             string name = L.luaL_optstring(2, null);
 
-            menu.SelectItem(name);
+            bool ret = menu.SelectItem(name);
 
-            return 0;
+            L.lua_pushboolean(ret);
+            return 1;
         }
 
         static int script_menu_select_index(LuaState L) {

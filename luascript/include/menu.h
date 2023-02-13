@@ -18,7 +18,7 @@ Menu menu_destroy(Menu* menu);
 Drawable menu_get_drawable(Menu menu);
 void menu_trasition_in(Menu menu);
 void menu_trasition_out(Menu menu);
-void menu_select_item(Menu menu, const char* name);
+bool menu_select_item(Menu menu, const char* name);
 void menu_select_index(Menu menu, int32_t index);
 bool menu_select_vertical(Menu menu, int32_t offset);
 bool menu_select_horizontal(Menu menu, int32_t offset);

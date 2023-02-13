@@ -149,13 +149,12 @@ void luascript_notify_scriptchange(Luascript luascript) {
     lua_imported_fn(lua, FUNCTION, 0);
 }
 
-void luascript_notify_pause_optionselected(Luascript luascript, int32_t option_index, uint32_t buttons) {
+void luascript_notify_pause_option_choosen(Luascript luascript, int32_t option_index) {
     FUNCTION(luascript, "f_pause_optionselected");
 
     lua_pushinteger(lua, option_index);
-    lua_pushinteger(lua, (lua_Integer)buttons);
 
-    lua_imported_fn(lua, FUNCTION, 2);
+    lua_imported_fn(lua, FUNCTION, 1);
 }
 
 void luascript_notify_pause_menuvisible(Luascript luascript, bool shown_or_hidden) {
@@ -376,4 +375,17 @@ void luascript_notify_modding_event(Luascript luascript, const char* event_name)
 
     lua_imported_fn(lua, FUNCTION, 1);
 }
+
+void luascript_notify_modding_handle_custom_option(Luascript luascript, const char* option_name) {
+    FUNCTION(luascript, "f_modding_handle_custom_option");
+
+    lua_pushstring(luascript->L, option_name);
+
+#ifdef JAVASCRIPT
+    free((char*)option_name);
+#endif
+
+    lua_imported_fn(lua, FUNCTION, 1);
+}
+
 

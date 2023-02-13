@@ -184,6 +184,7 @@ namespace Engine.Platform {
         internal bool shader_needs_flush;
         internal StackList<PSShader> shader_stack = new StackList<PSShader>(SHADER_STACK_LENGTH);
         private int shader_last_resolution_changes = 0;
+        private int screen_stride;
 
 
         private int stack_index = 0;
@@ -208,6 +209,7 @@ namespace Engine.Platform {
         public SH4Matrix CurrentMatrix { get => this.stack[this.stack_index].matrix; }
 
         public int ScreenWidth { get => PVR_WIDTH; }
+        public int ScreenStride { get => screen_stride; }
         public int ScreenHeight { get => PVR_HEIGHT; }
 
         private PVRContextState PreviousState {
@@ -229,6 +231,8 @@ namespace Engine.Platform {
         private void SizeCallback(Window window, int width, int height) {
             if (window != this.nativeWindow) return;
             if (width == 0 || height == 0) return;
+
+            this.screen_stride = width;
 
             double aspect_ratio = EngineSettings.widescreen ? WIDESCREEN_ASPECT_RATIO : DREAMCAST_ASPECT_RATIO;
             double width_final = height * aspect_ratio;
@@ -392,6 +396,7 @@ namespace Engine.Platform {
 
             this.shader_framebuffer_front = new PSFramebuffer(this);
             this.shader_framebuffer_back = new PSFramebuffer(this);
+            this.shader_last_resolution_changes = this.resolution_changes;
             PSFramebuffer.ResizeQuadScreen(this);
 
             if (EngineSettings.pixelbufferobjects) {

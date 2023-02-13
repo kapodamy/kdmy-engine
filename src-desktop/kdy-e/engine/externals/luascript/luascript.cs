@@ -302,15 +302,14 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.CallPushedGlobalFunction(0);
         }
 
-        public void notify_pause_optionselected(int option_index, uint buttons) {
-            const string FUNCTION = "f_pause_optionselected";
+        public void notify_pause_option_choosen(int option_index) {
+            const string FUNCTION = "f_pause_option_choosen";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
 
             L.lua_pushinteger(option_index);
-            L.lua_pushinteger(buttons);
 
-            lua.CallPushedGlobalFunction(2);
+            lua.CallPushedGlobalFunction(1);
         }
 
         public void notify_pause_menuvisible(bool shown_or_hidden) {
@@ -468,14 +467,14 @@ namespace Engine.Externals.LuaScriptInterop {
             L.lua_pushinteger(index);
             L.lua_pushstring(name);
 
-            return (bool)lua.CallPushedGlobalFunctionWithReturn(3);
+            return lua.CallPushedGlobalFunctionWithReturnBool(3);
         }
 
         public bool notify_modding_back() {
             const string FUNCTION = "f_modding_back";
             if (lua.PushGlobalFunction(FUNCTION)) return false;
 
-            return (bool)lua.CallPushedGlobalFunctionWithReturn(0);
+            return lua.CallPushedGlobalFunctionWithReturnBool(0);
         }
 
         public object notify_modding_exit() {
@@ -499,6 +498,15 @@ namespace Engine.Externals.LuaScriptInterop {
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
             lua.LuaStateHandle.lua_pushstring(event_name);
+
+            lua.CallPushedGlobalFunction(1);
+        }
+
+        public void notify_modding_handle_custom_option(string option_name) {
+            const string FUNCTION = "f_modding_handle_custom_option";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            lua.LuaStateHandle.lua_pushstring(option_name);
 
             lua.CallPushedGlobalFunction(1);
         }

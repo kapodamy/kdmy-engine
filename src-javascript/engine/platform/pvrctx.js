@@ -37,6 +37,7 @@ class PVRContext {
     /**@type {bool}         */ shader_needs_flush = false;
     /**@type {PSShader[]}   */ shader_stack = new Array();
     /**@type {number}       */ shader_last_resolution_changes = 0;
+    /**@type {number}       */ screen_stride;
 
 
     /**@type {number}*/ stack_index = 0;
@@ -76,6 +77,7 @@ class PVRContext {
         this.webopengl = await webopengl_init(this._html5canvas);
         this.shader_framebuffer_front = new PSFramebuffer(this);
         this.shader_framebuffer_back = new PSFramebuffer(this);
+        this.shader_last_resolution_changes = this.resolution_changes;
         PSFramebuffer.ResizeQuadScreen(this);
     }
 
@@ -95,6 +97,8 @@ class PVRContext {
         this.global_offsetcolor = this.stack[0].offsetcolor;
         pvrctx_helper_clear_offsetcolor(this.vertex_offsetcolor);
         pvrctx_helper_clear_offsetcolor(this.render_offsetcolor);
+
+        this.screen_stride = this.screen_width;
     }
 
 

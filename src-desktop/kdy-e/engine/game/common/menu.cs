@@ -271,14 +271,15 @@ namespace Engine.Game.Common {
         }
 
 
-        public void SelectItem(string name) {
+        public bool SelectItem(string name) {
             for (int i = 0 ; i < this.items_size ; i++) {
                 if (this.items[i].name == name) {
                     InternalSetIndexSelected(i);
-                    return;
+                    return true;
                 };
             }
             InternalSetIndexSelected(-1);
+            return false;
         }
 
         public void SelectIndex(int index) {
@@ -351,6 +352,10 @@ namespace Engine.Game.Common {
 
             InternalBuildMap();
             return true;
+        }
+
+        public bool HasValidSelection() {
+            return this.index_selected >= 0 && this.index_selected < this.items_size;
         }
 
 
@@ -909,7 +914,7 @@ L_stop_checking_static_index:
 
             this.render_distance_end = accumulator;
 
-            if (this.per_page/* && pages >= 1*/) {
+            if (this.per_page && pages > 0) {
                 this.map_size = (int)Math.Ceiling(pages);
                 this.map = new int[this.map_size];
             }

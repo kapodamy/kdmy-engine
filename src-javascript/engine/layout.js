@@ -1434,6 +1434,7 @@ function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
         if (group.psframebuffer && group.context.last_z_index == i) {
 
             pvr_context_save(pvrctx);
+            sh4matrix_copy_to(MATRIX_VIEWPORT, pvrctx.current_matrix);
 
             // draw group framebuffer
             pvr_context_set_framebuffer(pvrctx, null);

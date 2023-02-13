@@ -3,6 +3,7 @@
     "vsicons.associations.folders": [
         { "icon": "plugin", "extensions": ["animation"] },
         { "icon": "binary", "extensions": ["platform"] },
+        { "icon": "include", "extensions": ["externals"] },
         { "icon": "funkin", "extensions": ["game"], "format": "svg" },
     ],
     "files.exclude": {

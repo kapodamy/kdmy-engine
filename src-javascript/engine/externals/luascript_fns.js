@@ -162,6 +162,24 @@ function luascript_notify_modding_event(luascript, event_name) {
     );
 }
 
+function luascript_notify_modding_event(luascript, event_name) {
+    let event_name_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(event_name);
+
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_modding_event,
+        luascript, event_name_ptr
+    );
+}
+
+function luascript_notify_modding_handle_custom_option(luascript, option_name) {
+    let option_name_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(option_name);
+
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_modding_handle_custom_option,
+        luascript, option_name_ptr
+    );
+}
+
 
 function _luascriptcript_call(fn, ...args) {
     if (!args[0]) return;

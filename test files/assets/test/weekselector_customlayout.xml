@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Layout width="640" height="480" animationList="customlayout_anim.xml">
+<Layout width="640" height="480" animationList="weekselector_customlayout_anim.xml">
     <!--
             change-difficult
             selected-difficult-%name%

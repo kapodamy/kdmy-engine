@@ -15,5 +15,9 @@
 /sndbridge/.vscode/*.log
 /sndbridge/output/
 
+/expansions/
+!/expansions/funkin/
+!/expansions/example-expansion/
+
 Thumbs.db
 /src-desktop/kdy-e/kdy-e.csproj.user

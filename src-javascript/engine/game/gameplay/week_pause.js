@@ -120,12 +120,14 @@ const WEEKPAUSE_MENU = {
 const WEEKPAUSE_LAYOUT_WIDESCREEN = "/assets/common/image/week-round/pause.xml";
 const WEEKPAUSE_LAYOUT_DREAMCAST = "/assets/common/image/week-round/pause~dreamcast.xml";
 const WEEKPAUSE_NOCONTROLLER = "/assets/common/image/week-round/no_controller.png";
-const WEEKPAUSE_MODDING_SCRIPT = "/assets/data/scripts/weekpause.lua";
-const WEEKPAUSE_MODDING_MENU = "/assets/data/menus/weekpause.json";
+const WEEKPAUSE_MODDING_SCRIPT = "/assets/common/data/scripts/weekpause.lua";
+const WEEKPAUSE_MODDING_MENU = "/assets/common/data/menus/weekpause.json";
+const WEEKPAUSE_BUTTONS = GAMEPAD_START | GAMEPAD_AD_UP | GAMEPAD_AD_DOWN | GAMEPAD_A | GAMEPAD_X | GAMEPAD_B | GAMEPAD_BACK;
+const WEEKPAUSE_DELAY = 400;
 const WEEKPAUSE_ANTIBOUNCE = 400;
 
 // messagebox strings
-const WEEKPAUSE_MSGCONTROLLER = "The controller $i was discconected, \n" +
+const WEEKPAUSE_MSGCONTROLLER = "The controller $i was disconnected, \n" +
     "reconnect it or press START on an unused \n" +
     "controller to replace it.";
 const WEEKPAUSE_MSGMENU = "The week progress will be lost, ¿return\n to the main menu?";
@@ -167,7 +169,7 @@ async function week_pause_init() {
 
     let modding = await modding_init(layout, WEEKPAUSE_MODDING_SCRIPT);
     modding.native_menu = menu;
-    modding.callback_option = weekpause_internal_handle_option;
+    modding.callback_option = week_pause_internal_handle_modding_option;
 
     let weekpause = {
         menu,
@@ -178,7 +180,7 @@ async function week_pause_init() {
         menu_external: null,
         background_menu_music: null,
         modding,
-        native_option_choosen_index: -1
+        modding_choosen_option_name: null
     };
     modding.callback_private_data = weekpause;
 
@@ -193,6 +195,7 @@ async function week_pause_destroy(weekpause) {
     await modding_destroy(weekpause.modding);
     if (weekpause.menu_external) menu_destroy(weekpause.menu_external);
     if (weekpause.background_menu_music) soundplayer_destroy(weekpause.background_menu_music);
+    weekpause.modding_choosen_option_name = null;// do not dispose
     weekpause = undefined;
 }
 
@@ -238,8 +241,7 @@ async function week_pause_prepare(weekpause) {
 async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ roundcontext, dettached_index) {
     let dettached_controller = dettached_index >= 0;
     let controller = gamepad_init(-1);
-    let antibounce = dettached_controller ? 1000 : WEEKPAUSE_ANTIBOUNCE;
-    gamepad_set_buttons_delay(controller, WEEKPAUSE_ANTIBOUNCE / 2);
+    gamepad_set_buttons_delay(controller, WEEKPAUSE_DELAY);
 
     messagebox_hide(weekpause.messagebox, 0);
     if (weekpause.background_menu_music) {
@@ -248,9 +250,9 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
     }
     gamepad_clear_buttons(controller);
 
-    let current_menu_external = 0;
+    let current_menu_is_external = 0;
     let current_menu = weekpause.menu;
-    let selected_option = 0;
+    let return_value = 0;
 
     menu_select_index(weekpause.menu, 0);
     if (weekpause.menu_external) menu_select_index(weekpause.menu_external, 0);
@@ -266,7 +268,7 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
     }
 
     if (roundcontext.script) await weekscript_notify_pause(roundcontext.script, 1);
-    while (roundcontext.scriptcontext.halt_flag) await week_pause_internal_render(roundcontext, weekpause);
+    while (roundcontext.scriptcontext.halt_flag) await week_pause_internal_render(weekpause, roundcontext);
 
     layout_trigger_any(weekpause.layout, null);
 
@@ -282,49 +284,41 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
         messagebox_show(weekpause.messagebox, 1);
     }
 
-    weekpause.native_option_choosen_index = -1;
+    weekpause.modding_choosen_option_name = null;
     weekpause.modding.has_exit = 0;
     weekpause.modding.has_halt = 0;
     await modding_helper_notify_init(weekpause.modding, MODDING_NATIVE_MENU_SCREEN);
+    await await modding_helper_notify_option(weekpause.modding, 1);
 
     while (!weekpause.modding.has_exit) {
-        let to_external_menu = 0;
-        let elapsed = await week_pause_internal_render(roundcontext, weekpause);
+        let has_option_choosen = 0;
+        let go_back = 0;
+        let elapsed = await week_pause_internal_render(weekpause, roundcontext);
+        let buttons = gamepad_has_pressed_delayed(controller, WEEKPAUSE_BUTTONS);
 
-        let buttons = gamepad_has_pressed_delayed(
-            controller,
-            GAMEPAD_START | GAMEPAD_AD_UP | GAMEPAD_AD_DOWN | GAMEPAD_A | GAMEPAD_X | GAMEPAD_B | GAMEPAD_BACK
-        );
-
-        let res = await modding_helper_handle_custom_menu(weekpause.modding, controller, elapsed);
-        if (res != MODDING_HELPER_RESULT_CONTINUE) break;
-        if (weekpause.modding.has_halt || weekpause.modding.active_menu != weekpause.menu) continue;
-        if (weekpause.native_option_choosen_index >= 0) {
-            selected_option = weekpause.native_option_choosen_index;
-            break;
-        }
-
-        if (antibounce > 0) {
-            if (buttons)
-                antibounce -= elapsed;
-            else
-                antibounce = 0;
-            continue;
-        }
-
-        if (selected_option != 0) {
+        // if the messagebox is visible, wait decision
+        if (return_value != 0) {
             if (buttons & (GAMEPAD_A | GAMEPAD_X)) {
                 break;
             } else if (buttons & (GAMEPAD_B | GAMEPAD_START | GAMEPAD_BACK)) {
-                selected_option = 0;
+                return_value = 0;
                 if (buttons & (GAMEPAD_B | GAMEPAD_BACK)) {
-                    antibounce = 200;
+                    gamepad_set_buttons_delay(controller, WEEKPAUSE_DELAY);
                     messagebox_hide(weekpause.messagebox, 0);
                 } else {
                     break;
                 }
             }
             continue;
+        }
+
+        let res = await modding_helper_handle_custom_menu(weekpause.modding, controller, elapsed);
+        if (res != MODDING_HELPER_RESULT_CONTINUE) break;
+        if (weekpause.modding.has_halt || weekpause.modding.active_menu != weekpause.menu) continue;
+        if (weekpause.modding_choosen_option_name != null) {
+            buttons = 0x00;
+            has_option_choosen = 1;
+            break;
         }
 
         if (dettached_controller) {
@@ -350,130 +344,144 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
         }
 
         if (buttons & GAMEPAD_START) {
-            if (!current_menu_external && !await modding_helper_notify_back(weekpause.modding)) break;
+            if (!current_menu_is_external && !await modding_helper_notify_back(weekpause.modding)) break;
         } else if (buttons & GAMEPAD_AD_UP) {
             if (!menu_select_vertical(current_menu, -1))
                 menu_select_index(current_menu, menu_get_items_count(current_menu) - 1);
+            await modding_helper_notify_option(weekpause.modding, 1);
         } else if (buttons & GAMEPAD_AD_DOWN) {
-            if (!menu_select_vertical(current_menu, 1))
-                menu_select_index(current_menu, 0);
+            if (!menu_select_vertical(current_menu, -1))
+                menu_select_index(current_menu, -0);
+            await modding_helper_notify_option(weekpause.modding, 1);
         } else if (buttons & (GAMEPAD_A | GAMEPAD_X)) {
-            if (current_menu_external) {
-                to_external_menu = 1;
-            } else {
-                let option_index = weekpause_internal_get_native_option_index(
-                    menu_get_selected_item_name(weekpause.menu)
-                );
-                if (option_index == 0) {
-                    selected_option = 0;// resume
-                    break;
-                } else if (option_index == 1 && weekpause.menu_external) {
-                    // display week menu
-                    modding_choose_native_menu_option(weekpause.modding, "week-custom-menu");
-                    menu_trasition_in(weekpause.menu_external);
-                    weekpause.menu_placeholder.vertex = menu_get_drawable(weekpause.menu_external);
-                    current_menu_external = 1;
-                    if (roundcontext.script) await weekscript_notify_pause_menuvisible(roundcontext.script, 1);
-                } else if (option_index == 2) {
-                    selected_option = 1;// restart song
-                    break;
-                } else if (option_index == 3) {
-                    selected_option = 2;// back to weekselector
-                } else if (option_index == 4) {
-                    selected_option = 3;// back to mainmenu
-                }
-
-                if (selected_option != 0) {
-                    let msg = selected_option == 2 ? WEEKPAUSE_MSGWEEKSELECTOR : WEEKPAUSE_MSGMENU;
-                    messagebox_hide_image(weekpause.messagebox, 1);
-                    messagebox_set_buttons_icons(weekpause.messagebox, "a", "b");
-                    messagebox_set_buttons_text(weekpause.messagebox, "Ok", "Cancel");
-                    messagebox_set_title(weekpause.messagebox, "Confirm");
-                    messagebox_use_small_size(weekpause.messagebox, 1);
-                    messagebox_set_message(weekpause.messagebox, msg);
-                    messagebox_show(weekpause.messagebox, 0);
-                    gamepad_clear_buttons(controller);
-                }
-            }
+            has_option_choosen = 1;
         } else if (buttons & (GAMEPAD_B | GAMEPAD_BACK)) {
-            if (current_menu_external) {
-                current_menu_external = 0;
-                weekpause.menu_placeholder.vertex = menu_get_drawable(weekpause.menu);
-                if (roundcontext.script) await weekscript_notify_pause_menuvisible(roundcontext.script, 0);
-                await modding_choose_native_menu_option(weekpause.modding, "week-pause-menu");
-                menu_trasition_in(weekpause.menu);
-            } else if (!await modding_helper_notify_back(weekpause.modding)) {
-                selected_option = 0;
-                break;
-            }
-        } else if (current_menu_external) {
-            buttons = gamepad_get_pressed(controller);
-            to_external_menu = buttons;// notify script if has buttons pressed
+            go_back = 1;
+        } else if (!has_option_choosen) {
+            // nothing to do
+            continue;
         }
 
-        if (to_external_menu) {
-            let option_index = menu_get_selected_index(weekpause.menu_external);
-            let buttons = gamepad_get_pressed(controller);
-            if (roundcontext.script) {
-                await weekscript_notify_pause_optionselected(roundcontext.script, option_index, buttons);
+
+        if (has_option_choosen && current_menu_is_external) {
+            let option_index = menu_get_selected_index(current_menu);
+            await weekscript_notify_pause_option_choosen(roundcontext.script, option_index);
+            has_option_choosen = 0;
+            go_back = 1;
+        } else if (has_option_choosen) {
+            if (weekpause.modding_choosen_option_name == null) {
+                weekpause.modding_choosen_option_name = menu_get_selected_item_name(current_menu);
+                if (!await modding_helper_notify_option(weekpause.modding, 0)) {
+                    weekpause.modding_choosen_option_name = null;
+                    continue;
+                }
             }
-            while (roundcontext.scriptcontext.halt_flag) await week_pause_internal_render(roundcontext, weekpause);
+
+            return_value = week_pause_internal_return_value(weekpause);
+            weekpause.modding_choosen_option_name = null;
+
+            if (return_value == 0) {
+                // resume
+                break;
+            } else if (return_value == 4) {
+                return_value = 0;
+                if (!weekpause.menu_external || !roundcontext.script) continue;
+
+                // display week menu
+                current_menu = weekpause.menu_external;
+                weekpause.modding.callback_option = null;
+                await modding_helper_notify_event(weekpause.modding, "week-custom-menu");
+                menu_trasition_in(current_menu);
+                weekpause.menu_placeholder.vertex = menu_get_drawable(current_menu);
+                current_menu_is_external = 1;
+                if (roundcontext.script) await weekscript_notify_pause_menuvisible(roundcontext.script, 1);
+            } else if (return_value == 1) {
+                // restart song
+                break;
+            } else if (return_value == 2 || return_value == 3) {
+                const msg = return_value == 2 ? WEEKPAUSE_MSGWEEKSELECTOR : WEEKPAUSE_MSGMENU;
+                messagebox_hide_image(weekpause.messagebox, 1);
+                messagebox_set_buttons_icons(weekpause.messagebox, "a", "b");
+                messagebox_set_buttons_text(weekpause.messagebox, "Ok", "Cancel");
+                messagebox_set_title(weekpause.messagebox, "Confirm");
+                messagebox_use_small_size(weekpause.messagebox, 1);
+                messagebox_set_message(weekpause.messagebox, msg);
+                messagebox_show(weekpause.messagebox, 0);
+                gamepad_set_buttons_delay(controller, WEEKPAUSE_ANTIBOUNCE);
+            } else if (return_value == -1) {
+                // custom option menu
+                await modding_helper_handle_custom_option(weekpause.modding, menu_get_selected_item_name(current_menu));
+                return_value = 0;
+            }
         }
+
+        if (go_back && current_menu_is_external) {
+            current_menu_is_external = 0;
+            current_menu = weekpause.menu;
+            weekpause.menu_placeholder.vertex = menu_get_drawable(weekpause.menu);
+            await weekscript_notify_pause_menuvisible(roundcontext.script, 0);
+            weekpause.modding.callback_option = week_pause_internal_handle_modding_option;
+            await modding_helper_notify_event(weekpause.modding, "week-pause-menu");
+            menu_trasition_in(weekpause.menu);
+        } else if (go_back && !await modding_helper_notify_back(weekpause.modding)) {
+            return_value = 0;
+            break;
+        }
+
     }
 
     if (weekpause.background_menu_music) soundplayer_fade(weekpause.background_menu_music, 0, 100);
 
     if (roundcontext.script) await weekscript_notify_pause(roundcontext.script, 0);
-    while (roundcontext.scriptcontext.halt_flag) await week_pause_internal_render(roundcontext, weekpause);
+    while (roundcontext.scriptcontext.halt_flag) await week_pause_internal_render(weekpause, roundcontext);
 
     if (weekpause.background_menu_music) soundplayer_stop(weekpause.background_menu_music);
     messagebox_hide(weekpause.messagebox, 1);
 
-    if (selected_option == 0) {
-        for (let i = 0; i < roundcontext.players_size; i++) {
-            if (roundcontext.players[i].controller) gamepad_clear_buttons(roundcontext.players[i].controller);
-        }
-    } else {
-        let target = selected_option == 1 ? "transition_fast" : "transition";
+    if (return_value != 0) {
+        const target = return_value == 1 ? "transition_fast" : "transition";
         layout_trigger_any(weekpause.layout, target);
 
         while (1) {
-            let elapsed = await week_pause_internal_render(roundcontext, weekpause);
-
+            await week_pause_internal_render(weekpause, roundcontext);
             if (layout_animation_is_completed(weekpause.layout, "transition_effect")) break;
         }
     }
 
-    modding_helper_notify_exit2(weekpause.modding);
+    await modding_helper_notify_exit2(weekpause.modding);
 
     // selected options:
     //      0 -> resume
     //      1 -> restart song
     //      2 -> back to weekselector
     //      3 -> back to mainmenu
-    return selected_option;
+    return return_value;
 }
 
-async function week_pause_internal_render(roundcontext, weekpause) {
+async function week_pause_internal_render(weekpause, roundcontext) {
     const buttons = [0x00];
 
-    let elapsed = await pvrctx_wait_ready();
-    pvr_context_reset(pvr_context);
+    let elapsed;
 
-    for (let i = 0; i < roundcontext.players_size; i++) {
-        let controller = roundcontext.players[i].controller;
-        if (controller && gamepad_get_managed_presses(controller, 1, buttons) && roundcontext.script) {
-            await weekscript_notify_buttons(roundcontext.script, i, buttons[0]);
+    do {
+        elapsed = await pvrctx_wait_ready();
+        pvr_context_reset(pvr_context);
+
+        for (let i = 0; i < roundcontext.players_size; i++) {
+            let controller = roundcontext.players[i].controller;
+            if (controller && gamepad_get_managed_presses(controller, 1, buttons) && roundcontext.script) {
+                await weekscript_notify_buttons(roundcontext.script, i, buttons[0]);
+            }
         }
-    }
 
-    if (roundcontext.script) await weekscript_notify_frame(roundcontext.script, elapsed);
+        if (roundcontext.script) await weekscript_notify_frame(roundcontext.script, elapsed);
 
-    // draw the stage+ui layout but do not animate
-    layout_draw(roundcontext.layout, pvr_context);
+        // draw the stage+ui layout but do not animate
+        layout_draw(roundcontext.layout, pvr_context);
 
-    layout_animate(weekpause.layout, elapsed);
-    layout_draw(weekpause.layout, pvr_context);
+        layout_animate(weekpause.layout, elapsed);
+        layout_draw(weekpause.layout, pvr_context);
+    } while (roundcontext.scriptcontext.halt_flag);
 
     messagebox_animate(weekpause.messagebox, elapsed);
     messagebox_draw(weekpause.messagebox, pvr_context);
@@ -481,21 +489,49 @@ async function week_pause_internal_render(roundcontext, weekpause) {
     return elapsed;
 }
 
-function weekpause_internal_handle_option(weekpause, option_name) {
-    if (option_name == null) return false;
-
-    weekpause.native_option_choosen_index = weekpause_internal_get_native_option_index(option_name);
-
-    return weekpause.native_option_choosen_index >= 0;
-}
-
-function weekpause_internal_get_native_option_index(option_name) {
-    for (let i = 0; i < WEEKPAUSE_MENU.items_size; i++) {
-        if (option_name == WEEKPAUSE_MENU.items[i].name) {
-            return i;
-        }
+function week_pause_internal_handle_modding_option(weekpause, option_name) {
+    if (option_name == null) {
+        // resume
+        weekpause.modding_choosen_option_name = WEEKPAUSE_MENU.items[0].name;
+        menu_select_item(weekpause.menu, weekpause.modding_choosen_option_name);
+        return 1;
     }
 
-    return -1;
+    // select native option
+    let index = menumanifest_get_option_index(WEEKPAUSE_MENU, option_name);
+    if (index >= 0) {
+        weekpause.modding_choosen_option_name = WEEKPAUSE_MENU.items[index].name;
+        menu_select_item(weekpause.menu, weekpause.modding_choosen_option_name);
+        return 1;
+    }
+
+    // select custom option
+    if (menu_has_item(weekpause.menu, option_name)) {
+        menu_select_item(weekpause.menu, option_name);
+        weekpause.modding_choosen_option_name = menu_get_selected_item_name(weekpause.menu);
+        return 1;
+    }
+
+    // reject
+    return 0;
+}
+
+function week_pause_internal_return_value(weekpause) {
+    switch (weekpause.modding_choosen_option_name) {
+        case null:
+        case "resume":
+            return 0;
+        case "week-menu":
+            return 4;
+        case "restart-song":
+            return 1;
+        case "exit-week-selector":
+            return 2;
+        case "exit-main-menu":
+            return 3;
+        default:
+            // custom option
+            return -1;
+    }
 }
 

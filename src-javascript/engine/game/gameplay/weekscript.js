@@ -224,9 +224,9 @@ function weekscript_notify_scriptchange(script) {
     return _weekscript_call(ModuleLuaScript._luascript_notify_scriptchange, script);
 }
 
-function weekscript_notify_pause_optionselected(script, option_index, buttons) {
+function weekscript_notify_pause_option_choosen(script, option_index) {
     return _weekscript_call(
-        ModuleLuaScript._luascript_notify_pause_optionselected, script, option_index | 0, buttons | 0
+        ModuleLuaScript._luascript_notify_pause_option_choosen, script, option_index
     );
 }
 

@@ -192,6 +192,7 @@ class PSShader {
     /**@type {PostprocessingUniform[]}*/uniform_cache;
 
     /**@type {PVRContext}*/pvrctx;
+    /**@type {number}*/resolution_changes;
 
     static #buffer_floats = new Float32Array(16);
 
@@ -201,6 +202,7 @@ class PSShader {
 
         this.program = program;
         this.pvrctx = pvrctx;
+        this.resolution_changes = pvrctx.resolution_changes;
 
         // vertex array object
         this.vao = gl.createVertexArray();
@@ -576,6 +578,14 @@ class PSShader {
     Draw(/**@type {PSFramebuffer}*/ from_framebuffer) {
         const gl = this.pvrctx.webopengl.gl;
 
+        if (this.resolution_changes != this.pvrctx.resolution_changes) {
+            // update quad screen buffer
+            this.resolution_changes = this.pvrctx.resolution_changes;
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, WEBGL_QUAD_SCREEN, gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        }
+
         gl.useProgram(this.program);
         gl.bindVertexArray(this.vao);
 
@@ -749,6 +759,11 @@ class PSFramebuffer {
         //gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbuffer);
         //gl.renderbufferStorage(gl.RENDERBUFFER, gl.STENCIL_INDEX8, this.pow2_width, this.pow2_height);
 
+        // invalidate framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+        gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.COLOR_ATTACHMENT0]);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.bindTexture(gl.TEXTURE_2D, null);
         //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     }
@@ -797,7 +812,7 @@ class PSFramebuffer {
     }
 
     static ResizeQuadScreen(/**@type {PVRContext}*/pvrctx) {
-        let width = pvrctx.screen_width;
+        let width = pvrctx.screen_stride;
         let height = pvrctx.screen_height;
         let pow2_width = math2d_poweroftwo_calc(width);
         let pow2_height = math2d_poweroftwo_calc(height);

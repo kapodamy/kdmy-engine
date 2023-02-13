@@ -291,6 +291,24 @@ namespace Engine.Externals.LuaInterop {
             return null;
         }
 
+        public bool CallPushedGlobalFunctionWithReturnBool(int arguments_count) {
+            unsafe {
+                string fn_name = this.last_pushed_function_name;
+                this.last_pushed_function_name = null;
+
+                if (LuaInteropHelpers.luascript_pcallk(this.L, arguments_count, 1) == 0) {
+                    return LUA.lua_toboolean(this.L, -1) != 0;
+                }
+
+                string error_message = LUA.lua_tostring(L, -1);
+                Console.Error.WriteLine("lua_imported_fn() call to '{0}' failed.\n{1}\n", fn_name, error_message);
+                //Console.Error.Flush();
+                LUA.lua_pop(this.L, 1);
+            }
+
+            return false;
+        }
+
         public void DropSharedObject(object obj) {
             unsafe {
                 void* obj_ptr = this.handle_references.GetReference(obj);

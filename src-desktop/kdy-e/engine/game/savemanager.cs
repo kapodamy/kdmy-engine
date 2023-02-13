@@ -19,7 +19,7 @@ namespace Engine.Game {
         private const float SCAN_INTERVAL = 1000f;
         private const string LAYOUT = "/assets/common/image/save-manager/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/save-manager/layout~dreamcast.xml";
-        private const string MODDING_SCRIPT = "/assets/data/scripts/savemanager.lua";
+        private const string MODDING_SCRIPT = "/assets/common/data/scripts/savemanager.lua";
 
         public static readonly MenuManifest MENU_MANIFEST = new MenuManifest() {
             parameters = new MenuManifest.Parameters() {
@@ -210,6 +210,10 @@ namespace Engine.Game {
 
             Modding modding = new Modding(this.layout, SaveManager.MODDING_SCRIPT);
             modding.native_menu = modding.active_menu = this.menu;
+            modding.callback_private_data = null;
+            modding.callback_option = null;
+            modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+            modding.HelperNotifyEvent(this.save_only ? "do-save" : "do-load");
 
             while (!modding.has_exit) {
                 int selection_offset_x = 0;
@@ -297,6 +301,7 @@ namespace Engine.Game {
 
                         save_or_load_success = InternalCommit(selected_index);
                         SaveManager.game_withoutsavedata = save_or_load_success;
+                        if (save_or_load_success && this.save_only) modding.has_funkinsave_changes = false;
                         if (save_or_load_success) break;
                     }
                 } else if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool() && !modding.HelperNotifyBack()) {
@@ -343,9 +348,10 @@ namespace Engine.Game {
             }
 
             this.layout.TriggerAny("outro");
-            modding.HelperNotifyModdingEvent("outro");
+            modding.HelperNotifyEvent("outro");
 
             if (save_or_load_success) {
+                modding.has_exit = modding.has_halt = false;
                 while (!modding.has_exit) {
                     float elapsed = PVRContext.global_context.WaitReady();
                     PVRContext.global_context.Reset();

@@ -128,15 +128,17 @@ namespace Engine.Game.Gameplay {
             },
             items_size = 5
         };
-        public const string LAYOUT_WIDESCREEN = "/assets/common/image/week-round/pause.xml";
-        public const string LAYOUT_DREAMCAST = "/assets/common/image/week-round/pause~dreamcast.xml";
-        public const string NOCONTROLLER = "/assets/common/image/week-round/no_controller.png";
-        private const string MODDING_SCRIPT = "/assets/data/scripts/weekpause.lua";
-        private const string MODDING_MENU = "/assets/data/menus/weekpause.json";
-        public const int ANTIBOUNCE = 400;
+        private const string LAYOUT_WIDESCREEN = "/assets/common/image/week-round/pause.xml";
+        private const string LAYOUT_DREAMCAST = "/assets/common/image/week-round/pause~dreamcast.xml";
+        private const string NOCONTROLLER = "/assets/common/image/week-round/no_controller.png";
+        private const string MODDING_SCRIPT = "/assets/common/data/scripts/weekpause.lua";
+        private const string MODDING_MENU = "/assets/common/data/menus/weekpause.json";
+        private const GamepadButtons BUTTONS = GamepadButtons.START | GamepadButtons.AD_UP | GamepadButtons.AD_DOWN | GamepadButtons.A | GamepadButtons.X | GamepadButtons.B | GamepadButtons.BACK;
+        private const int DELAY = 200;
+        private const int ANTIBOUNCE = 400;
 
         // messagebox strings
-        public const string MSGCONTROLLER = "The controller $i was discconected, \n" +
+        public const string MSGCONTROLLER = "The controller $i was disconnected, \n" +
             "reconnect it or press START on an unused \n" +
             "controller to replace it.";
         public const string MSGMENU = "The week progress will be lost, ¿return\n to the main menu?";
@@ -151,7 +153,7 @@ namespace Engine.Game.Gameplay {
         private Menu menu_external;
         private SoundPlayer background_menu_music;
         private Modding modding;
-        private int native_option_choosen_index;
+        private string modding_choosen_option_name;
 
 
         public WeekPause() {
@@ -188,8 +190,9 @@ namespace Engine.Game.Gameplay {
             Sprite sprite_nocontroller = Sprite.Init(Texture.Init(WeekPause.NOCONTROLLER));
 
             Modding modding = new Modding(layout, WeekPause.MODDING_SCRIPT);
-            modding.native_menu = menu;
-            modding.callback_option = this.InternalHandleOption;
+            modding.native_menu = modding.active_menu = menu;
+            modding.callback_private_data = this;
+            modding.callback_option = this.InternalHandleModdingOption;
 
             this.menu = menu;
             this.messagebox = messagebox;
@@ -199,7 +202,7 @@ namespace Engine.Game.Gameplay {
             this.menu_external = null;
             this.background_menu_music = null;
             this.modding = modding;
-            this.native_option_choosen_index = -1;
+            this.modding_choosen_option_name = null;
         }
 
         public void Destroy() {
@@ -210,6 +213,7 @@ namespace Engine.Game.Gameplay {
             this.modding.Destroy();
             if (this.menu_external != null) this.menu_external.Destroy();
             if (this.background_menu_music != null) this.background_menu_music.Destroy();
+            this.modding_choosen_option_name = null;// do not dispose
             //free(this);
         }
 
@@ -255,8 +259,7 @@ namespace Engine.Game.Gameplay {
         public int HelperShow(RoundContext roundcontext, int dettached_index) {
             bool dettached_controller = dettached_index >= 0;
             Gamepad controller = new Gamepad(-1);
-            float antibounce = dettached_controller ? 1000.0f : WeekPause.ANTIBOUNCE;
-            controller.SetButtonsDelay(WeekPause.ANTIBOUNCE / 2);
+            controller.SetButtonsDelay(WeekPause.DELAY);
 
             this.messagebox.Hide(false);
             if (this.background_menu_music != null) {
@@ -265,9 +268,9 @@ namespace Engine.Game.Gameplay {
             }
             controller.ClearButtons();
 
-            bool current_menu_external = false;
+            bool current_menu_is_external = false;
             Menu current_menu = this.menu;
-            int selected_option = 0;
+            int return_value = 0;
 
             this.menu.SelectIndex(0);
             if (this.menu_external != null) this.menu_external.SelectIndex(0);
@@ -299,48 +302,41 @@ namespace Engine.Game.Gameplay {
                 this.messagebox.Show(true);
             }
 
-            this.native_option_choosen_index = -1;
+            this.modding_choosen_option_name = null;
             this.modding.has_exit = false;
             this.modding.has_halt = false;
             this.modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+            this.modding.HelperNotifyOption(true);
 
             while (!this.modding.has_exit) {
-                bool to_external_menu = false;
+                bool has_option_choosen = false;
+                bool go_back = false;
                 float elapsed = InternalRender(roundcontext);
+                GamepadButtons buttons = controller.HasPressedDelayed(WeekPause.BUTTONS);
 
-                GamepadButtons buttons = controller.HasPressedDelayed(
-                    GamepadButtons.START | GamepadButtons.AD_UP | GamepadButtons.AD_DOWN | GamepadButtons.A | GamepadButtons.X | GamepadButtons.B | GamepadButtons.BACK
-                );
-
-                ModdingHelperResult res = this.modding.HelperHandleCustomMenu(controller, elapsed);
-                if (res != ModdingHelperResult.CONTINUE) break;
-                if (this.modding.has_halt || this.modding.active_menu != this.menu) continue;
-                if (this.native_option_choosen_index >= 0) {
-                    selected_option = this.native_option_choosen_index;
-                    break;
-                }
-
-                if (antibounce > 0) {
-                    if (buttons.Bool())
-                        antibounce -= elapsed;
-                    else
-                        antibounce = 0.0f;
-                    continue;
-                }
-
-                if (selected_option != 0) {
+                // if the messagebox is visible, wait decision
+                if (return_value != 0) {
                     if ((buttons & (GamepadButtons.A | GamepadButtons.X)).Bool()) {
                         break;
                     } else if ((buttons & (GamepadButtons.B | GamepadButtons.START | GamepadButtons.BACK)).Bool()) {
-                        selected_option = 0;
+                        return_value = 0;
                         if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
-                            antibounce = 200.0f;
+                            controller.SetButtonsDelay(WeekPause.DELAY);
                             this.messagebox.Hide(false);
                         } else {
                             break;
                         }
                     }
                     continue;
+                }
+
+                ModdingHelperResult res = this.modding.HelperHandleCustomMenu(controller, elapsed);
+                if (res != ModdingHelperResult.CONTINUE) break;
+                if (this.modding.has_halt || this.modding.active_menu != this.menu) continue;
+                if (this.modding_choosen_option_name != null) {
+                    buttons = GamepadButtons.NOTHING;
+                    has_option_choosen = true;
+                    break;
                 }
 
                 if (dettached_controller) {
@@ -366,73 +362,90 @@ namespace Engine.Game.Gameplay {
                 }
 
                 if ((buttons & GamepadButtons.START).Bool()) {
-                    if (!current_menu_external && !this.modding.HelperNotifyBack()) break;
+                    if (!current_menu_is_external && !this.modding.HelperNotifyBack()) break;
                 } else if ((buttons & GamepadButtons.AD_UP).Bool()) {
                     if (!current_menu.SelectVertical(-1))
                         current_menu.SelectIndex(current_menu.GetItemsCount() - 1);
+                    this.modding.HelperNotifyOption(true);
                 } else if ((buttons & GamepadButtons.AD_DOWN).Bool()) {
                     if (!current_menu.SelectVertical(1))
                         current_menu.SelectIndex(0);
+                    this.modding.HelperNotifyOption(true);
                 } else if ((buttons & (GamepadButtons.A | GamepadButtons.X)).Bool()) {
-                    if (current_menu_external) {
-                        to_external_menu = true;
-                    } else {
-                        int option_index = WeekPause.InternalGetNativeOptionIndex(
-                            this.menu.GetSelectedItemName()
-                        );
-                        if (option_index == 0) {
-                            selected_option = 0;// resume
-                            break;
-                        } else if (option_index == 1 && this.menu_external != null) {
-                            // display week menu
-                            this.modding.HelperNotifyModdingEvent("week-custom-menu");
-                            this.menu_external.TrasitionIn();
-                            this.menu_placeholder.vertex = this.menu_external.GetDrawable();
-                            current_menu_external = true;
-                            if (roundcontext.script != null) roundcontext.script.NotifyPauseMenuvisible(true);
-                        } else if (option_index == 2) {
-                            selected_option = 1;// restart song
-                            break;
-                        } else if (option_index == 3) {
-                            selected_option = 2;// back to weekselector
-                        } else if (option_index == 4) {
-                            selected_option = 3;// back to mainmenu
-                        }
-
-                        if (selected_option != 0) {
-                            string msg = selected_option == 2 ? WeekPause.MSGWEEKSELECTOR : WeekPause.MSGMENU;
-                            this.messagebox.HideImage(true);
-                            this.messagebox.SetButtonsIcons("a", "b");
-                            this.messagebox.SetButtonsText("Ok", "Cancel");
-                            this.messagebox.SetTitle("Confirm");
-                            this.messagebox.UseSmallSize(true);
-                            this.messagebox.SetMessage(msg);
-                            this.messagebox.Show(false);
-                            controller.ClearButtons();
-                        }
-                    }
+                    has_option_choosen = true;
                 } else if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
-                    if (current_menu_external) {
-                        current_menu_external = false;
-                        this.menu_placeholder.vertex = this.menu.GetDrawable();
-                        if (roundcontext.script != null) roundcontext.script.NotifyPauseMenuvisible(false);
-                        this.modding.HelperNotifyModdingEvent("week-pause-menu");
-                        this.menu.TrasitionIn();
-                    } else if (!modding.HelperNotifyBack()) {
-                        selected_option = 0;
-                        break;
-                    }
-                } else if (current_menu_external) {
-                    buttons = controller.GetPressed();
-                    to_external_menu = buttons.Bool();// notify script if has buttons pressed
+                    go_back = true;
+                } else if (!has_option_choosen) {
+                    // nothing to do
+                    continue;
                 }
 
-                if (to_external_menu) {
-                    int option_index = this.menu_external.GetSelectedIndex();
-                    buttons = controller.GetPressed();
-                    if (roundcontext.script != null) roundcontext.script.NotifyPauseOptionselected(option_index, buttons);
-                    while (roundcontext.scriptcontext.halt_flag) InternalRender(roundcontext);
+
+                if (has_option_choosen && current_menu_is_external) {
+                    int option_index = current_menu.GetSelectedIndex();
+                    roundcontext.script.NotifyPauseOptionChoosen(option_index);
+                    has_option_choosen = false;
+                    go_back = true;
+                } else if (has_option_choosen) {
+                    if (this.modding_choosen_option_name == null) {
+                        this.modding_choosen_option_name = current_menu.GetSelectedItemName();
+                        if (!this.modding.HelperNotifyOption(false)) {
+                            this.modding_choosen_option_name = null;
+                            continue;
+                        }
+                    }
+
+                    return_value = this.InternalReturnValue();
+                    this.modding_choosen_option_name = null;
+
+                    if (return_value == 0) {
+                        // resume
+                        break;
+                    } else if (return_value == 4) {
+                        return_value = 0;
+                        if (this.menu_external == null || roundcontext.script == null) continue;
+
+                        // display week menu
+                        current_menu = this.menu_external;
+                        this.modding.callback_option = null;
+                        this.modding.HelperNotifyEvent("week-custom-menu");
+                        current_menu.TrasitionIn();
+                        this.menu_placeholder.vertex = current_menu.GetDrawable();
+                        current_menu_is_external = true;
+                        if (roundcontext.script != null) roundcontext.script.NotifyPauseMenuvisible(true);
+                    } else if (return_value == 1) {
+                        // restart song
+                        break;
+                    } else if (return_value == 2 || return_value == 3) {
+                        string msg = return_value == 2 ? WeekPause.MSGWEEKSELECTOR : WeekPause.MSGMENU;
+                        this.messagebox.HideImage(true);
+                        this.messagebox.SetButtonsIcons("a", "b");
+                        this.messagebox.SetButtonsText("Ok", "Cancel");
+                        this.messagebox.SetTitle("Confirm");
+                        this.messagebox.UseSmallSize(true);
+                        this.messagebox.SetMessage(msg);
+                        this.messagebox.Show(false);
+                        controller.SetButtonsDelay(WeekPause.ANTIBOUNCE);
+                    } else if (return_value == -1) {
+                        // custom option menu
+                        this.modding.HelperNotifyHandleCustomOption(current_menu.GetSelectedItemName());
+                        return_value = 0;
+                    }
                 }
+
+                if (go_back && current_menu_is_external) {
+                    current_menu_is_external = false;
+                    current_menu = this.menu;
+                    this.menu_placeholder.vertex = this.menu.GetDrawable();
+                    roundcontext.script.NotifyPauseMenuvisible(false);
+                    this.modding.callback_option = InternalHandleModdingOption;
+                    this.modding.HelperNotifyEvent("week-pause-menu");
+                    this.menu.TrasitionIn();
+                } else if (go_back && !this.modding.HelperNotifyBack()) {
+                    return_value = 0;
+                    break;
+                }
+
             }
 
             if (this.background_menu_music != null) this.background_menu_music.Fade(false, 100.0f);
@@ -443,17 +456,12 @@ namespace Engine.Game.Gameplay {
             if (this.background_menu_music != null) this.background_menu_music.Stop();
             this.messagebox.Hide(true);
 
-            if (selected_option == 0) {
-                for (int i = 0 ; i < roundcontext.players_size ; i++) {
-                    if (roundcontext.players[i].controller != null) roundcontext.players[i].controller.ClearButtons();
-                }
-            } else {
-                string target = selected_option == 1 ? "transition_fast" : "transition";
+            if (return_value != 0) {
+                string target = return_value == 1 ? "transition_fast" : "transition";
                 this.layout.TriggerAny(target);
 
                 while (true) {
-                    float elapsed = InternalRender(roundcontext);
-
+                    InternalRender(roundcontext);
                     if (this.layout.AnimationIsCompleted("transition_effect") > 0) break;
                 }
             }
@@ -465,26 +473,31 @@ namespace Engine.Game.Gameplay {
             //      1 -> restart song
             //      2 -> back to weekselector
             //      3 -> back to mainmenu
-            return selected_option;
+            return return_value;
         }
 
         private float InternalRender(RoundContext roundcontext) {
-            GamepadButtons buttons = GamepadButtons.NOTHING;
+            float elapsed;
 
-            float elapsed = PVRContext.global_context.WaitReady();
-            PVRContext.global_context.Reset();
+            do {
+                GamepadButtons buttons = GamepadButtons.NOTHING;
 
-            for (int i = 0 ; i < roundcontext.players_size ; i++) {
-                Gamepad controller = roundcontext.players[i].controller;
-                if (controller != null && controller.GetManagedPresses(true, ref buttons)) {
-                    if (roundcontext.script != null) roundcontext.script.NotifyButtons(i, buttons);
+                elapsed = PVRContext.global_context.WaitReady();
+                PVRContext.global_context.Reset();
+
+                for (int i = 0 ; i < roundcontext.players_size ; i++) {
+                    Gamepad controller = roundcontext.players[i].controller;
+                    if (controller != null && controller.GetManagedPresses(true, ref buttons)) {
+                        if (roundcontext.script != null) roundcontext.script.NotifyButtons(i, buttons);
+                    }
                 }
-            }
 
-            if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
+                if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
 
-            // draw the stage+ui layout but do not animate
-            roundcontext.layout.Draw(PVRContext.global_context);
+                // draw the stage+ui layout but do not animate
+                roundcontext.layout.Draw(PVRContext.global_context);
+
+            } while (roundcontext.scriptcontext.halt_flag);
 
             this.layout.Animate(elapsed);
             this.layout.Draw(PVRContext.global_context);
@@ -495,22 +508,50 @@ namespace Engine.Game.Gameplay {
             return elapsed;
         }
 
-        private bool InternalHandleOption(string option_name) {
-            if (option_name == null) return false;
-
-            this.native_option_choosen_index = WeekPause.InternalGetNativeOptionIndex(option_name);
-
-            return this.native_option_choosen_index >= 0;
-        }
-
-        private static int InternalGetNativeOptionIndex(string option_name) {
-            for (int i = 0 ; i < WeekPause.MENU.items_size ; i++) {
-                if (option_name == WeekPause.MENU.items[i].name) {
-                    return i;
-                }
+        private bool InternalHandleModdingOption(object obj, string option_name) {
+            if (option_name == null) {
+                // resume
+                this.modding_choosen_option_name = WeekPause.MENU.items[0].name;
+                this.menu.SelectItem(this.modding_choosen_option_name);
+                return true;
             }
 
-            return -1;
+            // select native option
+            int index = WeekPause.MENU.GetOptionIndex(option_name);
+            if (index >= 0) {
+                this.modding_choosen_option_name = WeekPause.MENU.items[index].name;
+                this.menu.SelectItem(this.modding_choosen_option_name);
+                return true;
+            }
+
+            // select custom option
+            if (this.menu.HasItem(option_name)) {
+                this.menu.SelectItem(option_name);
+                this.modding_choosen_option_name = this.menu.GetSelectedItemName();
+                return true;
+            }
+
+            // reject
+            return false;
+        }
+
+        private int InternalReturnValue() {
+            switch (this.modding_choosen_option_name) {
+                case null:
+                case "resume":
+                    return 0;
+                case "week-menu":
+                    return 4;
+                case "restart-song":
+                    return 1;
+                case "exit-week-selector":
+                    return 2;
+                case "exit-main-menu":
+                    return 3;
+                default:
+                    // custom option
+                    return -1;
+            }
         }
 
     }

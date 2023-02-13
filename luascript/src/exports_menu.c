@@ -21,8 +21,9 @@ EM_JS_PRFX(void, menu_trasition_in, (Menu menu), {
 EM_JS_PRFX(void, menu_trasition_out, (Menu menu), {
     menu_trasition_out(kdmyEngine_obtain(menu));
 });
-EM_JS_PRFX(void, menu_select_item, (Menu menu, const char* name), {
-    menu_select_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+EM_JS_PRFX(bool, menu_select_item, (Menu menu, const char* name), {
+    let ret = menu_select_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0;
 });
 EM_JS_PRFX(void, menu_select_index, (Menu menu, int32_t index), {
     menu_select_index(kdmyEngine_obtain(menu), index);
@@ -458,9 +459,10 @@ static int script_menu_select_item(lua_State* L) {
     Menu menu = luascript_read_userdata(L, MENU);
     const char* name = luaL_optstring(L, 2, NULL);
 
-    menu_select_item(menu, name);
+    bool ret = menu_select_item(menu, name);
 
-    return 0;
+    lua_pushboolean(L, ret);
+    return 1;
 }
 
 static int script_menu_select_index(lua_State* L) {

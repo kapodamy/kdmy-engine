@@ -694,6 +694,7 @@ void main() { mainImage(FragColor, TexCoord); }
         private WebGLUniformLocation u_kdy_texsize;
 
         private PVRContext pvrctx;
+        private int resolution_changes;
 
         private static float[] buffer_floats = new float[16];
 
@@ -702,6 +703,7 @@ void main() { mainImage(FragColor, TexCoord); }
 
             this.program = program;
             this.pvrctx = pvrctx;
+            this.resolution_changes = pvrctx.resolution_changes;
 
             // vertex array object
             this.vao = gl.createVertexArray();
@@ -881,6 +883,14 @@ void main() { mainImage(FragColor, TexCoord); }
         public void Draw(PSFramebuffer from_framebuffer) {
             var gl = this.pvrctx.webopengl.gl;
 
+            if (this.resolution_changes != this.pvrctx.resolution_changes) {
+                // update quad screen buffer
+                this.resolution_changes = this.pvrctx.resolution_changes;
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+                gl.bufferData(gl.ARRAY_BUFFER, WebGLContext.QUAD_SCREEN, gl.STATIC_DRAW);
+                gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
+            }
+
             gl.useProgram(this.program);
             gl.bindVertexArray(this.vao);
 
@@ -969,7 +979,7 @@ void main() { mainImage(FragColor, TexCoord); }
             return PSShader.BuildFromSource(pvrctx, vertex_shader_sourcecode, fragment_shader_sourcecode);
         }
 
-        internal static PSShader Init(string vertex_sourcecode, string fragment_sourcecode) {
+        public static PSShader Init(string vertex_sourcecode, string fragment_sourcecode) {
             return BuildFromSource(PVRContext.global_context, vertex_sourcecode, fragment_sourcecode);
         }
 
@@ -998,12 +1008,12 @@ void main() { mainImage(FragColor, TexCoord); }
 
             // width, height, aspect-ratio
             this.screen_dimmens = new float[] {
-            pvrctx.ScreenWidth, pvrctx.ScreenHeight, (float)pvrctx.ScreenWidth / (float)pvrctx.ScreenHeight
-        };
+                pvrctx.ScreenWidth, pvrctx.ScreenHeight, (float)pvrctx.ScreenWidth / (float)pvrctx.ScreenHeight
+            };
             // width, height, aspect-ratio
             this.texture_dimmens = new float[] {
-            this.pow2_width, this.pow2_height, (float)this.pow2_width / (float)this.pow2_height
-        };
+                this.pow2_width, this.pow2_height, (float)this.pow2_width / (float)this.pow2_height
+            };
 
             // framebuffer configuration
             this.framebuffer = gl.createFramebuffer();
@@ -1057,6 +1067,11 @@ void main() { mainImage(FragColor, TexCoord); }
             //gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbuffer);
             //gl.renderbufferStorage(gl.RENDERBUFFER, gl.STENCIL_INDEX8, this.pow2_width, this.pow2_height);
 
+            // invalidate framebuffer
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+            gl.invalidateFramebuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0);
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, WebGLFramebuffer.Null);
             gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
             //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
         }
@@ -1105,7 +1120,7 @@ void main() { mainImage(FragColor, TexCoord); }
         }
 
         public static void ResizeQuadScreen(PVRContext pvrctx) {
-            int width = pvrctx.ScreenWidth;
+            int width = pvrctx.ScreenStride;
             int height = pvrctx.ScreenHeight;
             int pow2_width = Math2D.PowerOfTwoCalc(width);
             int pow2_height = Math2D.PowerOfTwoCalc(height);

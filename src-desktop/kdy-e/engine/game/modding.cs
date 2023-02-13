@@ -2,13 +2,14 @@ using System;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Game.Gameplay;
+using Engine.Game.Gameplay.Helpers;
 using Engine.Platform;
 using Engine.Sound;
 using KallistiOS;
 
 namespace Engine.Game {
 
-    public delegate bool ModdingCallbackOption(string option_name);
+    public delegate bool ModdingCallbackOption(object private_data, string option_name);
 
     public enum ModdingHelperResult {
         CONTINUE,
@@ -18,7 +19,7 @@ namespace Engine.Game {
 
     public class Modding {
 
-        public const string NATIVE_MENU_SCREEN = "__NATIVE_SCREEN__";
+        public const string NATIVE_MENU_SCREEN = "NATIVE_SCREEN";
 
         public readonly WeekScript script;
         public readonly Layout layout;
@@ -28,6 +29,7 @@ namespace Engine.Game {
         public Menu native_menu;
         public Menu active_menu;
         public ModdingCallbackOption callback_option;
+        public object callback_private_data;
         public double exit_delay_ms;
         public double custom_menu_gamepad_delay;
         private double custom_menu_active_gamepad_delay;
@@ -45,6 +47,7 @@ namespace Engine.Game {
             this.native_menu = null;
             this.active_menu = null;
             this.callback_option = null;
+            this.callback_private_data = null;
             this.exit_delay_ms = 0.0;
             this.custom_menu_gamepad_delay = 200.0;
             this.custom_menu_active_gamepad_delay = 0.0;
@@ -110,7 +113,7 @@ namespace Engine.Game {
 
         public bool ChooseNativeMenuOption(string name) {
             if (this.callback_option == null) return false;
-            return this.callback_option(name);
+            return this.callback_option(this.callback_private_data, name);
         }
 
         public void SetActiveMenu(Menu menu) {
@@ -289,9 +292,14 @@ namespace Engine.Game {
             this.script.GetLuaScript().notify_modding_init(arg);
         }
 
-        public void HelperNotifyModdingEvent(string evt) {
+        public void HelperNotifyEvent(string evt) {
             if (this.script == null) return;
             this.script.GetLuaScript().notify_modding_event(evt);
+        }
+
+        public void HelperNotifyHandleCustomOption(string custom_option_name) {
+            if (this.script == null) return;
+            this.script.GetLuaScript().notify_modding_handle_custom_option(custom_option_name);
         }
 
         public void SetMenuInLayoutPlaceholder(string placeholder_name, Menu menu) {

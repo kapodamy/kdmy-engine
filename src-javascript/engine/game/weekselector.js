@@ -47,7 +47,7 @@ const WEEKSELECTOR_BUTTONS_OK = GAMEPAD_X | GAMEPAD_A;
 
 const WEEKSELECTOR_LAYOUT = "/assets/common/image/week-selector/layout.xml";
 const WEEKSELECTOR_LAYOUT_DREAMCAST = "/assets/common/image/week-selector/layout~dreamcast.xml";
-const WEEKSELECTOR_MODDING_SCRIPT = "/assets/data/scripts/weekselector.lua";
+const WEEKSELECTOR_MODDING_SCRIPT = "/assets/common/data/scripts/weekselector.lua";
 
 class UI {
     /**@type {GamepadKDY} */
@@ -172,13 +172,8 @@ async function weekselector_trigger_difficult_change(/**@type {UI}*/ui,/**@type 
 }
 
 async function weekselector_trigger_alternate_change(ui, /**@type {STATE}*/state) {
-    let alternate_action;
-    if (state.has_choosen_alternate) alternate_action = "selected-no-alternate";
-    else alternate_action = "selected-alternate";
-
-    if (state.custom_layout) layout_trigger_any(state.custom_layout, alternate_action);
-    layout_trigger_any(ui.layout, alternate_action);
-    await modding_helper_notify_event(state.modding, alternate_action);
+    let what = state.has_choosen_alternate ? "selected-no-alternate" : "selected-alternate";
+    await weekselector_trigger_event(ui, state, what);
 }
 
 async function weekselector_load_custom_week_background(/**@type {STATE}*/state) {
@@ -452,22 +447,22 @@ async function weekselector_main() {
         if (state.update_ui) weekselector_change_page(ui, state.page_selected_ui);
     }
 
-    let no_anim_out = 0;
-
+    let outro_layout = layout;
     if (state.back_to_main_menu) {
         if (sound_cancel) soundplayer_replay(sound_cancel);
-        layout_trigger_any(layout, "back-to-main-menu");
+        await weekselector_trigger_event(ui, state, "back-to-main-menu");
     } else {
         if (state.bg_music) soundplayer_stop(state.bg_music);
         weekselector_change_page(ui, 0);
         if (sound_confirm) soundplayer_replay(sound_confirm);
 
-        if (state.custom_layout)
-            no_anim_out = layout_trigger_any(state.custom_layout, "week-choosen");
-
-        // if the custom layout does not contains the "week-choosen" action
-        // trigger in the main layout
-        if (!no_anim_out) layout_trigger_any(layout, "week-choosen");
+        if (state.custom_layout && layout_trigger_any(state.custom_layout, "week-choosen")) {
+            outro_layout = state.custom_layout;
+        } else {
+            // if the custom layout does not contains the "week-choosen" action
+            // trigger in the main layout
+            layout_trigger_any(layout, "week-choosen");
+        }
 
         await modding_helper_notify_event(state.modding, "week-choosen");
         layout_set_group_visibility(layout, "ui_game_progress", 0);
@@ -477,10 +472,8 @@ async function weekselector_main() {
         weekselector_weeklist_toggle_choosen(ui.weeklist);
     }
 
-    let total_elapsed = 0;
-    while (total_elapsed < 2400) {
+    while (1) {
         let elapsed = await pvrctx_wait_ready();
-        total_elapsed += elapsed;
 
         beatwatcher_global_set_timestamp_from_kos_timer();
         await modding_helper_notify_frame(modding, elapsed, -1.0);
@@ -494,7 +487,7 @@ async function weekselector_main() {
             layout_draw(state.custom_layout, pvr_context);
         }
 
-        if (state.back_to_main_menu && layout_animation_is_completed(layout, "transition_effect"))
+        if (state.back_to_main_menu && layout_animation_is_completed(outro_layout, "transition_effect"))
             break;
     }
 

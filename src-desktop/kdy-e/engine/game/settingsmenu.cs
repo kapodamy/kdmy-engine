@@ -16,8 +16,8 @@ namespace Engine.Game {
         private const string KEY_NONE = "(none)";
         private const string KEY_BIND = "(waiting)";
         private const double DELAY_SECONDS = 0.25;
-        private const string MODDING_SCRIPT = "/assets/data/scripts/settigsmenu.lua";
-        private const string MODDING_MENU = "/assets/data/menus/settigsmenu-main.json";
+        private const string MODDING_SCRIPT = "/assets/common/data/scripts/settigsmenu.lua";
+        private const string MODDING_MENU = "/assets/common/data/menus/settigsmenu-main.json";
         private static readonly KeyCallback delegate_key_callback = InternalKeyCallback;
 
 
@@ -192,10 +192,11 @@ namespace Engine.Game {
         private static Menu current_menu = null;
         private static SettingOption[] current_setting_options = null;
         private static bool current_menu_choosen = false;
+        private static bool current_menu_choosen_custom = false;
+        private static bool is_running = false;
 
 
         public static void Main() {
-
             SettingOption[] main_options_help = {
                 new SettingOption() {
                     name = "keyboard-bindings-gameplay",
@@ -219,6 +220,11 @@ namespace Engine.Game {
                 }
             };
 
+            if (SettingsMenu.is_running) {
+                Console.Error.WriteLine("[ERROR] SettingsMenu::Main() is already running, only a single instance is allowed");
+                return;
+            }
+
             AnimList animlist = AnimList.Init("/assets/common/anims/settings-menu.xml");
             AnimSprite anim_binding, anim_binding_rollback;
 
@@ -241,6 +247,12 @@ namespace Engine.Game {
             );
             SettingsMenu.MENU.parameters.font_size = layout.GetAttachedValueAsFloat(
                 "menu_fontSize", SettingsMenu.MENU.parameters.font_size
+            );
+            SettingsMenu.MENU.parameters.items_dimmen = layout.GetAttachedValueAsFloat(
+                "menu_itemDimmen", SettingsMenu.MENU.parameters.items_dimmen
+            );
+            SettingsMenu.MENU.parameters.items_dimmen = layout.GetAttachedValueAsFloat(
+                "menu_itemScale", SettingsMenu.MENU.parameters.texture_scale
             );
             SettingsMenu.MENU.parameters.items_gap = layout.GetAttachedValueAsFloat(
                 "menu_itemGap", SettingsMenu.MENU.parameters.items_gap
@@ -311,14 +323,16 @@ namespace Engine.Game {
             SettingsMenu.current_menu = null;
             SettingsMenu.current_setting_options = null;
             SettingsMenu.current_menu_choosen = false;
+            SettingsMenu.current_menu_choosen_custom = false;
+            SettingsMenu.is_running = true;
 
             Modding modding = new Modding(layout, SettingsMenu.MODDING_SCRIPT);
             modding.callback_option = SettingsMenu.InternalHandleOption;
             modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
 
-            while (modding.has_exit) {
+            while (!modding.has_exit) {
                 int selected_index = InCommonMenu("Settings", layout, gamepad, menu, options_help, modding);
-                string selected_name = menumanifest.items[selected_index].name;
+                string selected_name = selected_index < 0 ? "return-main-menu" : menumanifest.items[selected_index].name;
                 switch (selected_name) {
                     case "keyboard-bindings-gameplay":
                         InGameplayBinding(anim_binding, anim_binding_rollback);
@@ -348,6 +362,8 @@ namespace Engine.Game {
             menu.Destroy();
             layout.Destroy();
             modding.Destroy();
+
+            SettingsMenu.is_running = false;
 
             //if (options_help != main_options_help) free(options_help);
             if (menumanifest != SettingsMenu.MENU) menumanifest.Destroy();
@@ -695,12 +711,13 @@ namespace Engine.Game {
             TextSprite hint = layout.GetTextsprite("hint");
             gamepad.SetButtonsDelay((int)(SettingsMenu.DELAY_SECONDS * 1000));
 
-            SettingsMenu.current_menu = modding.native_menu = menu;
+            SettingsMenu.current_menu = modding.native_menu = modding.active_menu = menu;
             SettingsMenu.current_setting_options = options;
             SettingsMenu.current_menu_choosen = false;
+            SettingsMenu.current_menu_choosen_custom = false;
 
             layout.TriggerAny(null);
-            modding.HelperNotifyModdingEvent(title);
+            modding.HelperNotifyEvent(title);
 
             int last_selected_index = -1;
             int selected_index = menu.GetSelectedIndex();
@@ -708,6 +725,7 @@ namespace Engine.Game {
                 hint.SetTextIntern(true, options[selected_index].description);
                 last_selected_index = selected_index;
                 GameMain.HelperTriggerActionMenu2(layout, SettingsMenu.MENU_COMMON, selected_index, title, true, false);
+                modding.HelperNotifyOption(true);
             }
 
             int option = -1;
@@ -715,7 +733,7 @@ namespace Engine.Game {
 
             while (!modding.has_exit) {
                 if (SettingsMenu.current_menu_choosen) {
-                    option = menu.GetSelectedIndex();
+                    if (!SettingsMenu.current_menu_choosen_custom) option = menu.GetSelectedIndex();
                     break;
                 }
 
@@ -992,7 +1010,7 @@ namespace Engine.Game {
 
             if (setting_name != null) setting_name.SetTextIntern(true, options[0].name);
 
-            while (modding.has_exit) {
+            while (!modding.has_exit) {
                 int selected_option = InCommonMenu(title, layout, gamepad, menu, options, modding);
                 if (selected_option < 0) break;
 
@@ -1339,11 +1357,15 @@ namespace Engine.Game {
             }
         }
 
-        private static bool InternalHandleOption(string option_name) {
+        private static bool InternalHandleOption(object obj, string option_name) {
             if (SettingsMenu.current_menu == null || SettingsMenu.current_setting_options == null) {
                 return false;
             }
-            if (option_name == null) return false;
+            SettingsMenu.current_menu_choosen = true;
+            if (option_name == null) {
+                SettingsMenu.current_menu_choosen_custom = true;
+                return false;
+            }
 
             if (SettingsMenu.current_menu.HasItem(option_name)) {
                 SettingsMenu.current_menu.SelectItem(option_name);
@@ -1358,6 +1380,7 @@ namespace Engine.Game {
                 }
             }
 
+            SettingsMenu.current_menu_choosen_custom = true;
             return false;
         }
 

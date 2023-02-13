@@ -872,7 +872,7 @@ declare global {
         get_drawable(): Drawable;
         trasition_in(): void;
         trasition_out(): void;
-        select_item(name: string): void;
+        select_item(name: string): boolean;
         select_index(index: number): void;
         select_vertical(offset: number): boolean;
         select_horizontal(offset: number): boolean;

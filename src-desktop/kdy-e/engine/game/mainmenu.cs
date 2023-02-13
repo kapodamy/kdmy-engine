@@ -13,8 +13,9 @@ namespace Engine.Game {
         private const int OPTION_SELECTION_DELAY = 200;// milliseconds
         private const string LAYOUT = "/assets/common/image/main-menu/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/main-menu/layout~dreamcast.xml";
-        private const string MODDING_SCRIPT = "/assets/data/scripts/mainmenu.lua";
-        private const string MODDING_MENU = "/assets/data/menus/mainmenu.json";
+        private const string MODDING_SCRIPT = "/assets/common/data/scripts/mainmenu.lua";
+        private const string MODDING_MENU = "/assets/common/data/menus/mainmenu.json";
+        private const string BACK_TO_STARTSCREEN = "back-to-startscreen";
 
         public static readonly MenuManifest MENU_MANIFEST = new MenuManifest() {
             parameters = new MenuManifest.Parameters() {
@@ -124,7 +125,6 @@ namespace Engine.Game {
         public const GamepadButtons GAMEPAD_CANCEL = GamepadButtons.B | GamepadButtons.Y | GamepadButtons.BACK;
         public const GamepadButtons GAMEPAD_BUTTONS = MainMenu.GAMEPAD_OK | MainMenu.GAMEPAD_CANCEL | GamepadButtons.AD;
 
-        private static int option_index_choosen;
 
         public static bool Main() {
             Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
@@ -134,6 +134,7 @@ namespace Engine.Game {
             }
 
             LayoutPlaceholder menu_placeholder = layout.GetPlaceholder("menu");
+            float delay_after_choose = layout.GetAttachedValueAsFloat("delay_after_choose", 1200f);
 
             // default values
             MainMenu.MENU_MANIFEST.parameters.items_align = Align.CENTER;
@@ -216,20 +217,26 @@ namespace Engine.Game {
             maple_pad.SetButtonsDelay(MainMenu.OPTION_SELECTION_DELAY);
             maple_pad.ClearButtons();
 
-            Modding modding = new Modding(layout, MainMenu.MODDING_SCRIPT);
-            modding.native_menu = menu;
-            modding.callback_option = MainMenu.HandleOption;
-            MainMenu.option_index_choosen = -1;
-            modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+            ModdingHelper moddinghelper = new ModdingHelper() {
+                menumanifest = menumanifest,
+                choosen_name = null
+            };
 
-            bool option_was_selected = false;
-            int selected_index = -1;
+            Modding modding = new Modding(layout, MainMenu.MODDING_SCRIPT);
+            modding.native_menu = modding.active_menu = menu;
+            modding.callback_private_data = moddinghelper;
+            modding.callback_option = MainMenu.HandleModdingOption;
+            modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+            modding.HelperNotifyOption(true);
+
             int last_selected_index = 0;
 
             while (!modding.has_exit) {
-                if (MainMenu.option_index_choosen >= 0) {
-                    selected_index = MainMenu.option_index_choosen;
-                    menu.SelectIndex(selected_index);
+                if (moddinghelper.choosen_name != null) {
+                    if (moddinghelper.choosen_name == MainMenu.BACK_TO_STARTSCREEN)
+                        moddinghelper.choosen_name = null;
+                    else
+                        menu.SelectItem(moddinghelper.choosen_name);
                     break;
                 }
 
@@ -249,10 +256,13 @@ namespace Engine.Game {
                 if (modding.has_halt || modding.active_menu != menu) continue;
 
                 if ((buttons & MainMenu.GAMEPAD_OK).Bool()) {
-                    selected_index = menu.GetSelectedIndex();
-                    if (selected_index >= 0 && selected_index < menu.GetItemsCount()) {
-                        if (modding.HelperNotifyOption(false)) continue;
-                        option_was_selected = true;
+                    if (menu.HasValidSelection()) {
+                        moddinghelper.choosen_name = menu.GetSelectedItemName();
+                        if (modding.HelperNotifyOption(false)) {
+                            moddinghelper.choosen_name = null;
+                            continue;
+                        }
+                        // Note: the modding script can override the choosen option
                         break;
                     }
                 } else if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool() && !modding.HelperNotifyBack())
@@ -287,38 +297,39 @@ namespace Engine.Game {
                 }
             }
 
+            int choosen_option_index = 0;
+            bool has_choosen_option = moddinghelper.choosen_name != null;
+
             // apply choosen transition
             if (sound_scroll != null) sound_scroll.Stop();
-            SoundPlayer target_sound = option_was_selected ? sound_confirm : sound_cancel;
+            SoundPlayer target_sound = has_choosen_option ? sound_confirm : sound_cancel;
             if (target_sound != null) target_sound.Replay();
-            layout.TriggerAny(option_was_selected ? "option_selected" : "return");
-            if (option_was_selected) menu.ToggleChoosen(true);
+            layout.TriggerAny(has_choosen_option ? "option_selected" : "return");
+            if (has_choosen_option) menu.ToggleChoosen(true);
             else menu.TrasitionOut();
 
-            if (option_was_selected) {
-                GameMain.HelperTriggerActionMenu2(layout, menumanifest, selected_index, null, false, true);
+            if (has_choosen_option) {
+                GameMain.HelperTriggerActionMenu(layout, null, moddinghelper.choosen_name, false, true);
             }
 
-            float total_elapsed = 0f;
 
-            // animate selected option
-            if (option_was_selected) {
-                while (total_elapsed < 1200f) {
+            // animate choosen option
+            if (has_choosen_option) {
+                float total_elapsed = 0f;
+                while (total_elapsed < delay_after_choose && !modding.has_exit) {
                     float elapsed = PVRContext.global_context.WaitReady();
-                    total_elapsed += elapsed;
+                    if (!modding.has_halt) total_elapsed += elapsed;
 
                     layout.Animate(elapsed);
                     layout.Draw(PVRContext.global_context);
                 }
-
-                total_elapsed = 0f;
             }
 
             // trigger outro transition
             layout.TriggerAction(null, "outro");
             menu.TrasitionOut();
 
-            while (total_elapsed < 1200f) {
+            while (true) {
                 float elapsed = PVRContext.global_context.WaitReady();
 
                 layout.Animate(elapsed);
@@ -326,16 +337,14 @@ namespace Engine.Game {
 
                 if (layout.AnimationIsCompleted("transition_effect") > 0)
                     break;
-
-                total_elapsed += elapsed;
             }
 
-            selected_index = -1;
-            string selected_option_name = menu.GetSelectedItemName();
-            for (int i = 0 ; i < MainMenu.MENU_MANIFEST.items_size ; i++) {
-                if (MainMenu.MENU_MANIFEST.items[i].name == selected_option_name) {
-                    selected_index = i;
-                    break;
+            if (has_choosen_option) {
+                // obtain the native option index
+                choosen_option_index = MainMenu.MENU_MANIFEST.GetOptionIndex(moddinghelper.choosen_name);
+
+                if (choosen_option_index < 0) {
+                    modding.HelperNotifyHandleCustomOption(moddinghelper.choosen_name);
                 }
             }
 
@@ -353,10 +362,10 @@ namespace Engine.Game {
             if (menumanifest != MainMenu.MENU_MANIFEST) menumanifest.Destroy();
 
             // if no option was selected, jump to the start screen
-            if (!option_was_selected) return false;
+            if (!has_choosen_option) return false;
 
             // handle user action
-            return MainMenu.HandleSelectedOption(selected_index);
+            return MainMenu.HandleSelectedOption(choosen_option_index);
         }
 
         public static void ShowDonate() {
@@ -400,7 +409,7 @@ namespace Engine.Game {
 
         public static bool HandleSelectedOption(int selected_index) {
             //
-            // we handle all menu options here
+            // all main menu options are handled here
             // all functions called here are async in JS
             //
             // return false to go back to the start-screen, otherwise, reload the main-menu
@@ -427,15 +436,37 @@ namespace Engine.Game {
             }
         }
 
-        public static bool HandleOption(string option_name) {
-            if (option_name == null) return false;
-            for (int i = 0 ; i < MainMenu.MENU_MANIFEST.items_size ; i++) {
-                if (option_name == MainMenu.MENU_MANIFEST.items[i].name) {
-                    MainMenu.option_index_choosen = i;
-                    return true;
-                }
+        public static bool HandleModdingOption(object obj, string option_name) {
+            ModdingHelper moddinghelper = (ModdingHelper)obj;
+
+            if (option_name == null || option_name == MainMenu.BACK_TO_STARTSCREEN) {
+                // assume is going back
+                moddinghelper.choosen_name = MainMenu.BACK_TO_STARTSCREEN;
+                return true;
             }
+
+            // check if the option is present on the menu (native or custom)
+            int index = moddinghelper.menumanifest.GetOptionIndex(option_name);
+            if (index >= 0) {
+                moddinghelper.choosen_name = moddinghelper.menumanifest.items[index].name;
+                return true;
+            }
+
+            // check if the option is native
+            index = MainMenu.MENU_MANIFEST.GetOptionIndex(option_name);
+            if (index >= 0) {
+                moddinghelper.choosen_name = MainMenu.MENU_MANIFEST.items[index].name;
+                return true;
+            }
+
+            // reject
             return false;
+        }
+
+
+        private class ModdingHelper {
+            public MenuManifest menumanifest;
+            public string choosen_name;
         }
     }
 

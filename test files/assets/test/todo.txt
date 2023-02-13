@@ -1,7 +1,3 @@
-
-base game completed message in weekselector
-custom layout in weekselector (maybe in the future)
-
 layout Macro (in the future):
     animation events
     layout+script event listening

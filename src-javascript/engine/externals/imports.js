@@ -17,7 +17,7 @@
  * @property {function(ModuleLuaScript):void} _luascript_notify_weekleave
  * @property {function(ModuleLuaScript):void} _luascript_notify_afterresults
  * @property {function(ModuleLuaScript):void} _luascript_notify_scriptchange
- * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_pause_optionselected
+ * @property {function(ModuleLuaScript,number):void} _luascript_notify_pause_option_choosen
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_pause_menuvisible
  * @property {function(ModuleLuaScript,number,number,number,number,bool,number,number):void} _luascript_notify_note
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_buttons
@@ -37,6 +37,7 @@
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_modding_init
  * @property {function(ModuleLuaScript,number):void} _luascript_call_function
  * @property {function(ModuleLuaScript,number):void} _luascript_notify_modding_event
+ * @property {function(ModuleLuaScript,number):void} _luascript_notify_modding_handle_custom_option
  * @property {function(ModuleLuaScript,number):number} _luascript_eval
  * @property {function(string):number} kdmyEngine_stringToPtr
  * @property {function(number):string} kdmyEngine_ptrToString

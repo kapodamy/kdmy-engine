@@ -3,8 +3,9 @@
 const MAINMENU_LAYOUT = "/assets/common/image/main-menu/layout.xml";
 const MAINMENU_LAYOUT_DREAMCAST = "/assets/common/image/main-menu/layout~dreamcast.xml";
 const MAINMENU_OPTION_SELECTION_DELAY = 200;// milliseconds
-const MAINMENU_MODDING_SCRIPT = "/assets/data/scripts/mainmenu.lua";
-const MAINMENU_MODDING_MENU = "/assets/data/menus/mainmenu.json";
+const MAINMENU_MODDING_SCRIPT = "/assets/common/data/scripts/mainmenu.lua";
+const MAINMENU_MODDING_MENU = "/assets/common/data/menus/mainmenu.json";
+const MAINMENU_BACK_TO_STARTSCREEN = "back-to-startscreen";
 
 const MAINMENU_MENU_MANIFEST = {
     parameters: {
@@ -114,7 +115,6 @@ const MAINMENU_GAMEPAD_OK = GAMEPAD_A | GAMEPAD_X | GAMEPAD_START;
 const MAINMENU_GAMEPAD_CANCEL = GAMEPAD_B | GAMEPAD_Y | GAMEPAD_BACK;
 const MAINMENU_GAMEPAD_BUTTONS = MAINMENU_GAMEPAD_OK | MAINMENU_GAMEPAD_CANCEL | GAMEPAD_AD;
 
-var mainmenu_option_index_choosen;
 
 async function mainmenu_main() {
     let layout = await layout_init(pvrctx_is_widescreen() ? MAINMENU_LAYOUT : MAINMENU_LAYOUT_DREAMCAST);
@@ -124,6 +124,7 @@ async function mainmenu_main() {
     }
 
     let menu_placeholder = layout_get_placeholder(layout, "menu");
+    let delay_after_choose = layout_get_attached_value_as_float(layout, "delay_after_choose", 1200.0);
 
     // default values
     MAINMENU_MENU_MANIFEST.parameters.items_align = ALIGN_CENTER;
@@ -206,21 +207,26 @@ async function mainmenu_main() {
     gamepad_set_buttons_delay(maple_pad, MAINMENU_OPTION_SELECTION_DELAY);
     gamepad_clear_buttons(maple_pad);
 
-    let modding = await modding_init(layout, MAINMENU_MODDING_SCRIPT);
-    modding.native_menu = menu;
-    modding.callback_private_data = null;
-    modding.callback_option = mainmenu_handle_option;
-    mainmenu_option_index_choosen = -1;
-    await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
+    const moddinghelper = {
+        menumanifest: menumanifest,
+        choosen_name: null
+    };
 
-    let option_was_selected = 0;
-    let selected_index = -1;
+    let modding = await modding_init(layout, MAINMENU_MODDING_SCRIPT);
+    modding.native_menu = modding.active_menu = menu;
+    modding.callback_private_data = moddinghelper;
+    modding.callback_option = mainmenu_handle_modding_option;
+    await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
+    await modding_helper_notify_option(modding, 1);
+
     let last_selected_index = 0;
 
     while (!modding.has_exit) {
-        if (mainmenu_option_index_choosen >= 0) {
-            selected_index = mainmenu_option_index_choosen;
-            menu_select_index(menu, selected_index);
+        if (moddinghelper.choosen_name != null) {
+            if (moddinghelper.choosen_name == MAINMENU_BACK_TO_STARTSCREEN)
+                moddinghelper.choosen_name = null;
+            else
+                menu_select_item(menu, moddinghelper.choosen_name);
             break;
         }
 
@@ -240,13 +246,16 @@ async function mainmenu_main() {
         if (modding.has_halt || modding.active_menu != menu) continue;
 
         if (buttons & MAINMENU_GAMEPAD_OK) {
-            selected_index = menu_get_selected_index(menu);
-            if (selected_index >= 0 && selected_index < menu_get_items_count(menu)) {
-                if (await modding_helper_notify_option(modding, 0)) continue;
-                option_was_selected = 1;
+            if (menu_has_valid_selection(menu)) {
+                moddinghelper.choosen_name = menu_get_selected_item_name(menu);
+                if (await modding_helper_notify_option(modding, 0)) {
+                    moddinghelper.choosen_name = null;
+                    continue;
+                }
+                // Note: the modding script can override the choosen option
                 break;
             }
-        } else if (buttons & MAINMENU_GAMEPAD_CANCEL && !await modding_helper_notify_back(modding))
+        } else if ((buttons & MAINMENU_GAMEPAD_CANCEL) && !await modding_helper_notify_back(modding))
             break;
         else if (buttons & GAMEPAD_AD_DOWN)
             selection_offset_y++;
@@ -278,40 +287,38 @@ async function mainmenu_main() {
         }
     }
 
+    let choosen_option_index = 0;
+    let has_choosen_option = moddinghelper.choosen_name != null;
+
     // apply choosen transition
     if (sound_scroll) soundplayer_stop(sound_scroll);
-    let target_sound = option_was_selected ? sound_confirm : sound_cancel;
+    let target_sound = has_choosen_option ? sound_confirm : sound_cancel;
     if (target_sound) soundplayer_replay(target_sound);
-    layout_trigger_any(layout, option_was_selected ? "option_selected" : "return");
-    if (option_was_selected) menu_toggle_choosen(menu, 1);
+    layout_trigger_any(layout, has_choosen_option ? "option_selected" : "return");
+    if (has_choosen_option) menu_toggle_choosen(menu, 1);
     else menu_trasition_out(menu);
 
-    if (option_was_selected) {
-        main_helper_trigger_action_menu2(layout, menumanifest, selected_index, null, 0, 1);
+    if (has_choosen_option) {
+        main_helper_trigger_action_menu(layout, null, moddinghelper.choosen_name, 0, 1);
     }
 
-    let total_elapsed = 0;
-
-    // animate selected option
-    if (option_was_selected) {
-        while (total_elapsed < 1200) {
+    // animate choosen option
+    if (has_choosen_option) {
+        let total_elapsed = 0;
+        while (total_elapsed < delay_after_choose && !modding.has_exit) {
             let elapsed = await pvrctx_wait_ready();
-            total_elapsed += elapsed;
+            if (!modding.has_halt) total_elapsed += elapsed;
 
             layout_animate(layout, elapsed);
             layout_draw(layout, pvr_context);
         }
-
-        total_elapsed = 0;
     }
-
-    await modding_helper_notify_exit2(modding);
 
     // trigger outro transition
     layout_trigger_action(layout, null, "outro");
     menu_trasition_out(menu);
 
-    while (total_elapsed < 1200) {
+    while (1) {
         let elapsed = await pvrctx_wait_ready();
 
         layout_animate(layout, elapsed);
@@ -319,18 +326,18 @@ async function mainmenu_main() {
 
         if (layout_animation_is_completed(layout, "transition_effect"))
             break;
-
-        total_elapsed += elapsed;
     }
 
-    selected_index = -1;
-    let selected_option_name = menu_get_selected_item_name(menu);
-    for (let i = 0; i < MAINMENU_MENU_MANIFEST.items_size; i++) {
-        if (MAINMENU_MENU_MANIFEST.items[i].name == selected_option_name) {
-            selected_index = i;
-            break;
+    if (has_choosen_option) {
+        // obtain the native option index
+        choosen_option_index = menumanifest_get_option_index(MAINMENU_MENU_MANIFEST, moddinghelper.choosen_name);
+
+        if (choosen_option_index < 0) {
+            modding.HelperNotifyHandleCustomOption(moddinghelper.choosen_name);
         }
     }
+
+    await modding_helper_notify_exit2(modding);
 
     menu_destroy(menu);
     gamepad_destroy(maple_pad);
@@ -344,10 +351,10 @@ async function mainmenu_main() {
     if (menumanifest != MAINMENU_MENU_MANIFEST) menumanifest_destroy(menumanifest);
 
     // if no option was selected, jump to the start screen
-    if (!option_was_selected) return 0;
+    if (!has_choosen_option) return 0;
 
     // handle user action
-    return await mainmenu_handle_selected_option(selected_index);
+    return await mainmenu_handle_selected_option(choosen_option_index);
 }
 
 async function mainmenu_show_donate() {
@@ -391,7 +398,7 @@ async function mainmenu_show_donate() {
 
 async function mainmenu_handle_selected_option(selected_index) {
     //
-    // we handle all menu options here
+    // all main menu options are handled here
     // all functions called here are async in JS
     //
     // return 0 to go back to the start-screen, otherwise, reload the main-menu
@@ -415,14 +422,27 @@ async function mainmenu_handle_selected_option(selected_index) {
     }
 }
 
-function mainmenu_handle_option(priv_data, option_name) {
-    if (option_name == null) return false;
-    for (let i = 0; i < MAINMENU_MENU_MANIFEST.items_size; i++) {
-        if (option_name == MAINMENU_MENU_MANIFEST.items[i].name) {
-            mainmenu_option_index_choosen = i;
-            return true;
-        }
+function mainmenu_handle_modding_option(moddinghelper, option_name) {
+    if (option_name == null || option_name == MAINMENU_BACK_TO_STARTSCREEN) {
+        // assume is going back
+        moddinghelper.choosen_name = MAINMENU_BACK_TO_STARTSCREEN;
+        return 1;
     }
-    return false;
+
+    // check if the option is present on the menu (native or custom)
+    let index = menumanifest_get_option_index(moddinghelper.menumanifest, option_name);
+    if (index >= 0) {
+        moddinghelper.choosen_name = moddinghelper.menumanifest.items[index].name;
+    }
+
+    // check if the option is native
+    index = menumanifest_get_option_index(MAINMENU_MENU_MANIFEST, option_name);
+    if (index >= 0) {
+        moddinghelper.choosen_name = MAINMENU_MENU_MANIFEST.items[index].name;
+        return 1;
+    }
+
+    // reject
+    return 0;
 }
 

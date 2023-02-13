@@ -22,7 +22,7 @@ namespace Engine.Game {
         private const string BG_INFO_NAME = "background_song_info";
         private const string LAYOUT = "/assets/common/image/freeplay-menu/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/freeplay-menu/layout~dreamcast.xml";
-        private const string MODDING_SCRIPT = "/assets/data/scripts/freeplaymenu.lua";
+        private const string MODDING_SCRIPT = "/assets/common/data/scripts/freeplaymenu.lua";
 
 
         private static readonly MenuManifest MENU_SONGS = new MenuManifest() {
@@ -181,7 +181,10 @@ namespace Engine.Game {
             // step 8: initialize modding
             Modding modding = new Modding(layout, FreeplayMenu.MODDING_SCRIPT);
             modding.native_menu = modding.active_menu = menu_songs;
+            modding.callback_private_data = null;
+            modding.callback_option = null;
             modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+
 
             State state = new State() {
                 difficult_index = -1,
@@ -214,7 +217,7 @@ namespace Engine.Game {
             }
 
             layout.TriggerAny("transition-in");
-            modding.HelperNotifyModdingEvent("transition-in");
+            modding.HelperNotifyEvent("transition-in");
 
             while (true) {
                 modding.has_exit = false;
@@ -290,7 +293,7 @@ namespace Engine.Game {
                 FreeplayMenu.InternalShowInfo(state);
                 FreeplayMenu.InternalSongLoad(state, true);
                 InternalTriggerActionMenu(state, true, false);
-                state.modding.HelperNotifyModdingEvent("|track-noalt|");
+                FreeplayMenu.InternalModdingNotifyEvent(state, true, true);
             }
 
 
@@ -326,7 +329,7 @@ namespace Engine.Game {
                     WeekInfo weeinfo = Funkin.weeks_array.array[state.map.week_index];
                     if (!String.IsNullOrEmpty(weeinfo.warning_message)) {
                         state.use_alternative = !state.use_alternative;
-                        state.modding.HelperNotifyModdingEvent(state.use_alternative ? "|track-alt|" : "|track-noalt|");
+                        FreeplayMenu.InternalModdingNotifyEvent(state, false, true);
                     } else if (sound_asterik != null) {
                         sound_asterik.Replay();
                     }
@@ -339,17 +342,17 @@ namespace Engine.Game {
                     switch_difficult = false;
                 } else if ((btns & GamepadButtons.DPAD_LEFT).Bool()) {
                     offset = -1;
-                    switch_difficult = true;
+                    switch_difficult = !state.map.is_locked;
                 } else if ((btns & GamepadButtons.DPAD_RIGHT).Bool()) {
                     offset = 1;
-                    switch_difficult = true;
+                    switch_difficult = !state.map.is_locked;
                 } else if ((btns & (GamepadButtons.A | GamepadButtons.START)).Bool()) {
                     int index = menu.GetSelectedIndex();
                     if (index < 0 || index >= menu.GetItemsCount() || state.difficult_locked || state.map.is_locked) {
                         if (sound_asterik != null) sound_asterik.Replay();
                         continue;
                     }
-                    if (!FreeplayMenu.InternalModdingNotifyOption(state, false)) continue;
+                    if (FreeplayMenu.InternalModdingNotifyOption(state, false)) continue;
 
                     map_index = index;
                     break;
@@ -365,14 +368,7 @@ namespace Engine.Game {
                         state.difficult_index = new_index;
                         state.difficult_locked = state.difficulties[new_index].is_locked;
                         FreeplayMenu.InternalShowInfo(state);
-
-                        if (state.difficult_locked) {
-                            string name = StringUtils.Concat(state.difficulties[new_index].name, "|locked");
-                            state.modding.HelperNotifyModdingEvent(name);
-                            //free(name);
-                        } else {
-                            state.modding.HelperNotifyModdingEvent(state.difficulties[new_index].name);
-                        }
+                        FreeplayMenu.InternalModdingNotifyEvent(state, true, false);
                     }
                     continue;
                 }
@@ -399,7 +395,7 @@ namespace Engine.Game {
 
                 if (selected_index != old_index) {
                     InternalTriggerActionMenu(state, true, false);
-                    state.modding.HelperNotifyModdingEvent("|track-noalt|");
+                    FreeplayMenu.InternalModdingNotifyEvent(state, true, true);
                 }
             }
 
@@ -732,7 +728,7 @@ L_return:
             Layout layout = state.layout;
             Modding modding = state.modding;
 
-            state.modding.HelperNotifyModdingEvent(what);
+            state.modding.HelperNotifyEvent(what);
 
             if (duration < 1) return;
             if (layout.TriggerAny(what) < 1) return;
@@ -768,7 +764,7 @@ L_return:
 
             string week_name = weekinfo.display_name ?? weekinfo.name;
             string song_name = songs[state.map.song_index].name;
-            string name = StringUtils.Concat(week_name, "|", song_name);
+            string name = StringUtils.Concat(week_name, "\n", weekinfo.display_name, "\n", song_name);
             int index = menu.GetSelectedIndex();
 
             bool ret = state.modding.HelperNotifyOption2(selected_or_choosen, menu, index, name);
@@ -776,6 +772,25 @@ L_return:
 
             return ret;
         }
+
+        private static void InternalModdingNotifyEvent(State state, bool difficult, bool alt_track) {
+            if (difficult && alt_track) {
+                state.modding.HelperNotifyEvent(state.map.is_locked ? "song-locked" : "song-not-locked");
+            }
+            if (difficult) {
+                state.modding.HelperNotifyEvent(state.difficult_locked ? "difficult-locked" : "difficult-not-locked");
+
+                if (state.difficult_index >= 0 && state.difficult_index < state.difficulties_size)
+                    state.modding.HelperNotifyEvent(state.difficulties[state.difficult_index].name);
+                else
+                    state.modding.HelperNotifyEvent(null);
+            }
+            if (alt_track) {
+                state.modding.HelperNotifyEvent(state.use_alternative ? "tracks-alt" : "tracks-not-alt");
+            }
+        }
+
+
 
         public struct MappedSong {
             public int song_index;

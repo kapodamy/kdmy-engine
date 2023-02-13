@@ -12,7 +12,7 @@ namespace Engine.Game {
         private const string TEXT_SPARSE = "--";
         private const string LAYOUT = "/assets/common/image/intro-screen/layout.xml";
         private const string LAYOUT_DREAMCAST = "/assets/common/image/intro-screen/layout~dreamcast.xml";
-        private const string MODDING_SCRIPT = "/assets/data/scripts/introscreen.lua";
+        private const string MODDING_SCRIPT = "/assets/common/data/scripts/introscreen.lua";
         private const GamepadButtons SKIP_BUTTONS = GamepadButtons.START | GamepadButtons.A;
 
         public static void Main() {
@@ -31,7 +31,7 @@ namespace Engine.Game {
             );
 
             if (custom_duration > 0.0) {
-                modding.HelperNotifyModdingEvent("custom-intro");
+                modding.HelperNotifyEvent("custom-intro");
 
                 // custom intro detected wait the requeted time
                 double progress = 0.0;
@@ -83,22 +83,22 @@ namespace Engine.Game {
             if (GameMain.background_menu_music != null) GameMain.background_menu_music.Play();
 
             layout.TriggerAny("intro-engine");
-            modding.HelperNotifyModdingEvent("intro-engine");
+            modding.HelperNotifyEvent("intro-engine");
             IntroScreen.DrawSparseText(self_text, delay, engine_duration, modding, maple_pad);
 
             if (week_greetings != null) {
                 layout.TriggerAny("intro-week-grettings");
-                modding.HelperNotifyModdingEvent("intro-week-grettings");
+                modding.HelperNotifyEvent("intro-week-grettings");
                 IntroScreen.DrawSparseText(week_greetings, delay, greetings_duration, modding, maple_pad);
             } else {
                 layout.TriggerAny("intro-greetings");
-                modding.HelperNotifyModdingEvent("intro-greetings");
+                modding.HelperNotifyEvent("intro-greetings");
                 IntroScreen.DrawSparseText(intro_text, delay, greetings_duration, modding, maple_pad);
             }
 
             layout.TriggerAny("intro-funkin");
-            modding.HelperNotifyModdingEvent("intro-funkin");
-            IntroScreen.DrawSparseText(Funkin.FUNKY, delay, funkin_duration, modding, maple_pad);
+            modding.HelperNotifyEvent("intro-funkin");
+            IntroScreen.DrawSparseText(funky, delay, funkin_duration, modding, maple_pad);
 
             modding.HelperNotifyExit2();
 

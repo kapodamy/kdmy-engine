@@ -6,7 +6,7 @@ const INTROSCREEN_FUNKY = "Friday--Night--Funkin";
 const INTROSCREEN_LAYOUT = "/assets/common/image/intro-screen/layout.xml";
 const INTROSCREEN_LAYOUT_DREAMCAST = "/assets/common/image/intro-screen/layout~dreamcast.xml";
 const INTROSCREEN_SKIP_BUTTONS = GAMEPAD_A | GAMEPAD_START;
-const INTROSCREEN_MODDING_SCRIPT = "/assets/data/scripts/introscreen.lua";
+const INTROSCREEN_MODDING_SCRIPT = "/assets/common/data/scripts/introscreen.lua";
 
 
 async function introscreen_main() {

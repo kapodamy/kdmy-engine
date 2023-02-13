@@ -21,8 +21,9 @@ void menu_trasition_in(Menu menu) {
 void menu_trasition_out(Menu menu) {
     print_stub("menu_trasition_out", "menu=%p", menu);
 }
-void menu_select_item(Menu menu, const char* name) {
+bool menu_select_item(Menu menu, const char* name) {
     print_stub("menu_select_item", "menu=%p name=%s", menu, name);
+    return false;
 }
 void menu_select_index(Menu menu, int32_t index) {
     print_stub("menu_select_index", "menu=%p index=%i", menu, index);

@@ -82,6 +82,9 @@ namespace Engine.Game.Gameplay.Helpers {
             JSONParser json = JSONParser.LoadFrom(src);
             if (json == null) throw new Exception("menumanifest_init() misssing or invalid file: " + src);
 
+            JSONToken json_parameters = JSONParser.ReadObject(json, "parameters");
+            if (json_parameters == null) throw new Exception("menumanifest_init() misssing parameters in json: " + src);
+
             FS.FolderStackPush();
             FS.SetWorkingFolder(src, true);
 
@@ -109,53 +112,51 @@ namespace Engine.Game.Gameplay.Helpers {
                 throw new Exception("menumanifest_init() misssing or invalid 'items' property in: " + src);
             }
 
-            MenuManifest menumanifest = new MenuManifest() {
-                parameters = new Parameters() {
-                    suffix_selected = JSONParser.ReadString(json, "suffixSelected", "selected"),
-                    suffix_choosen = JSONParser.ReadString(json, "suffixChoosen", "choosen"),
-                    suffix_discarded = JSONParser.ReadString(json, "suffixDiscarded", "discarded"),
-                    suffix_idle = JSONParser.ReadString(json, "suffixIdle", "idle"),
-                    suffix_rollback = JSONParser.ReadString(json, "suffixRollback", "rollback"),
-                    suffix_in = JSONParser.ReadString(json, "suffixIn", "in"),
-                    suffix_out = JSONParser.ReadString(json, "suffixOut", "out"),
+            this.parameters = new Parameters() {
+                suffix_selected = JSONParser.ReadString(json_parameters, "suffixSelected", "selected"),
+                suffix_choosen = JSONParser.ReadString(json_parameters, "suffixChoosen", "choosen"),
+                suffix_discarded = JSONParser.ReadString(json_parameters, "suffixDiscarded", "discarded"),
+                suffix_idle = JSONParser.ReadString(json_parameters, "suffixIdle", "idle"),
+                suffix_rollback = JSONParser.ReadString(json_parameters, "suffixRollback", "rollback"),
+                suffix_in = JSONParser.ReadString(json_parameters, "suffixIn", "in"),
+                suffix_out = JSONParser.ReadString(json_parameters, "suffixOut", "out"),
 
-                    atlas = MenuManifest.InternalParsePath(json, "atlas"),
-                    animlist = MenuManifest.InternalParsePath(json, "animlist"),
+                atlas = MenuManifest.InternalParsePath(json_parameters, "atlas"),
+                animlist = MenuManifest.InternalParsePath(json_parameters, "animlist"),
 
-                    anim_selected = JSONParser.ReadString(json, "animSelected", null),
-                    anim_choosen = JSONParser.ReadString(json, "animChoosen", null),
-                    anim_discarded = JSONParser.ReadString(json, "animDiscarded", null),
-                    anim_idle = JSONParser.ReadString(json, "animIdle", null),
-                    anim_rollback = JSONParser.ReadString(json, "animRollback", null),
-                    anim_in = JSONParser.ReadString(json, "animIn", null),
-                    anim_out = JSONParser.ReadString(json, "animOut", null),
+                anim_selected = JSONParser.ReadString(json_parameters, "animSelected", null),
+                anim_choosen = JSONParser.ReadString(json_parameters, "animChoosen", null),
+                anim_discarded = JSONParser.ReadString(json_parameters, "animDiscarded", null),
+                anim_idle = JSONParser.ReadString(json_parameters, "animIdle", null),
+                anim_rollback = JSONParser.ReadString(json_parameters, "animRollback", null),
+                anim_in = JSONParser.ReadString(json_parameters, "animIn", null),
+                anim_out = JSONParser.ReadString(json_parameters, "animOut", null),
 
-                    anim_transition_in_delay = (float)JSONParser.ReadNumberDouble(json, "transitionInDelay", 0f),
-                    anim_transition_out_delay = (float)JSONParser.ReadNumberDouble(json, "transitionOutDelay", 0f),
+                anim_transition_in_delay = (float)JSONParser.ReadNumberDouble(json_parameters, "transitionInDelay", 0f),
+                anim_transition_out_delay = (float)JSONParser.ReadNumberDouble(json_parameters, "transitionOutDelay", 0f),
 
-                    font = JSONParser.ReadString(json, "fontPath", null),
-                    font_glyph_suffix = JSONParser.ReadString(json, "fontSuffix", null),
-                    font_color_by_difference = JSONParser.ReadBoolean(json, "fontColorByDifference", false),
-                    font_size = (float)JSONParser.ReadNumberDouble(json, "fontSize", 0.0),
-                    font_color = JSONParser.ReadHex(json, "fontColor", 0xFFFFFF),
-                    font_border_color = JSONParser.ReadHex(json, "fontBorderColor", 0x0),
-                    font_border_size = (float)JSONParser.ReadNumberDouble(json, "fontBorderSize", 0.0),
+                font = JSONParser.ReadString(json_parameters, "fontPath", null),
+                font_glyph_suffix = JSONParser.ReadString(json_parameters, "fontSuffix", null),
+                font_color_by_difference = JSONParser.ReadBoolean(json_parameters, "fontColorByDifference", false),
+                font_size = (float)JSONParser.ReadNumberDouble(json_parameters, "fontSize", 0.0),
+                font_color = JSONParser.ReadHex(json_parameters, "fontColor", 0xFFFFFF),
+                font_border_color = JSONParser.ReadHex(json_parameters, "fontBorderColor", 0x0),
+                font_border_size = (float)JSONParser.ReadNumberDouble(json_parameters, "fontBorderSize", 0.0),
 
-                    is_sparse = JSONParser.ReadBoolean(json, "isSparse", false),
-                    is_vertical = JSONParser.ReadBoolean(json, "isVertical", true),
-                    is_per_page = JSONParser.ReadBoolean(json, "isPerPage", false),
+                is_sparse = JSONParser.ReadBoolean(json_parameters, "isSparse", false),
+                is_vertical = JSONParser.ReadBoolean(json_parameters, "isVertical", true),
+                is_per_page = JSONParser.ReadBoolean(json_parameters, "isPerPage", false),
 
-                    items_align = align,
-                    items_gap = (float)JSONParser.ReadNumberDouble(json, "itemsGap", 0.0),
-                    items_dimmen = (float)JSONParser.ReadNumberDouble(json, "itemsDimmen", 0.0),
-                    static_index = (int)JSONParser.ReadNumberLong(json, "staticIndex", 0L),
-                    texture_scale = (float)JSONParser.ReadNumberDouble(json, "textureScale", Double.NaN),
-                    enable_horizontal_text_correction = JSONParser.ReadBoolean(json, "enableHorizontalTextCorrection", false),
-                },
-
-                items = new Item[array_items_length],
-                items_size = array_items_length,
+                items_align = align,
+                items_gap = (float)JSONParser.ReadNumberDouble(json_parameters, "itemsGap", 0.0),
+                items_dimmen = (float)JSONParser.ReadNumberDouble(json_parameters, "itemsDimmen", 0.0),
+                static_index = (int)JSONParser.ReadNumberLong(json_parameters, "staticIndex", 0L),
+                texture_scale = (float)JSONParser.ReadNumberDouble(json_parameters, "textureScale", Double.NaN),
+                enable_horizontal_text_correction = JSONParser.ReadBoolean(json_parameters, "enableHorizontalTextCorrection", false),
             };
+
+            this.items = new Item[array_items_length];
+            this.items_size = array_items_length;
 
             for (int i = 0 ; i < array_items_length ; i++) {
                 JSONToken json_item = JSONParser.ReadArrayItemObject(array_items, i);
@@ -166,6 +167,7 @@ namespace Engine.Game.Gameplay.Helpers {
                     text = JSONParser.ReadString(json_item, "text", null),
                     hidden = JSONParser.ReadBoolean(json_item, "hidden", false),
                     description = JSONParser.ReadString(json_item, "description", null),
+                    texture_scale = (float)JSONParser.ReadNumberDouble(json_item, "textureScale", 0.0),
 
                     placement = new Placement() {
                         x = (float)JSONParser.ReadNumberDouble(json_placement, "x", 0.0),
@@ -229,6 +231,14 @@ namespace Engine.Game.Gameplay.Helpers {
             //free(this);
         }
 
+        public int GetOptionIndex(string option_name) {
+            for (int i = 0 ; i < this.items_size ; i++) {
+                if (this.items[i].name == option_name) {
+                    return i;
+                }
+            }
+            return -1;
+        }
 
         private static string InternalParsePath(JSONToken json, string property_name) {
             string str = JSONParser.ReadString(json, property_name, null);
