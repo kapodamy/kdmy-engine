@@ -2210,7 +2210,7 @@ async function layout_parse_sprite(unparsed_sprite, layout_context, group_id) {
 
     let actions_arraylist = arraylist_init2(actions.length);
     for (let action of actions) {
-        await layout_parse_sprite_action(action, layout_context.animlist, atlas, actions_arraylist);
+        await layout_parse_sprite_action(action, layout_context.animlist, atlas, actions_arraylist, 0);
     }
     arraylist_destroy2(actions_arraylist, vertex, "actions_size", "actions");
 
@@ -2826,7 +2826,7 @@ function layout_parse_macro(/** @type {Element} */ unparsed_root, layout_context
 ///        ACTION PARSER       ///
 //////////////////////////////////
 
-async function layout_parse_sprite_action(unparsed_action, animlist, atlas, action_entries) {
+async function layout_parse_sprite_action(unparsed_action, animlist, atlas, action_entries, from_video) {
     let entries = arraylist_init2(unparsed_action.children.length);
 
     for (let unparsed_entry of unparsed_action.children) {
@@ -2896,7 +2896,9 @@ async function layout_parse_sprite_action(unparsed_action, animlist, atlas, acti
                 layout_helper_add_action_spritetrailingoffsetcolor(unparsed_entry, entries);
                 break;
             default:
-                console.warn("Unknown action entry: " + unparsed_entry.tagName);
+                if (!from_video) {
+                    console.warn("Unknown action entry: " + unparsed_entry.tagName);
+                }
                 break;
         }
     }
@@ -3122,7 +3124,7 @@ async function layout_parse_video_action(unparsed_action, animlist, action_entri
                 break;
             default:
                 if (!layout_helper_add_action_media(unparsed_entry, entries)) break;
-                await layout_parse_sprite_action(unparsed_action, animlist, null, action_entries);
+                await layout_parse_sprite_action(unparsed_action, animlist, null, action_entries, 0);
                 break;
         }
     }

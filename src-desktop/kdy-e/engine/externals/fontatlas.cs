@@ -40,7 +40,7 @@ namespace Engine.Externals {
 
 
 
-    public static class ModuleFontAtlas {
+    public static class FontAtlas {
 
         private const string DLL = "kdy_fontatlas";
 

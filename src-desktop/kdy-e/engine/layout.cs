@@ -2306,7 +2306,7 @@ namespace Engine {
 
             ArrayList<Action> actions_arraylist = new ArrayList<Action>(actions.Length);
             foreach (XmlParserNode action in actions) {
-                ParseSpriteAction(action, layout_context.animlist, atlas, actions_arraylist);
+                ParseSpriteAction(action, layout_context.animlist, atlas, actions_arraylist, false);
             }
             actions_arraylist.Destroy2(out vertex.actions_size, ref vertex.actions);
 
@@ -2929,7 +2929,7 @@ namespace Engine {
         ///        ACTION PARSER       ///
         //////////////////////////////////
 
-        private static void ParseSpriteAction(XmlParserNode unparsed_action, AnimList animlist, Atlas atlas, ArrayList<Action> action_entries) {
+        private static void ParseSpriteAction(XmlParserNode unparsed_action, AnimList animlist, Atlas atlas, ArrayList<Action> action_entries, bool from_video) {
             ArrayList<ActionEntry> entries = new ArrayList<ActionEntry>(unparsed_action.Children.Length);
 
             foreach (XmlParserNode unparsed_entry in unparsed_action.Children) {
@@ -2999,7 +2999,9 @@ namespace Engine {
                         Layout.HelperAddActionSpriteTrailingOffsetcolor(unparsed_entry, entries);
                         break;
                     default:
-                        Console.Error.WriteLine("[WARN] Unknown action entry: " + unparsed_entry.TagName);
+                        if (!from_video) {
+                            Console.Error.WriteLine("[WARN] Unknown action entry: " + unparsed_entry.TagName);
+                        }
                         break;
                 }
             }
@@ -3225,7 +3227,7 @@ namespace Engine {
                         break;
                     default:
                         if (!Layout.HelperAddActionMedia(unparsed_entry, entries)) break;
-                        Layout.ParseSpriteAction(unparsed_action, animlist, null, action_entries);
+                        Layout.ParseSpriteAction(unparsed_action, animlist, null, action_entries, true);
                         break;
                 }
             }

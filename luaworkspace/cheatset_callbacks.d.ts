@@ -214,14 +214,14 @@ declare namespace KDMYEngine {
      * @return {boolean} true to cancel, otherwise, false.
      */
     export function f_modding_menu_option_choosen(menu: Menu, index: number, name: string): boolean;
-    
+
     /**
      * @summary (modding context only) Called when something happens in the UI, events can be different
      * in all engine screen menus.
      * @param name name of the event
      */
     export function f_modding_event(name: string): void;
-    
+
     /**
      * @summary (modding context only) Called when a menu option is choosen but is not recognized by
      * the engine. This function is only called if native menus contains custom option/entries.
@@ -248,8 +248,15 @@ declare namespace KDMYEngine {
      * @param arg value passed by {@link modding_spawn_screen} or "NATIVE_SCREEN" if called by the engine.
      */
     export function f_modding_init(arg: BasicValue): void;
-    
-    
+
+    export function f_modding_window_focus(focused: boolean): void;
+    export function f_modding_window_minimized(minimized: boolean): void;
+    export function f_input_keyboard(key: Keys, scancode: number, is_pressed: boolean, mods: ModKeys): void;
+    export function f_input_mouse_position(x: number, y: number): void;
+    export function f_input_mouse_enter(entering: boolean): void;
+    export function f_input_mouse_button(button: MouseButton, is_pressed: boolean, mods: ModKeys): void;
+    export function f_input_mouse_scroll(x: number, y: number): void;
+
 
 }
 

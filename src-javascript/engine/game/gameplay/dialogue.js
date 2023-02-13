@@ -809,6 +809,7 @@ async function dialogue_internal_prepare_dialog(dialogue) {
         dialogue.current_speechimage = dialogue.speechimages[0];
     }
 
+    gamepad_enforce_buttons_delay(dialogue.gamepad);
     return 1;
 }
 
@@ -2398,6 +2399,11 @@ async function dialogue_internal_parse_speechimage(node, base_src, speechimages)
         const orig_size = [0, 0];
         texture_get_original_dimmensions(texture, orig_size);
 
+        if (scale >= 0.0) {
+            orig_size[0] *= scale;
+            orig_size[1] *= scale;
+        }
+
         statesprite = statesprite_init_from_texture(texture);
         statesprite_set_draw_location(statesprite, 0.0, 0.0);
         statesprite_set_draw_size(statesprite, orig_size[0], orig_size[1]);
@@ -2648,6 +2654,7 @@ function dialogue_internal_parse_dialog_from_string(source, dialog_ref) {
 
 function dialogue_internal_read_color(node, rgba) {
     let color = [0];
+    rgba[3] = 1.0;
     if (vertexprops_parse_hex(node.getAttribute("rgb"), color, 0)) {
         math2d_color_bytes_to_floats(color[0], 0, rgba);
         rgba[3] = vertexprops_parse_float(node, "alpha", 1.0);

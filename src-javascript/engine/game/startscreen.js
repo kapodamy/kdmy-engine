@@ -48,12 +48,12 @@ async function startscreen_main() {
             await modding_helper_notify_event(modding, "start_pressed");
         } else if (enter_pressed) {
             if (total_elapsed >= delay_after_start) {
-                if (trigger_fade_away) {
+                if (trigger_fade_away && !exit_to_bios) {
                     trigger_fade_away = 0;
                     layout_trigger_any(layout, "outro");
                     await modding_helper_notify_event(modding, "outro");
                 } else {
-                    let state = layout_animation_is_completed(layout, "transition-intro-outro-effect");
+                    let state = layout_animation_is_completed(layout, "transition-effect");
 
                     if (state == -1) break;// infinite looped animation
 

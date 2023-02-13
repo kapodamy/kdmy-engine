@@ -659,6 +659,7 @@
             <xs:sequence minOccurs="1" maxOccurs="unbounded">
                 <xs:element name="Sprite" minOccurs="0" maxOccurs="unbounded" type="Sprite" />
                 <xs:element name="Text" minOccurs="0" maxOccurs="unbounded" type="Text" />
+                <xs:element name="Video" minOccurs="0" maxOccurs="unbounded" type="Video" />
                 <xs:element name="Group" minOccurs="0" maxOccurs="unbounded" type="Group" />
                 <xs:element name="Placeholder" minOccurs="0" maxOccurs="unbounded" type="Placeholder" />
             </xs:sequence>
@@ -699,10 +700,10 @@
     </xs:complexType>
     <xs:complexType name="Placeholder">
         <xs:sequence minOccurs="0" maxOccurs="unbounded">
-            <xs:element name="Parallax" type="Parallax" maxOccurs="1" />
-            <xs:element name="Location" type="Location" maxOccurs="1" />
-            <xs:element name="Size" type="Size" maxOccurs="1" />
-            <xs:element name="Static" type="Static" maxOccurs="1" />
+            <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="1" />
+            <xs:element name="Location" type="Location" minOccurs="0" maxOccurs="1" />
+            <xs:element name="Size" type="Size" minOccurs="0" maxOccurs="1" />
+            <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="1" />
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="required" />
         <xs:attribute name="alignHorizontal" type="Align" use="optional" default="none" />
@@ -724,6 +725,7 @@
                 <xs:element name="Text" minOccurs="0" maxOccurs="unbounded" type="Text" />
                 <xs:element name="Sound" minOccurs="0" maxOccurs="unbounded" type="Sound" />
                 <xs:element name="Group" minOccurs="0" maxOccurs="unbounded" type="Group" />
+                <xs:element name="Video" minOccurs="0" maxOccurs="unbounded" type="Video" />
                 <xs:element name="Camera" minOccurs="0" maxOccurs="unbounded" type="Camera" />
                 <xs:element name="Trigger" minOccurs="0" maxOccurs="unbounded" type="Trigger" />
                 <xs:element name="Placeholder" minOccurs="0" maxOccurs="unbounded" type="Placeholder" />

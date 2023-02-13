@@ -188,9 +188,8 @@ async function weekselector_load_custom_week_background(/**@type {STATE}*/state)
     }
 
     let has_custom_bg_music = 0;
-    let path = weekenumerator_get_asset(state.weekinfo, state.weekinfo.custom_selector_layout);
-    state.custom_layout = await layout_init(path);
-    path = undefined;
+
+    state.custom_layout = await layout_init(state.weekinfo.custom_selector_layout);
     if (state.custom_layout != null) {
         layout_trigger_any(state.custom_layout, "principal-show");
         if (!state.week_unlocked) layout_trigger_any(state.custom_layout, "week-locked");
@@ -487,7 +486,7 @@ async function weekselector_main() {
             layout_draw(state.custom_layout, pvr_context);
         }
 
-        if (state.back_to_main_menu && layout_animation_is_completed(outro_layout, "transition_effect"))
+        if (layout_animation_is_completed(outro_layout, "transition_effect"))
             break;
     }
 

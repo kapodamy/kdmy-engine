@@ -322,6 +322,7 @@ namespace Engine.Game.Gameplay {
                         return_value = 0;
                         if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                             controller.SetButtonsDelay(WeekPause.DELAY);
+                            controller.EnforceButtonsDelay();
                             this.messagebox.Hide(false);
                         } else {
                             break;
@@ -389,7 +390,7 @@ namespace Engine.Game.Gameplay {
                 } else if (has_option_choosen) {
                     if (this.modding_choosen_option_name == null) {
                         this.modding_choosen_option_name = current_menu.GetSelectedItemName();
-                        if (!this.modding.HelperNotifyOption(false)) {
+                        if (this.modding.HelperNotifyOption(false)) {
                             this.modding_choosen_option_name = null;
                             continue;
                         }
@@ -426,9 +427,13 @@ namespace Engine.Game.Gameplay {
                         this.messagebox.SetMessage(msg);
                         this.messagebox.Show(false);
                         controller.SetButtonsDelay(WeekPause.ANTIBOUNCE);
+                        controller.EnforceButtonsDelay();
                     } else if (return_value == -1) {
                         // custom option menu
-                        this.modding.HelperNotifyHandleCustomOption(current_menu.GetSelectedItemName());
+                        this.modding.callback_option = null;
+                        this.modding.HelperNotifyHandleCustomOption(this.modding_choosen_option_name);
+                        this.modding.callback_option = this.InternalHandleModdingOption;
+                        this.modding_choosen_option_name = null;
                         return_value = 0;
                     }
                 }
@@ -531,7 +536,8 @@ namespace Engine.Game.Gameplay {
                 return true;
             }
 
-            // reject
+            // unknown option
+            this.modding_choosen_option_name = option_name;
             return false;
         }
 

@@ -55,12 +55,12 @@ namespace Engine.Game {
                     modding.HelperNotifyEvent("start_pressed");
                 } else if (enter_pressed) {
                     if (total_elapsed >= delay_after_start) {
-                        if (trigger_fade_away) {
+                        if (trigger_fade_away && !exit_to_bios) {
                             trigger_fade_away = false;
                             layout.TriggerAny("outro");
                             modding.HelperNotifyEvent("outro");
                         } else {
-                            int state = layout.AnimationIsCompleted("transition-intro-outro-effect");
+                            int state = layout.AnimationIsCompleted("transition-effect");
 
                             if (state == -1) break;// infinite looped animation
 

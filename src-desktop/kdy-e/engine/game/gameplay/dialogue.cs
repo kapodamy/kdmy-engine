@@ -818,6 +818,8 @@ namespace Engine.Game.Gameplay {
                 this.current_speechimage = this.speechimages[0];
             }
 
+            this.gamepad.EnforceButtonsDelay();
+
             return true;
         }
 
@@ -2392,6 +2394,11 @@ L_check_failed:
                 float width, height;
                 texture.GetOriginalDimmensions(out width, out height);
 
+                if (scale >= 0f) {
+                    width *= scale;
+                    height *= scale;
+                }
+
                 statesprite = StateSprite.InitFromTexture(texture);
                 statesprite.SetDrawLocation(0f, 0f);
                 statesprite.SetDrawSize(width, height);
@@ -2641,6 +2648,7 @@ L_return:
 
         private static void InternalReadColor(XmlParserNode node, float[] rgba) {
             uint color;
+            rgba[3] = 1.0f;
             if (VertexProps.ParseHex(node.GetAttribute("rgb"), out color, false)) {
                 Math2D.ColorBytesToFloats(color, false, rgba);
                 rgba[3] = VertexProps.ParseFloat(node, "alpha", 1f);

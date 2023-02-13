@@ -210,7 +210,17 @@
 					"type": "number",
 					"default": 0.0,
 					"description": "Seeks the song the desired amount of seconds before preview"
-				}
+				},
+                "freeplayLockedHostIconModel": {
+                    "type": ["string", "null"],
+                    "default": null,
+                    "description": "if ommited the value of 'freeplayHostIconModel' is used"
+                },
+				"freeplayLockedHostIconName": {
+                    "type": ["string", "null"],
+                    "default": null,
+                    "description": "if ommited the value of 'freeplayHostIconName' is used"
+                }
             },
             "required": [
                 "name"

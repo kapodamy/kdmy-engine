@@ -72,9 +72,9 @@ function ______kdmyEngine_timer_run(timestamp: number, song_driven_only: boolean
             let [result, error] = pcall(entry.callback, ...table.unpack(entry.args));
             if (!result) print(error);
 
-            // check if any callback was calceled, start again
+            // check if any callback was removed, start again
             if (removes != ______kdmyEngine_timer_removes) {
-                i = 0;
+                i = 1;
                 length = ______kdmyEngine_timer_table.length();
                 removes = ______kdmyEngine_timer_removes;
             }

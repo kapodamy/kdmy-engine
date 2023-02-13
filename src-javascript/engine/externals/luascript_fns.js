@@ -180,6 +180,54 @@ function luascript_notify_modding_handle_custom_option(luascript, option_name) {
     );
 }
 
+function luascript_notify_modding_window_focus(luascript, focused) {
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_modding_window_focus,
+        luascript, focused ? 1 : 0
+    );
+}
+
+function luascript_notify_modding_window_minimized(luascript, minimized) {
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_modding_window_minimized,
+        luascript, minimized ? 1 : 0
+    );
+}
+
+function luascript_notify_input_keyboard(luascript, key, scancode, is_pressed, mods) {
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_input_keyboard,
+        luascript, key, scancode, is_pressed ? 1 : 0, mods
+    );
+}
+
+function luascript_notify_input_mouse_position(luascript, x, y) {
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_input_mouse_position,
+        luascript, x, y
+    );
+}
+
+function luascript_notify_input_mouse_enter(Luascript, entering) {
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_input_mouse_enter,
+        Luascript, entering ? 1 : 0
+    );
+}
+
+function luascript_notify_input_mouse_button(luascript, button, is_pressed, mods) {
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_input_mouse_button,
+        luascript, button, is_pressed ? 1 : 0, mods
+    );
+}
+
+function luascript_notify_input_mouse_scroll(luascript, x, y) {
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_input_mouse_scroll,
+        luascript, x, y
+    );
+}
 
 function _luascriptcript_call(fn, ...args) {
     if (!args[0]) return;

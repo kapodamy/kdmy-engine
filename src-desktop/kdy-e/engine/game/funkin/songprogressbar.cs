@@ -98,6 +98,7 @@ namespace Engine.Game {
                 this.textsprite_time.SetAlign(Align.CENTER, align);
             }
             this.textsprite_time.SetDrawLocation(x - border_size, y - border_size);
+            border_size *= 2f;
             this.textsprite_time.SetMaxDrawSize(width + border_size, height + border_size);
 
             this.statesprite_progress.CropEnable(true);

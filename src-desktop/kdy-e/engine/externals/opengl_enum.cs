@@ -103,7 +103,8 @@ namespace Engine.Externals {
         GL_CONSTANT_COLOR = 0x8001,
         GL_PIXEL_UNPACK_BUFFER = 0x88EC,
         GL_STREAM_DRAW = 0x88E0,
-        GL_WRITE_ONLY = 0x88B9
+        GL_WRITE_ONLY = 0x88B9,
+        GL_LINEAR_MIPMAP_NEAREST = 0x2701
     }
 
     public partial class WebGL2RenderingContext {
@@ -198,6 +199,7 @@ namespace Engine.Externals {
         public readonly GLenum PIXEL_UNPACK_BUFFER = GLenum.GL_PIXEL_UNPACK_BUFFER;
         public readonly GLenum STREAM_DRAW = GLenum.GL_STREAM_DRAW;
         public readonly GLenum WRITE_ONLY = GLenum.GL_WRITE_ONLY;
+        public readonly GLenum LINEAR_MIPMAP_NEAREST = GLenum.GL_LINEAR_MIPMAP_NEAREST;
     }
 
 }

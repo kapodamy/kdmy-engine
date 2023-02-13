@@ -218,12 +218,19 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
 
-function glyphrenderer_set_sdf_params(pvrctx, width, edge) {
+function glyphrenderer_set_sdf_smoothing(pvrctx, smoothing) {
     const gl = pvrctx.webopengl.gl;
     let program_glyphs = pvrctx.webopengl.program_glyphs;
 
     gl.useProgram(program_glyphs.program);
-    gl.uniform1f(program_glyphs.u_sdf_width, width);
-    gl.uniform1f(program_glyphs.u_sdf_edge, edge);
+    gl.uniform1f(program_glyphs.u_sdf_smoothing, smoothing);
+}
+
+function glyphrenderer_set_sdf_thickness(pvrctx, thickness) {
+    const gl = pvrctx.webopengl.gl;
+    let program_glyphs = pvrctx.webopengl.program_glyphs;
+
+    gl.useProgram(program_glyphs.program);
+    gl.uniform1f(program_glyphs.u_sdf_thickness, thickness);
 }
 

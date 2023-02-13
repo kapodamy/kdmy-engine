@@ -106,17 +106,20 @@ async function freeplaymenu_main() {
     // step 3: count required tracks
     let songs = arraylist_init2(weeks_array.size * 3);
     for (let i = 0; i < weeks_array.size; i++) {
-        let is_week_locked = !funkinsave_contains_unlock_directive(weeks_array.array[i].unlock_directive);
+        const weekinfo = weeks_array.array[i];
+        let is_week_locked = !funkinsave_contains_unlock_directive(weekinfo.unlock_directive);
 
-        for (let j = 0; j < weeks_array.array[i].songs_count; j++) {
-            let should_hide = weeks_array.array[i].songs[j].freeplay_hide_if_week_locked;
+        for (let j = 0; j < weekinfo.songs_count; j++) {
+            const song = weekinfo.songs[j];
+
+            let should_hide = song.freeplay_hide_if_week_locked;
             if (should_hide && is_week_locked) continue;
 
-            should_hide = weeks_array.array[i].songs[j].freeplay_hide_if_locked;
-            let is_song_locked = !funkinsave_contains_unlock_directive(weeks_array.array[i].songs[j].freeplay_unlock_directive);
+            should_hide = song.freeplay_hide_if_locked;
+            let is_song_locked = !funkinsave_contains_unlock_directive(song.freeplay_unlock_directive);
             if (should_hide && is_song_locked) continue;
 
-            let gameplaymanifest_index = weeks_array.array[i].songs[j].freeplay_track_index_in_gameplaymanifest;
+            let gameplaymanifest_index = song.freeplay_track_index_in_gameplaymanifest;
             if (gameplaymanifest_index < 0) gameplaymanifest_index = j;
 
             arraylist_add(songs, {

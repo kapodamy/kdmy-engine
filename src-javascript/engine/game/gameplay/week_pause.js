@@ -180,7 +180,8 @@ async function week_pause_init() {
         menu_external: null,
         background_menu_music: null,
         modding,
-        modding_choosen_option_name: null
+        modding_choosen_option_name: null,
+        modding_choosen_option_name_is_allocated: 0
     };
     modding.callback_private_data = weekpause;
 
@@ -304,6 +305,7 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
                 return_value = 0;
                 if (buttons & (GAMEPAD_B | GAMEPAD_BACK)) {
                     gamepad_set_buttons_delay(controller, WEEKPAUSE_DELAY);
+                    gamepad_enforce_buttons_delay(controller);
                     messagebox_hide(weekpause.messagebox, 0);
                 } else {
                     break;
@@ -378,7 +380,6 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
             }
 
             return_value = week_pause_internal_return_value(weekpause);
-            weekpause.modding_choosen_option_name = null;
 
             if (return_value == 0) {
                 // resume
@@ -408,9 +409,16 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
                 messagebox_set_message(weekpause.messagebox, msg);
                 messagebox_show(weekpause.messagebox, 0);
                 gamepad_set_buttons_delay(controller, WEEKPAUSE_ANTIBOUNCE);
+                gamepad_enforce_buttons_delay(controller);
             } else if (return_value == -1) {
                 // custom option menu
-                await modding_helper_handle_custom_option(weekpause.modding, menu_get_selected_item_name(current_menu));
+                weekpause.modding.callback_option = null;
+                await modding_helper_handle_custom_option(weekpause.modding, weekpause.modding_choosen_option_name);
+                if (weekpause.modding_choosen_option_name_is_allocated) {
+                    weekpause.modding_choosen_option_name = undefined;
+                    weekpause.modding_choosen_option_name = null;
+                }
+                weekpause.modding.callback_option = week_pause_internal_handle_modding_option;
                 return_value = 0;
             }
         }
@@ -490,6 +498,11 @@ async function week_pause_internal_render(weekpause, roundcontext) {
 }
 
 function week_pause_internal_handle_modding_option(weekpause, option_name) {
+    if (weekpause.modding_choosen_option_name_is_allocated) {
+        weekpause.modding_choosen_option_name = undefined;
+        weekpause.modding_choosen_option_name_is_allocated = 0;
+    }
+
     if (option_name == null) {
         // resume
         weekpause.modding_choosen_option_name = WEEKPAUSE_MENU.items[0].name;
@@ -512,7 +525,9 @@ function week_pause_internal_handle_modding_option(weekpause, option_name) {
         return 1;
     }
 
-    // reject
+    // unknown option
+    weekpause.modding_choosen_option_name = strdup(option_name);
+    weekpause.modding_choosen_option_name_is_allocated = 1;
     return 0;
 }
 

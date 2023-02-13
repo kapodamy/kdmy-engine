@@ -311,11 +311,13 @@ L_continue:
         }
 
 
-        internal void _keyboard_enqueue_data(Window window, Keys key, int scanCode, InputState state, ModKeys mods) {
+        internal void _keyboard_enqueue_data(Window window, Keys key, int scancode, InputState state, ModKeys mods) {
             if (state == InputState.Repeat) return;
 
+            Engine.Externals.LuaScriptInterop.LuascriptPlatform.InternalCallbackKeyboard(window, key, scancode, state, mods);
+
             // avoid collision with not binded keys
-            if (scanCode == -1) return;
+            if (scancode == -1) return;
 
             // special keys
             if (key == Keys.F11) {
@@ -332,7 +334,7 @@ L_continue:
 
             for (int i = 0 ; i < maple_mappings.KEYBOARD_MAPPING_BUTTONS.Length ; i++) {
                 var mapping = maple_mappings.KEYBOARD_MAPPING_BUTTONS[i];
-                if (mapping.scancode == scanCode) {
+                if (mapping.scancode == scancode) {
                     enqueue_key_event(timestamp, mapping.button, CONTEx.NONE, false, hold);
                 }
             }
@@ -340,17 +342,17 @@ L_continue:
             for (int i = 0 ; i < maple_mappings.KEYBOARD_MAPPING_AXES.Length ; i++) {
                 var mapping = maple_mappings.KEYBOARD_MAPPING_AXES[i];
 
-                if (mapping.scancode_low == scanCode) {
+                if (mapping.scancode_low == scancode) {
                     enqueue_key_event(timestamp, CONT.NOTHING, mapping.axis, true, hold);
                 }
-                if (mapping.scancode_high == scanCode) {
+                if (mapping.scancode_high == scancode) {
                     enqueue_key_event(timestamp, CONT.NOTHING, mapping.axis, false, hold);
                 }
             }
 
             for (int i = 0 ; i < maple_mappings.KEYBOARD_MAPPING_TRIGGERS.Length ; i++) {
                 var mapping = maple_mappings.KEYBOARD_MAPPING_TRIGGERS[i];
-                if (mapping.scancode == scanCode) {
+                if (mapping.scancode == scancode) {
                     enqueue_key_event(timestamp, CONT.NOTHING, mapping.trigger, false, hold);
                 }
             }

@@ -13,6 +13,8 @@ namespace Engine.Font {
         private static volatile int IDS = 0;
 
         public const byte GLYPHS_HEIGHT = 72;// in the dreamcast use 64px, 64px is enough for SDF
+        public const float GLYPHS_OUTLINE_RATIO = 0.086f;// ~6px of outline @ 72px (used in SDF)
+        public const float GLYPHS_SMOOTHING_COEFF = 0.25f;// used in SDF, idk how its works
         public const sbyte GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
         public const float FAKE_SPACE = 0.75f;// 75% of the height
 
@@ -93,7 +95,7 @@ namespace Engine.Font {
 
             // create a texture atlas and glyphs map with all common letters, numbers and symbols
             fonttype.fontcharmap_primary_ptr = fonttype.InternalRetrieveFontcharmap(null);
-            fonttype.fontcharmap_primary = ModuleFontAtlas.kdmyEngine_parseFontCharMap(fonttype.fontcharmap_primary_ptr);
+            fonttype.fontcharmap_primary = FontAtlas.kdmyEngine_parseFontCharMap(fonttype.fontcharmap_primary_ptr);
             fonttype.fontcharmap_primary_texture = FontType.InternalUploadTexture(fonttype.fontcharmap_primary);
 
             if (fonttype.fontcharmap_primary != null) {
@@ -120,17 +122,17 @@ namespace Engine.Font {
             FontType.POOL.Delete(this.instance_id);
 
             if (this.fontcharmap_primary != null) {
-                ModuleFontAtlas._fontatlas_atlas_destroy(this.fontcharmap_primary_ptr);
+                FontAtlas._fontatlas_atlas_destroy(this.fontcharmap_primary_ptr);
                 if (this.fontcharmap_primary_texture != null) this.fontcharmap_primary_texture.Destroy();
             }
 
             if (this.fontcharmap_secondary != null) {
-                ModuleFontAtlas._fontatlas_atlas_destroy(this.fontcharmap_secondary_ptr);
+                FontAtlas._fontatlas_atlas_destroy(this.fontcharmap_secondary_ptr);
                 if (this.fontcharmap_secondary_texture != null) this.fontcharmap_secondary_texture.Destroy();
             }
 
-            if (this.fontatlas != null) ModuleFontAtlas._fontatlas_destroy(this.fontatlas);
-            if (this.font_ptr != IntPtr.Zero) ModuleFontAtlas.kdmyEngine_deallocate(this.font_ptr);
+            if (this.fontatlas != null) FontAtlas._fontatlas_destroy(this.fontatlas);
+            if (this.font_ptr != IntPtr.Zero) FontAtlas.kdmyEngine_deallocate(this.font_ptr);
 
             //free(this.instance_path);
             //free(fonttype);
@@ -322,14 +324,24 @@ namespace Engine.Font {
             bool has_border = this.border_enable && this.border_color[3] > 0 && this.border_size >= 0;
             float outline_size = this.border_size * 2;
             float scale = height / FontType.GLYPHS_HEIGHT;
-            float ascender = (primary ?? secondary).ascender * scale;
+            float ascender = ((primary ?? secondary).ascender / 2f) * scale;// FIXME: ¿why does dividing by 2 works?
             int text_end_index = text_index + text_size;
             int text_length = text.Length;
 
             Debug.Assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
 
+#if SDF_FONT
+            // calculate sdf thickness
+            if (has_border && this.border_size > 0f) {
+                float max_border_size = height * FontType.GLYPHS_OUTLINE_RATIO;
+                float border_size = Math.Min(this.border_size, max_border_size);
+                float thickness = (1f - (border_size / max_border_size)) / 2f;
+                GlyphRenderer.SetSDFThickness(pvrctx, thickness);
+            }
+#endif
+
             float draw_x = 0;
-            float draw_y = 0;//-ascender;
+            float draw_y = 0 - ascender;
             int line_chars = 0;
 
             int index = text_index;
@@ -380,7 +392,7 @@ namespace Engine.Font {
 
                 if (grapheme.code == FontGlyph.LINEFEED) {
                     draw_x = 0;
-                    draw_y += height + this.lines_separation/* - ascender*/;
+                    draw_y += height + this.lines_separation - ascender;
                     previous_codepoint = grapheme.code;
                     line_chars = 0;
                     continue;
@@ -432,14 +444,22 @@ namespace Engine.Font {
                     float dh = fontchardata.height * scale;
 
                     if (has_border) {
+                        float sdx, sdy, sdw, sdh;
+#if SDF_FONT
+                        sdx = dx;
+                        sdy = dy;
+                        sdw = dw;
+                        sdh = dh;
+#else
                         // compute border location and outline size
-                        float sdx = dx - this.border_size;
-                        float sdy = dy - this.border_size;
-                        float sdw = dw + outline_size;
-                        float sdh = dh + outline_size;
+                        sdx = dx - this.border_size;
+                        sdy = dy - this.border_size;
+                        sdw = dw + outline_size;
+                        sdh = dh + outline_size;
+#endif
 
-                        dx += this.border_offset_x;
-                        dy += this.border_offset_y;
+                        sdx += this.border_offset_x;
+                        sdy += this.border_offset_y;
 
                         // queue outlined glyph for batch rendering
                         GlyphRenderer.AppendGlyph(
@@ -449,10 +469,15 @@ namespace Engine.Font {
                         );
                         added++;
                     }
-
+                    bool is_outline;
+#if SDF_FONT
+                    is_outline = false;
+#else
+                    is_outline = true;
+#endif
                     // queue glyph for batch rendering
                     GlyphRenderer.AppendGlyph(
-                        texture, is_secondary, false,
+                        texture, is_secondary, is_outline,
                         fontchardata.atlas_entry.x, fontchardata.atlas_entry.y, fontchardata.width, fontchardata.height,
                         dx, dy, dw, dh
                     );
@@ -464,9 +489,8 @@ namespace Engine.Font {
             }
 
 #if SDF_FONT
-            float width, edge;
-            FontType.InternalCalcSDF(height, out width, out edge);
-            GlyphRenderer.SetSDFParams(pvrctx, width, edge);
+            float smoothing = FontType.GLYPHS_SMOOTHING_COEFF / height;
+            GlyphRenderer.SetSDFSmoothing(pvrctx, smoothing);
 #endif
 
             // commit draw
@@ -484,8 +508,8 @@ namespace Engine.Font {
             if (font == null) return false;
 
             // Important: keep the font data allocated, required for FreeType library
-            this.font_ptr = ModuleFontAtlas.kdmyEngine_allocate(font);
-            this.fontatlas = ModuleFontAtlas._fontatlas_init(this.font_ptr, font.Length);
+            this.font_ptr = FontAtlas.kdmyEngine_allocate(font);
+            this.fontatlas = FontAtlas._fontatlas_init(this.font_ptr, font.Length);
 
             return this.fontatlas == null;
         }
@@ -494,17 +518,17 @@ namespace Engine.Font {
             IntPtr fontcharmap_ptr = IntPtr.Zero;
 
 #if SDF_FONT
-            ModuleFontAtlas.fontatlas_enable_sdf(true);
+            FontAtlas.fontatlas_enable_sdf(true);
 #endif
 
             if (characters_map != null) {
-                IntPtr characters_map_ptr = ModuleFontAtlas.kdmyEngine_allocate(characters_map);
-                fontcharmap_ptr = ModuleFontAtlas._fontatlas_atlas_build(
+                IntPtr characters_map_ptr = FontAtlas.kdmyEngine_allocate(characters_map);
+                fontcharmap_ptr = FontAtlas._fontatlas_atlas_build(
                     this.fontatlas, FontType.GLYPHS_HEIGHT, FontType.GLYPHS_GAPS, characters_map_ptr
                 );
-                ModuleFontAtlas.kdmyEngine_deallocate(characters_map_ptr);
+                FontAtlas.kdmyEngine_deallocate(characters_map_ptr);
             } else {
-                fontcharmap_ptr = ModuleFontAtlas._fontatlas_atlas_build_complete(
+                fontcharmap_ptr = FontAtlas._fontatlas_atlas_build_complete(
                     this.fontatlas, FontType.GLYPHS_HEIGHT, FontType.GLYPHS_GAPS
                 );
             }
@@ -524,8 +548,7 @@ namespace Engine.Font {
             WebGLTexture texture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, texture);
 
-
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR_MIPMAP_NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -537,9 +560,7 @@ namespace Engine.Font {
                 GLenum.GL_RED, gl.UNSIGNED_BYTE, fontcharmap.texture
             );
 
-#if !SDF_FONT
             gl.generateMipmap(gl.TEXTURE_2D);
-#endif
 
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpack_alignment);
 
@@ -601,7 +622,7 @@ namespace Engine.Font {
             // step 3: rebuild the secondary char map
             if (this.fontcharmap_secondary != null) {
                 // dispose previous instance
-                ModuleFontAtlas._fontatlas_atlas_destroy(this.fontcharmap_secondary_ptr);
+                FontAtlas._fontatlas_atlas_destroy(this.fontcharmap_secondary_ptr);
                 //free(this.fontcharmap_secondary.char_array);
                 //free(this.fontcharmap_secondary);
                 if (this.fontcharmap_secondary_texture != null) this.fontcharmap_secondary_texture.Destroy();
@@ -609,7 +630,7 @@ namespace Engine.Font {
 
             // build map and upload texture
             this.fontcharmap_secondary_ptr = InternalRetrieveFontcharmap(codepoints);
-            this.fontcharmap_secondary = ModuleFontAtlas.kdmyEngine_parseFontCharMap(this.fontcharmap_secondary_ptr);
+            this.fontcharmap_secondary = FontAtlas.kdmyEngine_parseFontCharMap(this.fontcharmap_secondary_ptr);
             this.fontcharmap_secondary_texture = FontType.InternalUploadTexture(this.fontcharmap_secondary);
 
             // dispose secondary codepoints array
@@ -624,18 +645,6 @@ namespace Engine.Font {
             }
             return null;
         }
-
-#if SDF_FONT
-        private static void InternalCalcSDF(float font_height, out float width, out float edge) {
-            const float SMALL_PX = 8.0f, SMALL_WIDTH = 0.474f, SMALL_EDGE = 0.12f;
-            const float LARGE_PX = 256f, LARGE_WIDTH = 0.510f, LARGE_EDGE = 0.06f;
-
-            float target = Math2D.InverseLerp(SMALL_PX, LARGE_PX, font_height);
-
-            width = Math2D.Lerp(SMALL_WIDTH, LARGE_WIDTH, target);
-            edge = Math2D.Lerp(SMALL_EDGE, LARGE_EDGE, target);
-        }
-#endif
 
 
         public int Animate(float elapsed) { return 0; }

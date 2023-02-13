@@ -33,6 +33,14 @@
                 "overrideWeeksFolder": {
                     "type": "boolean",
                     "default": false
+                },
+                "windowIcon": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "windowTitle": {
+                    "type": ["string", "null"],
+                    "default": null
                 }
             },
             "title": "About (expansion descriptor)"           

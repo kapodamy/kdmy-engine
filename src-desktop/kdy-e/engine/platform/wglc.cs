@@ -14,7 +14,7 @@ namespace Engine.Platform {
         public static readonly float[] RGBA = new float[2 * 2];
         public static readonly float[] QUAD = new float[] { 0f, 0f, 0f, 1f, 1f, 0f, 1f, 0f, 0f, 1f, 1f, 1f };
         public static readonly float[] QUAD_SCREEN = new float[] {
-            -1f, 1f, 0f, 1f, -1f, -1, 0f, 0f, 1f, -1f, 1f, 0f, -1f, 1f, 0f, 1f,1f, -1f, 1f, 0f, 1f, 1f, 1f, 1f
+            -1f, 1f, 0f, 1f, -1f, -1, 0f, 0f, 1f, -1f, 1f, 0f, -1f, 1f, 0f, 1f, 1f, -1f, 1f, 0f, 1f, 1f, 1f, 1f
         };
 
         private static readonly Regex rx_header = new Regex(@"#pragma header[\s\t\xA0]*\r?\n", RegexOptions.Compiled);
@@ -626,8 +626,8 @@ void main() { mainImage(FragColor, TexCoord); }
         internal WebGLUniformLocation u_color_outline;
 
 #if SDF_FONT
-        internal WebGLUniformLocation u_sdf_width;
-        internal WebGLUniformLocation u_sdf_edge;
+        internal WebGLUniformLocation u_sdf_smoothing;
+        internal WebGLUniformLocation u_sdf_thickness;
 #endif
 
         internal WebGLBuffer buffer_indices;
@@ -661,8 +661,8 @@ void main() { mainImage(FragColor, TexCoord); }
 
 #if SDF_FONT
             // sdf specific uniforms
-            this.u_sdf_width = gl.getUniformLocation(program, "u_sdf_width");
-            this.u_sdf_edge = gl.getUniformLocation(program, "u_sdf_edge");
+            this.u_sdf_smoothing = gl.getUniformLocation(program, "u_sdf_smoothing");
+            this.u_sdf_thickness = gl.getUniformLocation(program, "u_sdf_thickness");
 #endif
 
             // glyphs buffer

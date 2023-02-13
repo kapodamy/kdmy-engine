@@ -14,10 +14,12 @@ namespace Engine.Externals.LuaScriptInterop {
 
         private readonly ManagedLuaState lua;
         private readonly LuaState L;
+        private readonly bool is_week;
 
-        private Luascript(ManagedLuaState lua) {
+        private Luascript(ManagedLuaState lua, bool is_week) {
             this.lua = lua;
             this.L = lua.LuaStateHandle;
+            this.is_week = is_week;
         }
 
 
@@ -57,6 +59,143 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.RegisterConstantInteger("GAMEPAD_DPAD4_LEFT", (uint)GamepadButtons.DPAD4_LEFT);
             lua.RegisterConstantInteger("GAMEPAD_BACK", (uint)GamepadButtons.BACK);
 
+            lua.RegisterConstantInteger("MouseButton_BUTTON1", 0);
+            lua.RegisterConstantInteger("MouseButton_BUTTON2", 1);
+            lua.RegisterConstantInteger("MouseButton_BUTTON3", 2);
+            lua.RegisterConstantInteger("MouseButton_BUTTON4", 3);
+            lua.RegisterConstantInteger("MouseButton_BUTTON5", 4);
+            lua.RegisterConstantInteger("MouseButton_BUTTON6", 5);
+            lua.RegisterConstantInteger("MouseButton_BUTTON7", 6);
+            lua.RegisterConstantInteger("MouseButton_BUTTON8", 7);
+
+            lua.RegisterConstantInteger("ModKeys_Shift", 0x0001);
+            lua.RegisterConstantInteger("ModKeys_Control", 0x0002);
+            lua.RegisterConstantInteger("ModKeys_Alt", 0x0004);
+            lua.RegisterConstantInteger("ModKeys_Super", 0x0008);
+            lua.RegisterConstantInteger("ModKeys_CapsLock", 0x0010);
+            lua.RegisterConstantInteger("ModKeys_NumLock", 0x0020);
+
+            lua.RegisterConstantInteger("Keys_Unknown", -1);
+            lua.RegisterConstantInteger("Keys_Space", 32);
+            lua.RegisterConstantInteger("Keys_Apostrophe", 39);
+            lua.RegisterConstantInteger("Keys_Comma", 44);
+            lua.RegisterConstantInteger("Keys_Minus", 45);
+            lua.RegisterConstantInteger("Keys_Period", 46);
+            lua.RegisterConstantInteger("Keys_Slash", 47);
+            lua.RegisterConstantInteger("Keys_Numpad0", 48);
+            lua.RegisterConstantInteger("Keys_Numpad1", 49);
+            lua.RegisterConstantInteger("Keys_Numpad2", 50);
+            lua.RegisterConstantInteger("Keys_Numpad3", 51);
+            lua.RegisterConstantInteger("Keys_Numpad4", 52);
+            lua.RegisterConstantInteger("Keys_Numpad5", 53);
+            lua.RegisterConstantInteger("Keys_Numpad6", 54);
+            lua.RegisterConstantInteger("Keys_Numpad7", 55);
+            lua.RegisterConstantInteger("Keys_Numpad8", 56);
+            lua.RegisterConstantInteger("Keys_Numpad9", 57);
+            lua.RegisterConstantInteger("Keys_Semicolon", 59);
+            lua.RegisterConstantInteger("Keys_Equal", 61);
+            lua.RegisterConstantInteger("Keys_A", 65);
+            lua.RegisterConstantInteger("Keys_B", 66);
+            lua.RegisterConstantInteger("Keys_C", 67);
+            lua.RegisterConstantInteger("Keys_D", 68);
+            lua.RegisterConstantInteger("Keys_E", 69);
+            lua.RegisterConstantInteger("Keys_F", 70);
+            lua.RegisterConstantInteger("Keys_G", 71);
+            lua.RegisterConstantInteger("Keys_H", 72);
+            lua.RegisterConstantInteger("Keys_I", 73);
+            lua.RegisterConstantInteger("Keys_J", 74);
+            lua.RegisterConstantInteger("Keys_K", 75);
+            lua.RegisterConstantInteger("Keys_L", 76);
+            lua.RegisterConstantInteger("Keys_M", 77);
+            lua.RegisterConstantInteger("Keys_N", 78);
+            lua.RegisterConstantInteger("Keys_O", 79);
+            lua.RegisterConstantInteger("Keys_P", 80);
+            lua.RegisterConstantInteger("Keys_Q", 81);
+            lua.RegisterConstantInteger("Keys_R", 82);
+            lua.RegisterConstantInteger("Keys_S", 83);
+            lua.RegisterConstantInteger("Keys_T", 84);
+            lua.RegisterConstantInteger("Keys_U", 85);
+            lua.RegisterConstantInteger("Keys_V", 86);
+            lua.RegisterConstantInteger("Keys_W", 87);
+            lua.RegisterConstantInteger("Keys_X", 88);
+            lua.RegisterConstantInteger("Keys_Y", 89);
+            lua.RegisterConstantInteger("Keys_Z", 90);
+            lua.RegisterConstantInteger("Keys_LeftBracket", 91);
+            lua.RegisterConstantInteger("Keys_Backslash", 92);
+            lua.RegisterConstantInteger("Keys_RightBracket", 93);
+            lua.RegisterConstantInteger("Keys_GraveAccent", 96);
+            lua.RegisterConstantInteger("Keys_World_1", 161);
+            lua.RegisterConstantInteger("Keys_World_2", 162);
+            lua.RegisterConstantInteger("Keys_Escape", 256);
+            lua.RegisterConstantInteger("Keys_Enter", 257);
+            lua.RegisterConstantInteger("Keys_Tab", 258);
+            lua.RegisterConstantInteger("Keys_Backspace", 259);
+            lua.RegisterConstantInteger("Keys_Insert", 260);
+            lua.RegisterConstantInteger("Keys_Delete", 261);
+            lua.RegisterConstantInteger("Keys_Right", 262);
+            lua.RegisterConstantInteger("Keys_Left", 263);
+            lua.RegisterConstantInteger("Keys_Down", 264);
+            lua.RegisterConstantInteger("Keys_Up", 265);
+            lua.RegisterConstantInteger("Keys_PageUp", 266);
+            lua.RegisterConstantInteger("Keys_PageDown", 267);
+            lua.RegisterConstantInteger("Keys_Home", 268);
+            lua.RegisterConstantInteger("Keys_End", 269);
+            lua.RegisterConstantInteger("Keys_CapsLock", 280);
+            lua.RegisterConstantInteger("Keys_ScrollLock", 281);
+            lua.RegisterConstantInteger("Keys_NumLock", 282);
+            lua.RegisterConstantInteger("Keys_PrintScreen", 283);
+            lua.RegisterConstantInteger("Keys_Pause", 284);
+            lua.RegisterConstantInteger("Keys_F1", 290);
+            lua.RegisterConstantInteger("Keys_F2", 291);
+            lua.RegisterConstantInteger("Keys_F3", 292);
+            lua.RegisterConstantInteger("Keys_F4", 293);
+            lua.RegisterConstantInteger("Keys_F5", 294);
+            lua.RegisterConstantInteger("Keys_F6", 295);
+            lua.RegisterConstantInteger("Keys_F7", 296);
+            lua.RegisterConstantInteger("Keys_F8", 297);
+            lua.RegisterConstantInteger("Keys_F9", 298);
+            lua.RegisterConstantInteger("Keys_F10", 299);
+            lua.RegisterConstantInteger("Keys_F11", 300);
+            lua.RegisterConstantInteger("Keys_F12", 301);
+            lua.RegisterConstantInteger("Keys_F13", 302);
+            lua.RegisterConstantInteger("Keys_F14", 303);
+            lua.RegisterConstantInteger("Keys_F15", 304);
+            lua.RegisterConstantInteger("Keys_F16", 305);
+            lua.RegisterConstantInteger("Keys_F17", 306);
+            lua.RegisterConstantInteger("Keys_F18", 307);
+            lua.RegisterConstantInteger("Keys_F19", 308);
+            lua.RegisterConstantInteger("Keys_F20", 309);
+            lua.RegisterConstantInteger("Keys_F21", 310);
+            lua.RegisterConstantInteger("Keys_F22", 311);
+            lua.RegisterConstantInteger("Keys_F23", 312);
+            lua.RegisterConstantInteger("Keys_F24", 313);
+            lua.RegisterConstantInteger("Keys_F25", 314);
+            lua.RegisterConstantInteger("Keys_KP_0", 320);
+            lua.RegisterConstantInteger("Keys_KP_1", 321);
+            lua.RegisterConstantInteger("Keys_KP_2", 322);
+            lua.RegisterConstantInteger("Keys_KP_3", 323);
+            lua.RegisterConstantInteger("Keys_KP_4", 324);
+            lua.RegisterConstantInteger("Keys_KP_5", 325);
+            lua.RegisterConstantInteger("Keys_KP_6", 326);
+            lua.RegisterConstantInteger("Keys_KP_7", 327);
+            lua.RegisterConstantInteger("Keys_KP_8", 328);
+            lua.RegisterConstantInteger("Keys_KP_9", 329);
+            lua.RegisterConstantInteger("Keys_KP_Decimal", 330);
+            lua.RegisterConstantInteger("Keys_KP_Divide", 331);
+            lua.RegisterConstantInteger("Keys_KP_Multiply", 332);
+            lua.RegisterConstantInteger("Keys_KP_Subtract", 333);
+            lua.RegisterConstantInteger("Keys_KP_Add", 334);
+            lua.RegisterConstantInteger("Keys_KP_Enter", 335);
+            lua.RegisterConstantInteger("Keys_KP_Equal", 336);
+            lua.RegisterConstantInteger("Keys_LeftShift", 340);
+            lua.RegisterConstantInteger("Keys_LeftControl", 341);
+            lua.RegisterConstantInteger("Keys_LeftAlt", 342);
+            lua.RegisterConstantInteger("Keys_LeftSuper", 343);
+            lua.RegisterConstantInteger("Keys_RightShift", 344);
+            lua.RegisterConstantInteger("Keys_RightControl", 345);
+            lua.RegisterConstantInteger("Keys_RightAlt", 346);
+            lua.RegisterConstantInteger("Keys_RightSuper", 347);
+            lua.RegisterConstantInteger("Keys_Menu", 348);
 
             // register all objects (metatables) and functions
             ExportsCamera.script_camera_register(lua);
@@ -171,7 +310,7 @@ namespace Engine.Externals.LuaScriptInterop {
                 return null;
             }
 
-            return new Luascript(lua);
+            return new Luascript(lua, is_week);
         }
 
         public void Destroy() {
@@ -184,6 +323,8 @@ namespace Engine.Externals.LuaScriptInterop {
                 luascript.lua.DropSharedObject(obj);
             }
         }
+
+
 
         public bool Eval(string eval_string) {
             if (String.IsNullOrEmpty(eval_string)) return true;
@@ -497,7 +638,7 @@ namespace Engine.Externals.LuaScriptInterop {
             const string FUNCTION = "f_modding_event";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
-            lua.LuaStateHandle.lua_pushstring(event_name);
+            L.lua_pushstring(event_name);
 
             lua.CallPushedGlobalFunction(1);
         }
@@ -506,10 +647,82 @@ namespace Engine.Externals.LuaScriptInterop {
             const string FUNCTION = "f_modding_handle_custom_option";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
-            lua.LuaStateHandle.lua_pushstring(option_name);
+            L.lua_pushstring(option_name);
+            lua.CallPushedGlobalFunction(1);
+        }
+
+        public void notify_modding_window_focus(bool focused) {
+            if (is_week) return;
+            const string FUNCTION = "f_modding_window_focus";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            L.lua_pushboolean(focused);
 
             lua.CallPushedGlobalFunction(1);
         }
+
+        public void notify_modding_window_minimized(bool minimized) {
+            if (is_week) return;
+            const string FUNCTION = "f_modding_window_minimized";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            L.lua_pushboolean(minimized);
+
+            lua.CallPushedGlobalFunction(1);
+        }
+
+        public void notify_input_keyboard(int key, int scancode, bool is_pressed, int mods) {
+            const string FUNCTION = "f_input_keyboard";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            L.lua_pushinteger(key);
+            L.lua_pushinteger(scancode);
+            L.lua_pushboolean(is_pressed);
+            L.lua_pushinteger(mods);
+
+            lua.CallPushedGlobalFunction(4);
+        }
+
+        public void notify_input_mouse_position(double x, double y) {
+            const string FUNCTION = "f_input_mouse_position";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            L.lua_pushnumber(x);
+            L.lua_pushnumber(y);
+
+            lua.CallPushedGlobalFunction(2);
+        }
+
+        public void notify_input_mouse_enter(bool entering) {
+            const string FUNCTION = "f_input_mouse_enter";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            L.lua_pushboolean(entering);
+
+            lua.CallPushedGlobalFunction(1);
+        }
+
+        public void notify_input_mouse_button(int button, bool is_pressed, int mods) {
+            const string FUNCTION = "f_input_mouse_button";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            L.lua_pushinteger(button);
+            L.lua_pushboolean(is_pressed);
+            L.lua_pushinteger(mods);
+
+            lua.CallPushedGlobalFunction(3);
+        }
+
+        public void notify_input_mouse_scroll(double x, double y) {
+            const string FUNCTION = "f_input_mouse_scroll";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            L.lua_pushnumber(x);
+            L.lua_pushnumber(y);
+
+            lua.CallPushedGlobalFunction(2);
+        }
+
     }
 
 }

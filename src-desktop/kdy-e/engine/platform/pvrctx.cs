@@ -45,6 +45,7 @@ namespace Engine.Platform {
         private const double WIDESCREEN_ASPECT_RATIO = 16.0 / 9.0;
         private const double DREAMCAST_ASPECT_RATIO = 4.0 / 3.0;
         private const float FPS_FONT_SIZE_RATIO = 40.0f / 720.0f;// 40px @ 1280x720
+        private const double AUTOHIDE_CURSOR_SECONDS = 3.0;
         private const int SHADER_STACK_LENGTH = 64;
 
         public static PVRContext global_context;
@@ -126,6 +127,16 @@ namespace Engine.Platform {
             // resize framebuffers if the screen size has changed
             this.CheckFrameBufferSize();
 
+            // notify all lua scripts about keyboard/mouse/window changes
+            Engine.Externals.LuaScriptInterop.LuascriptPlatform.PollWindowState();
+
+            // check if necessary hide the cursor
+            if (now > this.cursor_hide_timestamp) {
+                Glfw.SetInputMode(this.nativeWindow, Glfw.CURSOR, Glfw.CURSOR_HIDDEN);
+                this.cursor_hide_timestamp = Double.PositiveInfinity;
+                this.cursor_is_hidden = true;
+            }
+
             return elapsed;
         }
 
@@ -134,6 +145,21 @@ namespace Engine.Platform {
             offsetcolor[1] = 0.0f;
             offsetcolor[2] = 0.0f;
             offsetcolor[3] = -1.0f;
+        }
+
+        public static void UnHideCursor() {
+            PVRContext pvr_context = PVRContext.global_context;
+
+            if (pvr_context.cursor_is_hidden) {
+                Glfw.SetInputMode(pvr_context.nativeWindow, Glfw.CURSOR, Glfw.CURSOR_NORMAL);
+            }
+
+            if (EngineSettings.autohide_cursor)
+                pvr_context.cursor_hide_timestamp = Glfw.GetTime() + PVRContext.AUTOHIDE_CURSOR_SECONDS;
+            else
+                pvr_context.cursor_hide_timestamp = Double.PositiveInfinity;
+
+            pvr_context.cursor_is_hidden = false;
         }
 
         public bool IsWidescreen() {
@@ -177,6 +203,11 @@ namespace Engine.Platform {
         private TextSprite fps_text;
         internal float last_elapsed = 0;
         internal int frame_rendered = 0;
+        internal readonly string native_window_title;
+
+        // this variable is here because LuascriptPlatform has the mouse state callbacks
+        private bool cursor_is_hidden;
+        private double cursor_hide_timestamp;
 
         private PSFramebuffer shader_framebuffer_front;
         private PSFramebuffer shader_framebuffer_back;
@@ -289,7 +320,7 @@ namespace Engine.Platform {
             if (this.fps_text == null) {
                 FontHolder font = new FontHolder("/assets/common/font/vcr.ttf", -1, null);
                 this.fps_text = TextSprite.Init2(font, 64f, 0xAAFFAA);
-                this.fps_text.SetDrawLocation(0f, 0f);
+                this.fps_text.SetDrawLocation(2f, 0f);
             }
 
             if (this.fps_resolution_changes != this.resolution_changes) {
@@ -336,13 +367,20 @@ namespace Engine.Platform {
             int width = EngineSettings.widescreen ? 960 : 640;
             int height = EngineSettings.widescreen ? 540 : 480;
 
+            string title;
+            if (EngineSettings.expansion_window_title != null) {
+                title = EngineSettings.expansion_window_title;
+                EngineSettings.expansion_window_title = null;
+            } else {
 #if DEBUG
-            string title = $"{Engine.Game.GameMain.ENGINE_NAME} {Engine.Game.GameMain.ENGINE_VERSION}";
+                title = $"{Engine.Game.GameMain.ENGINE_NAME} {Engine.Game.GameMain.ENGINE_VERSION}";
 #else
-            string title = Funkin.FUNKY.Replace("--", "\x20");
+                title = Funkin.FUNKY.Replace("--", "\x20");
 #endif
+            }
 
             this.last_timestamp = 0;
+            this.native_window_title = title;
             this.nativeWindow = Glfw.CreateWindow(width, height, title, Monitor.None, Window.None);
             Glfw.MakeContextCurrent(this.nativeWindow);
             Glfw.GetWindowPosition(this.nativeWindow, out this.last_windowed_x, out this.last_windowed_y);
@@ -380,7 +418,11 @@ namespace Engine.Platform {
             Glfw.SwapBuffers(this.nativeWindow);
             this.webopengl.ClearScreen(PVRContext.CLEAR_COLOR);
 
-            using (IconLoader loader = new IconLoader(Engine.Properties.Resources.icon)) {
+            byte[] icon_data = EngineSettings.expansion_window_icon;
+            EngineSettings.expansion_window_icon = null;
+
+            if (icon_data == null) icon_data = Engine.Properties.Resources.icon;
+            using (IconLoader loader = new IconLoader(icon_data)) {
                 Icon[] icons = new Icon[loader.icons.Length];
                 for (int i = 0 ; i < icons.Length ; i++) {
                     icons[i] = new Icon(
@@ -403,6 +445,12 @@ namespace Engine.Platform {
                 // partial implementation, needs async texture loading
                 TextureLoader.SetPixelBufferBuilder(new PixelUnPackBufferBuilder(this.webopengl.gl));
             }
+
+            this.cursor_is_hidden = false;
+            if (EngineSettings.autohide_cursor)
+                this.cursor_hide_timestamp = Glfw.GetTime() + AUTOHIDE_CURSOR_SECONDS;
+            else
+                this.cursor_hide_timestamp = Double.PositiveInfinity;
 
             Console.Error.WriteLine("PowerVR backend init completed\n");
         }

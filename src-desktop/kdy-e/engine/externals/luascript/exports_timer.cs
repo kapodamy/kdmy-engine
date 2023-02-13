@@ -82,7 +82,7 @@ namespace Engine.Externals.LuaScriptInterop {
         "                    print(____error)\n" +
         "                end\n" +
         "                if removes ~= ______kdmyEngine_timer_removes then\n" +
-        "                    i = 0\n" +
+        "                    i = 1\n" +
         "                    length = #______kdmyEngine_timer_table\n" +
         "                    removes = ______kdmyEngine_timer_removes\n" +
         "                end\n" +

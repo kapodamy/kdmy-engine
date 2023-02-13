@@ -39,6 +39,17 @@ EM_JS_PRFX(char*, kdmyEngine_get_locationquery, (), {
 
     return kdmyEngine_stringToPtr(str);
 });
+EM_JS_PRFX(void, kdmyEngine_require_window_attention, (), {
+    alert(document.title + "\n Environment:require_window_attention()");
+});
+EM_JS_PRFX(void, kdmyEngine_change_window_title, (const char* title, bool from_modding_context), {
+    luascriptplatform.ChangeWindowTitle(kdmyEngine_ptrToString(title), from_modding_context);
+});
+EM_JS_PRFX(void, kdmyEngine_open_link, (const char* url), {
+    let target_url = kdmyEngine_ptrToString(url);
+    if (!target_url) return;
+    window.open(target_url, "_blank", "noopener,noreferrer");
+});
 #else
 static const char* language = "English";
 static const char* username = "Cosme Fulanito";
@@ -86,10 +97,45 @@ static int script_environment_get_cmdargs(lua_State* L) {
 }
 
 static int script_environment_exit(lua_State* L) {
-    int exit_code = (int)luaL_checkinteger(L, 1);
+    int exit_code = (int)luaL_checkinteger(L, 2);
     exit(exit_code);
     return 0;
 }
+
+static int script_environment_change_window_title(lua_State* L) {
+
+#ifdef JAVASCRIPT
+    Luascript luascript = luascript_get_instance(L);
+    const char* title = luaL_optstring(L, 2, NULL);
+    kdmyEngine_change_window_title(title, !luascript->is_week);
+#else
+    (void)L;
+#endif
+
+    return 0;
+}
+
+static int script_environment_require_window_attention(lua_State* L) {
+    (void)L;
+
+#ifdef JAVASCRIPT
+    kdmyEngine_require_window_attention();
+#endif
+
+    return 0;
+}
+
+static int script_environment_open_www_link(lua_State* L) {
+    const char* url = luaL_checkstring(L, 2);
+
+#ifdef JAVASCRIPT
+    kdmyEngine_open_link(url);
+#endif
+
+    return 0;
+}
+
+
 
 
 static const luaL_Reg ENVIRONMENT_FUNCTIONS[] = {
@@ -97,6 +143,9 @@ static const luaL_Reg ENVIRONMENT_FUNCTIONS[] = {
     { "get_username", script_environment_get_username },
     { "get_cmdargs", script_environment_get_cmdargs },
     { "exit", script_environment_exit },
+    { "change_window_title", script_environment_change_window_title },
+    { "require_window_attention", script_environment_require_window_attention },
+    { "open_www_link", script_environment_open_www_link },
     { NULL, NULL }
 };
 

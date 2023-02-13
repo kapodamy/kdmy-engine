@@ -209,7 +209,8 @@ async function mainmenu_main() {
 
     const moddinghelper = {
         menumanifest: menumanifest,
-        choosen_name: null
+        choosen_name: null,
+        choosen_name_is_allocated: 0
     };
 
     let modding = await modding_init(layout, MAINMENU_MODDING_SCRIPT);
@@ -333,7 +334,9 @@ async function mainmenu_main() {
         choosen_option_index = menumanifest_get_option_index(MAINMENU_MENU_MANIFEST, moddinghelper.choosen_name);
 
         if (choosen_option_index < 0) {
+            modding.callback_option = null;
             modding.HelperNotifyHandleCustomOption(moddinghelper.choosen_name);
+            if (moddinghelper.choosen_name_is_allocated) moddinghelper.choosen_name = undefined;
         }
     }
 
@@ -423,6 +426,11 @@ async function mainmenu_handle_selected_option(selected_index) {
 }
 
 function mainmenu_handle_modding_option(moddinghelper, option_name) {
+    if (moddinghelper.choosen_name_is_allocated) {
+        moddinghelper.choosen_name = undefined;
+        moddinghelper.choosen_name_is_allocated = 0;
+    }
+    
     if (option_name == null || option_name == MAINMENU_BACK_TO_STARTSCREEN) {
         // assume is going back
         moddinghelper.choosen_name = MAINMENU_BACK_TO_STARTSCREEN;
@@ -433,6 +441,7 @@ function mainmenu_handle_modding_option(moddinghelper, option_name) {
     let index = menumanifest_get_option_index(moddinghelper.menumanifest, option_name);
     if (index >= 0) {
         moddinghelper.choosen_name = moddinghelper.menumanifest.items[index].name;
+        return 1;
     }
 
     // check if the option is native
@@ -442,7 +451,9 @@ function mainmenu_handle_modding_option(moddinghelper, option_name) {
         return 1;
     }
 
-    // reject
+    // unknown option
+    moddinghelper.choosen_name = option_name;
+    moddinghelper.choosen_name_is_allocated = 1;
     return 0;
 }
 

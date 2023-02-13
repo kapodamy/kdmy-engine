@@ -45,19 +45,21 @@ namespace CsharpWrapper {
                 Application.Exit();
 
                 bool exit = form.NotLaunchAndExit;
-                EngineSettings.expansion = form.SelectedExpansion;
+                EngineSettings.expansion_directory = form.SelectedExpansionDirectory;
+                EngineSettings.expansion_window_icon = form.SelectedExpansionWindowIcon;
+                EngineSettings.expansion_window_title = form.SelectedExpansionWindowTitle;
                 form.Destroy();
 
                 if (exit) return 0;
 
-                Console.WriteLine("Selected expansion: " + (EngineSettings.expansion ?? "<none>"));
+                Console.WriteLine("Selected expansion: " + (EngineSettings.expansion_directory ?? "<none>"));
                 Console.WriteLine();
             }
 
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
 
             Console.Error.WriteLine("AICA:" + AICA.sndbridge_get_runtime_info());
-            Console.Error.WriteLine("FontAtlas: FreeType V" + ModuleFontAtlas.fontatlas_get_version());
+            Console.Error.WriteLine("FontAtlas: FreeType V" + FontAtlas.fontatlas_get_version());
             Console.Error.WriteLine("LuaScript: " + ManagedLuaState.GetVersion());
             Console.Error.WriteLine("FFGraph: " + FFgraph.ffgraph_get_runtime_info() ?? "<not loaded>");
 
@@ -69,14 +71,18 @@ namespace CsharpWrapper {
             for (int i = 1 ; i < argv.Length ; i++) {
                 switch (argv[i].ToLowerInvariant()) {
                     case "-expansion":
-                        NextArgAs(argv, i + 1, ref EngineSettings.expansion);
-                        if (String.IsNullOrEmpty(EngineSettings.expansion)) {
-                            EngineSettings.expansion = null;
+                        if (HasCommandLineSwitch(argv, "-expansionsloader")) {
+                            Console.Error.WriteLine("[INFO] '-expansion' argument was ignored");
                             break;
                         }
-                        if (EngineSettings.expansion.ToLower() == "funkin") {
+                        NextArgAs(argv, i + 1, ref EngineSettings.expansion_directory);
+                        if (String.IsNullOrEmpty(EngineSettings.expansion_directory)) {
+                            EngineSettings.expansion_directory = null;
+                            break;
+                        }
+                        if (EngineSettings.expansion_directory.ToLower() == "funkin") {
                             Console.Error.WriteLine("[INFO] '/expansions/funkin' is always applied");
-                            EngineSettings.expansion = null;
+                            EngineSettings.expansion_directory = null;
                         }
                         break;
                     case "-style":
@@ -128,9 +134,10 @@ namespace CsharpWrapper {
                 i++;
             }
 
+            // Load selected expansion, do this in another thread to not mess-up the engine startup
             Thread thread = new Thread(delegate () {
                 FS.Init();
-                Expansions.Load(EngineSettings.expansion);
+                Expansions.Load(EngineSettings.expansion_directory);
             });
             thread.Start();
             thread.Join();
@@ -151,7 +158,7 @@ namespace CsharpWrapper {
             if (File.Exists(gamecontrollerdb_path)) {
                 Console.WriteLine("detected 'gamecontrollerdb.txt' file, updating mappings");
                 string mappings = File.ReadAllText(gamecontrollerdb_path, Encoding.ASCII);
-                if (!Glfw.glfwUpdateGamepadMappings(mappings)) {
+                if (!Glfw.UpdateGamepadMappings(mappings)) {
                     Console.Error.WriteLine("[ERROR] failed to import " + gamecontrollerdb_path);
                 }
             }

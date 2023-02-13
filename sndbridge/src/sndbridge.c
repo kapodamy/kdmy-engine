@@ -222,14 +222,13 @@ static int read_cb(const void* ib, void* output, ulong frameCount, CbTimeInfo ti
     (void)sf;
 
     Stream_t* stream = (Stream_t*)userdata;
-    const int32_t total_samples = frameCount * stream->channels;
     float* output_float = (float*)output;
 
     stream->callback_running = true;
 
     if (stream->halt) {
         // playback ended, silence output to keep alive the stream
-        memset(output_float, 0x00, total_samples);
+        memset(output, 0x00, frameCount * stream->bytes_per_sample_per_channel);
         stream->callback_running = false;
         return paContinue;
     }
@@ -238,7 +237,7 @@ static int read_cb(const void* ib, void* output, ulong frameCount, CbTimeInfo ti
     int32_t readed_frames = sndbridge_read_samples(stream, frameCount, output_float);
 
     if (stream->muted) {
-        memset(output_float, 0x00, total_samples);
+        memset(output, 0x00, frameCount * stream->bytes_per_sample_per_channel);
         goto L_prepare_return;
     }
 
@@ -438,10 +437,6 @@ extern StreamID sndbridge_queue(ExternalDecoder* external_decoder) {
 extern void sndbridge_dispose(StreamID stream_id) {
     GET_STREAM(stream_id);
     if (!stream) return;
-
-    // FIXME: there a race condition which keeps the stream alive
-    stream->volume = 0.0;
-    Pa_Sleep(1);
 
     Pa_CloseStream(stream->pastream);
 

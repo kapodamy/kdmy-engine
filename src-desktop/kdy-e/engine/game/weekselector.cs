@@ -196,9 +196,8 @@ namespace Engine.Game {
             }
 
             bool has_custom_bg_music = false;
-            string path = WeekEnumerator.GetAsset(state.weekinfo, state.weekinfo.custom_selector_layout);
-            state.custom_layout = Layout.Init(path);
-            //free(path);
+
+            state.custom_layout = Layout.Init(state.weekinfo.custom_selector_layout);
             if (state.custom_layout != null) {
                 state.custom_layout.TriggerAny("show-principal");
                 if (!state.week_unlocked) state.custom_layout.TriggerAny("week-locked");
@@ -491,7 +490,7 @@ namespace Engine.Game {
                     state.custom_layout.Draw(PVRContext.global_context);
                 }
 
-                if (state.back_to_main_menu && outro_layout.AnimationIsCompleted("transition_effect") > 0)
+                if (outro_layout.AnimationIsCompleted("transition_effect") > 0)
                     break;
             }
 

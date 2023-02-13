@@ -68,6 +68,7 @@ async function songprogressbar_init(x, y, z, width, height, align, border_size, 
         textsprite_set_align(songprogressbar.textsprite_time, ALIGN_CENTER, align);
     }
     textsprite_set_draw_location(songprogressbar.textsprite_time, x - border_size, y - border_size);
+    border_size *= 2.0;
     textsprite_set_max_draw_size(songprogressbar.textsprite_time, width + border_size, height + border_size);
 
     statesprite_crop_enable(songprogressbar.statesprite_progress, 1);

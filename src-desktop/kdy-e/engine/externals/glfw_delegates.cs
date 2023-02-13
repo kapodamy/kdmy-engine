@@ -3,7 +3,7 @@
 namespace Engine.Externals.GLFW {
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void KeyCallback(Window window, Keys key, int scanCode, InputState state, ModKeys mods);
+    internal delegate void KeyCallback(Window window, Keys key, int scancode, InputState action, ModKeys mods);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void JoystickCallback(int joystick, ConnectionStatus status);
@@ -20,4 +20,12 @@ namespace Engine.Externals.GLFW {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void WindowCallback(Window window);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void MouseCallback(Window window, double x, double y);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void MouseEnterCallback(Window window, bool entering);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void MouseButtonCallback(Window window, MouseButtons button, InputState state, ModKeys mods);
 }

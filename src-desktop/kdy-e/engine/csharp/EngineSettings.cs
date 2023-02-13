@@ -13,7 +13,9 @@ namespace CsharpWrapper {
         public static INI ini;
         public static bool ini_exists;
 
-        public static string expansion = null;// folder name inside of "/expansions/"
+        public static string expansion_directory = null;// folder name inside of "/expansions/"
+        public static byte[] expansion_window_icon = null;// window icon bytes
+        public static string expansion_window_title = null;// window title
         public static string style = null;// folder name inside of "/expansions/"
         public static bool widescreen = true;// uses 1280x720 (like Funkin) instead of 640x480
         public static bool pixelbufferobjects = false;// uses the OpenGL PBO (no async support)
@@ -26,6 +28,7 @@ namespace CsharpWrapper {
 
         public static bool show_fps = false;
         public static byte fps_limit = 0;
+        public static bool autohide_cursor = true;
         public static bool use_funkin_marker_duration = true;
         public static bool gameplay_enabled_distractions = true;
         public static bool gameplay_enabled_flashinglights = true;
@@ -62,13 +65,15 @@ namespace CsharpWrapper {
                     fps_limit = 2;
                     break;
             }
+            autohide_cursor = GetBool(false, "autohide_cursor", autohide_cursor);
         }
 
         internal static void Reload() {
             int old_fps_limit = fps_limit;
             LoadINI();
-            if (old_fps_limit != fps_limit)
-                PVRContext.global_context.SetFPSLimit(fps_limit, true);
+
+            if (old_fps_limit != fps_limit) PVRContext.global_context.SetFPSLimit(fps_limit, true);
+            PVRContext.UnHideCursor();
         }
 
         public static void GetBind(string ini_key, ref int scancode) {

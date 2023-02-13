@@ -58,6 +58,7 @@ async function weekscript_init(src, context, is_week) {
         return null;
     }
 
+    await luascriptplatform.AddLuascript(luascript);
     return luascript;
 }
 
@@ -110,6 +111,8 @@ async function weekscript_init(src, context, is_week) {
 }*/
 
 function weekscript_destroy(script) {
+    luascriptplatform.RemoveLuascript(script);
+    luascriptplatform.RestoreWindowTitleIfChanged();
     ModuleLuaScript._luascript_destroy_JS(script);
 }
 

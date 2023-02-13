@@ -183,7 +183,11 @@ namespace Engine.Platform {
 
         public void SetButtonsDelay(int delay_time) {
             this.delay_duration = delay_time;
-            this.delay_timestamp = 0.0;
+            this.delay_timestamp = timer.ms_gettime64() + delay_time;
+        }
+
+        public void EnforceButtonsDelay() {
+            this.delay_timestamp = timer.ms_gettime64() + this.delay_duration;
         }
 
 

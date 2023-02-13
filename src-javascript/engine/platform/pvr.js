@@ -90,8 +90,10 @@ function pvrctx_wait_ready() {
 
             // resize framebuffers if the screen size has changed
             pvr_context.CheckFramebufferSize();
+            luascriptplatform.PollWindowState().then(function () {
 
-            resolve(elapsed);
+                resolve(elapsed);
+            });
         });
 
         if (document.hidden) return;

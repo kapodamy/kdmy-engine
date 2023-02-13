@@ -586,6 +586,8 @@ namespace Engine.Game.Gameplay {
                     Week.RoundPrepare(roundcontext, gameplaymanifest);
                 }
 
+                Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
+
                 // before continue set default values
                 Week.BEAT_WATCHER.Reset(true, roundcontext.settings.original_bpm);
                 Week.QUARTER_WATCHER.Reset(false, roundcontext.settings.original_bpm);
@@ -602,7 +604,7 @@ namespace Engine.Game.Gameplay {
                     roundcontext.players[i].character.SetVisible(true);
                 }
                 roundcontext.scriptcontext.halt_flag = false;
-                roundcontext.layout.SetSingleItemToDraw(null);
+                layout.SetSingleItemToDraw(null);
                 if (roundcontext.songplayer != null) roundcontext.songplayer.Mute(false);
 
                 if (first_init) {
@@ -671,8 +673,8 @@ namespace Engine.Game.Gameplay {
 
                 if ((round_result == 0 && roundcontext.track_index != last_track) || round_result == 2) {
                     if (roundcontext.settings.layout_rollback) {
-                        roundcontext.layout.StopAllTriggers();
-                        roundcontext.layout.TriggerAny(null);
+                        layout.StopAllTriggers();
+                        layout.TriggerAny(null);
                     }
                     Week.UISetVisibility(roundcontext, true);
                     Week.InternalResetPlayersAndGirlfriend(roundcontext);
@@ -791,12 +793,13 @@ namespace Engine.Game.Gameplay {
                 roundcontext.messagebox.Show(true);
 
                 // do save
-                int save_error = (int)GameMain.SpawnCoroutine(roundcontext.layout, delegate (object arg) {
+                Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
+                int save_error = (int)GameMain.SpawnCoroutine(layout, delegate (object arg) {
                     return (object)SaveManager.ShouldShow((bool)arg);
                 }, true);
 
                 if (save_error != 0) {
-                    roundcontext.layout.Suspend();
+                    layout.Suspend();
                     SaveManager savemanager = new SaveManager(true, save_error);
 
                     savemanager.Show();
@@ -2043,7 +2046,7 @@ namespace Engine.Game.Gameplay {
             );
             roundcontext.trackinfo.SetZIndex(initparams.ui.trackinfo_z);
             roundcontext.trackinfo.BorderEnable(true);
-            roundcontext.trackinfo.BorderSetSize(2.5f);
+            roundcontext.trackinfo.BorderSetSize(2f);
             roundcontext.trackinfo.BorderSetColorRGBA8(0x000000FF);// black
 
             // step 2: dispose all modelholders used
@@ -2075,6 +2078,8 @@ namespace Engine.Game.Gameplay {
 
             // dettach from the layout
             Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
+            if (layout == null) return;// this never should happen
+
             int group_id = layout.GetGroupId(Week.ROUND_UI_GROUP_NAME2);
 
             if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
@@ -2277,13 +2282,14 @@ namespace Engine.Game.Gameplay {
             bool check_ready = roundcontext.settings.ask_ready;
             bool do_countdown = roundcontext.settings.do_countdown;
             PlayerStats playerstats = null;
-            Camera camera = roundcontext.layout != null ? roundcontext.layout.GetCameraHelper() : null;
+            Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
+            Camera camera = layout.GetCameraHelper();
             double round_duration = roundcontext.round_duration;
             double round_end_timestamp;
             double unmute_timestamp = Double.PositiveInfinity;
 
             if (round_duration < 0) round_duration = Double.PositiveInfinity;
-            if (roundcontext.layout != null) roundcontext.layout.Resume();
+            layout.Resume();
 
             if (roundcontext.songprogressbar != null) {
                 double duration = roundcontext.songplayer != null ? roundcontext.songplayer.GetDuration() : round_duration;
@@ -2309,7 +2315,7 @@ namespace Engine.Game.Gameplay {
                 BeatWatcher.GlobalSetTimestampFromKosTimer();
 
                 if (pvr_context.IsOffscreen()) {
-                    roundcontext.layout.Suspend();
+                    layout.Suspend();
                     roundcontext.dialogue.Suspend();
 
                     int decision = roundcontext.weekpause.HelperShow(roundcontext, -1);
@@ -2322,14 +2328,14 @@ namespace Engine.Game.Gameplay {
                             return 3;// back to mainmenu
                     }
 
-                    roundcontext.layout.Resume();
+                    layout.Resume();
                     roundcontext.dialogue.Resume();
                     continue;
                 }
 
                 if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
-                roundcontext.layout.Animate(elapsed);
-                roundcontext.layout.Draw(pvr_context);
+                layout.Animate(elapsed);
+                layout.Draw(pvr_context);
 
                 if (roundcontext.dialogue.IsCompleted()) {
                     show_dialog = false;
@@ -2409,8 +2415,7 @@ namespace Engine.Game.Gameplay {
                         Week.Halt(roundcontext, true);
 
                         if (do_countdown) roundcontext.countdown.Start();
-                        if (roundcontext.layout != null)
-                            roundcontext.layout.TriggerCamera(Week.ROUND_CAMERA_ROUNDSTART);
+                        layout.TriggerCamera(Week.ROUND_CAMERA_ROUNDSTART);
                     }
                 } else if (roundcontext.countdown.HasEnded()) {
                     do_countdown = false;
@@ -2425,13 +2430,11 @@ namespace Engine.Game.Gameplay {
 
 
                 if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
-                roundcontext.layout.Animate(elapsed);
-                roundcontext.layout.Draw(pvr_context);
+                layout.Animate(elapsed);
+                layout.Draw(pvr_context);
             }
 
-            if (!roundcontext.settings.ask_ready && roundcontext.layout != null) {
-                roundcontext.layout.TriggerCamera(Week.ROUND_CAMERA_ROUNDSTART);
-            }
+            if (!roundcontext.settings.ask_ready) layout.TriggerCamera(Week.ROUND_CAMERA_ROUNDSTART);
 
             if (roundcontext.songprogressbar != null) roundcontext.songprogressbar.ManualUpdateEnable(false);
 
@@ -2490,7 +2493,7 @@ namespace Engine.Game.Gameplay {
                 if (paused || pvr_context.IsOffscreen()) {
                     // pause all critical stuff
                     round_duration = round_end_timestamp - timer.ms_gettime64();
-                    roundcontext.layout.Suspend();
+                    layout.Suspend();
                     if (roundcontext.songplayer != null) roundcontext.songplayer.Pause();
                     for (int i = 0 ; i < roundcontext.players_size ; i++) {
                         if (roundcontext.players[i].ddrkeymon != null) {
@@ -2514,7 +2517,7 @@ namespace Engine.Game.Gameplay {
 
                     // resume
                     round_end_timestamp = timer.ms_gettime64() + round_duration;
-                    roundcontext.layout.Resume();
+                    layout.Resume();
 
                     if (roundcontext.songplayer != null) {
                         roundcontext.songplayer.Seek(song_timestamp);
@@ -2647,8 +2650,8 @@ namespace Engine.Game.Gameplay {
                     roundcontext.script.NotifyTimerSong(song_timestamp);
                     roundcontext.script.NotifyFrame(elapsed);
                 }
-                roundcontext.layout.Animate(elapsed);
-                roundcontext.layout.Draw(pvr_context);
+                layout.Animate(elapsed);
+                layout.Draw(pvr_context);
 
                 if (roundcontext.scriptcontext.halt_flag) Week.Halt(roundcontext, false);
 
@@ -2671,7 +2674,7 @@ namespace Engine.Game.Gameplay {
 
             // notify the script about the current round result and halt (if necessary)
             if (roundcontext.songplayer != null) roundcontext.songplayer.Pause();
-            roundcontext.layout.TriggerCamera(Week.ROUND_CAMERA_ROUNDEND);
+            layout.TriggerCamera(Week.ROUND_CAMERA_ROUNDEND);
 
             if (roundcontext.script != null) roundcontext.script.NotifyRoundend(gameover);
 
@@ -2714,6 +2717,7 @@ namespace Engine.Game.Gameplay {
         public static void Halt(RoundContext roundcontext, bool poke_global_beatwatcher) {
             if (!roundcontext.scriptcontext.halt_flag) return;
 
+            Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
             GamepadButtons preesed = GamepadButtons.NOTHING;
 
             Console.Error.WriteLine("[LOG] week_halt() waiting for script signal...");
@@ -2736,8 +2740,8 @@ namespace Engine.Game.Gameplay {
 
 
                 if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
-                roundcontext.layout.Animate(elapsed);
-                roundcontext.layout.Draw(PVRContext.global_context);
+                layout.Animate(elapsed);
+                layout.Draw(PVRContext.global_context);
 
                 if (poke_global_beatwatcher) BeatWatcher.GlobalSetTimestampFromKosTimer();
 

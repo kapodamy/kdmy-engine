@@ -2,7 +2,7 @@
 
 // this file contains all shared data across the game
 const ENGINE_NAME = "kdmy-engine";
-const ENGINE_VERSION = "0.51";
+const ENGINE_VERSION = "0.52";
 
 
 /**
@@ -37,6 +37,7 @@ const FUNKIN_SCREEN_RESOLUTION_HEIGHT = 720;
 async function main(argc, argv) {
     // vital parts
     fs_init();// intialize filesystem access for the main thread (this thread)
+    luascriptplatform.InitializeCallbacks();
 
     if (!(await io_resource_exists(FS_ASSETS_FOLDER, 0, 1))) {
         alert("Missing assets folder");

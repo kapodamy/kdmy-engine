@@ -32,6 +32,13 @@
  * @property {function(ModuleLuaScript):void} _luascript_notify_after_strum_scroll
  * @property {function(ModuleLuaScript,number,number,number):void} _luascript_notify_modding_menu_option_selected
  * @property {function(ModuleLuaScript,number,number,number):boolean} _luascript_notify_modding_menu_option_choosen
+ * @property {function(ModuleLuaScript, bool):void} _luascript_notify_modding_window_focus
+ * @property {function(ModuleLuaScript, bool):void} _luascript_notify_modding_window_minimized
+ * @property {function(ModuleLuaScript, number, number, bool, number):void} _luascript_notify_input_keyboard
+ * @property {function(ModuleLuaScript, number, number):void} _luascript_notify_input_mouse_position
+ * @property {function(ModuleLuaScript, bool):void} _luascript_notify_input_mouse_enter
+ * @property {function(ModuleLuaScript, number, bool, number):void} _luascript_notify_input_mouse_button
+ * @property {function(ModuleLuaScript, number, number):void} _luascript_notify_input_mouse_scroll
  * @property {function(ModuleLuaScript):boolean} _luascript_notify_modding_back
  * @property {function(ModuleLuaScript,number):number} _luascript_notify_modding_exit
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_modding_init

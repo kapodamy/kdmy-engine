@@ -192,8 +192,9 @@ namespace Engine.Game {
         private static Menu current_menu = null;
         private static SettingOption[] current_setting_options = null;
         private static bool current_menu_choosen = false;
-        private static bool current_menu_choosen_custom = false;
+        private static string current_menu_choosen_custom = null;
         private static bool is_running = false;
+        private static FontHolder submenus_font = null;
 
 
         public static void Main() {
@@ -223,6 +224,11 @@ namespace Engine.Game {
             if (SettingsMenu.is_running) {
                 Console.Error.WriteLine("[ERROR] SettingsMenu::Main() is already running, only a single instance is allowed");
                 return;
+            }
+
+            if (SettingsMenu.submenus_font == null && FS.FileExists(SettingsMenu.MENU_COMMON.parameters.font)) {
+                // little improvement, keep loaded the "pixel.otf" font to improve loading times
+                submenus_font = new FontHolder(SettingsMenu.MENU_COMMON.parameters.font, -1f, null);
             }
 
             AnimList animlist = AnimList.Init("/assets/common/anims/settings-menu.xml");
@@ -323,7 +329,7 @@ namespace Engine.Game {
             SettingsMenu.current_menu = null;
             SettingsMenu.current_setting_options = null;
             SettingsMenu.current_menu_choosen = false;
-            SettingsMenu.current_menu_choosen_custom = false;
+            SettingsMenu.current_menu_choosen_custom = null;
             SettingsMenu.is_running = true;
 
             Modding modding = new Modding(layout, SettingsMenu.MODDING_SCRIPT);
@@ -332,7 +338,7 @@ namespace Engine.Game {
 
             while (!modding.has_exit) {
                 int selected_index = InCommonMenu("Settings", layout, gamepad, menu, options_help, modding);
-                string selected_name = selected_index < 0 ? "return-main-menu" : menumanifest.items[selected_index].name;
+                string selected_name = selected_index < 0 ? null : menumanifest.items[selected_index].name;
                 switch (selected_name) {
                     case "keyboard-bindings-gameplay":
                         InGameplayBinding(anim_binding, anim_binding_rollback);
@@ -350,6 +356,10 @@ namespace Engine.Game {
                         break;
                     default:
                         // custom option selected
+                        if (SettingsMenu.current_menu_choosen_custom == null) break;
+                        modding.HelperNotifyHandleCustomOption(SettingsMenu.current_menu_choosen_custom);
+                        //free(SettingsMenu.current_menu_choosen_custom);
+                        SettingsMenu.current_menu_choosen_custom = null;
                         continue;
                 }
                 break;
@@ -714,7 +724,6 @@ namespace Engine.Game {
             SettingsMenu.current_menu = modding.native_menu = modding.active_menu = menu;
             SettingsMenu.current_setting_options = options;
             SettingsMenu.current_menu_choosen = false;
-            SettingsMenu.current_menu_choosen_custom = false;
 
             layout.TriggerAny(null);
             modding.HelperNotifyEvent(title);
@@ -733,7 +742,7 @@ namespace Engine.Game {
 
             while (!modding.has_exit) {
                 if (SettingsMenu.current_menu_choosen) {
-                    if (!SettingsMenu.current_menu_choosen_custom) option = menu.GetSelectedIndex();
+                    if (SettingsMenu.current_menu_choosen_custom != null) option = menu.GetSelectedIndex();
                     break;
                 }
 
@@ -915,16 +924,24 @@ namespace Engine.Game {
                 },
                 new SettingOption() {
                     name = "AVAILABLE SAVESLOTS",
-                    description = "(Desktop version only) Emulates the specified number of VMUs.\n" +
+                    description = "Emulates the specified number of VMUs.\n" +
                                   "Defaults to 1, this applies before the engine runs",
                     is_int = true,
                     value_int = 1,
                     number_min = 1,
                     number_max = 8,
                     ini_key="saveslots"
+                },
+                new SettingOption() {
+                    name = "AUTOHIDE CURSOR",
+                    description = "Hides your mouse cursor after 3 seconds of inactivity.\n" +
+                                  "The mouse is never used by the engine, but some weeks can make use of it",
+                    is_bool = true,
+                    value_bool = true,
+                    ini_key = "autohide_cursor"
                 }
             };
-            int options_size = 4;
+            int options_size = 5;
 
             // load current settings
             for (int i = 0 ; i < options_size ; i++) {
@@ -1037,6 +1054,12 @@ namespace Engine.Game {
 
                 layout.SetGroupVisibility("change-value", false);
             }
+
+            if (SettingsMenu.current_menu_choosen_custom != null) {
+                modding.HelperNotifyHandleCustomOption(SettingsMenu.current_menu_choosen_custom);
+            }
+            //free(SettingsMenu.current_menu_choosen_custom);
+            SettingsMenu.current_menu_choosen_custom = null;
 
             layout.Destroy();
         }
@@ -1361,9 +1384,12 @@ namespace Engine.Game {
             if (SettingsMenu.current_menu == null || SettingsMenu.current_setting_options == null) {
                 return false;
             }
+
+            //free(SettingsMenu.current_menu_choosen_custom);
+
             SettingsMenu.current_menu_choosen = true;
             if (option_name == null) {
-                SettingsMenu.current_menu_choosen_custom = true;
+                SettingsMenu.current_menu_choosen_custom = null;
                 return false;
             }
 
@@ -1380,7 +1406,7 @@ namespace Engine.Game {
                 }
             }
 
-            SettingsMenu.current_menu_choosen_custom = true;
+            SettingsMenu.current_menu_choosen_custom = option_name;
             return false;
         }
 

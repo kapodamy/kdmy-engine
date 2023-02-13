@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
 
 namespace Engine.Platform {
 
@@ -33,6 +35,9 @@ namespace Engine.Platform {
 
 
         public unsafe void Load(byte* ptr, MemoryStream stream) {
+            // check if the provided data is PNG, JPG, GIF, or TIFF
+            if (LoadAsBitmap(stream)) return;
+
             int offset = sizeof(IconHeader);
             int size = 0;
             IconHeader* header = (IconHeader*)ptr;
@@ -64,6 +69,8 @@ namespace Engine.Platform {
                     using (Icon icon = new Icon(stream, entry->width, entry->height)) {
                         using (Graphics g = Graphics.FromImage(dest_bitmap)) {
                             g.Clear(Color.Transparent);
+                            g.CompositingMode = CompositingMode.SourceCopy;
+                            g.CompositingQuality = CompositingQuality.HighQuality;
                             g.DrawIcon(icon, 0, 0);
                         }
                     }
@@ -75,6 +82,46 @@ namespace Engine.Platform {
                     TextureLoader.ToRGBA_FromBigEndian(pixel_count, (uint*)icn);
             }
 
+        }
+
+        private unsafe bool LoadAsBitmap(MemoryStream stream) {
+            Bitmap bitmap;
+            try {
+                bitmap = new Bitmap(stream);
+            } catch {
+                stream.Seek(0, SeekOrigin.Begin);
+                return false;
+            }
+
+            Console.Error.WriteLine(
+                "[WARN] IconLoader::LoadAsBitmap() expected ICN file format not an image."
+            );
+
+            int pixel_count = bitmap.Width * bitmap.Height;
+            int stride = bitmap.Width * sizeof(uint);
+            icons = new RawIcon[1];
+            raw_data = Marshal.AllocHGlobal(pixel_count * sizeof(uint));
+
+            using (Bitmap dest_bitmap = new Bitmap(bitmap.Width, bitmap.Height, stride, FORMAT, raw_data)) {
+                using (Graphics g = Graphics.FromImage(dest_bitmap)) {
+                    g.Clear(Color.Transparent);
+                    g.CompositingMode = CompositingMode.SourceCopy;
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+                    g.DrawImage(bitmap, 0, 0, bitmap.Width, bitmap.Height);
+                }
+            }
+
+            icons[0].width = bitmap.Width;
+            icons[0].height = bitmap.Height;
+            icons[0].pixels = raw_data;
+            bitmap.Dispose();
+
+            if (BitConverter.IsLittleEndian)
+                TextureLoader.ToRGBA_FromLittleEndian(pixel_count, (uint*)raw_data);
+            else
+                TextureLoader.ToRGBA_FromBigEndian(pixel_count, (uint*)raw_data);
+
+            return true;
         }
 
 

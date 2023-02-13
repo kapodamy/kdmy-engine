@@ -227,13 +227,20 @@ namespace Engine.Font {
         }
 
 #if SDF_FONT
-        public static void SetSDFParams(PVRContext pvrctx, float width, float edge) {
+        public static void SetSDFSmoothing(PVRContext pvrctx, float smoothing) {
             WebGL2RenderingContext gl = pvrctx.webopengl.gl;
             WebGLContextProgramGlyphs program_glyphs = pvrctx.webopengl.program_glyphs;
 
             gl.useProgram(program_glyphs.program);
-            gl.uniform1f(program_glyphs.u_sdf_width, width);
-            gl.uniform1f(program_glyphs.u_sdf_edge, edge);
+            gl.uniform1f(program_glyphs.u_sdf_smoothing, smoothing);
+        }
+
+        public static void SetSDFThickness(PVRContext pvrctx, float thickness) {
+            WebGL2RenderingContext gl = pvrctx.webopengl.gl;
+            WebGLContextProgramGlyphs program_glyphs = pvrctx.webopengl.program_glyphs;
+
+            gl.useProgram(program_glyphs.program);
+            gl.uniform1f(program_glyphs.u_sdf_thickness, thickness);
         }
 #endif
 

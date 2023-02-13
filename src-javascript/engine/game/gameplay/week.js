@@ -584,6 +584,8 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             await week_round_prepare(roundcontext, gameplaymanifest);
         }
 
+        const layout = roundcontext.layout ?? roundcontext.ui_layout;
+
         // before continue set default values
         beatwatcher_reset(WEEK_BEAT_WATCHER, 1, roundcontext.settings.original_bpm);
         beatwatcher_reset(WEEK_QUARTER_WATCHER, 0, roundcontext.settings.original_bpm);
@@ -600,7 +602,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             character_set_visible(roundcontext.players[i].character, 1);
         }
         roundcontext.scriptcontext.halt_flag = 0;
-        layout_set_single_item_to_draw(roundcontext.layout, null);
+        layout_set_single_item_to_draw(layout, null);
         if (roundcontext.songplayer) songplayer_mute(roundcontext.songplayer, 0);
 
         if (first_init) {
@@ -669,8 +671,8 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
         if ((round_result == 0 && roundcontext.track_index != last_track) || round_result == 2) {
             if (roundcontext.settings.layout_rollback) {
-                layout_stop_all_triggers(roundcontext.layout);
-                layout_trigger_any(roundcontext.layout, null);
+                layout_stop_all_triggers(layout);
+                layout_trigger_any(layout, null);
             }
             week_ui_set_visibility(roundcontext, 1);
             week_internal_reset_players_and_girlfriend(roundcontext);
@@ -789,10 +791,11 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         messagebox_show(roundcontext.messagebox, 1);
 
         // do save
-        let save_error = await main_spawn_coroutine(roundcontext.layout, savemanager_should_show, 1);
+        const layout = roundcontext.layout ?? roundcontext.ui_layout;
+        let save_error = await main_spawn_coroutine(layout, savemanager_should_show, 1);
 
         if (save_error) {
-            layout_suspend(roundcontext.layout);
+            layout_suspend(layout);
             let savemanager = await savemanager_init(1, save_error);
             await savemanager_show(savemanager);
             savemanager_destroy(savemanager);
@@ -2032,7 +2035,7 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
     );
     textsprite_set_z_index(roundcontext.trackinfo, initparams.ui.trackinfo_z);
     textsprite_border_enable(roundcontext.trackinfo, 1);
-    textsprite_border_set_size(roundcontext.trackinfo, 2.5);
+    textsprite_border_set_size(roundcontext.trackinfo, 2);
     textsprite_border_set_color_rgba8(roundcontext.trackinfo, 0x000000FF);// black
 
     // step 2: dispose all modelholders used
@@ -2064,7 +2067,8 @@ async function week_init_dialogue(/**@type {RoundContext}*/roundcontext, dialogu
 
     // dettach from the layout
     let layout = roundcontext.layout ?? roundcontext.ui_layout;
-    let group_id = layout_get_group_id(layout, WEEKROUND_UI_GROUP_NAME2)
+    let group_id = layout_get_group_id(layout, WEEKROUND_UI_GROUP_NAME2);
+    if (!layout) return;// this never should happen
 
     if (roundcontext.dialogue) dialogue_destroy(roundcontext.dialogue);
 
@@ -2266,7 +2270,8 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
     let check_ready = roundcontext.settings.ask_ready;
     let do_countdown = roundcontext.settings.do_countdown;
     let playerstats = null;
-    let camera = roundcontext.layout ? layout_get_camera_helper(roundcontext.layout) : null;
+    let layout = roundcontext.layout ?? roundcontext.ui_layout;
+    let camera = layout_get_camera_helper(layout);
     let round_duration = roundcontext.round_duration;
     let round_end_timestamp;
     let unmute_timestamp = Infinity;
@@ -2274,7 +2279,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
     window["roundcontext"] = roundcontext;
 
     if (round_duration < 0) round_duration = Infinity;
-    if (roundcontext.layout) layout_resume(roundcontext.layout);
+    layout_resume(layout);
 
     if (roundcontext.songprogressbar) {
         let duration = roundcontext.songplayer ? songplayer_get_duration(roundcontext.songplayer) : round_duration;
@@ -2300,7 +2305,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         beatwatcher_global_set_timestamp_from_kos_timer();
 
         if (pvr_is_offscreen(pvr_context)) {
-            layout_suspend(roundcontext.layout);
+            layout_suspend(layout);
             dialogue_suspend(roundcontext.dialogue);
 
             let decision = await week_pause_helper_show(roundcontext.weekpause, roundcontext, -1);
@@ -2313,14 +2318,14 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
                     return 3;// back to mainmenu
             }
 
-            layout_resume(roundcontext.layout);
+            layout_resume(layout);
             dialogue_resume(roundcontext.dialogue);
             continue;
         }
 
         if (roundcontext.script != null) await weekscript_notify_frame(roundcontext.script, elapsed);
-        layout_animate(roundcontext.layout, elapsed);
-        layout_draw(roundcontext.layout, pvr_context);
+        layout_animate(layout, elapsed);
+        layout_draw(layout, pvr_context);
 
         if (dialogue_is_completed(roundcontext.dialogue)) {
             show_dialog = 0;
@@ -2398,8 +2403,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
                 }
 
                 if (do_countdown) countdown_start(roundcontext.countdown);
-                if (roundcontext.layout)
-                    layout_trigger_camera(roundcontext.layout, WEEKROUND_CAMERA_ROUNDSTART);
+                layout_trigger_camera(layout, WEEKROUND_CAMERA_ROUNDSTART);
             }
         } else if (countdown_has_ended(roundcontext.countdown)) {
             do_countdown = 0;
@@ -2413,13 +2417,11 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         }
 
         if (roundcontext.script) await weekscript_notify_frame(roundcontext.script, elapsed);
-        layout_animate(roundcontext.layout, elapsed);
-        layout_draw(roundcontext.layout, pvr_context);
+        layout_animate(layout, elapsed);
+        layout_draw(layout, pvr_context);
     }
 
-    if (!roundcontext.settings.ask_ready && roundcontext.layout) {
-        layout_trigger_camera(roundcontext.layout, WEEKROUND_CAMERA_ROUNDSTART);
-    }
+    if (!roundcontext.settings.ask_ready) layout_trigger_camera(layout, WEEKROUND_CAMERA_ROUNDSTART);
 
     if (roundcontext.songprogressbar) songprogressbar_manual_update_enable(roundcontext.songprogressbar, 0);
 
@@ -2480,7 +2482,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         if (paused || pvr_is_offscreen(pvr_context)) {
             // pause all critical stuff
             round_duration = round_end_timestamp - timer_ms_gettime64();
-            layout_suspend(roundcontext.layout);
+            layout_suspend(layout);
             if (roundcontext.songplayer) songplayer_pause(roundcontext.songplayer);
             for (let i = 0; i < roundcontext.players_size; i++) {
                 if (roundcontext.players[i].ddrkeymon) {
@@ -2504,7 +2506,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
             // resume
             round_end_timestamp = timer_ms_gettime64() + round_duration;
-            layout_resume(roundcontext.layout);
+            layout_resume(layout);
 
             if (roundcontext.songplayer) {
                 songplayer_seek(roundcontext.songplayer, song_timestamp);
@@ -2636,8 +2638,8 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
             await weekscript_notify_timersong(roundcontext.script, song_timestamp);
             await weekscript_notify_frame(roundcontext.script, elapsed);
         }
-        layout_animate(roundcontext.layout, elapsed);
-        layout_draw(roundcontext.layout, pvr_context);
+        layout_animate(layout, elapsed);
+        layout_draw(layout, pvr_context);
 
         // JS only
         if (roundcontext.scriptcontext.halt_flag) await week_halt(roundcontext, 0);
@@ -2661,7 +2663,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
     // notify the script about the current round result and halt (if necessary)
     if (roundcontext.songplayer) songplayer_pause(roundcontext.songplayer);
-    layout_trigger_camera(roundcontext.layout, WEEKROUND_CAMERA_ROUNDEND);
+    layout_trigger_camera(layout, WEEKROUND_CAMERA_ROUNDEND);
     if (roundcontext.script) {
         await weekscript_notify_roundend(roundcontext.script, gameover);
         await week_halt(roundcontext, 1);
@@ -2706,6 +2708,7 @@ async function week_halt(/** @type {RoundContext} */roundcontext, poke_global_be
     if (!roundcontext.scriptcontext.halt_flag) return;
 
     const preesed = [0x00];
+    const layout = roundcontext.layout ?? roundcontext.ui_layout;
 
     console.log("week_halt() waiting for script signal...");
 
@@ -2725,8 +2728,8 @@ async function week_halt(/** @type {RoundContext} */roundcontext, poke_global_be
         }
 
         if (roundcontext.script) await weekscript_notify_frame(roundcontext.script, elapsed);
-        layout_animate(roundcontext.layout, elapsed);
-        layout_draw(roundcontext.layout, pvr_context);
+        layout_animate(layout, elapsed);
+        layout_draw(layout, pvr_context);
 
         if (poke_global_beatwatcher) beatwatcher_global_set_timestamp_from_kos_timer();
 

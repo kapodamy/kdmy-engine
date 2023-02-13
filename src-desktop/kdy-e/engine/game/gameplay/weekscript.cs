@@ -38,12 +38,14 @@ namespace Engine.Game.Gameplay {
                 return null;
             }
 
+            LuascriptPlatform.AddLuascript(luascript);
             return new WeekScript() { luascript = luascript };
         }
 
         public void Destroy() {
             //if (!this) return;
-
+            LuascriptPlatform.RemoveLuascript(this.luascript);
+            LuascriptPlatform.RestoreWindowTitleIfChanged();
             this.luascript.Destroy();
         }
 

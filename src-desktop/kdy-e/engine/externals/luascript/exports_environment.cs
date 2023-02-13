@@ -2,6 +2,7 @@
 using System.Globalization;
 using Engine.Animation;
 using Engine.Externals.LuaInterop;
+using Engine.Game;
 
 namespace Engine.Externals.LuaScriptInterop {
 
@@ -26,8 +27,25 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_environment_exit(LuaState L) {
-            int exit_code = (int)L.luaL_checkinteger(1);
+            int exit_code = (int)L.luaL_checkinteger(2);
             Environment.Exit(exit_code);
+            return 0;
+        }
+
+        static int script_environment_change_window_title(LuaState L) {
+            string title = L.luaL_optstring(2, null);
+            LuascriptPlatform.ChangeWindowTitle(title, L.Context is Modding);
+            return 0;
+        }
+
+        static int script_environment_require_window_attention(LuaState L) {
+            LuascriptPlatform.RequestWindowAttention();
+            return 0;
+        }
+
+        static int script_environment_open_www_link(LuaState L) {
+            string url = L.luaL_checkstring(2);
+            LuascriptPlatform.OpenWWWLink(url);
             return 0;
         }
 
@@ -37,6 +55,9 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("get_username", script_environment_get_username),
             new LuaTableFunction("get_cmdargs", script_environment_get_cmdargs),
             new LuaTableFunction("exit", script_environment_exit),
+            new LuaTableFunction("change_window_title", script_environment_change_window_title),
+            new LuaTableFunction("require_window_attention", script_environment_require_window_attention),
+            new LuaTableFunction("open_www_link", script_environment_open_www_link),
             new LuaTableFunction(null, null),
         };
 

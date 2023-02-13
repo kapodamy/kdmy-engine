@@ -210,7 +210,7 @@ namespace Engine.Game.Gameplay.Helpers {
 
             JSONToken json_additional_states = JSONParser.ReadArray(json, "additionalStates");
             ArrayList<AdditionalState> additional_states = CharacterManifest.InternalReadAdditionalStates(
-                json_additional_states, src
+                json_additional_states, this.model_character, src
             );
             additional_states.Destroy2(out this.additional_states_size, ref this.additional_states);
 
@@ -436,7 +436,7 @@ namespace Engine.Game.Gameplay.Helpers {
             //}
         }
 
-        private static ArrayList<AdditionalState> InternalReadAdditionalStates(JSONToken json_array, string src) {
+        private static ArrayList<AdditionalState> InternalReadAdditionalStates(JSONToken json_array, string default_model, string src) {
             ArrayList<AdditionalState> additional_states = new ArrayList<AdditionalState>();
 
             int size = JSONParser.ReadArrayLength(json_array);
@@ -445,7 +445,7 @@ namespace Engine.Game.Gameplay.Helpers {
 
                 AdditionalState state = new AdditionalState() {
                     name = JSONParser.ReadString(item, "name", null),
-                    model = CharacterManifest.InternalPathOf(item, "model", src),
+                    model = CharacterManifest.InternalPathOf(item, "model", null),
                     actions = new Actions() {
                         extras = null,
                         extras_size = 0,
@@ -460,6 +460,8 @@ namespace Engine.Game.Gameplay.Helpers {
                         sing_size = 0
                     }
                 };
+
+                if (String.IsNullOrEmpty(state.model)) state.model = default_model;
 
                 JSONToken json_actions = JSONParser.ReadObject(item, "actions");
                 if (!JSONParser.IsPropertyNull(item, "actions")) {

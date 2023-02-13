@@ -30,6 +30,7 @@ class PVRContext {
     /**@type {number}*/ resolution_changes = 0;
     /**@type {number}*/ last_elapsed = 0;
     /**@type {number}*/ frame_rendered = 0;
+    /**@type {string}*/ native_window_title;
 
     /**@type {PSFramebuffer}*/ shader_framebuffer_front;
     /**@type {PSFramebuffer}*/ shader_framebuffer_back;
@@ -99,6 +100,7 @@ class PVRContext {
         pvrctx_helper_clear_offsetcolor(this.render_offsetcolor);
 
         this.screen_stride = this.screen_width;
+        this.native_window_title = document.title;
     }
 
 

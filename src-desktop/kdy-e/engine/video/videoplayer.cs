@@ -468,6 +468,10 @@ L_prepare:
                         time_offset = Glfw.GetTime();
                         next_frame_time = Double.NegativeInfinity;
                         this.decoder_seek_request = false;
+                    } else if (time <= -2.0) {
+                        this.video_track_ended = true;
+                        this.decoder_running = this.loop_enabled;
+                        Interlocked.Exchange(ref this.last_video_playback_time, this.info.video_seconds_duration);
                     } else if ((current_time - time) > VideoPlayer.BEHIND_TOLERANCE && next_frame_time >= 0.0) {
                         // behind playback time, skip the current frame to keep in sync
                         Interlocked.Exchange(ref this.last_video_playback_time, time);
@@ -476,10 +480,6 @@ L_prepare:
                             $"VideoPlayer::InternalDecoder() video out-of-sync {time}/{current_time}"
                         );
 #endif
-                    } else if (time == -2.0) {
-                        this.video_track_ended = true;
-                        this.decoder_running = this.loop_enabled;
-                        Interlocked.Exchange(ref this.last_video_playback_time, this.info.video_seconds_duration);
                     } else if (time < 0) {
                         // an error ocurred
                     } else {

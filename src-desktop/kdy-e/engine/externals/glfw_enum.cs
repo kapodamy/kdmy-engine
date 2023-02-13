@@ -175,7 +175,7 @@ namespace Engine.Externals.GLFW {
         RIGHT_CONTROL = 345,
         RIGHT_ALT = 346,
         RIGHT_SUPER = 347,
-        MENU = 348,
+        MENU = 348
     }
 
     internal enum Hint : int {
@@ -187,4 +187,17 @@ namespace Engine.Externals.GLFW {
         Decorated = 0x00020005
     }
 
+    public enum MouseButtons : int {
+        BUTTON1 = 0,
+        BUTTON2 = 1,
+        BUTTON3 = 2,
+        BUTTON4 = 3,
+        BUTTON5 = 4,
+        BUTTON6 = 5,
+        BUTTON7 = 6,
+        BUTTON8 = 7,
+        LEFT = BUTTON1,
+        RIGHT = BUTTON2,
+        MIDDLE = BUTTON3
+    }
 }

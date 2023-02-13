@@ -8,7 +8,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Engine.Utils;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace CsharpWrapper {
 
@@ -22,6 +21,8 @@ namespace CsharpWrapper {
             public string description = "";
             public Image screenshoot;
             public Image icon;
+            public byte[] window_icon;
+            public string window_title;
 
             public Expansion(string directory_name) {
                 name = directory = directory_name;
@@ -50,13 +51,10 @@ namespace CsharpWrapper {
         private readonly string expansions_dir;
         private readonly Bitmap blank_bitmap;
         private Expansion[] expansions;
-        private string selected_expansion_name;
+        private Expansion selected_expansion;
         private readonly ImageList imagelist;
         private bool do_launch;
         private Icon icon;
-        private int list_width;
-        private int group_x;
-        private int group_width;
 
         public ExpansionsLoader() {
             expansions_dir = Path.Combine(EngineSettings.EngineDir, "expansions");
@@ -81,13 +79,13 @@ namespace CsharpWrapper {
                 icon = new Icon(stream);
             }
             Icon = icon;
-
-            list_width = listView.Width;
-            group_x = groupBox1.Location.X;
-            group_width = groupBox1.Width;
         }
 
-        public string SelectedExpansion { get => selected_expansion_name; }
+        public string SelectedExpansionDirectory { get => selected_expansion.directory; }
+
+        public byte[] SelectedExpansionWindowIcon { get => selected_expansion.window_icon; }
+
+        public string SelectedExpansionWindowTitle { get => selected_expansion.window_title; }
 
         public bool NotLaunchAndExit { get => !do_launch; }
 
@@ -103,7 +101,7 @@ namespace CsharpWrapper {
         protected override void OnLoad(EventArgs e) {
             base.OnShown(e);
             button_refreshList_Click(this, e);
-            selected_expansion_name = null;
+            selected_expansion = null;
         }
 
 
@@ -139,6 +137,8 @@ namespace CsharpWrapper {
                 expansion.description = JSONParser.ReadString(json, "description", null);
                 string screenshoot_path = JSONParser.ReadString(json, "screenshoot", null);
                 string icon_path = JSONParser.ReadString(json, "icon", null);
+                string window_icon_path = JSONParser.ReadString(json, "windowIcon", null);
+                expansion.window_title = JSONParser.ReadString(json, "windowTitle", null);
                 JSONParser.Destroy(json);
 
                 if (screenshoot_path != null) {
@@ -153,7 +153,19 @@ namespace CsharpWrapper {
                         expansion.icon = Image.FromFile(icon_path);
                     }
                 }
+                if (window_icon_path != null) {
+                    window_icon_path = Path.Combine(dir.FullName, window_icon_path);
+                    if (File.Exists(window_icon_path)) {
+                        expansion.window_icon = File.ReadAllBytes(window_icon_path);
+                    } else {
+                        Console.Error.WriteLine(
+                            $"[WARN] ExpansionsLoader::LoadExpansios() file '{window_icon_path}' not found"
+                        );
+                        expansion.window_icon = null;
+                    }
+                }
 
+                // TODO: markdown to RTF (https://es.wikipedia.org/wiki/Rich_Text_Format)
                 if (expansion.submiter != null) {
                     expansion.submiter = expansion.submiter.Replace("\r", "").Replace("\n", "\r\n");
                 }
@@ -208,7 +220,7 @@ namespace CsharpWrapper {
             if (selections.Count < 1) return;
 
             do_launch = true;
-            selected_expansion_name = expansions[selections[0]].directory;
+            selected_expansion = expansions[selections[0]];
             Close();
         }
 

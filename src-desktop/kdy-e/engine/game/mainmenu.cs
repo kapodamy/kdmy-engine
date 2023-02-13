@@ -344,6 +344,7 @@ namespace Engine.Game {
                 choosen_option_index = MainMenu.MENU_MANIFEST.GetOptionIndex(moddinghelper.choosen_name);
 
                 if (choosen_option_index < 0) {
+                    modding.callback_option = null;
                     modding.HelperNotifyHandleCustomOption(moddinghelper.choosen_name);
                 }
             }
@@ -459,7 +460,8 @@ namespace Engine.Game {
                 return true;
             }
 
-            // reject
+            // unknown option
+            moddinghelper.choosen_name = option_name;
             return false;
         }
 

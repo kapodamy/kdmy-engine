@@ -121,17 +121,20 @@ namespace Engine.Game {
             // step 3: count required tracks
             ArrayList<MappedSong> songs = new ArrayList<MappedSong>(Funkin.weeks_array.size * 3);
             for (int i = 0 ; i < Funkin.weeks_array.size ; i++) {
-                bool is_week_locked = !FunkinSave.ContainsUnlockDirective(Funkin.weeks_array.array[i].unlock_directive);
+                WeekInfo weekinfo = Funkin.weeks_array.array[i];
+                bool is_week_locked = !FunkinSave.ContainsUnlockDirective(weekinfo.unlock_directive);
 
-                for (int j = 0 ; j < Funkin.weeks_array.array[i].songs_count ; j++) {
-                    bool should_hide = Funkin.weeks_array.array[i].songs[j].freeplay_hide_if_week_locked;
+                for (int j = 0 ; j < weekinfo.songs_count ; j++) {
+                    WeekInfo.Song song = weekinfo.songs[j];
+
+                    bool should_hide = song.freeplay_hide_if_week_locked;
                     if (should_hide && is_week_locked) continue;
 
-                    should_hide = Funkin.weeks_array.array[i].songs[j].freeplay_hide_if_locked;
-                    bool is_song_locked = !FunkinSave.ContainsUnlockDirective(Funkin.weeks_array.array[i].songs[j].freeplay_unlock_directive);
+                    should_hide = song.freeplay_hide_if_locked;
+                    bool is_song_locked = !FunkinSave.ContainsUnlockDirective(song.freeplay_unlock_directive);
                     if (should_hide && is_song_locked) continue;
 
-                    int gameplaymanifest_index = Funkin.weeks_array.array[i].songs[j].freeplay_track_index_in_gameplaymanifest;
+                    int gameplaymanifest_index = song.freeplay_track_index_in_gameplaymanifest;
                     if (gameplaymanifest_index < 0) gameplaymanifest_index = j;
 
                     songs.Add(new MappedSong() {

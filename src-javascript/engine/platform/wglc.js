@@ -116,8 +116,8 @@ class WebGLContextProgramGlyphs {
     /**@type {WebGLUniformLocation}*/u_offsetcolor_mul_or_diff;
     /**@type {WebGLUniformLocation}*/u_texture0;
     /**@type {WebGLUniformLocation}*/u_texture1;
-    /**@type {WebGLUniformLocation}*/u_sdf_width;
-    /**@type {WebGLUniformLocation}*/u_sdf_edge;
+    /**@type {WebGLUniformLocation}*/u_sdf_smoothing;
+    /**@type {WebGLUniformLocation}*/u_sdf_thickness;
 
     /**@type {WebGLBuffer}*/buffer_indices;
     /**@type {WebGLBuffer}*/buffer_vertex;
@@ -151,8 +151,8 @@ class WebGLContextProgramGlyphs {
 
         if (SDF_FONT) {
             // sdf specific uniforms
-            this.u_sdf_width = gl.getUniformLocation(program, "u_sdf_width");
-            this.u_sdf_edge = gl.getUniformLocation(program, "u_sdf_edge");
+            this.u_sdf_smoothing = gl.getUniformLocation(program, "u_sdf_smoothing");
+            this.u_sdf_thickness = gl.getUniformLocation(program, "u_sdf_thickness");
         }
 
         // glyphs buffer

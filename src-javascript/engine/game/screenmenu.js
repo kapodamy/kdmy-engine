@@ -10,6 +10,7 @@ async function screenmenu_init(layout_src, script_src) {
     }
 
     let modding = await modding_init(layout, script_src);
+    modding.exit_delay_ms = layout_get_attached_value_as_float(layout, "exit_delay", 0.0);
 
     return { modding, layout };
 }
@@ -49,13 +50,14 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
         }
 
         L_process_gamepad: {
-            let menu = screenmenu.modding.active_menu;
-            if (screenmenu.modding.has_halt || !menu) break L_process_gamepad;
-
+            if (screenmenu.modding.has_halt) break L_process_gamepad;
+            
             if (active_gamepad_delay > 0.0) {
                 active_gamepad_delay -= elapsed;
                 if (active_gamepad_delay > 0.0) break L_process_gamepad;
             }
+
+            let menu = screenmenu.modding.active_menu;
 
             let go_back = 0;
             let has_selected = 0;
@@ -63,7 +65,9 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
 
             if ((pressed & MAINMENU_GAMEPAD_CANCEL) != 0)
                 go_back = 1;
-            else if ((pressed & GAMEPAD_DALL_LEFT) != 0)
+            else if (menu == null) {
+                break L_process_gamepad;
+            } else if ((pressed & GAMEPAD_DALL_LEFT) != 0)
                 has_selected = menu_select_horizontal(menu, -1);
             else if ((pressed & GAMEPAD_DALL_RIGHT) != 0)
                 has_selected = menu_select_horizontal(menu, 1);

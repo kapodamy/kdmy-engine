@@ -26,8 +26,8 @@ const float MOD_B = MOD_A / 2.0;
 #endif
 
 #ifdef SDF_FONT
-uniform float u_sdf_width;
-uniform float u_sdf_edge;
+uniform float u_sdf_smoothing;
+uniform float u_sdf_thickness;
 
 const float THICKNESS = 0.20;
 #endif
@@ -46,15 +46,24 @@ void main() {
     if(u_grayscale) {
         float luminance = texture_color.r;
 
-		#ifdef SDF_FONT
-        /*if(is_outline) {
-            luminance = 1.0 - smoothstep(THICKNESS + u_sdf_width, THICKNESS + u_sdf_width + u_sdf_edge, 1.0 - luminance);
-        } else {*/
-            luminance = 1.0 - smoothstep(u_sdf_width, u_sdf_width + u_sdf_edge, 1.0 - luminance);
-        /*}*/
-		#endif
+        if (luminance <= 0) {
+            discard;
+            return;
+        }
 
-        color = vec4(1.0, 1.0, 1.0, luminance) * source_color;
+		#ifdef SDF_FONT
+        if (is_outline) {
+            float factor = smoothstep(0.5 - u_sdf_smoothing, 0.5 + u_sdf_smoothing, luminance);
+            color = mix(u_color_outline, source_color, factor);
+            float alpha = smoothstep(u_sdf_thickness - u_sdf_smoothing, u_sdf_thickness + u_sdf_smoothing, luminance);
+            color = vec4(color.rgb, color.a * alpha);
+        } else {
+            luminance = smoothstep(0.5 - u_sdf_smoothing, 0.5 + u_sdf_smoothing, luminance);
+            color = vec4(source_color.rgb, source_color.a * luminance);
+        }
+        #else
+        color = vec4(source_color.rgb, source_color.a * luminance);
+		#endif
     } else {
         if(u_color_by_diff) {
             color.r = source_color.r - texture_color.r;

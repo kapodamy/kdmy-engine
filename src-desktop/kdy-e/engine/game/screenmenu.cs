@@ -24,6 +24,7 @@ namespace Engine.Game {
             }
 
             Modding modding = new Modding(layout, script_src);
+            modding.exit_delay_ms = layout.GetAttachedValueAsFloat("exit_delay", 0f);
 
             return new ScreenMenu() { modding = modding, layout = layout };
         }
@@ -63,29 +64,32 @@ namespace Engine.Game {
                     script.notify_frame(elapsed);
                 }
 
-                Menu menu = this.modding.active_menu;
-                if (this.modding.has_halt || menu == null) goto L_layout;
+                if (this.modding.has_halt) goto L_layout;
 
                 if (active_gamepad_delay > 0f) {
                     active_gamepad_delay -= elapsed;
                     if (active_gamepad_delay > 0f) goto L_layout;
                 }
 
+                Menu menu = this.modding.active_menu;
+
                 bool go_back = false;
                 bool has_selected = false;
                 bool has_choosen = false;
 
-                if ((pressed & MainMenu.GAMEPAD_CANCEL) != 0)
+                if ((pressed & MainMenu.GAMEPAD_CANCEL).Bool())
                     go_back = true;
-                else if ((pressed & GamepadButtons.DALL_LEFT) != 0)
+                else if (menu == null)
+                    goto L_layout;
+                else if ((pressed & GamepadButtons.DALL_LEFT).Bool())
                     has_selected = menu.SelectHorizontal(-1);
-                else if ((pressed & GamepadButtons.DALL_RIGHT) != 0)
+                else if ((pressed & GamepadButtons.DALL_RIGHT).Bool())
                     has_selected = menu.SelectHorizontal(1);
-                else if ((pressed & GamepadButtons.DALL_UP) != 0)
+                else if ((pressed & GamepadButtons.DALL_UP).Bool())
                     has_selected = menu.SelectVertical(-1);
-                else if ((pressed & GamepadButtons.DALL_DOWN) != 0)
+                else if ((pressed & GamepadButtons.DALL_DOWN).Bool())
                     has_selected = menu.SelectVertical(1);
-                else if ((pressed & MainMenu.GAMEPAD_OK) != 0)
+                else if ((pressed & MainMenu.GAMEPAD_OK).Bool())
                     has_choosen = menu.GetSelectedIndex() >= 0;
 
 

@@ -16,9 +16,10 @@ typedef struct LuascriptObject_t {
 typedef struct Luascript_t {
     void* L;
     void* context;
+    bool is_week;
     LuascriptObject* shared_array;
     size_t shared_size;
-} * Luascript;
+}* Luascript;
 
 
 Luascript luascript_init(const char* lua_sourcecode, const char* filename, void* context, bool is_week);
@@ -59,4 +60,11 @@ void* luascript_notify_modding_exit(Luascript luascript, ModdingValueType* retur
 void luascript_notify_modding_init(Luascript luascript, ModdingValueType arg_type, void* arg_value);
 void luascript_notify_modding_event(Luascript luascript, const char* event_name);
 void luascript_notify_modding_handle_custom_option(Luascript luascript, const char* option_name);
+void luascript_notify_modding_window_focus(Luascript luascript, bool focused);
+void luascript_notify_modding_window_minimized(Luascript luascript, bool minimized);
+void luascript_notify_input_keyboard(Luascript luascript, int32_t key, int32_t scancode, bool is_pressed, int32_t mods);
+void luascript_notify_input_mouse_position(Luascript luascript, double x, double y);
+void luascript_notify_input_mouse_enter(Luascript luascript, bool entering);
+void luascript_notify_input_mouse_button(Luascript luascript, int32_t button, bool is_pressed, int32_t mods);
+void luascript_notify_input_mouse_scroll(Luascript luascript, double x, double y);
 #endif

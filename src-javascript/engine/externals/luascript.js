@@ -1594,6 +1594,9 @@ function __js__healthwatcher_has_deads(healthwatcher, in_players_or_opponents) {
 function __js__healthwatcher_reset_opponents(healthwatcher) {
     healthwatcher_reset_opponents(kdmyEngine_obtain(healthwatcher))
 }
+function __js__kdmyEngine_change_window_title(title, from_modding_context) {
+    luascriptplatform.ChangeWindowTitle(kdmyEngine_ptrToString(title), from_modding_context)
+}
 function __js__kdmyEngine_create_array(size) {
     return kdmyEngine_obtain(new Array(size))
 }
@@ -1639,6 +1642,12 @@ function __js__kdmyEngine_get_locationquery() {
 }
 function __js__kdmyEngine_get_useragent() {
     return kdmyEngine_stringToPtr(navigator.userAgent)
+}
+function __js__kdmyEngine_open_link(url) {
+    let target_url = kdmyEngine_ptrToString(url);
+    if (!target_url)
+        return;
+    window.open(target_url, "_blank", "noopener,noreferrer")
 }
 function __js__kdmyEngine_read_array_item_object(array_id, index) {
     let array = kdmyEngine_obtain(array_id);
@@ -1706,6 +1715,9 @@ function __js__kdmyEngine_read_prop_string(obj_id, field_name) {
 function __js__kdmyEngine_read_window_object(variable_name) {
     let obj = window[kdmyEngine_ptrToString(variable_name)];
     return obj === undefined ? 0 : kdmyEngine_obtain(obj)
+}
+function __js__kdmyEngine_require_window_attention() {
+    alert(document.title + "\n Environment:require_window_attention()")
 }
 function __js__kdmyEngine_write_in_array_boolean(array_id, index, value) {
     let array = kdmyEngine_obtain(array_id);
@@ -1953,8 +1965,8 @@ function __js__menu_select_index(menu, index) {
     menu_select_index(kdmyEngine_obtain(menu), index)
 }
 function __js__menu_select_item(menu, name) {
-    let ret = menu_select_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name))
-    return ret ? 1 : 0;
+    let ret = menu_select_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
 }
 function __js__menu_select_vertical(menu, offset) {
     let ret = menu_select_vertical(kdmyEngine_obtain(menu), offset);
@@ -6946,6 +6958,7 @@ var asmLibraryArg = {
     "__js__healthwatcher_enable_recover": __js__healthwatcher_enable_recover,
     "__js__healthwatcher_has_deads": __js__healthwatcher_has_deads,
     "__js__healthwatcher_reset_opponents": __js__healthwatcher_reset_opponents,
+    "__js__kdmyEngine_change_window_title": __js__kdmyEngine_change_window_title,
     "__js__kdmyEngine_create_array": __js__kdmyEngine_create_array,
     "__js__kdmyEngine_create_object": __js__kdmyEngine_create_object,
     "__js__kdmyEngine_forget_obtained": __js__kdmyEngine_forget_obtained,
@@ -6961,6 +6974,7 @@ var asmLibraryArg = {
     "__js__kdmyEngine_read_prop_object": __js__kdmyEngine_read_prop_object,
     "__js__kdmyEngine_read_prop_string": __js__kdmyEngine_read_prop_string,
     "__js__kdmyEngine_read_window_object": __js__kdmyEngine_read_window_object,
+    "__js__kdmyEngine_require_window_attention": __js__kdmyEngine_require_window_attention,
     "__js__kdmyEngine_write_in_array_boolean": __js__kdmyEngine_write_in_array_boolean,
     "__js__kdmyEngine_write_in_array_double": __js__kdmyEngine_write_in_array_double,
     "__js__kdmyEngine_write_in_array_float": __js__kdmyEngine_write_in_array_float,
@@ -7543,6 +7557,27 @@ var _luascript_notify_modding_event = ModuleLuaScript["_luascript_notify_modding
 };
 var _luascript_notify_modding_handle_custom_option = ModuleLuaScript["_luascript_notify_modding_handle_custom_option"] = function () {
     return (_luascript_notify_modding_handle_custom_option = ModuleLuaScript["_luascript_notify_modding_handle_custom_option"] = ModuleLuaScript["asm"]["luascript_notify_modding_handle_custom_option"]).apply(null, arguments)
+};
+var _luascript_notify_modding_window_focus = ModuleLuaScript["_luascript_notify_modding_window_focus"] = function () {
+    return (_luascript_notify_modding_window_focus = ModuleLuaScript["_luascript_notify_modding_window_focus"] = ModuleLuaScript["asm"]["luascript_notify_modding_window_focus"]).apply(null, arguments)
+};
+var _luascript_notify_modding_window_minimized = ModuleLuaScript["_luascript_notify_modding_window_minimized"] = function () {
+    return (_luascript_notify_modding_window_minimized = ModuleLuaScript["_luascript_notify_modding_window_minimized"] = ModuleLuaScript["asm"]["luascript_notify_modding_window_minimized"]).apply(null, arguments)
+};
+var _luascript_notify_input_keyboard = ModuleLuaScript["_luascript_notify_input_keyboard"] = function () {
+    return (_luascript_notify_input_keyboard = ModuleLuaScript["_luascript_notify_input_keyboard"] = ModuleLuaScript["asm"]["luascript_notify_input_keyboard"]).apply(null, arguments)
+};
+var _luascript_notify_input_mouse_position = ModuleLuaScript["_luascript_notify_input_mouse_position"] = function () {
+    return (_luascript_notify_input_mouse_position = ModuleLuaScript["_luascript_notify_input_mouse_position"] = ModuleLuaScript["asm"]["luascript_notify_input_mouse_position"]).apply(null, arguments)
+};
+var _luascript_notify_input_mouse_enter = ModuleLuaScript["_luascript_notify_input_mouse_enter"] = function () {
+    return (_luascript_notify_input_mouse_enter = ModuleLuaScript["_luascript_notify_input_mouse_enter"] = ModuleLuaScript["asm"]["luascript_notify_input_mouse_enter"]).apply(null, arguments)
+};
+var _luascript_notify_input_mouse_button = ModuleLuaScript["_luascript_notify_input_mouse_button"] = function () {
+    return (_luascript_notify_input_mouse_button = ModuleLuaScript["_luascript_notify_input_mouse_button"] = ModuleLuaScript["asm"]["luascript_notify_input_mouse_button"]).apply(null, arguments)
+};
+var _luascript_notify_input_mouse_scroll = ModuleLuaScript["_luascript_notify_input_mouse_scroll"] = function () {
+    return (_luascript_notify_input_mouse_scroll = ModuleLuaScript["_luascript_notify_input_mouse_scroll"] = ModuleLuaScript["asm"]["luascript_notify_input_mouse_scroll"]).apply(null, arguments)
 };
 var _malloc = ModuleLuaScript["_malloc"] = function () {
     return (_malloc = ModuleLuaScript["_malloc"] = ModuleLuaScript["asm"]["malloc"]).apply(null, arguments)

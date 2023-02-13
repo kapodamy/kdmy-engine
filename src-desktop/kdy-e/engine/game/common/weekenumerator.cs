@@ -21,6 +21,8 @@ namespace Engine.Game.Common {
             public string name;
             public string freeplay_host_icon_model;
             public string freeplay_host_icon_name;
+            public string freeplay_locked_host_icon_model;
+            public string freeplay_locked_host_icon_name;
             public string freeplay_background;
             public bool freeplay_only;
             public string freeplay_unlock_directive;
@@ -227,6 +229,8 @@ namespace Engine.Game.Common {
                         name = JSONParser.ReadString(json_song, "name", null),
                         freeplay_host_icon_model = ParsePath(json_song, "freeplayHostIconModel"),
                         freeplay_host_icon_name = JSONParser.ReadString(json_song, "freeplayHostIconName", null),
+                        freeplay_locked_host_icon_model = ParsePath(json_song, "freeplayLockedHostIconModel"),
+                        freeplay_locked_host_icon_name = JSONParser.ReadString(json_song, "freeplayLockedHostIconName", null),
                         freeplay_background = JSONParser.ReadString(json_song, "freeplayBackground", null),
                         freeplay_only = JSONParser.ReadBoolean(json_song, "freeplayOnly", false),
                         freeplay_unlock_directive = JSONParser.ReadString(json_song, "freeplayUnlockDirective", null),

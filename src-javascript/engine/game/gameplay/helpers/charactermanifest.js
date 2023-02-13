@@ -36,7 +36,7 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
         sing_alternate_suffix: json_read_string(json, "singAlternateSuffix", null),
         sing_prefix: json_read_string(json, "singPrefix", null),
         sing_alternate_prefix: json_read_string(json, "singAlternatePrefix", null),
-        allow_alternate_idle: json_read_string(json, "allowAlternateIdle", false),
+        allow_alternate_idle: json_read_boolean(json, "allowAlternateIdle", false),
         continuous_idle: json_read_boolean(json, "continuousIdle", false),
         actions_apply_chart_speed: json_read_boolean(json, "actionsApplyChartSpeed", false),
 
@@ -123,7 +123,7 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
 
     let json_additional_states = json_read_array(json, "additionalStates");
     let additional_states = character_manifest_internal_read_additional_states(
-        json_additional_states, src
+        json_additional_states, character_manifest.model_character, src
     );
     arraylist_destroy2(additional_states, character_manifest, "additional_states_size", "additional_states");
 
@@ -351,7 +351,7 @@ function character_manifest_internal_destroy_actions(actions) {
     }
 }
 
-function character_manifest_internal_read_additional_states(json_array, src) {
+function character_manifest_internal_read_additional_states(json_array, default_model, src) {
     let additional_states = arraylist_init();
 
     let size = json_read_array_length(json_array);
@@ -360,7 +360,7 @@ function character_manifest_internal_read_additional_states(json_array, src) {
 
         let state = {
             name: json_read_string(item, "name", null),
-            model: charactermanifest_internal_path_of(item, "model", src),
+            model: charactermanifest_internal_path_of(item, "model", null),
             actions: {
                 extras: null,
                 extras_size: 0,
@@ -375,6 +375,8 @@ function character_manifest_internal_read_additional_states(json_array, src) {
                 sing_size: 0
             }
         };
+
+        if (!state.model) state.model = strdup(default_model);
 
         let json_actions = json_read_object(item, "actions");
         if (!json_is_property_null(item, "actions")) {

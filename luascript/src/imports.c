@@ -388,4 +388,68 @@ void luascript_notify_modding_handle_custom_option(Luascript luascript, const ch
     lua_imported_fn(lua, FUNCTION, 1);
 }
 
+void luascript_notify_modding_window_focus(Luascript luascript, bool focused) {
+    if (luascript->is_week) return;
+    FUNCTION(luascript, "f_modding_window_focus");
+
+    lua_pushboolean(luascript->L, focused);
+
+    lua_imported_fn(lua, FUNCTION, 1);
+}
+
+void luascript_notify_modding_window_minimized(Luascript luascript, bool minimized) {
+    if (luascript->is_week) return;
+    FUNCTION(luascript, "f_modding_window_minimized");
+
+    lua_pushboolean(luascript->L, minimized);
+
+    lua_imported_fn(lua, FUNCTION, 1);
+}
+
+void luascript_notify_input_keyboard(Luascript luascript, int32_t key, int32_t scancode, bool is_pressed, int32_t mods) {
+    FUNCTION(luascript, "f_input_keyboard");
+
+    lua_pushinteger(luascript->L, key);
+    lua_pushinteger(luascript->L, scancode);
+    lua_pushboolean(luascript->L, is_pressed);
+    lua_pushinteger(luascript->L, mods);
+
+    lua_imported_fn(lua, FUNCTION, 4);
+}
+
+void luascript_notify_input_mouse_position(Luascript luascript, double x, double y) {
+    FUNCTION(luascript, "f_input_mouse_position");
+
+    lua_pushnumber(luascript->L, x);
+    lua_pushnumber(luascript->L, y);
+
+    lua_imported_fn(lua, FUNCTION, 2);
+}
+
+void luascript_notify_input_mouse_enter(Luascript luascript, bool entering) {
+    FUNCTION(luascript, "f_input_mouse_enter");
+
+    lua_pushboolean(luascript->L, entering);
+
+    lua_imported_fn(lua, FUNCTION, 1);
+}
+
+void luascript_notify_input_mouse_button(Luascript luascript, int32_t button, bool is_pressed, int32_t mods) {
+    FUNCTION(luascript, "f_input_mouse_button");
+
+    lua_pushinteger(luascript->L, button);
+    lua_pushboolean(luascript->L, is_pressed);
+    lua_pushinteger(luascript->L, mods);
+
+    lua_imported_fn(lua, FUNCTION, 3);
+}
+
+void luascript_notify_input_mouse_scroll(Luascript luascript, double x, double y) {
+    FUNCTION(luascript, "f_input_mouse_scroll");
+
+    lua_pushnumber(luascript->L, x);
+    lua_pushnumber(luascript->L, y);
+
+    lua_imported_fn(lua, FUNCTION, 2);
+}
 

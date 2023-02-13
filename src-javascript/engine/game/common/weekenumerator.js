@@ -155,6 +155,8 @@ async function weekenumerator_parse_week(week_name) {
                 name: json_read_string(json_song, "name", null),
                 freeplay_host_icon_model: await weekenumerator_parse_path(json_song, "freeplayHostIconModel"),
                 freeplay_host_icon_name: json_read_string(json_song, "freeplayHostIconName", null),
+                freeplay_locked_host_icon_model: await weekenumerator_parse_path(json_song, "freeplayLockedHostIconModel"),
+                freeplay_locked_host_icon_name: json_read_string(json_song, "freeplayLockedHostIconName", null),
                 freeplay_background: json_read_string(json_song, "freeplayBackground", null),
                 freeplay_only: json_read_boolean(json_song, "freeplayOnly", false),
                 freeplay_unlock_directive: json_read_string(json_song, "freeplayUnlockDirective", null),

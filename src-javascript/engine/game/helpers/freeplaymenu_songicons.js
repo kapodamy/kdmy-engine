@@ -14,8 +14,15 @@ async function freeplaymenu_songicons_init(song_map, max_dimmen, font_size) {
         let track = arraylist_get(song_map, i);
         let weekinfo = weeks_array.array[track.week_index];
 
-        let icon_name = weekinfo.songs[track.song_index].freeplay_host_icon_name;
-        let model_src = weekinfo.songs[track.song_index].freeplay_host_icon_model;
+        let icon_name = null, model_src = null;
+
+        if (track.is_locked) {
+            icon_name = weekinfo.songs[track.song_index].freeplay_locked_host_icon_name;
+            model_src = weekinfo.songs[track.song_index].freeplay_locked_host_icon_model;
+        }
+
+        if (!icon_name) icon_name = weekinfo.songs[track.song_index].freeplay_host_icon_name;
+        if (!model_src) model_src = weekinfo.songs[track.song_index].freeplay_host_icon_model;
 
         if (!icon_name) icon_name = HEALTHBAR_ICON_PREFIX_NEUTRAL;
         if (!model_src) model_src = weekinfo.songs_default_freeplay_host_icon_model;

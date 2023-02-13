@@ -12,6 +12,9 @@ namespace Engine.Externals.GLFW {
         public const int DONT_CARE = -1;
         public const int PROFILE_CORE = 0x00032001;
         public const int WINDOWATTRIBUTE_FOCUSED = 0x00020001;
+        public const int CURSOR = 0x00033001;
+        public const int CURSOR_NORMAL = 0x00034001;
+        public const int CURSOR_HIDDEN = 0x00034002;
 
         public const string GAMECONTROLLERDB = "gamecontrollerdb.txt";
 
@@ -110,7 +113,32 @@ namespace Engine.Externals.GLFW {
         public static extern WindowCallback SetCloseCallback(Window window, WindowCallback closeCallback);
 
         [DllImport(GLFW, EntryPoint = "glfwUpdateGamepadMappings", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool glfwUpdateGamepadMappings([MarshalAs(UnmanagedType.LPStr)] string mappings);
+        public static extern bool UpdateGamepadMappings([MarshalAs(UnmanagedType.LPStr)] string mappings);
+
+        [DllImport(GLFW, EntryPoint = "glfwSetCursorPosCallback", CallingConvention = CallingConvention.Cdecl)]
+        public static extern MouseCallback SetCursorPositionCallback(Window window, MouseCallback mouseCallback);
+
+        [DllImport(GLFW, EntryPoint = "glfwSetCursorEnterCallback", CallingConvention = CallingConvention.Cdecl)]
+        public static extern MouseEnterCallback SetCursorEnterCallback(Window window, MouseEnterCallback mouseCallback);
+
+        [DllImport(GLFW, EntryPoint = "glfwSetMouseButtonCallback", CallingConvention = CallingConvention.Cdecl)]
+        public static extern MouseButtonCallback SetMouseButtonCallback(Window window, MouseButtonCallback mouseCallback);
+
+        [DllImport(GLFW, EntryPoint = "glfwSetScrollCallback", CallingConvention = CallingConvention.Cdecl)]
+        public static extern MouseCallback SetScrollCallback(Window window, MouseCallback mouseCallback);
+
+        [DllImport(GLFW, EntryPoint = "glfwRequestWindowAttention", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RequestWindowAttention(Window window);
+
+        [DllImport(GLFW, EntryPoint = "glfwSetWindowTitle", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void glfwSetWindowTitle(Window window, byte[] title);
+
+        [DllImport(GLFW, EntryPoint = "glfwSetInputMode", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SetInputMode(Window window, int mode, int value);
+
+        [DllImport(GLFW, EntryPoint = "glfwGetInputMode", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int GetInputMode(Window window, int mode);
+
 
         public static string GetJoystickName(int joystick) {
             return StringFromPtr(glfwGetJoystickName(joystick));
@@ -144,6 +172,18 @@ namespace Engine.Externals.GLFW {
             return new Window(glfwCreateWindow(width, height, title_ptr, monitor, share));
         }
 
+        public static void SetWindowTitle(Window window, string title) {
+            byte[] buffer;
+
+            if (title == null) {
+                buffer = null;
+            } else {
+                buffer = new byte[Encoding.UTF8.GetByteCount(title) + 1];
+                Encoding.UTF8.GetBytes(title, 0, title.Length, buffer, 0);
+            }
+
+            glfwSetWindowTitle(window, buffer);
+        }
 
         private static string StringFromPtr(IntPtr ptr) {
             if (ptr == IntPtr.Zero) return null;
