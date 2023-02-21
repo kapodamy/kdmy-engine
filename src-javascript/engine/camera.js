@@ -24,7 +24,10 @@ function camera_init(modifier, viewport_width, viewport_height) {
         parallax_x: 0, parallax_y: 0, parallax_z: 1,
         offset_x: 0, offset_y: 0, offset_z: 1,
         parent_layout: null,
-        animation: null
+        animation: null,
+        enable_offset_zoom: 1,
+        half_viewport_width: viewport_width / 2.0,
+        half_viewport_height: viewport_height / 2.0
     };
 
     if (camera.internal_modifier) {
@@ -38,7 +41,6 @@ function camera_init(modifier, viewport_width, viewport_height) {
     }
 
     camera_set_interpolator_type(camera, CAMERA_DEFAULT_INTERPOLATOR);
-    //camera_enable_scene_zoom(camera, 1);
 
     return camera;
 }
@@ -307,6 +309,10 @@ function camera_from_layout(camera, layout, camera_name) {
     let camera_placeholder = layout_get_camera_placeholder(layout, camera_name);
     if (!camera_placeholder) return 0;
 
+    if (camera_placeholder.enable_offset_zoom) {
+        camera.enable_offset_zoom = camera_placeholder.enable_offset_zoom;
+    }
+
     if (camera_placeholder.animation) {
         camera_set_animation(camera, camera_placeholder.animation);
         return 1;
@@ -531,13 +537,26 @@ function camera_apply_offset(camera, destination_matrix) {
     }
 
     sh4matrix_translate(destination_matrix, camera.offset_x, camera.offset_y);
-    sh4matrix_scale(destination_matrix, camera.offset_z, camera.offset_z);
+
+    if (camera.enable_offset_zoom && camera.offset_z != 1.0) {
+        sh4matrix_scale_size(
+            destination_matrix,
+            camera.half_viewport_width, camera.half_viewport_height,
+            camera.offset_z, camera.offset_z
+        );
+    } else {
+        sh4matrix_scale(destination_matrix, camera.offset_z, camera.offset_z);
+    }
 }
 
 function camera_is_completed(camera) {
     if (camera.animation) return animsprite_is_completed(camera.animation);
     if (camera.transition_completed && camera.force_update) return 0;
     return camera.progress >= camera.duration;
+}
+
+function camera_disable_offset_zoom(camera, disabled) {
+    camera.enable_offset_zoom = !disabled;
 }
 
 function camera_set_property(camera, id, value) {
@@ -559,6 +578,9 @@ function camera_set_property(camera, id, value) {
             break;
         case CAMERA_PROP_OFFSET_Z:
             camera.offset_z = value;
+            break;
+        case CAMERA_PROP_OFFSET_ZOOM:
+            camera.enable_offset_zoom = value >= 1.0;
             break;
     }
 }

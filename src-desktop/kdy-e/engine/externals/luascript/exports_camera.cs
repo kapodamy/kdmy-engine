@@ -172,6 +172,16 @@ namespace Engine.Externals.LuaScriptInterop {
             return 1;
         }
 
+        static int script_camera_disable_offset_zoom(LuaState L) {
+            Camera camera = L.ReadUserdata<Camera>(CAMERA);
+
+            bool disable = L.lua_toboolean(2);
+
+            camera.DisableOffsetZoom(disable);
+
+            return 0;
+        }
+
         static int script_camera_to_origin(LuaState L) {
             Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
@@ -343,6 +353,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("slide_z", script_camera_slide_z),
             new LuaTableFunction("slide_to", script_camera_slide_to),
             new LuaTableFunction("from_layout", script_camera_from_layout),
+            new LuaTableFunction("disable_offset_zoom", script_camera_disable_offset_zoom),
             new LuaTableFunction("to_origin", script_camera_to_origin),
             new LuaTableFunction("repeat", script_camera_repeat),
             new LuaTableFunction("stop", script_camera_stop),

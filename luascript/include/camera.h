@@ -35,6 +35,7 @@ void camera_slide_y(Camera camera, float start, float end);
 void camera_slide_z(Camera camera, float start, float end);
 void camera_slide_to(Camera camera, float x, float y, float z);
 bool camera_from_layout(Camera camera, Layout layout, const char* camera_name);
+void camera_disable_offset_zoom(Camera camera, bool disable);
 void camera_to_origin(Camera camera, bool should_slide);
 void camera_repeat(Camera camera);
 void camera_stop(Camera camera);

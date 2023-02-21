@@ -172,10 +172,10 @@
 	<AttachValue name="durationTransition_playSong" type="float" value="1000" />
 	<AttachValue name="durationTransition_screenOut" type="float" value="500" />
 	
-	<Camera name="before-play-song" duration="1000">
+	<Camera offsetZoom="false" name="before-play-song" duration="1000">
 		<To z="5" />
 	</Camera>
-	<Camera name="after-play-song" duration="300">
+	<Camera offsetZoom="false" name="after-play-song" duration="300">
 		<To z="1" />
 	</Camera>
 	<Trigger name="before-play-song" action="transition-out" />

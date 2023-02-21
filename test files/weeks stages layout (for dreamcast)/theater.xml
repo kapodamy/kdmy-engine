@@ -2,7 +2,7 @@
 <Layout width="2560" height="1400" keepAspectRatio="true" >
 
     <!-- ******************* Cameras ******************* -->
-    <Camera>
+    <Camera offsetZoom="false">
         <!-- Cameras without name are applied after the layout is loaded -->
         <!-- 
                 For some reason in funkin the sprites are placed using negative coordinates,
@@ -11,13 +11,13 @@
         <Offset x="505" y="310" z="1" />
         <Move x="0" y="0" z="1.245" />
     </Camera>
-    <Camera name="camera_opponent">
+    <Camera offsetZoom="false" name="camera_opponent">
         <To x="34" y="76" z="1.47" />
     </Camera>
-    <Camera name="camera_player">
+    <Camera offsetZoom="false" name="camera_player">
         <To x="-102" y="10" z="1.42" />
     </Camera>
-    <Camera name="camera_roundEnd">
+    <Camera offsetZoom="false" name="camera_roundEnd">
         <To x="-12" y="61" z="1.21" />
     </Camera>
 

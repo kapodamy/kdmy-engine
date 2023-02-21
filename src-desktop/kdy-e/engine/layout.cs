@@ -40,6 +40,7 @@ namespace Engine {
     internal class CameraPlaceholder {
 
         public string name;
+        public bool enable_offset_zoom;
         public bool has_duration;
         public bool duration_in_beats;
         public float duration;
@@ -2530,6 +2531,7 @@ namespace Engine {
 
             float duration_beats = Layout.HelperParseFloat(unparsed_camera, "durationInBeats", Single.NaN);
             float duration_milliseconds = Layout.HelperParseFloat(unparsed_camera, "duration", Single.NaN);
+            bool enable_offset_zoom = VertexProps.ParseBoolean(unparsed_camera, "offsetZoom", true);
 
             bool duration_in_beats; float duration; bool has_duration;
 
@@ -2545,6 +2547,8 @@ namespace Engine {
 
             CameraPlaceholder camera_placeholder = new CameraPlaceholder() {
                 name = unparsed_camera.GetAttribute("name"),
+
+                enable_offset_zoom = enable_offset_zoom,
 
                 has_duration = has_duration,
                 duration_in_beats = duration_in_beats,

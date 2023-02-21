@@ -4,32 +4,32 @@
     <Font name="font-ttf" path="/assets/common/font/vcr.ttf" />
 
     <!-- Camera example, triggered from the engine or "Macro"  -->
-    <Camera name="pan_and_zoom_example" duration="100">
+    <Camera offsetZoom="false" name="pan_and_zoom_example" duration="100">
         <From x="-50" y="0" />
         <To x="100" y="50" z="0.5" />
     </Camera>
 
     <!-- Camera example with offset (start location and scale without any parallax) -->
-    <Camera name="pan_and_zoom_example" duration="100">
+    <Camera offsetZoom="false" name="pan_and_zoom_example" duration="100">
         <Origin x="100" y="-50" z="1" />
         <From x="-50" y="0" />
         <To x="100" y="50" z="0.5" />
     </Camera>
 
     <!-- Camera example but with beats as duration (the engine uses the BPM defined in the chart) -->
-    <Camera name="slide_camera" durationInBeats="100">
+    <Camera offsetZoom="false" name="slide_camera" durationInBeats="100">
         <From x="-50" y="0" />
         <To x="100" y="50" z="0.5" />
     </Camera>
 
     <!-- Camera example but the duration equals to a single beat ("durationInBeats" and "duration" are not present) -->
-    <Camera name="camera_example">
+    <Camera offsetZoom="false" name="camera_example">
         <From x="-50" y="0" />
         <To x="100" y="50" z="0.5" />
     </Camera>
 
     <!-- Camera move example, moves the camera without any animation and/or transition -->
-    <Camera name="move_camera_example">
+    <Camera offsetZoom="false" name="move_camera_example">
         <Move x="-50" y="0" />
     </Camera>
 

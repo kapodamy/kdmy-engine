@@ -35,6 +35,9 @@ namespace Engine {
         private float offset_z;
         private Layout parent_layout;
         private AnimSprite animation;
+        private bool enable_offset_zoom;
+        private float half_viewport_width;
+        private float half_viewport_height;
 
 
         public Camera(Modifier modifier, float viewport_width, float viewport_height) {
@@ -51,6 +54,9 @@ namespace Engine {
             this.offset_x = 0.0f; this.offset_y = 0.0f; this.offset_z = 1.0f;
             this.parent_layout = null;
             this.animation = null;
+            this.enable_offset_zoom = true;
+            this.half_viewport_width = viewport_width / 2f;
+            this.half_viewport_height = viewport_height / 2f;
 
             if (this.internal_modifier) {
                 // no modifier provided used the internal one
@@ -63,7 +69,6 @@ namespace Engine {
             }
 
             this.SetInterpolatorType(Camera.DEFAULT_INTERPOLATOR);
-            //this.enableSceneZoom(true);
         }
 
         public void Destroy() {
@@ -330,6 +335,10 @@ namespace Engine {
             CameraPlaceholder camera_placeholder = layout.GetCameraPlaceholder(camera_name);
             if (camera_placeholder == null) return false;
 
+            if (camera_placeholder.enable_offset_zoom) {
+                this.enable_offset_zoom = camera_placeholder.enable_offset_zoom;
+            }
+
             if (camera_placeholder.animation != null) {
                 this.SetAnimation(camera_placeholder.animation);
                 return true;
@@ -552,13 +561,25 @@ namespace Engine {
             }
 
             destination_matrix.Translate(this.offset_x, this.offset_y);
-            destination_matrix.Scale(this.offset_z, this.offset_z);
+
+            if (this.enable_offset_zoom && this.offset_z != 1f) {
+                destination_matrix.ScaleSize(
+                    this.half_viewport_width, this.half_viewport_height,
+                    this.offset_z, this.offset_z
+                );
+            } else {
+                destination_matrix.Scale(this.offset_z, this.offset_z);
+            }
         }
 
         public bool IsCompleted() {
             if (this.animation != null) return this.animation.IsCompleted();
             if (this.transition_completed && this.force_update) return false;
             return this.progress >= this.duration;
+        }
+
+        public void DisableOffsetZoom(bool disabled) {
+            this.enable_offset_zoom = !disabled;
         }
 
         public void SetProperty(int id, float value) {
@@ -580,6 +601,9 @@ namespace Engine {
                     break;
                 case VertexProps.CAMERA_PROP_OFFSET_Z:
                     this.offset_z = value;
+                    break;
+                case VertexProps.CAMERA_PROP_OFFSET_ZOOM:
+                    this.enable_offset_zoom = value >= 1f;
                     break;
             }
         }

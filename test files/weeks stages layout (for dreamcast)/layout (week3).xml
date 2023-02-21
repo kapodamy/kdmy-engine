@@ -2,17 +2,17 @@
 <Layout width="2114" height="1075" keepAspectRatio="true" animationList="anims.xml">
 
     <!-- ******************* Cameras ******************* -->
-	<Camera>
+	<Camera offsetZoom="false">
 		<Offset x="-171" y="-162" z="1.4400075000006713" />
 		<To z="1.1" />
 	</Camera>
-	<Camera name="camera_opponent">
+	<Camera offsetZoom="false" name="camera_opponent">
 		<To x="252" y="111" z="1.5800000000000005" />
 	</Camera>
-	<Camera name="camera_player">
+	<Camera offsetZoom="false" name="camera_player">
 		<To x="-54" y="102" z="1.5600000000000005" />
 	</Camera>
-	<Camera name="round_roundEnd">
+	<Camera offsetZoom="false" name="round_roundEnd">
 		<To x="87" y="252" z="1.06" />
 	</Camera>
 

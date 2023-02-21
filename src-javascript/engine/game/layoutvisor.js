@@ -45,7 +45,7 @@ var layoutvisor_uianimlist = null;
 var layoutvisor_rankingmodelholder = null;
 var layoutvisor_streakmodelholder = null;
 var layoutvisor_uifont = null;
-var layoutvisor_nosing = false;
+var layoutvisor_nosing = true;
 var layoutvisor_drawabledrawfn = null;
 var layoutvisor_placeholderalign = null;
 var layoutvisor_placeholderalingvertical = null;
@@ -1324,7 +1324,7 @@ function layoutvisor_camera_prompt(x, y, z, is_offset) {
 
     let result = prompt(
         "Enter the camera " + (is_offset ? "offset" : "parallax") + ":",
-        `x=${x} y=${y} z=${z}`
+        `x="${x}" y="${y}" z="${z}"`
     );
 
     if (!result || result.length < 1) return null;
@@ -1360,6 +1360,7 @@ function layoutvisor_localstorage_save(key_name, value) {
     }
 
     localStorage.setItem(key_name, JSON.stringify(array));
+    layoutvisor_localstorage_load(key_name);
 }
 
 function layoutvisor_localstorage_load(key_name) {

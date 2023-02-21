@@ -54,6 +54,9 @@ bool camera_from_layout(Camera camera, Layout layout, const char* camera_name) {
     print_stub("camera_from_layout", "camera=%p layout=%p camera_name=%s", camera, layout, camera_name);
     return 0;
 }
+void camera_disable_offset_zoom(Camera camera, bool disable) {
+    print_stub("camera_disable_offset_zoom", "camera=%p disable=(bool)%i", camera, disable);
+}
 void camera_to_origin(Camera camera, bool should_slide) {
     print_stub("camera_to_origin", "camera=%p should_slide=(bool)%i", camera, should_slide);
 }

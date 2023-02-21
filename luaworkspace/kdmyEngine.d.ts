@@ -244,6 +244,7 @@ declare global {
         slide_z(start: number, end: number): void;
         slide_to(x: number, y: number, z: number): void;
         from_layout(camera_name: string): boolean;
+        disable_offset_zoom(disable: boolean): void;
         to_origin(should_slide: boolean): void;
         repeat(): void;
         stop(): void;

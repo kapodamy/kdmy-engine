@@ -2,35 +2,35 @@
 <Layout width="1280" height="720" keepAspectRatio="true" animationList="anims.xml">
 
 	<!-- ******************* Cameras ******************* -->
-	<Camera name="mall_start" durationInBeats="2">
+	<Camera offsetZoom="false" name="mall_start" durationInBeats="2">
 		<FromOffset x="45.08299020712525" y="212.21416056883731" z="0.749143160170722" />
 		<ToOffset x="48.08299020712525" y="200.21416056883731" z="0.7858098256294007" />
 	</Camera>
-	<Camera name="camera_opponent">
+	<Camera offsetZoom="false" name="camera_opponent">
 		<Offset x="33.08299020712525" y="179.21416056883731" z="0.7858098256294007" />
 		<To x="729" y="-219" z="0.9106666695594788" />
 	</Camera>
-	<Camera name="camera_player">
+	<Camera offsetZoom="false" name="camera_player">
 		<Offset x="33.08299020712525" y="179.21416056883731" z="0.7858098256294007" />
 		<To x="-213" y="-153" z="1.1080000018119822" />
 	</Camera>
-	<Camera name="round_roundEnd">
+	<Camera offsetZoom="false" name="round_roundEnd">
 		<FromOffset x="113.83749746347172" y="54.100132575255216" z="0.7901723366735298" />
 		<ToOffset x="219.08299020712525" y="164.21416056883731" z="0.8824764914218658" />
 	</Camera>
 
-	<Camera name="mall_evil">
+	<Camera offsetZoom="false" name="mall_evil">
 		<Offset x="0" y="0" z="1.0" />
 		<Move x="120" y="2031" z="1.512666657304765" />
 	</Camera>
-	<Camera name="mall_evil_zoom_out" durationInBeats="24">
+	<Camera offsetZoom="false" name="mall_evil_zoom_out" durationInBeats="24">
 		<Offset x="0" y="0" z="1.0" />
 		<To x="-186" y="789" z="0.8006666732311258" />
 	</Camera>
-	<Camera name="camera_evil_opponent">
+	<Camera offsetZoom="false" name="camera_evil_opponent">
 		<To x="84" y="-78" z="0.8833333373546609" />
 	</Camera>
-	<Camera name="camera_evil_player">
+	<Camera offsetZoom="false" name="camera_evil_player">
 		<To x="-447" y="-54" z="0.9560000016689307" />
 	</Camera>
 	

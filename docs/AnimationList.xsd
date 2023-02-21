@@ -70,6 +70,7 @@
             <xs:enumeration value="offsetX" />
             <xs:enumeration value="offsetY" />
             <xs:enumeration value="offsetZ" />
+            <xs:enumeration value="offsetZoom" />
             <xs:enumeration value="alpha2" />
             <xs:enumeration value="borderOffsetX" />
             <xs:enumeration value="borderOffsetY" />

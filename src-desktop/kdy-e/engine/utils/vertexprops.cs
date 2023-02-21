@@ -123,7 +123,9 @@ namespace Engine.Utils {
         public const int TEXTSPRITE_PROP_BORDER_OFFSET_X = 71;
         public const int TEXTSPRITE_PROP_BORDER_OFFSET_Y = 72;
 
-        public const int TEXTSPRITE_PROP_STRING = 73;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
+        public const int CAMERA_PROP_OFFSET_ZOOM = 73;
+
+        public const int TEXTSPRITE_PROP_STRING = 74;// warning: string pointer. DO NOT USE IN MACROEXECUTOR
 
         public const int PLAYBACK_NONE = 0;
         public const int PLAYBACK_PLAY = 1;
@@ -446,6 +448,8 @@ namespace Engine.Utils {
                         return CAMERA_PROP_OFFSET_Y;
                     case "offsetz":
                         return CAMERA_PROP_OFFSET_Z;
+                    case "offsetzoom":
+                        return CAMERA_PROP_OFFSET_ZOOM;
                 }
             }
 

@@ -52,6 +52,9 @@ EM_JS_PRFX(void, camera_slide_to, (Camera camera, float x, float y, float z), {
 EM_JS_PRFX(bool, camera_from_layout, (Camera camera, Layout layout, const char* camera_name), {
     return camera_from_layout(kdmyEngine_obtain(camera), kdmyEngine_obtain(layout), kdmyEngine_ptrToString(camera_name));
 });
+EM_JS_PRFX(void, camera_disable_offset_zoom, (Camera camera, bool disable), {
+    return camera_disable_offset_zoom(kdmyEngine_obtain(camera), disable);
+});
 EM_JS_PRFX(void, camera_to_origin, (Camera camera, bool should_slide), {
     camera_to_origin(kdmyEngine_obtain(camera), should_slide);
 });
@@ -269,6 +272,16 @@ static int script_camera_from_layout(lua_State* L) {
     return 1;
 }
 
+static int script_camera_disable_offset_zoom(lua_State* L) {
+    Camera camera = luascript_read_userdata(L, CAMERA);
+
+    bool disable = lua_toboolean(L, 2);
+
+    camera_disable_offset_zoom(camera, disable);
+
+    return 0;
+}
+
 static int script_camera_to_origin(lua_State* L) {
     Camera camera = luascript_read_userdata(L, CAMERA);
 
@@ -440,6 +453,7 @@ static const luaL_Reg CAMERA_FUNCTIONS[] = {
     {"slide_z", script_camera_slide_z},
     {"slide_to", script_camera_slide_to},
     {"from_layout", script_camera_from_layout},
+    {"disable_offset_zoom", script_camera_disable_offset_zoom},
     {"to_origin", script_camera_to_origin},
     {"repeat", script_camera_repeat},
     {"stop", script_camera_stop},

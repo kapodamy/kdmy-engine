@@ -2434,6 +2434,7 @@ function layout_parse_camera(unparsed_camera, layout_context) {
 
     let duration_beats = layout_helper_parse_float(unparsed_camera, "durationInBeats", NaN);
     let duration_milliseconds = layout_helper_parse_float(unparsed_camera, "duration", NaN);
+    let enable_offset_zoom = vertexprops_parse_boolean(unparsed_camera, "offsetZoom", 1);
 
     let duration_in_beats, duration, has_duration;
 
@@ -2449,6 +2450,8 @@ function layout_parse_camera(unparsed_camera, layout_context) {
 
     let camera_placeholder = {
         name: unparsed_camera.getAttribute("name"),
+
+        enable_offset_zoom: enable_offset_zoom,
 
         has_duration: has_duration,
         duration_in_beats: duration_in_beats,
@@ -2473,9 +2476,6 @@ function layout_parse_camera(unparsed_camera, layout_context) {
         from_offset_y: NaN,
         from_offset_z: NaN,
 
-        //
-        // Not implemented: requires a rework in the camera helper (camera.js)
-        //
         animation: null,
 
         from_x: NaN, from_y: NaN, from_z: NaN,

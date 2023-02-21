@@ -685,6 +685,7 @@
         <xs:attribute name="animationName" type="xs:string" use="optional" default="null" />
         <xs:attribute name="durationInBeats" type="xs:float" use="optional" default="NaN" />
         <xs:attribute name="duration" type="xs:float" use="optional" default="NaN" />
+        <xs:attribute name="offsetZoom" type="xs:boolean" use="optional" default="true" />
     </xs:complexType>
     <xs:complexType name="Trigger">
         <xs:attribute name="name" type="xs:string" use="optional" />

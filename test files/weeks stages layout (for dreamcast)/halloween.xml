@@ -2,20 +2,20 @@
 <Layout width="2114" height="1075" keepAspectRatio="true" animationList="anims.xml">
 
     <!-- ******************* Cameras ******************* -->
-	<Camera durationInBeats="2">
+	<Camera offsetZoom="false" durationInBeats="2">
 		<Offset x="0" y="0" z="1" />
 		<From x="-378" y="0" z="1.4800000000000022" />
 		<To x="168" y="3" z="1.4600000000000022" />
 	</Camera>
-	<Camera name="camera_opponent">
+	<Camera offsetZoom="false" name="camera_opponent">
 		<Offset x="-276" y="-246" z="1.4800000000000022" />
 		<To x="219.76193999993848" y="-53.367539999921405" z="1.4800000000000022" />
 	</Camera>
-	<Camera name="camera_player">
+	<Camera offsetZoom="false" name="camera_player">
 		<Offset x="-276" y="-246" z="1.4800000000000022" />
 		<To x="-111" y="-183" z="1.4700000000000004" />
 	</Camera>
-	<Camera name="round_roundEnd">
+	<Camera offsetZoom="false" name="round_roundEnd">
 		<Offset x="-276" y="-246" z="1.4800000000000022" />
 		<To x="0" y="-18" z="1.11" />
 	</Camera>

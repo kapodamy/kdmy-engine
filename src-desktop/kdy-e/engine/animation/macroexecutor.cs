@@ -70,7 +70,7 @@ namespace Engine.Animation {
         public const int ANIM_MACRO_SPECIAL_RANDOM = 9;
 
         /** count of "SPRITE_PROP_* + TEXTSPRITE_PROP_* + MEDIA_PROP_* + FONT_PROP_* + LAYOUT_PROP_* + CAMERA_PROP_*" */
-        public const int MACROEXECUTOR_VERTEX_PROP_COUNT = 73;
+        public const int MACROEXECUTOR_VERTEX_PROP_COUNT = 74;
         public const int MACROEXECUTOR_REGISTER_COUNT = 4;// this must match ANIM_MACRO_SPECIAL_REGISTER* count
 
 

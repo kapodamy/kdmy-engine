@@ -1077,6 +1077,9 @@ function __js__camera_end(camera) {
 function __js__camera_from_layout(camera, layout, camera_name) {
     return camera_from_layout(kdmyEngine_obtain(camera), kdmyEngine_obtain(layout), kdmyEngine_ptrToString(camera_name))
 }
+function __js__camera_disable_offset_zoom(camera, enabled) {
+    return camera_disable_offset_zoom(kdmyEngine_obtain(camera), enabled)
+}
 function __js__camera_get_modifier(camera) {
     const modifier = camera_get_modifier(kdmyEngine_obtain(camera));
     return kdmyEngine_obtain(modifier)
@@ -6800,6 +6803,7 @@ var asmLibraryArg = {
     "__js__camera_debug_log_info": __js__camera_debug_log_info,
     "__js__camera_end": __js__camera_end,
     "__js__camera_from_layout": __js__camera_from_layout,
+    "__js__camera_disable_offset_zoom": __js__camera_disable_offset_zoom,
     "__js__camera_get_modifier": __js__camera_get_modifier,
     "__js__camera_get_offset": __js__camera_get_offset,
     "__js__camera_get_parent_layout": __js__camera_get_parent_layout,

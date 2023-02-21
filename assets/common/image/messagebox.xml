@@ -12,18 +12,18 @@
     </Action>
 
     <!-- no animation -->
-    <Camera name="show-static">
+    <Camera offsetZoom="false" name="show-static">
         <Move z="1.0" />
     </Camera>
 
     <!-- with animation -->
-    <Camera name="show-anim" duration="250">
+    <Camera offsetZoom="false" name="show-anim" duration="250">
         <From z="0.1" />
         <To z="1.0" />
     </Camera>
 
     <!-- hide animation -->
-    <Camera name="hide-anim" duration="125">
+    <Camera offsetZoom="false" name="hide-anim" duration="125">
         <From z="1.0" />
         <To z="0.1" />
     </Camera>
