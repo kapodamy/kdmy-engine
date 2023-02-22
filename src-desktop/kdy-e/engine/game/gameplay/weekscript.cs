@@ -160,7 +160,7 @@ namespace Engine.Game.Gameplay {
         }
 
         public void NotifyPauseOptionChoosen(int option_index) {
-            this.luascript.notify_pause_option_choosen(option_index);
+            this.luascript.notify_pause_optionchoosen(option_index);
         }
 
         public void NotifyPauseMenuvisible(bool shown_or_hidden) {

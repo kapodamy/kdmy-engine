@@ -126,7 +126,7 @@ async function character_init(charactermanifest) {
     arraylist_destroy2(import_context.all_extras_names, character, "all_extras_names_size", "all_extras_names");
 
     character.inverted_size = charactermanifest.opposite_directions.sizes;
-    if (character.inverted_size > 0) {
+    if (character.inverted_size > 0 && charactermanifest.actions.sing_size > 0) {
         character_internal_import_opposite_dir(
             character, "inverted_from", charactermanifest.opposite_directions.from
         );

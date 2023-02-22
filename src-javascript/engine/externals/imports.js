@@ -17,7 +17,7 @@
  * @property {function(ModuleLuaScript):void} _luascript_notify_weekleave
  * @property {function(ModuleLuaScript):void} _luascript_notify_afterresults
  * @property {function(ModuleLuaScript):void} _luascript_notify_scriptchange
- * @property {function(ModuleLuaScript,number):void} _luascript_notify_pause_option_choosen
+ * @property {function(ModuleLuaScript,number):void} _luascript_notify_pause_optionchoosen
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_pause_menuvisible
  * @property {function(ModuleLuaScript,number,number,number,number,bool,number,number):void} _luascript_notify_note
  * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_buttons
@@ -34,6 +34,7 @@
  * @property {function(ModuleLuaScript,number,number,number):boolean} _luascript_notify_modding_menu_option_choosen
  * @property {function(ModuleLuaScript, bool):void} _luascript_notify_modding_window_focus
  * @property {function(ModuleLuaScript, bool):void} _luascript_notify_modding_window_minimized
+ * @property {function(ModuleLuaScript, number, number):void} _luascript_notify_window_size_changed
  * @property {function(ModuleLuaScript, number, number, bool, number):void} _luascript_notify_input_keyboard
  * @property {function(ModuleLuaScript, number, number):void} _luascript_notify_input_mouse_position
  * @property {function(ModuleLuaScript, bool):void} _luascript_notify_input_mouse_enter

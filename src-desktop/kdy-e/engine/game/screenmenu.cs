@@ -127,6 +127,10 @@ L_layout:
                 layout.Draw(pvrctx);
             }
 
+            // if there no script ¿exit_value should be null or pick the menu selectd option name?
+            object exit_value = null;
+            if (script != null) exit_value = script.notify_modding_exit();
+
             // delay exit (if applicable)
             double exit_delay = this.modding.exit_delay_ms;
             while (exit_delay > 0) {
@@ -143,10 +147,6 @@ L_layout:
                 layout.Animate(elapsed);
                 layout.Draw(pvrctx);
             }
-
-            // if there no script ¿exit_value should be null or pick the menu selectd option name?
-            object exit_value = null;
-            if (script != null) exit_value = script.notify_modding_exit();
 
             gamepad.Destroy();
             return exit_value;

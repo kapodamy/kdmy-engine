@@ -180,7 +180,7 @@ namespace Engine.Game {
             import_context.all_extras_names.Destroy2(out this.all_extras_names_size, ref this.all_extras_names);
 
             this.inverted_size = charactermanifest.opposite_directions.sizes;
-            if (this.inverted_size > 0) {
+            if (this.inverted_size > 0 && charactermanifest.actions.sing_size > 0) {
                 InternalImportOppositeDir(
                      ref this.inverted_from, charactermanifest.opposite_directions.from
                  );
@@ -1365,7 +1365,7 @@ L_read_state:
                 }
 
                 if (array[i] < 0)
-                    Console.Error.WriteLine("[ERROR] Character.init() unknown sing/miss direction: " + ltr_array[i]);
+                    Console.Error.WriteLine("[ERROR] character_init() unknown sing/miss direction: " + ltr_array[i]);
             }
         }
 

@@ -11,7 +11,7 @@ const GAMEPLAYMANIFEST_DEFAULT = {
     distributions: [
         STRUMS_DEFAULT_DISTRIBUTION
     ],
-    distributions_size: 0,
+    distributions_size: 1,
     girlfriend: {
         refer: GAMEPLAYMANIFEST_REFER_GIRLFRIEND,
         manifest: null,// "#girlfriend"
@@ -83,8 +83,10 @@ async function gameplaymanifest_init(src) {
 
         if (json_has_property_array(json_default, "distributions"))
             gameplaymanifest_parse_distributions(json_default, manifest.default, "distributions", "distributions_size");
-        else
-            gameplaymanifest_parse_distributions_minimal(json_default, manifest.default);
+        else if (json_has_property_array(json_default, "distributionsMinimal"))
+            gameplaymanifest_parse_distributions_minimal(json_default, manifest.default, "distributions", "distributions_size");
+        else if (json_has_property_object(json_default, "distributionsModels"))
+            gameplaymanifest_parse_distributions_models(json_default, manifest.default, "distributions", "distributions_size");
 
         gameplaymanifest_parse_players(json_default, manifest.default, "players", "players_size");
 
@@ -336,8 +338,16 @@ function gameplaymanifest_parse_track(track, json_track, players_count) {
     track.has_players = json_has_property_array(json_track, "players");
     gameplaymanifest_parse_players(json_track, track, "players", "players_size");
 
-    track.has_distributions = json_has_property_array(json_track, "distributions");
-    gameplaymanifest_parse_distributions(json_track, track, "distributions", "distributions_size");
+    if (json_has_property_array(json_track, "distributions")) {
+        track.has_distributions = 1;
+        gameplaymanifest_parse_distributions(json_track, track, "distributions", "distributions_size");
+    } else if (json_has_property_array(json_track, "distributionsMinimal")) {
+        track.has_distributions = 1;
+        gameplaymanifest_parse_distributions_minimal(json_track, track, "distributions", "distributions_size");
+    } else if (json_has_property_array(json_track, "distributionsModels")) {
+        track.has_distributions = 1;
+        gameplaymanifest_parse_distributions_models(json_track, track, "distributions", "distributions_size");
+    }
 
     track.healthbar = gameplaymanifest_parse_healthbar(json_track);
     track.girlfriend = gameplaymanifest_parse_girlfriend(json_track);
@@ -430,18 +440,18 @@ function gameplaymanifest_parse_distributions(json, obj, ptr_distributions, ptr_
         return;
     }
 
-    let distributions = new Array(json_distributions_size);
-    let distributions_size = json_distributions_size;
+    let distributions_new = new Array(json_distributions_size);
+    let distributions_size_new = json_distributions_size;
 
     for (let i = 0; i < json_distributions_size; i++) {
-        distributions[i] = {};
+        distributions_new[i] = {};
         gameplaymanifest_parse_distribution(
-            json_read_array_item_object(json_distributions, i), distributions[i]
+            json_read_array_item_object(json_distributions, i), distributions_new[i]
         );
     }
 
-    obj[ptr_distributions] = distributions;
-    obj[ptr_distributions_size] = distributions_size;
+    obj[ptr_distributions] = distributions_new;
+    obj[ptr_distributions_size] = distributions_size_new;
 }
 
 function gameplaymanifest_parse_distribution(json_distribution, distribution) {
@@ -560,15 +570,13 @@ function gameplaymanifest_parse_distribution(json_distribution, distribution) {
 
 }
 
-function gameplaymanifest_parse_distributions_minimal(json, manifest) {
+function gameplaymanifest_parse_distributions_minimal(json, obj, ptr_distributions, ptr_distributions_size) {
     let json_dists_minimal_array = json_read_array(json, "distributionsMinimal");
     let json_dists_minimal_array_length = json_read_array_length(json_dists_minimal_array);
 
-    if (json_dists_minimal_array_length < 0) return;
-
     if (json_dists_minimal_array_length < 1) {
-        manifest.distributions = null;
-        manifest.distributions_size = 0;
+        obj[ptr_distributions] = null;
+        obj[ptr_distributions_size] = 0;
         return;
     }
 
@@ -626,8 +634,39 @@ function gameplaymanifest_parse_distributions_minimal(json, manifest) {
         }
     }
 
-    manifest.distributions = dists_minimal;
-    manifest.distributions_size = json_dists_minimal_array_length;
+    obj[ptr_distributions] = dists_minimal;
+    obj[ptr_distributions_size] = json_dists_minimal_array_length;
+}
+
+function gameplaymanifest_parse_distributions_models(json, obj, ptr_distributions, ptr_distributions_size) {
+    const json_obj = json_read_object(json, "distributionsModels");
+
+    let model_marker = json_read_string(json_obj, "modelMarker", FUNKIN_COMMON_NOTES);
+    let model_sick_effect = json_read_string(json_obj, "modelSickEffect", FUNKIN_COMMON_NOTES);
+    let model_background = json_read_string(json_obj, "modelBackground", FUNKIN_COMMON_NOTES);
+    let model_notes = json_read_string(json_obj, "modelNotes", FUNKIN_COMMON_NOTES);
+
+    obj[ptr_distributions] = [
+        {
+            notes: STRUMS_DEFAULT_DISTRIBUTION.notes,
+            notes_size: STRUMS_DEFAULT_DISTRIBUTION.notes_size,
+            states: [
+                {
+                    name: null,
+                    model_marker: model_marker,
+                    model_sick_effect: model_sick_effect,
+                    model_background: model_background,
+                    model_notes: model_notes
+                }
+            ],
+            states_size: 1,
+            strums: STRUMS_DEFAULT_DISTRIBUTION.strums,
+            strums_size: STRUMS_DEFAULT_DISTRIBUTION.strums_size,
+            strum_binds: STRUMS_DEFAULT_DISTRIBUTION.strum_binds,
+            strum_binds_is_custom: STRUMS_DEFAULT_DISTRIBUTION.strum_binds_is_custom
+        }
+    ];
+    obj[ptr_distributions_size] = 1;
 }
 
 

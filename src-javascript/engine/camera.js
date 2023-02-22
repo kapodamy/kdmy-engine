@@ -309,9 +309,7 @@ function camera_from_layout(camera, layout, camera_name) {
     let camera_placeholder = layout_get_camera_placeholder(layout, camera_name);
     if (!camera_placeholder) return 0;
 
-    if (camera_placeholder.enable_offset_zoom) {
-        camera.enable_offset_zoom = camera_placeholder.enable_offset_zoom;
-    }
+    camera.enable_offset_zoom = camera_placeholder.enable_offset_zoom;
 
     if (camera_placeholder.animation) {
         camera_set_animation(camera, camera_placeholder.animation);
@@ -557,6 +555,15 @@ function camera_is_completed(camera) {
 
 function camera_disable_offset_zoom(camera, disabled) {
     camera.enable_offset_zoom = !disabled;
+}
+
+function camera_change_viewport(camera, width, height) {
+    if (camera.internal_modifier) {
+        camera.modifier.width = width;
+        camera.modifier.height = height;
+    }
+    camera.half_viewport_width = width / 2.0;
+    camera.half_viewport_height = height / 2.0;
 }
 
 function camera_set_property(camera, id, value) {

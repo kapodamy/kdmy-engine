@@ -8,8 +8,9 @@ const FUNKIN_PLAYER_RETRY = "retry";
 const FUNKIN_PLAYER_GIVEUP = "giveup";
 
 const WEEKROUND_READY_BUTTONS = GAMEPAD_A | GAMEPAD_START;
-//const WEEKROUND_CAMERA_GIRLFRIEND = "camera_girlfriend";
-const WEEKROUND_CAMERA_PLAYER = "camera_player";// camera_player0, camera_player1, etc
+const WEEKROUND_CAMERA_GIRLFRIEND = "camera_girlfriend";
+const WEEKROUND_CAMERA_CHARACTER = "camera_character";
+const WEEKROUND_CAMERA_PLAYER = "camera_player";
 const WEEKROUND_CAMERA_OPONNENT = "camera_opponent";
 const WEEKROUND_CAMERA_ROUNDSTART = "camera_roundStart";
 const WEEKROUND_CAMERA_ROUNDEND = "camera_roundEnd";
@@ -227,6 +228,7 @@ const CHARACTERTYPE = {
  * @property {object} ui_camera
  * @property {object} missnotefx
  * @property {object} songprogressbar
+ * @property {object} autouicosmetics
  * 
  * @property {object} layout
  *  
@@ -303,6 +305,7 @@ async function week_destroy(/** @type {RoundContext} */ roundcontext, gameplayma
     if (roundcontext.missnotefx) missnotefx_destroy(roundcontext.missnotefx);
     if (roundcontext.dialogue) dialogue_destroy(roundcontext.dialogue);
     if (roundcontext.songprogressbar) songprogressbar_destroy(roundcontext.songprogressbar);
+    if (roundcontext.autouicosmetics) autouicosmetics_destroy(roundcontext.autouicosmetics);
 
     roundcontext.events = undefined;
     roundcontext.healthbarparams.player_icon_model = undefined;
@@ -439,6 +442,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         ui_camera: camera_init(null, 640, 480),
         missnotefx: null,
         songprogressbar: null,
+        autouicosmetics: autouicosmetics_init(),
         screen_background: sprite_init_from_rgb8(0x0),
 
         has_directive_changes: 0,
@@ -643,7 +647,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             } else if (roundcontext.dialogue == null) {
                 console.error(`[ERROR] week_round() can not load '${dialog_text}' there no dialogue instance`);
             } else if (await dialogue_show_dialog(roundcontext.dialogue, dialog_text)) {
-                if (roundcontext.script != null) weekscript_notify_dialogue_builtin_open(roundcontext.script, dialog_text);
+                if (roundcontext.script != null) await weekscript_notify_dialogue_builtin_open(roundcontext.script, dialog_text);
                 show_dialog = 1;
             } else {
                 console.error(`week_round() failed to read '${dialog_text}' file`);
@@ -834,6 +838,7 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     roundcontext.ui_layout = layout;
 
     layout_get_viewport_size(layout, layout_size);
+    camera_change_viewport(roundcontext.ui_camera, layout_size[0], layout_size[1]);
     initparams.ui_layout_width = layout_size[0];
     initparams.ui_layout_height = layout_size[1];
     ui.countdown_height = initparams.ui_layout_height / 3;
@@ -1542,6 +1547,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
     let players = gameplaymanifest.default.players;
     let players_size = gameplaymanifest.default.players_size;
     let distributions = gameplaymanifest.default.distributions;
+    let distributions_size = gameplaymanifest.default.distributions_size;
 
     if (gameplaymanifest.tracks[track_index].has_players) {
         players = gameplaymanifest.tracks[track_index].players;
@@ -1549,6 +1555,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
     }
     if (gameplaymanifest.tracks[track_index].has_distributions) {
         distributions = gameplaymanifest.tracks[track_index].distributions;
+        distributions_size = gameplaymanifest.tracks[track_index].distributions_size;
     }
 
     //
@@ -1570,6 +1577,10 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
         // update only the strums and the character animations
         for (let i = 0; i < roundcontext.players_size; i++) {
             if (players[i].distribution_index >= 0 || roundcontext.players[i].strums) {
+                if (players[i].distribution_index >= distributions_size) {
+                    throw new RangeError("invalid distribution_index");
+                }
+
                 let distribution = distributions[players[i].distribution_index];
                 strums_set_notes(
                     roundcontext.players[i].strums,
@@ -1677,6 +1688,9 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
         if (layout_strums_id < 0 || players[i].distribution_index < 0) {
             roundcontext.players[i].type = CHARACTERTYPE.ACTOR;
             continue;
+        }
+        if (players[i].distribution_index >= distributions_size) {
+            throw new RangeError("invalid distribution_index");
         }
 
         let distribution = distributions[players[i].distribution_index];
@@ -1855,71 +1869,28 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
 }
 
 async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
-    // default values to guess positions
-    const STREAK = { x: -355.0, y: -115.0, z: +0.13, height: 136.0, width: 0.0 };
-    const RANK = { x: -350.0, y: -250.0, z: +0.11, height: 148.0 };
-    const ACCURACY = { x: +305.0, y: -165.0, z: +0.12, height: 80.0 };
-
     const initparams = roundcontext.initparams;
     const viewport_size = [0, 0];
     let layout = roundcontext.layout ? roundcontext.layout : roundcontext.ui_layout;
 
     layout_get_viewport_size(roundcontext.ui_layout, viewport_size);
-
-    let auto_compute_location_from = layout_get_attached_value(
-        layout, "ui_autoplace_cosmetic_from_placeholder", LAYOUT_TYPE_STRING, null
-    );
-    let auto_compute_location = !!auto_compute_location_from;
-    let auto_compute_reference = null;
-
-    if (auto_compute_location) {
-        auto_compute_reference = layout_get_placeholder(layout, auto_compute_location_from);
-        if (!auto_compute_reference) {
-            auto_compute_location = false;
-            console.warn(`week_init_ui_cosmetics() missing '${auto_compute_location_from}' placeholder, autoplace failed.`);
-        }
-    }
+    let has_autoplace = autouicosmetics_prepare_placeholders(roundcontext.autouicosmetics, layout);
 
     let placeholder_streakcounter = week_internal_read_placeholder_counter(
-        layout, "ui_streakcounter", !auto_compute_location
+        layout, "ui_streakcounter", !has_autoplace
     );
     let placeholder_rankingcounter_rank = week_internal_read_placeholder_counter(
-        layout, "ui_rankingcounter_rank", !auto_compute_location
+        layout, "ui_rankingcounter_rank", !has_autoplace
     );
     let placeholder_rankingcounter_accuracy = week_internal_read_placeholder_counter(
-        layout, "ui_rankingcounter_accuracy", !auto_compute_location
+        layout, "ui_rankingcounter_accuracy", !has_autoplace
     );
 
     // guess the position of streakcounter and rankingcounter if has missing placeholders
-    if (auto_compute_location) {
-        if (!placeholder_streakcounter) {
-            placeholder_streakcounter = STREAK;
-            placeholder_streakcounter.x += auto_compute_reference.x;
-            placeholder_streakcounter.y += auto_compute_reference.y;
-            placeholder_streakcounter.z += auto_compute_reference.z;
-        }
-        if (!placeholder_rankingcounter_rank) {
-            placeholder_rankingcounter_rank = RANK;
-            placeholder_rankingcounter_rank.x += auto_compute_reference.x;
-            placeholder_rankingcounter_rank.y += auto_compute_reference.y;
-            placeholder_rankingcounter_rank.z += auto_compute_reference.z;
-        }
-        if (!placeholder_rankingcounter_accuracy) {
-            placeholder_rankingcounter_accuracy = ACCURACY;
-            placeholder_rankingcounter_accuracy.x += auto_compute_reference.x;
-            placeholder_rankingcounter_accuracy.y += auto_compute_reference.y;
-            placeholder_rankingcounter_accuracy.z += auto_compute_reference.z;
-        }
-    }
-
-    if (!SETTINGS.gameplay_enabled_uicosmetics) {
-        // drawn away
-        placeholder_streakcounter.x = -Infinity;
-        placeholder_streakcounter.y = -Infinity;
-        placeholder_rankingcounter_rank.x = -Infinity;
-        placeholder_rankingcounter_rank.y = -Infinity;
-        placeholder_rankingcounter_accuracy.x = -Infinity;
-        placeholder_rankingcounter_accuracy.y = -Infinity;
+    if (has_autoplace) {
+        if (placeholder_streakcounter) placeholder_streakcounter = AUTOUICOSMETICS_PLACEHOLDER_STREAK;
+        if (placeholder_rankingcounter_rank) placeholder_rankingcounter_rank = AUTOUICOSMETICS_PLACEHOLDER_RANK;
+        if (placeholder_rankingcounter_accuracy) placeholder_rankingcounter_accuracy = AUTOUICOSMETICS_PLACEHOLDER_ACCURACY;
     }
 
     // keep a copy of the old values
@@ -2035,7 +2006,7 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
     );
     textsprite_set_z_index(roundcontext.trackinfo, initparams.ui.trackinfo_z);
     textsprite_border_enable(roundcontext.trackinfo, 1);
-    textsprite_border_set_size(roundcontext.trackinfo, 2);
+    textsprite_border_set_size(roundcontext.trackinfo, ROUNDSTATS_FONT_BORDER_SIZE);
     textsprite_border_set_color_rgba8(roundcontext.trackinfo, 0x000000FF);// black
 
     // step 2: dispose all modelholders used
@@ -2048,6 +2019,17 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
     if (old_streakcounter) streakcounter_destroy(old_streakcounter);
     if (old_countdown) countdown_destroy(old_countdown);
     if (old_songprogressbar) songprogressbar_destroy(old_songprogressbar);
+
+    // step 4: drawn away if ui cosmetics are disabled
+    if (!SETTINGS.gameplay_enabled_uicosmetics) {
+        // drawn away
+        if (placeholder_streakcounter) placeholder_streakcounter.vertex = null;
+        if (placeholder_rankingcounter_rank) placeholder_rankingcounter_rank.vertex = null;
+        if (placeholder_rankingcounter_accuracy) placeholder_rankingcounter_accuracy.vertex = null;
+    }
+
+    // step 5: pick drawables if "ui_autoplace_cosmetics" placeholder is present
+    autouicosmetics_pick_drawables(roundcontext.autouicosmetics);
 }
 
 async function week_init_ui_gameover(/**@type {RoundContext}*/roundcontext) {
@@ -2091,7 +2073,7 @@ async function week_init_dialogue(/**@type {RoundContext}*/roundcontext, dialogu
 
 function week_place_in_layout(roundcontext) {
     const initparams = roundcontext.initparams;
-    const UI_SIZE = 8;// all UI "cosmetics" elements + screen background + dialogue
+    const UI_SIZE = 9;// all UI "cosmetics" elements + screen background + dialogue
 
     let layout, is_ui;
     if (roundcontext.layout) {
@@ -2149,6 +2131,10 @@ function week_place_in_layout(roundcontext) {
     );
     layout_external_vertex_set_entry(
         layout, 7, VERTEX_DRAWABLE, roundcontext.dialogue ? dialogue_get_drawable(roundcontext.dialogue) : null, ui2
+    );
+    layout_external_vertex_set_entry(
+        layout, 8, VERTEX_DRAWABLE,
+        roundcontext.autouicosmetics.drawable_self, roundcontext.autouicosmetics.layout_group_id
     );
 
     // step 3: initialize the ui camera
@@ -2331,6 +2317,8 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
             show_dialog = 0;
             week_internal_do_antibounce(roundcontext);
         }
+
+        await week_halt(roundcontext, 1);
     }
 
     if (check_ready) countdown_ready(roundcontext.countdown);
@@ -2704,7 +2692,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 }
 
 
-async function week_halt(/** @type {RoundContext} */roundcontext, poke_global_beatwatcher) {
+async function week_halt(/** @type {RoundContext} */roundcontext, peek_global_beatwatcher) {
     if (!roundcontext.scriptcontext.halt_flag) return;
 
     const preesed = [0x00];
@@ -2712,7 +2700,7 @@ async function week_halt(/** @type {RoundContext} */roundcontext, poke_global_be
 
     console.log("week_halt() waiting for script signal...");
 
-    if (poke_global_beatwatcher) beatwatcher_global_set_timestamp_from_kos_timer();
+    if (peek_global_beatwatcher) beatwatcher_global_set_timestamp_from_kos_timer();
 
     while (roundcontext.scriptcontext.halt_flag) {
         let elapsed = await pvrctx_wait_ready();
@@ -2731,7 +2719,7 @@ async function week_halt(/** @type {RoundContext} */roundcontext, poke_global_be
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
 
-        if (poke_global_beatwatcher) beatwatcher_global_set_timestamp_from_kos_timer();
+        if (peek_global_beatwatcher) beatwatcher_global_set_timestamp_from_kos_timer();
 
         if (roundcontext.scriptcontext.force_end_flag) {
             console.log("week_halt() wait interrupted because week_end() was called");
@@ -2751,10 +2739,10 @@ async function week_peek_chart_events(/** @type {RoundContext} */roundcontext, t
         if (timestamp < roundcontext.events[i].timestamp) break;
         switch (roundcontext.events[i].command) {
             case CHART_EVENT_CAMERA_OPPONENT:
-                week_internal_camera_focus_guess(roundcontext, 1);
+                week_camera_focus_guess(roundcontext, WEEKROUND_CAMERA_OPONNENT, -1);
                 break;
             case CHART_EVENT_CAMERA_PLAYER:
-                week_internal_camera_focus_guess(roundcontext, 0);
+                week_camera_focus_guess(roundcontext, WEEKROUND_CAMERA_PLAYER, -1);
                 break;
             case CHART_EVENT_CHANGE_BPM:
                 week_update_bpm(roundcontext, roundcontext.events[i].parameter);
@@ -3162,46 +3150,18 @@ async function week_internal_load_gameplay_manifest(src) {
     return gameplaymanifest;
 }
 
-function week_camera_focus(layout, character_prefix, index) {
-    if (!layout) return 1;
+function week_camera_focus_guess(/**@type {RoundContext} */ roundcontext, target_name, character_index) {
+    const layout = roundcontext.layout ?? roundcontext.ui_layout;
     let camera = layout_get_camera_helper(layout);
 
-    if (index < 0) {
-        return camera_from_layout(camera, layout, character_prefix);
+    if (character_index >= 0) {
+        let name = week_internal_concat_suffix(WEEKROUND_CAMERA_CHARACTER, character_index);
+        let found = camera_from_layout(camera, layout, name);
+        name = undefined;
+        if (found) return;
     }
 
-    let name = week_internal_concat_suffix(character_prefix, index);
-    let res = camera_from_layout(camera, layout, name);
-    name = undefined;
-    return res;
-}
-
-function week_internal_camera_focus_guess(/**@type {RoundContext} */ roundcontext, opponent_or_player) {
-    if (!roundcontext.layout) return;
-
-    const settings = roundcontext.settings;
-
-    // check if there absolute camera present in the layout
-    const target = opponent_or_player ? settings.camera_name_opponent : settings.camera_name_player;
-    let camera = layout_get_camera_helper(roundcontext.layout);
-    if (camera_from_layout(camera, roundcontext.layout, target)) return;
-
-    // guess from the character type and later invoke the camera named like "camera_player012345"
-    let index = -1;
-    for (let i = 0; i < roundcontext.players_size; i++) {
-        if (opponent_or_player && roundcontext.players[i].type == CHARACTERTYPE.BOT) {
-            index = i;
-            break;
-        }
-        if (!opponent_or_player && roundcontext.players[i].type == CHARACTERTYPE.PLAYER) {
-            index = i;
-            break;
-        }
-    }
-
-    if (index < 0) return;
-
-    week_camera_focus(roundcontext.layout, WEEKROUND_CAMERA_PLAYER, index);
+    camera_from_layout(camera, layout, target_name);
 }
 
 function week_internal_reset_players_and_girlfriend(/**@type {RoundContext} */ roundcontext) {

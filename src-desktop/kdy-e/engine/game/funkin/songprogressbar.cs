@@ -267,7 +267,7 @@ namespace Engine.Game {
 
                 if (this.songplayer != null) {
                     current = this.songplayer.GetTimestamp();
-                    duration = this.songplayer.GetDuration();
+                    duration = this.duration >= 0.0 ? this.duration : this.songplayer.GetDuration();
                 } else {
                     current = BeatWatcher.beatwatcher_global_timestamp;// peek global beatwatcher time
                     duration = this.duration;

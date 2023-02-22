@@ -101,6 +101,7 @@ void layout_set_group_antialiasing(Layout layout, const char* group_name, PVRFla
 Modifier layout_get_group_modifier(Layout layout, const char* group_name);
 PSShader layout_get_group_shader(Layout layout, const char* group_name);
 bool layout_set_group_shader(Layout layout, const char* group_name, PSShader psshader);
+void layout_screen_to_layout_coordinates(Layout layout, float screen_x, float screen_y, bool calc_with_camera, float* layout_x, float* layout_y);
 
 #endif
 

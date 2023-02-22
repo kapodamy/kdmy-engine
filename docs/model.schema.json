@@ -19,7 +19,7 @@
                 },
                 "vertexColor": {
                     "type": ["integer", "string", "null"],
-                    "default": "0xFFFFFF",
+                    "default": "0xFFFFFF"
                 }
             },
             "required": [

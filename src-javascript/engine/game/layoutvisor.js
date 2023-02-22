@@ -53,6 +53,7 @@ var layoutvisor_placeholderalinghorizontal = null;
 var layoutvisor_itemparallaxx = null;
 var layoutvisor_itemparallaxy = null;
 var layoutvisor_itemparallaxz = null;
+let layoutvisor_autouicosmetics = null;
 
 
 async function main_layout_visor() {
@@ -84,6 +85,7 @@ async function main_layout_visor() {
     layoutvisor_rankingmodelholder = await modelholder_init("/assets/common/image/week-round/ranking");
     layoutvisor_streakmodelholder = await modelholder_init("/assets/common/font/numbers");
     layoutvisor_uifont = await fontholder_init("/assets/common/font/vcr.ttf", -1);
+    layoutvisor_autouicosmetics = autouicosmetics_init();
 
     while (1) {
         let elapsed = await pvrctx_wait_ready();
@@ -342,6 +344,8 @@ function main_layout_add_listeners() {
         // @ts-ignore
         document.getElementById("item-bind-type-accuracy").style.display = value == "accuracy" ? "block" : "none";
         // @ts-ignore
+        document.getElementById("item-bind-type-autouicosmetics").style.display = value == "autouicosmetics" ? "block" : "none";
+        // @ts-ignore
         document.getElementById("item-bind-type-character").style.display = value == "character" ? "block" : "none";
     }
 
@@ -371,6 +375,7 @@ function main_layout_add_listeners() {
     document.getElementById("item-mousemove").addEventListener("click", function () {
         // @ts-ignore
         layoutvisor_itemmousemove = this.checked;
+        pvr_context._html5canvas.style.cursor = layoutvisor_itemmousemove ? "grab" : "";
         // @ts-ignore
         this.parentNode.style.fontWeight = this.checked ? "bold" : "";
     });
@@ -471,6 +476,8 @@ function main_layout_add_listeners() {
                 target_input = "[name=item-bind-type][value=accuracy]";
             else if (layout_placeholder.name == "ui_streakcounter")
                 target_input = "[name=item-bind-type][value=streak]";
+            else if (layout_placeholder.name == "ui_autoplace_cosmetics")
+                target_input = "[name=item-bind-type][value=autouicosmetics]";
         }
 
         let target = document.querySelector(target_input);
@@ -497,6 +504,9 @@ function main_layout_add_listeners() {
         // @ts-ignore
         else if (document.querySelector("[name=item-bind-type][value=accuracy]").checked)
             layoutvisor_update_rankingaccuracy(layout_placeholder);
+        // @ts-ignore
+        else if (document.querySelector("[name=item-bind-type][value=autouicosmetics]").checked)
+            layoutvisor_update_autouicosmetics(layout_placeholder);
         // @ts-ignore
         else if (document.querySelector("[name=item-bind-type][value=streak]").checked)
             layoutvisor_update_streakcounter(layout_placeholder);
@@ -769,10 +779,12 @@ function layoutvisor_mousedown(evt) {
     layoutvisor_startx = Math.trunc(evt.clientX - layoutvisor_offsetx);
     layoutvisor_starty = Math.trunc(evt.clientY - layoutvisor_offsety);
     layoutvisor_drag = true;
+    pvr_context._html5canvas.style.cursor = layoutvisor_itemmousemove && layoutvisor_hookedvertex ? "grabbing" : "move";
 }
 
 // @ts-ignore
 function layoutvisor_mouseup(evt) {
+    pvr_context._html5canvas.style.cursor = layoutvisor_itemmousemove ? "grab" : "";
     if (layoutvisor_drag) layoutvisor_drag = false;
 }
 
@@ -1154,6 +1166,9 @@ function layoutvisor_drawable_update(layout_placeholder) {
         case "rankingaccuracy":
             layoutvisor_update_rankingaccuracy(layout_placeholder);
             break;
+        case "autouicosmetics":
+            layoutvisor_update_autouicosmetics(layout_placeholder);
+            break;
         case "character":
             let character = layout_placeholder.vertex.private_data;
             character_set_draw_location(
@@ -1294,6 +1309,28 @@ function layoutvisor_update_rankingaccuracy(layout_placeholder) {
     rankingcounter_use_percent_instead(layoutvisor_rankingaccuracy, accuracy_percent);
     layoutvisor_rankingaccuracy.layoutvisor = layout_placeholder;
     layout_placeholder.vertex.layoutvisor_type = "rankingaccuracy";
+}
+
+function layoutvisor_update_autouicosmetics(layout_placeholder) {
+    layoutvisor_dispose_character(layout_placeholder);
+
+    // hook layout_get_placeholder() function
+    let fn = layout_get_placeholder;
+    window["layout_get_placeholder"] = function () {
+        window["layout_get_placeholder"] = fn;
+        return layout_placeholder;
+    }
+
+    autouicosmetics_prepare_placeholders(layoutvisor_autouicosmetics, layoutvisor_layout);
+    {
+        layoutvisor_update_streakcounter(AUTOUICOSMETICS_PLACEHOLDER_STREAK);
+        layoutvisor_update_rankingcounter(AUTOUICOSMETICS_PLACEHOLDER_RANK);
+        layoutvisor_update_rankingaccuracy(AUTOUICOSMETICS_PLACEHOLDER_ACCURACY);
+    }
+    autouicosmetics_pick_drawables(layoutvisor_autouicosmetics);
+
+    layout_placeholder.vertex = layoutvisor_autouicosmetics.drawable_self;
+    layout_placeholder.vertex.layoutvisor_type = "autouicosmetics";
 }
 
 function layoutvisor_update_none(layout_placeholder) {

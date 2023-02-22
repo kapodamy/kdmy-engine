@@ -39,7 +39,7 @@ void luascript_notify_pause(Luascript luascript, bool pause_or_resume);
 void luascript_notify_weekleave(Luascript luascript);
 void luascript_notify_afterresults(Luascript luascript);
 void luascript_notify_scriptchange(Luascript luascript);
-void luascript_notify_pause_option_choosen(Luascript luascript, int32_t option_index);
+void luascript_notify_pause_optionchoosen(Luascript luascript, int32_t option_index);
 void luascript_notify_pause_menuvisible(Luascript luascript, bool shown_or_hidden);
 void luascript_notify_note(Luascript luascript, double timestamp, int32_t id, double duration, double data, bool special, int32_t player_id, uint32_t state);
 void luascript_notify_buttons(Luascript luascript, int32_t player_id, uint32_t buttons);
@@ -62,6 +62,7 @@ void luascript_notify_modding_event(Luascript luascript, const char* event_name)
 void luascript_notify_modding_handle_custom_option(Luascript luascript, const char* option_name);
 void luascript_notify_modding_window_focus(Luascript luascript, bool focused);
 void luascript_notify_modding_window_minimized(Luascript luascript, bool minimized);
+void luascript_notify_window_size_changed(Luascript luascript, int32_t screen_width, int32_t screen_height);
 void luascript_notify_input_keyboard(Luascript luascript, int32_t key, int32_t scancode, bool is_pressed, int32_t mods);
 void luascript_notify_input_mouse_position(Luascript luascript, double x, double y);
 void luascript_notify_input_mouse_enter(Luascript luascript, bool entering);

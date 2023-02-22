@@ -34,8 +34,8 @@ const float THICKNESS = 0.20;
 
 void main() {
     bool is_outline = v_coloralt != 0.0;
-    vec4 texture_color;
     vec4 source_color = is_outline ? u_color_outline : u_color;
+    vec4 texture_color;
     vec4 color;
 
     if(bool(v_texalt))
@@ -46,24 +46,23 @@ void main() {
     if(u_grayscale) {
         float luminance = texture_color.r;
 
-        if (luminance <= 0) {
+        if(luminance <= 0.0) {
             discard;
             return;
         }
 
-		#ifdef SDF_FONT
-        if (is_outline) {
-            float factor = smoothstep(0.5 - u_sdf_smoothing, 0.5 + u_sdf_smoothing, luminance);
-            color = mix(u_color_outline, source_color, factor);
+#ifdef SDF_FONT
+        float distance = smoothstep(0.5 - u_sdf_smoothing, 0.5 + u_sdf_smoothing, luminance);
+
+        if(is_outline && u_sdf_thickness >= 0.0) {
             float alpha = smoothstep(u_sdf_thickness - u_sdf_smoothing, u_sdf_thickness + u_sdf_smoothing, luminance);
-            color = vec4(color.rgb, color.a * alpha);
+            color = vec4(u_color_outline.rgb, u_color_outline.a * alpha * (1.0 - distance));
         } else {
-            luminance = smoothstep(0.5 - u_sdf_smoothing, 0.5 + u_sdf_smoothing, luminance);
-            color = vec4(source_color.rgb, source_color.a * luminance);
+            color = vec4(source_color.rgb, source_color.a * distance);
         }
-        #else
-        color = vec4(source_color.rgb, source_color.a * luminance);
-		#endif
+#else
+        color = vec4(source_color.rgb, source_color.a * distance);
+#endif
     } else {
         if(u_color_by_diff) {
             color.r = source_color.r - texture_color.r;

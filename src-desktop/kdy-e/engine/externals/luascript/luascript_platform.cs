@@ -19,6 +19,7 @@ namespace Engine.Externals.LuaScriptInterop {
         private static bool last_window_focused;
         private static bool last_window_minimized;
         private static bool title_was_changed;
+        private static int last_resolution_changes;
 
 
         public static void InitializeCallbacks() {
@@ -29,6 +30,7 @@ namespace Engine.Externals.LuaScriptInterop {
             last_mouse_position_y = Double.NaN;
             last_window_focused = !PVRContext.global_context.IsOffscreen();
             last_window_minimized = PVRContext.global_context.IsMinimized();
+            last_resolution_changes = PVRContext.global_context.resolution_changes;
 
             //Glfw.SetKeyCallback(window, InternalCallbackKeyboard);// used by KOS wrapper
             Glfw.SetCursorPositionCallback(window, CALLBACK_POSITION);
@@ -54,19 +56,24 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         public static void PollWindowState() {
-            bool focused = !PVRContext.global_context.IsOffscreen();
-            bool minimized = PVRContext.global_context.IsMinimized();
+            PVRContext pvr_context = PVRContext.global_context;
+
+            bool focused = !pvr_context.IsOffscreen();
+            bool minimized = pvr_context.IsMinimized();
+            int resolution_changes = pvr_context.resolution_changes;
 
             bool focused_updated = focused != last_window_focused;
             bool minimize_updated = minimized != last_window_minimized;
+            bool resolution_updated = resolution_changes != last_resolution_changes;
 
-            if (focused_updated || minimize_updated) {
+            if (focused_updated || minimize_updated || resolution_updated) {
                 Luascript[] array = luascript_instances.PeekArray();
                 int size = luascript_instances.Size();
                 for (int i = 0 ; i < size ; i++) {
                     Luascript luascript = array[i];
                     if (focused_updated) luascript.notify_modding_window_focus(focused);
-                    if (minimize_updated) luascript.notify_modding_window_focus(minimized);
+                    if (minimize_updated) luascript.notify_modding_window_minimized(minimized);
+                    if (resolution_updated) luascript.notify_window_size_changed(pvr_context.ScreenWidth, pvr_context.ScreenHeight);
                 }
 
                 last_window_focused = focused;

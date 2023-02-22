@@ -1,4 +1,5 @@
 ﻿using System;
+using CsharpWrapper;
 using Engine.Animation;
 using Engine.Font;
 using Engine.Game.Common;
@@ -79,6 +80,8 @@ namespace Engine.Game {
                 Console.Error.WriteLine("[ERROR] freeplay_main() missing layout");
                 return;
             }
+
+            PVRContext.MuteAudioOutputOnMinimized(false);
 
             LayoutPlaceholder placeholder = layout.GetPlaceholder("menu");
             MenuManifest.Parameters @params = FreeplayMenu.MENU_SONGS.parameters;
@@ -237,12 +240,15 @@ namespace Engine.Game {
                 FreeplayMenu.InternalWaitTransition(state, "before-play-song", dt_playsong);
 
                 layout.Suspend();
+                PVRContext.MuteAudioOutputOnMinimized(EngineSettings.mute_on_minimize);
+
                 int ret = Week.Main(
                     weekinfo, state.use_alternative, difficult, default_bf, default_gf,
                     gameplaymanifest, state.map.gameplaymanifest_index
                 );
                 if (ret == 0) break;// back to main menu
 
+                PVRContext.MuteAudioOutputOnMinimized(false);
                 layout.Resume();
                 FreeplayMenu.InternalWaitTransition(state, "after-play-song", dt_playsong);
                 FreeplayMenu.InternalSongLoad(state, false);
@@ -273,6 +279,9 @@ namespace Engine.Game {
             songs.Destroy(false);
             layout.Destroy();
             modding.Destroy();
+
+
+            PVRContext.MuteAudioOutputOnMinimized(EngineSettings.mute_on_minimize);
 
             if (GameMain.background_menu_music != null) {
                 GameMain.background_menu_music.Play();

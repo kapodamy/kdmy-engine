@@ -200,7 +200,7 @@
                 </xs:complexType>
             </xs:element>
         </xs:sequence>
-        <xs:attribute name="baseModel" type="xs:anyURI" use="optional" />
+        <xs:attribute name="animationList" type="xs:anyURI" use="optional" />
     </xs:complexType>
     <xs:complexType name="Font">
         <xs:attribute name="name" type="xs:string" use="required" />

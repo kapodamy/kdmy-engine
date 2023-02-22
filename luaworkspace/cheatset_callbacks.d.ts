@@ -101,7 +101,7 @@ declare namespace KDMYEngine {
      * @param option_index Index (base-zero) of the custom option selected.
      * @param buttons An usigned number indicating the buttons pressed on the option. These are bit flags/fields.
      */
-    export function f_pause_optionselected(option_index: number, buttons: GamepadButtons): void;
+    export function f_pause_optionchoosen(option_index: number, buttons: GamepadButtons): void;
 
     /**
      * Called on a note hit or miss, also applies to penalties.
@@ -160,7 +160,7 @@ declare namespace KDMYEngine {
      * Note 2: while the dialog is shown the user can pause the game.
      * Note 3: if the user restarts the song, the dialog is ignored.
      * Note 4: if the initial states contains lua code, these runs first.
-     * @param dialog_src the dialog text file as-is was defined in the gameplay manifest.
+     * @param dialog_src the dialog text filename as-is was defined in the gameplay manifest.
      */
     export function f_dialogue_builtin_open(dialog_src: string): void;
 
@@ -249,12 +249,63 @@ declare namespace KDMYEngine {
      */
     export function f_modding_init(arg: BasicValue): void;
 
+    /**
+     * @summary (modding context only) Called when the game window looses or gain focus.
+     * @param focused true if focused, otherwise, false.
+     */
     export function f_modding_window_focus(focused: boolean): void;
+
+    /**
+     * @summary (modding context only) Called when the game window is minimized in the OS taskbar.
+     * @param minimized true if minimized, otherwise, false.
+     */
     export function f_modding_window_minimized(minimized: boolean): void;
+
+    /**
+     * @summary called when the game window was resized. Note: the size always honours the aspect ratio
+     * @param screen_width the new window width.
+     * @param screen_height the new window height.
+     */
+    export function f_window_size_changed(screen_width: number, screen_height: number): void;
+
+    /**
+     * @summary (desktop version only) called when a key is pressed or released
+     * @param key The keyboard key that was pressed or released. Can be {@link Keys.Unknown} if unknown
+     * @param scancode The system-specific scancode of the key. 
+     * @param is_pressed true on press, false if was released.
+     * @param mods Bit field describing which modifier keys were held down.
+     */
     export function f_input_keyboard(key: Keys, scancode: number, is_pressed: boolean, mods: ModKeys): void;
+
+    /**
+     * @summary (desktop version only) called when the mouse is moved, the reported position is relative
+     * to the window viewport, the position can be negative or greater than viewport width/height if the cursor
+     * moves outside of the window. 
+     * @param x The new cursor x-coordinate, relative to the left edge of the window
+     * @param y The new cursor y-coordinate, relative to the top edge of the window
+     */
     export function f_input_mouse_position(x: number, y: number): void;
+
+    /**
+     * @summary (desktop version only) called when the mouse cursor enters or leave the window area
+     * @param entering true if the cursor entered the window, otherwise, false if leaving.
+     */
     export function f_input_mouse_enter(entering: boolean): void;
+
+    /**
+     * @summary (desktop version only) 
+     * @param button which button was pressed
+     * @param is_pressed true on press, otherwise, false if was released.
+     * @param mods 	Bit field describing which keyboard modifier keys were held down.
+     */
     export function f_input_mouse_button(button: MouseButton, is_pressed: boolean, mods: ModKeys): void;
+
+    /**
+     * @summary (desktop version only) called when the vertical and/or horizontal wheel is moved. The amounts
+     * are system-specific
+     * @param x The scroll offset along the x-axis.
+     * @param y The scroll offset along the y-axis.
+     */
     export function f_input_mouse_scroll(x: number, y: number): void;
 
 

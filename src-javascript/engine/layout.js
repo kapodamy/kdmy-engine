@@ -177,8 +177,8 @@ async function layout_init(src) {
 
     layout.modifier_camera.width = viewport_width;
     layout.modifier_camera.height = viewport_height;
-    layout.camera_helper = camera_init(layout.modifier_camera, -1, -1);
-    layout.camera_secondary_helper = camera_init(layout.modifier_camera_secondary, -1, -1);
+    layout.camera_helper = camera_init(layout.modifier_camera, viewport_width, viewport_height);
+    layout.camera_secondary_helper = camera_init(layout.modifier_camera_secondary, viewport_width, viewport_height);
 
     layout.modifier_viewport.x = 0;
     layout.modifier_viewport.y = 0;
@@ -643,6 +643,24 @@ function layout_update_render_size(layout, screen_width, screen_height) {
     }
 }
 
+function layout_screen_to_layout_coordinates(layout, screen_x,  screen_y,  calc_with_camera, output_coords) {
+    // screen aspect ratio correction
+    screen_x -= pvr_context.screen_stride - pvr_context.screen_width;
+
+    const temp = new Float32Array(SH4MATRIX_SIZE);
+    sh4matrix_clear(temp);
+    sh4matrix_apply_modifier(temp, layout.modifier_viewport);
+
+    if (calc_with_camera) {
+        sh4matrix_apply_modifier(temp, layout.modifier_camera_secondary);
+        sh4matrix_apply_modifier(temp, layout.modifier_camera);
+    }
+
+    output_coords[0] = screen_x;
+    output_coords[1] = screen_y;
+    sh4matrix4_multiply_point(temp, output_coords);
+}
+
 function layout_camera_set_view(layout, x, y, depth) {
     camera_set_absolute(layout.camera_helper, x, y, depth);
 }
@@ -877,7 +895,7 @@ function layout_external_vertex_create_entries(layout, amount) {
             vertex: null,
             type: -1,
             group_id: 0,// layout root
-            parallax: { x: 1, y: 1, z: 1 },
+            parallax: { x: 1.0, y: 1.0, z: 1.0 },
             static_camera: 0,
             placeholder: null
         };
@@ -1214,8 +1232,8 @@ function layout_animate(layout, elapsed) {
 }
 
 function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
-    const MATRIX_SCREEN = new Float32Array(16);
-    const MATRIX_VIEWPORT = new Float32Array(16);
+    const MATRIX_SCREEN = new Float32Array(SH4MATRIX_SIZE);
+    const MATRIX_VIEWPORT = new Float32Array(SH4MATRIX_SIZE);
 
     pvr_context_save(pvrctx);
     if (layout.psshader) pvr_context_add_shader(pvrctx, layout.psshader);
@@ -3124,7 +3142,7 @@ async function layout_parse_video_action(unparsed_action, animlist, action_entri
                 break;
             default:
                 if (!layout_helper_add_action_media(unparsed_entry, entries)) break;
-                await layout_parse_sprite_action(unparsed_action, animlist, null, action_entries, 0);
+                await layout_parse_sprite_action(unparsed_action, animlist, null, action_entries, 1);
                 break;
         }
     }

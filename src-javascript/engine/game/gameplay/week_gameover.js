@@ -179,7 +179,7 @@ function week_gameover_get_difficult(weekgameover) {
 
 async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
     const pressed = [0x00];
-    const layout = roundcontext.layout;
+    const layout = roundcontext.layout ?? roundcontext.ui_layout;
 
     // match antialiasing with the stage layout
     layout_disable_antialiasing(weekgameover.layout, layout_is_antialiasing_disabled(layout));
@@ -196,21 +196,23 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         character_play_extra(roundcontext.girlfriend, "cry", 0);
     }
 
-    for (let i = 0; i < roundcontext.players_size; i++) {
-        if (!roundcontext.players[i].playerstats) continue;
-        if (roundcontext.players[i].is_opponent) {
-            character_play_extra(roundcontext.players[i].character, FUNKIN_OPPONENT_VICTORY, 0);
-            continue;
-        }
+    if (!layout_trigger_any(roundcontext.layout, "camera_gameover")) {
+        for (let i = 0; i < roundcontext.players_size; i++) {
+            if (!roundcontext.players[i].playerstats) continue;
+            if (roundcontext.players[i].is_opponent) {
+                character_play_extra(roundcontext.players[i].character, FUNKIN_OPPONENT_VICTORY, 0);
+                continue;
+            }
 
-        if (playerstats_is_dead(roundcontext.players[i].playerstats)) {
-            dead_player_index = i;
-            character_play_extra(roundcontext.players[i].character, FUNKIN_PLAYER_DIES, 0);
+            if (playerstats_is_dead(roundcontext.players[i].playerstats)) {
+                dead_player_index = i;
+                character_play_extra(roundcontext.players[i].character, FUNKIN_PLAYER_DIES, 0);
 
-            let prefix = roundcontext.players[i].is_opponent? WEEKROUND_CAMERA_OPONNENT : WEEKROUND_CAMERA_PLAYER;
-            week_camera_focus(roundcontext.layout, prefix, i);
-        } else {
-            character_play_extra(roundcontext.players[i].character, FUNKIN_PLAYER_SCARED, 0);
+                let target = roundcontext.players[i].is_opponent ? WEEKROUND_CAMERA_OPONNENT : WEEKROUND_CAMERA_PLAYER;
+                week_camera_focus_guess(roundcontext, target, i);
+            } else {
+                character_play_extra(roundcontext.players[i].character, FUNKIN_PLAYER_SCARED, 0);
+            }
         }
     }
 
@@ -229,16 +231,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
     let music_bg = await soundplayer_init("/assets/common/music/gameOver.ogg");
     let sfx_end = await soundplayer_init("/assets/common/sound/gameOverEnd.ogg");
 
-    if (sfx_die != null) soundplayer_replay(sfx_die);
-
-    // focus dead player
-    if (!layout_trigger_any(roundcontext.layout, "camera_gameover")) {
-        let camera_name = week_internal_concat_suffix(WEEKROUND_CAMERA_PLAYER, dead_player_index);
-        if (!layout_trigger_any(roundcontext.layout, camera_name)) {
-            layout_trigger_any(roundcontext.layout, WEEKROUND_CAMERA_PLAYER);
-        }
-        camera_name = undefined;
-    }
+    if (sfx_die) soundplayer_replay(sfx_die);
 
     // try draw only the dead player
     let character_name = week_internal_concat_suffix(WEEKROUND_CHARACTER_PREFIX, dead_player_index);
@@ -256,7 +249,6 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
     let selector_buttons = GAMEPAD_T_LR;
     let ui_buttons = WEEK_GAMEOVER_BUTTONS;
     let total = 0;
-    let dead_player_index2 = has_focus ? -1 : dead_player_index;
 
     while (1) {
         let elapsed = await pvrctx_wait_ready();
@@ -267,8 +259,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         pvr_context_reset(pvr_context);
         layout_animate(layout, elapsed);
 
-        if (stage_has_gameover) layout_draw(layout, pvr_context);
-        else week_gameover_draw2(weekgameover, dead_player_index2, roundcontext, pvr_context);
+        week_gameover_draw2(weekgameover, roundcontext, pvr_context);
 
         let buttons = gamepad_has_pressed_delayed(controller, ui_buttons);
 
@@ -353,8 +344,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         pvr_context_reset(pvr_context);
         layout_animate(layout, elapsed);
 
-        if (stage_has_gameover) layout_draw(layout, pvr_context);
-        else week_gameover_draw2(weekgameover, dead_player_index2, roundcontext, pvr_context);
+        week_gameover_draw2(weekgameover, roundcontext, pvr_context);
 
         if (gamepad_has_pressed_delayed(controller, GAMEPAD_START | GAMEPAD_A | GAMEPAD_X)) {
             layout_trigger_any(weekgameover.layout, "transition_force_end");
@@ -392,24 +382,11 @@ function week_gameover_draw(weekgameover, pvrctx) {
     layout_draw(weekgameover.layout, pvrctx);
 }
 
-function week_gameover_draw2(weekgameover, dead_player_index, roundcontext, pvrctx) {
+function week_gameover_draw2(weekgameover, roundcontext, pvrctx) {
     sprite_draw(roundcontext.screen_background, pvrctx);
-
-    if (dead_player_index < 0) {
-        layout_draw(roundcontext.layout, pvrctx);
-    } else {
-        pvr_context_save(pvrctx);
-        let matrix = pvrctx.current_matrix;
-        sh4matrix_apply_modifier(matrix, layout_get_modifier_viewport(roundcontext.layout));
-        sh4matrix_apply_modifier(matrix, layout_get_modifier_camera(roundcontext.layout));
-        pvr_context_set_global_antialiasing(pvrctx, layout_get_layout_antialiasing(roundcontext.layout));
-        character_draw(roundcontext.players[dead_player_index].character, pvrctx);
-        pvr_context_restore(pvrctx);
-    }
-
+    layout_draw(roundcontext.layout ?? roundcontext.ui_layout, pvrctx);
     if (weekgameover.disabled) return;
     layout_draw(weekgameover.layout, pvrctx);
-
 }
 
 

@@ -321,22 +321,33 @@ namespace Engine.Font {
             Texture primary_texture = this.fontcharmap_primary_texture;
             FontCharMap secondary = this.fontcharmap_secondary;
             Texture secondary_texture = this.fontcharmap_secondary_texture;
-            bool has_border = this.border_enable && this.border_color[3] > 0 && this.border_size >= 0;
+            bool has_border = this.border_enable && this.border_color[3] > 0 && this.border_size >= 0f;
             float outline_size = this.border_size * 2;
             float scale = height / FontType.GLYPHS_HEIGHT;
             float ascender = ((primary ?? secondary).ascender / 2f) * scale;// FIXME: ¿why does dividing by 2 works?
             int text_end_index = text_index + text_size;
             int text_length = text.Length;
+            float border_padding1 = 0f, border_padding2 = 0f;
 
             Debug.Assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
 
 #if SDF_FONT
             // calculate sdf thickness
-            if (has_border && this.border_size > 0f) {
-                float max_border_size = height * FontType.GLYPHS_OUTLINE_RATIO;
-                float border_size = Math.Min(this.border_size, max_border_size);
-                float thickness = (1f - (border_size / max_border_size)) / 2f;
-                GlyphRenderer.SetSDFThickness(pvrctx, thickness);
+            if (has_border) {
+                if (this.border_size > 0f) {
+                    float max_border_size = height * FontType.GLYPHS_OUTLINE_RATIO;
+                    float border_size = Math.Min(this.border_size, max_border_size);
+                    float thickness = (1f - (border_size / max_border_size)) / 2f;
+                    GlyphRenderer.SetSDFThickness(pvrctx, thickness);
+
+                    /*if (border_size < this.border_size && height > 8f) {
+                        // add some padding
+                        border_padding1 = this.border_size - border_size;
+                        border_padding2 = border_padding1 * 2f;
+                    }*/
+                } else {
+                    GlyphRenderer.SetSDFThickness(pvrctx, -1f);
+                }
             }
 #endif
 
@@ -446,10 +457,10 @@ namespace Engine.Font {
                     if (has_border) {
                         float sdx, sdy, sdw, sdh;
 #if SDF_FONT
-                        sdx = dx;
-                        sdy = dy;
-                        sdw = dw;
-                        sdh = dh;
+                        sdx = dx - border_padding1;
+                        sdy = dy - border_padding1;
+                        sdw = dw + border_padding2;
+                        sdh = dh + border_padding2;
 #else
                         // compute border location and outline size
                         sdx = dx - this.border_size;
@@ -469,15 +480,10 @@ namespace Engine.Font {
                         );
                         added++;
                     }
-                    bool is_outline;
-#if SDF_FONT
-                    is_outline = false;
-#else
-                    is_outline = true;
-#endif
+
                     // queue glyph for batch rendering
                     GlyphRenderer.AppendGlyph(
-                        texture, is_secondary, is_outline,
+                        texture, is_secondary, false,
                         fontchardata.atlas_entry.x, fontchardata.atlas_entry.y, fontchardata.width, fontchardata.height,
                         dx, dy, dw, dh
                     );

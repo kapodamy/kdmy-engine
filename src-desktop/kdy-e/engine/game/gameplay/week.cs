@@ -197,6 +197,7 @@ namespace Engine.Game.Gameplay {
         public Camera ui_camera;
         public MissNoteFX missnotefx;
         public SongProgressbar songprogressbar;
+        public AutoUICosmetics autouicosmetics;
 
         public Layout layout;
 
@@ -250,7 +251,8 @@ namespace Engine.Game.Gameplay {
 
         private const GamepadButtons ROUND_READY_BUTTONS = GamepadButtons.A | GamepadButtons.START;
         private const string ROUND_CAMERA_GIRLFRIEND = "camera_girlfriend";
-        internal const string ROUND_CAMERA_PLAYER = "camera_player";// camera_player0, camera_player1, etc
+        internal const string ROUND_CAMERA_CHARACTER = "camera_character";
+        internal const string ROUND_CAMERA_PLAYER = "camera_player";
         internal const string ROUND_CAMERA_OPONNENT = "camera_opponent";
         private const string ROUND_CAMERA_ROUNDSTART = "camera_roundStart";
         private const string ROUND_CAMERA_ROUNDEND = "camera_roundEnd";
@@ -310,6 +312,7 @@ namespace Engine.Game.Gameplay {
             if (roundcontext.missnotefx != null) roundcontext.missnotefx.Destroy();
             if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
             if (roundcontext.songprogressbar != null) roundcontext.songprogressbar.Destroy();
+            if (roundcontext.autouicosmetics != null) roundcontext.autouicosmetics.Destroy();
 
             //free(roundcontext.events);
             //free(roundcontext.healthbarparams.player_icon_model);
@@ -442,6 +445,7 @@ namespace Engine.Game.Gameplay {
                 ui_camera = new Camera(null, 640f, 480f),
                 missnotefx = null,
                 songprogressbar = null,
+                autouicosmetics = new AutoUICosmetics(),
                 screen_background = Sprite.InitFromRGB8(0x0),
 
                 has_directive_changes = false,
@@ -839,6 +843,7 @@ namespace Engine.Game.Gameplay {
             roundcontext.ui_layout = layout;
 
             layout.GetViewportSize(out layout_width, out layout_height);
+            roundcontext.ui_camera.ChangeViewport(layout_width, layout_height);
             initparams.ui_layout_width = layout_width;
             initparams.ui_layout_height = layout_height;
             ui.countdown_height = initparams.ui_layout_height / 3f;
@@ -1563,6 +1568,7 @@ namespace Engine.Game.Gameplay {
             GameplayManifestPlayer[] players = gameplaymanifest.@default.players;
             int players_size = gameplaymanifest.@default.players_size;
             Distribution[] distributions = gameplaymanifest.@default.distributions;
+            int distributions_size = gameplaymanifest.@default.distributions_size;
 
             if (gameplaymanifest.tracks[track_index].has_players) {
                 players = gameplaymanifest.tracks[track_index].players;
@@ -1570,6 +1576,7 @@ namespace Engine.Game.Gameplay {
             }
             if (gameplaymanifest.tracks[track_index].has_distributions) {
                 distributions = gameplaymanifest.tracks[track_index].distributions;
+                distributions_size = gameplaymanifest.tracks[track_index].distributions_size;
             }
 
             //
@@ -1591,6 +1598,10 @@ namespace Engine.Game.Gameplay {
                 // update only the strums and the character animations
                 for (int i = 0 ; i < roundcontext.players_size ; i++) {
                     if (players[i].distribution_index >= 0 || roundcontext.players[i].strums != null) {
+                        if (players[i].distribution_index >= distributions_size) {
+                            throw new IndexOutOfRangeException("invalid distribution_index");
+                        }
+
                         Distribution distribution = distributions[players[i].distribution_index];
                         roundcontext.players[i].strums.SetNotes(
                             chart,
@@ -1696,6 +1707,9 @@ namespace Engine.Game.Gameplay {
                 if (layout_strums_id < 0 || players[i].distribution_index < 0) {
                     roundcontext.players[i].type = CharacterType.ACTOR;
                     continue;
+                }
+                if (players[i].distribution_index >= distributions_size) {
+                    throw new IndexOutOfRangeException("invalid distribution_index");
                 }
 
                 Distribution distribution = distributions[players[i].distribution_index];
@@ -1868,71 +1882,27 @@ namespace Engine.Game.Gameplay {
         }
 
         public static void InitUICosmetics(RoundContext roundcontext) {
-            // default values to guess positions
-            var STREAK = new LayoutPlaceholder() { x = -355f, y = -115f, z = +0.13f, height = 136f, width = 0f };
-            var RANK = new LayoutPlaceholder() { x = -350f, y = -250f, z = +0.11f, height = 148f };
-            var ACCURACY = new LayoutPlaceholder() { x = +305f, y = -165f, z = +0.12f, height = 80f };
-
             InitParams initparams = roundcontext.initparams;
             float viewport_width = 0f, viewport_height = 0f;
             Layout layout = roundcontext.layout != null ? roundcontext.layout : roundcontext.ui_layout;
 
             roundcontext.ui_layout.GetViewportSize(out viewport_width, out viewport_height);
-
-            string auto_compute_location_from = (string)layout.GetAttachedValue(
-                "ui_autoplace_cosmetic_from_placeholder", AttachedValueType.STRING, null
-            );
-            bool auto_compute_location = !String.IsNullOrEmpty(auto_compute_location_from);
-            LayoutPlaceholder auto_compute_reference = null;
-
-            if (auto_compute_location) {
-                auto_compute_reference = layout.GetPlaceholder(auto_compute_location_from);
-                if (auto_compute_reference == null) {
-                    auto_compute_location = false;
-                    Console.Error.WriteLine($"[WARN] week_init_ui_cosmetics() missing '{auto_compute_location_from}' placeholder, autoplace failed.");
-                }
-            }
+            bool has_autoplace = roundcontext.autouicosmetics.PreparePlaceholders(layout);
 
             LayoutPlaceholder placeholder_streakcounter = Week.InternalReadPlaceholderCounter(
-                layout, "ui_streakcounter", !auto_compute_location
+                layout, "ui_streakcounter", !has_autoplace
             );
             LayoutPlaceholder placeholder_rankingcounter_rank = Week.InternalReadPlaceholderCounter(
-                layout, "ui_rankingcounter_rank", !auto_compute_location
+                layout, "ui_rankingcounter_rank", !has_autoplace
             );
             LayoutPlaceholder placeholder_rankingcounter_accuracy = Week.InternalReadPlaceholderCounter(
-                layout, "ui_rankingcounter_accuracy", !auto_compute_location
+                layout, "ui_rankingcounter_accuracy", !has_autoplace
             );
 
-            // guess the position of streakcounter and rankingcounter if has missing placeholders
-            if (auto_compute_location) {
-                if (placeholder_streakcounter == null) {
-                    placeholder_streakcounter = STREAK;
-                    placeholder_streakcounter.x += auto_compute_reference.x;
-                    placeholder_streakcounter.y += auto_compute_reference.y;
-                    placeholder_streakcounter.z += auto_compute_reference.z;
-                }
-                if (placeholder_rankingcounter_rank == null) {
-                    placeholder_rankingcounter_rank = RANK;
-                    placeholder_rankingcounter_rank.x += auto_compute_reference.x;
-                    placeholder_rankingcounter_rank.y += auto_compute_reference.y;
-                    placeholder_rankingcounter_rank.z += auto_compute_reference.z;
-                }
-                if (placeholder_rankingcounter_accuracy == null) {
-                    placeholder_rankingcounter_accuracy = ACCURACY;
-                    placeholder_rankingcounter_accuracy.x += auto_compute_reference.x;
-                    placeholder_rankingcounter_accuracy.y += auto_compute_reference.y;
-                    placeholder_rankingcounter_accuracy.z += auto_compute_reference.z;
-                }
-            }
-
-            if (!EngineSettings.gameplay_enabled_uicosmetics) {
-                // drawn away
-                placeholder_streakcounter.x = Single.NegativeInfinity;
-                placeholder_streakcounter.y = Single.NegativeInfinity;
-                placeholder_rankingcounter_rank.x = Single.NegativeInfinity;
-                placeholder_rankingcounter_rank.y = Single.NegativeInfinity;
-                placeholder_rankingcounter_accuracy.x = Single.NegativeInfinity;
-                placeholder_rankingcounter_accuracy.y = Single.NegativeInfinity;
+            if (has_autoplace) {
+                if (placeholder_streakcounter == null) placeholder_streakcounter = AutoUICosmetics.PLACEHOLDER_STREAK;
+                if (placeholder_rankingcounter_rank == null) placeholder_rankingcounter_rank = AutoUICosmetics.PLACEHOLDER_RANK;
+                if (placeholder_rankingcounter_accuracy == null) placeholder_rankingcounter_accuracy = AutoUICosmetics.PLACEHOLDER_ACCURACY;
             }
 
             // keep a copy of the old values
@@ -2046,7 +2016,7 @@ namespace Engine.Game.Gameplay {
             );
             roundcontext.trackinfo.SetZIndex(initparams.ui.trackinfo_z);
             roundcontext.trackinfo.BorderEnable(true);
-            roundcontext.trackinfo.BorderSetSize(2f);
+            roundcontext.trackinfo.BorderSetSize(RoundStats.FONT_BORDER_SIZE);
             roundcontext.trackinfo.BorderSetColorRGBA8(0x000000FF);// black
 
             // step 2: dispose all modelholders used
@@ -2059,6 +2029,18 @@ namespace Engine.Game.Gameplay {
             if (old_streakcounter != null) old_streakcounter.Destroy();
             if (old_countdown != null) old_countdown.Destroy();
             if (old_songprogressbar != null) old_songprogressbar.Destroy();
+
+
+            // step 4: drawn away if ui cosmetics are disabled
+            if (!EngineSettings.gameplay_enabled_uicosmetics) {
+                // drawn away
+                placeholder_streakcounter.vertex = null;
+                placeholder_rankingcounter_rank.vertex = null;
+                placeholder_rankingcounter_accuracy.vertex = null;
+            }
+
+            // step 5: pick drawables if "ui_autoplace_cosmetics" placeholder is present
+            roundcontext.autouicosmetics.PickDrawables();
         }
 
         public static void InitUIGameover(RoundContext roundcontext) {
@@ -2102,7 +2084,7 @@ namespace Engine.Game.Gameplay {
 
         public static void PlaceInLayout(RoundContext roundcontext) {
             InitParams initparams = roundcontext.initparams;
-            const byte UI_SIZE = 8;// all UI "cosmetics" elements + screen background + dialogue
+            const byte UI_SIZE = 9;// all UI "cosmetics" elements + screen background + dialogue
 
             Layout layout; bool is_ui;
             if (roundcontext.layout != null) {
@@ -2160,6 +2142,10 @@ namespace Engine.Game.Gameplay {
             );
             layout.ExternalVertexSetEntry(
                 7, PVRContextVertex.DRAWABLE, roundcontext.dialogue != null ? roundcontext.dialogue.GetDrawable() : null, ui2
+            );
+            layout.ExternalVertexSetEntry(
+                8, PVRContextVertex.DRAWABLE,
+                roundcontext.autouicosmetics.drawable_self, roundcontext.autouicosmetics.layout_group_id
             );
 
             // step 3: initialize the ui camera
@@ -2341,6 +2327,8 @@ namespace Engine.Game.Gameplay {
                     show_dialog = false;
                     Week.InternalDoAntibounce(roundcontext);
                 }
+
+                Week.Halt(roundcontext, true);
             }
 
             if (check_ready) roundcontext.countdown.Ready();
@@ -2714,7 +2702,7 @@ namespace Engine.Game.Gameplay {
         }
 
 
-        public static void Halt(RoundContext roundcontext, bool poke_global_beatwatcher) {
+        public static void Halt(RoundContext roundcontext, bool peek_global_beatwatcher) {
             if (!roundcontext.scriptcontext.halt_flag) return;
 
             Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
@@ -2722,7 +2710,7 @@ namespace Engine.Game.Gameplay {
 
             Console.Error.WriteLine("[LOG] week_halt() waiting for script signal...");
 
-            if (poke_global_beatwatcher) BeatWatcher.GlobalSetTimestampFromKosTimer();
+            if (peek_global_beatwatcher) BeatWatcher.GlobalSetTimestampFromKosTimer();
 
             while (roundcontext.scriptcontext.halt_flag) {
                 float elapsed = PVRContext.global_context.WaitReady();
@@ -2743,7 +2731,7 @@ namespace Engine.Game.Gameplay {
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
 
-                if (poke_global_beatwatcher) BeatWatcher.GlobalSetTimestampFromKosTimer();
+                if (peek_global_beatwatcher) BeatWatcher.GlobalSetTimestampFromKosTimer();
 
                 if (roundcontext.scriptcontext.force_end_flag) {
                     Console.Error.WriteLine("[LOG] week_halt() wait interrupted because week_end() was called");
@@ -2763,10 +2751,10 @@ namespace Engine.Game.Gameplay {
                 if (timestamp < roundcontext.events[i].timestamp) break;
                 switch (roundcontext.events[i].command) {
                     case ChartEvent.CAMERA_OPPONENT:
-                        Week.InternalCameraFocusGuess(roundcontext, true);
+                        Week.CameraFocusGuess(roundcontext, Week.ROUND_CAMERA_OPONNENT, -1);
                         break;
                     case ChartEvent.CAMERA_PLAYER:
-                        Week.InternalCameraFocusGuess(roundcontext, false);
+                        Week.CameraFocusGuess(roundcontext, Week.ROUND_CAMERA_PLAYER, -1);
                         break;
                     case ChartEvent.CHANGE_BPM:
                         Week.UpdateBpm(roundcontext, (float)roundcontext.events[i].parameter);
@@ -3152,46 +3140,18 @@ namespace Engine.Game.Gameplay {
             return gameplaymanifest;
         }
 
-        internal static bool CameraFocus(Layout layout, string character_prefix, int index) {
-            if (layout == null) return true;
+        internal static void CameraFocusGuess(RoundContext roundcontext, string target_name, int character_index) {
+            Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
             Camera camera = layout.GetCameraHelper();
 
-            if (index < 0) {
-                return camera.FromLayout(layout, character_prefix);
+            if (character_index >= 0) {
+                string name = Week.InternalConcatSuffix(Week.ROUND_CAMERA_CHARACTER, character_index);
+                bool found = camera.FromLayout(layout, name);
+                //free(name);
+                if (found) return;
             }
 
-            string name = Week.InternalConcatSuffix(character_prefix, index);
-            bool res = camera.FromLayout(layout, name);
-            //free(name);
-            return res;
-        }
-
-        private static void InternalCameraFocusGuess(RoundContext roundcontext, bool opponent_or_player) {
-            if (roundcontext.layout == null) return;
-
-            Settings settings = roundcontext.settings;
-
-            // check if there absolute camera present in the layout
-            string target = opponent_or_player ? settings.camera_name_opponent : settings.camera_name_player;
-            Camera camera = roundcontext.layout.GetCameraHelper();
-            if (camera.FromLayout(roundcontext.layout, target)) return;
-
-            // guess from the character type and later invoke the camera named like "camera_player012345"
-            int index = -1;
-            for (int i = 0 ; i < roundcontext.players_size ; i++) {
-                if (opponent_or_player && roundcontext.players[i].type == CharacterType.BOT) {
-                    index = i;
-                    break;
-                }
-                if (!opponent_or_player && roundcontext.players[i].type == CharacterType.PLAYER) {
-                    index = i;
-                    break;
-                }
-            }
-
-            if (index < 0) return;
-
-            Week.CameraFocus(roundcontext.layout, Week.ROUND_CAMERA_PLAYER, index);
+            camera.FromLayout(layout, target_name);
         }
 
         private static void InternalResetPlayersAndGirlfriend(RoundContext roundcontext) {

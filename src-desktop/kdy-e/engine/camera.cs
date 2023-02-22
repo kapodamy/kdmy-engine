@@ -335,9 +335,7 @@ namespace Engine {
             CameraPlaceholder camera_placeholder = layout.GetCameraPlaceholder(camera_name);
             if (camera_placeholder == null) return false;
 
-            if (camera_placeholder.enable_offset_zoom) {
-                this.enable_offset_zoom = camera_placeholder.enable_offset_zoom;
-            }
+            this.enable_offset_zoom = camera_placeholder.enable_offset_zoom;
 
             if (camera_placeholder.animation != null) {
                 this.SetAnimation(camera_placeholder.animation);
@@ -580,6 +578,15 @@ namespace Engine {
 
         public void DisableOffsetZoom(bool disabled) {
             this.enable_offset_zoom = !disabled;
+        }
+
+        public void ChangeViewport(float width, float height) {
+            if (this.internal_modifier) {
+                this.modifier.width = width;
+                this.modifier.height = height;
+            }
+            this.half_viewport_width = width / 2f;
+            this.half_viewport_height = height / 2f;
         }
 
         public void SetProperty(int id, float value) {

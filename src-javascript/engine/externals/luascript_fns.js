@@ -229,6 +229,13 @@ function luascript_notify_input_mouse_scroll(luascript, x, y) {
     );
 }
 
+function luascript_notify_window_size_changed(luascript, screen_width, screen_height) {
+    return _luascriptcript_call(
+        ModuleLuaScript._luascript_notify_window_size_changed,
+        luascript, screen_width, screen_height
+    );
+}
+
 function _luascriptcript_call(fn, ...args) {
     if (!args[0]) return;
 

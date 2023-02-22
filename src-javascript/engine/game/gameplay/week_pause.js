@@ -168,7 +168,7 @@ async function week_pause_init() {
     let sprite_nocontroller = sprite_init(await texture_init(WEEKPAUSE_NOCONTROLLER));
 
     let modding = await modding_init(layout, WEEKPAUSE_MODDING_SCRIPT);
-    modding.native_menu = menu;
+    modding.native_menu = modding.active_menu = menu;
     modding.callback_option = week_pause_internal_handle_modding_option;
 
     let weekpause = {
@@ -288,6 +288,7 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
     weekpause.modding_choosen_option_name = null;
     weekpause.modding.has_exit = 0;
     weekpause.modding.has_halt = 0;
+    weekpause.modding.native_menu = weekpause.modding.active_menu;
     await modding_helper_notify_init(weekpause.modding, MODDING_NATIVE_MENU_SCREEN);
     await await modding_helper_notify_option(weekpause.modding, 1);
 
@@ -352,8 +353,8 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
                 menu_select_index(current_menu, menu_get_items_count(current_menu) - 1);
             await modding_helper_notify_option(weekpause.modding, 1);
         } else if (buttons & GAMEPAD_AD_DOWN) {
-            if (!menu_select_vertical(current_menu, -1))
-                menu_select_index(current_menu, -0);
+            if (!menu_select_vertical(current_menu, 1))
+                menu_select_index(current_menu, 0);
             await modding_helper_notify_option(weekpause.modding, 1);
         } else if (buttons & (GAMEPAD_A | GAMEPAD_X)) {
             has_option_choosen = 1;
@@ -367,13 +368,13 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
 
         if (has_option_choosen && current_menu_is_external) {
             let option_index = menu_get_selected_index(current_menu);
-            await weekscript_notify_pause_option_choosen(roundcontext.script, option_index);
+            await weekscript_notify_pause_optionchoosen(roundcontext.script, option_index);
             has_option_choosen = 0;
             go_back = 1;
         } else if (has_option_choosen) {
             if (weekpause.modding_choosen_option_name == null) {
                 weekpause.modding_choosen_option_name = menu_get_selected_item_name(current_menu);
-                if (!await modding_helper_notify_option(weekpause.modding, 0)) {
+                if (await modding_helper_notify_option(weekpause.modding, 0)) {
                     weekpause.modding_choosen_option_name = null;
                     continue;
                 }

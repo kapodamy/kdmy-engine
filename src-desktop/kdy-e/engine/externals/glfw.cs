@@ -12,6 +12,7 @@ namespace Engine.Externals.GLFW {
         public const int DONT_CARE = -1;
         public const int PROFILE_CORE = 0x00032001;
         public const int WINDOWATTRIBUTE_FOCUSED = 0x00020001;
+        public const int WINDOWATTRIBUTE_ICONIFIED = 0x00020002;
         public const int CURSOR = 0x00033001;
         public const int CURSOR_NORMAL = 0x00034001;
         public const int CURSOR_HIDDEN = 0x00034002;

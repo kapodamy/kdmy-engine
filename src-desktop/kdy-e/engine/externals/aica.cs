@@ -59,6 +59,8 @@ namespace Engine.Externals {
         public static extern void sndbridge_loop(int stream_id, bool enable);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void sndbridge_set_master_volume(float volume);
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void sndbridge_set_master_muted(bool muted);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "sndbridge_get_runtime_info")]
         private static extern IntPtr __sndbridge_get_runtime_info();
 

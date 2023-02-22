@@ -203,7 +203,7 @@ namespace Engine.Game.Gameplay {
 
         public int HelperAskToPlayer(RoundContext roundcontext) {
             GamepadButtons pressed = GamepadButtons.NOTHING;
-            Layout layout = roundcontext.layout;
+            Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
 
             // match antialiasing with the stage layout
             this.layout.DisableAntialiasing(layout.IsAntialiasingDisabled());
@@ -220,21 +220,23 @@ namespace Engine.Game.Gameplay {
                 roundcontext.girlfriend.PlayExtra("cry", false);
             }
 
-            for (int i = 0 ; i < roundcontext.players_size ; i++) {
-                if (roundcontext.players[i].playerstats == null) continue;
-                if (roundcontext.players[i].is_opponent) {
-                    roundcontext.players[i].character.PlayExtra(Funkin.OPPONENT_VICTORY, false);
-                    continue;
-                }
+            if (roundcontext.layout.TriggerAny("camera_gameover") < 1) {
+                for (int i = 0 ; i < roundcontext.players_size ; i++) {
+                    if (roundcontext.players[i].playerstats == null) continue;
+                    if (roundcontext.players[i].is_opponent) {
+                        roundcontext.players[i].character.PlayExtra(Funkin.OPPONENT_VICTORY, false);
+                        continue;
+                    }
 
-                if (roundcontext.players[i].playerstats.IsDead()) {
-                    dead_player_index = i;
-                    roundcontext.players[i].character.PlayExtra(Funkin.PLAYER_DIES, false);
+                    if (roundcontext.players[i].playerstats.IsDead()) {
+                        dead_player_index = i;
+                        roundcontext.players[i].character.PlayExtra(Funkin.PLAYER_DIES, false);
 
-                    string prefix = roundcontext.players[i].is_opponent ? Week.ROUND_CAMERA_OPONNENT : Week.ROUND_CAMERA_PLAYER;
-                    Week.CameraFocus(roundcontext.layout, prefix, i);
-                } else {
-                    roundcontext.players[i].character.PlayExtra(Funkin.PLAYER_SCARED, false);
+                        string target = roundcontext.players[i].is_opponent ? Week.ROUND_CAMERA_OPONNENT : Week.ROUND_CAMERA_PLAYER;
+                        Week.CameraFocusGuess(roundcontext, target, i);
+                    } else {
+                        roundcontext.players[i].character.PlayExtra(Funkin.PLAYER_SCARED, false);
+                    }
                 }
             }
 
@@ -255,15 +257,6 @@ namespace Engine.Game.Gameplay {
 
             if (sfx_die != null) sfx_die.Replay();
 
-            // focus dead player
-            if (roundcontext.layout.TriggerAny("camera_gameover") < 1) {
-                string camera_name = Week.InternalConcatSuffix(Week.ROUND_CAMERA_PLAYER, dead_player_index);
-                if (roundcontext.layout.TriggerAny(camera_name) < 0) {
-                    roundcontext.layout.TriggerAny(Week.ROUND_CAMERA_PLAYER);
-                }
-                //free(camera_name);
-            }
-
             // try draw only the dead player
             string character_name = Week.InternalConcatSuffix(Week.ROUND_CHARACTER_PREFIX, dead_player_index);
             bool has_focus = roundcontext.layout.SetSingleItemToDraw(character_name);
@@ -280,7 +273,6 @@ namespace Engine.Game.Gameplay {
             GamepadButtons selector_buttons = GamepadButtons.T_LR;
             GamepadButtons ui_buttons = WeekGameOver.BUTTONS;
             double total = 0;
-            int dead_player_index2 = has_focus ? -1 : dead_player_index;
 
             while (true) {
                 float elapsed = PVRContext.global_context.WaitReady();
@@ -291,8 +283,7 @@ namespace Engine.Game.Gameplay {
                 PVRContext.global_context.Reset();
                 layout.Animate(elapsed);
 
-                if (stage_has_gameover) layout.Draw(PVRContext.global_context);
-                else Draw2(dead_player_index2, roundcontext, PVRContext.global_context);
+                Draw2(roundcontext, PVRContext.global_context);
 
                 GamepadButtons buttons = controller.HasPressedDelayed(ui_buttons);
 
@@ -377,8 +368,7 @@ namespace Engine.Game.Gameplay {
                 PVRContext.global_context.Reset();
                 layout.Animate(elapsed);
 
-                if (stage_has_gameover) layout.Draw(PVRContext.global_context);
-                else Draw2(dead_player_index2, roundcontext, PVRContext.global_context);
+                Draw2(roundcontext, PVRContext.global_context);
 
                 if (controller.HasPressedDelayed(GamepadButtons.START | GamepadButtons.A | GamepadButtons.X) != GamepadButtons.NOTHING) {
                     this.layout.TriggerAny("transition_force_end");
@@ -415,21 +405,9 @@ namespace Engine.Game.Gameplay {
             this.layout.Draw(pvrctx);
         }
 
-        public void Draw2(int dead_player_index, RoundContext roundcontext, PVRContext pvrctx) {
+        public void Draw2(RoundContext roundcontext, PVRContext pvrctx) {
             roundcontext.screen_background.Draw(pvrctx);
-
-            if (dead_player_index < 0) {
-                roundcontext.layout.Draw(pvrctx);
-            } else {
-                pvrctx.Save();
-                SH4Matrix matrix = pvrctx.CurrentMatrix;
-                matrix.ApplyModifier(roundcontext.layout.GetModifierViewport());
-                matrix.ApplyModifier(roundcontext.layout.GetModifierCamera());
-                pvrctx.SetGlobalAntialiasing(roundcontext.layout.GetLayoutAntialiasing());
-                roundcontext.players[dead_player_index].character.Draw(pvrctx);
-                pvrctx.Restore();
-            }
-
+            (roundcontext.layout ?? roundcontext.ui_layout).Draw(pvrctx);
             if (this.disabled) return;
             this.layout.Draw(pvrctx);
         }

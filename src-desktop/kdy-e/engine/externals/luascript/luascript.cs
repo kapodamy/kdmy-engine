@@ -443,8 +443,8 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.CallPushedGlobalFunction(0);
         }
 
-        public void notify_pause_option_choosen(int option_index) {
-            const string FUNCTION = "f_pause_option_choosen";
+        public void notify_pause_optionchoosen(int option_index) {
+            const string FUNCTION = "f_pause_optionchoosen";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
 
@@ -549,7 +549,7 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         public void notify_dialogue_builtin_open(string dialog_src) {
-            const string FUNCTION = "f_dialogue_line_starts";
+            const string FUNCTION = "f_dialogue_builtin_open";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
 
@@ -669,6 +669,16 @@ namespace Engine.Externals.LuaScriptInterop {
             L.lua_pushboolean(minimized);
 
             lua.CallPushedGlobalFunction(1);
+        }
+
+        public void notify_window_size_changed(int screen_width, int screen_height) {
+            const string FUNCTION = "f_window_size_changed";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            L.lua_pushinteger(screen_width);
+            L.lua_pushinteger(screen_height);
+
+            lua.CallPushedGlobalFunction(2);
         }
 
         public void notify_input_keyboard(int key, int scancode, bool is_pressed, int mods) {

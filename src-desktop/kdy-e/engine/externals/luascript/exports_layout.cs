@@ -328,6 +328,22 @@ namespace Engine.Externals.LuaScriptInterop {
             return 1;
         }
 
+        static int script_layout_screen_to_layout_coordinates(LuaState L) {
+            Layout layout = L.ReadUserdata<Layout>(LAYOUT);
+
+            float screen_x = (float)L.luaL_checknumber(2);
+            float screen_y = (float)L.luaL_checknumber(3);
+            bool calc_with_camera = L.lua_toboolean(4);
+
+            float layout_x, layout_y;
+
+            layout.ScreenToLayoutCoordinates(screen_x, screen_y, calc_with_camera, out layout_x, out layout_y);
+
+            L.lua_pushnumber(layout_x);
+            L.lua_pushnumber(layout_y);
+            return 2;
+        }
+
         ////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////
 
@@ -361,6 +377,7 @@ namespace Engine.Externals.LuaScriptInterop {
            new LuaTableFunction("get_group_modifier", script_layout_get_group_modifier),
            new LuaTableFunction("get_group_shader", script_layout_get_group_shader),
            new LuaTableFunction("set_group_shader", script_layout_set_group_shader),
+           new LuaTableFunction("screen_to_layout_coordinates", script_layout_screen_to_layout_coordinates),
            new LuaTableFunction(null, null)
         };
 

@@ -939,9 +939,18 @@ namespace Engine.Game {
                     is_bool = true,
                     value_bool = true,
                     ini_key = "autohide_cursor"
+                },
+                new SettingOption() {
+                    name = "SILENCE ON MINIMIZE",
+                    description = "Mutes audio output when the window is minimized.\n" +
+                                  "Freeplay menu is exempt",
+                    is_bool = true,
+                    value_bool = true,
+                    ini_key = "mute_on_minimize"
                 }
+
             };
-            int options_size = 5;
+            int options_size = 6;
 
             // load current settings
             for (int i = 0 ; i < options_size ; i++) {

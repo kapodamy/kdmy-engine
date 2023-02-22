@@ -29,6 +29,7 @@ namespace CsharpWrapper {
         public static bool show_fps = false;
         public static byte fps_limit = 0;
         public static bool autohide_cursor = true;
+        public static bool mute_on_minimize = true;
         public static bool use_funkin_marker_duration = true;
         public static bool gameplay_enabled_distractions = true;
         public static bool gameplay_enabled_flashinglights = true;
@@ -66,6 +67,7 @@ namespace CsharpWrapper {
                     break;
             }
             autohide_cursor = GetBool(false, "autohide_cursor", autohide_cursor);
+            mute_on_minimize = GetBool(false, "mute_on_minimize", mute_on_minimize);
         }
 
         internal static void Reload() {
@@ -74,6 +76,7 @@ namespace CsharpWrapper {
 
             if (old_fps_limit != fps_limit) PVRContext.global_context.SetFPSLimit(fps_limit, true);
             PVRContext.UnHideCursor();
+            PVRContext.MuteAudioOutputOnMinimized(mute_on_minimize);
         }
 
         public static void GetBind(string ini_key, ref int scancode) {

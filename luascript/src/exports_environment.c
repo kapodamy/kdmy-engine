@@ -47,8 +47,12 @@ EM_JS_PRFX(void, kdmyEngine_change_window_title, (const char* title, bool from_m
 });
 EM_JS_PRFX(void, kdmyEngine_open_link, (const char* url), {
     let target_url = kdmyEngine_ptrToString(url);
-    if (!target_url) return;
+    if (!target_url || target_url.startsWith("javascript:") || target_url.startsWith("blob:")) return;
     window.open(target_url, "_blank", "noopener,noreferrer");
+});
+EM_JS_PRFX(void, kdmyEngine_get_screen_size, (int32_t* screen_width, int32_t* screen_height), {
+    kdmyEngine_set_int32(screen_width, pvr_context.screen_width);
+    kdmyEngine_set_int32(screen_height, pvr_context.screen_height);
 });
 #else
 static const char* language = "English";
@@ -130,11 +134,27 @@ static int script_environment_open_www_link(lua_State* L) {
 
 #ifdef JAVASCRIPT
     kdmyEngine_open_link(url);
+#else
+    printf("script_environment_open_www_link() %s\n", url);
 #endif
 
     return 0;
 }
 
+static int script_environment_get_screensize(lua_State* L) {
+    int32_t screen_width, screen_height;
+
+#ifdef JAVASCRIPT
+    kdmyEngine_get_screen_size(&screen_width, &screen_height);
+#else
+    screen_width = 640;
+    screen_height = 480;
+#endif
+
+    lua_pushinteger(L, screen_width);
+    lua_pushinteger(L, screen_height);
+    return 2;
+}
 
 
 
@@ -146,6 +166,7 @@ static const luaL_Reg ENVIRONMENT_FUNCTIONS[] = {
     { "change_window_title", script_environment_change_window_title },
     { "require_window_attention", script_environment_require_window_attention },
     { "open_www_link", script_environment_open_www_link },
+    { "get_screensize", script_environment_get_screensize},
     { NULL, NULL }
 };
 

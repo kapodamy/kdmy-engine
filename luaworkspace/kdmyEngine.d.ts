@@ -289,8 +289,9 @@ declare global {
         disable_antialiasing(antialiasing: boolean): void;
         set_group_antialiasing(group_name: string, antialiasing: PVRFlag): void;
         get_group_modifier(group_name: string): Modifier;
-        get_group_shader(layout: Layout, name: string): PSShader;
-        set_group_shader(layout: Layout, name: string, psshader: PSShader): boolean;
+        get_group_shader(name: string): PSShader;
+        set_group_shader(name: string, psshader: PSShader): boolean;
+        screen_to_layout_coordinates(screen_x: number, screen_y: number, calc_with_camera: boolean): LuaMultiReturn<[number, number]>;
     }
     interface Sprite {
         matrix_get_modifier(): Modifier;
@@ -870,6 +871,7 @@ declare global {
         change_window_title(title: string): void;
         require_window_attention(): void;
         open_www_link(url: string): void;
+        get_screensize(): LuaMultiReturn<[number, number]>;
     }
     interface Menu {
         //destroy(): void;
@@ -1139,9 +1141,13 @@ declare global {
         BUTTON5 = 4,
         BUTTON6 = 5,
         BUTTON7 = 6,
-        BUTTON8 = 7
+        BUTTON8 = 7,
+        ButtonLeft = BUTTON1,
+        ButtonRight = BUTTON2,
+        ButtonMiddle = BUTTON3
     }
     const enum ModKeys {
+        None = 0x0000,
         Shift = 0x0001,
         Control = 0x0002,
         Alt = 0x0004,

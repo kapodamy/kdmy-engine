@@ -758,7 +758,7 @@ async function freeplaymenu_internal_modding_notify_option(state, selected_or_ch
 
     let week_name = weekinfo.display_name ?? weekinfo.name;
     let song_name = songs[state.map.song_index].name;
-    let name = string_concat(4, week_name, "\n", weekinfo.display_name, "\n", song_name);
+    let name = string_concat(5, week_name, "\n", weekinfo.display_name, "\n", song_name);
     let index = menu_get_selected_index(menu);
 
     let ret = await modding_helper_notify_option2(state.modding, selected_or_choosen, menu, index, name);

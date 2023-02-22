@@ -305,6 +305,7 @@ namespace Engine.Game.Gameplay {
             this.modding_choosen_option_name = null;
             this.modding.has_exit = false;
             this.modding.has_halt = false;
+            this.modding.native_menu = this.modding.active_menu;
             this.modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
             this.modding.HelperNotifyOption(true);
 

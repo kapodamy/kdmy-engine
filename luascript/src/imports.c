@@ -149,8 +149,8 @@ void luascript_notify_scriptchange(Luascript luascript) {
     lua_imported_fn(lua, FUNCTION, 0);
 }
 
-void luascript_notify_pause_option_choosen(Luascript luascript, int32_t option_index) {
-    FUNCTION(luascript, "f_pause_optionselected");
+void luascript_notify_pause_optionchoosen(Luascript luascript, int32_t option_index) {
+    FUNCTION(luascript, "f_pause_optionchoosen");
 
     lua_pushinteger(lua, option_index);
 
@@ -404,6 +404,15 @@ void luascript_notify_modding_window_minimized(Luascript luascript, bool minimiz
     lua_pushboolean(luascript->L, minimized);
 
     lua_imported_fn(lua, FUNCTION, 1);
+}
+
+void luascript_notify_window_size_changed(Luascript luascript, int32_t screen_width, int32_t screen_height) {
+    FUNCTION(luascript, "f_window_size_changed");
+
+    lua_pushinteger(luascript->L, screen_width);
+    lua_pushinteger(luascript->L, screen_height);
+
+    lua_imported_fn(lua, FUNCTION, 2);
 }
 
 void luascript_notify_input_keyboard(Luascript luascript, int32_t key, int32_t scancode, bool is_pressed, int32_t mods) {

@@ -135,6 +135,13 @@ EM_JS_PRFX(bool, layout_set_group_shader, (Layout layout, const char* group_name
         kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), kdmyEngine_obtain(psshader)
     );
 });
+EM_JS_PRFX(void, layout_screen_to_layout_coordinates, (Layout layout, float screen_x, float screen_y, bool calc_with_camera, float* layout_x, float* layout_y), {
+    const output_coords = [0, 0];
+    layout_screen_to_layout_coordinates(kdmyEngine_obtain(layout), screen_x, screen_y, calc_with_camera, output_coords);
+
+    kdmyEngine_set_float32(layout_x, output_coords[0]);
+    kdmyEngine_set_float32(layout_y, output_coords[1]);
+});
 #endif
 
 
@@ -432,7 +439,6 @@ static int script_layout_get_group_modifier(lua_State* L) {
     return script_modifier_new(L, modifier);
 }
 
-
 static int script_layout_get_group_shader(lua_State* L) {
     Layout layout = luascript_read_userdata(L, LAYOUT);
 
@@ -442,6 +448,7 @@ static int script_layout_get_group_shader(lua_State* L) {
 
     return script_psshader_new(L, psshader);
 }
+
 static int script_layout_set_group_shader(lua_State* L) {
     Layout layout = luascript_read_userdata(L, LAYOUT);
 
@@ -453,6 +460,22 @@ static int script_layout_set_group_shader(lua_State* L) {
     lua_pushboolean(L, ret);
 
     return 1;
+}
+
+static int script_layout_screen_to_layout_coordinates(lua_State* L) {
+    Layout layout = luascript_read_userdata(L, LAYOUT);
+
+    float screen_x = (float)luaL_checknumber(L, 2);
+    float screen_y = (float)luaL_checknumber(L, 3);
+    bool calc_with_camera = lua_toboolean(L, 4);
+
+    float layout_x, layout_y;
+
+    layout_screen_to_layout_coordinates(layout, screen_x, screen_y, calc_with_camera, &layout_x, &layout_y);
+
+    lua_pushnumber(L, layout_x);
+    lua_pushnumber(L, layout_y);
+    return 2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -488,6 +511,7 @@ static const luaL_Reg LAYOUT_FUNCTIONS[] = {
     {"get_group_modifier", script_layout_get_group_modifier},
     {"get_group_shader", script_layout_get_group_shader},
     {"set_group_shader", script_layout_set_group_shader},
+    {"screen_to_layout_coordinates", script_layout_screen_to_layout_coordinates},
     {NULL, NULL}
 };
 

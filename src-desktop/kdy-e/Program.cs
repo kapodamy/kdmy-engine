@@ -45,9 +45,11 @@ namespace CsharpWrapper {
                 Application.Exit();
 
                 bool exit = form.NotLaunchAndExit;
-                EngineSettings.expansion_directory = form.SelectedExpansionDirectory;
-                EngineSettings.expansion_window_icon = form.SelectedExpansionWindowIcon;
-                EngineSettings.expansion_window_title = form.SelectedExpansionWindowTitle;
+                if (!exit) {
+                    EngineSettings.expansion_directory = form.SelectedExpansionDirectory;
+                    EngineSettings.expansion_window_icon = form.SelectedExpansionWindowIcon;
+                    EngineSettings.expansion_window_title = form.SelectedExpansionWindowTitle;
+                }
                 form.Destroy();
 
                 if (exit) return 0;

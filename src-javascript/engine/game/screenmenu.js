@@ -113,6 +113,10 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
         layout_draw(layout, pvrctx);
     }
 
+    // if there no script ¿exit_value should be null or pick the menu selectd option name?
+    let exit_value = null;
+    if (script != null) exit_value = await luascript_notify_modding_exit(script);
+
     // delay exit (if applicable)
     let exit_delay = screenmenu.modding.exit_delay_ms;
     while (exit_delay > 0) {
@@ -128,10 +132,6 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
         layout_animate(layout, elapsed);
         layout_draw(layout, pvrctx);
     }
-
-    // if there no script ¿exit_value should be null or pick the menu selectd option name?
-    let exit_value = null;
-    if (script != null) exit_value = await luascript_notify_modding_exit(script);
 
     gamepad_destroy(gamepad);
     return exit_value;

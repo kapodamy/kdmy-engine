@@ -66,12 +66,14 @@ static volatile bool backend_initialize;
 static volatile StreamID STREAM_IDS;
 static Linkedlist streams;
 static volatile float master_volume;
+static volatile bool master_mute;
 static char runtime_info[256];
 static __attribute__((constructor)) void sndbridge_constructor() {
     backend_initialize = true;
     STREAM_IDS = 0x0000;
     streams = linkedlist_init();
     master_volume = 1.0f;
+    master_mute = false;
 }
 
 #define LOG_PAERROR(fmt, err) fprintf(stderr, fmt "\n", Pa_GetErrorText(err))
@@ -236,7 +238,7 @@ static int read_cb(const void* ib, void* output, ulong frameCount, CbTimeInfo ti
     // read samples
     int32_t readed_frames = sndbridge_read_samples(stream, frameCount, output_float);
 
-    if (stream->muted) {
+    if (stream->muted || master_mute) {
         memset(output, 0x00, frameCount * stream->bytes_per_sample_per_channel);
         goto L_prepare_return;
     }
@@ -695,6 +697,10 @@ extern void sndbridge_loop(StreamID stream_id, bool enable) {
 
 extern void sndbridge_set_master_volume(float volume) {
     master_volume = CLAMP_FLOAT(volume);
+}
+
+extern void sndbridge_set_master_muted(bool muted) {
+    master_mute = muted;
 }
 
 extern const char* sndbridge_get_runtime_info() {

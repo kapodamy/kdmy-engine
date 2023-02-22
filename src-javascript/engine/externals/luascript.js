@@ -1071,14 +1071,14 @@ function __js__camera_apply(camera, pvrctx) {
 function __js__camera_debug_log_info(camera) {
     camera_debug_log_info(kdmyEngine_obtain(camera))
 }
+function __js__camera_disable_offset_zoom(camera, disable) {
+    return camera_disable_offset_zoom(kdmyEngine_obtain(camera), disable)
+}
 function __js__camera_end(camera) {
     camera_end(kdmyEngine_obtain(camera))
 }
 function __js__camera_from_layout(camera, layout, camera_name) {
     return camera_from_layout(kdmyEngine_obtain(camera), kdmyEngine_obtain(layout), kdmyEngine_ptrToString(camera_name))
-}
-function __js__camera_disable_offset_zoom(camera, enabled) {
-    return camera_disable_offset_zoom(kdmyEngine_obtain(camera), enabled)
 }
 function __js__camera_get_modifier(camera) {
     const modifier = camera_get_modifier(kdmyEngine_obtain(camera));
@@ -1643,12 +1643,16 @@ function __js__kdmyEngine_get_locationquery() {
     }
     return kdmyEngine_stringToPtr(str)
 }
+function __js__kdmyEngine_get_screen_size(screen_width, screen_height) {
+    kdmyEngine_set_int32(screen_width, pvr_context.screen_width);
+    kdmyEngine_set_int32(screen_height, pvr_context.screen_height)
+}
 function __js__kdmyEngine_get_useragent() {
     return kdmyEngine_stringToPtr(navigator.userAgent)
 }
 function __js__kdmyEngine_open_link(url) {
     let target_url = kdmyEngine_ptrToString(url);
-    if (!target_url)
+    if (!target_url || target_url.startsWith("javascript:") || target_url.startsWith("blob:"))
         return;
     window.open(target_url, "_blank", "noopener,noreferrer")
 }
@@ -1889,6 +1893,12 @@ function __js__layout_get_viewport_size(layout, viewport_width, viewport_height)
 }
 function __js__layout_resume(layout) {
     layout_resume(kdmyEngine_obtain(layout))
+}
+function __js__layout_screen_to_layout_coordinates(layout, screen_x, screen_y, calc_with_camera, layout_x, layout_y) {
+    const output_coords = [0, 0];
+    layout_screen_to_layout_coordinates(kdmyEngine_obtain(layout), screen_x, screen_y, calc_with_camera, output_coords);
+    kdmyEngine_set_float32(layout_x, output_coords[0]);
+    kdmyEngine_set_float32(layout_y, output_coords[1])
 }
 function __js__layout_set_group_alpha(layout, group_name, alpha) {
     layout_set_group_alpha(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), alpha)
@@ -6801,9 +6811,9 @@ var asmLibraryArg = {
     "__js__atlas_utils_is_known_extension": __js__atlas_utils_is_known_extension,
     "__js__camera_apply": __js__camera_apply,
     "__js__camera_debug_log_info": __js__camera_debug_log_info,
+    "__js__camera_disable_offset_zoom": __js__camera_disable_offset_zoom,
     "__js__camera_end": __js__camera_end,
     "__js__camera_from_layout": __js__camera_from_layout,
-    "__js__camera_disable_offset_zoom": __js__camera_disable_offset_zoom,
     "__js__camera_get_modifier": __js__camera_get_modifier,
     "__js__camera_get_offset": __js__camera_get_offset,
     "__js__camera_get_parent_layout": __js__camera_get_parent_layout,
@@ -6968,7 +6978,9 @@ var asmLibraryArg = {
     "__js__kdmyEngine_forget_obtained": __js__kdmyEngine_forget_obtained,
     "__js__kdmyEngine_get_language": __js__kdmyEngine_get_language,
     "__js__kdmyEngine_get_locationquery": __js__kdmyEngine_get_locationquery,
+    "__js__kdmyEngine_get_screen_size": __js__kdmyEngine_get_screen_size,
     "__js__kdmyEngine_get_useragent": __js__kdmyEngine_get_useragent,
+    "__js__kdmyEngine_open_link": __js__kdmyEngine_open_link,
     "__js__kdmyEngine_read_array_item_object": __js__kdmyEngine_read_array_item_object,
     "__js__kdmyEngine_read_prop_boolean": __js__kdmyEngine_read_prop_boolean,
     "__js__kdmyEngine_read_prop_double": __js__kdmyEngine_read_prop_double,
@@ -7009,6 +7021,7 @@ var asmLibraryArg = {
     "__js__layout_get_videoplayer": __js__layout_get_videoplayer,
     "__js__layout_get_viewport_size": __js__layout_get_viewport_size,
     "__js__layout_resume": __js__layout_resume,
+    "__js__layout_screen_to_layout_coordinates": __js__layout_screen_to_layout_coordinates,
     "__js__layout_set_group_alpha": __js__layout_set_group_alpha,
     "__js__layout_set_group_antialiasing": __js__layout_set_group_antialiasing,
     "__js__layout_set_group_offsetcolor": __js__layout_set_group_offsetcolor,
@@ -7499,8 +7512,8 @@ var _luascript_notify_afterresults = ModuleLuaScript["_luascript_notify_afterres
 var _luascript_notify_scriptchange = ModuleLuaScript["_luascript_notify_scriptchange"] = function () {
     return (_luascript_notify_scriptchange = ModuleLuaScript["_luascript_notify_scriptchange"] = ModuleLuaScript["asm"]["luascript_notify_scriptchange"]).apply(null, arguments)
 };
-var _luascript_notify_pause_option_choosen = ModuleLuaScript["_luascript_notify_pause_option_choosen"] = function () {
-    return (_luascript_notify_pause_option_choosen = ModuleLuaScript["_luascript_notify_pause_option_choosen"] = ModuleLuaScript["asm"]["luascript_notify_pause_option_choosen"]).apply(null, arguments)
+var _luascript_notify_pause_optionchoosen = ModuleLuaScript["_luascript_notify_pause_optionchoosen"] = function () {
+    return (_luascript_notify_pause_optionchoosen = ModuleLuaScript["_luascript_notify_pause_optionchoosen"] = ModuleLuaScript["asm"]["luascript_notify_pause_optionchoosen"]).apply(null, arguments)
 };
 var _luascript_notify_pause_menuvisible = ModuleLuaScript["_luascript_notify_pause_menuvisible"] = function () {
     return (_luascript_notify_pause_menuvisible = ModuleLuaScript["_luascript_notify_pause_menuvisible"] = ModuleLuaScript["asm"]["luascript_notify_pause_menuvisible"]).apply(null, arguments)
@@ -7567,6 +7580,9 @@ var _luascript_notify_modding_window_focus = ModuleLuaScript["_luascript_notify_
 };
 var _luascript_notify_modding_window_minimized = ModuleLuaScript["_luascript_notify_modding_window_minimized"] = function () {
     return (_luascript_notify_modding_window_minimized = ModuleLuaScript["_luascript_notify_modding_window_minimized"] = ModuleLuaScript["asm"]["luascript_notify_modding_window_minimized"]).apply(null, arguments)
+};
+var _luascript_notify_window_size_changed = ModuleLuaScript["_luascript_notify_window_size_changed"] = function () {
+    return (_luascript_notify_window_size_changed = ModuleLuaScript["_luascript_notify_window_size_changed"] = ModuleLuaScript["asm"]["luascript_notify_window_size_changed"]).apply(null, arguments)
 };
 var _luascript_notify_input_keyboard = ModuleLuaScript["_luascript_notify_input_keyboard"] = function () {
     return (_luascript_notify_input_keyboard = ModuleLuaScript["_luascript_notify_input_keyboard"] = ModuleLuaScript["asm"]["luascript_notify_input_keyboard"]).apply(null, arguments)

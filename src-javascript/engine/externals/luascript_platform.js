@@ -149,6 +149,7 @@ class LuascriptPlatform {
     #last_window_focused = false;
     #last_window_minimized = false;
     #title_was_changed = false;
+    #last_resolution_changes = 1;
 
 
     InitializeCallbacks() {
@@ -202,10 +203,10 @@ class LuascriptPlatform {
 
         // notify input states if they do not have default values
         if (!Number.isNaN(this.#last_mouse_position_x) && !Number.isNaN(this.#last_mouse_position_y)) {
-            await luascript.notify_input_mouse_position(this.#last_mouse_position_x, this.#last_mouse_position_y);
+            await luascript_notify_input_mouse_position(luascript, this.#last_mouse_position_x, this.#last_mouse_position_y);
         }
-        if (!this.#last_window_focused) await luascript.notify_modding_window_focus(this.#last_window_focused);
-        if (this.#last_window_minimized) await luascript.notify_modding_window_focus(this.#last_window_minimized);
+        if (!this.#last_window_focused) await luascript_notify_modding_window_focus(luascript, this.#last_window_focused);
+        if (this.#last_window_minimized) await luascript_notify_modding_window_focus(luascript, this.#last_window_minimized);
     }
 
     RemoveLuascript(luascript) {
@@ -215,17 +216,20 @@ class LuascriptPlatform {
     async PollWindowState() {
         let focused = document.activeElement == pvr_context._html5canvas;
         let minimized = document.hidden;
+        let resolution_changes = pvr_context.resolution_changes;
 
         let focused_updated = focused != this.#last_window_focused;
         let minimize_updated = minimized != this.#last_window_minimized;
+        let resolution_updated = resolution_changes != this.#last_resolution_changes;
 
-        if (focused_updated || minimize_updated) {
+        if (focused_updated || minimize_updated || resolution_updated) {
             const array = this.#luascript_instances.array;
             const size = this.#luascript_instances.size;
             for (let i = 0; i < size; i++) {
                 const luascript = array[i];
                 if (focused_updated) await luascript_notify_modding_window_focus(luascript, focused);
-                if (minimize_updated) await luascript_notify_modding_window_focus(luascript, minimized);
+                if (minimize_updated) await luascript_notify_modding_window_minimized(luascript, minimized);
+                if (resolution_updated) await luascript_notify_window_size_changed(luascript, pvr_context.screen_width, pvr_context.screen_height);
             }
 
             this.#last_window_focused = focused;

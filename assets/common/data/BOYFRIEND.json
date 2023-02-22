@@ -41,6 +41,7 @@
 
         "extras": [
             { "name": "shaking",     "stopAfterBeats": 2,  "anim": null,                "animHold": "BF idle shaking" },
+            { "name": "shaking-continuous",                "anim": null,                "animHold": "BF idle shaking" },
             { "name": "dodge",       "stopAfterBeats": 0,  "anim": "boyfriend dodge",   "animHold": null },
             { "name": "pre-attack",  "stopAfterBeats": 0,  "anim": "bf pre attack",     "animHold": null },
             { "name": "attack",      "stopAfterBeats": 0,  "anim": "boyfriend attack",  "animHold": null},

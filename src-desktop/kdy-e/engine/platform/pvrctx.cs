@@ -216,6 +216,7 @@ namespace Engine.Platform {
         internal StackList<PSShader> shader_stack = new StackList<PSShader>(SHADER_STACK_LENGTH);
         private int shader_last_resolution_changes = 0;
         private int screen_stride;
+        private bool mute_on_minimize;
 
 
         private int stack_index = 0;
@@ -256,6 +257,7 @@ namespace Engine.Platform {
         private void IconifyCallback(Window window, bool focusing) {
             if (window == this.nativeWindow) {
                 this.is_minimized = !focusing;
+                if (this.mute_on_minimize) AICA.sndbridge_set_master_muted(focusing);
             }
         }
 
@@ -721,6 +723,11 @@ namespace Engine.Platform {
             this.webopengl.DrawFramebuffer(this, psframebuffer, sx, sy, sw, sh, dx, dy, dw, dh);
         }
 
+
+        public static void MuteAudioOutputOnMinimized(bool enable) {
+            global_context.mute_on_minimize = enable;
+            AICA.sndbridge_set_master_muted(enable && global_context.is_minimized);
+        }
 
         public bool IsOffscreen() {
             return !Glfw.GetWindowAttrib(this.nativeWindow, Glfw.WINDOWATTRIBUTE_FOCUSED);

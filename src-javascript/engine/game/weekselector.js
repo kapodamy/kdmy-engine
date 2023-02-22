@@ -368,7 +368,7 @@ async function weekselector_main() {
         custom_layout: null,
         bg_music_paused: 0,
         bg_music: layout_get_soundplayer(layout, "background_music") ?? background_menu_music,
-        modding: null
+        modding: modding
     };
 
     if (state.bg_music != background_menu_music && background_menu_music) {

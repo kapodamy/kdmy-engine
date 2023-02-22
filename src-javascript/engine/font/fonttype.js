@@ -4,7 +4,7 @@ const SDF_FONT = true;
 
 const FONTTYPE_POOL = new Map();
 var FONTTYPE_IDS = 0;
-const FONTTYPE_GLYPHS_HEIGHT = 64;// in the dreamcast use 64px
+const FONTTYPE_GLYPHS_HEIGHT = 72;// in the dreamcast use 64px
 const FONTTYPE_GLYPHS_OUTLINE_RATIO = 0.086;// ~6px of outline @ 72px (used in SDF)
 const FONTTYPE_GLYPHS_SMOOTHING_COEFF = 0.25;// used in SDF, idk how its works
 const FONTTYPE_GLYPHS_GAPS = 4;// space between glyph in pixels
@@ -280,16 +280,27 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
     const ascender = ((primary ?? secondary).ascender / 2.0) * scale;// FIXME: ¿why does dividing by 2 works?
     const text_end_index = text_index + text_size;
     const text_length = text.length;
+    let border_padding1 = 0.0, border_padding2 = 0.0;
 
     console.assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
 
     if (SDF_FONT) {
         // calculate sdf thickness
-        if (has_border && fonttype.border_size > 0.0) {
-            let max_border_size = height * FONTTYPE_GLYPHS_OUTLINE_RATIO;
-            let border_size = Math.min(fonttype.border_size, max_border_size);
-            let thickness = (1.0 - (border_size / max_border_size)) / 2.0;
-            glyphrenderer_set_sdf_thickness(pvrctx, thickness);
+        if (has_border) {
+            if (fonttype.border_size > 0.0) {
+                let max_border_size = height * FONTTYPE_GLYPHS_OUTLINE_RATIO;
+                let border_size = Math.min(fonttype.border_size, max_border_size);
+                let thickness = (1.0 - (border_size / max_border_size)) / 2.0;
+                glyphrenderer_set_sdf_thickness(pvrctx, thickness);
+
+                /*if (border_size < fonttype.border_size && height > 8.0) {
+                    // add some padding
+                    border_padding1 = fonttype.border_size - border_size;
+                    border_padding2 = border_padding1 * 2.0;
+                }*/
+            } else {
+                glyphrenderer_set_sdf_thickness(pvrctx, -1.0);
+            }
         }
     }
 
@@ -399,10 +410,10 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
             if (has_border) {
                 let sdx, sdy, sdw, sdh;
                 if (SDF_FONT) {
-                    sdx = dx;
-                    sdy = dy;
-                    sdw = dw;
-                    sdh = dh;
+                    sdx = dx - border_padding1;
+                    sdy = dy - border_padding1;
+                    sdw = dw + border_padding2;
+                    sdh = dh + border_padding2;
                 } else {
                     // compute border location and outline size
                     sdx = dx - fonttype.border_size;
@@ -414,16 +425,9 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
                 sdx += fonttype.border_offset_x;
                 sdy += fonttype.border_offset_y;
 
-                let is_outline;
-                if (SDF_FONT) {
-                    is_outline = 0;
-                } else {
-                    is_outline = 1;
-                }
-
                 // queue outlined glyph for batch rendering
                 glyphrenderer_append_glyph(
-                    texture, is_secondary, is_outline,
+                    texture, is_secondary, 1,
                     fontchardata.atlas_entry.x, fontchardata.atlas_entry.y, fontchardata.width, fontchardata.height,
                     sdx, sdy, sdw, sdh
                 );

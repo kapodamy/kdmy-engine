@@ -37,6 +37,9 @@
                         "$ref": "#/definitions/DistributionsMinimal"
                     }
                 },
+                "distributionsModels": {
+                    "$ref": "#/definitions/DistributionsModels"
+                },
                 "healthbar": {
                     "$ref": "#/definitions/Healthbar"
                 },
@@ -90,7 +93,7 @@
                 "states": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/DistributionsMinimal"
+                        "$ref": "#/definitions/DistributionStrumState"
                     }
                 }
             },
@@ -99,6 +102,59 @@
                 "strums"
             ],
             "title": "Distribution"
+        },
+        "DistributionsMinimal": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "modelMarker": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelSickEffect": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelBackground": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DistributionsMinimalState"
+                    }
+                }
+            },
+            "required": [
+                "modelMarker",
+                "modelNotes",
+                "name"
+            ],
+            "title": "DistributionsMinimal"
+        },
+        "DistributionsModels": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "modelMarker": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelSickEffect": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelBackground": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelNotes": {
+                    "type": ["string", "null"],
+                    "default": null
+                }
+            },
+            "title": "DistributionsModels"
         },
         "Note": {
             "type": "object",
@@ -140,65 +196,6 @@
                 "name"
             ],
             "title": "Note"
-        },
-        "DistributionsMinimal": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "modelMarker": {
-                    "type": ["string", "null"],
-                    "default": null
-                },
-                "modelSickEffect": {
-                    "type": ["string", "null"],
-                    "default": null
-                },
-                "modelBackground": {
-                    "type": ["string", "null"],
-                    "default": null
-                },
-                "states": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DistributionsMinimalState"
-                    }
-                }
-            },
-            "required": [
-                "modelMarker",
-                "modelNotes",
-                "name"
-            ],
-            "title": "DistributionsMinimal"
-        },
-        "DistributionsMinimalState": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "modelNotes": {
-                    "type": "string"
-                },
-                "modelMarker": {
-                    "type": "string"
-                },
-                "modelSickEffect": {
-                    "type": ["string", "null"],
-                    "default": null
-                },
-                "modelBackground": {
-                    "type": ["string", "null"],
-                    "default": null
-                }
-            },
-            "required": [
-                "modelMarker",
-                "modelNotes",
-                "name"
-            ],
-            "title": "DistributionsMinimalState"
         },
         "Strum": {
             "type": "object",
@@ -395,6 +392,21 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "distributions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Distribution"
+                    }
+                },
+                "distributionsMinimal": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DistributionsMinimal"
+                    }
+                },
+                "distributionsModels": {
+                    "$ref": "#/definitions/DistributionsModels"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -463,7 +475,70 @@
             "required": [
                 "name"
             ],
+            "oneOf": [
+                { "required": ["distributions"] },
+                { "required": ["distributionsMinimal"] },
+                { "required": ["distributionsModels" ]}
+            ],
             "title": "Track"
+        },
+        "DistributionsMinimalState": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "modelNotes": {
+                    "type": "string"
+                },
+                "modelMarker": {
+                    "type": "string"
+                },
+                "modelSickEffect": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "modelBackground": {
+                    "type": ["string", "null"],
+                    "default": null
+                }
+            },
+            "required": [
+                "modelMarker",
+                "modelNotes",
+                "name"
+            ],
+            "title": "DistributionsMinimalState"
+        },
+        "DistributionStrumState": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type":["string", "null"],
+                    "default": null
+                },
+                "model_marker": {
+                    "type":["string", "null"],
+                    "default": null
+                },
+                "model_sick_effect": {
+                    "type":["string", "null"],
+                    "default": null
+                },
+                "model_background": {
+                    "type":["string", "null"],
+                    "default": null
+                },
+                "model_notes": {
+                    "type":["string", "null"],
+                    "default": null
+                }
+            },
+            "required": [
+                "name"
+            ]
         }
     }
 }

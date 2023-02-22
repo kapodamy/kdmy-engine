@@ -300,8 +300,8 @@ namespace Engine {
 
             layout.modifier_camera.width = viewport_width;
             layout.modifier_camera.height = viewport_height;
-            layout.camera_helper = new Camera(layout.modifier_camera, -1f, -1f);
-            layout.camera_secondary_helper = new Camera(layout.modifier_camera_secondary, -1f, -1f);
+            layout.camera_helper = new Camera(layout.modifier_camera, viewport_width, viewport_height);
+            layout.camera_secondary_helper = new Camera(layout.modifier_camera_secondary, viewport_width, viewport_height);
 
             layout.modifier_viewport.x = 0f;
             layout.modifier_viewport.y = 0f;
@@ -767,6 +767,26 @@ namespace Engine {
             }
         }
 
+        public void ScreenToLayoutCoordinates(float screen_x, float screen_y, bool calc_with_camera, out float layout_x, out float layout_y) {
+            PVRContext pvr_context = PVRContext.global_context;
+
+            // screen aspect ratio correction
+            screen_x -= pvr_context.ScreenStride - pvr_context.ScreenWidth;
+
+            SH4Matrix temp = this.MATRIX_SCREEN;
+            temp.Clear();
+            temp.ApplyModifier(this.modifier_viewport);
+
+            if (calc_with_camera) {
+                temp.ApplyModifier(this.modifier_camera_secondary);
+                temp.ApplyModifier(this.modifier_camera);
+            }
+
+            layout_x = screen_x;
+            layout_y = screen_y;
+            temp.MultiplyPoint(ref layout_x, ref layout_y);
+        }
+
         public void CameraSetView(float x, float y, float depth) {
             this.camera_helper.SetAbsolute(x, y, depth);
         }
@@ -1001,7 +1021,7 @@ namespace Engine {
                     vertex = null,
                     type = PVRContextVertex.DRAWABLE,
                     group_id = 0,// layout root
-                    parallax = new LayoutParallax() { x = 10f, y = 1.0f, z = 1.0f },
+                    parallax = new LayoutParallax() { x = 1.0f, y = 1.0f, z = 1.0f },
                     static_camera = false,
                     placeholder = null
                 };
@@ -1197,7 +1217,13 @@ namespace Engine {
             this.single_item = null;
             if (item_name == null) return true;
             for (int i = 0 ; i < this.vertex_list_size ; i++) {
-                if (this.vertex_list[i].name == item_name) {
+                string name;
+                if (this.vertex_list[i].type == PVRContextVertex.DRAWABLE) {
+                    name = this.vertex_list[i].placeholder.name;
+                } else {
+                    name = this.vertex_list[i].name;
+                }
+                if (name == item_name) {
                     this.single_item = this.vertex_list[i];
                     return true;
                 }

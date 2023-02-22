@@ -120,4 +120,9 @@ bool layout_set_group_shader(Layout layout, const char* group_name, PSShader pss
     print_stub("layout_set_group_shader", "layout=%p group_name=%s psshader=%p", layout, group_name, psshader);
     return 0;
 }
+void layout_screen_to_layout_coordinates(Layout layout, float screen_x, float screen_y, bool calc_with_camera, float* layout_x, float* layout_y) {
+    print_stub("layout_screen_to_layout_coordinates", "layout=%p screen_x=%f screen_y=%f calc_with_camera=(bool)%i layout_x=%p layout_y=%p", layout, screen_x, screen_y, calc_with_camera, layout_x, layout_y);
+    *layout_x = 360;
+    *layout_y = 240;
+}
 

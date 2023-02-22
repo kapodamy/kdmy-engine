@@ -1,4 +1,5 @@
 using System;
+using CsharpWrapper;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Font;
 using Engine.Game.Common;
@@ -15,7 +16,7 @@ namespace Engine.Game {
 
         // this file contains all shared data across the game
         public const string ENGINE_NAME = "kdmy-engine";
-        public const string ENGINE_VERSION = "0.52";
+        public const string ENGINE_VERSION = "0.53";
 
         /**
          * The background music used in all menus, inherited from introscreen
@@ -32,6 +33,7 @@ namespace Engine.Game {
             // vital parts
             FS.Init();// intialize filesystem access for the main thread (this thread)
             LuascriptPlatform.InitializeCallbacks();
+            PVRContext.MuteAudioOutputOnMinimized(EngineSettings.mute_on_minimize);
 
             utsname osinfo;
             UTSNAME.uname(out osinfo);

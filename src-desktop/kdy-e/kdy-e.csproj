@@ -132,6 +132,7 @@
     <Compile Include="engine\game\funkin\songprogressbar.cs" />
     <Compile Include="engine\game\gameplay\dialogue.cs" />
     <Compile Include="engine\externals\luascript\luascript_platform.cs" />
+    <Compile Include="engine\game\gameplay\helpers\autouicosmetics.cs" />
     <Compile Include="engine\game\helpers\freeplay_songicons.cs" />
     <Compile Include="engine\game\screenmenu.cs" />
     <Compile Include="engine\game\settingsmenu.cs" />

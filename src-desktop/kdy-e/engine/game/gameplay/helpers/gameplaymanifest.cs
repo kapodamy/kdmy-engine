@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Text;
 using Engine.Game.Common;
 using Engine.Platform;
@@ -109,10 +110,10 @@ namespace Engine.Game.Gameplay.Helpers {
         public const string DEFAULT_BOYFRIEND = "#boyfriend";
 
         public static readonly GameplayManifestDefault DEFAULT = new GameplayManifestDefault() {
-            distributions = new Distribution[]{
+            distributions = new Distribution[] {
                 Strums.DEFAULT_DISTRIBUTION
             },
-            distributions_size = 0,
+            distributions_size = 1,
             girlfriend = new GameplayManifestGirlfriend() {
                 refer = GameplayManifestRefer.GIRLFRIEND,
                 manifest = null,// "#girlfriend"
@@ -191,8 +192,10 @@ namespace Engine.Game.Gameplay.Helpers {
 
                 if (JSONParser.HasPropertyArray(json_default, "distributions"))
                     GameplayManifest.ParseDistributions(json_default, out manifest.@default.distributions, out manifest.@default.distributions_size);
-                else
-                    GameplayManifest.ParseDistributionsMinimal(json_default, manifest.@default);
+                else if (JSONParser.HasPropertyArray(json_default, "distributionsMinimal"))
+                    GameplayManifest.ParseDistributionsMinimal(json_default, out manifest.@default.distributions, out manifest.@default.distributions_size);
+                else if (JSONParser.HasPropertyObject(json_default, "distributionsModels"))
+                    GameplayManifest.ParseDistributionsModels(json_default, out manifest.@default.distributions, out manifest.@default.distributions_size);
 
                 GameplayManifest.ParsePlayers(json_default, out manifest.@default.players, out manifest.@default.players_size);
 
@@ -444,8 +447,16 @@ namespace Engine.Game.Gameplay.Helpers {
             track.has_players = JSONParser.HasPropertyArray(json_track, "players");
             GameplayManifest.ParsePlayers(json_track, out track.players, out track.players_size);
 
-            track.has_distributions = JSONParser.HasPropertyArray(json_track, "distributions");
-            GameplayManifest.ParseDistributions(json_track, out track.distributions, out track.distributions_size);
+            if (JSONParser.HasPropertyArray(json_track, "distributions")) {
+                track.has_distributions = true;
+                GameplayManifest.ParseDistributions(json_track, out track.distributions, out track.distributions_size);
+            } else if (JSONParser.HasPropertyArray(json_track, "distributionsMinimal")) {
+                track.has_distributions = true;
+                GameplayManifest.ParseDistributionsMinimal(json_track, out track.distributions, out track.distributions_size);
+            } else if (JSONParser.HasPropertyArray(json_track, "distributionsModels")) {
+                track.has_distributions = true;
+                GameplayManifest.ParseDistributionsModels(json_track, out track.distributions, out track.distributions_size);
+            }
 
             track.healthbar = GameplayManifest.ParseHealthbar(json_track);
             track.girlfriend = GameplayManifest.ParseGirlfriend(json_track);
@@ -528,28 +539,28 @@ namespace Engine.Game.Gameplay.Helpers {
             distribution.notes_size = notes_size;
         }
 
-        public static void ParseDistributions(JSONToken json, out Distribution[] out_distributions, out int out_distributions_size) {
+        public static void ParseDistributions(JSONToken json, out Distribution[] distributions, out int distributions_size) {
             JSONToken json_distributions = JSONParser.ReadArray(json, "distributions");
             int json_distributions_size = JSONParser.ReadArrayLength(json_distributions);
 
             if (json_distributions_size < 1) {
-                out_distributions = null;
-                out_distributions_size = 0;
+                distributions = null;
+                distributions_size = 0;
                 return;
             }
 
-            Distribution[] distributions = new Distribution[json_distributions_size];
-            int distributions_size = json_distributions_size;
+            Distribution[] distributions_new = new Distribution[json_distributions_size];
+            int distributions_size_new = json_distributions_size;
 
             for (int i = 0 ; i < json_distributions_size ; i++) {
-                distributions[i] = new Distribution() { };
+                distributions_new[i] = new Distribution() { };
                 GameplayManifest.ParseDistribution(
-                     JSONParser.ReadArrayItemObject(json_distributions, i), distributions[i]
+                     JSONParser.ReadArrayItemObject(json_distributions, i), distributions_new[i]
                  );
             }
 
-            out_distributions = distributions;
-            out_distributions_size = distributions_size;
+            distributions = distributions_new;
+            distributions_size = distributions_size_new;
         }
 
         public static void ParseDistribution(JSONToken json_distribution, Distribution distribution) {
@@ -668,15 +679,13 @@ namespace Engine.Game.Gameplay.Helpers {
 
         }
 
-        public static void ParseDistributionsMinimal(JSONToken json, GameplayManifestDefault manifest) {
+        public static void ParseDistributionsMinimal(JSONToken json, out Distribution[] distributions, out int distributions_size) {
             JSONToken json_dists_minimal_array = JSONParser.ReadArray(json, "distributionsMinimal");
             int json_dists_minimal_array_length = JSONParser.ReadArrayLength(json_dists_minimal_array);
 
-            if (json_dists_minimal_array_length < 0) return;
-
             if (json_dists_minimal_array_length < 1) {
-                manifest.distributions = null;
-                manifest.distributions_size = 0;
+                distributions = null;
+                distributions_size = 0;
                 return;
             }
 
@@ -734,8 +743,39 @@ namespace Engine.Game.Gameplay.Helpers {
                 }
             }
 
-            manifest.distributions = dists_minimal;
-            manifest.distributions_size = json_dists_minimal_array_length;
+            distributions = dists_minimal;
+            distributions_size = json_dists_minimal_array_length;
+        }
+
+        public static void ParseDistributionsModels(JSONToken json, out Distribution[] distributions, out int distributions_size) {
+            JSONToken json_obj = JSONParser.ReadObject(json, "distributionsModels");
+
+            string model_marker = JSONParser.ReadString(json_obj, "modelMarker", Funkin.COMMON_NOTES);
+            string model_sick_effect = JSONParser.ReadString(json_obj, "modelSickEffect", Funkin.COMMON_NOTES);
+            string model_background = JSONParser.ReadString(json_obj, "modelBackground", Funkin.COMMON_NOTES);
+            string model_notes = JSONParser.ReadString(json_obj, "modelNotes", Funkin.COMMON_NOTES);
+
+            distributions = new Distribution[] {
+                new Distribution() {
+                    notes = Strums.DEFAULT_DISTRIBUTION.notes,
+                    notes_size = Strums.DEFAULT_DISTRIBUTION.notes_size,
+                    states = new DistributionStrumState[] {
+                        new DistributionStrumState() {
+                            name = null,
+                            model_marker = model_marker,
+                            model_sick_effect = model_sick_effect,
+                            model_background = model_background,
+                            model_notes = model_notes
+                        }
+                    },
+                    states_size = 1,
+                    strums = Strums.DEFAULT_DISTRIBUTION.strums,
+                    strums_size = Strums.DEFAULT_DISTRIBUTION.strums_size,
+                    strum_binds = Strums.DEFAULT_DISTRIBUTION.strum_binds,
+                    strum_binds_is_custom = Strums.DEFAULT_DISTRIBUTION.strum_binds_is_custom
+                }
+            };
+            distributions_size = 1;
         }
 
 

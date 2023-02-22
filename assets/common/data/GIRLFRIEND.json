@@ -35,7 +35,8 @@
 
         "extras": [
             { "name": "fear",       "stopAfterBeats": 2,  "animHold": "GF FEAR" },
-            { "name": "sad",        "stopAfterBeats": 2,  "anim": "gf sad"},
+            { "name": "fear-continuous",                  "animHold": "GF FEAR" },
+            { "name": "sad",              "stopAfterBeats": 2,  "anim": "gf sad"},
             { "name": "hair",   "stopAfterBeats": 0,  "animHold": "GF Dancing Beat Hair blowing", "animRollback": "GF Dancing Beat Hair Landing" }
         ]
     }

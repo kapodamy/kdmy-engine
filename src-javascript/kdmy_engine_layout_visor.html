@@ -135,6 +135,9 @@
                         <label><input type="radio" name="item-bind-type" value="accuracy"> Accuracy counter (displays
                             10.2ms, 20ms, etc.)</label>
                         <br>
+                        <label><input type="radio" name="item-bind-type" value="autouicosmetics"> Autoplace all counters using
+                        this placeholder</label>
+                        <br>
                         <label><input type="radio" name="item-bind-type" value="character" list="predefined-characterManifest"> Character (animated sprite
                             using charactermanifest)</label>
                     </fieldset>
@@ -164,6 +167,13 @@
                     <hr>
                     <label><b>ui_rankingcounter_accuracy_percent</b>: <input
                             id="bind-ui_rankingcounter_accuracy_percent" type="checkbox" value="false" /></label>
+                </fieldset>
+                <fieldset id="item-bind-type-autouicosmetics" style="display: none;">
+                    <legend>How counters are placed</legend>
+                    * Ranking counter on top-left<br>
+                    * Streak counter at 25% from left and 50% from top<br>
+                    *Accuracy counter on bottom-right<br>
+                    <i>the placeholder must have a width and height.</i>
                 </fieldset>
                 <fieldset id="item-bind-type-character" style="display: none;">
                     <legend>Configure character</legend>
@@ -217,7 +227,7 @@
                 <label><input type="radio" name="displaymode" id="displaymode-render" checked />Render only</label>
                 <label><input type="radio" name="displaymode" id="displaymode-animate" />Animate</label>
                 <label><input type="checkbox" id="widescreen" checked="true" />Widescreen</label>
-                <label><input type="checkbox" id="sing" value="true" checked />Sing simulation</label>
+                <label><input type="checkbox" id="sing" />Sing simulation</label>
             </div>
         </fieldset>
         <fieldset>
@@ -322,6 +332,7 @@
     <script src="engine/game/funkin/streakcounter_digits.js"></script>
     <script src="engine/game/funkin/rankingcounter.js"></script>
     <script src="engine/modelholder.js"></script>
+    <script src="engine/game/gameplay/helpers/autouicosmetics.js"></script>
     <script src="engine/game/gameplay/helpers/charactermanifest.js"></script>
 	<script src="engine/game/gameplay/weekscript.js"></script>
 

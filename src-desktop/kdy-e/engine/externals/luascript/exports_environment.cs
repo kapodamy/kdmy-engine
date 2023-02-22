@@ -3,6 +3,7 @@ using System.Globalization;
 using Engine.Animation;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
+using Engine.Platform;
 
 namespace Engine.Externals.LuaScriptInterop {
 
@@ -49,6 +50,15 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_environment_get_screensize(LuaState L) {
+            PVRContext pvr_context = PVRContext.global_context;
+
+            L.lua_pushinteger(pvr_context.ScreenWidth);
+            L.lua_pushinteger(pvr_context.ScreenHeight);
+
+            return 2;
+        }
+
 
         private static readonly LuaTableFunction[] ENVIRONMENT_FUNCTIONS = {
             new LuaTableFunction("get_language", script_environment_get_language),
@@ -58,6 +68,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("change_window_title", script_environment_change_window_title),
             new LuaTableFunction("require_window_attention", script_environment_require_window_attention),
             new LuaTableFunction("open_www_link", script_environment_open_www_link),
+            new LuaTableFunction("get_screensize", script_environment_get_screensize),
             new LuaTableFunction(null, null),
         };
 

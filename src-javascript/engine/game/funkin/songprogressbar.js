@@ -238,7 +238,7 @@ function songprogressbar_animate(songprogressbar, elapsed) {
 
         if (songprogressbar.songplayer) {
             current = songplayer_get_timestamp(songprogressbar.songplayer);
-            duration = songplayer_get_duration(songprogressbar.songplayer);
+            duration = songprogressbar.duration >= 0.0 ? songprogressbar.duration : songplayer_get_duration(songprogressbar.songplayer);
         } else {
             current = beatwatcher_global_timestamp;// peek global beatwatcher time
             duration = songprogressbar.duration;
