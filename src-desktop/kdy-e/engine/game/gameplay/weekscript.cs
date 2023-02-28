@@ -139,8 +139,8 @@ namespace Engine.Game.Gameplay {
             this.luascript.notify_weekend(giveup);
         }
 
-        public void NotifyDiedecision(bool retry_or_giveup) {
-            this.luascript.notify_diedecision(retry_or_giveup);
+        public void NotifyDiedecision(bool retry_or_giveup, string changed_difficult) {
+            this.luascript.notify_diedecision(retry_or_giveup, changed_difficult);
         }
 
         public void NotifyPause(bool pause_or_resume) {
@@ -151,8 +151,8 @@ namespace Engine.Game.Gameplay {
             this.luascript.notify_weekleave();
         }
 
-        public void NotifyAfterresults() {
-            this.luascript.notify_afterresults();
+        public void NotifyAfterresults(int total_attempts, int tracks_count, bool reject_completed) {
+            this.luascript.notify_afterresults(total_attempts, tracks_count, reject_completed);
         }
 
         public void NotifyScriptchange() {

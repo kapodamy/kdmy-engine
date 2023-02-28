@@ -33,6 +33,7 @@ namespace Engine.Game.Gameplay {
         public bool force_end_flag;
         public bool force_end_round_or_week;
         public bool force_end_loose_or_win;
+        public bool no_week_end_result_screen;
     }
 
     public class PlayerStruct {
@@ -504,6 +505,7 @@ namespace Engine.Game.Gameplay {
                     force_end_flag = false,
                     force_end_round_or_week = false,
                     force_end_loose_or_win = false,
+                    no_week_end_result_screen = false
                 },
 
                 players_from_default = false,
@@ -765,14 +767,17 @@ namespace Engine.Game.Gameplay {
             // show the whole week stats and wait for the player to press START to return
             if (!gameover) {
                 int total_attempts = 0;
+                int tracks_count = single_track ? 1 : gameplaymanifest.tracks_size;
+
                 for (int i = 0 ; i < gameplaymanifest.tracks_size ; i++) total_attempts += tracks_attempts[i];
 
-                int tracks_count = single_track ? 1 : gameplaymanifest.tracks_size;
-                roundcontext.weekresult.HelperShowSummary(
-                    roundcontext, total_attempts, tracks_count, reject_completed
-                );
+                if (!roundcontext.scriptcontext.no_week_end_result_screen) {
+                    roundcontext.weekresult.HelperShowSummary(
+                        roundcontext, total_attempts, tracks_count, reject_completed
+                    );
+                }
 
-                if (roundcontext.script != null) roundcontext.script.NotifyAfterresults();
+                if (roundcontext.script != null) roundcontext.script.NotifyAfterresults(total_attempts, tracks_count, reject_completed);
 
                 Week.Halt(roundcontext, true);
             }
@@ -2066,10 +2071,13 @@ namespace Engine.Game.Gameplay {
 
             if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
 
-            if (dialog_ignore_on_freeplay)
+            if (dialog_ignore_on_freeplay) {
                 roundcontext.dialogue = null;
-            else
-                roundcontext.dialogue = Dialogue.Init(dialogue_params);
+            } else {
+                float width, height;
+                roundcontext.ui_layout.GetViewportSize(out width, out height);
+                roundcontext.dialogue = Dialogue.Init(dialogue_params, width, height);
+            }
 
             if (roundcontext.dialogue != null) {
                 roundcontext.dialogue.SetScript(roundcontext.script);
@@ -2686,14 +2694,18 @@ namespace Engine.Game.Gameplay {
 
                 // ask for player decision
                 int decision = roundcontext.weekgameover.HelperAskToPlayer(roundcontext);
-                roundcontext.track_difficult = roundcontext.weekgameover.GetDifficult();
+                string track_difficult = roundcontext.weekgameover.GetDifficult();
                 roundcontext.weekgameover.Hide();
 
                 // notify script and wait (if necessary)
 
-                if (roundcontext.script != null) roundcontext.script.NotifyDiedecision(decision > 0);
+                if (roundcontext.script != null) {
+                    string change = roundcontext.track_difficult == track_difficult ? null : track_difficult;
+                    roundcontext.script.NotifyDiedecision(decision > 0, change);
+                    Week.Halt(roundcontext, true);
+                }
 
-                Week.Halt(roundcontext, true);
+                roundcontext.track_difficult = track_difficult;
 
                 return decision;
             }
@@ -2923,6 +2935,27 @@ namespace Engine.Game.Gameplay {
         public static void SetHalt(RoundContext roundcontext, bool halt) {
             roundcontext.scriptcontext.halt_flag = halt;
         }
+
+        public static void DisableWeekEndResults(RoundContext roundcontext, bool disable) {
+            roundcontext.scriptcontext.no_week_end_result_screen = disable;
+        }
+
+        public static void DisableGirlfriendCry(RoundContext roundcontext, bool disable) {
+            roundcontext.settings.girlfriend_cry = !disable;
+        }
+
+        public static void DisableAskReady(RoundContext roundcontext, bool disable) {
+            roundcontext.settings.ask_ready = !disable;
+        }
+
+        public static void DisableCountdown(RoundContext roundcontext, bool disable) {
+            roundcontext.settings.do_countdown = !disable;
+        }
+
+        public static void DisableCameraBumping(RoundContext roundcontext, bool disable) {
+            roundcontext.settings.camera_bumping = !disable;
+        }
+
 
         public static Character GetGirlfriend(RoundContext roundcontext) {
             return roundcontext.girlfriend;

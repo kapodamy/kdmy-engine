@@ -259,7 +259,7 @@ namespace Engine.Game.Gameplay {
 
             // try draw only the dead player
             string character_name = Week.InternalConcatSuffix(Week.ROUND_CHARACTER_PREFIX, dead_player_index);
-            bool has_focus = roundcontext.layout.SetSingleItemToDraw(character_name);
+            roundcontext.layout.SetSingleItemToDraw(character_name);
             //free(character_name);
 
             // trigger layout (normally shows the player only with a black background)

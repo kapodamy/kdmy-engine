@@ -50,10 +50,7 @@ const DIALOGUE_REPEATANIM_ALWAYS = 3;
 
 
 
-async function dialogue_init(src) {
-    let viewport_width = FUNKIN_SCREEN_RESOLUTION_WIDTH;
-    let viewport_height = FUNKIN_SCREEN_RESOLUTION_HEIGHT;
-
+async function dialogue_init(src, viewport_width, viewport_height) {
     src = fs_get_full_path(src);
     let xml = null;
     try {
@@ -154,7 +151,7 @@ async function dialogue_init(src) {
                             await dialogue_internal_parse_audiolist(node2, audios);
                             break;
                         case "BackgroundList":
-                            await dialogue_internal_parse_backgroundlist(node2, viewport_width, viewport_height, backgrounds);
+                            await dialogue_internal_parse_backgroundlist(node2, backgrounds);
                             break;
                         case "PortraitList":
                             await dialogue_internal_parse_portraitlist(node2, portraits);
@@ -243,11 +240,12 @@ async function dialogue_init(src) {
         is_completed: 1,
         chars_per_second: 0,
         self_drawable: null,
-        self_hidden: 0
+        self_hidden: 0,
+        matrix_viewport: new Float32Array[SH4MATRIX_SIZE]
     };
 
     dialogue.self_drawable = drawable_init(300, dialogue, dialogue_draw, dialogue_animate);
-
+    sh4matrix_clear(dialogue.matrix_viewport);
     gamepad_set_buttons_delay(dialogue.gamepad, 200);
 
     arraylist_destroy2(audios, dialogue, "audios_size", "audios");
@@ -305,6 +303,19 @@ async function dialogue_init(src) {
 
     fontholder = dialogue_internal_get_font(dialogue, "font");
     if (fontholder) textsprite_change_font(dialogue.texsprite_speech, fontholder);
+
+    // calculate viewport, dialogue UI is designed for a 1280x720@16:9 screen
+    if (viewport_width != FUNKIN_SCREEN_RESOLUTION_WIDTH || viewport_height != FUNKIN_SCREEN_RESOLUTION_HEIGHT) {
+        let scale_x = viewport_width / FUNKIN_SCREEN_RESOLUTION_WIDTH;
+        let scale_y = viewport_height / FUNKIN_SCREEN_RESOLUTION_HEIGHT;
+        let scale = Math.min(scale_x, scale_y);
+
+        sh4matrix_scale(dialogue.matrix_viewport, scale, scale);
+        sh4matrix_translate(dialogue.matrix_viewport,
+            (viewport_width - FUNKIN_SCREEN_RESOLUTION_WIDTH * scale) / 2.0,
+            (viewport_height - FUNKIN_SCREEN_RESOLUTION_HEIGHT * scale) / 2.0
+        );
+    }
 
     return dialogue;
 }
@@ -626,18 +637,12 @@ function dialogue_animate(dialogue, elapsed) {
     return 0;
 }
 
-function dialogue_draw(dialogue, pvrctx) {
+function dialogue_draw(dialogue,/**@type {PVRContext} */ pvrctx) {
     if (dialogue.self_hidden || dialogue.is_completed) return;
 
+    // apply viewport matrix
     pvr_context_save(pvrctx);
-
-    // JS only
-    if (!pvrctx_is_widescreen()) {
-        const scale = 640 / 1280;
-        const translate = (480 - (720 * scale)) / 2;
-        sh4matrix_scale(pvrctx.current_matrix, scale, scale);
-        sh4matrix_translate(pvrctx.current_matrix, 0, translate);
-    }
+    sh4matrix_multiply_with_matrix(pvrctx.current_matrix, dialogue.matrix_viewport);
 
     drawable_helper_apply_in_context(dialogue.self_drawable, pvrctx);
     pvr_context_save(pvrctx);
@@ -1405,7 +1410,9 @@ async function dialogue_internal_parse_audiolist(root_node, audios) {
     }
 }
 
-async function dialogue_internal_parse_backgroundlist(root_node, max_width, max_height, backgrounds) {
+async function dialogue_internal_parse_backgroundlist(root_node, backgrounds) {
+    const max_width = FUNKIN_SCREEN_RESOLUTION_WIDTH, max_height = FUNKIN_SCREEN_RESOLUTION_HEIGHT;
+
     let base_src = root_node.getAttribute("baseSrc");
 
     for (let node of root_node.children) {

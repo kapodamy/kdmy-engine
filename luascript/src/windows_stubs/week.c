@@ -63,6 +63,21 @@ Camera week_ui_get_camera(RoundContext roundcontext) {
 void week_set_halt(RoundContext roundcontext, bool halt) {
     print_stub("week_set_halt", "roundcontext=%p halt=(bool)%i", roundcontext, halt);
 }
+void week_disable_week_end_results(RoundContext roundcontext, bool disable) {
+    print_stub("week_disable_week_end_results", "roundcontext=%p disable=(bool)%i", roundcontext, disable);
+}
+void week_disable_girlfriend_cry(RoundContext roundcontext, bool disable) {
+    print_stub("week_disable_girlfriend_cry", "roundcontext=%p disable=(bool)%i", roundcontext, disable);
+}
+void week_disable_ask_ready(RoundContext roundcontext, bool disable) {
+    print_stub("week_disable_ask_ready", "roundcontext=%p disable=(bool)%i", roundcontext, disable);
+}
+void week_disable_countdown(RoundContext roundcontext, bool disable) {
+    print_stub("week_disable_countdown", "roundcontext=%p disable=(bool)%i", roundcontext, disable);
+}
+void week_disable_camera_bumping(RoundContext roundcontext, bool disable) {
+    print_stub("week_disable_camera_bumping", "roundcontext=%p disable=(bool)%i", roundcontext, disable);
+}
 int32_t week_ui_get_strums_count(RoundContext roundcontext) {
     print_stub("week_ui_get_strums_count", "roundcontext=%p", roundcontext);
     return 1;

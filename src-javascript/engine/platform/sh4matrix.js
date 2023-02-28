@@ -192,7 +192,7 @@ function sh4matrix_apply_modifier2(sh4matrix, modifier, draw_x, draw_y, draw_wid
     }
 }
 
-function sh4matrix4_multiply_point(sh4matrix, target_2d_point) {
+function sh4matrix_multiply_point(sh4matrix, target_2d_point) {
     let x1 = target_2d_point[0];
     let y1 = target_2d_point[1];
     let z1 = 0.0;

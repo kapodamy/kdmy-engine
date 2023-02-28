@@ -801,8 +801,10 @@ declare global {
         state_background_add(modelholder: ModelHolder, state_name: string): boolean;
         state_background_add2(color_rgb8: number, animsprite: AnimSprite, state_name: string): boolean;
         load_warnings(modelholder: ModelHolder, use_alt_icons: boolean): boolean;
-        set_opponent_bar_color(color_rgb8: number): void;
-        set_player_bar_color(color_rgb8: number): void;
+        set_opponent_bar_color(r: number, g: number, b: number): void;
+        set_opponent_bar_color_rgb8(color_rgb8: number): void;
+        set_player_bar_color(r: number, g: number, b: number): void;
+        set_player_bar_color_rgb8(color_rgb8: number): void;
         state_toggle(state_name: string): number;
         state_toggle_background(state_name: string): boolean;
         state_toggle_player(state_name: string): boolean;
@@ -933,6 +935,11 @@ declare global {
     function week_ui_get_layout(): Layout;
     function week_ui_get_camera(): Camera;
     function week_set_halt(halt: boolean): void;
+    function week_disable_week_end_results(disable: boolean): void;
+    function week_disable_girlfriend_cry(disable: boolean): void;
+    function week_disable_ask_ready(disable: boolean): void;
+    function week_disable_countdown(disable: boolean): void;
+    function week_disable_camera_bumping(disable: boolean): void;
     function week_ui_get_strums_count(): number;
     function week_ui_get_strums(strums_id: number): Strums;
     function week_ui_get_roundstats(): RoundStats;

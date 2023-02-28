@@ -347,6 +347,28 @@ function strum_set_notes(strum, chart, strumsdefs, strumsdefs_size, player_id, n
 
         // calculate the key test time limit
         strum.key_test_limit = Math.max(strum.chart_notes[0].timestamp - strum.marker_duration, 0);
+
+        // remove duplicated notes (filtered by timestamp and id)
+        let j = 0;
+        let last_timestamp = NaN;
+        let last_id = -1;
+        for (let i = 0; i < strum.chart_notes_size; i++) {
+            let id = strum.chart_notes[i].id;
+            let timestamp = strum.chart_notes[i].timestamp;
+            if (timestamp == last_timestamp && id == last_id) {
+                console.error(`strum_set_notes() duplicated note found: ts=${timestamp} id=${id}`);
+            } else {
+                last_timestamp = timestamp;
+                last_id = id;
+                strum.chart_notes[j++] = strum.chart_notes[i];// in C clone as struct
+            }
+        }
+        if (j != strum.chart_notes_size) {
+            // trim array
+            strum.chart_notes_size = j;
+            strum.chart_notes = realloc(strum.chart_notes, strum.chart_notes_size /* * sizeof(StrumNote) */);
+        }
+
     } else {
         strum.key_test_limit = -Infinity;
     }
@@ -1555,7 +1577,7 @@ function strum_set_draw_offset(strum, offset_milliseconds) {
 }
 
 function strum_set_bpm(strum, beats_per_minute) {
-   beatwatcher_reset(strum.beatwatcher, 1, beats_per_minute);
+    beatwatcher_reset(strum.beatwatcher, 1, beats_per_minute);
 }
 
 function strum_disable_beat_synced_idle_and_continous(strum, disabled) {

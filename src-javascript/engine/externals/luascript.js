@@ -3206,8 +3206,23 @@ function __js__videoplayer_stop(videoplayer) {
 function __js__week_change_character_camera_name(roundcontext, opponent_or_player, new_name) {
     week_change_character_camera_name(kdmyEngine_obtain(roundcontext), opponent_or_player, kdmyEngine_ptrToString(new_name))
 }
+function __js__week_disable_ask_ready(roundcontext, disable) {
+    week_disable_ask_ready(kdmyEngine_obtain(roundcontext), disable)
+}
+function __js__week_disable_camera_bumping(roundcontext, disable) {
+    week_disable_camera_bumping(kdmyEngine_obtain(roundcontext), disable)
+}
+function __js__week_disable_countdown(roundcontext, disable) {
+    week_disable_countdown(kdmyEngine_obtain(roundcontext), disable)
+}
+function __js__week_disable_girlfriend_cry(roundcontext, disable) {
+    week_disable_girlfriend_cry(kdmyEngine_obtain(roundcontext), disable)
+}
 function __js__week_disable_layout_rollback(roundcontext, disable) {
     week_disable_layout_rollback(kdmyEngine_obtain(roundcontext), disable)
+}
+function __js__week_disable_week_end_results(roundcontext, disable) {
+    week_disable_week_end_results(kdmyEngine_obtain(roundcontext), disable)
 }
 function __js__week_enable_credits_on_completed(roundcontext) {
     week_enable_credits_on_completed(kdmyEngine_obtain(roundcontext))
@@ -7398,7 +7413,12 @@ var asmLibraryArg = {
     "__js__videoplayer_set_volume": __js__videoplayer_set_volume,
     "__js__videoplayer_stop": __js__videoplayer_stop,
     "__js__week_change_character_camera_name": __js__week_change_character_camera_name,
+    "__js__week_disable_ask_ready": __js__week_disable_ask_ready,
+    "__js__week_disable_camera_bumping": __js__week_disable_camera_bumping,
+    "__js__week_disable_countdown": __js__week_disable_countdown,
+    "__js__week_disable_girlfriend_cry": __js__week_disable_girlfriend_cry,
     "__js__week_disable_layout_rollback": __js__week_disable_layout_rollback,
+    "__js__week_disable_week_end_results": __js__week_disable_week_end_results,
     "__js__week_enable_credits_on_completed": __js__week_enable_credits_on_completed,
     "__js__week_end": __js__week_end,
     "__js__week_get_character": __js__week_get_character,

@@ -207,8 +207,11 @@ function weekscript_notify_weekend(script, giveup) {
     return _weekscript_call(ModuleLuaScript._luascript_notify_weekend, script, giveup ? 1 : 0);
 }
 
-function weekscript_notify_diedecision(script, retry_or_giveup) {
-    return _weekscript_call(ModuleLuaScript._luascript_notify_diedecision, script, retry_or_giveup ? 1 : 0);
+function weekscript_notify_diedecision(script, retry_or_giveup, changed_difficult) {
+    return _weekscript_call(
+        ModuleLuaScript._luascript_notify_diedecision, script,
+        retry_or_giveup ? 1 : 0, ModuleLuaScript.kdmyEngine_stringToPtr(changed_difficult)
+    );
 }
 
 function weekscript_notify_pause(script, pause_or_resume) {
@@ -219,8 +222,10 @@ function weekscript_notify_weekleave(script) {
     return _weekscript_call(ModuleLuaScript._luascript_notify_weekleave, script);
 }
 
-function weekscript_notify_afterresults(script) {
-    return _weekscript_call(ModuleLuaScript._luascript_notify_afterresults, script);
+function weekscript_notify_afterresults(script, total_attempts, tracks_count, reject_completed) {
+    return _weekscript_call(
+        ModuleLuaScript._luascript_notify_afterresults, script, total_attempts, tracks_count, reject_completed ? 1 : 0
+    );
 }
 
 function weekscript_notify_scriptchange(script) {

@@ -87,6 +87,56 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_week_disable_week_end_results(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            bool disable = L.lua_toboolean(1);
+
+            Week.DisableWeekEndResults(roundcontext, disable);
+
+            return 0;
+        }
+
+        static int script_week_disable_girlfriend_cry(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            bool disable = L.lua_toboolean(1);
+
+            Week.DisableGirlfriendCry(roundcontext, disable);
+
+            return 0;
+        }
+
+        static int script_week_disable_ask_ready(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            bool disable = L.lua_toboolean(1);
+
+            Week.DisableAskReady(roundcontext, disable);
+
+            return 0;
+        }
+
+        static int script_week_disable_countdown(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            bool disable = L.lua_toboolean(1);
+
+            Week.DisableCountdown(roundcontext, disable);
+
+            return 0;
+        }
+
+        static int script_week_disable_camera_bumping(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            bool disable = L.lua_toboolean(1);
+
+            Week.DisableCameraBumping(roundcontext, disable);
+
+            return 0;
+        }
+
         static int script_week_ui_get_strums_count(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
@@ -415,6 +465,11 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("week_ui_get_layout", script_week_ui_get_layout),
             new LuaTableFunction("week_ui_get_camera", script_week_ui_get_camera),
             new LuaTableFunction("week_set_halt", script_week_set_halt),
+            new LuaTableFunction("week_disable_week_end_results", script_week_disable_week_end_results),
+            new LuaTableFunction("week_disable_girlfriend_cry", script_week_disable_girlfriend_cry),
+            new LuaTableFunction("week_disable_ask_ready", script_week_disable_ask_ready),
+            new LuaTableFunction("week_disable_countdown", script_week_disable_countdown),
+            new LuaTableFunction("week_disable_camera_bumping", script_week_disable_camera_bumping),
             new LuaTableFunction("week_ui_get_strums_count", script_week_ui_get_strums_count),
             new LuaTableFunction("week_ui_get_strums", script_week_ui_get_strums),
             new LuaTableFunction("week_ui_get_roundstats", script_week_ui_get_roundstats),

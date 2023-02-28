@@ -118,12 +118,17 @@ void luascript_notify_weekend(Luascript luascript, bool giveup) {
     lua_imported_fn(lua, FUNCTION, 1);
 }
 
-void luascript_notify_diedecision(Luascript luascript, bool retry_or_giveup) {
+void luascript_notify_diedecision(Luascript luascript, bool retry_or_giveup, const char* difficult_changed) {
     FUNCTION(luascript, "f_diedecision");
 
     lua_pushboolean(lua, retry_or_giveup);
+    lua_pushstring(lua, difficult_changed);
 
-    lua_imported_fn(lua, FUNCTION, 1);
+#ifdef JAVASCRIPT
+    free((char*)difficult_changed);
+#endif
+
+    lua_imported_fn(lua, FUNCTION, 2);
 }
 
 void luascript_notify_pause(Luascript luascript, bool pause_or_resume) {
@@ -139,9 +144,14 @@ void luascript_notify_weekleave(Luascript luascript) {
     lua_imported_fn(lua, FUNCTION, 0);
 }
 
-void luascript_notify_afterresults(Luascript luascript) {
+void luascript_notify_afterresults(Luascript luascript, int32_t total_attempts, int32_t tracks_count, bool reject_completed) {
     FUNCTION(luascript, "f_afterresults");
-    lua_imported_fn(lua, FUNCTION, 0);
+
+    lua_pushinteger(lua, total_attempts);
+    lua_pushinteger(lua, tracks_count);
+    lua_pushboolean(lua, reject_completed);
+
+    lua_imported_fn(lua, FUNCTION, 3);
 }
 
 void luascript_notify_scriptchange(Luascript luascript) {

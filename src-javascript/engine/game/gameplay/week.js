@@ -52,6 +52,7 @@ const CHARACTERTYPE = {
  * @property {bool} force_end_flag
  * @property {bool} force_end_round_or_week
  * @property {bool} force_end_loose_or_win
+ * @property {bool} no_week_end_result_screen
  */
 
 /**
@@ -502,6 +503,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             force_end_flag: 0,
             force_end_round_or_week: 0,
             force_end_loose_or_win: 0,
+            no_week_end_result_screen: 0
         },
 
         players_from_default: 0,
@@ -763,14 +765,17 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     // show the whole week stats and wait for the player to press START to return
     if (!gameover) {
         let total_attempts = 0;
+        let tracks_count = single_track ? 1 : gameplaymanifest.tracks_size;
+
         for (let i = 0; i < gameplaymanifest.tracks_size; i++) total_attempts += tracks_attempts[i];
 
-        let tracks_count = single_track ? 1 : gameplaymanifest.tracks_size;
-        await week_result_helper_show_summary(
-            roundcontext.weekresult, roundcontext, total_attempts, tracks_count, reject_completed
-        );
+        if (!roundcontext.scriptcontext.no_week_end_result_screen) {
+            await week_result_helper_show_summary(
+                roundcontext.weekresult, roundcontext, total_attempts, tracks_count, reject_completed
+            );
+        }
         if (roundcontext.script) {
-            await weekscript_notify_afterresults(roundcontext.script);
+            await weekscript_notify_afterresults(roundcontext.script, total_attempts, tracks_count, reject_completed);
             await week_halt(roundcontext, 1);
         }
     }
@@ -2054,10 +2059,13 @@ async function week_init_dialogue(/**@type {RoundContext}*/roundcontext, dialogu
 
     if (roundcontext.dialogue) dialogue_destroy(roundcontext.dialogue);
 
-    if (dialog_ignore_on_freeplay)
+    if (dialog_ignore_on_freeplay) {
         roundcontext.dialogue = null;
-    else
-        roundcontext.dialogue = await dialogue_init(dialogue_params);
+    } else {
+        const size = [0, 0];
+        layout_get_viewport_size(roundcontext.ui_layout, size);
+        roundcontext.dialogue = await dialogue_init(dialogue_params, size[0], size[1]);
+    }
 
     if (roundcontext.dialogue) {
         dialogue_set_script(roundcontext.dialogue, roundcontext.script);
@@ -2676,14 +2684,17 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
         // ask for player decision
         let decision = await week_gameover_helper_ask_to_player(roundcontext.weekgameover, roundcontext);
-        roundcontext.track_difficult = week_gameover_get_difficult(roundcontext.weekgameover);
+        let track_difficult = week_gameover_get_difficult(roundcontext.weekgameover);
         week_gameover_hide(roundcontext.weekgameover);
 
         // notify script and wait (if necessary)
         if (roundcontext.script) {
-            await weekscript_notify_diedecision(roundcontext.script, decision);
+            let change = roundcontext.track_difficult === track_difficult ? null : track_difficult;
+            await weekscript_notify_diedecision(roundcontext.script, decision, change);
             await week_halt(roundcontext, 1);
         }
+
+        roundcontext.track_difficult = track_difficult;
 
         return decision;
     }
@@ -2913,6 +2924,27 @@ function week_ui_get_camera(/**@type {RoundContext}*/roundcontext) {
 function week_set_halt(/**@type {RoundContext}*/roundcontext, halt) {
     roundcontext.scriptcontext.halt_flag = halt;
 }
+
+function week_disable_week_end_results(/**@type {RoundContext} */ roundcontext, disable) {
+    roundcontext.scriptcontext.no_week_end_result_screen = disable;
+}
+
+function week_disable_girlfriend_cry(/**@type {RoundContext} */ roundcontext, disable) {
+    roundcontext.settings.girlfriend_cry = !disable;
+}
+
+function week_disable_ask_ready(/**@type {RoundContext} */ roundcontext, disable) {
+    roundcontext.settings.ask_ready = !disable;
+}
+
+function week_disable_countdown(/**@type {RoundContext} */ roundcontext, disable) {
+    roundcontext.settings.do_countdown = !disable;
+}
+
+function week_disable_camera_bumping(/**@type {RoundContext} */ roundcontext, disable) {
+    roundcontext.settings.camera_bumping = !disable;
+}
+
 
 function week_get_girlfriend(/**@type {RoundContext}*/roundcontext) {
     return roundcontext.girlfriend;

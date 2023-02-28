@@ -403,6 +403,28 @@ namespace Engine.Game {
 
                 // calculate the key test time limit
                 this.key_test_limit = Math.Max(this.chart_notes[0].timestamp - this.marker_duration, 0.0);
+
+                // remove duplicated notes (filtered by timestamp and id)
+                int j = 0;
+                double last_timestamp = Double.NaN;
+                int last_id = -1;
+                for (int i = 0 ; i < this.chart_notes_size ; i++) {
+                    int id = this.chart_notes[i].id;
+                    double timestamp = this.chart_notes[i].timestamp;
+                    if (timestamp == last_timestamp && id == last_id) {
+                        Console.Error.WriteLine($"duplicated note found: ts={timestamp} id={id}");
+                    } else {
+                        last_timestamp = timestamp;
+                        last_id = id;
+                        this.chart_notes[j++] = this.chart_notes[i];
+                    }
+                }
+                if (j != this.chart_notes_size) {
+                    // trim array
+                    this.chart_notes_size = j;
+                    Array.Resize(ref this.chart_notes, this.chart_notes_size);
+                }
+
             } else {
                 this.key_test_limit = -Double.PositiveInfinity;
             }

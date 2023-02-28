@@ -39,6 +39,11 @@ Layout week_ui_get_layout(RoundContext roundcontext);
 Camera week_ui_get_camera(RoundContext roundcontext);
 
 void week_set_halt(RoundContext roundcontext, bool halt);
+void week_disable_week_end_results(RoundContext roundcontext, bool disable);
+void week_disable_girlfriend_cry(RoundContext roundcontext, bool disable);
+void week_disable_ask_ready(RoundContext roundcontext, bool disable);
+void week_disable_countdown(RoundContext roundcontext, bool disable);
+void week_disable_camera_bumping(RoundContext roundcontext, bool disable);
 int32_t week_ui_get_strums_count(RoundContext roundcontext);
 Strums week_ui_get_strums(RoundContext roundcontext, int32_t strums_id);
 RoundStats week_ui_get_roundstats(RoundContext roundcontext);

@@ -59,6 +59,21 @@ EM_JS_PRFX(Camera, week_ui_get_camera, (RoundContext roundcontext), {
 EM_JS_PRFX(void, week_set_halt, (RoundContext roundcontext, bool halt), {
     week_set_halt(kdmyEngine_obtain(roundcontext), halt);
 });
+EM_JS_PRFX(void, week_disable_week_end_results, (RoundContext roundcontext, bool disable), {
+    week_disable_week_end_results(kdmyEngine_obtain(roundcontext), disable);
+});
+EM_JS_PRFX(void, week_disable_girlfriend_cry, (RoundContext roundcontext, bool disable), {
+    week_disable_girlfriend_cry(kdmyEngine_obtain(roundcontext), disable);
+});
+EM_JS_PRFX(void, week_disable_ask_ready, (RoundContext roundcontext, bool disable), {
+    week_disable_ask_ready(kdmyEngine_obtain(roundcontext), disable);
+});
+EM_JS_PRFX(void, week_disable_countdown, (RoundContext roundcontext, bool disable), {
+    week_disable_countdown(kdmyEngine_obtain(roundcontext), disable);
+});
+EM_JS_PRFX(void, week_disable_camera_bumping, (RoundContext roundcontext, bool disable), {
+    week_disable_camera_bumping(kdmyEngine_obtain(roundcontext), disable);
+});
 EM_JS_PRFX(int32_t, week_ui_get_strums_count, (RoundContext roundcontext), {
     let ret = week_ui_get_strums_count(kdmyEngine_obtain(roundcontext));
     return ret;
@@ -271,6 +286,61 @@ static int script_week_set_halt(lua_State* L) {
     bool halt = (bool)lua_toboolean(L, 1);
 
     week_set_halt(roundcontext, halt);
+
+    return 0;
+}
+
+static int script_week_disable_week_end_results(lua_State* L) {
+    Luascript luascript = luascript_get_instance(L);
+    RoundContext roundcontext = (RoundContext)luascript->context;
+
+    bool disable = (bool)lua_toboolean(L, 1);
+
+    week_disable_week_end_results(roundcontext, disable);
+
+    return 0;
+}
+
+static int script_week_disable_girlfriend_cry(lua_State* L) {
+    Luascript luascript = luascript_get_instance(L);
+    RoundContext roundcontext = (RoundContext)luascript->context;
+
+    bool disable = (bool)lua_toboolean(L, 1);
+
+    week_disable_girlfriend_cry(roundcontext, disable);
+
+    return 0;
+}
+
+static int script_week_disable_ask_ready(lua_State* L) {
+    Luascript luascript = luascript_get_instance(L);
+    RoundContext roundcontext = (RoundContext)luascript->context;
+
+    bool disable = (bool)lua_toboolean(L, 1);
+
+    week_disable_ask_ready(roundcontext, disable);
+
+    return 0;
+}
+
+static int script_week_disable_countdown(lua_State* L) {
+    Luascript luascript = luascript_get_instance(L);
+    RoundContext roundcontext = (RoundContext)luascript->context;
+
+    bool disable = (bool)lua_toboolean(L, 1);
+
+    week_disable_countdown(roundcontext, disable);
+
+    return 0;
+}
+
+static int script_week_disable_camera_bumping(lua_State* L) {
+    Luascript luascript = luascript_get_instance(L);
+    RoundContext roundcontext = (RoundContext)luascript->context;
+
+    bool disable = (bool)lua_toboolean(L, 1);
+
+    week_disable_camera_bumping(roundcontext, disable);
 
     return 0;
 }
@@ -663,6 +733,11 @@ static const luaL_Reg WEEK_FUNCTIONS[] = {
     { "week_ui_get_layout", script_week_ui_get_layout },
     { "week_ui_get_camera", script_week_ui_get_camera },
     { "week_set_halt", script_week_set_halt },
+    { "week_disable_week_end_results", script_week_disable_week_end_results },
+    { "week_disable_girlfriend_cry", script_week_disable_girlfriend_cry },
+    { "week_disable_ask_ready", script_week_disable_ask_ready },
+    { "week_disable_countdown", script_week_disable_countdown },
+    { "week_disable_camera_bumping", script_week_disable_camera_bumping },
     { "week_ui_get_strums_count", script_week_ui_get_strums_count },
     { "week_ui_get_strums", script_week_ui_get_strums },
     { "week_ui_get_roundstats", script_week_ui_get_roundstats },

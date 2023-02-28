@@ -12,10 +12,10 @@
  * @property {function(ModuleLuaScript,number):void} _luascript_notify_frame
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_roundend
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_weekend
- * @property {function(ModuleLuaScript,bool):void} _luascript_notify_diedecision
+ * @property {function(ModuleLuaScript,bool,number):void} _luascript_notify_diedecision
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_pause
  * @property {function(ModuleLuaScript):void} _luascript_notify_weekleave
- * @property {function(ModuleLuaScript):void} _luascript_notify_afterresults
+ * @property {function(ModuleLuaScript, number, number, number):void} _luascript_notify_afterresults
  * @property {function(ModuleLuaScript):void} _luascript_notify_scriptchange
  * @property {function(ModuleLuaScript,number):void} _luascript_notify_pause_optionchoosen
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_pause_menuvisible

@@ -235,7 +235,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
     // try draw only the dead player
     let character_name = week_internal_concat_suffix(WEEKROUND_CHARACTER_PREFIX, dead_player_index);
-    let has_focus = layout_set_single_item_to_draw(roundcontext.layout, character_name);
+    layout_set_single_item_to_draw(roundcontext.layout, character_name);
     character_name = undefined;
 
     // trigger layout (normally shows the player only with a black background)

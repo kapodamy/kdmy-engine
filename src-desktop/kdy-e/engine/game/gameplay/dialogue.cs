@@ -75,16 +75,14 @@ namespace Engine.Game.Gameplay {
         private Gamepad gamepad;
         private Drawable self_drawable;
         private bool self_hidden;
+        private SH4Matrix matrix_viewport;
 
 
         private Dialogue() { }
 
 
 
-        public static Dialogue Init(string src) {
-            float viewport_width = Funkin.SCREEN_RESOLUTION_WIDTH;
-            float viewport_height = Funkin.SCREEN_RESOLUTION_HEIGHT;
-
+        public static Dialogue Init(string src, float viewport_width, float viewport_height) {
             src = FS.GetFullPath(src);
             XmlParser xml = XmlParser.Init(src);
             if (xml == null || xml.GetRoot() == null) {
@@ -175,7 +173,7 @@ namespace Engine.Game.Gameplay {
                                     Dialogue.InternalParseAudioList(node2, audios);
                                     break;
                                 case "BackgroundList":
-                                    Dialogue.InternalParseBackgroundList(node2, viewport_width, viewport_height, backgrounds);
+                                    Dialogue.InternalParseBackgroundList(node2, backgrounds);
                                     break;
                                 case "PortraitList":
                                     Dialogue.InternalParsePortraitList(node2, portraits);
@@ -264,11 +262,12 @@ namespace Engine.Game.Gameplay {
                 is_completed = true,
                 chars_per_second = 0,
                 self_drawable = null,
-                self_hidden = false
+                self_hidden = false,
+                matrix_viewport = new SH4Matrix()
             };
 
             dialogue.self_drawable = new Drawable(300, dialogue, dialogue);
-
+            dialogue.matrix_viewport.Clear();
             dialogue.gamepad.SetButtonsDelay(200);
 
             audios.Destroy2(out dialogue.audios_size, ref dialogue.audios);
@@ -326,6 +325,19 @@ namespace Engine.Game.Gameplay {
 
             fontholder = dialogue.InternalGetFont("font");
             if (fontholder != null) dialogue.texsprite_speech.ChangeFont(fontholder);
+
+            // calculate viewport, dialogue UI is designed for a 1280x720@16:9 screen
+            if (viewport_width != Funkin.SCREEN_RESOLUTION_WIDTH || viewport_height != Funkin.SCREEN_RESOLUTION_HEIGHT) {
+                float scale_x = viewport_width / Funkin.SCREEN_RESOLUTION_WIDTH;
+                float scale_y = viewport_height / Funkin.SCREEN_RESOLUTION_HEIGHT;
+                float scale = Math.Min(scale_x, scale_y);
+
+                dialogue.matrix_viewport.Scale(scale, scale);
+                dialogue.matrix_viewport.Translate(
+                    (viewport_width - Funkin.SCREEN_RESOLUTION_WIDTH * scale) / 2f,
+                    (viewport_height - Funkin.SCREEN_RESOLUTION_HEIGHT * scale) / 2f
+                );
+            }
 
             return dialogue;
         }
@@ -649,7 +661,10 @@ namespace Engine.Game.Gameplay {
         public void Draw(PVRContext pvrctx) {
             if (this.self_hidden || this.is_completed) return;
 
+            // apply viewport matrix
             pvrctx.Save();
+            pvrctx.CurrentMatrix.MultiplyWithMatrix(this.matrix_viewport);
+
             this.self_drawable.HelperApplyInContext(pvrctx);
             pvrctx.Save();
 
@@ -1408,7 +1423,9 @@ namespace Engine.Game.Gameplay {
             }
         }
 
-        private static void InternalParseBackgroundList(XmlParserNode root_node, float max_width, float max_height, ArrayList<Background> backgrounds) {
+        private static void InternalParseBackgroundList(XmlParserNode root_node, ArrayList<Background> backgrounds) {
+            const float max_width = Funkin.SCREEN_RESOLUTION_WIDTH, max_height = Funkin.SCREEN_RESOLUTION_HEIGHT;
+
             string base_src = root_node.GetAttribute("baseSrc");
 
             foreach (XmlParserNode node in root_node.Children) {
