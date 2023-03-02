@@ -67,12 +67,12 @@ int script_atlas_push_atlas_entry(lua_State* L, AtlasEntry entry) {
     LuaL_add_table_field(L, "y", lua_pushnumber, entry->y);
     LuaL_add_table_field(L, "width", lua_pushnumber, entry->width);
     LuaL_add_table_field(L, "height", lua_pushnumber, entry->height);
-    LuaL_add_table_field(L, "frame_x", lua_pushnumber, entry->frame_x);
-    LuaL_add_table_field(L, "frame_y", lua_pushnumber, entry->frame_y);
-    LuaL_add_table_field(L, "frame_width", lua_pushnumber, entry->frame_width);
-    LuaL_add_table_field(L, "frame_height", lua_pushnumber, entry->frame_height);
-    LuaL_add_table_field(L, "pivot_x", lua_pushnumber, entry->pivot_x);
-    LuaL_add_table_field(L, "pivot_y", lua_pushnumber, entry->pivot_y);
+    LuaL_add_table_field(L, "frameX", lua_pushnumber, entry->frame_x);
+    LuaL_add_table_field(L, "frameY", lua_pushnumber, entry->frame_y);
+    LuaL_add_table_field(L, "frameWidth", lua_pushnumber, entry->frame_width);
+    LuaL_add_table_field(L, "frameHeight", lua_pushnumber, entry->frame_height);
+    LuaL_add_table_field(L, "pivotX", lua_pushnumber, entry->pivot_x);
+    LuaL_add_table_field(L, "pivotY", lua_pushnumber, entry->pivot_y);
 
 #ifdef JAVASCRIPT
     free(_entry.name);

@@ -34,11 +34,11 @@ int script_animlistitem_index(lua_State* L) {
         lua_pushboolean(
             L, animlist_is_item_frame_animation(animlistitem)
         );
-    } else if (string_equals(field, "isItemMacroAnimation")) {
+    } else if (string_equals(field, "isMacroAnimation")) {
         lua_pushboolean(
             L, animlist_is_item_macro_animation(animlistitem)
         );
-    } else if (string_equals(field, "isItemTweenKeyframeAnimation")){
+    } else if (string_equals(field, "isTweenKeyframeAnimation")){
         lua_pushboolean(
             L, animlist_is_item_tweenkeyframe_animation(animlistitem)
         );

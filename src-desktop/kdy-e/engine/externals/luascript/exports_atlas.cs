@@ -20,12 +20,12 @@ namespace Engine.Externals.LuaScriptInterop {
             table.AddNumber("y", entry.y);
             table.AddNumber("width", entry.width);
             table.AddNumber("height", entry.height);
-            table.AddNumber("frame_x", entry.frame_x);
-            table.AddNumber("frame_y", entry.frame_y);
-            table.AddNumber("frame_width", entry.frame_width);
-            table.AddNumber("frame_height", entry.frame_height);
-            table.AddNumber("pivot_x", entry.pivot_x);
-            table.AddNumber("pivot_y", entry.pivot_y);
+            table.AddNumber("frameX", entry.frame_x);
+            table.AddNumber("frameY", entry.frame_y);
+            table.AddNumber("frameWidth", entry.frame_width);
+            table.AddNumber("frameHeight", entry.frame_height);
+            table.AddNumber("pivotX", entry.pivot_x);
+            table.AddNumber("pivotY", entry.pivot_y);
 
             table.PushTable(L);
             return 1;

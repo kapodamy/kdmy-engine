@@ -19,10 +19,10 @@ namespace Engine.Externals.LuaScriptInterop {
                 case "isFrameAnimation":
                     L.lua_pushboolean(AnimList.IsItemFrameAnimation(animlistitem));
                     break;
-                case "isItemMacroAnimation":
+                case "isMacroAnimation":
                     L.lua_pushboolean(AnimList.IsItemMacroAnimation(animlistitem));
                     break;
-                case "isItemTweenKeyframeAnimation":
+                case "isTweenKeyframeAnimation":
                     L.lua_pushboolean(AnimList.IsItemTweenkeyframeAnimation(animlistitem));
                     break;
                 default:
