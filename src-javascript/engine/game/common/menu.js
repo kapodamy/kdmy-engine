@@ -498,8 +498,8 @@ async function menu_internal_build_item(item, src_item, params, modelholder, fon
             textsprite_border_set_size(item.vertex, params.font_border_size);
         }
     } else {
-        if (src_item.modelholder) {
-            let temp = await modelholder_init(src_item.modelholder);
+        if (src_item.model) {
+            let temp = await modelholder_init(src_item.model);
             if (temp) {
                 custom_modelholder = true;
                 modelholder = temp;
@@ -559,7 +559,7 @@ async function menu_internal_build_item(item, src_item, params, modelholder, fon
     }
 
     item.cell_dimmen = dimmen;
-    item.cell_gap = Number.isFinite(src_item.gap) ? src_item.gap : 0;
+    item.cell_gap = Number.isFinite(src_item.placement.gap) ? src_item.placement.gap : 0;
 }
 
 function menu_internal_load_anim(modelholder, absolute_name, prefix, suffix) {

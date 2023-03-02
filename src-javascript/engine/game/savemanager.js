@@ -400,9 +400,7 @@ async function savemanager_internal_build_list(savemanager) {
             anim_out: null,
             hidden: 0,
             description: null,
-            gap: 0,
             texture_scale: 0,
-            modelholder: null
         };
 
         if (savemanager.vmu_array[i].has_savedata)

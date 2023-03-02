@@ -17,7 +17,6 @@ static MenuManifestItem test_mm_items[] = {
         .anim_rollback = "anim-rollback",
         .anim_in = "anim-in",
         .anim_out = "anim-out",
-        .gap = 20.0f,
         .hidden = false,
     },
     {
@@ -35,7 +34,6 @@ static MenuManifestItem test_mm_items[] = {
         .anim_rollback = "rollback",
         .anim_in = "in",
         .anim_out = "out",
-        .gap = 200.0f,
         .hidden = true,
     }};
 static MenuManifest_t test_mm = {

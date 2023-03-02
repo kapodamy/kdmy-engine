@@ -536,9 +536,9 @@ namespace Engine.Game.Common {
                     ((TextSprite)item.vertex).BorderSetSize(@params.font_border_size);
                 }
             } else {
-                if (src_item.modelholder != null) {
+                if (src_item.model != null) {
                     custom_modelholder = true;
-                    modelholder = ModelHolder.Init(src_item.modelholder);
+                    modelholder = ModelHolder.Init(src_item.model);
                 }
                 StateSprite statesprite = StateSprite.InitFromTexture(modelholder.GetTexture(true));
                 statesprite.SetVertexColorRGB8(modelholder.GetVertexColor());
@@ -592,7 +592,7 @@ namespace Engine.Game.Common {
             }
 
             item.cell_dimmen = dimmen;
-            item.cell_gap = !Single.IsNaN(src_item.gap) ? src_item.gap : 0;
+            item.cell_gap = !Single.IsNaN(src_item.placement.gap) ? src_item.placement.gap : 0;
         }
 
         private AnimSprite InternalLoadAnim(ModelHolder modelholder, string absolute_name, string prefix, string suffix) {

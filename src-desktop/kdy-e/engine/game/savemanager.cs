@@ -425,9 +425,8 @@ namespace Engine.Game {
                     anim_out = null,
                     hidden = false,
                     description = null,
-                    gap = 0f,
                     texture_scale = 0f,
-                    modelholder = null
+                    model = null
                 };
 
                 if (this.vmu_array[i].has_savedata)

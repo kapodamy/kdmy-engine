@@ -90,6 +90,7 @@ async function menumanifest_init(src) {
         menumanifest.items[i] = {
             name: json_read_string(json_item, "name", null),
             text: json_read_string(json_item, "text", null),
+            model: json_read_string(json_item, "model", null),
             hidden: json_read_boolean(json_item, "hidden", 0),
             description: json_read_string(json_item, "description", null),
             texture_scale: json_read_string(json_item, "textureScale", 0.0),

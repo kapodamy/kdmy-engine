@@ -122,7 +122,7 @@ static int menumanifest_to_table(lua_State* L, MenuManifest mm) {
                 }
 
                 ADD_FIELD_STRING(L, "text", mm->items[i].text);
-                ADD_FIELD_STRING(L, "modelholder", mm->items[i].modelholder);
+                ADD_FIELD_STRING(L, "model", mm->items[i].model);
                 ADD_FIELD_NUMBER(L, "texture_scale", mm->items[i].texture_scale);
                 ADD_FIELD_STRING(L, "name", mm->items[i].name);
                 ADD_FIELD_STRING(L, "anim_selected", mm->items[i].anim_selected);
@@ -132,7 +132,6 @@ static int menumanifest_to_table(lua_State* L, MenuManifest mm) {
                 ADD_FIELD_STRING(L, "anim_rollback", mm->items[i].anim_rollback);
                 ADD_FIELD_STRING(L, "anim_in", mm->items[i].anim_in);
                 ADD_FIELD_STRING(L, "anim_out", mm->items[i].anim_out);
-                ADD_FIELD_NUMBER(L, "gap", mm->items[i].gap);
                 ADD_FIELD_BOOLEAN(L, "hidden", mm->items[i].hidden);
                 ADD_FIELD_STRING(L, "description", mm->items[i].description);
             }

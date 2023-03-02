@@ -76,7 +76,7 @@ namespace Engine.Externals.LuaScriptInterop {
                         }
 
                         LuaTableHelpers.AddFieldString(L, "text", mm.items[i].text);
-                        LuaTableHelpers.AddFieldString(L, "modelholder", mm.items[i].modelholder);
+                        LuaTableHelpers.AddFieldString(L, "model", mm.items[i].model);
                         LuaTableHelpers.AddFieldNumber(L, "texture_scale", mm.items[i].texture_scale);
                         LuaTableHelpers.AddFieldString(L, "name", mm.items[i].name);
                         LuaTableHelpers.AddFieldString(L, "anim_selected", mm.items[i].anim_selected);
@@ -86,7 +86,6 @@ namespace Engine.Externals.LuaScriptInterop {
                         LuaTableHelpers.AddFieldString(L, "anim_rollback", mm.items[i].anim_rollback);
                         LuaTableHelpers.AddFieldString(L, "anim_in", mm.items[i].anim_in);
                         LuaTableHelpers.AddFieldString(L, "anim_out", mm.items[i].anim_out);
-                        LuaTableHelpers.AddFieldNumber(L, "gap", mm.items[i].gap);
                         LuaTableHelpers.AddFieldBoolean(L, "hidden", mm.items[i].hidden);
                         LuaTableHelpers.AddFieldString(L, "description", mm.items[i].description);
                     }

@@ -18,7 +18,7 @@ typedef struct {
     bool has_font_color;
     uint32_t font_color;
     char* text;
-    char* modelholder;
+    char* model;
     float texture_scale;
     char* name;
     char* anim_selected;
@@ -28,7 +28,6 @@ typedef struct {
     char* anim_rollback;
     char* anim_in;
     char* anim_out;
-    float gap;
     bool hidden;
     char* description;
 } MenuManifestItem;

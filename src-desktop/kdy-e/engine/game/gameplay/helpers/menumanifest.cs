@@ -56,7 +56,7 @@ namespace Engine.Game.Gameplay.Helpers {
             public bool has_font_color;
             public uint font_color;
             public string text;
-            public string modelholder;
+            public string model;
             public float texture_scale;
             public string name;
             public string anim_selected;
@@ -66,7 +66,6 @@ namespace Engine.Game.Gameplay.Helpers {
             public string anim_rollback;
             public string anim_in;
             public string anim_out;
-            public float gap;
             public bool hidden;
             public string description;
         }
@@ -165,6 +164,7 @@ namespace Engine.Game.Gameplay.Helpers {
                 this.items[i] = new Item() {
                     name = JSONParser.ReadString(json_item, "name", null),
                     text = JSONParser.ReadString(json_item, "text", null),
+                    model = JSONParser.ReadString(json_item, "model", null),
                     hidden = JSONParser.ReadBoolean(json_item, "hidden", false),
                     description = JSONParser.ReadString(json_item, "description", null),
                     texture_scale = (float)JSONParser.ReadNumberDouble(json_item, "textureScale", 0.0),

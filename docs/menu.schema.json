@@ -38,6 +38,10 @@
                     "type": ["string", "null"],
                     "default": null
                 },
+                "model": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
                 "placement": {
                     "$ref": "#/definitions/Placement"
                 },

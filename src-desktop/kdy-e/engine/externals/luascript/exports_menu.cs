@@ -86,7 +86,7 @@ namespace Engine.Externals.LuaScriptInterop {
                         mm.items[i].has_font_color = LuaTableHelpers.HasTableField(L, idx4, "font_color", LuaType.TNUMBER);
                         mm.items[i].font_color = (uint)LuaTableHelpers.GetFieldInteger(L, idx4, "font_color", 0x000000);
                         mm.items[i].text = LuaTableHelpers.GetFieldString(L, idx4, "text", null);
-                        mm.items[i].modelholder = LuaTableHelpers.GetFieldString(L, idx4, "modelholder", null);
+                        mm.items[i].model = LuaTableHelpers.GetFieldString(L, idx4, "model", null);
                         mm.items[i].texture_scale = (float)LuaTableHelpers.GetFieldNumber(L, idx4, "texture_scale", Double.NaN);
                         mm.items[i].name = LuaTableHelpers.GetFieldString(L, idx4, "name", null);
                         mm.items[i].anim_selected = LuaTableHelpers.GetFieldString(L, idx4, "anim_selected", null);
@@ -96,7 +96,6 @@ namespace Engine.Externals.LuaScriptInterop {
                         mm.items[i].anim_rollback = LuaTableHelpers.GetFieldString(L, idx4, "anim_rollback", null);
                         mm.items[i].anim_in = LuaTableHelpers.GetFieldString(L, idx4, "anim_in", null);
                         mm.items[i].anim_out = LuaTableHelpers.GetFieldString(L, idx4, "anim_out", null);
-                        mm.items[i].gap = (float)LuaTableHelpers.GetFieldNumber(L, idx4, "gap", Double.NaN);
                         mm.items[i].hidden = LuaTableHelpers.GetFieldBoolean(L, idx4, "hidden", false);
                         mm.items[i].description = LuaTableHelpers.GetFieldString(L, idx4, "description", null);
 

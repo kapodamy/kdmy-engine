@@ -183,7 +183,7 @@ static MenuManifest menumanifest_as_object_JS(MenuManifest mm) {
         kdmy_write_prop_boolean(items, "has_font_color", mm->items[i].has_font_color);
         kdmy_write_prop_integer(items, "font_color", (int32_t)mm->items[i].font_color);
         kdmy_write_prop_string(items, "text", mm->items[i].text);
-        kdmy_write_prop_string(items, "modelholder", mm->items[i].modelholder);
+        kdmy_write_prop_string(items, "model", mm->items[i].model);
         kdmy_write_prop_float(items, "texture_scale", mm->items[i].texture_scale);
         kdmy_write_prop_string(items, "name", mm->items[i].name);
         kdmy_write_prop_string(items, "anim_selected", mm->items[i].anim_selected);
@@ -193,7 +193,6 @@ static MenuManifest menumanifest_as_object_JS(MenuManifest mm) {
         kdmy_write_prop_string(items, "anim_rollback", mm->items[i].anim_rollback);
         kdmy_write_prop_string(items, "anim_in", mm->items[i].anim_in);
         kdmy_write_prop_string(items, "anim_out", mm->items[i].anim_out);
-        kdmy_write_prop_float(items, "gap", mm->items[i].gap);
         kdmy_write_prop_boolean(items, "hidden", mm->items[i].hidden);
         kdmy_write_prop_string(items, "description", mm->items[i].description);
 
@@ -357,7 +356,7 @@ static MenuManifest table_to_menumanifest(lua_State* L, int idx) {
                 mm->items[i].has_font_color = HAS_TABLE_FIELD(L, idx4, "font_color", LUA_TNUMBER);
                 mm->items[i].font_color = (uint32_t)GET_FIELD_INTEGER(L, idx4, "font_color", 0x000000);
                 mm->items[i].text = GET_FIELD_STRING(L, idx4, "text", NULL);
-                mm->items[i].modelholder = GET_FIELD_STRING(L, idx4, "modelholder", NULL);
+                mm->items[i].model = GET_FIELD_STRING(L, idx4, "model", NULL);
                 mm->items[i].texture_scale = (float)GET_FIELD_NUMBER(L, idx4, "texture_scale", NAN_DOUBLE);
                 mm->items[i].name = GET_FIELD_STRING(L, idx4, "name", NULL);
                 mm->items[i].anim_selected = GET_FIELD_STRING(L, idx4, "anim_selected", NULL);
@@ -367,7 +366,6 @@ static MenuManifest table_to_menumanifest(lua_State* L, int idx) {
                 mm->items[i].anim_rollback = GET_FIELD_STRING(L, idx4, "anim_rollback", NULL);
                 mm->items[i].anim_in = GET_FIELD_STRING(L, idx4, "anim_in", NULL);
                 mm->items[i].anim_out = GET_FIELD_STRING(L, idx4, "anim_out", NULL);
-                mm->items[i].gap = (float)GET_FIELD_NUMBER(L, idx4, "gap", NAN_DOUBLE);
                 mm->items[i].hidden = GET_FIELD_BOOLEAN(L, idx4, "hidden", false);
                 mm->items[i].description = GET_FIELD_STRING(L, idx4, "description", NULL);
 
