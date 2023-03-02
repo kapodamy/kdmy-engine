@@ -8,8 +8,8 @@
 		"stage": "limo/layout.xml",
 		"script": "limo/week4.lua"
 	},
-	"tracks": [
-        { "name": "Satin Panties", "chart": "charts/satin-panties.json", "song": "songs/satin-panties.ogg" },
+	"songs": [
+        { "name": "Satin Panties", "chart": "charts/satin-panties.json", "file": "songs/satin-panties.ogg" },
         { "name": "High" },
         { "name": "Milf" }
 	]

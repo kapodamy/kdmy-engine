@@ -28,8 +28,8 @@ const UI_LAYOUT_WIDESCREEN = "/assets/common/image/week-round/ui.xml";
 const UI_LAYOUT_DREAMCAST = "/assets/common/image/week-round/ui~dreamcast.xml";
 const UI_STRUMS_LAYOUT_PLACEHOLDER = { x: 0, y: 0, z: 100, width: 300, height: 54 };
 const UI_STUB_LAYOUT_PLACEHOLDER = { x: 0, y: 0, z: -1, width: 100, height: 100 };
-const UI_TRACKINFO_FORMAT = "$s $s[$s] {kdy $s}";
-const UI_TRACKINFO_ALT_SUFFIX = "(alt) ";
+const UI_SONGINFO_FORMAT = "$s $s[$s] {kdy $s}";
+const UI_SONGINFO_ALT_SUFFIX = "(alt) ";
 
 const WEEKROUND_CHARACTER_PREFIX = "character_";
 
@@ -120,15 +120,15 @@ const CHARACTERTYPE = {
  * @property {number} streakcounter_numbergap
  * @property {number} streakcounter_delay
  * @property {bool} rankingcounter_percentonly
- * @property {number} trackinfo_x
- * @property {number} trackinfo_y
- * @property {number} trackinfo_z
- * @property {number} trackinfo_maxwidth
- * @property {number} trackinfo_maxheight
- * @property {number} trackinfo_alignvertical
- * @property {number} trackinfo_alignhorinzontal
- * @property {number} trackinfo_fontsize
- * @property {number} trackinfo_fontcolor
+ * @property {number} songinfo_x
+ * @property {number} songinfo_y
+ * @property {number} songinfo_z
+ * @property {number} songinfo_maxwidth
+ * @property {number} songinfo_maxheight
+ * @property {number} songinfo_alignvertical
+ * @property {number} songinfo_alignhorinzontal
+ * @property {number} songinfo_fontsize
+ * @property {number} songinfo_fontcolor
  * @property {number} countdown_height
  * @property {number} songprogressbar_x
  * @property {number} songprogressbar_y
@@ -168,7 +168,7 @@ const CHARACTERTYPE = {
  * @property {string} difficult
  * @property {string} default_boyfriend
  * @property {string} default_girlfriend
- * @property {bool} single_track
+ * @property {bool} single_song
  * 
  * @property {object} weekinfo
  * 
@@ -220,7 +220,7 @@ const CHARACTERTYPE = {
  * @property {object} streakcounter
  * @property {object} healthbar
  * @property {object} roundstats
- * @property {object} trackinfo
+ * @property {object} songinfo
  * @property {object} countdown
  * @property {object} weekgameover
  * @property {object} weekpause
@@ -243,8 +243,8 @@ const CHARACTERTYPE = {
  * @property {PlayerStruct[]} players
  * @property {number} players_size
  * 
- * @property {number} track_index
- * @property {string} track_difficult
+ * @property {number} song_index
+ * @property {string} song_difficult
  * @property {number} round_duration
  * 
  * @property {ChartEvent[]} events
@@ -296,7 +296,7 @@ async function week_destroy(/** @type {RoundContext} */ roundcontext, gameplayma
     if (roundcontext.script) weekscript_destroy(roundcontext.script);
     if (roundcontext.countdown) countdown_destroy(roundcontext.countdown);
     if (roundcontext.girlfriend) character_destroy(roundcontext.girlfriend);
-    if (roundcontext.trackinfo) textsprite_destroy(roundcontext.trackinfo);
+    if (roundcontext.songinfo) textsprite_destroy(roundcontext.songinfo);
     if (roundcontext.weekgameover) week_gameover_destroy(roundcontext.weekgameover);
     if (roundcontext.weekpause) await week_pause_destroy(roundcontext.weekpause);
     if (roundcontext.screen_background) sprite_destroy(roundcontext.screen_background);
@@ -344,7 +344,7 @@ async function week_destroy(/** @type {RoundContext} */ roundcontext, gameplayma
 }
 
 
-async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf, gameplaymanifest_src, single_track_index) {
+async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf, gameplaymanifest_src, single_song_index) {
 
     sh4matrix_clear(WEEKROUND_UI_MATRIX);
     sh4matrix_clear(WEEKROUND_UI_MATRIX_CAMERA);
@@ -356,7 +356,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         difficult: difficult,
         default_boyfriend: default_bf,
         default_girlfriend: default_gf,
-        single_track: single_track_index >= 0,
+        single_song: single_song_index >= 0,
 
         layout_strums: null,
         layout_strums_size: 0,
@@ -394,15 +394,15 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             streakcounter_numbergap: 0,
             streakcounter_delay: 0,
             rankingcounter_percentonly: 0,
-            trackinfo_x: 0,
-            trackinfo_y: 0,
-            trackinfo_z: 0,
-            trackinfo_maxwidth: -1,
-            trackinfo_maxheight: -1,
-            trackinfo_alignvertical: ALIGN_START,
-            trackinfo_alignhorinzontal: ALIGN_START,
-            trackinfo_fontcolor: 0x00,
-            trackinfo_fontsize: 0x00,
+            songinfo_x: 0,
+            songinfo_y: 0,
+            songinfo_z: 0,
+            songinfo_maxwidth: -1,
+            songinfo_maxheight: -1,
+            songinfo_alignvertical: ALIGN_START,
+            songinfo_alignhorinzontal: ALIGN_START,
+            songinfo_fontcolor: 0x00,
+            songinfo_fontsize: 0x00,
             countdown_height: 0,
             songprogressbar_x: 0,
             songprogressbar_y: 0,
@@ -435,7 +435,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         playerstats_index: -1,
         healthwatcher: healthwatcher_init(),
         countdown: null,
-        trackinfo: null,
+        songinfo: null,
         weekgameover: null,
         weekpause: null,
         weekresult: null,
@@ -468,9 +468,9 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         },
         girlfriend: null,
 
-        track_index: 0,
+        song_index: 0,
         round_duration: -1,
-        track_difficult: difficult,
+        song_difficult: difficult,
 
         events: null,
         events_size: 0,
@@ -525,7 +525,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
     // pause menu
     roundcontext.weekpause = await week_pause_init();
-    // track/week stats
+    // song/week stats
     roundcontext.weekresult = week_result_init();
     // messagebox
     roundcontext.messagebox = await messagebox_init();
@@ -556,34 +556,34 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         return 1;
     }
 
-    // step 2: initialize the first track (round n° 1)
-    roundcontext.track_index = 0;// this is very important
+    // step 2: initialize the first song (round n° 1)
+    roundcontext.song_index = 0;// this is very important
     initparams.gameplaymanifest = gameplaymanifest;
 
     let gameover = 0;
     let retry = 0;
     let mainmenu = 0;
     let weekselector = 0;
-    let tracks_attempts = new Array(gameplaymanifest.tracks_size);
+    let songs_attempts = new Array(gameplaymanifest.songs_size);
     let first_init = 1;
     let reject_completed = false;
-    let last_track = gameplaymanifest.tracks_size - 1;
-    let single_track = single_track_index >= 0;
+    let last_song = gameplaymanifest.songs_size - 1;
+    let single_song = single_song_index >= 0;
 
-    for (let i = 0; i < gameplaymanifest.tracks_size; i++) tracks_attempts[i] = 0;
+    for (let i = 0; i < gameplaymanifest.songs_size; i++) songs_attempts[i] = 0;
 
-    if (single_track) {
-        if (single_track_index > gameplaymanifest.tracks_size) {
-            console.error("week_main() single_track_index is out of bounds, check your gameplay manifest");
+    if (single_song) {
+        if (single_song_index > gameplaymanifest.songs_size) {
+            console.error("week_main() single_song_index is out of bounds, check your gameplay manifest");
             gameplaymanifest_destroy(gameplaymanifest);
-            tracks_attempts = undefined;
+            songs_attempts = undefined;
             return 1;
         }
-        roundcontext.track_index = single_track_index;
+        roundcontext.song_index = single_song_index;
     }
 
     // step 3: start the round cycle
-    while (roundcontext.track_index < gameplaymanifest.tracks_size) {
+    while (roundcontext.song_index < gameplaymanifest.songs_size) {
         beatwatcher_global_set_timestamp(0);
 
         if (!retry) {
@@ -613,7 +613,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
         if (first_init) {
             if (roundcontext.script) {
-                await weekscript_notify_weekinit(roundcontext.script, single_track ? single_track_index : -1);
+                await weekscript_notify_weekinit(roundcontext.script, single_song ? single_song_index : -1);
                 await week_halt(roundcontext, 1);
             }
             first_init = 0;
@@ -641,9 +641,9 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
         // check if necessary show dialogue if an dialog text is provided
         let show_dialog = 0;
-        let dialog_on_freeplay = !gameplaymanifest.tracks[roundcontext.track_index].dialog_ignore_on_freeplay;
-        if (!retry && (!single_track || (single_track && dialog_on_freeplay))) {
-            let dialog_text = gameplaymanifest.tracks[roundcontext.track_index].dialog_text;
+        let dialog_on_freeplay = !gameplaymanifest.songs[roundcontext.song_index].dialog_ignore_on_freeplay;
+        if (!retry && (!single_song || (single_song && dialog_on_freeplay))) {
+            let dialog_text = gameplaymanifest.songs[roundcontext.song_index].dialog_text;
             if (!dialog_text) {
                 // nothing to do
             } else if (roundcontext.dialogue == null) {
@@ -657,7 +657,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         }
 
         // actual gameplay is here
-        let current_track_index = roundcontext.track_index;
+        let current_song_index = roundcontext.song_index;
         let round_result = await week_round(roundcontext, retry, show_dialog);
 
         retry = 0;
@@ -675,7 +675,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             roundcontext.scriptcontext.force_end_flag = 0;
         }
 
-        if ((round_result == 0 && roundcontext.track_index != last_track) || round_result == 2) {
+        if ((round_result == 0 && roundcontext.song_index != last_song) || round_result == 2) {
             if (roundcontext.settings.layout_rollback) {
                 layout_stop_all_triggers(layout);
                 layout_trigger_any(layout, null);
@@ -698,7 +698,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             break;
         } else if (round_result == 2) {
             // round loose, retry
-            tracks_attempts[roundcontext.track_index]++;
+            songs_attempts[roundcontext.song_index]++;
             if (roundcontext.songplayer) {
                 songplayer_seek(roundcontext.songplayer, 0.0);
                 songplayer_mute(roundcontext.songplayer, 0);
@@ -706,10 +706,10 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
             week_toggle_states(roundcontext, gameplaymanifest);
 
-            if (current_track_index != roundcontext.track_index) continue;
-            if (roundcontext.track_difficult != initparams.difficult) {
-                reject_completed = current_track_index > 0;
-                initparams.difficult = roundcontext.track_difficult;
+            if (current_song_index != roundcontext.song_index) continue;
+            if (roundcontext.song_difficult != initparams.difficult) {
+                reject_completed = current_song_index > 0;
+                initparams.difficult = roundcontext.song_difficult;
                 continue;
             }
 
@@ -718,10 +718,10 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             continue;
         }
 
-        if (single_track) break;// week launched from freeplaymenu
+        if (single_song) break;// week launched from freeplaymenu
 
         // round completed, next one
-        roundcontext.track_index++;
+        roundcontext.song_index++;
         retry = 0;
     }
 
@@ -743,7 +743,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         }
 
         // dispose all allocated resources
-        tracks_attempts = undefined;
+        songs_attempts = undefined;
         await week_destroy(roundcontext, gameplaymanifest);
 
         // if false, goto weekselector
@@ -765,17 +765,17 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     // show the whole week stats and wait for the player to press START to return
     if (!gameover) {
         let total_attempts = 0;
-        let tracks_count = single_track ? 1 : gameplaymanifest.tracks_size;
+        let songs_count = single_song ? 1 : gameplaymanifest.songs_size;
 
-        for (let i = 0; i < gameplaymanifest.tracks_size; i++) total_attempts += tracks_attempts[i];
+        for (let i = 0; i < gameplaymanifest.songs_size; i++) total_attempts += songs_attempts[i];
 
         if (!roundcontext.scriptcontext.no_week_end_result_screen) {
             await week_result_helper_show_summary(
-                roundcontext.weekresult, roundcontext, total_attempts, tracks_count, reject_completed
+                roundcontext.weekresult, roundcontext, total_attempts, songs_count, reject_completed
             );
         }
         if (roundcontext.script) {
-            await weekscript_notify_afterresults(roundcontext.script, total_attempts, tracks_count, reject_completed);
+            await weekscript_notify_afterresults(roundcontext.script, total_attempts, songs_count, reject_completed);
             await week_halt(roundcontext, 1);
         }
     }
@@ -789,7 +789,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             total_score += playerstats_get_score(roundcontext.players[i].playerstats);
         }
 
-        funkinsave_set_week_score(weekinfo.name, roundcontext.track_difficult, total_score);
+        funkinsave_set_week_score(weekinfo.name, roundcontext.song_difficult, total_score);
 
         // keep displaying the stage layout until the save is done
         messagebox_use_small_size(roundcontext.messagebox, 1);
@@ -814,7 +814,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     let show_credits = !gameover && roundcontext.settings.show_credits;
 
     // dispose all allocated resources
-    tracks_attempts = undefined;
+    songs_attempts = undefined;
     await week_destroy(roundcontext, gameplaymanifest);
 
     if (show_credits) {
@@ -936,20 +936,20 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     // pick streakcounter and rankingcounter values
     week_internal_pick_counters_values_from_layout(roundcontext);
 
-    placeholder = layout_get_placeholder(layout, "ui_track_info");
+    placeholder = layout_get_placeholder(layout, "ui_song_info");
     if (!placeholder) {
-        console.error("missing layout ui_track_info placeholder");
+        console.error("missing layout ui_song_info placeholder");
         placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
     }
-    ui.trackinfo_x = placeholder.x;
-    ui.trackinfo_y = placeholder.y;
-    ui.trackinfo_z = placeholder.z;
-    ui.trackinfo_maxwidth = placeholder.width;
-    ui.trackinfo_maxheight = placeholder.height;
-    ui.trackinfo_alignvertical = placeholder.align_vertical;
-    ui.trackinfo_alignhorinzontal = placeholder.align_horizontal;
-    ui.trackinfo_fontsize = layout_get_attached_value(layout, "ui_track_info_fontSize", LAYOUT_TYPE_FLOAT, 10);
-    ui.trackinfo_fontcolor = layout_get_attached_value(layout, "ui_track_info_fontColor", LAYOUT_TYPE_HEX, 0xFFFFFF);
+    ui.songinfo_x = placeholder.x;
+    ui.songinfo_y = placeholder.y;
+    ui.songinfo_z = placeholder.z;
+    ui.songinfo_maxwidth = placeholder.width;
+    ui.songinfo_maxheight = placeholder.height;
+    ui.songinfo_alignvertical = placeholder.align_vertical;
+    ui.songinfo_alignhorinzontal = placeholder.align_horizontal;
+    ui.songinfo_fontsize = layout_get_attached_value(layout, "ui_song_info_fontSize", LAYOUT_TYPE_FLOAT, 10);
+    ui.songinfo_fontcolor = layout_get_attached_value(layout, "ui_song_info_fontColor", LAYOUT_TYPE_HEX, 0xFFFFFF);
 
     // initialize adaptation of the UI elements in the stage layout
     week_internal_check_screen_resolution(roundcontext, true);
@@ -1002,11 +1002,11 @@ function week_pick_inverted_ui_layout_values(/** @type {RoundContext} */ roundco
         ui.songprogressbar_z = placeholder.z;
     }
 
-    placeholder = layout_get_placeholder(layout, "ui_track_info_inverted");
+    placeholder = layout_get_placeholder(layout, "ui_song_info_inverted");
     if (placeholder != null) {
-        ui.trackinfo_x = placeholder.x;
-        ui.trackinfo_y = placeholder.y;
-        ui.trackinfo_z = placeholder.z;
+        ui.songinfo_x = placeholder.x;
+        ui.songinfo_y = placeholder.y;
+        ui.songinfo_z = placeholder.z;
     }
 }
 
@@ -1014,15 +1014,15 @@ function week_pick_inverted_ui_layout_values(/** @type {RoundContext} */ roundco
 async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gameplaymanifest) {
     //
     // Note:
-    //      Some UI components can be redefined in each week round (track). If the
-    //      track does not specify this, the UI component/s are initialized to thier
+    //      Some UI components can be redefined in each week round (song). If the
+    //      song does not specify this, the UI component/s are initialized to thier
     //      default settings.
     //
-    //      Each track can not use the defined UI component/s of previous tracks, if
-    //      those tracks does not have thier own definitions it will reinitialized to
+    //      Each song can not use the defined UI component/s of previous songs, if
+    //      those songs does not have thier own definitions it will reinitialized to
     //      default.
     //
-    const trackmanifest = gameplaymanifest.tracks[roundcontext.track_index];
+    const songmanifest = gameplaymanifest.songs[roundcontext.song_index];
     const initparams = roundcontext.initparams;
 
     let updated_ui = 0;
@@ -1030,10 +1030,10 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     let updated_stage = 0;
 
     // initialize layout
-    if (trackmanifest.has_stage) {
+    if (songmanifest.has_stage) {
         updated_stage = 1;
         roundcontext.stage_from_default = 0;
-        await week_init_stage(roundcontext, trackmanifest.stage);
+        await week_init_stage(roundcontext, songmanifest.stage);
     } else if (!roundcontext.layout || !roundcontext.stage_from_default) {
         updated_stage = 1;
         roundcontext.stage_from_default = 1;
@@ -1041,28 +1041,28 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     }
 
     // initialize script/stagescript
-    if (trackmanifest.has_script) {
+    if (songmanifest.has_script) {
         roundcontext.script_from_default = 0;
-        await week_init_script(roundcontext, trackmanifest.script);
+        await week_init_script(roundcontext, songmanifest.script);
     } else if (!roundcontext.script || !roundcontext.script_from_default) {
         roundcontext.script_from_default = 1;
         await week_init_script(roundcontext, gameplaymanifest.default.script);
     }
 
     // initialize dialogue
-    if (trackmanifest.dialogue_params) {
+    if (songmanifest.dialogue_params) {
         roundcontext.dialogue_from_default = 0;
         await week_init_dialogue(
             roundcontext,
-            trackmanifest.dialogue_params,
-            trackmanifest.dialog_ignore_on_freeplay && initparams.single_track
+            songmanifest.dialogue_params,
+            songmanifest.dialog_ignore_on_freeplay && initparams.single_song
         );
     } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
         roundcontext.dialogue_from_default = 1;
         await week_init_dialogue(
             roundcontext,
             gameplaymanifest.default.dialogue_params,
-            trackmanifest.dialog_ignore_on_freeplay && initparams.single_track
+            songmanifest.dialog_ignore_on_freeplay && initparams.single_song
         );
     }
 
@@ -1074,8 +1074,8 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     }
 
     // initialize ui
-    if (trackmanifest.has_ui_layout) {
-        let src = trackmanifest.ui_layout;
+    if (songmanifest.has_ui_layout) {
+        let src = songmanifest.ui_layout;
         if (!src) src = gameplaymanifest.default.ui_layout;
 
         await week_init_ui_layout(src, initparams, roundcontext);
@@ -1109,7 +1109,7 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
         updated_distributions_or_players = 1;
     }
 
-    //let multiplier = roundcontext.track_difficult == FUNKIN_DIFFICULT_EASY ? 1.25 : 1.0;
+    //let multiplier = roundcontext.song_difficult == FUNKIN_DIFFICULT_EASY ? 1.25 : 1.0;
     //for (let i = 0; i < roundcontext.players_size; i++) {
     //    if (roundcontext.players[i].strums)
     //        strums_set_marker_duration_multiplier(roundcontext.players[i].strums, multiplier);
@@ -1148,10 +1148,10 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     }
 
     // initialize girlfriend
-    if (trackmanifest.has_girlfriend) {
+    if (songmanifest.has_girlfriend) {
         updated_stage = 1;
         roundcontext.girlfriend_from_default = 0;
-        await week_init_girlfriend(roundcontext, trackmanifest.girlfriend);
+        await week_init_girlfriend(roundcontext, songmanifest.girlfriend);
     } else if (!roundcontext.girlfriend || !roundcontext.girlfriend_from_default) {
         updated_stage = 1;
         roundcontext.girlfriend_from_default = 1;
@@ -1159,17 +1159,17 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     }
 
     // add additional pause menu
-    if (trackmanifest.has_pause_menu) {
+    if (songmanifest.has_pause_menu) {
         roundcontext.pause_menu_from_default = 0;
-        await week_pause_external_set_menu(roundcontext.weekpause, trackmanifest.pause_menu);
+        await week_pause_external_set_menu(roundcontext.weekpause, songmanifest.pause_menu);
     } else if (!roundcontext.pause_menu_from_default) {
         roundcontext.pause_menu_from_default = 1;
         await week_pause_external_set_menu(roundcontext.weekpause, gameplaymanifest.default.pause_menu);
     }
 
-    // initialize the song tracks
+    // initialize the song
     if (roundcontext.songplayer) songplayer_destroy(roundcontext.songplayer);
-    roundcontext.songplayer = await songplayer_init(trackmanifest.song, initparams.alt_tracks);
+    roundcontext.songplayer = await songplayer_init(songmanifest.file, initparams.alt_tracks);
 
     // initialize the gameover screen
     await week_init_ui_gameover(roundcontext);
@@ -1178,10 +1178,10 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     if (updated_ui || updated_stage) await week_init_ui_cosmetics(roundcontext);
 
     textsprite_set_text_formated(
-        roundcontext.trackinfo,
-        UI_TRACKINFO_FORMAT,
-        trackmanifest.name,
-        initparams.alt_tracks ? UI_TRACKINFO_ALT_SUFFIX : null,
+        roundcontext.songinfo,
+        UI_SONGINFO_FORMAT,
+        songmanifest.name,
+        initparams.alt_tracks ? UI_SONGINFO_ALT_SUFFIX : null,
         initparams.difficult,
         ENGINE_VERSION
     );
@@ -1195,7 +1195,7 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
     week_toggle_states(roundcontext, gameplaymanifest);
     week_update_bpm(roundcontext, roundcontext.settings.original_bpm);
     week_update_speed(roundcontext, roundcontext.settings.original_speed);
-    roundcontext.round_duration = trackmanifest.duration;
+    roundcontext.round_duration = songmanifest.duration;
 }
 
 async function week_init_healthbar(roundcontext, gameplaymanifest, force_update) {
@@ -1204,9 +1204,9 @@ async function week_init_healthbar(roundcontext, gameplaymanifest, force_update)
     let healthbarmanifest = gameplaymanifest.default.healthbar;
     const healthbarparams = roundcontext.healthbarparams;
 
-    if (gameplaymanifest.tracks[roundcontext.track_index].healthbar) {
+    if (gameplaymanifest.songs[roundcontext.song_index].healthbar) {
         roundcontext.healthbar_from_default = 0;
-        healthbarmanifest = gameplaymanifest.tracks[roundcontext.track_index].healthbar;
+        healthbarmanifest = gameplaymanifest.songs[roundcontext.song_index].healthbar;
     } else if (force_update || !roundcontext.healthbar || !roundcontext.healthbar_from_default) {
         roundcontext.healthbar_from_default = 1;
     } else {
@@ -1530,9 +1530,9 @@ async function week_init_script(/**@type {RoundContext}*/roundcontext, script_sr
 
 async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext, gameplaymanifest, new_ui) {
     const initparams = roundcontext.initparams;
-    const track_index = roundcontext.track_index;
+    const song_index = roundcontext.song_index;
 
-    let chart = await chart_init(gameplaymanifest.tracks[track_index].chart, initparams.difficult);
+    let chart = await chart_init(gameplaymanifest.songs[song_index].chart, initparams.difficult);
 
     // keep just in case the same textures are used
     let old_players = roundcontext.players;
@@ -1546,21 +1546,21 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
     roundcontext.settings.original_bpm = chart.bpm;
     roundcontext.settings.original_speed = chart.speed;
 
-    // Pick players & strum distributions from default or current track
-    let distributions_from_default = !gameplaymanifest.tracks[track_index].has_distributions;
-    let players_from_default = !gameplaymanifest.tracks[track_index].has_players;
+    // Pick players & strum distributions from default or current song
+    let distributions_from_default = !gameplaymanifest.songs[song_index].has_distributions;
+    let players_from_default = !gameplaymanifest.songs[song_index].has_players;
     let players = gameplaymanifest.default.players;
     let players_size = gameplaymanifest.default.players_size;
     let distributions = gameplaymanifest.default.distributions;
     let distributions_size = gameplaymanifest.default.distributions_size;
 
-    if (gameplaymanifest.tracks[track_index].has_players) {
-        players = gameplaymanifest.tracks[track_index].players;
-        players_size = gameplaymanifest.tracks[track_index].players_size;
+    if (gameplaymanifest.songs[song_index].has_players) {
+        players = gameplaymanifest.songs[song_index].players;
+        players_size = gameplaymanifest.songs[song_index].players_size;
     }
-    if (gameplaymanifest.tracks[track_index].has_distributions) {
-        distributions = gameplaymanifest.tracks[track_index].distributions;
-        distributions_size = gameplaymanifest.tracks[track_index].distributions_size;
+    if (gameplaymanifest.songs[song_index].has_distributions) {
+        distributions = gameplaymanifest.songs[song_index].distributions;
+        distributions_size = gameplaymanifest.songs[song_index].distributions_size;
     }
 
     //
@@ -1904,7 +1904,7 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
     let old_countdown = roundcontext.countdown;
     let old_songprogressbar = roundcontext.songprogressbar;
     if (roundcontext.roundstats) roundstats_destroy(roundcontext.roundstats);
-    if (roundcontext.trackinfo) textsprite_destroy(roundcontext.trackinfo);
+    if (roundcontext.songinfo) textsprite_destroy(roundcontext.songinfo);
 
     // step 1: initialize all "cosmetic" components
     let modelholder_rankingstreak = await modelholder_init(UI_RANKINGCOUNTER_MODEL);
@@ -1992,27 +1992,27 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
         roundcontext.countdown, initparams.ui_layout_width, initparams.ui_layout_height
     );
 
-    // step 1f: initialize trackinfo
-    roundcontext.trackinfo = textsprite_init2(
-        initparams.font, initparams.ui.trackinfo_fontsize, initparams.ui.trackinfo_fontcolor
+    // step 1f: initialize songinfo
+    roundcontext.songinfo = textsprite_init2(
+        initparams.font, initparams.ui.songinfo_fontsize, initparams.ui.songinfo_fontcolor
     );
     textsprite_set_align(
-        roundcontext.trackinfo,
-        initparams.ui.trackinfo_alignvertical,
-        initparams.ui.trackinfo_alignhorinzontal
+        roundcontext.songinfo,
+        initparams.ui.songinfo_alignvertical,
+        initparams.ui.songinfo_alignhorinzontal
     );
     textsprite_set_max_draw_size(
-        roundcontext.trackinfo,
-        initparams.ui.trackinfo_maxwidth,
-        initparams.ui.trackinfo_maxheight
+        roundcontext.songinfo,
+        initparams.ui.songinfo_maxwidth,
+        initparams.ui.songinfo_maxheight
     );
     textsprite_set_draw_location(
-        roundcontext.trackinfo, initparams.ui.trackinfo_x, initparams.ui.trackinfo_y
+        roundcontext.songinfo, initparams.ui.songinfo_x, initparams.ui.songinfo_y
     );
-    textsprite_set_z_index(roundcontext.trackinfo, initparams.ui.trackinfo_z);
-    textsprite_border_enable(roundcontext.trackinfo, 1);
-    textsprite_border_set_size(roundcontext.trackinfo, ROUNDSTATS_FONT_BORDER_SIZE);
-    textsprite_border_set_color_rgba8(roundcontext.trackinfo, 0x000000FF);// black
+    textsprite_set_z_index(roundcontext.songinfo, initparams.ui.songinfo_z);
+    textsprite_border_enable(roundcontext.songinfo, 1);
+    textsprite_border_set_size(roundcontext.songinfo, ROUNDSTATS_FONT_BORDER_SIZE);
+    textsprite_border_set_color_rgba8(roundcontext.songinfo, 0x000000FF);// black
 
     // step 2: dispose all modelholders used
     modelholder_destroy(modelholder_rankingstreak);
@@ -2129,7 +2129,7 @@ function week_place_in_layout(roundcontext) {
         layout, 3, VERTEX_DRAWABLE, countdown_get_drawable(roundcontext.countdown), ui1
     );
     layout_external_vertex_set_entry(
-        layout, 4, VERTEX_TEXTSPRITE, roundcontext.trackinfo, ui1
+        layout, 4, VERTEX_TEXTSPRITE, roundcontext.songinfo, ui1
     );
     layout_external_vertex_set_entry(
         layout, 5, VERTEX_DRAWABLE, week_gameover_get_drawable(roundcontext.weekgameover), ui2
@@ -2189,22 +2189,22 @@ function week_place_in_layout(roundcontext) {
 }
 
 function week_toggle_states(roundcontext, gameplaymanifest) {
-    const track = gameplaymanifest.tracks[roundcontext.track_index];
+    const song = gameplaymanifest.songs[roundcontext.song_index];
 
-    if (track.has_selected_state_name) {
+    if (song.has_selected_state_name) {
         for (let i = 0; i < roundcontext.players_size; i++) {
             if (roundcontext.players[i].strums)
-                strums_state_toggle(roundcontext.players[i].strums, track.selected_state_name);
+                strums_state_toggle(roundcontext.players[i].strums, song.selected_state_name);
             if (roundcontext.players[i].character)
-                character_state_toggle(roundcontext.players[i].character, track.selected_state_name);
+                character_state_toggle(roundcontext.players[i].character, song.selected_state_name);
         }
-        healthbar_state_toggle(roundcontext.healthbar, track.selected_state_name);
+        healthbar_state_toggle(roundcontext.healthbar, song.selected_state_name);
     }
 
-    let size = track.selected_state_name_per_player_size;
+    let size = song.selected_state_name_per_player_size;
     if (roundcontext.players_size < size) size = roundcontext.players_size;
     for (let i = 0; i < size; i++) {
-        const state_name = track.selected_state_name_per_player[i];
+        const state_name = song.selected_state_name_per_player[i];
         if (roundcontext.players[i].strums)
             strums_state_toggle(roundcontext.players[i].strums, state_name);
         if (roundcontext.players[i].character)
@@ -2684,17 +2684,17 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
         // ask for player decision
         let decision = await week_gameover_helper_ask_to_player(roundcontext.weekgameover, roundcontext);
-        let track_difficult = week_gameover_get_difficult(roundcontext.weekgameover);
+        let song_difficult = week_gameover_get_difficult(roundcontext.weekgameover);
         week_gameover_hide(roundcontext.weekgameover);
 
         // notify script and wait (if necessary)
         if (roundcontext.script) {
-            let change = roundcontext.track_difficult === track_difficult ? null : track_difficult;
+            let change = roundcontext.song_difficult === song_difficult ? null : song_difficult;
             await weekscript_notify_diedecision(roundcontext.script, decision, change);
             await week_halt(roundcontext, 1);
         }
 
-        roundcontext.track_difficult = track_difficult;
+        roundcontext.song_difficult = song_difficult;
 
         return decision;
     }
@@ -2967,8 +2967,8 @@ function week_ui_get_strums_count(/**@type {RoundContext}*/roundcontext) {
     return roundcontext.initparams.layout_strums_size;
 }
 
-function week_ui_get_trackinfo(/**@type {RoundContext}*/roundcontext) {
-    return roundcontext.trackinfo;
+function week_ui_get_round_textsprite(/**@type {RoundContext}*/roundcontext) {
+    return roundcontext.songinfo;
 }
 
 function week_ui_set_visibility(/**@type {RoundContext} */ roundcontext, visible) {
@@ -2980,11 +2980,11 @@ function week_get_current_chart_info(/**@type {RoundContext} */ roundcontext, ch
     chartinfo.speed = roundcontext.settings.camera_name_player;
 }
 
-function week_get_current_track_info(/**@type {RoundContext} */ roundcontext, trackinfo) {
-    if (!trackinfo) return;
-    trackinfo.name = roundcontext.initparams.gameplaymanifest.tracks[roundcontext.track_index].name;
-    trackinfo.difficult = roundcontext.track_difficult;
-    trackinfo.index = roundcontext.track_index;
+function week_get_current_song_info(/**@type {RoundContext} */ roundcontext, songinfo) {
+    if (!songinfo) return;
+    songinfo.name = roundcontext.initparams.gameplaymanifest.songs[roundcontext.song_index].name;
+    songinfo.difficult = roundcontext.song_difficult;
+    songinfo.index = roundcontext.song_index;
 }
 
 function week_change_character_camera_name(/**@type {RoundContext} */ roundcontext, opponent_or_player, new_name) {
@@ -3067,13 +3067,13 @@ function week_ui_get_streakcounter(/**@type {RoundContext} */ roundcontext) {
 function week_ui_get_strums(/**@type {RoundContext} */ roundcontext, strums_id) {
     const initparams = roundcontext.initparams;
     const gameplaymanifest = initparams.gameplaymanifest;
-    const track_index = roundcontext.track_index;
+    const song_index = roundcontext.song_index;
 
     let players = gameplaymanifest.default.players;
     let players_size = gameplaymanifest.default.players_size;
-    if (gameplaymanifest.tracks[track_index].has_players) {
-        players = gameplaymanifest.tracks[track_index].players;
-        players_size = gameplaymanifest.tracks[track_index].players_size;
+    if (gameplaymanifest.songs[song_index].has_players) {
+        players = gameplaymanifest.songs[song_index].players;
+        players_size = gameplaymanifest.songs[song_index].players_size;
     }
 
     for (let i = 0; i < players_size; i++) {
@@ -3173,9 +3173,9 @@ async function week_internal_load_gameplay_manifest(src) {
         return null;
     }
 
-    if (gameplaymanifest.tracks_size < 1) {
+    if (gameplaymanifest.songs_size < 1) {
         gameplaymanifest_destroy(gameplaymanifest);
-        console.error("week_main() no tracks defined, goodbye. File: " + src);
+        console.error("week_main() no songs defined, goodbye. File: " + src);
         return null;
     }
 

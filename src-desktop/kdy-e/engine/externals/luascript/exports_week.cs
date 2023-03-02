@@ -180,10 +180,10 @@ namespace Engine.Externals.LuaScriptInterop {
             return ExportsStreakCounter.script_streakcounter_new(L, ret);
         }
 
-        static int script_week_ui_get_trackinfo(LuaState L) {
+        static int script_week_ui_get_round_textsprite(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
-            TextSprite ret = Week.UIGetTrackinfo(roundcontext);
+            TextSprite ret = Week.UIGetRoundTextsprite(roundcontext);
 
             return ExportsTextSprite.script_textsprite_new(L, ret);
         }
@@ -331,13 +331,13 @@ namespace Engine.Externals.LuaScriptInterop {
             return 2;
         }
 
-        static int script_week_get_current_track_info(LuaState L) {
+        static int script_week_get_current_song_info(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
             string name;
             string difficult;
             int index;
-            Week.GetCurrentTrackInfo(roundcontext, out name, out difficult, out index);
+            Week.GetCurrentSongInfo(roundcontext, out name, out difficult, out index);
 
             L.lua_pushstring(name);
             L.lua_pushstring(difficult);
@@ -475,7 +475,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("week_ui_get_roundstats", script_week_ui_get_roundstats),
             new LuaTableFunction("week_ui_get_rankingcounter", script_week_ui_get_rankingcounter),
             new LuaTableFunction("week_ui_get_streakcounter", script_week_ui_get_streakcounter),
-            new LuaTableFunction("week_ui_get_trackinfo", script_week_ui_get_trackinfo),
+            new LuaTableFunction("week_ui_get_round_textsprite", script_week_ui_get_round_textsprite),
             new LuaTableFunction("week_ui_get_songprogressbar", script_week_ui_get_songprogressbar),
             new LuaTableFunction("week_ui_get_countdown", script_week_ui_get_countdown),
             new LuaTableFunction("week_ui_get_healthbar", script_week_ui_get_healthbar),
@@ -492,7 +492,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("week_get_playerstats", script_week_get_playerstats),
             new LuaTableFunction("week_get_songplayer", script_week_get_songplayer),
             new LuaTableFunction("week_get_current_chart_info", script_week_get_current_chart_info),
-            new LuaTableFunction("week_get_current_track_info", script_week_get_current_track_info),
+            new LuaTableFunction("week_get_current_song_info", script_week_get_current_song_info),
             new LuaTableFunction("week_change_character_camera_name", script_week_change_character_camera_name),
             new LuaTableFunction("week_disable_layout_rollback", script_week_disable_layout_rollback),
             new LuaTableFunction("week_override_common_folder", script_week_override_common_folder),

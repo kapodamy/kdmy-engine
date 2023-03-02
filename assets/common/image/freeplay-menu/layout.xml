@@ -15,12 +15,12 @@
             <Location x="0" y="0" z="1" />
             <Hide />
         </Action>
-        <Action name="track-background-set">
+        <Action name="song-background-set">
             <Show />
             <Location x="0" y="0" z="0" />
             <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
         </Action>
-        <Action name="track-background-hide">
+        <Action name="song-background-hide">
             <Hide />
         </Action>
     </Sprite>

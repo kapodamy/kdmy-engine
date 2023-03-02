@@ -837,7 +837,7 @@ namespace Engine.Game {
                 new SettingOption() {
                     name = "SHOW SONG PROGRESS BAR",
                     description = "Shows a progress bar near the strums makers.\n" +
-                                  "Indicates playback progress of the playing track",
+                                  "Indicates playback progress of the playing song",
                     is_bool = true,
                     value_bool = true,
                     ini_key = "song_progressbar"

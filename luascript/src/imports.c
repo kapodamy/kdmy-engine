@@ -144,11 +144,11 @@ void luascript_notify_weekleave(Luascript luascript) {
     lua_imported_fn(lua, FUNCTION, 0);
 }
 
-void luascript_notify_afterresults(Luascript luascript, int32_t total_attempts, int32_t tracks_count, bool reject_completed) {
+void luascript_notify_afterresults(Luascript luascript, int32_t total_attempts, int32_t songs_count, bool reject_completed) {
     FUNCTION(luascript, "f_afterresults");
 
     lua_pushinteger(lua, total_attempts);
-    lua_pushinteger(lua, tracks_count);
+    lua_pushinteger(lua, songs_count);
     lua_pushboolean(lua, reject_completed);
 
     lua_imported_fn(lua, FUNCTION, 3);

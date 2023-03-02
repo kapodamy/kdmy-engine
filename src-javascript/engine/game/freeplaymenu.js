@@ -103,7 +103,7 @@ async function freeplaymenu_main() {
         bg_info_width = draw_size[0];
     }
 
-    // step 3: count required tracks
+    // step 3: count required songs
     let songs = arraylist_init2(weeks_array.size * 3);
     for (let i = 0; i < weeks_array.size; i++) {
         const weekinfo = weeks_array.array[i];
@@ -119,7 +119,7 @@ async function freeplaymenu_main() {
             let is_song_locked = !funkinsave_contains_unlock_directive(song.freeplay_unlock_directive);
             if (should_hide && is_song_locked) continue;
 
-            let gameplaymanifest_index = song.freeplay_track_index_in_gameplaymanifest;
+            let gameplaymanifest_index = song.freeplay_song_index_in_gameplaymanifest;
             if (gameplaymanifest_index < 0) gameplaymanifest_index = j;
 
             arraylist_add(songs, {
@@ -137,12 +137,12 @@ async function freeplaymenu_main() {
     FREEPLAYMENU_MENU_SONGS.items = new Array(songs_size);
 
     for (let i = 0; i < songs_size; i++) {
-        let track = arraylist_get(songs, i);
-        let weekinfo = weeks_array.array[track.week_index];
+        let song = arraylist_get(songs, i);
+        let weekinfo = weeks_array.array[song.week_index];
 
         FREEPLAYMENU_MENU_SONGS.items[i] = {
             name: null,// unused
-            text: weekinfo.songs[track.song_index].name,
+            text: weekinfo.songs[song.song_index].name,
             placement: { x: 0, y: 0, dimmen: 0, gap: 0 },// unused
             anim_selected: null,// unused
             anim_choosen: null,// unused
@@ -543,9 +543,9 @@ async function freeplaymenu_internal_load_background_async(state) {
         if (sprite_anim) sprite_external_animation_set(state.background, sprite_anim);
 
         if (sprite_tex == null)
-            layout_trigger_any(state.layout, "track-background-hide");
+            layout_trigger_any(state.layout, "song-background-hide");
         else
-            layout_trigger_any(state.layout, "track-background-set");
+            layout_trigger_any(state.layout, "song-background-set");
     }
 
     if (modelholder) modelholder_destroy(modelholder);
@@ -767,8 +767,8 @@ async function freeplaymenu_internal_modding_notify_option(state, selected_or_ch
     return ret;
 }
 
-async function freeplaymenu_internal_modding_notify_event(state, difficult, alt_track) {
-    if (difficult && alt_track) {
+async function freeplaymenu_internal_modding_notify_event(state, difficult, alt_tracks) {
+    if (difficult && alt_tracks) {
         await modding_helper_notify_event(state.modding, state.map.is_locked ? "song-locked" : "song-not-locked");
     }
     if (difficult) {
@@ -779,7 +779,7 @@ async function freeplaymenu_internal_modding_notify_event(state, difficult, alt_
         else
             await modding_helper_notify_event(state.modding, null);
     }
-    if (alt_track) {
+    if (alt_tracks) {
         await modding_helper_notify_event(state.modding, state.use_alternative ? "tracks-alt" : "tracks-not-alt");
     }
 }

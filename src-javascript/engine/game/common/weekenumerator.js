@@ -163,7 +163,7 @@ async function weekenumerator_parse_week(week_name) {
                 freeplay_hide_if_week_locked: json_read_boolean(json_song, "freeplayHideIfWeekLocked", 0),
                 freeplay_hide_if_locked: json_read_boolean(json_song, "freeplayHideIfLocked", 0),
                 freeplay_gameplaymanifest: json_read_string(json_song, "freeplayGameplayManifest", null),
-                freeplay_track_index_in_gameplaymanifest: json_read_number(json_song, "freeplayTrackIndexInGameplayManifest", -1),
+                freeplay_song_index_in_gameplaymanifest: json_read_number(json_song, "freeplaySongIndexInGameplayManifest", -1),
                 freeplay_song_filename: await weekenumerator_parse_path(json_song, "freeplaySongFilename"),
                 freeplay_description: json_read_string(json_song, "freeplayDescription", null),
                 freeplay_seek_time: json_read_number(json_song, "freeplaySeekTime", NaN)

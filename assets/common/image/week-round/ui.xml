@@ -106,19 +106,19 @@
     <AttachValue name="ui_rankingcounter_accuracy_percent" type="boolean" value="false" />
 
 
-    <!-- ******************* TRACK NAME & DIFFICULTY DEFINITION ******************* -->
-    <Placeholder name="ui_track_info" x="8" y="700" z="101" />
+    <!-- ******************* SONG NAME & DIFFICULTY DEFINITION ******************* -->
+    <Placeholder name="ui_song_info" x="8" y="700" z="101" />
 
     <!-- rankingcounter additional parameters -->
-    <AttachValue name="ui_track_info_fontSize" type="float" value="16" />
-    <AttachValue name="ui_track_info_fontColor" type="hex" value="0xFFFFFF" />
+    <AttachValue name="ui_song_info_fontSize" type="float" value="16" />
+    <AttachValue name="ui_song_info_fontColor" type="hex" value="0xFFFFFF" />
 
 
     <!-- ******************* INVERTED DEFINITIONS ******************* -->
     <!-- Important: -->
     <!--    if the user enables the "inverted strum scrolling" option in settings menu -->
     <!--    the scroll direction is inverted keeping the declared orientation (vertical or horizontal). -->
-    <!--    UI elements should be moved are: song progressbar, strums, healthbar, roundstats and trackinfo -->
+    <!--    UI elements should be moved are: song progressbar, strums, healthbar, roundstats and songinfo -->
 	<!--    For this layout strums are inverted from UPSCROLL to DOWNSCROLL because the orientation is vertical. -->
 	<!--    In custom layouts with horizontal scrolling, this changes from RIGHTSCROLL to LEFTSCROLL -->
     <Placeholder name="ui_strums_inverted0" x="52" y="0" z="101" height="664" />
@@ -126,7 +126,7 @@
 	<Placeholder name="ui_songprogressbar_inverted" x="400" y="688" z="102" width="480" height="12" alignHorizontal="center" />
     <Placeholder name="ui_healthbar_inverted" x="340" y="72" z="100" width="600" height="20" />
     <Placeholder name="ui_roundstats_inverted" x="0" y="20" z="102" />
-    <Placeholder name="ui_track_info_inverted" x="8" y="20" z="101" />
+    <Placeholder name="ui_song_info_inverted" x="8" y="20" z="101" />
 
 
 	<!-- **************************************************************************************************** -->

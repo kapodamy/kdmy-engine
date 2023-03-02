@@ -48,9 +48,9 @@ function f_weekinit(freeplay_index: number): void {
 function f_beforeready(from_retry: boolean): void {
     stage = week_get_stage_layout();
 
-    let [, , track_index] = week_get_current_track_info();
+    let [, , song_index] = week_get_current_song_info();
 
-    switch (track_index) {
+    switch (song_index) {
         case 0:
             stage.trigger_trigger("girls_trigger");
             break;
@@ -77,11 +77,11 @@ function f_beforeready(from_retry: boolean): void {
     lyt_dialog_normal = stage.get_sprite("dialog_normal");
     lyt_dialog_angry = stage.get_sprite("dialog_angry");
     lyt_snd_angry = stage.get_soundplayer("angrySenpai");
-    dialog_is_angry = track_index == 1;
-    dialog_is_evil = track_index == 2;
+    dialog_is_angry = song_index == 1;
+    dialog_is_evil = song_index == 2;
 
     let dialog_lines: DialogLine[];
-    switch (track_index) {
+    switch (song_index) {
         case 0:
             dialog_lines = dialogs_senpai;
             break;
@@ -100,9 +100,9 @@ function f_beforeready(from_retry: boolean): void {
     week_set_halt(true);
     week_ui_set_visibility(false);
 
-    if (track_index == 0 || track_index == 2) lyt_bg_music.play();
+    if (song_index == 0 || song_index == 2) lyt_bg_music.play();
 
-    if (track_index == 2) stage.trigger_action(null, "fade_in_screen");
+    if (song_index == 2) stage.trigger_action(null, "fade_in_screen");
 
     timer_callback_timeout(1830, function () {
         // CORUTINES SON

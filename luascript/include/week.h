@@ -49,7 +49,7 @@ Strums week_ui_get_strums(RoundContext roundcontext, int32_t strums_id);
 RoundStats week_ui_get_roundstats(RoundContext roundcontext);
 RankingCounter week_ui_get_rankingcounter(RoundContext roundcontext);
 StreakCounter week_ui_get_streakcounter(RoundContext roundcontext);
-TextSprite week_ui_get_trackinfo(RoundContext roundcontext);
+TextSprite week_ui_get_round_textsprite(RoundContext roundcontext);
 SongProgressbar week_ui_get_songprogressbar(RoundContext roundcontext);
 Countdown week_ui_get_countdown(RoundContext roundcontext);
 HealthBar week_ui_get_healthbar(RoundContext roundcontext);
@@ -66,7 +66,7 @@ Character week_get_character(RoundContext roundcontext, int32_t character_index)
 PlayerStats week_get_playerstats(RoundContext roundcontext, int32_t character_index);
 SongPlayer week_get_songplayer(RoundContext roundcontext);
 void week_get_current_chart_info(RoundContext roundcontext, float* bpm, double* speed);
-void week_get_current_track_info(RoundContext roundcontext, const char** name, const char** difficult, int32_t* index);
+void week_get_current_song_info(RoundContext roundcontext, const char** name, const char** difficult, int32_t* index);
 void week_change_character_camera_name(RoundContext roundcontext, bool opponent_or_player, const char* new_name);
 void week_disable_layout_rollback(RoundContext roundcontext, bool disable);
 void week_override_common_folder(RoundContext roundcontext, const char* custom_common_path);

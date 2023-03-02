@@ -50,8 +50,8 @@ namespace Engine.Game.Gameplay {
         }
 
 
-        public void NotifyWeekinit(int freeplay_track_index) {
-            this.luascript.notify_weekinit(freeplay_track_index);
+        public void NotifyWeekinit(int freeplay_song_index) {
+            this.luascript.notify_weekinit(freeplay_song_index);
         }
 
         public void NotifyBeforeready(bool from_retry) {
@@ -151,8 +151,8 @@ namespace Engine.Game.Gameplay {
             this.luascript.notify_weekleave();
         }
 
-        public void NotifyAfterresults(int total_attempts, int tracks_count, bool reject_completed) {
-            this.luascript.notify_afterresults(total_attempts, tracks_count, reject_completed);
+        public void NotifyAfterresults(int total_attempts, int songs_count, bool reject_completed) {
+            this.luascript.notify_afterresults(total_attempts, songs_count, reject_completed);
         }
 
         public void NotifyScriptchange() {

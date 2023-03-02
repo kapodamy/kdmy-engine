@@ -6,10 +6,10 @@ const WEEKRESULT_WEEK_TEXT = "~judgements~\nSicks   $i\nGoods  $i\nBads   $i\n" 
 const WEEKRESULT_WEEK_TEXT2 = "~week resume~\n" +
     "Total attempts $i\nTotal score    $l\nAverage accuracy $3d%";
 
-const WEEKRESULT_TRACK_TEXT = "~judgements~\nSicks  $i\nGoods  $i\nBads   $i\n" +
+const WEEKRESULT_SONG_TEXT = "~judgements~\nSicks  $i\nGoods  $i\nBads   $i\n" +
     "\n~failures~\nShits      $i\nMissses    $i\nPenalties  $i" +
     "\n\n~streak~\nCombo breaks   $i\nHighest combo  $i\nHighest nps    $i";
-const WEEKRESULT_TRACK_TEXT2 = "~track resume~\nAttempts $i\nScore    $l\nAvg. accuracy $3d%";
+const WEEKRESULT_SONG_TEXT2 = "~song resume~\nAttempts $i\nScore    $l\nAvg. accuracy $3d%";
 
 
 const WEEKRESULT_LAYOUT_WIDESCREEN = "/assets/common/image/week-round/results.xml";
@@ -18,7 +18,7 @@ const WEEKRESULT_LAYOUT_DREAMCAST = "/assets/common/image/week-round/results~dre
 
 function week_result_init() {
     let weekresult = {
-        stats_track: {
+        stats_song: {
             sick: 0,
             good: 0,
             bads: 0,
@@ -59,41 +59,41 @@ function week_result_add_stats(weekresult, roundcontext) {
         if (roundcontext.players[i].is_opponent) continue;
         let playerstats = roundcontext.players[i].playerstats;
 
-        weekresult.stats_track.sick = playerstats_get_sicks(playerstats);
-        weekresult.stats_track.good = playerstats_get_goods(playerstats);
-        weekresult.stats_track.bads = playerstats_get_bads(playerstats);
-        weekresult.stats_track.shits = playerstats_get_shits(playerstats);
-        weekresult.stats_track.miss = playerstats_get_misses(playerstats);
-        weekresult.stats_track.penalties = playerstats_get_penalties(playerstats);
-        weekresult.stats_track.score = playerstats_get_score(playerstats);
-        weekresult.stats_track.accuracy = playerstats_get_accuracy(playerstats);
-        weekresult.stats_track.notesperseconds = playerstats_get_notes_per_seconds_highest(playerstats);
-        weekresult.stats_track.combobreaks = playerstats_get_combo_breaks(playerstats);
+        weekresult.stats_song.sick = playerstats_get_sicks(playerstats);
+        weekresult.stats_song.good = playerstats_get_goods(playerstats);
+        weekresult.stats_song.bads = playerstats_get_bads(playerstats);
+        weekresult.stats_song.shits = playerstats_get_shits(playerstats);
+        weekresult.stats_song.miss = playerstats_get_misses(playerstats);
+        weekresult.stats_song.penalties = playerstats_get_penalties(playerstats);
+        weekresult.stats_song.score = playerstats_get_score(playerstats);
+        weekresult.stats_song.accuracy = playerstats_get_accuracy(playerstats);
+        weekresult.stats_song.notesperseconds = playerstats_get_notes_per_seconds_highest(playerstats);
+        weekresult.stats_song.combobreaks = playerstats_get_combo_breaks(playerstats);
 
         let higheststreak = playerstats_get_highest_combo_streak(playerstats);
-        if (higheststreak > weekresult.stats_track.higheststreak) {
-            weekresult.stats_track.higheststreak = higheststreak;
+        if (higheststreak > weekresult.stats_song.higheststreak) {
+            weekresult.stats_song.higheststreak = higheststreak;
         }
     }
 
-    weekresult.accumulated_stats_week.sick += weekresult.stats_track.sick;
-    weekresult.accumulated_stats_week.good += weekresult.stats_track.good;
-    weekresult.accumulated_stats_week.bads += weekresult.stats_track.bads;
-    weekresult.accumulated_stats_week.shits += weekresult.stats_track.shits;
-    weekresult.accumulated_stats_week.miss += weekresult.stats_track.miss;
-    weekresult.accumulated_stats_week.penalties += weekresult.stats_track.penalties;
-    weekresult.accumulated_stats_week.score += weekresult.stats_track.score;
-    weekresult.accumulated_stats_week.accuracy += weekresult.stats_track.accuracy;
-    weekresult.accumulated_stats_week.notesperseconds += weekresult.stats_track.notesperseconds;
-    weekresult.accumulated_stats_week.combobreaks += weekresult.stats_track.combobreaks;
+    weekresult.accumulated_stats_week.sick += weekresult.stats_song.sick;
+    weekresult.accumulated_stats_week.good += weekresult.stats_song.good;
+    weekresult.accumulated_stats_week.bads += weekresult.stats_song.bads;
+    weekresult.accumulated_stats_week.shits += weekresult.stats_song.shits;
+    weekresult.accumulated_stats_week.miss += weekresult.stats_song.miss;
+    weekresult.accumulated_stats_week.penalties += weekresult.stats_song.penalties;
+    weekresult.accumulated_stats_week.score += weekresult.stats_song.score;
+    weekresult.accumulated_stats_week.accuracy += weekresult.stats_song.accuracy;
+    weekresult.accumulated_stats_week.notesperseconds += weekresult.stats_song.notesperseconds;
+    weekresult.accumulated_stats_week.combobreaks += weekresult.stats_song.combobreaks;
 
-    if (weekresult.stats_track.higheststreak > weekresult.accumulated_stats_week.higheststreak) {
-        weekresult.accumulated_stats_week.higheststreak = weekresult.stats_track.higheststreak;
+    if (weekresult.stats_song.higheststreak > weekresult.accumulated_stats_week.higheststreak) {
+        weekresult.accumulated_stats_week.higheststreak = weekresult.stats_song.higheststreak;
     }
 
 }
 
-async function week_result_helper_show_summary(weekresult, roundcontext, attempts, tracks_count, is_cleared) {
+async function week_result_helper_show_summary(weekresult, roundcontext, attempts, songs_count, is_cleared) {
 	let src = pvrctx_is_widescreen() ? WEEKRESULT_LAYOUT_WIDESCREEN : WEEKRESULT_LAYOUT_DREAMCAST;
     let layout = await layout_init(src);
     if (!layout) return;
@@ -107,12 +107,12 @@ async function week_result_helper_show_summary(weekresult, roundcontext, attempt
     let textsprite2 = layout_get_textsprite(layout, "stats2");
     let transition_delay = layout_get_attached_value_as_float(layout, "transition_delay", 0);
 
-    if (tracks_count < 0) {
-        // show the stats for the current (completed) track
-        let accumulated_stats = weekresult.stats_track;
+    if (songs_count < 0) {
+        // show the stats for the current (completed) song
+        let accumulated_stats = weekresult.stats_song;
 
         if (textsprite1)
-            textsprite_set_text_formated(textsprite1, WEEKRESULT_TRACK_TEXT,
+            textsprite_set_text_formated(textsprite1, WEEKRESULT_SONG_TEXT,
                 // judgements
                 accumulated_stats.sick,
                 accumulated_stats.good,
@@ -128,7 +128,7 @@ async function week_result_helper_show_summary(weekresult, roundcontext, attempt
                 accumulated_stats.notesperseconds
             );
         if (textsprite2)
-            textsprite_set_text_formated(textsprite2, WEEKRESULT_TRACK_TEXT2,
+            textsprite_set_text_formated(textsprite2, WEEKRESULT_SONG_TEXT2,
                 // week resume
                 attempts,
                 accumulated_stats.score,
@@ -136,7 +136,7 @@ async function week_result_helper_show_summary(weekresult, roundcontext, attempt
             );
     } else {
         let accumulated_stats = weekresult.accumulated_stats_week;
-        let average_accuracy = accumulated_stats.accuracy / tracks_count;
+        let average_accuracy = accumulated_stats.accuracy / songs_count;
 
         if (textsprite1)
             textsprite_set_text_formated(textsprite1, WEEKRESULT_WEEK_TEXT,

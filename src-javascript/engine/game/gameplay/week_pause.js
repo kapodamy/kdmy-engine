@@ -261,11 +261,11 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
 
     let textsprite = layout_get_textsprite(weekpause.layout, "stats");
     if (textsprite) {
-        const track_index = roundcontext.track_index;
-        const trackmanifest = roundcontext.initparams.gameplaymanifest.tracks[track_index];
-        const track_name = trackmanifest.name;
-        const track_difficult = roundcontext.track_difficult;
-        textsprite_set_text_formated(textsprite, "$s\n$s", track_name, track_difficult);
+        const song_index = roundcontext.song_index;
+        const songmanifest = roundcontext.initparams.gameplaymanifest.songs[song_index];
+        const song_name = songmanifest.name;
+        const song_difficult = roundcontext.song_difficult;
+        textsprite_set_text_formated(textsprite, "$s\n$s", song_name, song_difficult);
     }
 
     if (roundcontext.script) await weekscript_notify_pause(roundcontext.script, 1);

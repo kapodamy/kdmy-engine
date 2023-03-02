@@ -222,9 +222,9 @@ function weekscript_notify_weekleave(script) {
     return _weekscript_call(ModuleLuaScript._luascript_notify_weekleave, script);
 }
 
-function weekscript_notify_afterresults(script, total_attempts, tracks_count, reject_completed) {
+function weekscript_notify_afterresults(script, total_attempts, songs_count, reject_completed) {
     return _weekscript_call(
-        ModuleLuaScript._luascript_notify_afterresults, script, total_attempts, tracks_count, reject_completed ? 1 : 0
+        ModuleLuaScript._luascript_notify_afterresults, script, total_attempts, songs_count, reject_completed ? 1 : 0
     );
 }
 

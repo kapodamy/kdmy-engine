@@ -15,8 +15,8 @@ namespace Engine.Game {
     public class WeekSelector {
 
         private const string SCORE = "WEEK SCORE: ";
-        private const string TRACKS = "TRACKS";
-        private const string TRACKS_MORE = "...";
+        private const string SONGS = "TRACKS";
+        private const string SONGS_MORE = "...";
         private const string COMPLETED = "WEEKS COMPLETED";
         private const string CHOOSEN = "WEEK CHOOSEN";
         private const string DIFFICULTY = "DIFFICULTY";
@@ -83,7 +83,7 @@ namespace Engine.Game {
 
             public WeekSelectorMdlSelect mdl_boyfriend;
             public WeekSelectorMdlSelect mdl_girlfriend;
-            public TextSprite tracks_list;
+            public TextSprite songs_list;
             public TextSprite score;
             public TextSprite description;
 
@@ -121,8 +121,8 @@ namespace Engine.Game {
 
         private static void ShowWeekInfo(UI ui, WeekInfo weekinfo, long score) {
             float max_draw_width, max_draw_height;
-            float font_size = ui.tracks_list.GetFontSize();
-            ui.tracks_list.GetMaxDrawSize(out max_draw_width, out max_draw_height);
+            float font_size = ui.songs_list.GetFontSize();
+            ui.songs_list.GetMaxDrawSize(out max_draw_width, out max_draw_height);
 
             int songs_count = weekinfo.songs_count;
             int max_lines = (int)(max_draw_height / font_size) - 1;
@@ -144,13 +144,13 @@ namespace Engine.Game {
             }
             if (has_overflow) {
                 list.AddKDY("\n");
-                list.AddKDY(WeekSelector.TRACKS_MORE);
+                list.AddKDY(WeekSelector.SONGS_MORE);
             }
 
             // set the strings
             ui.score.SetTextFormated("$s$l", WeekSelector.SCORE, score);
             ui.description.SetTextIntern(true, weekinfo.description);
-            ui.tracks_list.SetTextIntern(true, list.InternKDY());
+            ui.songs_list.SetTextIntern(true, list.InternKDY());
         }
 
         private static void ChangePage(UI ui, int page) {
@@ -264,7 +264,7 @@ namespace Engine.Game {
                 description = layout.GetTextsprite("week_description"),
 
                 // week selector ui elements
-                tracks_list = layout.GetTextsprite("ui_tracks_list"),
+                songs_list = layout.GetTextsprite("ui_songs_list"),
                 weeks_choosen_index = layout.GetTextsprite("ui_weeks_choosen_index"),
                 layout = layout,
 
@@ -321,7 +321,7 @@ namespace Engine.Game {
             string last_difficult_played = FunkinSave.GetLastPlayedDifficult();
 
             // setup text boxes
-            WeekSelector.SetText(layout, "ui_tracks_title", null, WeekSelector.TRACKS);
+            WeekSelector.SetText(layout, "ui_songs_title", null, WeekSelector.SONGS);
             WeekSelector.SetText(layout, "ui_weeks_completed_title", null, WeekSelector.COMPLETED);
             WeekSelector.SetText(layout, "ui_weeks_completed_count", "$i", weeks_completed);
             WeekSelector.SetText(layout, "ui_weeks_choosen_title", null, WeekSelector.CHOOSEN);
@@ -497,7 +497,7 @@ namespace Engine.Game {
             // gameplay parameters
             WeekInfo gameplay_weekinfo = state.weekinfo;
             string gameplay_difficult = ui.weekdifficult.GetSelected();
-            bool gameplay_alternative_tracks = state.has_choosen_alternate;
+            bool gameplay_alternative_songs = state.has_choosen_alternate;
             string gameplay_model_boyfriend = ui.mdl_boyfriend.GetManifest();
             string gameplay_model_girlfriend = ui.mdl_girlfriend.GetManifest();
 
@@ -550,7 +550,7 @@ namespace Engine.Game {
 
             int week_result = Week.Main(
                 gameplay_weekinfo,
-                gameplay_alternative_tracks,
+                gameplay_alternative_songs,
                 gameplay_difficult,
                 gameplay_model_boyfriend,
                 gameplay_model_girlfriend,

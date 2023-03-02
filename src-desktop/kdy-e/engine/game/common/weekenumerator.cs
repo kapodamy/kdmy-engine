@@ -29,7 +29,7 @@ namespace Engine.Game.Common {
             public bool freeplay_hide_if_week_locked;
             public bool freeplay_hide_if_locked;
             public string freeplay_gameplaymanifest;
-            public int freeplay_track_index_in_gameplaymanifest;
+            public int freeplay_song_index_in_gameplaymanifest;
             public string freeplay_song_filename;
             public string freeplay_description;
             public float freeplay_seek_time;
@@ -237,7 +237,7 @@ namespace Engine.Game.Common {
                         freeplay_hide_if_week_locked = JSONParser.ReadBoolean(json_song, "freeplayHideIfWeekLocked", false),
                         freeplay_hide_if_locked = JSONParser.ReadBoolean(json_song, "freeplayHideIfLocked", false),
                         freeplay_gameplaymanifest = JSONParser.ReadString(json_song, "freeplayGameplayManifest", null),
-                        freeplay_track_index_in_gameplaymanifest = (int)JSONParser.ReadNumberLong(json_song, "freeplayTrackIndexInGameplayManifest", -1),
+                        freeplay_song_index_in_gameplaymanifest = (int)JSONParser.ReadNumberLong(json_song, "freeplaySongIndexInGameplayManifest", -1),
                         freeplay_song_filename = ParsePath(json_song, "freeplaySongFilename"),
                         freeplay_description = JSONParser.ReadString(json_song, "freeplayDescription", null),
                         freeplay_seek_time = (float)JSONParser.ReadNumberDouble(json_song, "freeplaySeekTime", Double.NaN)

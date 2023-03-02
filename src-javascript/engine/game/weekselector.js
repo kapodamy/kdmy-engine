@@ -1,12 +1,12 @@
 "use strict";
 
 const WEEKSELECTOR_SCORE = "WEEK SCORE: ";
-const WEEKSELECTOR_TRACKS = "TRACKS";
-const WEEKSELECTOR_TRACKS_MORE = "...";
+const WEEKSELECTOR_SONGS = "TRACKS";
+const WEEKSELECTOR_SONGS_MORE = "...";
 const WEEKSELECTOR_COMPLETED = "WEEKS COMPLETED";
 const WEEKSELECTOR_CHOOSEN = "WEEK CHOOSEN";
 const WEEKSELECTOR_DIFFICULTY = "DIFFICULTY";
-const WEEKSELECTOR_ALT_WARNING = "TRACKS WARNING";
+const WEEKSELECTOR_ALT_WARNING = "SONGS WARNING";
 const WEEKSELECTOR_SENSIBLE_CONTENT = "SENSIBLE CONTENT";
 const WEEKSELECTOR_HELP_N_ALT = "USE ALTERNATIVE TRACKS";
 const WEEKSELECTOR_HELP_W_ALT = "USE DEFAULT TRACKS";
@@ -67,7 +67,7 @@ class UI {
 
     mdl_boyfriend;
     mdl_girlfriend;
-    tracks_list;
+    songs_list;
     score;
     description;
 
@@ -114,8 +114,8 @@ class STATE {
 
 function weekselector_show_week_info(/**@type {UI}*/ui, weekinfo, score) {
     let max_draw_size = [0, 0];
-    let font_size = textsprite_get_font_size(ui.tracks_list);
-    textsprite_get_max_draw_size(ui.tracks_list, max_draw_size);
+    let font_size = textsprite_get_font_size(ui.songs_list);
+    textsprite_get_max_draw_size(ui.songs_list, max_draw_size);
 
     let songs_count = weekinfo.songs_count;
     let max_lines = Math.trunc(max_draw_size[1] / font_size) - 1;
@@ -137,13 +137,13 @@ function weekselector_show_week_info(/**@type {UI}*/ui, weekinfo, score) {
     }
     if (has_overflow) {
         stringbuilder_add(list, "\n");
-        stringbuilder_add(list, WEEKSELECTOR_TRACKS_MORE);
+        stringbuilder_add(list, WEEKSELECTOR_SONGS_MORE);
     }
 
     // set the strings
     textsprite_set_text_formated(ui.score, "$s$l", WEEKSELECTOR_SCORE, score);
     textsprite_set_text_intern(ui.description, 1, weekinfo.description);
-    textsprite_set_text_intern(ui.tracks_list, 1, stringbuilder_intern(ui.stringbuilder));
+    textsprite_set_text_intern(ui.songs_list, 1, stringbuilder_intern(ui.stringbuilder));
 }
 
 function weekselector_change_page(/**@type {UI}*/ui, page) {
@@ -260,7 +260,7 @@ async function weekselector_main() {
         description: layout_get_textsprite(layout, "week_description"),
 
         // week selector ui elements
-        tracks_list: layout_get_textsprite(layout, "ui_tracks_list"),
+        songs_list: layout_get_textsprite(layout, "ui_songs_list"),
         weeks_choosen_index: layout_get_textsprite(layout, "ui_weeks_choosen_index"),
         layout: layout,
 
@@ -317,7 +317,7 @@ async function weekselector_main() {
     let last_difficult_played = funkinsave_get_last_played_difficult();
 
     // setup text boxes
-    weekselector_set_text(layout, "ui_tracks_title", null, WEEKSELECTOR_TRACKS);
+    weekselector_set_text(layout, "ui_songs_title", null, WEEKSELECTOR_SONGS);
     weekselector_set_text(layout, "ui_weeks_completed_title", null, WEEKSELECTOR_COMPLETED);
     weekselector_set_text(layout, "ui_weeks_completed_count", "$i", weeks_completed);
     weekselector_set_text(layout, "ui_weeks_choosen_title", null, WEEKSELECTOR_CHOOSEN);

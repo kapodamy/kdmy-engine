@@ -121,7 +121,7 @@ namespace Engine.Game {
                 bg_info.GetDrawSize(out bg_info_width, out _);
             }
 
-            // step 3: count required tracks
+            // step 3: count required songs
             ArrayList<MappedSong> songs = new ArrayList<MappedSong>(Funkin.weeks_array.size * 3);
             for (int i = 0 ; i < Funkin.weeks_array.size ; i++) {
                 WeekInfo weekinfo = Funkin.weeks_array.array[i];
@@ -137,7 +137,7 @@ namespace Engine.Game {
                     bool is_song_locked = !FunkinSave.ContainsUnlockDirective(song.freeplay_unlock_directive);
                     if (should_hide && is_song_locked) continue;
 
-                    int gameplaymanifest_index = song.freeplay_track_index_in_gameplaymanifest;
+                    int gameplaymanifest_index = song.freeplay_song_index_in_gameplaymanifest;
                     if (gameplaymanifest_index < 0) gameplaymanifest_index = j;
 
                     songs.Add(new MappedSong() {
@@ -155,11 +155,11 @@ namespace Engine.Game {
             FreeplayMenu.MENU_SONGS.items = new MenuManifest.Item[songs_size];
 
             for (int i = 0 ; i < songs_size ; i++) {
-                MappedSong track = songs.Get(i);
-                WeekInfo weekinfo = Funkin.weeks_array.array[track.week_index];
+                MappedSong song = songs.Get(i);
+                WeekInfo weekinfo = Funkin.weeks_array.array[song.week_index];
 
                 FreeplayMenu.MENU_SONGS.items[i] = new MenuManifest.Item() {
-                    text = weekinfo.songs[track.song_index].name
+                    text = weekinfo.songs[song.song_index].name
                 };
             }
 
@@ -559,9 +559,9 @@ L_return:
                 if (sprite_anim != null) state.background.ExternalAnimationSet(sprite_anim);
 
                 if (sprite_tex == null)
-                    state.layout.TriggerAny("track-background-hide");
+                    state.layout.TriggerAny("song-background-hide");
                 else
-                    state.layout.TriggerAny("track-background-set");
+                    state.layout.TriggerAny("song-background-set");
             }
 
             if (modelholder != null) modelholder.Destroy();
@@ -785,8 +785,8 @@ L_return:
             return ret;
         }
 
-        private static void InternalModdingNotifyEvent(State state, bool difficult, bool alt_track) {
-            if (difficult && alt_track) {
+        private static void InternalModdingNotifyEvent(State state, bool difficult, bool alt_tracks) {
+            if (difficult && alt_tracks) {
                 state.modding.HelperNotifyEvent(state.map.is_locked ? "song-locked" : "song-not-locked");
             }
             if (difficult) {
@@ -797,7 +797,7 @@ L_return:
                 else
                     state.modding.HelperNotifyEvent(null);
             }
-            if (alt_track) {
+            if (alt_tracks) {
                 state.modding.HelperNotifyEvent(state.use_alternative ? "tracks-alt" : "tracks-not-alt");
             }
         }

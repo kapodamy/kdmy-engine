@@ -37,7 +37,7 @@ void luascript_notify_weekend(Luascript luascript, bool giveup);
 void luascript_notify_diedecision(Luascript luascript, bool retry_or_giveup, const char* difficult_changed);
 void luascript_notify_pause(Luascript luascript, bool pause_or_resume);
 void luascript_notify_weekleave(Luascript luascript);
-void luascript_notify_afterresults(Luascript luascript, int32_t total_attempts, int32_t tracks_count, bool reject_completed);
+void luascript_notify_afterresults(Luascript luascript, int32_t total_attempts, int32_t songs_count, bool reject_completed);
 void luascript_notify_scriptchange(Luascript luascript);
 void luascript_notify_pause_optionchoosen(Luascript luascript, int32_t option_index);
 void luascript_notify_pause_menuvisible(Luascript luascript, bool shown_or_hidden);

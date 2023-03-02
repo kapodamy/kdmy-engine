@@ -1,6 +1,6 @@
 --[[ Generated with https://github.com/TypeScriptToLua/TypeScriptToLua ]]
 function f_beforeready(from_retry)
-    local name, difficult, index = week_get_current_track_info()
+    local name, difficult, index = week_get_current_song_info()
     curSong_bopeebo = index == 0
     boyfriend = week_get_character(1)
 end

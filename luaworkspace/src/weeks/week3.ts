@@ -7,7 +7,7 @@ let song: SongPlayer = null;
 
 function f_weekinit(freeplay_index: number): void {
     if (freeplay_index >= 0) return;
-    let [, difficult,] = week_get_current_track_info();
+    let [, difficult,] = week_get_current_song_info();
     if (difficult == "HARD") week_unlockdirective_create("WEEK3_HARD", true, false, 1);
 }
 

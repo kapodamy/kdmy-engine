@@ -193,7 +193,7 @@
                     "type": "boolean",
                     "default": false
                 },
-				"freeplayTrackIndexInGameplayManifest": {
+				"freeplaySongIndexInGameplayManifest": {
                     "type": "integer",
                     "default": -1
                 },

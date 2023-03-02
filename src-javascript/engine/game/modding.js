@@ -290,7 +290,7 @@ function modding_get_loaded_weeks(modding, out_size) {
     return weeks_array.array;
 }
 
-async function modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, track_idx) {
+async function modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx) {
     let gameplay_weekinfo = null;
 
     for (let i = 0; i < weeks_array.size; i++) {
@@ -314,7 +314,7 @@ async function modding_launch_week(modding, week_name, difficult, alt_tracks, bf
         bf,
         gf,
         gameplay_manifest,
-        track_idx
+        song_idx
     );
 
     return week_result;

@@ -67,17 +67,17 @@
 
     
     <Group name="ui_week_selector" visible="true">
-        <!-- Selected week tracks -->        
-        <Text name="ui_tracks_title" fontName="vcr" fontSize="18" color="0xE55777">
+        <!-- Selected week songs -->        
+        <Text name="ui_songs_title" fontName="vcr" fontSize="18" color="0xE55777">
             <Action>
                 <Property name="alignHorizontal" value="center" />
                 <Property name="z" value="10" />
                 <Location x="20" y="318" />
                 <MaxSize width="200" height="18" />
-                <!--<String>TRACKS</String>-->
+                <!--<String>SONGS</String>-->
             </Action>
         </Text>
-        <Text name="ui_tracks_list" fontName="vcr" fontSize="18" color="0xE55777">
+        <Text name="ui_songs_list" fontName="vcr" fontSize="18" color="0xE55777">
             <Action>
                 <Property name="alignHorizontal" value="center" />
                 <Property name="alignParagraph" value="center" />

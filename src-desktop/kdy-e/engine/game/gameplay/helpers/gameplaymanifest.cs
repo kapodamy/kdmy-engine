@@ -59,9 +59,9 @@ namespace Engine.Game.Gameplay.Helpers {
         public bool has_warnings_model;
         public string warnings_model;
     }
-    public class GameplayManifestTrack {
+    public class GameplayManifestSong {
         public string name;
-        public string song;
+        public string file;
         public string chart;
         public string stage;
         public bool has_stage;
@@ -149,8 +149,8 @@ namespace Engine.Game.Gameplay.Helpers {
         };
 
         public GameplayManifestDefault @default;
-        public GameplayManifestTrack[] tracks;
-        public int tracks_size;
+        public GameplayManifestSong[] songs;
+        public int songs_size;
 
 
         private GameplayManifest() { }
@@ -162,8 +162,8 @@ namespace Engine.Game.Gameplay.Helpers {
 
             GameplayManifest manifest = new GameplayManifest() {
                 @default = GameplayManifest.DEFAULT,
-                tracks = null,
-                tracks_size = 0
+                songs = null,
+                songs_size = 0
             };
 
             if (JSONParser.HasPropertyObject(json, "default")) {
@@ -213,30 +213,30 @@ namespace Engine.Game.Gameplay.Helpers {
                 manifest.@default.dialogue_params = JSONParser.ReadString(json_default, "dialogueParams", null);
             }
 
-            JSONToken tracks_array = JSONParser.ReadArray(json, "tracks");
-            int tracks_array_size = JSONParser.ReadArrayLength(tracks_array);
+            JSONToken songs_array = JSONParser.ReadArray(json, "songs");
+            int songs_array_size = JSONParser.ReadArrayLength(songs_array);
 
-            if (tracks_array_size < 0) {
+            if (songs_array_size < 0) {
                 JSONParser.Destroy(json);
                 return manifest;
             }
 
-            manifest.tracks_size = tracks_array_size;
-            manifest.tracks = new GameplayManifestTrack[tracks_array_size];
+            manifest.songs_size = songs_array_size;
+            manifest.songs = new GameplayManifestSong[songs_array_size];
 
             int players_count = manifest.@default != null ? manifest.@default.players_size : -1;
 
-            for (int i = 0 ; i < tracks_array_size ; i++) {
-                JSONToken json_tracks = JSONParser.ReadArrayItemObject(tracks_array, i);
+            for (int i = 0 ; i < songs_array_size ; i++) {
+                JSONToken json_songs = JSONParser.ReadArrayItemObject(songs_array, i);
 
-                manifest.tracks[i] = new GameplayManifestTrack() { };
-                GameplayManifest.ParseTrack(manifest.tracks[i], json_tracks, players_count);
+                manifest.songs[i] = new GameplayManifestSong() { };
+                GameplayManifest.ParseSong(manifest.songs[i], json_songs, players_count);
 
-                // check if the girlfriend manifest in the current track is null
-                GameplayManifestGirlfriend track_girlfriend = manifest.tracks[i].girlfriend;
+                // check if the girlfriend manifest in the current song is null
+                GameplayManifestGirlfriend song_girlfriend = manifest.songs[i].girlfriend;
                 if (manifest.@default != null && manifest.@default.girlfriend != null) {
-                    if (track_girlfriend != null && track_girlfriend.manifest == null) {
-                        track_girlfriend.manifest = manifest.@default.girlfriend.manifest;
+                    if (song_girlfriend != null && song_girlfriend.manifest == null) {
+                        song_girlfriend.manifest = manifest.@default.girlfriend.manifest;
                     }
                 }
             }
@@ -263,31 +263,31 @@ namespace Engine.Game.Gameplay.Helpers {
                 //free(manifest.dialogue_params);
             }
 
-            for (int i = 0 ; i < this.tracks_size ; i++) {
-                GameplayManifestTrack track = this.tracks[i];
+            for (int i = 0 ; i < this.songs_size ; i++) {
+                GameplayManifestSong song = this.songs[i];
 
-                //free(track.name);
-                //free(track.song);
-                //free(track.chart);
-                //free(track.stage);
-                //free(track.script);
-                //free(track.ui_layout);
-                //free(track.pause_menu);
-                //free(track.selected_state_name);
+                //free(song.name);
+                //free(song.file);
+                //free(song.chart);
+                //free(song.stage);
+                //free(song.script);
+                //free(song.ui_layout);
+                //free(song.pause_menu);
+                //free(song.selected_state_name);
 
-                //for (int j = 0 ; j < track.selected_state_name_per_player_size ; j++) {
-                //    free(track.selected_state_name_per_player[i]);
+                //for (int j = 0 ; j < song.selected_state_name_per_player_size ; j++) {
+                //    free(song.selected_state_name_per_player[i]);
                 //}
-                //free(track.selected_state_name_per_player);
-                //free(track.dialogue_params);
-                //free(track.dialog_text);
+                //free(song.selected_state_name_per_player);
+                //free(song.dialogue_params);
+                //free(song.dialog_text);
 
-                GameplayManifest.DestroyHealthbar(track.healthbar);
-                GameplayManifest.DestroyGirlfriend(track.girlfriend);
-                GameplayManifest.DestroyDistributions(track.distributions, track.distributions_size);
-                GameplayManifest.DestroyPlayers(track.players, track.players_size);
+                GameplayManifest.DestroyHealthbar(song.healthbar);
+                GameplayManifest.DestroyGirlfriend(song.girlfriend);
+                GameplayManifest.DestroyDistributions(song.distributions, song.distributions_size);
+                GameplayManifest.DestroyPlayers(song.players, song.players_size);
             }
-            //free(this.tracks);
+            //free(this.songs);
 
             //free(this);
         }
@@ -387,104 +387,104 @@ namespace Engine.Game.Gameplay.Helpers {
         }
 
 
-        public static void ParseTrack(GameplayManifestTrack track, JSONToken json_track, int players_count) {
-            track.name = JSONParser.ReadString(json_track, "name", null);
-            track.song = JSONParser.ReadString(json_track, "song", null);
-            track.chart = JSONParser.ReadString(json_track, "chart", null);
+        public static void ParseSong(GameplayManifestSong song, JSONToken json_song, int players_count) {
+            song.name = JSONParser.ReadString(json_song, "name", null);
+            song.file = JSONParser.ReadString(json_song, "file", null);
+            song.chart = JSONParser.ReadString(json_song, "chart", null);
 
-            if (track.name == null && String.IsNullOrEmpty(track.song)) {
-                throw new Exception("gameplaymanifest_parse_track() track without 'name' and 'song'");
-            } else if (track.name != null && track.song == null && track.chart == null) {
-                if (FS.IsInvalidFilename(track.name)) {
-                    throw new Exception($"The track '{track.name}' is invalid for filename (song=null chart=null)");
+            if (song.name == null && String.IsNullOrEmpty(song.file)) {
+                throw new Exception("gameplaymanifest_parse_song() song without 'name' and 'song'");
+            } else if (song.name != null && song.file == null && song.chart == null) {
+                if (FS.IsInvalidFilename(song.name)) {
+                    throw new Exception($"The song '{song.name}' is invalid for filename (song=null chart=null)");
                 }
 
-                // build the song name and track name using lowercase and without spaces
+                // build the song name and song name using lowercase and without spaces
                 // example: "Dad Battle" --> "dadbattle"
-                int track_name_length = track.name.Length;
-                StringBuilder stringbuilder = new StringBuilder(track_name_length);
-                stringbuilder.AddWithReplaceKDY(track.name, "\x20", null);
+                int song_name_length = song.name.Length;
+                StringBuilder stringbuilder = new StringBuilder(song_name_length);
+                stringbuilder.AddWithReplaceKDY(song.name, "\x20", null);
                 stringbuilder.LowerCaseKDY();
                 string lowercase_name = stringbuilder.GetCopyKDY();
                 //stringbuilder.Destroy();
 
-                track.song = StringUtils.Concat(Funkin.WEEK_SONGS_FOLDER, lowercase_name, ".ogg");
-                track.chart = StringUtils.Concat(Funkin.WEEK_CHARTS_FOLDER, lowercase_name, ".json");
+                song.file = StringUtils.Concat(Funkin.WEEK_SONGS_FOLDER, lowercase_name, ".ogg");
+                song.chart = StringUtils.Concat(Funkin.WEEK_CHARTS_FOLDER, lowercase_name, ".json");
                 //free(lowercase_name);
             }
 
-            track.stage = JSONParser.ReadString(json_track, "stage", null);
-            track.has_stage = JSONParser.HasProperty(json_track, "stage");
+            song.stage = JSONParser.ReadString(json_song, "stage", null);
+            song.has_stage = JSONParser.HasProperty(json_song, "stage");
 
-            track.script = JSONParser.ReadString(json_track, "script", null);
-            track.has_script = JSONParser.HasProperty(json_track, "script");
+            song.script = JSONParser.ReadString(json_song, "script", null);
+            song.has_script = JSONParser.HasProperty(json_song, "script");
 
-            track.duration = JSONParser.ReadNumberDouble(json_track, "duration", -1.0);
-            if (track.duration >= 0) track.duration *= 1000.0;// convert to milliseconds
+            song.duration = JSONParser.ReadNumberDouble(json_song, "duration", -1.0);
+            if (song.duration >= 0) song.duration *= 1000.0;// convert to milliseconds
 
-            track.selected_state_name = JSONParser.ReadString(json_track, "selectedStateName", null);
-            track.has_selected_state_name = JSONParser.HasProperty(json_track, "selectedStateName");
+            song.selected_state_name = JSONParser.ReadString(json_song, "selectedStateName", null);
+            song.has_selected_state_name = JSONParser.HasProperty(json_song, "selectedStateName");
 
-            track.ui_layout = JSONParser.ReadString(json_track, "UILayout", null);
-            track.has_ui_layout = JSONParser.HasProperty(json_track, "UILayout");
+            song.ui_layout = JSONParser.ReadString(json_song, "UILayout", null);
+            song.has_ui_layout = JSONParser.HasProperty(json_song, "UILayout");
 
-            track.pause_menu = JSONParser.ReadString(json_track, "pauseMenu", null);
-            track.has_pause_menu = JSONParser.HasProperty(json_track, "pauseMenu");
+            song.pause_menu = JSONParser.ReadString(json_song, "pauseMenu", null);
+            song.has_pause_menu = JSONParser.HasProperty(json_song, "pauseMenu");
 
-            track.dialogue_params = JSONParser.ReadString(json_track, "dialogueParams", null);
-            track.dialog_text = JSONParser.ReadString(json_track, "dialogText", null);
-            track.dialog_ignore_on_freeplay = JSONParser.ReadBoolean(json_track, "dialogIgnoreOnFreeplay", true);
+            song.dialogue_params = JSONParser.ReadString(json_song, "dialogueParams", null);
+            song.dialog_text = JSONParser.ReadString(json_song, "dialogText", null);
+            song.dialog_ignore_on_freeplay = JSONParser.ReadBoolean(json_song, "dialogIgnoreOnFreeplay", true);
 
-            track.selected_state_name_per_player = null;
-            track.selected_state_name_per_player_size = 0;
+            song.selected_state_name_per_player = null;
+            song.selected_state_name_per_player_size = 0;
 
-            track.players = null;
-            track.players_size = 0;
+            song.players = null;
+            song.players_size = 0;
 
-            track.distributions = null;
-            track.distributions_size = 0;
+            song.distributions = null;
+            song.distributions_size = 0;
 
-            track.has_players = JSONParser.HasPropertyArray(json_track, "players");
-            GameplayManifest.ParsePlayers(json_track, out track.players, out track.players_size);
+            song.has_players = JSONParser.HasPropertyArray(json_song, "players");
+            GameplayManifest.ParsePlayers(json_song, out song.players, out song.players_size);
 
-            if (JSONParser.HasPropertyArray(json_track, "distributions")) {
-                track.has_distributions = true;
-                GameplayManifest.ParseDistributions(json_track, out track.distributions, out track.distributions_size);
-            } else if (JSONParser.HasPropertyArray(json_track, "distributionsMinimal")) {
-                track.has_distributions = true;
-                GameplayManifest.ParseDistributionsMinimal(json_track, out track.distributions, out track.distributions_size);
-            } else if (JSONParser.HasPropertyArray(json_track, "distributionsModels")) {
-                track.has_distributions = true;
-                GameplayManifest.ParseDistributionsModels(json_track, out track.distributions, out track.distributions_size);
+            if (JSONParser.HasPropertyArray(json_song, "distributions")) {
+                song.has_distributions = true;
+                GameplayManifest.ParseDistributions(json_song, out song.distributions, out song.distributions_size);
+            } else if (JSONParser.HasPropertyArray(json_song, "distributionsMinimal")) {
+                song.has_distributions = true;
+                GameplayManifest.ParseDistributionsMinimal(json_song, out song.distributions, out song.distributions_size);
+            } else if (JSONParser.HasPropertyArray(json_song, "distributionsModels")) {
+                song.has_distributions = true;
+                GameplayManifest.ParseDistributionsModels(json_song, out song.distributions, out song.distributions_size);
             }
 
-            track.healthbar = GameplayManifest.ParseHealthbar(json_track);
-            track.girlfriend = GameplayManifest.ParseGirlfriend(json_track);
-            track.has_girlfriend = JSONParser.HasPropertyObject(json_track, "girlfriend");
+            song.healthbar = GameplayManifest.ParseHealthbar(json_song);
+            song.girlfriend = GameplayManifest.ParseGirlfriend(json_song);
+            song.has_girlfriend = JSONParser.HasPropertyObject(json_song, "girlfriend");
 
-            JSONToken selected_states_array = JSONParser.ReadArray(json_track, "selectedStateNamePerPlayer");
+            JSONToken selected_states_array = JSONParser.ReadArray(json_song, "selectedStateNamePerPlayer");
             int selected_states_array_size = JSONParser.ReadArrayLength(selected_states_array);
 
-            if (track.has_players) players_count = track.players_size;
+            if (song.has_players) players_count = song.players_size;
 
             if (players_count < 0 && selected_states_array_size > 0) {
                 Console.Error.WriteLine("[ERROR]" +
-                    "gameplaymanifest_parse_track() 'selectedStateNamePerPlayer' found without 'players'"
+                    "gameplaymanifest_parse_song() 'selectedStateNamePerPlayer' found without 'players'"
                 );
             } else if (selected_states_array_size > 0) {
 
                 if (players_count != selected_states_array_size) {
                     Console.Error.WriteLine("[WARN]" +
-                        "gameplaymanifest_parse_track() 'selectedStateNamePerPlayer.length' != 'players.length'"
+                        "gameplaymanifest_parse_song() 'selectedStateNamePerPlayer.length' != 'players.length'"
                     );
                 } else {
-                    track.selected_state_name_per_player = new string[selected_states_array_size];
-                    track.selected_state_name_per_player_size = selected_states_array_size;
+                    song.selected_state_name_per_player = new string[selected_states_array_size];
+                    song.selected_state_name_per_player_size = selected_states_array_size;
                 }
             }
 
             for (int i = 0 ; i < selected_states_array_size ; i++) {
-                track.selected_state_name_per_player[i] = JSONParser.ReadArrayItemString(
+                song.selected_state_name_per_player[i] = JSONParser.ReadArrayItemString(
                     selected_states_array, i, null
                 );
             }

@@ -8,9 +8,9 @@
 		"stage": "philly/layout.xml",
 		"script": "philly/week3.lua"
 	},
-	"tracks": [
+	"songs": [
 		{ "name": "Pico"},
-		{ "name": "Philly Nice", "chart": "charts/philly.json", "song": "songs/philly.ogg" },
+		{ "name": "Philly Nice", "chart": "charts/philly.json", "file": "songs/philly.ogg" },
 		{ "name": "Blammed" }
 	]
 }

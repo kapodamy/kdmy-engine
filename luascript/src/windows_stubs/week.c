@@ -12,8 +12,8 @@ static Layout_t stub_layout1 = {};
 static Layout_t stub_layout2 = {};
 static TextSprite_t stub_textsprite = {};
 static Dialogue_t stub_dialogue = {};
-static char* stub_track_name = "°°test track°°";
-static char* stub_track_difficult = "NORMAL";
+static char* stub_song_name = "°°test song°°";
+static char* stub_song_difficult = "NORMAL";
 static Strums_t stub_strums = {};
 static RoundStats_t stub_roundstats = {};
 static RankingCounter_t stub_rankingcounter = {};
@@ -98,8 +98,8 @@ StreakCounter week_ui_get_streakcounter(RoundContext roundcontext) {
     print_stub("week_ui_get_streakcounter", "roundcontext=%p", roundcontext);
     return &stub_streakcounter;
 }
-TextSprite week_ui_get_trackinfo(RoundContext roundcontext) {
-    print_stub("week_ui_get_trackinfo", "roundcontext=%p", roundcontext);
+TextSprite week_ui_get_round_textsprite(RoundContext roundcontext) {
+    print_stub("week_ui_get_round_textsprite", "roundcontext=%p", roundcontext);
     return &stub_textsprite;
 }
 SongProgressbar week_ui_get_songprogressbar(RoundContext roundcontext) {
@@ -165,11 +165,11 @@ void week_get_current_chart_info(RoundContext roundcontext, float* bpm, double* 
     *speed = 1;
     print_stub("week_get_current_chart_info", "roundcontext=%p bpm=%p speed=%p", roundcontext, bpm, speed);
 }
-void week_get_current_track_info(RoundContext roundcontext, const char** name, const char** difficult, int32_t* index) {
-    *name = stub_track_name;
-    *difficult = stub_track_difficult;
+void week_get_current_song_info(RoundContext roundcontext, const char** name, const char** difficult, int32_t* index) {
+    *name = stub_song_name;
+    *difficult = stub_song_difficult;
     *index = 1;
-    print_stub("week_get_current_track_info", "roundcontext=%p name=%p difficult=%p index=%i", roundcontext, name, difficult, index);
+    print_stub("week_get_current_song_info", "roundcontext=%p name=%p difficult=%p index=%i", roundcontext, name, difficult, index);
 }
 void week_change_character_camera_name(RoundContext roundcontext, bool opponent_or_player, const char* new_name) {
     print_stub("week_change_character_camera_name", "roundcontext=%p opponent_or_player=(bool)%i new_name=%s", roundcontext, opponent_or_player, new_name);

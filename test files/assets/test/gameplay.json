@@ -69,13 +69,13 @@
             }
         ]
     },
-    "tracks": [
+    "songs": [
         { 
             "name": "song name here",
-            "song": "/path/to/file.ogg",
+            "file": "/path/to/file.ogg",
             "chart": "charts/tutorial.json",
-            "stage": "stage track",
-            "script": "script track",
+            "stage": "stage song.xml",
+            "script": "script.lua",
             "selectedStateName": "%selectedStateName%",
             "healthbar": null,
             "selectedStateNamePerPlayer": [

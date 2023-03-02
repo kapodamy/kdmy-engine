@@ -7,9 +7,9 @@ function f_beforeready(from_restart: boolean): void {
 
     if (from_restart) return;
 
-    let [track_name, track_difficult, track_index] = week_get_current_track_info();
+    let [song_name, song_difficult, song_index] = week_get_current_song_info();
 
-    print(`track: name=${track_name} difficult=${track_difficult} number=${track_index}`);
+    print(`song: name=${song_name} difficult=${song_difficult} number=${song_index}`);
 }
 
 // called by the engine

@@ -5,8 +5,8 @@ function f_beforeready(from_restart)
     if from_restart then
         return
     end
-    local track_name, track_difficult, track_index = week_get_current_track_info()
-    print((((("track: name=" .. track_name) .. " difficult=") .. track_difficult) .. " number=") .. tostring(track_index))
+    local song_name, song_difficult, song_index = week_get_current_song_info()
+    print((((("song: name=" .. song_name) .. " difficult=") .. song_difficult) .. " number=") .. tostring(song_index))
 end
 function f_beat(curBeat, since)
     if math.random(0, 1) < 0.1 then

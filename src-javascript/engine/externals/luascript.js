@@ -884,9 +884,9 @@ function __asyncjs__modding_launch_startscreen(modding) {
         return ret ? 1 : 0
     })
 }
-function __asyncjs__modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, track_idx) {
+function __asyncjs__modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx) {
     return Asyncify.handleAsync(async() => {
-        let ret = modding_launch_week(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(difficult), alt_tracks, kdmyEngine_ptrToString(bf), kdmyEngine_ptrToString(gf), kdmyEngine_ptrToString(gameplay_manifest), track_idx);
+        let ret = modding_launch_week(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(difficult), alt_tracks, kdmyEngine_ptrToString(bf), kdmyEngine_ptrToString(gf), kdmyEngine_ptrToString(gameplay_manifest), song_idx);
         _free(difficult);
         _free(bf);
         _free(gf);
@@ -3251,13 +3251,13 @@ function __js__week_get_current_chart_info(roundcontext, bpm, speed) {
     kdmyEngine_set_float32(bpm, values.bpm);
     kdmyEngine_set_float64(speed, values.speed)
 }
-function __js__week_get_current_track_info(roundcontext, name, difficult, index) {
+function __js__week_get_current_song_info(roundcontext, name, difficult, index) {
     const values = {
         name: null,
         difficult: null,
         index: -1
     };
-    week_get_current_track_info(kdmyEngine_obtain(roundcontext), values);
+    week_get_current_song_info(kdmyEngine_obtain(roundcontext), values);
     kdmyEngine_set_uint32(name, kdmyEngine_stringToPtr(values.name));
     kdmyEngine_set_uint32(difficult, kdmyEngine_stringToPtr(values.difficult));
     kdmyEngine_set_int32(index, values.index)
@@ -3365,8 +3365,8 @@ function __js__week_ui_get_strums_count(roundcontext) {
     let ret = week_ui_get_strums_count(kdmyEngine_obtain(roundcontext));
     return ret
 }
-function __js__week_ui_get_trackinfo(roundcontext) {
-    let ret = week_ui_get_trackinfo(kdmyEngine_obtain(roundcontext));
+function __js__week_ui_get_round_textsprite(roundcontext) {
+    let ret = week_ui_get_round_textsprite(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(ret)
 }
 function __js__week_ui_set_visibility(roundcontext, visible) {
@@ -7425,7 +7425,7 @@ var asmLibraryArg = {
     "__js__week_get_character_count": __js__week_get_character_count,
     "__js__week_get_conductor": __js__week_get_conductor,
     "__js__week_get_current_chart_info": __js__week_get_current_chart_info,
-    "__js__week_get_current_track_info": __js__week_get_current_track_info,
+    "__js__week_get_current_song_info": __js__week_get_current_song_info,
     "__js__week_get_dialogue": __js__week_get_dialogue,
     "__js__week_get_girlfriend": __js__week_get_girlfriend,
     "__js__week_get_healthwatcher": __js__week_get_healthwatcher,
@@ -7449,7 +7449,7 @@ var asmLibraryArg = {
     "__js__week_ui_get_streakcounter": __js__week_ui_get_streakcounter,
     "__js__week_ui_get_strums": __js__week_ui_get_strums,
     "__js__week_ui_get_strums_count": __js__week_ui_get_strums_count,
-    "__js__week_ui_get_trackinfo": __js__week_ui_get_trackinfo,
+    "__js__week_ui_get_round_textsprite": __js__week_ui_get_round_textsprite,
     "__js__week_ui_set_visibility": __js__week_ui_set_visibility,
     "__js__week_unlockdirective_create": __js__week_unlockdirective_create,
     "__js__week_unlockdirective_get": __js__week_unlockdirective_get,

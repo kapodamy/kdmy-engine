@@ -204,9 +204,9 @@ function f_weekinit(freeplay_index)
 end
 function f_beforeready(from_retry)
     stage = week_get_stage_layout()
-    local ____, ____, track_index = week_get_current_track_info()
+    local ____, ____, song_index = week_get_current_song_info()
     repeat
-        local ____switch5 = track_index
+        local ____switch5 = song_index
         local ____cond5 = ____switch5 == 0
         if ____cond5 then
             stage:trigger_trigger("girls_trigger")
@@ -239,11 +239,11 @@ function f_beforeready(from_retry)
     lyt_dialog_normal = stage:get_sprite("dialog_normal")
     lyt_dialog_angry = stage:get_sprite("dialog_angry")
     lyt_snd_angry = stage:get_soundplayer("angrySenpai")
-    dialog_is_angry = track_index == 1
-    dialog_is_evil = track_index == 2
+    dialog_is_angry = song_index == 1
+    dialog_is_evil = song_index == 2
     local dialog_lines
     repeat
-        local ____switch7 = track_index
+        local ____switch7 = song_index
         local ____cond7 = ____switch7 == 0
         if ____cond7 then
             dialog_lines = dialogs_senpai
@@ -268,10 +268,10 @@ function f_beforeready(from_retry)
     end
     week_set_halt(true)
     week_ui_set_visibility(false)
-    if track_index == 0 or track_index == 2 then
+    if song_index == 0 or song_index == 2 then
         lyt_bg_music:play()
     end
-    if track_index == 2 then
+    if song_index == 2 then
         stage:trigger_action(nil, "fade_in_screen")
     end
     timer_callback_timeout(

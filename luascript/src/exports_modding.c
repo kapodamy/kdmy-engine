@@ -135,8 +135,8 @@ EM_JS_PRFX(WeekInfo*, modding_get_loaded_weeks, (Modding modding, int32_t* out_s
     kdmyEngine_set_uint32(out_size, size[0]);
     return kdmyEngine_obtain(ret);
 });
-EM_ASYNC_JS_PRFX(int32_t, modding_launch_week, (Modding modding, const char* week_name, char* difficult, bool alt_tracks, char* bf, char* gf, char* gameplay_manifest, int32_t track_idx), {
-    let ret = modding_launch_week(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(difficult), alt_tracks, kdmyEngine_ptrToString(bf), kdmyEngine_ptrToString(gf), kdmyEngine_ptrToString(gameplay_manifest), track_idx);
+EM_ASYNC_JS_PRFX(int32_t, modding_launch_week, (Modding modding, const char* week_name, char* difficult, bool alt_tracks, char* bf, char* gf, char* gameplay_manifest, int32_t song_idx), {
+    let ret = modding_launch_week(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(difficult), alt_tracks, kdmyEngine_ptrToString(bf), kdmyEngine_ptrToString(gf), kdmyEngine_ptrToString(gameplay_manifest), song_idx);
     _free(difficult);
     _free(bf);
     _free(gf);
@@ -544,14 +544,14 @@ static int script_modding_launch_week(lua_State* L) {
     char* bf = luascript_get_string_copy(L, 4, NULL);
     char* gf = luascript_get_string_copy(L, 5, NULL);
     char* gameplay_manifest = luascript_get_string_copy(L, 6, NULL);
-    int32_t track_idx = (int32_t)luaL_optinteger(L, 7, -1);
+    int32_t song_idx = (int32_t)luaL_optinteger(L, 7, -1);
 
     if (!difficult || difficult[0] == '\0') {
         free(difficult);
         return luaL_error(L, "difficult must be provided");
     }
 
-    int32_t ret = modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, track_idx);
+    int32_t ret = modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx);
 
     lua_pushinteger(L, (lua_Integer)ret);
     return 1;

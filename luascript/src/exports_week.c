@@ -94,8 +94,8 @@ EM_JS_PRFX(StreakCounter, week_ui_get_streakcounter, (RoundContext roundcontext)
     let ret = week_ui_get_streakcounter(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(ret);
 });
-EM_JS_PRFX(TextSprite, week_ui_get_trackinfo, (RoundContext roundcontext), {
-    let ret = week_ui_get_trackinfo(kdmyEngine_obtain(roundcontext));
+EM_JS_PRFX(TextSprite, week_ui_get_round_textsprite, (RoundContext roundcontext), {
+    let ret = week_ui_get_round_textsprite(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(ret);
 });
 EM_JS_PRFX(SongProgressbar, week_ui_get_songprogressbar, (RoundContext roundcontext), {
@@ -165,13 +165,13 @@ EM_JS_PRFX(void, week_get_current_chart_info, (RoundContext roundcontext, float*
     kdmyEngine_set_float32(bpm, values.bpm);
     kdmyEngine_set_float64(speed, values.speed)
 });
-EM_JS_PRFX(void, week_get_current_track_info, (RoundContext roundcontext, const char** name, const char** difficult, int32_t* index), {
+EM_JS_PRFX(void, week_get_current_song_info, (RoundContext roundcontext, const char** name, const char** difficult, int32_t* index), {
     const values = {
         name: null,
         difficult: null,
         index: -1
     };
-    week_get_current_track_info(kdmyEngine_obtain(roundcontext), values);
+    week_get_current_song_info(kdmyEngine_obtain(roundcontext), values);
     kdmyEngine_set_uint32(name, kdmyEngine_stringToPtr(values.name));
     kdmyEngine_set_uint32(difficult, kdmyEngine_stringToPtr(values.difficult));
     kdmyEngine_set_int32(index, values.index)
@@ -397,12 +397,12 @@ static int script_week_ui_get_streakcounter(lua_State* L) {
     return script_streakcounter_new(L, ret);
 }
 
-static int script_week_ui_get_trackinfo(lua_State* L) {
+static int script_week_ui_get_round_textsprite(lua_State* L) {
     Luascript luascript = luascript_get_instance(L);
     RoundContext roundcontext = (RoundContext)luascript->context;
 
 
-    TextSprite ret = week_ui_get_trackinfo(roundcontext);
+    TextSprite ret = week_ui_get_round_textsprite(roundcontext);
 
     return script_textsprite_new(L, ret);
 }
@@ -576,14 +576,14 @@ static int script_week_get_current_chart_info(lua_State* L) {
     return 2;
 }
 
-static int script_week_get_current_track_info(lua_State* L) {
+static int script_week_get_current_song_info(lua_State* L) {
     Luascript luascript = luascript_get_instance(L);
     RoundContext roundcontext = (RoundContext)luascript->context;
     
     const char* name;
     const char* difficult;
     int32_t index;
-    week_get_current_track_info(roundcontext, &name, &difficult, &index);
+    week_get_current_song_info(roundcontext, &name, &difficult, &index);
 
     lua_pushstring(L, name);
     lua_pushstring(L, difficult);
@@ -743,7 +743,7 @@ static const luaL_Reg WEEK_FUNCTIONS[] = {
     { "week_ui_get_roundstats", script_week_ui_get_roundstats },
     { "week_ui_get_rankingcounter", script_week_ui_get_rankingcounter },
     { "week_ui_get_streakcounter", script_week_ui_get_streakcounter },
-    { "week_ui_get_trackinfo", script_week_ui_get_trackinfo },
+    { "week_ui_get_round_textsprite", script_week_ui_get_round_textsprite },
     { "week_ui_get_songprogressbar", script_week_ui_get_songprogressbar },
     { "week_ui_get_countdown", script_week_ui_get_countdown },
     { "week_ui_get_healthbar", script_week_ui_get_healthbar },
@@ -760,7 +760,7 @@ static const luaL_Reg WEEK_FUNCTIONS[] = {
     { "week_get_playerstats", script_week_get_playerstats },
     { "week_get_songplayer", script_week_get_songplayer },
     { "week_get_current_chart_info", script_week_get_current_chart_info },
-    { "week_get_current_track_info", script_week_get_current_track_info },
+    { "week_get_current_song_info", script_week_get_current_song_info },
     { "week_change_character_camera_name", script_week_change_character_camera_name },
     { "week_disable_layout_rollback", script_week_disable_layout_rollback },
     { "week_override_common_folder", script_week_override_common_folder },

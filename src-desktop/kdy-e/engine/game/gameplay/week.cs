@@ -96,15 +96,15 @@ namespace Engine.Game.Gameplay {
         public float streakcounter_numbergap;
         public float streakcounter_delay;
         public bool rankingcounter_percentonly;
-        public float trackinfo_x;
-        public float trackinfo_y;
-        public float trackinfo_z;
-        public float trackinfo_maxwidth;
-        public float trackinfo_maxheight;
-        public Align trackinfo_alignvertical;
-        public Align trackinfo_alignhorinzontal;
-        public float trackinfo_fontsize;
-        public uint trackinfo_fontcolor;
+        public float songinfo_x;
+        public float songinfo_y;
+        public float songinfo_z;
+        public float songinfo_maxwidth;
+        public float songinfo_maxheight;
+        public Align songinfo_alignvertical;
+        public Align songinfo_alignhorinzontal;
+        public float songinfo_fontsize;
+        public uint songinfo_fontcolor;
         public float countdown_height;
         public float songprogressbar_x;
         public float songprogressbar_y;
@@ -143,7 +143,7 @@ namespace Engine.Game.Gameplay {
         public string difficult;
         public string default_boyfriend;
         public string default_girlfriend;
-        public bool single_track;
+        public bool single_song;
 
         public WeekInfo weekinfo;
     }
@@ -189,7 +189,7 @@ namespace Engine.Game.Gameplay {
         public StreakCounter streakcounter;
         public HealthBar healthbar;
         public RoundStats roundstats;
-        public TextSprite trackinfo;
+        public TextSprite songinfo;
         public Countdown countdown;
         public WeekGameOver weekgameover;
         public WeekPause weekpause;
@@ -212,8 +212,8 @@ namespace Engine.Game.Gameplay {
         public PlayerStruct[] players;
         public int players_size;
 
-        public int track_index;
-        public string track_difficult;
+        public int song_index;
+        public string song_difficult;
         public double round_duration;
 
         public ChartEventEntry[] events;
@@ -271,11 +271,11 @@ namespace Engine.Game.Gameplay {
         private const string UI_LAYOUT_DREAMCAST = "/assets/common/image/week-round/ui~dreamcast.xml";
         private static readonly LayoutPlaceholder UI_STRUMS_LAYOUT_PLACEHOLDER = new LayoutPlaceholder() { x = 0f, y = 0f, z = 100f, width = 300f, height = 54f };
         private static readonly LayoutPlaceholder UI_STUB_LAYOUT_PLACEHOLDER = new LayoutPlaceholder() { x = 0f, y = 0f, z = -1f, width = 100f, height = 100f };
-        private const string UI_TRACKINFO_ALT_SUFFIX = "(alt) ";
+        private const string UI_SONGINFO_ALT_SUFFIX = "(alt) ";
 #if DEBUG
-        private const string UI_TRACKINFO_FORMAT = "$s $s[$s] {kdy $s}";
+        private const string UI_SONGINFO_FORMAT = "$s $s[$s] {kdy $s}";
 #else
-        private const string UI_TRACKINFO_FORMAT = "$s $s[$s]";
+        private const string UI_SONGINFO_FORMAT = "$s $s[$s]";
 #endif
 
         internal const string ROUND_CHARACTER_PREFIX = "character_";
@@ -303,7 +303,7 @@ namespace Engine.Game.Gameplay {
             if (roundcontext.script != null) roundcontext.script.Destroy();
             if (roundcontext.countdown != null) roundcontext.countdown.Destroy();
             if (roundcontext.girlfriend != null) roundcontext.girlfriend.Destroy();
-            if (roundcontext.trackinfo != null) roundcontext.trackinfo.Destroy();
+            if (roundcontext.songinfo != null) roundcontext.songinfo.Destroy();
             if (roundcontext.weekgameover != null) roundcontext.weekgameover.Destroy();
             if (roundcontext.weekpause != null) roundcontext.weekpause.Destroy();
             if (roundcontext.screen_background != null) roundcontext.screen_background.Destroy();
@@ -352,7 +352,7 @@ namespace Engine.Game.Gameplay {
         }
 
 
-        public static int Main(WeekInfo weekinfo, bool alt_tracks, string difficult, string default_bf, string default_gf, string gameplaymanifest_src, int single_track_index) {
+        public static int Main(WeekInfo weekinfo, bool alt_tracks, string difficult, string default_bf, string default_gf, string gameplaymanifest_src, int single_song_index) {
             Week.ROUND_UI_MATRIX.Clear();
             Week.ROUND_UI_MATRIX_CAMERA.Clear();
 
@@ -361,7 +361,7 @@ namespace Engine.Game.Gameplay {
                 difficult = difficult,
                 default_boyfriend = default_bf,
                 default_girlfriend = default_gf,
-                single_track = single_track_index >= 0,
+                single_song = single_song_index >= 0,
 
                 layout_strums = null,
                 layout_strums_size = 0,
@@ -399,15 +399,15 @@ namespace Engine.Game.Gameplay {
                     streakcounter_numbergap = 0f,
                     streakcounter_delay = 0f,
                     rankingcounter_percentonly = false,
-                    trackinfo_x = 0f,
-                    trackinfo_y = 0f,
-                    trackinfo_z = 0f,
-                    trackinfo_maxwidth = -1f,
-                    trackinfo_maxheight = -1f,
-                    trackinfo_alignvertical = Align.START,
-                    trackinfo_alignhorinzontal = Align.START,
-                    trackinfo_fontcolor = 0x00,
-                    trackinfo_fontsize = 0x00,
+                    songinfo_x = 0f,
+                    songinfo_y = 0f,
+                    songinfo_z = 0f,
+                    songinfo_maxwidth = -1f,
+                    songinfo_maxheight = -1f,
+                    songinfo_alignvertical = Align.START,
+                    songinfo_alignhorinzontal = Align.START,
+                    songinfo_fontcolor = 0x00,
+                    songinfo_fontsize = 0x00,
                     countdown_height = 0f,
                     songprogressbar_x = 0f,
                     songprogressbar_y = 0f,
@@ -438,7 +438,7 @@ namespace Engine.Game.Gameplay {
                 playerstats_index = -1,
                 healthwatcher = new HealthWatcher(),
                 countdown = null,
-                trackinfo = null,
+                songinfo = null,
                 weekgameover = null,
                 weekpause = null,
                 weekresult = null,
@@ -471,9 +471,9 @@ namespace Engine.Game.Gameplay {
                 },
                 girlfriend = null,
 
-                track_index = 0,
+                song_index = 0,
                 round_duration = -1,
-                track_difficult = difficult,
+                song_difficult = difficult,
 
                 events = null,
                 events_size = 0,
@@ -527,7 +527,7 @@ namespace Engine.Game.Gameplay {
 
             // pause menu
             roundcontext.weekpause = new WeekPause();
-            // track/week stats
+            // song/week stats
             roundcontext.weekresult = new WeekResult();
             // messagebox
             roundcontext.messagebox = new MessageBox();
@@ -558,34 +558,34 @@ namespace Engine.Game.Gameplay {
                 return 1;
             }
 
-            // step 2: initialize the first track (round n° 1)
-            roundcontext.track_index = 0;// this is very important
+            // step 2: initialize the first song (round n° 1)
+            roundcontext.song_index = 0;// this is very important
             initparams.gameplaymanifest = gameplaymanifest;
 
             bool gameover = false;
             bool retry = false;
             bool mainmenu = false;
             bool weekselector = false;
-            int[] tracks_attempts = new int[gameplaymanifest.tracks_size];
+            int[] songs_attempts = new int[gameplaymanifest.songs_size];
             bool first_init = true;
             bool reject_completed = false;
-            int last_track = gameplaymanifest.tracks_size - 1;
-            bool single_track = single_track_index >= 0;
+            int last_song = gameplaymanifest.songs_size - 1;
+            bool single_song = single_song_index >= 0;
 
-            for (int i = 0 ; i < gameplaymanifest.tracks_size ; i++) tracks_attempts[i] = 0;
+            for (int i = 0 ; i < gameplaymanifest.songs_size ; i++) songs_attempts[i] = 0;
 
-            if (single_track) {
-                if (single_track_index > gameplaymanifest.tracks_size) {
+            if (single_song) {
+                if (single_song_index > gameplaymanifest.songs_size) {
                     Console.Error.WriteLine("[ERROR] week_main() is out of bounds, check your gameplay manifest");
                     gameplaymanifest.Destroy();
-                    //free(tracks_attempts);
+                    //free(songs_attempts);
                     return 1;
                 }
-                roundcontext.track_index = single_track_index;
+                roundcontext.song_index = single_song_index;
             }
 
             // step 3: start the round cycle
-            while (roundcontext.track_index < gameplaymanifest.tracks_size) {
+            while (roundcontext.song_index < gameplaymanifest.songs_size) {
                 BeatWatcher.GlobalSetTimestamp(0.0);
 
                 if (!retry) {
@@ -615,7 +615,7 @@ namespace Engine.Game.Gameplay {
 
                 if (first_init) {
                     if (roundcontext.script != null) {
-                        roundcontext.script.NotifyWeekinit(single_track ? single_track_index : -1);
+                        roundcontext.script.NotifyWeekinit(single_song ? single_song_index : -1);
                         Week.Halt(roundcontext, true);
                     }
                     first_init = false;
@@ -643,9 +643,9 @@ namespace Engine.Game.Gameplay {
 
                 // check if necessary show dialogue if an dialog text is provided
                 bool show_dialog = false;
-                bool dialog_on_freeplay = !gameplaymanifest.tracks[roundcontext.track_index].dialog_ignore_on_freeplay;
-                if (!retry && (!single_track || (single_track && dialog_on_freeplay))) {
-                    string dialog_text = gameplaymanifest.tracks[roundcontext.track_index].dialog_text;
+                bool dialog_on_freeplay = !gameplaymanifest.songs[roundcontext.song_index].dialog_ignore_on_freeplay;
+                if (!retry && (!single_song || (single_song && dialog_on_freeplay))) {
+                    string dialog_text = gameplaymanifest.songs[roundcontext.song_index].dialog_text;
                     if (String.IsNullOrEmpty(dialog_text)) {
                         // nothing to do
                     } else if (roundcontext.dialogue == null) {
@@ -659,7 +659,7 @@ namespace Engine.Game.Gameplay {
                 }
 
                 // actual gameplay is here
-                int current_track_index = roundcontext.track_index;
+                int current_song_index = roundcontext.song_index;
                 int round_result = Round(roundcontext, retry, show_dialog);
 
                 retry = false;
@@ -677,7 +677,7 @@ namespace Engine.Game.Gameplay {
                     roundcontext.scriptcontext.force_end_flag = false;
                 }
 
-                if ((round_result == 0 && roundcontext.track_index != last_track) || round_result == 2) {
+                if ((round_result == 0 && roundcontext.song_index != last_song) || round_result == 2) {
                     if (roundcontext.settings.layout_rollback) {
                         layout.StopAllTriggers();
                         layout.TriggerAny(null);
@@ -700,7 +700,7 @@ namespace Engine.Game.Gameplay {
                     break;
                 } else if (round_result == 2) {
                     // round loose, retry
-                    tracks_attempts[roundcontext.track_index]++;
+                    songs_attempts[roundcontext.song_index]++;
                     if (roundcontext.songplayer != null) {
                         roundcontext.songplayer.Seek(0.0);
                         roundcontext.songplayer.Mute(false);
@@ -708,10 +708,10 @@ namespace Engine.Game.Gameplay {
 
                     Week.ToggleStates(roundcontext, gameplaymanifest);
 
-                    if (current_track_index != roundcontext.track_index) continue;
-                    if (roundcontext.track_difficult != initparams.difficult) {
-                        reject_completed = current_track_index > 0;
-                        initparams.difficult = roundcontext.track_difficult;
+                    if (current_song_index != roundcontext.song_index) continue;
+                    if (roundcontext.song_difficult != initparams.difficult) {
+                        reject_completed = current_song_index > 0;
+                        initparams.difficult = roundcontext.song_difficult;
                         continue;
                     }
 
@@ -720,10 +720,10 @@ namespace Engine.Game.Gameplay {
                     continue;
                 }
 
-                if (single_track) break;// week launched from freeplaymenu
+                if (single_song) break;// week launched from freeplaymenu
 
                 // round completed, next one
-                roundcontext.track_index++;
+                roundcontext.song_index++;
                 retry = false;
             }
 
@@ -745,7 +745,7 @@ namespace Engine.Game.Gameplay {
                 }
 
                 // dispose all allocated resources
-                //free(tracks_attempts);
+                //free(songs_attempts);
                 Week.Destroy(roundcontext, gameplaymanifest);
 
                 // if false, goto weekselector
@@ -767,17 +767,17 @@ namespace Engine.Game.Gameplay {
             // show the whole week stats and wait for the player to press START to return
             if (!gameover) {
                 int total_attempts = 0;
-                int tracks_count = single_track ? 1 : gameplaymanifest.tracks_size;
+                int songs_count = single_song ? 1 : gameplaymanifest.songs_size;
 
-                for (int i = 0 ; i < gameplaymanifest.tracks_size ; i++) total_attempts += tracks_attempts[i];
+                for (int i = 0 ; i < gameplaymanifest.songs_size ; i++) total_attempts += songs_attempts[i];
 
                 if (!roundcontext.scriptcontext.no_week_end_result_screen) {
                     roundcontext.weekresult.HelperShowSummary(
-                        roundcontext, total_attempts, tracks_count, reject_completed
+                        roundcontext, total_attempts, songs_count, reject_completed
                     );
                 }
 
-                if (roundcontext.script != null) roundcontext.script.NotifyAfterresults(total_attempts, tracks_count, reject_completed);
+                if (roundcontext.script != null) roundcontext.script.NotifyAfterresults(total_attempts, songs_count, reject_completed);
 
                 Week.Halt(roundcontext, true);
             }
@@ -791,7 +791,7 @@ namespace Engine.Game.Gameplay {
                     total_score += roundcontext.players[i].playerstats.GetScore();
                 }
 
-                FunkinSave.SetWeekScore(weekinfo.name, roundcontext.track_difficult, total_score);
+                FunkinSave.SetWeekScore(weekinfo.name, roundcontext.song_difficult, total_score);
 
                 // keep displaying the stage layout until the save is done
                 roundcontext.messagebox.UseSmallSize(true);
@@ -819,7 +819,7 @@ namespace Engine.Game.Gameplay {
             bool show_credits = !gameover && roundcontext.settings.show_credits;
 
             // dispose all allocated resources
-            //free(tracks_attempts);
+            //free(songs_attempts);
             Week.Destroy(roundcontext, gameplaymanifest);
 
             if (show_credits) {
@@ -939,20 +939,20 @@ namespace Engine.Game.Gameplay {
             // pick streakcounter and rankingcounter values
             Week.InternalPickCountersValuesFromLayout(roundcontext);
 
-            placeholder = layout.GetPlaceholder("ui_track_info");
+            placeholder = layout.GetPlaceholder("ui_song_info");
             if (placeholder == null) {
-                Console.Error.WriteLine("[ERROR] missing layout ui_track_info placeholder");
+                Console.Error.WriteLine("[ERROR] missing layout ui_song_info placeholder");
                 placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
             }
-            ui.trackinfo_x = placeholder.x;
-            ui.trackinfo_y = placeholder.y;
-            ui.trackinfo_z = placeholder.z;
-            ui.trackinfo_maxwidth = placeholder.width;
-            ui.trackinfo_maxheight = placeholder.height;
-            ui.trackinfo_alignvertical = placeholder.align_vertical;
-            ui.trackinfo_alignhorinzontal = placeholder.align_horizontal;
-            ui.trackinfo_fontsize = (float)((double)layout.GetAttachedValue("ui_track_info_fontSize", AttachedValueType.FLOAT, 10.0));
-            ui.trackinfo_fontcolor = (uint)layout.GetAttachedValue("ui_track_info_fontColor", AttachedValueType.HEX, 0xFFFFFFU);
+            ui.songinfo_x = placeholder.x;
+            ui.songinfo_y = placeholder.y;
+            ui.songinfo_z = placeholder.z;
+            ui.songinfo_maxwidth = placeholder.width;
+            ui.songinfo_maxheight = placeholder.height;
+            ui.songinfo_alignvertical = placeholder.align_vertical;
+            ui.songinfo_alignhorinzontal = placeholder.align_horizontal;
+            ui.songinfo_fontsize = (float)((double)layout.GetAttachedValue("ui_song_info_fontSize", AttachedValueType.FLOAT, 10.0));
+            ui.songinfo_fontcolor = (uint)layout.GetAttachedValue("ui_song_info_fontColor", AttachedValueType.HEX, 0xFFFFFFU);
 
             // initialize adaptation of the UI elements in the stage layout
             InternalCheckScreenResolution(roundcontext, true);
@@ -1005,11 +1005,11 @@ namespace Engine.Game.Gameplay {
                 ui.songprogressbar_z = placeholder.z;
             }
 
-            placeholder = layout.GetPlaceholder("ui_track_info_inverted");
+            placeholder = layout.GetPlaceholder("ui_song_info_inverted");
             if (placeholder != null) {
-                ui.trackinfo_x = placeholder.x;
-                ui.trackinfo_y = placeholder.y;
-                ui.trackinfo_z = placeholder.z;
+                ui.songinfo_x = placeholder.x;
+                ui.songinfo_y = placeholder.y;
+                ui.songinfo_z = placeholder.z;
             }
         }
 
@@ -1017,15 +1017,15 @@ namespace Engine.Game.Gameplay {
         public static void RoundPrepare(RoundContext roundcontext, GameplayManifest gameplaymanifest) {
             //
             // Note:
-            //      Some UI components can be redefined in each week round (track). If the
-            //      track does not specify this, the UI component/s are initialized to thier
+            //      Some UI components can be redefined in each week round (song). If the
+            //      song does not specify this, the UI component/s are initialized to thier
             //      default settings.
             //
-            //      Each track can not use the defined UI component/s of previous tracks, if
-            //      those tracks does not have thier own definitions it will reinitialized to
+            //      Each song can not use the defined UI component/s of previous songs, if
+            //      those songs does not have thier own definitions it will reinitialized to
             //      default.
             //
-            GameplayManifestTrack trackmanifest = gameplaymanifest.tracks[roundcontext.track_index];
+            GameplayManifestSong songmanifest = gameplaymanifest.songs[roundcontext.song_index];
             InitParams initparams = roundcontext.initparams;
 
             bool updated_ui = false;
@@ -1033,11 +1033,11 @@ namespace Engine.Game.Gameplay {
             bool updated_stage = false;
 
             // initialize layout
-            if (trackmanifest.has_stage) {
+            if (songmanifest.has_stage) {
                 updated_stage = true;
                 roundcontext.stage_from_default = false;
 
-                Week.InitStage(roundcontext, trackmanifest.stage);
+                Week.InitStage(roundcontext, songmanifest.stage);
             } else if (roundcontext.layout == null || !roundcontext.stage_from_default) {
                 updated_stage = true;
                 roundcontext.stage_from_default = true;
@@ -1046,10 +1046,10 @@ namespace Engine.Game.Gameplay {
             }
 
             // initialize script/stagescript
-            if (trackmanifest.has_script) {
+            if (songmanifest.has_script) {
                 roundcontext.script_from_default = false;
 
-                Week.InitScript(roundcontext, trackmanifest.script);
+                Week.InitScript(roundcontext, songmanifest.script);
             } else if (roundcontext.script == null || !roundcontext.script_from_default) {
                 roundcontext.script_from_default = true;
 
@@ -1057,19 +1057,19 @@ namespace Engine.Game.Gameplay {
             }
 
             // initialize dialogue
-            if (!String.IsNullOrEmpty(trackmanifest.dialogue_params)) {
+            if (!String.IsNullOrEmpty(songmanifest.dialogue_params)) {
                 roundcontext.dialogue_from_default = false;
                 Week.InitDialogue(
                     roundcontext,
-                    trackmanifest.dialogue_params,
-                    trackmanifest.dialog_ignore_on_freeplay && initparams.single_track
+                    songmanifest.dialogue_params,
+                    songmanifest.dialog_ignore_on_freeplay && initparams.single_song
                 );
             } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
                 roundcontext.dialogue_from_default = true;
                 Week.InitDialogue(
                     roundcontext,
                     gameplaymanifest.@default.dialogue_params,
-                    trackmanifest.dialog_ignore_on_freeplay && initparams.single_track
+                    songmanifest.dialog_ignore_on_freeplay && initparams.single_song
                 );
             }
 
@@ -1081,8 +1081,8 @@ namespace Engine.Game.Gameplay {
             }
 
             // initialize ui
-            if (trackmanifest.has_ui_layout) {
-                string src = trackmanifest.ui_layout;
+            if (songmanifest.has_ui_layout) {
+                string src = songmanifest.ui_layout;
                 if (String.IsNullOrEmpty(src)) src = gameplaymanifest.@default.ui_layout;
 
                 Week.InitUILayout(src, initparams, roundcontext);
@@ -1127,7 +1127,7 @@ namespace Engine.Game.Gameplay {
                 }
             }
 
-            //float multiplier = roundcontext.track_difficult == Funkin.DIFFICULT_EASY ? 1.25 : 1.0;
+            //float multiplier = roundcontext.song_difficult == Funkin.DIFFICULT_EASY ? 1.25 : 1.0;
             //for (int i = 0 ; i < roundcontext.players_size ; i++) {
             //    if (roundcontext.players[i].strums)
             //        roundcontext.players[i].strums.SetMarkerDurationMultiplier(multiplier);
@@ -1164,11 +1164,11 @@ namespace Engine.Game.Gameplay {
             }
 
             // initialize girlfriend
-            if (trackmanifest.has_girlfriend) {
+            if (songmanifest.has_girlfriend) {
                 updated_stage = true;
                 roundcontext.girlfriend_from_default = false;
 
-                Week.InitGirlfriend(roundcontext, trackmanifest.girlfriend);
+                Week.InitGirlfriend(roundcontext, songmanifest.girlfriend);
             } else if (roundcontext.girlfriend == null || !roundcontext.girlfriend_from_default) {
                 updated_stage = true;
                 roundcontext.girlfriend_from_default = true;
@@ -1177,19 +1177,19 @@ namespace Engine.Game.Gameplay {
             }
 
             // add additional pause menu
-            if (trackmanifest.has_pause_menu) {
+            if (songmanifest.has_pause_menu) {
                 roundcontext.pause_menu_from_default = false;
 
-                roundcontext.weekpause.ExternalSetMenu(trackmanifest.pause_menu);
+                roundcontext.weekpause.ExternalSetMenu(songmanifest.pause_menu);
             } else if (!roundcontext.pause_menu_from_default) {
                 roundcontext.pause_menu_from_default = true;
 
                 roundcontext.weekpause.ExternalSetMenu(gameplaymanifest.@default.pause_menu);
             }
 
-            // initialize the song tracks
+            // initialize the song
             if (roundcontext.songplayer != null) roundcontext.songplayer.Destroy();
-            roundcontext.songplayer = SongPlayer.Init(trackmanifest.song, initparams.alt_tracks);
+            roundcontext.songplayer = SongPlayer.Init(songmanifest.file, initparams.alt_tracks);
 
             // initialize the gameover screen
             Week.InitUIGameover(roundcontext);
@@ -1197,10 +1197,10 @@ namespace Engine.Game.Gameplay {
             // update location&size of UI cosmetics (if required)
             if (updated_ui || updated_stage) Week.InitUICosmetics(roundcontext);
 
-            roundcontext.trackinfo.SetTextFormated(
-                UI_TRACKINFO_FORMAT,
-                trackmanifest.name,
-                initparams.alt_tracks ? UI_TRACKINFO_ALT_SUFFIX : null,
+            roundcontext.songinfo.SetTextFormated(
+                UI_SONGINFO_FORMAT,
+                songmanifest.name,
+                initparams.alt_tracks ? UI_SONGINFO_ALT_SUFFIX : null,
                 initparams.difficult
 #if DEBUG
                 , GameMain.ENGINE_VERSION
@@ -1216,7 +1216,7 @@ namespace Engine.Game.Gameplay {
             Week.ToggleStates(roundcontext, gameplaymanifest);
             Week.UpdateBpm(roundcontext, roundcontext.settings.original_bpm);
             Week.UpdateSpeed(roundcontext, roundcontext.settings.original_speed);
-            roundcontext.round_duration = trackmanifest.duration;
+            roundcontext.round_duration = songmanifest.duration;
         }
 
         public static bool InitHealthbar(RoundContext roundcontext, GameplayManifest gameplaymanifest, bool force_update) {
@@ -1225,9 +1225,9 @@ namespace Engine.Game.Gameplay {
             GameplayManifestHealthBar healthbarmanifest = gameplaymanifest.@default.healthbar;
             HealthBarParams healthbarparams = roundcontext.healthbarparams;
 
-            if (gameplaymanifest.tracks[roundcontext.track_index].healthbar != null) {
+            if (gameplaymanifest.songs[roundcontext.song_index].healthbar != null) {
                 roundcontext.healthbar_from_default = false;
-                healthbarmanifest = gameplaymanifest.tracks[roundcontext.track_index].healthbar;
+                healthbarmanifest = gameplaymanifest.songs[roundcontext.song_index].healthbar;
             } else if (force_update || roundcontext.healthbar == null || !roundcontext.healthbar_from_default) {
                 roundcontext.healthbar_from_default = true;
             } else {
@@ -1551,9 +1551,9 @@ namespace Engine.Game.Gameplay {
 
         public static bool InitChartAndPlayers(RoundContext roundcontext, GameplayManifest gameplaymanifest, bool new_ui) {
             InitParams initparams = roundcontext.initparams;
-            int track_index = roundcontext.track_index;
+            int song_index = roundcontext.song_index;
 
-            Chart chart = new Chart(gameplaymanifest.tracks[track_index].chart, initparams.difficult);
+            Chart chart = new Chart(gameplaymanifest.songs[song_index].chart, initparams.difficult);
 
             // keep just in case the same textures are used
             PlayerStruct[] old_players = roundcontext.players;
@@ -1567,21 +1567,21 @@ namespace Engine.Game.Gameplay {
             roundcontext.settings.original_bpm = chart.bpm;
             roundcontext.settings.original_speed = chart.speed;
 
-            // Pick players & strum distributions from default or current track
-            bool distributions_from_default = !gameplaymanifest.tracks[track_index].has_distributions;
-            bool players_from_default = !gameplaymanifest.tracks[track_index].has_players;
+            // Pick players & strum distributions from default or current song
+            bool distributions_from_default = !gameplaymanifest.songs[song_index].has_distributions;
+            bool players_from_default = !gameplaymanifest.songs[song_index].has_players;
             GameplayManifestPlayer[] players = gameplaymanifest.@default.players;
             int players_size = gameplaymanifest.@default.players_size;
             Distribution[] distributions = gameplaymanifest.@default.distributions;
             int distributions_size = gameplaymanifest.@default.distributions_size;
 
-            if (gameplaymanifest.tracks[track_index].has_players) {
-                players = gameplaymanifest.tracks[track_index].players;
-                players_size = gameplaymanifest.tracks[track_index].players_size;
+            if (gameplaymanifest.songs[song_index].has_players) {
+                players = gameplaymanifest.songs[song_index].players;
+                players_size = gameplaymanifest.songs[song_index].players_size;
             }
-            if (gameplaymanifest.tracks[track_index].has_distributions) {
-                distributions = gameplaymanifest.tracks[track_index].distributions;
-                distributions_size = gameplaymanifest.tracks[track_index].distributions_size;
+            if (gameplaymanifest.songs[song_index].has_distributions) {
+                distributions = gameplaymanifest.songs[song_index].distributions;
+                distributions_size = gameplaymanifest.songs[song_index].distributions_size;
             }
 
             //
@@ -1916,7 +1916,7 @@ namespace Engine.Game.Gameplay {
             Countdown old_countdown = roundcontext.countdown;
             SongProgressbar old_songprogressbar = roundcontext.songprogressbar;
             if (roundcontext.roundstats != null) roundcontext.roundstats.Destroy();
-            if (roundcontext.trackinfo != null) roundcontext.trackinfo.Destroy();
+            if (roundcontext.songinfo != null) roundcontext.songinfo.Destroy();
 
             // step 1: initialize all "cosmetic" components
             ModelHolder modelholder_rankingstreak = ModelHolder.Init(UI_RANKINGCOUNTER_MODEL);
@@ -2004,25 +2004,25 @@ namespace Engine.Game.Gameplay {
                 initparams.ui_layout_width, initparams.ui_layout_height
             );
 
-            // step 1f: initialize trackinfo
-            roundcontext.trackinfo = TextSprite.Init2(
-                initparams.font, initparams.ui.trackinfo_fontsize, initparams.ui.trackinfo_fontcolor
+            // step 1f: initialize songinfo
+            roundcontext.songinfo = TextSprite.Init2(
+                initparams.font, initparams.ui.songinfo_fontsize, initparams.ui.songinfo_fontcolor
             );
-            roundcontext.trackinfo.SetAlign(
-                initparams.ui.trackinfo_alignvertical,
-                initparams.ui.trackinfo_alignhorinzontal
+            roundcontext.songinfo.SetAlign(
+                initparams.ui.songinfo_alignvertical,
+                initparams.ui.songinfo_alignhorinzontal
             );
-            roundcontext.trackinfo.SetMaxDrawSize(
-                initparams.ui.trackinfo_maxwidth,
-                initparams.ui.trackinfo_maxheight
+            roundcontext.songinfo.SetMaxDrawSize(
+                initparams.ui.songinfo_maxwidth,
+                initparams.ui.songinfo_maxheight
             );
-            roundcontext.trackinfo.SetDrawLocation(
-                initparams.ui.trackinfo_x, initparams.ui.trackinfo_y
+            roundcontext.songinfo.SetDrawLocation(
+                initparams.ui.songinfo_x, initparams.ui.songinfo_y
             );
-            roundcontext.trackinfo.SetZIndex(initparams.ui.trackinfo_z);
-            roundcontext.trackinfo.BorderEnable(true);
-            roundcontext.trackinfo.BorderSetSize(RoundStats.FONT_BORDER_SIZE);
-            roundcontext.trackinfo.BorderSetColorRGBA8(0x000000FF);// black
+            roundcontext.songinfo.SetZIndex(initparams.ui.songinfo_z);
+            roundcontext.songinfo.BorderEnable(true);
+            roundcontext.songinfo.BorderSetSize(RoundStats.FONT_BORDER_SIZE);
+            roundcontext.songinfo.BorderSetColorRGBA8(0x000000FF);// black
 
             // step 2: dispose all modelholders used
             modelholder_rankingstreak.Destroy();
@@ -2140,7 +2140,7 @@ namespace Engine.Game.Gameplay {
                 3, PVRContextVertex.DRAWABLE, roundcontext.countdown.GetDrawable(), ui1
             );
             layout.ExternalVertexSetEntry(
-                4, PVRContextVertex.TEXTSPRITE, roundcontext.trackinfo, ui1
+                4, PVRContextVertex.TEXTSPRITE, roundcontext.songinfo, ui1
             );
             layout.ExternalVertexSetEntry(
                 5, PVRContextVertex.DRAWABLE, roundcontext.weekgameover.GetDrawable(), ui2
@@ -2200,22 +2200,22 @@ namespace Engine.Game.Gameplay {
         }
 
         public static void ToggleStates(RoundContext roundcontext, GameplayManifest gameplaymanifest) {
-            GameplayManifestTrack track = gameplaymanifest.tracks[roundcontext.track_index];
+            GameplayManifestSong song = gameplaymanifest.songs[roundcontext.song_index];
 
-            if (track.has_selected_state_name) {
+            if (song.has_selected_state_name) {
                 for (int i = 0 ; i < roundcontext.players_size ; i++) {
                     if (roundcontext.players[i].strums != null)
-                        roundcontext.players[i].strums.StateToggle(track.selected_state_name);
+                        roundcontext.players[i].strums.StateToggle(song.selected_state_name);
                     if (roundcontext.players[i].character != null)
-                        roundcontext.players[i].character.StateToggle(track.selected_state_name);
+                        roundcontext.players[i].character.StateToggle(song.selected_state_name);
                 }
-                roundcontext.healthbar.StateToggle(track.selected_state_name);
+                roundcontext.healthbar.StateToggle(song.selected_state_name);
             }
 
-            int size = track.selected_state_name_per_player_size;
+            int size = song.selected_state_name_per_player_size;
             if (roundcontext.players_size < size) size = roundcontext.players_size;
             for (int i = 0 ; i < size ; i++) {
-                string state_name = track.selected_state_name_per_player[i];
+                string state_name = song.selected_state_name_per_player[i];
                 if (roundcontext.players[i].strums != null)
                     roundcontext.players[i].strums.StateToggle(state_name);
                 if (roundcontext.players[i].character != null)
@@ -2694,18 +2694,18 @@ namespace Engine.Game.Gameplay {
 
                 // ask for player decision
                 int decision = roundcontext.weekgameover.HelperAskToPlayer(roundcontext);
-                string track_difficult = roundcontext.weekgameover.GetDifficult();
+                string song_difficult = roundcontext.weekgameover.GetDifficult();
                 roundcontext.weekgameover.Hide();
 
                 // notify script and wait (if necessary)
 
                 if (roundcontext.script != null) {
-                    string change = roundcontext.track_difficult == track_difficult ? null : track_difficult;
+                    string change = roundcontext.song_difficult == song_difficult ? null : song_difficult;
                     roundcontext.script.NotifyDiedecision(decision > 0, change);
                     Week.Halt(roundcontext, true);
                 }
 
-                roundcontext.track_difficult = track_difficult;
+                roundcontext.song_difficult = song_difficult;
 
                 return decision;
             }
@@ -2978,8 +2978,8 @@ namespace Engine.Game.Gameplay {
             return roundcontext.initparams.layout_strums_size;
         }
 
-        public static TextSprite UIGetTrackinfo(RoundContext roundcontext) {
-            return roundcontext.trackinfo;
+        public static TextSprite UIGetRoundTextsprite(RoundContext roundcontext) {
+            return roundcontext.songinfo;
         }
 
         public static void UISetVisibility(RoundContext roundcontext, bool visible) {
@@ -2991,10 +2991,10 @@ namespace Engine.Game.Gameplay {
             speed = roundcontext.settings.original_speed;
         }
 
-        public static void GetCurrentTrackInfo(RoundContext roundcontext, out string name, out string difficult, out int index) {
-            name = roundcontext.initparams.gameplaymanifest.tracks[roundcontext.track_index].name;
-            difficult = roundcontext.track_difficult;
-            index = roundcontext.track_index;
+        public static void GetCurrentSongInfo(RoundContext roundcontext, out string name, out string difficult, out int index) {
+            name = roundcontext.initparams.gameplaymanifest.songs[roundcontext.song_index].name;
+            difficult = roundcontext.song_difficult;
+            index = roundcontext.song_index;
         }
 
         public static void ChangeCharacterCameraName(RoundContext roundcontext, bool opponent_or_player, string new_name) {
@@ -3081,13 +3081,13 @@ namespace Engine.Game.Gameplay {
         public static Strums UIGetStrums(RoundContext roundcontext, int strums_id) {
             InitParams initparams = roundcontext.initparams;
             GameplayManifest gameplaymanifest = initparams.gameplaymanifest;
-            int track_index = roundcontext.track_index;
+            int song_index = roundcontext.song_index;
 
             GameplayManifestPlayer[] players = gameplaymanifest.@default.players;
             int players_size = gameplaymanifest.@default.players_size;
-            if (gameplaymanifest.tracks[track_index].has_players) {
-                players = gameplaymanifest.tracks[track_index].players;
-                players_size = gameplaymanifest.tracks[track_index].players_size;
+            if (gameplaymanifest.songs[song_index].has_players) {
+                players = gameplaymanifest.songs[song_index].players;
+                players_size = gameplaymanifest.songs[song_index].players_size;
             }
 
             for (int i = 0 ; i < players_size ; i++) {
@@ -3164,9 +3164,9 @@ namespace Engine.Game.Gameplay {
                 return null;
             }
 
-            if (gameplaymanifest.tracks_size < 1) {
+            if (gameplaymanifest.songs_size < 1) {
                 gameplaymanifest.Destroy();
-                Console.Error.WriteLine("[ERROR] week_main() no tracks defined, goodbye.File: " + src);
+                Console.Error.WriteLine("[ERROR] week_main() no songs defined, goodbye.File: " + src);
                 return null;
             }
 

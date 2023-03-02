@@ -315,7 +315,7 @@ namespace Engine.Game {
             return Funkin.weeks_array.array;
         }
 
-        public int LaunchWeek(string week_name, string difficult, bool alt_tracks, string bf, string gf, string gameplay_manifest, int track_idx) {
+        public int LaunchWeek(string week_name, string difficult, bool alt_tracks, string bf, string gf, string gameplay_manifest, int song_idx) {
             WeekInfo gameplay_weekinfo = null;
 
             for (int i = 0 ; i < Funkin.weeks_array.size ; i++) {
@@ -343,7 +343,7 @@ namespace Engine.Game {
                 bf,
                 gf,
                 gameplay_manifest,
-                track_idx
+                song_idx
             );
 
             // forget all preloaded files

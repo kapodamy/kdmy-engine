@@ -17,12 +17,12 @@ end
 function f_beforeready(from_retry)
     stage = week_get_stage_layout()
     stageCamera = stage:get_camera_helper()
-    local ____, ____, track_index = week_get_current_track_info()
-    isBeforeEvilMall = track_index == 1
-    if track_index == 0 then
+    local ____, ____, song_index = week_get_current_song_info()
+    isBeforeEvilMall = song_index == 1
+    if song_index == 0 then
         stage:trigger_camera("mall_start")
     end
-    if track_index < 2 then
+    if song_index < 2 then
         stage:trigger_trigger("bops_trigger")
         return
     end

@@ -278,11 +278,11 @@ namespace Engine.Game.Gameplay {
 
             TextSprite textsprite = this.layout.GetTextsprite("stats");
             if (textsprite != null) {
-                int track_index = roundcontext.track_index;
-                GameplayManifestTrack trackmanifest = roundcontext.initparams.gameplaymanifest.tracks[track_index];
-                string track_name = trackmanifest.name;
-                string track_difficult = roundcontext.track_difficult;
-                textsprite.SetTextFormated("$s\n$s", track_name, track_difficult);
+                int song_index = roundcontext.song_index;
+                GameplayManifestSong songmanifest = roundcontext.initparams.gameplaymanifest.songs[song_index];
+                string song_name = songmanifest.name;
+                string song_difficult = roundcontext.song_difficult;
+                textsprite.SetTextFormated("$s\n$s", song_name, song_difficult);
             }
 
             if (roundcontext.script != null) roundcontext.script.NotifyPause(true);

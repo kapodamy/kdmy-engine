@@ -338,12 +338,12 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
 
-        public void notify_weekinit(int freeplay_track_index) {
+        public void notify_weekinit(int freeplay_song_index) {
             const string FUNCTION = "f_weekinit";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
 
-            L.lua_pushinteger(freeplay_track_index);
+            L.lua_pushinteger(freeplay_song_index);
 
             lua.CallPushedGlobalFunction(1);
         }
@@ -430,12 +430,12 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.CallPushedGlobalFunction(0);
         }
 
-        public void notify_afterresults(int total_attempts, int tracks_count, bool reject_completed) {
+        public void notify_afterresults(int total_attempts, int songs_count, bool reject_completed) {
             const string FUNCTION = "f_afterresults";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
             L.lua_pushinteger(total_attempts);
-            L.lua_pushinteger(tracks_count);
+            L.lua_pushinteger(songs_count);
             L.lua_pushboolean(reject_completed);
 
             lua.CallPushedGlobalFunction(3);

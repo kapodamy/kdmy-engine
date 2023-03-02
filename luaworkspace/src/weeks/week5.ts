@@ -12,13 +12,13 @@ function f_weekinit(freeplay_index: number) {
 function f_beforeready(from_retry: boolean): void {
     stage = week_get_stage_layout();
     stageCamera = stage.get_camera_helper();
-    let [, , track_index] = week_get_current_track_info();
+    let [, , song_index] = week_get_current_song_info();
 
-    isBeforeEvilMall = track_index == 1;
+    isBeforeEvilMall = song_index == 1;
 
-    if (track_index == 0) stage.trigger_camera("mall_start");
+    if (song_index == 0) stage.trigger_camera("mall_start");
 
-    if (track_index < 2) {
+    if (song_index < 2) {
         //
         // Notes:
         //      * The engines attempts to restore the original layout state (executes all not named actions)

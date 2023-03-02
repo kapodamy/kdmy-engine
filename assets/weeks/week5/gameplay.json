@@ -8,13 +8,13 @@
 		"stage": "christmas/layout.xml",
 		"script": "christmas/week5.lua"
 	},
-	"tracks": [
+	"songs": [
         { "name": "Cocoa" },
         { "name": "Eggnog" },
         {
 			"name": "Winter Horrorland",
 			"chart": "charts/winter-horrorland.json",
-			"song": "songs/winter-horrorland.ogg",
+			"file": "songs/winter-horrorland.ogg",
 			"players": [
 				{ "controller": -1, "isOpponent": true,  "strumsInLayoutId": 0, "manifest": "funkin/MONSTER_CHRISTMAS.json" },
 				{ "controller": 0,  "isOpponent": false, "strumsInLayoutId": 1, "manifest": "funkin/BOYFRIEND_CHRISTMAS.json" }

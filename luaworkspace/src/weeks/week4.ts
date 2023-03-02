@@ -15,9 +15,9 @@ function f_beforeready(): void {
     cameraUI = week_ui_get_camera();
     cameraStage = limo.get_camera_helper();
 
-    let [track_name, track_difficult, track_index] = week_get_current_track_info();
-    print("track: " + track_name);
-    isMILF = track_name == "Milf";
+    let [song_name, song_difficult, song_index] = week_get_current_song_info();
+    print("song: " + song_name);
+    isMILF = song_name == "Milf";
     incrementalUIZoomMILF = 1.05;
     incrementalStageZoomMILF = 1.09;
 }

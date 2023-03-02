@@ -20,18 +20,18 @@ namespace Engine.Game.Helpers {
             float base_offset_y = (font_size - max_dimmen) / 2f;
 
             for (int i = 0 ; i < this.icons_size ; i++) {
-                FreeplayMenu.MappedSong track = song_map.Get(i);
-                WeekInfo weekinfo = Funkin.weeks_array.array[track.week_index];
+                FreeplayMenu.MappedSong song = song_map.Get(i);
+                WeekInfo weekinfo = Funkin.weeks_array.array[song.week_index];
 
                 string icon_name = null, model_src = null;
 
-                if (track.is_locked) {
-                    icon_name = weekinfo.songs[track.song_index].freeplay_locked_host_icon_name;
-                    model_src = weekinfo.songs[track.song_index].freeplay_locked_host_icon_model;
+                if (song.is_locked) {
+                    icon_name = weekinfo.songs[song.song_index].freeplay_locked_host_icon_name;
+                    model_src = weekinfo.songs[song.song_index].freeplay_locked_host_icon_model;
                 }
 
-                if (icon_name == null) icon_name = weekinfo.songs[track.song_index].freeplay_host_icon_name;
-                if (model_src == null) model_src = weekinfo.songs[track.song_index].freeplay_host_icon_model;
+                if (icon_name == null) icon_name = weekinfo.songs[song.song_index].freeplay_host_icon_name;
+                if (model_src == null) model_src = weekinfo.songs[song.song_index].freeplay_host_icon_model;
 
                 if (icon_name == null) icon_name = HealthBar.ICON_PREFIX_NEUTRAL;
                 if (model_src == null) model_src = weekinfo.songs_default_freeplay_host_icon_model;

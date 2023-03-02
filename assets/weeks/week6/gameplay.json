@@ -8,7 +8,7 @@
 		"stage": "weeb/layout.xml",
 		"script": "week6.lua"
 	},
-	"tracks": [
+	"songs": [
         { 
 			"name": "senpai"
 		},

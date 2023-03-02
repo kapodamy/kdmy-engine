@@ -8,7 +8,7 @@
             { "manifest": "#boyfriend", "strumsInLayoutId": 1, "controller": 0 }
         ]
     },
-    "tracks": [
-        { "name": "Tutorial", "song": "tutorial.ogg", "chart": "charts/tutorial.json" }
+    "songs": [
+        { "name": "Tutorial", "file": "tutorial.ogg", "chart": "charts/tutorial.json" }
     ]
 }
