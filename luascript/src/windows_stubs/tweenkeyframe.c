@@ -55,6 +55,30 @@ int32_t tweenkeyframe_add_steps(TweenKeyframe tweenkeyframe, float at, int32_t i
     print_stub("tweenkeyframe_add_steps", "tweenkeyframe=%p at=%f id=%i value=%f steps_count=%i steps_method=%hhu", tweenkeyframe, at, id, value, steps_count, steps_method);
     return 0;
 }
+int32_t tweenkeyframe_add_cubic(TweenKeyframe tweenkeyframe, float at, int32_t id, float value) {
+    print_stub("tweenkeyframe_add_cubic", "tweenkeyframe=%p at=%f id=%i value=%f", tweenkeyframe, at, id, value);
+    return 0;
+}
+int32_t tweenkeyframe_add_ease(TweenKeyframe tweenkeyframe, float at, int32_t id, float value) {
+    print_stub("tweenkeyframe_add_ease", "tweenkeyframe=%p at=%f id=%i value=%f", tweenkeyframe, at, id, value);
+    return 0;
+}
+int32_t tweenkeyframe_add_easein(TweenKeyframe tweenkeyframe, float at, int32_t id, float value) {
+    print_stub("tweenkeyframe_add_easein", "tweenkeyframe=%p at=%f id=%i value=%f", tweenkeyframe, at, id, value);
+    return 0;
+}
+int32_t tweenkeyframe_add_quad(TweenKeyframe tweenkeyframe, float at, int32_t id, float value) {
+    print_stub("tweenkeyframe_add_quad", "tweenkeyframe=%p at=%f id=%i value=%f", tweenkeyframe, at, id, value);
+    return 0;
+}
+int32_t tweenkeyframe_add_expo(TweenKeyframe tweenkeyframe, float at, int32_t id, float value) {
+    print_stub("tweenkeyframe_add_expo", "tweenkeyframe=%p at=%f id=%i value=%f", tweenkeyframe, at, id, value);
+    return 0;
+}
+int32_t tweenkeyframe_add_sin(TweenKeyframe tweenkeyframe, float at, int32_t id, float value) {
+    print_stub("tweenkeyframe_add_sin", "tweenkeyframe=%p at=%f id=%i value=%f", tweenkeyframe, at, id, value);
+    return 0;
+}
 int32_t tweenkeyframe_add_interpolator(TweenKeyframe tweenkeyframde, float at, int32_t id, float value, AnimInterpolator type) {
     print_stub("tweenkeyframe_add_interpolator", "tweenkeyframde=%p at=%f id=%i value=%f type=%i", tweenkeyframde, at, id, value, type);
     return 0;

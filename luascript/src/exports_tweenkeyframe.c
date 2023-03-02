@@ -54,6 +54,30 @@ EM_JS_PRFX(int32_t, tweenkeyframe_add_steps, (TweenKeyframe tweenkeyframe, float
     let ret = tweenkeyframe_add_steps(kdmyEngine_obtain(tweenkeyframe), at, id, value, steps_count, steps_method);
     return ret;
 });
+EM_JS_PRFX(int32_t, tweenkeyframe_add_ease, (TweenKeyframe tweenkeyframe, float at, int32_t id, float value), {
+    let ret = tweenkeyframe_add_ease(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret;
+});
+EM_JS_PRFX(int32_t, tweenkeyframe_add_easein, (TweenKeyframe tweenkeyframe, float at, int32_t id, float value), {
+    let ret = tweenkeyframe_add_easein(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret;
+});
+EM_JS_PRFX(int32_t, tweenkeyframe_add_cubic, (TweenKeyframe tweenkeyframe, float at, int32_t id, float value), {
+    let ret = tweenkeyframe_add_cubic(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret;
+});
+EM_JS_PRFX(int32_t, tweenkeyframe_add_quad, (TweenKeyframe tweenkeyframe, float at, int32_t id, float value), {
+    let ret = tweenkeyframe_add_quad(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret;
+});
+EM_JS_PRFX(int32_t, tweenkeyframe_add_expo, (TweenKeyframe tweenkeyframe, float at, int32_t id, float value), {
+    let ret = tweenkeyframe_add_expo(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret;
+});
+EM_JS_PRFX(int32_t, tweenkeyframe_add_sin, (TweenKeyframe tweenkeyframe, float at, int32_t id, float value), {
+    let ret = tweenkeyframe_add_sin(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret;
+});
 EM_JS_PRFX(int32_t, tweenkeyframe_add_interpolator, (TweenKeyframe tweenkeyframde, float at, int32_t id, float value, AnimInterpolator type), {
     let ret = tweenkeyframe_add_interpolator(kdmyEngine_obtain(tweenkeyframde), at, id, value, type);
     return ret;
@@ -201,6 +225,78 @@ static int script_tweenkeyframe_add_steps(lua_State* L) {
     return 1;
 }
 
+static int script_tweenkeyframe_add_ease(lua_State* L) {
+    TweenKeyframe tweenkeyframe = luascript_read_userdata(L, TWEENKEYFRAME);
+    float at = (float)luaL_checknumber(L, 2);
+    int32_t id = (int32_t)luaL_checkinteger(L, 3);
+    float value = (float)luaL_checknumber(L, 4);
+
+    int32_t ret = tweenkeyframe_add_ease(tweenkeyframe, at, id, value);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
+static int script_tweenkeyframe_add_easein(lua_State* L) {
+    TweenKeyframe tweenkeyframe = luascript_read_userdata(L, TWEENKEYFRAME);
+    float at = (float)luaL_checknumber(L, 2);
+    int32_t id = (int32_t)luaL_checkinteger(L, 3);
+    float value = (float)luaL_checknumber(L, 4);
+
+    int32_t ret = tweenkeyframe_add_easein(tweenkeyframe, at, id, value);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
+static int script_tweenkeyframe_add_cubic(lua_State* L) {
+    TweenKeyframe tweenkeyframe = luascript_read_userdata(L, TWEENKEYFRAME);
+    float at = (float)luaL_checknumber(L, 2);
+    int32_t id = (int32_t)luaL_checkinteger(L, 3);
+    float value = (float)luaL_checknumber(L, 4);
+
+    int32_t ret = tweenkeyframe_add_cubic(tweenkeyframe, at, id, value);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
+static int script_tweenkeyframe_add_quad(lua_State* L) {
+    TweenKeyframe tweenkeyframe = luascript_read_userdata(L, TWEENKEYFRAME);
+    float at = (float)luaL_checknumber(L, 2);
+    int32_t id = (int32_t)luaL_checkinteger(L, 3);
+    float value = (float)luaL_checknumber(L, 4);
+
+    int32_t ret = tweenkeyframe_add_quad(tweenkeyframe, at, id, value);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
+static int script_tweenkeyframe_add_expo(lua_State* L) {
+    TweenKeyframe tweenkeyframe = luascript_read_userdata(L, TWEENKEYFRAME);
+    float at = (float)luaL_checknumber(L, 2);
+    int32_t id = (int32_t)luaL_checkinteger(L, 3);
+    float value = (float)luaL_checknumber(L, 4);
+
+    int32_t ret = tweenkeyframe_add_expo(tweenkeyframe, at, id, value);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
+static int script_tweenkeyframe_add_sin(lua_State* L) {
+    TweenKeyframe tweenkeyframe = luascript_read_userdata(L, TWEENKEYFRAME);
+    float at = (float)luaL_checknumber(L, 2);
+    int32_t id = (int32_t)luaL_checkinteger(L, 3);
+    float value = (float)luaL_checknumber(L, 4);
+
+    int32_t ret = tweenkeyframe_add_sin(tweenkeyframe, at, id, value);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
 static int script_tweenkeyframe_add_interpolator(lua_State* L) {
     TweenKeyframe tweenkeyframe = luascript_read_userdata(L, TWEENKEYFRAME);
     float at = (float)luaL_checknumber(L, 2);
@@ -231,6 +327,12 @@ static const luaL_Reg TWEENKEYFRAME_FUNCTIONS[] = {
     { "add_easeinout", script_tweenkeyframe_add_easeinout },
     { "add_linear", script_tweenkeyframe_add_linear },
     { "add_steps", script_tweenkeyframe_add_steps },
+    { "add_ease", script_tweenkeyframe_add_ease },
+    { "add_easein", script_tweenkeyframe_add_easein },
+    { "add_cubic", script_tweenkeyframe_add_cubic },
+    { "add_quad", script_tweenkeyframe_add_quad },
+    { "add_expo", script_tweenkeyframe_add_expo },
+    { "add_sin", script_tweenkeyframe_add_sin },
     { "add_interpolator", script_tweenkeyframe_add_interpolator },
     { NULL, NULL }
 };

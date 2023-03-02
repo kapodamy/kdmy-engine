@@ -3,6 +3,7 @@
 const MATH2D_DEG_TO_RAD = Math.PI / 180.0;
 const MATH2D_MAX_INT32 = 0x7FFFFFFF;
 const MATH2D_LOG100 = Math.log(100);
+const MATH2D_HALF_PI = Math.PI / 2.0;
 
 function math2d_random(min, max) {
     //return Math.random() * (max - min + 1) + min;
@@ -242,4 +243,20 @@ function math2d_timestamp_to_string(timestamp) {
     let str = stringbuilder_finalize(stringbuilder);
 
     return str;
+}
+
+function math2d_lerp_cubic(percent) {
+    return Math.pow(percent, 3);
+}
+
+function math2d_lerp_quad(percent) {
+    return Math.pow(percent, 2);
+}
+
+function math2d_lerp_expo(percent) {
+    return Math.pow(2.0, 10.0 * (percent - 1));
+}
+
+function math2d_lerp_sin(percent) {
+    return Math.sin(percent * MATH2D_HALF_PI);
 }

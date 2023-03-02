@@ -85,6 +85,10 @@
             <xs:enumeration value="ease-out" />
             <xs:enumeration value="ease-in-out" />
             <xs:enumeration value="steps" />
+            <xs:enumeration value="cubic" />
+            <xs:enumeration value="quad" />
+            <xs:enumeration value="expo" />
+            <xs:enumeration value="sin" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="Interpolator-stepsMethod">

@@ -18,6 +18,10 @@ const ANIM_MACRO_INTERPOLATOR_EASE_OUT = 2;
 const ANIM_MACRO_INTERPOLATOR_EASE_IN_OUT = 3;
 const ANIM_MACRO_INTERPOLATOR_LINEAR = 4;
 const ANIM_MACRO_INTERPOLATOR_STEPS = 5;
+const ANIM_MACRO_INTERPOLATOR_CUBIC = 6;
+const ANIM_MACRO_INTERPOLATOR_QUAD = 7;
+const ANIM_MACRO_INTERPOLATOR_EXPO = 8;
+const ANIM_MACRO_INTERPOLATOR_SIN = 9;
 
 const ANIM_MACRO_INTERPOLATOR_MODIFIER_SINE = 0;
 const ANIM_MACRO_INTERPOLATOR_MODIFIER_COSINE = 1;
@@ -397,6 +401,14 @@ function animlist_parse_interpolator(node, name) {
             return ANIM_MACRO_INTERPOLATOR_LINEAR;
         case "steps":
             return ANIM_MACRO_INTERPOLATOR_STEPS;
+        case "cubic":
+            return ANIM_MACRO_INTERPOLATOR_CUBIC;
+        case "quad":
+            return ANIM_MACRO_INTERPOLATOR_QUAD;
+        case "expo":
+            return ANIM_MACRO_INTERPOLATOR_EXPO;
+        case "sin":
+            return ANIM_MACRO_INTERPOLATOR_SIN;
     }
 
     console.warn("animlist: unknown interpolator type " + type);

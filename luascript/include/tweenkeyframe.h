@@ -1,6 +1,7 @@
 #ifndef __tweenkeyframe_h
 #define __tweenkeyframe_h
 
+#include <stdint.h>
 #include "animlist.h"
 #include "vertexprops.h"
 
@@ -22,6 +23,12 @@ int32_t tweenkeyframe_add_easeout(TweenKeyframe tweenkeyframe, float at, int32_t
 int32_t tweenkeyframe_add_easeinout(TweenKeyframe tweenkeyframe, float at, int32_t id, float value);
 int32_t tweenkeyframe_add_linear(TweenKeyframe tweenkeyframe, float at, int32_t id, float value);
 int32_t tweenkeyframe_add_steps(TweenKeyframe tweenkeyframe, float at, int32_t id, float value, int32_t steps_count, Align steps_method);
+int32_t tweenkeyframe_add_ease(TweenKeyframe tweenkeyframe, float at, int32_t id, float value);
+int32_t tweenkeyframe_add_easein(TweenKeyframe tweenkeyframe, float at, int32_t id, float value);
+int32_t tweenkeyframe_add_cubic(TweenKeyframe tweenkeyframe, float at, int32_t id, float value);
+int32_t tweenkeyframe_add_quad(TweenKeyframe tweenkeyframe, float at, int32_t id, float value);
+int32_t tweenkeyframe_add_expo(TweenKeyframe tweenkeyframe, float at, int32_t id, float value);
+int32_t tweenkeyframe_add_sin(TweenKeyframe tweenkeyframe, float at, int32_t id, float value);
 int32_t tweenkeyframe_add_interpolator(TweenKeyframe tweenkeyframde, float at, int32_t id, float value, AnimInterpolator type);
 
 #endif

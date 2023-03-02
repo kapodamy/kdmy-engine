@@ -158,6 +158,42 @@ function tweenkeyframe_add_steps(tweenkeyframe, at, id, value, steps_count, step
     );
 }
 
+function tweenkeyframe_add_ease(tweenkeyframe, at, id, value) {
+    return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_EASE, -1, -1
+    );
+}
+
+function tweenkeyframe_add_easein(tweenkeyframe, at, id, value) {
+    return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_EASE_IN, -1, -1
+    );
+}
+
+function tweenkeyframe_add_cubic(tweenkeyframe, at, id, value) {
+    return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_CUBIC, -1, -1
+    );
+}
+
+function tweenkeyframe_add_quad(tweenkeyframe, at, id, value) {
+    return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_QUAD, -1, -1
+    );
+}
+
+function tweenkeyframe_add_expo(tweenkeyframe, at, id, value) {
+    return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_EXPO, -1, -1
+    );
+}
+
+function tweenkeyframe_add_sin(tweenkeyframe, at, id, value) {
+    return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_SIN, -1, -1
+    );
+}
+
 function tweenkeyframe_add_interpolator(tweenkeyframe, at, id, value, type) {
     return tweenkeyframe_internal_add(
         tweenkeyframe, at, id, value, type, -1, -1
@@ -189,6 +225,22 @@ function tweenkeyframe_internal_by_steps(tweenkeyframe_entry, percent) {
     return macroexecutor_calc_steps(
         percent, tweenkeyframe_entry.steps_bounds, tweenkeyframe_entry.steps_count, tweenkeyframe_entry.steps_dir
     );
+}
+
+function tweenkeyframe_internal_by_cubic(tweenkeyframe_entry, percent) {
+    return math2d_lerp_cubic(percent);
+}
+
+function tweenkeyframe_internal_by_quad(tweenkeyframe_entry, percent) {
+    return math2d_lerp_quad(percent);
+}
+
+function tweenkeyframe_internal_by_expo(tweenkeyframe_entry, percent) {
+    return math2d_lerp_expo(percent);
+}
+
+function tweenkeyframe_internal_by_sin(tweenkeyframe_entry, percent) {
+    return math2d_lerp_sin(percent);
 }
 
 
@@ -255,6 +307,18 @@ function tweenkeyframe_internal_add(tweenkeyframe, at, id, value, interp, steps_
             break;
         case ANIM_MACRO_INTERPOLATOR_LINEAR:
             keyframe_entry.callback = tweenkeyframe_internal_by_linear;
+            break;
+        case ANIM_MACRO_INTERPOLATOR_CUBIC:
+            keyframe_entry.callback = tweenkeyframe_internal_by_cubic;
+            break;
+        case ANIM_MACRO_INTERPOLATOR_QUAD:
+            keyframe_entry.callback = tweenkeyframe_internal_by_quad;
+            break;
+        case ANIM_MACRO_INTERPOLATOR_EXPO:
+            keyframe_entry.callback = tweenkeyframe_internal_by_expo;
+            break;
+        case ANIM_MACRO_INTERPOLATOR_SIN:
+            keyframe_entry.callback = tweenkeyframe_internal_by_sin;
             break;
         case -1:
             console.assert(tweenkeyframe.default_interpolator != -1, "invalid default interpolator");

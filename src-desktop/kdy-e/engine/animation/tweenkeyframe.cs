@@ -1,8 +1,6 @@
 using System;
-using System.Reflection;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Utils;
-using Newtonsoft.Json.Linq;
 
 namespace Engine.Animation {
 
@@ -182,6 +180,30 @@ namespace Engine.Animation {
             );
         }
 
+        public int AddCubic(float at, int id, float value) {
+            return InternalAdd(
+                at, id, value, AnimInterpolator.CUBIC, Align.NONE, -1
+            );
+        }
+
+        public int AddQuad(float at, int id, float value) {
+            return InternalAdd(
+                at, id, value, AnimInterpolator.QUAD, Align.NONE, -1
+            );
+        }
+
+        public int AddExpo(float at, int id, float value) {
+            return InternalAdd(
+                at, id, value, AnimInterpolator.EXPO, Align.NONE, -1
+            );
+        }
+
+        public int AddSin(float at, int id, float value) {
+            return InternalAdd(
+                at, id, value, AnimInterpolator.SIN, Align.NONE, -1
+            );
+        }
+
         public int AddInterpolator(float at, int id, float value, AnimInterpolator type) {
             return InternalAdd(
                 at, id, value, type, Align.NONE, -1
@@ -213,6 +235,22 @@ namespace Engine.Animation {
             return MacroExecutor.CalcSteps(
                 percent, tweenkeyframe_entry.steps_bounds, tweenkeyframe_entry.steps_count, tweenkeyframe_entry.steps_dir
             );
+        }
+
+        private static float InternalByCubic(KeyframeEntry tweenkeyframe_entry, float progress) {
+            return Math2D.LerpCubic(progress);
+        }
+
+        private static float InternalByQuad(KeyframeEntry tweenkeyframe_entry, float progress) {
+            return Math2D.LerpQuad(progress);
+        }
+
+        private static float InternalByExpo(KeyframeEntry tweenkeyframe_entry, float progress) {
+            return Math2D.LerpExpo(progress);
+        }
+
+        private static float InternalBySin(KeyframeEntry tweenkeyframe_entry, float progress) {
+            return Math2D.LerpSin(progress);
         }
 
 
@@ -281,6 +319,18 @@ namespace Engine.Animation {
                     break;
                 case AnimInterpolator.LINEAR:
                     keyframe_entry.callback = TweenKeyframe.InternalByLinear;
+                    break;
+                case AnimInterpolator.CUBIC:
+                    keyframe_entry.callback = TweenKeyframe.InternalByCubic;
+                    break;
+                case AnimInterpolator.QUAD:
+                    keyframe_entry.callback = TweenKeyframe.InternalByQuad;
+                    break;
+                case AnimInterpolator.EXPO:
+                    keyframe_entry.callback = TweenKeyframe.InternalByExpo;
+                    break;
+                case AnimInterpolator.SIN:
+                    keyframe_entry.callback = TweenKeyframe.InternalBySin;
                     break;
                 case null:
                     interp = this.default_interpolator;

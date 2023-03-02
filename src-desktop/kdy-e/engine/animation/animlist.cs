@@ -405,6 +405,14 @@ namespace Engine.Animation {
                     return AnimInterpolator.LINEAR;
                 case "steps":
                     return AnimInterpolator.STEPS;
+                case "cubic":
+                    return AnimInterpolator.CUBIC;
+                case "quad":
+                    return AnimInterpolator.QUAD;
+                case "expo":
+                    return AnimInterpolator.EXPO;
+                case "sin":
+                    return AnimInterpolator.SIN;
             }
 
             Console.Error.WriteLine("animlist: unknown interpolator type " + type);

@@ -148,6 +148,78 @@ namespace Engine.Externals.LuaScriptInterop {
             return 1;
         }
 
+        static int script_tweenkeyframe_add_ease(LuaState L) {
+            TweenKeyframe tweenkeyframe = L.ReadUserdata<TweenKeyframe>(TWEENKEYFRAME);
+            float at = (float)L.luaL_checknumber(2);
+            int id = (int)L.luaL_checkinteger(3);
+            float value = (float)L.luaL_checknumber(4);
+
+            int ret = tweenkeyframe.AddEase(at, id, value);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
+        static int script_tweenkeyframe_add_easein(LuaState L) {
+            TweenKeyframe tweenkeyframe = L.ReadUserdata<TweenKeyframe>(TWEENKEYFRAME);
+            float at = (float)L.luaL_checknumber(2);
+            int id = (int)L.luaL_checkinteger(3);
+            float value = (float)L.luaL_checknumber(4);
+
+            int ret = tweenkeyframe.AddEaseIn(at, id, value);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
+        static int script_tweenkeyframe_add_cubic(LuaState L) {
+            TweenKeyframe tweenkeyframe = L.ReadUserdata<TweenKeyframe>(TWEENKEYFRAME);
+            float at = (float)L.luaL_checknumber(2);
+            int id = (int)L.luaL_checkinteger(3);
+            float value = (float)L.luaL_checknumber(4);
+
+            int ret = tweenkeyframe.AddCubic(at, id, value);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
+        static int script_tweenkeyframe_add_quad(LuaState L) {
+            TweenKeyframe tweenkeyframe = L.ReadUserdata<TweenKeyframe>(TWEENKEYFRAME);
+            float at = (float)L.luaL_checknumber(2);
+            int id = (int)L.luaL_checkinteger(3);
+            float value = (float)L.luaL_checknumber(4);
+
+            int ret = tweenkeyframe.AddQuad(at, id, value);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
+        static int script_tweenkeyframe_add_expo(LuaState L) {
+            TweenKeyframe tweenkeyframe = L.ReadUserdata<TweenKeyframe>(TWEENKEYFRAME);
+            float at = (float)L.luaL_checknumber(2);
+            int id = (int)L.luaL_checkinteger(3);
+            float value = (float)L.luaL_checknumber(4);
+
+            int ret = tweenkeyframe.AddExpo(at, id, value);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
+        static int script_tweenkeyframe_add_sin(LuaState L) {
+            TweenKeyframe tweenkeyframe = L.ReadUserdata<TweenKeyframe>(TWEENKEYFRAME);
+            float at = (float)L.luaL_checknumber(2);
+            int id = (int)L.luaL_checkinteger(3);
+            float value = (float)L.luaL_checknumber(4);
+
+            int ret = tweenkeyframe.AddSin(at, id, value);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
         static int script_tweenkeyframe_add_interpolator(LuaState L) {
             TweenKeyframe tweenkeyframe = L.ReadUserdata<TweenKeyframe>(TWEENKEYFRAME);
             float at = (float)L.luaL_checknumber(2);
@@ -178,6 +250,12 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("add_easeinout", script_tweenkeyframe_add_easeinout),
             new LuaTableFunction("add_linear", script_tweenkeyframe_add_linear),
             new LuaTableFunction("add_steps", script_tweenkeyframe_add_steps),
+            new LuaTableFunction("add_ease", script_tweenkeyframe_add_ease),
+            new LuaTableFunction("add_easein", script_tweenkeyframe_add_easein),
+            new LuaTableFunction("add_cubic", script_tweenkeyframe_add_cubic),
+            new LuaTableFunction("add_quad", script_tweenkeyframe_add_quad),
+            new LuaTableFunction("add_expo", script_tweenkeyframe_add_expo),
+            new LuaTableFunction("add_sin", script_tweenkeyframe_add_sin),
             new LuaTableFunction("add_interpolator", script_tweenkeyframe_add_interpolator),
             new LuaTableFunction(null, null)
         };

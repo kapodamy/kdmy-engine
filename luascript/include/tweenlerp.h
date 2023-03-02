@@ -38,6 +38,10 @@ int32_t tweenlerp_add_easeout(TweenLerp tweenlerp, int32_t id, float start, floa
 int32_t tweenlerp_add_easeinout(TweenLerp tweenlerp, int32_t id, float start, float end, float duration);
 int32_t tweenlerp_add_linear(TweenLerp tweenlerp, int32_t id, float start, float end, float duration);
 int32_t tweenlerp_add_steps(TweenLerp tweenlerp, int32_t id, float start, float end, float duration, int32_t steps_count, Align steps_method);
+int32_t tweenlerp_add_cubic(TweenLerp tweenlerp, int32_t id, float start, float end, float duration);
+int32_t tweenlerp_add_quad(TweenLerp tweenlerp, int32_t id, float start, float end, float duration);
+int32_t tweenlerp_add_expo(TweenLerp tweenlerp, int32_t id, float start, float end, float duration);
+int32_t tweenlerp_add_sin(TweenLerp tweenlerp, int32_t id, float start, float end, float duration);
 int32_t tweenlerp_add_interpolator(TweenLerp tweenlerp, int32_t id, float start, float end, float duration, AnimInterpolator type);
 
 #endif

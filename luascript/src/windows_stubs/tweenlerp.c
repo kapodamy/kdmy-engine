@@ -102,6 +102,22 @@ int32_t tweenlerp_add_steps(TweenLerp tweenlerp, int32_t id, float start, float 
     print_stub("tweenlerp_add_steps", "tweenlerp=%p id=%i start=%f end=%f duration=%f steps_count=%i steps_method=%hhu", tweenlerp, id, start, end, duration, steps_count, steps_method);
     return 0;
 }
+int32_t tweenlerp_add_cubic(TweenLerp tweenlerp, int32_t id, float start, float end, float duration) {
+    print_stub("tweenlerp_add_cubic", "tweenlerp=%p id=%i start=%f end=%f duration=%f", tweenlerp, id, start, end, duration);
+    return 0;
+}
+int32_t tweenlerp_add_quad(TweenLerp tweenlerp, int32_t id, float start, float end, float duration) {
+    print_stub("tweenlerp_add_quad", "tweenlerp=%p id=%i start=%f end=%f duration=%f", tweenlerp, id, start, end, duration);
+    return 0;
+}
+int32_t tweenlerp_add_expo(TweenLerp tweenlerp, int32_t id, float start, float end, float duration) {
+    print_stub("tweenlerp_add_expo", "tweenlerp=%p id=%i start=%f end=%f duration=%f", tweenlerp, id, start, end, duration);
+    return 0;
+}
+int32_t tweenlerp_add_sin(TweenLerp tweenlerp, int32_t id, float start, float end, float duration) {
+    print_stub("tweenlerp_add_sin", "tweenlerp=%p id=%i start=%f end=%f duration=%f", tweenlerp, id, start, end, duration);
+    return 0;
+}
 int32_t tweenlerp_add_interpolator(TweenLerp tweenlerp, int32_t id, float start, float end, float duration, AnimInterpolator type) {
     print_stub("tweenlerp_add_interpolator", "tweenlerp=%p id=%i start=%f end=%f duration=%f type=%p", tweenlerp, id, start, end, duration, type);
     return 0;

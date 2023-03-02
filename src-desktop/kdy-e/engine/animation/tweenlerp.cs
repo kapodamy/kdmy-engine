@@ -236,6 +236,30 @@ namespace Engine.Animation {
             );
         }
 
+        public int AddCubic(int id, float start, float end, float duration) {
+            return InternalAdd(
+                id, start, end, duration, AnimInterpolator.CUBIC, Align.NONE, -1
+            );
+        }
+
+        public int AddQuad(int id, float start, float end, float duration) {
+            return InternalAdd(
+                id, start, end, duration, AnimInterpolator.QUAD, Align.NONE, -1
+            );
+        }
+
+        public int AddExpo(int id, float start, float end, float duration) {
+            return InternalAdd(
+                id, start, end, duration, AnimInterpolator.EXPO, Align.NONE, -1
+            );
+        }
+
+        public int AddSin(int id, float start, float end, float duration) {
+            return InternalAdd(
+                id, start, end, duration, AnimInterpolator.SIN, Align.NONE, -1
+            );
+        }
+
         public int AddInterpolator(int id, float start, float end, float duration, AnimInterpolator type) {
             return InternalAdd(id, start, end, duration, type, Align.NONE, 2);
         }
@@ -265,6 +289,22 @@ namespace Engine.Animation {
             return MacroExecutor.CalcSteps(
                 completed, tweenlerp_entry.steps_bounds, tweenlerp_entry.steps_count, tweenlerp_entry.steps_dir
             );
+        }
+
+        private static float InternalByCubic(TweenLerpEntry tweenlerp_entry, float progress) {
+            return Math2D.LerpCubic(progress);
+        }
+
+        private static float InternalByQuad(TweenLerpEntry tweenlerp_entry, float progress) {
+            return Math2D.LerpQuad(progress);
+        }
+
+        private static float InternalByExpo(TweenLerpEntry tweenlerp_entry, float progress) {
+            return Math2D.LerpExpo(progress);
+        }
+
+        private static float InternalBySin(TweenLerpEntry tweenlerp_entry, float progress) {
+            return Math2D.LerpSin(progress);
         }
 
         private static bool InternalAnimateEntry(TweenLerpEntry tweenlerp_entry, float progress) {
@@ -322,6 +362,18 @@ namespace Engine.Animation {
                     break;
                 case AnimInterpolator.LINEAR:
                     tweenlerp_entry.callback = TweenLerp.InternalByLinear;
+                    break;
+                case AnimInterpolator.CUBIC:
+                    tweenlerp_entry.callback = TweenLerp.InternalByCubic;
+                    break;
+                case AnimInterpolator.QUAD:
+                    tweenlerp_entry.callback = TweenLerp.InternalByQuad;
+                    break;
+                case AnimInterpolator.EXPO:
+                    tweenlerp_entry.callback = TweenLerp.InternalByExpo;
+                    break;
+                case AnimInterpolator.SIN:
+                    tweenlerp_entry.callback = TweenLerp.InternalBySin;
                     break;
                 default:
                     return -1;

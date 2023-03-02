@@ -620,6 +620,18 @@ function macroexecutor_interpolator_run(macroexecutor, elapsed, interpolator) {
                 interpolator.steps_method
             );
             break;
+        case ANIM_MACRO_INTERPOLATOR_CUBIC:
+            value = math2d_lerp_cubic(percent);
+            break;
+        case ANIM_MACRO_INTERPOLATOR_QUAD:
+            value = math2d_lerp_quad(percent);
+            break;
+        case ANIM_MACRO_INTERPOLATOR_EXPO:
+            value = math2d_lerp_expo(percent);
+            break;
+        case ANIM_MACRO_INTERPOLATOR_SIN:
+            value = math2d_lerp_sin(percent);
+            break;
     }
 
 

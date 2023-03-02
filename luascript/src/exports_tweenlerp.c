@@ -105,6 +105,22 @@ EM_JS_PRFX(int32_t, tweenlerp_add_interpolator, (TweenLerp tweenlerp, int32_t id
     let ret = tweenlerp_add_interpolator(kdmyEngine_obtain(tweenlerp), id, start, end, duration, type);
     return ret;
 });
+EM_JS_PRFX(int32_t, tweenlerp_add_cubic, (TweenLerp tweenlerp, int32_t id, float start, float end, float duration), {
+    let ret = tweenlerp_add_cubic(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret;
+});
+EM_JS_PRFX(int32_t, tweenlerp_add_quad, (TweenLerp tweenlerp, int32_t id, float start, float end, float duration), {
+    let ret = tweenlerp_add_quad(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret;
+});
+EM_JS_PRFX(int32_t, tweenlerp_add_expo, (TweenLerp tweenlerp, int32_t id, float start, float end, float duration), {
+    let ret = tweenlerp_add_expo(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret;
+});
+EM_JS_PRFX(int32_t, tweenlerp_add_sin, (TweenLerp tweenlerp, int32_t id, float start, float end, float duration), {
+    let ret = tweenlerp_add_sin(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret;
+});
 #endif
 
 
@@ -379,6 +395,58 @@ static int script_tweenlerp_add_steps(lua_State* L) {
     return 1;
 }
 
+static int script_tweenlerp_add_cubic(lua_State* L) {
+    TweenLerp tweenlerp = luascript_read_userdata(L, TWEENLERP);
+    int32_t id = (int32_t)luaL_checkinteger(L, 2);
+    float start = (float)luaL_checknumber(L, 3);
+    float end = (float)luaL_checknumber(L, 4);
+    float duration = (float)luaL_checknumber(L, 5);
+
+    int32_t ret = tweenlerp_add_cubic(tweenlerp, id, start, end, duration);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
+static int script_tweenlerp_add_quad(lua_State* L) {
+    TweenLerp tweenlerp = luascript_read_userdata(L, TWEENLERP);
+    int32_t id = (int32_t)luaL_checkinteger(L, 2);
+    float start = (float)luaL_checknumber(L, 3);
+    float end = (float)luaL_checknumber(L, 4);
+    float duration = (float)luaL_checknumber(L, 5);
+
+    int32_t ret = tweenlerp_add_quad(tweenlerp, id, start, end, duration);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
+static int script_tweenlerp_add_expo(lua_State* L) {
+    TweenLerp tweenlerp = luascript_read_userdata(L, TWEENLERP);
+    int32_t id = (int32_t)luaL_checkinteger(L, 2);
+    float start = (float)luaL_checknumber(L, 3);
+    float end = (float)luaL_checknumber(L, 4);
+    float duration = (float)luaL_checknumber(L, 5);
+
+    int32_t ret = tweenlerp_add_expo(tweenlerp, id, start, end, duration);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
+static int script_tweenlerp_add_sin(lua_State* L) {
+    TweenLerp tweenlerp = luascript_read_userdata(L, TWEENLERP);
+    int32_t id = (int32_t)luaL_checkinteger(L, 2);
+    float start = (float)luaL_checknumber(L, 3);
+    float end = (float)luaL_checknumber(L, 4);
+    float duration = (float)luaL_checknumber(L, 5);
+
+    int32_t ret = tweenlerp_add_sin(tweenlerp, id, start, end, duration);
+
+    lua_pushinteger(L, (lua_Integer)ret);
+    return 1;
+}
+
 static int script_tweenlerp_add_interpolator(lua_State* L) {
     TweenLerp tweenlerp = luascript_read_userdata(L, TWEENLERP);
     int32_t id = (int32_t)luaL_checkinteger(L, 2);
@@ -422,6 +490,10 @@ static const luaL_Reg TWEENLERP_FUNCTIONS[] = {
     { "add_easeinout", script_tweenlerp_add_easeinout },
     { "add_linear", script_tweenlerp_add_linear },
     { "add_steps", script_tweenlerp_add_steps },
+    { "add_cubic", script_tweenlerp_add_cubic },
+    { "add_quad", script_tweenlerp_add_quad },
+    { "add_expo", script_tweenlerp_add_expo },
+    { "add_sin", script_tweenlerp_add_sin },
     { "add_interpolator", script_tweenlerp_add_interpolator },
     { NULL, NULL }
 };

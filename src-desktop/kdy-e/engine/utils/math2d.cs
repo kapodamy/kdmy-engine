@@ -9,10 +9,7 @@ namespace Engine.Utils {
         public static readonly float DEG_TO_RAD = (float)(Math.PI / 180.0);
         public const int MAX_INT32 = 0x7FFFFFFF;
         public static readonly float LOG100 = (float)Math.Log(100);
-
-        private const string TIME_SECONDS = "$1ds";// 1.2s
-        private const string TIME_MINUTES = "$im$2is";// 1m23s
-        private const string TIME_HOURS = "$ih$2i$2i";// 1h23m45s
+        public const double HALF_PI = Math.PI / 2.0;
 
         private static readonly Random random;
 
@@ -251,6 +248,23 @@ L_stop_checking_equal:
 
             return str;
         }
+
+        public static float LerpCubic(float percent) {
+            return (float)Math.Pow(percent, 3.0);
+        }
+
+        public static float LerpQuad(float percent) {
+            return (float)Math.Pow(percent, 2.0);
+        }
+
+        public static float LerpExpo(float percent) {
+            return (float)Math.Pow(2.0, 10.0 * (percent - 1));
+        }
+
+        public static float LerpSin(float percent) {
+            return (float)Math.Sin(percent * Math2D.HALF_PI);
+        }
+
 
     }
 }

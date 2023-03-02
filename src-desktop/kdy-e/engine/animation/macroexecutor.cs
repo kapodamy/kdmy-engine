@@ -24,7 +24,11 @@ namespace Engine.Animation {
         EASE_OUT = 2,
         EASE_IN_OUT = 3,
         LINEAR = 4,
-        STEPS = 5
+        STEPS = 5,
+        CUBIC = 6,
+        QUAD = 7,
+        EXPO = 8,
+        SIN = 9
     }
 
     public class MacroExecutorInstruction {
@@ -735,6 +739,18 @@ namespace Engine.Animation {
                         interpolator.steps_count,
                         interpolator.steps_method
                     );
+                    break;
+                case AnimInterpolator.CUBIC:
+                    value = Math2D.LerpCubic(percent);
+                    break;
+                case AnimInterpolator.QUAD:
+                    value = Math2D.LerpQuad(percent);
+                    break;
+                case AnimInterpolator.EXPO:
+                    value = Math2D.LerpExpo(percent);
+                    break;
+                case AnimInterpolator.SIN:
+                    value = Math2D.LerpSin(percent);
                     break;
             }
 

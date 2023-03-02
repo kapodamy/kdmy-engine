@@ -279,6 +279,58 @@ namespace Engine.Externals.LuaScriptInterop {
             return 1;
         }
 
+        static int script_tweenlerp_add_cubic(LuaState L) {
+            TweenLerp tweenlerp = L.ReadUserdata<TweenLerp>(TWEENLERP);
+            int id = (int)L.luaL_checkinteger(2);
+            float start = (float)L.luaL_checknumber(3);
+            float end = (float)L.luaL_checknumber(4);
+            float duration = (float)L.luaL_checknumber(5);
+
+            int ret = tweenlerp.AddCubic(id, start, end, duration);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
+        static int script_tweenlerp_add_quad(LuaState L) {
+            TweenLerp tweenlerp = L.ReadUserdata<TweenLerp>(TWEENLERP);
+            int id = (int)L.luaL_checkinteger(2);
+            float start = (float)L.luaL_checknumber(3);
+            float end = (float)L.luaL_checknumber(4);
+            float duration = (float)L.luaL_checknumber(5);
+
+            int ret = tweenlerp.AddQuad(id, start, end, duration);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
+        static int script_tweenlerp_add_expo(LuaState L) {
+            TweenLerp tweenlerp = L.ReadUserdata<TweenLerp>(TWEENLERP);
+            int id = (int)L.luaL_checkinteger(2);
+            float start = (float)L.luaL_checknumber(3);
+            float end = (float)L.luaL_checknumber(4);
+            float duration = (float)L.luaL_checknumber(5);
+
+            int ret = tweenlerp.AddExpo(id, start, end, duration);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
+        static int script_tweenlerp_add_sin(LuaState L) {
+            TweenLerp tweenlerp = L.ReadUserdata<TweenLerp>(TWEENLERP);
+            int id = (int)L.luaL_checkinteger(2);
+            float start = (float)L.luaL_checknumber(3);
+            float end = (float)L.luaL_checknumber(4);
+            float duration = (float)L.luaL_checknumber(5);
+
+            int ret = tweenlerp.AddSin(id, start, end, duration);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
         static int script_tweenlerp_add_interpolator(LuaState L) {
             TweenLerp tweenlerp = L.ReadUserdata<TweenLerp>(TWEENLERP);
             int id = (int)L.luaL_checkinteger(2);
@@ -322,6 +374,10 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("add_easeinout", script_tweenlerp_add_easeinout),
             new LuaTableFunction("add_linear", script_tweenlerp_add_linear),
             new LuaTableFunction("add_steps", script_tweenlerp_add_steps),
+            new LuaTableFunction("add_cubic", script_tweenlerp_add_cubic),
+            new LuaTableFunction("add_quad", script_tweenlerp_add_quad),
+            new LuaTableFunction("add_expo", script_tweenlerp_add_expo),
+            new LuaTableFunction("add_sin", script_tweenlerp_add_sin),
             new LuaTableFunction("add_interpolator", script_tweenlerp_add_interpolator),
             new LuaTableFunction(null, null)
         };

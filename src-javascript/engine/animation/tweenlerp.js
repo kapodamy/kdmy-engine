@@ -224,6 +224,30 @@ function tweenlerp_add_steps(tweenlerp, id, start, end, duration, steps_count, s
     );
 }
 
+function tweenlerp_add_cubic(tweenlerp, id, start, end, duration) {
+    return tweenlerp_internal_add(
+        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_CUBIC, -1, -1
+    );
+}
+
+function tweenlerp_add_quad(tweenlerp, id, start, end, duration) {
+    return tweenlerp_internal_add(
+        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_QUAD, -1, -1
+    );
+}
+
+function tweenlerp_add_expo(tweenlerp, id, start, end, duration) {
+    return tweenlerp_internal_add(
+        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_EXPO, -1, -1
+    );
+}
+
+function tweenlerp_add_sin(tweenlerp, id, start, end, duration) {
+    return tweenlerp_internal_add(
+        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_SIN, -1, -1
+    );
+}
+
 function tweenlerp_add_interpolator(tweenlerp, id, start, end, duration, type) {
     return tweenlerp_internal_add(tweenlerp, id, start, end, duration, type, ALIGN_NONE, 2);
 }
@@ -253,6 +277,22 @@ function tweenlerp_internal_by_steps(tweenlerp_entry, progress) {
     return macroexecutor_calc_steps(
         completed, tweenlerp_entry.steps_bounds, tweenlerp_entry.steps_count, tweenlerp_entry.steps_dir
     );
+}
+
+function tweenlerp_internal_by_cubic(tweenlerp_entry, progress) {
+    return math2d_lerp_cubic(progress);
+}
+
+function tweenlerp_internal_by_quad(tweenlerp_entry, progress) {
+    return math2d_lerp_quad(progress);
+}
+
+function tweenlerp_internal_by_expo(tweenlerp_entry, progress) {
+    return math2d_lerp_expo(progress);
+}
+
+function tweenlerp_internal_by_sin(tweenlerp_entry, progress) {
+    return math2d_lerp_sin(progress);
 }
 
 function tweenlerp_internal_animate_entry(tweenlerp_entry, progress) {
@@ -307,6 +347,18 @@ function tweenlerp_internal_add(tweenlerp, id, start, end, duration, interp, ste
             break;
         case ANIM_MACRO_INTERPOLATOR_LINEAR:
             tweenlerp_entry.callback = tweenlerp_internal_by_linear;
+            break;
+        case ANIM_MACRO_INTERPOLATOR_CUBIC:
+            tweenlerp_entry.callback = tweenlerp_internal_by_cubic;
+            break;
+        case ANIM_MACRO_INTERPOLATOR_QUAD:
+            tweenlerp_entry.callback = tweenlerp_internal_by_quad;
+            break;
+        case ANIM_MACRO_INTERPOLATOR_EXPO:
+            tweenlerp_entry.callback = tweenlerp_internal_by_expo;
+            break;
+        case ANIM_MACRO_INTERPOLATOR_SIN:
+            tweenlerp_entry.callback = tweenlerp_internal_by_sin;
             break;
         default:
             return -1;

@@ -351,6 +351,14 @@ int luascript_parse_interpolator(lua_State* L, const char* interpolator) {
         return ANIM_MACRO_INTERPOLATOR_LINEAR;
     else if (string_equals(interpolator, "steps"))
         return ANIM_MACRO_INTERPOLATOR_STEPS;
+    else if (string_equals(interpolator, "cubic"))
+        return ANIM_MACRO_INTERPOLATOR_CUBIC;
+    else if (string_equals(interpolator, "quad"))
+        return ANIM_MACRO_INTERPOLATOR_QUAD;
+    else if (string_equals(interpolator, "expo"))
+        return ANIM_MACRO_INTERPOLATOR_EXPO;
+    else if (string_equals(interpolator, "sin"))
+        return ANIM_MACRO_INTERPOLATOR_SIN;
 
     return luaL_error(L, "invalid interpolator: %s", interpolator);
 }

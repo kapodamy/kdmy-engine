@@ -2983,6 +2983,18 @@ function __js__textsprite_set_z_offset(textsprite, offset) {
 function __js__timer_ms_gettime32_JS() {
     return Math.trunc(performance.now())
 }
+function __js__tweenkeyframe_add_cubic(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_cubic(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_ease(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_ease(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_easein(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_easein(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
 function __js__tweenkeyframe_add_easeinout(tweenkeyframe, at, id, value) {
     let ret = tweenkeyframe_add_easeinout(kdmyEngine_obtain(tweenkeyframe), at, id, value);
     return ret
@@ -2991,12 +3003,24 @@ function __js__tweenkeyframe_add_easeout(tweenkeyframe, at, id, value) {
     let ret = tweenkeyframe_add_easeout(kdmyEngine_obtain(tweenkeyframe), at, id, value);
     return ret
 }
+function __js__tweenkeyframe_add_expo(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_expo(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
 function __js__tweenkeyframe_add_interpolator(tweenkeyframde, at, id, value, type) {
     let ret = tweenkeyframe_add_interpolator(kdmyEngine_obtain(tweenkeyframde), at, id, value, type);
     return ret
 }
 function __js__tweenkeyframe_add_linear(tweenkeyframe, at, id, value) {
     let ret = tweenkeyframe_add_linear(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_quad(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_quad(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_sin(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_sin(kdmyEngine_obtain(tweenkeyframe), at, id, value);
     return ret
 }
 function __js__tweenkeyframe_add_steps(tweenkeyframe, at, id, value, steps_count, steps_method) {
@@ -3040,6 +3064,10 @@ function __js__tweenkeyframe_peek_value_by_index(tweenkeyframe, index) {
     let ret = tweenkeyframe_peek_value_by_index(kdmyEngine_obtain(tweenkeyframe), index);
     return ret
 }
+function __js__tweenlerp_add_cubic(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_cubic(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
 function __js__tweenlerp_add_ease(tweenlerp, id, start, end, duration) {
     let ret = tweenlerp_add_ease(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
     return ret
@@ -3056,12 +3084,24 @@ function __js__tweenlerp_add_easeout(tweenlerp, id, start, end, duration) {
     let ret = tweenlerp_add_easeout(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
     return ret
 }
+function __js__tweenlerp_add_expo(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_expo(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
 function __js__tweenlerp_add_interpolator(tweenlerp, id, start, end, duration, type) {
     let ret = tweenlerp_add_interpolator(kdmyEngine_obtain(tweenlerp), id, start, end, duration, type);
     return ret
 }
 function __js__tweenlerp_add_linear(tweenlerp, id, start, end, duration) {
     let ret = tweenlerp_add_linear(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_quad(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_quad(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_sin(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_sin(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
     return ret
 }
 function __js__tweenlerp_add_steps(tweenlerp, id, start, end, duration, steps_count, steps_method) {
@@ -3345,6 +3385,10 @@ function __js__week_ui_get_rankingcounter(roundcontext) {
     let ret = week_ui_get_rankingcounter(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(ret)
 }
+function __js__week_ui_get_round_textsprite(roundcontext) {
+    let ret = week_ui_get_round_textsprite(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
 function __js__week_ui_get_roundstats(roundcontext) {
     let ret = week_ui_get_roundstats(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(ret)
@@ -3364,10 +3408,6 @@ function __js__week_ui_get_strums(roundcontext, strums_id) {
 function __js__week_ui_get_strums_count(roundcontext) {
     let ret = week_ui_get_strums_count(kdmyEngine_obtain(roundcontext));
     return ret
-}
-function __js__week_ui_get_round_textsprite(roundcontext) {
-    let ret = week_ui_get_round_textsprite(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
 }
 function __js__week_ui_set_visibility(roundcontext, visible) {
     week_ui_set_visibility(kdmyEngine_obtain(roundcontext), visible)
@@ -7355,10 +7395,16 @@ var asmLibraryArg = {
     "__js__textsprite_set_z_index": __js__textsprite_set_z_index,
     "__js__textsprite_set_z_offset": __js__textsprite_set_z_offset,
     "__js__timer_ms_gettime32_JS": __js__timer_ms_gettime32_JS,
+    "__js__tweenkeyframe_add_cubic": __js__tweenkeyframe_add_cubic,
+    "__js__tweenkeyframe_add_ease": __js__tweenkeyframe_add_ease,
+    "__js__tweenkeyframe_add_easein": __js__tweenkeyframe_add_easein,
     "__js__tweenkeyframe_add_easeinout": __js__tweenkeyframe_add_easeinout,
     "__js__tweenkeyframe_add_easeout": __js__tweenkeyframe_add_easeout,
+    "__js__tweenkeyframe_add_expo": __js__tweenkeyframe_add_expo,
     "__js__tweenkeyframe_add_interpolator": __js__tweenkeyframe_add_interpolator,
     "__js__tweenkeyframe_add_linear": __js__tweenkeyframe_add_linear,
+    "__js__tweenkeyframe_add_quad": __js__tweenkeyframe_add_quad,
+    "__js__tweenkeyframe_add_sin": __js__tweenkeyframe_add_sin,
     "__js__tweenkeyframe_add_steps": __js__tweenkeyframe_add_steps,
     "__js__tweenkeyframe_animate_percent": __js__tweenkeyframe_animate_percent,
     "__js__tweenkeyframe_destroy": __js__tweenkeyframe_destroy,
@@ -7369,12 +7415,16 @@ var asmLibraryArg = {
     "__js__tweenkeyframe_peek_value": __js__tweenkeyframe_peek_value,
     "__js__tweenkeyframe_peek_value_by_id": __js__tweenkeyframe_peek_value_by_id,
     "__js__tweenkeyframe_peek_value_by_index": __js__tweenkeyframe_peek_value_by_index,
+    "__js__tweenlerp_add_cubic": __js__tweenlerp_add_cubic,
     "__js__tweenlerp_add_ease": __js__tweenlerp_add_ease,
     "__js__tweenlerp_add_easein": __js__tweenlerp_add_easein,
     "__js__tweenlerp_add_easeinout": __js__tweenlerp_add_easeinout,
     "__js__tweenlerp_add_easeout": __js__tweenlerp_add_easeout,
+    "__js__tweenlerp_add_expo": __js__tweenlerp_add_expo,
     "__js__tweenlerp_add_interpolator": __js__tweenlerp_add_interpolator,
     "__js__tweenlerp_add_linear": __js__tweenlerp_add_linear,
+    "__js__tweenlerp_add_quad": __js__tweenlerp_add_quad,
+    "__js__tweenlerp_add_sin": __js__tweenlerp_add_sin,
     "__js__tweenlerp_add_steps": __js__tweenlerp_add_steps,
     "__js__tweenlerp_animate": __js__tweenlerp_animate,
     "__js__tweenlerp_animate_percent": __js__tweenlerp_animate_percent,
@@ -7444,12 +7494,12 @@ var asmLibraryArg = {
     "__js__week_ui_get_healthbar": __js__week_ui_get_healthbar,
     "__js__week_ui_get_layout": __js__week_ui_get_layout,
     "__js__week_ui_get_rankingcounter": __js__week_ui_get_rankingcounter,
+    "__js__week_ui_get_round_textsprite": __js__week_ui_get_round_textsprite,
     "__js__week_ui_get_roundstats": __js__week_ui_get_roundstats,
     "__js__week_ui_get_songprogressbar": __js__week_ui_get_songprogressbar,
     "__js__week_ui_get_streakcounter": __js__week_ui_get_streakcounter,
     "__js__week_ui_get_strums": __js__week_ui_get_strums,
     "__js__week_ui_get_strums_count": __js__week_ui_get_strums_count,
-    "__js__week_ui_get_round_textsprite": __js__week_ui_get_round_textsprite,
     "__js__week_ui_set_visibility": __js__week_ui_set_visibility,
     "__js__week_unlockdirective_create": __js__week_unlockdirective_create,
     "__js__week_unlockdirective_get": __js__week_unlockdirective_get,
