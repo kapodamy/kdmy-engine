@@ -2571,7 +2571,17 @@ namespace Engine.Game.Gameplay {
 
                 if (roundcontext.script != null) {
                     roundcontext.script.NotifyAfterStrumScroll();
-                    if (roundcontext.scriptcontext.halt_flag) Week.Halt(roundcontext, false);
+
+                    if (roundcontext.scriptcontext.halt_flag) {
+                        Week.Halt(roundcontext, false);
+
+                        for (int i = 0 ; i < roundcontext.players_size ; i++) {
+                            if (roundcontext.players[i].ddrkeymon != null) {
+                                roundcontext.players[i].controller.ClearButtons();
+                                roundcontext.players[i].ddrkeymon.Clear();
+                            }
+                        }
+                    }
                 }
 
                 if (playerstats != null) {
@@ -2649,7 +2659,16 @@ namespace Engine.Game.Gameplay {
                 layout.Animate(elapsed);
                 layout.Draw(pvr_context);
 
-                if (roundcontext.scriptcontext.halt_flag) Week.Halt(roundcontext, false);
+                if (roundcontext.scriptcontext.halt_flag) {
+                    Week.Halt(roundcontext, false);
+
+                    for (int i = 0 ; i < roundcontext.players_size ; i++) {
+                        if (roundcontext.players[i].ddrkeymon != null) {
+                            roundcontext.players[i].controller.ClearButtons();
+                            roundcontext.players[i].ddrkeymon.Clear();
+                        }
+                    }
+                }
 
                 if (roundcontext.scriptcontext.force_end_flag) {
                     if (roundcontext.songplayer != null) roundcontext.songplayer.Pause();

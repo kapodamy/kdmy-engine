@@ -2560,7 +2560,17 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
         if (roundcontext.script) {
             await weekscript_notify_after_strum_scroll(roundcontext.script);
-            if (roundcontext.scriptcontext.halt_flag) await week_halt(roundcontext, 0);
+
+            if (roundcontext.scriptcontext.halt_flag) {
+                await week_halt(roundcontext, 0);
+
+                for (let i = 0; i < roundcontext.players_size; i++) {
+                    if (roundcontext.players[i].ddrkeymon != null) {
+                        gamepad_clear_buttons(roundcontext.players[i].controller);
+                        ddrkeymon_clear(roundcontext.players[i].ddrkeymon);
+                    }
+                }
+            }
         }
 
         if (playerstats) {
@@ -2638,7 +2648,16 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         layout_draw(layout, pvr_context);
 
         // JS only
-        if (roundcontext.scriptcontext.halt_flag) await week_halt(roundcontext, 0);
+        if (roundcontext.scriptcontext.halt_flag) {
+            await week_halt(roundcontext, 0);
+
+            for (let i = 0; i < roundcontext.players_size; i++) {
+                if (roundcontext.players[i].ddrkeymon != null) {
+                    gamepad_clear_buttons(roundcontext.players[i].controller);
+                    ddrkeymon_clear(roundcontext.players[i].ddrkeymon);
+                }
+            }
+        }
 
         if (roundcontext.scriptcontext.force_end_flag) {
             if (roundcontext.songplayer) songplayer_pause(roundcontext.songplayer);
