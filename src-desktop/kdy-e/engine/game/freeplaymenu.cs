@@ -353,11 +353,13 @@ namespace Engine.Game {
                     offset = 1;
                     switch_difficult = false;
                 } else if ((btns & GamepadButtons.DPAD_LEFT).Bool()) {
+                    if (state.map.is_locked) continue;
                     offset = -1;
-                    switch_difficult = !state.map.is_locked;
+                    switch_difficult = true;
                 } else if ((btns & GamepadButtons.DPAD_RIGHT).Bool()) {
+                    if (state.map.is_locked) continue;
                     offset = 1;
-                    switch_difficult = !state.map.is_locked;
+                    switch_difficult = true;
                 } else if ((btns & (GamepadButtons.A | GamepadButtons.START)).Bool()) {
                     int index = menu.GetSelectedIndex();
                     if (index < 0 || index >= menu.GetItemsCount() || state.difficult_locked || state.map.is_locked) {

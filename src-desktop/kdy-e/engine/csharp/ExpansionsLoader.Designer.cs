@@ -65,6 +65,7 @@
             this.listView.FullRowSelect = true;
             this.listView.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
             this.listView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView1_DoubleClick);
+            this.listView.KeyUp += new System.Windows.Forms.KeyEventHandler(this.listView1_KeyUp);
             // 
             // columnHeader1
             // 

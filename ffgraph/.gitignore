@@ -1,10 +1,9 @@
 
 # ignore due license incompatibility
-/include/avcodec/
-/include/avformat/
-/include/avutil/
-/include/swresample/
-/include/swscale/
+/ffgraph/include/
+!/ffgraph/include/README.TXT
+!/ffgraph/include/externaldecoder.h
+!/ffgraph/include/filehandle.h
 
 # ignore due license incompatibility
 /lib/x64/avcodec-59.dll

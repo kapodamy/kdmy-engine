@@ -14,7 +14,7 @@ namespace Engine.Font {
 
         public const byte GLYPHS_HEIGHT = 72;// in the dreamcast use 64px, 64px is enough for SDF
         public const float GLYPHS_OUTLINE_RATIO = 0.086f;// ~6px of outline @ 72px (used in SDF)
-        public const float GLYPHS_SMOOTHING_COEFF = 0.25f;// used in SDF, idk how its works
+        public const float GLYPHS_SMOOTHING_COEFF = 0.245f;// used in SDF, idk how its works
         public const sbyte GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
         public const float FAKE_SPACE = 0.75f;// 75% of the height
 
@@ -495,7 +495,7 @@ namespace Engine.Font {
             }
 
 #if SDF_FONT
-            float smoothing = FontType.GLYPHS_SMOOTHING_COEFF / height;
+            float smoothing = FontType.InternalCalcSmoothing(pvrctx, height);
             GlyphRenderer.SetSDFSmoothing(pvrctx, smoothing);
 #endif
 
@@ -650,6 +650,26 @@ namespace Engine.Font {
                 }
             }
             return null;
+        }
+
+        private static float InternalCalcSmoothing(PVRContext pvrctx, float height) {
+            SH4Matrix matrix = pvrctx.CurrentMatrix;
+
+            double x = matrix.matrix[15] * Math.Sqrt(
+                (matrix.matrix[0] * matrix.matrix[0]) +
+                (matrix.matrix[1] * matrix.matrix[1]) +
+                (matrix.matrix[2] * matrix.matrix[2])
+            );
+            double y = matrix.matrix[15] * Math.Sqrt(
+                (matrix.matrix[4] * matrix.matrix[4]) +
+                (matrix.matrix[5] * matrix.matrix[5]) +
+                (matrix.matrix[6] * matrix.matrix[6])
+            );
+
+            double scale = (Math.Abs((x + y) / 2.0) * height) / FontType.GLYPHS_HEIGHT;
+            double smoothness = FontType.GLYPHS_SMOOTHING_COEFF / (FontType.GLYPHS_HEIGHT * scale);
+
+            return (float)smoothness;
         }
 
 

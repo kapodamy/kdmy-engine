@@ -1,4 +1,5 @@
 # Engine features
+
 Engine specific APIs
 
 * Layout, is a html-like file used for building stages and screens.
@@ -13,6 +14,7 @@ Engine specific APIs
   * Placeholders. Used for building custom menu screens (note: menus itself can not be modded)
   * Antialiasing control, for use in pixelated stages.
   * Actions, partial scripted layout modifications.
+  * Video playback.
 * Non-scripted animations
   * Also wrriten in XML.
   * Frame-based animations:
@@ -41,3 +43,4 @@ Engine specific APIs
   * Week.
   * Menus.
 * Layout visor, an html page used to visualize layouts.
+* Engine menus customization and creation of custom menu screens.

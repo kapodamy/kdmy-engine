@@ -2,25 +2,30 @@
 declare namespace KDMYEngine {
     /**
      * @file
-     * @summary This is a cheatset of functions to write in the lua script
+     * @summary This is a cheatset of functions to write in your lua script
      * This contains all functions called by the engine.
-     * All these functions are optional, so you can implement (write in your lua script) only the functions you need
+     * All these functions are optional, so you can implement (write in your own lua script) only the functions you need
      *
      * also.... ¡¡¡¡DO NOT IMPORT THIS FILE!!!!
      */
 
     /**
-     * Called when the week is loaded (with the first track). If the week is initialized from the freeplay menu
-     * an index of the choosen song is passed.
+     * Called when the week is loaded. If the week is initialized from the freeplay menu.
+     * an index of the choosen song is passed. Note: Attempting to adquire any object from the engine can fail
+     * because this function is called before loading week's resources. 
      *
-     * Note: In "freeplay mode" you should avoid/skip any cutscenes, distractions or dialogues if necessary.
-     * @param freeplay_index index of the song in "about.json" file or "freeplayTrackIndexInGameplayManifest" field value, otherwise, -1.
+     * Suggestion: In "freeplay mode" you should avoid/skip any cutscenes, distractions or dialogues if necessary.
+     * @param freeplay_index index of the song in "about.json" file or "freeplaySongIndexInGameplayManifest" field 
+     * value, otherwise, -1.
      */
     export function f_weekinit(freeplay_index: number): void;
 
     /**
-     * Called before the "_Ready?_" message is shown.
-     * @param from_retry {@link true} if the user restarted the current track, otherwise, {@link false}.
+     * @summary Called before the "__Ready?__" message is shown.
+     * In this function you should do any init tasks. If the player looses and changes the difficult (during the
+     * gameover screen), _from_retry_ will be false.
+     * @param from_retry {@link true} if the user restarted or is attempting again, otherwise, {@link false} for
+     * first attempt or difficult changed.
      */
     export function f_beforeready(from_retry: boolean): void;
 
@@ -44,8 +49,8 @@ declare namespace KDMYEngine {
     export function f_frame(elapsed: number): void;
 
     /**
-     * Called when the current round (track of the week) has ended.
-     * @param loose {@link true} If a player was defeated, otherwise, {@link false} the track is clear.
+     * Called when the current round (song of the week) has ended.
+     * @param loose {@link true} If a player was defeated, otherwise, {@link false} the song is clear.
      */
     export function f_roundend(loose: boolean): void;
 
@@ -59,12 +64,15 @@ declare namespace KDMYEngine {
      * @summary Notifies the dead player's decision, this function is called after {@link f_roundend}.
      * Depending on the choosen decision later will be called {@link f_beforeready} or {@link f_weekend}.
      * @param retry_or_giveup {@link true} if the player wants to retry the
-     * round (current track), otherwhise, {@link false} if gives up.
+     *                                     round (current song), otherwhise, {@link false} if gives up.
+     * @param changed_difficult {@link null} if the player does not change the difficult, otherwise, the 
+     *                                       difficult name is provided.
+     * Note: if the difficult was changed the {@link f_beforeready} function is called with {@link false} argument
      */
-    export function f_diedecision(retry_or_giveup: boolean): void;
+    export function f_diedecision(retry_or_giveup: boolean, changed_difficult: string): void;
 
     /**
-     * Called before the pause menu is shown, this suspends the stage and UI layouts (animations, triggers, sounds, etc)
+     * Called before the pause menu is shown, this suspends the stage layout (includes animations, triggers, sounds, etc)
      * @param pause_or_resume {@link true} if game was paused, otherwhise, {@link false} if returns to the gameplay.
      */
     export function f_pause(pause_or_resume: boolean): void;
@@ -72,25 +80,30 @@ declare namespace KDMYEngine {
     /**
      * Called when the player leaves the game, this means one of
      * "_Return to the main menu_" or "_Return to the week selector_" options was selected from the pause menu.
-     * Important: on this state, {@link f_roundend} and {@link f_weekend} functions never will be called.
+     * Important: on this state, {@link f_roundend} and {@link f_weekend} functions never are called.
      */
     export function f_weekleave(): void;
 
     /**
      * @summary Called after the results are shown and before the player returns to the menus
-     * Results are only shown once the week is completed and clear (without changing the difficult)
+     * Results are only shown once the week is completed, if the player has changed the difficult
+     * in one or more songs (excluding first week's song) the player is notified with the legend
+     * "__WAIT, YOU CHANGED THE DIFFICULT!__" and without saving any progress.
+     * This function is called whatever {@link week_disable_week_end_results} was used.
+     * @param {number} total_attempts total attempts taken to clear all songs
+     * @param {number} songs_count the amount of songs cleared, its always 1 in freeplay mode (see {@link f_weekinit})
+     * @param {number} reject_completed if the difficult was changed, otherwise, false
      */
-    export function f_afterresults(): void;
+    export function f_afterresults(total_attempts: number, songs_count: number, reject_completed: boolean): void;
 
     /**
-     * Called when the script is disposed before starting another round, this may mean that it is being
-     * replaced by another script or by none at all.
+     * @summary Called when the script is disposed and replaced by another script (or none at all).
      */
     export function f_scriptchange(): void;
 
     /**
      * Called when the week menu (an extra menu) is shown or hidden.
-     * Note: only called if the week provided an aditional menu.
+     * Note: only called if the week provided an aditional menu in the "gameplay.json" file.
      * @param shown_or_hidden {@link true} if the custom week menu is opened, otherwise, {@link false} if closed.
      */
     export function f_pause_menuvisible(shown_or_hidden: boolean): void;
@@ -116,8 +129,8 @@ declare namespace KDMYEngine {
     export function f_note(timestamp: number, id: number, duration: number, data: number, special: boolean, player_id: number, state: NoteState): void;
 
     /**
-     * Called after strums are scrolled and before {@link f_frame}
-     * @param player_id Index (base-zero) of the player controller/gamepad, in modding context indicates this value is -1.
+     * Called after strums are scrolled and before {@link f_frame}. In a modding context is also called
+     * @param player_id Index (base-zero) of the player controller/gamepad, in modding context this value is -1.
      * @param buttons An usigned number indicating the buttons pressed in the controller. These are bit flags/fields defined in GAMEPAD_* constants
      */
     export function f_buttons(player_id: number, buttons: GamepadButtons): void;
@@ -134,7 +147,7 @@ declare namespace KDMYEngine {
 
     /**
      * @summary Called on every beat.
-     * This function is not called exactly when an event occurs beacuse the check is done
+     * This function is not called exactly when the beat occurs beacuse the check is done
      * on every frame (before {@link f_frame}).
      * The milliseconds spent waiting for the frame is passed in the parameter __since__.
      * @param current_beat The beat number (also known as count).
@@ -144,7 +157,7 @@ declare namespace KDMYEngine {
 
     /**
      * @summary Called on every quarter (a quarter is 1/4 of a beat).
-     * This function is not called exactly when an event occurs beacuse the check is done
+     * This function is not called exactly when the quarter occurs beacuse the check is done
      * on every frame (before {@link f_frame}).
      * The milliseconds spent waiting for the frame is passed in the parameter __since__.
      * @param current_quarter The quarter number (also known as count).
@@ -153,9 +166,9 @@ declare namespace KDMYEngine {
     export function f_quarter(current_quarter: number, since: number): void;
 
     /**
-     * @summary Called when the engine display load and show a dialogue declared
+     * @summary Called when the engine load and display a dialogue declared
      * in the gameplay manifest (gameplay.json file).
-     * This happens if the track contains the "dialogText" property set.
+     * This happens if the song contains the "dialogText" property set.
      * Note 1: the engine calls this function before {@link f_beforeready}.
      * Note 2: while the dialog is shown the user can pause the game.
      * Note 3: if the user restarts the song, the dialog is ignored.
@@ -170,7 +183,7 @@ declare namespace KDMYEngine {
     export function f_dialogue_closing(): void;
 
     /**
-     * @summary Called when the the dialogue is closed or "<Exit />" is used on a state
+     * @summary Called when the the dialogue is closed or "\<Exit /\>" is used on a state
      */
     export function f_dialogue_exit(): void;
 
@@ -191,8 +204,7 @@ declare namespace KDMYEngine {
     export function f_dialogue_line_ends(line_index: number, state_name: string, text: string): void;
 
     /**
-     * @summary Called after the strum scrolling is done, at this point all key inputs are processed by all
-     * strum lines and all {@link PlayerStats} are updated.
+     * @summary Called after the strum scrolling is done and all key inputs are processedm, also any {@link PlayerStats} is updated.
      */
     export function f_after_strum_scroll(): void;
 
@@ -244,7 +256,7 @@ declare namespace KDMYEngine {
 
     /**
      * @summary (modding context only) Called when the script is loaded from a another modding context or
-     * screen menu. The {@param arg} value is the same used in the call to {@link modding_spawn_screen}.
+     * screen menu. The parameter _arg_ value is the same used in the call to {@link modding_spawn_screen}.
      * @param arg value passed by {@link modding_spawn_screen} or "NATIVE_SCREEN" if called by the engine.
      */
     export function f_modding_init(arg: BasicValue): void;
@@ -293,7 +305,7 @@ declare namespace KDMYEngine {
     export function f_input_mouse_enter(entering: boolean): void;
 
     /**
-     * @summary (desktop version only) 
+     * @summary (desktop version only) Called when a mouse button is pressed or released
      * @param button which button was pressed
      * @param is_pressed true on press, otherwise, false if was released.
      * @param mods 	Bit field describing which keyboard modifier keys were held down.
@@ -301,7 +313,7 @@ declare namespace KDMYEngine {
     export function f_input_mouse_button(button: MouseButton, is_pressed: boolean, mods: ModKeys): void;
 
     /**
-     * @summary (desktop version only) called when the vertical and/or horizontal wheel is moved. The amounts
+     * @summary (desktop version only) called when the vertical and/or horizontal wheel is moved. The scroll amounts
      * are system-specific
      * @param x The scroll offset along the x-axis.
      * @param y The scroll offset along the y-axis.

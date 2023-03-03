@@ -340,11 +340,13 @@ async function freeplaymenu_show(menu, state, songs) {
             offset = 1;
             switch_difficult = 0;
         } else if (btns & GAMEPAD_DPAD_LEFT) {
+            if (state.map.is_locked) continue;
             offset = -1;
-            switch_difficult = !state.map.is_locked;
+            switch_difficult = 1;
         } else if (btns & GAMEPAD_DPAD_RIGHT) {
+            if (state.map.is_locked) continue;
             offset = 1;
-            switch_difficult = !state.map.is_locked;
+            switch_difficult = 1;
         } else if (btns & (GAMEPAD_A | GAMEPAD_START)) {
             let index = menu_get_selected_index(menu);
             if (index < 0 || index >= menu_get_items_count(menu) || state.difficult_locked || state.map.is_locked) {
