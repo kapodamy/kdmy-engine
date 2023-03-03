@@ -6,7 +6,7 @@ const FONTTYPE_POOL = new Map();
 var FONTTYPE_IDS = 0;
 const FONTTYPE_GLYPHS_HEIGHT = 72;// in the dreamcast use 64px
 const FONTTYPE_GLYPHS_OUTLINE_RATIO = 0.086;// ~6px of outline @ 72px (used in SDF)
-const FONTTYPE_GLYPHS_SMOOTHING_COEFF = 0.25;// used in SDF, idk how its works
+const FONTTYPE_GLYPHS_SMOOTHING_COEFF = 0.245;// used in SDF, idk how its works
 const FONTTYPE_GLYPHS_GAPS = 4;// space between glyph in pixels
 const FONTTYPE_FAKE_SPACE = 0.75;// 75% of the height
 
@@ -448,7 +448,7 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
     }
 
     if (SDF_FONT) {
-        let smoothing = FONTTYPE_GLYPHS_SMOOTHING_COEFF / height;
+        let smoothing = fonttype_internal_calc_smoothing(pvrctx, height);
         glyphrenderer_set_sdf_smoothing(pvrctx, smoothing);
     }
 
@@ -607,5 +607,25 @@ function fonttype_internal_get_fontchardata(/**@type {FontCharMap}*/ fontcharmap
         }
     }
     return null;
+}
+
+function fonttype_internal_calc_smoothing(pvrctx, height) {
+    const matrix = pvrctx.current_matrix;
+
+    let x = matrix[15] * Math.sqrt(
+        (matrix[0] * matrix[0]) +
+        (matrix[1] * matrix[1]) +
+        (matrix[2] * matrix[2])
+    );
+    let y = matrix[15] * Math.sqrt(
+        (matrix[4] * matrix[4]) +
+        (matrix[5] * matrix[5]) +
+        (matrix[6] * matrix[6])
+    );
+
+    let scale = (Math.abs((x + y) / 2.0) * height) / FONTTYPE_GLYPHS_HEIGHT;
+    let smoothing = FONTTYPE_GLYPHS_SMOOTHING_COEFF / (FONTTYPE_GLYPHS_HEIGHT * scale);
+
+    return smoothing;
 }
 

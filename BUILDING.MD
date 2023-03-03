@@ -20,9 +20,9 @@ Everything was written from scratch, with no frameworks except low-level librari
 * *Font Atlas Builder*
 * Creates a font texture atlas, written in C. Uses [freetype](https://freetype.org/ "freetype") library.
 * The source code is located in the **fontatlas** folder.
-* To compile open **MSYS2 MinGW x86** command prompt inside of the folder and run:
-  * `mingw32-make build-release-dll-x86` this creates **kdy_fontatlas.dll** file in *output* folder.
-  * (optional) `mingw32-make build-release` creates a [WASM](https://webassembly.org/ "WASM") file for the Javascript version.
+* To compile open **MSYS2 MinGW x64** command prompt inside of the folder and run:
+  * `make build-release-dll-x64` this creates **kdy_fontatlas.dll** file in *output* folder.
+  * (optional) `make build-release` creates a [WASM](https://webassembly.org/ "WASM") file for the Javascript version.
 * Note: "JS glue" code must be patched before being used.
 * Project for [VSCode](https://code.visualstudio.com/ "VSCode") available.
 
@@ -33,7 +33,7 @@ Everything was written from scratch, with no frameworks except low-level librari
 * Requires a [emscripten](https://emscripten.org/ "emscripten") static library of [Lua](https://www.lua.org/ "Lua").
 * The source code is located in the **luascript** folder.
 * Used **only** in the Javascript version.
-* To compile open **MSYS2 MinGW x86** command prompt inside of the folder and run `mingw32-make build-release`, this creates a [WASM](https://webassembly.org/ "WASM") file.
+* To compile open **MSYS2 MinGW x64** command prompt inside of the folder and run `make build-release`, this creates a [WASM](https://webassembly.org/ "WASM") file.
 * Note: "JS glue" code must be patched before being used.
 * Project for [VSCode](https://code.visualstudio.com/ "VSCode") available.
 * *the C# version is automatically compiled with the engine.*
@@ -46,19 +46,34 @@ Everything was written from scratch, with no frameworks except low-level librari
 * The source code is located in the **sndbridge** folder.
 * Used **only** in the C# version.
 * Project for [VSCode](https://code.visualstudio.com/ "VSCode") available.
-* To compile open **MSYS2 MinGW x86** command prompt inside of the folder and run `mingw32-make build-release` this creates **kdy_AICA.dll** file in *output* folder.
+* To compile open **MSYS2 MinGW x64** command prompt inside of the folder and run `make build-release` this creates **kdy_AICA.dll** file in *output* folder.
+
+## FFGraph
+
+* *FFmpeg Graph*
+* Responsible for decoding video files (any format).
+* Uses [FFmpeg](https://www.ffmpeg.org/ "FFmpeg").
+* The source code is located in the **ffgraph** folder.
+* Headers of FFmpeg are required (not provided). See ffgraph/include/README.TXT for more info.
+* Shared libraries (dll files) of FFmpeg are required (not provided). See ffgraph/lib/x64/README.TXT for more info.
+* Used **only** in the C# version.
+* Project for [VSCode](https://code.visualstudio.com/ "VSCode") available.
+* To compile open **MSYS2 MinGW x64** command prompt inside of the folder and run `make build-release` this creates **kdy_FFgraph.dll** file in *output* folder.
 
 ## lua-interop
 
 * *Lua interoperability*
 * **C# only**
-* Contains all unmanaged code for interacting with Lua API. Automatically compiled with the engine.
+* Contains all unmanaged code for interacting with Lua API.
+* Automatically compiled with the engine.
 
 ## texture-mgr
 
 * *Texture manager*
 * **C# only**
-* Reads and write image files (PNG files). Automatically compiled with the engine.
+* Reads and write image files (PNG files).
+* Parses icon files (ICO files)
+* Automatically compiled with the engine.
 
 ---
 

@@ -1056,23 +1056,6 @@ namespace Engine.Game.Gameplay {
                 Week.InitScript(roundcontext, gameplaymanifest.@default.script);
             }
 
-            // initialize dialogue
-            if (!String.IsNullOrEmpty(songmanifest.dialogue_params)) {
-                roundcontext.dialogue_from_default = false;
-                Week.InitDialogue(
-                    roundcontext,
-                    songmanifest.dialogue_params,
-                    songmanifest.dialog_ignore_on_freeplay && initparams.single_song
-                );
-            } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
-                roundcontext.dialogue_from_default = true;
-                Week.InitDialogue(
-                    roundcontext,
-                    gameplaymanifest.@default.dialogue_params,
-                    songmanifest.dialog_ignore_on_freeplay && initparams.single_song
-                );
-            }
-
             // reload the music only  
             roundcontext.weekpause.Prepare();
 
@@ -1206,6 +1189,23 @@ namespace Engine.Game.Gameplay {
                 , GameMain.ENGINE_VERSION
 #endif
             );
+
+            // initialize dialogue
+            if (!String.IsNullOrEmpty(songmanifest.dialogue_params)) {
+                roundcontext.dialogue_from_default = false;
+                Week.InitDialogue(
+                    roundcontext,
+                    songmanifest.dialogue_params,
+                    songmanifest.dialog_ignore_on_freeplay && initparams.single_song
+                );
+            } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
+                roundcontext.dialogue_from_default = true;
+                Week.InitDialogue(
+                    roundcontext,
+                    gameplaymanifest.@default.dialogue_params,
+                    songmanifest.dialog_ignore_on_freeplay && initparams.single_song
+                );
+            }
 
             // Incorporates all ui elements in the stage layout
             if (updated_stage || updated_ui || updated_distributions_or_players) {

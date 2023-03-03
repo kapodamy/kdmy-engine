@@ -1,7 +1,7 @@
 
 # KDMY Engine: Friday Night Funkin'
 
-![dreamcast](https://img.shields.io/badge/dreamcast%20build-failing-red) ![C#](https://img.shields.io/badge/contains-C%23-informational) ![JS](https://img.shields.io/badge/contains-Javascript-informational) ![C](https://img.shields.io/badge/contains-C-informational) ![haxe](https://img.shields.io/badge/contains%20haxe%3F-haxen't-inactive)
+![dreamcast](https://img.shields.io/badge/dreamcast%20build-failing-red) ![C#](https://img.shields.io/badge/contains-C%23-informational) ![JS](https://img.shields.io/badge/contains-Javascript-informational) ![C](https://img.shields.io/badge/contains-C-informational) ![haxe](https://img.shields.io/badge/contains%20haxe%3F-haxen't-inactive) [![buymeacoffee](https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/kapodamy)
 
 kdy-e is an engine for FNF, written from scratch in javascript|C|C# (no haxe here). It was build specifically for the Sega Dreamcast, it was . . .
 
@@ -33,7 +33,8 @@ As for the basics, the engine has support for gamepads, multiple saveslots, mult
 * Per-track distributions (experimental), stage, lua script and characters.
 * Credits (can be customized per week), also has lua scripting support.
 * Each week and/or track stage can define the placement of characters and UI cosmetics (streak counter, ranking counter and accuracy).
-* Partial week lua scripting support (also known as "modcharts").
+* Week lua scripting support (also known as "modcharts").
+* Menu customization.
 * Built-in engine features (explained below)
 
 ## Engine especific features
@@ -47,14 +48,14 @@ Explained here [FEATURES.MD](FEATURES.MD "FEATURES.MD")
 ![pause](test%20files/kdmy%20pics/screenshots/pause.png)
 ![weekselector](test%20files/kdmy%20pics/screenshots/weekselector.png)
 
-## Missing features / To be implemented
+## ¿What is missing?
 
 * ~~Post-processing shaders~~. ¡DONE!
 * ~~Dialogues (waht a shame)~~. ¡DONE!
 * ~~Expansions loader (a.k.a mods loader).~~. ¡DONE!
 * ~~Lua API to manipulate strums, states and UI cosmetics~~. ¡DONE!
-* Documentation (a lot).
-* Video playback (kinda optional).
+* Documentation (only a part is documented).
+* ~~Video playback (kinda optional).~~ ¡DONE!
 
 ## How to compile
 

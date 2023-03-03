@@ -6,8 +6,8 @@
     "healthbarColor": "0xCE599E",
     "healthIconsModel": "icon-parents.xml",
 
-    "singSuffix": 		   "Dad",
-    "singAlternateSuffix": "Mom",
+    "singSuffix": 		   " Dad",
+    "singAlternateSuffix": " Mom",
 
     "alignVertical": "end",
     "alignHorizontal": "start",

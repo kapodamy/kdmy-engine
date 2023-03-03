@@ -215,6 +215,13 @@ namespace CsharpWrapper {
             button_launch_Click(sender, EventArgs.Empty);
         }
 
+        private void listView1_KeyUp(object sender, System.Windows.Forms.KeyEventArgs e) {
+            if (this.Focused) return;
+            if (e.KeyCode != Keys.Enter) return;
+
+            button_launch_Click(sender, EventArgs.Empty);
+        }
+
         private void button_launch_Click(object sender, EventArgs e) {
             var selections = listView.SelectedIndices;
             if (selections.Count < 1) return;

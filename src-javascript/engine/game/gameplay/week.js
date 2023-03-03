@@ -1049,23 +1049,6 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
         await week_init_script(roundcontext, gameplaymanifest.default.script);
     }
 
-    // initialize dialogue
-    if (songmanifest.dialogue_params) {
-        roundcontext.dialogue_from_default = 0;
-        await week_init_dialogue(
-            roundcontext,
-            songmanifest.dialogue_params,
-            songmanifest.dialog_ignore_on_freeplay && initparams.single_song
-        );
-    } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
-        roundcontext.dialogue_from_default = 1;
-        await week_init_dialogue(
-            roundcontext,
-            gameplaymanifest.default.dialogue_params,
-            songmanifest.dialog_ignore_on_freeplay && initparams.single_song
-        );
-    }
-
     // reload the music only
     await week_pause_prepare(roundcontext.weekpause);
 
@@ -1185,6 +1168,23 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
         initparams.difficult,
         ENGINE_VERSION
     );
+
+    // initialize dialogue
+    if (songmanifest.dialogue_params) {
+        roundcontext.dialogue_from_default = 0;
+        await week_init_dialogue(
+            roundcontext,
+            songmanifest.dialogue_params,
+            songmanifest.dialog_ignore_on_freeplay && initparams.single_song
+        );
+    } else if (roundcontext.dialogue == null || !roundcontext.script_from_default) {
+        roundcontext.dialogue_from_default = 1;
+        await week_init_dialogue(
+            roundcontext,
+            gameplaymanifest.default.dialogue_params,
+            songmanifest.dialog_ignore_on_freeplay && initparams.single_song
+        );
+    }
 
     // Incorporates all ui elements in the stage layout
     if (updated_stage || updated_ui || updated_distributions_or_players) {

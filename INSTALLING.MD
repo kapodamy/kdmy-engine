@@ -7,7 +7,7 @@ Before continue create a new folder somewhere (eg *dist*), here all compiled fil
 
 ## 1. Copy required libraries
 
-All required libraries are inside of **external_libraries-x86** folder, easy. This includes:
+All required libraries are inside of **external_libraries-x64** folder, easy. This includes:
 
 * `freetype.dll`
 * `glfw.dll`
@@ -18,13 +18,22 @@ All required libraries are inside of **external_libraries-x86** folder, easy. Th
 * `lua.dll`
 * `kdy_AICA.dll` (prebuilt)
 * `kdy_fontatlas.dll` (prebuilt)
+* `kdy_FFgraph.dll` (prebuilt)
 
-If sndbrigde was built with opus codec support, the following dll files also are required:
+If sndbrigde was built with OPUS codec support, the following dll files also are required otherwise **the engine will not run**:
 
 * `opusfile.dll`
 * `opus.dll`
 * `libssl-1_1.dll`
 * `libcrypto-1_1.dll`
+
+If video playback is necessary, download the [FFmpeg](https://www.ffmpeg.org/download.html#build-windows "FFmpeg download link") shared libraries, required dll files are:
+
+* `avcodec-59.dll`
+* `avformat-59.dll`
+* `avutil-57.dll`
+* `swscale-6.dll`
+* `swresample-4.dll`
 
 ## 2. Getting the assets folder
 
@@ -56,3 +65,4 @@ Javascript version of the engine does not require any compilation, just copy the
 ### Launching the javascript version
 
 Open `kdmy_engine.html` to launch the engine or `kdmy_engine_layout_visor.html` to open the *Layout Visor*.
+If the engine does not load try [allowing access to local files](https://dev.to/dengel29/loading-local-files-in-firefox-and-chrome-m9f "guide") or mounting a web server.
