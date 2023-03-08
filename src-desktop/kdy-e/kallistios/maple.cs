@@ -328,6 +328,14 @@ L_continue:
                 if (state == InputState.Press) Engine.Platform.PVRContext.TakeScreenshot();
                 return;
             }
+            if (key == Keys.KP_SUBTRACT) {
+                if (state == InputState.Press) Engine.Game.MasterVolume.VolumeStep(false);
+                return;
+            }
+            if (key == Keys.KP_ADD) {
+                if (state == InputState.Press) Engine.Game.MasterVolume.VolumeStep(true);
+                return;
+            }
 
             bool hold = state == InputState.Press;
             double timestamp = Glfw.GetTime() * 1000.0;

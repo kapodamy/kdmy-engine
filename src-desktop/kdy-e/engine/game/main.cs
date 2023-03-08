@@ -34,6 +34,7 @@ namespace Engine.Game {
             FS.Init();// intialize filesystem access for the main thread (this thread)
             LuascriptPlatform.InitializeCallbacks();
             PVRContext.MuteAudioOutputOnMinimized(EngineSettings.mute_on_minimize);
+            MasterVolume.Init();
 
             utsname osinfo;
             UTSNAME.uname(out osinfo);
@@ -42,7 +43,7 @@ namespace Engine.Game {
             Console.Error.WriteLine($"[LOG] OS: {osinfo.version}\r\n");
 
             // (JS & CS only) preload fonts
-            new FontHolder("/assets/common/font/vcr.ttf", -1, null);
+            //new FontHolder("/assets/common/font/vcr.ttf", -1, null);
             //new FontHolder("/assets/common/font/pixel.otf", -1, null);
             new FontHolder("/assets/common/font/alphabet.xml", -1, null);
 

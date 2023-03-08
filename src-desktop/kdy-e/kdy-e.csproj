@@ -134,6 +134,7 @@
     <Compile Include="engine\externals\luascript\luascript_platform.cs" />
     <Compile Include="engine\game\gameplay\helpers\autouicosmetics.cs" />
     <Compile Include="engine\game\helpers\freeplay_songicons.cs" />
+    <Compile Include="engine\game\mastervolume.cs" />
     <Compile Include="engine\game\screenmenu.cs" />
     <Compile Include="engine\game\settingsmenu.cs" />
     <Compile Include="engine\platform\expansions.cs" />

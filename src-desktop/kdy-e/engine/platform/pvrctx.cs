@@ -90,6 +90,7 @@ namespace Engine.Platform {
             this.shader_framebuffer_back.Invalidate();
 
             if (EngineSettings.show_fps) DrawFPS();// if enabled draw it
+            Engine.Game.MasterVolume.Draw(this);
 
             // swap the buffers if something was drawn (avoid screen flickering)
             if (Engine.Externals.WebGL2RenderingContext.KDY_draw_calls_count > 0) {

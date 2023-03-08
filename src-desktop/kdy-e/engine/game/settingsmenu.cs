@@ -193,7 +193,7 @@ namespace Engine.Game {
         private static SettingOption[] current_setting_options = null;
         private static bool current_menu_choosen = false;
         private static string current_menu_choosen_custom = null;
-        private static bool is_running = false;
+        public static bool is_running = false;
         private static FontHolder submenus_font = null;
 
 
