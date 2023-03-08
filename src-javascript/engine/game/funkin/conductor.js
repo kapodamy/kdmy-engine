@@ -9,7 +9,8 @@ function conductor_init() {
         last_penality_strum: null,
         last_sustain_strum: null,
         missnotefx: null,
-        miss_milliseconds: 0,
+        has_misses: 0,
+        has_hits: 0,
         play_calls: 0
     };
 }
@@ -29,7 +30,8 @@ function conductor_poll_reset(conductor) {
     }
     conductor.last_penality_strum = null;
     conductor.last_sustain_strum = null;
-    conductor.miss_milliseconds = 0;
+    conductor.has_misses = 0;
+    conductor.has_hits = 0;
 }
 
 function conductor_set_character(conductor, character) {
@@ -164,6 +166,9 @@ function conductor_poll(conductor) {
     let size = arraylist_size(conductor.mappings);
     let success = 0;
 
+    conductor.has_hits = 0;
+    conductor.has_misses = 0;
+
     for (let i = 0; i < size; i++) {
         if (array[i].is_disabled) continue;
 
@@ -175,6 +180,8 @@ function conductor_poll(conductor) {
         array[i].last_change_count = press_changes;
 
         switch (press_state) {
+            case STRUM_PRESS_STATE_MISS:
+                conductor.has_misses = true;
             case STRUM_PRESS_STATE_NONE:
                 if (conductor.last_penality_strum == array[i].strum) {
                     // stop the penality animation in the next beat
@@ -198,18 +205,20 @@ function conductor_poll(conductor) {
                 //conductor.current_duration = strum_get_marker_duration(array[i].strum);
                 conductor.last_sustain_strum = null;
                 conductor.last_penality_strum = null;
-                conductor.miss_milliseconds = 0;
+                conductor.has_misses = 0;
+                conductor.has_hits = 1;
                 success += conductor_internal_execute_sing(conductor.character, array[i].directions, 0);
                 break;
             case STRUM_PRESS_STATE_HIT_SUSTAIN:
                 conductor.last_sustain_strum = array[i].strum;
                 conductor.last_penality_strum = null;
-                conductor.miss_milliseconds = 0;
+                conductor.has_misses = 0;
+                conductor.has_hits = 1;
                 success += conductor_internal_execute_sing(conductor.character, array[i].directions, 1);
                 break;
             case STRUM_PRESS_STATE_PENALTY_NOTE:
                 // button press on empty strum
-                conductor.miss_milliseconds += strum_get_marker_duration(array[i].strum);
+                conductor.has_misses = 1;
                 conductor.last_sustain_strum = null;
                 conductor.last_penality_strum = array[i].strum;
                 success += conductor_internal_execute_miss(conductor.character, array[i].directions, 1);
@@ -234,10 +243,12 @@ function conductor_poll(conductor) {
 
 }
 
-function conductor_get_missed_milliseconds(conductor) {
-    let miss_milliseconds = conductor.miss_milliseconds;
-    conductor.miss_milliseconds = 0;
-    return miss_milliseconds;
+function conductor_has_hits(conductor) {
+    return conductor.has_hits;
+}
+
+function conductor_has_misses(conductor) {
+    return conductor.has_misses;
 }
 
 function conductor_disable(conductor, disable) {

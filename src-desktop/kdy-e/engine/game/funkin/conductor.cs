@@ -12,7 +12,8 @@ namespace Engine.Game {
         private Strum last_penality_strum;
         private Strum last_sustain_strum;
         private MissNoteFX missnotefx;
-        private double miss_milliseconds;
+        private bool has_misses;
+        private bool has_hits;
         private int play_calls;
 
 
@@ -25,7 +26,8 @@ namespace Engine.Game {
             this.last_penality_strum = null;
             this.last_sustain_strum = null;
             this.missnotefx = null;
-            this.miss_milliseconds = 0;
+            this.has_misses = false;
+            this.has_hits = false;
             this.play_calls = 0;
         }
 
@@ -44,7 +46,8 @@ namespace Engine.Game {
             }
             this.last_penality_strum = null;
             this.last_sustain_strum = null;
-            this.miss_milliseconds = 0;
+            this.has_misses = false;
+            this.has_hits = false;
         }
 
         public void SetCharacter(Character character) {
@@ -179,6 +182,9 @@ namespace Engine.Game {
             int size = this.mappings.Size();
             int success = 0;
 
+            this.has_hits = false;
+            this.has_misses = false;
+
             for (int i = 0 ; i < size ; i++) {
                 if (array[i].is_disabled) continue;
 
@@ -190,6 +196,9 @@ namespace Engine.Game {
                 array[i].last_change_count = press_changes;
 
                 switch (press_state) {
+                    case StrumPressState.MISS:
+                        this.has_misses = true;
+                        goto case StrumPressState.NONE;
                     case StrumPressState.NONE:
                         if (this.last_penality_strum == array[i].strum) {
                             // stop the penality animation in the next beat
@@ -213,18 +222,20 @@ namespace Engine.Game {
                         //this.current_duration = array[i].strum.GetMarkerDuration();
                         this.last_sustain_strum = null;
                         this.last_penality_strum = null;
-                        this.miss_milliseconds = 0;
+                        this.has_misses = false;
+                        this.has_hits = true;
                         success += InternalExecuteSing(this.character, array[i].directions, false);
                         break;
                     case StrumPressState.HIT_SUSTAIN:
                         this.last_sustain_strum = array[i].strum;
                         this.last_penality_strum = null;
-                        this.miss_milliseconds = 0;
+                        this.has_misses = false;
+                        this.has_hits = true;
                         success += InternalExecuteSing(this.character, array[i].directions, true);
                         break;
                     case StrumPressState.PENALTY_NOTE:
                         // button press on empty strum
-                        this.miss_milliseconds += array[i].strum.GetMarkerDuration();
+                        this.has_misses = true;
                         this.last_sustain_strum = null;
                         this.last_penality_strum = array[i].strum;
                         success += InternalExecuteMiss(this.character, array[i].directions, true);
@@ -249,10 +260,12 @@ namespace Engine.Game {
 
         }
 
-        public double GetMissedMilliseconds() {
-            double miss_milliseconds = this.miss_milliseconds;
-            this.miss_milliseconds = 0;
-            return miss_milliseconds;
+        public bool HasMisses() {
+            return this.has_misses;
+        }
+
+        public bool HasHits() {
+            return this.has_hits;
         }
 
         public void Disable(bool disable) {

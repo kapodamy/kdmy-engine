@@ -125,7 +125,7 @@ declare global {
         END = "end"
     }
     /** Describes a cleared note state */
-    const enum NoteState {
+    const enum StrumNoteState {
         /** The player has pressed a button in an empty strum or with the wrong buttons */
         PENALITY = 0,
         /** The note was missed */
@@ -233,15 +233,17 @@ declare global {
     /** Indicates the current {@link Strum} press state */
     const enum StrumPressState {
         /** nothing has been pressed or a sustain note was released */
-        NONE = "none",
+        NONE = 0,
         /** A normal note was cleared */
-        HIT = "hit",
+        HIT = 1,
         /** A sustain note is begin cleared */
-        HIT_SUSTAIN = "hit_sustain",
+        HIT_SUSTAIN = 2,
         /** A normal note was cleared with the wrong buttons */
-        PENALTY_NOTE = "penalty_note",
+        PENALTY_NOTE = 3,
         /** A button was pressed without notes (hit on empty strum) */
-        PENALTY_HIT = "penalty_hit"
+        PENALTY_HIT = 4,
+        /** Missed note or sustain part is getting missed */
+        MISS = 5
     }
     /** Indicates the Rank of the last cleared note */
     const enum Ranking {

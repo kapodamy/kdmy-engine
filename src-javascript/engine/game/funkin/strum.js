@@ -83,6 +83,7 @@ const STRUM_PRESS_STATE_HIT = 1;
 const STRUM_PRESS_STATE_HIT_SUSTAIN = 2;
 const STRUM_PRESS_STATE_PENALTY_NOTE = 3;
 const STRUM_PRESS_STATE_PENALTY_HIT = 4;
+const STRUM_PRESS_STATE_MISS = 5;
 
 
 const STRUM_MARKER_STATE_NOTHING = 0;
@@ -740,6 +741,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
                     playerstats_add_miss(playerstats, strum.attribute_notes[note.id].hurt_ratio);
                     if (weekscript) weekscript_notify_note_loss(weekscript, strum, i, playerstats, 0);
                     strum.extra_animations_have_misses++;
+                    press_state = STRUM_PRESS_STATE_MISS;
                 }
             }
             continue;
@@ -1993,7 +1995,7 @@ function strum_internal_check_sustain_queue(strum, song_timestamp, playerstats) 
         let note = array[i];
         let end_timestamp = note.endTimestamp;
         let note_attributes = strum.attribute_notes[note.id];
-        let is_released = note.state == NoteState.RELEASE;
+        let is_released = note.state == NoteState.RELEASE;// ¿was early released?
         let quarter = Math.trunc(
             (note.duration - (end_timestamp - song_timestamp)) / strum.marker_duration_quarter
         );
@@ -2011,6 +2013,14 @@ function strum_internal_check_sustain_queue(strum, song_timestamp, playerstats) 
         if (is_released && !note_attributes.ignore_miss || !is_released && !note_attributes.ignore_hit) {
             let quarters = quarter - note.previous_quarter;
             playerstats_add_sustain(playerstats, quarters, is_released);
+
+            // Mark press state as missed after the 4 first quarters 
+            if (is_released && quarter > 4) {
+                let total_quarters = (note.duration / strum.marker_duration_quarter) - 2;
+                // also ignore last 2 quarters
+                if (quarter < total_quarters) strum_internal_update_press_state(strum, STRUM_PRESS_STATE_MISS);
+            }
+
             //console.log(`[sustain] ts=${note.timestamp} release=${is_released} quarters=${quarters}`);
         }
 

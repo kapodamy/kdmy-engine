@@ -4,6 +4,7 @@ using System.Diagnostics;
 using CsharpWrapper;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
+using Engine.Game.Gameplay;
 using Engine.Platform;
 
 namespace Engine.Externals.LuaScriptInterop {
@@ -196,6 +197,28 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.RegisterConstantInteger("Keys_RightAlt", 346);
             lua.RegisterConstantInteger("Keys_RightSuper", 347);
             lua.RegisterConstantInteger("Keys_Menu", 348);
+
+            lua.RegisterConstantInteger("STRUM_PRESS_STATE_NONE", (int)StrumPressState.NONE);
+            lua.RegisterConstantInteger("STRUM_PRESS_STATE_HIT", (int)StrumPressState.HIT);
+            lua.RegisterConstantInteger("STRUM_PRESS_STATE_HIT_SUSTAIN", (int)StrumPressState.HIT_SUSTAIN);
+            lua.RegisterConstantInteger("STRUM_PRESS_STATE_PENALTY_NOTE", (int)StrumPressState.PENALTY_NOTE);
+            lua.RegisterConstantInteger("STRUM_PRESS_STATE_PENALTY_HIT", (int)StrumPressState.PENALTY_HIT);
+            lua.RegisterConstantInteger("STRUM_PRESS_STATE_MISS", (int)StrumPressState.MISS);
+
+            lua.RegisterConstantInteger("RANKING_NONE", (int)Ranking.NONE);
+            lua.RegisterConstantInteger("RANKING_SICK", (int)Ranking.SICK);
+            lua.RegisterConstantInteger("RANKING_GOOD", (int)Ranking.GOOD);
+            lua.RegisterConstantInteger("RANKING_BAD", (int)Ranking.BAD);
+            lua.RegisterConstantInteger("RANKING_SHIT", (int)Ranking.SHIT);
+            lua.RegisterConstantInteger("RANKING_MISS", (int)Ranking.MISS);
+            lua.RegisterConstantInteger("RANKING_PENALITY", (int)Ranking.PENALITY);
+
+            lua.RegisterConstantInteger("STRUM_NOTE_STATE_PENALITY", (int)ScriptNote.PENALITY);
+            lua.RegisterConstantInteger("STRUM_NOTE_STATE_MISS", (int)ScriptNote.MISS);
+            lua.RegisterConstantInteger("STRUM_NOTE_STATE_SHIT", (int)ScriptNote.SHIT);
+            lua.RegisterConstantInteger("STRUM_NOTE_STATE_BAD", (int)ScriptNote.BAD);
+            lua.RegisterConstantInteger("STRUM_NOTE_STATE_GOOD", (int)ScriptNote.GOOD);
+            lua.RegisterConstantInteger("STRUM_NOTE_STATE_SICK", (int)ScriptNote.SICK);
 
             // register all objects (metatables) and functions
             ExportsCamera.script_camera_register(lua);

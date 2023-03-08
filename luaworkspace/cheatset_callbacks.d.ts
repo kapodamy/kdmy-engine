@@ -126,7 +126,7 @@ declare namespace KDMYEngine {
      * @param player_id Index (base-zero) of the character, normally 0 means the opponent and 1 the player.
      * @param state the state of the note
      */
-    export function f_note(timestamp: number, id: number, duration: number, data: number, special: boolean, player_id: number, state: NoteState): void;
+    export function f_note(timestamp: number, id: number, duration: number, data: number, special: boolean, player_id: number, state: StrumNoteState): void;
 
     /**
      * Called after strums are scrolled and before {@link f_frame}. In a modding context is also called

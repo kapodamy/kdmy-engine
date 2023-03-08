@@ -2280,7 +2280,7 @@ namespace Engine.Game.Gameplay {
             Camera camera = layout.GetCameraHelper();
             double round_duration = roundcontext.round_duration;
             double round_end_timestamp;
-            double unmute_timestamp = Double.PositiveInfinity;
+            bool voices_muted = false;
 
             if (round_duration < 0) round_duration = Double.PositiveInfinity;
             layout.Resume();
@@ -2548,14 +2548,16 @@ namespace Engine.Game.Gameplay {
                 //
                 song_timestamp2 -= EngineSettings.input_offset;
 
-                double missed_milliseconds = 0.0;
+                //double missed_milliseconds = 0.0;
+                bool has_hits = false, has_misses = false;
 
                 for (int i = 0 ; i < roundcontext.players_size ; i++) {
                     switch (roundcontext.players[i].type) {
                         case CharacterType.BOT:
                             roundcontext.players[i].strums.ScrollAuto(song_timestamp2);
                             roundcontext.players[i].conductor.Poll();
-                            missed_milliseconds += roundcontext.players[i].conductor.GetMissedMilliseconds();
+                            if (roundcontext.players[i].conductor.HasMisses()) has_misses = true;
+                            if (roundcontext.players[i].conductor.HasHits()) has_hits = true;
                             break;
                         case CharacterType.PLAYER:
                             roundcontext.players[i].ddrkeymon.PollCSJS();
@@ -2564,7 +2566,8 @@ namespace Engine.Game.Gameplay {
                             if (roundcontext.players[i].controller.GetManagedPresses(false, ref pressed_buttons)) {
                                 if (roundcontext.script != null) roundcontext.script.NotifyButtons(i, pressed_buttons);
                             }
-                            missed_milliseconds += roundcontext.players[i].conductor.GetMissedMilliseconds();
+                            if (roundcontext.players[i].conductor.HasMisses()) has_misses = true; 
+                            if (roundcontext.players[i].conductor.HasHits()) has_hits = true;
                             break;
                     }
                 }
@@ -2602,17 +2605,12 @@ namespace Engine.Game.Gameplay {
                 }
 
                 if (roundcontext.songplayer != null) {
-                    if (/*!Double.IsNaN(missed_milliseconds) && */missed_milliseconds > 0.0) {
-                        if (!Double.IsInfinity(unmute_timestamp)) {
-                            unmute_timestamp += missed_milliseconds / 2.0;
-                            roundcontext.songplayer.MuteTrack(true, true);
-                        } else {
-                            unmute_timestamp = song_timestamp + missed_milliseconds;
-                            roundcontext.songplayer.MuteTrack(true, true);
-                        }
-                    } else if (song_timestamp > unmute_timestamp) {
-                        unmute_timestamp = Double.PositiveInfinity;
+                    if (has_misses && !has_hits && !voices_muted) {
+                        roundcontext.songplayer.MuteTrack(true, true);
+                        voices_muted = true;
+                    } else if (has_hits && voices_muted) {
                         roundcontext.songplayer.MuteTrack(true, false);
+                        voices_muted = false;
                     }
                 }
 

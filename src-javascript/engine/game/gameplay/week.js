@@ -2268,7 +2268,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
     let camera = layout_get_camera_helper(layout);
     let round_duration = roundcontext.round_duration;
     let round_end_timestamp;
-    let unmute_timestamp = Infinity;
+    let voices_muted = 0;
 
     window["roundcontext"] = roundcontext;
 
@@ -2537,14 +2537,15 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         //
         song_timestamp2 -= SETTINGS.input_offset;
 
-        let missed_milliseconds = 0;
+        let has_misses = 0, has_hits = 0;
 
         for (let i = 0; i < roundcontext.players_size; i++) {
             switch (roundcontext.players[i].type) {
                 case CHARACTERTYPE.BOT:
                     strums_scroll_auto(roundcontext.players[i].strums, song_timestamp2);
                     conductor_poll(roundcontext.players[i].conductor);
-                    missed_milliseconds += conductor_get_missed_milliseconds(roundcontext.players[i].conductor);
+                    if (conductor_has_misses(roundcontext.players[i].conductor)) has_misses = 1;
+                    if (conductor_has_hits(roundcontext.players[i].conductor)) has_hits = 1;
                     break;
                 case CHARACTERTYPE.PLAYER:
                     ddrkeymon_poll_CSJS(roundcontext.players[i].ddrkeymon);
@@ -2553,7 +2554,8 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
                     if (gamepad_get_managed_presses(roundcontext.players[i].controller, 0, pressed_buttons)) {
                         if (roundcontext.script) await weekscript_notify_buttons(roundcontext.script, i, pressed_buttons[0]);
                     }
-                    missed_milliseconds += conductor_get_missed_milliseconds(roundcontext.players[i].conductor);
+                    if (conductor_has_misses(roundcontext.players[i].conductor)) has_misses = 1;
+                    if (conductor_has_hits(roundcontext.players[i].conductor)) has_hits = 1;
                     break;
             }
         }
@@ -2591,17 +2593,12 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         }
 
         if (roundcontext.songplayer) {
-            if (/*Number.isFinite(missed_milliseconds) && */missed_milliseconds > 0) {
-                if (Number.isFinite(unmute_timestamp)) {
-                    unmute_timestamp += missed_milliseconds / 2;
-                    songplayer_mute_track(roundcontext.songplayer, 1, 1);
-                } else {
-                    unmute_timestamp = song_timestamp + missed_milliseconds;
-                    songplayer_mute_track(roundcontext.songplayer, 1, 1);
-                }
-            } else if (song_timestamp > unmute_timestamp) {
-                unmute_timestamp = Infinity;
+            if (has_misses && !has_hits && !voices_muted) {
+                songplayer_mute_track(roundcontext.songplayer, 1, 1);
+                voices_muted = 1;
+            } else if (has_hits && voices_muted) {
                 songplayer_mute_track(roundcontext.songplayer, 1, 0);
+                voices_muted = 0;
             }
         }
 

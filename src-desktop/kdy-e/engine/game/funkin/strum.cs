@@ -18,6 +18,7 @@ namespace Engine.Game {
         HIT_SUSTAIN,
         PENALTY_NOTE,
         PENALTY_HIT,
+        MISS,
         INVALID
     }
 
@@ -797,6 +798,7 @@ L_discard_key_event:
                             playerstats.AddMiss(this.attribute_notes[note.id].hurt_ratio);
                             if (weekscript != null) weekscript.NotifyNoteLoss(this, i, playerstats, false);
                             this.extra_animations_have_misses = true;
+                            press_state = StrumPressState.MISS;
                         }
                     }
                     continue;
@@ -2049,11 +2051,10 @@ L_discard_key_event:
             StrumNote[] array = this.sustain_queue.PeekArray();
 
             for (int i = 0 ; i < size ; i++) {
-                /** @type {StrumNote} */
                 StrumNote note = array[i];
                 double end_timestamp = note.EndTimestamp;
                 NoteAttribute note_attributes = this.attribute_notes[note.id];
-                bool is_released = note.state == NoteState.RELEASE;
+                bool is_released = note.state == NoteState.RELEASE;// ¿was early released?
                 int quarter = (int)(
                     (note.duration - (end_timestamp - song_timestamp)) / this.marker_duration_quarter
                 );
@@ -2071,6 +2072,14 @@ L_discard_key_event:
                 if (is_released && !note_attributes.ignore_miss || !is_released && !note_attributes.ignore_hit) {
                     int quarters = quarter - note.previous_quarter;
                     playerstats.AddSustain(quarters, is_released);
+
+                    // Mark press state as missed after the 4 first quarters 
+                    if (is_released && quarter > 4) {
+                        double total_quarters = (note.duration / this.marker_duration_quarter) - 2;
+                        // also ignore last 2 quarters
+                        if (quarter < total_quarters) InternalUpdatePressState(StrumPressState.MISS);
+                    }
+
                     //Console.Error.WriteLine($"[LOG] [sustain] ts={note.timestamp} release={is_released} quarters={quarters}");
                 }
 

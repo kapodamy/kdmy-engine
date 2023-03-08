@@ -25,6 +25,7 @@ typedef int32_t ScrollDirection;
 #define STRUM_PRESS_STATE_HIT_SUSTAIN 2
 #define STRUM_PRESS_STATE_PENALTY_NOTE 3
 #define STRUM_PRESS_STATE_PENALTY_HIT 4
+#define STRUM_PRESS_STATE_MISS 5
 typedef int32_t StrumPressState;
 
 #define STRUM_SCRIPT_TARGET_MARKER 0
@@ -42,6 +43,14 @@ typedef int32_t StrumScriptTarget;
 #define STRUM_SCRIPT_ON_IDLE 4
 #define STRUM_SCRIPT_ON_ALL 5
 typedef int32_t StrumScriptOn;
+
+#define STRUM_SCRIPT_NOTE_PENALITY 0
+#define STRUM_SCRIPT_NOTE_MISS 1
+#define STRUM_SCRIPT_NOTE_SHIT 2
+#define STRUM_SCRIPT_NOTE_BAD 3
+#define STRUM_SCRIPT_NOTE_GOOD 4
+#define STRUM_SCRIPT_NOTE_SICK 5
+typedef int32_t ScriptNote;
 
 
 
