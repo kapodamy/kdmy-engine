@@ -7,6 +7,8 @@
     ],
 	"songsDefaultFreeplayHostIconModel": "PICO/icon-pico.xml",
 
+    "displayName": "Week 3",
+
     "hostFlipSprite": true,
 
     "hasDifficultyEasy": true,

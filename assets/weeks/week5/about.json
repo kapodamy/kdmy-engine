@@ -7,6 +7,8 @@
     ],
 	"songsDefaultFreeplayHostIconModel": "funkin/icon-parents.xml",
 
+    "displayName": "Week 5",
+
     "unlockDirectiveName": "WEEK4",
     "emitUnlockDirectiveName": "WEEK5",
 

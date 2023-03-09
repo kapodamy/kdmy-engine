@@ -6,6 +6,7 @@
         { "name": "Dad Battle", "freeplaySongFilename": "songs/dadbattle.ogg" }
     ],
 	"songsDefaultFreeplayHostIconModel": "DD/icon-dad.xml",
+    "displayName": "Week 1",
     "unlockDirectiveName": "TTRL",
     "emitUnlockDirectiveName": "WEEK1",
     "hostCharacterManifest": "DD/DADDYDEAREST.json"

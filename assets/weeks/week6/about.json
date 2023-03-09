@@ -7,6 +7,8 @@
     ],
 	"songsDefaultFreeplayHostIconModel": "funkin/icon-senpai.xml",
 
+    "displayName": "Week 6",
+
     "hasDifficultyEasy": true,
     "hasDifficultyHard": true,
     "customDifficulties": [],

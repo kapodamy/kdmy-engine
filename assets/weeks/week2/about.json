@@ -7,6 +7,8 @@
     ],
 	"songsDefaultFreeplayHostIconModel": "SPKY/icon-spooky.xml",
 
+    "displayName": "Week 2",
+
 
     "unlockDirectiveName": "WEEK1",
     "emitUnlockDirectiveName": "WEEK2"

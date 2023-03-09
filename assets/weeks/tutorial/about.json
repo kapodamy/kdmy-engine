@@ -4,6 +4,8 @@
         { "name": "Tutorial", "freeplaySongFilename": "tutorial.ogg", "freeplayHostIconModel": "/assets/common/image/funkin/icon-gf.xml" }
     ],
 
+    "displayName": "Tutorial",
+
     "flipHostSprite": false,
 
     "hasDifficultyEasy": true,

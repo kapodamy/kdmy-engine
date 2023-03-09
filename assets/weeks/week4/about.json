@@ -7,6 +7,8 @@
     ],
 	"songsDefaultFreeplayHostIconModel": "MM/icon-mom.xml",
 
+    "displayName": "Week 4",
+
     "unlockDirectiveName": "WEEK3",
 	"emitUnlockDirectiveName": "WEEK4",
 
