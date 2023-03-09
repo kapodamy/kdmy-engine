@@ -773,7 +773,7 @@ namespace Engine.Game.Gameplay {
 
                 if (!roundcontext.scriptcontext.no_week_end_result_screen) {
                     roundcontext.weekresult.HelperShowSummary(
-                        roundcontext, total_attempts, songs_count, reject_completed
+                        roundcontext, total_attempts, songs_count, single_song, reject_completed
                     );
                 }
 
@@ -791,7 +791,13 @@ namespace Engine.Game.Gameplay {
                     total_score += roundcontext.players[i].playerstats.GetScore();
                 }
 
-                FunkinSave.SetWeekScore(weekinfo.name, roundcontext.song_difficult, total_score);
+                if (single_song) {
+                    // Warning: the song name declared in "gameplay.json" must be the same as in "about.json"
+                    string song_name = gameplaymanifest.songs[single_song_index].name;
+                    FunkinSave.SetFreeplayScore(weekinfo.name, roundcontext.song_difficult, song_name, total_score);
+                } else {
+                    FunkinSave.SetWeekScore(weekinfo.name, roundcontext.song_difficult, total_score);
+                }
 
                 // keep displaying the stage layout until the save is done
                 roundcontext.messagebox.UseSmallSize(true);
@@ -2566,7 +2572,7 @@ namespace Engine.Game.Gameplay {
                             if (roundcontext.players[i].controller.GetManagedPresses(false, ref pressed_buttons)) {
                                 if (roundcontext.script != null) roundcontext.script.NotifyButtons(i, pressed_buttons);
                             }
-                            if (roundcontext.players[i].conductor.HasMisses()) has_misses = true; 
+                            if (roundcontext.players[i].conductor.HasMisses()) has_misses = true;
                             if (roundcontext.players[i].conductor.HasHits()) has_hits = true;
                             break;
                     }

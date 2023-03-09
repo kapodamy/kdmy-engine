@@ -11,7 +11,7 @@ namespace Engine.Game {
     public static class FunkinSave {
 
         private const int MAX_STRING_SIZE = 32;
-        private const int SAVEDATA_VERSION = 0x01;
+        private const int SAVEDATA_VERSION = 0x02;
         private const int VMS_HEADER_OFFSET_CRC16 = 0x0046;
         private const int VMS_HEADER_OFFSET_LENGTH = 0x0048;
         private static readonly byte[] VMS_HEADER = new byte[] {
@@ -76,6 +76,7 @@ namespace Engine.Game {
         public static LinkedList<string> difficulty_names;
         public static LinkedList<Progress> progress;
         public static LinkedList<Storage> storages;
+        public static LinkedList<FreeplayProgress> freeplay_progress;
 
         public static int last_played_week_index;
         public static int last_played_difficulty_index;
@@ -94,6 +95,7 @@ namespace Engine.Game {
             FunkinSave.difficulty_names = new LinkedList<string>();
             FunkinSave.progress = new LinkedList<Progress>();
             FunkinSave.storages = new LinkedList<Storage>();
+            FunkinSave.freeplay_progress = new LinkedList<FreeplayProgress>();
 
             FunkinSave.last_played_week_index = -1;
             FunkinSave.last_played_difficulty_index = -1;
@@ -169,7 +171,7 @@ namespace Engine.Game {
             offset++;// reserved space
 
             // version check
-            if (version != FunkinSave.SAVEDATA_VERSION) {
+            if (version > FunkinSave.SAVEDATA_VERSION) {
                 //free(vmu_path);
                 //free(vmu_data);
                 return 5;
@@ -259,6 +261,27 @@ namespace Engine.Game {
                 });
             }
 
+            if (version >= 2) {
+                uint freeplay_progress_count = savedata.GetUint32(offset); offset += 4;
+
+                for (int i = 0 ; i < freeplay_progress_count ; i++) {
+                    ushort week_name_index_in_table = savedata.GetUint16(offset); offset += 2;
+                    ushort difficulty_name_index_in_table = savedata.GetUint16(offset); offset += 2;
+                    long score = savedata.GetInt64(offset); offset += 8;
+                    string song_name; offset += FunkinSave.InternalReadString(savedata, offset, out song_name);
+
+                    Debug.Assert(week_name_index_in_table < week_names_table_size);
+                    Debug.Assert(difficulty_name_index_in_table < difficulty_names_table_size);
+
+                    FunkinSave.freeplay_progress.AddItem(new FreeplayProgress() {
+                        week_id = week_name_index_in_table,
+                        difficulty_id = difficulty_name_index_in_table,
+                        song_name = song_name,
+                        score = score
+                    });
+                }
+            }
+
             if (last_played_week_name_index_in_table == 0xFFFF)
                 FunkinSave.last_played_week_index = -1;
             else
@@ -307,6 +330,15 @@ namespace Engine.Game {
                                     data,// n bytes
                                 },
                                 ...
+                            ],
+                            freeplay_progress_count, // 4 bytes
+                            freeplay_progress: [
+                                {
+                                    week_name_index_in_table,// 2 bytes (index to week_names_table array)
+                                    difficulty_name_index_in_table,// 2 bytes (index to difficulty_names_table array)
+                                    song_name,// zero-terminated string (max chars 32)
+                                    score,// 8 bytes
+                                }
                             ]
                         }
             */
@@ -351,9 +383,15 @@ namespace Engine.Game {
                 length += week_storage.data_size + sizeof(int) + sizeof(short);
             }
 
+            foreach (FreeplayProgress freeplay_progress in FunkinSave.freeplay_progress) {
+                length += FunkinSave.InternalStringByteLength(freeplay_progress.song_name);
+                length += sizeof(ushort) + sizeof(ushort) + sizeof(long);
+            }
+
             length += 10;//version + reserved + settings_count + directives_count + progress_count + storages_count
             length += 4;// last_played_week_name_index_in_table + last_played_difficulty_name_index_in_table
             length += 4;// week_names_table_size + difficulty_names_table_size
+            length += 4;// freeplay_progress_count (in funkinsave v2 or newer)
 
             // step 2: prepare buffer
             Debug.Assert(length < Math2D.MAX_INT32);
@@ -408,8 +446,17 @@ namespace Engine.Game {
             foreach (Storage week_storage in FunkinSave.storages) {
                 savedata.SetUint16(offset, week_storage.week_id); offset += sizeof(ushort);
                 offset += FunkinSave.InternalDumpString(week_storage.name, savedata, offset);
-                savedata.SetUInt32(offset, week_storage.data_size); offset += sizeof(uint);
+                savedata.SetUint32(offset, week_storage.data_size); offset += sizeof(uint);
                 savedata.Write(week_storage.data, offset, (int)week_storage.data_size); offset += (int)week_storage.data_size;
+            }
+
+            // dump freeplay progress
+            savedata.SetUint32(offset, (uint)FunkinSave.freeplay_progress.Count()); offset += sizeof(uint);
+            foreach (FreeplayProgress freeplay_progress in FunkinSave.freeplay_progress) {
+                savedata.SetUint16(offset, freeplay_progress.week_id); offset += sizeof(ushort);
+                savedata.SetUint16(offset, freeplay_progress.difficulty_id); offset += sizeof(ushort);
+                savedata.SetInt64(offset, freeplay_progress.score); offset += sizeof(long);
+                offset += FunkinSave.InternalDumpString(freeplay_progress.song_name, savedata, offset);
             }
 
             // step 4: check overflows
@@ -563,7 +610,15 @@ namespace Engine.Game {
 
             if (week_id < 0 || difficulty_id < 0) return;
 
-            FunkinSave.progress.AddItem(new Progress() { week_id = (ushort)week_id, difficulty_id = (ushort)difficulty_id, score = score });
+            foreach (Progress progress in FunkinSave.progress) {
+                if (progress.week_id == week_id && progress.difficulty_id == difficulty_id) {
+                    progress.score = score;
+                    return;
+                }
+            }
+
+            Progress new_progress = new Progress() { week_id = (ushort)week_id, difficulty_id = (ushort)difficulty_id, score = score };
+            FunkinSave.progress.AddItem(new_progress);
         }
 
         public static void SetSetting(ushort setting_id, long setting_value) {
@@ -640,6 +695,46 @@ namespace Engine.Game {
             return 0;
         }
 
+        public static void SetFreeplayScore(string week_name, string difficulty_name, string song_name, long score) {
+            if (String.IsNullOrEmpty(song_name)) return;
+
+            int week_id = FunkinSave.InternalNameIndex(FunkinSave.weeks_names, week_name);
+            int difficulty_id = FunkinSave.InternalNameIndex(FunkinSave.difficulty_names, difficulty_name);
+
+            if (week_id < 0 || difficulty_id < 0) return;
+
+            foreach (FreeplayProgress progress in FunkinSave.freeplay_progress) {
+                if (progress.week_id == week_id && progress.difficulty_id == difficulty_id && progress.song_name == song_name) {
+                    progress.score = score;
+                    return;
+                }
+            }
+
+            FreeplayProgress new_progress = new FreeplayProgress() {
+                week_id = (ushort)week_id,
+                difficulty_id = (ushort)difficulty_id,
+                song_name = song_name,
+                score = score
+            };
+            FunkinSave.freeplay_progress.AddItem(new_progress);
+        }
+
+        public static long GetFreeplayScore(string week_name, string difficulty_name, string song_name) {
+            if (String.IsNullOrEmpty(song_name)) return 0;
+
+            int week_id = FunkinSave.weeks_names.IndexOf(week_name);
+            int difficulty_id = FunkinSave.difficulty_names.IndexOf(difficulty_name);
+            if (week_id < 0 || difficulty_id < 0) return 0;
+
+            foreach (FreeplayProgress progress in FunkinSave.freeplay_progress) {
+                if (progress.week_id == week_id && progress.difficulty_id == difficulty_id && progress.song_name == song_name) {
+                    return progress.score;
+                }
+            }
+
+            return 0;
+        }
+
 
         public static bool HasSavedataInVMU(uint port, uint unit) {
             maple_device_t dev = maple.enum_dev(port, unit);
@@ -693,6 +788,9 @@ namespace Engine.Game {
             //foreach (Storage week_storage in FunkinSave.storages) //free(week_storage.data);
             FunkinSave.storages.Clear(/*free*/);
 
+            //foreach (FreeplayProgress freeplay_progress in FunkinSave.freeplay_progress) free(freeplay_progress.song_name);
+            FunkinSave.storages.Clear(/*free*/);
+
             FunkinSave.last_played_week_index = -1;
             FunkinSave.last_played_difficulty_index = -1;
         }
@@ -724,7 +822,7 @@ namespace Engine.Game {
                 length++;
             }
 
-            Debug.Assert(length > 0);
+            Debug.Assert(null_found || length > 0);
             output_string = Encoding.UTF8.GetString(buf, string_offset, length);
 
             if (null_found) length++;
@@ -793,6 +891,13 @@ namespace Engine.Game {
             public string name;
             public uint data_size;
             public byte[] data;
+        }
+
+        public class FreeplayProgress {
+            public ushort week_id;
+            public ushort difficulty_id;
+            public string song_name;
+            public long score;
         }
 
     }

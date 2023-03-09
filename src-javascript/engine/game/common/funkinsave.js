@@ -5,7 +5,7 @@ const FUNKIN_DIFFICULT_NORMAL = "NORMAL";
 const FUNKIN_DIFFICULT_HARD = "HARD";
 
 const FUNKINSAVE_MAX_STRING_SIZE = 32;
-const FUNKINSAVE_SAVEDATA_VERSION = 0x01;
+const FUNKINSAVE_SAVEDATA_VERSION = 0x02;
 const FUNKINSAVE_VMS_HEADER_OFFSET_CRC16 = 0x0046;
 const FUNKINSAVE_VMS_HEADER_OFFSET_LENGTH = 0x0048;
 const FUNKINSAVE_VMS_HEADER = new Uint8Array([
@@ -76,6 +76,7 @@ const funkinsave = {
     difficulty_names: linkedlist_init(),
     progress: linkedlist_init(),
     storages: linkedlist_init(),
+    freeplay_progress: linkedlist_init(),
 
     last_played_week_index: -1,
     last_played_difficulty_index: -1
@@ -151,7 +152,7 @@ async function funkinsave_read_from_vmu() {
     offset++;// reserved space
 
     // version check
-    if (version != FUNKINSAVE_SAVEDATA_VERSION) {
+    if (version > FUNKINSAVE_SAVEDATA_VERSION) {
         vmu_path = undefined;
         vms_data = undefined;
         return 5;
@@ -241,6 +242,27 @@ async function funkinsave_read_from_vmu() {
         });
     }
 
+    if (version >= 2) {
+        let freeplay_progress_count = savedata.getUint32(offset, ENDIANESS); offset += 4;
+
+        for (let i = 0; i < freeplay_progress_count; i++) {
+            let week_name_index_in_table = savedata.getUint16(offset, ENDIANESS); offset += 2;
+            let difficulty_name_index_in_table = savedata.getUint16(offset, ENDIANESS); offset += 2;
+            let score = Number(savedata.getBigInt64(offset, ENDIANESS)); offset += 8;
+            let song_name = []; offset += funkinsave_internal_read_string(savedata, offset, song_name);
+
+            console.assert(week_name_index_in_table < week_names_table_size);
+            console.assert(difficulty_name_index_in_table < difficulty_names_table_size);
+
+            linkedlist_add_item(funkinsave.freeplay_progress, {
+                week_id: week_name_index_in_table,
+                difficulty_id: difficulty_name_index_in_table,
+                song_name: song_name[0],
+                score: score
+            });
+        }
+    }
+
     if (last_played_week_name_index_in_table == 0xFFFF)
         funkinsave.last_played_week_index = -1;
     else
@@ -289,6 +311,15 @@ async function funkinsave_write_to_vmu() {
                             data,// n bytes
                         },
                         ...
+                    ],
+                    freeplay_progress_count, // 4 bytes
+                    freeplay_progress: [
+                        {
+                            week_name_index_in_table,// 2 bytes (index to week_names_table array)
+                            difficulty_name_index_in_table,// 2 bytes (index to difficulty_names_table array)
+                            song_name,// zero-terminated string (max chars 32)
+                            score,// 8 bytes
+                        }
                     ]
                 }
     */
@@ -332,9 +363,15 @@ async function funkinsave_write_to_vmu() {
         length += week_storage.data_size + /*sizeof(int32)*/4 + /*sizeof(int16)*/2;
     }
 
+    for (let freeplay_progress of linkedlist_iterate4(funkinsave.freeplay_progress)) {
+        length += funkinsave_internal_string_bytelength(freeplay_progress.song_name);
+        length += /*sizeof(uint16))*/2 +/*sizeof(uint16))*/2 + /*sizeof(int64))*/8;
+    }
+
     length += 10;//version + reserved + settings_count + directives_count + progress_count + storages_count
     length += 4;// last_played_week_name_index_in_table + last_played_difficulty_name_index_in_table
     length += 4;// week_names_table_size + difficulty_names_table_size
+    length += 4;// freeplay_progress_count (in funkinsave v2 or newer)
 
     // step 2: prepare buffer
     console.assert(length < MATH2D_MAX_INT32);
@@ -391,6 +428,15 @@ async function funkinsave_write_to_vmu() {
         offset += funkinsave_internal_dump_string(week_storage.name, savedata, offset);
         savedata.setUint32(offset, week_storage.data_size, ENDIANESS); offset += 4;
         (new Uint8Array(savedata.buffer)).set(week_storage.data, offset); offset += week_storage.data_size;
+    }
+
+    // dump freeplay progress
+    savedata.setUint32(offset, funkinsave.freeplay_progress.Count(), ENDIANESS); offset += 4;
+    for (let freeplay_progress of linkedlist_iterate4(funkinsave.freeplay_progress)) {
+        savedata.setUint16(offset, freeplay_progress.week_id, ENDIANESS); offset += 2;
+        savedata.setUint16(offset, freeplay_progress.difficulty_id, ENDIANESS); offset += 2;
+        savedata.setBigInt64(offset, BigInt(freeplay_progress.score), ENDIANESS); offset += 8;
+        offset += funkinsave_internal_dump_string(freeplay_progress.song_name, savedata, offset);
     }
 
     // step 4: check overflows
@@ -543,7 +589,15 @@ function funkinsave_set_week_score(week_name, difficulty_name, score) {
 
     if (week_id < 0 || difficulty_id < 0) return;
 
-    linkedlist_add_item(funkinsave.progress, { week_id, difficulty_id, score });
+    for (let progress of linkedlist_iterate4(funkinsave.progress)) {
+        if (progress.week_id == week_id && progress.difficulty_id == difficulty_id) {
+            progress.score = score;
+            return;
+        }
+    }
+
+    let new_progress = { week_id, difficulty_id, score };
+    linkedlist_add_item(funkinsave.progress, new_progress);
 }
 
 function funkinsave_set_setting(setting_id, setting_value) {
@@ -558,7 +612,7 @@ function funkinsave_set_setting(setting_id, setting_value) {
 }
 
 
-function funkinsave_storge_set(week_name, name, data, data_size) {
+function funkinsave_storage_set(week_name, name, data, data_size) {
     let week_id;
 
     if (week_name == null) {
@@ -598,7 +652,7 @@ function funkinsave_storge_set(week_name, name, data, data_size) {
     return 1;
 }
 
-function funkinsave_storge_get(week_name, name, out_data) {
+function funkinsave_storage_get(week_name, name, out_data) {
     let week_id = week_name == null ? FUNKINSAVE_MAX_INDEXED_NAME : funkinsave.weeks_names.indexOf(name);
 
     for (let storage of linkedlist_iterate4(funkinsave.storages)) {
@@ -609,6 +663,46 @@ function funkinsave_storge_get(week_name, name, out_data) {
     }
 
     out_data[0] = null;
+    return 0;
+}
+
+function funkinsave_set_freeplay_score(week_name, difficulty_name, song_name, score) {
+    if (!song_name) return;
+
+    let week_id = funkinsave_internal_name_index(funkinsave.weeks_names, week_name);
+    let difficulty_id = funkinsave_internal_name_index(funkinsave.difficulty_names, difficulty_name);
+
+    if (week_id < 0 || difficulty_id < 0) return;
+
+    for (let progress of linkedlist_iterate4(funkinsave.freeplay_progress)) {
+        if (progress.week_id == week_id && progress.difficulty_id == difficulty_id && progress.song_name == song_name) {
+            progress.score = score;
+            return;
+        }
+    }
+
+    let new_progress = {
+        week_id,
+        difficulty_id,
+        song_name,
+        score
+    };
+    linkedlist_add_item(funkinsave.freeplay_progress, new_progress);
+}
+
+function funkinsave_get_freeplay_score(week_name, difficulty_name, song_name) {
+    if (!song_name) return 0;
+
+    let week_id = linkedlist_index_of(funkinsave.weeks_names, week_name);
+    let difficulty_id = linkedlist_index_of(funkinsave, difficulty_name);
+    if (week_id < 0 || difficulty_id < 0) return 0;
+
+    for (let progress of linkedlist_iterate4(funkinsave.freeplay_progress)) {
+        if (progress.week_id == week_id && progress.difficulty_id == difficulty_id && progress.song_name == song_name) {
+            return progress.score;
+        }
+    }
+
     return 0;
 }
 
@@ -686,6 +780,9 @@ function funkinsave_internal_clear_savedata() {
 
     for (let week_storage of linkedlist_iterate4(funkinsave.storages)) week_storage.data = undefined;
     linkedlist_clear(funkinsave.storages, free);
+
+    for (let freeplay_progress of linkedlist_iterate4(funkinsave.freeplay_progress)) freeplay_progress.song_name = undefined;
+    linkedlist_clear(funkinsave.freeplay_progress, free);
 
     funkinsave.last_played_week_index = -1;
     funkinsave.last_played_difficulty_index = -1;

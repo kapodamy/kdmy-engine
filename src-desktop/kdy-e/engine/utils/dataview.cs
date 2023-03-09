@@ -77,7 +77,7 @@ namespace Engine.Utils {
 
         }
 
-        public void SetUInt32(int offset, uint value) {
+        public void SetUint32(int offset, uint value) {
             offset += this.start_offset;
             this.buffer[offset + 0] = (byte)((value >> 0) & 0xFF);
             this.buffer[offset + 1] = (byte)((value >> 8) & 0xFF);

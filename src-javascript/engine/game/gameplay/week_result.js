@@ -93,15 +93,17 @@ function week_result_add_stats(weekresult, roundcontext) {
 
 }
 
-async function week_result_helper_show_summary(weekresult, roundcontext, attempts, songs_count, is_cleared) {
-	let src = pvrctx_is_widescreen() ? WEEKRESULT_LAYOUT_WIDESCREEN : WEEKRESULT_LAYOUT_DREAMCAST;
+async function week_result_helper_show_summary(weekresult, roundcontext, attempts, songs_count, freeplay, reject) {
+    let src = pvrctx_is_widescreen() ? WEEKRESULT_LAYOUT_WIDESCREEN : WEEKRESULT_LAYOUT_DREAMCAST;
     let layout = await layout_init(src);
     if (!layout) return;
 
-    if (is_cleared)
+    if (reject)
         layout_trigger_any(layout, "week_not_cleared");
+    else if (freeplay)
+        layout_trigger_any("song_cleared");
     else
-        layout_trigger_any(layout, "week_cleared");
+        layout_trigger_any("week_cleared");
 
     let textsprite1 = layout_get_textsprite(layout, "stats");
     let textsprite2 = layout_get_textsprite(layout, "stats2");

@@ -771,7 +771,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
         if (!roundcontext.scriptcontext.no_week_end_result_screen) {
             await week_result_helper_show_summary(
-                roundcontext.weekresult, roundcontext, total_attempts, songs_count, reject_completed
+                roundcontext.weekresult, roundcontext, total_attempts, songs_count, single_song, reject_completed
             );
         }
         if (roundcontext.script) {
@@ -789,7 +789,13 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             total_score += playerstats_get_score(roundcontext.players[i].playerstats);
         }
 
-        funkinsave_set_week_score(weekinfo.name, roundcontext.song_difficult, total_score);
+        if (single_song) {
+            // Warning: the song name declared in "gameplay.json" must be the same as in "about.json"
+            let song_name = gameplaymanifest.songs[single_song_index].name;
+            funkinsave_set_freeplay_score(weekinfo.name, roundcontext.song_difficult, song_name, total_score);
+        } else {
+            funkinsave_set_week_score(weekinfo.name, roundcontext.song_difficult, total_score);
+        }
 
         // keep displaying the stage layout until the save is done
         messagebox_use_small_size(roundcontext.messagebox, 1);
@@ -2912,11 +2918,11 @@ function week_unlockdirective_has(roundcontext, name) {
 }
 
 function week_storage_get(roundcontext, name, out_data) {
-    return funkinsave_storge_get(roundcontext.initparams.weekinfo.name, name, out_data);
+    return funkinsave_storage_get(roundcontext.initparams.weekinfo.name, name, out_data);
 }
 
 function week_storage_set(roundcontext, name, data, data_size) {
-    let ret = funkinsave_storge_set(roundcontext.initparams.weekinfo.name, name, data, data_size);
+    let ret = funkinsave_storage_set(roundcontext.initparams.weekinfo.name, name, data, data_size);
     if (ret) roundcontext.has_directive_changes = 1;
     return ret;
 }

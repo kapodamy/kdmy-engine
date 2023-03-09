@@ -241,6 +241,7 @@ async function freeplaymenu_main() {
         layout_resume(layout);
         await freeplaymenu_internal_wait_transition(state, "after-play-song", dt_playsong);
         freeplaymenu_internal_song_load(state, 0);
+        freeplaymenu_internal_show_info(state);
     }
 
     // Wait for running threads
@@ -573,7 +574,7 @@ function freeplaymenu_internal_show_info(state) {
 
     if (state.difficult_index >= 0 && state.difficult_index < state.difficulties_size) {
         difficult = state.difficulties[state.difficult_index].name;
-        score = funkinsave_get_week_score(weekinfo.name, difficult);
+        score = funkinsave_get_freeplay_score(weekinfo.name, difficult, song_name);
         is_locked = state.difficulties[state.difficult_index].is_locked;
     } else {
         score = 0;

@@ -99,13 +99,15 @@ namespace Engine.Game.Gameplay {
 
         }
 
-        public void HelperShowSummary(RoundContext roundcontext, int attempts, int songs_count, bool is_cleared) {
+        public void HelperShowSummary(RoundContext roundcontext, int attempts, int songs_count, bool freeplay, bool reject) {
             string src = PVRContext.global_context.IsWidescreen() ? LAYOUT_WIDESCREEN : LAYOUT_DREAMCAST;
             Layout layout = Layout.Init(src);
             if (layout == null) return;
 
-            if (is_cleared)
+            if (reject)
                 layout.TriggerAny("week_not_cleared");
+            else if (freeplay)
+                layout.TriggerAny("song_cleared");
             else
                 layout.TriggerAny("week_cleared");
 

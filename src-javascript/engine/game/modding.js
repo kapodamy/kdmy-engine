@@ -78,13 +78,13 @@ function modding_unlockdirective_remove(modding, name) {
 
 
 function modding_storage_set(modding, week_name, name, data, data_size) {
-    let ret = funkinsave_storge_set(week_name, name, data, data_size);
+    let ret = funkinsave_storage_set(week_name, name, data, data_size);
     if (ret) modding.has_funkinsave_changes = true;
     return ret;
 }
 
 function modding_storage_get(modding, week_name, name, out_data) {
-    return funkinsave_storge_get(week_name, name, out_data);
+    return funkinsave_storage_get(week_name, name, out_data);
 }
 
 

@@ -252,6 +252,7 @@ namespace Engine.Game {
                 layout.Resume();
                 FreeplayMenu.InternalWaitTransition(state, "after-play-song", dt_playsong);
                 FreeplayMenu.InternalSongLoad(state, false);
+                FreeplayMenu.InternalShowInfo(state);
             }
 
             // Wait for running threads
@@ -591,7 +592,7 @@ L_return:
             long score;
             if (state.difficult_index >= 0 && state.difficult_index < state.difficulties_size) {
                 difficult = state.difficulties[state.difficult_index].name;
-                score = FunkinSave.GetWeekScore(weekinfo.name, difficult);
+                score = FunkinSave.GetFreeplayScore(weekinfo.name, difficult, song_name);
                 is_locked = state.difficulties[state.difficult_index].is_locked;
             } else {
                 score = 0;

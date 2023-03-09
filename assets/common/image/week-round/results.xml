@@ -30,6 +30,9 @@
 			<Action name="week_cleared">
                 <String>WEEK CLEARED!</String>
 			</Action>
+			<Action name="song_cleared">
+                <String>SONG CLEARED!</String>
+			</Action>
         </Text>
 
         <Text name="stats" fontSize="24" fontName="pixel" color="0xFFFFFF">
