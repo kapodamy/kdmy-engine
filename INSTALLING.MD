@@ -50,7 +50,7 @@ This feature is optional.
 
 ### 2b. Week 7 assets
 
-¿Is week 7 still is exclusive to [Newgrounds.com](https://www.newgrounds.com/ "Newgrounds.com")?.
+The engine does not support *Adobe Animate* JSON animations (Animation.json + spritemap1.json + spritemap1.png files). Possibly in the future it will be implemented.
 
 ## 3. Building the engine
 
