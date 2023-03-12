@@ -109,6 +109,9 @@
             <xs:enumeration value="playback" />
         </xs:restriction>
     </xs:simpleType>
+    <xs:simpleType name="props-video">
+        <xs:union memberTypes="props-sound props-sprite"/>
+    </xs:simpleType>
     <xs:simpleType name="props-group">
         <xs:restriction base="xs:string">
             <xs:enumeration value="x" />
@@ -285,6 +288,10 @@
         <xs:attribute name="seek" type="xs:double" use="optional" default="NaN" />
         <xs:attribute name="playback" type="playback" use="optional" />
     </xs:attributeGroup>
+    <xs:attributeGroup name="props-video">
+        <xs:attributeGroup ref="props-sound" />
+        <xs:attributeGroup ref="props-sprite" />
+    </xs:attributeGroup>
 
     <xs:complexType name="Font">
         <xs:attribute name="name" type="xs:string" use="required" />
@@ -404,6 +411,13 @@
     </xs:complexType>
     <xs:complexType name="Properties-sound">
         <xs:attributeGroup ref="props-sound" />
+    </xs:complexType>
+    <xs:complexType name="Property-video">
+        <xs:attribute name="name" type="props-video" use="required" />
+        <xs:attribute name="value" type="xs:anySimpleType" use="required" />
+    </xs:complexType>
+    <xs:complexType name="Properties-video">
+        <xs:attributeGroup ref="props-video" />
     </xs:complexType>
     <xs:complexType name="Property-group">
         <xs:attribute name="name" type="props-group" use="required" />
@@ -593,10 +607,10 @@
                         <xs:element name="Pause" minOccurs="0" maxOccurs="unbounded"/>
                         <xs:element name="Mute" minOccurs="0" maxOccurs="unbounded"/>
                         <xs:element name="Unmute" minOccurs="0" maxOccurs="unbounded"/>
-                        <xs:element name="Property" type="Property-sound" minOccurs="0" maxOccurs="unbounded" />
-                        <xs:element name="Properties" type="Properties-sound" minOccurs="0" maxOccurs="unbounded" />
-                        <xs:element name="FadeIn" type="Sound-Fade" minOccurs="0" maxOccurs="unbounded" />
-                        <xs:element name="FadeOut" type="Sound-Fade" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Property" type="Property-video" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="Properties" type="Properties-video" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AudioFadeIn" type="Sound-Fade" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AudioFadeOut" type="Sound-Fade" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Seek" type="Seek" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Location" type="Location" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Size" type="Size" minOccurs="0" maxOccurs="unbounded" />

@@ -97,6 +97,19 @@ namespace Engine.Image {
             float draw_y = this.draw_y + this.offset_y;
 
             if (this.vertex_dirty) {
+                float draw_width = this.draw_width;
+                float draw_height = this.draw_height;
+
+                // flip vertex (if required)
+                if (this.flip_x) {
+                    if (this.flip_correction) draw_x += draw_width;
+                    draw_width = -draw_width;
+                }
+                if (this.flip_y) {
+                    if (this.flip_correction) draw_y += draw_height;
+                    draw_height = -draw_height;
+                }
+
                 if (this.texture != null) {
                     float frame_width, frame_height;
                     float crop_x, crop_y, crop_width, crop_height;
@@ -104,18 +117,18 @@ namespace Engine.Image {
 
                     // complex frame size redimension
                     if (this.frame_width > 0f) {
-                        ratio_width = this.draw_width / this.frame_width;
+                        ratio_width = draw_width / this.frame_width;
                         frame_width = this.src_width * ratio_width;
                     } else {
-                        ratio_width = this.draw_width / this.src_width;
-                        frame_width = this.draw_width;
+                        ratio_width = draw_width / this.src_width;
+                        frame_width = draw_width;
                     }
                     if (this.frame_height > 0) {
-                        ratio_height = this.draw_height / this.frame_height;
+                        ratio_height = draw_height / this.frame_height;
                         frame_height = this.src_height * ratio_height;
                     } else {
-                        ratio_height = this.draw_height / this.src_height;
-                        frame_height = this.draw_height;
+                        ratio_height = draw_height / this.src_height;
+                        frame_height = draw_height;
                     }
 
                     // calculate cropping (if required)
@@ -158,8 +171,8 @@ namespace Engine.Image {
                 } else {
                     sprite_vertex[4] = draw_x;
                     sprite_vertex[5] = draw_y;
-                    sprite_vertex[6] = this.draw_width;
-                    sprite_vertex[7] = this.draw_height;
+                    sprite_vertex[6] = draw_width;
+                    sprite_vertex[7] = draw_height;
 
                     if (this.scale_texture != 1.0f) {
                         sprite_vertex[6] *= this.scale_texture;
@@ -1099,7 +1112,7 @@ namespace Engine.Image {
         public PSShader GetShader() {
             return this.psshader;
         }
-        
+
         public void BlendEnable(bool enabled) {
             this.blend_enabled = enabled;
         }

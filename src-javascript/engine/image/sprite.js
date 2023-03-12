@@ -11,9 +11,22 @@ function sprite_draw(sprite, pvrctx) {
     let sprite_vertex = sprite.vertex;
     let render_alpha = sprite.alpha * sprite.alpha2;
 
+    let draw_x = sprite.draw_x;
+    let draw_y = sprite.draw_y;
+
     if (sprite.vertex_dirty) {
-        let draw_x = sprite.draw_x;
-        let draw_y = sprite.draw_y;
+        let draw_width = sprite.draw_width;
+        let draw_height = sprite.draw_height;
+
+        // flip vertex (if required)
+        if (sprite.flip_x) {
+            if (sprite.flip_correction) draw_x += draw_width;
+            draw_width = -draw_width;
+        }
+        if (sprite.flip_y) {
+            if (sprite.flip_correction) draw_y += draw_height;
+            draw_height = -draw_height;
+        }
 
         if (sprite.texture) {
             let frame_width, frame_height;
@@ -22,18 +35,18 @@ function sprite_draw(sprite, pvrctx) {
 
             // complex frame size redimension
             if (sprite.frame_width > 0) {
-                ratio_width = sprite.draw_width / sprite.frame_width;
+                ratio_width = draw_width / sprite.frame_width;
                 frame_width = sprite.src_width * ratio_width;
             } else {
-                ratio_width = sprite.draw_width / sprite.src_width;
-                frame_width = sprite.draw_width;
+                ratio_width = draw_width / sprite.src_width;
+                frame_width = draw_width;
             }
             if (sprite.frame_height > 0) {
-                ratio_height = sprite.draw_height / sprite.frame_height;
+                ratio_height = draw_height / sprite.frame_height;
                 frame_height = sprite.src_height * ratio_height;
             } else {
-                ratio_height = sprite.draw_height / sprite.src_height;
-                frame_height = sprite.draw_height;
+                ratio_height = draw_height / sprite.src_height;
+                frame_height = draw_height;
             }
 
             // calculate cropping (if required)
@@ -75,8 +88,8 @@ function sprite_draw(sprite, pvrctx) {
         } else {
             sprite_vertex[4] = draw_x;
             sprite_vertex[5] = draw_y;
-            sprite_vertex[6] = sprite.draw_width;
-            sprite_vertex[7] = sprite.draw_height;
+            sprite_vertex[6] = draw_width;
+            sprite_vertex[7] = draw_height;
 
             if (sprite.crop_enabled) {
                 let crop_width = sprite.crop.width;
@@ -92,16 +105,6 @@ function sprite_draw(sprite, pvrctx) {
                 if (crop_height != -1 && crop_height < sprite_vertex[7])
                     sprite_vertex[7] = crop_height;
             }
-        }
-
-        // flip vertex (if required)
-        if (sprite.flip_x) {
-            if (sprite.flip_correction) sprite_vertex[4] += sprite_vertex[6];
-            sprite_vertex[6] = -sprite_vertex[6];
-        }
-        if (sprite.flip_y) {
-            if (sprite.flip_correction) sprite_vertex[5] += sprite_vertex[7];
-            sprite_vertex[7] = -sprite_vertex[7];
         }
 
         // cache the calculated vertex
@@ -124,8 +127,20 @@ function sprite_draw(sprite, pvrctx) {
         pvr_context_set_vertex_antialiasing(pvrctx, sprite.antialiasing);
     }
 
-    // apply transformation matrix
-    sprite_matrix_calculate(sprite, pvrctx);
+    let matrix = pvrctx.current_matrix;
+
+    // apply self modifier
+    sh4matrix_apply_modifier2(
+        matrix, sprite.matrix_source, draw_x, draw_y, sprite.draw_width, sprite.draw_height
+    );
+
+    // do corner rotation (if required)
+    if (sprite.matrix_corner.angle != 0) {
+        sh4matrix_corner_rotate(
+            matrix, sprite.matrix_corner,
+            draw_x, draw_y, sprite.draw_width, sprite.draw_height
+        );
+    }
 
     // draw sprites trail if necessary
     if (!sprite.trailing_disabled && sprite.trailing_used > 0) {
@@ -823,26 +838,6 @@ function sprite_set_offsetcolor(sprite, r, g, b, a) {
     if (g >= 0) sprite.offsetcolor[1] = g;
     if (b >= 0) sprite.offsetcolor[2] = b;
     if (a >= 0) sprite.offsetcolor[3] = a;
-}
-
-
-function sprite_matrix_calculate(sprite, pvrctx) {
-    let matrix = pvrctx.current_matrix;
-
-    // apply self modifier
-    sh4matrix_apply_modifier2(
-        matrix, sprite.matrix_source, sprite.draw_x, sprite.draw_y, sprite.draw_width, sprite.draw_height
-    );
-
-    // do corner rotation (if required)
-    if (sprite.matrix_corner.angle != 0) {
-        sh4matrix_corner_rotate(
-            matrix, sprite.matrix_corner,
-            sprite.draw_x, sprite.draw_y, sprite.draw_width, sprite.draw_height
-        );
-    }
-
-    pvr_context_flush(pvrctx);
 }
 
 

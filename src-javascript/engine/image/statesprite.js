@@ -16,6 +16,18 @@ function statesprite_draw(statesprite, pvrctx) {
     let draw_y = statesprite.draw_y + statesprite.offset_y;
 
     if (statesprite.vertex_dirty) {
+        let draw_width = statesprite.draw_width;
+        let draw_height = statesprite.draw_height;
+
+        if (statesprite.flip_x) {
+            if (statesprite.flip_correction) draw_x += draw_width;
+            draw_width = -draw_width;
+        }
+        if (statesprite.flip_y) {
+            if (statesprite.flip_correction) draw_y += draw_height;
+            draw_height = -draw_height;
+        }
+
         if (statesprite.texture) {
             let frame_width, frame_height;
             let crop_x, crop_y, crop_width, crop_height;
@@ -23,18 +35,18 @@ function statesprite_draw(statesprite, pvrctx) {
 
             // complex frame size redimension
             if (statesprite.frame_width > 0) {
-                ratio_width = statesprite.draw_width / statesprite.frame_width;
+                ratio_width = draw_width / statesprite.frame_width;
                 frame_width = statesprite.src_width * ratio_width;
             } else {
-                ratio_width = statesprite.draw_width / statesprite.src_width;
-                frame_width = statesprite.draw_width;
+                ratio_width = draw_width / statesprite.src_width;
+                frame_width = draw_width;
             }
             if (statesprite.frame_height > 0) {
-                ratio_height = statesprite.draw_height / statesprite.frame_height;
+                ratio_height = draw_height / statesprite.frame_height;
                 frame_height = statesprite.src_height * ratio_height;
             } else {
-                ratio_height = statesprite.draw_height / statesprite.src_height;
-                frame_height = statesprite.draw_height;
+                ratio_height = draw_height / statesprite.src_height;
+                frame_height = draw_height;
             }
 
             // calculate cropping (if required)
@@ -77,8 +89,8 @@ function statesprite_draw(statesprite, pvrctx) {
         } else {
             sprite_vertex[4] = draw_x;
             sprite_vertex[5] = draw_y;
-            sprite_vertex[6] = statesprite.draw_width;
-            sprite_vertex[7] = statesprite.draw_height;
+            sprite_vertex[6] = draw_width;
+            sprite_vertex[7] = draw_height;
 
             if (statesprite.crop_enabled) {
                 let crop_width = statesprite.crop.width;
@@ -94,15 +106,6 @@ function statesprite_draw(statesprite, pvrctx) {
                 if (crop_height != -1 && crop_height < sprite_vertex[7])
                     sprite_vertex[7] = crop_height;
             }
-        }
-
-        if (statesprite.flip_x) {
-            if (statesprite.flip_correction) sprite_vertex[4] += sprite_vertex[6];
-            sprite_vertex[6] = -sprite_vertex[6];
-        }
-        if (statesprite.flip_y) {
-            if (statesprite.flip_correction) sprite_vertex[5] += sprite_vertex[7];
-            sprite_vertex[7] = -sprite_vertex[7];
         }
 
         // cache the calculated vertex

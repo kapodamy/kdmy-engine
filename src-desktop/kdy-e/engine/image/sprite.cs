@@ -84,9 +84,22 @@ namespace Engine.Image {
             float[] sprite_vertex = this.vertex;
             float render_alpha = this.alpha * this.alpha2;
 
+            float draw_x = this.draw_x;
+            float draw_y = this.draw_y;
+
             if (this.vertex_dirty) {
-                float draw_x = this.draw_x;
-                float draw_y = this.draw_y;
+                float draw_width = this.draw_width;
+                float draw_height = this.draw_height;
+
+                // flip vertex (if required)
+                if (this.flip_x) {
+                    if (this.flip_correction) draw_x += draw_width;
+                    draw_width = -draw_width;
+                }
+                if (this.flip_y) {
+                    if (this.flip_correction) draw_y += draw_height;
+                    draw_height = -draw_height;
+                }
 
                 if (this.texture != null) {
                     float frame_width, frame_height;
@@ -95,18 +108,18 @@ namespace Engine.Image {
 
                     // complex frame size redimension
                     if (this.frame_width > 0) {
-                        ratio_width = this.draw_width / this.frame_width;
+                        ratio_width = draw_width / this.frame_width;
                         frame_width = this.src_width * ratio_width;
                     } else {
-                        ratio_width = this.draw_width / this.src_width;
-                        frame_width = this.draw_width;
+                        ratio_width = draw_width / this.src_width;
+                        frame_width = draw_width;
                     }
                     if (this.frame_height > 0) {
-                        ratio_height = this.draw_height / this.frame_height;
+                        ratio_height = draw_height / this.frame_height;
                         frame_height = this.src_height * ratio_height;
                     } else {
-                        ratio_height = this.draw_height / this.src_height;
-                        frame_height = this.draw_height;
+                        ratio_height = draw_height / this.src_height;
+                        frame_height = draw_height;
                     }
 
                     // calculate cropping (if required)
@@ -148,8 +161,8 @@ namespace Engine.Image {
                 } else {
                     sprite_vertex[4] = draw_x;
                     sprite_vertex[5] = draw_y;
-                    sprite_vertex[6] = this.draw_width;
-                    sprite_vertex[7] = this.draw_height;
+                    sprite_vertex[6] = draw_width;
+                    sprite_vertex[7] = draw_height;
 
                     if (this.crop_enabled) {
                         float crop_width = this.crop.width;
@@ -165,16 +178,6 @@ namespace Engine.Image {
                         if (crop_height != -1 && crop_height < sprite_vertex[7])
                             sprite_vertex[7] = crop_height;
                     }
-                }
-
-                // flip vertex (if required)
-                if (this.flip_x) {
-                    if (this.flip_correction) sprite_vertex[4] += sprite_vertex[6];
-                    sprite_vertex[6] = -sprite_vertex[6];
-                }
-                if (this.flip_y) {
-                    if (this.flip_correction) sprite_vertex[5] += sprite_vertex[7];
-                    sprite_vertex[7] = -sprite_vertex[7];
                 }
 
                 // cache the calculated vertex
