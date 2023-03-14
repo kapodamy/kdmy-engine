@@ -828,6 +828,12 @@ function __asyncjs__fs_readfile(path, buffer_ptr, size_ptr) {
         }
     })
 }
+function __asyncjs__json_load_from(src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await json_load_from(kdmyEngine_ptrToString(src));
+        return ModuleLuaScript.kdmyEngine_obtain(ret)
+    })
+}
 function __asyncjs__menu_init(menumanifest, x, y, z, width, height) {
     return Asyncify.handleAsync(async() => {
         let ret = await menu_init(kdmyEngine_obtain(menumanifest), x, y, z, width, height);
@@ -1655,6 +1661,9 @@ function __js__kdmyEngine_open_link(url) {
     if (!target_url || target_url.startsWith("javascript:") || target_url.startsWith("blob:"))
         return;
     window.open(target_url, "_blank", "noopener,noreferrer")
+}
+function __js__kdmyEngine_parse_json(L, json) {
+    return luascript_helper_parse_json(L, ModuleLuaScript.kdmyEngine_obtain(json))
 }
 function __js__kdmyEngine_read_array_item_object(array_id, index) {
     let array = kdmyEngine_obtain(array_id);
@@ -6823,6 +6832,7 @@ var asmLibraryArg = {
     "__asyncjs__dialogue_show_dialog": __asyncjs__dialogue_show_dialog,
     "__asyncjs__dialogue_show_dialog2": __asyncjs__dialogue_show_dialog2,
     "__asyncjs__fs_readfile": __asyncjs__fs_readfile,
+    "__asyncjs__json_load_from": __asyncjs__json_load_from,
     "__asyncjs__menu_init": __asyncjs__menu_init,
     "__asyncjs__menumanifest_init": __asyncjs__menumanifest_init,
     "__asyncjs__messagebox_set_image_from_atlas": __asyncjs__messagebox_set_image_from_atlas,
@@ -7036,6 +7046,7 @@ var asmLibraryArg = {
     "__js__kdmyEngine_get_screen_size": __js__kdmyEngine_get_screen_size,
     "__js__kdmyEngine_get_useragent": __js__kdmyEngine_get_useragent,
     "__js__kdmyEngine_open_link": __js__kdmyEngine_open_link,
+    "__js__kdmyEngine_parse_json": __js__kdmyEngine_parse_json,
     "__js__kdmyEngine_read_array_item_object": __js__kdmyEngine_read_array_item_object,
     "__js__kdmyEngine_read_prop_boolean": __js__kdmyEngine_read_prop_boolean,
     "__js__kdmyEngine_read_prop_double": __js__kdmyEngine_read_prop_double,
@@ -7543,8 +7554,32 @@ var asm = createWasm();
 var ___wasm_call_ctors = ModuleLuaScript["___wasm_call_ctors"] = function () {
     return (___wasm_call_ctors = ModuleLuaScript["___wasm_call_ctors"] = ModuleLuaScript["asm"]["__wasm_call_ctors"]).apply(null, arguments)
 };
+var _lua_pushstring = ModuleLuaScript["_lua_pushstring"] = function () {
+    return (_lua_pushstring = ModuleLuaScript["_lua_pushstring"] = ModuleLuaScript["asm"]["lua_pushstring"]).apply(null, arguments)
+};
 var _free = ModuleLuaScript["_free"] = function () {
     return (_free = ModuleLuaScript["_free"] = ModuleLuaScript["asm"]["free"]).apply(null, arguments)
+};
+var _lua_pushboolean = ModuleLuaScript["_lua_pushboolean"] = function () {
+    return (_lua_pushboolean = ModuleLuaScript["_lua_pushboolean"] = ModuleLuaScript["asm"]["lua_pushboolean"]).apply(null, arguments)
+};
+var _lua_setfield = ModuleLuaScript["_lua_setfield"] = function () {
+    return (_lua_setfield = ModuleLuaScript["_lua_setfield"] = ModuleLuaScript["asm"]["lua_setfield"]).apply(null, arguments)
+};
+var _lua_pushnil = ModuleLuaScript["_lua_pushnil"] = function () {
+    return (_lua_pushnil = ModuleLuaScript["_lua_pushnil"] = ModuleLuaScript["asm"]["lua_pushnil"]).apply(null, arguments)
+};
+var _lua_createtable = ModuleLuaScript["_lua_createtable"] = function () {
+    return (_lua_createtable = ModuleLuaScript["_lua_createtable"] = ModuleLuaScript["asm"]["lua_createtable"]).apply(null, arguments)
+};
+var _lua_settable = ModuleLuaScript["_lua_settable"] = function () {
+    return (_lua_settable = ModuleLuaScript["_lua_settable"] = ModuleLuaScript["asm"]["lua_settable"]).apply(null, arguments)
+};
+var _lua_pushnumber = ModuleLuaScript["_lua_pushnumber"] = function () {
+    return (_lua_pushnumber = ModuleLuaScript["_lua_pushnumber"] = ModuleLuaScript["asm"]["lua_pushnumber"]).apply(null, arguments)
+};
+var _lua_pushinteger = ModuleLuaScript["_lua_pushinteger"] = function () {
+    return (_lua_pushinteger = ModuleLuaScript["_lua_pushinteger"] = ModuleLuaScript["asm"]["lua_pushinteger"]).apply(null, arguments)
 };
 var _luascript_notify_weekinit = ModuleLuaScript["_luascript_notify_weekinit"] = function () {
     return (_luascript_notify_weekinit = ModuleLuaScript["_luascript_notify_weekinit"] = ModuleLuaScript["asm"]["luascript_notify_weekinit"]).apply(null, arguments)
@@ -7687,6 +7722,9 @@ var _luascript_destroy_JS = ModuleLuaScript["_luascript_destroy_JS"] = function 
 var _luascript_set_engine_globals_JS = ModuleLuaScript["_luascript_set_engine_globals_JS"] = function () {
     return (_luascript_set_engine_globals_JS = ModuleLuaScript["_luascript_set_engine_globals_JS"] = ModuleLuaScript["asm"]["luascript_set_engine_globals_JS"]).apply(null, arguments)
 };
+var _lua_rawseti = ModuleLuaScript["_lua_rawseti"] = function () {
+    return (_lua_rawseti = ModuleLuaScript["_lua_rawseti"] = ModuleLuaScript["asm"]["lua_rawseti"]).apply(null, arguments)
+};
 var _saveSetjmp = ModuleLuaScript["_saveSetjmp"] = function () {
     return (_saveSetjmp = ModuleLuaScript["_saveSetjmp"] = ModuleLuaScript["asm"]["saveSetjmp"]).apply(null, arguments)
 };
@@ -7720,6 +7758,9 @@ var dynCall_ii = ModuleLuaScript["dynCall_ii"] = function () {
 var dynCall_vi = ModuleLuaScript["dynCall_vi"] = function () {
     return (dynCall_vi = ModuleLuaScript["dynCall_vi"] = ModuleLuaScript["asm"]["dynCall_vi"]).apply(null, arguments)
 };
+var dynCall_viii = ModuleLuaScript["dynCall_viii"] = function () {
+    return (dynCall_viii = ModuleLuaScript["dynCall_viii"] = ModuleLuaScript["asm"]["dynCall_viii"]).apply(null, arguments)
+};
 var dynCall_vii = ModuleLuaScript["dynCall_vii"] = function () {
     return (dynCall_vii = ModuleLuaScript["dynCall_vii"] = ModuleLuaScript["asm"]["dynCall_vii"]).apply(null, arguments)
 };
@@ -7731,9 +7772,6 @@ var dynCall_iiii = ModuleLuaScript["dynCall_iiii"] = function () {
 };
 var dynCall_iiiii = ModuleLuaScript["dynCall_iiiii"] = function () {
     return (dynCall_iiiii = ModuleLuaScript["dynCall_iiiii"] = ModuleLuaScript["asm"]["dynCall_iiiii"]).apply(null, arguments)
-};
-var dynCall_viii = ModuleLuaScript["dynCall_viii"] = function () {
-    return (dynCall_viii = ModuleLuaScript["dynCall_viii"] = ModuleLuaScript["asm"]["dynCall_viii"]).apply(null, arguments)
 };
 var dynCall_jiji = ModuleLuaScript["dynCall_jiji"] = function () {
     return (dynCall_jiji = ModuleLuaScript["dynCall_jiji"] = ModuleLuaScript["asm"]["dynCall_jiji"]).apply(null, arguments)

@@ -21,11 +21,13 @@ namespace Engine.Externals.LuaScriptInterop {
         private static bool title_was_changed;
         private static int last_resolution_changes;
 
+        static LuascriptPlatform() {
+            luascript_instances = new ArrayList<Luascript>(2);
+        }
 
         public static void InitializeCallbacks() {
             Window window = PVRContext.InternalNativeWindow;
 
-            luascript_instances = new ArrayList<Luascript>(2);
             last_mouse_position_x = Double.NaN;
             last_mouse_position_y = Double.NaN;
             last_window_focused = !PVRContext.global_context.IsOffscreen();

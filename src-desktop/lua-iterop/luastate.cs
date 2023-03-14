@@ -318,6 +318,18 @@ L_destroyed:
                 return buffer;
             }
         }
+
+        public void lua_setfield(int idx, string k) {
+            unsafe {
+                LUA.lua_setfield(L, idx, k);
+            }
+        }
+
+        public void lua_rawseti(int index, int n) {
+            unsafe {
+                LUA.lua_rawseti(L, index, n);
+            }
+        }
     }
 
 }

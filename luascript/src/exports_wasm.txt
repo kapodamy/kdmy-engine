@@ -44,3 +44,12 @@ _luascript_notify_input_mouse_scroll
 _luascript_eval
 _luascript_call_function
 _luascript_set_engine_globals_JS
+_lua_pushinteger
+_lua_pushstring
+_lua_pushnumber
+_lua_pushboolean
+_lua_pushnil
+_lua_setfield
+_lua_createtable
+_lua_settable
+_lua_rawseti

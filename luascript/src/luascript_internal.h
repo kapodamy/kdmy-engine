@@ -319,4 +319,8 @@ void script_environment_register(lua_State* L);
 int script_menu_new(lua_State* L, Menu menu);
 void script_menu_register(lua_State* L);
 
+#define JSON "JSON"
+//int script_json_new(lua_State* L);
+void script_json_register(lua_State* L);
+
 #endif

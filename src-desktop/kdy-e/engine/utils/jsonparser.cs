@@ -19,6 +19,22 @@ namespace Engine.Utils {
         }
     }
 
+    public enum JSONValueType {
+        String,
+        Boolean,
+        NumberDouble,
+        NumberLong,
+        Array,
+        Null,
+        Object,
+        Unknown
+    }
+
+    public struct JSONProperty {
+        public JSONValueType type;
+        public string name;
+    }
+
     public class JSONParser : JSONToken {
 
         public static JSONParser LoadFrom(string src) {
@@ -35,6 +51,7 @@ namespace Engine.Utils {
                 return null;
             }
         }
+
         public static JSONParser LoadDirectFrom(string abosolute_src) {
             string source = System.IO.File.ReadAllText(abosolute_src);
             if (source == null || source.Length < 1) return null;
@@ -267,9 +284,93 @@ namespace Engine.Utils {
             return InternalHasItemType(json, name, JTokenType.Null);
         }
 
+        public static bool IsPropertyArray(JSONToken json, string name) {
+            return InternalHasItemType(json, name, JTokenType.Array);
+        }
+
         public static bool IsArrayItemNull(JSONToken json_array, int index) {
             JToken item = InternalGetArrayItem(json_array, index);
             return item == null || item.Type == JTokenType.Null;
+        }
+
+        public static JSONValueType GetArrayItemType(JSONToken json_array, int index) {
+            JToken value = InternalGetArrayItem(json_array, index);
+            if (value == null) return JSONValueType.Unknown;
+
+            switch (value.Type) {
+                case JTokenType.Array:
+                    return JSONValueType.Array;
+                case JTokenType.Boolean:
+                    return JSONValueType.Boolean;
+                case JTokenType.Float:
+                    return JSONValueType.NumberDouble;
+                case JTokenType.Integer:
+                    return JSONValueType.NumberLong;
+                case JTokenType.String:
+                    return JSONValueType.String;
+                case JTokenType.Null:
+                    return JSONValueType.Null;
+                case JTokenType.Object:
+                    return JSONValueType.Object;
+                default:
+                    return JSONValueType.Unknown;
+            }
+        }
+
+        public static bool IsArray(JSONToken json) {
+            if (json == null) return false;
+            if (json.guard.disposed) throw new JSONParserDestroyedException();
+            if (json.arr == null) return false;
+
+            return true;
+        }
+
+        public static JSONProperty[] GetObjectProperties(JSONToken json) {
+            if (json == null) return null;
+            if (json.guard.disposed) throw new JSONParserDestroyedException();
+            if (json.obj == null) return null;
+
+            if (json.obj.Type != JTokenType.Object) {
+                // not a object
+                return null;
+            }
+
+            int index = 0;
+            JSONProperty[] properties = new JSONProperty[json.obj.Count];
+
+            foreach (JProperty property in json.obj.Properties()) {
+                properties[index].name = property.Name;
+
+                switch (property.Value.Type) {
+                    case JTokenType.Array:
+                        properties[index].type = JSONValueType.Array;
+                        break;
+                    case JTokenType.Boolean:
+                        properties[index].type = JSONValueType.Boolean;
+                        break;
+                    case JTokenType.Float:
+                        properties[index].type = JSONValueType.NumberDouble;
+                        break;
+                    case JTokenType.Integer:
+                        properties[index].type = JSONValueType.NumberLong;
+                        break;
+                    case JTokenType.String:
+                        properties[index].type = JSONValueType.String;
+                        break;
+                    case JTokenType.Null:
+                        properties[index].type = JSONValueType.Null;
+                        break;
+                    case JTokenType.Object:
+                        properties[index].type = JSONValueType.Object;
+                        break;
+                    default:
+                        properties[index].type = JSONValueType.Unknown;
+                        break;
+                }
+                index++;
+            }
+
+            return properties;
         }
 
 

@@ -243,3 +243,97 @@ function _luascriptcript_call(fn, ...args) {
     let promise = ModuleLuaScript.kdmyEngine_yieldAsync();
     return promise === undefined ? ret : promise;
 }
+
+function luascript_helper_parse_json(L, json) {
+    if (!json) {
+        ModuleLuaScript._lua_pushnil(L);
+        return 1;
+    }
+
+    if (Array.isArray(json))
+        luascript_helper_parse_json_array(L, json);
+    else
+        luascript_helper_parse_json_object(L, json);
+
+    return 1;
+}
+
+function luascript_helper_parse_json_object(L, obj) {
+    let props = Object.getOwnPropertyNames(obj);
+
+    ModuleLuaScript._lua_createtable(L, 0, props.length);
+
+    for (let i = 0; i < props.length; i++) {
+        let value = obj[props[i]];
+        let type = typeof value;
+        let name_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(props[i]);
+
+        switch (type) {
+            case "number":
+                ModuleLuaScript._lua_pushnumber(L, value);
+                ModuleLuaScript._lua_setfield(L, -2, name_ptr);
+                break;
+            case "string":
+                let string_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(value);
+                ModuleLuaScript._lua_pushstring(L, string_ptr);
+                ModuleLuaScript._lua_setfield(L, -2, name_ptr);
+                ModuleLuaScript.kdmyEngine_deallocate(string_ptr);
+                break;
+            case "boolean":
+                ModuleLuaScript._lua_pushboolean(L, value ? 1 : 0);
+                ModuleLuaScript._lua_setfield(L, -2, name_ptr);
+                break;
+            case "object":
+                if (Array.isArray(value)) {
+                    ModuleLuaScript._lua_pushstring(L, name_ptr);
+                    luascript_helper_parse_json_array(L, value);
+                    ModuleLuaScript._lua_settable(L, -3);
+                } else if (value == null) {
+                    ModuleLuaScript._lua_pushnil(L);
+                    ModuleLuaScript._lua_setfield(L, -2, name_ptr);
+                } else {
+                    ModuleLuaScript._lua_pushstring(L, name_ptr);
+                    luascript_helper_parse_json_object(L, value);
+                    ModuleLuaScript._lua_settable(L, -3);
+                }
+                break;
+        }
+
+        ModuleLuaScript.kdmyEngine_deallocate(name_ptr);
+    }
+
+}
+
+function luascript_helper_parse_json_array(L, array) {
+    ModuleLuaScript._lua_createtable(L, array.length, 0);
+
+    for (let i = 0; i < array.length; i++) {
+        let value = array[i];
+        let type = typeof value;
+
+        switch (type) {
+            case "number":
+                ModuleLuaScript._lua_pushnumber(L, value);
+                break;
+            case "string":
+                let string_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(value);
+                ModuleLuaScript._lua_pushstring(L, string_ptr);
+                ModuleLuaScript.kdmyEngine_deallocate(string_ptr);
+                break;
+            case "boolean":
+                ModuleLuaScript._lua_pushboolean(L, value ? 1 : 0);
+                break;
+            case "object":
+                if (Array.isArray(value))
+                    luascript_helper_parse_json_array(L, value);
+                else if (value == null)
+                    ModuleLuaScript._lua_pushnil(L);
+                else
+                    luascript_helper_parse_json_object(L, value);
+                break;
+        }
+
+        ModuleLuaScript._lua_rawseti(L, -2, i + 1);
+    }
+}
+

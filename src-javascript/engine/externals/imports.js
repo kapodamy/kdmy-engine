@@ -56,6 +56,18 @@
  * @property {function(object):void} kdmyEngine_drop_shared_object
  * @property {function():DataView} kdmyEngine_get_ram
  * 
+ * @property {function(number, number):void} _lua_pushinteger
+ * @property {function(number, number):number} _lua_pushstring
+ * @property {function(number, number):void} _lua_pushnumber
+ * @property {function(number, number):void} _lua_pushboolean
+ * @property {function(number):void} _lua_pushnil
+ * @property {function(number, number, number):void} _lua_setfield
+ * @property {function(number, number, number):void} _lua_createtable
+ * @property {function(number, number):void} _lua_settable
+ * @property {function(number, number, number):void} _lua_rawseti
+    
+ }}
+ * 
  * @property {bool} isRuntimeInitialized
  * @property {bool} hasGlobalsSet
  * @property {boolean} kdmyEngine_endianess

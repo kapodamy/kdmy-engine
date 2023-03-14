@@ -93,6 +93,7 @@
     <Compile Include="engine\csharp\PreloadCache.cs" />
     <Compile Include="engine\drawable.cs" />
     <Compile Include="engine\externals\luascript\exports_drawable.cs" />
+    <Compile Include="engine\externals\luascript\exports_json.cs" />
     <Compile Include="engine\externals\luascript\exports_layoutplaceholder.cs" />
     <Compile Include="engine\externals\luascript\exports_menu.cs" />
     <Compile Include="engine\externals\luascript\exports_menumanifest.cs" />

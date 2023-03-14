@@ -320,6 +320,9 @@ namespace LuaNativeMethods {
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern ulong lua_rawlen(lua_State* L, int index);
 
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void lua_rawseti(lua_State* L, int index, int n);
+
 
         private static byte[] STRING_BUFFER = new byte[256];
         private static byte[] MarshalString(string str) {
