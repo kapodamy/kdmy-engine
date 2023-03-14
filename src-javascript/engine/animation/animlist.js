@@ -253,6 +253,7 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
     anim.frame_rate = vertexprops_parse_float(entry, "frameRate", default_fps);
     anim.alternate_per_loop = vertexprops_parse_boolean(entry, "alternateInLoops", 0);
     anim.alternate_no_random = !vertexprops_parse_boolean(entry, "alternateRandomize", 0);
+    anim.loop_from_index = 0;
 
     let frames = entry.children;
     let parsed_frames = linkedlist_init();
@@ -300,6 +301,9 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
                 else
                     last_alternate_index = frame_count;
                 break;
+            case "LoopMark":
+                anim.loop_from_index = linkedlist_count(parsed_frames);
+                break;
             default:
                 console.error("Unknown frame type: " + frames[i].tagName, frames[i]);
                 break;
@@ -319,6 +323,8 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
     }
     anim.alternate_set = linkedlist_to_solid_array(parsed_alternates);
     anim.alternate_set_size = linkedlist_count(parsed_alternates);
+
+    if (anim.loop_from_index == anim.frame_count) anim.loop_from_index = 0;
 
     linkedlist_destroy(parsed_frames);
 

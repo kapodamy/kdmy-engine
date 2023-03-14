@@ -24,11 +24,12 @@ namespace Engine.Animation {
         public MacroExecutorInstruction[] instructions;
         public int frame_count;
         public AtlasEntry[] frames;
-        internal AnimList.AlternateEntry[] alternate_set;
-        internal int alternate_set_size;
-        internal int frames_count;
-        internal int frame_restart_index;
-        internal bool frame_allow_size_change;
+        public AnimList.AlternateEntry[] alternate_set;
+        public int alternate_set_size;
+        public int frames_count;
+        public int frame_restart_index;
+        public bool frame_allow_size_change;
+        public int loop_from_index;
     }
 
     public class AnimList {
@@ -259,7 +260,8 @@ namespace Engine.Animation {
                 loop = VertexProps.ParseInteger(entry, "loop", 1),
                 frame_rate = VertexProps.ParseFloat(entry, "frameRate", default_fps),
                 alternate_per_loop = VertexProps.ParseBoolean(entry, "alternateInLoops", false),
-                alternate_no_random = !VertexProps.ParseBoolean(entry, "alternateRandomize", false)
+                alternate_no_random = !VertexProps.ParseBoolean(entry, "alternateRandomize", false),
+                loop_from_index = 0
             };
 
             XmlParserNodeList frames = entry.Children;
@@ -308,6 +310,9 @@ namespace Engine.Animation {
                         else
                             last_alternate_index = frame_count;
                         break;
+                    case "LoopMark":
+                        anim.loop_from_index = parsed_frames.Count();
+                        break;
                     default:
                         Console.Error.WriteLine("Unknown frame type: " + frames[i].TagName, frames[i]);
                         break;
@@ -327,6 +332,8 @@ namespace Engine.Animation {
             }
             anim.alternate_set = parsed_alternates.ToSolidArray();
             anim.alternate_set_size = parsed_alternates.Count();
+
+            if (anim.loop_from_index == anim.frame_count) anim.loop_from_index = 0;
 
             parsed_frames.Destroy();
 

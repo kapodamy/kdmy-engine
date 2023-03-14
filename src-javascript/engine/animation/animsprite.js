@@ -115,6 +115,7 @@ function animsprite_init(animlist_item) {
 
     animsprite.frame_count = animlist_item.frame_count;
     animsprite.frames = clone_array(animlist_item.frames, animlist_item.frame_count);
+    animsprite.loop_from_index = animlist_item.loop_from_index;
 
     if (animlist_item.instructions_count > 0) {
         let instructions = clone_array(animlist_item.instructions, animlist_item.instructions_count);
@@ -272,8 +273,8 @@ function animsprite_animate(animsprite, elapsed) {
         }
         animsprite_internal_alternate_choose(animsprite, 1);
         animsprite.delay_active = animsprite.delay > 0;
-        animsprite.current_index = 0;
-        animsprite.progress = 0;
+        animsprite.current_index = animsprite.loop_from_index;
+        animsprite.progress = animsprite.loop_from_index * animsprite.frame_time;
     }
 
     return 0;
@@ -510,6 +511,7 @@ function animsprite_internal_init(name, loop, frame_rate) {
 
         frames: null,
         frame_count: 0,
+        loop_from_index: 0,
 
         frame_time: frame_time,
         length: 0,
@@ -536,7 +538,7 @@ function animsprite_internal_init(name, loop, frame_rate) {
         alternate_index: -1,
 
         macroexecutor: null,
-        tweenlerp: null,
+        tweenlerp: null
     };
 
     ANIMSPRITE_POOL.set(animsprite.id, animsprite);

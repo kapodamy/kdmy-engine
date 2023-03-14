@@ -18,6 +18,7 @@ namespace Engine.Animation {
         internal string name;
         private AtlasEntry[] frames;
         private int frame_count;
+        private int loop_from_index;
         private double frame_time;
         private int length;
         private int loop;
@@ -151,6 +152,7 @@ namespace Engine.Animation {
 
             animsprite.frame_count = animlist_item.frame_count;
             animsprite.frames = CloneUtils.CloneArray(animlist_item.frames, animlist_item.frame_count);
+            animsprite.loop_from_index = animlist_item.loop_from_index;
 
             if (animlist_item.instructions_count > 0) {
                 MacroExecutorInstruction[] instructions = CloneUtils.CloneArray(animlist_item.instructions, animlist_item.instructions_count);
@@ -163,8 +165,8 @@ namespace Engine.Animation {
                 );
 
                 animsprite.macroexecutor.SetRestartInFrame(
-            animlist_item.frame_restart_index, animlist_item.frame_allow_size_change
-        );
+                    animlist_item.frame_restart_index, animlist_item.frame_allow_size_change
+                );
             }
 
             return animsprite;
@@ -344,8 +346,8 @@ namespace Engine.Animation {
                 }
                 InternalAlternateChoose(true);
                 this.delay_active = this.delay > 0;
-                this.current_index = 0;
-                this.progress = 0;
+                this.current_index = this.loop_from_index;
+                this.progress = this.loop_from_index * this.frame_time;
             }
 
             return 0;
@@ -580,6 +582,7 @@ namespace Engine.Animation {
 
                 frames = null,
                 frame_count = 0,
+                loop_from_index = 0,
 
                 frame_time = frame_time,
                 length = 0,

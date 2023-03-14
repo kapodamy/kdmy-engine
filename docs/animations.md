@@ -1,6 +1,6 @@
 # Animations
 
->Revision 41
+>Revision 48
 
 </br>
 This document explain how animations can be done without hardcoding them in the engine source code.</br></br>
@@ -376,6 +376,7 @@ This is the most simple way to make animations (by declaring frames).
   - [FrameArray](#framearray)
   - [Pause](#pause)
   - [AlternateSet](#alternateset)
+  - [LoopMark](#loopmark)
 </br>
 </br>
 
@@ -449,6 +450,14 @@ Repeats the last imported frame. Note: Do not put this at the start of the anima
 
 Creates an alternative set of frames, declare frames between [AlternateSet](#alternateset) elements to create a set. A random set will be chosen each time the animation repeats.</br>
 Note: putting an **AlternateSet** at the start or end of the animation will have no effect.
+
+---
+</br>
+
+### **LoopMark**
+
+Marks where the loop should start (interpreted as frame index), this allows you to always repeat the last frames of the animation.
+If this element is not present the loop will always be from the beginning.
 
 ---
 </br>
