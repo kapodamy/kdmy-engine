@@ -139,7 +139,7 @@ namespace Engine.Game {
             this.reference_width = 0f; this.reference_height = 0f;
             this.enable_reference_size = false;
 
-            this.offset_x = 0; this.offset_y = 0;
+            this.offset_x = charactermanifest.offset_x; this.offset_y = charactermanifest.offset_y;
 
             this.is_left_facing = charactermanifest.left_facing;
 

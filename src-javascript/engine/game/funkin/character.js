@@ -84,7 +84,7 @@ async function character_init(charactermanifest) {
         reference_width: 0, reference_height: 0,
         enable_reference_size: 0,
 
-        offset_x: 0, offset_y: 0,
+        offset_x: charactermanifest.offset_x, offset_y: charactermanifest.offset_y,
 
         is_left_facing: charactermanifest.left_facing,
 
