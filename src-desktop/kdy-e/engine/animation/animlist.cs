@@ -311,7 +311,8 @@ namespace Engine.Animation {
                             last_alternate_index = frame_count;
                         break;
                     case "LoopMark":
-                        anim.loop_from_index = parsed_frames.Count();
+                        int offset = VertexProps.ParseInteger(frames[i], "lastFrames", 0);
+                        anim.loop_from_index = parsed_frames.Count() - offset;
                         break;
                     default:
                         Console.Error.WriteLine("Unknown frame type: " + frames[i].TagName, frames[i]);
@@ -333,7 +334,9 @@ namespace Engine.Animation {
             anim.alternate_set = parsed_alternates.ToSolidArray();
             anim.alternate_set_size = parsed_alternates.Count();
 
-            if (anim.loop_from_index == anim.frame_count) anim.loop_from_index = 0;
+            if (anim.loop_from_index >= anim.frame_count || anim.loop_from_index < 0) {
+                anim.loop_from_index = 0;
+            }
 
             parsed_frames.Destroy();
 

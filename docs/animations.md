@@ -458,6 +458,9 @@ Note: putting an **AlternateSet** at the start or end of the animation will have
 
 Marks where the loop should start (interpreted as frame index), this allows you to always repeat the last frames of the animation.
 If this element is not present the loop will always be from the beginning.
+</br>
+
+`lastFrames` apply the mark to the last N frames (this does *current_added_frames - lastFrames*), defaults to 0. (Optional)
 
 ---
 </br>
