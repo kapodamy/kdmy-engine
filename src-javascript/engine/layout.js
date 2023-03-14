@@ -658,7 +658,7 @@ function layout_screen_to_layout_coordinates(layout, screen_x,  screen_y,  calc_
 
     output_coords[0] = screen_x;
     output_coords[1] = screen_y;
-    sh4matrix4_multiply_point(temp, output_coords);
+    sh4matrix_multiply_point(temp, output_coords);
 }
 
 function layout_camera_set_view(layout, x, y, depth) {
