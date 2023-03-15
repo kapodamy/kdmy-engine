@@ -1073,6 +1073,16 @@ declare global {
         set_text_force_case(none_or_lowercase_or_uppercase: TextSpriteForceCase): void;
         has_item(name: string): boolean;
     }
+    interface JSON {
+        /**
+         * Open and parse a JSON file.  
+         * Note: properties or array items with null values are discarded by lua, this means doing
+         * "obj.someprop == null" or "obj[123] == null" is always evaluated as false.
+         * @param json_filename json filename
+         * @returns the parsed content or null if fails
+         */
+        parse<T>(json_filename: string): T | T[] | null;
+    }
 
     //
     // Global metatables initializers (class static contructors in typescript)
@@ -1180,6 +1190,9 @@ declare global {
          */
         init(menumanifest: MenuManifest, x: number, y: number, z: number, width: number, height: number): Menu;
     } const Menu: MenuConstructor;
+    
+    // @ts-ignore (declare again, just in case)
+    const JSON: JSON;
 
 
     //

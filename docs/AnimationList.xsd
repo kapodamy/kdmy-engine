@@ -136,6 +136,9 @@
     <xs:complexType name="Pause">
         <xs:attribute name="duration" type="xs:nonNegativeInteger" use="optional" default="1" />
     </xs:complexType>
+    <xs:complexType name="LoopMark">
+        <xs:attribute name="lastFrames" type="xs:integer" use="optional" default="0" />
+    </xs:complexType>
     <xs:complexType name="Set">
         <xs:attribute name="property" type="VertexProps" use="required" />
         <xs:attribute name="value" type="xs:anySimpleType" use="optional" default="1" />
@@ -175,7 +178,7 @@
             <xs:element name="Frame" type="Frame" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="Pause" type="Pause" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="AlternateSet" minOccurs="0" maxOccurs="unbounded" />
-            <xs:element name="LoopMark" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="LoopMark" type="LoopMark" minOccurs="0" maxOccurs="unbounded" />
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="required" />
         <xs:attribute name="loop" type="xs:integer" default="1" use="optional" />
