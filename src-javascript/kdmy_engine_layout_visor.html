@@ -85,6 +85,7 @@
                     </div>
                 </div>
                 <div style="display: inline;">
+                    <label><input type="checkbox" id="item-visible">Visible</label>
                     <br>
                     <label><input type="checkbox" id="item-mousemove">Move with the mouse</label>
                     <br>
@@ -138,7 +139,7 @@
                         <label><input type="radio" name="item-bind-type" value="autouicosmetics"> Autoplace all counters using
                         this placeholder</label>
                         <br>
-                        <label><input type="radio" name="item-bind-type" value="character" list="predefined-characterManifest"> Character (animated sprite
+                        <label><input type="radio" name="item-bind-type" value="character" list="temp-datalist"> Character (animated sprite
                             using charactermanifest)</label>
                     </fieldset>
                 </div>
@@ -243,7 +244,7 @@
         </fieldset>
         <fieldset>
             <legend>Layout</legend>
-            <label>Base folder for layout: <input type="text" name="base-folder" list="predefined-baseLayoutFolder" /></label>
+            <label>Base folder for layout: <input type="text" name="base-folder" list="temp-datalist" /></label>
             <br>
             <div style="height: 4px;"></div>
             <label>Load layout: <input type="file" id="load-layout-file" /></label>
@@ -341,8 +342,9 @@
 	
 	<datalist id="predefined-characterManifest"></datalist>
     <datalist id="predefined-baseLayoutFolder"></datalist>
+    <datalist id="temp-datalist"></datalist>
     
-        <datalist id="predefined-characterManifest-default">
+    <datalist id="predefined-characterManifest-default">
 		<option value="/assets/common/data/BOYFRIEND.json"></option>
 		<option value="/assets/common/data/GIRLFRIEND.json"></option>
 		<option value="/assets/weeks/week1/DD/DADDYDEAREST.json"></option>
@@ -356,7 +358,7 @@
 		<option value="/assets/weeks/week6/funkin/SENPAI_ANGRY.json"></option>
 		<option value="/assets/weeks/week6/funkin/SPIRIT.json"></option>
     </datalist>
-        <datalist id="predefined-baseLayoutFolder-default">
+    <datalist id="predefined-baseLayoutFolder-default">
 		<option value="/assets"></option>
 		<option value="/expansions"></option>
 		<option value="/assets/weeks/tutorial/stage"></option>

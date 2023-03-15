@@ -3960,7 +3960,7 @@ function layout_helper_add_action_media(unparsed_entry, action_entries) {
 }
 
 function layout_helper_add_action_mediaproperty(unparsed_entry, action_entries) {
-    let property_id = vertexprops_parse_media_property(unparsed_entry, "name", true);
+    let property_id = vertexprops_parse_media_property(unparsed_entry, "name", 0);
     if (property_id < 0) return;
     layout_helper_parse_property(unparsed_entry, property_id, "value", action_entries);
 }

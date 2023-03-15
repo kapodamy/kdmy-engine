@@ -53,7 +53,10 @@ var layoutvisor_placeholderalinghorizontal = null;
 var layoutvisor_itemparallaxx = null;
 var layoutvisor_itemparallaxy = null;
 var layoutvisor_itemparallaxz = null;
-let layoutvisor_autouicosmetics = null;
+var layoutvisor_autouicosmetics = null;
+var layoutvisor_itemvisiblecheckbox = null;
+var layoutvisor_tempdatalist = null;
+var layoutvisor_tempdatalistadded = null;
 
 
 async function main_layout_visor() {
@@ -92,6 +95,7 @@ async function main_layout_visor() {
         pvr_context_reset(pvr_context);
         pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
 
+        layoutvisor_update_itemvisiblecheckbox();
         beatwatcher_global_set_timestamp_from_kos_timer();
 
         if (!layoutvisor_layout) continue;
@@ -183,16 +187,21 @@ async function main_layout_visor() {
 function main_layout_add_listeners() {
     window.addEventListener("beforeunload", function (e) { e.returnValue = "¿leave?" }, false);
 
-    document.getElementById("load-layout-file").addEventListener("change", layoutvisor_load, false);
+    /**@type {HTMLInputElement} */// @ts-ignore
     let input_basefolder = document.querySelector("input[name=base-folder]");
+    layoutvisor_tempdatalist = document.getElementById("temp-datalist");
 
-    // @ts-ignore
-    // @ts-ignore
-    input_basefolder.addEventListener("change", function (e) {
-        layoutvisor_localstorage_save("baseLayoutFolder", this.value);
+    document.getElementById("load-layout-file").addEventListener("change", function (e) {
+        // @ts-ignore
+        layoutvisor_localstorage_save("baseLayoutFolder", input_basefolder.value);
+        layoutvisor_load(e);
     }, false);
-    // @ts-ignore
+
+
     input_basefolder.value = layoutvisor_localstorage_load("baseLayoutFolder");
+    input_basefolder.addEventListener("keyup", function (e) {
+        layoutvisor_list_fs_entries(input_basefolder.value, "predefined-baseLayoutFolder", true);
+    });
 
     document.getElementById("widescreen").addEventListener("change", function (e) {
         // @ts-ignore
@@ -412,6 +421,28 @@ function main_layout_add_listeners() {
         layout_stop_all_triggers(layoutvisor_layout);
     });
 
+    layoutvisor_itemvisiblecheckbox = document.getElementById("item-visible");
+    layoutvisor_itemvisiblecheckbox.addEventListener("click", function (evt) {
+        if (!layoutvisor_hookedvertex) return;
+
+        let item = layoutvisor_layout.vertex_list[layoutvisor_hookedvertexindex];
+
+        switch (item.type) {
+            case VERTEX_DRAWABLE:
+                let drawable = item.placeholder.vertex;
+                if (drawable)
+                    drawable_set_visible(drawable, !drawable_is_visible(drawable));
+                else
+                    evt.preventDefault();
+                break;
+            case VERTEX_SPRITE:
+                sprite_set_visible(item.vertex, !sprite_is_visible(item.vertex));
+                break;
+            case VERTEX_TEXTSPRITE:
+                textsprite_set_visible(item.vertex, !textsprite_is_visible(item.vertex));
+                break;
+        }
+    });
 
     layoutvisor_input_itemwidth = document.getElementById("item-width");
     layoutvisor_input_itemheight = document.getElementById("item-height");
@@ -518,10 +549,14 @@ function main_layout_add_listeners() {
     });
 
     let character_manifest = document.getElementById("bind-character_manifest");
-    let value = layoutvisor_localstorage_load("characterManifest");
+
+    character_manifest.addEventListener("keyup", function (e) {
+        // @ts-ignore
+        layoutvisor_list_fs_entries(character_manifest.value, "predefined-characterManifest", false);
+    });
 
     // @ts-ignore
-    if (value) character_manifest.value = value;
+    character_manifest.value = layoutvisor_localstorage_load("characterManifest");
 
     character_manifest.addEventListener("change", function () {
         // @ts-ignore
@@ -617,7 +652,9 @@ async function layoutvisor_load(e) {
             let vertex = layoutvisor_layout.vertex_list[i].vertex;
             switch (layoutvisor_layout.vertex_list[i].type) {
                 case VERTEX_SPRITE:
-                    if (vertex.texture && vertex.texture.src_filename) {
+                    if (layoutvisor_layout.vertex_list[i].videoplayer) {
+                        name = "<videoplayer>";
+                    } else if (vertex.texture && vertex.texture.src_filename) {
                         let j = Math.max(vertex.texture.src_filename.lastIndexOf('/'), vertex.texture.src_filename.lastIndexOf('\\'));
                         if (j < 0)
                             name = vertex.texture.src_filename;
@@ -1435,4 +1472,110 @@ function layoutvisor_localstorage_load(key_name) {
     if (array.length < 1) return "";
 
     return array[0];
+}
+
+function layoutvisor_update_itemvisiblecheckbox() {
+    if (!layoutvisor_hookedvertex) {
+        layoutvisor_itemvisiblecheckbox.indeterminate = true;
+        return;
+    }
+
+    let item = layoutvisor_layout.vertex_list[layoutvisor_hookedvertexindex];
+    let is_visible = undefined;
+
+    switch (item.type) {
+        case VERTEX_DRAWABLE:
+            let drawable = item.placeholder.vertex;
+            if (drawable) {
+                is_visible = drawable_is_visible(drawable);
+            }
+            break;
+        case VERTEX_SPRITE:
+            is_visible = sprite_is_visible(item.vertex);
+            break;
+        case VERTEX_TEXTSPRITE:
+            is_visible = textsprite_is_visible(item.vertex);
+            break;
+    }
+
+    if (is_visible === undefined) {
+        layoutvisor_itemvisiblecheckbox.indeterminate = true;
+    } else {
+        layoutvisor_itemvisiblecheckbox.indeterminate = false;
+        layoutvisor_itemvisiblecheckbox.checked = !!is_visible;
+    }
+}
+
+async function layoutvisor_list_fs_entries(path, fallback_datalist_name, only_folders) {
+    let fallback_datalist = document.getElementById(fallback_datalist_name);
+
+    if (path == "/") {
+        layoutvisor_list_fs_use_fallback_values(fallback_datalist_name, null);
+        return;
+    } else if (!path.startsWith("/assets") && !path.startsWith("/expansions")) {
+        layoutvisor_list_fs_use_fallback_values(fallback_datalist_name, fallback_datalist);
+        return;
+    }
+
+    let fs_enum = { name: "", is_file: false, is_folder: false };
+
+    if (!await fs_folder_exists(path)) {
+        let path2 = fs_get_parent_folder(path);
+        if (path2 == "/" || (path2 == "" && path.charAt(0) == "/")) {
+            layoutvisor_list_fs_use_fallback_values(fallback_datalist_name, null);
+            return;
+        } else if (!await fs_folder_exists(path)) {
+            layoutvisor_list_fs_use_fallback_values(fallback_datalist_name, fallback_datalist);
+            return;
+        }
+        path = path2;
+    }
+
+    if (!await fs_folder_enumerate(path, fs_enum)) {
+        layoutvisor_list_fs_use_fallback_values(fallback_datalist_name, fallback_datalist);
+        return;
+    }
+
+    let list = [];
+
+    while (fs_folder_enumerate_next(fs_enum)) {
+        if (fs_enum.is_file && only_folders) {
+            continue;
+        } else if (!fs_enum.is_folder && !fs_enum.is_file) {
+            continue;
+        }
+
+        let tmp = fs_build_path(path, fs_enum.name);
+        if (tmp == path || `${tmp}/` == path) continue;
+
+        let option = document.createElement("option");
+        option.value = tmp;
+
+        list.push(option);
+    }
+
+    if (list.length > 0) {
+        layoutvisor_tempdatalistadded = null;
+        layoutvisor_tempdatalist.replaceChildren();
+        for (let option of list) layoutvisor_tempdatalist.appendChild(option);
+    }
+
+    fs_folder_enumerate_close(fs_enum);
+}
+
+function layoutvisor_list_fs_use_fallback_values(fallback_datalist_name, fallback_datalist) {
+    let target = fallback_datalist ? "predefined" : "root";
+    let added = `${target}@${fallback_datalist_name}`;
+
+    if (layoutvisor_tempdatalistadded == added) return;
+    layoutvisor_tempdatalistadded = added;
+
+    layoutvisor_tempdatalist.replaceChildren();
+
+    if (fallback_datalist) {
+        for (let option of fallback_datalist.children) layoutvisor_tempdatalist.appendChild(option.cloneNode());
+    } else {
+        layoutvisor_tempdatalist.appendChild(document.createElement("option")).value = "/assets";
+        layoutvisor_tempdatalist.appendChild(document.createElement("option")).value = "/expansions";
+    }
 }
