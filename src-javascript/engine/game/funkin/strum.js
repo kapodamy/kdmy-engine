@@ -21,6 +21,8 @@ class StrumNote {
     id;
     /** @type {number} */
     duration;
+    /** @type {boolean} */
+    alt_anim;
 
     /** @type {NoteState} */
     state;
@@ -56,6 +58,7 @@ class StrumNote {
         this.duration = chart_note.duration;
         this.custom_data = chart_note.data;
         this.hit_on_penality = 0;
+        this.alt_anim = chart_note.alt_anim;
 
         this.state = NoteState.PENDING;
         this.hit_diff = NaN;
@@ -175,6 +178,7 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
 
         press_state_changes: -1,
         press_state: STRUM_PRESS_STATE_NONE,
+        press_state_use_alt_anim: 0,
 
         marker_state: STRUM_MARKER_STATE_NOTHING,
         marker_state_changed: 0,
@@ -476,6 +480,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
     let notes_peek_index = strum.notes_peek_index;
     let song_offset_timestamp = song_timestamp + marker_duration;
     let press_state = -1;
+    let press_state_use_alt_anim = false;
     let notes_ahead = 0;
     let notes_cleared = 0;
 
@@ -600,6 +605,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
                 note.release_button = ddr_key.button;
 
                 press_state = STRUM_PRESS_STATE_HIT;
+                press_state_use_alt_anim = note.alt_anim;
                 break L_key_check;
             }
 
@@ -640,6 +646,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
                 press_state = STRUM_PRESS_STATE_HIT;
             }
 
+            press_state_use_alt_anim = note.alt_anim;
             note.state = NoteState.HOLD;
             note.release_button = ddr_key.button;
             note.release_time = note.endTimestamp;// use end timestamp to avoid compute as miss
@@ -813,6 +820,10 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
     }
     strum_internal_update_press_state(strum, press_state);
 
+    if (press_state == STRUM_PRESS_STATE_HIT || press_state == STRUM_PRESS_STATE_HIT_SUSTAIN) {
+        strum.press_state_use_alt_anim = press_state_use_alt_anim;
+    }
+
     return keys_processed;
 }
 
@@ -827,9 +838,11 @@ function strum_scroll_auto(strum, song_timestamp, playerstats, weekscript) {
     let notes_cleared = 0;
 
     let press_state = -1;
+    let press_state_use_alt_anim = false;
 
     // clear all notes ahead, but keep in hold the sustain ones
     for (; notes_peek_index < chart_notes_size; notes_peek_index++) {
+        /** @type {StrumNote} */
         let note = chart_notes[notes_peek_index];
         let is_sustain = note.duration >= strum.minimum_sustain_duration;
         let end_timestamp = note.endTimestamp;
@@ -852,6 +865,7 @@ function strum_scroll_auto(strum, song_timestamp, playerstats, weekscript) {
                     strum.marker_state = STRUM_AUTO_SCROLL_MARKER_STATE;
                     strum.marker_state_changed = 1;
                     press_state = is_sustain ? STRUM_PRESS_STATE_HIT_SUSTAIN : STRUM_PRESS_STATE_HIT;
+                    press_state_use_alt_anim = note.alt_anim;
                 }
 
                 if (weekscript) {
@@ -897,6 +911,10 @@ function strum_scroll_auto(strum, song_timestamp, playerstats, weekscript) {
     strum_internal_update_press_state(strum, press_state);
     strum_internal_check_sustain_queue(strum, song_timestamp, playerstats);
     strum.last_song_timestamp = song_timestamp;
+
+    if (press_state == STRUM_PRESS_STATE_HIT || press_state == STRUM_PRESS_STATE_HIT_SUSTAIN) {
+        strum.press_state_use_alt_anim = press_state_use_alt_anim;
+    }
 
     let count = notes_peek_index - strum.notes_peek_index;
     if (notes_cleared < count) return;
@@ -1034,6 +1052,10 @@ function strum_get_press_state_changes(strum) {
 
 function strum_get_press_state(strum) {
     return strum.press_state;
+}
+
+function strum_get_press_state_use_alt_anim(strum) {
+    return strum.press_state_use_alt_anim;
 }
 
 function strum_get_name(strum) {
@@ -2080,6 +2102,7 @@ function strum_internal_update_press_state(strum, press_state) {
         //if (press_state == strum.press_state) return;
         strum.press_state = press_state;
         strum.press_state_changes++;
+        strum.press_state_use_alt_anim = 0;
     }
 }
 

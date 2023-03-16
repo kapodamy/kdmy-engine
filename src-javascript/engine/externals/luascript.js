@@ -1603,6 +1603,10 @@ function __js__healthwatcher_has_deads(healthwatcher, in_players_or_opponents) {
 function __js__healthwatcher_reset_opponents(healthwatcher) {
     healthwatcher_reset_opponents(kdmyEngine_obtain(healthwatcher))
 }
+function __js__json_load_from_string(json_sourcecode) {
+    let ret = json_load_from_string(kdmyEngine_ptrToString(json_sourcecode));
+    return ModuleLuaScript.kdmyEngine_obtain(ret)
+}
 function __js__kdmyEngine_change_window_title(title, from_modding_context) {
     luascriptplatform.ChangeWindowTitle(kdmyEngine_ptrToString(title), from_modding_context)
 }
@@ -2706,6 +2710,10 @@ function __js__strum_get_press_state(strum) {
 function __js__strum_get_press_state_changes(strum) {
     let ret = strum_get_press_state_changes(kdmyEngine_obtain(strum));
     return ret
+}
+function __js__strum_get_press_state_use_alt_anim(strum) {
+    let ret = strum_get_press_state_use_alt_anim(kdmyEngine_obtain(strum));
+    return ret ? 1 : 0
 }
 function __js__strum_reset(strum, scroll_speed, state_name) {
     strum_reset(kdmyEngine_obtain(strum), scroll_speed, kdmyEngine_ptrToString(state_name))
@@ -7037,6 +7045,7 @@ var asmLibraryArg = {
     "__js__healthwatcher_enable_recover": __js__healthwatcher_enable_recover,
     "__js__healthwatcher_has_deads": __js__healthwatcher_has_deads,
     "__js__healthwatcher_reset_opponents": __js__healthwatcher_reset_opponents,
+    "__js__json_load_from_string": __js__json_load_from_string,
     "__js__kdmyEngine_change_window_title": __js__kdmyEngine_change_window_title,
     "__js__kdmyEngine_create_array": __js__kdmyEngine_create_array,
     "__js__kdmyEngine_create_object": __js__kdmyEngine_create_object,
@@ -7318,6 +7327,7 @@ var asmLibraryArg = {
     "__js__strum_get_name": __js__strum_get_name,
     "__js__strum_get_press_state": __js__strum_get_press_state,
     "__js__strum_get_press_state_changes": __js__strum_get_press_state_changes,
+    "__js__strum_get_press_state_use_alt_anim": __js__strum_get_press_state_use_alt_anim,
     "__js__strum_reset": __js__strum_reset,
     "__js__strum_set_alpha": __js__strum_set_alpha,
     "__js__strum_set_alpha_background": __js__strum_set_alpha_background,

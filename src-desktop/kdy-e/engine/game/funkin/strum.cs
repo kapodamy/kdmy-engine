@@ -36,6 +36,7 @@ namespace Engine.Game {
             public double timestamp;
             public int id;
             public double duration;
+            public bool alt_anim;
             public NoteState state;
             public double hit_diff;
             public double release_time;
@@ -57,6 +58,7 @@ namespace Engine.Game {
                 this.id = id;
                 this.timestamp = chart_note.timestamp;
                 this.duration = chart_note.duration;
+                this.alt_anim = chart_note.alt_anim;
                 this.custom_data = chart_note.data;
                 this.hit_on_penality = false;
 
@@ -159,6 +161,7 @@ namespace Engine.Game {
         private int notes_render_index;
         private int press_state_changes;
         private StrumPressState press_state;
+        private bool press_state_use_alt_anim;
         private StrumMarkerState marker_state;
         private bool marker_state_changed;
         private StrumMarkerState marker_sick_state;
@@ -233,6 +236,7 @@ namespace Engine.Game {
 
             this.press_state_changes = -1;
             this.press_state = StrumPressState.NONE;
+            this.press_state_use_alt_anim = false;
 
             this.marker_state = StrumMarkerState.NOTHING;
             this.marker_state_changed = false;
@@ -532,6 +536,7 @@ namespace Engine.Game {
             int notes_peek_index = this.notes_peek_index;
             double song_offset_timestamp = song_timestamp + marker_duration;
             StrumPressState press_state = StrumPressState.INVALID;
+            bool press_state_use_alt_anim = false;
             int notes_ahead = 0;
             int notes_cleared = 0;
 
@@ -656,6 +661,7 @@ namespace Engine.Game {
                         note.release_button = ddr_key.button;
 
                         press_state = StrumPressState.HIT;
+                        press_state_use_alt_anim = note.alt_anim;
                         goto L_discard_key_event;
                     }
 
@@ -696,6 +702,7 @@ namespace Engine.Game {
                         press_state = StrumPressState.HIT;
                     }
 
+                    press_state_use_alt_anim = note.alt_anim;
                     note.state = NoteState.HOLD;
                     note.release_button = ddr_key.button;
                     note.release_time = note.EndTimestamp;// use end timestamp to avoid compute as miss
@@ -871,6 +878,10 @@ L_discard_key_event:
             }
             InternalUpdatePressState(press_state);
 
+            if (press_state == StrumPressState.HIT || press_state == StrumPressState.HIT_SUSTAIN) {
+                this.press_state_use_alt_anim = press_state_use_alt_anim;
+            }
+
             return keys_processed;
         }
 
@@ -885,6 +896,7 @@ L_discard_key_event:
             int notes_cleared = 0;
 
             StrumPressState press_state = StrumPressState.INVALID;
+            bool press_state_use_alt_anim = false;
 
             // clear all notes ahead, but keep in hold the sustain ones
             for (; notes_peek_index < chart_notes_size ; notes_peek_index++) {
@@ -910,6 +922,7 @@ L_discard_key_event:
                             this.marker_state = Strum.AUTO_SCROLL_MARKER_STATE;
                             this.marker_state_changed = true;
                             press_state = is_sustain ? StrumPressState.HIT_SUSTAIN : StrumPressState.HIT;
+                            press_state_use_alt_anim = note.alt_anim;
                         }
 
                         if (weekscript != null) {
@@ -955,6 +968,10 @@ L_discard_key_event:
             InternalUpdatePressState(press_state);
             InternalCheckSustainQueue(song_timestamp, playerstats);
             this.last_song_timestamp = song_timestamp;
+
+            if (press_state == StrumPressState.HIT || press_state == StrumPressState.HIT_SUSTAIN) {
+                this.press_state_use_alt_anim = press_state_use_alt_anim;
+            }
 
             int count = notes_peek_index - this.notes_peek_index;
             if (notes_cleared < count) return;
@@ -1092,6 +1109,10 @@ L_discard_key_event:
 
         public StrumPressState GetPressState() {
             return this.press_state;
+        }
+
+        public bool GetPressStateUseAltAnim() {
+            return this.press_state_use_alt_anim;
         }
 
         public string GetName() {
@@ -2142,6 +2163,7 @@ L_discard_key_event:
             if (press_state != StrumPressState.INVALID) {
                 //if (press_state == this.press_state) return;
                 this.press_state = press_state;
+                this.press_state_use_alt_anim = false;
                 this.press_state_changes++;
             }
         }

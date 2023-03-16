@@ -30,6 +30,10 @@ StrumPressState strum_get_press_state(Strum strum) {
     print_stub("strum_get_press_state", "strum=%p", strum);
     return 0;
 }
+bool strum_get_press_state_use_alt_anim(Strum strum) {
+    print_stub("strum_get_press_state_use_alt_anim", "strum=%p", strum);
+    return false;
+}
 const char* strum_get_name(Strum strum) {
     print_stub("strum_get_name", "strum=%p", strum);
     return "abc123";

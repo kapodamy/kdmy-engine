@@ -14,6 +14,7 @@ class Chart {
      * @property {number} timestamp
      * @property {number} direction
      * @property {number} duration
+     * @property {bool} alt_anim
      * @property {number} data
      */
     /**
@@ -128,7 +129,17 @@ async function chart_init(src, difficult) {
             let timestamp = json_read_array_item_number(self_notes, 0, 0);
             let direction = json_read_array_item_number(self_notes, 1, 0);
             let duration = json_read_array_item_number(self_notes, 2, 0);
-            let data = json_read_array_item_number(self_notes, 3, 0);
+            let data;
+            let alt_note;
+
+            // In Funkin v0.2.8 the value at index 3 can denote an alt animation
+            if (json_get_array_item_type(self_notes, 3) == JSON_VALUE_TYPE_BOOLEAN) {
+                alt_note = json_read_array_item_boolean(self_notes, 3, 0);
+                data = alt_note ? Infinity : -Infinity;
+            } else {
+                alt_note = 0;
+                data = json_read_array_item_number(self_notes, 3, 0)
+            }
 
             if (set_camera) {
                 let target_camera;
@@ -199,7 +210,7 @@ async function chart_init(src, difficult) {
                 // self notes
                 target = must_hit_section ? player_notes : opponent_notes;
             }
-            arraylist_add(target, { timestamp, direction, duration, data });
+            arraylist_add(target, { timestamp, direction, duration, alt_anim, data });
         }
     }
 

@@ -27,6 +27,10 @@ EM_JS_PRFX(StrumPressState, strum_get_press_state, (Strum strum), {
     let ret = strum_get_press_state(kdmyEngine_obtain(strum));
     return ret;
 });
+EM_JS_PRFX(bool, strum_get_press_state_use_alt_anim, (Strum strum), {
+    let ret = strum_get_press_state_use_alt_anim(kdmyEngine_obtain(strum));
+    return ret ? 1 : 0;
+});
 EM_JS_PRFX(const char*, strum_get_name, (Strum strum), {
     let ret = strum_get_name(kdmyEngine_obtain(strum));
     return kdmyEngine_stringToPtr(ret);
@@ -199,6 +203,15 @@ static int script_strum_get_press_state(lua_State* L) {
     StrumPressState ret = strum_get_press_state(strum);
 
     lua_pushinteger(L, ret);
+    return 1;
+}
+
+static int script_strum_get_press_state_use_alt_anim(lua_State* L) {
+    Strum strum = luascript_read_userdata(L, STRUM);
+
+    bool ret = strum_get_press_state_use_alt_anim(strum);
+
+    lua_pushboolean(L, ret);
     return 1;
 }
 
@@ -489,6 +502,7 @@ static const luaL_Reg STRUM_FUNCTIONS[] = {
     { "force_key_release", script_strum_force_key_release },
     { "get_press_state_changes", script_strum_get_press_state_changes },
     { "get_press_state", script_strum_get_press_state },
+    { "get_press_state_use_alt_anim", script_strum_get_press_state_use_alt_anim},
     { "get_name", script_strum_get_name },
     { "get_marker_duration", script_strum_get_marker_duration },
     { "set_player_id", script_strum_set_player_id },

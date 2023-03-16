@@ -1,7 +1,26 @@
 "use string";
 
+const JSON_VALUE_TYPE_STRING = 0;
+const JSON_VALUE_TYPE_BOOLEAN = 1;
+const JSON_VALUE_TYPE_NUMBER = 2;
+const JSON_VALUE_TYPE_ARRAY = 4;
+const JSON_VALUE_TYPE_NULL = 5;
+const JSON_VALUE_TYPE_OBJECT = 6;
+const JSON_VALUE_TYPE_UNKNOWN = 7;
+
 async function json_load_from(src) {
     return await fs_readjson__(src);
+}
+
+function json_load_from_string(json_sourcecode) {
+    if (!json_sourcecode) return null;
+
+    try {
+        return JSON.parse(json_sourcecode)
+    } catch (e) {
+        console.error("json_load_from_string() failed ", e);
+        return null;
+    }
 }
 
 function json_destroy(json) {
@@ -194,5 +213,25 @@ function json_is_property_null(json, name) {
 
 function json_is_array_item_null(json_array, index) {
     return !json_array || json_array[index] === null;
+}
+
+function json_get_array_item_type(json_array, index) {
+    if (!json_array) return JSON_VALUE_TYPE_UNKNOWN;
+
+    let value = json_array[index];
+    if (value === undefined) return JSON_VALUE_TYPE_UNKNOWN;
+
+    switch (typeof value) {
+        case "boolean":
+            return JSON_VALUE_TYPE_BOOLEAN;
+        case "number":
+            return JSON_VALUE_TYPE_NUMBER;
+        case "object":
+            return JSON_VALUE_TYPE_OBJECT;
+        case "string":
+            return JSON_VALUE_TYPE_STRING;
+        default:
+            return JSON_VALUE_TYPE_UNKNOWN;
+    }
 }
 

@@ -195,15 +195,6 @@ namespace Engine.Image {
                     }
                 }
 
-                if (this.flip_x) {
-                    if (this.flip_correction) sprite_vertex[4] += sprite_vertex[6];
-                    sprite_vertex[6] = -sprite_vertex[6];
-                }
-                if (this.flip_y) {
-                    if (this.flip_correction) sprite_vertex[5] += sprite_vertex[7];
-                    sprite_vertex[7] = -sprite_vertex[7];
-                }
-
                 // cache the calculated vertex
                 this.vertex_dirty = false;
             }

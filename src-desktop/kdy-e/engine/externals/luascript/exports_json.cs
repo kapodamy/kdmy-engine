@@ -107,7 +107,7 @@ namespace Engine.Externals.LuaScriptInterop {
         #endregion
 
 
-        static int script_json_parse(LuaState L) {
+        static int script_json_parse_from_file(LuaState L) {
             string src = L.luaL_checkstring(2);
 
             JSONParser json = JSONParser.LoadFrom(src);
@@ -117,8 +117,19 @@ namespace Engine.Externals.LuaScriptInterop {
             return ret;
         }
 
+        static int script_json_parse(LuaState L) {
+            string json_sourcecode = L.luaL_checkstring(2);
+
+            JSONParser json = JSONParser.LoadFromString(json_sourcecode);
+            int ret = luascript_helper_parse_json(L, json);
+            JSONParser.Destroy(json);
+
+            return ret;
+        }
+
 
         static readonly LuaTableFunction[] JSON_FUNCTIONS = {
+            new LuaTableFunction("parse_from_file", script_json_parse_from_file),
             new LuaTableFunction("parse", script_json_parse),
             new LuaTableFunction( null, null)
         };

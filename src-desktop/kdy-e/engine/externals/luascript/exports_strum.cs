@@ -82,6 +82,15 @@ namespace Engine.Externals.LuaScriptInterop {
             return 1;
         }
 
+        static int script_strum_get_press_state_use_alt_anim(LuaState L) {
+            Strum strum = L.ReadUserdata<Strum>(STRUM);
+
+            bool ret = strum.GetPressStateUseAltAnim();
+
+            L.lua_pushboolean(ret);
+            return 1;
+        }
+
         static int script_strum_get_name(LuaState L) {
             Strum strum = L.ReadUserdata<Strum>(STRUM);
 
@@ -365,6 +374,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("force_key_release", script_strum_force_key_release),
             new LuaTableFunction("get_press_state_changes", script_strum_get_press_state_changes),
             new LuaTableFunction("get_press_state", script_strum_get_press_state),
+            new LuaTableFunction("get_press_state_use_alt_anim", script_strum_get_press_state_use_alt_anim),
             new LuaTableFunction("get_name", script_strum_get_name),
             new LuaTableFunction("get_marker_duration", script_strum_get_marker_duration),
             new LuaTableFunction("set_player_id", script_strum_set_player_id),

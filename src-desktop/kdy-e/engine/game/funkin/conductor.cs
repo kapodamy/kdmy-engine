@@ -190,10 +190,13 @@ namespace Engine.Game {
 
                 int press_changes = array[i].strum.GetPressStateChanges();
                 StrumPressState press_state = array[i].strum.GetPressState();
+                bool press_state_use_alt_anim = array[i].strum.GetPressStateUseAltAnim();
 
                 // check if the strums was updated
                 if (press_changes == array[i].last_change_count) continue;
                 array[i].last_change_count = press_changes;
+
+                if (press_state_use_alt_anim) this.character.UseAlternateSingAnimations(true);
 
                 switch (press_state) {
                     case StrumPressState.MISS:
@@ -251,6 +254,8 @@ namespace Engine.Game {
                     default:
                         break;
                 }
+
+                if (press_state_use_alt_anim) this.character.UseAlternateSingAnimations(false);
             }
 
             if (success > 0) {

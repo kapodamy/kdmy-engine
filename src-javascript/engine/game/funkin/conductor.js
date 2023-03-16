@@ -174,10 +174,13 @@ function conductor_poll(conductor) {
 
         let press_changes = strum_get_press_state_changes(array[i].strum);
         let press_state = strum_get_press_state(array[i].strum);
+        let press_state_use_alt_anim = strum_get_press_state_use_alt_anim(array[i].strum);
 
         // check if the strums was updated
         if (press_changes == array[i].last_change_count) continue;
         array[i].last_change_count = press_changes;
+
+        if (press_state_use_alt_anim) character_use_alternate_sing_animations(conductor.character);
 
         switch (press_state) {
             case STRUM_PRESS_STATE_MISS:
@@ -234,6 +237,8 @@ function conductor_poll(conductor) {
             default:
                 break;
         }
+
+        if (press_state_use_alt_anim) character_use_alternate_sing_animations(conductor.character);
     }
 
     if (success > 0) {

@@ -62,6 +62,7 @@ void strum_reset(Strum strum, float scroll_speed, const char* state_name);
 void strum_force_key_release(Strum strum);
 int32_t strum_get_press_state_changes(Strum strum);
 StrumPressState strum_get_press_state(Strum strum);
+bool strum_get_press_state_use_alt_anim(Strum strum);
 const char* strum_get_name(Strum strum);
 float strum_get_marker_duration(Strum strum);
 void strum_set_player_id(Strum strum, int32_t player_id);

@@ -19,6 +19,7 @@ namespace Engine.Game.Gameplay.Helpers {
         public double timestamp;
         public double direction;
         public double duration;
+        public bool alt_anim;
         public double data;
     }
 
@@ -132,7 +133,17 @@ namespace Engine.Game.Gameplay.Helpers {
                     double timestamp = JSONParser.ReadArrayItemNumberDouble(self_notes, 0, 0.0);
                     double direction = JSONParser.ReadArrayItemNumberDouble(self_notes, 1, 0.0);
                     double duration = JSONParser.ReadArrayItemNumberDouble(self_notes, 2, 0.0);
-                    double data = JSONParser.ReadArrayItemNumberDouble(self_notes, 3, 0.0);
+                    double data;
+                    bool alt_note;
+
+                    // In Funkin v0.2.8 the value at index 3 can denote an alt animation
+                    if (JSONParser.GetArrayItemType(self_notes, 3) == JSONValueType.Boolean) {
+                        alt_note = JSONParser.ReadArrayItemBoolean(self_notes, 3, false);
+                        data = alt_note ? Double.PositiveInfinity : Double.NegativeInfinity;
+                    } else {
+                        alt_note = false;
+                        data = JSONParser.ReadArrayItemNumberDouble(self_notes, 3, 0.0);
+                    }
 
                     if (set_camera) {
                         ChartEvent target_camera;
@@ -202,7 +213,7 @@ namespace Engine.Game.Gameplay.Helpers {
                         // self notes
                         target = must_hit_section ? player_notes : opponent_notes;
                     }
-                    target.Add(new ChartNote() { timestamp = timestamp, direction = direction, duration = duration, data = data });
+                    target.Add(new ChartNote() { timestamp = timestamp, direction = direction, duration = duration, alt_anim = alt_note, data = data });
                 }
             }
 

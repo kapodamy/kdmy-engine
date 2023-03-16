@@ -52,6 +52,20 @@ namespace Engine.Utils {
             }
         }
 
+        public static JSONParser LoadFromString(string json_sourcecode) {
+            if (json_sourcecode == null || json_sourcecode.Length < 1) return null;
+
+            try {
+                JToken json = JToken.Parse(json_sourcecode);
+                JSONParser parser = new JSONParser() { obj = json as JObject, arr = json as JArray };
+                parser.guard = new Guard();
+                return parser;
+            } catch (Exception e) {
+                Console.Error.WriteLine("json_load() can not parse string '" + json_sourcecode + "'\n", e.Message);
+                return null;
+            }
+        }
+
         public static JSONParser LoadDirectFrom(string abosolute_src) {
             string source = System.IO.File.ReadAllText(abosolute_src);
             if (source == null || source.Length < 1) return null;
