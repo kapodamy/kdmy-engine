@@ -519,17 +519,24 @@ namespace Engine.Game.Helpers {
             string anim_name_hey = WeekSelectorMdlSelect.HEY;
             string anim_name_idle = WeekSelectorMdlSelect.IDLE;
             bool hidden = false;
+            CharacterManifest charactermanifest = null;
 
             if (weekinfo.host_hide_if_week_locked)
                 hidden = weeklist.list_visible[weeklist.index].is_locked && weekinfo.host_hide_if_week_locked;
 
             if (!String.IsNullOrEmpty(weekinfo.week_host_character_manifest)) {
-                CharacterManifest charactermanifest = new CharacterManifest(weekinfo.week_host_character_manifest, false);
+                charactermanifest = new CharacterManifest(weekinfo.week_host_character_manifest, false);
                 host_flip = charactermanifest.left_facing;// face to the right
                 host_beat = charactermanifest.week_selector_enable_beat;
 
-                modelholder = ModelHolder.Init(charactermanifest.model_week_selector);
-                charactermanifest.Destroy();
+                if (charactermanifest.week_selector_idle_anim_name != null) {
+                    anim_name_idle = charactermanifest.week_selector_idle_anim_name;
+                }
+                if (charactermanifest.week_selector_choosen_anim_name != null) {
+                    anim_name_hey = charactermanifest.week_selector_choosen_anim_name;
+                }
+
+                modelholder = ModelHolder.Init(charactermanifest.week_selector_model);
             } else if (!String.IsNullOrEmpty(weekinfo.week_host_model)) {
                 host_flip = weekinfo.host_flip_sprite;
                 host_beat = weekinfo.host_enable_beat;
@@ -554,6 +561,7 @@ namespace Engine.Game.Helpers {
             if (!StateSprite.POOL.Has(host_statesprite_id)) {
                 // weeklist was disposed
                 if (modelholder != null) modelholder.Destroy();
+                if (charactermanifest != null) charactermanifest.Destroy();
                 return null;
             }
 
@@ -566,6 +574,8 @@ namespace Engine.Game.Helpers {
                 weeklist.host_statesprite.SetTexture(null, false);
                 weeklist.host_statesprite.SetVisible(false);
                 weeklist.host_loading = false;
+
+                if (charactermanifest != null) charactermanifest.Destroy();
                 return null;
             }
 
@@ -612,6 +622,7 @@ namespace Engine.Game.Helpers {
             }
 
             modelholder.Destroy();
+            if (charactermanifest != null) charactermanifest.Destroy();
 
             return null;
         }

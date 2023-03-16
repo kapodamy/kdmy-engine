@@ -1,7 +1,7 @@
 {
     "name": "LEMON DEMON CHRISTMAS",
     "model": "monsterChristmas.xml",
-    "modelWeekSelector": null,
+    "weekSelectorModel": null,
     "healthbarColor": "0xEAFF00",
     "healthIconsModel": "./../../week2/LMNDMN/icon-monster.xml",
 

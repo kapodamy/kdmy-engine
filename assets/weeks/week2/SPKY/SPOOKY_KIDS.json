@@ -1,7 +1,7 @@
 {
     "name": "SPOOKY KIDS",
     "model": "./spooky_kids_assets.xml",
-    "modelWeekSelector": "./../host.xml",
+    "weekSelectorModel": "./../host.xml",
     "healthbarColor": "0xD57E00",
     "healthIconsModel": "./icon-spooky.xml",
 

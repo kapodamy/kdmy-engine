@@ -493,14 +493,22 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
     let anim_name_hey = WEEKSELECTOR_MDLSELECT_HEY;
     let anim_name_idle = WEEKSELECTOR_MDLSELECT_IDLE;
     let hidden = 0;
+    let charactermanifest = null;
 
     if (weekinfo.host_hide_if_week_locked)
         hidden = weeklist.list_visible[weeklist.index].is_locked && weekinfo.host_hide_if_week_locked;
 
     if (weekinfo.week_host_character_manifest) {
-        let charactermanifest = await charactermanifest_init(weekinfo.week_host_character_manifest, 0);
+        charactermanifest = await charactermanifest_init(weekinfo.week_host_character_manifest, 0);
         host_flip = charactermanifest.left_facing;// face to the right
         host_beat = charactermanifest.week_selector_enable_beat;
+
+        if (charactermanifest.week_selector_idle_anim_name != null) {
+            anim_name_idle = charactermanifest.week_selector_idle_anim_name;
+        }
+        if (charactermanifest.week_selector_choosen_anim_name != null) {
+            anim_name_hey = charactermanifest.week_selector_choosen_anim_name;
+        }
 
         modelholder = await modelholder_init(charactermanifest.model_week_selector);
         charactermanifest_destroy(charactermanifest);
@@ -528,6 +536,7 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
     if (!STATESPRITE_POOL.has(host_statesprite_id)) {
         // weeklist was disposed
         if (modelholder) modelholder_destroy(modelholder);
+        if (charactermanifest) charactermanifest_destroy(charactermanifest);
         return;
     }
 
@@ -540,6 +549,8 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
         statesprite_set_texture(weeklist.host_statesprite, null, 0);
         statesprite_set_visible(weeklist.host_statesprite, 0);
         weeklist.host_loading = 0;
+
+        if (charactermanifest) charactermanifest_destroy(charactermanifest);
         return null;
     }
 
@@ -586,5 +597,6 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
     }
 
     modelholder_destroy(modelholder);
+    if (charactermanifest) charactermanifest_destroy(charactermanifest);
 }
 

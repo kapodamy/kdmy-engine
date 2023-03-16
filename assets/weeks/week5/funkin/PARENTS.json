@@ -1,7 +1,7 @@
 {
     "name": "PARENTS",
     "model": "mom_dad_christmas_assets.xml",
-    "modelWeekSelector": "../host.xml",
+    "weekSelectorModel": "../host.xml",
     "weekSelectorEnableBeat": true,
     "healthbarColor": "0xCE599E",
     "healthIconsModel": "icon-parents.xml",

@@ -161,13 +161,13 @@ namespace Engine.Game.Helpers {
 
                 this.list[index] = new CharacterInfo() {
                     name = JSONParser.ReadString(json_obj, "name", null),
-                    anim_name_choosen = JSONParser.ReadString(json_obj, "animationNameChoosen", null),
-                    anim_name_idle = JSONParser.ReadString(json_obj, "animationNameIdle", null),
                     is_locked = is_locked,
                     imported = true,
                     left_facing = false,
                     week_selector_enable_beat = false,
-                    model_week_selector = null,
+                    week_selector_model = null,
+                    week_selector_idle_anim_name = null,
+                    week_selector_choosen_anim_name = null,
                     manifest = manifest_path
                 };
 
@@ -199,7 +199,9 @@ namespace Engine.Game.Helpers {
                         imported = false,
                         left_facing = false,
                         week_selector_enable_beat = false,
-                        model_week_selector = null,
+                        week_selector_model = null,
+                        week_selector_idle_anim_name = null,
+                        week_selector_choosen_anim_name = null,
                         manifest = array[j].manifest
                     };
 
@@ -285,7 +287,9 @@ namespace Engine.Game.Helpers {
             //        free(this.list[i].name);
             //        free(this.list[i].manifest);
             //    }
-            //    free(this.list[i].model_week_selector);
+            //    free(this.list[i].week_selector_model);
+            //    free(this.list[i].week_selector_idle_anim_name);
+            //    free(this.list[i].week_selector_choosen_anim_name);
             //}
 
             //free(this.list);
@@ -428,7 +432,7 @@ namespace Engine.Game.Helpers {
             if (mdlselect.is_boyfriend && !left_facing) flip_x = true;
             else if (!mdlselect.is_boyfriend && left_facing) flip_x = true;
 
-            ModelHolder modelholder = ModelHolder.Init(character_info.model_week_selector);
+            ModelHolder modelholder = ModelHolder.Init(character_info.week_selector_model);
 
             if (!StateSprite.POOL.Has(id) || load_thread_id != mdlselect.load_thread_id) {
                 modelholder.Destroy();
@@ -444,14 +448,14 @@ namespace Engine.Game.Helpers {
              mdlselect.preview, modelholder,
              mdlselect.placeholder_character,
              week_selector_enable_beat,
-             character_info.anim_name_idle ?? WeekSelectorMdlSelect.IDLE,
+             character_info.week_selector_idle_anim_name ?? WeekSelectorMdlSelect.IDLE,
              WeekSelectorMdlSelect.IDLE
          );
             WeekSelectorMdlSelect.HelperImport(
                  mdlselect.preview, modelholder,
                  mdlselect.placeholder_character,
                  false,
-                 character_info.anim_name_choosen ?? WeekSelectorMdlSelect.HEY,
+                 character_info.week_selector_choosen_anim_name ?? WeekSelectorMdlSelect.HEY,
                  WeekSelectorMdlSelect.HEY
              );
             modelholder.Destroy();
@@ -492,7 +496,9 @@ namespace Engine.Game.Helpers {
             CharacterManifest charactermanifest = new CharacterManifest(src, false);
             list_item.left_facing = charactermanifest.left_facing;
             list_item.week_selector_enable_beat = charactermanifest.week_selector_enable_beat;
-            list_item.model_week_selector = charactermanifest.model_week_selector;
+            list_item.week_selector_model = charactermanifest.week_selector_model;
+            list_item.week_selector_idle_anim_name = charactermanifest.week_selector_idle_anim_name;
+            list_item.week_selector_choosen_anim_name = charactermanifest.week_selector_choosen_anim_name;
             charactermanifest.Destroy();
         }
 
@@ -503,9 +509,9 @@ namespace Engine.Game.Helpers {
             public bool imported;
             public bool left_facing;
             public bool week_selector_enable_beat;
-            public string model_week_selector;
-            public string anim_name_idle;
-            public string anim_name_choosen;
+            public string week_selector_model;
+            public string week_selector_idle_anim_name;
+            public string week_selector_choosen_anim_name;
             public string manifest;
         };
 

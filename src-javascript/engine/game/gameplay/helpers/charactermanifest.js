@@ -12,7 +12,7 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
 
     let model_character = null;
     let model_health_icons = null;
-    let model_week_selector = null;
+    let week_selector_model = null;
     let has_healthbar_color = json_has_property_hex(json, "healthbarColor");
     let healthbar_color = json_read_hex(json, "healthbarColor", 0x00FFFF);
 
@@ -22,13 +22,12 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
             model_health_icons = charactermanifest_internal_path_of(json, "healthIconsModel", src);
         }
     } else {
-        model_week_selector = charactermanifest_internal_path_of(json, "modelWeekSelector", src);
+        week_selector_model = charactermanifest_internal_path_of(json, "weekSelectorModel", null);
     }
 
     let character_manifest = {
         model_character,
         model_health_icons,
-        model_week_selector,
         has_healthbar_color,
         healthbar_color,
 
@@ -43,6 +42,10 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
         offset_x: json_read_number(json, "offsetX", 0),
         offset_y: json_read_number(json, "offsetY", 0),
         left_facing: json_read_boolean(json, "leftFacing", false),
+
+        week_selector_model,
+        week_selector_idle_anim_name: json_read_string(json, "weekSelectorIdleAnimName", null),
+        week_selector_choosen_anim_name: json_read_string(json, "weekSelectorChoosenAnimName", null),
         week_selector_enable_beat: json_read_boolean(json, "weekSelectorEnableBeat", true),
 
         actions: {
@@ -135,12 +138,15 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
 
 function charactermanifest_destroy(character_manifest) {
     character_manifest.model_character = undefined;
-    character_manifest.model_week_selector = undefined;
     character_manifest.model_health_icons = undefined;
     character_manifest.sing_suffix = undefined;
     character_manifest.sing_alternate_suffix = undefined;
     character_manifest.sing_alternate_prefix = undefined;
     character_manifest.allow_alternate_idle = undefined;
+    character_manifest.week_selector_model = undefined;
+    character_manifest.week_selector_idle_anim_name = undefined;
+    character_manifest.week_selector_choosen_anim_name = undefined;
+
 
     character_manifest_internal_destroy_actions(character_manifest.actions);
 

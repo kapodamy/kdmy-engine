@@ -1,7 +1,7 @@
 {
     "name": "GIRFRIEND",
     "model": "/assets/common/image/funkin/GF_assets.xml",
-    "modelWeekSelector": "/assets/common/image/funkin/girlfriend_preview.xml",
+    "weekSelectorModel": "/assets/common/image/funkin/girlfriend_preview.xml",
     "weekSelectorEnableBeat": true,
     "healthbarColor": "0xA5004D",
     "healthIconsModel": "/assets/common/image/funkin/icon-gf.xml",

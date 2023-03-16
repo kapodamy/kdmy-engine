@@ -1,7 +1,7 @@
 {
     "name": "BOYFRIEND",
     "model": "/assets/common/image/funkin/BOYFRIEND.xml",
-    "modelWeekSelector": "/assets/common/image/funkin/boyfriend_preview.xml",
+    "weekSelectorModel": "/assets/common/image/funkin/boyfriend_preview.xml",
     "weekSelectorEnableBeat": true,
     "healthbarColor": "0x00FF00",
     "healthIconsModel": "/assets/common/image/funkin/icon-bf.xml",

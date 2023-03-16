@@ -21,14 +21,6 @@
                 "unlockDirectiveName": {
                     "type": ["string", "null"],
                     "default": null
-                },
-                "animationNameChoosen": {
-                    "type": ["string", "null"],
-                    "default": null
-                },
-                "animationNameIdle": {
-                    "type": ["string", "null"],
-                    "default": null
                 }
             },
             "required": [

@@ -1,7 +1,7 @@
 {
     "name": "PICO",
     "model": "Pico_FNF_assetss.xml",
-    "modelWeekSelector": "../host.xml",
+    "weekSelectorModel": "../host.xml",
     "weekSelectorEnableBeat": true,
     "healthbarColor": "0xB7D855",
     "healthIconsModel": "icon-pico.xml",

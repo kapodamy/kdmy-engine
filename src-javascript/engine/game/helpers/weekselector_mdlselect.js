@@ -125,13 +125,13 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
 
         mdlselect.list[index] = {
             name: json_read_string(json_obj, "name", null),
-            anim_name_choosen: json_read_string(json_obj, "animationNameChoosen", null),
-            anim_name_idle: json_read_string(json_obj, "animationNameIdle", null),
             is_locked: is_locked,
             imported: 1,
             left_facing: 0,
             week_selector_enable_beat: 0,
-            model_week_selector: null,
+            week_selector_model: null,
+            week_selector_idle_anim_name: null,
+            week_selector_choosen_anim_name: null,
             manifest: manifest_path
         };
         await weekselector_mdlselect_helper_import_from_manifest(
@@ -162,7 +162,9 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
                 imported: 0,
                 left_facing: 0,
                 week_selector_enable_beat: 0,
-                model_week_selector: null,
+                week_selector_model: null,
+                week_selector_idle_anim_name: null,
+                week_selector_choosen_anim_name: null,
                 manifest: array[j].manifest
             };
             await weekselector_mdlselect_helper_import_from_manifest(
@@ -250,7 +252,9 @@ function weekselector_mdlselect_destroy(mdlselect) {
             mdlselect.list[i].name = undefined;
             mdlselect.list[i].manifest = undefined;
         }
-        mdlselect.list[i].model_week_selector = undefined;
+        mdlselect.list[i].week_selector_model = undefined;
+        mdlselect.list[i].week_selector_idle_anim_name = undefined;
+        mdlselect.list[i].week_selector_choosen_anim_name = undefined;
     }
 
     mdlselect.list = undefined;
@@ -391,7 +395,7 @@ async function weekselector_mdlselect_internal_load_async(mdlselect) {
     if (mdlselect.is_boyfriend && !left_facing) flip_x = 1;
     else if (!mdlselect.is_boyfriend && left_facing) flip_x = 1;
 
-    let modelholder = await modelholder_init(character_info.model_week_selector);
+    let modelholder = await modelholder_init(character_info.week_selector_model);
 
     if (!STATESPRITE_POOL.has(id) || load_thread_id != mdlselect.load_thread_id) {
         if (modelholder) modelholder_destroy(modelholder);
@@ -407,14 +411,14 @@ async function weekselector_mdlselect_internal_load_async(mdlselect) {
         mdlselect.preview, modelholder,
         mdlselect.placeholder_character,
         week_selector_enable_beat,
-        character_info.anim_name_idle ?? WEEKSELECTOR_MDLSELECT_IDLE,
+        character_info.week_selector_idle_anim_name ?? WEEKSELECTOR_MDLSELECT_IDLE,
         WEEKSELECTOR_MDLSELECT_IDLE
     );
     weekselector_mdlselect_helper_import(
         mdlselect.preview, modelholder,
         mdlselect.placeholder_character,
         0,
-        character_info.anim_name_choosen ?? WEEKSELECTOR_MDLSELECT_HEY,
+        character_info.week_selector_choosen_anim_name ?? WEEKSELECTOR_MDLSELECT_HEY,
         WEEKSELECTOR_MDLSELECT_HEY
     );
     modelholder_destroy(modelholder);
@@ -455,7 +459,9 @@ async function weekselector_mdlselect_helper_import_from_manifest(src, list_item
     let charactermanifest = await charactermanifest_init(src, 0);
     list_item.left_facing = charactermanifest.left_facing;
     list_item.week_selector_enable_beat = charactermanifest.week_selector_enable_beat;
-    list_item.model_week_selector = strdup(charactermanifest.model_week_selector);
+    list_item.week_selector_model = charactermanifest.week_selector_model;
+    list_item.week_selector_idle_anim_name = charactermanifest.week_selector_idle_anim_name;
+    list_item.week_selector_choosen_anim_name = charactermanifest.week_selector_choosen_anim_name;
     charactermanifest_destroy(charactermanifest);
 }
 

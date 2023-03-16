@@ -82,11 +82,13 @@ namespace Engine.Game.Gameplay.Helpers {
         public string sing_alternate_prefix;
         public Opposite opposite_directions;
         public string model_health_icons;
-        public string model_week_selector;
         public bool has_healthbar_color;
         public uint healthbar_color;
         public float offset_x;
         public float offset_y;
+        public string week_selector_model;
+        public string week_selector_idle_anim_name;
+        public string week_selector_choosen_anim_name;
         public bool week_selector_enable_beat;
         public AdditionalState[] additional_states;
         public int additional_states_size;
@@ -100,7 +102,7 @@ namespace Engine.Game.Gameplay.Helpers {
 
             string model_character = null;
             string model_health_icons = null;
-            string model_week_selector = null;
+            string week_selector_model = null;
             bool has_healthbar_color = JSONParser.HasPropertyHex(json, "healthbarColor");
             uint healthbar_color = JSONParser.ReadHex(json, "healthbarColor", 0x00FFFF);
 
@@ -110,13 +112,12 @@ namespace Engine.Game.Gameplay.Helpers {
                     model_health_icons = CharacterManifest.InternalPathOf(json, "healthIconsModel", src);
                 }
             } else {
-                model_week_selector = CharacterManifest.InternalPathOf(json, "modelWeekSelector", src);
+                week_selector_model = CharacterManifest.InternalPathOf(json, "weekSelectorModel", null);
             }
 
 
             this.model_character = model_character;
             this.model_health_icons = model_health_icons;
-            this.model_week_selector = model_week_selector;
             this.has_healthbar_color = has_healthbar_color;
             this.healthbar_color = healthbar_color;
 
@@ -131,6 +132,10 @@ namespace Engine.Game.Gameplay.Helpers {
             this.offset_x = (float)JSONParser.ReadNumberDouble(json, "offsetX", 0);
             this.offset_y = (float)JSONParser.ReadNumberDouble(json, "offsetY", 0);
             this.left_facing = JSONParser.ReadBoolean(json, "leftFacing", false);
+
+            this.week_selector_model = week_selector_model;
+            this.week_selector_idle_anim_name = JSONParser.ReadString(json, "weekSelectorIdleAnimName", null);
+            this.week_selector_choosen_anim_name = JSONParser.ReadString(json, "weekSelectorChoosenAnimName", null);
             this.week_selector_enable_beat = JSONParser.ReadBoolean(json, "weekSelectorEnableBeat", true);
 
             this.actions = new Actions() {
@@ -221,12 +226,14 @@ namespace Engine.Game.Gameplay.Helpers {
 
         public void Destroy() {
             //free(this.model_character);
-            //free(this.model_week_selector);
             //free(this.model_health_icons);
             //free(this.sing_suffix);
             //free(this.sing_alternate_suffix);
             //free(this.sing_alternate_prefix);
             //free(this.allow_alternate_idle);
+            //free(this.week_selector_model);
+            //free(this.week_selector_idle_anim_name);
+            //free(this.week_selector_choosen_anim_name);
 
             CharacterManifest.InternalDestroyActions(this.actions);
 

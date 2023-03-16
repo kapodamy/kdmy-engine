@@ -22,8 +22,17 @@
                     "type": ["string", "null"],
                     "default": null
                 },
-                "modelWeekSelector": {
-                    "type": "string"
+                "weekSelectorModel": {
+                    "type": ["string", "null"],
+                    "default": null
+                },
+                "weekSelectorIdleAnimName": {
+                    "type": ["string", "null"],
+                    "default": "idle"
+                },
+                "weekSelectorChoosenAnimName": {
+                    "type": ["string", "null"],
+                    "default": "hey"
                 },
                 "singSuffix": {
                     "type": ["string", "null"],

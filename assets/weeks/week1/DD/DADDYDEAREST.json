@@ -1,7 +1,7 @@
 {
     "name": "DADDY DEAREST",
     "model": "./DADDY_DEAREST.xml",
-    "modelWeekSelector": "./host.xml",
+    "weekSelectorModel": "./host.xml",
     "healthbarColor": "0xAF66CE",
     "healthIconsModel": "./icon-dad.xml",
 
