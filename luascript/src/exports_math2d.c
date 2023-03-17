@@ -80,6 +80,9 @@ void script_math2d_register(lua_State* L) {
         "local value = math.random(0, 100)\n"
         "return value < chance\n"
         "end\n"
+        "function math2d_random(min, max)\n"
+        "return math.random() * (max - min + 1) + min\n"
+        "end\n"
     );
 
     assert(ret == LUA_OK);

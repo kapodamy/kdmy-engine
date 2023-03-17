@@ -78,6 +78,9 @@ namespace Engine.Externals.LuaScriptInterop {
                 "function math2d_random_boolean(chance)\n" +
                 "local value = math.random(0, 100)\n" +
                 "return value < chance\n" +
+                "end\n" +
+                "function math2d_random(min, max)\n" +
+                "return math.random() * (max - min + 1) + min\n" +
                 "end\n"
             );
         }
