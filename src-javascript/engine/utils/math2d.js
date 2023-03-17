@@ -4,12 +4,12 @@ const MATH2D_DEG_TO_RAD = Math.PI / 180.0;
 const MATH2D_MAX_INT32 = 0x7FFFFFFF;
 const MATH2D_LOG100 = Math.log(100);
 const MATH2D_HALF_PI = Math.PI / 2.0;
+const MATH2D_PRNG = new Uint32Array(1);
 
 function math2d_random(min, max) {
     //return Math.random() * (max - min + 1) + min;
-    var value = new Uint32Array(1);
-    window.crypto.getRandomValues(value);
-    let pecent = value[0] / 0xffffffff;
+    window.crypto.getRandomValues(MATH2D_PRNG);
+    let pecent = MATH2D_PRNG[0] / 0xffffffff;
     return pecent * (max - min + 1) + min;
 }
 

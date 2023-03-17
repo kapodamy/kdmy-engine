@@ -1,3 +1,4 @@
+using System;
 using Engine.Externals.LuaInterop;
 using Engine.Utils;
 
@@ -27,6 +28,8 @@ namespace Engine.Externals.LuaScriptInterop {
                                                 "width: $6f, " +
                                                 "height: $6f, " +
                                                 "}";
+        private const double DEG_TO_RAD = Math.PI / 180.0;
+        private const double RAD_TO_DEG = 180.0 / Math.PI;
 
 
         internal static int script_modifier_new(LuaState L, Modifier modifier) {
@@ -79,6 +82,9 @@ namespace Engine.Externals.LuaScriptInterop {
                     break;
                 case "rotate":
                     L.lua_pushnumber(modifier.rotate);
+                    break;
+                case "rotateByDegrees":
+                    L.lua_pushnumber(modifier.rotate / RAD_TO_DEG);
                     break;
                 case "skewX":
                     L.lua_pushnumber(modifier.skew_x);
@@ -148,6 +154,9 @@ namespace Engine.Externals.LuaScriptInterop {
                     break;
                 case "rotate":
                     modifier.rotate = (float)L.luaL_checknumber(3);
+                    break;
+                case "rotateByDegrees":
+                    modifier.rotate = (float)(L.luaL_checknumber(3) * DEG_TO_RAD);
                     break;
                 case "skewX":
                     modifier.skew_x = (float)L.luaL_checknumber(3);

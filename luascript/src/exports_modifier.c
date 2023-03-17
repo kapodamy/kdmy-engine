@@ -2,7 +2,8 @@
 #include "luascript_internal.h"
 #include "engine_string.h"
 
-const float DEG_TO_RAD = (float)(3.14159265358979323846 / 180.0);
+const double DEG_TO_RAD = 3.14159265358979323846 / 180.0;
+const double RAD_TO_DEG = 180.0 / 3.14159265358979323846;
 
 const char TOSTRING_FORMAT[] = "{ "
 "translateX: %.6f, "
@@ -113,6 +114,8 @@ static int script_modifier_index(lua_State* L) {
         lua_pushnumber(L, modifier->translate_y);
     else if (string_equals(field, "rotate"))
         lua_pushnumber(L, modifier->rotate);
+    else if (string_equals(field, "rotateByDegrees"))
+        lua_pushnumber(L, modifier->rotate * RAD_TO_DEG);
     else if (string_equals(field, "skewX"))
         lua_pushnumber(L, modifier->skew_x);
     else if (string_equals(field, "skewY"))
@@ -163,6 +166,8 @@ static int script_modifier_newindex(lua_State* L) {
         modifier->translate_x = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "translateY"))
         modifier->translate_y = (float)luaL_checknumber(L, 3);
+    else if (string_equals(field, "rotateByDegrees"))
+        modifier->rotate = (float)(luaL_checknumber(L, 3) * DEG_TO_RAD);
     else if (string_equals(field, "rotate"))
         modifier->rotate = (float)luaL_checknumber(L, 3);
     else if (string_equals(field, "skewX"))

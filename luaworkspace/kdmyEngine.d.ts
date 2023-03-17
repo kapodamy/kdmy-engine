@@ -601,6 +601,7 @@ declare global {
         translateY: number;
 
         rotate: number;
+        rotateByDegrees: number;
 
         skewX: number;
         skewY: number;
@@ -1561,6 +1562,23 @@ declare global {
     // Global Math2D functions
     //
 
+    /**
+     * Generates a random number in a specified range, both inclusive.  
+     * Arguments can be floating point numbers and/or integers.  
+     * Note: This function uses the engine's preferred P-RNG. It is recommended as a replacement for the 
+     * lua P-RNG because it produces less uniform values.
+     * @param min minimum number to generate
+     * @param max maximum number to generate
+     * @returns A floating point number
+     */
+    function math2d_random(min: number, max: number): number;
+    /**
+     * Generates a floating-point, pseudo-random number between 0 (inclusive) and 1 (exclusive).  
+     * Note: This function uses the engine's preferred P-RNG. It is recommended as a replacement for the 
+     * lua P-RNG because it produces less uniform values.
+     * @returns A floating point number between 0.0 and 1.0
+     */
+    function math2d_random(): number;
     /**
      * Chooses a random number between 0 and 100 (inclusive), if this value is less than chance returns true
      * @param chance a 0%-100% percent chance to return true

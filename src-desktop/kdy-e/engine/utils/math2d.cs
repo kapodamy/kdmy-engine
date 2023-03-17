@@ -18,11 +18,20 @@ namespace Engine.Utils {
         }
 
         public static float RandomFloat() {
-            return (float)(random.Next() / (double)Int32.MaxValue);
+            //return (float)(random.Next() / (double)Int32.MaxValue);
+            return (float)random.NextDouble();
+        }
+
+        public static double RandomDouble() {
+            return random.NextDouble();
         }
 
         public static float Random(float min, float max) {
             return (float)(random.NextDouble() * (max - min + 1) + min);
+        }
+
+        public static double Random(double min, double max) {
+            return random.NextDouble() * (max - min + 1) + min;
         }
 
         public static int RandomInt(int min, int max) {

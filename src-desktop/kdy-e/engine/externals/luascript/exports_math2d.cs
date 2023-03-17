@@ -5,6 +5,21 @@ namespace Engine.Externals.LuaScriptInterop {
 
     public static class ExportsMath2D {
 
+        static int script_math2d_random(LuaState L) {
+            double ret;
+
+            if (L.lua_gettop() == 0) {
+                ret = Math2D.RandomDouble();
+            } else {
+                double start = L.luaL_checknumber(1);
+                double end = L.luaL_checknumber(2);
+                ret = Math2D.Random(start, end);
+            }
+
+            L.lua_pushnumber(ret);
+            return 1;
+        }
+
         static int script_math2d_lerp(LuaState L) {
             float start = (float)L.luaL_checknumber(1);
             float end = (float)L.luaL_checknumber(2);
@@ -63,6 +78,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         static readonly LuaTableFunction[] EXPORTS_FUNCTION = {
+            new LuaTableFunction("math2d_random", script_math2d_random),
             new LuaTableFunction("math2d_lerp", script_math2d_lerp),
             new LuaTableFunction("math2d_inverselerp", script_math2d_inverselerp),
             new LuaTableFunction("math2d_nearestdown", script_math2d_nearestdown),
@@ -78,9 +94,6 @@ namespace Engine.Externals.LuaScriptInterop {
                 "function math2d_random_boolean(chance)\n" +
                 "local value = math.random(0, 100)\n" +
                 "return value < chance\n" +
-                "end\n" +
-                "function math2d_random(min, max)\n" +
-                "return math.random() * (max - min + 1) + min\n" +
                 "end\n"
             );
         }

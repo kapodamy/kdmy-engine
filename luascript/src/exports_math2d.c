@@ -1,6 +1,37 @@
 #include "luascript_internal.h"
 #include "math2d.h"
 
+#ifdef JAVASCRIPT
+EM_JS_PRFX(double, math2d_rand, (), {
+    window.crypto.getRandomValues(MATH2D_PRNG);
+    let percent = MATH2D_PRNG[0] / 0xffffffff;
+    return percent;
+});
+#else
+static inline double math2d_rand() {
+    return rand() / (double)RAND_MAX;
+}
+#endif
+
+static double math2d_random(double min, double max) {
+    return math2d_rand() * (max - min + 1) + min;
+}
+
+
+static int script_math2d_random(lua_State* L) {
+    double ret;
+    
+    if (lua_gettop(L) == 0) {
+        ret = math2d_rand();
+    } else {
+        double start = luaL_checknumber(L, 1);
+        double end = luaL_checknumber(L, 2);
+        ret = math2d_random(start, end);
+    }
+
+    lua_pushnumber(L, ret);
+    return 1;
+}
 
 static int script_math2d_lerp(lua_State* L) {
     float start = (float)luaL_checknumber(L, 1);
@@ -60,6 +91,7 @@ static int script_math2d_points_distance(lua_State* L) {
 
 
 static const luaL_Reg EXPORTS_FUNCTION[] = {
+    { "math2d_random", script_math2d_random },
     { "math2d_lerp", script_math2d_lerp },
     { "math2d_inverselerp", script_math2d_inverselerp },
     { "math2d_nearestdown", script_math2d_nearestdown },
@@ -79,9 +111,6 @@ void script_math2d_register(lua_State* L) {
         "function math2d_random_boolean(chance)\n"
         "local value = math.random(0, 100)\n"
         "return value < chance\n"
-        "end\n"
-        "function math2d_random(min, max)\n"
-        "return math.random() * (max - min + 1) + min\n"
         "end\n"
     );
 

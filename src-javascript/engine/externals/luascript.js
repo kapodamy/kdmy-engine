@@ -1949,6 +1949,11 @@ function __js__layout_trigger_camera(layout, camera_name) {
 function __js__layout_trigger_trigger(layout, trigger_name) {
     return layout_trigger_trigger(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(trigger_name))
 }
+function __js__math2d_rand() {
+    window.crypto.getRandomValues(MATH2D_PRNG);
+    let percent = MATH2D_PRNG[0] / 4294967295;
+    return percent
+}
 function __js__menu_destroy(menu) {
     let ret = menu_destroy(kdmyEngine_obtain(menu));
     return kdmyEngine_obtain(ret)
@@ -7109,6 +7114,7 @@ var asmLibraryArg = {
     "__js__layout_trigger_any": __js__layout_trigger_any,
     "__js__layout_trigger_camera": __js__layout_trigger_camera,
     "__js__layout_trigger_trigger": __js__layout_trigger_trigger,
+    "__js__math2d_rand": __js__math2d_rand,
     "__js__menu_destroy": __js__menu_destroy,
     "__js__menu_get_drawable": __js__menu_get_drawable,
     "__js__menu_get_item_rect": __js__menu_get_item_rect,
