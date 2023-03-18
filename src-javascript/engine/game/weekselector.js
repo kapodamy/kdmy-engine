@@ -486,8 +486,12 @@ async function weekselector_main() {
             layout_draw(state.custom_layout, pvr_context);
         }
 
-        if (layout_animation_is_completed(outro_layout, "transition_effect"))
+        if (layout_animation_is_completed(outro_layout, "transition_effect")) {
+            // draw again, make the front and back framebuffers have the same graphics
+            layout_draw(layout, pvr_context);
+            if (state.custom_layout != null) layout_draw(state.custom_layout, pvr_context);
             break;
+        }
     }
 
     // gameplay parameters

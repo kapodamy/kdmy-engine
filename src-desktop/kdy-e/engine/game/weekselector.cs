@@ -490,8 +490,12 @@ namespace Engine.Game {
                     state.custom_layout.Draw(PVRContext.global_context);
                 }
 
-                if (outro_layout.AnimationIsCompleted("transition_effect") > 0)
+                if (outro_layout.AnimationIsCompleted("transition_effect") > 0) {
+                    // draw again, make the front and back framebuffers have the same graphics
+                    layout.Draw(PVRContext.global_context);
+                    if (state.custom_layout != null) state.custom_layout.Draw(PVRContext.global_context);
                     break;
+                }
             }
 
             // gameplay parameters
