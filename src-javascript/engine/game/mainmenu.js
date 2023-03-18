@@ -335,7 +335,7 @@ async function mainmenu_main() {
 
         if (choosen_option_index < 0) {
             modding.callback_option = null;
-            modding.HelperNotifyHandleCustomOption(moddinghelper.choosen_name);
+            await modding_helper_handle_custom_option(modding, moddinghelper.choosen_name);
             if (moddinghelper.choosen_name_is_allocated) moddinghelper.choosen_name = undefined;
         }
     }
@@ -370,6 +370,9 @@ async function mainmenu_show_donate() {
     let timeout = layout_get_attached_value(
         layout, "timeout", LAYOUT_TYPE_FLOAT, -1
     );
+    let donate_url = layout_get_attached_value(
+        layout, "donate_url", LAYOUT_TYPE_STRING, null
+    );
 
     if (pause_background_menu_music) soundplayer_pause(background_menu_music);
 
@@ -389,8 +392,16 @@ async function mainmenu_show_donate() {
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
 
-        if (gamepad_has_pressed_delayed(gamepad, CREDITS_BUTTONS)) break;
+        let buttons = gamepad_has_pressed_delayed(gamepad, CREDITS_BUTTONS);
+        if (buttons) {
+            if ((buttons & (GAMEPAD_A | GAMEPAD_START)) && donate_url) {
+                window.open(donate_url, "_blank", "noopener,noreferrer");
+                continue;
+            }
+            break;
+        }
     }
+
 
     layout_destroy(layout);
     gamepad_clear_buttons(gamepad);
@@ -430,7 +441,7 @@ function mainmenu_handle_modding_option(moddinghelper, option_name) {
         moddinghelper.choosen_name = undefined;
         moddinghelper.choosen_name_is_allocated = 0;
     }
-    
+
     if (option_name == null || option_name == MAINMENU_BACK_TO_STARTSCREEN) {
         // assume is going back
         moddinghelper.choosen_name = MAINMENU_BACK_TO_STARTSCREEN;

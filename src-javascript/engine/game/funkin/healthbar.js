@@ -428,15 +428,15 @@ function healthbar_animation_restart(healthbar) {
 function healthbar_animation_end(healthbar) {
     if (healthbar.bump_animation_opponent) {
         animsprite_force_end(healthbar.bump_animation_opponent);
-        animsprite_update_modifier(this.bump_animation_opponent, this.bump_modifier_opponent, 1);
+        animsprite_update_modifier(healthbar.bump_animation_opponent, healthbar.bump_modifier_opponent, 1);
     }
     if (healthbar.bump_animation_player) {
         animsprite_force_end(healthbar.bump_animation_player);
-        animsprite_update_modifier(this.bump_animation_player, this.bump_modifier_player, 1);
+        animsprite_update_modifier(healthbar.bump_animation_player, healthbar.bump_modifier_player, 1);
     }
     if (healthbar.drawable_animation) {
         animsprite_force_end(healthbar.drawable_animation);
-        animsprite_update_drawable(this.drawable_animation, this.drawable, 1);
+        animsprite_update_drawable(healthbar.drawable_animation, healthbar.drawable, 1);
     }
 
     statesprite_animation_end(healthbar.sprite_background);

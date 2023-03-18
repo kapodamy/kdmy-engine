@@ -431,7 +431,7 @@ async function funkinsave_write_to_vmu() {
     }
 
     // dump freeplay progress
-    savedata.setUint32(offset, funkinsave.freeplay_progress.Count(), ENDIANESS); offset += 4;
+    savedata.setUint32(offset, linkedlist_count(funkinsave.freeplay_progress), ENDIANESS); offset += 4;
     for (let freeplay_progress of linkedlist_iterate4(funkinsave.freeplay_progress)) {
         savedata.setUint16(offset, freeplay_progress.week_id, ENDIANESS); offset += 2;
         savedata.setUint16(offset, freeplay_progress.difficulty_id, ENDIANESS); offset += 2;
