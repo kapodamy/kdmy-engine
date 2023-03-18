@@ -343,6 +343,11 @@ namespace Engine.Game {
                 // obtain the native option index
                 choosen_option_index = MainMenu.MENU_MANIFEST.GetOptionIndex(moddinghelper.choosen_name);
 
+                // special case for "story mode"
+                if (choosen_option_index < 0 && moddinghelper.choosen_name == "story mode") {
+                    choosen_option_index = MainMenu.MENU_MANIFEST.GetOptionIndex("storymode");
+                }
+
                 if (choosen_option_index < 0) {
                     modding.callback_option = null;
                     modding.HelperNotifyHandleCustomOption(moddinghelper.choosen_name);

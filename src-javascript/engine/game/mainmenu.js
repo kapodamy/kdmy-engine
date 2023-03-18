@@ -333,6 +333,11 @@ async function mainmenu_main() {
         // obtain the native option index
         choosen_option_index = menumanifest_get_option_index(MAINMENU_MENU_MANIFEST, moddinghelper.choosen_name);
 
+        // special case for "story mode"
+        if (choosen_option_index < 0 && moddinghelper.choosen_name == "story mode") {
+            choosen_option_index = menumanifest_get_option_index(MAINMENU_MENU_MANIFEST, "storymode");
+        }
+
         if (choosen_option_index < 0) {
             modding.callback_option = null;
             await modding_helper_handle_custom_option(modding, moddinghelper.choosen_name);
