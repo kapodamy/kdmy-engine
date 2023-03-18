@@ -643,7 +643,7 @@ function layout_update_render_size(layout, screen_width, screen_height) {
     }
 }
 
-function layout_screen_to_layout_coordinates(layout, screen_x,  screen_y,  calc_with_camera, output_coords) {
+function layout_screen_to_layout_coordinates(layout, screen_x, screen_y, calc_with_camera, output_coords) {
     // screen aspect ratio correction
     screen_x -= pvr_context.screen_stride - pvr_context.screen_width;
 
@@ -3846,6 +3846,7 @@ function layout_helper_add_action_animationfromatlas(unparsed_entry, atlas, acti
     }
 
     let animsprite = animsprite_init_from_atlas(fps, loop, atlas, anim_name, has_number_suffix);
+    let override_size = vertexprops_parse_boolean(unparsed_entry, "overrideSize", 0);
 
     if (!animsprite) {
         console.warn(`Missing animation '${anim_name}': ${unparsed_entry.outerHTML}`);
@@ -3858,6 +3859,8 @@ function layout_helper_add_action_animationfromatlas(unparsed_entry, atlas, acti
         restart: vertexprops_parse_boolean(unparsed_entry, "restart", 1),
         stop_in_loop: vertexprops_parse_boolean(unparsed_entry, "stopOnLoop", 0)
     };
+
+    animsprite_allow_override_sprite_size(animsprite, override_size);
 
     arraylist_add(action_entries, entry);
 }

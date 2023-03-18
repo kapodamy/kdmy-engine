@@ -3963,6 +3963,7 @@ namespace Engine {
             }
 
             AnimSprite animsprite = AnimSprite.InitFromAtlas(fps, loop, atlas, anim_name, has_number_suffix);
+            bool override_size = VertexProps.ParseBoolean(unparsed_entry, "overrideSize", false);
 
             if (animsprite == null) {
                 Console.Error.WriteLine("[WARN] Missing animation '" + anim_name + "': " + unparsed_entry.OuterHTML);
@@ -3975,6 +3976,8 @@ namespace Engine {
                 restart = VertexProps.ParseBoolean(unparsed_entry, "restart", true),
                 stop_in_loop = VertexProps.ParseBoolean(unparsed_entry, "stopOnLoop", false)
             };
+
+            animsprite.AllowOverrideSpriteSize(override_size);
 
             action_entries.Add(entry);
         }

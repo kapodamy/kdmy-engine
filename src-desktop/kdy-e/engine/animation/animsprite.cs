@@ -36,6 +36,7 @@ namespace Engine.Animation {
         private int alternate_size;
         private bool alternate_per_loop;
         private int alternate_index;
+        private bool allow_override_size;
         private MacroExecutor macroexecutor;
         private TweenLerp tweenlerp;
 
@@ -519,6 +520,10 @@ namespace Engine.Animation {
             return this.frames[0];
         }
 
+        public void AllowOverrideSpriteSize(bool enable) {
+            this.allow_override_size = enable;
+        }
+
 
         private void InternalApplyFrame(Sprite sprite, int index) {
             if (this.frames == null) return;
@@ -530,6 +535,13 @@ namespace Engine.Animation {
             sprite.SetOffsetSource(frame.x, frame.y, frame.width, frame.height);
             sprite.SetOffsetFrame(frame.frame_x, frame.frame_y, frame.frame_width, frame.frame_height);
             sprite.SetOffsetPivot(frame.pivot_x, frame.pivot_y);
+
+            if (this.allow_override_size) {
+                sprite.SetDrawSize(
+                    frame.frame_width > 0 ? frame.frame_width : frame.width,
+                    frame.frame_height > 0 ? frame.frame_height : frame.height
+                );
+            }
         }
 
         private void InternalApplyFrame2(StateSprite statesprite, int index) {
@@ -548,6 +560,13 @@ namespace Engine.Animation {
             statesprite.SetOffsetPivot(
                 frame.pivot_x, frame.pivot_y
             );
+
+            if (this.allow_override_size) {
+                statesprite.SetDrawSize(
+                    frame.frame_width > 0 ? frame.frame_width : frame.width,
+                    frame.frame_height > 0 ? frame.frame_height : frame.height
+                );
+            }
         }
 
         private void InternalAlternateChoose(bool loop) {
@@ -607,6 +626,8 @@ namespace Engine.Animation {
                 alternate_size = 0,
                 alternate_per_loop = false,
                 alternate_index = -1,
+
+                allow_override_size = false,
 
                 macroexecutor = null,
                 tweenlerp = null,

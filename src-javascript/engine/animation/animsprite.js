@@ -448,6 +448,10 @@ function animsprite_helper_get_first_frame_atlas_entry(animsprite) {
     return animsprite.frames[0];
 }
 
+function animsprite_allow_override_sprite_size(animsprite, enable) {
+    animsprite.allow_override_size = enable;
+}
+
 
 function animsprite_internal_apply_frame(animsprite, sprite, index) {
     if (!animsprite.frames) return;
@@ -459,6 +463,14 @@ function animsprite_internal_apply_frame(animsprite, sprite, index) {
     sprite_set_offset_source(sprite, frame.x, frame.y, frame.width, frame.height);
     sprite_set_offset_frame(sprite, frame.frame_x, frame.frame_y, frame.frame_width, frame.frame_height);
     sprite_set_offset_pivot(sprite, frame.pivot_x, frame.pivot_y);
+
+    if (animsprite.allow_override_size) {
+        sprite_set_draw_size(
+            sprite,
+            frame.frame_width > 0 ? frame.frame_width : frame.width,
+            frame.frame_height > 0 ? frame.frame_height : frame.height
+        );
+    }
 }
 
 function animsprite_internal_apply_frame2(animsprite, statesprite, index) {
@@ -477,6 +489,14 @@ function animsprite_internal_apply_frame2(animsprite, statesprite, index) {
     statesprite_set_offset_pivot(
         statesprite, frame.pivot_x, frame.pivot_y
     );
+
+    if (animsprite.allow_override_size) {
+        statesprite_set_draw_size(
+            statesprite,
+            frame.frame_width > 0 ? frame.frame_width : frame.width,
+            frame.frame_height > 0 ? frame.frame_height : frame.height
+        );
+    }
 }
 
 function animsprite_internal_alternate_choose(animsprite, loop) {
@@ -536,6 +556,8 @@ function animsprite_internal_init(name, loop, frame_rate) {
         alternate_size: 0,
         alternate_per_loop: 0,
         alternate_index: -1,
+
+        allow_override_size: 0,
 
         macroexecutor: null,
         tweenlerp: null
