@@ -338,7 +338,9 @@ namespace Engine.Game.Gameplay {
 
             if (roundcontext.players_size > 0) {
                 string anim = decision == 2 ? Funkin.PLAYER_RETRY : Funkin.PLAYER_GIVEUP;
-                roundcontext.players[dead_player_index].character.PlayExtra(anim, false);
+                if (roundcontext.players[dead_player_index].character.HasDirection(anim, true)) {
+                    roundcontext.players[dead_player_index].character.PlayExtra(anim, false);
+                }
             }
 
             if (sfx_die != null) sfx_die.Stop();

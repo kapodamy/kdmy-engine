@@ -163,7 +163,7 @@ namespace Engine.Game.Helpers {
                     name = JSONParser.ReadString(json_obj, "name", null),
                     is_locked = is_locked,
                     imported = true,
-                    left_facing = false,
+                    week_selector_left_facing = false,
                     week_selector_enable_beat = false,
                     week_selector_model = null,
                     week_selector_idle_anim_name = null,
@@ -197,7 +197,7 @@ namespace Engine.Game.Helpers {
                         name = array[j].name,
                         is_locked = is_locked,
                         imported = false,
-                        left_facing = false,
+                        week_selector_left_facing = false,
                         week_selector_enable_beat = false,
                         week_selector_model = null,
                         week_selector_idle_anim_name = null,
@@ -425,12 +425,12 @@ namespace Engine.Game.Helpers {
             int id = mdlselect.preview.id;
             int load_thread_id = mdlselect.load_thread_id;
             CharacterInfo character_info = mdlselect.list[mdlselect.index];
-            bool left_facing = character_info.left_facing;
+            bool week_selector_left_facing = character_info.week_selector_left_facing;
             bool week_selector_enable_beat = character_info.week_selector_enable_beat;
             bool flip_x = false;
 
-            if (mdlselect.is_boyfriend && !left_facing) flip_x = true;
-            else if (!mdlselect.is_boyfriend && left_facing) flip_x = true;
+            if (mdlselect.is_boyfriend && !week_selector_left_facing) flip_x = true;
+            //else if (!mdlselect.is_boyfriend && week_selector_left_facing) flip_x = true;
 
             ModelHolder modelholder = ModelHolder.Init(character_info.week_selector_model);
 
@@ -494,7 +494,7 @@ namespace Engine.Game.Helpers {
 
         private static void HelperImportFromManifest(string src, CharacterInfo list_item) {
             CharacterManifest charactermanifest = new CharacterManifest(src, false);
-            list_item.left_facing = charactermanifest.left_facing;
+            list_item.week_selector_left_facing = charactermanifest.week_selector_left_facing;
             list_item.week_selector_enable_beat = charactermanifest.week_selector_enable_beat;
             list_item.week_selector_model = charactermanifest.week_selector_model;
             list_item.week_selector_idle_anim_name = charactermanifest.week_selector_idle_anim_name;
@@ -507,7 +507,7 @@ namespace Engine.Game.Helpers {
             public string name;
             public bool is_locked;
             public bool imported;
-            public bool left_facing;
+            public bool week_selector_left_facing;
             public bool week_selector_enable_beat;
             public string week_selector_model;
             public string week_selector_idle_anim_name;

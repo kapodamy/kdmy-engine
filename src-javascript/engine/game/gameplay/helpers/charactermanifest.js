@@ -47,6 +47,7 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
         week_selector_idle_anim_name: json_read_string(json, "weekSelectorIdleAnimName", null),
         week_selector_choosen_anim_name: json_read_string(json, "weekSelectorChoosenAnimName", null),
         week_selector_enable_beat: json_read_boolean(json, "weekSelectorEnableBeat", true),
+        week_selector_left_facing: false,
 
         actions: {
             sing: null, sing_size: 0,
@@ -74,6 +75,10 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
         additional_states_size: 0,
         additional_states: null
     };
+
+    character_manifest.week_selector_left_facing = json_read_boolean(
+        json, "weekSelectorLeftFacing", character_manifest.left_facing
+    );
 
     let json_actions = json_read_object(json, "actions");
     character_manifest_internal_parse_actions(json_actions, character_manifest.actions, src);

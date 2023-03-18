@@ -314,7 +314,9 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
     if (roundcontext.players_size > 0) {
         const anim = decision == 2 ? FUNKIN_PLAYER_RETRY : FUNKIN_PLAYER_GIVEUP;
-        character_play_extra(roundcontext.players[dead_player_index].character, anim, 0);
+        if (character_has_direction(roundcontext.players[dead_player_index], anim, 1)) {
+            character_play_extra(roundcontext.players[dead_player_index].character, anim, 0);
+        }
     }
 
     if (sfx_die) soundplayer_stop(sfx_die);

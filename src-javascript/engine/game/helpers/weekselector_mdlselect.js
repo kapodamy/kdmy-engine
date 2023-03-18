@@ -127,7 +127,7 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
             name: json_read_string(json_obj, "name", null),
             is_locked: is_locked,
             imported: 1,
-            left_facing: 0,
+            week_selector_left_facing: 0,
             week_selector_enable_beat: 0,
             week_selector_model: null,
             week_selector_idle_anim_name: null,
@@ -160,7 +160,7 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
                 name: array[j].name,
                 is_locked: is_locked,
                 imported: 0,
-                left_facing: 0,
+                week_selector_left_facing: 0,
                 week_selector_enable_beat: 0,
                 week_selector_model: null,
                 week_selector_idle_anim_name: null,
@@ -388,12 +388,12 @@ async function weekselector_mdlselect_internal_load_async(mdlselect) {
     let id = mdlselect.preview.id;
     let load_thread_id = mdlselect.load_thread_id;
     let character_info = mdlselect.list[mdlselect.index];
-    let left_facing = character_info.left_facing;
+    let week_selector_left_facing = character_info.week_selector_left_facing;
     let week_selector_enable_beat = character_info.week_selector_enable_beat;
     let flip_x = 0;
 
-    if (mdlselect.is_boyfriend && !left_facing) flip_x = 1;
-    else if (!mdlselect.is_boyfriend && left_facing) flip_x = 1;
+    if (mdlselect.is_boyfriend && !week_selector_left_facing) flip_x = 1;
+    //else if (!mdlselect.is_boyfriend && week_selector_left_facing) flip_x = 1;
 
     let modelholder = await modelholder_init(character_info.week_selector_model);
 
@@ -457,7 +457,7 @@ function weekselector_mdlselect_helper_import(statesprite, mdlhldr, placeholder,
 
 async function weekselector_mdlselect_helper_import_from_manifest(src, list_item) {
     let charactermanifest = await charactermanifest_init(src, 0);
-    list_item.left_facing = charactermanifest.left_facing;
+    list_item.week_selector_left_facing = charactermanifest.week_selector_left_facing;
     list_item.week_selector_enable_beat = charactermanifest.week_selector_enable_beat;
     list_item.week_selector_model = charactermanifest.week_selector_model;
     list_item.week_selector_idle_anim_name = charactermanifest.week_selector_idle_anim_name;

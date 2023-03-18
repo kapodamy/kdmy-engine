@@ -89,6 +89,7 @@ namespace Engine.Game.Gameplay.Helpers {
         public string week_selector_model;
         public string week_selector_idle_anim_name;
         public string week_selector_choosen_anim_name;
+        public bool week_selector_left_facing;
         public bool week_selector_enable_beat;
         public AdditionalState[] additional_states;
         public int additional_states_size;
@@ -137,6 +138,7 @@ namespace Engine.Game.Gameplay.Helpers {
             this.week_selector_idle_anim_name = JSONParser.ReadString(json, "weekSelectorIdleAnimName", null);
             this.week_selector_choosen_anim_name = JSONParser.ReadString(json, "weekSelectorChoosenAnimName", null);
             this.week_selector_enable_beat = JSONParser.ReadBoolean(json, "weekSelectorEnableBeat", true);
+            this.week_selector_left_facing = JSONParser.ReadBoolean(json, "weekSelectorLeftFacing", this.left_facing);
 
             this.actions = new Actions() {
                 sing = null,
