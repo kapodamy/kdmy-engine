@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <title>gf center+center to center+end align converter</title>
+    </head>
+    <body>
+        <label>idle height: <input type="number" id="height" value="634" /></label>
+        </br>
+        <label>scale: <input type="number" id="scale" value="1.0" /></label>
+        </br>
+        <label>xml line:<input type="text" id="line" style="width:50%;" /></label>
+        </br>
+        <button id="calc">Calc!</button>
+        </br>
+        </br>
+        <label>result xml line:<input type="text" id="res" style="width:50%;" /></label>
+        </br>
+
+        <script type="text/javascript">
+            function convert() {
+                let height = document.getElementById("height").value;
+                let scale = document.getElementById("scale").value;
+                let line_el = document.getElementById("line");
+                let line = new DOMParser().parseFromString(line_el.value, "text/xml");
+
+                let orig_y = parseFloat(line.documentElement.getAttribute("y"));
+
+                let y = orig_y + ((height * scale) / 2);
+
+                line.documentElement.setAttribute("y", y.toString());
+                document.getElementById("res").value = line.documentElement.outerHTML;
+            }
+            
+            document.getElementById("calc").addEventListener("click", convert);
+        </script>
+    </body>
+
+</html>

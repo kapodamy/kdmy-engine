@@ -45,7 +45,7 @@
 	<AttachValue type="float" name="ui_streakcounter_delay" value="10" />
 
 	<!-- ******************* Characters ******************* -->
-	<Placeholder name="character_girlfriend" x="758" y="468" z="7">
+	<Placeholder name="character_girlfriend" x="758" y="825.5" z="7">
 		<Parallax x="0.95" y="0.95" z="1.0" />
 	</Placeholder>
 	<AttachValue name="character_count" type="integer" value="2" />

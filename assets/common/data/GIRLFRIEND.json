@@ -10,7 +10,7 @@
     "continuousIdle": true,
     "offsetX": 0,
     "offsetY": 0,
-    "alignVertical": "center",
+    "alignVertical": "end",
     "alignHorizontal": "center",
     "referenceSize": { "width": -1, "height": -1 },
     "leftFacing": false, 

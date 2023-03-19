@@ -37,7 +37,7 @@
     <AttachValue name="character_count" type="integer" value="2" />
    
     <AttachValue name="character_scale_0" type="float" value="0.9" />
-    <Placeholder name="character_0" x="825" y="425" z="2" />
+    <Placeholder name="character_0" x="825" y="710.3" z="2"/>
     
     <AttachValue name="character_scale_1" type="float" value="0.9" />
     <Placeholder name="character_1" x="860" y="830" z="2.2" />

@@ -29,7 +29,7 @@
     <AttachValue type="float" name="ui_streakcounter_delay"       value="5" />
 
 	<!-- ******************* Characters ******************* -->
-    <Placeholder name="character_girlfriend" x="854" y="452" z="4" />
+    <Placeholder name="character_girlfriend" x="854" y="769" z="4"/>
     <AttachValue name="character_count" type="integer" value="2" />
     <Placeholder name="character_0" x="226" y="815" z="5" />
     <Placeholder name="character_1" x="1011" y="615" z="5" />

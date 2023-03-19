@@ -5,7 +5,7 @@
 
     "actionsApplyChartSpeed": true,
     "continuousIdle": true,
-    "alignVertical": "center",
+    "alignVertical": "end",
     "alignHorizontal": "center",
     "leftFacing": true,
 	

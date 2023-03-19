@@ -38,7 +38,7 @@
 
 
     <!-- ******************* Characters ******************* -->
-    <Placeholder name="character_girlfriend" x="800" y="400" z="2"/>
+    <Placeholder name="character_girlfriend" x="800" y="685.3" z="2"/>
     <AttachValue name="character_girlfriend_scale" type="float" value="0.9" />
 
     <AttachValue name="character_count" type="integer" value="2" />
