@@ -146,20 +146,40 @@ async function modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
         if (!modelholder.animlist) modelholder.animlist = MODELHOLDER_STUB_ANIMLIST;
     }
 
+    let atlas_texture = null;
+
     if (atlas_src && await fs_file_exists(atlas_src)) {
         modelholder.atlas = await atlas_init(atlas_src);
-        if (!modelholder.atlas) modelholder.atlas = MODELHOLDER_STUB_ATLAS;
 
-        if (modelholder.atlas) {
-            let atlas_texture = atlas_get_texture_path(modelholder.atlas);
-            if (atlas_texture) {
-                if (await fs_file_exists(atlas_texture)) {
-                    modelholder.texture = await texture_init(atlas_texture);
-                } else {
-                    console.error(`missing texture file: ${atlas_texture} in ${atlas_src}`);
-                }
-            }
+        if (modelholder.atlas != null)
+            atlas_texture = atlas_get_texture_path(modelholder);
+        else
+            modelholder.atlas = MODELHOLDER_STUB_ATLAS;
+    }
+
+    if (atlas_texture && await fs_file_exists(atlas_texture)) {
+        modelholder.texture = await texture_init(atlas_texture);
+    } else {
+        // try use atlas name instead
+        fs_folder_stack_push();
+        fs_set_working_folder(atlas_src, 1);
+
+        let temp = fs_get_filename_without_extension(atlas_src);
+        let texture_path = string_concat(2, temp, ".png");
+
+        if (await fs_file_exists(texture_path)) {
+            modelholder.texture = await texture_init(texture_path);
         }
+
+        if (modelholder.texture != null) {
+            console.warn(`modelholder_init2() expected ${atlas_texture}, found ${texture_path}`);
+        } else {
+            console.error(`modelholder_init2() missing texture file: ${atlas_texture} in ${atlas_src}`);
+        }
+
+        temp = undefined;
+        texture_path = undefined;
+        fs_folder_stack_pop();
     }
 
     return modelholder;

@@ -2,7 +2,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Note:Tthe engine replaces "#pragma header" with:
+// Note: The engine replaces "#pragma header" with:
 //      out     vec4      FragColor;
 //      in      vec2      TexCoord;
 //      uniform sampler2D Texture;

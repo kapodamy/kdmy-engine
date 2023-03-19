@@ -17,10 +17,10 @@
 	<SubTexture name="%0001" x="336" y="508" width="46" height="52"/>
 	<SubTexture name="%0002" x="384" y="508" width="46" height="52"/>
 	<SubTexture name="%0003" x="384" y="508" width="46" height="52"/>
-	<SubTexture name="&apm;0000" x="432" y="508" width="36" height="58"/>
-	<SubTexture name="&apm;0001" x="432" y="508" width="36" height="58"/>
-	<SubTexture name="&apm;0002" x="470" y="508" width="36" height="58"/>
-	<SubTexture name="&apm;0003" x="470" y="508" width="36" height="58"/>
+	<SubTexture name="&#38;0000" x="432" y="508" width="36" height="58"/>
+	<SubTexture name="&#38;0001" x="432" y="508" width="36" height="58"/>
+	<SubTexture name="&#38;0002" x="470" y="508" width="36" height="58"/>
+	<SubTexture name="&#38;0003" x="470" y="508" width="36" height="58"/>
 	<SubTexture name="(0000" x="2" y="574" width="26" height="57"/>
 	<SubTexture name="(0001" x="2" y="574" width="26" height="57"/>
 	<SubTexture name="(0002" x="30" y="574" width="26" height="57"/>

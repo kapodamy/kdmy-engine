@@ -158,6 +158,12 @@ namespace LuaNativeMethods {
         public static bool lua_isnoneornil(lua_State* L, int n) {
             return lua_type(L, n) <= 0;
         }
+        public static lua_Number lua_tonumber(lua_State* L, int i) {
+            return lua_tonumberx(L, i, null);
+        }
+        public static lua_Integer lua_tointeger(lua_State* L, int i) {
+            return lua_tointegerx(L, i, null);
+        }
 
 
 
@@ -276,7 +282,10 @@ namespace LuaNativeMethods {
         public static extern int lua_toboolean(lua_State* L, int idx);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern double lua_tonumber(lua_State* L, int idx);
+        public static extern lua_Number lua_tonumberx(lua_State* L, int idx, int* isnum);
+
+        [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+        public static extern lua_Integer lua_tointegerx(lua_State* L, int idx, int* isnum);
 
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void lua_pushboolean(lua_State* L, int b);

@@ -168,20 +168,40 @@ namespace Engine {
                 if (modelholder.animlist == null) modelholder.animlist = ModelHolder.STUB_ANIMLIST;
             }
 
+            string atlas_texture = null;
+
             if (!String.IsNullOrEmpty(atlas_src) && FS.FileExists(atlas_src)) {
                 modelholder.atlas = Atlas.Init(atlas_src);
-                if (modelholder.atlas == null) modelholder.atlas = ModelHolder.STUB_ATLAS;
 
-                if (modelholder.atlas != null) {
-                    string atlas_texture = modelholder.atlas.GetTexturePath();
-                    if (!String.IsNullOrEmpty(atlas_texture)) {
-                        if (FS.FileExists(atlas_texture)) {
-                            modelholder.texture = Texture.Init(atlas_texture);
-                        } else {
-                            Console.Error.Write("missing texture file: " + atlas_texture + " in " + atlas_src);
-                        }
-                    }
+                if (modelholder.atlas != null)
+                    atlas_texture = modelholder.atlas.GetTexturePath();
+                else
+                    modelholder.atlas = ModelHolder.STUB_ATLAS;
+            }
+
+            if (!String.IsNullOrEmpty(atlas_texture) && FS.FileExists(atlas_texture)) {
+                modelholder.texture = Texture.Init(atlas_texture);
+            } else {
+                // try use atlas name instead
+                FS.FolderStackPush();
+                FS.SetWorkingFolder(atlas_src, true);
+
+                string temp = FS.GetFilenameWithoutExtension(atlas_src);
+                string texture_path = temp + ".png";
+
+                if (FS.FileExists(texture_path)) {
+                    modelholder.texture = Texture.Init(texture_path);
                 }
+
+                if (modelholder.texture != null) {
+                    Console.Error.WriteLine($"[WARN] modelholder_init2() expected {atlas_texture}, found {texture_path}");
+                } else {
+                    Console.Error.WriteLine($"[ERROR] modelholder_init2() missing texture file: {atlas_texture} in {atlas_src}");
+                }
+
+                //free(temp);
+                //free(texture_path);
+                FS.FolderStackPop();
             }
 
             return modelholder;

@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Game.Gameplay.Helpers;
 using Engine.Platform;
@@ -384,6 +385,9 @@ namespace Engine.Game {
             double timeout = (double)layout.GetAttachedValue(
                  "timeout", AttachedValueType.FLOAT, -1.0
             );
+            string donate_url = (string)layout.GetAttachedValue(
+                "donate_url", AttachedValueType.STRING, null
+            );
 
             if (pause_background_menu_music) GameMain.background_menu_music.Pause();
 
@@ -403,7 +407,14 @@ namespace Engine.Game {
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
 
-                if (gamepad.HasPressedDelayed(Credits.BUTTONS).Bool()) break;
+                GamepadButtons buttons = gamepad.HasPressedDelayed(Credits.BUTTONS);
+                if (buttons.Bool()) {
+                    if ((buttons & (GamepadButtons.A | GamepadButtons.START)).Bool() && donate_url != null) {
+                        LuascriptPlatform.OpenWWWLink(donate_url);
+                        continue;
+                    }
+                    break;
+                }
             }
 
             layout.Destroy();
