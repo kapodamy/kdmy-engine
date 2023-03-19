@@ -2,6 +2,7 @@
 <Layout width="640" height="480" animationSpeed="1.0" animationList="animations.xml">
 	<AttachValue name="pause_background_menu_music" type="boolean" value="false" />
 	<AttachValue name="timeout" type="float" value="-1" />
+	<AttachValue name="donate_url" type="string" value="https://ninja-muffin24.itch.io/funkin?ref=kdmy-engine" />
 
 	<Sprite rgb="0x000000">
 		<Action>
