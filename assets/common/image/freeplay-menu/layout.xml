@@ -3,6 +3,8 @@
 
     <Font name="vcr" path="/assets/common/font/vcr.ttf" />
 
+    <AttachValue name="song_preview_volume" type="float" value="0.7" />
+
     <Sprite texture="menuBGMagenta.png">
         <Action>
             <Location x="0" y="0" z="0" />

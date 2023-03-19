@@ -727,7 +727,11 @@ namespace Engine.Platform {
 
         public static void MuteAudioOutputOnMinimized(bool enable) {
             global_context.mute_on_minimize = enable;
-            AICA.sndbridge_set_master_muted(enable && global_context.is_minimized);
+
+            if (enable)
+                AICA.sndbridge_set_master_muted(global_context.is_minimized);
+            else
+                AICA.sndbridge_set_master_muted(false);
         }
 
         public bool IsOffscreen() {

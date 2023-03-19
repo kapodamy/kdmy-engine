@@ -202,7 +202,8 @@ async function freeplaymenu_main() {
         running_threads: 0,
         mutex: {},
         bg_info_width: bg_info_width,
-        modding: modding
+        modding: modding,
+        song_preview_volume: layout_get_attached_value_as_float(layout, "song_preview_volume", 0.7)
     };
     mutex_init(state.mutex, MUTEX_TYPE_NORMAL);
     if (state.background) sprite_set_texture(state.background, null, 0);
@@ -480,7 +481,7 @@ async function freeplaymenu_internal_load_song_async(state) {
         state.soundplayer_path = strdup(final_path);
         state.soundplayer = soundplayer;
 
-        soundplayer_set_volume(soundplayer, 0.5);
+        soundplayer_set_volume(soundplayer, state.song_preview_volume);
         if (!Number.isNaN(seek)) soundplayer_seek(soundplayer, seek);
         soundplayer_play(soundplayer);
         soundplayer_fade(soundplayer, 1, 500);

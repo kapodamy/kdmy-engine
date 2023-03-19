@@ -210,7 +210,8 @@ namespace Engine.Game {
                 running_threads = 0,
                 mutex = null,
                 bg_info_width = bg_info_width,
-                modding = modding
+                modding = modding,
+                song_preview_volume = layout.GetAttachedValueAsFloat("song_preview_volume", 0.7f)
             };
             mutex.Init(out state.mutex, mutex.TYPE_NORMAL);
             if (state.background != null) state.background.SetTexture(null, false);
@@ -494,7 +495,7 @@ namespace Engine.Game {
             state.soundplayer_path = final_path;// strdup(final_path)
             state.soundplayer = soundplayer;
 
-            soundplayer.SetVolume(0.5f);
+            soundplayer.SetVolume(state.song_preview_volume);
             if (!Single.IsNaN(seek)) soundplayer.Seek(seek);
             soundplayer.Play();
             soundplayer.Fade(true, 500);
@@ -845,6 +846,7 @@ L_return:
 
             public float bg_info_width;
             public Modding modding;
+            public float song_preview_volume;
         }
 
     }
