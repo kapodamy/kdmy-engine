@@ -159,7 +159,7 @@ async function modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
 
     if (atlas_texture && await fs_file_exists(atlas_texture)) {
         modelholder.texture = await texture_init(atlas_texture);
-    } else {
+    } else if (atlas_src) {
         // try use atlas name instead
         fs_folder_stack_push();
         fs_set_working_folder(atlas_src, 1);

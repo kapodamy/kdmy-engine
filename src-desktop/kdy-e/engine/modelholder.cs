@@ -1,11 +1,14 @@
 using System;
+using System.IO;
 using System.Reflection;
+using System.Text;
 using Engine.Animation;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Utils;
+using static System.Windows.Forms.DataFormats;
 
 namespace Engine {
 
@@ -181,7 +184,7 @@ namespace Engine {
 
             if (!String.IsNullOrEmpty(atlas_texture) && FS.FileExists(atlas_texture)) {
                 modelholder.texture = Texture.Init(atlas_texture);
-            } else {
+            } else if (!String.IsNullOrEmpty(atlas_src)) {
                 // try use atlas name instead
                 FS.FolderStackPush();
                 FS.SetWorkingFolder(atlas_src, true);
