@@ -1,4 +1,6 @@
-clone the freetype and inside of the folder run (needs emscripten):
+1. clone the freetype
+2. open powershell prompt 
+3. inside of the folder run the following commands (needs emscripten):
 
 mkdir build
 
@@ -9,3 +11,9 @@ emcmake cmake ..
 emmake make
 
 emmake make install
+
+
+4. step 3 fail if the build folder already exists or is not empty
+5. grab "libfreetype.a" file from the build folder
+6. done
+ 

@@ -30,4 +30,4 @@ build-debug:
 	# cp .\output\fontatlas.wasm .\..\engine\externals\fontatlas.wasm
 
 build-debug-windows:
-	$(CC) $(WINDOWS_STUBS_SOURCES) $(SOURCES) -Wall libs/x86/freetype.dll -Iinclude -O0 -g -std=c99 -o output/main.exe
+	$(CC) $(WINDOWS_STUBS_SOURCES) $(SOURCES) -Wall libs/x64/freetype.dll -Iinclude -O0 -g -std=c99 -o output/main.exe

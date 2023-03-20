@@ -141,8 +141,17 @@ L_failed:
 }
 
 static inline void pick_bitmap(FT_Face face, CharData* chardata, FT_GlyphSlot glyph) {
-    FT_Render_Mode render_mode = sdf_enabled ? FT_RENDER_MODE_SDF : FT_RENDER_MODE_NORMAL;
-    FT_Error error = FT_Render_Glyph(glyph, render_mode);
+    FT_Error error;
+    
+    if (sdf_enabled) {
+        // 2 pass rendering. This use "bsdf" renderer which offers better quality
+        error = FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
+        if (!error) {
+            error = FT_Render_Glyph(glyph, FT_RENDER_MODE_SDF);
+        }
+    } else {
+        error = FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
+    }
 
     if (error) {
         /*fprintf(
