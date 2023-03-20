@@ -357,7 +357,7 @@ namespace Engine.Game {
             // validate ids
             int strum_id = this.strum_id;
             if (strum_id < 0 || strum_id >= strumsdefs_size) return -1;
-            if (player_id < 0 || player_id >= chart.entries_size) return -1;
+            if (player_id < 0 || player_id >= chart.entries_size) return 0;
 
             int[] notes_ids = strumsdefs[strum_id].notes_ids;
             int note_ids_size = strumsdefs[strum_id].notes_ids_size;

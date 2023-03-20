@@ -415,9 +415,11 @@ namespace Engine.Game {
             this.current_action_type = CharacterActionType.EXTRA;
             this.current_use_frame_rollback = false;
 
-            this.InternalSetBeatStop(extra_info.stop_after_beats);
+            InternalSetBeatStop(extra_info.stop_after_beats);
 
             InternalUpdateTexture();
+            InternalCalculateLocation();
+
             this.played_actions_count++;
 
             return true;
@@ -493,6 +495,7 @@ L_read_state:
             this.current_stop_on_beat = -1;// extra_info.stop_after_beats ignored
 
             InternalUpdateTexture();
+            InternalCalculateLocation();
 
             return 1;
         }
@@ -573,6 +576,8 @@ L_read_state:
             this.current_sing_non_sustain = !prefer_sustain;
 
             InternalUpdateTexture();
+            InternalCalculateLocation();
+
             this.played_actions_count++;
 
             return true;
@@ -613,7 +618,7 @@ L_read_state:
             InternalEndCurrentAction();
 
             if (this.current_action_type == CharacterActionType.MISS && miss_info == this.current_action_miss) {
-                this.InternalSetBeatStop(keep_in_hold ? -1 : miss_info.stop_after_beats);
+                InternalSetBeatStop(keep_in_hold ? -1 : miss_info.stop_after_beats);
                 // do not replay this action
                 return 2;
             }
@@ -625,9 +630,11 @@ L_read_state:
             this.current_action_miss = miss_info;
             this.current_use_frame_rollback = false;
 
-            this.InternalSetBeatStop(keep_in_hold ? -1 : miss_info.stop_after_beats);
+            InternalSetBeatStop(keep_in_hold ? -1 : miss_info.stop_after_beats);
 
             InternalUpdateTexture();
+            InternalCalculateLocation();
+
             this.played_actions_count++;
 
             return 1;
@@ -681,9 +688,11 @@ L_read_state:
             this.current_action_type = CharacterActionType.EXTRA;
             this.current_use_frame_rollback = false;
 
-            this.InternalSetBeatStop(extra_info.stop_after_beats);
+            InternalSetBeatStop(extra_info.stop_after_beats);
 
             InternalUpdateTexture();
+            InternalCalculateLocation();
+
             this.played_actions_count++;
 
             return true;
@@ -809,12 +818,15 @@ L_read_state:
                 if (check_beat_stop && has_beat_stop && current_action_type != CharacterActionType.SING) {
                     completed = true;
                 } else if (has_beat_stop && current_action_type == CharacterActionType.SING && this.current_sing_non_sustain) {
-                    //
+                    // In week 7 tankman "hey! pretty good" anim require this
+                    this.current_stop_on_beat = -1;
+                    return 1;
+
                     // In non-sustain sing actions, beat stops ends the
                     // action. This can no be the expected behaviour, but
                     // base sing animations have to be shorter than a beat.
                     //
-                    completed = true;
+                    //completed = true;
                 } else {
                     // wait until the current action animation is completed
                     return 1;
@@ -904,7 +916,7 @@ L_read_state:
             if (current_action_type == CharacterActionType.IDLE) {
                 if (this.current_stop_on_beat < 0) {
                     // no re-scheduled, do it now
-                    this.InternalSetBeatStop(1);
+                    InternalSetBeatStop(1);
                 }
                 if (this.current_stop_on_beat > this.beatwatcher.count) {
                     // wait for the next beat
@@ -1660,7 +1672,7 @@ L_read_state:
 
             return state;
         }
-        
+
 
         private class CharacterModelInfo {
             public string model_src;

@@ -294,7 +294,7 @@ namespace Engine.Game {
         private static int Show(Menu menu, State state, ArrayList<MappedSong> songs) {
             int map_index = -1;
             Gamepad gamepad = new Gamepad(-1);
-            gamepad.SetButtonsDelay(200);
+            gamepad.SetButtonsDelay(100);
 
             SoundPlayer sound_asterik = SoundPlayer.Init("/assets/common/sound/asterikMenu.ogg");
 

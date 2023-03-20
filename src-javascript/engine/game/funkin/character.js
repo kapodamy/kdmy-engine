@@ -365,6 +365,8 @@ function character_play_hey(character) {
     character_internal_set_beat_stop(character, extra_info.stop_after_beats);
 
     character_internal_update_texture(character);
+    character_internal_calculate_location(character);
+
     character.played_actions_count++;
 
     return 1;
@@ -443,6 +445,7 @@ function character_play_idle(character) {
     character.current_stop_on_beat = -1;// extra_info.stop_after_beats ignored
 
     character_internal_update_texture(character);
+    character_internal_calculate_location(character);
 
     return 1;
 }
@@ -526,6 +529,8 @@ function character_play_sing(character, direction, prefer_sustain) {
     character.current_sing_non_sustain = !prefer_sustain;
 
     character_internal_update_texture(character);
+    character_internal_calculate_location(character);
+
     character.played_actions_count++;
 
     return 1;
@@ -585,6 +590,8 @@ function character_play_miss(character, direction, keep_in_hold) {
     character_internal_set_beat_stop(character, keep_in_hold ? -1 : miss_info.stop_after_beats);
 
     character_internal_update_texture(character);
+    character_internal_calculate_location(character);
+
     character.played_actions_count++;
 
     return 1;
@@ -643,6 +650,8 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
     character_internal_set_beat_stop(character, extra_info.stop_after_beats);
 
     character_internal_update_texture(character);
+    character_internal_calculate_location(character);
+
     character.played_actions_count++;
 
     return 1;
@@ -767,12 +776,16 @@ function character_animate(character, elapsed) {
         if (check_beat_stop && has_beat_stop && current_action_type != CharacterActionType.SING) {
             completed = 1;
         } else if (has_beat_stop && current_action_type == CharacterActionType.SING && character.current_sing_non_sustain) {
+            // In week 7 tankman "hey! pretty good" anim require this
+            character.current_stop_on_beat = -1;
+            return 1;
+
             //
             // In non-sustain sing actions, beat stops ends the
             // action. This can no be the expected behaviour, but
             // base sing animations have to be shorter than a beat.
             //
-            completed = 1;
+            //completed = 1;
         } else {
             // wait until the current action animation is completed
             return 1;
