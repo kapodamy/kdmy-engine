@@ -407,7 +407,7 @@ namespace Engine.Game.Gameplay {
                 }
             }
 
-            if (this.sfx_die != null) this.sfx_die.Stop();
+            //if (this.sfx_die != null) this.sfx_die.Stop();
             this.layout.SetGroupVisibilityById(this.group_id_help, false);
 
             if (decision == 2) {
@@ -459,7 +459,14 @@ namespace Engine.Game.Gameplay {
                 // wait for character animation ends (if required)
                 if (wait_animation && commited_anims != dead_character.GetCommitedAnimationsCount()) {
                     wait_animation = false;
-                    total = gameover_transition_before;
+
+                    if (decision == 2 && this.sfx_retry != null && !this.sfx_retry.HasEnded()) {
+                        // wait for retry sound effect (gameOverEnd.ogg is 7 seconds long)
+                        total = this.sfx_retry.GetDuration() - this.sfx_retry.GetPosition();
+                        if (total < 0) total = gameover_transition_before;
+                    } else {
+                        total = gameover_transition_before;
+                    }
                 }
 
                 if (trigger_transition && total <= gameover_transition_before) {
@@ -528,10 +535,10 @@ namespace Engine.Game.Gameplay {
                     this.duration_giveup = Single.IsNaN(nro) ? this.default_giveup_duration : nro;
                     return;
                 case WeekGameOverOption.SetMusic:
-                    this.music_bg = SoundPlayer.Init(str ?? "/assets/common/sound/loss_sfx.ogg");
+                    this.music_bg = SoundPlayer.Init(str ?? "/assets/common/music/gameOver.ogg");
                     return;
                 case WeekGameOverOption.SetSfxDie:
-                    this.sfx_die = SoundPlayer.Init(str ?? "/assets/common/music/gameOver.ogg");
+                    this.sfx_die = SoundPlayer.Init(str ?? "/assets/common/sound/loss_sfx.ogg");
                     return;
                 case WeekGameOverOption.SetSfxRetry:
                     this.sfx_retry = SoundPlayer.Init(str ?? "/assets/common/sound/gameOverEnd.ogg");

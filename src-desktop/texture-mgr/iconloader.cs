@@ -4,7 +4,6 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Messaging;
 
 namespace Engine.Platform {
 
@@ -36,7 +35,9 @@ namespace Engine.Platform {
 
         public unsafe void Load(byte* ptr, MemoryStream stream) {
             // check if the provided data is PNG, JPG, GIF, or TIFF
-            if (LoadAsBitmap(stream)) return;
+            uint signature = *((uint*)ptr);
+
+            if (signature != 0x00010000 && LoadAsBitmap(stream)) return;
 
             int offset = sizeof(IconHeader);
             int size = 0;
@@ -87,6 +88,8 @@ namespace Engine.Platform {
         private unsafe bool LoadAsBitmap(MemoryStream stream) {
             Bitmap bitmap;
             try {
+
+
                 bitmap = new Bitmap(stream);
             } catch {
                 stream.Seek(0, SeekOrigin.Begin);

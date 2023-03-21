@@ -280,7 +280,7 @@ async function freeplaymenu_main() {
 async function freeplaymenu_show(menu, state, songs) {
     let map_index = -1;
     let gamepad = gamepad_init(-1);
-    gamepad_set_buttons_delay(gamepad, 100);
+    gamepad_set_buttons_delay(gamepad, 150);
 
     let sound_asterik = await soundplayer_init("/assets/common/sound/asterikMenu.ogg");
 

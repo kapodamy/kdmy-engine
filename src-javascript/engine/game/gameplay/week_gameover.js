@@ -371,7 +371,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         }
     }
 
-    if (weekgameover.sfx_die) soundplayer_stop(weekgameover.sfx_die);
+    //if (weekgameover.sfx_die) soundplayer_stop(weekgameover.sfx_die);
     layout_set_group_visibility_by_id(weekgameover.layout, weekgameover.group_id_help, 0);
 
     if (decision == 2) {
@@ -423,7 +423,14 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         // wait for character animation ends (if required)
         if (wait_animation && commited_anims != character_get_commited_animations_count(dead_character)) {
             wait_animation = false;
-            total = weekgameover.gameover_transition_before;
+
+            if (decision == 2 && weekgameover.sfx_retry && !soundplayer_has_ended(weekgameover.sfx_retry)) {
+                // wait for retry sound effect (gameOverEnd.ogg is 7 seconds long)
+                total = soundplayer_get_duration(weekgameover.sfx_retry) - soundplayer_get_position(weekgameover.sfx_retry);
+                if (total < 0) total = weekgameover.gameover_transition_before;
+            } else {
+                total = weekgameover.gameover_transition_before;
+            }
         }
 
         if (trigger_transition && total <= weekgameover.gameover_transition_before) {
@@ -493,10 +500,10 @@ async function week_gameover_set_option(weekgameover, option, nro, str) {
             weekgameover.duration_giveup = Number.isNaN(nro) ? weekgameover.default_giveup_duration : nro;
             return;
         case WEEK_GAMEOVER_SETMUSIC:
-            weekgameover.music_bg = await soundplayer_init(str ?? "/assets/common/sound/loss_sfx.ogg");
+            weekgameover.music_bg = await soundplayer_init(str ?? "/assets/common/music/gameOver.ogg");
             return;
         case WEEK_GAMEOVER_SETSFXDIE:
-            weekgameover.sfx_die = await soundplayer_init(str ?? "/assets/common/music/gameOver.ogg");
+            weekgameover.sfx_die = await soundplayer_init(str ?? "/assets/common/sound/loss_sfx.ogg");
             return;
         case WEEK_GAMEOVER_SETSFXRETRY:
             weekgameover.sfx_retry = await soundplayer_init(str ?? "/assets/common/sound/gameOverEnd.ogg");
