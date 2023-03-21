@@ -74,6 +74,8 @@ namespace Engine.Game {
         private int[] inverted_to;
         private float character_scale;
         private int played_actions_count;
+        private int commited_animations_count;
+        private bool current_anim_changed;
         private bool animation_freezed;
 
 
@@ -151,6 +153,8 @@ namespace Engine.Game {
 
             this.character_scale = 1.0f;
             this.played_actions_count = 0;
+            this.commited_animations_count = 0;
+            this.current_anim_changed = false;
             this.animation_freezed = false;
 
             this.beatwatcher.Reset(true, 100f);
@@ -421,6 +425,8 @@ namespace Engine.Game {
             InternalCalculateLocation();
 
             this.played_actions_count++;
+            this.commited_animations_count++;
+            this.current_anim_changed = true;
 
             return true;
         }
@@ -429,6 +435,7 @@ namespace Engine.Game {
             Debug.Assert(this.current_state != null, "this.current_state was NULL");
 
             this.played_actions_count++;
+            this.commited_animations_count++;
 
             // rollback the current action (if possible)
             switch (this.current_action_type) {
@@ -444,6 +451,7 @@ namespace Engine.Game {
                             } else if (this.current_action_sing.rollback != null) {
                                 this.current_anim = this.current_action_sing.rollback;
                                 this.current_anim.Restart();
+                                this.current_anim_changed = true;
                                 return 2;
                             }
                             break;
@@ -471,6 +479,7 @@ L_read_state:
                     goto L_read_state;
                 }
                 this.played_actions_count--;
+                this.commited_animations_count--;
                 return 0;
             }
 
@@ -493,6 +502,7 @@ L_read_state:
             this.current_action_type = CharacterActionType.IDLE;
             this.current_use_frame_rollback = false;
             this.current_stop_on_beat = -1;// extra_info.stop_after_beats ignored
+            this.current_anim_changed = true;
 
             InternalUpdateTexture();
             InternalCalculateLocation();
@@ -579,6 +589,8 @@ L_read_state:
             InternalCalculateLocation();
 
             this.played_actions_count++;
+            this.commited_animations_count++;
+            this.current_anim_changed = true;
 
             return true;
         }
@@ -636,6 +648,8 @@ L_read_state:
             InternalCalculateLocation();
 
             this.played_actions_count++;
+            this.commited_animations_count++;
+            this.current_anim_changed = true;
 
             return 1;
         }
@@ -667,7 +681,7 @@ L_read_state:
                     state = this.default_state;
                     goto L_read_state;
                 }
-                InternalFallbackIdle();
+                //InternalFallbackIdle();
                 return false;
             }
 
@@ -694,6 +708,8 @@ L_read_state:
             InternalCalculateLocation();
 
             this.played_actions_count++;
+            this.commited_animations_count++;
+            this.current_anim_changed = true;
 
             return true;
         }
@@ -719,6 +735,8 @@ L_read_state:
             this.current_action_type = CharacterActionType.NONE;
             this.current_stop_on_beat = -1;
             this.alt_enabled = false;
+            this.commited_animations_count++;
+            this.current_anim_changed = false;
 
             this.drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
 
@@ -833,6 +851,11 @@ L_read_state:
                 }
             }
 
+            if (this.current_anim_changed) {
+                this.current_anim_changed = false;// just in case
+                this.commited_animations_count++;
+            }
+
             if (this.continuous_idle && current_action_type == CharacterActionType.IDLE) {
                 // follow hold animation (if exists)
                 if (this.current_anim_type == CharacterAnimType.BASE && this.current_action_extra.hold != null) {
@@ -842,6 +865,7 @@ L_read_state:
 
                 // play the idle animation again
                 this.current_anim.Restart();
+                this.current_anim_changed = true;
                 return 1;
             }
 
@@ -876,6 +900,7 @@ L_read_state:
                     follow_hold.Restart();
                     this.current_anim = follow_hold;
                     this.current_anim_type = CharacterAnimType.HOLD;
+                    this.current_anim_changed = true;
                     return 0;
                 case CharacterAnimType.HOLD:
                     // check if should rollback the current animation or play the rollback animation
@@ -904,6 +929,7 @@ L_read_state:
 
                 this.current_use_frame_rollback = follow_frame_rollback;
                 this.current_anim_type = CharacterAnimType.ROLLBACK;
+                this.current_anim_changed = true;
                 return 1;
             }
 
@@ -1009,6 +1035,10 @@ L_read_state:
 
         public int GetPlayCalls() {
             return this.played_actions_count;
+        }
+
+        public int GetCommitedAnimationsCount() {
+            return this.commited_animations_count;
         }
 
         public CharacterActionType GetCurrentAction() {

@@ -96,6 +96,8 @@ async function character_init(charactermanifest) {
 
         character_scale: 1.0,
         played_actions_count: 0,
+        commited_animations_count: 0,
+        current_anim_changed: 0,
         animation_freezed: 0
     };
 
@@ -368,6 +370,8 @@ function character_play_hey(character) {
     character_internal_calculate_location(character);
 
     character.played_actions_count++;
+    character.commited_animations_count++;
+    character.current_anim_changed = 1;
 
     return 1;
 }
@@ -376,6 +380,7 @@ function character_play_idle(character) {
     console.assert(character.current_state != null, "character.current_state was NULL");
 
     character.played_actions_count++;
+    character.commited_animations_count++;
 
     // rollback the current action (if possible)
     switch (character.current_action_type) {
@@ -391,6 +396,7 @@ function character_play_idle(character) {
                     } else if (character.current_action_sing.rollback) {
                         character.current_anim = character.current_action_sing.rollback;
                         animsprite_restart(character.current_anim);
+                        character.current_anim_changed = 1;
                         return 2;
                     }
                     break;
@@ -418,6 +424,7 @@ function character_play_idle(character) {
                 continue L_read_state;
             }
             character.played_actions_count--;
+            character.commited_animations_count--;
             return 0;
         }
 
@@ -443,6 +450,7 @@ function character_play_idle(character) {
     character.current_action_type = CharacterActionType.IDLE;
     character.current_use_frame_rollback = 0;
     character.current_stop_on_beat = -1;// extra_info.stop_after_beats ignored
+    character.current_anim_changed = 1;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
@@ -532,6 +540,8 @@ function character_play_sing(character, direction, prefer_sustain) {
     character_internal_calculate_location(character);
 
     character.played_actions_count++;
+    character.commited_animations_count++;
+    character.current_anim_changed = 1;
 
     return 1;
 }
@@ -593,6 +603,8 @@ function character_play_miss(character, direction, keep_in_hold) {
     character_internal_calculate_location(character);
 
     character.played_actions_count++;
+    character.commited_animations_count++;
+    character.current_anim_changed = 1;
 
     return 1;
 }
@@ -623,7 +635,7 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
                 state = character.default_state;
                 continue L_read_state;
             }
-            character_internal_fallback_idle(character);
+            //character_internal_fallback_idle(character);
             return 0;
         }
 
@@ -653,6 +665,8 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
     character_internal_calculate_location(character);
 
     character.played_actions_count++;
+    character.commited_animations_count++;
+    character.current_anim_changed = 1;
 
     return 1;
 }
@@ -678,6 +692,8 @@ function character_reset(character) {
     character.current_action_type = CharacterActionType.NONE;
     character.current_stop_on_beat = -1;
     character.alt_enabled = 0;
+    character.commited_animations_count++;
+    character.current_anim_changed = 0;
 
     drawable_set_antialiasing(character.drawable, PVR_FLAG_DEFAULT);
 
@@ -792,6 +808,11 @@ function character_animate(character, elapsed) {
         }
     }
 
+    if (character.current_anim_changed) {
+        character.current_anim_changed = 0;// just in case
+        character.commited_animations_count++;
+    }
+
     if (character.continuous_idle && current_action_type == CharacterActionType.IDLE) {
         // follow hold animation (if exists)
         if (character.current_anim_type == CharacterAnimType.BASE && character.current_action_extra.hold) {
@@ -801,6 +822,7 @@ function character_animate(character, elapsed) {
 
         // play the idle animation again
         animsprite_restart(character.current_anim);
+        character.current_anim_changed = 1;
         return 1;
     }
 
@@ -835,6 +857,7 @@ function character_animate(character, elapsed) {
             animsprite_restart(follow_hold);
             character.current_anim = follow_hold;
             character.current_anim_type = CharacterAnimType.HOLD;
+            character.current_anim_changed = 1;
             return 0;
         case CharacterAnimType.HOLD:
             // check if should rollback the current animation or play the rollback animation
@@ -862,6 +885,7 @@ function character_animate(character, elapsed) {
 
         character.current_use_frame_rollback = follow_frame_rollback;
         character.current_anim_type = CharacterAnimType.ROLLBACK;
+        character.current_anim_changed = 1;
         return 1;
     }
 
@@ -968,6 +992,10 @@ function character_get_drawable(character) {
 
 function character_get_play_calls(character) {
     return character.played_actions_count;
+}
+
+function character_get_commited_animations_count(character) {
+    return character.commited_animations_count;
 }
 
 function character_get_current_action(character) {

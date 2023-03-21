@@ -426,8 +426,15 @@ namespace Engine.Externals.LuaScriptInterop {
             lua.CallPushedGlobalFunction(1);
         }
 
-        public void notify_diedecision(bool retry_or_giveup, string changed_difficult) {
-            const string FUNCTION = "f_diedecision";
+        public void notify_gameoverloop() {
+            const string FUNCTION = "f_gameoverloop";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            lua.CallPushedGlobalFunction(0);
+        }
+
+        public void notify_gameoverdecision(bool retry_or_giveup, string changed_difficult) {
+            const string FUNCTION = "f_gameoverdecision";
             if (lua.PushGlobalFunction(FUNCTION)) return;
 
 
@@ -435,6 +442,13 @@ namespace Engine.Externals.LuaScriptInterop {
             L.lua_pushstring(changed_difficult);
 
             lua.CallPushedGlobalFunction(2);
+        }
+
+        public void notify_gameoverended() {
+            const string FUNCTION = "f_gameoverended";
+            if (lua.PushGlobalFunction(FUNCTION)) return;
+
+            lua.CallPushedGlobalFunction(0);
         }
 
         public void notify_pause(bool pause_or_resume) {

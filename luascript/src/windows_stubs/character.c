@@ -114,6 +114,10 @@ int32_t character_get_play_calls(Character character) {
     print_stub("character_get_play_calls", "character=%p", character);
     return 12345;
 }
+int32_t character_get_commited_animations_count(Character character) {
+    print_stub("character_get_commited_animations_count", "character=%p", character);
+    return 12345;
+}
 CharacterActionType character_get_current_action(Character character) {
     print_stub("character_get_current_action", "character=%p", character);
     return CHARACTER_ACTION_TYPE_IDLE;

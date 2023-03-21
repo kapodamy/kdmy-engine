@@ -27,6 +27,17 @@ typedef struct _RoundContext_t {
 
 typedef RoundContext_t* RoundContext;
 
+#define WEEK_GAMEOVEROPTION_NOMUSIC 0
+#define WEEK_GAMEOVEROPTION_NOSFXDIE 1
+#define WEEK_GAMEOVEROPTION_NOSFXRETRY 2
+#define WEEK_GAMEOVEROPTION_ANIMDURATIONDIE 3
+#define WEEK_GAMEOVEROPTION_ANIMDURATIONRETRY 4
+#define WEEK_GAMEOVEROPTION_ANIMDURATIONGIVEUP 5
+#define WEEK_GAMEOVEROPTION_SETMUSIC 6
+#define WEEK_GAMEOVEROPTION_SETSFXDIE 7
+#define WEEK_GAMEOVEROPTION_SETSFXRETRY 8
+typedef int32_t WeekGameOverOption;
+
 
 void week_unlockdirective_create(RoundContext roundcontext, const char* name, bool completed_round, bool completed_week, double value);
 bool week_unlockdirective_has(RoundContext roundcontext, const char* name);
@@ -75,6 +86,7 @@ void week_end(RoundContext roundcontext, bool round_or_week, bool loose_or_win);
 Dialogue week_get_dialogue(RoundContext roundcontext);
 void week_set_ui_shader(RoundContext roundcontext, PSShader psshader);
 void week_rebuild_ui(RoundContext roundcontext);
+void week_set_gameover_option(RoundContext roundcontext, WeekGameOverOption opt, float nro, const char* str);
 
 #endif
 

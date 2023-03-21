@@ -983,6 +983,11 @@ function __asyncjs__week_rebuild_ui(roundcontext) {
         await week_rebuild_ui(kdmyEngine_obtain(roundcontext))
     })
 }
+function __asyncjs__week_set_gameover_option(roundcontext, opt, nro, str) {
+    return Asyncify.handleAsync(async() => {
+        await week_set_gameover_option(kdmyEngine_obtain(roundcontext), opt, nro, kdmyEngine_ptrToString(str))
+    })
+}
 function __js__animlist_destroy(animlist) {
     animlist_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(animlist)))
 }
@@ -1196,6 +1201,9 @@ function __js__character_flip_orientation(character, enable) {
 }
 function __js__character_freeze_animation(character, enabled) {
     character_freeze_animation(kdmyEngine_obtain(character), enabled)
+}
+function __js__character_get_commited_animations_count(character) {
+    return character_get_commited_animations_count(kdmyEngine_obtain(character))
 }
 function __js__character_get_current_action(character) {
     return character_get_current_action(kdmyEngine_obtain(character))
@@ -2502,6 +2510,9 @@ function __js__soundplayer_get_position(soundplayer) {
 }
 function __js__soundplayer_has_ended(soundplayer) {
     return soundplayer_has_ended(kdmyEngine_obtain(soundplayer))
+}
+function __js__soundplayer_has_fading(soundplayer) {
+    return soundplayer_has_fading(kdmyEngine_obtain(soundplayer))
 }
 function __js__soundplayer_is_muted(soundplayer) {
     return soundplayer_is_muted(kdmyEngine_obtain(soundplayer))
@@ -6864,6 +6875,7 @@ var asmLibraryArg = {
     "__asyncjs__modelholder_init2": __asyncjs__modelholder_init2,
     "__asyncjs__songplayer_play": __asyncjs__songplayer_play,
     "__asyncjs__week_rebuild_ui": __asyncjs__week_rebuild_ui,
+    "__asyncjs__week_set_gameover_option": __asyncjs__week_set_gameover_option,
     "__js__animlist_destroy": __js__animlist_destroy,
     "__js__animlist_get_animation": __js__animlist_get_animation,
     "__js__animlist_is_item_frame_animation": __js__animlist_is_item_frame_animation,
@@ -6927,6 +6939,7 @@ var asmLibraryArg = {
     "__js__character_face_as_opponent": __js__character_face_as_opponent,
     "__js__character_flip_orientation": __js__character_flip_orientation,
     "__js__character_freeze_animation": __js__character_freeze_animation,
+    "__js__character_get_commited_animations_count": __js__character_get_commited_animations_count,
     "__js__character_get_current_action": __js__character_get_current_action,
     "__js__character_get_modifier": __js__character_get_modifier,
     "__js__character_get_play_calls": __js__character_get_play_calls,
@@ -7269,6 +7282,7 @@ var asmLibraryArg = {
     "__js__soundplayer_get_duration": __js__soundplayer_get_duration,
     "__js__soundplayer_get_position": __js__soundplayer_get_position,
     "__js__soundplayer_has_ended": __js__soundplayer_has_ended,
+    "__js__soundplayer_has_fading": __js__soundplayer_has_fading,
     "__js__soundplayer_is_muted": __js__soundplayer_is_muted,
     "__js__soundplayer_is_playing": __js__soundplayer_is_playing,
     "__js__soundplayer_loop_enable": __js__soundplayer_loop_enable,
@@ -7618,8 +7632,14 @@ var _luascript_notify_roundend = ModuleLuaScript["_luascript_notify_roundend"] =
 var _luascript_notify_weekend = ModuleLuaScript["_luascript_notify_weekend"] = function () {
     return (_luascript_notify_weekend = ModuleLuaScript["_luascript_notify_weekend"] = ModuleLuaScript["asm"]["luascript_notify_weekend"]).apply(null, arguments)
 };
-var _luascript_notify_diedecision = ModuleLuaScript["_luascript_notify_diedecision"] = function () {
-    return (_luascript_notify_diedecision = ModuleLuaScript["_luascript_notify_diedecision"] = ModuleLuaScript["asm"]["luascript_notify_diedecision"]).apply(null, arguments)
+var _luascript_notify_gameoverloop = ModuleLuaScript["_luascript_notify_gameoverloop"] = function () {
+    return (_luascript_notify_gameoverloop = ModuleLuaScript["_luascript_notify_gameoverloop"] = ModuleLuaScript["asm"]["luascript_notify_gameoverloop"]).apply(null, arguments)
+};
+var _luascript_notify_gameoverdecision = ModuleLuaScript["_luascript_notify_gameoverdecision"] = function () {
+    return (_luascript_notify_gameoverdecision = ModuleLuaScript["_luascript_notify_gameoverdecision"] = ModuleLuaScript["asm"]["luascript_notify_gameoverdecision"]).apply(null, arguments)
+};
+var _luascript_notify_gameoverended = ModuleLuaScript["_luascript_notify_gameoverended"] = function () {
+    return (_luascript_notify_gameoverended = ModuleLuaScript["_luascript_notify_gameoverended"] = ModuleLuaScript["asm"]["luascript_notify_gameoverended"]).apply(null, arguments)
 };
 var _luascript_notify_pause = ModuleLuaScript["_luascript_notify_pause"] = function () {
     return (_luascript_notify_pause = ModuleLuaScript["_luascript_notify_pause"] = ModuleLuaScript["asm"]["luascript_notify_pause"]).apply(null, arguments)

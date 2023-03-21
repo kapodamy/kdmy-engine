@@ -118,8 +118,14 @@ void luascript_notify_weekend(Luascript luascript, bool giveup) {
     lua_imported_fn(lua, FUNCTION, 1);
 }
 
-void luascript_notify_diedecision(Luascript luascript, bool retry_or_giveup, const char* difficult_changed) {
-    FUNCTION(luascript, "f_diedecision");
+void luascript_notify_gameoverloop(Luascript luascript) {
+    FUNCTION(luascript, "f_gameoverloop");
+
+    lua_imported_fn(lua, FUNCTION, 0);
+}
+
+void luascript_notify_gameoverdecision(Luascript luascript, bool retry_or_giveup, const char* difficult_changed) {
+    FUNCTION(luascript, "f_gameoverdecision");
 
     lua_pushboolean(lua, retry_or_giveup);
     lua_pushstring(lua, difficult_changed);
@@ -129,6 +135,12 @@ void luascript_notify_diedecision(Luascript luascript, bool retry_or_giveup, con
 #endif
 
     lua_imported_fn(lua, FUNCTION, 2);
+}
+
+void luascript_notify_gameoverended(Luascript luascript) {
+    FUNCTION(luascript, "f_gameoverended");
+
+    lua_imported_fn(lua, FUNCTION, 0);
 }
 
 void luascript_notify_pause(Luascript luascript, bool pause_or_resume) {

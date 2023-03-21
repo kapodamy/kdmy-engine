@@ -2721,10 +2721,8 @@ namespace Engine.Game.Gameplay {
                 roundcontext.weekgameover.Hide();
 
                 // notify script and wait (if necessary)
-
                 if (roundcontext.script != null) {
-                    string change = roundcontext.song_difficult == song_difficult ? null : song_difficult;
-                    roundcontext.script.NotifyDiedecision(decision > 0, change);
+                    roundcontext.script.NotifyGameoverended();
                     Week.Halt(roundcontext, true);
                 }
 
@@ -3125,6 +3123,11 @@ namespace Engine.Game.Gameplay {
 
             // unable to guess the correct player's strums
             return null;
+        }
+
+        public static void SetGameoverOption(RoundContext roundcontext, WeekGameOverOption opt, float nro, string str) {
+            if (roundcontext.weekgameover == null) return;
+            roundcontext.weekgameover.SetOption(opt, nro, str);
         }
 
 

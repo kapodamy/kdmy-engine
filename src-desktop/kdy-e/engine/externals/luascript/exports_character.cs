@@ -349,6 +349,15 @@ namespace Engine.Externals.LuaScriptInterop {
             return 1;
         }
 
+        static int script_character_get_commited_animations_count(LuaState L) {
+            Character character = L.ReadUserdata<Character>(CHARACTER);
+
+            int ret = character.GetCommitedAnimationsCount();
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
         static int script_character_get_current_action(LuaState L) {
             Character character = L.ReadUserdata<Character>(CHARACTER);
 
@@ -444,6 +453,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("get_modifier", script_character_get_modifier),
             new LuaTableFunction("has_direction", script_character_has_direction),
             new LuaTableFunction("get_play_calls", script_character_get_play_calls),
+            new LuaTableFunction("get_commited_animations_count", script_character_get_commited_animations_count),
             new LuaTableFunction("get_current_action", script_character_get_current_action),
             new LuaTableFunction("freeze_animation", script_character_freeze_animation),
             new LuaTableFunction("trailing_enabled", script_character_trailing_enabled),

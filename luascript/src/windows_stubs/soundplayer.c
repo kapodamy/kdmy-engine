@@ -30,6 +30,10 @@ bool soundplayer_is_playing(SoundPlayer soundplayer) {
     print_stub("soundplayer_is_playing", "soundplayer=%p", soundplayer);
     return 456;
 }
+Fadding soundplayer_has_fading(SoundPlayer soundplayer) {
+    print_stub("soundplayer_has_fading", "soundplayer=%p", soundplayer);
+    return 0;
+}
 double soundplayer_get_duration(SoundPlayer soundplayer) {
     print_stub("soundplayer_get_duration", "soundplayer=%p", soundplayer);
     return 999;

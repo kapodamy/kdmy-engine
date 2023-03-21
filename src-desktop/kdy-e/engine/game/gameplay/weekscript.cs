@@ -139,8 +139,16 @@ namespace Engine.Game.Gameplay {
             this.luascript.notify_weekend(giveup);
         }
 
-        public void NotifyDiedecision(bool retry_or_giveup, string changed_difficult) {
-            this.luascript.notify_diedecision(retry_or_giveup, changed_difficult);
+        public void NotifyGameoverloop() {
+            this.luascript.notify_gameoverloop();
+        }
+
+        public void NotifyGameoverdecision(bool retry_or_giveup, string changed_difficult) {
+            this.luascript.notify_gameoverdecision(retry_or_giveup, changed_difficult);
+        }
+
+        public void NotifyGameoverended() {
+            this.luascript.notify_gameoverended();
         }
 
         public void NotifyPause(bool pause_or_resume) {

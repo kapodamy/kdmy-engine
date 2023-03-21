@@ -107,6 +107,9 @@ EM_JS_PRFX(bool, character_has_direction, (Character character, const char* name
 EM_JS_PRFX(int32_t, character_get_play_calls, (Character character), {
     return character_get_play_calls(kdmyEngine_obtain(character));
 });
+EM_JS_PRFX(int32_t, character_get_commited_animations_count, (Character character), {
+    return character_get_commited_animations_count(kdmyEngine_obtain(character));
+});
 EM_JS_PRFX(CharacterActionType, character_get_current_action, (Character character), {
     return character_get_current_action(kdmyEngine_obtain(character));
 });
@@ -463,6 +466,15 @@ static int script_character_get_play_calls(lua_State* L) {
     return 1;
 }
 
+static int script_character_get_commited_animations_count(lua_State* L) {
+    Character character = luascript_read_userdata(L, CHARACTER);
+
+    int32_t ret = character_get_commited_animations_count(character);
+
+    lua_pushinteger(L, ret);
+    return 1;
+}
+
 static int script_character_get_current_action(lua_State* L) {
     Character character = luascript_read_userdata(L, CHARACTER);
 
@@ -558,6 +570,7 @@ static const luaL_Reg CHARACTER_FUNCTIONS[] = {
     {"get_modifier", script_character_get_modifier},
     {"has_direction", script_character_has_direction},
     {"get_play_calls", script_character_get_play_calls},
+    {"get_commited_animations_count", script_character_get_commited_animations_count},
     {"get_current_action", script_character_get_current_action},
     {"freeze_animation", script_character_freeze_animation},
     {"trailing_enabled", script_character_trailing_enabled},

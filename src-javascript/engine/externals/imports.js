@@ -12,7 +12,9 @@
  * @property {function(ModuleLuaScript,number):void} _luascript_notify_frame
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_roundend
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_weekend
- * @property {function(ModuleLuaScript,bool,number):void} _luascript_notify_diedecision
+ * @property {function(ModuleLuaScript):void} _luascript_notify_gameoverloop
+ * @property {function(ModuleLuaScript,bool,number):void} _luascript_notify_gameoverdecision
+ * @property {function(ModuleLuaScript, number, number):void} _luascript_notify_gameoverended
  * @property {function(ModuleLuaScript,bool):void} _luascript_notify_pause
  * @property {function(ModuleLuaScript):void} _luascript_notify_weekleave
  * @property {function(ModuleLuaScript, number, number, number):void} _luascript_notify_afterresults

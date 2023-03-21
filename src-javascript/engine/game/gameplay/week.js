@@ -2711,8 +2711,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
         // notify script and wait (if necessary)
         if (roundcontext.script) {
-            let change = roundcontext.song_difficult === song_difficult ? null : song_difficult;
-            await weekscript_notify_diedecision(roundcontext.script, decision, change);
+            await weekscript_notify_gameoverended(roundcontext.script);
             await week_halt(roundcontext, 1);
         }
 
@@ -3110,6 +3109,11 @@ function week_ui_get_strums(/**@type {RoundContext} */ roundcontext, strums_id) 
 
     // unable to guess the correct player's strums
     return null;
+}
+
+async function week_set_gameover_option(roundcontext, opt, nro, str) {
+    if (roundcontext.weekgameover == null) return;
+    await week_gameover_set_option(roundcontext.weekgameover, opt, nro, str);
 }
 
 

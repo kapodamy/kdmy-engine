@@ -207,11 +207,19 @@ function weekscript_notify_weekend(script, giveup) {
     return _weekscript_call(ModuleLuaScript._luascript_notify_weekend, script, giveup ? 1 : 0);
 }
 
-function weekscript_notify_diedecision(script, retry_or_giveup, changed_difficult) {
+function weekscript_notify_gameoverloop(script) {
+    return _weekscript_call(ModuleLuaScript._luascript_notify_gameoverloop, script);
+}
+
+function weekscript_notify_gameoverdecision(script, retry_or_giveup, changed_difficult) {
     return _weekscript_call(
-        ModuleLuaScript._luascript_notify_diedecision, script,
+        ModuleLuaScript._luascript_notify_gameoverdecision, script,
         retry_or_giveup ? 1 : 0, ModuleLuaScript.kdmyEngine_stringToPtr(changed_difficult)
     );
+}
+
+function weekscript_notify_gameoverended(script) {
+    return _weekscript_call(ModuleLuaScript._luascript_notify_weekend, script);
 }
 
 function weekscript_notify_pause(script, pause_or_resume) {

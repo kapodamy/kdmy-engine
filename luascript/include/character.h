@@ -55,6 +55,7 @@ void character_set_visible(Character character, bool visible);
 Modifier character_get_modifier(Character character);
 bool character_has_direction(Character character, const char* name, bool is_extra);
 int32_t character_get_play_calls(Character character);
+int32_t character_get_commited_animations_count(Character character);
 CharacterActionType character_get_current_action(Character character);
 void character_freeze_animation(Character character, bool enabled);
 void character_trailing_enabled(Character character, bool enabled);

@@ -196,4 +196,7 @@ void week_set_ui_shader(RoundContext roundcontext, PSShader psshader) {
 void week_rebuild_ui(RoundContext roundcontext) {
     print_stub("week_rebuild_ui", "roundcontext=%p", roundcontext);
 }
+void week_set_gameover_option(RoundContext roundcontext, WeekGameOverOption opt, float nro, const char* str) {
+    print_stub("week_set_gameover_option", "roundcontext=%p opt=%i nro=%f str=%s", roundcontext, opt, nro, str);
+}
 

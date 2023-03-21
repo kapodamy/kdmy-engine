@@ -49,8 +49,9 @@ declare namespace KDMYEngine {
     export function f_frame(elapsed: number): void;
 
     /**
-     * Called when the current round (song of the week) has ended.
-     * @param loose {@link true} If a player was defeated, otherwise, {@link false} the song is clear.
+     * Called when the current round (song of the week) has ended.  
+     * Note: when the player loses the gameover screen is shown.
+     * @param loose {@link true} If a player was defeated, otherwise, {@link false} if the song was cleared.
      */
     export function f_roundend(loose: boolean): void;
 
@@ -61,15 +62,29 @@ declare namespace KDMYEngine {
     export function f_weekend(giveup: boolean): void;
 
     /**
-     * @summary Notifies the dead player's decision, this function is called after {@link f_roundend}.
-     * Depending on the choosen decision later will be called {@link f_beforeready} or {@link f_weekend}.
+     * @summary Notifies the die player's animation is completed and before:
+     * - looped dead animation starts
+     * - play the background music if present
+     * - the gameover UI becomes visible  
+     * the function is called after {@link f_roundend}
+     */
+    export function f_gameoverloop(): void;
+
+    /**
+     * @summary Notifies the dead player's decision, this function is called before playing the dead player's 
+     * "retry" or "giveup" animations.
      * @param retry_or_giveup {@link true} if the player wants to retry the
      *                                     round (current song), otherwhise, {@link false} if gives up.
      * @param changed_difficult {@link null} if the player does not change the difficult, otherwise, the 
      *                                       difficult name is provided.
      * Note: if the difficult was changed the {@link f_beforeready} function is called with {@link false} argument
      */
-    export function f_diedecision(retry_or_giveup: boolean, changed_difficult: string): void;
+    export function f_gameoverdecision(retry_or_giveup: boolean, changed_difficult: string): void;
+
+    /**
+     * @summary Called when the gameover screen ends
+     */
+    export function f_gameoverended(): void;
 
     /**
      * Called before the pause menu is shown, this suspends the stage layout (includes animations, triggers, sounds, etc)

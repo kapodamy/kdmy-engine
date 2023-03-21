@@ -71,6 +71,15 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_soundplayer_has_fadding(LuaState L) {
+            SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
+
+            Fading ret = soundplayer.HasFadding();
+
+            L.lua_pushinteger((int)ret);
+            return 1;
+        }
+
         static int script_soundplayer_is_muted(LuaState L) {
             SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
 
@@ -138,6 +147,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("fade", script_soundplayer_fade),
             new LuaTableFunction("set_volume", script_soundplayer_set_volume),
             new LuaTableFunction("set_mute", script_soundplayer_set_mute),
+            new LuaTableFunction("has_fadding", script_soundplayer_has_fadding),
             new LuaTableFunction("is_muted", script_soundplayer_is_muted),
             new LuaTableFunction("is_playing", script_soundplayer_is_playing),
             new LuaTableFunction("get_duration", script_soundplayer_get_duration),

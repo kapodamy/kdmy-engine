@@ -25,6 +25,9 @@ EM_JS_PRFX(void, soundplayer_set_volume, (SoundPlayer soundplayer, float volume)
 EM_JS_PRFX(void, soundplayer_set_mute, (SoundPlayer soundplayer, bool muted), {
     soundplayer_set_mute(kdmyEngine_obtain(soundplayer), muted);
 });
+EM_JS_PRFX(Fadding, soundplayer_has_fading, (SoundPlayer soundplayer), {
+    return soundplayer_has_fading(kdmyEngine_obtain(soundplayer));
+});
 EM_JS_PRFX(bool, soundplayer_is_muted, (SoundPlayer soundplayer), {
     return soundplayer_is_muted(kdmyEngine_obtain(soundplayer));
 });
@@ -111,6 +114,15 @@ static int script_soundplayer_set_mute(lua_State* L) {
     return 0;
 }
 
+static int script_soundplayer_has_fading(lua_State* L) {
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
+
+    Fadding ret = soundplayer_has_fading(soundplayer);
+
+    lua_pushinteger(L, (int32_t)ret);
+    return 1;
+}
+
 static int script_soundplayer_is_muted(lua_State* L) {
     SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
 
@@ -178,6 +190,7 @@ static const luaL_Reg SOUNDPLAYER_FUNCTIONS[] = {
     {"fade", script_soundplayer_fade},
     {"set_volume", script_soundplayer_set_volume},
     {"set_mute", script_soundplayer_set_mute},
+    {"has_fadding", script_soundplayer_has_fading},
     {"is_muted", script_soundplayer_is_muted},
     {"is_playing", script_soundplayer_is_playing},
     {"get_duration", script_soundplayer_get_duration},

@@ -8,9 +8,10 @@
     <AttachValue name="help_text_padding_x" type="float" value="2" />
     <AttachValue name="help_text_padding_y" type="float" value="14" />
 
-    <AttachValue type="float" name="gameover_duration_die" value="3200" />
-    <AttachValue type="float" name="gameover_duration_retry" value="3600" />
-    <AttachValue type="float" name="gameover_duration_giveup" value="500" />
+    <!-- <AttachValue type="float" name="gameover_duration_die" value="3200" /> -->
+    <!-- <AttachValue type="float" name="gameover_duration_retry" value="3600" /> -->
+    <!-- <AttachValue type="float" name="gameover_duration_giveup" value="500" /> -->
+    <AttachValue type="float" name="gameover_transition_before" value="500" />
 
     <!-- Stats + difficulty selector -->
     <Group>

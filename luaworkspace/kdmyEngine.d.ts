@@ -255,6 +255,11 @@ declare global {
         MISS = 5,
         PENALITY = 6
     }
+    const enum Fading {
+        NONE = 0,
+        IN = 1,
+        OUT = 2
+    }
 
     //
     // Global sub-metatables (classes in typescript/javascript)
@@ -486,6 +491,7 @@ declare global {
         fade(in_or_out: boolean, duration: number): void;
         set_volume(volume: number): void;
         set_mute(muted: boolean): void;
+        has_fadding(): Fading;
         is_muted(): boolean;
         is_playing(): boolean;
         get_duration(): number;
@@ -571,6 +577,7 @@ declare global {
         get_modifier(): Modifier;
         has_direction(name: string, is_extra: boolean): boolean;
         get_play_calls(): number;
+        get_commited_animations_count(): number;
         get_current_action(): CharacterActionType;
         freeze_animation(enabled: boolean): void;
         trailing_enabled(enabled: boolean): void;
@@ -1498,6 +1505,51 @@ declare global {
      * @returns true if was saved, otherwise, false if an error occurs
      */
     function week_storage_set_blob(blob_name: string, blob: string): boolean;
+    /**
+     * Removes the background music used in the gameover screen
+     */
+    function week_gameover_no_music(): void;
+    /**
+     * Removes the __die__ sound effect used in the gameover screen
+     */
+    function week_gameover_no_sfx_die(): void;
+    /**
+     * Removes the __retry__ sound effect used in the gameover screen
+     */
+    function week_gameover_no_sfx_retry(): void;
+    /**
+     * Set the duration for the __die__ animation used in the gameover screen.  
+     * The die animation is played using {@link Character.play_extra} function. By default the engine waits 3200ms
+     * @param duration_ms duration in milliseconds, NaN to use default duration or -1 to wait for the animation end
+     */
+    function week_gameover_set_die_anim_duration(duration_ms: number): void;
+    /**
+     * Set the duration for the __retry__  animation used in the gameover screen.  
+     * The die animation is played using {@link Character.play_extra} function. By default the engine waits 3600ms
+     * @param duration_ms duration in milliseconds, NaN to use default duration or -1 to wait for the animation end
+     */
+    function week_gameover_set_retry_anim_duration(duration_ms: number): void;
+    /**
+     * Set the duration for the __giveup__ animation used in the gameover screen.  
+     * The die animation is played using {@link Character.play_extra} function. By default the engine waits 0ms
+     * @param duration_ms duration in milliseconds, NaN to use default duration or -1 to wait for the animation end
+     */
+    function week_gameover_set_giveup_anim_duration(duration_ms: number): void;
+    /**
+     * Sets the music for the gameover screen
+     * @param filename the sound filename or null to use/retore the default sound
+     */
+    function week_gameover_set_music(filename: string): void;
+    /**
+     * Sets the __die__ sound effect for the gameover screen
+     * @param filename the sound filename or null to use/retore the default sound
+     */
+    function week_gameover_set_sfx_die(filename: string): void;
+    /**
+     * Sets the __retry sound effect for the gameover screen
+     * @param filename the sound filename or null to use/retore the default sound
+     */
+    function week_gameover_set_sfx_confirm(filename: string): void;
 
 
     //
@@ -2119,5 +2171,6 @@ declare global {
         RightSuper = 347,
         Menu = 348
     }
+
 
 }
