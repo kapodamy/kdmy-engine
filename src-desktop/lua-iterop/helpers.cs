@@ -148,7 +148,7 @@ L_store_and_return:
                 return 1;
             }
 
-            void* obj_ptr = luascript.handle_references.AddReference(obj);
+            void* obj_ptr = luascript.handle_references.AddReference(obj, allocated);
 
             int @ref = get_lua_reference(luascript, obj_ptr);
             if (@ref != LUA.NOREF) {

@@ -15,7 +15,11 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_tweenkeyframe_init2(LuaState L) {
-            AnimListItem animlistitem = L.ReadUserdata<AnimListItem>(ExportsAnimListItem.ANIMLISTITEM);
+            AnimListItem animlistitem = L.ReadNullableUserdata<AnimListItem>(2, ExportsAnimListItem.ANIMLISTITEM);
+
+            if (animlistitem == null) {
+                return L.luaL_error("animlistitem was nil (null)");
+            }
 
             TweenKeyframe ret = TweenKeyframe.Init2(animlistitem);
 

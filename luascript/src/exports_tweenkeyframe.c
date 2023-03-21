@@ -92,7 +92,11 @@ static int script_tweenkeyframe_init(lua_State* L) {
 }
 
 static int script_tweenkeyframe_init2(lua_State* L) {
-    AnimListItem animlistitem = luascript_read_userdata(L, ANIMLISTITEM);
+    AnimListItem animlistitem = luascript_read_nullable_userdata(L, 2, ANIMLISTITEM);
+
+    if (!animlistitem) {
+        return luaL_error(L, "animlistitem was nil (null)");
+    }
 
     TweenKeyframe ret = tweenkeyframe_init2(animlistitem);
 

@@ -16,7 +16,7 @@ EM_JS_PRFX(AnimListItem, animlist_get_animation, (AnimList animlist, const char*
 
 
 static int script_animlist_init(lua_State* L) {
-    const char* src = luaL_checkstring(L, 1);
+    const char* src = luaL_checkstring(L, 2);
 
     AnimList ret = animlist_init(src);
 

@@ -33,7 +33,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         static int script_atlas_init(LuaState L) {
-            string src = L.luaL_checkstring(1);
+            string src = L.luaL_checkstring(2);
 
             Atlas ret = Atlas.Init(src);
             return L.CreateAllocatedUserdata(ATLAS, ret);

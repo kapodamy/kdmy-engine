@@ -40,11 +40,12 @@ namespace Engine.Externals.LuaInterop {
             return null;
         }
 
-        public void* AddReference(object obj) {
+        public void* AddReference(object obj, bool strong_reference) {
             void* obj_ptr = this.GetReference(obj);
             if (obj_ptr != null) return obj_ptr;
 
-            GCHandle handle = GCHandle.Alloc(obj, GCHandleType.WeakTrackResurrection);
+            GCHandleType type = strong_reference ? GCHandleType.Normal : GCHandleType.WeakTrackResurrection;
+            GCHandle handle = GCHandle.Alloc(obj, type);
             this.handles.Add(handle);
 
             return GCHandle.ToIntPtr(handle).ToPointer();

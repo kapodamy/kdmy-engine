@@ -11,11 +11,11 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         static int script_animsprite_init_from_atlas(LuaState L) {
-            float frame_rate = (float)L.luaL_checknumber(1);
-            int loop = (int)L.luaL_checkinteger(2);
-            Atlas atlas = L.ReadNullableUserdata<Atlas>(3, ExportsAtlas.ATLAS);
-            string prefix = L.luaL_optstring(4, null);
-            bool has_number_suffix = L.lua_toboolean(5);
+            float frame_rate = (float)L.luaL_checknumber(2);
+            int loop = (int)L.luaL_checkinteger(3);
+            Atlas atlas = L.ReadNullableUserdata<Atlas>(4, ExportsAtlas.ATLAS);
+            string prefix = L.luaL_optstring(5, null);
+            bool has_number_suffix = L.lua_toboolean(6);
 
             AnimSprite ret = AnimSprite.InitFromAtlas(frame_rate, loop, atlas, prefix, has_number_suffix);
 
@@ -23,8 +23,12 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_animsprite_init_from_animlist(LuaState L) {
-            AnimList animlist = L.ReadUserdata<AnimList>(ExportsAnimList.ANIMLIST);
-            string animation_name = L.luaL_optstring(2, null);
+            AnimList animlist = L.ReadNullableUserdata<AnimList>(2, ExportsAnimList.ANIMLIST);
+            string animation_name = L.luaL_optstring(3, null);
+
+            if (animlist == null) {
+                return L.luaL_error("animlist was nil (null)");
+            }
 
             AnimSprite ret = AnimSprite.InitFromAnimlist(animlist, animation_name);
 
@@ -32,9 +36,13 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_animsprite_init_from_tweenlerp(LuaState L) {
-            string name = L.luaL_optstring(1, null);
-            int loop = (int)L.luaL_checkinteger(2);
-            TweenLerp tweenlerp = L.ReadNullableUserdata<TweenLerp>(3, ExportsTweenLerp.TWEENLERP);
+            string name = L.luaL_optstring(2, null);
+            int loop = (int)L.luaL_checkinteger(3);
+            TweenLerp tweenlerp = L.ReadNullableUserdata<TweenLerp>(4, ExportsTweenLerp.TWEENLERP);
+
+            if (tweenlerp == null) {
+                return L.luaL_error("tweenlerp was nill (null)");
+            }
 
             AnimSprite ret = AnimSprite.InitFromTweenLerp(name, loop, tweenlerp);
 
@@ -42,7 +50,7 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_animsprite_init_as_empty(LuaState L) {
-            string name = L.luaL_checkstring(1);
+            string name = L.luaL_checkstring(2);
 
             AnimSprite ret = AnimSprite.InitAsEmpty(name);
 
@@ -50,7 +58,11 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_animsprite_init(LuaState L) {
-            AnimListItem animlist_item = L.ReadNullableUserdata<AnimListItem>(1, ExportsAnimListItem.ANIMLISTITEM);
+            AnimListItem animlist_item = L.ReadNullableUserdata<AnimListItem>(2, ExportsAnimListItem.ANIMLISTITEM);
+
+            if (animlist_item == null) {
+                return L.luaL_error("animlist_item was nil (null)");
+            }
 
             AnimSprite ret = AnimSprite.Init(animlist_item);
 

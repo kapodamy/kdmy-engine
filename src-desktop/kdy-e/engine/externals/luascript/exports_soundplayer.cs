@@ -1,3 +1,4 @@
+using System;
 using Engine.Externals.LuaInterop;
 using Engine.Sound;
 
@@ -6,6 +7,24 @@ namespace Engine.Externals.LuaScriptInterop {
     public static class ExportsSoundPlayer {
         private const string SOUNDPLAYER = "SoundPlayer";
 
+
+        static int script_soundplayer_init(LuaState L) {
+            string src = L.luaL_checkstring(2);
+            SoundPlayer ret = SoundPlayer.Init(src);
+
+            return L.CreateAllocatedUserdata(SOUNDPLAYER, ret);
+        }
+
+        static int script_soundplayer_destroy(LuaState L) {
+            SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
+
+            if (L.IsUserdataAllocated(SOUNDPLAYER))
+                soundplayer.Destroy();
+            else
+                Console.WriteLine("script_soundplayer_destroy() object was not allocated by lua");
+
+            return 0;
+        }
 
         static int script_soundplayer_play(LuaState L) {
             SoundPlayer soundplayer = L.ReadUserdata<SoundPlayer>(SOUNDPLAYER);
@@ -140,6 +159,8 @@ namespace Engine.Externals.LuaScriptInterop {
         ////////////////////////////////////////////////////////////////////////////////////
 
         static readonly LuaTableFunction[] SOUNDPLAYER_FUNCTIONS = {
+            new LuaTableFunction("init", script_soundplayer_init),
+            new LuaTableFunction("destroy", script_soundplayer_destroy),
             new LuaTableFunction("play", script_soundplayer_play),
             new LuaTableFunction("pause", script_soundplayer_pause),
             new LuaTableFunction("stop", script_soundplayer_stop),
@@ -163,7 +184,8 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_soundplayer_gc(LuaState L) {
-            return L.GC_userdata(SOUNDPLAYER);
+            // if this object was allocated by lua, call the destructor            
+            return L.DestroyUserdata(SOUNDPLAYER);
         }
 
         static int script_soundplayer_tostring(LuaState L) {

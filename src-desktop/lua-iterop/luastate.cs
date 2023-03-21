@@ -36,7 +36,16 @@ namespace Engine.Externals.LuaInterop {
                 void* ptr = LuaInteropHelpers.luascript_read_userdata(L, metatable_name);
                 GCHandle handle = GCHandle.FromIntPtr((IntPtr)ptr);
 
-                if (handle.IsAllocated) return (T)handle.Target;
+                if (handle.IsAllocated) {
+                    T obj = (T)handle.Target;
+
+                    // obj can be null if the reference was weak
+                    if (obj == null) {
+                        LUA.luaL_error(this.L, $"{metatable_name} object reference lost.");
+                    }
+
+                    return obj;
+                }
 
                 LUA.luaL_error(this.L, $"{metatable_name} object was disposed by the engine.");
                 return null;

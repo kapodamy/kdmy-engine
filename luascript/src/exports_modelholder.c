@@ -58,7 +58,7 @@ EM_JS_PRFX(bool, modelholder_utils_is_known_extension, (const char* filename), {
 
 
 static int script_modelholder_init(lua_State* L) {
-    const char* src = luaL_checkstring(L, 1);
+    const char* src = luaL_checkstring(L, 2);
 
     ModelHolder ret = modelholder_init(src);
 
@@ -66,9 +66,9 @@ static int script_modelholder_init(lua_State* L) {
 }
 
 static int script_modelholder_init2(lua_State* L) {
-    uint32_t vertex_color_rgb8 = (uint32_t)luaL_checkinteger(L, 1);
-    const char* atlas_src = luaL_optstring(L, 2, NULL);
-    const char* animlist_src = luaL_optstring(L, 3, NULL);
+    uint32_t vertex_color_rgb8 = (uint32_t)luaL_checkinteger(L, 2);
+    const char* atlas_src = luaL_optstring(L, 3, NULL);
+    const char* animlist_src = luaL_optstring(L, 4, NULL);
 
     ModelHolder ret = modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src);
 

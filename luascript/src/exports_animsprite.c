@@ -45,11 +45,11 @@ EM_JS_PRFX(void, animsprite_set_delay, (AnimSprite animsprite, float delay_milli
 
 
 static int script_animsprite_init_from_atlas(lua_State* L) {
-    float frame_rate = (float)luaL_checknumber(L, 1);
-    int32_t loop = (int32_t)luaL_checkinteger(L, 2);
-    Atlas atlas = luascript_read_nullable_userdata(L, 3, ATLAS);
-    const char* prefix = luaL_optstring(L, 4, NULL);
-    bool has_number_suffix = (bool)lua_toboolean(L, 5);
+    float frame_rate = (float)luaL_checknumber(L, 2);
+    int32_t loop = (int32_t)luaL_checkinteger(L, 3);
+    Atlas atlas = luascript_read_nullable_userdata(L, 4, ATLAS);
+    const char* prefix = luaL_optstring(L, 5, NULL);
+    bool has_number_suffix = (bool)lua_toboolean(L, 6);
 
     AnimSprite ret = animsprite_init_from_atlas(frame_rate, loop, atlas, prefix, has_number_suffix);
 
@@ -57,8 +57,12 @@ static int script_animsprite_init_from_atlas(lua_State* L) {
 }
 
 static int script_animsprite_init_from_animlist(lua_State* L) {
-    AnimList animlist = luascript_read_nullable_userdata(L, 1, ANIMLIST);
-    const char* animation_name = luaL_optstring(L, 2, NULL);
+    AnimList animlist = luascript_read_nullable_userdata(L, 2, ANIMLIST);
+    const char* animation_name = luaL_optstring(L, 3, NULL);
+
+    if (!animlist) {
+        return luaL_error(L, "animlist was nil (null)");
+    }
 
     AnimSprite ret = animsprite_init_from_animlist(animlist, animation_name);
 
@@ -66,9 +70,13 @@ static int script_animsprite_init_from_animlist(lua_State* L) {
 }
 
 static int script_animsprite_init_from_tweenlerp(lua_State* L) {
-    const char* name = luaL_optstring(L, 1, NULL);
-    int32_t loop = (int32_t)luaL_checkinteger(L, 2);
-    TweenLerp tweenlerp = luascript_read_nullable_userdata(L, 3, TWEENLERP);
+    const char* name = luaL_optstring(L, 2, NULL);
+    int32_t loop = (int32_t)luaL_checkinteger(L, 3);
+    TweenLerp tweenlerp = luascript_read_nullable_userdata(L, 4, TWEENLERP);
+
+    if (!tweenlerp) {
+        return luaL_error(L, "tweenlerp was nil (null)");
+    }
 
     AnimSprite ret = animsprite_init_from_tweenlerp(name, loop, tweenlerp);
 
@@ -76,7 +84,7 @@ static int script_animsprite_init_from_tweenlerp(lua_State* L) {
 }
 
 static int script_animsprite_init_as_empty(lua_State* L) {
-    const char* name = luaL_checkstring(L, 1);
+    const char* name = luaL_checkstring(L, 2);
 
     AnimSprite ret = animsprite_init_as_empty(name);
 
@@ -84,7 +92,11 @@ static int script_animsprite_init_as_empty(lua_State* L) {
 }
 
 static int script_animsprite_init(lua_State* L) {
-    AnimListItem animlist_item = luascript_read_nullable_userdata(L, 1, ANIMLISTITEM);
+    AnimListItem animlist_item = luascript_read_nullable_userdata(L, 2, ANIMLISTITEM);
+
+    if (!animlist_item) {
+        return luaL_error(L, "animlist_item was nil (null)");
+    }
 
     AnimSprite ret = animsprite_init(animlist_item);
 

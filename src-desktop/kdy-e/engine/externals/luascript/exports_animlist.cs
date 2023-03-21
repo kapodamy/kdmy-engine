@@ -10,7 +10,7 @@ namespace Engine.Externals.LuaScriptInterop {
 
 
         static int script_animlist_init(LuaState L) {
-            string src = L.luaL_checkstring(1);
+            string src = L.luaL_checkstring(2);
 
             AnimList ret = AnimList.Init(src);
 

@@ -109,12 +109,12 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_menu_init(LuaState L) {
-            MenuManifest menumanifest = table_to_menumanifest(L, 1);
-            float x = (float)L.luaL_checknumber(2);
-            float y = (float)L.luaL_checknumber(3);
-            float z = (float)L.luaL_checknumber(4);
-            float width = (float)L.luaL_checknumber(5);
-            float height = (float)L.luaL_checknumber(6);
+            MenuManifest menumanifest = table_to_menumanifest(L, 2);
+            float x = (float)L.luaL_checknumber(3);
+            float y = (float)L.luaL_checknumber(4);
+            float z = (float)L.luaL_checknumber(5);
+            float width = (float)L.luaL_checknumber(6);
+            float height = (float)L.luaL_checknumber(7);
 
             if (menumanifest == null) return L.luaL_error("menumanifest argument can not be nil (null)");
 

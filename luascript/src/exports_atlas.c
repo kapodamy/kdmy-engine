@@ -83,7 +83,7 @@ int script_atlas_push_atlas_entry(lua_State* L, AtlasEntry entry) {
 
 
 static int script_atlas_init(lua_State* L) {
-    const char* src = luaL_checkstring(L, 1);
+    const char* src = luaL_checkstring(L, 2);
 
     Atlas ret = atlas_init(src);
     return luascript_userdata_allocnew(L, ATLAS, ret);

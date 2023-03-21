@@ -58,7 +58,7 @@ EM_JS_PRFX(bool, soundplayer_has_ended, (SoundPlayer soundplayer), {
 
 
 static int script_soundplayer_init(lua_State* L) {
-    const char* src = luaL_checkstring(L, 1);
+    const char* src = luaL_checkstring(L, 2);
 
     SoundPlayer ret = soundplayer_init(src);
 
@@ -234,7 +234,8 @@ int script_soundplayer_new(lua_State* L, SoundPlayer soundplayer) {
 }
 
 static int script_soundplayer_gc(lua_State* L) {
-    return luascript_userdata_gc(L, SOUNDPLAYER);
+    // if this object was allocated by lua, call the destructor
+    return luascript_userdata_destroy(L, SOUNDPLAYER, (Destructor)soundplayer_destroy);
 }
 
 static int script_soundplayer_tostring(lua_State* L) {

@@ -380,12 +380,12 @@ static MenuManifest table_to_menumanifest(lua_State* L, int idx) {
 
 
 static int script_menu_init(lua_State* L) {
-    MenuManifest menumanifest = table_to_menumanifest(L, 1);
-    float x = (float)luaL_checknumber(L, 2);
-    float y = (float)luaL_checknumber(L, 3);
-    float z = (float)luaL_checknumber(L, 4);
-    float width = (float)luaL_checknumber(L, 5);
-    float height = (float)luaL_checknumber(L, 6);
+    MenuManifest menumanifest = table_to_menumanifest(L, 2);
+    float x = (float)luaL_checknumber(L, 3);
+    float y = (float)luaL_checknumber(L, 4);
+    float z = (float)luaL_checknumber(L, 5);
+    float width = (float)luaL_checknumber(L, 6);
+    float height = (float)luaL_checknumber(L, 7);
 
     if (!menumanifest) return luaL_error(L, "menumanifest argument can not be nil (null)");
 

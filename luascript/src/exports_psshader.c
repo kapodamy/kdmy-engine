@@ -36,8 +36,8 @@ EM_JS_PRFX(bool, psshader_set_uniform1i, (PSShader psshader, const char* name, i
 
 
 static int script_psshader_init(lua_State* L) {
-    const char* vertex_sourcecode = luaL_optstring(L, 1, NULL);
-    const char* fragment_sourcecode = luaL_optstring(L, 2, NULL);
+    const char* vertex_sourcecode = luaL_optstring(L, 2, NULL);
+    const char* fragment_sourcecode = luaL_optstring(L, 3, NULL);
 
     PSShader psshader = psshader_init(vertex_sourcecode, fragment_sourcecode);
 

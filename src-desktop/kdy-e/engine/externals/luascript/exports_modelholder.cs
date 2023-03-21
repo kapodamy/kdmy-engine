@@ -11,7 +11,7 @@ namespace Engine.Externals.LuaScriptInterop {
         public const string MODELHOLDER = "ModelHolder";
 
         static int script_modelholder_init(LuaState L) {
-            string src = L.luaL_checkstring(1);
+            string src = L.luaL_checkstring(2);
 
             ModelHolder ret = ModelHolder.Init(src);
 
@@ -19,9 +19,9 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_modelholder_init2(LuaState L) {
-            uint vertex_color_rgb8 = (uint)L.luaL_checkinteger(1);
-            string atlas_src = L.luaL_optstring(2, null);
-            string animlist_src = L.luaL_optstring(3, null);
+            uint vertex_color_rgb8 = (uint)L.luaL_checkinteger(2);
+            string atlas_src = L.luaL_optstring(3, null);
+            string animlist_src = L.luaL_optstring(4, null);
 
             ModelHolder ret = ModelHolder.Init2(vertex_color_rgb8, atlas_src, animlist_src);
 
@@ -58,10 +58,10 @@ namespace Engine.Externals.LuaScriptInterop {
         }
 
         static int script_modelholder_create_animsprite(LuaState L) {
-            ModelHolder modelholder = L.ReadUserdata<ModelHolder>(MODELHOLDER);
-            string animation_name = L.luaL_optstring(2, null);
-            bool fallback_ = L.lua_toboolean(3);
-            bool no_return_null = L.lua_toboolean(4);
+            ModelHolder modelholder = L.ReadNullableUserdata<ModelHolder>(2, MODELHOLDER);
+            string animation_name = L.luaL_optstring(3, null);
+            bool fallback_ = L.lua_toboolean(4);
+            bool no_return_null = L.lua_toboolean(5);
 
             AnimSprite ret = modelholder.CreateAnimsprite(animation_name, fallback_, no_return_null);
 

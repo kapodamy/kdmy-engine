@@ -11,8 +11,8 @@ public static class ExportsPSShader {
 
 
     static int script_psshader_init(LuaState L) {
-        string vertex_sourcecode = L.luaL_optstring(1, null);
-        string fragment_sourcecode = L.luaL_optstring(2, null);
+        string vertex_sourcecode = L.luaL_optstring(2, null);
+        string fragment_sourcecode = L.luaL_optstring(3, null);
 
         PSShader psshader = PSShader.Init(vertex_sourcecode, fragment_sourcecode);
 
