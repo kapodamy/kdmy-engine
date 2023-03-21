@@ -484,6 +484,7 @@ declare global {
     }
     /** An OGG Vorbis sound player  */
     interface SoundPlayer {
+        destroy(): void;
         play(): void;
         pause(): void;
         stop(): void;
@@ -1209,6 +1210,14 @@ declare global {
          */
         init(menumanifest: MenuManifest, x: number, y: number, z: number, width: number, height: number): Menu;
     } const Menu: MenuConstructor;
+    interface SoundPlayerConstructor {
+        /**
+         * Initilizes a new sound player
+         * @param filename the ogg filename, the file must be OGG Vorbis
+         * @returns a new {@link SoundPlayer} instance, otherwise, null if an error ocurrs
+         */
+        init(filename: string): SoundPlayer;
+    } const SoundPlayer: SoundPlayerConstructor;
 
 
     //

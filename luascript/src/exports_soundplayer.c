@@ -4,6 +4,13 @@
 
 
 #ifdef JAVASCRIPT
+EM_ASYNC_JS_PRFX(SoundPlayer, soundplayer_init, (const char* src), {
+    let ret = await soundplayer_init(kdmyEngine_ptrToString(src));
+    return kdmyEngine_obtain(ret);
+});
+EM_JS_PRFX(void, soundplayer_destroy, (SoundPlayer* soundplayer), {
+    soundplayer_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(soundplayer)));
+});
 EM_JS_PRFX(void, soundplayer_play, (SoundPlayer soundplayer), {
     soundplayer_play(kdmyEngine_obtain(soundplayer));
 });
@@ -49,6 +56,25 @@ EM_JS_PRFX(bool, soundplayer_has_ended, (SoundPlayer soundplayer), {
 #endif
 
 
+
+static int script_soundplayer_init(lua_State* L) {
+    const char* src = luaL_checkstring(L, 1);
+
+    SoundPlayer ret = soundplayer_init(src);
+
+    return luascript_userdata_allocnew(L, SOUNDPLAYER, ret);
+}
+
+static int script_soundplayer_destroy(lua_State* L) {
+    SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
+    
+    if (luascript_userdata_is_allocated(L, SOUNDPLAYER))
+        soundplayer_destroy(&soundplayer);
+    else
+        printf("script_soundplayer_destroy() object was not allocated by lua\n");
+
+    return 0;
+}
 
 static int script_soundplayer_play(lua_State* L) {
     SoundPlayer soundplayer = luascript_read_userdata(L, SOUNDPLAYER);
@@ -183,6 +209,8 @@ static int script_soundplayer_has_ended(lua_State* L) {
 ////////////////////////////////////////////////////////////////////////////////////
 
 static const luaL_Reg SOUNDPLAYER_FUNCTIONS[] = {
+    {"init", script_soundplayer_init},
+    {"destroy", script_soundplayer_destroy},
     {"play", script_soundplayer_play},
     {"pause", script_soundplayer_pause},
     {"stop", script_soundplayer_stop},

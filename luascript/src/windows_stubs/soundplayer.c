@@ -1,6 +1,15 @@
 #include "commons.h"
 #include "soundplayer.h"
 
+SoundPlayer_t stub = {};
+
+SoundPlayer soundplayer_init(const char* src) {
+    print_stub("soundplayer_init", "src=%s", src);
+    return &stub;
+}
+void soundplayer_destroy(SoundPlayer* soundplayer) {
+    print_stub("soundplayer_destroy", "soundplayer=%p", soundplayer);
+}
 void soundplayer_play(SoundPlayer soundplayer) {
     print_stub("soundplayer_play", "soundplayer=%p", soundplayer);
 }

@@ -12,6 +12,8 @@ typedef SoundPlayer_t *SoundPlayer;
 typedef int32_t Fadding;
 
 
+SoundPlayer soundplayer_init(const char* src);
+void soundplayer_destroy(SoundPlayer* soundplayer);
 void soundplayer_play(SoundPlayer soundplayer);
 void soundplayer_pause(SoundPlayer soundplayer);
 void soundplayer_stop(SoundPlayer soundplayer);

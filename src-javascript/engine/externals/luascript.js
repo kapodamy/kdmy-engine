@@ -978,6 +978,12 @@ function __asyncjs__songplayer_play(songplayer, songinfo) {
         await songplayer_play(kdmyEngine_obtain(songplayer), _songinfo)
     })
 }
+function __asyncjs__soundplayer_init(src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await soundplayer_init(kdmyEngine_ptrToString(src));
+        return kdmyEngine_obtain(ret)
+    })
+}
 function __asyncjs__week_rebuild_ui(roundcontext) {
     return Asyncify.handleAsync(async() => {
         await week_rebuild_ui(kdmyEngine_obtain(roundcontext))
@@ -2498,6 +2504,9 @@ function __js__songprogressbar_set_visible(songprogressbar, visible) {
 }
 function __js__songprogressbar_show_elapsed(songprogressbar, elapsed_or_remain_time) {
     songprogressbar_show_elapsed(kdmyEngine_obtain(songprogressbar), elapsed_or_remain_time)
+}
+function __js__soundplayer_destroy(soundplayer) {
+    soundplayer_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(soundplayer)))
 }
 function __js__soundplayer_fade(soundplayer, in_or_out, duration) {
     soundplayer_fade(kdmyEngine_obtain(soundplayer), in_or_out, duration)
@@ -6874,6 +6883,7 @@ var asmLibraryArg = {
     "__asyncjs__modelholder_init": __asyncjs__modelholder_init,
     "__asyncjs__modelholder_init2": __asyncjs__modelholder_init2,
     "__asyncjs__songplayer_play": __asyncjs__songplayer_play,
+    "__asyncjs__soundplayer_init": __asyncjs__soundplayer_init,
     "__asyncjs__week_rebuild_ui": __asyncjs__week_rebuild_ui,
     "__asyncjs__week_set_gameover_option": __asyncjs__week_set_gameover_option,
     "__js__animlist_destroy": __js__animlist_destroy,
@@ -7278,6 +7288,7 @@ var asmLibraryArg = {
     "__js__songprogressbar_set_text_color": __js__songprogressbar_set_text_color,
     "__js__songprogressbar_set_visible": __js__songprogressbar_set_visible,
     "__js__songprogressbar_show_elapsed": __js__songprogressbar_show_elapsed,
+    "__js__soundplayer_destroy": __js__soundplayer_destroy,
     "__js__soundplayer_fade": __js__soundplayer_fade,
     "__js__soundplayer_get_duration": __js__soundplayer_get_duration,
     "__js__soundplayer_get_position": __js__soundplayer_get_position,
