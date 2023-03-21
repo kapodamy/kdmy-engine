@@ -88,6 +88,7 @@ static void completed_cb(void* userdata) {
     Stream_t* stream = (Stream_t*)userdata;
     stream->completed = true;
     stream->callback_running = false;
+    stream->played_time += Pa_GetStreamTime(stream->pastream) - stream->timestamp;
 
 #ifdef DEBUG
     printf(
@@ -467,7 +468,7 @@ extern double sndbridge_position(StreamID stream_id) {
         case 1:
             break;
         case 0:
-            if (stream->fetching && !stream->halt)
+            if (!stream->completed && stream->fetching && !stream->halt)
                 position += Pa_GetStreamTime(stream->pastream) - stream->timestamp;
             break;
         default:
@@ -750,7 +751,8 @@ int main() {
     assert(mem);
     StreamID stream_id = sndbridge_queue_ogg(mem);*/
 
-    FileHandle_t* mem = filehandle_init("./vorbis.ogg");
+    // FileHandle_t* mem = filehandle_init("./vorbis.ogg");
+    FileHandle_t* mem = filehandle_init("./gameOverEnd.ogg");
     StreamID stream_id = sndbridge_queue_ogg(mem);
 
 
@@ -811,17 +813,19 @@ int main() {
         //sndbridge_seek(stream_id, 0.0);
     }*/
 
-    //sndbridge_stop(stream_id);
+    // sndbridge_stop(stream_id);
     sndbridge_play(stream_id);
-    Pa_Sleep(3000);
-    sndbridge_seek(stream_id, 1000);
+    // Pa_Sleep(3000);
+    // sndbridge_seek(stream_id, 1000);
 
-    while (true) {
+    int32_t total = 0;
+    while (total < 15000) {
         double duration = sndbridge_duration(stream_id);
         double position = sndbridge_position(stream_id);
         printf("duration=%f  time=%f\n", duration, position);
         Pa_Sleep(100);
-        if (sndbridge_has_ended(stream_id)) break;
+        total += 100;
+        // if (sndbridge_has_ended(stream_id)) break;
     }
 
     printf("playback done\n");
