@@ -243,6 +243,8 @@ namespace Engine.Game {
                 layout.Suspend();
                 PVRContext.MuteAudioOutputOnMinimized(EngineSettings.mute_on_minimize);
 
+                GameMain.HelperDrawLoadingScreen();
+
                 int ret = Week.Main(
                     weekinfo, state.use_alternative, difficult, default_bf, default_gf,
                     gameplaymanifest, state.map.gameplaymanifest_index

@@ -233,6 +233,9 @@ async function freeplaymenu_main() {
         await freeplaymenu_internal_wait_transition(state, "before-play-song", dt_playsong);
 
         layout_suspend(layout);
+
+        await main_helper_draw_loading_screen();
+
         let ret = await week_main(
             weekinfo, state.use_alternative, difficult, default_bf, default_gf,
             gameplaymanifest, state.map.gameplaymanifest_index

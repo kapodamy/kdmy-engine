@@ -947,10 +947,18 @@ namespace Engine.Game {
                     is_bool = true,
                     value_bool = true,
                     ini_key = "mute_on_minimize"
+                },
+                new SettingOption() {
+                    name = "SHOW LOADING SCREEN",
+                    description = "Displays a sprite after starting the week/song gameplay.\n" +
+                                  "Only applicable in Freeplay menu and Week selector",
+                    is_bool = true,
+                    value_bool = false,
+                    ini_key = "show_loading_screen"
                 }
 
             };
-            int options_size = 6;
+            int options_size = 7;
 
             // load current settings
             for (int i = 0 ; i < options_size ; i++) {

@@ -109,6 +109,8 @@ namespace Engine.Game.Common {
 
         public const float MARKER_DURATION = 1000f / 6f;
 
+        public const string LOADING_SCREEN_TEXTURE = "/assets/common/image/funkin/funkay.png";
+
 
         ////////////////////////////////////
         // Imported from Kade Engine v1.6.1

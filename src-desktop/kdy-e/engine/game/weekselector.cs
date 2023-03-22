@@ -546,6 +546,8 @@ namespace Engine.Game {
 
             FunkinSave.SetLastPlayed(gameplay_weekinfo.name, gameplay_difficult);
 
+            GameMain.HelperDrawLoadingScreen();
+
             // (C# only) before run check if necessary preload files
             int preload_id = PreloadCache.AddFileList(
                 WeekEnumerator.GetAsset(gameplay_weekinfo, PreloadCache.PRELOAD_FILENAME)

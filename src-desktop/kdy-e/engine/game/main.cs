@@ -4,6 +4,7 @@ using Engine.Externals.LuaScriptInterop;
 using Engine.Font;
 using Engine.Game.Common;
 using Engine.Game.Gameplay.Helpers;
+using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
@@ -137,6 +138,30 @@ namespace Engine.Game {
             }
 
             return 1;
+        }
+
+        public static void HelperDrawLoadingScreen() {
+            PVRContext pvr_context = PVRContext.global_context;
+
+            if (!EngineSettings.show_loading_screen) return;
+
+            if (!FS.FileExists(Funkin.LOADING_SCREEN_TEXTURE)) {
+                return;
+            }
+
+            Texture texture = Texture.Init(Funkin.LOADING_SCREEN_TEXTURE);
+            Sprite sprite = Sprite.Init(texture);
+            sprite.SetDrawLocation(0f, 0f);
+            sprite.SetDrawSizeFromSourceSize();
+
+            // funkay texture aspect ratio is not 16:9 or 4:3
+            ImgUtils.CalcResizeSprite(sprite, pvr_context.ScreenWidth, pvr_context.ScreenHeight, true, true);
+
+            pvr_context.Reset();
+            sprite.Draw(pvr_context);
+            pvr_context.WaitReady();
+
+            sprite.DestroyFull();
         }
 
         public static void HelperTriggerActionMenu(Layout layout, string prefix, string name, bool selected, bool choosen) {

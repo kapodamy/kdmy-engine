@@ -542,6 +542,8 @@ async function weekselector_main() {
 
     funkinsave_set_last_played(gameplay_weekinfo.name, gameplay_difficult);
 
+    await main_helper_draw_loading_screen();
+
     let week_result = await week_main(
         gameplay_weekinfo,
         gameplay_alternative_tracks,

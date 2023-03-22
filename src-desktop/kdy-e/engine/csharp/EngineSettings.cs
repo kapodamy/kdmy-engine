@@ -33,6 +33,7 @@ namespace CsharpWrapper {
         public static bool autohide_cursor = true;
         public static bool mute_on_minimize = true;
         public static int master_volume = 100;
+        public static bool show_loading_screen = false;
         public static bool use_funkin_marker_duration = true;
         public static bool gameplay_enabled_distractions = true;
         public static bool gameplay_enabled_flashinglights = true;
@@ -72,6 +73,7 @@ namespace CsharpWrapper {
             autohide_cursor = GetBool(false, "autohide_cursor", autohide_cursor);
             mute_on_minimize = GetBool(false, "mute_on_minimize", mute_on_minimize);
             master_volume = GetInt(false, "master_volume", master_volume);
+            show_loading_screen = GetBool(false, "show_loading_screen", show_loading_screen);
         }
 
         internal static void Reload() {

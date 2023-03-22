@@ -24,13 +24,15 @@ var DEBUG = 0;
 var SETTINGS = { // not implemented
     input_offset: 0, inverse_strum_scroll: false, penality_on_empty_strum: true, use_funkin_marker_duration: true,
     song_progressbar: true, song_progressbar_remaining: false,
-    gameplay_enabled_distractions: true, gameplay_enabled_flashinglights: true, gameplay_enabled_ui_cosmetics: true
+    gameplay_enabled_distractions: true, gameplay_enabled_flashinglights: true, gameplay_enabled_ui_cosmetics: true,
+    show_loading_screen: true
 };
 
 
 const FUNKIN_BACKGROUND_MUSIC = "/assets/common/music/freakyMenu.ogg";
 const FUNKIN_SCREEN_RESOLUTION_WIDTH = 1280;
 const FUNKIN_SCREEN_RESOLUTION_HEIGHT = 720;
+const FUNKIN_LOADING_SCREEN_TEXTURE = "/assets/common/image/funkin/funkay.png";
 
 
 
@@ -146,6 +148,28 @@ async function main(argc, argv) {
     }
 
     return 1;
+}
+
+async function main_helper_draw_loading_screen() {
+    if (!SETTINGS.show_loading_screen) return;
+
+    if (!await fs_file_exists(FUNKIN_LOADING_SCREEN_TEXTURE)) {
+        return;
+    }
+
+    let texture = await texture_init(FUNKIN_LOADING_SCREEN_TEXTURE);
+    let sprite = sprite_init(texture);
+    sprite.SetDrawLocation(0.0, 0.0);
+    sprite.SetDrawSizeFromSourceSize();
+
+    // funkay texture aspect ratio is not 16:9 or 4:3
+    imgutils_calc_resize_sprite(sprite, pvr_context.screen_width, pvr_context.screen_height, 1, 1);
+
+    pvr_context_reset(pvr_context);
+    sprite_draw(pvr_context);
+    await pvrctx_wait_ready();
+
+    sprite_destroy_full();
 }
 
 function main_helper_trigger_action_menu(layout, prefix, name, selected, choosen) {
