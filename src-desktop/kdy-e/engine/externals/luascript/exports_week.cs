@@ -513,6 +513,27 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+
+        static int script_week_gameover_set_before_anim_duration(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            float duration_ms = (float)L.luaL_checknumber(1);
+
+            Week.SetGameoverOption(roundcontext, WeekGameOverOption.AnimDurationBefore, duration_ms, null);
+
+            return 0;
+        }
+
+        static int script_week_gameover_set_before_force_end_anim_duration(LuaState L) {
+            RoundContext roundcontext = (RoundContext)L.Context;
+
+            float duration_ms = (float)L.luaL_checknumber(1);
+
+            Week.SetGameoverOption(roundcontext, WeekGameOverOption.AnimDurationBeforeForceEnd, duration_ms, null);
+
+            return 0;
+        }
+
         static int script_week_gameover_set_music(LuaState L) {
             RoundContext roundcontext = (RoundContext)L.Context;
 
@@ -598,6 +619,8 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("week_gameover_set_die_anim_duration", script_week_gameover_set_die_anim_duration),
             new LuaTableFunction("week_gameover_set_retry_anim_duration", script_week_gameover_set_retry_anim_duration),
             new LuaTableFunction("week_gameover_set_giveup_anim_duration", script_week_gameover_set_giveup_anim_duration),
+            new LuaTableFunction("week_gameover_set_before_anim_duration", script_week_gameover_set_before_anim_duration),
+            new LuaTableFunction("week_gameover_set_before_force_end_anim_duration", script_week_gameover_set_before_force_end_anim_duration),
             new LuaTableFunction("week_gameover_set_music", script_week_gameover_set_music),
             new LuaTableFunction("week_gameover_set_sfx_die", script_week_gameover_set_sfx_die),
             new LuaTableFunction("week_gameover_set_sfx_confirm", script_week_gameover_set_sfx_confirm),

@@ -1545,6 +1545,19 @@ declare global {
      */
     function week_gameover_set_giveup_anim_duration(duration_ms: number): void;
     /**
+     * Sets the millisecods before __giveup__ or __retry__ ends to fire the screen transition (fade to black).  
+     * If the engine is waiting for __giveup__ or __retry__ animation to completed, this value is ignored.
+     * @param duration_ms duration in milliseconds, NaN to use default duration
+     */
+    function week_gameover_set_before_anim_duration(duration_ms: number): void;
+    /**
+     * Same as {@link week_gameover_set_before_anim_duration}, but this value used instead if the player
+     * skips the gameover screen (after pressing START button twice).  
+     * If the engine is waiting for __giveup__ or __retry__ animation to completed, this value is ignored.
+     * @param duration_ms duration in milliseconds, NaN to use default duration
+     */
+    function week_gameover_set_before_force_end_anim_duration(duration_ms: number): void;
+    /**
      * Sets the music for the gameover screen
      * @param filename the sound filename or null to use/retore the default sound
      */

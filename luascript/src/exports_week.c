@@ -789,6 +789,28 @@ static int script_week_gameover_set_giveup_anim_duration(lua_State* L) {
     return 0;
 }
 
+static int script_week_gameover_set_before_anim_duration(lua_State* L) {
+    Luascript luascript = luascript_get_instance(L);
+    RoundContext roundcontext = (RoundContext)luascript->context;
+
+    float duration_ms = (float)luaL_checknumber(L, 1);
+
+    week_set_gameover_option(roundcontext, WEEK_GAMEOVEROPTION_ANIMDURATIONBEFORE, duration_ms, NULL);
+
+    return 0;
+}
+
+static int script_week_gameover_set_before_force_end_anim_duration(lua_State* L) {
+    Luascript luascript = luascript_get_instance(L);
+    RoundContext roundcontext = (RoundContext)luascript->context;
+
+    float duration_ms = (float)luaL_checknumber(L, 1);
+
+    week_set_gameover_option(roundcontext, WEEK_GAMEOVEROPTION_ANIMDURATIONBEFOREFORCEEND, duration_ms, NULL);
+
+    return 0;
+}
+
 static int script_week_gameover_set_music(lua_State* L) {
     Luascript luascript = luascript_get_instance(L);
     RoundContext roundcontext = (RoundContext)luascript->context;
@@ -879,6 +901,8 @@ static const luaL_Reg WEEK_FUNCTIONS[] = {
     { "week_gameover_set_music", script_week_gameover_set_music },
     { "week_gameover_set_sfx_die", script_week_gameover_set_sfx_die },
     { "week_gameover_set_sfx_confirm", script_week_gameover_set_sfx_confirm },
+    { "week_gameover_set_before_anim_duration", script_week_gameover_set_before_anim_duration },
+    { "week_gameover_set_before_force_end_anim_duration", script_week_gameover_set_before_force_end_anim_duration },
     { NULL, NULL }
 };
 

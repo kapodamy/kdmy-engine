@@ -13,6 +13,7 @@ const WEEK_GAMEOVER_DURATION_DIE = "gameover_duration_die";
 const WEEK_GAMEOVER_DURATION_RETRY = "gameover_duration_retry";
 const WEEK_GAMEOVER_DURATION_GIVEUP = "gameover_duration_giveup";
 const WEEK_GAMEOVER_DURATION_BEFORE = "gameover_transition_before";
+const WEEK_GAMEOVER_DURATION_BEFORE_FORCE_END = "gameover_transition_before_force_end";
 
 const WEEK_GAMEOVER_LAYOUT_Z_INDEX = 200;
 const WEEK_GAMEOVER_LAYOUT_DREAMCAST = "/assets/common/image/week-round/gameover~dreamcast.xml";
@@ -30,9 +31,11 @@ const WEEK_GAMEOVER_NOSFXRETRY = 2;
 const WEEK_GAMEOVER_ANIMDURATIONDIE = 3;
 const WEEK_GAMEOVER_ANIMDURATIONRETRY = 4;
 const WEEK_GAMEOVER_ANIMDURATIONGIVEUP = 5;
-const WEEK_GAMEOVER_SETMUSIC = 6;
-const WEEK_GAMEOVER_SETSFXDIE = 7;
-const WEEK_GAMEOVER_SETSFXRETRY = 8;
+const WEEK_GAMEOVER_ANIMDURATIONBEFORE = 6;
+const WEEK_GAMEOVER_ANIMDURATIONBEFOREFORCEEND = 7;
+const WEEK_GAMEOVER_SETMUSIC = 8;
+const WEEK_GAMEOVER_SETSFXDIE = 9;
+const WEEK_GAMEOVER_SETSFXRETRY = 10;
 
 
 async function week_gameover_init() {
@@ -79,6 +82,9 @@ async function week_gameover_init() {
         ),
         default_before_duration: layout_get_attached_value_as_float(
             layout, WEEK_GAMEOVER_DURATION_BEFORE, 500.0
+        ),
+        default_before_force_end_duration: layout_get_attached_value_as_float(
+            layout, WEEK_GAMEOVER_DURATION_BEFORE_FORCE_END, 500.0
         )
     };
 
@@ -101,6 +107,12 @@ async function week_gameover_init() {
     await week_gameover_set_option(WEEK_GAMEOVER_SETMUSIC, NaN, null);
     await week_gameover_set_option(WEEK_GAMEOVER_SETSFXDIE, NaN, null);
     await week_gameover_set_option(WEEK_GAMEOVER_SETSFXRETRY, NaN, null);
+
+    weekgameover.duration_die = weekgameover.default_die_duration;
+    weekgameover.duration_retry = weekgameover.default_retry_duration;
+    weekgameover.duration_giveup = weekgameover.default_giveup_duration;
+    weekgameover.duration_before = weekgameover.default_before_duration;
+    weekgameover.duration_before_force_end = weekgameover.default_before_force_end_duration;
 
     return weekgameover;
 }
@@ -214,13 +226,19 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
     // pick values from the current stage layout (if exists)
     let die_animation_duration = layout_get_attached_value_as_float(
-        layout, WEEK_GAMEOVER_DURATION_DIE, weekgameover.default_die_duration
+        layout, WEEK_GAMEOVER_DURATION_DIE, weekgameover.duration_die
     );
     let retry_animation_duration = layout_get_attached_value_as_float(
-        layout, WEEK_GAMEOVER_DURATION_RETRY, weekgameover.default_retry_duration
+        layout, WEEK_GAMEOVER_DURATION_RETRY, weekgameover.duration_retry
     );
     let giveup_animation_duration = layout_get_attached_value_as_float(
-        layout, WEEK_GAMEOVER_DURATION_GIVEUP, weekgameover.default_giveup_duration
+        layout, WEEK_GAMEOVER_DURATION_GIVEUP, weekgameover.duration_giveup
+    );
+    let before_duration = layout_get_attached_value_as_float(
+        layout, WEEK_GAMEOVER_DURATION_BEFORE, weekgameover.duration_giveup
+    );
+    let before_force_end_duration = layout_get_attached_value_as_float(
+        layout, WEEK_GAMEOVER_DURATION_BEFORE_FORCE_END, weekgameover.duration_giveup
     );
     let stage_has_gameover = layout_get_attached_value(
         roundcontext.layout, "gameover_with_stage", LAYOUT_TYPE_BOOLEAN, 0
@@ -388,15 +406,17 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
     if (dead_character) commited_anims = character_get_commited_animations_count(dead_character);
 
+    let before = decision == 1 ? before_force_end_duration : before_duration;
+    let trigger_transition = 1;
+
     total = decision == 2 ? retry_animation_duration : giveup_animation_duration;
     wait_animation = total < 0.0 && dead_character;
 
     if (wait_animation)
         total = Infinity;
     else if (total < 0.0)
-        total = weekgameover.gameover_transition_before;
+        total = before;
 
-    let trigger_transition = 1;
     while (total > 0.0) {
         let elapsed = await pvrctx_wait_ready();
 
@@ -427,15 +447,15 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
             if (decision == 2 && weekgameover.sfx_retry && !soundplayer_has_ended(weekgameover.sfx_retry)) {
                 // wait for retry sound effect (gameOverEnd.ogg is 7 seconds long)
                 total = soundplayer_get_duration(weekgameover.sfx_retry) - soundplayer_get_position(weekgameover.sfx_retry);
-                if (total < 0) total = weekgameover.gameover_transition_before;
+                if (total < 0) total = before;// ignore
             } else {
-                total = weekgameover.gameover_transition_before;
+                total = before;// ignore
             }
         }
 
-        if (trigger_transition && total <= weekgameover.gameover_transition_before) {
+        if (trigger_transition && total <= before) {
             trigger_transition = 0;
-            layout_trigger_any(weekgameover.layout, "transition");
+            layout_trigger_any(weekgameover.layout, decision == 2 ? "transition" : "transition_giveup");
             if (decision == 1 && weekgameover.music_bg) soundplayer_fade(weekgameover.music_bg, 0, total);
         } else if (trigger_transition) {
             total -= elapsed;
@@ -444,6 +464,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         }
     }
 
+    if (weekgameover.sfx_die) soundplayer_stop(weekgameover.sfx_die);
     if (weekgameover.sfx_retry) soundplayer_stop(weekgameover.sfx_retry);
 
     gamepad_destroy(controller);
@@ -498,6 +519,12 @@ async function week_gameover_set_option(weekgameover, option, nro, str) {
             return;
         case WEEK_GAMEOVER_ANIMDURATIONGIVEUP:
             weekgameover.duration_giveup = Number.isNaN(nro) ? weekgameover.default_giveup_duration : nro;
+            return;
+        case WEEK_GAMEOVER_ANIMDURATIONBEFORE:
+            weekgameover.duration_before = Number.isNaN(nro) ? weekgameover.default_before_duration : nro;
+            return;
+        case WEEK_GAMEOVER_ANIMDURATIONBEFOREFORCEEND:
+            weekgameover.duration_before_force_end = Number.isNaN(nro) ? weekgameover.default_before_force_end_duration : nro;
             return;
         case WEEK_GAMEOVER_SETMUSIC:
             weekgameover.music_bg = await soundplayer_init(str ?? "/assets/common/music/gameOver.ogg");

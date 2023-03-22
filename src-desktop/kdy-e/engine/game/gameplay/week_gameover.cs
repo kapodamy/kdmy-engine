@@ -16,6 +16,8 @@ namespace Engine.Game.Gameplay {
         AnimDurationDie,
         AnimDurationRetry,
         AnimDurationGiveup,
+        AnimDurationBefore,
+        AnimDurationBeforeForceEnd,
         SetMusic,
         SetSfxDie,
         SetSfxRetry
@@ -36,6 +38,7 @@ namespace Engine.Game.Gameplay {
         public const string DURATION_RETRY = "gameover_duration_retry";
         public const string DURATION_GIVEUP = "gameover_duration_giveup";
         public const string DURATION_BEFORE = "gameover_transition_before";
+        public const string DURATION_BEFORE_FORCE_END = "gameover_transition_before_force_end";
 
         public const float LAYOUT_Z_INDEX = 200.0f;
         public const string LAYOUT_DREAMCAST = "/assets/common/image/week-round/gameover~dreamcast.xml";
@@ -63,12 +66,15 @@ namespace Engine.Game.Gameplay {
         private float default_retry_duration;
         private float default_giveup_duration;
         private float default_before_duration;
+        private float default_before_force_end_duration;
         private SoundPlayer sfx_die;
         private SoundPlayer music_bg;
         private SoundPlayer sfx_retry;
         private float duration_die;
         private float duration_retry;
         private float duration_giveup;
+        private float duration_before;
+        private float duration_before_force_end;
 
 
         public WeekGameOver() {
@@ -85,7 +91,7 @@ namespace Engine.Game.Gameplay {
             );
             WeekSelectorHelpText help_difficult = new WeekSelectorHelpText(
                button_icons, layout, 2, false, WeekSelector.BUTTON_LT_RT, WeekGameOver.HELP_DIFFICULT, null
-           );
+            );
             WeekSelectorHelpText help_giveup = new WeekSelectorHelpText(
                 button_icons, layout, 1, false, WeekSelector.BUTTON_B, WeekGameOver.HELP_GIVEUP, null
             );
@@ -116,6 +122,9 @@ namespace Engine.Game.Gameplay {
             this.default_before_duration = layout.GetAttachedValueAsFloat(
                 WeekGameOver.DURATION_BEFORE, 500.0f
             );
+            this.default_before_force_end_duration = layout.GetAttachedValueAsFloat(
+                WeekGameOver.DURATION_BEFORE_FORCE_END, 500.0f
+            );
 
             this.drawable = new Drawable(
                 WeekGameOver.LAYOUT_Z_INDEX, this, this
@@ -136,6 +145,12 @@ namespace Engine.Game.Gameplay {
             SetOption(WeekGameOverOption.SetMusic, Single.NaN, null);
             SetOption(WeekGameOverOption.SetSfxDie, Single.NaN, null);
             SetOption(WeekGameOverOption.SetSfxRetry, Single.NaN, null);
+
+            this.duration_die = this.default_die_duration;
+            this.duration_retry = this.default_retry_duration;
+            this.duration_giveup = this.default_giveup_duration;
+            this.duration_before = this.default_before_duration;
+            this.duration_before_force_end = this.default_before_force_end_duration;
         }
 
         public void Destroy() {
@@ -247,16 +262,19 @@ namespace Engine.Game.Gameplay {
 
             // pick values from the current stage layout (if exists)
             float die_animation_duration = layout.GetAttachedValueAsFloat(
-                WeekGameOver.DURATION_DIE, this.default_die_duration
+                WeekGameOver.DURATION_DIE, this.duration_die
             );
             float retry_animation_duration = layout.GetAttachedValueAsFloat(
-                 WeekGameOver.DURATION_RETRY, this.default_retry_duration
+                 WeekGameOver.DURATION_RETRY, this.duration_retry
             );
             float giveup_animation_duration = layout.GetAttachedValueAsFloat(
-                 WeekGameOver.DURATION_GIVEUP, this.default_giveup_duration
+                 WeekGameOver.DURATION_GIVEUP, this.duration_giveup
             );
-            float gameover_transition_before = this.layout.GetAttachedValueAsFloat(
-                WeekGameOver.DURATION_BEFORE, this.default_before_duration
+            float before_duration = this.layout.GetAttachedValueAsFloat(
+                WeekGameOver.DURATION_BEFORE, this.duration_before
+            );
+            float before_force_end_duration = this.layout.GetAttachedValueAsFloat(
+                WeekGameOver.DURATION_BEFORE_FORCE_END, this.duration_before_force_end
             );
             bool stage_has_gameover = (bool)layout.GetAttachedValue(
                 "gameover_with_stage", AttachedValueType.BOOLEAN, false
@@ -427,12 +445,14 @@ namespace Engine.Game.Gameplay {
             total = decision == 2 ? retry_animation_duration : giveup_animation_duration;
             wait_animation = total < 0.0 && dead_character != null;
 
+            float before = decision == 1 ? before_force_end_duration : before_duration;
+            bool trigger_transition = true;
+
             if (wait_animation)
                 total = Single.PositiveInfinity;
             else if (total < 0.0)
-                total = gameover_transition_before;
+                total = before;
 
-            bool trigger_transition = true;
             while (total > 0.0) {
                 float elapsed = PVRContext.global_context.WaitReady();
 
@@ -463,15 +483,15 @@ namespace Engine.Game.Gameplay {
                     if (decision == 2 && this.sfx_retry != null && !this.sfx_retry.HasEnded()) {
                         // wait for retry sound effect (gameOverEnd.ogg is 7 seconds long)
                         total = this.sfx_retry.GetDuration() - this.sfx_retry.GetPosition();
-                        if (total < 0) total = gameover_transition_before;
+                        if (total < 0) total = before;// ignore
                     } else {
-                        total = gameover_transition_before;
+                        total = before;// ignore
                     }
                 }
 
-                if (trigger_transition && total <= gameover_transition_before) {
+                if (trigger_transition && total <= before) {
                     trigger_transition = false;
-                    this.layout.TriggerAny("transition");
+                    this.layout.TriggerAny(decision == 2 ? "transition" : "transition_giveup");
                     if (decision == 1) this.music_bg.Fade(false, (float)total);
                 } else if (trigger_transition) {
                     total -= elapsed;
@@ -480,6 +500,7 @@ namespace Engine.Game.Gameplay {
                 }
             }
 
+            if (this.sfx_die != null) this.sfx_die.Stop();
             if (this.sfx_retry != null) this.sfx_retry.Stop();
 
             controller.Destroy();
@@ -533,6 +554,12 @@ namespace Engine.Game.Gameplay {
                     return;
                 case WeekGameOverOption.AnimDurationGiveup:
                     this.duration_giveup = Single.IsNaN(nro) ? this.default_giveup_duration : nro;
+                    return;
+                case WeekGameOverOption.AnimDurationBefore:
+                    this.duration_before = Single.IsNaN(nro) ? this.default_before_duration : nro;
+                    return;
+                case WeekGameOverOption.AnimDurationBeforeForceEnd:
+                    this.duration_before_force_end = Single.IsNaN(nro) ? this.default_before_force_end_duration : nro;
                     return;
                 case WeekGameOverOption.SetMusic:
                     this.music_bg = SoundPlayer.Init(str ?? "/assets/common/music/gameOver.ogg");

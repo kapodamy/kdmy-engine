@@ -125,6 +125,10 @@
         <Interpolator type="ease-out" property="alpha" start="0" end="1" duration="2000" />
     </AnimationMacro>
 
+    <AnimationMacro name="gameover_transition_giveup">
+        <Interpolator type="ease-out" property="alpha" start="0" end="1" duration="500" />
+    </AnimationMacro>
+
     <AnimationMacro name="gameover_changed_difficult">
         <Interpolator type="linear" property="translateX" start="-300" end="0" duration="200" />
     </AnimationMacro>
