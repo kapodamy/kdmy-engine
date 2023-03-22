@@ -264,7 +264,7 @@ L_store_and_return:
             udata->was_allocated_by_lua = false;
 
             if (was_allocated_by_lua) {
-                GCHandle handle = GCHandle.FromIntPtr((IntPtr)udata);
+                GCHandle handle = GCHandle.FromIntPtr((IntPtr)obj_ptr);
                 if (handle.IsAllocated) {
                     object obj = handle.Target;
 
