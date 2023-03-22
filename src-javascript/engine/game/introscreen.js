@@ -88,6 +88,23 @@ async function introscreen_main() {
     await modding_helper_notify_event(modding, "intro-funkin");
     await introscreen_draw_sparse_text(funky_intro, delay, funkin_duration, modding, maple_pad);
 
+    layout_trigger_any(layout, "transition-out");
+    await modding_helper_notify_event(modding, "transition-out");
+    while (1) {
+        let elapsed = await pvrctx_wait_ready();
+        modding_helper_notify_frame(modding, elapsed, -1.0);
+
+        pvr_context_reset(pvr_context);
+        layout_animate(layout, elapsed);
+        layout_draw(layout, pvr_context);
+
+        if (layout_animation_is_completed(layout, "transition_effect") > 0) {
+            // flush framebuffer again with last fade frame
+            await pvrctx_wait_ready();
+            break;
+        }
+    }
+
     await modding_helper_notify_exit2(modding);
 
     // dispose resources used

@@ -325,8 +325,11 @@ async function mainmenu_main() {
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
 
-        if (layout_animation_is_completed(layout, "transition_effect"))
+        if (layout_animation_is_completed(layout, "transition_effect")) {
+            // flush framebuffer again with last fade frame
+            await pvrctx_wait_ready();
             break;
+        }
     }
 
     if (has_choosen_option) {

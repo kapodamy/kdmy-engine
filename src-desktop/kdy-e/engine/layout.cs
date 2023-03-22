@@ -710,42 +710,34 @@ namespace Engine {
         public int AnimationIsCompleted(string item_name) {
             if (item_name == null) throw new ArgumentNullException("entry_name", "entry_name is required");
 
-            AnimSprite obj = null;
-            bool is_drawable = false;
-            bool found = false;
+            IVertex vertex = null;
+            AnimSprite animsprite = null;
 
             for (int i = 0 ; i < this.vertex_list_size ; i++) {
                 if (this.vertex_list[i].name == item_name) {
-                    obj = this.vertex_list[i].animation;
-                    is_drawable = this.vertex_list[i].type == PVRContextVertex.DRAWABLE;
-                    found = true;
+                    vertex = this.vertex_list[i].vertex;
+                    animsprite = this.vertex_list[i].animation;
                     break;
                 }
             }
 
-            if (!found) {
+            if (vertex == null) {
                 // check if a group with this name exists
                 for (int i = 0 ; i < this.group_list_size ; i++) {
                     if (this.group_list[i].name == item_name) {
-                        obj = this.vertex_list[i].animation;
-                        found = true;
+                        animsprite = this.group_list[i].animation;
                         break;
                     }
                 }
             }
 
-            if (!found) return 2;
+            if (vertex == null && animsprite == null) return 2;
 
-            if (obj == null) return 1;
-
-            if (is_drawable) {
-                //
-                // Note: is not posible peek the drawable animation, call .Animate()
-                // with a zero elapsed duration to check if was completed.
-                //
-                if (obj.Animate(0) > 0) return 1;
+            if (animsprite != null) {
+                if (animsprite.IsCompleted()) return 1;
             } else {
-                if (obj.IsCompleted()) return 1;
+                // call *_animate() to check if was completed.
+                if (vertex.Animate(0f) > 0) return 1;
             }
 
             return 0;

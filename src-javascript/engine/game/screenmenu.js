@@ -132,6 +132,9 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
         layout_animate(layout, elapsed);
         layout_draw(layout, pvrctx);
     }
+    
+    // flush framebuffer again with last fade frame
+    await pvrctx_wait_ready();
 
     gamepad_destroy(gamepad);
     return exit_value;

@@ -586,42 +586,55 @@ function layout_contains_action(layout, target_name, action_name) {
 function layout_animation_is_completed(layout, item_name) {
     if (item_name == null) throw new Error("entry_name is required");
 
-    let obj = null;
-    let is_drawable = false;
-    let found = 0;
+    let type = -1;
+    let vertex = null;
+    let animsprite = null;
 
     for (let i = 0; i < layout.vertex_list_size; i++) {
         if (layout.vertex_list[i].name == item_name) {
-            obj = layout.vertex_list[i].animation;
-            is_drawable = layout.vertex_list[i].type == VERTEX_DRAWABLE;
-            found = 1;
+            type = this.vertex_list[i].type;
+            vertex = this.vertex_list[i].vertex;
+            animsprite = this.vertex_list[i].animation;
             break;
         }
     }
 
-    if (!found) {
+    if (!vertex) {
         // check if a group with this name exists
         for (let i = 0; i < layout.group_list_size; i++) {
             if (layout.group_list[i].name == item_name) {
-                obj = layout.vertex_list[i].animation;
-                found = 1;
+                vertex = null;
+                animsprite = this.vertex_list[i].animation;
                 break;
             }
         }
     }
 
-    if (!found) return 2;
+    if (!vertex && !animsprite) return 2;
 
-    if (!obj) return 1;
-
-    if (is_drawable) {
-        //
-        // Note: is not posible peek the drawable animation, call drawable_animate()
-        // with a zero elapsed duration to check if was completed.
-        //
-        if (drawable_animate(obj, 0)) return 1;
+    if (animsprite != null) {
+        if (animsprite_is_completed(animsprite)) return 1;
     } else {
-        if (animsprite_is_completed(obj)) return 1;
+        // call *_animate() to check if was completed.
+        let ret = 0;
+        switch (type) {
+            case VERTEX_DRAWABLE:
+                ret = drawable_animate(vertex, 0.0);
+                break;
+            case VERTEX_SPRITE:
+                ret = sprite_animate(vertex, 0.0);
+                break;
+            case VERTEX_STATESPRITE:
+                ret = statesprite_animate(vertex, 0.0);
+                break;
+            case VERTEX_TEXTSPRITE:
+                ret = textsprite_animate(vertex, 0.0);
+                break;
+            default:
+                return -1;
+        }
+
+        if (ret > 0) return 1;
     }
 
     return 0;

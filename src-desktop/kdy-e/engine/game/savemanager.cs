@@ -363,7 +363,11 @@ namespace Engine.Game {
                     this.layout.Draw(PVRContext.global_context);
 
                     if (modding.has_halt) continue;
-                    if (this.layout.AnimationIsCompleted("transition_effect") > 0) break;
+                    if (this.layout.AnimationIsCompleted("transition_effect") > 0) {
+                        // flush framebuffer again with last fade frame
+                        PVRContext.global_context.WaitReady();
+                        break;
+                    }
                 }
             }
 

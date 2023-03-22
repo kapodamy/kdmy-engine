@@ -338,7 +338,11 @@ async function savemanager_show(savemanager) {
             layout_draw(savemanager.layout, pvr_context);
 
             if (modding.has_halt) continue;
-            if (layout_animation_is_completed(savemanager.layout, "transition_effect")) break;
+            if (layout_animation_is_completed(savemanager.layout, "transition_effect")) {
+                // flush framebuffer again with last fade frame
+                await pvrctx_wait_ready();
+                break;
+            }
         }
     }
 

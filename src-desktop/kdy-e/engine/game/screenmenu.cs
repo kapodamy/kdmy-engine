@@ -148,6 +148,9 @@ L_layout:
                 layout.Draw(pvrctx);
             }
 
+            // flush framebuffer again with last drawn frame
+            pvrctx.WaitReady();
+
             gamepad.Destroy();
             return exit_value;
         }

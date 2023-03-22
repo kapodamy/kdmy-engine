@@ -100,6 +100,24 @@ namespace Engine.Game {
             modding.HelperNotifyEvent("intro-funkin");
             IntroScreen.DrawSparseText(funky, delay, funkin_duration, modding, maple_pad);
 
+
+            layout.TriggerAny("transition-out");
+            modding.HelperNotifyEvent("transition-out");
+            while (true) {
+                float elapsed = PVRContext.global_context.WaitReady();
+                modding.HelperNotifyFrame(elapsed, -1.0);
+
+                PVRContext.global_context.Reset();
+                layout.Animate(elapsed);
+                layout.Draw(PVRContext.global_context);
+
+                if (layout.AnimationIsCompleted("transition_effect") > 0) {
+                    // flush framebuffer again with last fade frame
+                    PVRContext.global_context.WaitReady();
+                    break;
+                }
+            }
+
             modding.HelperNotifyExit2();
 
             // dispose resources used

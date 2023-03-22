@@ -336,8 +336,11 @@ namespace Engine.Game {
                 layout.Animate(elapsed);
                 layout.Draw(PVRContext.global_context);
 
-                if (layout.AnimationIsCompleted("transition_effect") > 0)
+                if (layout.AnimationIsCompleted("transition_effect") > 0) {
+                    // flush framebuffer again with last fade frame
+                    PVRContext.global_context.WaitReady();
                     break;
+                }
             }
 
             if (has_choosen_option) {
