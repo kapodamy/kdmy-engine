@@ -49,25 +49,28 @@ namespace Engine.Platform {
                 IconEntry* entry = (IconEntry*)(ptr + search_offset);
                 search_offset += sizeof(IconEntry);
 
-                size += entry->width * entry->height * sizeof(uint);
                 icons[i].width = entry->width;
                 icons[i].height = entry->height;
+
+                if (icons[i].width < 1) icons[i].width = 256;
+                if (icons[i].height < 1) icons[i].height = 256;
+
+                size += icons[i].width * icons[i].height * sizeof(uint);
             }
 
             raw_data = Marshal.AllocHGlobal(size);
 
-            for (int i = 0, icn_offset = 0 ; i < header->count ; i++) {
-                IconEntry* entry = (IconEntry*)(ptr + offset);
+            for (int i = 0, icn_offset = 0 ; i < icons.Length ; i++) {
                 IntPtr icn = icons[i].pixels = new IntPtr((byte*)raw_data + icn_offset);
-                int pixel_count = entry->width * entry->height;
-                int stride = entry->width * sizeof(uint);
+                int pixel_count = icons[i].width * icons[i].height;
+                int stride = icons[i].width * sizeof(uint);
 
                 offset += sizeof(IconEntry);
-                icn_offset += stride * entry->height;
+                icn_offset += stride * icons[i].height;
                 stream.Seek(0, SeekOrigin.Begin);
 
-                using (Bitmap dest_bitmap = new Bitmap(entry->width, entry->height, stride, FORMAT, icn)) {
-                    using (Icon icon = new Icon(stream, entry->width, entry->height)) {
+                using (Bitmap dest_bitmap = new Bitmap(icons[i].width, icons[i].height, stride, FORMAT, icn)) {
+                    using (Icon icon = new Icon(stream, icons[i].width, icons[i].height)) {
                         using (Graphics g = Graphics.FromImage(dest_bitmap)) {
                             g.Clear(Color.Transparent);
                             g.CompositingMode = CompositingMode.SourceCopy;
