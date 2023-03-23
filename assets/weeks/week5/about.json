@@ -16,5 +16,22 @@
     "contentAdvisoryMessage": null,
 
     "disallowCustomBoyfriend": true,
-    "disallowCustomGirlfriend": true
+    "disallowCustomGirlfriend": true,
+
+    "unlockables": {
+        "boyfriend": [
+            {
+                "name": "BOYFRIEND (CHRISTMAS)",
+                "unlockDirectiveName": "WEEK5_HARD",
+                "manifest": "funkin/BOYFRIEND_CHRISTMAS.json"
+            }
+        ],
+        "girlfriend": [
+            {
+                "name": "GIRLFRIEND (CHRISTMAS)",
+                "unlockDirectiveName": "WEEK5_HARD",
+                "manifest": "funkin/GIRLFRIEND_CHRISTMAS.json"
+            }
+        ]
+    }
 }

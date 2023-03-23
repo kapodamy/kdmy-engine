@@ -7,6 +7,9 @@ let in_freeplay_mode: boolean = false;
 function f_weekinit(freeplay_index: number) {
     in_freeplay_mode = freeplay_index >= 0;
     if (freeplay_index == 2) place_lemon_demon(week_get_stage_layout());
+
+    let [, difficult,] = week_get_current_song_info();
+    if (difficult == "HARD" && freeplay_index < 0) week_unlockdirective_create("WEEK5_HARD", false, true, 0.0);
 }
 
 function f_beforeready(from_retry: boolean): void {

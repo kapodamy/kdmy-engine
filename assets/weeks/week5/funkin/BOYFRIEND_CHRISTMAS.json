@@ -1,8 +1,9 @@
 {
     "model": "bfChristmas.xml",
     "healthbarColor": "0x31B3D1",
+    "weekSelectorModel": "./../bfChristmas_preview.xml",
     "healthIconsModel": "/assets/common/image/funkin/icon-bf.xml",
-    
+
 	"alignVertical": "end",
     "alignHorizontal": "start",
     "leftFacing": true,

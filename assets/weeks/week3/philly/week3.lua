@@ -9,7 +9,7 @@ function f_weekinit(freeplay_index)
         return
     end
     local ____, difficult = week_get_current_song_info()
-    if difficult == "HARD" then
+    if difficult == "HARD" and freeplay_index < 0 then
         week_unlockdirective_create("WEEK3_HARD", true, false, 1)
     end
 end

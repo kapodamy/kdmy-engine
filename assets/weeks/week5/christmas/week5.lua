@@ -13,6 +13,10 @@ function f_weekinit(freeplay_index)
     if freeplay_index == 2 then
         place_lemon_demon(week_get_stage_layout())
     end
+    local ____, difficult = week_get_current_song_info()
+    if difficult == "HARD" and freeplay_index < 0 then
+        week_unlockdirective_create("WEEK5_HARD", false, true, 0)
+    end
 end
 function f_beforeready(from_retry)
     stage = week_get_stage_layout()

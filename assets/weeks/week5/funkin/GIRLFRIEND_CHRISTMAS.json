@@ -1,6 +1,8 @@
 {
     "model": "gfChristmas.xml",
     "healthbarColor": "0xA5004D",
+    "weekSelectorModel": "./../gfChristmas_preview.xml",
+    "healthIconsModel": "/assets/common/image/funkin/icon-gf.xml",
 
     "actionsApplyChartSpeed": true,
     "continuousIdle": true,
