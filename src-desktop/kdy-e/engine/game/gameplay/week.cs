@@ -677,7 +677,7 @@ namespace Engine.Game.Gameplay {
                     roundcontext.scriptcontext.force_end_flag = false;
                 }
 
-                if ((round_result == 0 && roundcontext.song_index != last_song) || round_result == 2) {
+                if ((round_result == 0 && roundcontext.song_index != last_song && !single_song) || round_result == 2) {
                     if (roundcontext.settings.layout_rollback) {
                         layout.StopAllTriggers();
                         layout.TriggerAny(null);

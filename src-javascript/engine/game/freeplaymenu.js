@@ -228,7 +228,7 @@ async function freeplaymenu_main() {
         let difficult = state.difficulties[state.difficult_index].name;
         let weekinfo = weeks_array.array[arraylist_get(songs, map_index).week_index];
         let gameplaymanifest = weekinfo.songs[state.map.song_index].freeplay_gameplaymanifest;
-        freeplaymenu_internal_drop_soundplayer(state);
+        await freeplaymenu_internal_drop_soundplayer(state);
 
         await freeplaymenu_internal_wait_transition(state, "before-play-song", dt_playsong);
 
@@ -248,7 +248,7 @@ async function freeplaymenu_main() {
         freeplaymenu_internal_show_info(state);
     }
 
-    // Wait for running threads
+    // wait for running threads
     while (1) {
         await pvrctx_wait_ready();
         mutex_lock(state.mutex);
@@ -267,7 +267,7 @@ async function freeplaymenu_main() {
     default_gf = undefined;
     state.difficulties = undefined;
     mutex_destroy(state.mutex);
-    freeplaymenu_internal_drop_soundplayer(state);
+    await freeplaymenu_internal_drop_soundplayer(state);
     freeplaymenu_songicons_destroy(songicons);
     menu_destroy(menu_songs);
     arraylist_destroy(songs, 0);
@@ -290,7 +290,7 @@ async function freeplaymenu_show(menu, state, songs) {
     if (menu_get_selected_index(menu) < 0 && menu_get_items_count(menu) > 0) {
         menu_select_index(menu, 0);
 
-        state.map = arraylist_get(songs, menu_get_selected_index(menu));
+        state.map = arraylist_get(songs, 0);
         state.use_alternative = 0;
         freeplaymenu_internal_build_difficulties(state);
         freeplaymenu_internal_show_info(state);
@@ -426,7 +426,7 @@ async function freeplaymenu_internal_load_song_async(state) {
     let seek = songinfo.freeplay_seek_time * 1000.0;
 
     if (state.map.is_locked || songinfo.name == null) {
-        freeplaymenu_internal_drop_soundplayer(state);
+        await freeplaymenu_internal_drop_soundplayer(state);
 
         state.running_threads--;
         mutex_unlock(state.mutex);
@@ -463,7 +463,7 @@ async function freeplaymenu_internal_load_song_async(state) {
             break L_load_soundplayer;
         }
         if (final_path == null) {
-            freeplaymenu_internal_drop_soundplayer(state);
+            await freeplaymenu_internal_drop_soundplayer(state);
             break L_load_soundplayer;
         }
 
@@ -480,7 +480,7 @@ async function freeplaymenu_internal_load_song_async(state) {
         // adquire mutex and swap the soundplayer
         mutex_lock(state.mutex);
 
-        freeplaymenu_internal_drop_soundplayer(state);
+        await freeplaymenu_internal_drop_soundplayer(state);
         state.soundplayer_path = strdup(final_path);
         state.soundplayer = soundplayer;
 
@@ -619,7 +619,16 @@ function freeplaymenu_internal_show_info(state) {
         layout_trigger_any(layout, "hide-alternative");
 }
 
-function freeplaymenu_internal_drop_soundplayer(state) {
+async function freeplaymenu_internal_drop_soundplayer(state) {
+    // wait for running threads
+    while (true) {
+        await thd_pass();
+        mutex_lock(state.mutex);
+        let exit = state.running_threads < 1;
+        mutex_unlock(state.mutex);
+        if (exit) break;
+    }
+
     if (state.soundplayer) {
         soundplayer_stop(state.soundplayer);
         soundplayer_destroy(state.soundplayer);

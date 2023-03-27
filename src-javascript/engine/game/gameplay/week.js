@@ -675,7 +675,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             roundcontext.scriptcontext.force_end_flag = 0;
         }
 
-        if ((round_result == 0 && roundcontext.song_index != last_song) || round_result == 2) {
+        if ((round_result == 0 && roundcontext.song_index != last_song && !single_song) || round_result == 2) {
             if (roundcontext.settings.layout_rollback) {
                 layout_stop_all_triggers(layout);
                 layout_trigger_any(layout, null);

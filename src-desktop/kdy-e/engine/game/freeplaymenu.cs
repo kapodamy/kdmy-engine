@@ -258,7 +258,7 @@ namespace Engine.Game {
                 FreeplayMenu.InternalShowInfo(state);
             }
 
-            // Wait for running threads
+            // wait for running threads
             while (true) {
                 PVRContext.global_context.WaitReady();
                 mutex.Lock(state.mutex);
@@ -303,7 +303,7 @@ namespace Engine.Game {
             if (menu.GetSelectedIndex() < 0 && menu.GetItemsCount() > 0) {
                 menu.SelectIndex(0);
 
-                state.map = songs.Get(menu.GetSelectedIndex());
+                state.map = songs.Get(0);
                 state.use_alternative = false;
                 FreeplayMenu.InternalBuildDifficulties(state);
                 FreeplayMenu.InternalShowInfo(state);
@@ -637,6 +637,15 @@ L_return:
         }
 
         private static void InternalDropSoundplayer(State state) {
+            // wait for running threads
+            while (true) {
+                thd.pass();
+                mutex.Lock(state.mutex);
+                bool exit = state.running_threads < 1;
+                mutex.Unlock(state.mutex);
+                if (exit) break;
+            }
+
             if (state.soundplayer != null) {
                 state.soundplayer.Stop();
                 state.soundplayer.Destroy();

@@ -46,9 +46,9 @@ namespace Engine.Externals {
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void sndbridge_set_volume(int stream, float volume);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void sndbridge_mute(int stream, bool muted);
+        private static extern void sndbridge_mute(int stream, int muted);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void sndbridge_do_fade(int stream, bool fade_in_or_out, float milliseconds);
+        private static extern void sndbridge_do_fade(int stream, int fade_in_or_out, float milliseconds);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern bool sndbridge_is_active(int stream_id);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
@@ -56,11 +56,11 @@ namespace Engine.Externals {
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern bool sndbridge_has_ended(int stream_id);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void sndbridge_loop(int stream_id, bool enable);
+        private static extern void sndbridge_loop(int stream_id, int enable);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void sndbridge_set_master_volume(float volume);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void sndbridge_set_master_muted(bool muted);
+        private static extern void sndbridge_set_master_muted(int muted);
         [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "sndbridge_get_runtime_info")]
         private static extern IntPtr __sndbridge_get_runtime_info();
 
@@ -68,6 +68,24 @@ namespace Engine.Externals {
             IntPtr ptr = __sndbridge_get_runtime_info();
             return Marshal.PtrToStringAnsi(ptr);
         }
+
+        public static void sndbridge_mute(int stream, bool muted) {
+            sndbridge_mute(stream, muted ? 1 : 0);
+        }
+
+        public static void sndbridge_do_fade(int stream, bool fade_in_or_out, float milliseconds) {
+            sndbridge_do_fade(stream, fade_in_or_out ? 1 : 0, milliseconds);
+        }
+
+        public static void sndbridge_loop(int stream_id, bool enable) {
+            sndbridge_loop(stream_id, enable ? 1 : 0);
+        }
+
+        public static void sndbridge_set_master_muted(bool muted) {
+            sndbridge_set_master_muted(muted ? 1 : 0);
+        }
+
+
 
     }
 }
