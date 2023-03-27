@@ -134,8 +134,8 @@ namespace Engine.Game.Gameplay {
         private const string MODDING_SCRIPT = "/assets/common/data/scripts/weekpause.lua";
         private const string MODDING_MENU = "/assets/common/data/menus/weekpause.json";
         private const GamepadButtons BUTTONS = GamepadButtons.START | GamepadButtons.AD_UP | GamepadButtons.AD_DOWN | GamepadButtons.A | GamepadButtons.X | GamepadButtons.B | GamepadButtons.BACK;
-        private const int DELAY = 200;
-        private const int ANTIBOUNCE = 400;
+        private const int DELAY = 170;
+        private const int ANTIBOUNCE = (int)(WeekPause.DELAY * 1.25f);
 
         // messagebox strings
         public const string MSGCONTROLLER = "The controller $i was disconnected, \n" +

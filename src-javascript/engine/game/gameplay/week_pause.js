@@ -123,8 +123,8 @@ const WEEKPAUSE_NOCONTROLLER = "/assets/common/image/week-round/no_controller.pn
 const WEEKPAUSE_MODDING_SCRIPT = "/assets/common/data/scripts/weekpause.lua";
 const WEEKPAUSE_MODDING_MENU = "/assets/common/data/menus/weekpause.json";
 const WEEKPAUSE_BUTTONS = GAMEPAD_START | GAMEPAD_AD_UP | GAMEPAD_AD_DOWN | GAMEPAD_A | GAMEPAD_X | GAMEPAD_B | GAMEPAD_BACK;
-const WEEKPAUSE_DELAY = 400;
-const WEEKPAUSE_ANTIBOUNCE = 400;
+const WEEKPAUSE_DELAY = 170;
+const WEEKPAUSE_ANTIBOUNCE = WEEKPAUSE_DELAY * 1.25;
 
 // messagebox strings
 const WEEKPAUSE_MSGCONTROLLER = "The controller $i was disconnected, \n" +
