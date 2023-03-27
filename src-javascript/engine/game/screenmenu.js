@@ -1,6 +1,7 @@
 "use strict";
 
 const SCREENMENU_BUTTONS_DELAY = 200;
+const SCREENMENU_BACK_BUTTONS = GAMEPAD_BACK | GAMEPAD_B;
 
 async function screenmenu_init(layout_src, script_src) {
     let layout = await layout_init(layout_src);
@@ -40,6 +41,10 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
         pvr_context_reset(pvrctx);
 
         let pressed = gamepad_get_pressed(gamepad);
+        let back_pressed = (pressed & SCREENMENU_BACK_BUTTONS) != 0;
+
+        // ignore back buttons if halt flag not is signalated and call "f_modding_back" instead
+        if (back_pressed && !screenmenu.modding.has_halt) pressed &= ~SCREENMENU_BACK_BUTTONS;
 
         if (script != null) {
             if (last_pressed != pressed) {
@@ -51,7 +56,7 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
 
         L_process_gamepad: {
             if (screenmenu.modding.has_halt) break L_process_gamepad;
-            
+
             if (active_gamepad_delay > 0.0) {
                 active_gamepad_delay -= elapsed;
                 if (active_gamepad_delay > 0.0) break L_process_gamepad;
@@ -63,7 +68,7 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
             let has_selected = 0;
             let has_choosen = false;
 
-            if ((pressed & MAINMENU_GAMEPAD_CANCEL) != 0)
+            if (back_pressed)
                 go_back = 1;
             else if (menu == null) {
                 break L_process_gamepad;
@@ -132,7 +137,7 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
         layout_animate(layout, elapsed);
         layout_draw(layout, pvrctx);
     }
-    
+
     // flush framebuffer again with last fade frame
     await pvrctx_wait_ready();
 

@@ -41,11 +41,16 @@ async function startscreen_main() {
         let pressed = gamepad_has_pressed_delayed(maple_pad, MAINMENU_GAMEPAD_BUTTONS);
         if (modding.has_halt) pressed = 0x00;
 
-        if ((!enter_pressed && (pressed & MAINMENU_GAMEPAD_OK)) || moddinghelper.start_pressed) {
-            enter_pressed = 1;
-            if (soundplayer_confirm) soundplayer_play(soundplayer_confirm);
-            layout_trigger_any(layout, "start_pressed");
-            await modding_helper_notify_event(modding, "start_pressed");
+        if ((pressed & MAINMENU_GAMEPAD_OK) || moddinghelper.start_pressed) {
+            if (enter_pressed) {
+                break;
+            } else {
+                enter_pressed = 1;
+                moddinghelper.start_pressed = 0;
+                if (soundplayer_confirm) soundplayer_play(soundplayer_confirm);
+                layout_trigger_any(layout, "start_pressed");
+                await modding_helper_notify_event(modding, "start_pressed");
+            }
         } else if (enter_pressed) {
             if (total_elapsed >= delay_after_start) {
                 if (trigger_fade_away && !exit_to_bios) {

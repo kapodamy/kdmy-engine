@@ -2519,6 +2519,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
                 if (roundcontext.players[i].ddrkeymon) {
                     gamepad_clear_buttons(roundcontext.players[i].controller);
                     ddrkeymon_start(roundcontext.players[i].ddrkeymon, -song_timestamp);
+                    strums_force_key_release(roundcontext.players[i].strums);
                 }
             }
 

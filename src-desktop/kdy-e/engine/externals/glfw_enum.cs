@@ -1,6 +1,7 @@
 ﻿using System;
 
 namespace Engine.Externals.GLFW {
+
     internal enum InputState : int {
         Release = 0,
         Press = 1,

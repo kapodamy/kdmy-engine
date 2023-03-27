@@ -72,6 +72,7 @@ namespace Engine.Platform {
 
         private GamepadButtons buttons;
         private GamepadButtons last_buttons;
+        private GamepadButtons clear_mask;
         private int delay_duration;
         private double delay_timestamp;
         private int controller_index;
@@ -111,6 +112,7 @@ namespace Engine.Platform {
 
             this.buttons = 0x00;
             this.last_buttons = 0x00;
+            this.clear_mask = GamepadButtons.NOTHING;
             this.controller_index = controller_device_index;
             this.delay_duration = 0;
             this.delay_timestamp = 0;
@@ -191,20 +193,21 @@ namespace Engine.Platform {
         }
 
 
-
         public void ClearButtons() {
-            this.buttons = 0x00;
+            this.clear_mask = 0x00;
+            this.InternalUpdateState();
+            this.clear_mask = ~this.buttons;
+            this.buttons = GamepadButtons.NOTHING;
+        }
 
-            if (this.controller_index < 0) {
-                int count = maple.enum_count();
-                for (int i = 0 ; i < count ; i++) {
-                    maple_device_t device = maple.enum_type(i, MAPLE_FUNC.CONTROLLER);
-                    if (device != null) InternalClearControllerStatus(maple.dev_status(device));
-                }
-            } else if (this.device != null) {
-                InternalClearControllerStatus(maple.dev_status(this.device));
+        public static void ClearAllGamepads() {
+            foreach (Gamepad gamepad in Gamepad.POOL) {
+                gamepad.clear_mask = GamepadButtons.NOTHING;
+                gamepad.InternalUpdateState();
+                gamepad.clear_mask = ~gamepad.buttons;
+                //gamepad.last_buttons = gamepad.buttons;
+                gamepad.buttons = GamepadButtons.NOTHING;
             }
-            if (this.mix_keyboard) InternalClearControllerStatus(maple.KEYBOARD.status);
         }
 
         public GamepadButtons GetPressed() {
@@ -252,7 +255,7 @@ namespace Engine.Platform {
             // find the desired controller number/index/position
             for (int i = 0 ; i < maple_devices_found ; i++) {
                 maple_device_t device = maple.enum_type(i, MAPLE_FUNC.CONTROLLER);
-                if (device != null) continue;
+                if (device == null) continue;
 
                 if (index == this.controller_index) {
                     this.device = device;
@@ -314,6 +317,9 @@ namespace Engine.Platform {
                 cont_state_t keyboard_status = maple.KEYBOARD.dequeque_all();
                 InternalReadDevice(keyboard_status);
             }
+
+            // apply clear mask if necessary
+            InternalApplyClearMask();
         }
 
         internal IEnumerable<GamepadButtons> InternalUpdateState_JSCSHARP() {
@@ -325,17 +331,31 @@ namespace Engine.Platform {
                 // map the buttons in a form the engine can understand
                 InternalReadDevice(controller_status);
             }/* else if (this.controller_index < 0) {
-                throw new Exception("InternalUpdateState_JSCSHARP() controller_index < 0")
+                throw new Exception("InternalUpdateState_JSCSHARP() controller_index < 0");
             }*/
 
             if (this.mix_keyboard && maple.KEYBOARD.has_queued) {
                 foreach (bool _ in maple.KEYBOARD.poll_queue()) {
                     InternalReadDevice(maple.KEYBOARD.status);
-                    yield return this.buttons;
+                    yield return this.buttons & this.clear_mask;
                 }
             } else {
                 InternalReadDevice(maple.KEYBOARD.status);
-                yield return this.buttons;
+                yield return this.buttons & this.clear_mask;
+            }
+
+            // apply clear mask if necessary
+            InternalApplyClearMask();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InternalApplyClearMask() {
+            if (this.clear_mask != GamepadButtons.NOTHING) {
+                // forget released buttons present in the mask
+                this.clear_mask = ~(~this.clear_mask & this.buttons);
+
+                // clear pressed buttons
+                this.buttons &= this.clear_mask;
             }
         }
 
@@ -352,16 +372,6 @@ namespace Engine.Platform {
                 // this never should happen
                 return timer.ms_gettime64();
             }
-        }
-
-        private void InternalClearControllerStatus(cont_state_t status) {
-            status.buttons = 0x00;
-            status.ltrig = 0;
-            status.rtrig = 0;
-            status.joyx = 0;
-            status.joyy = 0;
-            status.joy2x = 0;
-            status.joy2y = 0;
         }
 
     }

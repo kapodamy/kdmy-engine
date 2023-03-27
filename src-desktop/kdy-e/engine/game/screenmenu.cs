@@ -8,6 +8,7 @@ namespace Engine.Game {
 
     public class ScreenMenu {
         private const float BUTTONS_DELAY = 200;
+        private const GamepadButtons BACK_BUTTONS = GamepadButtons.BACK | GamepadButtons.B;
 
         private Modding modding;
         private Layout layout;
@@ -54,6 +55,10 @@ namespace Engine.Game {
                 pvrctx.Reset();
 
                 GamepadButtons pressed = gamepad.GetPressed();
+                bool back_pressed = (pressed & ScreenMenu.BACK_BUTTONS).Bool();
+
+                // ignore back buttons if halt flag not is signalated and call "f_modding_back" instead
+                if (back_pressed && !this.modding.has_halt) pressed &= ~ScreenMenu.BACK_BUTTONS;
 
                 if (script != null) {
                     if (last_pressed != pressed) {
@@ -77,7 +82,7 @@ namespace Engine.Game {
                 bool has_selected = false;
                 bool has_choosen = false;
 
-                if ((pressed & MainMenu.GAMEPAD_CANCEL).Bool())
+                if (back_pressed)
                     go_back = true;
                 else if (menu == null)
                     goto L_layout;
@@ -150,6 +155,9 @@ L_layout:
 
             // flush framebuffer again with last drawn frame
             pvrctx.WaitReady();
+
+            // do antibounce before return (just in case)
+            Gamepad.ClearAllGamepads();
 
             gamepad.Destroy();
             return exit_value;

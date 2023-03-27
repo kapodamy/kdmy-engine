@@ -421,7 +421,6 @@ namespace Engine.Game {
             }
 
             layout.Destroy();
-            gamepad.ClearButtons();
             gamepad.Destroy();
 
             if (pause_background_menu_music) GameMain.background_menu_music.Play();

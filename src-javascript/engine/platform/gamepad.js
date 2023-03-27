@@ -60,6 +60,7 @@ var GAMEPAD_ANALOG_DEAD_ZONE = 0x40;// considered "pressed" any analog input if 
  * @typedef {object} GamepadKDY
  * @property {number} buttons
  * @property {number} last_buttons
+ * @property {number} clear_mask
  * @property {number} delay_duration
  * @property {number} delay_timestamp
  * @property {number} controller_index
@@ -101,6 +102,7 @@ function gamepad_init2(controller_device_index, mix_keyboard) {
     let gamepad = {
         buttons: 0x00,
         last_buttons: 0x00,
+        clear_mask: 0x00,
         controller_index: controller_device_index,
         delay_duration: 0,
         delay_timestamp: 0,
@@ -181,18 +183,20 @@ function gamepad_enforce_buttons_delay(/**@type {GamepadKDY}*/gamepad) {
 
 
 function gamepad_clear_buttons(/**@type {GamepadKDY}*/gamepad) {
+    gamepad.clear_mask = 0x00;
+    gamepad_internal_update_state(gamepad);
+    gamepad.clear_mask = ~gamepad.buttons;
     gamepad.buttons = 0x00;
+}
 
-    if (gamepad.controller_index < 0) {
-        let count = maple_enum_count();
-        for (let i = 0; i < count; i++) {
-            let device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
-            if (device) gamepad_internal_clear_controller_status(maple_dev_status(device));
-        }
-    } else if (gamepad.device) {
-        gamepad_internal_clear_controller_status(maple_dev_status(gamepad.device));
+function gamepad_clear_all_gamepads() {
+    for (let [gamepad, id] of GAMEPAD_POOL) {
+        gamepad.clear_mask = 0x00;
+        gamepad_internal_update_state(gamepad);
+        gamepad.clear_mask = ~gamepad.buttons;
+        //gamepad.last_buttons = gamepad.buttons;
+        gamepad.buttons = 0x00;
     }
-    if (gamepad.mix_keyboard) gamepad_internal_clear_controller_status(KOS_MAPLE_KEYBOARD.status);
 }
 
 function gamepad_get_pressed(/**@type {GamepadKDY}*/gamepad) {
@@ -302,6 +306,9 @@ function gamepad_internal_update_state(/**@type {GamepadKDY}*/gamepad) {
         const keyboard_status = KOS_MAPLE_KEYBOARD.dequeque_all();
         gamepad_internal_read_device(gamepad, keyboard_status);
     }
+
+    // apply clear mask if necessary
+    gamepad_internal_apply_clear_mask(gamepad);
 }
 
 function* gamepad_internal_update_state_JSCSHARP(/**@type {GamepadKDY}*/gamepad) {
@@ -313,17 +320,30 @@ function* gamepad_internal_update_state_JSCSHARP(/**@type {GamepadKDY}*/gamepad)
         // map the buttons in a form the engine can understand
         gamepad_internal_read_device(gamepad, controller_status);
     }/* else if (gamepad.controller_index < 0) {
-        throw new Error("gamepad_internal_update_state_JSCSHARP() controller_index < 0")
+        throw new Error("gamepad_internal_update_state_JSCSHARP() controller_index < 0");
     }*/
 
     if (gamepad.mix_keyboard && KOS_MAPLE_KEYBOARD.has_queued > 0) {
         for (let _ of KOS_MAPLE_KEYBOARD.poll_queue()) {
             gamepad_internal_read_device(gamepad, KOS_MAPLE_KEYBOARD.status);
-            yield gamepad.buttons;
+            yield gamepad.buttons & gamepad.clear_mask;
         }
     } else {
         gamepad_internal_read_device(gamepad, KOS_MAPLE_KEYBOARD.status);
-        yield gamepad.buttons;
+        yield gamepad.buttons & gamepad.clear_mask;
+    }
+
+    // apply clear mask if necessary
+    gamepad_internal_apply_clear_mask(gamepad);
+}
+
+function gamepad_internal_apply_clear_mask(/**@type {GamepadKDY}*/gamepad) {
+    if (gamepad.clear_mask != 0x00) {
+        // forget released buttons present in the mask
+        gamepad.clear_mask = ~(~gamepad.clear_mask & gamepad.buttons);
+
+        // clear pressed buttons
+        gamepad.buttons &= gamepad.clear_mask;
     }
 }
 

@@ -48,11 +48,16 @@ namespace Engine.Game {
                 GamepadButtons pressed = maple_pad.HasPressedDelayed(MainMenu.GAMEPAD_BUTTONS);
                 if (modding.has_halt) pressed = GamepadButtons.NOTHING;
 
-                if ((!enter_pressed && ((pressed & MainMenu.GAMEPAD_OK).Bool()) || moddinghelper.start_pressed)) {
-                    enter_pressed = true;
-                    if (soundplayer_confirm != null) soundplayer_confirm.Play();
-                    layout.TriggerAny("start_pressed");
-                    modding.HelperNotifyEvent("start_pressed");
+                if ((pressed & MainMenu.GAMEPAD_OK).Bool() || moddinghelper.start_pressed) {
+                    if (enter_pressed) {
+                        break;
+                    } else {
+                        enter_pressed = true;
+                        moddinghelper.start_pressed = false;
+                        if (soundplayer_confirm != null) soundplayer_confirm.Play();
+                        layout.TriggerAny("start_pressed");
+                        modding.HelperNotifyEvent("start_pressed");
+                    }
                 } else if (enter_pressed) {
                     if (total_elapsed >= delay_after_start) {
                         if (trigger_fade_away && !exit_to_bios) {

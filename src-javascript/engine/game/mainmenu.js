@@ -412,7 +412,6 @@ async function mainmenu_show_donate() {
 
 
     layout_destroy(layout);
-    gamepad_clear_buttons(gamepad);
     gamepad_destroy(gamepad);
 
     if (pause_background_menu_music) soundplayer_play(background_menu_music);

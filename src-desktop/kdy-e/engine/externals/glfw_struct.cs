@@ -6,7 +6,7 @@ namespace Engine.Externals.GLFW {
     [StructLayout(LayoutKind.Sequential)]
     internal struct GamePadState {
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 15)]
-        public readonly InputState[] buttons;
+        public readonly byte[] buttons;
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
         public readonly float[] axes;

@@ -2530,6 +2530,7 @@ namespace Engine.Game.Gameplay {
                         if (roundcontext.players[i].ddrkeymon != null) {
                             roundcontext.players[i].controller.ClearButtons();
                             roundcontext.players[i].ddrkeymon.Start(-song_timestamp);
+                            roundcontext.players[i].strums.ForceKeyRelease();
                         }
                     }
 

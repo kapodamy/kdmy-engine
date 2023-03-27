@@ -108,7 +108,7 @@ namespace KallistiOS.MAPLE {
             int saveslots = EngineSettings.GetInt(false, "saveslots", 1);
             for (int i = 0 ; i < saveslots ; i++) {
                 if (i < 4) {
-                    maple.DEVICES[i, 1] = new maple_device_t(MAPLE_FUNC.MEMCARD, (uint)i, 1U);
+                    maple.DEVICES[i, 1] = new maple_device_t(MAPLE_FUNC.MEMCARD, (uint)i, 1U, -1);
                     continue;
                 }
 
@@ -118,7 +118,7 @@ namespace KallistiOS.MAPLE {
                             if (mapping.port != port && mapping.unit != unit) {
                                 // unused space, assign as VMU
                                 maple.DEVICES[port, unit] = new maple_device_t(
-                                    MAPLE_FUNC.MEMCARD, port, unit
+                                    MAPLE_FUNC.MEMCARD, port, unit, -1
                                 );
                                 goto L_continue;
                             }
@@ -149,7 +149,7 @@ L_continue:
                 maple_device_t device = DEVICES[mapping.port, mapping.unit];
 
                 if (device == null) {
-                    device = new maple_device_t(MAPLE_FUNC.CONTROLLER, mapping.port, mapping.unit);
+                    device = new maple_device_t(MAPLE_FUNC.CONTROLLER, mapping.port, mapping.unit, joystick);
                     DEVICES[mapping.port, mapping.unit] = device;
                 }
 
@@ -159,13 +159,12 @@ L_continue:
                 device._status.joy2x = device._status.joy2y = 0;
                 device._status.ltrig = device._status.rtrig = 0;
 
-                if (device.valid) {
-                    Console.Error.WriteLine(
-                        "[LOG] gamepad connected id={0} name={1}",
-                        (int)joystick,
-                        Glfw.GetJoystickName(joystick)
-                    );
-                }
+                Console.Error.WriteLine(
+                    "[LOG] gamepad id={0} name={1} status={2}",
+                    (int)joystick,
+                    Glfw.GetJoystickName(joystick),
+                    status.ToString()
+                );
             }
         }
 
@@ -214,13 +213,13 @@ L_continue:
         internal cont_state_t _status;
 
 
-        internal maple_device_t(MAPLE_FUNC funcs, uint port, uint unit) {
+        internal maple_device_t(MAPLE_FUNC funcs, uint port, uint unit, int gamepad_index) {
             this.port = port;
             this.unit = unit;
             this.info = new maple_devinfo_t() { functions = funcs };
             this.valid = (funcs & MAPLE_FUNC.MEMCARD) != MAPLE_FUNC.NOTHING;
             this._status = new cont_state_t();
-            this._gamepad_index = -1;
+            this._gamepad_index = gamepad_index;
         }
 
 
@@ -231,6 +230,8 @@ L_continue:
             //    * If the controller has additional buttons and/or axes, they are reported
             //      by KallistiOS using CONT_CAPABILITY_* in maple_enum_type*() functions.
             //
+            if (this._gamepad_index < 0) return;
+
             GamePadState state;
             if (!Glfw.GetGamepadState(this._gamepad_index, out state)) {
                 this.valid = false;
@@ -245,13 +246,11 @@ L_continue:
             // read the gamepad buttons using the standard layout
             for (int i = 0 ; i < maple_mappings.GAMEPAD_BUTTONS_MAPPING.Length ; i++) {
                 var mapping = maple_mappings.GAMEPAD_BUTTONS_MAPPING[i];
-                InputState button_state = state.buttons[(int)mapping.glfw_button];
+                byte button_state = state.buttons[(int)mapping.glfw_button];
 
-                if (button_state == InputState.Repeat) continue;
-
-                if (button_state == InputState.Press)
+                if (button_state == 0x01)
                     this._status.buttons |= mapping.cont_button;
-                else if (button_state == InputState.Release)
+                else if (button_state == 0x00)
                     this._status.buttons &= ~mapping.cont_button;
             }
 
