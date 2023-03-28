@@ -41,6 +41,7 @@ function beatwatcher_poll(beatwatcher) {
         beatwatcher.resyncs++;
         beatwatcher.drift_timestamp -= beatwatcher.last_global_timestamp - beatwatcher_global_timestamp;
         beatwatcher.last_global_timestamp = beatwatcher_global_timestamp;
+        beatwatcher.since = 0;
         return 0;
     }
 

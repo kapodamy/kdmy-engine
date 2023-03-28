@@ -57,11 +57,13 @@ async function character_init(charactermanifest) {
 
         current_anim_type: CharacterAnimType.BASE,
         current_action_type: CharacterActionType.NONE,
-        current_stop_on_beat: -1,
         current_anim: null,
         current_use_frame_rollback: 0,
-        current_sing_follow_hold: 0,
-        current_sing_non_sustain: 0,
+        current_follow_hold: 0,
+        current_expected_duration: 0,
+        current_idle_in_next_beat: 0,
+        current_waiting_animation_end_and_idle: 0,
+        current_waiting_animation_end: 0,
 
         alt_enabled: 0,
         continuous_idle: charactermanifest.continuous_idle,
@@ -97,7 +99,6 @@ async function character_init(charactermanifest) {
         character_scale: 1.0,
         played_actions_count: 0,
         commited_animations_count: 0,
-        current_anim_changed: 0,
         animation_freezed: 0
     };
 
@@ -350,28 +351,39 @@ function character_play_hey(character) {
     // end current action
     character_internal_end_current_action(character);
 
+    if (extra_info.stop_after_beats <= 0.0) {
+        character.current_expected_duration = Infinity;
+        character.current_waiting_animation_end = 1;
+        character.current_waiting_animation_end_and_idle = extra_info.stop_after_beats == 0.0;
+    } else {
+        character.current_expected_duration = extra_info.stop_after_beats * character.beatwatcher.tick;
+        character.current_waiting_animation_end = 0;
+        character.current_waiting_animation_end_and_idle = 0;
+    }
+
     if (extra_info.base) {
         character.current_anim = extra_info.base;
         character.current_anim_type = CharacterAnimType.BASE;
+        character.current_follow_hold = extra_info.hold != null;
     } else {
         character.current_anim = extra_info.hold;
         character.current_anim_type = CharacterAnimType.HOLD;
+        character.current_follow_hold = 0;
     }
 
     animsprite_restart(character.current_anim);
 
     character.current_action_extra = extra_info;
     character.current_action_type = CharacterActionType.EXTRA;
-    character.current_use_frame_rollback = 0;
 
-    character_internal_set_beat_stop(character, extra_info.stop_after_beats);
+    character.current_use_frame_rollback = 0;
+    character.current_idle_in_next_beat = 0;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
 
     character.played_actions_count++;
     character.commited_animations_count++;
-    character.current_anim_changed = 1;
 
     return 1;
 }
@@ -380,34 +392,33 @@ function character_play_idle(character) {
     console.assert(character.current_state != null, "character.current_state was NULL");
 
     character.played_actions_count++;
-    character.commited_animations_count++;
 
-    // rollback the current action (if possible)
-    switch (character.current_action_type) {
-        case CharacterActionType.SING:
-            switch (character.current_anim_type) {
-                case CharacterAnimType.BASE:
-                    character.current_sing_follow_hold = 0;
-                    return 2;
-                case CharacterAnimType.HOLD:
-                    if (character.current_action_sing.hold_can_rollback) {
-                        character.current_use_frame_rollback = character.current_action_sing.hold_can_rollback;
-                        return 2;
-                    } else if (character.current_action_sing.rollback) {
-                        character.current_anim = character.current_action_sing.rollback;
-                        animsprite_restart(character.current_anim);
-                        character.current_anim_changed = 1;
-                        return 2;
-                    }
-                    break;
-            }
-            break;
-        case CharacterActionType.MISS:
-            if (character.current_stop_on_beat >= 0) return 2;
-            break;
-        case CharacterActionType.EXTRA:
-        case CharacterActionType.IDLE:
-            break;
+    let action_type = character.current_action_type;
+    let rollback_active = character.current_anim_type == CharacterAnimType.ROLLBACK;
+    if (action_type != CharacterActionType.NONE && action_type != CharacterActionType.IDLE && !rollback_active) {
+
+        // rollback the current action (if possible)
+        let ret = 0;
+        switch (character.current_action_type) {
+            case CharacterActionType.SING:
+                ret = character_internal_animate_sing(character, 1, 1);
+                break;
+            case CharacterActionType.MISS:
+                ret = character_internal_animate_miss(character, 1, 1);
+                break;
+            case CharacterActionType.EXTRA:
+                ret = character_internal_animate_extra(character, 1, 1);
+                break;
+            default:
+                character.current_idle_in_next_beat = 1;
+                character.current_action_type = CharacterActionType.NONE;
+                break;
+        }
+
+        // do nothing if rollback is active or idle was previously used
+        if (!character.current_idle_in_next_beat || character.current_action_type == CharacterActionType.IDLE) {
+            return ret;
+        }
     }
 
     let state = character.current_state;
@@ -423,37 +434,39 @@ function character_play_idle(character) {
                 state = character.default_state;
                 continue L_read_state;
             }
-            character.played_actions_count--;
-            character.commited_animations_count--;
             return 0;
         }
 
         break;// JS only
     }
 
-    if (character.current_action_type != CharacterActionType.IDLE) {
-        // end current action
-        character_internal_end_current_action(character);
-    }
+    // end current action
+    character_internal_end_current_action(character);
 
     if (extra_info.base) {
         character.current_anim = extra_info.base;
         character.current_anim_type = CharacterAnimType.BASE;
+        character.current_follow_hold = extra_info.hold != null;
     } else {
         character.current_anim = extra_info.hold;
         character.current_anim_type = CharacterAnimType.HOLD;
+        character.current_follow_hold = 0;
     }
 
     animsprite_restart(character.current_anim);
 
     character.current_action_extra = extra_info;
     character.current_action_type = CharacterActionType.IDLE;
+
+    character.current_expected_duration = 0.0;
     character.current_use_frame_rollback = 0;
-    character.current_stop_on_beat = -1;// extra_info.stop_after_beats ignored
-    character.current_anim_changed = 1;
+    character.current_idle_in_next_beat = 0;
+    character.current_waiting_animation_end = 0;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
+
+    character.commited_animations_count++;
 
     return 1;
 }
@@ -509,39 +522,57 @@ function character_play_sing(character, direction, prefer_sustain) {
     // end current action
     character_internal_end_current_action(character);
 
-    let base_used;
     if (prefer_sustain) {
-        base_used = sing_info.full_sustain;
-        character.current_anim = sing_info.full_sustain ? sing_info.base : sing_info.hold;
-    } else {
-        base_used = 1;
-        character.current_anim = sing_info.base;
-    }
+        // ignore "stopAfterBeats"
+        character.current_expected_duration = Infinity;
+        character.current_waiting_animation_end = false;
+        character.current_waiting_animation_end_and_idle = false;
 
-    // check if the current animation is not present
-    if (!character.current_anim) {
-        character.current_anim = base_used ? sing_info.hold : sing_info.base;
-        base_used = !base_used;
+        if (sing_info.full_sustain) {
+            if (sing_info.base) {
+                character.current_anim = sing_info.base;
+                character.current_anim_type = CharacterAnimType.BASE;
+                character.current_follow_hold = sing_info.hold != null;
+            } else {
+                character.current_anim = sing_info.hold;
+                character.current_anim_type = CharacterAnimType.HOLD;
+                character.current_follow_hold = 0;
+            }
+        } else {
+            character.current_anim = sing_info.hold ?? sing_info.base;
+            character.current_anim_type = sing_info.hold ? CharacterAnimType.HOLD : CharacterAnimType.BASE;
+            character.current_follow_hold = 0;
+        }
+    } else {
+        character.current_anim = sing_info.base ?? sing_info.hold;
+        character.current_anim_type = sing_info.base ? CharacterAnimType.BASE : CharacterAnimType.HOLD;
+        character.current_follow_hold = sing_info.follow_hold && sing_info.base && sing_info.hold;
+
+        // ignore "stopAfterBeats" if negative (waits for animation completion)
+        if (sing_info.stop_after_beats <= 0.0) {
+            character.current_waiting_animation_end = 1;
+            character.current_expected_duration = Infinity;
+            character.current_waiting_animation_end_and_idle = sing_info.stop_after_beats == 0.0;
+        } else {
+            character.current_waiting_animation_end = 0;
+            character.current_expected_duration = sing_info.stop_after_beats * character.beatwatcher.tick;
+            character.current_waiting_animation_end_and_idle = 0;
+        }
     }
 
     animsprite_restart(character.current_anim);
 
     character.current_action_sing = sing_info;
     character.current_action_type = CharacterActionType.SING;
-    character.current_anim_type = prefer_sustain ? CharacterAnimType.HOLD : CharacterAnimType.BASE;
-    character.current_use_frame_rollback = 0;
-    character.current_stop_on_beat = prefer_sustain ? -1 : (character.beatwatcher.count + 2);
 
-    // specific sing action fields
-    character.current_sing_follow_hold = prefer_sustain ? 0 : sing_info.follow_hold;
-    character.current_sing_non_sustain = !prefer_sustain;
+    character.current_use_frame_rollback = 0;
+    character.current_idle_in_next_beat = 0;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
 
     character.played_actions_count++;
     character.commited_animations_count++;
-    character.current_anim_changed = 1;
 
     return 1;
 }
@@ -583,11 +614,20 @@ function character_play_miss(character, direction, keep_in_hold) {
     // end current action
     character_internal_end_current_action(character);
 
-    if (character.current_action_type == CharacterActionType.MISS && miss_info == character.current_action_miss) {
-        character_internal_set_beat_stop(character, keep_in_hold ? -1 : miss_info.stop_after_beats);
-
-        // do not replay this action
-        return 2;
+    if (keep_in_hold) {
+        // ignore "stopAfterBeats"
+        character.current_expected_duration = Infinity;
+        character.current_waiting_animation_end = 0;
+        character.current_waiting_animation_end_and_idle = 0;
+    } else if (miss_info.stop_after_beats <= 0.0) {
+        // wait for animation completion
+        character.current_expected_duration = Infinity;
+        character.current_waiting_animation_end = 1;
+        character.current_waiting_animation_end_and_idle = miss_info.stop_after_beats == 0.0;
+    } else {
+        character.current_expected_duration = miss_info.stop_after_beats * character.beatwatcher.tick;
+        character.current_waiting_animation_end = 0;
+        character.current_waiting_animation_end_and_idle = 0;
     }
 
     animsprite_restart(miss_info.animation);
@@ -595,16 +635,15 @@ function character_play_miss(character, direction, keep_in_hold) {
     character.current_anim = miss_info.animation;
     character.current_action_type = CharacterActionType.MISS;
     character.current_action_miss = miss_info;
-    character.current_use_frame_rollback = 0;
 
-    character_internal_set_beat_stop(character, keep_in_hold ? -1 : miss_info.stop_after_beats);
+    character.current_follow_hold = 0;
+    character.current_use_frame_rollback = 0;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
 
     character.played_actions_count++;
     character.commited_animations_count++;
-    character.current_anim_changed = 1;
 
     return 1;
 }
@@ -615,7 +654,6 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
     let id_extra = character_internal_get_extra_id(character, extra_animation_name);
     if (id_extra < 0) {
         // unknown extra
-        character_internal_fallback_idle(character);
         return 0;
     }
 
@@ -645,30 +683,55 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
     // end current action
     character_internal_end_current_action(character);
 
-    if ((extra_info.hold && prefer_sustain) || (!extra_info.base && extra_info.hold)) {
-        character.current_anim = extra_info.hold;
-        character.current_anim_type = CharacterAnimType.HOLD;
+    if (prefer_sustain) {
+        // ignore "stopAfterBeats"
+        character.current_expected_duration = Infinity;
+        character.current_waiting_animation_end = 0;
+        character.current_waiting_animation_end_and_idle = 0;
+    } else if (extra_info.stop_after_beats <= 0.0) {
+        // wait for animation completion
+        character.current_expected_duration = Infinity;
+        character.current_waiting_animation_end = 1;
+        character.current_waiting_animation_end_and_idle = extra_info.stop_after_beats == 0.0;
     } else {
-        character.current_anim = extra_info.base;
-        character.current_anim_type = CharacterAnimType.BASE;
+        character.current_expected_duration = extra_info.stop_after_beats * character.beatwatcher.tick;
+        character.current_waiting_animation_end = 0;
+        character.current_waiting_animation_end_and_idle = 0;
+    }
+
+    if (prefer_sustain) {
+        character.current_anim = extra_info.hold ?? extra_info.base;
+        character.current_anim_type = extra_info.hold ? CharacterAnimType.HOLD : CharacterAnimType.BASE;
+        character.current_follow_hold = 0;
+    } else {
+        character.current_anim = extra_info.base ?? extra_info.hold;
+        character.current_anim_type = extra_info.base ? CharacterAnimType.BASE : CharacterAnimType.HOLD;
+        character.current_follow_hold = extra_info.base && extra_info.hold;
     }
 
     animsprite_restart(character.current_anim);
 
     character.current_action_extra = extra_info;
     character.current_action_type = CharacterActionType.EXTRA;
-    character.current_use_frame_rollback = 0;
 
-    character_internal_set_beat_stop(character, extra_info.stop_after_beats);
+    character.current_use_frame_rollback = 0;
+    character.current_idle_in_next_beat = 0;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
 
     character.played_actions_count++;
     character.commited_animations_count++;
-    character.current_anim_changed = 1;
 
     return 1;
+}
+
+function character_schedule_idle(character) {
+    character.played_actions_count++;
+    character.commited_animations_count++;
+
+    character.current_expected_duration = 0.0;
+    character.current_idle_in_next_beat = 1;
 }
 
 
@@ -689,11 +752,7 @@ function character_reset(character) {
     beatwatcher_reset(character.beatwatcher, 1, 100);
 
     character.idle_speed = 1.0;
-    character.current_action_type = CharacterActionType.NONE;
-    character.current_stop_on_beat = -1;
     character.alt_enabled = 0;
-    character.commited_animations_count++;
-    character.current_anim_changed = 0;
 
     drawable_set_antialiasing(character.drawable, PVR_FLAG_DEFAULT);
 
@@ -705,6 +764,7 @@ function character_reset(character) {
     // switch to the default state
     character_state_toggle(character, null);
 
+    character.current_action_type = CharacterActionType.NONE;
     character_play_idle(character);
 }
 
@@ -739,7 +799,7 @@ function character_face_as_opponent(character, face_as_opponent) {
 
 
 function character_animate(character, elapsed) {
-    beatwatcher_poll(character.beatwatcher);
+    let has_beat = beatwatcher_poll(character.beatwatcher);
 
     if (character.drawable_animation != null) {
         animsprite_animate(character.drawable_animation, elapsed);
@@ -757,25 +817,14 @@ function character_animate(character, elapsed) {
         return 1;
     }
 
-    // required to compute trailing fx
     statesprite_animate(character.statesprite, elapsed);
 
+    if (character.current_action_type == CharacterActionType.NONE) return 1;
+
     let completed;
-    const current_action_type = character.current_action_type;
-    let has_beat_stop = character.beatwatcher.count >= character.current_stop_on_beat;
+    let orig_elapsed = elapsed;
 
-    if (!character.current_anim) {
-        if (character.current_stop_on_beat < 0) return 1;
-        if (has_beat_stop) {
-            character.current_action_type = CharacterActionType.NONE;
-            character_play_idle(character);
-            return 1;
-        }
-        return 0;
-    }
-
-    if (current_action_type == CharacterActionType.NONE) return 1;
-    if (current_action_type == CharacterActionType.IDLE && character.idle_speed != 1.0) {
+    if (character.current_action_type == CharacterActionType.IDLE && character.idle_speed != 1.0) {
         elapsed *= character.idle_speed;
     }
 
@@ -787,147 +836,37 @@ function character_animate(character, elapsed) {
     animsprite_update_statesprite(character.current_anim, character.statesprite, 1);
     character_internal_calculate_location(character);
 
-    if (!completed) {
-        let check_beat_stop = character.current_stop_on_beat >= 0;
-        if (check_beat_stop && has_beat_stop && current_action_type != CharacterActionType.SING) {
-            completed = 1;
-        } else if (has_beat_stop && current_action_type == CharacterActionType.SING && character.current_sing_non_sustain) {
-            // In week 7 tankman "hey! pretty good" anim require this
-            character.current_stop_on_beat = -1;
-            return 1;
+    let should_stop = character.current_expected_duration <= 0.0;
+    character.current_expected_duration -= orig_elapsed;
 
-            //
-            // In non-sustain sing actions, beat stops ends the
-            // action. This can no be the expected behaviour, but
-            // base sing animations have to be shorter than a beat.
-            //
-            //completed = 1;
-        } else {
-            // wait until the current action animation is completed
-            return 1;
+    if (character.current_idle_in_next_beat) {
+        if (has_beat && should_stop) {
+            character.current_action_type = CharacterActionType.NONE;
+            return character_play_idle(character);
         }
-    }
-
-    if (character.current_anim_changed) {
-        character.current_anim_changed = 0;// just in case
-        character.commited_animations_count++;
-    }
-
-    if (character.continuous_idle && current_action_type == CharacterActionType.IDLE) {
-        // follow hold animation (if exists)
-        if (character.current_anim_type == CharacterAnimType.BASE && character.current_action_extra.hold) {
-            character.current_anim = character.current_action_extra.hold;
-            character.current_anim_type = CharacterAnimType.HOLD;
-        }
-
-        // play the idle animation again
-        animsprite_restart(character.current_anim);
-        character.current_anim_changed = 1;
         return 1;
     }
 
-    let switch_to_idle = 0;
-    let follow_rollback = null;
-    /**@type {bool}*/let follow_frame_rollback = 0;
-
-    // guess the next animation in the action
-    switch (character.current_anim_type) {
-        case CharacterAnimType.BASE:
-            // check if the hold animation should be played
-            let follow_hold = null;
-            switch (current_action_type) {
-                case CharacterActionType.SING:
-                    follow_hold = character.current_sing_follow_hold ? character.current_action_sing.hold : null;
-                    follow_rollback = character.current_action_sing.rollback;
-                    follow_frame_rollback = character.current_action_sing.base_can_rollback;
-                    break;
-                case CharacterActionType.EXTRA:
-                case CharacterActionType.IDLE:
-                    follow_hold = character.current_action_extra.hold;
-                    follow_rollback = character.current_action_extra.rollback;
-                    break;
-            }
-
-            if (!follow_hold || !has_beat_stop) {
-                switch_to_idle = 1;
-                break;
-            }
-
-            // queue hold animation
-            animsprite_restart(follow_hold);
-            character.current_anim = follow_hold;
-            character.current_anim_type = CharacterAnimType.HOLD;
-            character.current_anim_changed = 1;
-            return 0;
-        case CharacterAnimType.HOLD:
-            // check if should rollback the current animation or play the rollback animation
-            switch (current_action_type) {
-                case CharacterActionType.SING:
-                    follow_rollback = character.current_action_sing.rollback;
-                    follow_frame_rollback = character.current_action_sing.hold_can_rollback;
-                    break;
-                case CharacterActionType.MISS:
-                    // never reached
-                    break;
-                case CharacterActionType.EXTRA:
-                case CharacterActionType.IDLE:
-                    follow_rollback = character.current_action_extra.rollback;
-                    break;
-            }
-        case CharacterAnimType.ROLLBACK:
-            switch_to_idle = 1;
-            break;
-    }
-
-    // check if is necessary do a rollback
-    if (!switch_to_idle && (follow_rollback || follow_frame_rollback)) {
-        if (follow_rollback) character.current_anim = follow_rollback;
-
-        character.current_use_frame_rollback = follow_frame_rollback;
-        character.current_anim_type = CharacterAnimType.ROLLBACK;
-        character.current_anim_changed = 1;
-        return 1;
-    }
-
-
-    //
-    // Check if necessary switch to idle action
-    //
-
-    // re-schedule idle action (if current action)
-    if (current_action_type == CharacterActionType.IDLE) {
-        if (character.current_stop_on_beat < 0) {
-            // no re-scheduled, do it now
-            character_internal_set_beat_stop(character);
+    if (character.current_anim_type == CharacterAnimType.ROLLBACK) {
+        if (completed) {
+            character.current_action_type = CharacterActionType.NONE;
+            return character_play_idle(character);
         }
-        if (character.current_stop_on_beat > character.beatwatcher.count) {
-            // wait for the next beat
-            return 1;
-        }
+        return 0;
     }
 
-    // handle special cases
-    switch (current_action_type) {
+    switch (character.current_action_type) {
         case CharacterActionType.SING:
-            if (character.current_anim_type == CharacterAnimType.HOLD) return 1;
-            break;
+            return character_internal_animate_sing(character, completed, should_stop);
         case CharacterActionType.MISS:
-            // keep the sprite static until another action is executed
-            if (character.current_stop_on_beat < 0) return 1;
-            // keep the sprite static until next beat stop
-            if (character.beatwatcher.count < character.current_stop_on_beat) return 0;
-            break;
+            return character_internal_animate_miss(character, completed, should_stop);
+        case CharacterActionType.IDLE:
+            return character_internal_animate_idle(character, completed, has_beat);
         case CharacterActionType.EXTRA:
-            // keep the sprite static if "current_stop_on_beat" is not set
-            if (character.current_stop_on_beat < 0) return 1;
-            // keep the sprite static until next beat stop, useless "static_until_beat" is false
-            if (!has_beat_stop && character.current_action_extra.static_until_beat) return 1;
-            break;
+            return character_internal_animate_extra(character, completed, should_stop);
     }
 
-    // switch current action to idle
-    character.current_action_type = CharacterActionType.NONE;
-    return character_play_idle(character);
+    return 0;
 
 }
 
@@ -1040,6 +979,7 @@ function character_internal_import_sing(sing_info, modelholder, sing_entry, id_d
     sing_info.id_direction = id_direction;
     sing_info.follow_hold = sing_entry.follow_hold;
     sing_info.full_sustain = sing_entry.full_sustain;
+    sing_info.stop_after_beats = sing_entry.stop_after_beats;
     sing_info.offset_x = sing_entry.offset_x;
     sing_info.offset_y = sing_entry.offset_y;
 
@@ -1108,7 +1048,6 @@ async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_r
 
     extra_info.id_extra = id_extra;
     extra_info.is_valid = extra_info.base != null || extra_info.hold != null;
-    extra_info.static_until_beat = extra_entry.static_until_beat;
     extra_info.offset_x = extra_entry.offset_x;
     extra_info.offset_y = extra_entry.offset_y;
 }
@@ -1175,17 +1114,17 @@ function character_internal_state_create(name, sing_size, miss_size, extras_size
         extras: new Array(extras_size),
         hey: {
             base: null, hold: null, rollback: null,
-            beat_stop: 0, id_extra: -1, id_texture: -1, is_valid: 0, static_until_beat: 0,
+            stop_after_beats: 0, id_extra: -1, id_texture: -1, is_valid: 0,
             offset_x: 0, offset_y: 0
         },
         idle: {
             base: null, hold: null, rollback: null,
-            beat_stop: 0, id_extra: -1, id_texture: -1, is_valid: 0, static_until_beat: 0,
+            stop_after_beats: 0, id_extra: -1, id_texture: -1, is_valid: 0,
             offset_x: 0, offset_y: 0
         },
         idle_alt: {
             base: null, hold: null, rollback: null,
-            beat_stop: 0, id_extra: -1, id_texture: -1, is_valid: 0, static_until_beat: 0,
+            stop_after_beats: 0, id_extra: -1, id_texture: -1, is_valid: 0,
             offset_x: 0, offset_y: 0
         }
     };
@@ -1213,6 +1152,7 @@ function character_internal_state_of_sing(new_singinfo, modelholder, state_name,
     new_singinfo.id_direction = sing_info.id_direction;
     new_singinfo.follow_hold = sing_info.follow_hold;
     new_singinfo.full_sustain = sing_info.full_sustain;
+    new_singinfo.stop_after_beats = sing_info.stop_after_beats;
     new_singinfo.offset_x = sing_info.offset_x;
     new_singinfo.offset_y = sing_info.offset_y;
     new_singinfo.base_can_rollback = 0;
@@ -1240,7 +1180,6 @@ function character_internal_state_of_extra(new_extrainfo, modelholder, state_nam
     new_extrainfo.stop_after_beats = extra_info.stop_after_beats;
     new_extrainfo.offset_x = extra_info.offset_x;
     new_extrainfo.offset_y = extra_info.offset_y;
-    new_extrainfo.static_until_beat = extra_info.static_until_beat;
     new_extrainfo.is_valid = new_extrainfo.base && new_extrainfo.hold;
 }
 
@@ -1420,7 +1359,7 @@ function character_internal_calculate_location(character) {
 }
 
 function character_internal_end_current_action(character) {
-    if (!character.current_anim) return;
+    if (!character.current_anim || character.current_idle_in_next_beat) return;
 
     let base = null;
     let hold = null;
@@ -1471,6 +1410,7 @@ function character_internal_end_current_action(character) {
 function character_internal_fallback_idle(character) {
     if (character.current_action_type == CharacterActionType.IDLE) return;
     character_internal_end_current_action(character);
+    character.current_action_type = CharacterActionType.NONE;
     character_play_idle(character);
 }
 
@@ -1522,17 +1462,6 @@ async function character_internal_get_modelholder(modelholder_arraylist, model_s
 function character_internal_destroy_modelholder(modelholder_arraylist_item) {
     modelholder_arraylist_item.model_src = undefined;
     modelholder_destroy(modelholder_arraylist_item.modelholder);
-}
-
-function character_internal_set_beat_stop(/**@type {object}*/character,/**@type {number} */ stop_after_beats) {
-    if (stop_after_beats < 1) {
-        character.current_stop_on_beat = -1;
-        return;
-    }
-
-    character.current_stop_on_beat = character.beatwatcher.count + stop_after_beats;
-    if (beatwatcher_remaining_until_next(character.beatwatcher) <= (character.beatwatcher.tick * 0.5))
-        character.current_stop_on_beat++;
 }
 
 async function character_internal_import_actions(context, actions, model_src, state_name) {
@@ -1641,5 +1570,170 @@ async function character_internal_import_actions(context, actions, model_src, st
     }
 
     return state;
+}
+
+function character_internal_animate_sing(character, completed, should_stop) {
+    let action = character.current_action_sing;
+
+    if (!completed && !should_stop) {
+        // keep waiting
+        return 0;
+    }
+
+    // play "animHold" if necessary
+    if (character.current_follow_hold && !should_stop) {
+        character.commited_animations_count++;
+        character.current_anim_type = CharacterAnimType.HOLD;
+        character.current_follow_hold = 0;
+        character.current_anim = action.hold;
+        animsprite_restart(character.current_anim);
+        return 1;
+    }
+
+    if (character.current_waiting_animation_end) {
+        if (!completed) return 0;
+    } else if (!should_stop) {
+        // edge case: sustain sing with "anim"+"animHold" ended. keep static
+        // edge case: sustain sing with "anim" only ended. keep static
+        return 1;
+    }
+
+    //
+    // Note: only do rollback here for non-sustain sing actions
+    //
+    character.commited_animations_count++;
+
+    // if exists a rollback animation use it
+    if (action.rollback) {
+        character.current_expected_duration = Infinity;
+        character.current_anim = action.rollback;
+        character.current_anim_type = CharacterAnimType.ROLLBACK;
+        character.current_use_frame_rollback = 0;
+        animsprite_restart(character.current_anim);
+        return 1;
+    }
+
+    // if not, try do self rollback
+    let is_base = character.current_anim_type == CharacterAnimType.BASE;
+    let can_frame_rollback = is_base ? action.base_can_rollback : action.hold_can_rollback;
+
+    if (!can_frame_rollback) {
+        if (character.current_waiting_animation_end_and_idle) {
+            // do not wait for next beat, play idle now
+            character.current_action_type = CharacterActionType.NONE;
+            return character_play_idle(character);
+        }
+        // schedule idle
+        character.current_expected_duration = 0.0;
+        character.current_idle_in_next_beat = 1;
+        return 1;
+    }
+
+    // do frame rollback
+    character.current_use_frame_rollback = 1;
+    character.current_anim_type = CharacterAnimType.ROLLBACK;
+    return 1;
+}
+
+function character_internal_animate_miss(character, completed, should_stop) {
+    if (!completed && !should_stop) {
+        // nothing to do
+        return 0;
+    }
+
+    if (character.current_waiting_animation_end) {
+        if (!completed) return 0;
+    } else if (!should_stop) {
+        return 1;
+    }
+
+    character.commited_animations_count++;
+
+    if (character.current_waiting_animation_end_and_idle) {
+        // do not wait for next beat, play idle now
+        character.current_action_type = CharacterActionType.NONE;
+        return character_play_idle(character);
+    }
+
+    // schedule idle
+    character.current_expected_duration = 0.0;
+    character.current_idle_in_next_beat = 1;
+    return 1;
+}
+
+function character_internal_animate_idle(character, completed, has_beat) {
+    if (!completed) {
+
+        // interrupt "animHold" when a beat is detected
+        if (has_beat && !character.continuous_idle && character.current_anim_type == CharacterAnimType.HOLD) {
+            character.current_action_type = CharacterActionType.NONE;
+            character_play_idle(character);
+            return 1;
+        }
+    }
+
+    character.commited_animations_count++;
+
+    if (character.current_follow_hold) {
+        character.current_follow_hold = 0;
+        character.current_anim = character.current_action_extra.hold;
+        character.current_anim_type = CharacterAnimType.HOLD;
+        animsprite_restart(character.current_anim);
+        return 1;
+    }
+
+    if (character.continuous_idle) {
+        character.current_action_type = CharacterActionType.NONE;
+        character_play_idle(character);
+        return 1;
+    }
+
+    character.current_expected_duration = 0.0;
+    character.current_idle_in_next_beat = 1;
+    return 1;
+}
+
+function character_internal_animate_extra(character, completed, should_stop) {
+    let action = character.current_action_extra;
+
+    if (!completed) return 0;
+
+    // play "animHold" if necessary
+    if (character.current_follow_hold && !should_stop) {
+        character.commited_animations_count++;
+        character.current_anim_type = CharacterAnimType.HOLD;
+        character.current_follow_hold = 0;
+        character.current_anim = action.hold;
+        animsprite_restart(character.current_anim);
+        return 1;
+    }
+
+    if (character.current_waiting_animation_end) {
+        if (!completed) return 0;
+    } else if (!should_stop) {
+        return 1;
+    }
+
+    character.commited_animations_count++;
+
+    // if exists a rollback animation use it
+    if (action.rollback) {
+        character.current_expected_duration = Infinity;
+        character.current_anim = action.rollback;
+        character.current_anim_type = CharacterAnimType.ROLLBACK;
+        character.current_use_frame_rollback = 0;
+        animsprite_restart(character.current_anim);
+        return 1;
+    }
+
+    if (character.current_waiting_animation_end_and_idle) {
+        // do not wait for next beat, play idle now
+        character.current_action_type = CharacterActionType.NONE;
+        return character_play_idle(character);
+    }
+
+    character.current_expected_duration = 0.0;
+    character.current_idle_in_next_beat = 1;
+    return 1;
 }
 

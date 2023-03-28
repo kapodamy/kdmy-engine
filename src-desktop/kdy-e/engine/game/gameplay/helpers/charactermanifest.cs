@@ -23,13 +23,14 @@ namespace Engine.Game.Gameplay.Helpers {
             public bool rollback;
             public bool follow_hold;
             public bool full_sustain;
+            public float stop_after_beats;
             public float offset_x;
             public float offset_y;
         }
         public class Miss {
             public string direction;
             public string model_src;
-            public int stop_after_beats;
+            public float stop_after_beats;
             public string anim;
             public float offset_x;
             public float offset_y;
@@ -37,11 +38,10 @@ namespace Engine.Game.Gameplay.Helpers {
         public class Extra {
             public string name;
             public string model_src;
-            public int stop_after_beats;
+            public float stop_after_beats;
             public string anim;
             public string anim_hold;
             public string anim_rollback;
-            public bool static_until_beat;
             public float offset_x;
             public float offset_y;
         }
@@ -263,7 +263,7 @@ namespace Engine.Game.Gameplay.Helpers {
         }
 
 
-        private static void InternalParseExtra(JSONToken json_extra, bool ignore_name, Extra entry) {
+        private static void InternalParseExtra(JSONToken json_extra, bool ignore_name, double default_beat_stop, Extra entry) {
             double offset_x, offset_y;
             if (ignore_name) {
                 entry.name = null;
@@ -273,8 +273,7 @@ namespace Engine.Game.Gameplay.Helpers {
             }
             entry.anim = JSONParser.ReadString(json_extra, "anim", null);
             entry.anim_hold = JSONParser.ReadString(json_extra, "animHold", null);
-            entry.stop_after_beats = (int)JSONParser.ReadNumberLong(json_extra, "stopAfterBeats", 0L);
-            entry.static_until_beat = JSONParser.ReadBoolean(json_extra, "staticUntilBeat", true);
+            entry.stop_after_beats = (float)JSONParser.ReadNumberDouble(json_extra, "stopAfterBeats", default_beat_stop);
             entry.anim_rollback = JSONParser.ReadString(json_extra, "animRollback", null);
             entry.model_src = CharacterManifest.InternalPathOf(json_extra, "model", null);
 
@@ -359,6 +358,7 @@ namespace Engine.Game.Gameplay.Helpers {
                     rollback = JSONParser.ReadBoolean(item_json, "rollback", false),
                     follow_hold = JSONParser.ReadBoolean(item_json, "followHold", false),
                     full_sustain = JSONParser.ReadBoolean(item_json, "fullSustain", false),
+                    stop_after_beats = (float)JSONParser.ReadNumberDouble(item_json, "stopAfterBeats", 1.0),
                     model_src = InternalPathOf(item_json, "model", null),
                     offset_x = (float)offset_x,
                     offset_y = (float)offset_y
@@ -375,7 +375,7 @@ namespace Engine.Game.Gameplay.Helpers {
                 actions.miss[i] = new Miss() {
                     direction = JSONParser.ReadString(item_json, "direction", null),
                     anim = JSONParser.ReadString(item_json, "anim", null),
-                    stop_after_beats = (int)JSONParser.ReadNumberLong(item_json, "stopAfterBeats", 1L),
+                    stop_after_beats = (float)JSONParser.ReadNumberDouble(item_json, "stopAfterBeats", 1.0),
                     model_src = InternalPathOf(item_json, "model", null),
                     offset_x = (float)offset_x,
                     offset_y = (float)offset_y
@@ -389,19 +389,19 @@ namespace Engine.Game.Gameplay.Helpers {
                 JSONToken item_json = JSONParser.ReadArrayItemObject(extras_array, i);
 
                 actions.extras[i] = new Extra() { };
-                InternalParseExtra(item_json, false, actions.extras[i]);
+                InternalParseExtra(item_json, false, -1.0, actions.extras[i]);
             }
 
             actions.has_idle = JSONParser.HasPropertyObject(json_actions, "idle");
             if (actions.has_idle) {
                 JSONToken json_extra = JSONParser.ReadObject(json_actions, "idle");
-                InternalParseExtra(json_extra, true, actions.idle);
+                InternalParseExtra(json_extra, true, -1.0, actions.idle);
             }
 
             actions.has_hey = JSONParser.HasPropertyObject(json_actions, "hey");
             if (actions.has_hey) {
                 JSONToken json_extra = JSONParser.ReadObject(json_actions, "hey");
-                InternalParseExtra(json_extra, true, actions.hey);
+                InternalParseExtra(json_extra, true, -1.0, actions.hey);
             }
         }
 

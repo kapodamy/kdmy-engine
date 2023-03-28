@@ -165,12 +165,8 @@
                     "default": null
                 },
                 "stopAfterBeats": {
-                    "type": "integer",
-                    "default": -1
-                },
-                "staticUntilBeat": {
-                    "type": "boolean",
-                    "default": true
+                    "type": "number",
+                    "default": -1.0
                 },
                 "model": {
                     "type": ["string", "null"],
@@ -199,8 +195,8 @@
                     "default": null
                 },
                 "stopAfterBeats": {
-                    "type": "integer",
-                    "default": -1
+                    "type": "number",
+                    "default": 1.0
                 },
                 "model": {
                     "type": ["string", "null"],
@@ -290,6 +286,10 @@
                 "fullSustain": {
                     "type": "boolean",
                     "default": false
+                },
+                "stopAfterBeats": {
+                    "type": "number",
+                    "default": 1.0
                 },
                 "model": {
                     "type": ["string", "null"],

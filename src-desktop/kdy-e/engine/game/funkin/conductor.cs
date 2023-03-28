@@ -205,9 +205,10 @@ namespace Engine.Game {
                     case StrumPressState.NONE:
                         if (this.last_penality_strum == array[i].strum) {
                             // stop the penality animation in the next beat
-                            success += InternalExecuteMiss(this.character, array[i].directions, false);
+                            this.character.ScheduleIdle();
+                            this.play_calls = this.character.GetPlayCalls();
                             this.last_penality_strum = null;
-                        } else if (this.last_sustain_strum == null || this.last_sustain_strum == array[i].strum) {
+                        } else if (this.last_sustain_strum == array[i].strum) {
                             this.last_sustain_strum = null;
                             if (!this.character.IsIdleActive()) {
                                 //
@@ -222,7 +223,6 @@ namespace Engine.Game {
                         }
                         break;
                     case StrumPressState.HIT:
-                        //this.current_duration = array[i].strum.GetMarkerDuration();
                         this.last_sustain_strum = null;
                         this.last_penality_strum = null;
                         this.has_misses = false;

@@ -46,9 +46,11 @@ namespace Engine.Game {
         private CharacterActionMiss current_action_miss;
         private CharacterActionSing current_action_sing;
         private CharacterActionType current_action_type;
-        private int current_stop_on_beat;
-        private bool current_sing_follow_hold;
-        private bool current_sing_non_sustain;
+        private float current_expected_duration;
+        private bool current_follow_hold;
+        private bool current_idle_in_next_beat;
+        private bool current_waiting_animation_end_and_idle;
+        private bool current_waiting_animation_end;
         private bool alt_enabled;
         private bool continuous_idle;
         private BeatWatcher beatwatcher;
@@ -75,7 +77,6 @@ namespace Engine.Game {
         private float character_scale;
         private int played_actions_count;
         private int commited_animations_count;
-        private bool current_anim_changed;
         private bool animation_freezed;
 
 
@@ -114,11 +115,13 @@ namespace Engine.Game {
 
             this.current_anim_type = CharacterAnimType.BASE;
             this.current_action_type = CharacterActionType.NONE;
-            this.current_stop_on_beat = -1;
             this.current_anim = null;
             this.current_use_frame_rollback = false;
-            this.current_sing_follow_hold = false;
-            this.current_sing_non_sustain = false;
+            this.current_follow_hold = false;
+            this.current_expected_duration = 0f;
+            this.current_idle_in_next_beat = false;
+            this.current_waiting_animation_end_and_idle = false;
+            this.current_waiting_animation_end = false;
 
             this.alt_enabled = false;
             this.continuous_idle = charactermanifest.continuous_idle;
@@ -154,7 +157,6 @@ namespace Engine.Game {
             this.character_scale = 1.0f;
             this.played_actions_count = 0;
             this.commited_animations_count = 0;
-            this.current_anim_changed = false;
             this.animation_freezed = false;
 
             this.beatwatcher.Reset(true, 100f);
@@ -405,28 +407,39 @@ namespace Engine.Game {
             // end current action
             InternalEndCurrentAction();
 
+            if (extra_info.stop_after_beats <= 0f) {
+                this.current_expected_duration = Single.PositiveInfinity;
+                this.current_waiting_animation_end = true;
+                this.current_waiting_animation_end_and_idle = extra_info.stop_after_beats == 0f;
+            } else {
+                this.current_expected_duration = extra_info.stop_after_beats * this.beatwatcher.tick;
+                this.current_waiting_animation_end = false;
+                this.current_waiting_animation_end_and_idle = false;
+            }
+
             if (extra_info.@base != null) {
                 this.current_anim = extra_info.@base;
                 this.current_anim_type = CharacterAnimType.BASE;
+                this.current_follow_hold = extra_info.hold != null;
             } else {
                 this.current_anim = extra_info.hold;
                 this.current_anim_type = CharacterAnimType.HOLD;
+                this.current_follow_hold = false;
             }
 
             this.current_anim.Restart();
 
             this.current_action_extra = extra_info;
             this.current_action_type = CharacterActionType.EXTRA;
-            this.current_use_frame_rollback = false;
 
-            InternalSetBeatStop(extra_info.stop_after_beats);
+            this.current_use_frame_rollback = false;
+            this.current_idle_in_next_beat = false;
 
             InternalUpdateTexture();
             InternalCalculateLocation();
 
             this.played_actions_count++;
             this.commited_animations_count++;
-            this.current_anim_changed = true;
 
             return true;
         }
@@ -435,34 +448,33 @@ namespace Engine.Game {
             Debug.Assert(this.current_state != null, "this.current_state was NULL");
 
             this.played_actions_count++;
-            this.commited_animations_count++;
 
-            // rollback the current action (if possible)
-            switch (this.current_action_type) {
-                case CharacterActionType.SING:
-                    switch (this.current_anim_type) {
-                        case CharacterAnimType.BASE:
-                            this.current_sing_follow_hold = false;
-                            return 2;
-                        case CharacterAnimType.HOLD:
-                            if (this.current_action_sing.hold_can_rollback) {
-                                this.current_use_frame_rollback = this.current_action_sing.hold_can_rollback;
-                                return 2;
-                            } else if (this.current_action_sing.rollback != null) {
-                                this.current_anim = this.current_action_sing.rollback;
-                                this.current_anim.Restart();
-                                this.current_anim_changed = true;
-                                return 2;
-                            }
-                            break;
-                    }
-                    break;
-                case CharacterActionType.MISS:
-                    if (this.current_stop_on_beat >= 0) return 2;
-                    break;
-                case CharacterActionType.EXTRA:
-                case CharacterActionType.IDLE:
-                    break;
+            CharacterActionType action_type = this.current_action_type;
+            bool rollback_active = this.current_anim_type == CharacterAnimType.ROLLBACK;
+            if (action_type != CharacterActionType.NONE && action_type != CharacterActionType.IDLE && !rollback_active) {
+
+                // rollback the current action (if possible)
+                int ret = 0;
+                switch (this.current_action_type) {
+                    case CharacterActionType.SING:
+                        ret = InternalAnimateSing(true, true);
+                        break;
+                    case CharacterActionType.MISS:
+                        ret = InternalAnimateMiss(true, true);
+                        break;
+                    case CharacterActionType.EXTRA:
+                        ret = InternalAnimateExtra(true, true);
+                        break;
+                    default:
+                        this.current_idle_in_next_beat = true;
+                        this.current_action_type = CharacterActionType.NONE;
+                        break;
+                }
+
+                // do nothing if rollback is active or idle was previously used
+                if (!this.current_idle_in_next_beat || this.current_action_type == CharacterActionType.IDLE) {
+                    return ret;
+                }
             }
 
             CharacterState state = this.current_state;
@@ -478,34 +490,36 @@ L_read_state:
                     state = this.default_state;
                     goto L_read_state;
                 }
-                this.played_actions_count--;
-                this.commited_animations_count--;
                 return 0;
             }
 
-            if (this.current_action_type != CharacterActionType.IDLE) {
-                // end current action
-                InternalEndCurrentAction();
-            }
+            // end current action
+            InternalEndCurrentAction();
 
             if (extra_info.@base != null) {
                 this.current_anim = extra_info.@base;
                 this.current_anim_type = CharacterAnimType.BASE;
+                this.current_follow_hold = extra_info.hold != null;
             } else {
                 this.current_anim = extra_info.hold;
                 this.current_anim_type = CharacterAnimType.HOLD;
+                this.current_follow_hold = false;
             }
 
             this.current_anim.Restart();
 
             this.current_action_extra = extra_info;
             this.current_action_type = CharacterActionType.IDLE;
+
+            this.current_expected_duration = 0f;
             this.current_use_frame_rollback = false;
-            this.current_stop_on_beat = -1;// extra_info.stop_after_beats ignored
-            this.current_anim_changed = true;
+            this.current_idle_in_next_beat = false;
+            this.current_waiting_animation_end = false;
 
             InternalUpdateTexture();
             InternalCalculateLocation();
+
+            this.commited_animations_count++;
 
             return 1;
         }
@@ -558,39 +572,57 @@ L_read_state:
             // end current action
             InternalEndCurrentAction();
 
-            bool base_used;
             if (prefer_sustain) {
-                base_used = sing_info.full_sustain;
-                this.current_anim = sing_info.full_sustain ? sing_info.@base : sing_info.hold;
-            } else {
-                base_used = true;
-                this.current_anim = sing_info.@base;
-            }
+                // ignore "stopAfterBeats"
+                this.current_expected_duration = Single.PositiveInfinity;
+                this.current_waiting_animation_end = false;
+                this.current_waiting_animation_end_and_idle = false;
 
-            // check if the current animation is not present
-            if (this.current_anim == null) {
-                this.current_anim = base_used ? sing_info.hold : sing_info.@base;
-                base_used = !base_used;
+                if (sing_info.full_sustain) {
+                    if (sing_info.@base != null) {
+                        this.current_anim = sing_info.@base;
+                        this.current_anim_type = CharacterAnimType.BASE;
+                        this.current_follow_hold = sing_info.hold != null;
+                    } else {
+                        this.current_anim = sing_info.hold;
+                        this.current_anim_type = CharacterAnimType.HOLD;
+                        this.current_follow_hold = false;
+                    }
+                } else {
+                    this.current_anim = sing_info.hold ?? sing_info.@base;
+                    this.current_anim_type = sing_info.hold != null ? CharacterAnimType.HOLD : CharacterAnimType.BASE;
+                    this.current_follow_hold = false;
+                }
+            } else {
+                this.current_anim = sing_info.@base ?? sing_info.hold;
+                this.current_anim_type = sing_info.@base != null ? CharacterAnimType.BASE : CharacterAnimType.HOLD;
+                this.current_follow_hold = sing_info.follow_hold && sing_info.@base != null && sing_info.hold != null;
+
+                // ignore "stopAfterBeats" if negative (waits for animation completion)
+                if (sing_info.stop_after_beats <= 0f) {
+                    this.current_waiting_animation_end = true;
+                    this.current_expected_duration = Single.PositiveInfinity;
+                    this.current_waiting_animation_end_and_idle = sing_info.stop_after_beats == 0f;
+                } else {
+                    this.current_waiting_animation_end = false;
+                    this.current_expected_duration = sing_info.stop_after_beats * this.beatwatcher.tick;
+                    this.current_waiting_animation_end_and_idle = false;
+                }
             }
 
             this.current_anim.Restart();
 
             this.current_action_sing = sing_info;
             this.current_action_type = CharacterActionType.SING;
-            this.current_anim_type = prefer_sustain ? CharacterAnimType.HOLD : CharacterAnimType.BASE;
-            this.current_use_frame_rollback = false;
-            this.current_stop_on_beat = prefer_sustain ? -1 : (this.beatwatcher.count + 2);
 
-            // specific sing action fields
-            this.current_sing_follow_hold = prefer_sustain ? false : sing_info.follow_hold;
-            this.current_sing_non_sustain = !prefer_sustain;
+            this.current_use_frame_rollback = false;
+            this.current_idle_in_next_beat = false;
 
             InternalUpdateTexture();
             InternalCalculateLocation();
 
             this.played_actions_count++;
             this.commited_animations_count++;
-            this.current_anim_changed = true;
 
             return true;
         }
@@ -629,10 +661,20 @@ L_read_state:
             // end current action
             InternalEndCurrentAction();
 
-            if (this.current_action_type == CharacterActionType.MISS && miss_info == this.current_action_miss) {
-                InternalSetBeatStop(keep_in_hold ? -1 : miss_info.stop_after_beats);
-                // do not replay this action
-                return 2;
+            if (keep_in_hold) {
+                // ignore "stopAfterBeats"
+                this.current_expected_duration = Single.PositiveInfinity;
+                this.current_waiting_animation_end = false;
+                this.current_waiting_animation_end_and_idle = false;
+            } else if (miss_info.stop_after_beats <= 0f) {
+                // wait for animation completion
+                this.current_expected_duration = Single.PositiveInfinity;
+                this.current_waiting_animation_end = true;
+                this.current_waiting_animation_end_and_idle = miss_info.stop_after_beats == 0f;
+            } else {
+                this.current_expected_duration = miss_info.stop_after_beats * this.beatwatcher.tick;
+                this.current_waiting_animation_end = false;
+                this.current_waiting_animation_end_and_idle = false;
             }
 
             miss_info.animation.Restart();
@@ -640,16 +682,16 @@ L_read_state:
             this.current_anim = miss_info.animation;
             this.current_action_type = CharacterActionType.MISS;
             this.current_action_miss = miss_info;
-            this.current_use_frame_rollback = false;
 
-            InternalSetBeatStop(keep_in_hold ? -1 : miss_info.stop_after_beats);
+            this.current_follow_hold = false;
+            this.current_use_frame_rollback = false;
+            this.current_idle_in_next_beat = false;
 
             InternalUpdateTexture();
             InternalCalculateLocation();
 
             this.played_actions_count++;
             this.commited_animations_count++;
-            this.current_anim_changed = true;
 
             return 1;
         }
@@ -660,7 +702,6 @@ L_read_state:
             int id_extra = InternalGetExtraId(extra_animation_name);
             if (id_extra < 0) {
                 // unknown extra
-                InternalFallbackIdle();
                 return false;
             }
 
@@ -688,30 +729,55 @@ L_read_state:
             // end current action
             InternalEndCurrentAction();
 
-            if ((extra_info.hold != null && prefer_sustain) || (extra_info.@base == null && extra_info.hold != null)) {
-                this.current_anim = extra_info.hold;
-                this.current_anim_type = CharacterAnimType.HOLD;
+            if (prefer_sustain) {
+                // ignore "stopAfterBeats"
+                this.current_expected_duration = Single.PositiveInfinity;
+                this.current_waiting_animation_end = false;
+                this.current_waiting_animation_end_and_idle = false;
+            } else if (extra_info.stop_after_beats <= 0f) {
+                // wait for animation completion
+                this.current_expected_duration = Single.PositiveInfinity;
+                this.current_waiting_animation_end = true;
+                this.current_waiting_animation_end_and_idle = extra_info.stop_after_beats == 0f;
             } else {
-                this.current_anim = extra_info.@base;
-                this.current_anim_type = CharacterAnimType.BASE;
+                this.current_expected_duration = extra_info.stop_after_beats * this.beatwatcher.tick;
+                this.current_waiting_animation_end = false;
+                this.current_waiting_animation_end_and_idle = false;
+            }
+
+            if (prefer_sustain) {
+                this.current_anim = extra_info.hold ?? extra_info.@base;
+                this.current_anim_type = extra_info.hold != null ? CharacterAnimType.HOLD : CharacterAnimType.BASE;
+                this.current_follow_hold = false;
+            } else {
+                this.current_anim = extra_info.@base ?? extra_info.hold;
+                this.current_anim_type = extra_info.@base != null ? CharacterAnimType.BASE : CharacterAnimType.HOLD;
+                this.current_follow_hold = extra_info.@base != null && extra_info.hold != null;
             }
 
             this.current_anim.Restart();
 
             this.current_action_extra = extra_info;
             this.current_action_type = CharacterActionType.EXTRA;
-            this.current_use_frame_rollback = false;
 
-            InternalSetBeatStop(extra_info.stop_after_beats);
+            this.current_use_frame_rollback = false;
+            this.current_idle_in_next_beat = false;
 
             InternalUpdateTexture();
             InternalCalculateLocation();
 
             this.played_actions_count++;
             this.commited_animations_count++;
-            this.current_anim_changed = true;
 
             return true;
+        }
+
+        public void ScheduleIdle() {
+            this.played_actions_count++;
+            this.commited_animations_count++;
+
+            this.current_expected_duration = 0f;
+            this.current_idle_in_next_beat = true;
         }
 
 
@@ -732,11 +798,7 @@ L_read_state:
             this.beatwatcher.Reset(true, 100);
 
             this.idle_speed = 1.0f;
-            this.current_action_type = CharacterActionType.NONE;
-            this.current_stop_on_beat = -1;
             this.alt_enabled = false;
-            this.commited_animations_count++;
-            this.current_anim_changed = false;
 
             this.drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
 
@@ -748,6 +810,7 @@ L_read_state:
             // switch to the default state
             StateToggle(null);
 
+            this.current_action_type = CharacterActionType.NONE;
             PlayIdle();
         }
 
@@ -782,7 +845,7 @@ L_read_state:
 
 
         public int Animate(float elapsed) {
-            this.beatwatcher.Poll();
+            bool has_beat = this.beatwatcher.Poll();
 
             if (this.drawable_animation != null) {
                 this.drawable_animation.Animate(elapsed);
@@ -800,26 +863,14 @@ L_read_state:
                 return 1;
             }
 
-            // required to compute trailing fx
             this.statesprite.Animate(elapsed);
 
+            if (this.current_action_type == CharacterActionType.NONE) return 1;
+
             bool completed;
-            CharacterActionType current_action_type = this.current_action_type;
-            bool has_beat_stop = this.beatwatcher.count >= this.current_stop_on_beat;
+            float orig_elapsed = elapsed;
 
-            if (this.current_anim == null) {
-                if (this.current_stop_on_beat < 0) return 1;
-                if (has_beat_stop) {
-                    this.current_action_type = CharacterActionType.NONE;
-                    PlayIdle();
-                    return 1;
-                }
-                return 0;
-            }
-
-            if (current_action_type == CharacterActionType.NONE) return 1;
-
-            if (current_action_type == CharacterActionType.IDLE && this.idle_speed != 1.0) {
+            if (this.current_action_type == CharacterActionType.IDLE && this.idle_speed != 1.0) {
                 elapsed *= this.idle_speed;
             }
 
@@ -831,148 +882,37 @@ L_read_state:
             this.current_anim.UpdateStatesprite(this.statesprite, true);
             InternalCalculateLocation();
 
-            if (!completed) {
-                bool check_beat_stop = this.current_stop_on_beat >= 0;
-                if (check_beat_stop && has_beat_stop && current_action_type != CharacterActionType.SING) {
-                    completed = true;
-                } else if (has_beat_stop && current_action_type == CharacterActionType.SING && this.current_sing_non_sustain) {
-                    // In week 7 tankman "hey! pretty good" anim require this
-                    this.current_stop_on_beat = -1;
-                    return 1;
+            bool should_stop = this.current_expected_duration <= 0f;
+            this.current_expected_duration -= orig_elapsed;
 
-                    // In non-sustain sing actions, beat stops ends the
-                    // action. This can no be the expected behaviour, but
-                    // base sing animations have to be shorter than a beat.
-                    //
-                    //completed = true;
-                } else {
-                    // wait until the current action animation is completed
-                    return 1;
+            if (this.current_idle_in_next_beat) {
+                if (has_beat && should_stop) {
+                    this.current_action_type = CharacterActionType.NONE;
+                    return PlayIdle();
                 }
-            }
-
-            if (this.current_anim_changed) {
-                this.current_anim_changed = false;// just in case
-                this.commited_animations_count++;
-            }
-
-            if (this.continuous_idle && current_action_type == CharacterActionType.IDLE) {
-                // follow hold animation (if exists)
-                if (this.current_anim_type == CharacterAnimType.BASE && this.current_action_extra.hold != null) {
-                    this.current_anim = this.current_action_extra.hold;
-                    this.current_anim_type = CharacterAnimType.HOLD;
-                }
-
-                // play the idle animation again
-                this.current_anim.Restart();
-                this.current_anim_changed = true;
                 return 1;
             }
 
-            bool switch_to_idle = false;
-            AnimSprite follow_rollback = null;
-            bool follow_frame_rollback = false;
-
-            // guess the next animation in the action
-            switch (this.current_anim_type) {
-                case CharacterAnimType.BASE:
-                    // check if the hold animation should be played
-                    AnimSprite follow_hold = null;
-                    switch (current_action_type) {
-                        case CharacterActionType.SING:
-                            follow_hold = this.current_sing_follow_hold ? this.current_action_sing.hold : null;
-                            follow_rollback = this.current_action_sing.rollback;
-                            follow_frame_rollback = this.current_action_sing.base_can_rollback;
-                            break;
-                        case CharacterActionType.EXTRA:
-                        case CharacterActionType.IDLE:
-                            follow_hold = this.current_action_extra.hold;
-                            follow_rollback = this.current_action_extra.rollback;
-                            break;
-                    }
-
-                    if (follow_hold == null || !has_beat_stop) {
-                        switch_to_idle = true;
-                        break;
-                    }
-
-                    // queue hold animation
-                    follow_hold.Restart();
-                    this.current_anim = follow_hold;
-                    this.current_anim_type = CharacterAnimType.HOLD;
-                    this.current_anim_changed = true;
-                    return 0;
-                case CharacterAnimType.HOLD:
-                    // check if should rollback the current animation or play the rollback animation
-                    switch (current_action_type) {
-                        case CharacterActionType.SING:
-                            follow_rollback = this.current_action_sing.rollback;
-                            follow_frame_rollback = this.current_action_sing.hold_can_rollback;
-                            break;
-                        case CharacterActionType.MISS:
-                            // never reached
-                            break;
-                        case CharacterActionType.EXTRA:
-                        case CharacterActionType.IDLE:
-                            follow_rollback = this.current_action_extra.rollback;
-                            break;
-                    }
-                    goto case CharacterAnimType.ROLLBACK;
-                case CharacterAnimType.ROLLBACK:
-                    switch_to_idle = true;
-                    break;
-            }
-
-            // check if is necessary do a rollback
-            if (!switch_to_idle && (follow_rollback != null || follow_frame_rollback)) {
-                if (follow_rollback != null) this.current_anim = follow_rollback;
-
-                this.current_use_frame_rollback = follow_frame_rollback;
-                this.current_anim_type = CharacterAnimType.ROLLBACK;
-                this.current_anim_changed = true;
-                return 1;
-            }
-
-
-            //
-            // Check if necessary switch to idle action
-            //
-
-            // re-schedule idle action (if current action)
-            if (current_action_type == CharacterActionType.IDLE) {
-                if (this.current_stop_on_beat < 0) {
-                    // no re-scheduled, do it now
-                    InternalSetBeatStop(1);
+            if (this.current_anim_type == CharacterAnimType.ROLLBACK) {
+                if (completed) {
+                    this.current_action_type = CharacterActionType.NONE;
+                    return PlayIdle();
                 }
-                if (this.current_stop_on_beat > this.beatwatcher.count) {
-                    // wait for the next beat
-                    return 1;
-                }
+                return 0;
             }
 
-            // handle special cases
-            switch (current_action_type) {
+            switch (this.current_action_type) {
                 case CharacterActionType.SING:
-                    if (this.current_anim_type == CharacterAnimType.HOLD) return 1;
-                    break;
+                    return InternalAnimateSing(completed, should_stop);
                 case CharacterActionType.MISS:
-                    // keep the sprite static until another action is executed
-                    if (this.current_stop_on_beat < 0) return 1;
-                    // keep the sprite static until next beat stop
-                    if (this.beatwatcher.count < this.current_stop_on_beat) return 0;
-                    break;
+                    return InternalAnimateMiss(completed, should_stop);
+                case CharacterActionType.IDLE:
+                    return InternalAnimateIdle(completed, has_beat);
                 case CharacterActionType.EXTRA:
-                    // keep the sprite static if "current_stop_on_beat" is not set
-                    if (this.current_stop_on_beat < 0) return 1;
-                    // keep the sprite static until next beat stop, useless "static_until_beat" is false
-                    if (!has_beat_stop && this.current_action_extra.static_until_beat) return 1;
-                    break;
+                    return InternalAnimateExtra(completed, should_stop);
             }
 
-            // switch current action to idle
-            this.current_action_type = CharacterActionType.NONE;
-            return PlayIdle();
-
+            return 0;
         }
 
         public void Draw(PVRContext pvrctx) {
@@ -1082,6 +1022,7 @@ L_read_state:
             sing_info.id_direction = id_direction;
             sing_info.follow_hold = sing_entry.follow_hold;
             sing_info.full_sustain = sing_entry.full_sustain;
+            sing_info.stop_after_beats = sing_entry.stop_after_beats;
             sing_info.offset_x = sing_entry.offset_x;
             sing_info.offset_y = sing_entry.offset_y;
 
@@ -1148,7 +1089,6 @@ L_read_state:
 
             extra_info.id_extra = id_extra;
             extra_info.is_valid = extra_info.@base != null || extra_info.hold != null;
-            extra_info.static_until_beat = extra_entry.static_until_beat;
             extra_info.offset_x = extra_entry.offset_x;
             extra_info.offset_y = extra_entry.offset_y;
         }
@@ -1222,7 +1162,6 @@ L_read_state:
                     id_extra = -1,
                     id_texture = -1,
                     is_valid = false,
-                    static_until_beat = false,
                     offset_x = 0f,
                     offset_y = 0f
                 },
@@ -1234,7 +1173,6 @@ L_read_state:
                     id_extra = -1,
                     id_texture = -1,
                     is_valid = false,
-                    static_until_beat = false,
                     offset_x = 0f,
                     offset_y = 0f
                 },
@@ -1246,7 +1184,6 @@ L_read_state:
                     id_extra = -1,
                     id_texture = -1,
                     is_valid = false,
-                    static_until_beat = false,
                     offset_x = 0f,
                     offset_y = 0f
                 }
@@ -1274,6 +1211,7 @@ L_read_state:
             new_singinfo.id_direction = sing_info.id_direction;
             new_singinfo.follow_hold = sing_info.follow_hold;
             new_singinfo.full_sustain = sing_info.full_sustain;
+            new_singinfo.stop_after_beats = sing_info.stop_after_beats;
             new_singinfo.offset_x = sing_info.offset_x;
             new_singinfo.offset_y = sing_info.offset_y;
             new_singinfo.base_can_rollback = false;
@@ -1301,7 +1239,6 @@ L_read_state:
             new_extrainfo.stop_after_beats = extra_info.stop_after_beats;
             new_extrainfo.offset_x = extra_info.offset_x;
             new_extrainfo.offset_y = extra_info.offset_y;
-            new_extrainfo.static_until_beat = extra_info.static_until_beat;
             new_extrainfo.is_valid = new_extrainfo.@base != null && new_extrainfo.hold != null;
         }
 
@@ -1475,7 +1412,7 @@ L_read_state:
         }
 
         private void InternalEndCurrentAction() {
-            if (this.current_anim == null) return;
+            if (this.current_anim == null || this.current_idle_in_next_beat) return;
 
             AnimSprite @base = null;
             AnimSprite hold = null;
@@ -1526,6 +1463,7 @@ L_read_state:
         private void InternalFallbackIdle() {
             if (this.current_action_type == CharacterActionType.IDLE) return;
             InternalEndCurrentAction();
+            this.current_action_type = CharacterActionType.NONE;
             PlayIdle();
         }
 
@@ -1577,17 +1515,6 @@ L_read_state:
         private static void InternalDestroyModelholder(CharacterModelInfo modelholder_arraylist_item) {
             //free(modelholder_arraylist_item.model_src);
             modelholder_arraylist_item.modelholder.Destroy();
-        }
-
-        private void InternalSetBeatStop(int stop_after_beats) {
-            if (stop_after_beats < 1) {
-                this.current_stop_on_beat = -1;
-                return;
-            }
-
-            this.current_stop_on_beat = this.beatwatcher.count + stop_after_beats;
-            if (this.beatwatcher.RemainingUntilNext() <= (this.beatwatcher.tick * 0.5f))
-                this.current_stop_on_beat++;
         }
 
         private static CharacterState InternalImportActions(CharacterImportContext context, CharacterManifest.Actions actions, string model_src, string state_name) {
@@ -1703,6 +1630,171 @@ L_read_state:
             return state;
         }
 
+        private int InternalAnimateSing(bool completed, bool should_stop) {
+            CharacterActionSing action = this.current_action_sing;
+
+            if (!completed && !should_stop) {
+                // keep waiting
+                return 0;
+            }
+
+            // play "animHold" if necessary
+            if (this.current_follow_hold && !should_stop) {
+                this.commited_animations_count++;
+                this.current_anim_type = CharacterAnimType.HOLD;
+                this.current_follow_hold = false;
+                this.current_anim = action.hold;
+                this.current_anim.Restart();
+                return 1;
+            }
+
+            if (this.current_waiting_animation_end) {
+                if (!completed) return 0;
+            } else if (!should_stop) {
+                // edge case: sustain sing with "anim"+"animHold" ended. keep static
+                // edge case: sustain sing with "anim" only ended. keep static
+                return 1;
+            }
+
+            //
+            // Note: only do rollback here for non-sustain sing actions
+            //
+            this.commited_animations_count++;
+
+            // if exists a rollback animation use it
+            if (action.rollback != null) {
+                this.current_expected_duration = Single.PositiveInfinity;
+                this.current_anim = action.rollback;
+                this.current_anim_type = CharacterAnimType.ROLLBACK;
+                this.current_use_frame_rollback = false;
+                this.current_anim.Restart();
+                return 1;
+            }
+
+            // if not, try do self rollback
+            bool is_base = this.current_anim_type == CharacterAnimType.BASE;
+            bool can_frame_rollback = is_base ? action.base_can_rollback : action.hold_can_rollback;
+
+            if (!can_frame_rollback) {
+                if (this.current_waiting_animation_end_and_idle) {
+                    // do not wait for next beat, play idle now
+                    this.current_action_type = CharacterActionType.NONE;
+                    return PlayIdle();
+                }
+                // schedule idle
+                this.current_expected_duration = 0f;
+                this.current_idle_in_next_beat = true;
+                return 1;
+            }
+
+            // do frame rollback
+            this.current_use_frame_rollback = true;
+            this.current_anim_type = CharacterAnimType.ROLLBACK;
+            return 1;
+        }
+
+        private int InternalAnimateMiss(bool completed, bool should_stop) {
+            if (!completed && !should_stop) {
+                // nothing to do
+                return 0;
+            }
+
+            if (this.current_waiting_animation_end) {
+                if (!completed) return 0;
+            } else if (!should_stop) {
+                return 1;
+            }
+
+            this.commited_animations_count++;
+
+            if (this.current_waiting_animation_end_and_idle) {
+                // do not wait for next beat, play idle now
+                this.current_action_type = CharacterActionType.NONE;
+                return PlayIdle();
+            }
+
+            // schedule idle
+            this.current_expected_duration = 0f;
+            this.current_idle_in_next_beat = true;
+            return 1;
+        }
+
+        private int InternalAnimateIdle(bool completed, bool has_beat) {
+            if (!completed) {
+
+                // interrupt "animHold" when a beat is detected
+                if (has_beat && !this.continuous_idle && this.current_anim_type == CharacterAnimType.HOLD) {
+                    this.current_action_type = CharacterActionType.NONE;
+                    PlayIdle();
+                    return 1;
+                }
+            }
+
+            this.commited_animations_count++;
+
+            if (this.current_follow_hold) {
+                this.current_follow_hold = false;
+                this.current_anim = this.current_action_extra.hold;
+                this.current_anim_type = CharacterAnimType.HOLD;
+                this.current_anim.Restart();
+                return 1;
+            }
+
+            if (this.continuous_idle) {
+                this.current_action_type = CharacterActionType.NONE;
+                PlayIdle();
+                return 1;
+            }
+
+            this.current_expected_duration = 0f;
+            this.current_idle_in_next_beat = true;
+            return 1;
+        }
+
+        private int InternalAnimateExtra(bool completed, bool should_stop) {
+            CharacterActionExtra action = this.current_action_extra;
+
+            if (!completed) return 0;
+
+            // play "animHold" if necessary
+            if (this.current_follow_hold && !should_stop) {
+                this.commited_animations_count++;
+                this.current_anim_type = CharacterAnimType.HOLD;
+                this.current_follow_hold = false;
+                this.current_anim = action.hold;
+                this.current_anim.Restart();
+                return 1;
+            }
+
+            if (this.current_waiting_animation_end) {
+                if (!completed) return 0;
+            } else if (!should_stop) {
+                return 1;
+            }
+
+            this.commited_animations_count++;
+
+            // if exists a rollback animation use it
+            if (action.rollback != null) {
+                this.current_expected_duration = Single.PositiveInfinity;
+                this.current_anim = action.rollback;
+                this.current_anim_type = CharacterAnimType.ROLLBACK;
+                this.current_use_frame_rollback = false;
+                this.current_anim.Restart();
+                return 1;
+            }
+
+            if (this.current_waiting_animation_end_and_idle) {
+                // do not wait for next beat, play idle now
+                this.current_action_type = CharacterActionType.NONE;
+                return PlayIdle();
+            }
+
+            this.current_expected_duration = 0f;
+            this.current_idle_in_next_beat = true;
+            return 1;
+        }
+
 
         private class CharacterModelInfo {
             public string model_src;
@@ -1715,9 +1807,8 @@ L_read_state:
         }
         private class CharacterActionExtra {
             public int id_extra;
-            public int stop_after_beats;
+            public float stop_after_beats;
             public bool is_valid;
-            public bool static_until_beat;
             public AnimSprite @base;
             public AnimSprite hold;
             public AnimSprite rollback;
@@ -1734,6 +1825,7 @@ L_read_state:
             public bool hold_can_rollback;
             public bool follow_hold;
             public bool full_sustain;
+            public float stop_after_beats;
             public int id_texture;
             public float offset_x;
             public float offset_y;
@@ -1741,7 +1833,7 @@ L_read_state:
         private class CharacterActionMiss {
             public int id_direction;
             public AnimSprite animation;
-            public int stop_after_beats;
+            public float stop_after_beats;
             public int id_texture;
             public float offset_x;
             public float offset_y;

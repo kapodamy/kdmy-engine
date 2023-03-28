@@ -179,7 +179,7 @@ function charactermanifest_destroy(character_manifest) {
 }
 
 
-function charactermanifest_internal_parse_extra(json_extra, ignore_name, entry) {
+function charactermanifest_internal_parse_extra(json_extra, ignore_name, default_beat_stop, entry) {
     const output_offsets = [0, 0];
     if (ignore_name) {
         entry.name = null;
@@ -189,8 +189,7 @@ function charactermanifest_internal_parse_extra(json_extra, ignore_name, entry) 
     }
     entry.anim = json_read_string(json_extra, "anim", null);
     entry.anim_hold = json_read_string(json_extra, "animHold", null);
-    entry.stop_after_beats = json_read_number(json_extra, "stopAfterBeats", 0);
-    entry.static_until_beat = json_read_boolean(json_extra, "staticUntilBeat", true);
+    entry.stop_after_beats = json_read_number(json_extra, "stopAfterBeats", default_beat_stop);
     entry.anim_rollback = json_read_string(json_extra, "animRollback", null);
     entry.model_src = charactermanifest_internal_path_of(json_extra, "model", null);
 
@@ -275,6 +274,7 @@ function character_manifest_internal_parse_actions(json_actions, actions, src) {
             rollback: json_read_boolean(item_json, "rollback", false),
             follow_hold: json_read_boolean(item_json, "followHold", false),
             full_sustain: json_read_boolean(item_json, "fullSustain", false),
+            stop_after_beats: json_read_number(item_json, "stopAfterBeats", 1.0),
             model_src: charactermanifest_internal_path_of(item_json, "model", null),
             offset_x: output_offsets[0],
             offset_y: output_offsets[1]
@@ -291,7 +291,7 @@ function character_manifest_internal_parse_actions(json_actions, actions, src) {
         actions.miss[i] = {
             direction: json_read_string(item_json, "direction", null),
             anim: json_read_string(item_json, "anim", null),
-            stop_after_beats: json_read_number(item_json, "stopAfterBeats", 1),
+            stop_after_beats: json_read_number(item_json, "stopAfterBeats", 1.0),
             model_src: charactermanifest_internal_path_of(item_json, "model", null),
             offset_x: output_offsets[0],
             offset_y: output_offsets[1]
@@ -305,19 +305,19 @@ function character_manifest_internal_parse_actions(json_actions, actions, src) {
         let item_json = json_read_array_item_object(extras_array, i);
 
         actions.extras[i] = {};
-        charactermanifest_internal_parse_extra(item_json, 0, actions.extras[i]);
+        charactermanifest_internal_parse_extra(item_json, 0, -1, actions.extras[i]);
     }
 
     actions.has_idle = json_has_property_object(json_actions, "idle");
     if (actions.has_idle) {
         let json_extra = json_read_object(json_actions, "idle");
-        charactermanifest_internal_parse_extra(json_extra, 1, actions.idle);
+        charactermanifest_internal_parse_extra(json_extra, 1, -1, actions.idle);
     }
 
     actions.has_hey = json_has_property_object(json_actions, "hey");
     if (actions.has_hey) {
         let json_extra = json_read_object(json_actions, "hey");
-        charactermanifest_internal_parse_extra(json_extra, 1, actions.hey);
+        charactermanifest_internal_parse_extra(json_extra, 1, -1, actions.hey);
     }
 
 }

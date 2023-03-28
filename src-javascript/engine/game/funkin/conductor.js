@@ -188,9 +188,10 @@ function conductor_poll(conductor) {
             case STRUM_PRESS_STATE_NONE:
                 if (conductor.last_penality_strum == array[i].strum) {
                     // stop the penality animation in the next beat
-                    conductor_internal_execute_miss(conductor.character, array[i].directions, 0);
+                    character_schedule_idle(conductor.character);
+                    conductor.play_calls = character_get_play_calls(conductor.character);
                     conductor.last_penality_strum = null;
-                } else if (!conductor.last_sustain_strum || conductor.last_sustain_strum == array[i].strum) {
+                } else if (conductor.last_sustain_strum == array[i].strum) {
                     conductor.last_sustain_strum = null;
                     if (!character_is_idle_active(conductor.character)) {
                         //
@@ -205,7 +206,6 @@ function conductor_poll(conductor) {
                 }
                 break;
             case STRUM_PRESS_STATE_HIT:
-                //conductor.current_duration = strum_get_marker_duration(array[i].strum);
                 conductor.last_sustain_strum = null;
                 conductor.last_penality_strum = null;
                 conductor.has_misses = 0;

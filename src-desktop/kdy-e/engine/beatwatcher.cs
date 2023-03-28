@@ -59,6 +59,7 @@ namespace Engine {
                 this.resyncs++;
                 this.drift_timestamp -= this.last_global_timestamp - beatwatcher_global_timestamp;
                 this.last_global_timestamp = beatwatcher_global_timestamp;
+                this.since = 0f;
                 return false;
             }
 
