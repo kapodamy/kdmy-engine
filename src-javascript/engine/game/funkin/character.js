@@ -1670,6 +1670,8 @@ function character_internal_animate_idle(character, completed, has_beat) {
             character_play_idle(character);
             return 1;
         }
+
+        return 0;
     }
 
     character.commited_animations_count++;

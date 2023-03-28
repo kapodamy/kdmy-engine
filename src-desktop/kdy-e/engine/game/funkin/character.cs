@@ -1728,6 +1728,8 @@ L_read_state:
                     PlayIdle();
                     return 1;
                 }
+
+                return 0;
             }
 
             this.commited_animations_count++;
