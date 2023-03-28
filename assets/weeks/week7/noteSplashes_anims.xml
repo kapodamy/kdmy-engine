@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList frameRate="24" atlasPath="./funkin/shared/images/noteSplashes.xml">
+    <Animation name="down splash" loop="1" alternateRandomize="true" alternateInLoops="true">
+        <FrameArray entryPrefixName="note impact 1  blue" />
+        <AlternateSet/>
+        <FrameArray entryPrefixName="note impact 2 blue" />
+    </Animation>
+    <Animation name="up splash" loop="1" alternateRandomize="true" alternateInLoops="true">
+        <FrameArray entryPrefixName="note impact 1 green" />
+        <AlternateSet/>
+        <FrameArray entryPrefixName="note impact 2 green" />
+    </Animation>
+    <Animation name="left splash" loop="1" alternateRandomize="true" alternateInLoops="true">
+        <FrameArray entryPrefixName="note impact 1 red" />
+        <AlternateSet/>
+        <FrameArray entryPrefixName="note impact 2 red" />
+    </Animation>
+    <Animation name="right splash" loop="1" alternateRandomize="true" alternateInLoops="true">
+        <FrameArray entryPrefixName="note impact 1 purple" />
+        <AlternateSet/>
+        <FrameArray entryPrefixName="note impact 2 purple" />
+    </Animation>
+</AnimationList>

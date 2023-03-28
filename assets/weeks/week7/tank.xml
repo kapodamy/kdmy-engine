@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../docs/Layout.xsd"
+    width="1280" height="720" animationList="./tank_anims.xml">
+
+    <AttachValue name="max_tankman_killed" type="integer" value="8" />
+    <Trigger action="beat" loop="-1" loopDelayBeats="1" />
+
+    <!-- cameras -->
+    <Camera>
+        <Offset x="0" y="0" z="1" />
+        <Move x="0" y="0" z="1" />
+    </Camera>
+    <Camera name="camera_opponent">
+        <To x="270" y="-144" z="0.9" />
+    </Camera>
+    <Camera name="camera_player">
+        <To x="-204" y="-204" z="0.9" />
+    </Camera>
+    <Camera name="camera_roundStart">
+        <ToOffset x="0" y="0" z="1" />
+        <To x="21" y="-123" z="0.9" />
+    </Camera>
+    <Camera name="cutscene-ugh">
+        <Offset x="162" y="141" z="1.091" />
+        <Move x="243" y="-240" z="1" />
+    </Camera>
+    <Camera name="cutscene-guns">
+        <Offset x="120" y="129" z="1.1890000003337982" />
+        <Move x="294" y="-222" z="1" />
+    </Camera>
+    <Camera name="cutscene-stress">
+        <Offset x="87" y="126" z="0.96" />
+        <Move x="36" y="-255" z="1" />
+    </Camera>
+
+    <!-- sprites -->
+    <Sprite texture="./funkin/week7/images/tankSky.png">
+        <Action>
+            <Location x="-400" y="-400" z="0" />
+            <Parallax x="0" y="0" />
+        </Action>
+    </Sprite>
+    <Sprite texture="./funkin/week7/images/tankClouds.png">
+        <Action>
+            <Location x="-700" y="-20" z="1" />
+            <Parallax x="0.1" y="0.1" />
+            <Animation name="tankClouds_locate_with_velocity" />
+        </Action>
+    </Sprite>
+    <Sprite texture="./funkin/week7/images/tankMountains.png">
+        <Action>
+            <Location x="-300" y="-20" z="2" />
+            <Parallax x="0.2" y="0.2" />
+            <Modifier scaleSize="true" />
+        </Action>
+    </Sprite>
+    <Sprite texture="./funkin/week7/images/tankBuildings.png">
+        <Action>
+            <Location x="-200" y="0" z="3" />
+            <Parallax x="0.30" y="0.30" />
+            <Modifier scaleSize="true" scale="1.1" />
+        </Action>
+    </Sprite>
+    <Sprite texture="./funkin/week7/images/tankRuins.png">
+        <Action>
+            <Location x="-200" y="0" z="4" />
+            <Parallax x="0.35" y="0.35" />
+            <Modifier scaleSize="true" scale="1.1" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="./funkin/week7/images/smokeLeft.xml">
+        <Action>
+            <Location x="-200" y="-100" z="5" />
+            <Parallax x="0.4" y="0.4" />
+            <AnimationFromAtlas name="SmokeBlurLeft instance" loop="-1" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="./funkin/week7/images/smokeRight.xml">
+        <Action>
+            <Location x="1100" y="-100" z="5" />
+            <Parallax x="0.4" y="0.4" />
+            <AnimationFromAtlas name="SmokeRight instance" loop="-1" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="./funkin/week7/images/tankWatchtower.xml">
+        <Action>
+            <Location x="100" y="50" z="6" />
+            <Parallax x="0.5" y="0.5" />
+        </Action>
+        <Action name="beat">
+            <AnimationFromAtlas name="watchtower gradient color instance" />
+        </Action>
+    </Sprite>
+    <Sprite name="tankGround" atlas="./funkin/week7/images/tankRolling.xml">
+        <Action>
+            <Location x="300" y="300" z="7" />
+            <Parallax x="0.5" y="0.5" />
+        </Action>
+        <Action name="beat">
+            <AnimationFromAtlas name="BG tank w lighting instance" />
+        </Action>
+    </Sprite>
+    <Group>
+        <!-- all posible tankmans killed -->
+        <!-- shoot animations needs (for some reason) offset correction -->
+        <Sprite name="tankmankilled0" atlas="./funkin/week7/images/tankmanKilled1.xml">
+            <Action>
+                <Location x="500" y="200" z="8.0" />
+                <Modifier scaleSize="true" scale="0.8"/>
+                <Hide />
+            </Action>
+            <Action name="run">
+                <Modifier translate="0" />
+                <AtlasApply entry="tankman running0000" overrideSize="true" />
+                <AnimationFromAtlas name="tankman running" loop="-1" />
+            </Action>
+            <Action name="shot1">
+                <Modifier translateX="-50" translateY="-160" />
+                <AtlasApply entry="John Shot 10000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 1" loop="1" />
+            </Action>
+            <Action name="shot2">
+                <Modifier translateX="-250" translateY="-220" />
+                <AtlasApply entry="John Shot 20000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 2" loop="1" />
+            </Action>
+        </Sprite>
+        <Sprite name="tankmankilled1" atlas="./funkin/week7/images/tankmanKilled1.xml">
+            <Action>
+                <Location x="1200" y="200" z="8.1" />
+                <Modifier scaleSize="true" scale="0.8"/>
+                <Hide />
+            </Action>
+            <Action name="run">
+                <Modifier translate="0" />
+                <AtlasApply entry="tankman running0000" overrideSize="true" />
+                <AnimationFromAtlas name="tankman running" loop="-1" />
+            </Action>
+            <Action name="shot1">
+                <Modifier translateX="-50" translateY="-160" />
+                <AtlasApply entry="John Shot 10000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 1" loop="1" />
+            </Action>
+            <Action name="shot2">
+                <Modifier translateX="-250" translateY="-220" />
+                <AtlasApply entry="John Shot 20000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 2" loop="1" />
+            </Action>
+        </Sprite>
+        <Sprite name="tankmankilled2" atlas="./funkin/week7/images/tankmanKilled1.xml">
+            <Action>
+                <Location x="500" y="200" z="8.2" />
+                <Modifier scaleSize="true" scale="0.8"/>
+                <Hide />
+            </Action>
+            <Action name="run">
+                <Modifier translate="0" />
+                <AtlasApply entry="tankman running0000" overrideSize="true" />
+                <AnimationFromAtlas name="tankman running" loop="-1" />
+            </Action>
+            <Action name="shot1">
+                <Modifier translateX="-50" translateY="-160" />
+                <AtlasApply entry="John Shot 10000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 1" loop="1" />
+            </Action>
+            <Action name="shot2">
+                <Modifier translateX="-250" translateY="-220" />
+                <AtlasApply entry="John Shot 20000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 2" loop="1" />
+            </Action>
+        </Sprite>
+        <Sprite name="tankmankilled3" atlas="./funkin/week7/images/tankmanKilled1.xml">
+            <Action>
+                <Location x="500" y="200" z="8.3" />
+                <Modifier scaleSize="true" scale="0.8"/>
+                <Hide />
+            </Action>
+            <Action name="run">
+                <Modifier translate="0" />
+                <AtlasApply entry="tankman running0000" overrideSize="true" />
+                <AnimationFromAtlas name="tankman running" loop="-1" />
+            </Action>
+            <Action name="shot1">
+                <Modifier translateX="-50" translateY="-160" />
+                <AtlasApply entry="John Shot 10000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 1" loop="1" />
+            </Action>
+            <Action name="shot2">
+                <Modifier translateX="-250" translateY="-220" />
+                <AtlasApply entry="John Shot 20000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 2" loop="1" />
+            </Action>
+        </Sprite>
+        <Sprite name="tankmankilled4" atlas="./funkin/week7/images/tankmanKilled1.xml">
+            <Action>
+                <Location x="500" y="200" z="8.4" />
+                <Modifier scaleSize="true" scale="0.8"/>
+                <Hide />
+            </Action>
+            <Action name="run">
+                <Modifier translate="0" />
+                <AtlasApply entry="tankman running0000" overrideSize="true" />
+                <AnimationFromAtlas name="tankman running" loop="-1" />
+            </Action>
+            <Action name="shot1">
+                <Modifier translateX="-50" translateY="-160" />
+                <AtlasApply entry="John Shot 10000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 1" loop="1" />
+            </Action>
+            <Action name="shot2">
+                <Modifier translateX="-250" translateY="-220" />
+                <AtlasApply entry="John Shot 20000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 2" loop="1" />
+            </Action>
+        </Sprite>
+        <Sprite name="tankmankilled5" atlas="./funkin/week7/images/tankmanKilled1.xml">
+            <Action>
+                <Location x="500" y="200" z="8.5" />
+                <Modifier scaleSize="true" scale="0.8"/>
+                <Hide />
+            </Action>
+            <Action name="run">
+                <Modifier translate="0" />
+                <AtlasApply entry="tankman running0000" overrideSize="true" />
+                <AnimationFromAtlas name="tankman running" loop="-1" />
+            </Action>
+            <Action name="shot1">
+                <Modifier translateX="-50" translateY="-160" />
+                <AtlasApply entry="John Shot 10000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 1" loop="1" />
+            </Action>
+            <Action name="shot2">
+                <Modifier translateX="-250" translateY="-220" />
+                <AtlasApply entry="John Shot 20000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 2" loop="1" />
+            </Action>
+        </Sprite>
+        <Sprite name="tankmankilled6" atlas="./funkin/week7/images/tankmanKilled1.xml">
+            <Action>
+                <Location x="500" y="200" z="8.6" />
+                <Modifier scaleSize="true" scale="0.8"/>
+                <Hide />
+            </Action>
+            <Action name="run">
+                <Modifier translate="0" />
+                <AtlasApply entry="tankman running0000" overrideSize="true" />
+                <AnimationFromAtlas name="tankman running" loop="-1" />
+            </Action>
+            <Action name="shot1">
+                <Modifier translateX="-50" translateY="-160" />
+                <AtlasApply entry="John Shot 10000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 1" loop="1" />
+            </Action>
+            <Action name="shot2">
+                <Modifier translateX="-250" translateY="-220" />
+                <AtlasApply entry="John Shot 20000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 2" loop="1" />
+            </Action>
+        </Sprite>
+        <Sprite name="tankmankilled7" atlas="./funkin/week7/images/tankmanKilled1.xml">
+            <Action>
+                <Location x="500" y="200" z="8.7" />
+                <Modifier scaleSize="true" scale="0.8"/>
+                <Hide />
+            </Action>
+            <Action name="run">
+                <Modifier translate="0" />
+                <AtlasApply entry="tankman running0000" overrideSize="true" />
+                <AnimationFromAtlas name="tankman running" loop="-1" />
+            </Action>
+            <Action name="shot1">
+                <Modifier translateX="-50" translateY="-160" />
+                <AtlasApply entry="John Shot 10000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 1" loop="1" />
+            </Action>
+            <Action name="shot2">
+                <Modifier translateX="-250" translateY="-220" />
+                <AtlasApply entry="John Shot 20000" overrideSize="true" />
+                <AnimationFromAtlas name="John Shot 2" loop="1" />
+            </Action>
+        </Sprite>
+    </Group>
+    <Sprite texture="./funkin/week7/images/tankGround.png">
+        <Action>
+            <Location x="-420" y="-150" z="9" />
+            <Modifier scaleSize="true" scale="1.15" />
+        </Action>
+    </Sprite>
+
+    <!-- characters -->
+    <Placeholder name="character_girlfriend" x="588" y="710" z="10" />
+    <AttachValue name="character_count" type="integer" value="2" />
+    <Placeholder name="character_0" x="380" y="877" z="12" />
+    <Placeholder name="character_1" x="762" y="842" z="12" />
+
+	<!-- ******************* RANKINGCOUNTER ******************* -->
+	<Placeholder name="ui_rankingcounter_rank" x="670" y="235" z="12.1" height="90" />
+	<Placeholder name="ui_rankingcounter_accuracy" x="670" y="690" z="12.2" height="32" />
+
+	<!-- ******************* STREAKCOUNTER ******************* -->
+	<Placeholder name="ui_streakcounter" x="597" y="345" z="12.3" height="50" width="0" />
+	<AttachValue type="float" name="ui_streakcounter_comboHeight" value="0" />
+	<AttachValue type="float" name="ui_streakcounter_delay" value="10" />
+
+    <!-- foreground sprites -->
+    <Sprite atlas="./funkin/week7/images/tank0.xml">
+        <Action>
+            <Location x="-500" y="650" z="13" />
+            <Parallax x="1.7" y="1.5" z="1.00" />
+        </Action>
+        <Action name="beat">
+            <AnimationFromAtlas name="fg" hasNumberSuffix="false" loop="-1" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="./funkin/week7/images/tank1.xml">
+        <Action>
+            <Location x="-300" y="750" z="14" />
+            <Parallax x="2" y="0.2" z="1.1" />
+        </Action>
+        <Action name="beat">
+            <AnimationFromAtlas name="fg" hasNumberSuffix="false" loop="-1" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="./funkin/week7/images/tank2.xml">
+        <Action>
+            <Location x="450" y="940" z="15" />
+            <Parallax x="1.5" y="1.5" z="1.02" />
+        </Action>
+        <Action name="beat">
+            <AnimationFromAtlas name="foreground" hasNumberSuffix="false" loop="-1" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="./funkin/week7/images/tank4.xml">
+        <Action>
+            <Location x="1300" y="900" z="16" />
+            <Parallax x="1.5" y="1.5" z="1.04" />
+        </Action>
+        <Action name="beat">
+            <AnimationFromAtlas name="fg" hasNumberSuffix="false" loop="-1" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="./funkin/week7/images/tank5.xml">
+        <Action>
+            <Location x="1620" y="700" z="17" />
+            <Parallax x="1.5" y="1.5" z="1.06" />
+        </Action>
+        <Action name="beat">
+            <AnimationFromAtlas name="fg" hasNumberSuffix="false" loop="-1" />
+        </Action>
+    </Sprite>
+    <Sprite atlas="./funkin/week7/images/tank3.xml">
+        <Action>
+            <Location x="1300" y="1200" z="18" />
+            <Parallax x="3.5" y="2.5" z="1.2" />
+        </Action>
+        <Action name="beat">
+            <AnimationFromAtlas name="fg" hasNumberSuffix="false" loop="-1" />
+        </Action>
+    </Sprite>
+
+    <!-- cutscenes videos ¿why are placed in music folder? -->
+    <Video name="video-ugh" src="./funkin/preload/music/ughCutscene.mp4">
+        <Action>
+            <Location x="0" y="0" z="20"/>
+            <Size width="1280" height="720" />
+            <Property name="alpha" value="1.0" />
+            <Static />
+            <Hide />
+            <Stop />
+        </Action>
+        <Action name="video_fade_in_and_play">
+            <Show />
+            <Play />
+        </Action>
+    </Video>
+    <Video name="video-guns" src="./funkin/preload/music/gunsCutscene.mp4">
+        <Action>
+            <Location x="0" y="0" z="20"/>
+            <Size width="1280" height="720" />
+            <Property name="alpha" value="1.0" />
+            <Static />
+            <Hide />
+            <Stop />
+        </Action>
+        <Action name="video_fade_in_and_play">
+            <Show />
+            <Animation name="video_fade_in_anim" />
+            <Play />
+        </Action>
+    </Video>
+    <Video name="video-stress" src="./funkin/preload/music/stressCutscene.mp4">
+        <Action>
+            <Location x="0" y="0" z="20"/>
+            <Size width="1280" height="720" />
+            <Property name="alpha" value="1.0" />
+            <Static />
+            <Hide />
+            <Stop />
+        </Action>
+        <Action name="video_fade_in_and_play">
+            <Show />
+            <Animation name="video_fade_in_anim" />
+            <Play />
+        </Action>
+    </Video>
+    <Sprite name="fade-effect" rgb="0x000000">
+        <Action>
+            <Static />
+            <Location x="0" y="0" z="1000" />
+            <Size width="1280" height="720"/>
+            <Property name="alpha" value="0.0" />
+        </Action>
+        <Action name="bounce_fade">
+            <Animation name="bounce_fade_anim" />
+        </Action>
+        <Action name="fade_out">
+            <Animation name="fade_out_anim" />
+        </Action>
+    </Sprite>
+
+</Layout>

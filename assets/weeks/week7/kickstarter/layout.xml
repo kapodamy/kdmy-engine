@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Layout
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../../docs/Layout.xsd"
+    width="1280" height="720" animationList="./anims.xml">
+
+    <Font name="fnf" path="/assets/common/font/default.xml" colorByDifference="true" glyphAnimate="true" />
+
+    <Sprite rgb="0x000000">
+        <Action>
+            <Location x="0" y="0" z="0" />
+            <Size width="1280" height="720" />
+        </Action>
+    </Sprite>
+    <Sprite texture="./dots_sdf.png">
+        <Action>
+            <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
+            <Location x="0" y="0" z="1" alignHorizontal="start" alignVertical="start" />
+            <SetShader>
+                <FragmentSource>
+                    #pragma header
+                    #pragma shadertoy_mainImage
+
+                    void mainImage( out vec4 fragColor, in vec2 fragCoord )
+                    {
+                        const float smoothing = 1.0 / 12.0;
+                        const vec3 color = vec3(0.25099, 0.53334, 0.22353);
+
+                        vec2 uv = fragCoord/iResolution.xy;
+                        float distance = texture(iChannel0, uv).r;
+
+                        float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, distance);
+                        alpha *= 0.55 - (uv.y * uv.x);
+
+                        fragColor = vec4(color, alpha);
+                    }
+                </FragmentSource>
+            </SetShader>
+        </Action>
+    </Sprite>
+
+    <Sprite rgb="0xf9cf51">
+        <Action>
+            <Location x="0" y="0" z="2" />
+            <Size width="480" height="108" />
+        </Action>
+    </Sprite>
+    <Text fontName="fnf" rgb="0x000000" fontSize="56">
+        <Action>
+            <Location x="0" y="0" z="3" />
+            <MaxSize width="480" height="108" />
+            <Properties alignVertical="center" alignHorizontal="center" />
+            <String>KICKSTARTER</String>
+        </Action>
+    </Text>
+
+    <Sprite texture="./selected.png" initialAction="select-www">
+        <Action>
+            <Location z="3" />
+        </Action>
+        <Action name="select-www">
+            <Location x="72" y="186" />
+            <Size width="552" />
+            <Animation name="selected_anim_left" />
+        </Action>
+        <Action name="select-trailer">
+            <Location x="74" y="332" />
+            <Size width="-1" height="-1" />
+            <Animation name="selected_anim_right" />
+        </Action>
+    </Sprite>
+    
+    <Text fontName="fnf" rgb="0xFFFFFF" fontSize="46">
+        <Action>
+            <Location x="82" y="216" z="4.0" />
+            <String>Open web page</String>
+        </Action>
+        <Action name="select-www">
+            <Property name="alpha" value="1" />
+        </Action>
+        <Action name="select-trailer">
+            <Property name="alpha" value="0.9" />
+        </Action>
+    </Text>
+    <Text fontName="fnf" rgb="0xFFFFFF" fontSize="46">
+        <Action>
+            <Location x="82" y="360" z="4.1" />
+            <String>Watch trailer</String>
+        </Action>
+        <Action name="select-www">
+            <Property name="alpha" value="0.9" />
+        </Action>
+        <Action name="select-trailer">
+            <Property name="alpha" value="1" />
+        </Action>
+    </Text>
+    
+    <Video name="trailer" src="./../funkin/preload/music/kickstarterTrailer.mp4">
+        <Action>
+            <Location x="0" y="0" z="5"/>
+            <Size width="1280" height="720" />
+            <Property name="alpha" value="0.0" />
+        </Action>
+        <Action name="fade_in">
+            <Animation name="video_fade_in_anim" />
+        </Action>
+        <Action name="fade_out">
+            <Animation name="video_fade_out_anim" />
+        </Action>
+    </Video>
+
+    <Sprite name="fade-effect" rgb="0x000000">
+        <Action>
+            <Location x="0" y="0" z="6" />
+            <Size width="1280" height="720"/>
+            <Property name="alpha" value="0.0" />
+        </Action>
+        <Action name="outro">
+            <Animation name="screen_fade_out_anim" />
+        </Action>
+    </Sprite>
+
+</Layout>

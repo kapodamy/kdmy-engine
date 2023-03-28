@@ -1,0 +1,42 @@
+{
+    "$schema": "../../../../docs/gameplay.schema.json",
+	"default": {
+		"script": "./week7.lua",
+		"stage": "tank.xml",
+		"players": [
+			{ "controller": -1, "isOpponent": true,  "strumsInLayoutId": 0, "manifest": "TANKMAN_CAPTAIN.json" },
+			{ "controller": 0,  "isOpponent": false, "strumsInLayoutId": 1, "manifest": "#boyfriend" }
+		],
+		"distributionsModels": {
+			"modelSickEffect": "./noteSplashes_model.json"
+		}.
+        "girlfriend": {
+            "manifest": "./GIRLFRIEND_TANKMAN.json"
+        }
+	},
+	"songs": [
+        {
+			"name": "Ugh",
+			"chart": "./funkin/preload/data/ugh/ugh.json",
+			"file": "./funkin/songs/ugh/.ogg"
+		},
+        {
+			"name": "Guns",
+			"chart": "./funkin/preload/data/guns/guns.json",
+			"file": "./funkin/songs/guns/.ogg"
+		},
+        {
+			"name": "Stress",
+			"chart": "./funkin/preload/data/stress/stress.json",
+			"file": "./funkin/songs/stress/.ogg",
+			"girlfriend": {
+				"manifest": "./PICO_SPEAKER.json"
+			},
+			"players": [
+				{ "controller": -1, "isOpponent": true,  "strumsInLayoutId": 0, "manifest": "TANKMAN_CAPTAIN.json" },
+				{ "controller": 0,  "isOpponent": false, "strumsInLayoutId": 1, "manifest": "./BOYFRIEND_AND_GIRLFRIEND.json" }
+			]
+		}
+	]
+}
+

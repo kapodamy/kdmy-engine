@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList atlasPath="funkin/shared/images/characters/picoSpeaker.xml">
+
+    <Animation name="shoot1" frameRate="24" loop="-1">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="Pico shoot 1" />
+        <LoopMark lastFrames="3" />
+    </Animation>
+    <Animation name="shoot2" frameRate="24" loop="-1">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="Pico shoot 2" />
+        <LoopMark lastFrames="3" />
+    </Animation>
+    <Animation name="shoot3" frameRate="24" loop="-1">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="Pico shoot 3" />
+        <LoopMark lastFrames="3" />
+    </Animation>
+    <Animation name="shoot4" frameRate="24" loop="-1">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="Pico shoot 4" />
+        <LoopMark lastFrames="3" />
+    </Animation>
+
+</AnimationList>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../docs/AnimationList.xsd">
+
+    <AnimationMacro name="video_fade_in_anim">
+        <Interpolator property="alpha" duration="500" type="linear" start="0.0" end="1.0" />
+    </AnimationMacro>
+
+    <AnimationMacro name="bounce_fade_anim">
+        <Interpolator property="alpha" duration="250" type="ease-in" start="0.0" end="1.0" />
+        <Yield />
+        <Interpolator property="alpha" duration="250" type="ease-out" end="0.0" />
+    </AnimationMacro>
+
+    <AnimationMacro name="fade_out_anim">
+        <Interpolator property="alpha" duration="500" type="ease-out" start="0.0" end="1.0" />
+    </AnimationMacro>
+
+    <AnimationMacro name="tankClouds_locate_with_velocity">
+        <!-- tankSky.x = FlxG.random.int(-700, -100) -->
+        <RandomSetup start="-700" end="-100" />
+        <RandomChoose />
+        <Set property="x" value="rnd" />
+
+        <!-- tankSky.y = FlxG.random.int(-20, 20) -->
+        <RandomSetup start="-20" end="20" />
+        <RandomChoose />
+        <Set property="y" value="rnd" />
+
+        <!-- tankSky.velocity.x = FlxG.random.float(5, 15); -->
+        <!-- Note: there no velocity here only absolute units, use instead the total distance needed for 2m30s -->
+        <RandomSetup start="750" end="2250" />
+        <RandomChoose />
+        <Interpolator property="translateX" duration="150000" type="linear" start="0" end="rnd" />
+    </AnimationMacro>
+
+</AnimationList>

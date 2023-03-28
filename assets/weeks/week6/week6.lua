@@ -169,7 +169,7 @@ end
 PREFIX_DAD = ":dad:"
 PREFIX_BF = ":bf:"
 CHARS_DELAY = 40
-GAMEPAD_XA = GAMEPAD_X | GAMEPAD_A
+GAMEPAD_XA = 4 | 1
 stage = nil
 lyt_icon_boyfriend = nil
 lyt_icon_senpai = nil
@@ -199,8 +199,7 @@ function f_weekinit(freeplay_index)
     dialogs_senpai = dialog_parse("/assets/weeks/week6/weeb/dialogs/senpaiDialogue.txt")
     dialogs_roses = dialog_parse("/assets/weeks/week6/weeb/dialogs/rosesDialogue.txt")
     dialogs_thorns = dialog_parse("/assets/weeks/week6/weeb_but_evil/dialogs/thornsDialogue.txt")
-    week_enable_credits_on_completed()
-    week_unlockdirective_create("FNF_COMPLETED", false, true, 9942069)
+    week_unlockdirective_create("FNF_WEEK6_COMPLETED", false, true, 9942069)
 end
 function f_beforeready(from_retry)
     stage = week_get_stage_layout()

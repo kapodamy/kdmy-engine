@@ -1,0 +1,39 @@
+{
+    "parameters": {
+        "suffixSelected": "selected",
+        "suffixChoosen": null,
+        "suffixDiscarded": null,
+        "suffixIdle": "idle",
+        "suffixRollback": null,
+        "suffixIn": null,
+        "suffixOut": null,
+
+        "atlas": "/assets/weeks/week7/funkin/preload/images/main_menu.xml",
+        "animlist": "/assets/common/image/main-menu/animations.xml",
+
+        "animChoosen": "choosen",
+
+        "animTransitionInDelay": 0.0,
+        "animTransitionOutDelay": -100.0,
+
+        "animTransitionIn": "transition_intro_item",
+        "animTransitionOut": "transition_outro_item",
+
+        "isSparse": false,
+        "isVertical": true,
+        "isPerPage": true,
+
+        "itemsAlign": "center",
+        "itemsGap": 36,
+        "itemsDimmen": 90,
+        "staticIndex": 0,
+        "enableHorizontalTextCorrection": true
+    },
+    "items": [
+        { "name": "story mode" },
+        { "name": "freeplay" },
+        { "name": "kickstarter" },
+        { "name": "donate" },
+        { "name": "options" }
+    ]
+}

@@ -1,0 +1,6 @@
+<TextureAtlas imagePath="funkin/preload/images/icons/icon-tankman.png">
+    <TileSet x="0" y="0" subTextureWidth="300" subTextureHeight="150" tileWidth="150" tileHeight="112">
+        <Tile index="0" name="neutral" />
+        <Tile index="1" name="loosing" />
+    </TileSet>
+</TextureAtlas>

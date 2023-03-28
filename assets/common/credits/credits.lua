@@ -80,6 +80,7 @@ do
     end
 end
 
+-- End of Lua Library inline imports
 function thanks_callback()
     local bg_music = layout:get_soundplayer("bg-music")
     if bg_music then
@@ -97,7 +98,7 @@ function shoot_callback()
         end
     )
 end
-CREDITS_BUTTONS = GAMEPAD_START | GAMEPAD_A | GAMEPAD_B | GAMEPAD_X | GAMEPAD_Y
+CREDITS_BUTTONS = 256 | 1 | 2 | 4 | 8
 introText = fs_readfile("/assets/common/introText.txt")
 layout = modding_get_layout()
 introTextHolder = layout:get_textsprite("intro-texts")

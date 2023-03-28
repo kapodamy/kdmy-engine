@@ -41,8 +41,7 @@ function f_weekinit(freeplay_index: number): void {
     dialogs_roses = dialog_parse("/assets/weeks/week6/weeb/dialogs/rosesDialogue.txt");
     dialogs_thorns = dialog_parse("/assets/weeks/week6/weeb_but_evil/dialogs/thornsDialogue.txt");
 
-    week_enable_credits_on_completed();
-    week_unlockdirective_create("FNF_COMPLETED", false, true, 9942069);
+    week_unlockdirective_create("FNF_WEEK6_COMPLETED", false, true, 9942069);
 }
 
 function f_beforeready(from_retry: boolean): void {

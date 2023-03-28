@@ -1,0 +1,43 @@
+{
+    "name": "BOYFRIEND AND GIRLFRIEND",
+    "model": "funkin/shared/images/characters/bfAndGF.xml",
+    "weekSelectorModel": "bfAndGF_preview.xml",
+    "weekSelectorEnableBeat": true,
+    "healthbarColor": "0x31b0d1",
+    "healthIconsModel": "/assets/common/image/funkin/icon-bf.xml",
+
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": true,
+    "oppositeDirections": {
+        "from": ["left", "right"],
+        "to": ["right", "left"]
+    },
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "BF NOTE LEFT", "offsetX": -29, "offsetY": 10   },
+            { "direction": "down",   "anim": "BF NOTE DOWN", "offsetX": -41, "offsetY": 23   },
+            { "direction": "up",     "anim": "BF NOTE UP",   "offsetX": 12,  "offsetY": 7    },
+            { "direction": "right",  "anim": "BF NOTE RIGHT","offsetX": -10 , "offsetY": -10 }
+        ],
+
+        "miss": [
+            { "direction": "left",   "anim": "BF NOTE LEFT MISS",  "offsetX": -29, "offsetY": 10  },
+            { "direction": "down",   "anim": "BF NOTE DOWN MISS",  "offsetX": -41, "offsetY": 23  },
+            { "direction": "up",     "anim": "BF NOTE UP MISS",    "offsetX": 12,  "offsetY": 7   },
+            { "direction": "right",  "anim": "BF NOTE RIGHT MISS", "offsetX": -10, "offsetY": -10 }
+        ],
+
+        "idle": { "anim": "BF idle dance w gf",  "offsetX":  0, "offsetY": 0 },
+
+        "extras": [
+            { "name": "bfCatches",   "anim": "BF catches GF",                                                   "offsetX": 0, "offsetY": 0                                      },
+            { "name": "dies",        "anim": "BF Dies with GF",         "animHold": "BF Dead with GF Loop",     "model": "funkin/shared/images/characters/bfHoldingGF-DEAD.xml" },
+            { "name": "retry",       "anim": "RETRY confirm holding gf",                                        "model": "funkin/shared/images/characters/bfHoldingGF-DEAD.xml" },
+            { "name": "static-idle", "anim": "BF idle dance w gf"                                                                                                               }
+        ]
+    }
+}
+

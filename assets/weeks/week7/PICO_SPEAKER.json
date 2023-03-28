@@ -1,0 +1,32 @@
+{
+    "name": "PICO Speakers",
+    "model": "pico_speaker_model.json",
+
+    "alignVertical": "end",
+    "alignHorizontal": "center",
+    
+    "leftFacing": false,
+    "continuousIdle": true,
+   
+    "oppositeDirections": {
+        "from": ["left", "right"],
+        "to": ["right", "left"]
+    },
+
+    
+    "actions": {
+
+        "idle": { "animHold": "shoot1",  "offsetX": 242,  "offsetY": 0 },
+
+        "sing": [],
+
+        "extras": [
+            { "name": "shoot1", "animHold": "shoot1", "offsetX": 242,   "offsetY": 0 },
+            { "name": "shoot2", "animHold": "shoot2", "offsetX": 290,  "offsetY": 0 },
+            { "name": "shoot3", "animHold": "shoot3", "offsetX": -202, "offsetY": 0 },
+            { "name": "shoot4", "animHold": "shoot4", "offsetX": -216, "offsetY": 0 }
+        ]
+    }
+
+}
+

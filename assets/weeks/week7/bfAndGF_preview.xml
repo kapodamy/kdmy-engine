@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="bfAndGF_preview.png">
+	<SubTexture name="choosen00" x="1117" y="0" width="529" height="483"/>
+	<SubTexture name="choosen01" x="1117" y="0" width="529" height="483"/>
+	<SubTexture name="choosen02" x="1119" y="1300" width="529" height="509"/>
+	<SubTexture name="choosen03" x="1119" y="1300" width="529" height="509"/>
+	<SubTexture name="choosen04" x="2182" y="1042" width="523" height="509"/>
+	<SubTexture name="choosen05" x="2182" y="1042" width="523" height="509"/>
+	<SubTexture name="choosen06" x="2709" y="0" width="523" height="516"/>
+	<SubTexture name="choosen07" x="2709" y="0" width="523" height="516"/>
+	<SubTexture name="choosen08" x="2180" y="0" width="525" height="516"/>
+	<SubTexture name="choosen04" x="2180" y="0" width="525" height="516"/>
+	<SubTexture name="choosen09" x="2180" y="520" width="525" height="518"/>
+	<SubTexture name="choosen10" x="2180" y="520" width="525" height="518"/>
+	<SubTexture name="choosen11" x="1652" y="1050" width="526" height="518"/>
+	<SubTexture name="choosen12" x="1652" y="1050" width="526" height="518"/>
+	<SubTexture name="choosen13" x="1650" y="0" width="526" height="522"/>
+	<SubTexture name="choosen14" x="1650" y="0" width="526" height="522"/>
+	<SubTexture name="choosen15" x="1650" y="0" width="526" height="522"/>
+	<SubTexture name="choosen16" x="1650" y="0" width="526" height="522"/>
+	<SubTexture name="choosen17" x="1650" y="0" width="526" height="522"/>
+	<SubTexture name="choosen018" x="1120" y="487" width="526" height="521"/>
+	<SubTexture name="choosen019" x="1120" y="487" width="526" height="521"/>
+	<SubTexture name="choosen020" x="1120" y="487" width="526" height="521"/>
+	<SubTexture name="choosen021" x="1120" y="487" width="526" height="521"/>
+	<SubTexture name="choosen022" x="1120" y="487" width="526" height="521"/>
+	<SubTexture name="choosen023" x="1120" y="487" width="526" height="521"/>
+	<SubTexture name="choosen024" x="1650" y="526" width="526" height="520"/>
+	<SubTexture name="choosen025" x="1650" y="526" width="526" height="520"/>
+	<SubTexture name="choosen026" x="1650" y="526" width="526" height="520"/>
+	<SubTexture name="idle00" x="563" y="0" width="550" height="424"/>
+	<SubTexture name="idle01" x="563" y="0" width="550" height="424"/>
+	<SubTexture name="idle02" x="562" y="872" width="554" height="424"/>
+	<SubTexture name="idle03" x="562" y="872" width="554" height="424"/>
+	<SubTexture name="idle04" x="560" y="1308" width="555" height="426"/>
+	<SubTexture name="idle05" x="560" y="1308" width="555" height="426"/>
+	<SubTexture name="idle06" x="0" y="1308" width="556" height="429"/>
+	<SubTexture name="idle07" x="0" y="1308" width="556" height="429"/>
+	<SubTexture name="idle09" x="0" y="872" width="558" height="432"/>
+	<SubTexture name="idle10" x="0" y="872" width="558" height="432"/>
+	<SubTexture name="idle11" x="0" y="0" width="559" height="432"/>
+	<SubTexture name="idle12" x="0" y="0" width="559" height="432"/>
+	<SubTexture name="idle13" x="0" y="436" width="559" height="432"/>
+	<SubTexture name="idle14" x="0" y="436" width="559" height="432"/>
+</TextureAtlas>

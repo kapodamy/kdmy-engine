@@ -1,0 +1,37 @@
+{
+    "$schema": "./../../../../docs/character.schema.json",
+    "name": "Tankman Captain",
+    "model": "./tankman_captain_model.json",
+    "healthbarColor": "0x272727",
+    "healthIconsModel": "./icon-tankman_captain.xml",
+
+    "weekSelectorModel": "funkin/preload/images/campaign_menu_UI_characters.xml",
+    "weekSelectorIdleAnimName": "Tankman Menu BLACK",
+    "weekSelectorLeftFacing": false,
+
+    "alignVertical": "end",
+    "alignHorizontal": "start",
+    "leftFacing": true,
+
+    "oppositeDirections": {
+        "from": ["left", "right"],
+        "to": ["right", "left"]
+    },
+
+    "singSuffix": "-alt",
+    "singAlternateSuffix": "-alt",
+
+    "actions": {
+
+        "sing": [
+            { "direction": "left",   "anim": "singLEFT",  "offsetX": 100,  "offsetY": 0                    },
+            { "direction": "down",   "anim": "singDOWN",  "offsetX": 98,   "offsetY": 0, "stopAfterBeats": -1 },
+            { "direction": "up",     "anim": "singUP",    "offsetX": 24,   "offsetY": 0, "stopAfterBeats": -1 },
+            { "direction": "right",  "anim": "singRIGHT", "offsetX": -1,   "offsetY": 0                    }
+        ],
+
+        "idle": { "anim": "idle",  "offsetX": 0,  "offsetY": 0 },
+        "hey":  { "anim": "singUP-alt" }
+    }
+}
+

@@ -1,0 +1,41 @@
+{
+    "$schema": "../../../../docs/about.schema.json",
+    "description": "TANKMAN",
+    "songs": [
+        { "freeplayUnlockDirective": "WEEK7", "name": "Ugh", "freeplaySongFilename": "funkin/songs/stress/.ogg" },
+        { "freeplayUnlockDirective": "WEEK7", "name": "Guns", "freeplaySongFilename": "funkin/songs/guns/.ogg" },
+        { "freeplayUnlockDirective": "WEEK7", "name": "Stress", "freeplaySongFilename": "funkin/songs/stress/.ogg" }
+    ],
+    "songsDefaultFreeplayHostIconModel": "./icon-tankman_captain.xml",
+    
+    "hostModel": "funkin/preload/images/campaign_menu_UI_characters.xml",
+    "hostModelIdleAnimationName": "Tankman Menu BLACK",
+    "hostEnableBeat": true,
+
+    "displayName": "Week 7",
+
+    "weekTitleModel": "funkin/preload/images/storymenu/week7.png",
+
+    "unlockDirectiveName": "WEEK6",
+    "emitUnlockDirectiveName": "WEEK7",
+
+    "disallowCustomBoyfriend": true,
+    "disallowCustomGirlfriend": true,
+
+    "unlockables": {
+        "boyfriend": [
+            { 
+                "name": "BF&GF", 
+                "hideIfLocked": true, 
+                "manifest": "BOYFRIEND_AND_GIRLFRIEND.json",
+                "unlockDirectiveName": "WEEK7"
+            },
+            {
+                "name": "Tankman Captain",
+                "hideIfLocked": false,
+                "manifest": "TANKMAN_CAPTAIN.json",
+                "unlockDirectiveName": "WEEK7"
+            }
+        ]
+    }
+}

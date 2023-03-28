@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList atlasPath="funkin/shared/images/characters/tankmanCaptain.xml">
+
+    <Animation name="idle" frameRate="24" loop="1">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="Tankman Idle Dance instance" />
+    </Animation>
+
+    <Animation name="singLEFT" frameRate="24" loop="1">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="Tankman Note Left instance" />
+    </Animation>
+    <Animation name="singDOWN" frameRate="24" loop="1">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="Tankman DOWN note instance" />
+    </Animation>
+    <Animation name="singUP" frameRate="24" loop="1">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="Tankman UP note instance" />
+    </Animation>
+    <Animation name="singRIGHT" frameRate="24" loop="1">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="Tankman Right Note instance" />
+    </Animation>
+
+    <Animation name="singDOWN-alt">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="PRETTY GOOD tankman instance" />
+    </Animation>
+    <Animation name="singUP-alt">
+        <FrameArray hasNumberSuffix="true" entryPrefixName="TANKMAN UGH instance" />
+    </Animation>
+
+</AnimationList>

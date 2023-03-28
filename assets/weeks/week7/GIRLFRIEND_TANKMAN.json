@@ -1,0 +1,23 @@
+{
+    "name": "GIRLFRIEND TANKMAN",
+    "model": "funkin/shared/images/characters/gfTankmen.xml",
+
+    "alignVertical": "end",
+    "alignHorizontal": "center",
+    
+    "leftFacing": false,
+    "continuousIdle": true,
+
+    "actions": {
+
+        "sing": [],
+
+        "idle": { "anim": "GF Dancing at Gunpoint",  "offsetX": 0,  "offsetY": 0 },
+
+        "extras": [
+            { "name": "cry", "anim": "GF Crying at Gunpoint ", "offsetX": 0, "offsetY": 0 }
+        ]
+    }
+
+}
+

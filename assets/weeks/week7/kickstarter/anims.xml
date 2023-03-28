@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnimationList
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../../docs/AnimationList.xsd">
+
+    <AnimationMacro name="video_fade_in_anim">
+        <Interpolator property="alpha" duration="250" type="expo" start="0.0" end="1.0" />
+    </AnimationMacro>
+    <AnimationMacro name="video_fade_out_anim">
+        <Interpolator property="alpha" duration="250" type="expo" start="1.0" end="0.0" />
+    </AnimationMacro>  
+    <AnimationMacro name="screen_fade_out_anim">
+        <Interpolator property="alpha" duration="500" type="ease-out" start="0.0" end="1.0" />
+    </AnimationMacro>
+
+    <AnimationMacro name="selected_anim_left">
+        <Interpolator property="skewX" duration="50" type="linear" start="-0.25" end="0" />
+    </AnimationMacro>
+    <AnimationMacro name="selected_anim_right">
+        <Interpolator property="skewX" duration="50" type="linear" start="0.25" end="0" />
+    </AnimationMacro>
+
+</AnimationList>
