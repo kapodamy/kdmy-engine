@@ -18,10 +18,10 @@
         "sing": [],
         "miss": [],
 
-		"idle": { "anim": "GF Dancing Beat Hair blowing CAR", "stopAfterBeats": 0 },
+		"idle": { "anim": "GF Dancing Beat Hair blowing CAR" },
 
 		"extras": [
-			{ "name": "sad",        "stopAfterBeats": 1,  "anim": "gf sad", "model": "/assets/common/image/funkin/GF_assets.xml"}
+			{ "name": "sad", "anim": "gf sad", "model": "/assets/common/image/funkin/GF_assets.xml" }
 		]
     }
 }

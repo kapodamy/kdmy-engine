@@ -14,6 +14,6 @@
 	},
 
     "actions": {
-		"idle": { "anim": "idle", "stopAfterBeats": 0 }
+		"idle": { "anim": "idle" }
     }
 }

@@ -23,33 +23,33 @@
     "actions": {
 
         "sing": [
-            { "direction": "left",   "anim": "BF NOTE LEFT",  "animHold": null, "animRollback": null, "rollback": true, "followHold": false, "fullSustain": false },
-            { "direction": "down",   "anim": "BF NOTE DOWN",  "animHold": null, "animRollback": null, "rollback": true, "followHold": false, "fullSustain": false },
-            { "direction": "up",     "anim": "BF NOTE UP",    "animHold": null, "animRollback": null, "rollback": true, "followHold": false, "fullSustain": false },
-            { "direction": "right",  "anim": "BF NOTE RIGHT", "animHold": null, "animRollback": null, "rollback": true, "followHold": false, "fullSustain": false }
+            { "direction": "left",   "anim": "BF NOTE LEFT",  "rollback": true },
+            { "direction": "down",   "anim": "BF NOTE DOWN",  "rollback": true },
+            { "direction": "up",     "anim": "BF NOTE UP",    "rollback": true },
+            { "direction": "right",  "anim": "BF NOTE RIGHT", "rollback": true }
         ],
 
         "miss": [
-            { "direction": "left",   "anim": "BF NOTE LEFT MISS",   "stopAfterBeats": 1 },
-            { "direction": "down",   "anim": "BF NOTE DOWN MISS",   "stopAfterBeats": 1 },
-            { "direction": "up",     "anim": "BF NOTE UP MISS",     "stopAfterBeats": 1 },
-            { "direction": "right",  "anim": "BF NOTE RIGHT MISS",  "stopAfterBeats": 1 }
+            { "direction": "left",   "anim": "BF NOTE LEFT MISS"    },
+            { "direction": "down",   "anim": "BF NOTE DOWN MISS"    },
+            { "direction": "up",     "anim": "BF NOTE UP MISS"      },
+            { "direction": "right",  "anim": "BF NOTE RIGHT MISS"   }
         ],
 
-        "idle": { "anim": "BF idle dance",  "stopAfterBeats": 0, "animHold": null },
-        "hey": {  "anim": "BF HEY!!",       "stopAfterBeats": 2, "animHold": null },
+        "idle": { "anim": "BF idle dance" },
+        "hey": {  "anim": "BF HEY!!"      },
 
         "extras": [
-            { "name": "shaking",     "stopAfterBeats": 2,  "anim": null,                "animHold": "BF idle shaking" },
-            { "name": "shaking-continuous",                "anim": null,                "animHold": "BF idle shaking" },
-            { "name": "dodge",       "stopAfterBeats": 0,  "anim": "boyfriend dodge",   "animHold": null },
-            { "name": "pre-attack",  "stopAfterBeats": 0,  "anim": "bf pre attack",     "animHold": null },
-            { "name": "attack",      "stopAfterBeats": 0,  "anim": "boyfriend attack",  "animHold": null},
-            { "name": "hit",         "stopAfterBeats": 0,  "anim": "BF hit",            "animHold": null},
-            { "name": "dies",        "stopAfterBeats": 0,  "anim": "BF dies",           "animHold": "BF Dead Loop" },
-            { "name": "retry",       "stopAfterBeats": 0,  "anim": "BF Dead confirm",   "animHold": null },
-            { "name": "giveup",      "stopAfterBeats": 0,  "anim": "BF Dead Loop",      "animHold": null },
-            { "name": "static-idle", "stopAfterBeats": 0,  "anim": "BF idle dance",     "animHold": null }
+            { "name": "shaking",            "anim": "BF idle shaking",   "stopAfterBeats": 1        },
+            { "name": "shaking-continuous", "animHold": "BF idle shaking"                           },
+            { "name": "dodge",              "anim": "boyfriend dodge",                              },
+            { "name": "pre-attack",         "anim": "bf pre attack",                                },
+            { "name": "attack",             "anim": "boyfriend attack",                             },
+            { "name": "hit",                "anim": "BF hit",                                       },
+            { "name": "dies",               "anim": "BF dies",           "animHold": "BF Dead Loop" },
+            { "name": "retry",              "anim": "BF Dead confirm",                              },
+            { "name": "giveup",             "anim": "BF Dead Loop",                                 },
+            { "name": "static-idle",        "anim": "BF idle dance",                                }
         ]
     }
 }

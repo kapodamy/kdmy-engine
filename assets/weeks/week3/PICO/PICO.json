@@ -23,23 +23,21 @@
     "actions": {
 
         "sing": [
-            { "direction": "left",   "anim": "pico Up note" },
-            { "direction": "down",   "anim": "Pico Down Note"},
-            { "direction": "up",     "anim": "pico Up note" },
+            { "direction": "left",   "anim": "pico Up note"    },
+            { "direction": "down",   "anim": "Pico Down Note"  },
+            { "direction": "up",     "anim": "pico Up note"    },
             { "direction": "right",  "anim": "Pico Note Right" }
         ],
 
         "miss": [
-            { "direction": "left",   "anim": "pico Up note miss",   "stopAfterBeats": 1 },
-            { "direction": "down",   "anim": "Pico Down Note MISS",   "stopAfterBeats": 1 },
-            { "direction": "up",     "anim": "pico Up note miss",     "stopAfterBeats": 1 },
-            { "direction": "right",  "anim": "Pico Note Right Miss",  "stopAfterBeats": 1 }
+            { "direction": "left",   "anim": "pico Up note miss"    },
+            { "direction": "down",   "anim": "Pico Down Note MISS"  },
+            { "direction": "up",     "anim": "pico Up note miss"    },
+            { "direction": "right",  "anim": "Pico Note Right Miss" }
         ],
 
-        "idle": { "anim": "Pico Idle Dance",  "stopAfterBeats": 0, "animHold": null },
-        "hey": null,
+        "idle": { "anim": "Pico Idle Dance" }
 
-        "extras": []
     }
 }
 

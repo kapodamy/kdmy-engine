@@ -17,20 +17,21 @@
 
     "actions": {
         "sing": [
-            { "direction": "left",   "animHold": "GF left note",  "rollback": true },
-            { "direction": "down",   "animHold": "GF Down Note",  "rollback": true },
-            { "direction": "up",     "animHold": "GF Up Note",    "rollback": true },
-            { "direction": "right",  "animHold": "GF Right Note", "rollback": true }
+            { "direction": "left",   "anim": "GF left note",  "rollback": true },
+            { "direction": "down",   "anim": "GF Down Note",  "rollback": true },
+            { "direction": "up",     "anim": "GF Up Note",    "rollback": true },
+            { "direction": "right",  "anim": "GF Right Note", "rollback": true }
         ],
         "miss": [],
 
-		"idle": { "anim": "GF Dancing Beat", "stopAfterBeats": 0 },
-        "hey":  { "animHold": "GF Cheer" },
+		"idle": { "anim": "GF Dancing Beat" },
+        "hey":  { "animHold": "GF Cheer"    },
 
 		"extras": [
-			{ "name": "fear",   "stopAfterBeats": 1,  "anim": "GF FEAR" },
-			{ "name": "sad",    "stopAfterBeats": 1,  "anim": "gf sad" },
-            { "name": "hair",   "stopAfterBeats": 0, "anim": "GF Dancing Beat Hair Landing" }
+			{ "name": "fear",               "anim": "GF FEAR"                      },
+            { "name": "fear-continuous",    "animHold": "GF FEAR"                  },
+			{ "name": "sad",                "anim": "gf sad"                       },
+            { "name": "hair",               "anim": "GF Dancing Beat Hair Landing" }
 		]
     }
 }
