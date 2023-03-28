@@ -1052,7 +1052,7 @@ declare global {
         readonly inversedScrollEnabled: boolean;
         readonly songProgressbarEnabled: boolean;
     }
-    /** Provides access to the platform-specific features */
+    /** Provides access to platform-specific features */
     interface Environment {
         get_language(): string;
         get_username(): string;

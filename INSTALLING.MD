@@ -29,10 +29,10 @@ If sndbrigde was built with OPUS codec support, the following dll files also are
 
 If video playback is necessary, download the [FFmpeg](https://www.ffmpeg.org/download.html#build-windows "FFmpeg download link") shared libraries, required dll files are:
 
-* `avcodec-59.dll`
-* `avformat-59.dll`
-* `avutil-57.dll`
-* `swscale-6.dll`
+* `avcodec-60.dll`
+* `avformat-60.dll`
+* `avutil-58.dll`
+* `swscale-7.dll`
 * `swresample-4.dll`
 
 ## 2. Getting the assets folder

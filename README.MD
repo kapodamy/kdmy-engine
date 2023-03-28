@@ -68,7 +68,7 @@ Currently, the engine is ported to C# to make it playable with the exception of 
 
 ## More to know
 
-Engine was made using by reference Kade-Engine v1.4.2 and Funkin v0.2.7.1 source code. But as reference, fr fr, not only was it written from scratch but the game was also reverse engineered because the sources were unreadable (denuvo, ¿quien te conoce papa?). I got to the point of measuring the elements on the screen with a ruler, not kidding.
+Engine was made using by reference Kade-Engine v1.4.2 and Funkin v0.2.8.0 source code. But as reference, fr fr, not only was it written from scratch but the game was also reverse engineered because the sources were unreadable (denuvo, ¿quien te conoce papa?). I got to the point of measuring the elements on the screen with a ruler, not kidding.
 
 # Final words
 
