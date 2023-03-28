@@ -236,7 +236,7 @@ namespace Engine.Game {
                 string difficult = state.difficulties[state.difficult_index].name;
                 WeekInfo weekinfo = Funkin.weeks_array.array[songs.Get(map_index).week_index];
                 string gameplaymanifest = weekinfo.songs[state.map.song_index].freeplay_gameplaymanifest;
-                InternalDropSoundplayer(state);
+                InternalDropSoundplayer(state, true);
 
                 FreeplayMenu.InternalWaitTransition(state, "before-play-song", dt_playsong);
 
@@ -277,7 +277,7 @@ namespace Engine.Game {
             //free(default_gf);
             //free(state.difficulties);
             mutex.Destroy(state.mutex);
-            InternalDropSoundplayer(state);
+            InternalDropSoundplayer(state, false);
             songicons.Destroy();
             menu_songs.Destroy();
             songs.Destroy(false);
@@ -440,7 +440,7 @@ namespace Engine.Game {
             float seek = songinfo.freeplay_seek_time * 1000f;
 
             if (state.map.is_locked || songinfo.name == null) {
-                InternalDropSoundplayer(state);
+                InternalDropSoundplayer(state, false);
 
                 state.running_threads--;
                 mutex.Unlock(state.mutex);
@@ -476,7 +476,7 @@ namespace Engine.Game {
                 goto L_return;
             }
             if (final_path == null) {
-                InternalDropSoundplayer(state);
+                InternalDropSoundplayer(state, false);
                 goto L_return;
             }
 
@@ -490,10 +490,10 @@ namespace Engine.Game {
                 goto L_return;
             }
 
-            // adquire mutex and swap the soundplayer
+            // adquire mutex and swap the soundplayesr
             mutex.Lock(state.mutex);
 
-            InternalDropSoundplayer(state);
+            InternalDropSoundplayer(state, false);
             state.soundplayer_path = final_path;// strdup(final_path)
             state.soundplayer = soundplayer;
 
@@ -636,9 +636,9 @@ L_return:
                 layout.TriggerAny("hide-alternative");
         }
 
-        private static void InternalDropSoundplayer(State state) {
+        private static void InternalDropSoundplayer(State state, bool wait_for_background_threads) {
             // wait for running threads
-            while (true) {
+            while (wait_for_background_threads) {
                 thd.pass();
                 mutex.Lock(state.mutex);
                 bool exit = state.running_threads < 1;
