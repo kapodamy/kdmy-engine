@@ -560,7 +560,8 @@ namespace Engine.Game {
                 gameplay_model_boyfriend,
                 gameplay_model_girlfriend,
                 null,
-                -1
+                -1,
+                null
             );
 
             // forget all preloaded files

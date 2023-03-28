@@ -79,6 +79,10 @@ EM_JS_PRFX(bool, menu_has_item, (Menu menu, const char* name), {
     let ret = menu_has_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
     return ret ? 1 : 0;
 });
+EM_JS_PRFX(int32_t, menu_index_of_item, (Menu menu, const char* name), {
+    let ret = menu_index_of_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+    return ret;
+});
 
 static void menumanifest_destroy_JS(MenuManifest* menumanifest) {
     MenuManifest obj = *menumanifest;
@@ -593,6 +597,18 @@ static int script_menu_has_item(lua_State* L) {
     return 1;
 }
 
+static int script_menu_index_of_item(lua_State* L) {
+    Menu menu = luascript_read_userdata(L, MENU);
+    const char* name = luaL_optstring(L, 2, NULL);
+
+    int32_t ret = menu_index_of_item(menu, name);
+
+    lua_pushinteger(L, ret);
+    return 1;
+}
+
+
+
 
 
 
@@ -615,6 +631,7 @@ static const luaL_Reg MENU_FUNCTIONS[] = {
     { "get_selected_item_name", script_menu_get_selected_item_name },
     { "set_text_force_case", script_menu_set_text_force_case },
     { "has_item", script_menu_has_item },
+    { "index_of_item", script_menu_index_of_item},
     { NULL, NULL }
 };
 

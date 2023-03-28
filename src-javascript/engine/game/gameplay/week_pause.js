@@ -134,7 +134,7 @@ const WEEKPAUSE_MSGMENU = "The week progress will be lost, ¿return\n to the mai
 const WEEKPAUSE_MSGWEEKSELECTOR = "The week progress will be lost, ¿return\n to the week selector?";
 
 
-async function week_pause_init() {
+async function week_pause_init(exit_to_weekselector_label) {
     let src = pvrctx_is_widescreen() ? WEEKPAUSE_LAYOUT_WIDESCREEN : WEEKPAUSE_LAYOUT_DREAMCAST;
     let layout = await layout_init(src);
     if (!layout) throw new Error("can not load: " + src);
@@ -170,6 +170,11 @@ async function week_pause_init() {
     let modding = await modding_init(layout, WEEKPAUSE_MODDING_SCRIPT);
     modding.native_menu = modding.active_menu = menu;
     modding.callback_option = week_pause_internal_handle_modding_option;
+
+    if (exit_to_weekselector_label) {
+        let index = menu_index_of_item(menu, "exit-week-selector");
+        if (index >= 0) menu_set_item_text(menu, index, exit_to_weekselector_label);
+    }
 
     let weekpause = {
         menu,

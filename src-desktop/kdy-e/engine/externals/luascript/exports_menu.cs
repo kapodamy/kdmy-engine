@@ -303,6 +303,16 @@ namespace Engine.Externals.LuaScriptInterop {
             return 1;
         }
 
+        static int script_menu_index_of_item(LuaState L) {
+            Menu menu = L.ReadUserdata<Menu>(MENU);
+            string name = L.luaL_optstring(2, null);
+
+            int ret = menu.IndexOfItem(name);
+
+            L.lua_pushinteger(ret);
+            return 1;
+        }
+
 
 
         static readonly LuaTableFunction[] MENU_FUNCTIONS = {
@@ -324,6 +334,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("get_selected_item_name", script_menu_get_selected_item_name),
             new LuaTableFunction("set_text_force_case", script_menu_set_text_force_case),
             new LuaTableFunction("has_item", script_menu_has_item),
+            new LuaTableFunction("index_of_item", script_menu_index_of_item),
             new LuaTableFunction(null, null)
         };
 

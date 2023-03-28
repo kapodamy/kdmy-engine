@@ -264,8 +264,9 @@ namespace Engine.Externals.LuaScriptInterop {
             string gf = L.luaL_optstring(5, null);
             string gameplay_manifest = L.luaL_optstring(6, null);
             int song_idx = (int)L.luaL_optinteger(7, -1);
+            string ws_label = L.luaL_optstring(8, null);
 
-            int ret = modding.LaunchWeek(week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx);
+            int ret = modding.LaunchWeek(week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx, ws_label);
 
             L.lua_pushinteger(ret);
             return 1;

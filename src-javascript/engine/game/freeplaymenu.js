@@ -238,7 +238,7 @@ async function freeplaymenu_main() {
 
         let ret = await week_main(
             weekinfo, state.use_alternative, difficult, default_bf, default_gf,
-            gameplaymanifest, state.map.gameplaymanifest_index
+            gameplaymanifest, state.map.gameplaymanifest_index, "RETURN TO FREEPLAY MENU"
         );
         if (ret == 0) break;// back to main menu
 

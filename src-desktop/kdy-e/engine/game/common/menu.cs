@@ -511,6 +511,13 @@ namespace Engine.Game.Common {
             return false;
         }
 
+        public int IndexOfItem(string name) {
+            for (int i = 0 ; i < this.items_size ; i++) {
+                if (this.items[i].name == name) return i;
+            }
+            return -1;
+        }
+
 
         private void InternalBuildItem(MenuItem item, MenuManifest.Item src_item, MenuManifest.Parameters @params, ModelHolder modelholder, FontHolder fontholder, float[] border) {
             bool custom_modelholder = false;

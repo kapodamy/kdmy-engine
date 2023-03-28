@@ -247,7 +247,7 @@ namespace Engine.Game {
 
                 int ret = Week.Main(
                     weekinfo, state.use_alternative, difficult, default_bf, default_gf,
-                    gameplaymanifest, state.map.gameplaymanifest_index
+                    gameplaymanifest, state.map.gameplaymanifest_index, "RETURN TO FREEPLAY MENU"
                 );
                 if (ret == 0) break;// back to main menu
 

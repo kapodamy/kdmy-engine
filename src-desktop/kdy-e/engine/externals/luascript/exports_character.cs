@@ -414,6 +414,14 @@ namespace Engine.Externals.LuaScriptInterop {
             return 0;
         }
 
+        static int script_character_schedule_idle(LuaState L) {
+            Character character = L.ReadUserdata<Character>(CHARACTER);
+
+            character.ScheduleIdle();
+
+            return 0;
+        }
+
 
 
         ////////////////////////////////////////////////////////////////////////////////////
@@ -459,6 +467,7 @@ namespace Engine.Externals.LuaScriptInterop {
             new LuaTableFunction("trailing_enabled", script_character_trailing_enabled),
             new LuaTableFunction("trailing_set_params", script_character_trailing_set_params),
             new LuaTableFunction("trailing_set_offsetcolor", script_character_trailing_set_offsetcolor),
+            new LuaTableFunction("schedule_idle", script_character_schedule_idle),
             new LuaTableFunction(null, null)
         };
 

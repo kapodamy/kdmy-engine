@@ -134,3 +134,7 @@ void character_trailing_set_params(Character character, int32_t length, float tr
 void character_trailing_set_offsetcolor(Character character, float r, float g, float b){
     print_stub("character_trailing_set_offsetcolor", "character=%p r=%f g=%f b=%f", character, r ,g ,b);
 }
+void character_schedule_idle(Character character) {
+    print_stub("character_schedule_idle", "character=%p", character);
+}
+

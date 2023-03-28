@@ -156,7 +156,7 @@ namespace Engine.Game.Gameplay {
         private string modding_choosen_option_name;
 
 
-        public WeekPause() {
+        public WeekPause(string exit_to_weekselector_label) {
             string src = PVRContext.global_context.IsWidescreen() ? WeekPause.LAYOUT_WIDESCREEN : WeekPause.LAYOUT_DREAMCAST;
             Layout layout = Layout.Init(src);
             if (layout == null) throw new Exception("can not load: " + src);
@@ -193,6 +193,11 @@ namespace Engine.Game.Gameplay {
             modding.native_menu = modding.active_menu = menu;
             modding.callback_private_data = this;
             modding.callback_option = this.InternalHandleModdingOption;
+
+            if (!String.IsNullOrEmpty(exit_to_weekselector_label)) {
+                int index = menu.IndexOfItem("exit-week-selector");
+                if (index >= 0) menu.SetItemText(index, exit_to_weekselector_label);
+            }
 
             this.menu = menu;
             this.messagebox = messagebox;

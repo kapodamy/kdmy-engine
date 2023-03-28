@@ -82,8 +82,8 @@ WeekInfo* modding_get_loaded_weeks(Modding modding, int32_t* out_size) {
     print_stub("modding_get_loaded_weeks", "modding=%p out_size=%p", modding, out_size);
     return NULL;
 }
-int32_t modding_launch_week(Modding modding, const char* week_name, char* difficult, bool alt_tracks, char* bf, char* gf, char* gameplay_manifest, int32_t song_idx) {
-    print_stub("modding_launch_week", "modding=%p week_name=%s difficult=%s alt_tracks=(bool)%i bf=%s gf=%s gameplay_manifest=%s song_idx=%i", modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx);
+int32_t modding_launch_week(Modding modding, const char* week_name, char* difficult, bool alt_tracks, char* bf, char* gf, char* gameplay_manifest, int32_t song_idx, const char* ws_label) {
+    print_stub("modding_launch_week", "modding=%p week_name=%s difficult=%s alt_tracks=(bool)%i bf=%s gf=%s gameplay_manifest=%s song_idx=%i ws_label=%s", modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx, ws_label);
     free(difficult);
     free(bf);
     free(gf);

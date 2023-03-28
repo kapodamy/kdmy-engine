@@ -584,6 +584,7 @@ declare global {
         trailing_enabled(enabled: boolean): void;
         trailing_set_params(length: number, trail_delay: number, trail_alpha: number, darken_colors?: boolean): void;
         trailing_set_offsetcolor(r: number, g: number, b: number): void;
+        schedule_idle(): void;
     }
     /**
      * An OGG Vorbis sound player, the difference with {@link SoundPlayer} is that it allows the use 
@@ -1082,6 +1083,7 @@ declare global {
         get_selected_item_name(): string;
         set_text_force_case(none_or_lowercase_or_uppercase: TextSpriteForceCase): void;
         has_item(name: string): boolean;
+        index_of_item(name: string): boolean;
     }
     /** Provides a JSON parser */
     interface JSON {
@@ -1824,8 +1826,9 @@ declare global {
      * @param girlfriend_character_manifest_src the girlfried character manifest filename, otherwise, null to use the default
      * @param gameplay_manifest_src the gameplay manifest json filename
      * @param freeplay_song_index the song index in the gameplay manifest, otherwise, use -1 to play the whole week
+     * @param exit_to_weekselector_label text to replace the "EXIT TO WEEK SELECTOR" label in the pause menu
      */
-    function modding_launch_week(week_name: string, difficult: string, use_alt_tracks: boolean, boyfriend_character_manifest_src: string, girlfriend_character_manifest_src: string, gameplay_manifest_src: string, freeplay_song_index: number): number;
+    function modding_launch_week(week_name: string, difficult: string, use_alt_tracks: boolean, boyfriend_character_manifest_src: string, girlfriend_character_manifest_src: string, gameplay_manifest_src: string, freeplay_song_index: number, exit_to_weekselector_label: string): number;
     /** Launch the credits screen */
     function modding_launch_credits(): void;
     /** Launch the start screen, this also rewinds the background music */

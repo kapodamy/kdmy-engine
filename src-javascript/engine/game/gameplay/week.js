@@ -344,7 +344,7 @@ async function week_destroy(/** @type {RoundContext} */ roundcontext, gameplayma
 }
 
 
-async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf, gameplaymanifest_src, single_song_index) {
+async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf, gameplaymanifest_src, single_song_index, exit_to_weekselector_label) {
 
     sh4matrix_clear(WEEKROUND_UI_MATRIX);
     sh4matrix_clear(WEEKROUND_UI_MATRIX_CAMERA);
@@ -524,7 +524,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     sprite_set_z_index(roundcontext.screen_background, -Infinity);
 
     // pause menu
-    roundcontext.weekpause = await week_pause_init();
+    roundcontext.weekpause = await week_pause_init(exit_to_weekselector_label);
     // song/week stats
     roundcontext.weekresult = week_result_init();
     // messagebox

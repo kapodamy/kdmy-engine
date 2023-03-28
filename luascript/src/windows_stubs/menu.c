@@ -70,3 +70,8 @@ bool menu_has_item(Menu menu, const char* name) {
     print_stub("menu_has_item", "menu=%p name=%s", menu, name);
     return false;
 }
+int32_t menu_index_of_item(Menu menu, const char* name) {
+    print_stub("menu_index_of_item", "menu=%p name=%s", menu, name);
+    return -1;
+
+}

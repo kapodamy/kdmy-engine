@@ -352,7 +352,7 @@ namespace Engine.Game.Gameplay {
         }
 
 
-        public static int Main(WeekInfo weekinfo, bool alt_tracks, string difficult, string default_bf, string default_gf, string gameplaymanifest_src, int single_song_index) {
+        public static int Main(WeekInfo weekinfo, bool alt_tracks, string difficult, string default_bf, string default_gf, string gameplaymanifest_src, int single_song_index, string exit_to_weekselector_label) {
             Week.ROUND_UI_MATRIX.Clear();
             Week.ROUND_UI_MATRIX_CAMERA.Clear();
 
@@ -526,7 +526,7 @@ namespace Engine.Game.Gameplay {
             roundcontext.screen_background.SetZIndex(Single.NegativeInfinity);
 
             // pause menu
-            roundcontext.weekpause = new WeekPause();
+            roundcontext.weekpause = new WeekPause(exit_to_weekselector_label);
             // song/week stats
             roundcontext.weekresult = new WeekResult();
             // messagebox

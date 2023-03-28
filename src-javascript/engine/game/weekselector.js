@@ -551,7 +551,8 @@ async function weekselector_main() {
         gameplay_model_boyfriend,
         gameplay_model_girlfriend,
         null,
-        -1
+        -1,
+        null
     );
 
     background_menu_music = await soundplayer_init(FUNKIN_BACKGROUND_MUSIC);

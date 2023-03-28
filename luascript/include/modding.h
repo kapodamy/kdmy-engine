@@ -43,7 +43,7 @@ bool modding_storage_set(Modding modding, const char* week_name, const char* nam
 uint32_t modding_storage_get(Modding modding, const char* week_name, const char* name, uint8_t** data);
 
 WeekInfo* modding_get_loaded_weeks(Modding modding, int32_t* out_size);
-int32_t modding_launch_week(Modding modding, const char* week_name, char* difficult, bool alt_tracks, char* bf, char* gf, char* gameplay_manifest, int32_t song_idx);
+int32_t modding_launch_week(Modding modding, const char* week_name, char* difficult, bool alt_tracks, char* bf, char* gf, char* gameplay_manifest, int32_t song_idx, const char* ws_label);
 void modding_launch_credits(Modding modding);
 bool modding_launch_startscreen(Modding modding);
 bool modding_launch_mainmenu(Modding modding);

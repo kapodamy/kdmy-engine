@@ -125,6 +125,9 @@ EM_JS_PRFX(void, character_trailing_set_params, (Character character, int32_t le
 EM_JS_PRFX(void, character_trailing_set_offsetcolor, (Character character, float r, float g, float b), {
     character_trailing_set_offsetcolor(kdmyEngine_obtain(character), r, g, b);
 });
+EM_JS_PRFX(void, character_schedule_idle, (Character character), {
+    character_schedule_idle(kdmyEngine_obtain(character));
+});
 #endif
 
 
@@ -532,6 +535,14 @@ static int script_character_trailing_set_offsetcolor(lua_State* L) {
     return 0;
 }
 
+static int script_character_schedule_idle(lua_State* L) {
+    Character character = luascript_read_userdata(L, CHARACTER);
+
+    character_schedule_idle(character);
+
+    return 0;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -576,6 +587,7 @@ static const luaL_Reg CHARACTER_FUNCTIONS[] = {
     {"trailing_enabled", script_character_trailing_enabled},
     {"trailing_set_params", script_character_trailing_set_params},
     {"trailing_set_offsetcolor", script_character_trailing_set_offsetcolor},
+    {"schedule_idle", script_character_schedule_idle},
     {NULL, NULL}
 };
 

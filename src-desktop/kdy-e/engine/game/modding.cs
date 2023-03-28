@@ -315,7 +315,7 @@ namespace Engine.Game {
             return Funkin.weeks_array.array;
         }
 
-        public int LaunchWeek(string week_name, string difficult, bool alt_tracks, string bf, string gf, string gameplay_manifest, int song_idx) {
+        public int LaunchWeek(string week_name, string difficult, bool alt_tracks, string bf, string gf, string gameplay_manifest, int song_idx, string ws_label) {
             WeekInfo gameplay_weekinfo = null;
 
             for (int i = 0 ; i < Funkin.weeks_array.size ; i++) {
@@ -331,10 +331,12 @@ namespace Engine.Game {
             if (String.IsNullOrEmpty(bf)) bf = FreeplayMenu.HelperGetDefaultCharacterManifest(true);
             if (String.IsNullOrEmpty(gf)) gf = FreeplayMenu.HelperGetDefaultCharacterManifest(false);
 
+            /*
             // (C# only) before run check if necessary preload files
             int preload_id = PreloadCache.AddFileList(
                 WeekEnumerator.GetAsset(gameplay_weekinfo, PreloadCache.PRELOAD_FILENAME)
             );
+            */
 
             int week_result = Week.Main(
                 gameplay_weekinfo,
@@ -343,11 +345,15 @@ namespace Engine.Game {
                 bf,
                 gf,
                 gameplay_manifest,
-                song_idx
+                song_idx,
+                ws_label
             );
 
+            /*
             // forget all preloaded files
             PreloadCache.ClearById(preload_id);
+            */
+
             return week_result;
         }
 

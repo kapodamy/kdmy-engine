@@ -890,9 +890,9 @@ function __asyncjs__modding_launch_startscreen(modding) {
         return ret ? 1 : 0
     })
 }
-function __asyncjs__modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx) {
+function __asyncjs__modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx, ws_label) {
     return Asyncify.handleAsync(async() => {
-        let ret = modding_launch_week(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(difficult), alt_tracks, kdmyEngine_ptrToString(bf), kdmyEngine_ptrToString(gf), kdmyEngine_ptrToString(gameplay_manifest), song_idx);
+        let ret = modding_launch_week(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(difficult), alt_tracks, kdmyEngine_ptrToString(bf), kdmyEngine_ptrToString(gf), kdmyEngine_ptrToString(gameplay_manifest), song_idx, kdmyEngine_ptrToString(ws_label));
         _free(difficult);
         _free(bf);
         _free(gf);
@@ -1244,6 +1244,9 @@ function __js__character_play_sing(character, direction, prefer_sustain) {
 }
 function __js__character_reset(character) {
     character_reset(kdmyEngine_obtain(character))
+}
+function __js__character_schedule_idle(character) {
+    character_schedule_idle(kdmyEngine_obtain(character))
 }
 function __js__character_set_alpha(character, alpha) {
     character_set_alpha(kdmyEngine_obtain(character), alpha)
@@ -2001,6 +2004,10 @@ function __js__menu_get_selected_item_name(menu) {
 function __js__menu_has_item(menu, name) {
     let ret = menu_has_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
     return ret ? 1 : 0
+}
+function __js__menu_index_of_item(menu, name) {
+    let ret = menu_index_of_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+    return ret
 }
 function __js__menu_select_horizontal(menu, offset) {
     let ret = menu_select_horizontal(kdmyEngine_obtain(menu), offset);
@@ -6961,6 +6968,7 @@ var asmLibraryArg = {
     "__js__character_play_miss": __js__character_play_miss,
     "__js__character_play_sing": __js__character_play_sing,
     "__js__character_reset": __js__character_reset,
+    "__js__character_schedule_idle": __js__character_schedule_idle,
     "__js__character_set_alpha": __js__character_set_alpha,
     "__js__character_set_color_offset": __js__character_set_color_offset,
     "__js__character_set_color_offset_to_default": __js__character_set_color_offset_to_default,
@@ -7145,6 +7153,7 @@ var asmLibraryArg = {
     "__js__menu_get_selected_index": __js__menu_get_selected_index,
     "__js__menu_get_selected_item_name": __js__menu_get_selected_item_name,
     "__js__menu_has_item": __js__menu_has_item,
+    "__js__menu_index_of_item": __js__menu_index_of_item,
     "__js__menu_select_horizontal": __js__menu_select_horizontal,
     "__js__menu_select_index": __js__menu_select_index,
     "__js__menu_select_item": __js__menu_select_item,
