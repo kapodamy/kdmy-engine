@@ -2,7 +2,7 @@
 <Layout width="640" height="480" keepAspectRatio="true" animationList="/assets/common/anims/week-round.xml">
     <Font name="vcr" path="/assets/common/font/vcr.ttf" />
     <AttachValue name="menu_font_path" type="string" value="/assets/common/font/alphabet.xml" />
-    <AttachValue name="menu_font_size" type="float" value="36" />
+    <AttachValue name="menu_font_size" type="float" value="32" />
 
     <Sprite r="0" g="0" b="0" a="0.6">
         <Action>
@@ -23,7 +23,7 @@
     </Text>
 
     <Placeholder name="menu">
-        <Location x="40" y="210" z="2" />
+        <Location x="40" y="180" z="2" />
         <Size width="600" height="280" />
     </Placeholder>
 
