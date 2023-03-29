@@ -20,7 +20,7 @@ const WEEK_GAMEOVER_LAYOUT_DREAMCAST = "/assets/common/image/week-round/gameover
 const WEEK_GAMEOVER_LAYOUT_WIDESCREEN = "/assets/common/image/week-round/gameover.xml";
 const WEEK_GAMEOVER_LAYOUT_VERSION = "/assets/common/image/week-round/gameover_version.txt";
 
-const WEEK_GAMEOVER_BUTTONS = GAMEPAD_B | GAMEPAD_START | GAMEPAD_T_LR;
+const WEEK_GAMEOVER_BUTTONS = GAMEPAD_BACK | GAMEPAD_B | GAMEPAD_START | GAMEPAD_T_LR;
 const WEEK_GAMEOVER_BUTTONS2 = WEEK_GAMEOVER_BUTTONS | GAMEPAD_AD_LEFT | GAMEPAD_AD_RIGHT;
 const WEEK_GAMEOVER_BUTTONS_LEFT = GAMEPAD_AD_LEFT | GAMEPAD_TRIGGER_LEFT;
 const WEEK_GAMEOVER_BUTTONS_SELECTOR = GAMEPAD_AD_LEFT | GAMEPAD_AD_RIGHT | GAMEPAD_T_LR;
@@ -104,9 +104,9 @@ async function week_gameover_init() {
     );
 
     // load default sounds
-    await week_gameover_set_option(WEEK_GAMEOVER_SETMUSIC, NaN, null);
-    await week_gameover_set_option(WEEK_GAMEOVER_SETSFXDIE, NaN, null);
-    await week_gameover_set_option(WEEK_GAMEOVER_SETSFXRETRY, NaN, null);
+    await week_gameover_set_option(weekgameover, WEEK_GAMEOVER_SETMUSIC, NaN, null);
+    await week_gameover_set_option(weekgameover, WEEK_GAMEOVER_SETSFXDIE, NaN, null);
+    await week_gameover_set_option(weekgameover, WEEK_GAMEOVER_SETSFXRETRY, NaN, null);
 
     weekgameover.duration_die = weekgameover.default_die_duration;
     weekgameover.duration_retry = weekgameover.default_retry_duration;
@@ -241,7 +241,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         layout, WEEK_GAMEOVER_DURATION_BEFORE_FORCE_END, weekgameover.duration_giveup
     );
     let stage_has_gameover = layout_get_attached_value(
-        roundcontext.layout, "gameover_with_stage", LAYOUT_TYPE_BOOLEAN, 0
+        layout, "gameover_with_stage", LAYOUT_TYPE_BOOLEAN, 0
     );
 
     // ¿which player is dead?    
@@ -254,7 +254,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         character_play_extra(roundcontext.girlfriend, "cry", 0);
     }
 
-    if (!layout_trigger_any(roundcontext.layout, "camera_gameover")) {
+    if (!layout_trigger_any(layout, "camera_gameover")) {
         for (let i = 0; i < roundcontext.players_size; i++) {
             if (!roundcontext.players[i].playerstats) continue;
             if (roundcontext.players[i].is_opponent) {
@@ -283,7 +283,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
     // try draw only the dead player
     let character_name = week_internal_concat_suffix(WEEKROUND_CHARACTER_PREFIX, dead_player_index);
-    layout_set_single_item_to_draw(roundcontext.layout, character_name);
+    layout_set_single_item_to_draw(layout, character_name);
     character_name = undefined;
 
     // trigger layout (normally shows the player only with a black background)
@@ -391,11 +391,11 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
     //if (weekgameover.sfx_die) soundplayer_stop(weekgameover.sfx_die);
     layout_set_group_visibility_by_id(weekgameover.layout, weekgameover.group_id_help, 0);
-
+    
     if (decision == 2) {
         layout_trigger_any(weekgameover.layout, "hide_stats");
         if (weekgameover.music_bg) soundplayer_stop(weekgameover.music_bg);
-        if (weekgameover.sfx_end) soundplayer_replay(weekgameover.sfx_end);
+        if (weekgameover.sfx_retry) soundplayer_replay(weekgameover.sfx_retry);
     }
 
     if (roundcontext.script) {
@@ -412,12 +412,14 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
     total = decision == 2 ? retry_animation_duration : giveup_animation_duration;
     wait_animation = total < 0.0 && dead_character;
 
+    if (before < 0.0) before = 0.0;
+
     if (wait_animation)
         total = Infinity;
     else if (total < 0.0)
         total = before;
 
-    while (total > 0.0) {
+    while (total >= 0.0) {
         let elapsed = await pvrctx_wait_ready();
 
         for (let i = 0; i < roundcontext.players_size; i++) {
@@ -447,18 +449,20 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
             if (decision == 2 && weekgameover.sfx_retry && !soundplayer_has_ended(weekgameover.sfx_retry)) {
                 // wait for retry sound effect (gameOverEnd.ogg is 7 seconds long)
                 total = soundplayer_get_duration(weekgameover.sfx_retry) - soundplayer_get_position(weekgameover.sfx_retry);
-                if (total < 0) total = before;// ignore
+                if (total <= 0) total = before;// ignore
             } else {
                 total = before;// ignore
             }
         }
 
-        if (trigger_transition && total <= before) {
-            trigger_transition = 0;
-            layout_trigger_any(weekgameover.layout, decision == 2 ? "transition" : "transition_giveup");
-            if (decision == 1 && weekgameover.music_bg) soundplayer_fade(weekgameover.music_bg, 0, total);
-        } else if (trigger_transition) {
+        if (trigger_transition) {
             total -= elapsed;
+            if (total <= before) {
+                total = Infinity;
+                trigger_transition = 0;
+                layout_trigger_any(weekgameover.layout, decision == 2 ? "transition" : "transition_giveup");
+                if (decision == 1 && weekgameover.music_bg) soundplayer_fade(weekgameover.music_bg, 0, total);
+            }
         } else if (layout_animation_is_completed(weekgameover.layout, "transition_effect")) {
             break;
         }
@@ -527,12 +531,15 @@ async function week_gameover_set_option(weekgameover, option, nro, str) {
             weekgameover.duration_before_force_end = Number.isNaN(nro) ? weekgameover.default_before_force_end_duration : nro;
             return;
         case WEEK_GAMEOVER_SETMUSIC:
+            if (weekgameover.music_bg) soundplayer_destroy(weekgameover.music_bg);
             weekgameover.music_bg = await soundplayer_init(str ?? "/assets/common/music/gameOver.ogg");
             return;
         case WEEK_GAMEOVER_SETSFXDIE:
+            if (weekgameover.sfx_die) soundplayer_destroy(weekgameover.sfx_die);
             weekgameover.sfx_die = await soundplayer_init(str ?? "/assets/common/sound/loss_sfx.ogg");
             return;
         case WEEK_GAMEOVER_SETSFXRETRY:
+            if (weekgameover.sfx_retry) soundplayer_destroy(weekgameover.sfx_retry);
             weekgameover.sfx_retry = await soundplayer_init(str ?? "/assets/common/sound/gameOverEnd.ogg");
             return;
     }

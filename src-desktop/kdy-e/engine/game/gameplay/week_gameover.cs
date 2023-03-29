@@ -290,7 +290,7 @@ namespace Engine.Game.Gameplay {
                 roundcontext.girlfriend.PlayExtra("cry", false);
             }
 
-            if (roundcontext.layout.TriggerAny("camera_gameover") < 1) {
+            if (layout.TriggerAny("camera_gameover") < 1) {
                 for (int i = 0 ; i < roundcontext.players_size ; i++) {
                     if (roundcontext.players[i].playerstats == null) continue;
                     if (roundcontext.players[i].is_opponent) {
@@ -319,7 +319,7 @@ namespace Engine.Game.Gameplay {
 
             // try draw only the dead player
             string character_name = Week.InternalConcatSuffix(Week.ROUND_CHARACTER_PREFIX, dead_player_index);
-            roundcontext.layout.SetSingleItemToDraw(character_name);
+            layout.SetSingleItemToDraw(character_name);
             //free(character_name);
 
             // trigger layout (normally shows the player only with a black background)
@@ -489,12 +489,14 @@ namespace Engine.Game.Gameplay {
                     }
                 }
 
-                if (trigger_transition && total <= before) {
-                    trigger_transition = false;
-                    this.layout.TriggerAny(decision == 2 ? "transition" : "transition_giveup");
-                    if (decision == 1) this.music_bg.Fade(false, (float)total);
-                } else if (trigger_transition) {
+                if (trigger_transition) {
                     total -= elapsed;
+                    if (total <= before) {
+                        total = Double.PositiveInfinity;
+                        trigger_transition = false;
+                        this.layout.TriggerAny(decision == 2 ? "transition" : "transition_giveup");
+                        if (decision == 1) this.music_bg.Fade(false, (float)total);
+                    }
                 } else if (this.layout.AnimationIsCompleted("transition_effect") > 0) {
                     break;
                 }
@@ -562,12 +564,15 @@ namespace Engine.Game.Gameplay {
                     this.duration_before_force_end = Single.IsNaN(nro) ? this.default_before_force_end_duration : nro;
                     return;
                 case WeekGameOverOption.SetMusic:
+                    if (this.music_bg != null) this.music_bg.Destroy();
                     this.music_bg = SoundPlayer.Init(str ?? "/assets/common/music/gameOver.ogg");
                     return;
                 case WeekGameOverOption.SetSfxDie:
+                    if (this.sfx_die != null) this.sfx_die.Destroy();
                     this.sfx_die = SoundPlayer.Init(str ?? "/assets/common/sound/loss_sfx.ogg");
                     return;
                 case WeekGameOverOption.SetSfxRetry:
+                    if (this.sfx_retry != null) this.sfx_retry.Destroy();
                     this.sfx_retry = SoundPlayer.Init(str ?? "/assets/common/sound/gameOverEnd.ogg");
                     return;
             }
