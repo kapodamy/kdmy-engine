@@ -17,11 +17,13 @@
         </Action>
     </Sprite>
 
-    <Sprite rgb="0x000000" name="transition_effect">
+    <Sprite rgb="0x000000" name="transition_effect" initialAction="intro">
         <Action>
             <Size width="1280" height="720" />
             <Location x="0" y="0" />
             <Property name="z" value="3" />
+        </Action>
+        <Action name="intro">
             <Animation name="transition_intro" />
         </Action>
         <Action name="outro">

@@ -114,6 +114,7 @@ const MAINMENU_MENU_MANIFEST = {
 const MAINMENU_GAMEPAD_OK = GAMEPAD_A | GAMEPAD_X | GAMEPAD_START;
 const MAINMENU_GAMEPAD_CANCEL = GAMEPAD_B | GAMEPAD_Y | GAMEPAD_BACK;
 const MAINMENU_GAMEPAD_BUTTONS = MAINMENU_GAMEPAD_OK | MAINMENU_GAMEPAD_CANCEL | GAMEPAD_AD;
+const MAINMENU_GAMEPAD_SHOW_CREDITS = GAMEPAD_DPAD_DOWN | GAMEPAD_DPAD_UP | GAMEPAD_DPAD_LEFT | GAMEPAD_DPAD_RIGHT;
 
 
 async function mainmenu_main() {
@@ -195,7 +196,7 @@ async function mainmenu_main() {
         layout_external_vertex_set_entry(layout, 0, VERTEX_DRAWABLE, menu_get_drawable(menu), index);
     }
 
-    // attach camera animtion (if was defined)
+    // attach camera animation (if was defined)
     layout_trigger_camera(layout, "camera_animation");
 
     let sound_confirm = await soundplayer_init("/assets/common/sound/confirmMenu.ogg");
@@ -258,7 +259,10 @@ async function mainmenu_main() {
             }
         } else if ((buttons & MAINMENU_GAMEPAD_CANCEL) && !await modding_helper_notify_back(modding))
             break;
-        else if (buttons & GAMEPAD_AD_DOWN)
+        else if ((buttons & MAINMENU_GAMEPAD_SHOW_CREDITS) == MAINMENU_GAMEPAD_SHOW_CREDITS) {
+            await mainmenu_show_credits(layout);
+            gamepad_clear_buttons(maple_pad);
+        } else if (buttons & GAMEPAD_AD_DOWN)
             selection_offset_y++;
         else if (buttons & GAMEPAD_AD_UP)
             selection_offset_y--;
@@ -415,6 +419,35 @@ async function mainmenu_show_donate() {
     gamepad_destroy(gamepad);
 
     if (pause_background_menu_music) soundplayer_play(background_menu_music);
+}
+
+async function mainmenu_show_credits(layout) {
+    layout_trigger_any(layout, "outro");
+
+    let has_bg_music = background_menu_music && soundplayer_is_playing(background_menu_music);
+    if (has_bg_music) soundplayer_fade(background_menu_music, 0, 500.0);
+
+    while (true) {
+        let elapsed = await pvrctx_wait_ready();
+
+        layout_animate(layout, elapsed);
+        layout_draw(layout, pvr_context);
+
+        if (layout_animation_is_completed(layout, "transition_effect") > 0) {
+            // flush framebuffer again with last fade frame
+            await pvrctx_wait_ready();
+            break;
+        }
+    }
+
+    await credits_main();
+
+    layout_trigger_any(layout, "intro");
+
+    if (has_bg_music) {
+        soundplayer_play(background_menu_music);
+        soundplayer_fade(background_menu_music, 1, 500.0);
+    }
 }
 
 async function mainmenu_handle_selected_option(selected_index) {

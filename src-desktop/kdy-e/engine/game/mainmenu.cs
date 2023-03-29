@@ -125,6 +125,10 @@ namespace Engine.Game {
         public const GamepadButtons GAMEPAD_OK = GamepadButtons.A | GamepadButtons.X | GamepadButtons.START;
         public const GamepadButtons GAMEPAD_CANCEL = GamepadButtons.B | GamepadButtons.Y | GamepadButtons.BACK;
         public const GamepadButtons GAMEPAD_BUTTONS = MainMenu.GAMEPAD_OK | MainMenu.GAMEPAD_CANCEL | GamepadButtons.AD;
+        private const GamepadButtons GAMEPAD_SHOW_CREDITS =
+            GamepadButtons.DPAD_UP | GamepadButtons.DPAD_DOWN |
+            GamepadButtons.DPAD_LEFT | GamepadButtons.DPAD_RIGHT
+        ;
 
 
         public static bool Main() {
@@ -206,7 +210,7 @@ namespace Engine.Game {
                 layout.ExternalVertexSetEntry(0, PVRContextVertex.DRAWABLE, menu.GetDrawable(), index);
             }
 
-            // attach camera animtion (if was defined)
+            // attach camera animation (if was defined)
             layout.TriggerCamera("camera_animation");
 
             SoundPlayer sound_confirm = SoundPlayer.Init("/assets/common/sound/confirmMenu.ogg");
@@ -268,7 +272,10 @@ namespace Engine.Game {
                     }
                 } else if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool() && !modding.HelperNotifyBack())
                     break;
-                else if ((buttons & GamepadButtons.AD_DOWN).Bool())
+                else if ((buttons & MainMenu.GAMEPAD_SHOW_CREDITS) == MainMenu.GAMEPAD_SHOW_CREDITS) {
+                    MainMenu.ShowCredits(layout);
+                    maple_pad.ClearButtons();
+                } else if ((buttons & GamepadButtons.AD_DOWN).Bool())
                     selection_offset_y++;
                 else if ((buttons & GamepadButtons.AD_UP).Bool())
                     selection_offset_y--;
@@ -424,6 +431,35 @@ namespace Engine.Game {
             gamepad.Destroy();
 
             if (pause_background_menu_music) GameMain.background_menu_music.Play();
+        }
+
+        public static void ShowCredits(Layout layout) {
+            layout.TriggerAny("outro");
+
+            bool has_bg_music = GameMain.background_menu_music != null && GameMain.background_menu_music.IsPlaying();
+            if (has_bg_music) GameMain.background_menu_music.Fade(false, 500f);
+
+            while (true) {
+                float elapsed = PVRContext.global_context.WaitReady();
+
+                layout.Animate(elapsed);
+                layout.Draw(PVRContext.global_context);
+
+                if (layout.AnimationIsCompleted("transition_effect") > 0) {
+                    // flush framebuffer again with last fade frame
+                    PVRContext.global_context.WaitReady();
+                    break;
+                }
+            }
+
+            Credits.Main();
+
+            layout.TriggerAny("intro");
+
+            if (has_bg_music) {
+                GameMain.background_menu_music.Play();
+                GameMain.background_menu_music.Fade(true, 500f);
+            }
         }
 
         public static bool HandleSelectedOption(int selected_index) {
