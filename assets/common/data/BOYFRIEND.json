@@ -42,14 +42,14 @@
         "extras": [
             { "name": "shaking",            "anim": "BF idle shaking",   "stopAfterBeats": 1        },
             { "name": "shaking-continuous", "animHold": "BF idle shaking"                           },
-            { "name": "dodge",              "anim": "boyfriend dodge",                              },
-            { "name": "pre-attack",         "anim": "bf pre attack",                                },
-            { "name": "attack",             "anim": "boyfriend attack",                             },
-            { "name": "hit",                "anim": "BF hit",                                       },
+            { "name": "dodge",              "anim": "boyfriend dodge"                               },
+            { "name": "pre-attack",         "anim": "bf pre attack"                                 },
+            { "name": "attack",             "anim": "boyfriend attack"                              },
+            { "name": "hit",                "anim": "BF hit"                                        },
             { "name": "dies",               "anim": "BF dies",           "animHold": "BF Dead Loop" },
-            { "name": "retry",              "anim": "BF Dead confirm",                              },
-            { "name": "giveup",             "anim": "BF Dead Loop",                                 },
-            { "name": "static-idle",        "anim": "BF idle dance",                                }
+            { "name": "retry",              "anim": "BF Dead confirm"                               },
+            { "name": "giveup",             "anim": "BF Dead Loop"                                  },
+            { "name": "static-idle",        "anim": "BF idle dance"                                 }
         ]
     }
 }

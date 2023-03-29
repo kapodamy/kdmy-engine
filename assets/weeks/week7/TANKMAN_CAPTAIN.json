@@ -18,7 +18,6 @@
         "to": ["right", "left"]
     },
 
-    "singSuffix": "-alt",
     "singAlternateSuffix": "-alt",
 
     "actions": {

@@ -1,0 +1,55 @@
+<html>
+    <header>
+        <title>JSON syntex verifier</title>
+    </header>
+
+    <body>
+        <br>
+        <strong>Select json files to read:</strong><br>
+        <input id="files" type="file" accept=".json,text/*" multiple /><br>
+        <textarea id="result" style="width: 50vw;height: 25vh;"></textarea>
+
+<script>
+/** @type {HTMLInputElement} */
+let file_input = document.getElementById("files");
+/** @type {HTMLTextAreaElement} */
+let result = document.getElementById("result");
+
+function readFileAsString(/**@type {File} */file) {
+    return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function (event) {
+            resolve(event.target.result);
+        };
+        reader.onerror = function (event) {
+            reject(reader.error);
+        };
+        reader.readAsText(file);
+    });
+}
+
+file_input.addEventListener("change", async function (evt) {
+    result.value = "processing " + this.files.length + " files\r\n";
+
+    for (let file of this.files) {
+        let text = "";
+        try {
+            text = await readFileAsString(file);
+        } catch (e) {
+            result.value += "[ERROR] File: " + file.name + " error: " + e.message + "\r\n";
+            continue;
+        }
+        try {
+            JSON.parse(text);
+        } catch (e) {
+            result.value += "[PARSE] File: " + file.name + " error: " + e.message + "\r\n";
+            continue;
+        }
+        result.value += "[PASS]  File: " + file.name + "\r\n";
+    }
+
+    result.value += "\r\nOperation completed\r\n";
+});
+</script>
+    </body>
+</html>

@@ -17,18 +17,18 @@
         ],
 
         "miss": [
-            { "direction": "left",   "anim": "BF LEFT MISS instance",   "stopAfterBeats": 1 },
-            { "direction": "down",   "anim": "BF DOWN MISS instance",   "stopAfterBeats": 1 },
-            { "direction": "up",     "anim": "BF UP MISS instance",     "stopAfterBeats": 1 },
-            { "direction": "right",  "anim": "BF RIGHT MISS instance",  "stopAfterBeats": 1 }
+            { "direction": "left",   "anim": "BF LEFT MISS instance" },
+            { "direction": "down",   "anim": "BF DOWN MISS instance" },
+            { "direction": "up",     "anim": "BF UP MISS instance"   },
+            { "direction": "right",  "anim": "BF RIGHT MISS instance" }
         ],
 
-        "idle": { "anim": "BF IDLE instance",  "stopAfterBeats": 0 },
+        "idle": { "anim": "BF IDLE instance" },
 		
 		"extras": [
-            { "name": "dies",        "stopAfterBeats": 0,  "anim": "BF Dies pixel",   "animHold": "Retry Loop", 	"model": "bfPixelsDEAD.xml" },
-            { "name": "retry",       "stopAfterBeats": 0,  "anim": "RETRY CONFIRM",   "animHold": null, 			"model": "bfPixelsDEAD.xml" },
-            { "name": "giveup",      "stopAfterBeats": 0,  "anim": "Retry Loop",      "animHold": null, 			"model": "bfPixelsDEAD.xml" }
+            { "name": "dies",        "anim": "BF Dies pixel",   "animHold": "Retry Loop", 	"model": "bfPixelsDEAD.xml" },
+            { "name": "retry",       "anim": "RETRY CONFIRM",   "animHold": null, 			"model": "bfPixelsDEAD.xml" },
+            { "name": "giveup",      "anim": "Retry Loop",      "animHold": null, 			"model": "bfPixelsDEAD.xml" }
 		]
     }
 }
