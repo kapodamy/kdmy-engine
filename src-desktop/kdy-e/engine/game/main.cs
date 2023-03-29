@@ -53,6 +53,7 @@ namespace Engine.Game {
             if (Funkin.weeks_array.size < 1) Console.Error.WriteLine("[WARN] main() no weeks detected");
 
             // load savedata
+            FunkinSave.PickFirstAvailableVMU();
             int load_result = SaveManager.ShouldShow(false);
             if (load_result != 0) {
                 SaveManager savemanager = new SaveManager(false, load_result);

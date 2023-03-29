@@ -1045,3 +1045,7 @@ function textsprite_background_set_color(textsprite, r, g, b, a) {
     if (!Number.isNaN(a)) textsprite.background_rgba[3] = a;
 }
 
+function textsprite_get_string(textsprite) {
+    return textsprite.text_forced_case ?? textsprite.text;
+}
+

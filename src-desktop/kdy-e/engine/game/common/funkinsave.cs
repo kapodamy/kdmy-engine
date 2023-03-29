@@ -106,7 +106,7 @@ namespace Engine.Game {
 
 
             // step 1: check if the VMU is inserted at the given port+slot
-            if (FunkinSave.InternalIsVMUMissing()) return 1;
+            if (FunkinSave.IsVMUMissing()) return 1;
 
             // step 2: open savedata file
             string vmu_path = FunkinSave.InternalGetVMUPath(FunkinSave.maple_port, FunkinSave.maple_unit);
@@ -357,7 +357,7 @@ namespace Engine.Game {
                 last_played_difficulty_index = (ushort)FunkinSave.last_played_difficulty_index;
 
 
-            if (FunkinSave.InternalIsVMUMissing()) return 1;
+            if (FunkinSave.IsVMUMissing()) return 1;
 
             // step 1: count amount bytes needed
             length += FunkinSave.settings.Count() * (sizeof(ushort) + sizeof(double));
@@ -759,6 +759,23 @@ namespace Engine.Game {
             FunkinSave.maple_unit = unit;
         }
 
+        public static bool IsVMUMissing() {
+            maple_device_t device = maple.enum_dev(FunkinSave.maple_port, FunkinSave.maple_unit);
+            return device == null || (device.info.functions & MAPLE_FUNC.MEMCARD) == 0x00;
+        }
+
+        public static void PickFirstAvailableVMU() {
+            for (int i = 0, count = maple.enum_count() ; i < count ; i++) {
+                maple_device_t dev = maple.enum_type(i, MAPLE_FUNC.MEMCARD);
+
+                if (dev != null && dev.valid) {
+                    FunkinSave.maple_port = dev.port;
+                    FunkinSave.maple_unit = dev.unit;
+                    return;
+                }
+            }
+        }
+
 
         private static int InternalStringByteLength(string str) {
             int string_length = StringUtils.ByteLength(str);
@@ -801,11 +818,6 @@ namespace Engine.Game {
 
             // Important: the vms filename can not be longer than 12 bytes
             return "/vmu/" + port_name + "" + slot_name + "/FNF_KDY_SAVE";
-        }
-
-        private static bool InternalIsVMUMissing() {
-            maple_device_t device = maple.enum_dev(FunkinSave.maple_port, FunkinSave.maple_unit);
-            return device == null || (device.info.functions & MAPLE_FUNC.MEMCARD) == 0x00;
         }
 
         private static int InternalReadString(DataView buffer, int offset, out string output_string) {

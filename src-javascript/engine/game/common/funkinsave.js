@@ -87,7 +87,7 @@ async function funkinsave_read_from_vmu() {
     const ENDIANESS = true;
 
     // step 1: check if the VMU is inserted at the given port+slot
-    if (funkinsave_internal_is_vmu_missing()) return 1;
+    if (funkinsave_is_vmu_missing()) return 1;
 
     // step 2: open savedata file
     let vmu_path = funkinsave_internal_get_vmu_path(funkinsave.maple_port, funkinsave.maple_unit);
@@ -337,7 +337,7 @@ async function funkinsave_write_to_vmu() {
     if (funkinsave.last_played_difficulty_index >= 0)
         last_played_difficulty_index = funkinsave.last_played_difficulty_index;
 
-    if (funkinsave_internal_is_vmu_missing()) return 1;
+    if (funkinsave_is_vmu_missing()) return 1;
 
     // step 1: count amount bytes needed
     length += linkedlist_count(funkinsave.settings) * (/*sizeof(uint16))*/2 +/*sizeof(int64|double))*/8);
@@ -730,6 +730,23 @@ function funkinsave_set_vmu(port, unit) {
     funkinsave.maple_unit = unit;
 }
 
+function funkinsave_is_vmu_missing() {
+    let device = maple_enum_dev(funkinsave.maple_port, funkinsave.maple_unit);
+    return !device || (device.info.functions & MAPLE_FUNC_MEMCARD) == 0x00;
+}
+
+function funkinsave_pick_first_available_vmu() {
+    for (let i = 0, count = maple_enum_count(); i < count; i++) {
+        let dev = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
+
+        if (dev && dev.valid) {
+            funkinsave.maple_port = dev.port;
+            funkinsave.maple_unit = dev.unit;
+            return;
+        }
+    }
+}
+
 
 function funkinsave_internal_string_bytelength(str) {
     let string_length = string_bytelength(str);
@@ -794,11 +811,6 @@ function funkinsave_internal_get_vmu_path(port, unit) {
 
     // Important: the vms filename can not be longer than 12 bytes
     return `/vmu/${port_name}${slot_name}/FNF_KDY_SAVE`;
-}
-
-function funkinsave_internal_is_vmu_missing() {
-    let device = maple_enum_dev(funkinsave.maple_port, funkinsave.maple_unit);
-    return !device || (device.info.functions & MAPLE_FUNC_MEMCARD) == 0x00;
 }
 
 function funkinsave_internal_read_string(buffer, offset, output_string) {

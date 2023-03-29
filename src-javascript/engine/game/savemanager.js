@@ -59,7 +59,7 @@ const SAVEMANAGER_MENU_MANIFEST = {
  * This variable is set to true if the user does not want load and/or save
  * the progress. {@link savemanager_should_show} will always return -1 if true
  */
-var savemanager_game_withoutsavedata = 0;
+var savemanager_game_withoutsavedata = false;
 
 async function savemanager_init(save_only, error_code) {
     let layout = await layout_init(pvrctx_is_widescreen() ? SAVEMANAGER_LAYOUT : SAVEMANAGER_LAYOUT_DREAMCAST);
@@ -244,11 +244,11 @@ async function savemanager_show(savemanager) {
             messagebox_animate(savemanager.messagebox, elapsed);
             messagebox_draw(savemanager.messagebox, pvr_context);
 
-            if (buttons & GAMEPAD_A) {
-                savemanager_game_withoutsavedata = 1;
+            if (buttons & MAINMENU_GAMEPAD_OK) {
+                savemanager_game_withoutsavedata = true;
                 break;
             }
-            if (buttons & (GAMEPAD_B | GAMEPAD_BACK)) confirm_leave = 0;
+            if (buttons & MAINMENU_GAMEPAD_CANCEL) confirm_leave = 0;
             continue;
         }
 
@@ -266,7 +266,7 @@ async function savemanager_show(savemanager) {
             selected_index = menu_get_selected_index(savemanager.menu);
             if (selected_index >= 0 && selected_index < menu_get_items_count(savemanager.menu)) {
                 save_or_load_success = await savemanager_internal_commit(savemanager, selected_index);
-                savemanager_game_withoutsavedata = save_or_load_success;
+                savemanager_game_withoutsavedata = !save_or_load_success;
                 if (save_or_load_success && savemanager.save_only) modding.has_funkinsave_changes = 0;
                 if (save_or_load_success) break;
             }
@@ -352,33 +352,18 @@ async function savemanager_show(savemanager) {
 
 async function savemanager_should_show(attempt_to_save_or_load) {
     if (savemanager_game_withoutsavedata) return -1;
-
-    let index = 0;
-    let count = 0;
-    let first_vmu = 1;
-
-    // count all attached VMUs
-    while (1) {
-        let dev = maple_enum_type(index++, MAPLE_FUNC_MEMCARD);
-        if (!dev || !dev.valid) break;
-        if (first_vmu) {
-            first_vmu = 0;
-            funkinsave_set_vmu(dev.port, dev.unit);
-        }
-        count++;
-    }
-
-    if (count != 1) return -1;
+    if (funkinsave_is_vmu_missing()) return 1;
 
     // attempt to automatically load/save
     let result;
     if (attempt_to_save_or_load) {
         result = await funkinsave_write_to_vmu();
-        savemanager_game_withoutsavedata = result == 0 ? 0 : 1;
     } else {
         result = await funkinsave_read_from_vmu();
         if (result == 1 || result == 2) result = -1;
     }
+
+    savemanager_game_withoutsavedata = result != 0;
 
     return result;
 }
@@ -493,16 +478,17 @@ async function savemanager_internal_commit(savemanager, selected_index) {
     let vmu = savemanager.vmu_array[selected_index];
 
     if (!savemanager.save_only && !vmu.has_savedata) {
+        messagebox_set_title(savemanager.messagebox, textsprite_get_string(savemanager.selected_label));
         messagebox_set_message(savemanager.messagebox, "This vmu is empty ¿Create a new save?");
         messagebox_set_buttons_icons(savemanager.messagebox, "a", "b");
-        messagebox_set_buttons_text(savemanager.messagebox, "Yes", "Pick another");
+        messagebox_set_buttons_text(savemanager.messagebox, "Yes", "Pick another");
         messagebox_show(savemanager.messagebox, 1);
 
         gamepad_clear_buttons(savemanager.maple_pad);
 
         while (1) {
             let elapsed = await pvrctx_wait_ready();
-            let buttons = gamepad_has_pressed_delayed(savemanager.maple_pad, GAMEPAD_A | GAMEPAD_B | GAMEPAD_BACK);
+            let buttons = gamepad_has_pressed_delayed(savemanager.maple_pad, MAINMENU_GAMEPAD_BUTTONS);
 
             pvr_context_reset(pvr_context);
             layout_animate(savemanager.layout, elapsed);
@@ -510,8 +496,8 @@ async function savemanager_internal_commit(savemanager, selected_index) {
             messagebox_animate(savemanager.messagebox, elapsed);
             messagebox_draw(savemanager.messagebox, pvr_context);
 
-            if (buttons & (GAMEPAD_B | GAMEPAD_BACK)) return 0;
-            if (buttons & GAMEPAD_A) break;
+            if (buttons & MAINMENU_GAMEPAD_CANCEL) return 0;
+            if (buttons & MAINMENU_GAMEPAD_OK) break;
         }
     }
 
@@ -547,6 +533,7 @@ async function savemanager_internal_show_error(savemanager, error_code) {
     if (savemanager.save_only) {
         switch (error_code) {
             case 0:
+                savemanager_game_withoutsavedata = false;
                 return 1;
             case 1:
                 messagebox_set_message(
@@ -578,6 +565,7 @@ async function savemanager_internal_show_error(savemanager, error_code) {
         switch (error_code) {
             case 0:
                 // success
+                savemanager_game_withoutsavedata = false;
                 return 1;
             case 1:
                 messagebox_set_message(

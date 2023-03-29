@@ -70,7 +70,7 @@ namespace Engine.Game {
 
         /**
          * This variable is set to true if the user does not want load and/or save
-         * the progress. {@link this.ShouldShow} will always return -1 if true
+         * the progress. {@link SaveManager.ShouldShow} will always return -1 if true
          */
         public static bool game_withoutsavedata = false;
 
@@ -277,11 +277,11 @@ namespace Engine.Game {
                     this.messagebox.Animate(elapsed);
                     this.messagebox.Draw(PVRContext.global_context);
 
-                    if ((buttons & GamepadButtons.A).Bool()) {
+                    if ((buttons & MainMenu.GAMEPAD_OK).Bool()) {
                         SaveManager.game_withoutsavedata = true;
                         break;
                     }
-                    if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) confirm_leave = false;
+                    if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool()) confirm_leave = false;
                     continue;
                 }
 
@@ -300,7 +300,7 @@ namespace Engine.Game {
                     if (selected_index >= 0 && selected_index < this.menu.GetItemsCount()) {
 
                         save_or_load_success = InternalCommit(selected_index);
-                        SaveManager.game_withoutsavedata = save_or_load_success;
+                        SaveManager.game_withoutsavedata = !save_or_load_success;
                         if (save_or_load_success && this.save_only) modding.has_funkinsave_changes = false;
                         if (save_or_load_success) break;
                     }
@@ -377,33 +377,18 @@ namespace Engine.Game {
 
         public static int ShouldShow(bool attempt_to_save_or_load) {
             if (SaveManager.game_withoutsavedata) return -1;
-
-            int index = 0;
-            int count = 0;
-            bool first_vmu = true;
-
-            // count all attached VMUs
-            while (true) {
-                maple_device_t dev = maple.enum_type(index++, MAPLE_FUNC.MEMCARD);
-                if (dev == null || !dev.valid) break;
-                if (first_vmu) {
-                    first_vmu = false;
-                    FunkinSave.SetVMU(dev.port, dev.unit);
-                }
-                count++;
-            }
-
-            if (count != 1) return -1;
+            if (FunkinSave.IsVMUMissing()) return 1;
 
             // attempt to automatically load/save
             int result;
             if (attempt_to_save_or_load) {
                 result = FunkinSave.WriteToVMU();
-                SaveManager.game_withoutsavedata = result != 0;
             } else {
                 result = FunkinSave.ReadFromVMU();
                 if (result == 1 || result == 2) result = -1;
             }
+
+            SaveManager.game_withoutsavedata = result != 0;
 
             return result;
         }
@@ -519,16 +504,17 @@ namespace Engine.Game {
             VMUInfo vmu = this.vmu_array[selected_index];
 
             if (!this.save_only && !vmu.has_savedata) {
+                this.messagebox.SetTitle(this.selected_label.GetString());
                 this.messagebox.SetMessage("This vmu is empty ¿Create a new save?");
                 this.messagebox.SetButtonsIcons("a", "b");
-                this.messagebox.SetButtonsText("Yes", "Pick another");
+                this.messagebox.SetButtonsText("Yes", "Pick another");
                 this.messagebox.Show(true);
 
                 this.maple_pad.ClearButtons();
 
                 while (true) {
                     float elapsed = PVRContext.global_context.WaitReady();
-                    GamepadButtons buttons = this.maple_pad.HasPressedDelayed(GamepadButtons.A | GamepadButtons.B | GamepadButtons.BACK);
+                    GamepadButtons buttons = this.maple_pad.HasPressedDelayed(MainMenu.GAMEPAD_BUTTONS);
 
                     PVRContext.global_context.Reset();
                     this.layout.Animate(elapsed);
@@ -536,8 +522,8 @@ namespace Engine.Game {
                     this.messagebox.Animate(elapsed);
                     this.messagebox.Draw(PVRContext.global_context);
 
-                    if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) return false;
-                    if ((buttons & GamepadButtons.A).Bool()) break;
+                    if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool()) return false;
+                    if ((buttons & MainMenu.GAMEPAD_OK).Bool()) break;
                 }
             }
 
@@ -574,6 +560,7 @@ namespace Engine.Game {
             if (this.save_only) {
                 switch (error_code) {
                     case 0:
+                        SaveManager.game_withoutsavedata = false;
                         return true;
                     case 1:
                         this.messagebox.SetMessage(
@@ -605,6 +592,7 @@ namespace Engine.Game {
                 switch (error_code) {
                     case 0:
                         // success
+                        SaveManager.game_withoutsavedata = false;
                         return true;
                     case 1:
                         this.messagebox.SetMessage(

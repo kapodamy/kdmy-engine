@@ -1076,6 +1076,10 @@ namespace Engine.Font {
             if (!Double.IsNaN(a)) this.background_rgba[3] = a;
         }
 
+        public string GetString() {
+            return this.text_forced_case ?? this.text;
+        }
+
 
 
         private class ParagraphInfo {

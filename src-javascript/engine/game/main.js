@@ -68,6 +68,7 @@ async function main(argc, argv) {
     if (weeks_array.size < 1) console.warn("main() no weeks detected");
 
     // load savedata
+    funkinsave_pick_first_available_vmu();
     let load_result = await savemanager_should_show(0);
     if (load_result) {
         let savemanager = await savemanager_init(0, load_result);
