@@ -575,6 +575,7 @@ namespace Engine.Game {
             }
 
             layout.Destroy();
+            KallistiOS.MAPLE.maple_mappings.LoadKeyboardMappings();
         }
 
         private static void InMenusBinding(AnimSprite anim_binding, AnimSprite anim_binding_rollback) {
