@@ -1008,8 +1008,8 @@ L_discard_key_event:
             //
             // How this function works:
             //
-            //  * Pick key events from neighbor strums and check if hits notes on this this. To accomplish
-            //    this Scroll() function must be called before doing this.
+            //  * Pick key events from neighbor strums and check if hits notes on this strum. To accomplish
+            //    this Strum::Scroll() function must be called before doing this.
             //
             //  * Ignore key events of "invisible" strums which are used in mechanics like "press space"
             //
@@ -1034,8 +1034,11 @@ L_discard_key_event:
                     if (ddr_key.in_song_timestamp > song_timestamp) continue;
 
                     if (InternalOnNoteBounds(i, key_timestamp)) {
-                        double diff = key_timestamp / this.chart_notes[i].timestamp;
-                        if (diff <= 0.50 || diff >= 1.50) continue;
+                        double diff = Math.Abs(this.chart_notes[i].timestamp - key_timestamp);
+                        diff /= this.marker_duration;
+
+                        // ignore if the accuracy less than 50%
+                        if (diff < 0.50) continue;
 
                         //Console.Error.WriteLine("[LOG] [penality] hit on pending note ts=" + note.timestamp);
                         this.extra_animations_have_penalties = true;
@@ -1715,9 +1718,6 @@ L_discard_key_event:
 
             double start = note_timestamp - this.marker_duration;
             double end = note_timestamp + note_duration;
-
-            // increase end timestamp for non-sustain notes
-            if (strum_note.duration < 1) end += this.marker_duration;
 
             return test_timestamp >= start && test_timestamp <= end;
         }

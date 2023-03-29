@@ -977,8 +977,11 @@ function strum_find_penalties_note_hit(strum, song_timestamp, ddrkeys_fifo, play
             if (ddr_key.in_song_timestamp > song_timestamp) continue;
 
             if (strum_internal_on_note_bounds(strum, i, key_timestamp)) {
-                let diff = key_timestamp / strum.chart_notes[i].timestamp;
-                if (diff <= 0.50 || diff >= 1.50) continue;
+                let diff = Math.abs(strum.chart_notes[i].timestamp - key_timestamp);
+                diff /= strum.marker_duration;
+
+                // ignore if the accuracy less than 50%
+                if (diff < 0.50) continue;
 
                 //console.log(`[penality] hit on pending note ts=${note.timestamp}`);
                 strum.extra_animations_have_penalties = 1;
@@ -1656,9 +1659,6 @@ function strum_internal_on_note_bounds(strum, note_index, test_timestamp) {
 
     let start = note_timestamp - strum.marker_duration;
     let end = note_timestamp + note_duration;
-
-    // increase end timestamp for non-sustain notes
-    if (strum_note.duration < 1) end += strum.marker_duration;
 
     return test_timestamp >= start && test_timestamp <= end;
 }
