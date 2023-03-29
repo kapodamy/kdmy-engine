@@ -525,8 +525,8 @@ function character_play_sing(character, direction, prefer_sustain) {
     if (prefer_sustain) {
         // ignore "stopAfterBeats"
         character.current_expected_duration = Infinity;
-        character.current_waiting_animation_end = false;
-        character.current_waiting_animation_end_and_idle = false;
+        character.current_waiting_animation_end = 0;
+        character.current_waiting_animation_end_and_idle = 0;
 
         if (sing_info.full_sustain) {
             if (sing_info.base) {

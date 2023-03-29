@@ -240,7 +240,7 @@ function atlas_parse_resolution(atlas, resolution_string) {
         resolution_string.substring(0, index), NaN
     );
     let height = vertexprops_parse_unsigned_integer(
-        resolution_string.substring(index + 1, resolution_string.Length), NaN
+        resolution_string.substring(index + 1, resolution_string.length), NaN
     );
 
     if (!Number.isFinite(width) || !Number.isFinite(height)) {

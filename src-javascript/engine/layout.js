@@ -592,9 +592,9 @@ function layout_animation_is_completed(layout, item_name) {
 
     for (let i = 0; i < layout.vertex_list_size; i++) {
         if (layout.vertex_list[i].name == item_name) {
-            type = this.vertex_list[i].type;
-            vertex = this.vertex_list[i].vertex;
-            animsprite = this.vertex_list[i].animation;
+            type = layout.vertex_list[i].type;
+            vertex = layout.vertex_list[i].vertex;
+            animsprite = layout.vertex_list[i].animation;
             break;
         }
     }
@@ -604,7 +604,7 @@ function layout_animation_is_completed(layout, item_name) {
         for (let i = 0; i < layout.group_list_size; i++) {
             if (layout.group_list[i].name == item_name) {
                 vertex = null;
-                animsprite = this.vertex_list[i].animation;
+                animsprite = layout.vertex_list[i].animation;
                 break;
             }
         }
@@ -1104,9 +1104,15 @@ function layout_get_camera_placeholder(layout, camera_name) {
 
 function layout_set_single_item_to_draw(layout, item_name) {
     layout.single_item = null;
-    if (item_name == null) return 1;
+    if (item_name == null) return true;
     for (let i = 0; i < layout.vertex_list_size; i++) {
-        if (layout.vertex_list[i].name == item_name) {
+        let name;
+        if (layout.vertex_list[i].type == VERTEX_DRAWABLE) {
+            name = layout.vertex_list[i].placeholder.name;
+        } else {
+            name = layout.vertex_list[i].name;
+        }
+        if (name == item_name) {
             layout.single_item = layout.vertex_list[i];
             return 1;
         }

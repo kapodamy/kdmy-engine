@@ -510,7 +510,7 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
             anim_name_hey = charactermanifest.week_selector_choosen_anim_name;
         }
 
-        modelholder = await modelholder_init(charactermanifest.model_week_selector);
+        modelholder = await modelholder_init(charactermanifest.week_selector_model);
         charactermanifest_destroy(charactermanifest);
     } else if (weekinfo.week_host_model) {
         host_flip = weekinfo.host_flip_sprite;

@@ -152,7 +152,7 @@ async function modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
         modelholder.atlas = await atlas_init(atlas_src);
 
         if (modelholder.atlas != null)
-            atlas_texture = atlas_get_texture_path(modelholder);
+            atlas_texture = atlas_get_texture_path(modelholder.atlas);
         else
             modelholder.atlas = MODELHOLDER_STUB_ATLAS;
     }

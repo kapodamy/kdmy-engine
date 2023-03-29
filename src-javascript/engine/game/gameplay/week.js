@@ -28,7 +28,7 @@ const UI_LAYOUT_WIDESCREEN = "/assets/common/image/week-round/ui.xml";
 const UI_LAYOUT_DREAMCAST = "/assets/common/image/week-round/ui~dreamcast.xml";
 const UI_STRUMS_LAYOUT_PLACEHOLDER = { x: 0, y: 0, z: 100, width: 300, height: 54 };
 const UI_STUB_LAYOUT_PLACEHOLDER = { x: 0, y: 0, z: -1, width: 100, height: 100 };
-const UI_SONGINFO_FORMAT = "$s $s[$s] {kdy $s}";
+const UI_SONGINFO_FORMAT = "$s $s[$s]";// "$s $s[$s] {kdy $s}";
 const UI_SONGINFO_ALT_SUFFIX = "(alt) ";
 
 const WEEKROUND_CHARACTER_PREFIX = "character_";
@@ -1171,8 +1171,8 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
         UI_SONGINFO_FORMAT,
         songmanifest.name,
         initparams.alt_tracks ? UI_SONGINFO_ALT_SUFFIX : null,
-        initparams.difficult,
-        ENGINE_VERSION
+        initparams.difficult/*,
+        ENGINE_VERSION*/
     );
 
     // initialize dialogue

@@ -246,7 +246,7 @@ async function songplayer_helper_get_tracks(src, prefer_alternative, output_path
     if (separator_index >= 0) {
         // parse "voices.ogg|inst.ogg" format
         path_voices = await songplayer_internal_separe_paths(0, separator_index, src, 1);
-        path_instrumental = await songplayer_internal_separe_paths(separator_index + 1, src.Length, src, 1);
+        path_instrumental = await songplayer_internal_separe_paths(separator_index + 1, src.length, src, 1);
 
         output_paths[0] = path_voices;
         output_paths[1] = path_instrumental;
