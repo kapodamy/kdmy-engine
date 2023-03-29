@@ -21,6 +21,7 @@ namespace Engine.Game {
 
             Modding modding = new Modding(layout, IntroScreen.MODDING_SCRIPT);
             Gamepad maple_pad = new Gamepad(-1);
+            maple_pad.ClearButtons();
 
             modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
 

@@ -15,6 +15,7 @@ async function introscreen_main() {
 
     let modding = await modding_init(layout, INTROSCREEN_MODDING_SCRIPT);
     let maple_pad = gamepad_init(-1);
+    gamepad_clear_buttons(maple_pad);
 
     await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
 
