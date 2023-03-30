@@ -99,7 +99,8 @@ async function character_init(charactermanifest) {
         character_scale: 1.0,
         played_actions_count: 0,
         commited_animations_count: 0,
-        animation_freezed: 0
+        animation_freezed: 0,
+        flip_x: 0
     };
 
     beatwatcher_reset(character.beatwatcher, 1, 100);
@@ -781,19 +782,18 @@ function character_enable_flip_correction(character, enable) {
 }
 
 function character_flip_orientation(character, enable) {
-    character.inverted_enabled = !!enable;
-    statesprite_flip_texture(character.statesprite, character.inverted_enabled, null);
+    character.inverted_enabled = character.inverted_size > 0 && enable;
+    statesprite_flip_texture(character.statesprite, enable, null);
 }
 
 function character_face_as_opponent(character, face_as_opponent) {
-    let flip_x;
     if (face_as_opponent)
-        flip_x = character.is_left_facing;
+        character.flip_x = character.is_left_facing;
     else
-        flip_x = !character.is_left_facing;
+        character.flip_x = !character.is_left_facing;
 
-    character.inverted_enabled = character.inverted_size > 0 && flip_x;
-    statesprite_flip_texture(character.statesprite, flip_x, null);
+    character.inverted_enabled = character.inverted_size > 0 && character.flip_x;
+    statesprite_flip_texture(character.statesprite, character.flip_x, null);
 }
 
 
@@ -1348,9 +1348,14 @@ function character_internal_calculate_location(character) {
             break;
     }
 
-    // step 2: apply offsets
-    draw_x += (action_offset_x + character.offset_x) * character.character_scale;
-    draw_y += (action_offset_y + character.offset_y) * character.character_scale;
+    // step 2: calc total offsets
+    let offset_x = action_offset_x + character.offset_x;
+    let offset_y = action_offset_y + character.offset_y;
+    if (character.flip_x) offset_x = -offset_x;
+
+    // step 3: apply offsets
+    draw_x += offset_x * character.character_scale;
+    draw_y += offset_y * character.character_scale;
 
     // step 4: change the sprite location
     modifier.x = draw_x;

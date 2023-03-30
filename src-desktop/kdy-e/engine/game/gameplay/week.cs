@@ -2785,10 +2785,10 @@ namespace Engine.Game.Gameplay {
                 if (timestamp < roundcontext.events[i].timestamp) break;
                 switch (roundcontext.events[i].command) {
                     case ChartEvent.CAMERA_OPPONENT:
-                        Week.CameraFocusGuess(roundcontext, Week.ROUND_CAMERA_OPONNENT, -1);
+                        Week.CameraFocusGuess(roundcontext, roundcontext.settings.camera_name_opponent, -1);
                         break;
                     case ChartEvent.CAMERA_PLAYER:
-                        Week.CameraFocusGuess(roundcontext, Week.ROUND_CAMERA_PLAYER, -1);
+                        Week.CameraFocusGuess(roundcontext, roundcontext.settings.camera_name_player, -1);
                         break;
                     case ChartEvent.CHANGE_BPM:
                         Week.UpdateBpm(roundcontext, (float)roundcontext.events[i].parameter);

@@ -78,6 +78,7 @@ namespace Engine.Game {
         private int played_actions_count;
         private int commited_animations_count;
         private bool animation_freezed;
+        private bool flip_x;
 
 
         public Character(CharacterManifest charactermanifest) {
@@ -158,6 +159,7 @@ namespace Engine.Game {
             this.played_actions_count = 0;
             this.commited_animations_count = 0;
             this.animation_freezed = false;
+            this.flip_x = false;
 
             this.beatwatcher.Reset(true, 100f);
 
@@ -827,19 +829,19 @@ L_read_state:
         }
 
         public void FlipOrientation(bool enable) {
-            this.inverted_enabled = enable;
-            this.statesprite.FlipTexture(this.inverted_enabled, null);
+            this.flip_x = enable;
+            this.inverted_enabled = this.inverted_size > 0 && enable;
+            this.statesprite.FlipTexture(enable, null);
         }
 
         public void FaceAsOpponent(bool face_as_opponent) {
-            bool flip_x;
             if (face_as_opponent)
-                flip_x = this.is_left_facing;
+                this.flip_x = this.is_left_facing;
             else
-                flip_x = !this.is_left_facing;
+                this.flip_x = !this.is_left_facing;
 
             this.inverted_enabled = this.inverted_size > 0 && flip_x;
-            this.statesprite.FlipTexture(flip_x, null);
+            this.statesprite.FlipTexture(this.flip_x, null);
         }
 
 
@@ -1401,9 +1403,14 @@ L_read_state:
                     break;
             }
 
-            // step 2: apply global offset
-            draw_x += (action_offset_x + this.offset_x) * this.character_scale;
-            draw_y += (action_offset_y + this.offset_y) * this.character_scale;
+            // step 2: calc total offsets
+            float offset_x = action_offset_x + this.offset_x;
+            float offset_y = action_offset_y + this.offset_y;
+            if (this.flip_x) offset_x = -offset_x;
+
+            // step 3: apply offsets
+            draw_x += offset_x * this.character_scale;
+            draw_y += offset_y * this.character_scale;
 
             // step 4: change the sprite location
             modifier.x = draw_x;

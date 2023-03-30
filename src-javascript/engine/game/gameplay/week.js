@@ -792,7 +792,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         if (single_song) {
             // Warning: the song name declared in "gameplay.json" must be the same as in "about.json"
             let song_name = gameplaymanifest.songs[single_song_index].name;
-            funkinsave_set_freeplay_score(weekinfo.name, roundcontext.song_difficult, song_name, 1 , total_score);
+            funkinsave_set_freeplay_score(weekinfo.name, roundcontext.song_difficult, song_name, 1, total_score);
         } else {
             funkinsave_set_week_score(weekinfo.name, roundcontext.song_difficult, 1, total_score);
         }
@@ -2774,10 +2774,10 @@ async function week_peek_chart_events(/** @type {RoundContext} */roundcontext, t
         if (timestamp < roundcontext.events[i].timestamp) break;
         switch (roundcontext.events[i].command) {
             case CHART_EVENT_CAMERA_OPPONENT:
-                week_camera_focus_guess(roundcontext, WEEKROUND_CAMERA_OPONNENT, -1);
+                week_camera_focus_guess(roundcontext, roundcontext.settings.camera_name_opponent, -1);
                 break;
             case CHART_EVENT_CAMERA_PLAYER:
-                week_camera_focus_guess(roundcontext, WEEKROUND_CAMERA_PLAYER, -1);
+                week_camera_focus_guess(roundcontext, roundcontext.settings.camera_name_player, -1);
                 break;
             case CHART_EVENT_CHANGE_BPM:
                 week_update_bpm(roundcontext, roundcontext.events[i].parameter);
