@@ -604,7 +604,7 @@ namespace Engine.Game {
             if (difficulty_id >= 0) FunkinSave.last_played_difficulty_index = difficulty_id;
         }
 
-        public static void SetWeekScore(string week_name, string difficulty_name, long score) {
+        public static void SetWeekScore(string week_name, string difficulty_name, bool only_if_best, long score) {
             int week_id = FunkinSave.InternalNameIndex(FunkinSave.weeks_names, week_name);
             int difficulty_id = FunkinSave.InternalNameIndex(FunkinSave.difficulty_names, difficulty_name);
 
@@ -612,7 +612,9 @@ namespace Engine.Game {
 
             foreach (Progress progress in FunkinSave.progress) {
                 if (progress.week_id == week_id && progress.difficulty_id == difficulty_id) {
-                    progress.score = score;
+                    if (!only_if_best || score > progress.score) {
+                        progress.score = score;
+                    }
                     return;
                 }
             }
@@ -695,7 +697,7 @@ namespace Engine.Game {
             return 0;
         }
 
-        public static void SetFreeplayScore(string week_name, string difficulty_name, string song_name, long score) {
+        public static void SetFreeplayScore(string week_name, string difficulty_name, string song_name, bool only_if_best, long score) {
             if (String.IsNullOrEmpty(song_name)) return;
 
             int week_id = FunkinSave.InternalNameIndex(FunkinSave.weeks_names, week_name);
@@ -705,7 +707,9 @@ namespace Engine.Game {
 
             foreach (FreeplayProgress progress in FunkinSave.freeplay_progress) {
                 if (progress.week_id == week_id && progress.difficulty_id == difficulty_id && progress.song_name == song_name) {
-                    progress.score = score;
+                    if (!only_if_best || score > progress.score) {
+                        progress.score = score;
+                    }
                     return;
                 }
             }

@@ -792,9 +792,9 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         if (single_song) {
             // Warning: the song name declared in "gameplay.json" must be the same as in "about.json"
             let song_name = gameplaymanifest.songs[single_song_index].name;
-            funkinsave_set_freeplay_score(weekinfo.name, roundcontext.song_difficult, song_name, total_score);
+            funkinsave_set_freeplay_score(weekinfo.name, roundcontext.song_difficult, song_name, 1 , total_score);
         } else {
-            funkinsave_set_week_score(weekinfo.name, roundcontext.song_difficult, total_score);
+            funkinsave_set_week_score(weekinfo.name, roundcontext.song_difficult, 1, total_score);
         }
 
         // keep displaying the stage layout until the save is done

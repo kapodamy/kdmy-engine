@@ -583,7 +583,7 @@ function funkinsave_set_last_played(week_name, difficulty_name) {
     if (difficulty_id >= 0) funkinsave.last_played_difficulty_index = difficulty_id;
 }
 
-function funkinsave_set_week_score(week_name, difficulty_name, score) {
+function funkinsave_set_week_score(week_name, difficulty_name, only_if_best, score) {
     let week_id = funkinsave_internal_name_index(funkinsave.weeks_names, week_name);
     let difficulty_id = funkinsave_internal_name_index(funkinsave.difficulty_names, difficulty_name);
 
@@ -591,7 +591,9 @@ function funkinsave_set_week_score(week_name, difficulty_name, score) {
 
     for (let progress of linkedlist_iterate4(funkinsave.progress)) {
         if (progress.week_id == week_id && progress.difficulty_id == difficulty_id) {
-            progress.score = score;
+            if (!only_if_best || score > progress.score) {
+                progress.score = score;
+            }
             return;
         }
     }
@@ -666,7 +668,7 @@ function funkinsave_storage_get(week_name, name, out_data) {
     return 0;
 }
 
-function funkinsave_set_freeplay_score(week_name, difficulty_name, song_name, score) {
+function funkinsave_set_freeplay_score(week_name, difficulty_name, song_name, only_if_best, score) {
     if (!song_name) return;
 
     let week_id = funkinsave_internal_name_index(funkinsave.weeks_names, week_name);
@@ -676,7 +678,9 @@ function funkinsave_set_freeplay_score(week_name, difficulty_name, song_name, sc
 
     for (let progress of linkedlist_iterate4(funkinsave.freeplay_progress)) {
         if (progress.week_id == week_id && progress.difficulty_id == difficulty_id && progress.song_name == song_name) {
-            progress.score = score;
+            if (!only_if_best || score > progress.score) {
+                progress.score = score;
+            }
             return;
         }
     }

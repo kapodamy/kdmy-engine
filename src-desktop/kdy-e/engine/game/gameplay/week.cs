@@ -794,9 +794,9 @@ namespace Engine.Game.Gameplay {
                 if (single_song) {
                     // Warning: the song name declared in "gameplay.json" must be the same as in "about.json"
                     string song_name = gameplaymanifest.songs[single_song_index].name;
-                    FunkinSave.SetFreeplayScore(weekinfo.name, roundcontext.song_difficult, song_name, total_score);
+                    FunkinSave.SetFreeplayScore(weekinfo.name, roundcontext.song_difficult, song_name, true, total_score);
                 } else {
-                    FunkinSave.SetWeekScore(weekinfo.name, roundcontext.song_difficult, total_score);
+                    FunkinSave.SetWeekScore(weekinfo.name, roundcontext.song_difficult, true, total_score);
                 }
 
                 // keep displaying the stage layout until the save is done
