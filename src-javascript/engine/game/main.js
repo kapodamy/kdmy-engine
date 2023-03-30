@@ -2,7 +2,7 @@
 
 // this file contains all shared data across the game
 const ENGINE_NAME = "kdmy-engine";
-const ENGINE_VERSION = "0.55";
+const ENGINE_VERSION = "0.57";
 
 
 /**
@@ -160,14 +160,14 @@ async function main_helper_draw_loading_screen() {
 
     let texture = await texture_init(FUNKIN_LOADING_SCREEN_TEXTURE);
     let sprite = sprite_init(texture);
-    sprite.SetDrawLocation(0.0, 0.0);
-    sprite.SetDrawSizeFromSourceSize();
+    sprite_set_draw_location(sprite, 0.0, 0.0);
+    sprite_set_draw_size_from_source_size(sprite);
 
     // funkay texture aspect ratio is not 16:9 or 4:3
     imgutils_calc_resize_sprite(sprite, pvr_context.screen_width, pvr_context.screen_height, 1, 1);
 
     pvr_context_reset(pvr_context);
-    sprite_draw(pvr_context);
+    sprite_draw(sprite, pvr_context);
     await pvrctx_wait_ready();
 
     sprite_destroy_full();
