@@ -90,6 +90,7 @@ async function chart_init(src, difficult) {
     let last_alt_anim_player = false;
     let last_alt_anim_opponent = false;
     let beat_duration = math2d_beats_per_minute_to_beat_per_milliseconds(chart.bpm);
+    let quarter_duration = beat_duration / 4.0;
     let timestamp_event_accumulated = 0;
 
     for (let i = 0; i < json_notes_length; i++) {
@@ -99,18 +100,19 @@ async function chart_init(src, difficult) {
         //let type_of_section = json_read_number(json_section, "typeOfSection", 0);
         //if (type_of_section != 0) throw new Error("Unknown typeOfSection=" + type_of_section);
 
-        // lengthInSteps appears to be used only in the chart editor
-        //let lenght_in_steps = json_read_number(json_section, "lengthInSteps", 16);
-        //if (lenght_in_steps != 16) throw new Error("Unknown lengthInSteps=" + lenght_in_steps);
-
+        let length_in_steps = json_read_number(json_section, "lengthInSteps", 16);
         let must_hit_section = json_read_boolean(json_section, "mustHitSection", false);
         let alt_anim = json_read_boolean(json_section, "altAnim", false);
         let change_bpm = json_read_boolean(json_section, "changeBPM", false);
         let bpm = json_read_number(json_section, "bpm", 100);
 
-        if (change_bpm) beat_duration = math2d_beats_per_minute_to_beat_per_milliseconds(bpm);
+        if (change_bpm) {
+            beat_duration = math2d_beats_per_minute_to_beat_per_milliseconds(bpm);
+            quarter_duration = beat_duration / 4.0;
+        }
+
         let timestamp_event = timestamp_event_accumulated;
-        timestamp_event_accumulated += beat_duration * 4;// ¿is the duration is expressed in quarters?
+        timestamp_event_accumulated += quarter_duration * length_in_steps;
 
         let json_section_notes = json_read_array(json_section, "sectionNotes");
         let json_section_notes_length = json_read_array_length(json_section_notes);

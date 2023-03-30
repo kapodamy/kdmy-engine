@@ -526,7 +526,6 @@ namespace Engine.Game {
         }
 
         public int Scroll(double song_timestamp, DDRKeysFIFO ddrkeys_fifo, PlayerStats playerstats, WeekScript weekscript) {
-
             StrumNote[] chart_notes = this.chart_notes;
             int chart_notes_size = this.chart_notes_size;
             float marker_duration = this.marker_duration;
@@ -886,6 +885,8 @@ L_discard_key_event:
         }
 
         public void ScrollAuto(double song_timestamp, PlayerStats playerstats, WeekScript weekscript) {
+            if (this.chart_notes_size < 1) return;
+
             StrumNote[] chart_notes = this.chart_notes;
             NoteAttribute[] attribute_notes = this.attribute_notes;
             int chart_notes_size = this.chart_notes_size;
@@ -997,7 +998,7 @@ L_discard_key_event:
         }
 
         public int FindPenaltiesNoteHit(double song_timestamp, DDRKeysFIFO ddrkeys_fifo, PlayerStats playerstats, WeekScript weekscript) {
-            if (ddrkeys_fifo.available < 0) return 0;
+            if (ddrkeys_fifo.available < 1 || this.chart_notes_size < 1) return 0;
 
             StrumNote[] chart_notes = this.chart_notes;
             int chart_notes_size = this.chart_notes_size;
@@ -1066,7 +1067,7 @@ L_discard_key_event:
         }
 
         public int FindPenaltiesEmptyHit(double song_timestamp, DDRKeysFIFO ddrkeys_fifo, PlayerStats playerstats) {
-            if (ddrkeys_fifo.available < 1) return 0;
+            if (ddrkeys_fifo.available < 1 || this.chart_notes_size < 1) return 0;
 
             int keys_processed = 0;
 

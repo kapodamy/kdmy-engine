@@ -2551,11 +2551,13 @@ namespace Engine.Game.Gameplay {
                 double song_timestamp2 = song_timestamp;
 
                 //
-                // If Strums.SetDrawOffset() is not used, enable this line
+                // If Strums::SetDrawOffset() is not used, enable this line
                 //
                 song_timestamp2 -= EngineSettings.input_offset;
 
-                //double missed_milliseconds = 0.0;
+                // check camera/alt-anims events
+                Week.PeekChartEvents(roundcontext, song_timestamp);
+
                 bool has_hits = false, has_misses = false;
 
                 for (int i = 0 ; i < roundcontext.players_size ; i++) {
@@ -2621,8 +2623,6 @@ namespace Engine.Game.Gameplay {
                     }
                 }
 
-
-                Week.PeekChartEvents(roundcontext, song_timestamp);
 
                 if (Week.BEAT_WATCHER.Poll()) {
                     // bump UI

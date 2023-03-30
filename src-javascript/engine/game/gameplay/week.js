@@ -2544,6 +2544,9 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         //
         song_timestamp2 -= SETTINGS.input_offset;
 
+        // check camera/alt-anims events
+        await week_peek_chart_events(roundcontext, song_timestamp);
+
         let has_misses = 0, has_hits = 0;
 
         for (let i = 0; i < roundcontext.players_size; i++) {
@@ -2609,7 +2612,6 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
             }
         }
 
-        await week_peek_chart_events(roundcontext, song_timestamp);
 
         if (beatwatcher_poll(WEEK_BEAT_WATCHER)) {
             // bump UI

@@ -94,6 +94,7 @@ namespace Engine.Game.Gameplay.Helpers {
             bool last_alt_anim_player = false;
             bool last_alt_anim_opponent = false;
             float beat_duration = Math2D.BeatsPerMinuteToBeatPerMilliseconds(this.bpm);
+            float quarter_duration = beat_duration / 4f;
             double timestamp_event_accumulated = 0;
 
             for (int i = 0 ; i < json_notes_length ; i++) {
@@ -103,18 +104,19 @@ namespace Engine.Game.Gameplay.Helpers {
                 //long type_of_section = JSONParser.ReadNumberLong(json_section, "typeOfSection", 0L);
                 //if (type_of_section != 0L) throw new Exception("Unknown typeOfSection=" + type_of_section);
 
-                // lengthInSteps appears to be used only in the chart editor
-                //long lenght_in_steps = JSONParser.ReadNumberLong(json_section, "lengthInSteps", 16L);
-                //if (lenght_in_steps != 16L) throw new Exception("Unknown lengthInSteps=" + lenght_in_steps);
-
+                long length_in_steps = JSONParser.ReadNumberLong(json_section, "lengthInSteps", 16L);
                 bool must_hit_section = JSONParser.ReadBoolean(json_section, "mustHitSection", false);
                 bool alt_anim = JSONParser.ReadBoolean(json_section, "altAnim", false);
                 bool change_bpm = JSONParser.ReadBoolean(json_section, "changeBPM", false);
                 double bpm = JSONParser.ReadNumberDouble(json_section, "bpm", 100.0);
 
-                if (change_bpm) beat_duration = Math2D.BeatsPerMinuteToBeatPerMilliseconds((float)bpm);
+                if (change_bpm) {
+                    beat_duration = Math2D.BeatsPerMinuteToBeatPerMilliseconds((float)bpm);
+                    quarter_duration = beat_duration / 4f;
+                }
+
                 double timestamp_event = timestamp_event_accumulated;
-                timestamp_event_accumulated += beat_duration * 4;// ¿is the duration is expressed in quarters?
+                timestamp_event_accumulated += quarter_duration * length_in_steps;
 
                 JSONToken json_section_notes = JSONParser.ReadArray(json_section, "sectionNotes");
                 int json_section_notes_length = JSONParser.ReadArrayLength(json_section_notes);

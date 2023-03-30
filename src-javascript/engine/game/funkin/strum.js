@@ -828,6 +828,8 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
 }
 
 function strum_scroll_auto(strum, song_timestamp, playerstats, weekscript) {
+    if (strum.chart_notes_size < 1) return;
+
     const chart_notes = strum.chart_notes;
     const attribute_notes = strum.attribute_notes;
     const chart_notes_size = strum.chart_notes_size;
@@ -940,7 +942,7 @@ function strum_force_key_release(strum) {
 }
 
 function strum_find_penalties_note_hit(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscript) {
-    if (ddrkeys_fifo.available < 0) return 0;
+    if (ddrkeys_fifo.available < 1 || strum.chart_notes_size < 1) return 0;
 
     const chart_notes = strum.chart_notes;
     const chart_notes_size = strum.chart_notes_size;
@@ -1009,7 +1011,7 @@ function strum_find_penalties_note_hit(strum, song_timestamp, ddrkeys_fifo, play
 }
 
 function strum_find_penalties_empty_hit(strum, song_timestamp, ddrkeys_fifo, playerstats) {
-    if (ddrkeys_fifo.available < 1) return 0;
+    if (ddrkeys_fifo.available < 1 || strum.chart_notes_size < 1) return 0;
 
     let keys_processed = 0;
 
