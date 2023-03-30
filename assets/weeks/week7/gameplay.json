@@ -9,7 +9,7 @@
 		],
 		"distributionsModels": {
 			"modelSickEffect": "./noteSplashes_model.json"
-		}.
+		},
         "girlfriend": {
             "manifest": "./GIRLFRIEND_TANKMAN.json"
         }

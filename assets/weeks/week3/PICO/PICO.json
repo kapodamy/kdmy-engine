@@ -23,17 +23,17 @@
     "actions": {
 
         "sing": [
-            { "direction": "left",   "anim": "pico Up note"    },
-            { "direction": "down",   "anim": "Pico Down Note"  },
-            { "direction": "up",     "anim": "pico Up note"    },
-            { "direction": "right",  "anim": "Pico Note Right" }
+            { "direction": "left",   "anim": "Pico NOTE LEFT",  "offsetX": -82 },
+            { "direction": "down",   "anim": "Pico Down Note",  "offsetX": -96 },
+            { "direction": "up",     "anim": "pico Up note",    "offsetX": -24 },
+            { "direction": "right",  "anim": "Pico Note Right", "offsetX": 44  }
         ],
 
         "miss": [
-            { "direction": "left",   "anim": "pico Up note miss"    },
-            { "direction": "down",   "anim": "Pico Down Note MISS"  },
-            { "direction": "up",     "anim": "pico Up note miss"    },
-            { "direction": "right",  "anim": "Pico Note Right Miss" }
+            { "direction": "left",   "anim": "Pico NOTE LEFT miss",     "offsetX": -82                  },
+            { "direction": "down",   "anim": "Pico Down Note MISS",     "offsetX": -102, "offsetY": -48 },
+            { "direction": "up",     "anim": "pico Up note miss",       "offsetX": -22                  },
+            { "direction": "right",  "anim": "Pico Note Right Miss",    "offsetX": 34                   }
         ],
 
         "idle": { "anim": "Pico Idle Dance" }

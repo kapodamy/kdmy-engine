@@ -11,10 +11,10 @@
     "actions": {
 
         "sing": [
-            { "direction": "left",   "anim": "Mom Left Pose" },
-            { "direction": "down",   "anim": "MOM DOWN POSE" },
-            { "direction": "up",     "anim": "Mom Up Pose" },
-            { "direction": "right",  "anim": "Mom Right Pose" }
+            { "direction": "left",   "anim": "Mom Left Pose",   "offsetX": -74  },
+            { "direction": "down",   "anim": "MOM DOWN POSE"                    },
+            { "direction": "up",     "anim": "Mom Up Pose",     "offsetX": 18   },
+            { "direction": "right",  "anim": "Mom Right Pose"                   }
         ],
 
         "idle": { "anim": "Mom Idle" }

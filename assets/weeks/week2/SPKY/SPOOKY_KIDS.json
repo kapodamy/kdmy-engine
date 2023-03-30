@@ -12,10 +12,10 @@
     "actions": {
 
         "sing": [
-            { "direction": "left",   "anim": "note sing left" },
-            { "direction": "down",   "anim": "spooky DOWN note" },
-            { "direction": "up",     "anim": "spooky UP NOTE" },
-            { "direction": "right",  "anim": "spooky sing right" }
+            { "direction": "left",   "anim": "note sing left",      "offsetX": -126 },
+            { "direction": "down",   "anim": "spooky DOWN note"                     },
+            { "direction": "up",     "anim": "spooky UP NOTE"                       },
+            { "direction": "right",  "anim": "spooky sing right",   "offsetX": 115  }
         ],
 
         "idle": { "anim": "spooky dance idle" }

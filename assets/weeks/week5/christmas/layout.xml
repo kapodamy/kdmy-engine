@@ -28,9 +28,11 @@
 		<To x="-186" y="789" z="0.8006666732311258" />
 	</Camera>
 	<Camera offsetZoom="false" name="camera_evil_opponent">
+		<Offset x="0" y="0" z="1.0" />
 		<To x="84" y="-78" z="0.8833333373546609" />
 	</Camera>
 	<Camera offsetZoom="false" name="camera_evil_player">
+		<Offset x="0" y="0" z="1.0" />
 		<To x="-447" y="-54" z="0.9560000016689307" />
 	</Camera>
 	

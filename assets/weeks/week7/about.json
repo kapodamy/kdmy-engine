@@ -2,7 +2,7 @@
     "$schema": "../../../../docs/about.schema.json",
     "description": "TANKMAN",
     "songs": [
-        { "freeplayUnlockDirective": "WEEK7", "name": "Ugh", "freeplaySongFilename": "funkin/songs/stress/.ogg" },
+        { "freeplayUnlockDirective": "WEEK7", "name": "Ugh", "freeplaySongFilename": "funkin/songs/ugh/.ogg" },
         { "freeplayUnlockDirective": "WEEK7", "name": "Guns", "freeplaySongFilename": "funkin/songs/guns/.ogg" },
         { "freeplayUnlockDirective": "WEEK7", "name": "Stress", "freeplaySongFilename": "funkin/songs/stress/.ogg" }
     ],

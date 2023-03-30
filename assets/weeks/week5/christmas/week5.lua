@@ -31,6 +31,7 @@ function f_beforeready(from_retry)
         return
     end
     stage:stop_all_triggers()
+    place_lemon_demon(stage)
     week_change_character_camera_name(true, "camera_evil_opponent")
     week_change_character_camera_name(false, "camera_evil_player")
     if from_retry or in_freeplay_mode then
@@ -44,7 +45,6 @@ function f_beforeready(from_retry)
     week_set_halt(true)
     stage:trigger_action(nil, "fade_lights")
     week_ui_set_visibility(false)
-    place_lemon_demon(stage)
     stage:trigger_action(nil, "lights_on")
     timer_callback_timeout(
         800,

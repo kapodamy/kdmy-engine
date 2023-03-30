@@ -16,10 +16,10 @@
     "actions": {
 
         "sing": [
-            { "direction": "left",   "anim": "Monster left note"  },
-            { "direction": "down",   "anim": "monster down"       },
-            { "direction": "up",     "anim": "monster up note"    },
-            { "direction": "right",  "anim": "Monster Right note" }
+            { "direction": "left",   "anim": "Monster left note",   "offsetX": 12 },
+            { "direction": "down",   "anim": "monster down",        "offsetX": 46 },
+            { "direction": "up",     "anim": "monster up note",     "offsetX": 32 },
+            { "direction": "right",  "anim": "Monster Right note",  "offsetX": 60 }
         ],
 
         "miss": [],

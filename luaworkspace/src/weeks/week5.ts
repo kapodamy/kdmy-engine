@@ -35,6 +35,9 @@ function f_beforeready(from_retry: boolean): void {
     // stop bop trigger
     stage.stop_all_triggers();
 
+    // move lemon demon (spawns in parents location)
+    place_lemon_demon(stage);
+
     // change cameras focus
     week_change_character_camera_name(true, "camera_evil_opponent");
     week_change_character_camera_name(false, "camera_evil_player");
@@ -62,9 +65,6 @@ function f_beforeready(from_retry: boolean): void {
     stage.trigger_action(null, "fade_lights");
 
     week_ui_set_visibility(false);
-
-    // step 2: move lemon demon (spawns in parents location)
-    place_lemon_demon(stage);
 
     // step 4: play "lights_on" sound 
     stage.trigger_action(null, "lights_on");

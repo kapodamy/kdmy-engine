@@ -20,10 +20,10 @@
     "actions": {
 
         "sing": [
-            { "direction": "left",   "anim": "Parent Left Note"  },
-            { "direction": "down",   "anim": "Parent Down Note"  },
-            { "direction": "up",     "anim": "Parent Up Note"    },
-            { "direction": "right",  "anim": "Parent Right Note" }
+            { "direction": "left",   "anim": "Parent Left Note",    "offsetX": 24 },
+            { "direction": "down",   "anim": "Parent Down Note",    "offsetX": 34 },
+            { "direction": "up",     "anim": "Parent Up Note",      "offsetX": 38 },
+            { "direction": "right",  "anim": "Parent Right Note",   "offsetX": -5 }
         ],
 
         "miss": [],
