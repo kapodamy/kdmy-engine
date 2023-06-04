@@ -79,3 +79,4 @@ internal delegate IntPtr glMapBuffer(GLenum target, GLenum access);
 internal delegate IntPtr glUnmapBuffer(GLenum target);
 internal delegate void glFinish();
 internal delegate void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels);
+internal delegate void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void* data);

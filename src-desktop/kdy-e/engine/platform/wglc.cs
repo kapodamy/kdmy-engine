@@ -132,11 +132,11 @@ namespace Engine.Platform {
         public void ChangeTextureFiltering(PVRContext pvrctx) {
             WebGL2RenderingContext gl = pvrctx.webopengl.gl;
 
-            int filter;
+            GLenum filter;
             if (pvrctx.render_antialiasing == PVRContextFlag.DISABLE)
-                filter = gl.NEAREST;
+                filter = gl.NEAREST_MIPMAP_NEAREST;
             else
-                filter = gl.LINEAR;
+                filter = gl.LINEAR_MIPMAP_LINEAR;
 
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);

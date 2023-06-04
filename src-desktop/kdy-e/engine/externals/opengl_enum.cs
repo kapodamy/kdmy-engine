@@ -3,6 +3,22 @@
 namespace Engine.Externals {
 
     public enum GLenum : uint {
+        // ---------------- GL_EXT_texture_compression_s3tc ----------------
+        // https://registry.khronos.org/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt
+        GL_COMPRESSED_RGB_S3TC_DXT1_EXT = 0x83F0,
+        GL_COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1,
+        GL_COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2,
+        GL_COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3,
+        // ---------------- GL_EXT_texture_compression_s3tc ----------------
+
+        // ---------------- GL_EXT_texture_compression_bptc ----------------
+        // https://registry.khronos.org/OpenGL/extensions/EXT/EXT_texture_compression_bptc.txt
+        GL_COMPRESSED_RGBA_BPTC_UNORM_ARB = 0x8E8C,
+        GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB = 0x8E8D,
+        GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB = 0x8E8E,
+        GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB = 0x8E8F,
+        // ---------------- GL_EXT_texture_compression_bptc ----------------
+
         GL_NONE = 0,
         GL_STATIC_DRAW = 0x88E4,
         GL_PROXY_TEXTURE_2D = 0x8064,
@@ -21,7 +37,11 @@ namespace Engine.Externals {
         GL_COMPILE_STATUS = 0x8B81,
         GL_COLOR_BUFFER_BIT = 0x00004000,
         GL_LINEAR = 0x2601,
+        GL_LINEAR_MIPMAP_LINEAR = 0x2703,
+        GL_LINEAR_MIPMAP_NEAREST = 0x2701,
         GL_NEAREST = 0x2600,
+        GL_NEAREST_MIPMAP_LINEAR = 0x2702,
+        GL_NEAREST_MIPMAP_NEAREST = 0x2700,
         GL_RGBA = 0x1908,
         GL_UNSIGNED_BYTE = 0x1401,
         GL_CLAMP_TO_EDGE = 0x812F,
@@ -104,7 +124,8 @@ namespace Engine.Externals {
         GL_PIXEL_UNPACK_BUFFER = 0x88EC,
         GL_STREAM_DRAW = 0x88E0,
         GL_WRITE_ONLY = 0x88B9,
-        GL_LINEAR_MIPMAP_NEAREST = 0x2701
+        GL_NUM_EXTENSIONS = 0x821D,
+        GL_EXTENSIONS = 0x1F03
     }
 
     public partial class WebGL2RenderingContext {
@@ -125,8 +146,12 @@ namespace Engine.Externals {
         public readonly GLenum FRAGMENT_SHADER = GLenum.GL_FRAGMENT_SHADER;
         public readonly GLenum COMPILE_STATUS = GLenum.GL_COMPILE_STATUS;
         public readonly uint COLOR_BUFFER_BIT = (uint)GLenum.GL_COLOR_BUFFER_BIT;
-        public readonly int LINEAR = (int)GLenum.GL_LINEAR;
-        public readonly int NEAREST = (int)GLenum.GL_NEAREST;
+        public readonly GLenum LINEAR = GLenum.GL_LINEAR;
+        public readonly GLenum LINEAR_MIPMAP_LINEAR = GLenum.GL_LINEAR_MIPMAP_LINEAR;
+        public readonly GLenum LINEAR_MIPMAP_NEAREST = GLenum.GL_LINEAR_MIPMAP_NEAREST;
+        public readonly GLenum NEAREST = GLenum.GL_NEAREST;
+        public readonly GLenum NEAREST_MIPMAP_LINEAR = GLenum.GL_NEAREST_MIPMAP_LINEAR;
+        public readonly GLenum NEAREST_MIPMAP_NEAREST = GLenum.GL_NEAREST_MIPMAP_NEAREST;
         public readonly GLenum RGBA = GLenum.GL_RGBA;
         public readonly GLenum UNSIGNED_BYTE = GLenum.GL_UNSIGNED_BYTE;
         public readonly GLenum CLAMP_TO_EDGE = GLenum.GL_CLAMP_TO_EDGE;
@@ -199,7 +224,6 @@ namespace Engine.Externals {
         public readonly GLenum PIXEL_UNPACK_BUFFER = GLenum.GL_PIXEL_UNPACK_BUFFER;
         public readonly GLenum STREAM_DRAW = GLenum.GL_STREAM_DRAW;
         public readonly GLenum WRITE_ONLY = GLenum.GL_WRITE_ONLY;
-        public readonly GLenum LINEAR_MIPMAP_NEAREST = GLenum.GL_LINEAR_MIPMAP_NEAREST;
     }
 
 }

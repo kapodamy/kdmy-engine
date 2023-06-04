@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using Engine.Platform;
-using static System.Windows.Forms.DataFormats;
 
 namespace Engine.Externals {
 
@@ -317,11 +316,45 @@ namespace Engine.Externals {
             NativeMethods.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
         }
 
+        internal void compressedTexSubImage2D(GLenum target, int level, int xoffset, int yoffset, int width, int height, GLenum format, DataView srcData) {
+            if (xoffset != 0 || yoffset != 0) throw new NotSupportedException("compressedTexSubImage2D() xoffset and yoffset are not supported");
+            NativeMethods.glCompressedTexImage2D(target, level, format, width, height, 0, srcData.length, srcData.pointer);
+        }
+
         internal IWebGLExtension getExtension(string name) {
+            string gl_ext_name;
+            IWebGLExtension ext;
+
             switch (name) {
+                case "WEBGL_compressed_texture_s3tc":
+                    gl_ext_name = "GL_EXT_texture_compression_s3tc";
+                    ext = new WEBGL_compressed_texture_s3tc();
+                    break;
+                case "EXT_texture_compression_bptc":
+                    // in GLES use "GL_EXT_texture_compression_bptc" instead
+                    gl_ext_name = "GL_ARB_texture_compression_bptc";
+                    ext = new EXT_texture_compression_bptc();
+                    break;
                 default:
                     return null;
             }
+
+            int[] count = new int[1];
+            NativeMethods.glGetIntegerv(GLenum.GL_NUM_EXTENSIONS, count);
+
+            for (uint i = 0 ; i < count[0] ; i++) {
+                IntPtr readed_ext_name_ptr = NativeMethods.glGetStringi(GLenum.GL_EXTENSIONS, i);
+                string readed_ext_name = Marshal.PtrToStringAnsi(readed_ext_name_ptr);
+
+                if (readed_ext_name == gl_ext_name) {
+                    return ext;
+                }
+            }
+
+#if DEBUG
+            Console.WriteLine($"[WARN] {gl_ext_name} (${name}) not found or not supported");
+#endif
+            return null;
         }
 
         internal void pixelStorei(GLenum pname, int param) {
@@ -525,6 +558,20 @@ namespace Engine.Externals {
         }
 
 #pragma warning restore IDE1006
+
+        public struct DataView {
+            internal readonly int length;
+            internal readonly IntPtr pointer;
+
+            public DataView(IntPtr buffer, int byteOffset, int byteLength) {
+                if (buffer == IntPtr.Zero) throw new ArgumentNullException("buffer");
+                if (byteLength < 1) throw new ArgumentOutOfRangeException("byteLength");
+                if (byteOffset < 0 || byteOffset >= byteLength) throw new ArgumentOutOfRangeException("byteOffset");
+
+                pointer = IntPtr.Add(buffer, byteOffset);
+                length = byteLength;
+            }
+        }
 
     }
 }

@@ -24,6 +24,7 @@ namespace Engine.Externals {
             internal delegate void DglClearDepth(GLclampd depth);
             internal delegate void DglShadeModel(GLenum mode);
             internal delegate IntPtr DglGetString(GLenum name);
+            internal delegate IntPtr DglGetStringi(GLenum name, GLuint index);
             internal delegate void DglFlush();
             internal delegate GLenum DglGetError();
             internal delegate void DglActiveTexture(GLenum texture);
@@ -98,6 +99,7 @@ namespace Engine.Externals {
             internal delegate GLboolean DglUnmapBuffer(GLenum target);
             internal delegate void DglFinish();
             internal delegate void DglTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, IntPtr pixels);
+            internal delegate void DglCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, IntPtr data);
 
 #pragma warning disable CS0649
             internal static readonly DglViewport glViewport;
@@ -106,6 +108,7 @@ namespace Engine.Externals {
             internal static readonly DglClearDepth glClearDepth;
             internal static readonly DglShadeModel glShadeModel;
             internal static readonly DglGetString glGetString;
+            internal static readonly DglGetStringi glGetStringi;
             internal static readonly DglFlush glFlush;
             internal static readonly DglGetError glGetError;
             internal static readonly DglActiveTexture glActiveTexture;
@@ -180,6 +183,7 @@ namespace Engine.Externals {
             internal static readonly DglUnmapBuffer glUnmapBuffer;
             internal static readonly DglFinish glFinish;
             internal static readonly DglTexSubImage2D glTexSubImage2D;
+            internal static readonly DglCompressedTexImage2D glCompressedTexImage2D;
 #pragma warning restore CS0649
 
 
