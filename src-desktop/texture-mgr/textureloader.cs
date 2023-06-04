@@ -5,7 +5,6 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 
 namespace Engine.Platform {
@@ -38,11 +37,12 @@ namespace Engine.Platform {
             return ReadTexture(bitmap);
         }
 
-        public static ImageData ReadTexture(Stream stream) {
+        public static ImageData ReadTexture(byte[] buffer) {
             Bitmap bitmap;
-
             try {
+                using (MemoryStream stream = new MemoryStream(buffer, false)) {
                 bitmap = new Bitmap(stream);
+                }
             } catch (Exception e) {
                 Console.Error.WriteLine(
                     $"[ERROR] read_texture_from_stream() failed to read/parse:\n" + e.Message

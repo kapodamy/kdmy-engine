@@ -15,10 +15,10 @@ namespace Engine.Platform {
 
         public static ImageData ReadTexture(string src) {
             string absolute_path = IO.GetAbsolutePath(src, true, true);
-            Stream stream = PreloadCache.RetrieveStream(absolute_path);
+            byte[] buffer = PreloadCache.RetrieveBuffer(absolute_path);
 
-            if (stream != null)
-                return TextureLoader.ReadTexture(stream);
+            if (buffer != null)
+                return TextureLoader.ReadTexture(buffer);
             else
                 return TextureLoader.ReadTexture(absolute_path);
         }
