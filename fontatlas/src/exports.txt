@@ -5,3 +5,5 @@ _fontatlas_atlas_destroy_JS
 _fontatlas_atlas_build_complete
 _fontatlas_enable_sdf
 _fontatlas_get_version
+_malloc
+_free

@@ -1,5 +1,5 @@
-1. clone the freetype
-2. open powershell prompt 
+1. clone or download freetype sourcecode
+2. open powershell/msys2 prompt
 3. inside of the folder run the following commands (needs emscripten):
 
 mkdir build
@@ -9,8 +9,6 @@ cd build
 emcmake cmake ..
 
 emmake make
-
-emmake make install
 
 
 4. step 3 fail if the build folder already exists or is not empty

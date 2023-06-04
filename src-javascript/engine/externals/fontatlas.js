@@ -96,30 +96,16 @@ function locateFile(path) {
     return scriptDirectory + path
 }
 var read_, readAsync, readBinary, setWindowTitle;
-function logExceptionOnExit(e) {
-    if (e instanceof ExitStatus)
-        return;
-    let toLog = e;
-    err("exiting due to exception: " + toLog)
-}
-var fs;
-var nodePath;
-var requireNodeFS;
 if (ENVIRONMENT_IS_NODE) {
+    var fs = require("fs");
+    var nodePath = require("path");
     if (ENVIRONMENT_IS_WORKER) {
-        scriptDirectory = require("path").dirname(scriptDirectory) + "/"
+        scriptDirectory = nodePath.dirname(scriptDirectory) + "/"
     } else {
         scriptDirectory = __dirname + "/"
     }
-    requireNodeFS = () => {
-        if (!nodePath) {
-            fs = require("fs");
-            nodePath = require("path")
-        }
-    };
-    read_ = function shell_read(filename, binary) {
-        requireNodeFS();
-        filename = nodePath["normalize"](filename);
+    read_ = (filename, binary) => {
+        filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
         return fs.readFileSync(filename, binary ? undefined : "utf8")
     };
     readBinary = filename => {
@@ -129,46 +115,42 @@ if (ENVIRONMENT_IS_NODE) {
         }
         return ret
     };
-    readAsync = (filename, onload, onerror) => {
-        requireNodeFS();
-        filename = nodePath["normalize"](filename);
-        fs.readFile(filename, function (err, data) {
+    readAsync = (filename, onload, onerror, binary = true) => {
+        filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
+        fs.readFile(filename, binary ? undefined : "utf8", (err, data) => {
             if (err)
                 onerror(err);
             else
-                onload(data.buffer)
+                onload(binary ? data.buffer : data)
         })
     };
-    if (process["argv"].length > 1) {
-        thisProgram = process["argv"][1].replace(/\\/g, "/")
+    if (!ModuleFontAtlas["thisProgram"] && process.argv.length > 1) {
+        thisProgram = process.argv[1].replace(/\\/g, "/")
     }
-    arguments_ = process["argv"].slice(2);
+    arguments_ = process.argv.slice(2);
     if (typeof module != "undefined") {
         module["exports"] = ModuleFontAtlas
     }
-    process["on"]("uncaughtException", function (ex) {
-        if (!(ex instanceof ExitStatus)) {
+    process.on("uncaughtException", ex => {
+        if (ex !== "unwind" && !(ex instanceof ExitStatus) && !(ex.context instanceof ExitStatus)) {
             throw ex
         }
     });
-    process["on"]("unhandledRejection", function (reason) {
-        throw reason
-    });//@ts-ignore
-    quit_ = (status, toThrow) => {
-        if (keepRuntimeAlive()) {
-            process["exitCode"] = status;
-            throw toThrow
-        }
-        logExceptionOnExit(toThrow);
-        process["exit"](status)
-    };
-    ModuleFontAtlas["inspect"] = function () {
-        return "[Emscripten ModuleFontAtlas object]"
+    var nodeMajor = process.versions.node.split(".")[0];
+    if (nodeMajor < 15) {
+        process.on("unhandledRejection", reason => {
+            throw reason
+        })
     }
+    quit_ = (status, toThrow) => {
+        process.exitCode = status;
+        throw toThrow
+    };
+    ModuleFontAtlas["inspect"] = () => "[Emscripten ModuleFontAtlas object]"
 } else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
     if (ENVIRONMENT_IS_WORKER) {
         scriptDirectory = self.location.href
-    } else if (typeof document != "undefined" && document.currentScript) {//@ts-ignore
+    } else if (typeof document != "undefined" && document.currentScript) {
         scriptDirectory = document.currentScript.src
     }
     if (scriptDirectory.indexOf("blob:") !== 0) {
@@ -209,7 +191,7 @@ if (ENVIRONMENT_IS_NODE) {
     setWindowTitle = title => document.title = title
 } else {}
 var out = ModuleFontAtlas["print"] || console.log.bind(console);
-var err = ModuleFontAtlas["printErr"] || console.warn.bind(console);
+var err = ModuleFontAtlas["printErr"] || console.error.bind(console);
 Object.assign(ModuleFontAtlas, moduleOverrides);
 moduleOverrides = null;
 if (ModuleFontAtlas["arguments"])
@@ -218,99 +200,6 @@ if (ModuleFontAtlas["thisProgram"])
     thisProgram = ModuleFontAtlas["thisProgram"];
 if (ModuleFontAtlas["quit"])
     quit_ = ModuleFontAtlas["quit"];
-var POINTER_SIZE = 4;
-var POINTER_SIZE = 4;
-function warnOnce(text) {//@ts-ignore
-    if (!warnOnce.shown)//@ts-ignore
-        warnOnce.shown = {};//@ts-ignore
-    if (!warnOnce.shown[text]) {//@ts-ignore
-        warnOnce.shown[text] = 1;
-        err(text)
-    }
-}
-function uleb128Encode(n) {
-    if (n < 128) {
-        return [n]
-    }
-    return [n % 128 | 128, n >> 7]
-}
-function convertJsFunctionToWasm(func, sig) {//@ts-ignore
-    if (typeof WebAssembly.Function == "function") {
-        var typeNames = {
-            "i": "i32",
-            "j": "i64",
-            "f": "f32",
-            "d": "f64",
-            "p": "i32"
-        };
-        var type = {
-            parameters: [],
-            results: sig[0] == "v" ? [] : [typeNames[sig[0]]]
-        };
-        for (var i = 1; i < sig.length; ++i) {
-            type.parameters.push(typeNames[sig[i]])
-        }//@ts-ignore
-        return new WebAssembly.Function(type, func)
-    }
-    var typeSection = [1, 96];
-    var sigRet = sig.slice(0, 1);
-    var sigParam = sig.slice(1);
-    var typeCodes = {
-        "i": 127,
-        "p": 127,
-        "j": 126,
-        "f": 125,
-        "d": 124
-    };
-    typeSection = typeSection.concat(uleb128Encode(sigParam.length));
-    for (var i = 0; i < sigParam.length; ++i) {
-        typeSection.push(typeCodes[sigParam[i]])
-    }
-    if (sigRet == "v") {
-        typeSection.push(0)
-    } else {
-        typeSection = typeSection.concat([1, typeCodes[sigRet]])
-    }
-    typeSection = [1].concat(uleb128Encode(typeSection.length), typeSection);
-    var bytes = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0].concat(typeSection, [2, 7, 1, 1, 101, 1, 102, 0, 0, 7, 5, 1, 1, 102, 0, 0]));//@ts-ignore
-    var module = new WebAssembly.ModuleFontAtlas(bytes);
-    var instance = new WebAssembly.Instance(module, {
-        "e": {
-            "f": func
-        }
-    });
-    var wrappedFunc = instance.exports["f"];
-    return wrappedFunc
-}
-var freeTableIndexes = [];
-var functionsInTableMap;
-function getEmptyTableSlot() {
-    if (freeTableIndexes.length) {
-        return freeTableIndexes.pop()
-    }
-    try {
-        wasmTable.grow(1)
-    } catch (err) {
-        if (!(err instanceof RangeError)) {
-            throw err
-        }
-        throw "Unable to grow wasm table. Set ALLOW_TABLE_GROWTH."
-    }
-    return wasmTable.length - 1
-}
-function updateTableMap(offset, count) {
-    for (var i = offset; i < offset + count; i++) {
-        var item = getWasmTableEntry(i);
-        if (item) {
-            functionsInTableMap.set(item, i)
-        }
-    }
-}
-var tempRet0 = 0;
-var setTempRet0 = value => {
-    tempRet0 = value
-};
-var getTempRet0 = () => tempRet0;
 var wasmBinary;
 if (ModuleFontAtlas["wasmBinary"])
     wasmBinary = ModuleFontAtlas["wasmBinary"];
@@ -326,188 +215,26 @@ function assert(condition, text) {
         abort(text)
     }
 }
-function getCFunc(ident) {
-    var func = ModuleFontAtlas["_" + ident];
-    return func
+var HEAP8, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPU32, HEAPF32, HEAPF64;
+function updateMemoryViews() {
+    var b = wasmMemory.buffer;
+    ModuleFontAtlas["HEAP8"] = HEAP8 = new Int8Array(b);
+    ModuleFontAtlas["HEAP16"] = HEAP16 = new Int16Array(b);
+    ModuleFontAtlas["HEAP32"] = HEAP32 = new Int32Array(b);
+    ModuleFontAtlas["HEAPU8"] = HEAPU8 = new Uint8Array(b);
+    ModuleFontAtlas["HEAPU16"] = HEAPU16 = new Uint16Array(b);
+    ModuleFontAtlas["HEAPU32"] = HEAPU32 = new Uint32Array(b);
+    ModuleFontAtlas["HEAPF32"] = HEAPF32 = new Float32Array(b);
+    ModuleFontAtlas["HEAPF64"] = HEAPF64 = new Float64Array(b)
 }
-function ccall(ident, returnType, argTypes, args, opts) {
-    var toC = {
-        "string": function (str) {
-            var ret = 0;
-            if (str !== null && str !== undefined && str !== 0) {
-                var len = (str.length << 2) + 1;
-                ret = stackAlloc(len);
-                stringToUTF8(str, ret, len)
-            }
-            return ret
-        },
-        "array": function (arr) {
-            var ret = stackAlloc(arr.length);
-            writeArrayToMemory(arr, ret);
-            return ret
-        }
-    };
-    function convertReturnValue(ret) {
-        if (returnType === "string") {
-            return UTF8ToString(ret)
-        }
-        if (returnType === "boolean")
-            return Boolean(ret);
-        return ret
-    }
-    var func = getCFunc(ident);
-    var cArgs = [];
-    var stack = 0;
-    if (args) {
-        for (var i = 0; i < args.length; i++) {
-            var converter = toC[argTypes[i]];
-            if (converter) {
-                if (stack === 0)
-                    stack = stackSave();
-                cArgs[i] = converter(args[i])
-            } else {
-                cArgs[i] = args[i]
-            }
-        }
-    }
-    var ret = func.apply(null, cArgs);
-    function onDone(ret) {
-        if (stack !== 0)
-            stackRestore(stack);
-        return convertReturnValue(ret)
-    }
-    ret = onDone(ret);
-    return ret
-}
-var UTF8Decoder = typeof TextDecoder != "undefined" ? new TextDecoder("utf8") : undefined;
-function UTF8ArrayToString(heapOrArray, idx, maxBytesToRead) {
-    var endIdx = idx + maxBytesToRead;
-    var endPtr = idx;
-    while (heapOrArray[endPtr] && !(endPtr >= endIdx))
-        ++endPtr;
-    if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
-        return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr))
-    } else {
-        var str = "";
-        while (idx < endPtr) {
-            var u0 = heapOrArray[idx++];
-            if (!(u0 & 128)) {
-                str += String.fromCharCode(u0);
-                continue
-            }
-            var u1 = heapOrArray[idx++] & 63;
-            if ((u0 & 224) == 192) {
-                str += String.fromCharCode((u0 & 31) << 6 | u1);
-                continue
-            }
-            var u2 = heapOrArray[idx++] & 63;
-            if ((u0 & 240) == 224) {
-                u0 = (u0 & 15) << 12 | u1 << 6 | u2
-            } else {
-                u0 = (u0 & 7) << 18 | u1 << 12 | u2 << 6 | heapOrArray[idx++] & 63
-            }
-            if (u0 < 65536) {
-                str += String.fromCharCode(u0)
-            } else {
-                var ch = u0 - 65536;
-                str += String.fromCharCode(55296 | ch >> 10, 56320 | ch & 1023)
-            }
-        }
-    }
-    return str
-}
-function UTF8ToString(ptr, maxBytesToRead) {
-    return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : ""
-}
-function stringToUTF8Array(str, heap, outIdx, maxBytesToWrite) {
-    if (!(maxBytesToWrite > 0))
-        return 0;
-    var startIdx = outIdx;
-    var endIdx = outIdx + maxBytesToWrite - 1;
-    for (var i = 0; i < str.length; ++i) {
-        var u = str.charCodeAt(i);
-        if (u >= 55296 && u <= 57343) {
-            var u1 = str.charCodeAt(++i);
-            u = 65536 + ((u & 1023) << 10) | u1 & 1023
-        }
-        if (u <= 127) {
-            if (outIdx >= endIdx)
-                break;
-            heap[outIdx++] = u
-        } else if (u <= 2047) {
-            if (outIdx + 1 >= endIdx)
-                break;
-            heap[outIdx++] = 192 | u >> 6;
-            heap[outIdx++] = 128 | u & 63
-        } else if (u <= 65535) {
-            if (outIdx + 2 >= endIdx)
-                break;
-            heap[outIdx++] = 224 | u >> 12;
-            heap[outIdx++] = 128 | u >> 6 & 63;
-            heap[outIdx++] = 128 | u & 63
-        } else {
-            if (outIdx + 3 >= endIdx)
-                break;
-            heap[outIdx++] = 240 | u >> 18;
-            heap[outIdx++] = 128 | u >> 12 & 63;
-            heap[outIdx++] = 128 | u >> 6 & 63;
-            heap[outIdx++] = 128 | u & 63
-        }
-    }
-    heap[outIdx] = 0;
-    return outIdx - startIdx
-}
-function stringToUTF8(str, outPtr, maxBytesToWrite) {
-    return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite)
-}
-function lengthBytesUTF8(str) {
-    var len = 0;
-    for (var i = 0; i < str.length; ++i) {
-        var u = str.charCodeAt(i);
-        if (u >= 55296 && u <= 57343)
-            u = 65536 + ((u & 1023) << 10) | str.charCodeAt(++i) & 1023;
-        if (u <= 127)
-            ++len;
-        else if (u <= 2047)
-            len += 2;
-        else if (u <= 65535)
-            len += 3;
-        else
-            len += 4
-    }
-    return len
-}
-var UTF16Decoder = typeof TextDecoder != "undefined" ? new TextDecoder("utf-16le") : undefined;
-function writeArrayToMemory(array, buffer) {
-    HEAP8.set(array, buffer)
-}
-function writeAsciiToMemory(str, buffer, dontAddNull) {
-    for (var i = 0; i < str.length; ++i) {
-        HEAP8[buffer++ >> 0] = str.charCodeAt(i)
-    }
-    if (!dontAddNull)
-        HEAP8[buffer >> 0] = 0
-}
-var buffer, HEAP8, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPU32, HEAPF32, HEAPF64;
-function updateGlobalBufferAndViews(buf) {
-    buffer = buf;
-    ModuleFontAtlas["HEAP8"] = HEAP8 = new Int8Array(buf);
-    ModuleFontAtlas["HEAP16"] = HEAP16 = new Int16Array(buf);
-    ModuleFontAtlas["HEAP32"] = HEAP32 = new Int32Array(buf);
-    ModuleFontAtlas["HEAPU8"] = HEAPU8 = new Uint8Array(buf);
-    ModuleFontAtlas["HEAPU16"] = HEAPU16 = new Uint16Array(buf);
-    ModuleFontAtlas["HEAPU32"] = HEAPU32 = new Uint32Array(buf);
-    ModuleFontAtlas["HEAPF32"] = HEAPF32 = new Float32Array(buf);
-    ModuleFontAtlas["HEAPF64"] = HEAPF64 = new Float64Array(buf)
-}
-var INITIAL_MEMORY = ModuleFontAtlas["INITIAL_MEMORY"] || 16777216;
 var wasmTable;
 var __ATPRERUN__ = [];
 var __ATINIT__ = [];
 var __ATPOSTRUN__ = [];
 var runtimeInitialized = false;
+var runtimeKeepaliveCounter = 0;
 function keepRuntimeAlive() {
-    return noExitRuntime
+    return noExitRuntime || runtimeKeepaliveCounter > 0
 }
 function preRun() {
     if (ModuleFontAtlas["preRun"]) {
@@ -575,10 +302,9 @@ function removeRunDependency(id) {
         }
     }
 }
-function abort(what) { {
-        if (ModuleFontAtlas["onAbort"]) {
-            ModuleFontAtlas["onAbort"](what)
-        }
+function abort(what) {
+    if (ModuleFontAtlas["onAbort"]) {
+        ModuleFontAtlas["onAbort"](what)
     }
     what = "Aborted(" + what + ")";
     err(what);
@@ -607,157 +333,142 @@ function getBinary(file) {
         }
         if (readBinary) {
             return readBinary(file)
-        } else {
-            throw "both async and sync fetching of the wasm failed"
         }
+        throw "both async and sync fetching of the wasm failed"
     } catch (err) {
         abort(err)
     }
 }
-function getBinaryPromise() {
+function getBinaryPromise(binaryFile) {
     if (!wasmBinary && (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER)) {
-        if (typeof fetch == "function" && !isFileURI(wasmBinaryFile)) {
-            return fetch(wasmBinaryFile, {
+        if (typeof fetch == "function" && !isFileURI(binaryFile)) {
+            return fetch(binaryFile, {
                 credentials: "same-origin"
-            }).then(function (response) {
+            }).then(response => {
                 if (!response["ok"]) {
-                    throw "failed to load wasm binary file at '" + wasmBinaryFile + "'"
+                    throw "failed to load wasm binary file at '" + binaryFile + "'"
                 }
                 return response["arrayBuffer"]()
-            }).catch(function () {
-                return getBinary(wasmBinaryFile)
-            })
+            }).catch(() => getBinary(binaryFile))
         } else {
             if (readAsync) {
-                return new Promise(function (resolve, reject) {
-                    readAsync(wasmBinaryFile, function (response) {
-                        resolve(new Uint8Array(response))
-                    }, reject)
+                return new Promise((resolve, reject) => {
+                    readAsync(binaryFile, response => resolve(new Uint8Array(response)), reject)
                 })
             }
         }
     }
-    return Promise.resolve().then(function () {
-        return getBinary(wasmBinaryFile)
+    return Promise.resolve().then(() => getBinary(binaryFile))
+}
+function instantiateArrayBuffer(binaryFile, imports, receiver) {
+    return getBinaryPromise(binaryFile).then(binary => {
+        return WebAssembly.instantiate(binary, imports)
+    }).then(instance => {
+        return instance
+    }).then(receiver, reason => {
+        err("failed to asynchronously prepare wasm: " + reason);
+        abort(reason)
     })
+}
+function instantiateAsync(binary, binaryFile, imports, callback) {
+    if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) && !isFileURI(binaryFile) && !ENVIRONMENT_IS_NODE && typeof fetch == "function") {
+        return fetch(binaryFile, {
+            credentials: "same-origin"
+        }).then(response => {
+            var result = WebAssembly.instantiateStreaming(response, imports);
+            return result.then(callback, function (reason) {
+                err("wasm streaming compile failed: " + reason);
+                err("falling back to ArrayBuffer instantiation");
+                return instantiateArrayBuffer(binaryFile, imports, callback)
+            })
+        })
+    } else {
+        return instantiateArrayBuffer(binaryFile, imports, callback)
+    }
 }
 function createWasm() {
     var info = {
-        "env": asmLibraryArg,
-        "wasi_snapshot_preview1": asmLibraryArg
+        "env": wasmImports,
+        "wasi_snapshot_preview1": wasmImports
     };
     function receiveInstance(instance, module) {
         var exports = instance.exports;
         ModuleFontAtlas["asm"] = exports;
         wasmMemory = ModuleFontAtlas["asm"]["memory"];
-        updateGlobalBufferAndViews(wasmMemory.buffer);
+        updateMemoryViews();
         wasmTable = ModuleFontAtlas["asm"]["__indirect_function_table"];
         addOnInit(ModuleFontAtlas["asm"]["__wasm_call_ctors"]);
-        removeRunDependency("wasm-instantiate")
+        removeRunDependency("wasm-instantiate");
+        return exports
     }
     addRunDependency("wasm-instantiate");
     function receiveInstantiationResult(result) {
         receiveInstance(result["instance"])
     }
-    function instantiateArrayBuffer(receiver) {
-        return getBinaryPromise().then(function (binary) {
-            return WebAssembly.instantiate(binary, info)
-        }).then(function (instance) {
-            return instance
-        }).then(receiver, function (reason) {
-            err("failed to asynchronously prepare wasm: " + reason);
-            abort(reason)
-        })
-    }
-    function instantiateAsync() {
-        if (!wasmBinary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(wasmBinaryFile) && !isFileURI(wasmBinaryFile) && typeof fetch == "function") {
-            return fetch(wasmBinaryFile, {
-                credentials: "same-origin"
-            }).then(function (response) {
-                var result = WebAssembly.instantiateStreaming(response, info);
-                return result.then(receiveInstantiationResult, function (reason) {
-                    err("wasm streaming compile failed: " + reason);
-                    err("falling back to ArrayBuffer instantiation");
-                    return instantiateArrayBuffer(receiveInstantiationResult)
-                })
-            })
-        } else {
-            return instantiateArrayBuffer(receiveInstantiationResult)
-        }
-    }
     if (ModuleFontAtlas["instantiateWasm"]) {
         try {
-            var exports = ModuleFontAtlas["instantiateWasm"](info, receiveInstance);
-            return exports
+            return ModuleFontAtlas["instantiateWasm"](info, receiveInstance)
         } catch (e) {
             err("ModuleFontAtlas.instantiateWasm callback failed with error: " + e);
             return false
         }
     }
-    instantiateAsync();
+    instantiateAsync(wasmBinary, wasmBinaryFile, info, receiveInstantiationResult);
     return {}
 }
 var tempDouble;
 var tempI64;
+function ExitStatus(status) {
+    this.name = "ExitStatus";
+    this.message = "Program terminated with exit(" + status + ")";
+    this.status = status
+}
 function callRuntimeCallbacks(callbacks) {
     while (callbacks.length > 0) {
-        var callback = callbacks.shift();
-        if (typeof callback == "function") {
-            callback(ModuleFontAtlas);
+        callbacks.shift()(ModuleFontAtlas)
+    }
+}
+var UTF8Decoder = typeof TextDecoder != "undefined" ? new TextDecoder("utf8") : undefined;
+function UTF8ArrayToString(heapOrArray, idx, maxBytesToRead) {
+    var endIdx = idx + maxBytesToRead;
+    var endPtr = idx;
+    while (heapOrArray[endPtr] && !(endPtr >= endIdx))
+        ++endPtr;
+    if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
+        return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr))
+    }
+    var str = "";
+    while (idx < endPtr) {
+        var u0 = heapOrArray[idx++];
+        if (!(u0 & 128)) {
+            str += String.fromCharCode(u0);
             continue
         }
-        var func = callback.func;
-        if (typeof func == "number") {
-            if (callback.arg === undefined) {
-                getWasmTableEntry(func)()
-            } else {
-                getWasmTableEntry(func)(callback.arg)
-            }
+        var u1 = heapOrArray[idx++] & 63;
+        if ((u0 & 224) == 192) {
+            str += String.fromCharCode((u0 & 31) << 6 | u1);
+            continue
+        }
+        var u2 = heapOrArray[idx++] & 63;
+        if ((u0 & 240) == 224) {
+            u0 = (u0 & 15) << 12 | u1 << 6 | u2
         } else {
-            func(callback.arg === undefined ? null : callback.arg)
+            u0 = (u0 & 7) << 18 | u1 << 12 | u2 << 6 | heapOrArray[idx++] & 63
+        }
+        if (u0 < 65536) {
+            str += String.fromCharCode(u0)
+        } else {
+            var ch = u0 - 65536;
+            str += String.fromCharCode(55296 | ch >> 10, 56320 | ch & 1023)
         }
     }
+    return str
 }
-function demangle(func) {
-    return func
-}
-function demangleAll(text) {
-    var regex = /\b_Z[\w\d_]+/g;
-    return text.replace(regex, function (x) {
-        var y = demangle(x);
-        return x === y ? x : y + " [" + x + "]"
-    })
-}
-var wasmTableMirror = [];
-function getWasmTableEntry(funcPtr) {
-    var func = wasmTableMirror[funcPtr];
-    if (!func) {
-        if (funcPtr >= wasmTableMirror.length)
-            wasmTableMirror.length = funcPtr + 1;
-        wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr)
-    }
-    return func
-}
-function jsStackTrace() {
-    var error = new Error;
-    if (!error.stack) {
-        try {
-            throw new Error
-        } catch (e) {
-            error = e
-        }
-        if (!error.stack) {
-            return "(no stack trace available)"
-        }
-    }
-    return error.stack.toString()
-}
-function setWasmTableEntry(idx, func) {
-    wasmTable.set(idx, func);
-    wasmTableMirror[idx] = wasmTable.get(idx)
+function UTF8ToString(ptr, maxBytesToRead) {
+    return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : ""
 }
 function ___assert_fail(condition, filename, line, func) {
-    abort("Assertion failed: " + UTF8ToString(condition) + ", at: " + [filename ? UTF8ToString(filename) : "unknown filename", line, func ? UTF8ToString(func) : "unknown function"])
+    abort(`Assertion failed: ${UTF8ToString(condition)}, at: ` + [filename ? UTF8ToString(filename) : "unknown filename", line, func ? UTF8ToString(func) : "unknown function"])
 }
 function setErrNo(value) {
     HEAP32[___errno_location() >> 2] = value;
@@ -825,31 +536,31 @@ var PATH = {
         return path.substr(lastSlash + 1)
     },
     join: function () {
-        var paths = Array.prototype.slice.call(arguments, 0);
+        var paths = Array.prototype.slice.call(arguments);
         return PATH.normalize(paths.join("/"))
     },
     join2: (l, r) => {
         return PATH.normalize(l + "/" + r)
     }
 };
-function getRandomDevice() {
+function initRandomFill() {
     if (typeof crypto == "object" && typeof crypto["getRandomValues"] == "function") {
-        var randomBuffer = new Uint8Array(1);
-        return function () {
-            crypto.getRandomValues(randomBuffer);
-            return randomBuffer[0]
-        }
+        return view => crypto.getRandomValues(view)
     } else if (ENVIRONMENT_IS_NODE) {
         try {
             var crypto_module = require("crypto");
-            return function () {
-                return crypto_module["randomBytes"](1)[0]
+            var randomFillSync = crypto_module["randomFillSync"];
+            if (randomFillSync) {
+                return view => crypto_module["randomFillSync"](view)
             }
+            var randomBytes = crypto_module["randomBytes"];
+            return view => (view.set(randomBytes(view.byteLength)), view)
         } catch (e) {}
     }
-    return function () {
-        abort("randomDevice")
-    }
+    abort("initRandomDevice")
+}
+function randomFill(view) {
+    return (randomFill = initRandomFill())(view)
 }
 var PATH_FS = {
     resolve: function () {
@@ -904,6 +615,69 @@ var PATH_FS = {
         return outputParts.join("/")
     }
 };
+function lengthBytesUTF8(str) {
+    var len = 0;
+    for (var i = 0; i < str.length; ++i) {
+        var c = str.charCodeAt(i);
+        if (c <= 127) {
+            len++
+        } else if (c <= 2047) {
+            len += 2
+        } else if (c >= 55296 && c <= 57343) {
+            len += 4;
+            ++i
+        } else {
+            len += 3
+        }
+    }
+    return len
+}
+function stringToUTF8Array(str, heap, outIdx, maxBytesToWrite) {
+    if (!(maxBytesToWrite > 0))
+        return 0;
+    var startIdx = outIdx;
+    var endIdx = outIdx + maxBytesToWrite - 1;
+    for (var i = 0; i < str.length; ++i) {
+        var u = str.charCodeAt(i);
+        if (u >= 55296 && u <= 57343) {
+            var u1 = str.charCodeAt(++i);
+            u = 65536 + ((u & 1023) << 10) | u1 & 1023
+        }
+        if (u <= 127) {
+            if (outIdx >= endIdx)
+                break;
+            heap[outIdx++] = u
+        } else if (u <= 2047) {
+            if (outIdx + 1 >= endIdx)
+                break;
+            heap[outIdx++] = 192 | u >> 6;
+            heap[outIdx++] = 128 | u & 63
+        } else if (u <= 65535) {
+            if (outIdx + 2 >= endIdx)
+                break;
+            heap[outIdx++] = 224 | u >> 12;
+            heap[outIdx++] = 128 | u >> 6 & 63;
+            heap[outIdx++] = 128 | u & 63
+        } else {
+            if (outIdx + 3 >= endIdx)
+                break;
+            heap[outIdx++] = 240 | u >> 18;
+            heap[outIdx++] = 128 | u >> 12 & 63;
+            heap[outIdx++] = 128 | u >> 6 & 63;
+            heap[outIdx++] = 128 | u & 63
+        }
+    }
+    heap[outIdx] = 0;
+    return outIdx - startIdx
+}
+function intArrayFromString(stringy, dontAddNull, length) {
+    var len = length > 0 ? length : lengthBytesUTF8(stringy) + 1;
+    var u8array = new Array(len);
+    var numBytesWritten = stringToUTF8Array(stringy, u8array, 0, u8array.length);
+    if (dontAddNull)
+        u8array.length = numBytesWritten;
+    return u8array
+}
 var TTY = {
     ttys: [],
     init: function () {},
@@ -926,10 +700,10 @@ var TTY = {
             stream.seekable = false
         },
         close: function (stream) {
-            stream.tty.ops.flush(stream.tty)
+            stream.tty.ops.fsync(stream.tty)
         },
-        flush: function (stream) {
-            stream.tty.ops.flush(stream.tty)
+        fsync: function (stream) {
+            stream.tty.ops.fsync(stream.tty)
         },
         read: function (stream, buffer, offset, length, pos) {
             if (!stream.tty || !stream.tty.ops.get_char) {
@@ -998,8 +772,8 @@ var TTY = {
                     result = window.prompt("Input: ");
                     if (result !== null) {
                         result += "\n"
-                    }//@ts-ignore
-                } else if (typeof readline == "function") {//@ts-ignore
+                    }
+                } else if (typeof readline == "function") {
                     result = readline();
                     if (result !== null) {
                         result += "\n"
@@ -1021,7 +795,7 @@ var TTY = {
                     tty.output.push(val)
             }
         },
-        flush: function (tty) {
+        fsync: function (tty) {
             if (tty.output && tty.output.length > 0) {
                 out(UTF8ArrayToString(tty.output, 0));
                 tty.output = []
@@ -1038,7 +812,7 @@ var TTY = {
                     tty.output.push(val)
             }
         },
-        flush: function (tty) {
+        fsync: function (tty) {
             if (tty.output && tty.output.length > 0) {
                 err(UTF8ArrayToString(tty.output, 0));
                 tty.output = []
@@ -1047,7 +821,8 @@ var TTY = {
     }
 };
 function zeroMemory(address, size) {
-    HEAPU8.fill(0, address, address + size)
+    HEAPU8.fill(0, address, address + size);
+    return address
 }
 function alignMemory(size, alignment) {
     return Math.ceil(size / alignment) * alignment
@@ -1057,8 +832,7 @@ function mmapAlloc(size) {
     var ptr = _emscripten_builtin_memalign(65536, size);
     if (!ptr)
         return 0;
-    zeroMemory(ptr, size);
-    return ptr
+    return zeroMemory(ptr, size)
 }
 var MEMFS = {
     ops_table: null,
@@ -1345,7 +1119,7 @@ var MEMFS = {
             var ptr;
             var allocated;
             var contents = stream.node.contents;
-            if (!(flags & 2) && contents.buffer === buffer) {
+            if (!(flags & 2) && contents.buffer === HEAP8.buffer) {
                 allocated = false;
                 ptr = contents.byteOffset
             } else {
@@ -1369,33 +1143,95 @@ var MEMFS = {
             }
         },
         msync: function (stream, buffer, offset, length, mmapFlags) {
-            if (!FS.isFile(stream.node.mode)) {
-                throw new FS.ErrnoError(43)
-            }
-            if (mmapFlags & 2) {
-                return 0
-            }
-            var bytesWritten = MEMFS.stream_ops.write(stream, buffer, 0, length, offset, false);
+            MEMFS.stream_ops.write(stream, buffer, 0, length, offset, false);
             return 0
         }
     }
 };
 function asyncLoad(url, onload, onerror, noRunDep) {
-    var dep = !noRunDep ? getUniqueRunDependency("al " + url) : "";
-    readAsync(url, function (arrayBuffer) {
-        assert(arrayBuffer, 'Loading data file "' + url + '" failed (no arrayBuffer).');
+    var dep = !noRunDep ? getUniqueRunDependency(`al ${url}`) : "";
+    readAsync(url, arrayBuffer => {
+        assert(arrayBuffer, `Loading data file "${url}" failed (no arrayBuffer).`);
         onload(new Uint8Array(arrayBuffer));
         if (dep)
             removeRunDependency(dep)
-    }, function (event) {
+    }, event => {
         if (onerror) {
             onerror()
         } else {
-            throw 'Loading data file "' + url + '" failed.'
+            throw `Loading data file "${url}" failed.`
         }
     });
     if (dep)
         addRunDependency(dep)
+}
+var preloadPlugins = ModuleFontAtlas["preloadPlugins"] || [];
+function FS_handledByPreloadPlugin(byteArray, fullname, finish, onerror) {
+    if (typeof Browser != "undefined")
+        Browser.init();
+    var handled = false;
+    preloadPlugins.forEach(function (plugin) {
+        if (handled)
+            return;
+        if (plugin["canHandle"](fullname)) {
+            plugin["handle"](byteArray, fullname, finish, onerror);
+            handled = true
+        }
+    });
+    return handled
+}
+function FS_createPreloadedFile(parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) {
+    var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
+    var dep = getUniqueRunDependency(`cp ${fullname}`);
+    function processData(byteArray) {
+        function finish(byteArray) {
+            if (preFinish)
+                preFinish();
+            if (!dontCreateFile) {
+                FS.createDataFile(parent, name, byteArray, canRead, canWrite, canOwn)
+            }
+            if (onload)
+                onload();
+            removeRunDependency(dep)
+        }
+        if (FS_handledByPreloadPlugin(byteArray, fullname, finish, () => {
+                if (onerror)
+                    onerror();
+                    removeRunDependency(dep)
+                })) {
+                return
+            }
+        finish(byteArray)
+    }
+    addRunDependency(dep);
+    if (typeof url == "string") {
+        asyncLoad(url, byteArray => processData(byteArray), onerror)
+    } else {
+        processData(url)
+    }
+}
+function FS_modeStringToFlags(str) {
+    var flagModes = {
+        "r": 0,
+        "r+": 2,
+        "w": 512 | 64 | 1,
+        "w+": 512 | 64 | 2,
+        "a": 1024 | 64 | 1,
+        "a+": 1024 | 64 | 2
+    };
+    var flags = flagModes[str];
+    if (typeof flags == "undefined") {
+        throw new Error(`Unknown file open mode: ${str}`)
+    }
+    return flags
+}
+function FS_getMode(canRead, canWrite) {
+    var mode = 0;
+    if (canRead)
+        mode |= 292 | 73;
+    if (canWrite)
+        mode |= 146;
+    return mode
 }
 var FS = {
     root: null,
@@ -1412,7 +1248,7 @@ var FS = {
     filesystems: null,
     syncFSRequests: 0,
     lookupPath: (path, opts = {}) => {
-        path = PATH_FS.resolve(FS.cwd(), path);
+        path = PATH_FS.resolve(path);
         if (!path)
             return {
                 path: "",
@@ -1426,7 +1262,7 @@ var FS = {
         if (opts.recurse_count > 8) {
             throw new FS.ErrnoError(32)
         }
-        var parts = PATH.normalizeArray(path.split("/").filter(p => !!p), false);
+        var parts = path.split("/").filter(p => !!p);
         var current = FS.root;
         var current_path = "/";
         for (var i = 0; i < parts.length; i++) {
@@ -1468,9 +1304,9 @@ var FS = {
                 var mount = node.mount.mountpoint;
                 if (!path)
                     return mount;
-                return mount[mount.length - 1] !== "/" ? mount + "/" + path : mount + path
+                return mount[mount.length - 1] !== "/" ? `${mount}/${path}` : mount + path
             }
-            path = path ? node.name + "/" + path : node.name;
+            path = path ? `${node.name}/${path}` : node.name;
             node = node.parent
         }
     },
@@ -1549,21 +1385,6 @@ var FS = {
     },
     isSocket: mode => {
         return (mode & 49152) === 49152
-    },
-    flagModes: {
-        "r": 0,
-        "r+": 2,
-        "w": 577,
-        "w+": 578,
-        "a": 1089,
-        "a+": 1090
-    },
-    modeStringToFlags: str => {
-        var flags = FS.flagModes[str];
-        if (typeof flags == "undefined") {
-            throw new Error("Unknown file open mode: " + str)
-        }
-        return flags
     },
     flagsToPermissionString: flag => {
         var perms = ["r", "w", "rw"][flag & 3];
@@ -1653,7 +1474,8 @@ var FS = {
             FS.FSStream = function () {
                 this.shared = {}
             };
-            FS.FSStream.prototype = {
+            FS.FSStream.prototype = {};
+            Object.defineProperties(FS.FSStream.prototype, {
                 object: {
                     get: function () {
                         return this.node
@@ -1686,14 +1508,14 @@ var FS = {
                     }
                 },
                 position: {
-                    get function () {
+                    get: function () {
                         return this.shared.position
                     },
                     set: function (val) {
                         this.shared.position = val
                     }
                 }
-            }
+            })
         }
         stream = Object.assign(new FS.FSStream, stream);
         var fd = FS.nextfd(fd_start, fd_end);
@@ -1742,7 +1564,7 @@ var FS = {
         }
         FS.syncFSRequests++;
         if (FS.syncFSRequests > 1) {
-            err("warning: " + FS.syncFSRequests + " FS.syncfs operations in flight at once, probably just doing extra work")
+            err(`warning: ${FS.syncFSRequests} FS.syncfs operations in flight at once, probably just doing extra work`)
         }
         var mounts = FS.getMounts(FS.root.mount);
         var completed = 0;
@@ -1751,8 +1573,8 @@ var FS = {
             return callback(errCode)
         }
         function done(errCode) {
-            if (errCode) {//@ts-ignore
-                if (!done.errored) {//@ts-ignore
+            if (errCode) {
+                if (!done.errored) {
                     done.errored = true;
                     return doCallback(errCode)
                 }
@@ -2164,7 +1986,7 @@ var FS = {
         if (path === "") {
             throw new FS.ErrnoError(44)
         }
-        flags = typeof flags == "string" ? FS.modeStringToFlags(flags) : flags;
+        flags = typeof flags == "string" ? FS_modeStringToFlags(flags) : flags;
         mode = typeof mode == "undefined" ? 438 : mode;
         if (flags & 64) {
             mode = mode & 4095 | 32768
@@ -2357,7 +2179,7 @@ var FS = {
         return stream.stream_ops.mmap(stream, length, position, prot, flags)
     },
     msync: (stream, buffer, offset, length, mmapFlags) => {
-        if (!stream || !stream.stream_ops.msync) {
+        if (!stream.stream_ops.msync) {
             return 0
         }
         return stream.stream_ops.msync(stream, buffer, offset, length, mmapFlags)
@@ -2373,7 +2195,7 @@ var FS = {
         opts.flags = opts.flags || 0;
         opts.encoding = opts.encoding || "binary";
         if (opts.encoding !== "utf8" && opts.encoding !== "binary") {
-            throw new Error('Invalid encoding type "' + opts.encoding + '"')
+            throw new Error(`Invalid encoding type "${opts.encoding}"`)
         }
         var ret;
         var stream = FS.open(path, opts.flags);
@@ -2436,9 +2258,16 @@ var FS = {
         TTY.register(FS.makedev(6, 0), TTY.default_tty1_ops);
         FS.mkdev("/dev/tty", FS.makedev(5, 0));
         FS.mkdev("/dev/tty1", FS.makedev(6, 0));
-        var random_device = getRandomDevice();
-        FS.createDevice("/dev", "random", random_device);
-        FS.createDevice("/dev", "urandom", random_device);
+        var randomBuffer = new Uint8Array(1024),
+        randomLeft = 0;
+        var randomByte = () => {
+            if (randomLeft === 0) {
+                randomLeft = randomFill(randomBuffer).byteLength
+            }
+            return randomBuffer[--randomLeft]
+        };
+        FS.createDevice("/dev", "random", randomByte);
+        FS.createDevice("/dev", "urandom", randomByte);
         FS.mkdir("/dev/shm");
         FS.mkdir("/dev/shm/tmp")
     },
@@ -2496,6 +2325,7 @@ var FS = {
         if (FS.ErrnoError)
             return;
         FS.ErrnoError = function ErrnoError(errno, node) {
+            this.name = "ErrnoError";
             this.node = node;
             this.setErrno = function (errno) {
                 this.errno = errno
@@ -2539,21 +2369,12 @@ var FS = {
             FS.close(stream)
         }
     },
-    getMode: (canRead, canWrite) => {
-        var mode = 0;
-        if (canRead)
-            mode |= 292 | 73;
-        if (canWrite)
-            mode |= 146;
-        return mode
-    },
     findObject: (path, dontResolveLastLink) => {
         var ret = FS.analyzePath(path, dontResolveLastLink);
-        if (ret.exists) {
-            return ret.object
-        } else {
+        if (!ret.exists) {
             return null
         }
+        return ret.object
     },
     analyzePath: (path, dontResolveLastLink) => {
         try {
@@ -2611,7 +2432,7 @@ var FS = {
     },
     createFile: (parent, name, properties, canRead, canWrite) => {
         var path = PATH.join2(typeof parent == "string" ? parent : FS.getPath(parent), name);
-        var mode = FS.getMode(canRead, canWrite);
+        var mode = FS_getMode(canRead, canWrite);
         return FS.create(path, mode)
     },
     createDataFile: (parent, name, data, canRead, canWrite, canOwn) => {
@@ -2620,7 +2441,7 @@ var FS = {
             parent = typeof parent == "string" ? parent : FS.getPath(parent);
             path = name ? PATH.join2(parent, name) : parent
         }
-        var mode = FS.getMode(canRead, canWrite);
+        var mode = FS_getMode(canRead, canWrite);
         var node = FS.create(path, mode);
         if (data) {
             if (typeof data == "string") {
@@ -2639,7 +2460,7 @@ var FS = {
     },
     createDevice: (parent, name, input, output) => {
         var path = PATH.join2(typeof parent == "string" ? parent : FS.getPath(parent), name);
-        var mode = FS.getMode(!!input, !!output);
+        var mode = FS_getMode(!!input, !!output);
         if (!FS.createDevice.major)
             FS.createDevice.major = 64;
         var dev = FS.makedev(FS.createDevice.major++, 0);
@@ -2711,11 +2532,11 @@ var FS = {
             this.lengthKnown = false;
             this.chunks = []
         }
-        LazyUint8Array.prototype.get = function LazyUint8Array_get(idx) {//@ts-ignore
+        LazyUint8Array.prototype.get = function LazyUint8Array_get(idx) {
             if (idx > this.length - 1 || idx < 0) {
                 return undefined
-            }//@ts-ignore
-            var chunkOffset = idx % this.chunkSize;//@ts-ignore
+            }
+            var chunkOffset = idx % this.chunkSize;
             var chunkNum = idx / this.chunkSize | 0;
             return this.getter(chunkNum)[chunkOffset]
         };
@@ -2753,9 +2574,8 @@ var FS = {
                     throw new Error("Couldn't load " + url + ". Status: " + xhr.status);
                 if (xhr.response !== undefined) {
                     return new Uint8Array(xhr.response || [])
-                } else {
-                    return intArrayFromString(xhr.responseText || "", true)
                 }
+                return intArrayFromString(xhr.responseText || "", true)
             };
             var lazyArray = this;
             lazyArray.setDataGetter(chunkNum => {
@@ -2805,7 +2625,7 @@ var FS = {
                 isDevice: false,
                 contents: lazyArray
             }
-        } else {//@ts-ignore
+        } else {
             var properties = {
                 isDevice: false,
                 url: url
@@ -2834,8 +2654,7 @@ var FS = {
                 return fn.apply(null, arguments)
             }
         });
-        stream_ops.read = (stream, buffer, offset, length, position) => {
-            FS.forceLoadFile(node);
+        function writeChunks(stream, buffer, offset, length, position) {
             var contents = stream.node.contents;
             if (position >= contents.length)
                 return 0;
@@ -2850,140 +2669,25 @@ var FS = {
                 }
             }
             return size
+        }
+        stream_ops.read = (stream, buffer, offset, length, position) => {
+            FS.forceLoadFile(node);
+            return writeChunks(stream, buffer, offset, length, position)
+        };
+        stream_ops.mmap = (stream, length, position, prot, flags) => {
+            FS.forceLoadFile(node);
+            var ptr = mmapAlloc(length);
+            if (!ptr) {
+                throw new FS.ErrnoError(48)
+            }
+            writeChunks(stream, HEAP8, ptr, length, position);
+            return {
+                ptr: ptr,
+                allocated: true
+            }
         };
         node.stream_ops = stream_ops;
         return node
-    },
-    createPreloadedFile: (parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) => {
-        var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
-        var dep = getUniqueRunDependency("cp " + fullname);
-        function processData(byteArray) {
-            function finish(byteArray) {
-                if (preFinish)
-                    preFinish();
-                if (!dontCreateFile) {
-                    FS.createDataFile(parent, name, byteArray, canRead, canWrite, canOwn)
-                }
-                if (onload)
-                    onload();
-                removeRunDependency(dep)
-            }//@ts-ignore
-            if (Browser.handledByPreloadPlugin(byteArray, fullname, finish, () => {
-                    if (onerror)
-                        onerror();
-                        removeRunDependency(dep)
-                    })) {
-                    return
-                }
-            finish(byteArray)
-        }
-        addRunDependency(dep);
-        if (typeof url == "string") {
-            asyncLoad(url, byteArray => processData(byteArray), onerror)
-        } else {
-            processData(url)
-        }
-    },
-    indexedDB: () => {//@ts-ignore
-        return window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
-    },
-    DB_NAME: () => {
-        return "EM_FS_" + window.location.pathname
-    },
-    DB_VERSION: 20,
-    DB_STORE_NAME: "FILE_DATA",
-    saveFilesToDB: (paths, onload, onerror) => {
-        onload = onload || (() => {});
-        onerror = onerror || (() => {});
-        var indexedDB = FS.indexedDB();
-        try {
-            var openRequest = indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
-        } catch (e) {
-            return onerror(e)
-        }
-        openRequest.onupgradeneeded = () => {
-            out("creating db");
-            var db = openRequest.result;
-            db.createObjectStore(FS.DB_STORE_NAME)
-        };
-        openRequest.onsuccess = () => {
-            var db = openRequest.result;
-            var transaction = db.transaction([FS.DB_STORE_NAME], "readwrite");
-            var files = transaction.objectStore(FS.DB_STORE_NAME);
-            var ok = 0,
-            fail = 0,
-            total = paths.length;
-            function finish() {
-                if (fail == 0)
-                    onload();
-                else
-                    onerror()
-            }
-            paths.forEach(path => {
-                var putRequest = files.put(FS.analyzePath(path).object.contents, path);
-                putRequest.onsuccess = () => {
-                    ok++;
-                    if (ok + fail == total)
-                        finish()
-                };
-                putRequest.onerror = () => {
-                    fail++;
-                    if (ok + fail == total)
-                        finish()
-                }
-            });
-            transaction.onerror = onerror
-        };
-        openRequest.onerror = onerror
-    },
-    loadFilesFromDB: (paths, onload, onerror) => {
-        onload = onload || (() => {});
-        onerror = onerror || (() => {});
-        var indexedDB = FS.indexedDB();
-        try {
-            var openRequest = indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
-        } catch (e) {
-            return onerror(e)
-        }
-        openRequest.onupgradeneeded = onerror;
-        openRequest.onsuccess = () => {
-            var db = openRequest.result;
-            try {
-                var transaction = db.transaction([FS.DB_STORE_NAME], "readonly")
-            } catch (e) {
-                onerror(e);
-                return
-            }
-            var files = transaction.objectStore(FS.DB_STORE_NAME);
-            var ok = 0,
-            fail = 0,
-            total = paths.length;
-            function finish() {
-                if (fail == 0)
-                    onload();
-                else
-                    onerror()
-            }
-            paths.forEach(path => {
-                var getRequest = files.get(path);
-                getRequest.onsuccess = () => {
-                    if (FS.analyzePath(path).exists) {
-                        FS.unlink(path)
-                    }
-                    FS.createDataFile(PATH.dirname(path), PATH.basename(path), getRequest.result, true, true, true);
-                    ok++;
-                    if (ok + fail == total)
-                        finish()
-                };
-                getRequest.onerror = () => {
-                    fail++;
-                    if (ok + fail == total)
-                        finish()
-                }
-            });
-            transaction.onerror = onerror
-        };
-        openRequest.onerror = onerror
     }
 };
 var SYSCALLS = {
@@ -2996,9 +2700,7 @@ var SYSCALLS = {
         if (dirfd === -100) {
             dir = FS.cwd()
         } else {
-            var dirstream = FS.getStream(dirfd);
-            if (!dirstream)
-                throw new FS.ErrnoError(8);
+            var dirstream = SYSCALLS.getStreamFromFD(dirfd);
             dir = dirstream.path
         }
         if (path.length == 0) {
@@ -3019,31 +2721,44 @@ var SYSCALLS = {
             throw e
         }
         HEAP32[buf >> 2] = stat.dev;
-        HEAP32[buf + 4 >> 2] = 0;
         HEAP32[buf + 8 >> 2] = stat.ino;
         HEAP32[buf + 12 >> 2] = stat.mode;
-        HEAP32[buf + 16 >> 2] = stat.nlink;
+        HEAPU32[buf + 16 >> 2] = stat.nlink;
         HEAP32[buf + 20 >> 2] = stat.uid;
         HEAP32[buf + 24 >> 2] = stat.gid;
         HEAP32[buf + 28 >> 2] = stat.rdev;
-        HEAP32[buf + 32 >> 2] = 0;
-        tempI64 = [stat.size >>> 0, (tempDouble = stat.size, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        tempI64 = [stat.size >>> 0, (tempDouble = stat.size, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
         HEAP32[buf + 40 >> 2] = tempI64[0],
         HEAP32[buf + 44 >> 2] = tempI64[1];
         HEAP32[buf + 48 >> 2] = 4096;
         HEAP32[buf + 52 >> 2] = stat.blocks;
-        HEAP32[buf + 56 >> 2] = stat.atime.getTime() / 1e3 | 0;
-        HEAP32[buf + 60 >> 2] = 0;
-        HEAP32[buf + 64 >> 2] = stat.mtime.getTime() / 1e3 | 0;
-        HEAP32[buf + 68 >> 2] = 0;
-        HEAP32[buf + 72 >> 2] = stat.ctime.getTime() / 1e3 | 0;
-        HEAP32[buf + 76 >> 2] = 0;
-        tempI64 = [stat.ino >>> 0, (tempDouble = stat.ino, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
-        HEAP32[buf + 80 >> 2] = tempI64[0],
-        HEAP32[buf + 84 >> 2] = tempI64[1];
+        var atime = stat.atime.getTime();
+        var mtime = stat.mtime.getTime();
+        var ctime = stat.ctime.getTime();
+        tempI64 = [Math.floor(atime / 1e3) >>> 0, (tempDouble = Math.floor(atime / 1e3), +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 56 >> 2] = tempI64[0],
+        HEAP32[buf + 60 >> 2] = tempI64[1];
+        HEAPU32[buf + 64 >> 2] = atime % 1e3 * 1e3;
+        tempI64 = [Math.floor(mtime / 1e3) >>> 0, (tempDouble = Math.floor(mtime / 1e3), +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 72 >> 2] = tempI64[0],
+        HEAP32[buf + 76 >> 2] = tempI64[1];
+        HEAPU32[buf + 80 >> 2] = mtime % 1e3 * 1e3;
+        tempI64 = [Math.floor(ctime / 1e3) >>> 0, (tempDouble = Math.floor(ctime / 1e3), +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 88 >> 2] = tempI64[0],
+        HEAP32[buf + 92 >> 2] = tempI64[1];
+        HEAPU32[buf + 96 >> 2] = ctime % 1e3 * 1e3;
+        tempI64 = [stat.ino >>> 0, (tempDouble = stat.ino, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 104 >> 2] = tempI64[0],
+        HEAP32[buf + 108 >> 2] = tempI64[1];
         return 0
     },
     doMsync: function (addr, stream, len, flags, offset) {
+        if (!FS.isFile(stream.node.mode)) {
+            throw new FS.ErrnoError(43)
+        }
+        if (flags & 2) {
+            return 0
+        }
         var buffer = HEAPU8.slice(addr, addr + len);
         FS.msync(stream, buffer, offset, len, flags)
     },
@@ -3108,7 +2823,7 @@ function ___syscall_fcntl64(fd, cmd, varargs) {
             }
         }
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -3118,7 +2833,7 @@ function ___syscall_fstat64(fd, buf) {
         var stream = SYSCALLS.getStreamFromFD(fd);
         return SYSCALLS.doStat(FS.stat, stream.path, buf)
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -3128,7 +2843,7 @@ function ___syscall_lstat64(path, buf) {
         path = SYSCALLS.getStr(path);
         return SYSCALLS.doStat(FS.lstat, path, buf)
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -3138,11 +2853,11 @@ function ___syscall_newfstatat(dirfd, path, buf, flags) {
         path = SYSCALLS.getStr(path);
         var nofollow = flags & 256;
         var allowEmpty = flags & 4096;
-        flags = flags & ~4352;
+        flags = flags & ~6400;
         path = SYSCALLS.calculateAt(dirfd, path, allowEmpty);
         return SYSCALLS.doStat(nofollow ? FS.lstat : FS.stat, path, buf)
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -3155,7 +2870,7 @@ function ___syscall_openat(dirfd, path, flags, varargs) {
         var mode = varargs ? SYSCALLS.get() : 0;
         return FS.open(path, flags, mode).fd
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -3165,7 +2880,7 @@ function ___syscall_stat64(path, buf) {
         path = SYSCALLS.getStr(path);
         return SYSCALLS.doStat(FS.stat, path, buf)
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -3173,32 +2888,29 @@ function ___syscall_stat64(path, buf) {
 function __emscripten_throw_longjmp() {
     throw Infinity
 }
-function __mmap_js(len, prot, flags, fd, off, allocated) {
+function __mmap_js(len, prot, flags, fd, off, allocated, addr) {
     try {
-        var stream = FS.getStream(fd);
-        if (!stream)
-            return -8;
+        var stream = SYSCALLS.getStreamFromFD(fd);
         var res = FS.mmap(stream, len, off, prot, flags);
         var ptr = res.ptr;
         HEAP32[allocated >> 2] = res.allocated;
-        return ptr
+        HEAPU32[addr >> 2] = ptr;
+        return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
 }
 function __munmap_js(addr, len, prot, flags, fd, offset) {
     try {
-        var stream = FS.getStream(fd);
-        if (stream) {
-            if (prot & 2) {
-                SYSCALLS.doMsync(addr, stream, len, flags, offset)
-            }
-            FS.munmap(stream)
+        var stream = SYSCALLS.getStreamFromFD(fd);
+        if (prot & 2) {
+            SYSCALLS.doMsync(addr, stream, len, flags, offset)
         }
+        FS.munmap(stream)
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -3210,9 +2922,10 @@ function getHeapMax() {
     return 2147483648
 }
 function emscripten_realloc_buffer(size) {
+    var b = wasmMemory.buffer;
     try {
-        wasmMemory.grow(size - buffer.byteLength + 65535 >>> 16);
-        updateGlobalBufferAndViews(wasmMemory.buffer);
+        wasmMemory.grow(size - b.byteLength + 65535 >>> 16);
+        updateMemoryViews();
         return 1
     } catch (e) {}
 }
@@ -3223,7 +2936,7 @@ function _emscripten_resize_heap(requestedSize) {
     if (requestedSize > maxHeapSize) {
         return false
     }
-    let alignUp = (x, multiple) => x + (multiple - x % multiple) % multiple;
+    var alignUp = (x, multiple) => x + (multiple - x % multiple) % multiple;
     for (var cutDown = 1; cutDown <= 4; cutDown *= 2) {
         var overGrownHeapSize = oldSize * (1 + .2 / cutDown);
         overGrownHeapSize = Math.min(overGrownHeapSize, requestedSize + 100663296);
@@ -3239,7 +2952,7 @@ var ENV = {};
 function getExecutableName() {
     return thisProgram || "./this.program"
 }
-function getEnvStrings() {//@ts-ignore
+function getEnvStrings() {
     if (!getEnvStrings.strings) {
         var lang = (typeof navigator == "object" && navigator.languages && navigator.languages[0] || "C").replace("-", "_") + ".UTF-8";
         var env = {
@@ -3260,17 +2973,23 @@ function getEnvStrings() {//@ts-ignore
         var strings = [];
         for (var x in env) {
             strings.push(x + "=" + env[x])
-        }//@ts-ignore
+        }
         getEnvStrings.strings = strings
-    }//@ts-ignore
+    }
     return getEnvStrings.strings
+}
+function stringToAscii(str, buffer) {
+    for (var i = 0; i < str.length; ++i) {
+        HEAP8[buffer++ >> 0] = str.charCodeAt(i)
+    }
+    HEAP8[buffer >> 0] = 0
 }
 function _environ_get(__environ, environ_buf) {
     var bufSize = 0;
     getEnvStrings().forEach(function (string, i) {
         var ptr = environ_buf + bufSize;
         HEAPU32[__environ + i * 4 >> 2] = ptr;
-        writeAsciiToMemory(string, ptr);
+        stringToAscii(string, ptr);
         bufSize += string.length + 1
     });
     return 0
@@ -3285,16 +3004,27 @@ function _environ_sizes_get(penviron_count, penviron_buf_size) {
     HEAPU32[penviron_buf_size >> 2] = bufSize;
     return 0
 }
-function _exit(status) {
-    exit(status)
+function _proc_exit(code) {
+    EXITSTATUS = code;
+    if (!keepRuntimeAlive()) {
+        if (ModuleFontAtlas["onExit"])
+            ModuleFontAtlas["onExit"](code);
+        ABORT = true
+    }
+    quit_(code, new ExitStatus(code))
 }
+function exitJS(status, implicit) {
+    EXITSTATUS = status;
+    _proc_exit(status)
+}
+var _exit = exitJS;
 function _fd_close(fd) {
     try {
         var stream = SYSCALLS.getStreamFromFD(fd);
         FS.close(stream);
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return e.errno
     }
@@ -3310,7 +3040,10 @@ function doReadv(stream, iov, iovcnt, offset) {
             return -1;
         ret += curr;
         if (curr < len)
-            break
+            break;
+        if (typeof offset !== "undefined") {
+            offset += curr
+        }
     }
     return ret
 }
@@ -3318,15 +3051,15 @@ function _fd_read(fd, iov, iovcnt, pnum) {
     try {
         var stream = SYSCALLS.getStreamFromFD(fd);
         var num = doReadv(stream, iov, iovcnt);
-        HEAP32[pnum >> 2] = num;
+        HEAPU32[pnum >> 2] = num;
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return e.errno
     }
 }
-function convertI32PairToI53Checked(lo, hi) {//@ts-ignore
+function convertI32PairToI53Checked(lo, hi) {
     return hi + 2097152 >>> 0 < 4194305 - !!lo ? (lo >>> 0) + hi * 4294967296 : NaN
 }
 function _fd_seek(fd, offset_low, offset_high, whence, newOffset) {
@@ -3336,14 +3069,14 @@ function _fd_seek(fd, offset_low, offset_high, whence, newOffset) {
             return 61;
         var stream = SYSCALLS.getStreamFromFD(fd);
         FS.llseek(stream, offset, whence);
-        tempI64 = [stream.position >>> 0, (tempDouble = stream.position, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        tempI64 = [stream.position >>> 0, (tempDouble = stream.position, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
         HEAP32[newOffset >> 2] = tempI64[0],
         HEAP32[newOffset + 4 >> 2] = tempI64[1];
         if (stream.getdents && offset === 0 && whence === 0)
             stream.getdents = null;
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return e.errno
     }
@@ -3357,7 +3090,10 @@ function doWritev(stream, iov, iovcnt, offset) {
         var curr = FS.write(stream, HEAP8, ptr, len, offset);
         if (curr < 0)
             return -1;
-        ret += curr
+        ret += curr;
+        if (typeof offset !== "undefined") {
+            offset += curr
+        }
     }
     return ret
 }
@@ -3368,16 +3104,20 @@ function _fd_write(fd, iov, iovcnt, pnum) {
         HEAPU32[pnum >> 2] = num;
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return e.errno
     }
 }
-function _getTempRet0() {
-    return getTempRet0()
-}
-function _setTempRet0(val) {
-    setTempRet0(val)
+var wasmTableMirror = [];
+function getWasmTableEntry(funcPtr) {
+    var func = wasmTableMirror[funcPtr];
+    if (!func) {
+        if (funcPtr >= wasmTableMirror.length)
+            wasmTableMirror.length = funcPtr + 1;
+        wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr)
+    }
+    return func
 }
 var FSNode = function (parent, name, mode, rdev) {
     if (!parent) {
@@ -3424,17 +3164,9 @@ Object.defineProperties(FSNode.prototype, {
     }
 });
 FS.FSNode = FSNode;
+FS.createPreloadedFile = FS_createPreloadedFile;
 FS.staticInit();
-var ASSERTIONS = false;
-function intArrayFromString(stringy, dontAddNull, length) {
-    var len = length > 0 ? length : lengthBytesUTF8(stringy) + 1;
-    var u8array = new Array(len);
-    var numBytesWritten = stringToUTF8Array(stringy, u8array, 0, u8array.length);
-    if (dontAddNull)
-        u8array.length = numBytesWritten;
-    return u8array
-}
-var asmLibraryArg = {
+var wasmImports = {
     "__assert_fail": ___assert_fail,
     "__syscall_fcntl64": ___syscall_fcntl64,
     "__syscall_fstat64": ___syscall_fstat64,
@@ -3454,17 +3186,15 @@ var asmLibraryArg = {
     "fd_read": _fd_read,
     "fd_seek": _fd_seek,
     "fd_write": _fd_write,
-    "getTempRet0": _getTempRet0,
     "invoke_iii": invoke_iii,
     "invoke_iiii": invoke_iiii,
     "invoke_iiiii": invoke_iiiii,
     "invoke_v": invoke_v,
-    "invoke_viiii": invoke_viiii,
-    "setTempRet0": _setTempRet0
+    "invoke_viiii": invoke_viiii
 };
 var asm = createWasm();
-var ___wasm_call_ctors = ModuleFontAtlas["___wasm_call_ctors"] = function () {
-    return (___wasm_call_ctors = ModuleFontAtlas["___wasm_call_ctors"] = ModuleFontAtlas["asm"]["__wasm_call_ctors"]).apply(null, arguments)
+var ___wasm_call_ctors = function () {
+    return (___wasm_call_ctors = ModuleFontAtlas["asm"]["__wasm_call_ctors"]).apply(null, arguments)
 };
 var _fontatlas_enable_sdf = ModuleFontAtlas["_fontatlas_enable_sdf"] = function () {
     return (_fontatlas_enable_sdf = ModuleFontAtlas["_fontatlas_enable_sdf"] = ModuleFontAtlas["asm"]["fontatlas_enable_sdf"]).apply(null, arguments)
@@ -3493,26 +3223,23 @@ var _fontatlas_destroy_JS = ModuleFontAtlas["_fontatlas_destroy_JS"] = function 
 var _fontatlas_atlas_destroy_JS = ModuleFontAtlas["_fontatlas_atlas_destroy_JS"] = function () {
     return (_fontatlas_atlas_destroy_JS = ModuleFontAtlas["_fontatlas_atlas_destroy_JS"] = ModuleFontAtlas["asm"]["fontatlas_atlas_destroy_JS"]).apply(null, arguments)
 };
-var _saveSetjmp = ModuleFontAtlas["_saveSetjmp"] = function () {
-    return (_saveSetjmp = ModuleFontAtlas["_saveSetjmp"] = ModuleFontAtlas["asm"]["saveSetjmp"]).apply(null, arguments)
+var ___errno_location = function () {
+    return (___errno_location = ModuleFontAtlas["asm"]["__errno_location"]).apply(null, arguments)
 };
-var ___errno_location = ModuleFontAtlas["___errno_location"] = function () {
-    return (___errno_location = ModuleFontAtlas["___errno_location"] = ModuleFontAtlas["asm"]["__errno_location"]).apply(null, arguments)
+var _emscripten_builtin_memalign = function () {
+    return (_emscripten_builtin_memalign = ModuleFontAtlas["asm"]["emscripten_builtin_memalign"]).apply(null, arguments)
 };
-var _emscripten_builtin_memalign = ModuleFontAtlas["_emscripten_builtin_memalign"] = function () {
-    return (_emscripten_builtin_memalign = ModuleFontAtlas["_emscripten_builtin_memalign"] = ModuleFontAtlas["asm"]["emscripten_builtin_memalign"]).apply(null, arguments)
+var _setThrew = function () {
+    return (_setThrew = ModuleFontAtlas["asm"]["setThrew"]).apply(null, arguments)
 };
-var _setThrew = ModuleFontAtlas["_setThrew"] = function () {
-    return (_setThrew = ModuleFontAtlas["_setThrew"] = ModuleFontAtlas["asm"]["setThrew"]).apply(null, arguments)
+var stackSave = function () {
+    return (stackSave = ModuleFontAtlas["asm"]["stackSave"]).apply(null, arguments)
 };
-var stackSave = ModuleFontAtlas["stackSave"] = function () {
-    return (stackSave = ModuleFontAtlas["stackSave"] = ModuleFontAtlas["asm"]["stackSave"]).apply(null, arguments)
+var stackRestore = function () {
+    return (stackRestore = ModuleFontAtlas["asm"]["stackRestore"]).apply(null, arguments)
 };
-var stackRestore = ModuleFontAtlas["stackRestore"] = function () {
-    return (stackRestore = ModuleFontAtlas["stackRestore"] = ModuleFontAtlas["asm"]["stackRestore"]).apply(null, arguments)
-};
-var stackAlloc = ModuleFontAtlas["stackAlloc"] = function () {
-    return (stackAlloc = ModuleFontAtlas["stackAlloc"] = ModuleFontAtlas["asm"]["stackAlloc"]).apply(null, arguments)
+var stackAlloc = function () {
+    return (stackAlloc = ModuleFontAtlas["asm"]["stackAlloc"]).apply(null, arguments)
 };
 var dynCall_jiji = ModuleFontAtlas["dynCall_jiji"] = function () {
     return (dynCall_jiji = ModuleFontAtlas["dynCall_jiji"] = ModuleFontAtlas["asm"]["dynCall_jiji"]).apply(null, arguments)
@@ -3573,19 +3300,13 @@ function invoke_iiii(index, a1, a2, a3) {
     }
 }
 var calledRun;
-function ExitStatus(status) {
-    this.name = "ExitStatus";
-    this.message = "Program terminated with exit(" + status + ")";
-    this.status = status
-}
 dependenciesFulfilled = function runCaller() {
     if (!calledRun)
         run();
     if (!calledRun)
         dependenciesFulfilled = runCaller
 };
-function run(args) {
-    args = args || arguments_;
+function run() {
     if (runDependencies > 0) {
         return
     }
@@ -3616,20 +3337,6 @@ function run(args) {
     } else {
         doRun()
     }
-}
-ModuleFontAtlas["run"] = run;
-function exit(status, implicit) {
-    EXITSTATUS = status;
-    procExit(status)
-}
-function procExit(code) {
-    EXITSTATUS = code;
-    if (!keepRuntimeAlive()) {
-        if (ModuleFontAtlas["onExit"])
-            ModuleFontAtlas["onExit"](code);
-        ABORT = true
-    }
-    quit_(code, new ExitStatus(code))
 }
 if (ModuleFontAtlas["preInit"]) {
     if (typeof ModuleFontAtlas["preInit"] == "function")

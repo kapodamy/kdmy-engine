@@ -110,10 +110,8 @@
                 "$gcc"
             ],
             "windows": {
-                "command": "powershell",
+                "command": "mingw32-make",
                 "args": [
-                    "-c",
-                    "mingw32-make",
                     "windows-build-debug"
                 ],
                 "presentation": {

@@ -65,5 +65,19 @@
         "menu.h": "c"
     },
     "C_Cpp.clang_format_style": "file",
-    "C_Cpp.formatting": "clangFormat"
+    "C_Cpp.formatting": "clangFormat",
+    "terminal.integrated.profiles.windows": {
+        "mingw64-shell": {
+          "path": "C:\\msys64\\usr\\bin\\bash.exe",
+          "args": [
+            "--login"
+          ]
+        }
+      },
+    "terminal.integrated.defaultProfile.windows": "mingw64-shell",
+    "makefile.makePath": "C:\\msys64\\mingw64\\bin\\mingw32-make.exe",
+    "terminal.integrated.env.windows": {
+        "CHERE_INVOKING": "1",
+        "MSYSTEM": "MINGW64",
+    },
 }
