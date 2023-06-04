@@ -220,7 +220,7 @@ function pvr_onoff(e) {
 
         // emulate main thread
         kos_thd_id++;
-        main_fn(1, "1st_read.bin");
+        main_fn(1, ["1st_read.bin"]);
         return;
     }
 

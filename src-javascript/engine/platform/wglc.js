@@ -28,6 +28,8 @@ class WebGL2Context {
 
     /**@type {bool}*/has_texture_uploads;
 
+    /**@type {WEBGL_compressed_texture_s3tc}*/s3tc_ext;
+
     constructor(/**@type {HTMLCanvasElement}*/canvas) {
         this.gl = canvas.getContext("webgl2", {
             alpha: false,
@@ -875,13 +877,14 @@ async function webopengl_init(canvas) {
 
     wglc.has_texture_uploads = 0;
 
+    // required to support compressed textures
+    wglc.s3tc_ext = gl.getExtension("WEBGL_compressed_texture_s3tc");
+
     return wglc;
 }
 
 function webopengl_create_texture(/**@type {WebGL2Context}*/wglc, texture_width, texture_height, bitmap_data) {
     const gl = wglc.gl;
-    const pow2_width = math2d_poweroftwo_calc(texture_width);
-    const pow2_height = math2d_poweroftwo_calc(texture_height);
 
     // clear any previous error
     gl.getError();
@@ -891,17 +894,67 @@ function webopengl_create_texture(/**@type {WebGL2Context}*/wglc, texture_width,
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, tex);
 
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap_data);
+    if (bitmap_data instanceof DDS) {
+        let dds = bitmap_data;
+
+        if (wglc.s3tc_ext == null) {
+            console.error("WebGLContext::CreateTexture() EXT_texture_compression_s3tc is not supported");
+            return null;
+        }
+
+        let format;
+        switch (dds.Compression) {
+            case DDSCompression.DXT1:
+                format = wglc.s3tc_ext.COMPRESSED_RGB_S3TC_DXT1_EXT;
+                break;
+            case DDSCompression.DXT3:
+                format = wglc.s3tc_ext.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+                break;
+            case DDSCompression.DXT5:
+                format = wglc.s3tc_ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                break;
+            default:
+                // this never should happen
+                gl.deleteTexture(tex);
+                return null;
+        }
+
+        // upload main bitmap
+        gl.compressedTexImage2D(
+            gl.TEXTURE_2D,
+            0,
+            format,
+            dds.width, dds.height,
+            0,
+            dds.pixels
+        );
+
+        // upload mipmaps (if present)
+        for (let i = 0; i < dds.Mipmaps.length; i++) {
+            gl.compressedTexImage2D(
+                gl.TEXTURE_2D,
+                i + 1,
+                format,
+                dds.Mipmaps[i].width, dds.Mipmaps[i].height,
+                0,
+                dds.Mipmaps[i].pixels
+            );
+        }
+    } else {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap_data);
+    }
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-    if (pow2_width == texture_width && pow2_height == texture_height) {
-        gl.generateMipmap(gl.TEXTURE_2D);
-    } else {
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    }
+    //
+    // Note:
+    //       most of uncompresed textures are 8192x8192 and requires
+    //       256MiB of vram each one.
+    //       Mipmaping such texture will require ~476MiB, when the game
+    //       normally requires 512MiB~1.2GiB of vram. This increases the
+    //       requeriments to 1.4Gib~2.25GiB of vram.
+    //gl.generateMipmap(gl.TEXTURE_2D);
 
     wglc.has_texture_uploads = 1;
 

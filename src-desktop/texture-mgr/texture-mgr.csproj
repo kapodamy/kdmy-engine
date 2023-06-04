@@ -31,6 +31,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DDS.cs" />
     <Compile Include="iconloader.cs" />
     <Compile Include="imagedata.cs" />
     <Compile Include="imagewritter.cs" />

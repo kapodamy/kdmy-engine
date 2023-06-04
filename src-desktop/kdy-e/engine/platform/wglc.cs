@@ -34,6 +34,8 @@ namespace Engine.Platform {
         internal WebGLShader stock_shadervertex;
         internal WebGLShader stock_shaderfragment;
 
+        internal WEBGL_compressed_texture_s3tc s3tc_ext;
+
         internal WebGLContext() {
             this.gl = new WebGL2RenderingContext();
             Console.Error.WriteLine("OpenGL: " + this.gl.getString(GLenum.GL_VERSION));
@@ -78,12 +80,15 @@ namespace Engine.Platform {
             );
 
             this.has_texture_uploads = false;
+
+            // required to support compressed textures
+            this.s3tc_ext = (WEBGL_compressed_texture_s3tc)gl.getExtension("WEBGL_compressed_texture_s3tc");
         }
 
         public WebGLTexture CreateTexture(int pow2_tex_width, int pow2_tex_height, ImageData bitmap_data) {
             WebGL2RenderingContext gl = this.gl;
 
-            PixelUnPackBuffer pixelDataBuffer = (PixelUnPackBuffer)bitmap_data.pixelDataBuffer;
+            IPixelDataBuffer pixelDataBuffer = bitmap_data.pixelDataBuffer;
 
             // clear any previous error
             gl.getError();
@@ -93,12 +98,56 @@ namespace Engine.Platform {
             //gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, tex);
 
-            if (pixelDataBuffer != null) {
-                gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pixelDataBuffer.pbo);
+            if (pixelDataBuffer is DDSPixelDataBuffer dds) {
+                if (this.s3tc_ext == null) {
+                    Console.Error.WriteLine("[ERROR] WebGLContext::CreateTexture() EXT_texture_compression_s3tc is not supported");
+                    return WebGLTexture.Null;
+                }
 
-                if (pixelDataBuffer.mapped_buffer != IntPtr.Zero) {
+                GLenum format;
+                switch (dds.Compression) {
+                    case DDSCompression.DXT1:
+                        format = this.s3tc_ext.COMPRESSED_RGB_S3TC_DXT1_EXT;
+                        break;
+                    case DDSCompression.DXT3:
+                        format = this.s3tc_ext.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+                        break;
+                    case DDSCompression.DXT5:
+                        format = this.s3tc_ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                        break;
+                    default:
+                        // this never should happen
+                        gl.deleteTexture(tex);
+                        return WebGLTexture.Null;
+                }
+
+                // upload main bitmap
+                gl.compressedTexImage2D(
+                    gl.TEXTURE_2D,
+                    0,
+                    format,
+                    bitmap_data.orig_width, bitmap_data.orig_height,
+                    0,
+                    new WebGL2RenderingContext.DataView(bitmap_data.Addr, 0, bitmap_data.size)
+                );
+
+                // upload mipmaps (if present)
+                for (int i = 0 ; i < dds.Mipmaps.Length ; i++) {
+                    gl.compressedTexImage2D(
+                        gl.TEXTURE_2D,
+                        i + 1,
+                        format,
+                        (int)dds.Mipmaps[i].width, (int)dds.Mipmaps[i].height,
+                        0,
+                        new WebGL2RenderingContext.DataView(dds.Mipmaps[i].ptr, 0, (int)dds.Mipmaps[i].length)
+                    );
+                }
+            } else if (pixelDataBuffer is PixelUnPackBuffer pb) {
+                gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pb.pbo);
+
+                if (pb.mapped_buffer != IntPtr.Zero) {
                     gl.unmapBuffer(gl.PIXEL_UNPACK_BUFFER);
-                    pixelDataBuffer.mapped_buffer = IntPtr.Zero;
+                    pb.mapped_buffer = IntPtr.Zero;
                 }
 
                 gl.texImage2D(
@@ -122,6 +171,13 @@ namespace Engine.Platform {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
+            //
+            // Note:
+            //       most of uncompresed textures are 8192x8192 and requires
+            //       256MiB of vram each one.
+            //       Mipmaping such texture will require ~476MiB, when the game
+            //       normally requires 512MiB~1.2GiB of vram. This increases the
+            //       requeriments to 1.4Gib~2.25GiB of vram.
             //gl.generateMipmap(gl.TEXTURE_2D);
 
             this.has_texture_uploads = true;

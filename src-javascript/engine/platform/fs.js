@@ -55,6 +55,15 @@ async function fs_readarraybuffer(src) {
 
 async function fs_readimagebitmap(src) {
     src = await fs_get_full_path_and_override(src);
+    if (DDS.IsDDS(src)) {
+        let arraybuffer = await io_foreground_request(src, IO_REQUEST_ARRAYBUFFER);
+        if (!arraybuffer) return null;
+
+        let dds = DDS.Parse(arraybuffer);
+        if (!dds) return null;
+
+        return { data: dds, size: dds.size };
+    }
     return await io_foreground_request(src, IO_REQUEST_BITMAP);
 }
 

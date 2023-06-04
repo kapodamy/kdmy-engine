@@ -316,9 +316,8 @@ namespace Engine.Externals {
             NativeMethods.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
         }
 
-        internal void compressedTexSubImage2D(GLenum target, int level, int xoffset, int yoffset, int width, int height, GLenum format, DataView srcData) {
-            if (xoffset != 0 || yoffset != 0) throw new NotSupportedException("compressedTexSubImage2D() xoffset and yoffset are not supported");
-            NativeMethods.glCompressedTexImage2D(target, level, format, width, height, 0, srcData.length, srcData.pointer);
+        internal void compressedTexImage2D(GLenum target, int level, GLenum internalformat, int width, int height, int border, DataView pixels) {
+            NativeMethods.glCompressedTexImage2D(target, level, internalformat, width, height, border, pixels.length, pixels.pointer);
         }
 
         internal IWebGLExtension getExtension(string name) {

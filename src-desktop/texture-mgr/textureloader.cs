@@ -23,8 +23,11 @@ namespace Engine.Platform {
 
 
         public static ImageData ReadTexture(string src) {
-            Bitmap bitmap;
+            if (DDS.IsDDS(src)) {
+                return DDS.Parse(src);
+            }
 
+            Bitmap bitmap;
             try {
                 bitmap = new Bitmap(src);
             } catch (Exception e) {
@@ -38,10 +41,14 @@ namespace Engine.Platform {
         }
 
         public static ImageData ReadTexture(byte[] buffer) {
+            if (DDS.IsDDS(buffer)) {
+                return DDS.Parse(buffer);
+            }
+
             Bitmap bitmap;
             try {
                 using (MemoryStream stream = new MemoryStream(buffer, false)) {
-                bitmap = new Bitmap(stream);
+                    bitmap = new Bitmap(stream);
                 }
             } catch (Exception e) {
                 Console.Error.WriteLine(
