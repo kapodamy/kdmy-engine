@@ -46,6 +46,7 @@ typedef struct {
     volatile bool keep_alive;
     volatile bool halt;
     volatile bool callback_running;
+    volatile bool looped_needs_time_reset;
 
     volatile PaTime timestamp;
     volatile PaTime played_time;
@@ -130,6 +131,11 @@ static Stream_t* sndbridge_get_stream(StreamID stream) {
 static inline int32_t sndbridge_read_samples(Stream_t* stream, ulong frameCount, float* output) {
     assert(frameCount < SAMPLE_BUFFER_SIZE);
 
+    if (stream->looped_needs_time_reset) {
+        stream->played_time = 0.0;
+        stream->looped_needs_time_reset = false;
+    }
+
     // check if necessary refill the internal buffer;
     size_t buffer_used = stream->buffer_used;
     if (buffer_used >= frameCount) goto L_copy_and_return;
@@ -146,8 +152,8 @@ static inline int32_t sndbridge_read_samples(Stream_t* stream, ulong frameCount,
             // EOF reached, if looped seek to the start
             if (stream->looped) {
                 DECODER_SEEK(stream->decoder, 0.0);
-                stream->played_time = 0.0;
                 stream->fetching = false;
+                stream->looped_needs_time_reset = true;
                 continue;
             }
             break;
@@ -424,6 +430,7 @@ extern StreamID sndbridge_queue(ExternalDecoder* external_decoder) {
     stream->keep_alive = duration < MIN_DURATION_MS_KEEP_ALIVE;
     stream->callback_running = false;
     stream->sample_rate = sample_rate;
+    stream->looped_needs_time_reset = false;
 
     sndbridge_create_pastream(stream);
     if (!stream->pastream) {
@@ -506,6 +513,7 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
 
     stream->buffer_used = 0;
     stream->played_time = milliseconds / 1000.0;
+    stream->looped_needs_time_reset = false;
     DECODER_SEEK(stream->decoder, milliseconds);
 
     if (milliseconds >= stream->duration) {
@@ -600,6 +608,7 @@ extern void sndbridge_pause(StreamID stream_id) {
     stream->fade_duration = 0.0;
     stream->fetching = false;
     stream->completed = false;
+    stream->looped_needs_time_reset = false;
     DECODER_SEEK(stream->decoder, stream->played_time * 1000.0);
 }
 
@@ -632,6 +641,7 @@ L_reset_stream:
     stream->fade_duration = 0.0;
     stream->completed = false;
     stream->fetching = false;
+    stream->looped_needs_time_reset = false;
     DECODER_SEEK(stream->decoder, 0.0);
 }
 
