@@ -15,6 +15,7 @@ typedef struct {
     ExternalDecoderReadCB read_func;
     ExternalDecoderInfoCB info_func;
     ExternalDecoderSeekCB seek_func;
+    ExternalDecoderLoopCB loop_func;
 } WrapperOggDecoder;
 
 typedef void* (*InitFn)(FileHandle_t* file_hnd);
@@ -37,6 +38,10 @@ static bool wrapper_seek(WrapperOggDecoder* wrapper, double timestamp) {
     return wrapper->seek_func(wrapper->oggdecoder, timestamp);
 }
 
+static void wrapper_loop(WrapperOggDecoder* wrapper, int64_t* loop_start, int64_t* loop_length) {
+    wrapper->loop_func(wrapper->oggdecoder, loop_start, loop_length);
+}
+
 
 ExternalDecoder* oggdecoder_init(FileHandle_t* file_hnd) {
     assert(file_hnd);
@@ -57,6 +62,7 @@ ExternalDecoder* oggdecoder_init(FileHandle_t* file_hnd) {
             wrapper->info_func = (ExternalDecoderInfoCB)oggvorbisdecoder_get_info;
             wrapper->read_func = (ExternalDecoderReadCB)oggvorbisdecoder_read;
             wrapper->seek_func = (ExternalDecoderSeekCB)oggvorbisdecoder_seek;
+            wrapper->loop_func = (ExternalDecoderLoopCB)oggvorbisdecoder_get_loop_points;
             break;
 #ifdef SNDBRIDGE_OPUS_DECODING
         case OGGUTIL_CODEC_OPUS:;
@@ -65,6 +71,7 @@ ExternalDecoder* oggdecoder_init(FileHandle_t* file_hnd) {
             wrapper->info_func = (ExternalDecoderInfoCB)oggopusdecoder_get_info;
             wrapper->read_func = (ExternalDecoderReadCB)oggopusdecoder_read;
             wrapper->seek_func = (ExternalDecoderSeekCB)oggopusdecoder_seek;
+            wrapper->loop_func = (ExternalDecoderLoopCB)oggopusdecoder_get_loop_points;
             break;
 #endif
         case OGGUTIL_CODEC_ERROR:
@@ -90,6 +97,7 @@ ExternalDecoder* oggdecoder_init(FileHandle_t* file_hnd) {
     wrapper->extdec.info_func = (ExternalDecoderInfoCB)wrapper_info;
     wrapper->extdec.read_func = (ExternalDecoderReadCB)wrapper_read;
     wrapper->extdec.seek_func = (ExternalDecoderSeekCB)wrapper_seek;
+    wrapper->extdec.loop_func = (ExternalDecoderLoopCB)wrapper_loop;
 
     // mimic IDisposable interface
     return &wrapper->extdec;

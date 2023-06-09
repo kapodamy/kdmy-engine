@@ -1,6 +1,6 @@
 1 VERSIONINFO
-FILEVERSION     1,2,0,0
-PRODUCTVERSION  1,2,0,0
+FILEVERSION     1,2,1,0
+PRODUCTVERSION  1,2,1,0
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
@@ -8,11 +8,11 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "kapodamy"
       VALUE "FileDescription", "KDMY-Engine FFmpeg graph"
-      VALUE "FileVersion", "1.2.0"
+      VALUE "FileVersion", "1.2.1"
       VALUE "InternalName", "sndthread"
       VALUE "OriginalFilename", "kdy_FFgraph.dll"
       VALUE "ProductName", "KDMY-Engine multimedia files decoding using FFmpeg"
-      VALUE "ProductVersion", "1.2.0"
+      VALUE "ProductVersion", "1.2.1"
     END
   END
   BLOCK "VarFileInfo"

@@ -364,7 +364,7 @@ async function songplayer_internal_chrome_url(path) {
     let arraybuffer = await fs_readarraybuffer(path);
     let type = "";
 
-    if (path.endsWith(".ogg")) type = "audio/ogg";
+    if (path.endsWith(".ogg") || path.endsWith(".logg")) type = "audio/ogg";
     else if (path.endsWith(".wav")) type = "audio/wav";
     else if (path.endsWith(".mp3")) type = "audio/mp3";
 

@@ -30,7 +30,10 @@ namespace Engine.Sound {
 
             if (!FS.FileExists(full_path)) { return null; }
 
-            if (!full_path.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase)) {
+            if (
+                !full_path.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) &&
+                !full_path.EndsWith(".logg", StringComparison.OrdinalIgnoreCase)
+                ) {
                 Console.Error.WriteLine("songplayer_init() format not supported: " + src);
                 return null;
             }

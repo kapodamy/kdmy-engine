@@ -3,9 +3,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "oggdecoders.h"
 
+#define STR_STARTWITH(str, substr) strncmp(substr, str, strlen(substr)) == 0
 
 static size_t read_func(void* ptr, size_t size, size_t nmemb, void* datasource) {
     return (size_t)filehandle_read((FileHandle_t*)datasource, ptr, size * nmemb);
@@ -42,6 +44,24 @@ OggVorbisDecoder oggvorbisdecoder_init(FileHandle_t* file_hnd) {
         oggvorbisdecoder->duration = ov_time_total(&oggvorbisdecoder->vf, -1) * 1000.0;
 
         oggvorbisdecoder->file_hnd = file_hnd;
+
+       oggvorbisdecoder->loop_start = -1;
+       oggvorbisdecoder->loop_length = -1;
+
+        // find loop points
+        vorbis_comment* comments_info = ov_comment(&oggvorbisdecoder->vf, -1);
+        for (int i = 0; i < comments_info->comments; i++) {
+            //int length = comments_info->comment_lengths[i];
+            char* comment = comments_info->user_comments[i];
+
+            if (STR_STARTWITH(comment, OGGDECODERS_LOOPSTART)) {
+                oggvorbisdecoder->loop_start = strtoll(comment + strlen(OGGDECODERS_LOOPSTART), NULL, 10);
+            }
+
+            if (STR_STARTWITH(comment, OGGDECODERS_LOOPLENGTH)) {
+                oggvorbisdecoder->loop_length = strtoll(comment + strlen(OGGDECODERS_LOOPLENGTH), NULL, 10);
+            }
+        }
 
         return oggvorbisdecoder;
     }
@@ -82,4 +102,9 @@ void oggvorbisdecoder_get_info(OggVorbisDecoder oggvorbisdecoder, int32_t* rate,
 
 bool oggvorbisdecoder_seek(OggVorbisDecoder oggvorbisdecoder, double timestamp) {
     return ov_pcm_seek(&oggvorbisdecoder->vf, (ogg_int64_t)((timestamp / 1000.0) * oggvorbisdecoder->rate));
+}
+
+void oggvorbisdecoder_get_loop_points(OggVorbisDecoder oggvorbisdecoder, int64_t* loop_start, int64_t* loop_length) {
+    *loop_start = oggvorbisdecoder->loop_start;
+    *loop_length = oggvorbisdecoder->loop_length;
 }

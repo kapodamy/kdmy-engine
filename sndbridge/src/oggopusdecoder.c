@@ -7,6 +7,7 @@
 
 #include "oggdecoders.h"
 
+#define STR_STARTWITH(str, substr) strncmp(substr, str, strlen(substr)) == 0
 
 static int read_func(void* stream, unsigned char* ptr, int nbytes) {
     return (int)filehandle_read((FileHandle_t*)stream, ptr, nbytes);
@@ -49,6 +50,23 @@ OggOpusDecoder oggopusdecoder_init(FileHandle_t* file_hnd) {
     oggopusdecoder->channels = op_channel_count(oggopusdecoder->op, -1);
     oggopusdecoder->file_hnd = file_hnd;
     oggopusdecoder->bytes_per_channel = op_channel_count(oggopusdecoder->op, -1) * 2;
+    oggopusdecoder->loop_start = -1;
+    oggopusdecoder->loop_length = -1;
+
+    // find loop points
+    const OpusTags* comments_info = op_tags(oggopusdecoder->op, -1);
+    for (int i = 0; i < comments_info->comments; i++) {
+        //int length = comments_info->comment_lengths[i];
+        char* comment = comments_info->user_comments[i];
+
+        if (STR_STARTWITH(comment, OGGDECODERS_LOOPSTART)) {
+            oggopusdecoder->loop_start = strtoll(comment + strlen(OGGDECODERS_LOOPSTART), NULL, 10);
+        }
+
+        if (STR_STARTWITH(comment, OGGDECODERS_LOOPLENGTH)) {
+            oggopusdecoder->loop_length = strtoll(comment + strlen(OGGDECODERS_LOOPLENGTH), NULL, 10);
+        }
+    }
 
     return oggopusdecoder;
 }
@@ -73,5 +91,10 @@ void oggopusdecoder_get_info(OggOpusDecoder oggopusdecoder, int32_t* rate, int32
 bool oggopusdecoder_seek(OggOpusDecoder oggopusdecoder, double timestamp) {
     ogg_int64_t pcm_offset = (ogg_int64_t)(timestamp / OPUS_RATE_CONV);
     return op_pcm_seek(oggopusdecoder->op, pcm_offset);
+}
+
+void oggopusdecoder_get_loop_points(OggOpusDecoder oggopusdecoder, int64_t* loop_start, int64_t* loop_length) {
+    *loop_start = oggopusdecoder->loop_start;
+    *loop_length = oggopusdecoder->loop_length;
 }
 #endif

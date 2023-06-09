@@ -12,6 +12,9 @@
 
 #include "filehandle.h"
 
+#define OGGDECODERS_LOOPSTART "LOOPSTART="
+#define OGGDECODERS_LOOPLENGTH "LOOPLENGTH="
+
 typedef struct {
     OggVorbis_File vf;
     int current_section;
@@ -19,6 +22,9 @@ typedef struct {
     int32_t channels;
     double rate;
     double duration;
+
+    int64_t loop_start;
+    int64_t loop_length;
 
     FileHandle_t* file_hnd;
 } OggVorbisDecoder_t;
@@ -31,6 +37,7 @@ void oggvorbisdecoder_destroy(OggVorbisDecoder oggvorbisdecoder);
 int32_t oggvorbisdecoder_read(OggVorbisDecoder oggvorbisdecoder, float* buffer, int32_t samples_per_channel);
 void oggvorbisdecoder_get_info(OggVorbisDecoder oggvorbisdecoder, int32_t* rate, int32_t* channels, double* duration);
 bool oggvorbisdecoder_seek(OggVorbisDecoder oggvorbisdecoder, double timestamp);
+void oggvorbisdecoder_get_loop_points(OggVorbisDecoder oggvorbisdecoder, int64_t* loop_start, int64_t* loop_length);
 
 
 #ifdef SNDBRIDGE_OPUS_DECODING
@@ -45,6 +52,9 @@ typedef struct {
     double duration;
     int channels;
 
+    int64_t loop_start;
+    int64_t loop_length;
+
     FileHandle_t* file_hnd;
 } OggOpusDecoder_t;
 
@@ -56,6 +66,7 @@ void oggopusdecoder_destroy(OggOpusDecoder oggopusdecoder);
 int32_t oggopusdecoder_read(OggOpusDecoder oggopusdecoder, float* buffer, int32_t samples_per_channel);
 void oggopusdecoder_get_info(OggOpusDecoder oggopusdecoder, int32_t* rate, int32_t* channels, double* duration);
 bool oggopusdecoder_seek(OggOpusDecoder oggopusdecoder, double timestamp);
+void oggopusdecoder_get_loop_points(OggOpusDecoder oggvorbisdecoder, int64_t* loop_start, int64_t* loop_length);
 #endif
 
 #endif

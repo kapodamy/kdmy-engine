@@ -12,6 +12,12 @@ static bool stub_seek(void* decoder, double timestamp) {
     return false;
 }
 
+static void stub_loop(void* decoder, int64_t* loop_start, int64_t* loop_length) {
+    (void)decoder;
+    *loop_start = -1;
+    *loop_length = -1;
+}
+
 
 static int32_t read(FFGraph* ffgraph, float* buffer, int32_t sample_per_channel) {
     int32_t ret = ffgraph_read_audio_samples(ffgraph, buffer, sample_per_channel);
@@ -43,6 +49,7 @@ ExternalDecoder* ffgraph_sndbridge_create_helper(FFGraph* ffgraph, bool allow_se
     ffgraph_sndbridge->info_func = (ExternalDecoderInfoCB)info;
     ffgraph_sndbridge->read_func = (ExternalDecoderReadCB)read;
     ffgraph_sndbridge->seek_func = allow_seek ? (ExternalDecoderSeekCB)seek : stub_seek;
+    ffgraph_sndbridge->loop_func = stub_loop;
 
     return ffgraph_sndbridge;
 }

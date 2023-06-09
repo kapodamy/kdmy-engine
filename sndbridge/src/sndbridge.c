@@ -47,6 +47,7 @@ typedef struct {
     volatile bool halt;
     volatile bool callback_running;
     volatile bool looped_needs_time_reset;
+    volatile int64_t sample_position;
 
     volatile PaTime timestamp;
     volatile PaTime played_time;
@@ -56,6 +57,10 @@ typedef struct {
     float fade_duration;
     float fade_progress;
     bool fade_in_or_out;
+
+    int64_t loop_start_samples;
+    PaTime loop_start_milliseconds;
+    int64_t loop_end_samples;
 
     size_t buffer_used;
     float buffer[SAMPLE_BUFFER_SIZE];
@@ -132,7 +137,7 @@ static inline int32_t sndbridge_read_samples(Stream_t* stream, ulong frameCount,
     assert(frameCount < SAMPLE_BUFFER_SIZE);
 
     if (stream->looped_needs_time_reset) {
-        stream->played_time = 0.0;
+        stream->played_time = stream->loop_start_milliseconds / 1000.0;// this is zero if loop points are absent
         stream->looped_needs_time_reset = false;
     }
 
@@ -151,12 +156,41 @@ static inline int32_t sndbridge_read_samples(Stream_t* stream, ulong frameCount,
 
             // EOF reached, if looped seek to the start
             if (stream->looped) {
+                if (stream->loop_start_samples >= 0) {
+                    // this never should happen
+                    DECODER_SEEK(stream->decoder, stream->loop_start_milliseconds);
+                    stream->sample_position = stream->loop_start_samples;
+                    stream->fetching = false;
+                    stream->looped_needs_time_reset = true;
+                    continue;
+                }
+
                 DECODER_SEEK(stream->decoder, 0.0);
                 stream->fetching = false;
                 stream->looped_needs_time_reset = true;
                 continue;
             }
             break;
+        }
+
+        // check loop points
+        if (stream->looped && stream->loop_start_samples >= 0 && readed > 0) {
+            int64_t total_readed = stream->sample_position + readed;
+
+            if (total_readed < stream->loop_end_samples) {
+                stream->sample_position = total_readed;
+            } else {
+                // discard last samples
+                int64_t to_discard = total_readed - stream->loop_end_samples;
+                if (to_discard < 0 || to_discard > readed) to_discard = readed;
+                readed -= to_discard;
+
+                // seek to the loop start position
+                DECODER_SEEK(stream->decoder, stream->loop_start_milliseconds);
+                stream->fetching = false;
+                stream->sample_position = stream->loop_start_samples;
+                stream->looped_needs_time_reset = true;
+            }
         }
 
         buf += readed * stream->channels;
@@ -431,12 +465,35 @@ extern StreamID sndbridge_queue(ExternalDecoder* external_decoder) {
     stream->callback_running = false;
     stream->sample_rate = sample_rate;
     stream->looped_needs_time_reset = false;
+    stream->sample_position = 0;
+    stream->loop_start_samples = -1;
+    stream->loop_start_milliseconds = 0.0;
+    stream->loop_end_samples = -1;
 
     sndbridge_create_pastream(stream);
     if (!stream->pastream) {
         free(stream);
         sndbridge_dispose_backend();
         return StreamID_BACKEND_FAILED;
+    }
+
+    if (external_decoder->loop_func) {
+        external_decoder->loop_func(external_decoder->decoder, &stream->loop_start_samples, &stream->loop_end_samples);
+
+        // check if the loop points are valid
+        if (stream->loop_start_samples < 0 || stream->loop_start_samples == stream->loop_end_samples) {
+            stream->loop_start_samples = -1;
+            stream->loop_end_samples = -1;
+        } else if (stream->loop_end_samples < 1) {
+            stream->loop_end_samples = (int64_t)((stream->duration / 1000.0) * stream->sample_rate);
+        } else {
+            stream->loop_end_samples += stream->loop_start_samples;
+        }
+
+        if (stream->loop_start_samples >= 0) {
+            stream->loop_start_milliseconds = (stream->loop_start_samples * 1000.0) / stream->sample_rate;
+            stream->looped = true;
+        }
     }
 
     // ¡success!
@@ -514,6 +571,8 @@ extern void sndbridge_seek(StreamID stream_id, double milliseconds) {
     stream->buffer_used = 0;
     stream->played_time = milliseconds / 1000.0;
     stream->looped_needs_time_reset = false;
+    stream->sample_position = (int64_t)(stream->played_time * stream->sample_rate);
+
     DECODER_SEEK(stream->decoder, milliseconds);
 
     if (milliseconds >= stream->duration) {
@@ -609,6 +668,7 @@ extern void sndbridge_pause(StreamID stream_id) {
     stream->fetching = false;
     stream->completed = false;
     stream->looped_needs_time_reset = false;
+    stream->sample_position = (int64_t)(stream->played_time * stream->sample_rate);
     DECODER_SEEK(stream->decoder, stream->played_time * 1000.0);
 }
 
@@ -642,6 +702,7 @@ L_reset_stream:
     stream->completed = false;
     stream->fetching = false;
     stream->looped_needs_time_reset = false;
+    stream->sample_position = 0;
     DECODER_SEEK(stream->decoder, 0.0);
 }
 
@@ -762,7 +823,7 @@ int main() {
     StreamID stream_id = sndbridge_queue_ogg(mem);*/
 
     // FileHandle_t* mem = filehandle_init("./vorbis.ogg");
-    FileHandle_t* mem = filehandle_init("./gameOverEnd.ogg");
+    FileHandle_t* mem = filehandle_init("./goldgrab.logg");
     StreamID stream_id = sndbridge_queue_ogg(mem);
 
 
@@ -823,13 +884,14 @@ int main() {
         //sndbridge_seek(stream_id, 0.0);
     }*/
 
+    sndbridge_loop(stream_id, false);
     // sndbridge_stop(stream_id);
     sndbridge_play(stream_id);
     // Pa_Sleep(3000);
     // sndbridge_seek(stream_id, 1000);
 
     int32_t total = 0;
-    while (total < 15000) {
+    while (total < 50000) {
         double duration = sndbridge_duration(stream_id);
         double position = sndbridge_position(stream_id);
         printf("duration=%f  time=%f\n", duration, position);
