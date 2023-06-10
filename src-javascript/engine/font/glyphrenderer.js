@@ -126,7 +126,7 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
         gl.uniform1i(program_glyphs.u_texture0, 0);
 
         // update antialiasing
-        if (change_filtering) webopengl_change_texture_filtering(pvrctx);
+        if (change_filtering) webopengl_change_texture_filtering(pvrctx, tex0.has_mipmaps);
     }
     if (tex1) {
         gl.activeTexture(gl.TEXTURE1);
@@ -134,7 +134,7 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
         gl.uniform1i(program_glyphs.u_texture1, 1);
 
         // update antialiasing
-        if (change_filtering) webopengl_change_texture_filtering(pvrctx);
+        if (change_filtering) webopengl_change_texture_filtering(pvrctx, tex1.has_mipmaps);
     }
 
     // send quad units

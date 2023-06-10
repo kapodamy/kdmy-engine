@@ -571,11 +571,15 @@ namespace Engine.Font {
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpack_alignment);
 
             fontcharmap.texture = IntPtr.Zero;
-            return Texture.InitFromRAW(
+
+            Texture tex = Texture.InitFromRAW(
                 texture, (int)fontcharmap.texture_byte_size, true,
                 fontcharmap.texture_width, fontcharmap.texture_height,
                 fontcharmap.texture_width, fontcharmap.texture_height
             );
+            tex.has_mipmaps = true;
+
+            return tex;
         }
 
         private void InternalFindUnmapedCodepointsToSecondary(int text_index, int text_end_index, string text) {

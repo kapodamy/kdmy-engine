@@ -53,13 +53,18 @@ function texture_init_from_raw(ptr, size, in_vram, width, height, orig_width, or
         id: TEXTURE_IDS++,
         src_filename: null,
         references: 1,
-        cache_references: 0
+        cache_references: 0,
+        has_mipmaps: false
     }
 
     if (in_vram)
         texture.data_vram = ptr;
     else
         texture.data_ram = ptr;
+
+    if (!in_vram && texture.data_ram instanceof DDS) {
+        texture.has_mipmaps = ptr.Mipmaps.length > 0;
+    }
 
     TEXTURE_POOL.set(texture.id, texture);
 

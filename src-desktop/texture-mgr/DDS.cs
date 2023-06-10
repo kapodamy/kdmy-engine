@@ -28,7 +28,7 @@ namespace Engine.Platform {
         private readonly int first_bitmap_size;
 
         public unsafe DDSPixelDataBuffer(GCHandle hnd, void* ptr, DDSBitmap[] bitmaps, DDSCompression compression) {
-            if (dds_ptr == null) throw new ArgumentNullException(nameof(dds_ptr));
+            if (ptr == null) throw new ArgumentNullException(nameof(dds_ptr));
             if (bitmaps == null) throw new ArgumentNullException(nameof(bitmaps));
             if (bitmaps.Length < 1) throw new ArgumentException($"invalid {nameof(bitmaps)} length");
 

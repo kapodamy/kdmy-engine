@@ -528,11 +528,15 @@ function fonttype_internal_upload_texture(fontcharmap) {
     //gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpack_alignment);
 
     fontcharmap.texture = null;
-    return texture_init_from_raw(
+
+    let tex = texture_init_from_raw(
         texture, fontcharmap.texture_byte_size, true,
         fontcharmap.texture_width, fontcharmap.texture_height,
         fontcharmap.texture_width, fontcharmap.texture_height
     );
+    tex.has_mipmaps = true;
+
+    return tex;
 }
 
 function fonttype_internal_find_unmaped_codepoints_to_secondary(fonttype, text_index, text_end_index, text) {

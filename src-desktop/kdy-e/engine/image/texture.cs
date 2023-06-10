@@ -24,6 +24,7 @@ namespace Engine.Image {
         internal string src_filename;
         private int references;
         private int cache_references;
+        internal bool has_mipmaps;
 
 
         public static Texture Init(string src) {
@@ -72,11 +73,17 @@ namespace Engine.Image {
             texture.src_filename = null;
             texture.references = 1;
             texture.cache_references = 0;
+            texture.has_mipmaps = false;
 
             if (in_vram)
                 texture.data_vram = (WebGLTexture)ptr;
             else
                 texture.data_ram = (ImageData)ptr;
+
+            if (!in_vram && texture.data_ram.pixelDataBuffer is DDSPixelDataBuffer) {
+                DDSPixelDataBuffer dds = (DDSPixelDataBuffer)texture.data_ram.pixelDataBuffer;
+                texture.has_mipmaps = dds.Mipmaps.Length > 0;
+            }
 
             TEXTURE_POOL.Set(texture.id, texture);
 

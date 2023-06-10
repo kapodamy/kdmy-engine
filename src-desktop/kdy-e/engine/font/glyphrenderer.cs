@@ -134,7 +134,7 @@ namespace Engine.Font {
                 gl.uniform1i(program_glyphs.u_texture0, 0);
 
                 // update antialiasing
-                if (change_filtering) pvrctx.webopengl.ChangeTextureFiltering(pvrctx);
+                if (change_filtering) pvrctx.webopengl.ChangeTextureFiltering(pvrctx, tex0.has_mipmaps);
             }
             if (tex1 != null) {
                 gl.activeTexture(gl.TEXTURE1);
@@ -142,7 +142,7 @@ namespace Engine.Font {
                 gl.uniform1i(program_glyphs.u_texture1, 1);
 
                 // update antialiasing
-                if (change_filtering) pvrctx.webopengl.ChangeTextureFiltering(pvrctx);
+                if (change_filtering) pvrctx.webopengl.ChangeTextureFiltering(pvrctx, tex1.has_mipmaps);
             }
 
             // send quad units

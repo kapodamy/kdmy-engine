@@ -185,14 +185,14 @@ namespace Engine.Platform {
             return tex;
         }
 
-        public void ChangeTextureFiltering(PVRContext pvrctx) {
+        public void ChangeTextureFiltering(PVRContext pvrctx, bool has_mipmaps) {
             WebGL2RenderingContext gl = pvrctx.webopengl.gl;
 
             GLenum filter;
             if (pvrctx.render_antialiasing == PVRContextFlag.DISABLE)
-                filter = gl.NEAREST_MIPMAP_NEAREST;
+                filter = has_mipmaps ? gl.NEAREST_MIPMAP_NEAREST : gl.NEAREST;
             else
-                filter = gl.LINEAR_MIPMAP_LINEAR;
+                filter = has_mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR;
 
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
@@ -234,7 +234,7 @@ namespace Engine.Platform {
 
             // bind texture and update antialiasing
             gl.bindTexture(gl.TEXTURE_2D, tex.data_vram);
-            ChangeTextureFiltering(pvrctx);
+            ChangeTextureFiltering(pvrctx, tex.has_mipmaps);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.position_buffer);
             gl.enableVertexAttribArray(this.program_textured.a_position);

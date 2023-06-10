@@ -961,14 +961,14 @@ function webopengl_create_texture(/**@type {WebGL2Context}*/wglc, texture_width,
     return tex;
 }
 
-function webopengl_change_texture_filtering(/**@type {PVRContext}*/pvrctx) {
+function webopengl_change_texture_filtering(/**@type {PVRContext}*/pvrctx, has_mipmaps) {
     const gl = pvrctx.webopengl.gl;
 
     let filter;
     if (pvrctx.render_antialiasing == PVR_FLAG_DISABLE)
-        filter = gl.NEAREST;
+        filter = has_mipmaps ? gl.NEAREST_MIPMAP_NEAREST : gl.NEAREST;
     else
-        filter = gl.LINEAR;
+        filter = has_mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR;
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
@@ -1022,7 +1022,7 @@ function webopengl_draw_texture(/**@type {PVRContext}*/pvrctx, tex, sx, sy, sw, 
 
     // bind texture and update antialiasing
     gl.bindTexture(gl.TEXTURE_2D, tex.data_vram);
-    webopengl_change_texture_filtering(pvrctx);
+    webopengl_change_texture_filtering(pvrctx, tex.has_mipmaps);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, wglc.position_buffer);
     gl.enableVertexAttribArray(wglc.program_textured.a_position);
