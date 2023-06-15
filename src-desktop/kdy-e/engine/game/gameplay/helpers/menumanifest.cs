@@ -78,7 +78,7 @@ namespace Engine.Game.Gameplay.Helpers {
 
         public MenuManifest(string src) {
 
-            JSONParser json = JSONParser.LoadFrom(src);
+            JSONToken json = JSONParser.LoadFrom(src);
             if (json == null) throw new Exception("menumanifest_init() misssing or invalid file: " + src);
 
             JSONToken json_parameters = JSONParser.ReadObject(json, "parameters");

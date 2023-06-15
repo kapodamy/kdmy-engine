@@ -157,7 +157,7 @@ namespace Engine.Game.Gameplay.Helpers {
 
 
         public static GameplayManifest Init(string src) {
-            JSONParser json = JSONParser.LoadFrom(src);
+            JSONToken json = JSONParser.LoadFrom(src);
             if (json == null) return null;
 
             GameplayManifest manifest = new GameplayManifest() {

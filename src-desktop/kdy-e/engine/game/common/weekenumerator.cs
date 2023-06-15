@@ -168,7 +168,7 @@ namespace Engine.Game.Common {
             WeekInfo week_parsed = null;
 
             try {
-                JSONParser json = JSONParser.LoadFrom(Funkin.WEEK_ABOUT_FILE);
+                JSONToken json = JSONParser.LoadFrom(Funkin.WEEK_ABOUT_FILE);
 
                 if (!JSONParser.HasPropertyArray(json, "songs")) {
                     throw new Exception("missing or invalid songs in week: " + week_name);

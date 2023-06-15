@@ -250,10 +250,23 @@ function luascript_helper_parse_json(L, json) {
         return 1;
     }
 
-    if (Array.isArray(json))
+    let type = typeof(json);
+
+    if (Array.isArray(json)) {
         luascript_helper_parse_json_array(L, json);
-    else
+    } else if (type == null) {
+        ModuleLuaScript._lua_pushnil(L);
+    } else if (type === "boolean") {
+        ModuleLuaScript._lua_pushboolean(L, json);
+    } else if (type === "number") {
+        ModuleLuaScript._lua_pushnumber(L, json);
+    } else if (type === "string") {
+        let string_ptr = ModuleLuaScript.kdmyEngine_stringToPtr(json);
+        ModuleLuaScript._lua_pushstring(L, string_ptr);
+        ModuleLuaScript.kdmyEngine_deallocate(string_ptr);
+    } else if (type === "object") {
         luascript_helper_parse_json_object(L, json);
+    }
 
     return 1;
 }

@@ -716,7 +716,7 @@ L_return:
 
         public static string HelperGetDefaultCharacterManifest(bool is_boyfriend) {
             string src = is_boyfriend ? WeekSelectorMdlSelect.MODELS_BF : WeekSelectorMdlSelect.MODELS_GF;
-            JSONParser json = JSONParser.LoadFrom(src);
+            JSONToken json = JSONParser.LoadFrom(src);
 
             if (json == null) return null;
 

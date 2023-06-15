@@ -104,7 +104,7 @@ namespace Engine.Game.Helpers {
             int index = 0;
 
             string models = is_boyfriend ? WeekSelectorMdlSelect.MODELS_BF : WeekSelectorMdlSelect.MODELS_GF;
-            JSONParser models_array = JSONParser.LoadFrom(models);
+            JSONToken models_array = JSONParser.LoadFrom(models);
             int models_array_size = JSONParser.ReadArrayLength(models_array);
 
             // count all character models

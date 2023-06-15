@@ -1,9 +1,5 @@
-﻿
-
-using System;
-using Engine.Externals.LuaInterop;
+﻿using Engine.Externals.LuaInterop;
 using Engine.Utils;
-using Newtonsoft.Json.Linq;
 
 namespace Engine.Externals.LuaScriptInterop {
 
@@ -13,16 +9,29 @@ namespace Engine.Externals.LuaScriptInterop {
 
         #region "JSON --> Lua table"
 
-        private static int luascript_helper_parse_json(LuaState L, JSONParser json) {
+        private static int luascript_helper_parse_json(LuaState L, JSONToken json) {
             if (json == null) {
                 L.lua_pushnil();
                 return 1;
             }
 
-            if (JSONParser.IsArray(json))
+            object value = JSONParser.GetTokenValue(json);
+
+            if (JSONParser.IsArray(json)) {
                 luascript_helper_parse_json_array(L, json);
-            else
+            } else if (value is null) {
+                L.lua_pushnil();
+            } else if (value is bool) {
+                L.lua_pushboolean((bool)value);
+            } else if (value is long) {
+                L.lua_pushinteger((long)value);
+            } else if (value is double) {
+                L.lua_pushnumber((double)value);
+            } else if (value is string) {
+                L.lua_pushstring((string)value);
+            } else {
                 luascript_helper_parse_json_object(L, json);
+            }
 
             return 1;
         }
@@ -110,7 +119,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_json_parse_from_file(LuaState L) {
             string src = L.luaL_checkstring(2);
 
-            JSONParser json = JSONParser.LoadFrom(src);
+            JSONToken json = JSONParser.LoadFrom(src);
             int ret = luascript_helper_parse_json(L, json);
             JSONParser.Destroy(json);
 
@@ -120,7 +129,7 @@ namespace Engine.Externals.LuaScriptInterop {
         static int script_json_parse(LuaState L) {
             string json_sourcecode = L.luaL_checkstring(2);
 
-            JSONParser json = JSONParser.LoadFromString(json_sourcecode);
+            JSONToken json = JSONParser.LoadFromString(json_sourcecode);
             int ret = luascript_helper_parse_json(L, json);
             JSONParser.Destroy(json);
 

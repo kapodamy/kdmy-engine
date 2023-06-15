@@ -61,7 +61,7 @@ namespace Engine.Game.Gameplay.Helpers {
             string chart_filename = StringUtils.CopyAndInsert(src, index, difficult);
             //free(difficult);
 
-            JSONParser json;
+            JSONToken json;
             if (is_normal && FS.FileExists(src)) {
                 json = JSONParser.LoadFrom(src);
             } else {

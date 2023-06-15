@@ -54,7 +54,7 @@ namespace Engine.Platform {
 
             if (has_about) {
                 about_path = IO.GetAbsolutePath(expansion_base_path + Expansions.ABOUT_FILENAME, true, false);
-                JSONParser json = JSONParser.LoadDirectFrom(about_path);
+                JSONToken json = JSONParser.LoadDirectFrom(about_path);
                 bool override_weeks_folder = JSONParser.ReadBoolean(json, "overrideWeeksFolder", false);
                 JSONParser.Destroy(json);
 

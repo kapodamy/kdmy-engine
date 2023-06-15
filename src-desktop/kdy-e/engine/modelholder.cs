@@ -60,7 +60,7 @@ namespace Engine {
                     FS.FolderStackPop();
                     return null;
                 }
-                JSONParser json = JSONParser.LoadFrom(full_path);
+                JSONToken json = JSONParser.LoadFrom(full_path);
                 manifest_texture = JSONParser.ReadString(json, "texture", null);
                 manifest_atlas = JSONParser.ReadString(json, "atlas", null);
                 manifest_animlist = JSONParser.ReadString(json, "animlist", null);

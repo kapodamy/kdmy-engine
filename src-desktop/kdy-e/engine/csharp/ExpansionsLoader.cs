@@ -127,7 +127,7 @@ namespace CsharpWrapper {
                     continue;
                 }
 
-                JSONParser json = JSONParser.LoadDirectFrom(about_src);
+                JSONToken json = JSONParser.LoadDirectFrom(about_src);
                 if (json == null) {
                     Console.Error.WriteLine("ExpansionsLoader::LoadExpansions() can not open: " + about_src);
                     continue;

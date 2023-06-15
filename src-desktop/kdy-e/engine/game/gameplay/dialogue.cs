@@ -2440,7 +2440,7 @@ L_check_failed:
         }
 
         private static void InternalLoadPsychCharacterJSON(string src, ArrayList<Portrait> portraits) {
-            JSONParser json = JSONParser.LoadFrom(src);
+            JSONToken json = JSONParser.LoadFrom(src);
             if (json == null) {
                 Console.Error.WriteLine("[ERROR] dialogue_internal_load_psych_character_json() can not load: " + src);
                 return;

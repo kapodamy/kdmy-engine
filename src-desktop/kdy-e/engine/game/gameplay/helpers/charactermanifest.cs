@@ -95,7 +95,7 @@ namespace Engine.Game.Gameplay.Helpers {
         public int additional_states_size;
 
         public CharacterManifest(string src, bool gameplay_required_models_only) {
-            JSONParser json = JSONParser.LoadFrom(src);
+            JSONToken json = JSONParser.LoadFrom(src);
             if (json == null) throw new Exception("missing or invalid file: " + src);
 
             FS.FolderStackPush();
