@@ -10,7 +10,7 @@ namespace Engine.Platform {
         BOTTOMRIGHT
     }
 
-    public struct SH4MatrixCorner {
+public struct CornerRotation {
         public float angle;
         public float x;
         public float y;
@@ -303,7 +303,7 @@ namespace Engine.Platform {
             for (int i = 0 ; i < SH4Matrix.SIZE ; i++) dest.matrix[i] = this.matrix[i];
         }
 
-        public void CornerRotate(SH4MatrixCorner matrix_corner, float x, float y, float width, float height) {
+    public void CornerRotate(CornerRotation matrix_corner, float x, float y, float width, float height) {
             Translate(x, y);
             RotateByRads(matrix_corner.angle);
             Translate(-x, -y);

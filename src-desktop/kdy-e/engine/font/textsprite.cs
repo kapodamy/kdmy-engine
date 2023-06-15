@@ -39,7 +39,7 @@ namespace Engine.Font {
         private int max_lines;
         private Align paragraph_align;
         private Modifier matrix_source;
-        private SH4MatrixCorner matrix_corner;
+        private CornerRotation matrix_corner;
         private bool flip_x;
         private bool flip_y;
         private ArrayList<ParagraphInfo> paragraph_array;

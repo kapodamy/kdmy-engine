@@ -24,7 +24,7 @@ namespace Engine.Image {
         private bool flip_x;
         private bool flip_y;
         private bool flip_correction;
-        private SH4MatrixCorner matrix_corner;
+        private CornerRotation matrix_corner;
         private float src_x;
         private float src_y;
         private float[] vertex_color;
@@ -288,7 +288,7 @@ namespace Engine.Image {
             sprite.flip_x = false;
             sprite.flip_y = false;
             sprite.flip_correction = true;
-            sprite.matrix_corner = new SH4MatrixCorner();
+            sprite.matrix_corner = new CornerRotation();
 
             sprite.src_x = 0;
             sprite.src_y = 0;

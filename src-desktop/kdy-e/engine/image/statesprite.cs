@@ -12,7 +12,7 @@ namespace Engine.Image {
         public string state_name;
         public uint vertex_color;
         public AtlasEntry frame_info;
-        public SH4MatrixCorner corner_rotation;
+        public CornerRotation corner_rotation;
         public float offset_x;
         public float draw_width;
         public float draw_height;
@@ -55,7 +55,7 @@ namespace Engine.Image {
         private float[] vertex;
         private bool vertex_dirty;
         private AnimSprite animation_external;
-        private SH4MatrixCorner matrix_corner;
+        private CornerRotation matrix_corner;
         private SpriteCropInfo crop;
         private bool crop_enabled;
         private bool flip_x;
@@ -352,7 +352,7 @@ namespace Engine.Image {
 
             statesprite.animation_external = null;
 
-            statesprite.matrix_corner = new SH4MatrixCorner();
+            statesprite.matrix_corner = new CornerRotation();
 
             statesprite.crop = new SpriteCropInfo();
             statesprite.crop_enabled = false;
@@ -848,7 +848,7 @@ namespace Engine.Image {
                 animation = animsprt,
                 vertex_color = rgb8_color,
                 frame_info = null,
-                corner_rotation = new SH4MatrixCorner() { x = corner_x, y = corner_y, angle = corner_angle },
+                corner_rotation = new CornerRotation() { x = corner_x, y = corner_y, angle = corner_angle },
                 offset_x = this.offset_x,
                 offset_y = this.offset_y,
                 draw_width = this.draw_width,
