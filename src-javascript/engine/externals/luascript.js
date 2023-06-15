@@ -150,7 +150,7 @@ var quit_ = (status, toThrow) => {
     throw toThrow
 };
 var ENVIRONMENT_IS_WEB = typeof window == "object";
-var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";
+var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";// @ts-ignore
 var ENVIRONMENT_IS_NODE = typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string";
 var scriptDirectory = "";
 function locateFile(path) {
@@ -170,14 +170,14 @@ var fs;
 var nodePath;
 var requireNodeFS;
 if (ENVIRONMENT_IS_NODE) {
-    if (ENVIRONMENT_IS_WORKER) {
+    if (ENVIRONMENT_IS_WORKER) {// @ts-ignore
         scriptDirectory = require("path").dirname(scriptDirectory) + "/"
-    } else {
+    } else {// @ts-ignore
         scriptDirectory = __dirname + "/"
     }
     requireNodeFS = () => {
-        if (!nodePath) {
-            fs = require("fs");
+        if (!nodePath) {// @ts-ignore
+            fs = require("fs");// @ts-ignore
             nodePath = require("path")
         }
     };
@@ -202,28 +202,28 @@ if (ENVIRONMENT_IS_NODE) {
             else
                 onload(data.buffer)
         })
-    };
-    if (process["argv"].length > 1) {
+    };// @ts-ignore
+    if (process["argv"].length > 1) {// @ts-ignore
         thisProgram = process["argv"][1].replace(/\\/g, "/")
-    }
+    }// @ts-ignore
     arguments_ = process["argv"].slice(2);
     if (typeof module != "undefined") {
         module["exports"] = ModuleLuaScript
-    }
+    }// @ts-ignore
     process["on"]("uncaughtException", function (ex) {
         if (!(ex instanceof ExitStatus)) {
             throw ex
         }
-    });
+    });// @ts-ignore
     process["on"]("unhandledRejection", function (reason) {
         throw reason
     });// @ts-ignore
     quit_ = (status, toThrow) => {
-        if (keepRuntimeAlive()) {
+        if (keepRuntimeAlive()) {// @ts-ignore
             process["exitCode"] = status;
             throw toThrow
         }
-        logExceptionOnExit(toThrow);
+        logExceptionOnExit(toThrow);// @ts-ignore
         process["exit"](status)
     };
     ModuleLuaScript["inspect"] = function () {
@@ -3629,7 +3629,7 @@ function getRandomDevice() {
             return randomBuffer[0]
         }
     } else if (ENVIRONMENT_IS_NODE) {
-        try {
+        try {// @ts-ignore
             var crypto_module = require("crypto");
             return function () {
                 return crypto_module["randomBytes"](1)[0]
@@ -3767,10 +3767,10 @@ var TTY = {
             if (!tty.input.length) {
                 var result = null;
                 if (ENVIRONMENT_IS_NODE) {
-                    var BUFSIZE = 256;
+                    var BUFSIZE = 256;// @ts-ignore
                     var buf = Buffer.alloc(BUFSIZE);
                     var bytesRead = 0;
-                    try {
+                    try {// @ts-ignore
                         bytesRead = fs.readSync(process.stdin.fd, buf, 0, BUFSIZE, -1)
                     } catch (e) {
                         if (e.toString().includes("EOF"))
@@ -6134,7 +6134,7 @@ function _abort() {
 }
 var _emscripten_get_now;
 if (ENVIRONMENT_IS_NODE) {
-    _emscripten_get_now = () => {
+    _emscripten_get_now = () => {// @ts-ignore
         var t = process["hrtime"]();
         return t[0] * 1e3 + t[1] / 1e6
     }
@@ -6592,7 +6592,7 @@ function _system(command) {
             return 1;
         var cmdstr = UTF8ToString(command);
         if (!cmdstr.length)
-            return 0;
+            return 0;// @ts-ignore
         var cp = require("child_process");
         var ret = cp.spawnSync(cmdstr, [], {
             shell: true,
