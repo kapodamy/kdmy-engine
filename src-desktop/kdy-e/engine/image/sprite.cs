@@ -887,7 +887,7 @@ namespace Engine.Image {
 
 
         public void MatrixCalculate(PVRContext pvrctx) {
-            SH4Matrix matrix = pvrctx.CurrentMatrix;
+            SIMDMatrix matrix = pvrctx.CurrentMatrix;
 
             // apply self modifier
             matrix.ApplyModifier2(

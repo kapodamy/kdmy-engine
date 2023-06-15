@@ -118,12 +118,12 @@ namespace Engine {
 
 
         private Layout() {
-            this.MATRIX_VIEWPORT = new SH4Matrix();
-            this.MATRIX_SCREEN = new SH4Matrix();
+            this.MATRIX_VIEWPORT = new SIMDMatrix();
+            this.MATRIX_SCREEN = new SIMDMatrix();
         }
 
-        private readonly SH4Matrix MATRIX_VIEWPORT;
-        private readonly SH4Matrix MATRIX_SCREEN;
+        private readonly SIMDMatrix MATRIX_VIEWPORT;
+        private readonly SIMDMatrix MATRIX_SCREEN;
 
         private float animation_speed;
         private Camera camera_helper;
@@ -765,7 +765,7 @@ namespace Engine {
             // screen aspect ratio correction
             screen_x -= pvr_context.ScreenStride - pvr_context.ScreenWidth;
 
-            SH4Matrix temp = this.MATRIX_SCREEN;
+            SIMDMatrix temp = this.MATRIX_SCREEN;
             temp.Clear();
             temp.ApplyModifier(this.modifier_viewport);
 
@@ -1092,7 +1092,7 @@ namespace Engine {
                     visible = true,
                     alpha = 1.0f,
                     antialiasing = PVRContextFlag.DEFAULT,
-                    matrix = new SH4Matrix(),
+                    matrix = new SIMDMatrix(),
                     offsetcolor = new float[4],
                     parallax = new LayoutParallax() { x = 1.0f, y = 1.0f, z = 1.0f },
 
@@ -1128,7 +1128,7 @@ namespace Engine {
             return true;
         }
 
-        public bool SetGroupStaticToScreenById(int group_id, SH4Matrix sh4matrix) {
+        public bool SetGroupStaticToScreenById(int group_id, SIMDMatrix sh4matrix) {
             if (group_id < 0 || group_id >= this.group_list_size) return false;
             this.group_list[group_id].static_screen = sh4matrix;
             return true;
@@ -1470,7 +1470,7 @@ namespace Engine {
                     pvrctx.SetFramebuffer(null);
                 }
 
-                SH4Matrix matrix = pvrctx.CurrentMatrix;
+                SIMDMatrix matrix = pvrctx.CurrentMatrix;
 
                 // apply group context
                 pvrctx.SetGlobalAlpha(group.psframebuffer != null ? 1.0f : group.context.alpha);
@@ -2418,7 +2418,7 @@ namespace Engine {
                     visible = true,
                     alpha = 1.0f,
                     antialiasing = PVRContextFlag.DEFAULT,
-                    matrix = new SH4Matrix(),
+                    matrix = new SIMDMatrix(),
                     offsetcolor = new float[4],
                     parallax = new LayoutParallax() { x = 1.0f, y = 1.0f, z = 1.0f },
 
@@ -4452,7 +4452,7 @@ namespace Engine {
             public bool visible;
             public float alpha;
             public PVRContextFlag antialiasing;
-            public SH4Matrix matrix;
+            public SIMDMatrix matrix;
             public float[] offsetcolor;
             public LayoutParallax parallax;
             public Group next_child;
@@ -4504,7 +4504,7 @@ namespace Engine {
             public bool static_camera;
             public int group_id;
             public string initial_action_name;
-            public SH4Matrix static_screen;
+            public SIMDMatrix static_screen;
             public PVRContextFlag antialiasing;
             public float alpha2;
             public PSShader psshader;

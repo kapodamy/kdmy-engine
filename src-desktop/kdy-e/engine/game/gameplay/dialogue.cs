@@ -75,7 +75,7 @@ namespace Engine.Game.Gameplay {
         private Gamepad gamepad;
         private Drawable self_drawable;
         private bool self_hidden;
-        private SH4Matrix matrix_viewport;
+        private SIMDMatrix matrix_viewport;
 
 
         private Dialogue() { }
@@ -263,7 +263,7 @@ namespace Engine.Game.Gameplay {
                 chars_per_second = 0,
                 self_drawable = null,
                 self_hidden = false,
-                matrix_viewport = new SH4Matrix()
+                matrix_viewport = new SIMDMatrix()
             };
 
             dialogue.self_drawable = new Drawable(300, dialogue, dialogue);

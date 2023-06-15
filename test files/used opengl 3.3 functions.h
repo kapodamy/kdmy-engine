@@ -28,7 +28,6 @@ internal delegate void glShaderSource(GLuint shader, GLsizei count, const GLchar
 internal delegate GLuint glCreateShader(GLenum shaderType);
 internal delegate void glDrawArrays(GLenum mode, GLint first, GLsizei count);
 internal delegate void glUniform4fv(GLint location, GLsizei count, const GLfloat *value);
-internal delegate void glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 internal delegate void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer);
 internal delegate GLint glGetAttribLocation(GLuint program, const GLchar *name);
 internal delegate GLint glGetUniformLocation(GLuint program, const GLchar *name);

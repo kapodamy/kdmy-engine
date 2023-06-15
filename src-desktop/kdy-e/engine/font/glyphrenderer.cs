@@ -168,7 +168,7 @@ namespace Engine.Font {
             gl.bufferData(gl.ARRAY_BUFFER, context_array_length, glyphrenderer_context_array, gl.DYNAMIC_DRAW);
 
             // copy transformation matrix (with all modifiers applied)
-            gl.uniformMatrix4fv(program_glyphs.u_matrix_transform, false, pvrctx.CurrentMatrix.matrix);
+            gl.uniformMatrix4fv(program_glyphs.u_matrix_transform, false, pvrctx.CurrentMatrix);
 
             // render alpha value and the text color
             WebGLContext.RGBA[0] = color[0];

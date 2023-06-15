@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Engine.Utils;
 
 namespace Engine.Platform {
@@ -42,7 +43,7 @@ public struct CornerRotation {
         }
 
         internal void Clear() {
-            angle = x = y = 0;
+        angle = x = y = 0f;
         }
     }
 
@@ -314,6 +315,17 @@ public struct CornerRotation {
             Translate(draw_x - (draw_x * scale_x), draw_y - (draw_y * scale_y));
             Scale(scale_x, scale_y);
         }
+
+    public float this[int index] {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+#if DEBUG
+            if (index < 0 || index > 16) throw new ArgumentOutOfRangeException();
+#endif
+            return this.matrix[index];
+        }
+    }
 
 
 

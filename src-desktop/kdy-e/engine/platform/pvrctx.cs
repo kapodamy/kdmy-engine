@@ -171,7 +171,7 @@ namespace Engine.Platform {
 
         private class PVRContextState {
 
-            public readonly SH4Matrix matrix = new SH4Matrix();
+            public readonly SIMDMatrix matrix = new SIMDMatrix();
             public float global_alpha = 1.0f;
             public readonly float[] offsetcolor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
             public PVRContextFlag global_antialiasing = PVRContextFlag.DEFAULT;
@@ -239,7 +239,7 @@ namespace Engine.Platform {
         internal PVRContextFlag render_offsetcolor_multiply = PVRContextFlag.DEFAULT;
         internal PVRContextFlag render_antialiasing = PVRContextFlag.DEFAULT;
 
-        public SH4Matrix CurrentMatrix { get => this.stack[this.stack_index].matrix; }
+        public SIMDMatrix CurrentMatrix { get => this.stack[this.stack_index].matrix; }
 
         public int ScreenWidth { get => PVR_WIDTH; }
         public int ScreenStride { get => screen_stride; }
@@ -518,12 +518,12 @@ namespace Engine.Platform {
         }
 
         public void ApplyModifier(Modifier modifier) {
-            SH4Matrix matrix = this.stack[this.stack_index].matrix;
+            SIMDMatrix matrix = this.stack[this.stack_index].matrix;
             matrix.ApplyModifier(modifier);
         }
 
         public void ApplyModifier2(Modifier modifier, float draw_x, float draw_y, float draw_width, float draw_height) {
-            SH4Matrix matrix = this.stack[this.stack_index].matrix;
+            SIMDMatrix matrix = this.stack[this.stack_index].matrix;
             matrix.ApplyModifier2(modifier, draw_x, draw_y, draw_width, draw_height);
         }
 

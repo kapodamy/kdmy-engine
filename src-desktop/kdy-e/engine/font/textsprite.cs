@@ -379,7 +379,7 @@ namespace Engine.Font {
 
 
         public void MatrixCalculate(PVRContext pvrctx) {
-            SH4Matrix matrix = pvrctx.CurrentMatrix;
+            SIMDMatrix matrix = pvrctx.CurrentMatrix;
 
             // step 1: flip text (if required)
             if (this.flip_x || this.flip_y) {

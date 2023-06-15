@@ -539,7 +539,7 @@ namespace Engine {
             }
 
             if (pvrctx != null) {
-                SH4Matrix matrix = pvrctx.CurrentMatrix;
+                SIMDMatrix matrix = pvrctx.CurrentMatrix;
                 ApplyOffset(matrix);
                 matrix.ApplyModifier(this.modifier);
                 //pvrctx.Flush();
@@ -547,7 +547,7 @@ namespace Engine {
 
         }
 
-        public void ApplyOffset(SH4Matrix destination_matrix) {
+        public void ApplyOffset(SIMDMatrix destination_matrix) {
             if (this.animation == null && this.has_transition_offset) {
                 float x = this.tweenlerp.PeekValueByIndex(Camera.OX);
                 float y = this.tweenlerp.PeekValueByIndex(Camera.OY);

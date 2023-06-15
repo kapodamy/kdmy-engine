@@ -48,7 +48,7 @@ namespace Engine.Externals {
             internal delegate void DglUniform4fv(GLint location, GLsizei count, GLfloat[] value);
             internal delegate void DglUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, GLfloat[] value);
             internal delegate void DglUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, GLfloat[] value);
-            internal delegate void DglUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, GLfloat[] value);
+            internal unsafe delegate void DglUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, GLfloat* value);
             internal delegate void DglVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, IntPtr pointer);
             internal delegate GLint DglGetAttribLocation(GLuint program, GLchar name);
             internal delegate GLint DglGetUniformLocation(GLuint program, GLchar name);

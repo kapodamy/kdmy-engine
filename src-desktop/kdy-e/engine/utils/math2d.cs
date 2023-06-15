@@ -223,6 +223,7 @@ L_stop_checking_equal:
             return size;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool FloatsAreNearEqual(float float1, float float2) {
             return Math.Abs(float1 - float2) < Single.Epsilon;
         }

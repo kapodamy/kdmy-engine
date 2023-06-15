@@ -257,8 +257,8 @@ namespace Engine.Game.Gameplay {
         internal const string ROUND_CAMERA_OPONNENT = "camera_opponent";
         private const string ROUND_CAMERA_ROUNDSTART = "camera_roundStart";
         private const string ROUND_CAMERA_ROUNDEND = "camera_roundEnd";
-        private static readonly SH4Matrix ROUND_UI_MATRIX = new SH4Matrix();
-        private static readonly SH4Matrix ROUND_UI_MATRIX_CAMERA = new SH4Matrix();
+        private static readonly SIMDMatrix ROUND_UI_MATRIX = new SIMDMatrix();
+        private static readonly SIMDMatrix ROUND_UI_MATRIX_CAMERA = new SIMDMatrix();
         private const string ROUND_UI_GROUP_NAME = "______UI______";// for internally use only
         private const string ROUND_UI_GROUP_NAME2 = "______UI2______";// for internally use only
 

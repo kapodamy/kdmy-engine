@@ -98,7 +98,7 @@ namespace Engine.Game {
             float y = MasterVolume.BACK_OFFSET_Y + MasterVolume.PADDING;
             float scale_x = pvrctx.ScreenWidth / (float)Funkin.SCREEN_RESOLUTION_WIDTH;
             float scale_y = pvrctx.ScreenHeight / (float)Funkin.SCREEN_RESOLUTION_HEIGHT;
-            SH4Matrix matrix = pvrctx.CurrentMatrix;
+            SIMDMatrix matrix = pvrctx.CurrentMatrix;
 
             //
             // low-level rendering

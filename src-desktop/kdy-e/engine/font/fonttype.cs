@@ -657,7 +657,7 @@ namespace Engine.Font {
         }
 
         private static float InternalCalcSmoothing(PVRContext pvrctx, float height) {
-            SH4Matrix matrix = pvrctx.CurrentMatrix;
+            SIMDMatrix matrix = pvrctx.CurrentMatrix;
 
             double x = matrix[15] * Math.Sqrt(
                 (matrix[0] * matrix[0]) +

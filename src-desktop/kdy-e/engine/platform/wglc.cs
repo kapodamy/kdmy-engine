@@ -249,7 +249,7 @@ namespace Engine.Platform {
             gl.uniformMatrix4fv(this.program_textured.u_matrix_model, false, WebGLContext.MAT4);
 
             // copy transformation matrix (with all modifiers applied)
-            gl.uniformMatrix4fv(this.program_textured.u_matrix_transform, false, pvrctx.CurrentMatrix.matrix);
+            gl.uniformMatrix4fv(this.program_textured.u_matrix_transform, false, pvrctx.CurrentMatrix);
 
             // optimized sub-texture matrix, contains the source size and location
             WebGLContext.InternalIdentity(WebGLContext.MAT4, 4);
@@ -308,7 +308,7 @@ namespace Engine.Platform {
             gl.uniformMatrix4fv(this.program_solid.u_matrix_model, false, WebGLContext.MAT4);
 
             // copy transformation matrix (with all modifiers applied)
-            gl.uniformMatrix4fv(this.program_solid.u_matrix_transform, false, pvrctx.CurrentMatrix.matrix);
+            gl.uniformMatrix4fv(this.program_solid.u_matrix_transform, false, pvrctx.CurrentMatrix);
 
             // if the offsetcolor alpha is negative, disable the offsetcolor processing
             // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_diff" are boolean values
@@ -377,7 +377,7 @@ namespace Engine.Platform {
             gl.uniformMatrix4fv(wglc.program_framebuffer.u_matrix_model, false, WebGLContext.MAT4);
 
             // copy transformation matrix (with all modifiers applied)
-            gl.uniformMatrix4fv(wglc.program_framebuffer.u_matrix_transform, false, pvrctx.CurrentMatrix.matrix);
+            gl.uniformMatrix4fv(wglc.program_framebuffer.u_matrix_transform, false, pvrctx.CurrentMatrix);
 
             // optimized sub-texture matrix, contains the source size and location
             WebGLContext.InternalIdentity(WebGLContext.MAT4, 4);
