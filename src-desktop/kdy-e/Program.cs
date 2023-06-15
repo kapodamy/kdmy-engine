@@ -25,7 +25,7 @@ namespace CsharpWrapper {
 
         [STAThread]
         static int Main() {
-            Application.EnableVisualStyles();
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.SetCompatibleTextRenderingDefault(false);
 
             bool should_attach_console = true;

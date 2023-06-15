@@ -7,6 +7,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
+#pragma warning disable CA1416
+
 namespace Engine.Platform {
 
     public static class TextureLoader {

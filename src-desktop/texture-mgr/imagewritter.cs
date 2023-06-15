@@ -4,6 +4,8 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 
+#pragma warning disable CA1416
+
 namespace Engine.Platform {
     public class ImageWritter {
 

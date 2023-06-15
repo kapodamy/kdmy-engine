@@ -1,35 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7C76AA79-86A1-4580-A743-2610DAF56995}</ProjectGuid>
+    <TargetFramework>net7.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
+    <Platforms>x64</Platforms>
     <RootNamespace>Engine</RootNamespace>
-    <AssemblyName>kdy-e</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+	<UpdateAssemblyInfo>true</UpdateAssemblyInfo>
+    <UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	<OutputType>Exe</OutputType>
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>false</SignManifests>
@@ -49,252 +31,22 @@
   </PropertyGroup>
   <PropertyGroup>
     <NoWin32Manifest>true</NoWin32Manifest>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;SDF_FONT</DefineConstants>
+    <DefineConstants>$(DefineConstants);SDF_FONT</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;SDF_FONT</DefineConstants>
-    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);SDF_FONT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="engine\animation\animlist.cs" />
-    <Compile Include="engine\animation\animsprite.cs" />
-    <Compile Include="engine\animation\macroexecutor.cs" />
-    <Compile Include="engine\animation\tweenkeyframe.cs" />
-    <Compile Include="engine\animation\tweenlerp.cs" />
-    <Compile Include="engine\camera.cs" />
-    <Compile Include="engine\csharp\EngineSettings.cs" />
-    <Compile Include="engine\csharp\ExpansionsLoader.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="engine\csharp\ExpansionsLoader.Designer.cs" />
-    <Compile Include="engine\csharp\IAnimate.cs" />
-    <Compile Include="engine\csharp\IDraw.cs" />
-    <Compile Include="engine\csharp\IFontRender.cs" />
-    <Compile Include="engine\csharp\IGetDrawLocation.cs" />
-    <Compile Include="engine\csharp\INI.cs" />
-    <Compile Include="engine\csharp\ISetProperty.cs" />
-    <Compile Include="engine\csharp\ISetPropertyObject.cs" />
-    <Compile Include="engine\csharp\IVertex.cs" />
-    <Compile Include="engine\csharp\PreloadCache.cs" />
-    <Compile Include="engine\drawable.cs" />
-    <Compile Include="engine\externals\luascript\exports_drawable.cs" />
-    <Compile Include="engine\externals\luascript\exports_json.cs" />
-    <Compile Include="engine\externals\luascript\exports_layoutplaceholder.cs" />
-    <Compile Include="engine\externals\luascript\exports_menu.cs" />
-    <Compile Include="engine\externals\luascript\exports_menumanifest.cs" />
-    <Compile Include="engine\externals\luascript\exports_modelholder.cs" />
-    <Compile Include="engine\externals\ffgraph.cs" />
-    <Compile Include="engine\externals\glfw_struct.cs" />
-    <Compile Include="engine\externals\glfw_enum.cs" />
-    <Compile Include="engine\externals\glfw_delegates.cs" />
-    <Compile Include="engine\externals\glfw.cs" />
-    <Compile Include="engine\externals\luascript\exports_animlist.cs" />
-    <Compile Include="engine\externals\luascript\exports_enginesettings.cs" />
-    <Compile Include="engine\externals\luascript\exports_animlistitem.cs" />
-    <Compile Include="engine\externals\luascript\exports_animsprite.cs" />
-    <Compile Include="engine\externals\luascript\exports_atlas.cs" />
-    <Compile Include="engine\externals\luascript\exports_conductor.cs" />
-    <Compile Include="engine\externals\luascript\exports_countdown.cs" />
-    <Compile Include="engine\externals\luascript\exports_dialogue.cs" />
-    <Compile Include="engine\externals\luascript\exports_environment.cs" />
-    <Compile Include="engine\externals\luascript\exports_healthbar.cs" />
-    <Compile Include="engine\externals\luascript\exports_healthwatcher.cs" />
-    <Compile Include="engine\externals\luascript\exports_missnotefx.cs" />
-    <Compile Include="engine\externals\luascript\exports_playerstats.cs" />
-    <Compile Include="engine\externals\luascript\exports_psshader.cs" />
-    <Compile Include="engine\externals\luascript\exports_rankingcounter.cs" />
-    <Compile Include="engine\externals\luascript\exports_roundstats.cs" />
-    <Compile Include="engine\externals\luascript\exports_songprogressbar.cs" />
-    <Compile Include="engine\externals\luascript\exports_streakcounter.cs" />
-    <Compile Include="engine\externals\luascript\exports_strum.cs" />
-    <Compile Include="engine\externals\luascript\exports_strums.cs" />
-    <Compile Include="engine\externals\luascript\exports_script.cs" />
-    <Compile Include="engine\externals\luascript\exports_tweenlerp.cs" />
-    <Compile Include="engine\externals\luascript\exports_videoplayer.cs" />
-    <Compile Include="engine\externals\luascript\luascript_helpers.cs" />
-    <Compile Include="engine\externals\luascript\exports_tweenkeyframe.cs" />
-    <Compile Include="engine\externals\opengl_pixeldatabuffer.cs" />
-    <Compile Include="engine\game\freeplaymenu.cs" />
-    <Compile Include="engine\game\funkin\songprogressbar.cs" />
-    <Compile Include="engine\game\gameplay\dialogue.cs" />
-    <Compile Include="engine\externals\luascript\luascript_platform.cs" />
-    <Compile Include="engine\game\gameplay\helpers\autouicosmetics.cs" />
-    <Compile Include="engine\game\helpers\freeplay_songicons.cs" />
-    <Compile Include="engine\game\mastervolume.cs" />
-    <Compile Include="engine\game\screenmenu.cs" />
-    <Compile Include="engine\game\settingsmenu.cs" />
-    <Compile Include="engine\platform\expansions.cs" />
-    <Compile Include="engine\externals\aica.cs" />
-    <Compile Include="engine\externals\fontatlas.cs" />
-    <Compile Include="engine\externals\luascript\exports_camera.cs" />
-    <Compile Include="engine\externals\luascript\exports_character.cs" />
-    <Compile Include="engine\externals\luascript\exports_fs.cs" />
-    <Compile Include="engine\externals\luascript\exports_layout.cs" />
-    <Compile Include="engine\externals\luascript\exports_math2d.cs" />
-    <Compile Include="engine\externals\luascript\exports_messagebox.cs" />
-    <Compile Include="engine\externals\luascript\exports_modding.cs" />
-    <Compile Include="engine\externals\luascript\exports_modifier.cs" />
-    <Compile Include="engine\externals\luascript\exports_songplayer.cs" />
-    <Compile Include="engine\externals\luascript\exports_soundplayer.cs" />
-    <Compile Include="engine\externals\luascript\exports_sprite.cs" />
-    <Compile Include="engine\externals\luascript\exports_textsprite.cs" />
-    <Compile Include="engine\externals\luascript\exports_timer.cs" />
-    <Compile Include="engine\externals\luascript\exports_week.cs" />
-    <Compile Include="engine\externals\luascript\luascript.cs" />
-    <Compile Include="engine\externals\opengl.cs" />
-    <Compile Include="engine\externals\opengl_enum.cs" />
-    <Compile Include="engine\externals\opengl_gles.cs" />
-    <Compile Include="engine\externals\opengl_pinvoke.cs" />
-    <Compile Include="engine\font\fontglyph.cs" />
-    <Compile Include="engine\font\fontholder.cs" />
-    <Compile Include="engine\font\fonttype.cs" />
-    <Compile Include="engine\font\glyphrenderer.cs" />
-    <Compile Include="engine\font\textsprite.cs" />
-    <Compile Include="engine\beatwatcher.cs" />
-    <Compile Include="engine\game\common\funkinsave.cs" />
-    <Compile Include="engine\game\common\funkin.cs" />
-    <Compile Include="engine\game\common\menu.cs" />
-    <Compile Include="engine\game\common\messagebox.cs" />
-    <Compile Include="engine\game\common\weekenumerator.cs" />
-    <Compile Include="engine\game\credits.cs" />
-    <Compile Include="engine\game\ddrkeysmon.cs" />
-    <Compile Include="engine\game\funkin\character.cs" />
-    <Compile Include="engine\game\funkin\conductor.cs" />
-    <Compile Include="engine\game\funkin\countdown.cs" />
-    <Compile Include="engine\game\funkin\healthbar.cs" />
-    <Compile Include="engine\game\funkin\healthwatcher.cs" />
-    <Compile Include="engine\game\funkin\missnotefx.cs" />
-    <Compile Include="engine\game\funkin\note.cs" />
-    <Compile Include="engine\game\funkin\notepool.cs" />
-    <Compile Include="engine\game\funkin\playerstats.cs" />
-    <Compile Include="engine\game\funkin\rankingcounter.cs" />
-    <Compile Include="engine\game\funkin\roundstats.cs" />
-    <Compile Include="engine\game\funkin\streakcounter.cs" />
-    <Compile Include="engine\game\funkin\streakcounter_digits.cs" />
-    <Compile Include="engine\game\funkin\strum.cs" />
-    <Compile Include="engine\game\funkin\strums.cs" />
-    <Compile Include="engine\game\gameplay\helpers\charactermanifest.cs" />
-    <Compile Include="engine\game\gameplay\helpers\chart.cs" />
-    <Compile Include="engine\game\gameplay\helpers\gameplaymanifest.cs" />
-    <Compile Include="engine\game\gameplay\helpers\menumanifest.cs" />
-    <Compile Include="engine\game\gameplay\week.cs" />
-    <Compile Include="engine\game\gameplay\weekscript.cs" />
-    <Compile Include="engine\game\gameplay\week_gameover.cs" />
-    <Compile Include="engine\game\gameplay\week_pause.cs" />
-    <Compile Include="engine\game\gameplay\week_result.cs" />
-    <Compile Include="engine\game\helpers\weekselector_difficult.cs" />
-    <Compile Include="engine\game\helpers\weekselector_helptext.cs" />
-    <Compile Include="engine\game\helpers\weekselector_mdlselect.cs" />
-    <Compile Include="engine\game\helpers\weekselector_weeklist.cs" />
-    <Compile Include="engine\game\helpers\weekselector_weekmsg.cs" />
-    <Compile Include="engine\game\helpers\weekselector_weektitle.cs" />
-    <Compile Include="engine\game\introscreen.cs" />
-    <Compile Include="engine\game\main.cs" />
-    <Compile Include="engine\game\mainmenu.cs" />
-    <Compile Include="engine\game\modding.cs" />
-    <Compile Include="engine\game\savemanager.cs" />
-    <Compile Include="engine\game\startscreen.cs" />
-    <Compile Include="engine\game\weekselector.cs" />
-    <Compile Include="engine\image\atlas.cs" />
-    <Compile Include="engine\image\imgutils.cs" />
-    <Compile Include="engine\image\sprite.cs" />
-    <Compile Include="engine\image\statesprite.cs" />
-    <Compile Include="engine\image\texture.cs" />
-    <Compile Include="engine\image\texturepool.cs" />
-    <Compile Include="engine\layout.cs" />
-    <Compile Include="engine\modelholder.cs" />
-    <Compile Include="engine\platform\gamepad.cs" />
-    <Compile Include="engine\modifier.cs" />
-    <Compile Include="engine\platform\pvrctx.cs" />
-    <Compile Include="engine\platform\sh4matrix.cs" />
-    <Compile Include="engine\platform\wglc.cs" />
-    <Compile Include="engine\utils\arraylist.cs" />
-    <Compile Include="engine\utils\dataview.cs" />
-    <Compile Include="engine\utils\jsonparser.cs" />
-    <Compile Include="engine\utils\linkedlist.cs" />
-    <Compile Include="engine\platform\fs.cs" />
-    <Compile Include="engine\platform\io.cs" />
-    <Compile Include="engine\sound\songplayer.cs" />
-    <Compile Include="engine\sound\soundplayer.cs" />
-    <Compile Include="engine\utils\map.cs" />
-    <Compile Include="engine\utils\math2d.cs" />
-    <Compile Include="engine\utils\misc.cs" />
-    <Compile Include="engine\utils\number.cs" />
-    <Compile Include="engine\utils\stacklist.cs" />
-    <Compile Include="engine\utils\stringfolding.cs" />
-    <Compile Include="engine\utils\stringsort.cs" />
-    <Compile Include="engine\utils\stringutils.cs" />
-    <Compile Include="engine\utils\stringbuilder.cs" />
-    <Compile Include="engine\utils\tokenizer.cs" />
-    <Compile Include="engine\utils\vertexprops.cs" />
-    <Compile Include="engine\utils\xmlparser.cs" />
-    <Compile Include="engine\video\videoplayer.cs" />
-    <Compile Include="kallistios\arch.cs" />
-    <Compile Include="kallistios\mutex.cs" />
-    <Compile Include="kallistios\utsname.cs" />
-    <Compile Include="kallistios\fs.cs" />
-    <Compile Include="kallistios\maple.cs" />
-    <Compile Include="kallistios\thd.cs" />
-    <Compile Include="kallistios\timer.cs" />
-    <Compile Include="kallistios\tls.cs" />
-    <Compile Include="kallistios\vmu.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.7.2 %28x86 y x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
+    <SupportedPlatform Include="windows" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Properties\icon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\lua-iterop\lua-iterop.csproj">
-      <Project>{0a9500b9-1fc4-4033-851f-b33d5dd2b5cd}</Project>
-      <Name>lua-iterop</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\texture-mgr\texture-mgr.csproj">
-      <Project>{31710e91-a1f9-4c16-b6e8-a6702d0b8a31}</Project>
-      <Name>texture-mgr</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\lua-iterop\lua-iterop.csproj" />
+    <ProjectReference Include="..\texture-mgr\texture-mgr.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

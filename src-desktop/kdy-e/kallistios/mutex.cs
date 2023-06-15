@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 
+#pragma warning disable CS8981
+
 namespace KallistiOS.MUTEX {
 
     public class mutex_t {

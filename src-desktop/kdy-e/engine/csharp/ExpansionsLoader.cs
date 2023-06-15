@@ -9,6 +9,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Engine.Utils;
 
+#pragma warning disable CA1416
+
 namespace CsharpWrapper {
 
     public partial class ExpansionsLoader : Form {

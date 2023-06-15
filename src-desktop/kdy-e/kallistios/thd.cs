@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading;
 
+#pragma warning disable CS8981
+
 namespace KallistiOS.THD {
 
     public class kthread_t {

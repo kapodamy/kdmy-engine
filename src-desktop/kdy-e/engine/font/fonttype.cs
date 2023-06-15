@@ -131,7 +131,7 @@ namespace Engine.Font {
                 if (this.fontcharmap_secondary_texture != null) this.fontcharmap_secondary_texture.Destroy();
             }
 
-            if (this.fontatlas != null) FontAtlas._fontatlas_destroy(this.fontatlas);
+            if (this.fontatlas != IntPtr.Zero) FontAtlas._fontatlas_destroy(this.fontatlas);
             if (this.font_ptr != IntPtr.Zero) FontAtlas.kdmyEngine_deallocate(this.font_ptr);
 
             //free(this.instance_path);
@@ -517,7 +517,7 @@ namespace Engine.Font {
             this.font_ptr = FontAtlas.kdmyEngine_allocate(font);
             this.fontatlas = FontAtlas._fontatlas_init(this.font_ptr, font.Length);
 
-            return this.fontatlas == null;
+            return this.fontatlas == IntPtr.Zero;
         }
 
         private IntPtr InternalRetrieveFontcharmap(int[] characters_map) {
@@ -659,15 +659,15 @@ namespace Engine.Font {
         private static float InternalCalcSmoothing(PVRContext pvrctx, float height) {
             SH4Matrix matrix = pvrctx.CurrentMatrix;
 
-            double x = matrix.matrix[15] * Math.Sqrt(
-                (matrix.matrix[0] * matrix.matrix[0]) +
-                (matrix.matrix[1] * matrix.matrix[1]) +
-                (matrix.matrix[2] * matrix.matrix[2])
+            double x = matrix[15] * Math.Sqrt(
+                (matrix[0] * matrix[0]) +
+                (matrix[1] * matrix[1]) +
+                (matrix[2] * matrix[2])
             );
-            double y = matrix.matrix[15] * Math.Sqrt(
-                (matrix.matrix[4] * matrix.matrix[4]) +
-                (matrix.matrix[5] * matrix.matrix[5]) +
-                (matrix.matrix[6] * matrix.matrix[6])
+            double y = matrix[15] * Math.Sqrt(
+                (matrix[4] * matrix[4]) +
+                (matrix[5] * matrix[5]) +
+                (matrix[6] * matrix[6])
             );
 
             double scale = (Math.Abs((x + y) / 2.0) * height) / FontType.GLYPHS_HEIGHT;

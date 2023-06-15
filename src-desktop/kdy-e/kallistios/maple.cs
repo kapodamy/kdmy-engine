@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using CsharpWrapper;
 using Engine.Externals.GLFW;
 
+#pragma warning disable CS8981
+
 namespace KallistiOS.MAPLE {
 
     [Flags]

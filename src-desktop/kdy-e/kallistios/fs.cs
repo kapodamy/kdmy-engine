@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+#pragma warning disable CS8981
+
 namespace KallistiOS.VFS {
 
     public struct stat_t {

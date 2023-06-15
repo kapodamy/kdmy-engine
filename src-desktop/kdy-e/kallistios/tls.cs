@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 
+#pragma warning disable CS8981
+
 namespace KallistiOS.TLS {
 
     public delegate void kthread_destructor<T>(T obj);

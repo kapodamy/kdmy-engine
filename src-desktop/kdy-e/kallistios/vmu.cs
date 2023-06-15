@@ -1,6 +1,8 @@
 ﻿using System;
 using Engine.Utils;
 
+#pragma warning disable CS8981
+
 namespace KallistiOS.VMU {
 
     /**
