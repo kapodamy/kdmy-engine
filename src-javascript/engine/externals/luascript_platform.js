@@ -397,7 +397,12 @@ class LuascriptPlatform {
     }
 
     #CallbackMouseMove(event) {
-        const rect = pvr_context._html5canvas.getBoundingClientRect();
+        let rect;
+        if (pvr_context._html5canvas instanceof OffscreenCanvas)
+            rect = document.body.getBoundingClientRect();
+        else
+            rect = pvr_context._html5canvas.getBoundingClientRect();
+
         let position_x = event.pageX - (rect.left + window.scrollX);
         let position_y = event.pageY - (rect.top + window.screenTop);
 

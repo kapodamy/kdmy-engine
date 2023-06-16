@@ -429,7 +429,7 @@ function pvr_context_draw_framebuffer(pvrctx, psframebuffer, sx, sy, sw, sh, dx,
 
 /** @param {PVRContext} pvrctx */
 function pvr_is_offscreen(pvrctx) {
-    return pvrctx._html5canvas.ownerDocument.hidden;
+    return document.hidden;
 }
 
 /** @param {PVRContext} pvrctx @param {PSShader} psshader @returns {bool}*/
