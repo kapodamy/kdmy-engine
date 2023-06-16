@@ -20,7 +20,7 @@ EM_JS_PRFX(void, psshader_destroy, (PSShader* psshader), {
 });
 
 EM_JS_PRFX(int32_t, psshader_set_uniform_any, (PSShader psshader, const char* name, const double* values), {
-    const val = new Float32Array(buffer, values, 128);
+    const val = new Float32Array(wasmMemory.buffer, values, 128);
     kdmyEngine_obtain(psshader).SetUniformAny(kdmyEngine_ptrToString(name), val);
 });
 

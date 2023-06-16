@@ -9,11 +9,12 @@ EMMODULE = -s EXPORT_NAME=ModuleLuaScript
 
 wasm-build-release:
 	$(EMCC) $(SOURCES) lib/liblua.a -Iinclude -O2 $(EMFLAGS) ${EMMODULE} -o output/luascript.js
-	# cp .\output\luascript.wasm .\..\engine\externals\luascript.wasm
+#   cp .\output\luascript.wasm .\..\engine\externals\luascript.wasm
 
 wasm-build-debug:
 	$(EMCC) $(SOURCES) lib/liblua.a -Iinclude -g $(EMFLAGS) ${EMMODULE} -o output/luascript.js
-	# cp .\output\luascript.wasm .\..\engine\externals\luascript.wasm
+#   cp .\output\luascript.wasm .\..\engine\externals\luascript.wasm
 
 windows-build-debug:
 	$(CC) $(WINDOWS_STUBS_SOURCES) $(SOURCES) lib/lua54.dll -Iinclude -O0 -g ${CFLAGS} -o output/main.exe
+

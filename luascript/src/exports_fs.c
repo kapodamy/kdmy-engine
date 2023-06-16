@@ -14,7 +14,7 @@ EM_ASYNC_JS_PRFX(bool, fs_readfile, (const char* path, uint8_t** buffer_ptr, uin
         return 0;
       }
 
-      (new Uint8Array(buffer)).set(new Uint8Array(arraybuffer), ptr);
+      (new Uint8Array(wasmMemory.buffer)).set(new Uint8Array(arraybuffer), ptr);
 
       kdmyEngine_set_uint32(buffer_ptr, ptr);
       kdmyEngine_set_uint32(size_ptr, arraybuffer.byteLength);

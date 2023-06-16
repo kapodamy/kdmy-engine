@@ -130,7 +130,7 @@ function kdmyEngine_get_float64(address) {
     return kdmyEngine_dataView.getFloat64(address, kdmyEngine_endianess);
 }
 function kdmyEngine_get_ram() {
-    return new DataView(buffer);
+    return new DataView(wasmMemory.buffer);
 }
 
 ModuleLuaScript.kdmyEngine_stringToPtr = kdmyEngine_stringToPtr;
@@ -160,30 +160,16 @@ function locateFile(path) {
     return scriptDirectory + path
 }
 var read_, readAsync, readBinary, setWindowTitle;
-function logExceptionOnExit(e) {
-    if (e instanceof ExitStatus)
-        return;
-    let toLog = e;
-    err("exiting due to exception: " + toLog)
-}
-var fs;
-var nodePath;
-var requireNodeFS;
-if (ENVIRONMENT_IS_NODE) {
-    if (ENVIRONMENT_IS_WORKER) {// @ts-ignore
-        scriptDirectory = require("path").dirname(scriptDirectory) + "/"
+if (ENVIRONMENT_IS_NODE) {// @ts-ignore
+    var fs = require("fs");// @ts-ignore
+    var nodePath = require("path");
+    if (ENVIRONMENT_IS_WORKER) {
+        scriptDirectory = nodePath.dirname(scriptDirectory) + "/"
     } else {// @ts-ignore
         scriptDirectory = __dirname + "/"
     }
-    requireNodeFS = () => {
-        if (!nodePath) {// @ts-ignore
-            fs = require("fs");// @ts-ignore
-            nodePath = require("path")
-        }
-    };
-    read_ = function shell_read(filename, binary) {
-        requireNodeFS();
-        filename = nodePath["normalize"](filename);
+    read_ = (filename, binary) => {
+        filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
         return fs.readFileSync(filename, binary ? undefined : "utf8")
     };
     readBinary = filename => {
@@ -193,42 +179,38 @@ if (ENVIRONMENT_IS_NODE) {
         }
         return ret
     };
-    readAsync = (filename, onload, onerror) => {
-        requireNodeFS();
-        filename = nodePath["normalize"](filename);
-        fs.readFile(filename, function (err, data) {
+    readAsync = (filename, onload, onerror, binary = true) => {
+        filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
+        fs.readFile(filename, binary ? undefined : "utf8", (err, data) => {
             if (err)
                 onerror(err);
             else
-                onload(data.buffer)
+                onload(binary ? data.buffer : data)
         })
     };// @ts-ignore
-    if (process["argv"].length > 1) {// @ts-ignore
-        thisProgram = process["argv"][1].replace(/\\/g, "/")
+    if (!ModuleLuaScript["thisProgram"] && process.argv.length > 1) {// @ts-ignore
+        thisProgram = process.argv[1].replace(/\\/g, "/")
     }// @ts-ignore
-    arguments_ = process["argv"].slice(2);
+    arguments_ = process.argv.slice(2);
     if (typeof module != "undefined") {
         module["exports"] = ModuleLuaScript
     }// @ts-ignore
-    process["on"]("uncaughtException", function (ex) {
-        if (!(ex instanceof ExitStatus)) {
+    process.on("uncaughtException", ex => {
+        if (ex !== "unwind" && !(ex instanceof ExitStatus) && !(ex.context instanceof ExitStatus)) {
             throw ex
         }
     });// @ts-ignore
-    process["on"]("unhandledRejection", function (reason) {
-        throw reason
-    });// @ts-ignore
-    quit_ = (status, toThrow) => {
-        if (keepRuntimeAlive()) {// @ts-ignore
-            process["exitCode"] = status;
-            throw toThrow
-        }
-        logExceptionOnExit(toThrow);// @ts-ignore
-        process["exit"](status)
+    var nodeMajor = process.versions.node.split(".")[0];
+    if (nodeMajor < 15) {// @ts-ignore
+        process.on("unhandledRejection", reason => {
+            throw reason
+        })
+    }// @ts-ignore
+    quit_ = (status, toThrow) => {// @ts-ignore
+        process.exitCode = status;
+        throw toThrow
     };
-    ModuleLuaScript["inspect"] = function () {
-        return "[Emscripten Module object]"
-    }
+    ModuleLuaScript["inspect"] = () => "[Emscripten ModuleLuaScript object]"
 } else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
     if (ENVIRONMENT_IS_WORKER) {
         scriptDirectory = self.location.href
@@ -273,7 +255,7 @@ if (ENVIRONMENT_IS_NODE) {
     setWindowTitle = title => document.title = title
 } else {}
 var out = ModuleLuaScript["print"] || console.log.bind(console);
-var err = ModuleLuaScript["printErr"] || console.warn.bind(console);
+var err = ModuleLuaScript["printErr"] || console.error.bind(console);
 Object.assign(ModuleLuaScript, moduleOverrides);
 moduleOverrides = null;
 if (ModuleLuaScript["arguments"])
@@ -282,98 +264,6 @@ if (ModuleLuaScript["thisProgram"])
     thisProgram = ModuleLuaScript["thisProgram"];
 if (ModuleLuaScript["quit"])
     quit_ = ModuleLuaScript["quit"];
-var POINTER_SIZE = 4;
-function warnOnce(text) {// @ts-ignore
-    if (!warnOnce.shown)// @ts-ignore
-        warnOnce.shown = {};// @ts-ignore
-    if (!warnOnce.shown[text]) {// @ts-ignore
-        warnOnce.shown[text] = 1;
-        err(text)
-    }
-}
-function uleb128Encode(n) {
-    if (n < 128) {
-        return [n]
-    }
-    return [n % 128 | 128, n >> 7]
-}
-function convertJsFunctionToWasm(func, sig) {// @ts-ignore
-    if (typeof WebAssembly.Function == "function") {
-        var typeNames = {
-            "i": "i32",
-            "j": "i64",
-            "f": "f32",
-            "d": "f64",
-            "p": "i32"
-        };
-        var type = {
-            parameters: [],
-            results: sig[0] == "v" ? [] : [typeNames[sig[0]]]
-        };
-        for (var i = 1; i < sig.length; ++i) {
-            type.parameters.push(typeNames[sig[i]])
-        }// @ts-ignore
-        return new WebAssembly.Function(type, func)
-    }
-    var typeSection = [1, 96];
-    var sigRet = sig.slice(0, 1);
-    var sigParam = sig.slice(1);
-    var typeCodes = {
-        "i": 127,
-        "p": 127,
-        "j": 126,
-        "f": 125,
-        "d": 124
-    };
-    typeSection = typeSection.concat(uleb128Encode(sigParam.length));
-    for (var i = 0; i < sigParam.length; ++i) {
-        typeSection.push(typeCodes[sigParam[i]])
-    }
-    if (sigRet == "v") {
-        typeSection.push(0)
-    } else {
-        typeSection = typeSection.concat([1, typeCodes[sigRet]])
-    }
-    typeSection = [1].concat(uleb128Encode(typeSection.length), typeSection);
-    var bytes = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0].concat(typeSection, [2, 7, 1, 1, 101, 1, 102, 0, 0, 7, 5, 1, 1, 102, 0, 0]));
-    var module = new WebAssembly.Module(bytes);
-    var instance = new WebAssembly.Instance(module, {
-        "e": {
-            "f": func
-        }
-    });
-    var wrappedFunc = instance.exports["f"];
-    return wrappedFunc
-}
-var freeTableIndexes = [];
-var functionsInTableMap;
-function getEmptyTableSlot() {
-    if (freeTableIndexes.length) {
-        return freeTableIndexes.pop()
-    }
-    try {
-        wasmTable.grow(1)
-    } catch (err) {
-        if (!(err instanceof RangeError)) {
-            throw err
-        }
-        throw "Unable to grow wasm table. Set ALLOW_TABLE_GROWTH."
-    }
-    return wasmTable.length - 1
-}
-function updateTableMap(offset, count) {
-    for (var i = offset; i < offset + count; i++) {
-        var item = getWasmTableEntry(i);
-        if (item) {
-            functionsInTableMap.set(item, i)
-        }
-    }
-}
-var tempRet0 = 0;
-var setTempRet0 = value => {
-    tempRet0 = value
-};
-var getTempRet0 = () => tempRet0;
 var wasmBinary;
 if (ModuleLuaScript["wasmBinary"])
     wasmBinary = ModuleLuaScript["wasmBinary"];
@@ -389,205 +279,26 @@ function assert(condition, text) {
         abort(text)
     }
 }
-function getCFunc(ident) {
-    var func = ModuleLuaScript["_" + ident];
-    return func
+var HEAP8, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPU32, HEAPF32, HEAPF64;
+function updateMemoryViews() {
+    var b = wasmMemory.buffer;
+    ModuleLuaScript["HEAP8"] = HEAP8 = new Int8Array(b);
+    ModuleLuaScript["HEAP16"] = HEAP16 = new Int16Array(b);
+    ModuleLuaScript["HEAP32"] = HEAP32 = new Int32Array(b);
+    ModuleLuaScript["HEAPU8"] = HEAPU8 = new Uint8Array(b);
+    ModuleLuaScript["HEAPU16"] = HEAPU16 = new Uint16Array(b);
+    ModuleLuaScript["HEAPU32"] = HEAPU32 = new Uint32Array(b);
+    ModuleLuaScript["HEAPF32"] = HEAPF32 = new Float32Array(b);
+    ModuleLuaScript["HEAPF64"] = HEAPF64 = new Float64Array(b)
 }
-function ccall(ident, returnType, argTypes, args, opts) {
-    var toC = {
-        "string": function (str) {
-            var ret = 0;
-            if (str !== null && str !== undefined && str !== 0) {
-                var len = (str.length << 2) + 1;
-                ret = stackAlloc(len);
-                stringToUTF8(str, ret, len)
-            }
-            return ret
-        },
-        "array": function (arr) {
-            var ret = stackAlloc(arr.length);
-            writeArrayToMemory(arr, ret);
-            return ret
-        }
-    };
-    function convertReturnValue(ret) {
-        if (returnType === "string") {
-            return UTF8ToString(ret)
-        }
-        if (returnType === "boolean")
-            return Boolean(ret);
-        return ret
-    }
-    var func = getCFunc(ident);
-    var cArgs = [];
-    var stack = 0;
-    if (args) {
-        for (var i = 0; i < args.length; i++) {
-            var converter = toC[argTypes[i]];
-            if (converter) {
-                if (stack === 0)
-                    stack = stackSave();
-                cArgs[i] = converter(args[i])
-            } else {
-                cArgs[i] = args[i]
-            }
-        }
-    }
-    var previousAsync = Asyncify.currData;
-    var ret = func.apply(null, cArgs);
-    function onDone(ret) {
-        runtimeKeepalivePop();
-        if (stack !== 0)
-            stackRestore(stack);
-        return convertReturnValue(ret)
-    }
-    runtimeKeepalivePush();
-    var asyncMode = opts && opts.async;
-    if (Asyncify.currData != previousAsync) {
-        return Asyncify.whenDone().then(onDone)
-    }
-    ret = onDone(ret);
-    if (asyncMode)
-        return Promise.resolve(ret);
-    return ret
-}
-var UTF8Decoder = typeof TextDecoder != "undefined" ? new TextDecoder("utf8") : undefined;
-function UTF8ArrayToString(heapOrArray, idx, maxBytesToRead) {
-    var endIdx = idx + maxBytesToRead;
-    var endPtr = idx;
-    while (heapOrArray[endPtr] && !(endPtr >= endIdx))
-        ++endPtr;
-    if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
-        return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr))
-    } else {
-        var str = "";
-        while (idx < endPtr) {
-            var u0 = heapOrArray[idx++];
-            if (!(u0 & 128)) {
-                str += String.fromCharCode(u0);
-                continue
-            }
-            var u1 = heapOrArray[idx++] & 63;
-            if ((u0 & 224) == 192) {
-                str += String.fromCharCode((u0 & 31) << 6 | u1);
-                continue
-            }
-            var u2 = heapOrArray[idx++] & 63;
-            if ((u0 & 240) == 224) {
-                u0 = (u0 & 15) << 12 | u1 << 6 | u2
-            } else {
-                u0 = (u0 & 7) << 18 | u1 << 12 | u2 << 6 | heapOrArray[idx++] & 63
-            }
-            if (u0 < 65536) {
-                str += String.fromCharCode(u0)
-            } else {
-                var ch = u0 - 65536;
-                str += String.fromCharCode(55296 | ch >> 10, 56320 | ch & 1023)
-            }
-        }
-    }
-    return str
-}
-function UTF8ToString(ptr, maxBytesToRead) {
-    return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : ""
-}
-function stringToUTF8Array(str, heap, outIdx, maxBytesToWrite) {
-    if (!(maxBytesToWrite > 0))
-        return 0;
-    var startIdx = outIdx;
-    var endIdx = outIdx + maxBytesToWrite - 1;
-    for (var i = 0; i < str.length; ++i) {
-        var u = str.charCodeAt(i);
-        if (u >= 55296 && u <= 57343) {
-            var u1 = str.charCodeAt(++i);
-            u = 65536 + ((u & 1023) << 10) | u1 & 1023
-        }
-        if (u <= 127) {
-            if (outIdx >= endIdx)
-                break;
-            heap[outIdx++] = u
-        } else if (u <= 2047) {
-            if (outIdx + 1 >= endIdx)
-                break;
-            heap[outIdx++] = 192 | u >> 6;
-            heap[outIdx++] = 128 | u & 63
-        } else if (u <= 65535) {
-            if (outIdx + 2 >= endIdx)
-                break;
-            heap[outIdx++] = 224 | u >> 12;
-            heap[outIdx++] = 128 | u >> 6 & 63;
-            heap[outIdx++] = 128 | u & 63
-        } else {
-            if (outIdx + 3 >= endIdx)
-                break;
-            heap[outIdx++] = 240 | u >> 18;
-            heap[outIdx++] = 128 | u >> 12 & 63;
-            heap[outIdx++] = 128 | u >> 6 & 63;
-            heap[outIdx++] = 128 | u & 63
-        }
-    }
-    heap[outIdx] = 0;
-    return outIdx - startIdx
-}
-function stringToUTF8(str, outPtr, maxBytesToWrite) {
-    return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite)
-}
-function lengthBytesUTF8(str) {
-    var len = 0;
-    for (var i = 0; i < str.length; ++i) {
-        var u = str.charCodeAt(i);
-        if (u >= 55296 && u <= 57343)
-            u = 65536 + ((u & 1023) << 10) | str.charCodeAt(++i) & 1023;
-        if (u <= 127)
-            ++len;
-        else if (u <= 2047)
-            len += 2;
-        else if (u <= 65535)
-            len += 3;
-        else
-            len += 4
-    }
-    return len
-}
-var UTF16Decoder = typeof TextDecoder != "undefined" ? new TextDecoder("utf-16le") : undefined;
-function allocateUTF8(str) {
-    var size = lengthBytesUTF8(str) + 1;
-    var ret = _malloc(size);
-    if (ret)
-        stringToUTF8Array(str, HEAP8, ret, size);
-    return ret
-}
-function writeArrayToMemory(array, buffer) {
-    HEAP8.set(array, buffer)
-}
-function writeAsciiToMemory(str, buffer, dontAddNull) {
-    for (var i = 0; i < str.length; ++i) {
-        HEAP8[buffer++ >> 0] = str.charCodeAt(i)
-    }
-    if (!dontAddNull)
-        HEAP8[buffer >> 0] = 0
-}
-var buffer, HEAP8, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPU32, HEAPF32, HEAPF64;
-function updateGlobalBufferAndViews(buf) {
-    buffer = buf;
-    ModuleLuaScript["HEAP8"] = HEAP8 = new Int8Array(buf);
-    ModuleLuaScript["HEAP16"] = HEAP16 = new Int16Array(buf);
-    ModuleLuaScript["HEAP32"] = HEAP32 = new Int32Array(buf);
-    ModuleLuaScript["HEAPU8"] = HEAPU8 = new Uint8Array(buf);
-    ModuleLuaScript["HEAPU16"] = HEAPU16 = new Uint16Array(buf);
-    ModuleLuaScript["HEAPU32"] = HEAPU32 = new Uint32Array(buf);
-    ModuleLuaScript["HEAPF32"] = HEAPF32 = new Float32Array(buf);
-    ModuleLuaScript["HEAPF64"] = HEAPF64 = new Float64Array(buf)
-    kdmyEngine_dataView = new DataView(buf);
-}
-var INITIAL_MEMORY = ModuleLuaScript["INITIAL_MEMORY"] || 16777216;
 var wasmTable;
 var __ATPRERUN__ = [];
 var __ATINIT__ = [];
 var __ATPOSTRUN__ = [];
 var runtimeInitialized = false;
+var runtimeKeepaliveCounter = 0;
 function keepRuntimeAlive() {
-    return noExitRuntime
+    return noExitRuntime || runtimeKeepaliveCounter > 0
 }
 function preRun() {
     if (ModuleLuaScript["preRun"]) {
@@ -655,10 +366,9 @@ function removeRunDependency(id) {
         }
     }
 }
-function abort(what) { {
-        if (ModuleLuaScript["onAbort"]) {
-            ModuleLuaScript["onAbort"](what)
-        }
+function abort(what) {
+    if (ModuleLuaScript["onAbort"]) {
+        ModuleLuaScript["onAbort"](what)
     }
     what = "Aborted(" + what + ")";
     err(what);
@@ -687,113 +397,482 @@ function getBinary(file) {
         }
         if (readBinary) {
             return readBinary(file)
-        } else {
-            throw "both async and sync fetching of the wasm failed"
         }
+        throw "both async and sync fetching of the wasm failed"
     } catch (err) {
         abort(err)
     }
 }
-function getBinaryPromise() {
+function getBinaryPromise(binaryFile) {
     if (!wasmBinary && (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER)) {
-        if (typeof fetch == "function" && !isFileURI(wasmBinaryFile)) {
-            return fetch(wasmBinaryFile, {
+        if (typeof fetch == "function" && !isFileURI(binaryFile)) {
+            return fetch(binaryFile, {
                 credentials: "same-origin"
-            }).then(function (response) {
+            }).then(response => {
                 if (!response["ok"]) {
-                    throw "failed to load wasm binary file at '" + wasmBinaryFile + "'"
+                    throw "failed to load wasm binary file at '" + binaryFile + "'"
                 }
                 return response["arrayBuffer"]()
-            }).catch(function () {
-                return getBinary(wasmBinaryFile)
-            })
+            }).catch(() => getBinary(binaryFile))
         } else {
             if (readAsync) {
-                return new Promise(function (resolve, reject) {
-                    readAsync(wasmBinaryFile, function (response) {
-                        resolve(new Uint8Array(response))
-                    }, reject)
+                return new Promise((resolve, reject) => {
+                    readAsync(binaryFile, response => resolve(new Uint8Array(response)), reject)
                 })
             }
         }
     }
-    return Promise.resolve().then(function () {
-        return getBinary(wasmBinaryFile)
+    return Promise.resolve().then(() => getBinary(binaryFile))
+}
+function instantiateArrayBuffer(binaryFile, imports, receiver) {
+    return getBinaryPromise(binaryFile).then(binary => {
+        return WebAssembly.instantiate(binary, imports)
+    }).then(instance => {
+        return instance
+    }).then(receiver, reason => {
+        err("failed to asynchronously prepare wasm: " + reason);
+        abort(reason)
     })
+}
+function instantiateAsync(binary, binaryFile, imports, callback) {
+    if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) && !isFileURI(binaryFile) && !ENVIRONMENT_IS_NODE && typeof fetch == "function") {
+        return fetch(binaryFile, {
+            credentials: "same-origin"
+        }).then(response => {
+            var result = WebAssembly.instantiateStreaming(response, imports);
+            return result.then(callback, function (reason) {
+                err("wasm streaming compile failed: " + reason);
+                err("falling back to ArrayBuffer instantiation");
+                return instantiateArrayBuffer(binaryFile, imports, callback)
+            })
+        })
+    } else {
+        return instantiateArrayBuffer(binaryFile, imports, callback)
+    }
 }
 function createWasm() {
     var info = {
-        "env": asmLibraryArg,
-        "wasi_snapshot_preview1": asmLibraryArg
+        "env": wasmImports,
+        "wasi_snapshot_preview1": wasmImports
     };
     function receiveInstance(instance, module) {
         var exports = instance.exports;
         exports = Asyncify.instrumentWasmExports(exports);
         ModuleLuaScript["asm"] = exports;
         wasmMemory = ModuleLuaScript["asm"]["memory"];
-        updateGlobalBufferAndViews(wasmMemory.buffer);
+        updateMemoryViews();
         wasmTable = ModuleLuaScript["asm"]["__indirect_function_table"];
         addOnInit(ModuleLuaScript["asm"]["__wasm_call_ctors"]);
-        removeRunDependency("wasm-instantiate")
+        removeRunDependency("wasm-instantiate");
+        return exports
     }
     addRunDependency("wasm-instantiate");
     function receiveInstantiationResult(result) {
         receiveInstance(result["instance"])
     }
-    function instantiateArrayBuffer(receiver) {
-        return getBinaryPromise().then(function (binary) {
-            return WebAssembly.instantiate(binary, info)
-        }).then(function (instance) {
-            return instance
-        }).then(receiver, function (reason) {
-            err("failed to asynchronously prepare wasm: " + reason);
-            abort(reason)
-        })
-    }
-    function instantiateAsync() {
-        if (!wasmBinary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(wasmBinaryFile) && !isFileURI(wasmBinaryFile) && typeof fetch == "function") {
-            return fetch(wasmBinaryFile, {
-                credentials: "same-origin"
-            }).then(function (response) {
-                var result = WebAssembly.instantiateStreaming(response, info);
-                return result.then(receiveInstantiationResult, function (reason) {
-                    err("wasm streaming compile failed: " + reason);
-                    err("falling back to ArrayBuffer instantiation");
-                    return instantiateArrayBuffer(receiveInstantiationResult)
-                })
-            })
-        } else {
-            return instantiateArrayBuffer(receiveInstantiationResult)
-        }
-    }
     if (ModuleLuaScript["instantiateWasm"]) {
         try {
-            var exports = ModuleLuaScript["instantiateWasm"](info, receiveInstance);
-            exports = Asyncify.instrumentWasmExports(exports);
-            return exports
+            return ModuleLuaScript["instantiateWasm"](info, receiveInstance)
         } catch (e) {
-            err("Module.instantiateWasm callback failed with error: " + e);
+            err("ModuleLuaScript.instantiateWasm callback failed with error: " + e);
             return false
         }
     }
-    instantiateAsync();
+    instantiateAsync(wasmBinary, wasmBinaryFile, info, receiveInstantiationResult);
     return {}
 }
 var tempDouble;
 var tempI64;
-
-
 function __asyncjs__animlist_init(src) {
     return Asyncify.handleAsync(async() => {
         let ret = await animlist_init(kdmyEngine_ptrToString(src));
         return kdmyEngine_obtain(ret)
     })
 }
+function __js__animlist_destroy(animlist) {
+    animlist_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(animlist)))
+}
+function __js__animlist_get_animation(animlist, animation_name) {
+    let ret = animlist_get_animation(kdmyEngine_obtain(animlist), kdmyEngine_ptrToString(animation_name));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animlist_is_item_macro_animation(animlist_item) {
+    let ret = animlist_is_item_macro_animation(kdmyEngine_obtain(animlist_item));
+    return ret ? 1 : 0
+}
+function __js__animlist_is_item_tweenkeyframe_animation(animlist_item) {
+    let ret = animlist_is_item_tweenkeyframe_animation(kdmyEngine_obtain(animlist_item));
+    return ret ? 1 : 0
+}
+function __js__animlist_is_item_frame_animation(animlist_item) {
+    let ret = animlist_is_item_frame_animation(kdmyEngine_obtain(animlist_item));
+    return ret ? 1 : 0
+}
+function __js__animsprite_init_from_atlas(frame_rate, loop, atlas, prefix, has_number_suffix) {
+    let ret = animsprite_init_from_atlas(frame_rate, loop, kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(prefix), has_number_suffix);
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_init_from_animlist(animlist, animation_name) {
+    let ret = animsprite_init_from_animlist(kdmyEngine_obtain(animlist), kdmyEngine_ptrToString(animation_name));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_init_from_tweenlerp(name, loop, tweenlerp) {
+    let ret = animsprite_init_from_tweenlerp(kdmyEngine_ptrToString(name), loop, kdmyEngine_obtain(tweenlerp));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_init_as_empty(name) {
+    let ret = animsprite_init_as_empty(kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_init(animlist_item) {
+    let ret = animsprite_init(kdmyEngine_obtain(animlist_item));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_destroy(animsprite) {
+    animsprite_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(animsprite)))
+}
+function __js__animsprite_set_loop(animsprite, loop) {
+    animsprite_set_loop(kdmyEngine_obtain(animsprite), loop)
+}
+function __js__animsprite_get_name(animsprite) {
+    let ret = animsprite_get_name(kdmyEngine_obtain(animsprite));
+    return kdmyEngine_obtain(ret)
+}
+function __js__animsprite_is_frame_animation(animsprite) {
+    let ret = animsprite_is_frame_animation(kdmyEngine_obtain(animsprite));
+    return ret ? 1 : 0
+}
+function __js__animsprite_set_delay(animsprite, delay_milliseconds) {
+    animsprite_set_delay(kdmyEngine_obtain(animsprite), delay_milliseconds)
+}
 function __asyncjs__atlas_init(src) {
     return Asyncify.handleAsync(async() => {
         let ret = await atlas_init(kdmyEngine_ptrToString(src));
         return kdmyEngine_obtain(ret)
     })
+}
+function __js__atlas_destroy(atlas) {
+    atlas_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(atlas)))
+}
+function __js__atlas_get_index_of(atlas, name) {
+    let ret = atlas_get_index_of(kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(name));
+    return ret
+}
+function __js__atlas_get_entry(atlas, name) {
+    let ret = atlas_get_entry(kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(ret)
+}
+function __js__atlas_get_entry_with_number_suffix(atlas, name_prefix) {
+    let ret = atlas_get_entry_with_number_suffix(kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(name_prefix));
+    return kdmyEngine_obtain(ret)
+}
+function __js__atlas_get_glyph_fps(atlas) {
+    let ret = atlas_get_glyph_fps(kdmyEngine_obtain(atlas));
+    return ret
+}
+function __js__atlas_get_texture_resolution(atlas, resolution_width, resolution_height) {
+    const values = [0, 0];
+    atlas_get_texture_resolution(kdmyEngine_obtain(atlas), values);
+    kdmyEngine_set_int32(resolution_width, values[0]);
+    kdmyEngine_set_int32(resolution_height, values[1])
+}
+function __js__atlas_utils_is_known_extension(src) {
+    let ret = atlas_utils_is_known_extension(kdmyEngine_ptrToString(src));
+    return ret ? 1 : 0
+}
+function __js__camera_set_interpolator_type(camera, type) {
+    camera_set_interpolator_type(kdmyEngine_obtain(camera), type)
+}
+function __js__camera_set_transition_duration(camera, expresed_in_beats, value) {
+    camera_set_transition_duration(kdmyEngine_obtain(camera), expresed_in_beats, value)
+}
+function __js__camera_set_absolute_zoom(camera, z) {
+    camera_set_absolute_zoom(kdmyEngine_obtain(camera), z)
+}
+function __js__camera_set_absolute_position(camera, x, y) {
+    camera_set_absolute_position(kdmyEngine_obtain(camera), x, y)
+}
+function __js__camera_set_offset(camera, x, y, z) {
+    camera_set_offset(kdmyEngine_obtain(camera), x, y, z)
+}
+function __js__camera_get_offset(camera, x, y, z) {
+    const values = [0, 0, 0];
+    camera_get_offset(kdmyEngine_obtain(camera), values);
+    kdmyEngine_set_float32(x, values[0]);
+    kdmyEngine_set_float32(y, values[1]);
+    kdmyEngine_set_float32(z, values[2])
+}
+function __js__camera_get_modifier(camera) {
+    const modifier = camera_get_modifier(kdmyEngine_obtain(camera));
+    return kdmyEngine_obtain(modifier)
+}
+function __js__camera_move(camera, end_x, end_y, end_z) {
+    camera_move(kdmyEngine_obtain(camera), end_x, end_y, end_z)
+}
+function __js__camera_slide(camera, start_x, start_y, start_z, end_x, end_y, end_z) {
+    camera_slide(kdmyEngine_obtain(camera), start_x, start_y, start_z, end_x, end_y, end_z)
+}
+function __js__camera_slide_x(camera, start, end) {
+    camera_slide_x(kdmyEngine_obtain(camera), start, end)
+}
+function __js__camera_slide_y(camera, start, end) {
+    camera_slide_y(kdmyEngine_obtain(camera), start, end)
+}
+function __js__camera_slide_z(camera, start, end) {
+    camera_slide_z(kdmyEngine_obtain(camera), start, end)
+}
+function __js__camera_slide_to(camera, x, y, z) {
+    camera_slide_to(kdmyEngine_obtain(camera), x, y, z)
+}
+function __js__camera_from_layout(camera, layout, camera_name) {
+    return camera_from_layout(kdmyEngine_obtain(camera), kdmyEngine_obtain(layout), kdmyEngine_ptrToString(camera_name))
+}
+function __js__camera_disable_offset_zoom(camera, disable) {
+    return camera_disable_offset_zoom(kdmyEngine_obtain(camera), disable)
+}
+function __js__camera_to_origin(camera, should_slide) {
+    camera_to_origin(kdmyEngine_obtain(camera), should_slide)
+}
+function __js__camera_repeat(camera) {
+    camera_repeat(kdmyEngine_obtain(camera))
+}
+function __js__camera_stop(camera) {
+    camera_stop(kdmyEngine_obtain(camera))
+}
+function __js__camera_end(camera) {
+    camera_end(kdmyEngine_obtain(camera))
+}
+function __js__camera_is_completed(camera) {
+    return camera_is_completed(kdmyEngine_obtain(camera))
+}
+function __js__camera_debug_log_info(camera) {
+    camera_debug_log_info(kdmyEngine_obtain(camera))
+}
+function __js__camera_apply(camera, pvrctx) {
+    camera_apply(kdmyEngine_obtain(camera), null)
+}
+function __js__camera_move_offset(camera, end_x, end_y, end_z) {
+    camera_move_offset(kdmyEngine_obtain(camera), end_x, end_y, end_z)
+}
+function __js__camera_slide_offset(camera, start_x, start_y, start_z, end_x, end_y, end_z) {
+    camera_slide_offset(kdmyEngine_obtain(camera), start_x, start_y, start_z, end_x, end_y, end_z)
+}
+function __js__camera_slide_x_offset(camera, start, end) {
+    camera_slide_x_offset(kdmyEngine_obtain(camera), start, end)
+}
+function __js__camera_slide_y_offset(camera, start, end) {
+    camera_slide_y_offset(kdmyEngine_obtain(camera), start, end)
+}
+function __js__camera_slide_z_offset(camera, start, end) {
+    camera_slide_z_offset(kdmyEngine_obtain(camera), start, end)
+}
+function __js__camera_slide_to_offset(camera, x, y, z) {
+    camera_slide_to_offset(kdmyEngine_obtain(camera), x, y, z)
+}
+function __js__camera_to_origin_offset(camera, should_slide) {
+    camera_to_origin_offset(kdmyEngine_obtain(camera), should_slide)
+}
+function __js__camera_get_parent_layout(camera) {
+    let ret = camera_get_parent_layout(kdmyEngine_obtain(camera));
+    return kdmyEngine_obtain(ret)
+}
+function __js__camera_set_animation(camera, animsprite) {
+    camera_set_animation(kdmyEngine_obtain(camera), kdmyEngine_obtain(animsprite))
+}
+function __js__character_use_alternate_sing_animations(character, enable) {
+    character_use_alternate_sing_animations(kdmyEngine_obtain(character), enable)
+}
+function __js__character_set_draw_location(character, x, y) {
+    character_set_draw_location(kdmyEngine_obtain(character), x, y)
+}
+function __js__character_set_draw_align(character, align_vertical, align_horizontal) {
+    character_set_draw_align(kdmyEngine_obtain(character), align_vertical, align_horizontal)
+}
+function __js__character_update_reference_size(character, width, height) {
+    character_update_reference_size(kdmyEngine_obtain(character), width, height)
+}
+function __js__character_enable_reference_size(character, enable) {
+    character_enable_reference_size(kdmyEngine_obtain(character), enable)
+}
+function __js__character_set_offset(character, offset_x, offset_y) {
+    character_set_offset(kdmyEngine_obtain(character), offset_x, offset_y)
+}
+function __js__character_state_add(character, modelholder, state_name) {
+    return character_state_add(kdmyEngine_obtain(character), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(state_name))
+}
+function __js__character_state_toggle(character, state_name) {
+    return character_state_toggle(kdmyEngine_obtain(character), kdmyEngine_ptrToString(state_name))
+}
+function __js__character_play_hey(character) {
+    return character_play_hey(kdmyEngine_obtain(character))
+}
+function __js__character_play_idle(character) {
+    return character_play_idle(kdmyEngine_obtain(character))
+}
+function __js__character_play_sing(character, direction, prefer_sustain) {
+    return character_play_sing(kdmyEngine_obtain(character), kdmyEngine_ptrToString(direction), prefer_sustain)
+}
+function __js__character_play_miss(character, direction, keep_in_hold) {
+    return character_play_miss(kdmyEngine_obtain(character), kdmyEngine_ptrToString(direction), keep_in_hold)
+}
+function __js__character_play_extra(character, extra_animation_name, prefer_sustain) {
+    return character_play_extra(kdmyEngine_obtain(character), kdmyEngine_ptrToString(extra_animation_name), prefer_sustain)
+}
+function __js__character_set_idle_speed(character, speed) {
+    character_set_idle_speed(kdmyEngine_obtain(character), speed)
+}
+function __js__character_set_scale(character, scale_factor) {
+    character_set_scale(kdmyEngine_obtain(character), scale_factor)
+}
+function __js__character_reset(character) {
+    character_reset(kdmyEngine_obtain(character))
+}
+function __js__character_enable_continuous_idle(character, enable) {
+    character_enable_continuous_idle(kdmyEngine_obtain(character), enable)
+}
+function __js__character_is_idle_active(character) {
+    return character_is_idle_active(kdmyEngine_obtain(character))
+}
+function __js__character_enable_flip_correction(character, enable) {
+    return character_enable_flip_correction(kdmyEngine_obtain(character), enable)
+}
+function __js__character_flip_orientation(character, enable) {
+    return character_flip_orientation(kdmyEngine_obtain(character), enable)
+}
+function __js__character_face_as_opponent(character, face_as_opponent) {
+    character_face_as_opponent(kdmyEngine_obtain(character), face_as_opponent)
+}
+function __js__character_set_z_index(character, z) {
+    character_set_z_index(kdmyEngine_obtain(character), z)
+}
+function __js__character_set_z_offset(character, z_offset) {
+    character_set_z_offset(kdmyEngine_obtain(character), z_offset)
+}
+function __js__character_animation_set(character, animsprite) {
+    character_animation_set(kdmyEngine_obtain(character), kdmyEngine_obtain(animsprite))
+}
+function __js__character_animation_restart(character) {
+    character_animation_restart(kdmyEngine_obtain(character))
+}
+function __js__character_animation_end(character) {
+    character_animation_end(kdmyEngine_obtain(character))
+}
+function __js__character_set_color_offset(character, r, g, b, a) {
+    character_set_color_offset(kdmyEngine_obtain(character), r, g, b, a)
+}
+function __js__character_set_color_offset_to_default(character) {
+    character_set_color_offset_to_default(kdmyEngine_obtain(character))
+}
+function __js__character_set_alpha(character, alpha) {
+    character_set_alpha(kdmyEngine_obtain(character), alpha)
+}
+function __js__character_set_visible(character, visible) {
+    character_set_visible(kdmyEngine_obtain(character), visible)
+}
+function __js__character_get_modifier(character) {
+    const modifier = character_get_modifier(kdmyEngine_obtain(character));
+    return kdmyEngine_obtain(modifier)
+}
+function __js__character_has_direction(character, name, is_extra) {
+    return character_has_direction(kdmyEngine_obtain(character), kdmyEngine_ptrToString(name), is_extra)
+}
+function __js__character_get_play_calls(character) {
+    return character_get_play_calls(kdmyEngine_obtain(character))
+}
+function __js__character_get_commited_animations_count(character) {
+    return character_get_commited_animations_count(kdmyEngine_obtain(character))
+}
+function __js__character_get_current_action(character) {
+    return character_get_current_action(kdmyEngine_obtain(character))
+}
+function __js__character_freeze_animation(character, enabled) {
+    character_freeze_animation(kdmyEngine_obtain(character), enabled)
+}
+function __js__character_trailing_enabled(character, enabled) {
+    character_trailing_enabled(kdmyEngine_obtain(character), enabled)
+}
+function __js__character_trailing_set_params(character, length, trail_delay, trail_alpha, darken_colors) {
+    character_trailing_set_params(kdmyEngine_obtain(character), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors))
+}
+function __js__character_trailing_set_offsetcolor(character, r, g, b) {
+    character_trailing_set_offsetcolor(kdmyEngine_obtain(character), r, g, b)
+}
+function __js__character_schedule_idle(character) {
+    character_schedule_idle(kdmyEngine_obtain(character))
+}
+function __js__conductor_init() {
+    let ret = conductor_init();
+    return kdmyEngine_obtain(ret)
+}
+function __js__conductor_destroy(conductor) {
+    conductor_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(conductor)))
+}
+function __js__conductor_poll_reset(conductor) {
+    conductor_poll_reset(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_set_character(conductor, character) {
+    conductor_set_character(kdmyEngine_obtain(conductor), kdmyEngine_obtain(character))
+}
+function __js__conductor_use_strum_line(conductor, strum) {
+    conductor_use_strum_line(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum))
+}
+function __js__conductor_use_strums(conductor, strums) {
+    conductor_use_strums(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strums))
+}
+function __js__conductor_disable_strum_line(conductor, strum, should_disable) {
+    let ret = conductor_disable_strum_line(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), should_disable);
+    return ret ? 1 : 0
+}
+function __js__conductor_remove_strum(conductor, strum) {
+    let ret = conductor_remove_strum(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum));
+    return ret ? 1 : 0
+}
+function __js__conductor_clear_mapping(conductor) {
+    conductor_clear_mapping(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_map_strum_to_player_sing_add(conductor, strum, sing_direction_name) {
+    conductor_map_strum_to_player_sing_add(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(sing_direction_name))
+}
+function __js__conductor_map_strum_to_player_extra_add(conductor, strum, extra_animation_name) {
+    conductor_map_strum_to_player_extra_add(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(extra_animation_name))
+}
+function __js__conductor_map_strum_to_player_sing_remove(conductor, strum, sing_direction_name) {
+    conductor_map_strum_to_player_sing_remove(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(sing_direction_name))
+}
+function __js__conductor_map_strum_to_player_extra_remove(conductor, strum, extra_animation_name) {
+    conductor_map_strum_to_player_extra_remove(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(extra_animation_name))
+}
+function __js__conductor_map_automatically(conductor, should_map_extras) {
+    let ret = conductor_map_automatically(kdmyEngine_obtain(conductor), should_map_extras);
+    return ret
+}
+function __js__conductor_poll(conductor) {
+    conductor_poll(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_disable(conductor, disable) {
+    conductor_disable(kdmyEngine_obtain(conductor), disable)
+}
+function __js__conductor_play_idle(conductor) {
+    conductor_play_idle(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_play_hey(conductor) {
+    conductor_play_hey(kdmyEngine_obtain(conductor))
+}
+function __js__conductor_get_character(conductor) {
+    let ret = conductor_get_character(kdmyEngine_obtain(conductor));
+    return kdmyEngine_obtain(ret)
+}
+function __js__dialogue_apply_state(dialogue, state_name) {
+    return dialogue_apply_state(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name))
+}
+function __js__dialogue_apply_state2(dialogue, state_name, if_line_label) {
+    return dialogue_apply_state2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name), kdmyEngine_ptrToString(if_line_label))
+}
+function __js__dialogue_is_completed(dialogue) {
+    return dialogue_is_completed(kdmyEngine_obtain(dialogue))
+}
+function __js__dialogue_is_hidden(dialogue) {
+    return dialogue_is_hidden(kdmyEngine_obtain(dialogue))
 }
 function __asyncjs__dialogue_show_dialog(dialogue, dialog_src) {
     return Asyncify.handleAsync(async() => {
@@ -804,6 +883,76 @@ function __asyncjs__dialogue_show_dialog2(dialogue, text_dialog_content) {
     return Asyncify.handleAsync(async() => {
         return await dialogue_show_dialog2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(text_dialog_content))
     })
+}
+function __js__dialogue_close(dialogue) {
+    dialogue_close(kdmyEngine_obtain(dialogue))
+}
+function __js__dialogue_hide(dialogue, hidden) {
+    dialogue_hide(kdmyEngine_obtain(dialogue), hidden)
+}
+function __js__dialogue_get_modifier(dialogue) {
+    const modifier = dialogue_get_modifier(kdmyEngine_obtain(dialogue));
+    return kdmyEngine_obtain(modifier)
+}
+function __js__dialogue_set_offsetcolor(dialogue, r, g, b, a) {
+    dialogue_set_offsetcolor(kdmyEngine_obtain(dialogue), r, g, b, a)
+}
+function __js__dialogue_set_alpha(dialogue, alpha) {
+    dialogue_set_alpha(kdmyEngine_obtain(dialogue), alpha)
+}
+function __js__dialogue_set_antialiasing(dialogue, antialiasing) {
+    dialogue_set_antialiasing(kdmyEngine_obtain(dialogue), antialiasing)
+}
+function __js__kdmyEngine_get_language() {
+    const code = window.navigator.language;
+    const lang = new Intl.DisplayNames([code], {
+        type: "language"
+    });
+    const name = lang.of(code);
+    return kdmyEngine_stringToPtr(name)
+}
+function __js__kdmyEngine_get_useragent() {
+    return kdmyEngine_stringToPtr(navigator.userAgent)
+}
+function __js__kdmyEngine_get_locationquery() {
+    let query = location.search;
+    if (query.length > 0 && query[0] == "?")
+        query = query.substring(1);
+    let name = location.pathname;
+    let idx = name.lastIndexOf("/");
+    if (idx >= 0)
+        name = name.substring(idx + 1);
+    let str = name + " ";
+    for (let part of query.split("&")) {
+        let idx = part.indexOf("=");
+        if (idx < 0) {
+            str += decodeURIComponent(part) + " ";
+            continue
+        }
+        let key = part.substring(0, idx);
+        let value = part.substring(idx + 1);
+        if (value.includes(" ") && value[0] != '"' && value[value.length - 1] != '"') {
+            value = '"' + value + '"'
+        }
+        str += "-" + decodeURIComponent(key) + " " + value + " "
+    }
+    return kdmyEngine_stringToPtr(str)
+}
+function __js__kdmyEngine_require_window_attention() {
+    alert(document.title + "\n Environment:require_window_attention()")
+}
+function __js__kdmyEngine_change_window_title(title, from_modding_context) {
+    luascriptplatform.ChangeWindowTitle(kdmyEngine_ptrToString(title), from_modding_context)
+}
+function __js__kdmyEngine_open_link(url) {
+    let target_url = kdmyEngine_ptrToString(url);
+    if (!target_url || target_url.startsWith("javascript:") || target_url.startsWith("blob:"))
+        return;
+    window.open(target_url, "_blank", "noopener,noreferrer")
+}
+function __js__kdmyEngine_get_screen_size(screen_width, screen_height) {
+    kdmyEngine_set_int32(screen_width, pvr_context.screen_width);
+    kdmyEngine_set_int32(screen_height, pvr_context.screen_height)
 }
 function __asyncjs__fs_readfile(path, buffer_ptr, size_ptr) {
     return Asyncify.handleAsync(async() => {
@@ -818,7 +967,7 @@ function __asyncjs__fs_readfile(path, buffer_ptr, size_ptr) {
                 console.error("__asyncjs__fs_readfile() out-of-memory, size required was " + arraybuffer.byteLength);
                 return 0
             }
-            new Uint8Array(buffer).set(new Uint8Array(arraybuffer), ptr);
+            new Uint8Array(wasmMemory.buffer).set(new Uint8Array(arraybuffer), ptr);
             kdmyEngine_set_uint32(buffer_ptr, ptr);
             kdmyEngine_set_uint32(size_ptr, arraybuffer.byteLength);
             return 1
@@ -834,6 +983,147 @@ function __asyncjs__json_load_from(src) {
         return ModuleLuaScript.kdmyEngine_obtain(ret)
     })
 }
+function __js__json_load_from_string(json_sourcecode) {
+    let ret = json_load_from_string(kdmyEngine_ptrToString(json_sourcecode));
+    return ModuleLuaScript.kdmyEngine_obtain(ret)
+}
+function __js__kdmyEngine_parse_json(L, json) {
+    return luascript_helper_parse_json(L, ModuleLuaScript.kdmyEngine_obtain(json))
+}
+function __js__layout_trigger_any(layout, action_triger_camera_interval_name) {
+    return layout_trigger_any(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(action_triger_camera_interval_name))
+}
+function __js__layout_trigger_action(layout, target_name, action_name) {
+    return layout_trigger_action(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(target_name), kdmyEngine_ptrToString(action_name))
+}
+function __js__layout_trigger_camera(layout, camera_name) {
+    return layout_trigger_camera(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(camera_name))
+}
+function __js__layout_trigger_trigger(layout, trigger_name) {
+    return layout_trigger_trigger(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(trigger_name))
+}
+function __js__layout_contains_action(layout, target_name, action_name) {
+    return layout_contains_action(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(target_name), kdmyEngine_ptrToString(action_name))
+}
+function __js__layout_stop_all_triggers(layout) {
+    return layout_stop_all_triggers(kdmyEngine_obtain(layout))
+}
+function __js__layout_stop_trigger(layout, trigger_name) {
+    return layout_stop_trigger(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(trigger_name))
+}
+function __js__layout_animation_is_completed(layout, item_name) {
+    return layout_animation_is_completed(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(item_name))
+}
+function __js__layout_camera_set_view(layout, x, y, z) {
+    layout_camera_set_view(kdmyEngine_obtain(layout), x, y, z)
+}
+function __js__layout_camera_is_completed(layout) {
+    return layout_camera_is_completed(kdmyEngine_obtain(layout))
+}
+function __js__layout_get_camera_helper(layout) {
+    const camera = layout_get_camera_helper(kdmyEngine_obtain(layout));
+    return kdmyEngine_obtain(camera)
+}
+function __js__layout_get_secondary_camera_helper(layout) {
+    const camera = layout_get_secondary_camera_helper(kdmyEngine_obtain(layout));
+    return kdmyEngine_obtain(camera)
+}
+function __js__layout_get_textsprite(layout, name) {
+    const textsprite = layout_get_textsprite(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(textsprite)
+}
+function __js__layout_get_sprite(layout, name) {
+    const sprite = layout_get_sprite(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(sprite)
+}
+function __js__layout_get_soundplayer(layout, name) {
+    const soundplayer = layout_get_soundplayer(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(soundplayer)
+}
+function __js__layout_get_videoplayer(layout, name) {
+    let ret = layout_get_videoplayer(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
+    return kdmyEngine_obtain(ret)
+}
+function __js__layout_get_viewport_size(layout, viewport_width, viewport_height) {
+    const values = [0, 0];
+    layout_get_viewport_size(kdmyEngine_obtain(layout), values);
+    kdmyEngine_set_float32(viewport_width, values[0]);
+    kdmyEngine_set_float32(viewport_height, values[1])
+}
+function __js__layout_get_attached_value2(layout, name, result) {
+    const value = [null];
+    let type = layout_get_attached_value2(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name), value);
+    switch (type) {
+    case LAYOUT_TYPE_NOTFOUND:
+        break;
+    case LAYOUT_TYPE_STRING:
+        kdmyEngine_set_uint32(result, kdmyEngine_stringToPtr(value[0]));
+        break;
+    case LAYOUT_TYPE_FLOAT:
+        kdmyEngine_set_float32(result, value[0]);
+        break;
+    case LAYOUT_TYPE_INTEGER:
+        kdmyEngine_set_int32(result, value[0]);
+        break;
+    case LAYOUT_TYPE_HEX:
+        kdmyEngine_set_uint32(result, value[0]);
+        break;
+    case LAYOUT_TYPE_BOOLEAN:
+        kdmyEngine_set_int32(result, value[0] ? 1 : 0);
+        break;
+    default:
+        console.warn("Unknown layout type-value ", type, value[0]);
+        break
+    }
+    return type
+}
+function __js__layout_set_group_visibility(layout, group_name, visible) {
+    layout_set_group_visibility(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), visible)
+}
+function __js__layout_set_group_alpha(layout, group_name, alpha) {
+    layout_set_group_alpha(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), alpha)
+}
+function __js__layout_set_group_offsetcolor(layout, group_name, r, g, b, a) {
+    layout_set_group_offsetcolor(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), r, g, b, a)
+}
+function __js__layout_suspend(layout) {
+    layout_suspend(kdmyEngine_obtain(layout))
+}
+function __js__layout_resume(layout) {
+    layout_resume(kdmyEngine_obtain(layout))
+}
+function __js__layout_get_placeholder(layout, group_name) {
+    let placeholder = layout_get_placeholder(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
+    return kdmyEngine_obtain(placeholder)
+}
+function __js__layout_disable_antialiasing(layout, antialiasing) {
+    layout_disable_antialiasing(kdmyEngine_obtain(layout), antialiasing)
+}
+function __js__layout_set_group_antialiasing(layout, group_name, antialiasing) {
+    layout_set_group_antialiasing(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), antialiasing)
+}
+function __js__layout_get_group_modifier(layout, group_name) {
+    let modifier = layout_get_group_modifier(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
+    return kdmyEngine_obtain(modifier)
+}
+function __js__layout_get_group_shader(layout, group_name) {
+    let psshader = layout_get_group_shader(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
+    return kdmyEngine_obtain(psshader)
+}
+function __js__layout_set_group_shader(layout, group_name, psshader) {
+    return layout_set_group_shader(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), kdmyEngine_obtain(psshader))
+}
+function __js__layout_screen_to_layout_coordinates(layout, screen_x, screen_y, calc_with_camera, layout_x, layout_y) {
+    const output_coords = [0, 0];
+    layout_screen_to_layout_coordinates(kdmyEngine_obtain(layout), screen_x, screen_y, calc_with_camera, output_coords);
+    kdmyEngine_set_float32(layout_x, output_coords[0]);
+    kdmyEngine_set_float32(layout_y, output_coords[1])
+}
+function __js__math2d_rand() {
+    window.crypto.getRandomValues(MATH2D_PRNG);
+    let percent = MATH2D_PRNG[0] / 4294967295;
+    return percent
+}
 function __asyncjs__menu_init(menumanifest, x, y, z, width, height) {
     return Asyncify.handleAsync(async() => {
         let ret = await menu_init(kdmyEngine_obtain(menumanifest), x, y, z, width, height);
@@ -841,10 +1131,123 @@ function __asyncjs__menu_init(menumanifest, x, y, z, width, height) {
         return kdmyEngine_obtain(ret)
     })
 }
+function __js__menu_get_drawable(menu) {
+    let ret = menu_get_drawable(kdmyEngine_obtain(menu));
+    return kdmyEngine_obtain(ret)
+}
+function __js__menu_trasition_in(menu) {
+    menu_trasition_in(kdmyEngine_obtain(menu))
+}
+function __js__menu_trasition_out(menu) {
+    menu_trasition_out(kdmyEngine_obtain(menu))
+}
+function __js__menu_select_item(menu, name) {
+    let ret = menu_select_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
+}
+function __js__menu_select_index(menu, index) {
+    menu_select_index(kdmyEngine_obtain(menu), index)
+}
+function __js__menu_select_vertical(menu, offset) {
+    let ret = menu_select_vertical(kdmyEngine_obtain(menu), offset);
+    return ret ? 1 : 0
+}
+function __js__menu_select_horizontal(menu, offset) {
+    let ret = menu_select_horizontal(kdmyEngine_obtain(menu), offset);
+    return ret ? 1 : 0
+}
+function __js__menu_toggle_choosen(menu, enable) {
+    menu_toggle_choosen(kdmyEngine_obtain(menu), enable)
+}
+function __js__menu_get_selected_index(menu) {
+    let ret = menu_get_selected_index(kdmyEngine_obtain(menu));
+    return ret
+}
+function __js__menu_get_items_count(menu) {
+    let ret = menu_get_items_count(kdmyEngine_obtain(menu));
+    return ret
+}
+function __js__menu_set_item_text(menu, index, text) {
+    let ret = menu_set_item_text(kdmyEngine_obtain(menu), index, kdmyEngine_ptrToString(text));
+    return ret ? 1 : 0
+}
+function __js__menu_set_item_visibility(menu, index, visible) {
+    let ret = menu_set_item_visibility(kdmyEngine_obtain(menu), index, visible);
+    return ret ? 1 : 0
+}
+function __js__menu_get_item_rect(menu, index, x, y, width, height) {
+    const output_location = [0, 0];
+    const output_size = [0, 0];
+    let ret = menu_get_item_rect(kdmyEngine_obtain(menu), index, output_location, output_size);
+    kdmyEngine_set_float32(x, output_location[0]);
+    kdmyEngine_set_float32(y, output_location[1]);
+    kdmyEngine_set_float32(width, output_size[2]);
+    kdmyEngine_set_float32(height, output_size[3]);
+    return ret ? 1 : 0
+}
+function __js__menu_get_selected_item_name(menu) {
+    let ret = menu_get_selected_item_name(kdmyEngine_obtain(menu));
+    return kdmyEngine_stringToPtr(ret)
+}
+function __js__menu_set_text_force_case(menu, none_or_lowercase_or_uppercase) {
+    menu_set_text_force_case(kdmyEngine_obtain(menu), none_or_lowercase_or_uppercase)
+}
+function __js__menu_has_item(menu, name) {
+    let ret = menu_has_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
+}
+function __js__menu_index_of_item(menu, name) {
+    let ret = menu_index_of_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
+    return ret
+}
 function __asyncjs__menumanifest_init(src) {
     return Asyncify.handleAsync(async() => {
         let ret = await menumanifest_init(kdmyEngine_ptrToString(src));
         return kdmyEngine_obtain(ret)
+    })
+}
+function __js__menumanifest_destroy(menumanifest) {
+    menumanifest_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(menumanifest)))
+}
+function __js__messagebox_set_buttons_text(messagebox, left_text, right_text) {
+    messagebox_set_buttons_text(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(left_text), kdmyEngine_ptrToString(right_text))
+}
+function __js__messagebox_set_button_single(messagebox, center_text) {
+    messagebox_set_button_single(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(center_text))
+}
+function __js__messagebox_set_buttons_icons(messagebox, left_icon_name, right_icon_name) {
+    messagebox_set_buttons_icons(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(left_icon_name), kdmyEngine_ptrToString(right_icon_name))
+}
+function __js__messagebox_set_button_single_icon(messagebox, center_icon_name) {
+    messagebox_set_button_single_icon(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(center_icon_name))
+}
+function __js__messagebox_set_title(messagebox, text) {
+    messagebox_set_title(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(text))
+}
+function __js__messagebox_set_image_background_color(messagebox, color_rgb8) {
+    messagebox_set_image_background_color(kdmyEngine_obtain(messagebox), color_rgb8)
+}
+function __js__messagebox_set_image_background_color_default(messagebox) {
+    messagebox_set_image_background_color_default(kdmyEngine_obtain(messagebox))
+}
+function __js__messagebox_set_message(messagebox, text) {
+    messagebox_set_message(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(text))
+}
+function __js__messagebox_hide_image_background(messagebox, hide) {
+    messagebox_hide_image_background(kdmyEngine_obtain(messagebox), hide)
+}
+function __js__messagebox_hide_image(messagebox, hide) {
+    messagebox_hide_image(kdmyEngine_obtain(messagebox), hide)
+}
+function __js__messagebox_show_buttons_icons(messagebox, show) {
+    messagebox_show_buttons_icons(kdmyEngine_obtain(messagebox), show)
+}
+function __js__messagebox_use_small_size(messagebox, small_or_normal) {
+    messagebox_use_small_size(kdmyEngine_obtain(messagebox), small_or_normal)
+}
+function __asyncjs__messagebox_set_image_from_texture(messagebox, filename) {
+    return Asyncify.handleAsync(async() => {
+        await messagebox_set_image_from_texture(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(filename))
     })
 }
 function __asyncjs__messagebox_set_image_from_atlas(messagebox, filename, entry_name, is_animation) {
@@ -852,59 +1255,61 @@ function __asyncjs__messagebox_set_image_from_atlas(messagebox, filename, entry_
         await messagebox_set_image_from_atlas(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(filename), kdmyEngine_ptrToString(entry_name), is_animation)
     })
 }
-function __asyncjs__messagebox_set_image_from_texture(messagebox, filename) {
-    return Asyncify.handleAsync(async() => {
-        await messagebox_set_image_from_texture(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(filename))
-    })
+function __js__messagebox_hide(messagebox, animated) {
+    messagebox_hide(kdmyEngine_obtain(messagebox), animated)
 }
-function __asyncjs__modding_get_messagebox(modding) {
-    return Asyncify.handleAsync(async() => {
-        let ret = await modding_get_messagebox(kdmyEngine_obtain(modding));
-        return kdmyEngine_obtain(ret)
-    })
+function __js__messagebox_show(messagebox, animated) {
+    messagebox_show(kdmyEngine_obtain(messagebox), animated)
 }
-function __asyncjs__modding_launch_credits(modding) {
-    return Asyncify.handleAsync(async() => {
-        modding_launch_credits(kdmyEngine_obtain(modding))
-    })
+function __js__messagebox_set_z_index(messagebox, z_index) {
+    messagebox_set_z_index(kdmyEngine_obtain(messagebox), z_index)
 }
-function __asyncjs__modding_launch_freeplay(modding) {
-    return Asyncify.handleAsync(async() => {
-        modding_launch_freeplay(kdmyEngine_obtain(modding))
-    })
+function __js__messagebox_get_modifier(messagebox) {
+    const modifier = messagebox_get_modifier(kdmyEngine_obtain(messagebox));
+    return kdmyEngine_obtain(modifier)
 }
-function __asyncjs__modding_launch_mainmenu(modding) {
-    return Asyncify.handleAsync(async() => {
-        let ret = modding_launch_mainmenu(kdmyEngine_obtain(modding));
-        return ret ? 1 : 0
-    })
+function __js__modding_get_layout(modding) {
+    let ret = modding_get_layout(kdmyEngine_obtain(modding));
+    return kdmyEngine_obtain(ret)
 }
-function __asyncjs__modding_launch_settings(modding) {
-    return Asyncify.handleAsync(async() => {
-        modding_launch_settings(kdmyEngine_obtain(modding))
-    })
+function __js__modding_exit(modding) {
+    modding_exit(kdmyEngine_obtain(modding))
 }
-function __asyncjs__modding_launch_startscreen(modding) {
-    return Asyncify.handleAsync(async() => {
-        let ret = modding_launch_startscreen(kdmyEngine_obtain(modding));
-        return ret ? 1 : 0
-    })
+function __js__modding_set_halt(modding, halt) {
+    modding_set_halt(kdmyEngine_obtain(modding), halt)
 }
-function __asyncjs__modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx, ws_label) {
-    return Asyncify.handleAsync(async() => {
-        let ret = modding_launch_week(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(difficult), alt_tracks, kdmyEngine_ptrToString(bf), kdmyEngine_ptrToString(gf), kdmyEngine_ptrToString(gameplay_manifest), song_idx, kdmyEngine_ptrToString(ws_label));
-        _free(difficult);
-        _free(bf);
-        _free(gf);
-        _free(gameplay_manifest);
-        return ret
-    })
+function __js__modding_unlockdirective_create(modding, name, value) {
+    modding_unlockdirective_create(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name), value)
 }
-function __asyncjs__modding_launch_weekselector(modding) {
-    return Asyncify.handleAsync(async() => {
-        let ret = modding_launch_weekselector(kdmyEngine_obtain(modding));
-        return ret
-    })
+function __js__modding_unlockdirective_get(modding, name) {
+    let ret = modding_unlockdirective_get(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name));
+    return ret
+}
+function __js__modding_unlockdirective_remove(modding, name) {
+    modding_unlockdirective_remove(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name))
+}
+function __js__modding_unlockdirective_has(modding, name) {
+    let ret = modding_unlockdirective_has(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
+}
+function __js__modding_get_active_menu(modding) {
+    let ret = modding_get_active_menu(kdmyEngine_obtain(modding));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modding_choose_native_menu_option(modding, name) {
+    let ret = modding_choose_native_menu_option(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
+}
+function __js__modding_get_native_menu(modding) {
+    let ret = modding_get_native_menu(kdmyEngine_obtain(modding));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modding_set_active_menu(modding, menu) {
+    modding_set_active_menu(kdmyEngine_obtain(modding), kdmyEngine_obtain(menu))
+}
+function __js__modding_get_native_background_music(modding) {
+    let ret = modding_get_native_background_music(kdmyEngine_obtain(modding));
+    return kdmyEngine_obtain(ret)
 }
 function __asyncjs__modding_replace_native_background_music(modding, music_src) {
     return Asyncify.handleAsync(async() => {
@@ -957,1191 +1362,25 @@ function __asyncjs__modding_spawn_screen(modding, layout_src, script_src, arg_ty
         return ret_ptr
     })
 }
-function __asyncjs__modelholder_init(src) {
-    return Asyncify.handleAsync(async() => {
-        let ret = await modelholder_init(kdmyEngine_ptrToString(src));
-        return kdmyEngine_obtain(ret)
-    })
-}
-function __asyncjs__modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
-    return Asyncify.handleAsync(async() => {
-        let ret = await modelholder_init2(vertex_color_rgb8, kdmyEngine_ptrToString(atlas_src), kdmyEngine_ptrToString(animlist_src));
-        return kdmyEngine_obtain(ret)
-    })
-}
-function __asyncjs__songplayer_play(songplayer, songinfo) {
-    return Asyncify.handleAsync(async() => {
-        const _songinfo = {
-            completed: 0,
-            timestamp: 0
-        };
-        await songplayer_play(kdmyEngine_obtain(songplayer), _songinfo)
-    })
-}
-function __asyncjs__soundplayer_init(src) {
-    return Asyncify.handleAsync(async() => {
-        let ret = await soundplayer_init(kdmyEngine_ptrToString(src));
-        return kdmyEngine_obtain(ret)
-    })
-}
-function __asyncjs__week_rebuild_ui(roundcontext) {
-    return Asyncify.handleAsync(async() => {
-        await week_rebuild_ui(kdmyEngine_obtain(roundcontext))
-    })
-}
-function __asyncjs__week_set_gameover_option(roundcontext, opt, nro, str) {
-    return Asyncify.handleAsync(async() => {
-        await week_set_gameover_option(kdmyEngine_obtain(roundcontext), opt, nro, kdmyEngine_ptrToString(str))
-    })
-}
-function __js__animlist_destroy(animlist) {
-    animlist_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(animlist)))
-}
-function __js__animlist_get_animation(animlist, animation_name) {
-    let ret = animlist_get_animation(kdmyEngine_obtain(animlist), kdmyEngine_ptrToString(animation_name));
-    return kdmyEngine_obtain(ret)
-}
-function __js__animlist_is_item_frame_animation(animlist_item) {
-    let ret = animlist_is_item_frame_animation(kdmyEngine_obtain(animlist_item));
-    return ret ? 1 : 0
-}
-function __js__animlist_is_item_macro_animation(animlist_item) {
-    let ret = animlist_is_item_macro_animation(kdmyEngine_obtain(animlist_item));
-    return ret ? 1 : 0
-}
-function __js__animlist_is_item_tweenkeyframe_animation(animlist_item) {
-    let ret = animlist_is_item_tweenkeyframe_animation(kdmyEngine_obtain(animlist_item));
-    return ret ? 1 : 0
-}
-function __js__animsprite_destroy(animsprite) {
-    animsprite_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(animsprite)))
-}
-function __js__animsprite_get_name(animsprite) {
-    let ret = animsprite_get_name(kdmyEngine_obtain(animsprite));
-    return kdmyEngine_obtain(ret)
-}
-function __js__animsprite_init(animlist_item) {
-    let ret = animsprite_init(kdmyEngine_obtain(animlist_item));
-    return kdmyEngine_obtain(ret)
-}
-function __js__animsprite_init_as_empty(name) {
-    let ret = animsprite_init_as_empty(kdmyEngine_ptrToString(name));
-    return kdmyEngine_obtain(ret)
-}
-function __js__animsprite_init_from_animlist(animlist, animation_name) {
-    let ret = animsprite_init_from_animlist(kdmyEngine_obtain(animlist), kdmyEngine_ptrToString(animation_name));
-    return kdmyEngine_obtain(ret)
-}
-function __js__animsprite_init_from_atlas(frame_rate, loop, atlas, prefix, has_number_suffix) {
-    let ret = animsprite_init_from_atlas(frame_rate, loop, kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(prefix), has_number_suffix);
-    return kdmyEngine_obtain(ret)
-}
-function __js__animsprite_init_from_tweenlerp(name, loop, tweenlerp) {
-    let ret = animsprite_init_from_tweenlerp(kdmyEngine_ptrToString(name), loop, kdmyEngine_obtain(tweenlerp));
-    return kdmyEngine_obtain(ret)
-}
-function __js__animsprite_is_frame_animation(animsprite) {
-    let ret = animsprite_is_frame_animation(kdmyEngine_obtain(animsprite));
-    return ret ? 1 : 0
-}
-function __js__animsprite_restart(animsprite) {
-    animsprite_restart(kdmyEngine_obtain(animsprite))
-}
-function __js__animsprite_set_delay(animsprite, delay_milliseconds) {
-    animsprite_set_delay(kdmyEngine_obtain(animsprite), delay_milliseconds)
-}
-function __js__animsprite_set_loop(animsprite, loop) {
-    animsprite_set_loop(kdmyEngine_obtain(animsprite), loop)
-}
-function __js__atlas_destroy(atlas) {
-    atlas_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(atlas)))
-}
-function __js__atlas_get_entry(atlas, name) {
-    let ret = atlas_get_entry(kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(name));
-    return kdmyEngine_obtain(ret)
-}
-function __js__atlas_get_entry_with_number_suffix(atlas, name_prefix) {
-    let ret = atlas_get_entry_with_number_suffix(kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(name_prefix));
-    return kdmyEngine_obtain(ret)
-}
-function __js__atlas_get_glyph_fps(atlas) {
-    let ret = atlas_get_glyph_fps(kdmyEngine_obtain(atlas));
-    return ret
-}
-function __js__atlas_get_index_of(atlas, name) {
-    let ret = atlas_get_index_of(kdmyEngine_obtain(atlas), kdmyEngine_ptrToString(name));
-    return ret
-}
-function __js__atlas_get_texture_resolution(atlas, resolution_width, resolution_height) {
-    const values = [0, 0];
-    atlas_get_texture_resolution(kdmyEngine_obtain(atlas), values);
-    kdmyEngine_set_int32(resolution_width, values[0]);
-    kdmyEngine_set_int32(resolution_height, values[1])
-}
-function __js__atlas_utils_is_known_extension(src) {
-    let ret = atlas_utils_is_known_extension(kdmyEngine_ptrToString(src));
-    return ret ? 1 : 0
-}
-function __js__camera_apply(camera, pvrctx) {
-    camera_apply(kdmyEngine_obtain(camera), null)
-}
-function __js__camera_debug_log_info(camera) {
-    camera_debug_log_info(kdmyEngine_obtain(camera))
-}
-function __js__camera_disable_offset_zoom(camera, disable) {
-    return camera_disable_offset_zoom(kdmyEngine_obtain(camera), disable)
-}
-function __js__camera_end(camera) {
-    camera_end(kdmyEngine_obtain(camera))
-}
-function __js__camera_from_layout(camera, layout, camera_name) {
-    return camera_from_layout(kdmyEngine_obtain(camera), kdmyEngine_obtain(layout), kdmyEngine_ptrToString(camera_name))
-}
-function __js__camera_get_modifier(camera) {
-    const modifier = camera_get_modifier(kdmyEngine_obtain(camera));
-    return kdmyEngine_obtain(modifier)
-}
-function __js__camera_get_offset(camera, x, y, z) {
-    const values = [0, 0, 0];
-    camera_get_offset(kdmyEngine_obtain(camera), values);
-    kdmyEngine_set_float32(x, values[0]);
-    kdmyEngine_set_float32(y, values[1]);
-    kdmyEngine_set_float32(z, values[2])
-}
-function __js__camera_get_parent_layout(camera) {
-    let ret = camera_get_parent_layout(kdmyEngine_obtain(camera));
-    return kdmyEngine_obtain(ret)
-}
-function __js__camera_is_completed(camera) {
-    return camera_is_completed(kdmyEngine_obtain(camera))
-}
-function __js__camera_move(camera, end_x, end_y, end_z) {
-    camera_move(kdmyEngine_obtain(camera), end_x, end_y, end_z)
-}
-function __js__camera_move_offset(camera, end_x, end_y, end_z) {
-    camera_move_offset(kdmyEngine_obtain(camera), end_x, end_y, end_z)
-}
-function __js__camera_repeat(camera) {
-    camera_repeat(kdmyEngine_obtain(camera))
-}
-function __js__camera_set_absolute_position(camera, x, y) {
-    camera_set_absolute_position(kdmyEngine_obtain(camera), x, y)
-}
-function __js__camera_set_absolute_zoom(camera, z) {
-    camera_set_absolute_zoom(kdmyEngine_obtain(camera), z)
-}
-function __js__camera_set_animation(camera, animsprite) {
-    camera_set_animation(kdmyEngine_obtain(camera), kdmyEngine_obtain(animsprite))
-}
-function __js__camera_set_interpolator_type(camera, type) {
-    camera_set_interpolator_type(kdmyEngine_obtain(camera), type)
-}
-function __js__camera_set_offset(camera, x, y, z) {
-    camera_set_offset(kdmyEngine_obtain(camera), x, y, z)
-}
-function __js__camera_set_transition_duration(camera, expresed_in_beats, value) {
-    camera_set_transition_duration(kdmyEngine_obtain(camera), expresed_in_beats, value)
-}
-function __js__camera_slide(camera, start_x, start_y, start_z, end_x, end_y, end_z) {
-    camera_slide(kdmyEngine_obtain(camera), start_x, start_y, start_z, end_x, end_y, end_z)
-}
-function __js__camera_slide_offset(camera, start_x, start_y, start_z, end_x, end_y, end_z) {
-    camera_slide_offset(kdmyEngine_obtain(camera), start_x, start_y, start_z, end_x, end_y, end_z)
-}
-function __js__camera_slide_to(camera, x, y, z) {
-    camera_slide_to(kdmyEngine_obtain(camera), x, y, z)
-}
-function __js__camera_slide_to_offset(camera, x, y, z) {
-    camera_slide_to_offset(kdmyEngine_obtain(camera), x, y, z)
-}
-function __js__camera_slide_x(camera, start, end) {
-    camera_slide_x(kdmyEngine_obtain(camera), start, end)
-}
-function __js__camera_slide_x_offset(camera, start, end) {
-    camera_slide_x_offset(kdmyEngine_obtain(camera), start, end)
-}
-function __js__camera_slide_y(camera, start, end) {
-    camera_slide_y(kdmyEngine_obtain(camera), start, end)
-}
-function __js__camera_slide_y_offset(camera, start, end) {
-    camera_slide_y_offset(kdmyEngine_obtain(camera), start, end)
-}
-function __js__camera_slide_z(camera, start, end) {
-    camera_slide_z(kdmyEngine_obtain(camera), start, end)
-}
-function __js__camera_slide_z_offset(camera, start, end) {
-    camera_slide_z_offset(kdmyEngine_obtain(camera), start, end)
-}
-function __js__camera_stop(camera) {
-    camera_stop(kdmyEngine_obtain(camera))
-}
-function __js__camera_to_origin(camera, should_slide) {
-    camera_to_origin(kdmyEngine_obtain(camera), should_slide)
-}
-function __js__camera_to_origin_offset(camera, should_slide) {
-    camera_to_origin_offset(kdmyEngine_obtain(camera), should_slide)
-}
-function __js__character_animation_end(character) {
-    character_animation_end(kdmyEngine_obtain(character))
-}
-function __js__character_animation_restart(character) {
-    character_animation_restart(kdmyEngine_obtain(character))
-}
-function __js__character_animation_set(character, animsprite) {
-    character_animation_set(kdmyEngine_obtain(character), kdmyEngine_obtain(animsprite))
-}
-function __js__character_enable_continuous_idle(character, enable) {
-    character_enable_continuous_idle(kdmyEngine_obtain(character), enable)
-}
-function __js__character_enable_flip_correction(character, enable) {
-    return character_enable_flip_correction(kdmyEngine_obtain(character), enable)
-}
-function __js__character_enable_reference_size(character, enable) {
-    character_enable_reference_size(kdmyEngine_obtain(character), enable)
-}
-function __js__character_face_as_opponent(character, face_as_opponent) {
-    character_face_as_opponent(kdmyEngine_obtain(character), face_as_opponent)
-}
-function __js__character_flip_orientation(character, enable) {
-    return character_flip_orientation(kdmyEngine_obtain(character), enable)
-}
-function __js__character_freeze_animation(character, enabled) {
-    character_freeze_animation(kdmyEngine_obtain(character), enabled)
-}
-function __js__character_get_commited_animations_count(character) {
-    return character_get_commited_animations_count(kdmyEngine_obtain(character))
-}
-function __js__character_get_current_action(character) {
-    return character_get_current_action(kdmyEngine_obtain(character))
-}
-function __js__character_get_modifier(character) {
-    const modifier = character_get_modifier(kdmyEngine_obtain(character));
-    return kdmyEngine_obtain(modifier)
-}
-function __js__character_get_play_calls(character) {
-    return character_get_play_calls(kdmyEngine_obtain(character))
-}
-function __js__character_has_direction(character, name, is_extra) {
-    return character_has_direction(kdmyEngine_obtain(character), kdmyEngine_ptrToString(name), is_extra)
-}
-function __js__character_is_idle_active(character) {
-    return character_is_idle_active(kdmyEngine_obtain(character))
-}
-function __js__character_play_extra(character, extra_animation_name, prefer_sustain) {
-    return character_play_extra(kdmyEngine_obtain(character), kdmyEngine_ptrToString(extra_animation_name), prefer_sustain)
-}
-function __js__character_play_hey(character) {
-    return character_play_hey(kdmyEngine_obtain(character))
-}
-function __js__character_play_idle(character) {
-    return character_play_idle(kdmyEngine_obtain(character))
-}
-function __js__character_play_miss(character, direction, keep_in_hold) {
-    return character_play_miss(kdmyEngine_obtain(character), kdmyEngine_ptrToString(direction), keep_in_hold)
-}
-function __js__character_play_sing(character, direction, prefer_sustain) {
-    return character_play_sing(kdmyEngine_obtain(character), kdmyEngine_ptrToString(direction), prefer_sustain)
-}
-function __js__character_reset(character) {
-    character_reset(kdmyEngine_obtain(character))
-}
-function __js__character_schedule_idle(character) {
-    character_schedule_idle(kdmyEngine_obtain(character))
-}
-function __js__character_set_alpha(character, alpha) {
-    character_set_alpha(kdmyEngine_obtain(character), alpha)
-}
-function __js__character_set_color_offset(character, r, g, b, a) {
-    character_set_color_offset(kdmyEngine_obtain(character), r, g, b, a)
-}
-function __js__character_set_color_offset_to_default(character) {
-    character_set_color_offset_to_default(kdmyEngine_obtain(character))
-}
-function __js__character_set_draw_align(character, align_vertical, align_horizontal) {
-    character_set_draw_align(kdmyEngine_obtain(character), align_vertical, align_horizontal)
-}
-function __js__character_set_draw_location(character, x, y) {
-    character_set_draw_location(kdmyEngine_obtain(character), x, y)
-}
-function __js__character_set_idle_speed(character, speed) {
-    character_set_idle_speed(kdmyEngine_obtain(character), speed)
-}
-function __js__character_set_offset(character, offset_x, offset_y) {
-    character_set_offset(kdmyEngine_obtain(character), offset_x, offset_y)
-}
-function __js__character_set_scale(character, scale_factor) {
-    character_set_scale(kdmyEngine_obtain(character), scale_factor)
-}
-function __js__character_set_visible(character, visible) {
-    character_set_visible(kdmyEngine_obtain(character), visible)
-}
-function __js__character_set_z_index(character, z) {
-    character_set_z_index(kdmyEngine_obtain(character), z)
-}
-function __js__character_set_z_offset(character, z_offset) {
-    character_set_z_offset(kdmyEngine_obtain(character), z_offset)
-}
-function __js__character_state_add(character, modelholder, state_name) {
-    return character_state_add(kdmyEngine_obtain(character), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(state_name))
-}
-function __js__character_state_toggle(character, state_name) {
-    return character_state_toggle(kdmyEngine_obtain(character), kdmyEngine_ptrToString(state_name))
-}
-function __js__character_trailing_enabled(character, enabled) {
-    character_trailing_enabled(kdmyEngine_obtain(character), enabled)
-}
-function __js__character_trailing_set_offsetcolor(character, r, g, b) {
-    character_trailing_set_offsetcolor(kdmyEngine_obtain(character), r, g, b)
-}
-function __js__character_trailing_set_params(character, length, trail_delay, trail_alpha, darken_colors) {
-    character_trailing_set_params(kdmyEngine_obtain(character), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors))
-}
-function __js__character_update_reference_size(character, width, height) {
-    character_update_reference_size(kdmyEngine_obtain(character), width, height)
-}
-function __js__character_use_alternate_sing_animations(character, enable) {
-    character_use_alternate_sing_animations(kdmyEngine_obtain(character), enable)
-}
-function __js__conductor_clear_mapping(conductor) {
-    conductor_clear_mapping(kdmyEngine_obtain(conductor))
-}
-function __js__conductor_destroy(conductor) {
-    conductor_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(conductor)))
-}
-function __js__conductor_disable(conductor, disable) {
-    conductor_disable(kdmyEngine_obtain(conductor), disable)
-}
-function __js__conductor_disable_strum_line(conductor, strum, should_disable) {
-    let ret = conductor_disable_strum_line(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), should_disable);
-    return ret ? 1 : 0
-}
-function __js__conductor_get_character(conductor) {
-    let ret = conductor_get_character(kdmyEngine_obtain(conductor));
-    return kdmyEngine_obtain(ret)
-}
-function __js__conductor_init() {
-    let ret = conductor_init();
-    return kdmyEngine_obtain(ret)
-}
-function __js__conductor_map_automatically(conductor, should_map_extras) {
-    let ret = conductor_map_automatically(kdmyEngine_obtain(conductor), should_map_extras);
-    return ret
-}
-function __js__conductor_map_strum_to_player_extra_add(conductor, strum, extra_animation_name) {
-    conductor_map_strum_to_player_extra_add(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(extra_animation_name))
-}
-function __js__conductor_map_strum_to_player_extra_remove(conductor, strum, extra_animation_name) {
-    conductor_map_strum_to_player_extra_remove(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(extra_animation_name))
-}
-function __js__conductor_map_strum_to_player_sing_add(conductor, strum, sing_direction_name) {
-    conductor_map_strum_to_player_sing_add(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(sing_direction_name))
-}
-function __js__conductor_map_strum_to_player_sing_remove(conductor, strum, sing_direction_name) {
-    conductor_map_strum_to_player_sing_remove(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum), kdmyEngine_ptrToString(sing_direction_name))
-}
-function __js__conductor_play_hey(conductor) {
-    conductor_play_hey(kdmyEngine_obtain(conductor))
-}
-function __js__conductor_play_idle(conductor) {
-    conductor_play_idle(kdmyEngine_obtain(conductor))
-}
-function __js__conductor_poll(conductor) {
-    conductor_poll(kdmyEngine_obtain(conductor))
-}
-function __js__conductor_poll_reset(conductor) {
-    conductor_poll_reset(kdmyEngine_obtain(conductor))
-}
-function __js__conductor_remove_strum(conductor, strum) {
-    let ret = conductor_remove_strum(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum));
-    return ret ? 1 : 0
-}
-function __js__conductor_set_character(conductor, character) {
-    conductor_set_character(kdmyEngine_obtain(conductor), kdmyEngine_obtain(character))
-}
-function __js__conductor_use_strum_line(conductor, strum) {
-    conductor_use_strum_line(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strum))
-}
-function __js__conductor_use_strums(conductor, strums) {
-    conductor_use_strums(kdmyEngine_obtain(conductor), kdmyEngine_obtain(strums))
-}
-function __js__countdown_get_drawable(countdown) {
-    let ret = countdown_get_drawable(kdmyEngine_obtain(countdown));
-    return kdmyEngine_obtain(ret)
-}
-function __js__countdown_has_ended(countdown) {
-    let ret = countdown_has_ended(kdmyEngine_obtain(countdown));
-    return ret ? 1 : 0
-}
-function __js__countdown_ready(countdown) {
-    let ret = countdown_ready(kdmyEngine_obtain(countdown));
-    return ret ? 1 : 0
-}
-function __js__countdown_set_bpm(countdown, bpm) {
-    countdown_set_bpm(kdmyEngine_obtain(countdown), bpm)
-}
-function __js__countdown_set_default_animation2(countdown, tweenkeyframe) {
-    countdown_set_default_animation2(kdmyEngine_obtain(countdown), kdmyEngine_obtain(tweenkeyframe))
-}
-function __js__countdown_start(countdown) {
-    let ret = countdown_start(kdmyEngine_obtain(countdown));
-    return ret ? 1 : 0
-}
-function __js__dialogue_apply_state(dialogue, state_name) {
-    return dialogue_apply_state(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name))
-}
-function __js__dialogue_apply_state2(dialogue, state_name, if_line_label) {
-    return dialogue_apply_state2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name), kdmyEngine_ptrToString(if_line_label))
-}
-function __js__dialogue_close(dialogue) {
-    dialogue_close(kdmyEngine_obtain(dialogue))
-}
-function __js__dialogue_get_modifier(dialogue) {
-    const modifier = dialogue_get_modifier(kdmyEngine_obtain(dialogue));
-    return kdmyEngine_obtain(modifier)
-}
-function __js__dialogue_hide(dialogue, hidden) {
-    dialogue_hide(kdmyEngine_obtain(dialogue), hidden)
-}
-function __js__dialogue_is_completed(dialogue) {
-    return dialogue_is_completed(kdmyEngine_obtain(dialogue))
-}
-function __js__dialogue_is_hidden(dialogue) {
-    return dialogue_is_hidden(kdmyEngine_obtain(dialogue))
-}
-function __js__dialogue_set_alpha(dialogue, alpha) {
-    dialogue_set_alpha(kdmyEngine_obtain(dialogue), alpha)
-}
-function __js__dialogue_set_antialiasing(dialogue, antialiasing) {
-    dialogue_set_antialiasing(kdmyEngine_obtain(dialogue), antialiasing)
-}
-function __js__dialogue_set_offsetcolor(dialogue, r, g, b, a) {
-    dialogue_set_offsetcolor(kdmyEngine_obtain(dialogue), r, g, b, a)
-}
-function __js__drawable_blend_enable(drawable, enabled) {
-    drawable_blend_enable(kdmyEngine_obtain(drawable), enabled)
-}
-function __js__drawable_blend_set(drawable, src_rgb, dst_rgb, src_alpha, dst_alpha) {
-    drawable_blend_set(kdmyEngine_obtain(drawable), src_rgb, dst_rgb, src_alpha, dst_alpha)
-}
-function __js__drawable_get_alpha(drawable) {
-    let ret = drawable_get_alpha(kdmyEngine_obtain(drawable));
-    return ret
-}
-function __js__drawable_get_modifier(drawable) {
-    let ret = drawable_get_modifier(kdmyEngine_obtain(drawable));
-    return kdmyEngine_obtain(ret)
-}
-function __js__drawable_get_shader(drawable) {
-    let ret = drawable_get_shader(kdmyEngine_obtain(drawable));
-    return kdmyEngine_obtain(ret)
-}
-function __js__drawable_get_z_index(drawable) {
-    let ret = drawable_get_z_index(kdmyEngine_obtain(drawable));
-    return ret
-}
-function __js__drawable_set_alpha(drawable, alpha) {
-    drawable_set_alpha(kdmyEngine_obtain(drawable), alpha)
-}
-function __js__drawable_set_antialiasing(drawable, antialiasing) {
-    drawable_set_antialiasing(kdmyEngine_obtain(drawable), antialiasing)
-}
-function __js__drawable_set_offsetcolor(drawable, r, g, b, a) {
-    drawable_set_offsetcolor(kdmyEngine_obtain(drawable), r, g, b, a)
-}
-function __js__drawable_set_offsetcolor_to_default(drawable) {
-    drawable_set_offsetcolor_to_default(kdmyEngine_obtain(drawable))
-}
-function __js__drawable_set_shader(drawable, psshader) {
-    drawable_set_shader(kdmyEngine_obtain(drawable), kdmyEngine_obtain(psshader))
-}
-function __js__drawable_set_z_index(drawable, z_index) {
-    drawable_set_z_index(kdmyEngine_obtain(drawable), z_index)
-}
-function __js__drawable_set_z_offset(drawable, offset) {
-    drawable_set_z_offset(kdmyEngine_obtain(drawable), offset)
-}
-function __js__healthbar_animation_end(healthbar) {
-    healthbar_animation_end(kdmyEngine_obtain(healthbar))
-}
-function __js__healthbar_animation_restart(healthbar) {
-    healthbar_animation_restart(kdmyEngine_obtain(healthbar))
-}
-function __js__healthbar_animation_set(healthbar, animsprite) {
-    healthbar_animation_set(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(animsprite))
-}
-function __js__healthbar_bump_enable(healthbar, enable_bump) {
-    healthbar_bump_enable(kdmyEngine_obtain(healthbar), enable_bump)
-}
-function __js__healthbar_disable_icon_overlap(healthbar, disable) {
-    healthbar_disable_icon_overlap(kdmyEngine_obtain(healthbar), disable)
-}
-function __js__healthbar_disable_progress_animation(healthbar, disable) {
-    healthbar_disable_progress_animation(kdmyEngine_obtain(healthbar), disable)
-}
-function __js__healthbar_disable_warnings(healthbar, disable) {
-    healthbar_disable_warnings(kdmyEngine_obtain(healthbar), disable)
-}
-function __js__healthbar_enable_extra_length(healthbar, extra_enabled) {
-    healthbar_enable_extra_length(kdmyEngine_obtain(healthbar), extra_enabled)
-}
-function __js__healthbar_enable_low_health_flash_warning(healthbar, enable) {
-    healthbar_enable_low_health_flash_warning(kdmyEngine_obtain(healthbar), enable)
-}
-function __js__healthbar_enable_vertical(healthbar, enable_vertical) {
-    healthbar_enable_vertical(kdmyEngine_obtain(healthbar), enable_vertical)
-}
-function __js__healthbar_get_bar_midpoint(healthbar, x, y) {
-    const values = [0, 0];
-    healthbar_get_bar_midpoint(kdmyEngine_obtain(healthbar), values);
-    kdmyEngine_set_float32(x, values[0]);
-    kdmyEngine_set_float32(y, values[1])
-}
-function __js__healthbar_get_drawable(healthbar) {
-    let ret = healthbar_get_drawable(kdmyEngine_obtain(healthbar));
-    return kdmyEngine_obtain(ret)
-}
-function __js__healthbar_get_percent(healthbar) {
-    let ret = healthbar_get_percent(kdmyEngine_obtain(healthbar));
-    return ret
-}
-function __js__healthbar_hide_warnings(healthbar) {
-    healthbar_hide_warnings(kdmyEngine_obtain(healthbar))
-}
-function __js__healthbar_load_warnings(healthbar, modelholder, use_alt_icons) {
-    let ret = healthbar_load_warnings(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(modelholder), use_alt_icons);
-    return ret ? 1 : 0
-}
-function __js__healthbar_set_alpha(healthbar, alpha) {
-    healthbar_set_alpha(kdmyEngine_obtain(healthbar), alpha)
-}
-function __js__healthbar_set_bpm(healthbar, beats_per_minute) {
-    healthbar_set_bpm(kdmyEngine_obtain(healthbar), beats_per_minute)
-}
-function __js__healthbar_set_bump_animation_opponent(healthbar, animsprite) {
-    healthbar_set_bump_animation_opponent(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(animsprite))
-}
-function __js__healthbar_set_bump_animation_player(healthbar, animsprite) {
-    healthbar_set_bump_animation_player(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(animsprite))
-}
-function __js__healthbar_set_health_position(healthbar, max_health, health, opponent_recover) {
-    let ret = healthbar_set_health_position(kdmyEngine_obtain(healthbar), max_health, health, opponent_recover);
-    return ret
-}
-function __js__healthbar_set_health_position2(healthbar, percent) {
-    healthbar_set_health_position2(kdmyEngine_obtain(healthbar), percent)
-}
-function __js__healthbar_set_opponent_bar_color(healthbar, r, g, b) {
-    healthbar_set_opponent_bar_color(kdmyEngine_obtain(healthbar), r, g, b)
-}
-function __js__healthbar_set_opponent_bar_color_rgb8(healthbar, color_rgb8) {
-    healthbar_set_opponent_bar_color_rgb8(kdmyEngine_obtain(healthbar), color_rgb8)
-}
-function __js__healthbar_set_player_bar_color(healthbar, r, g, b) {
-    healthbar_set_player_bar_color(kdmyEngine_obtain(healthbar), r, g, b)
-}
-function __js__healthbar_set_player_bar_color_rgb8(healthbar, color_rgb8) {
-    healthbar_set_player_bar_color_rgb8(kdmyEngine_obtain(healthbar), color_rgb8)
-}
-function __js__healthbar_set_visible(healthbar, visible) {
-    healthbar_set_visible(kdmyEngine_obtain(healthbar), visible)
-}
-function __js__healthbar_show_drain_warning(healthbar, use_fast_drain) {
-    healthbar_show_drain_warning(kdmyEngine_obtain(healthbar), use_fast_drain)
-}
-function __js__healthbar_show_locked_warning(healthbar) {
-    healthbar_show_locked_warning(kdmyEngine_obtain(healthbar))
-}
-function __js__healthbar_state_background_add(healthbar, modelholder, state_name) {
-    let ret = healthbar_state_background_add(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(state_name));
-    return ret ? 1 : 0
-}
-function __js__healthbar_state_background_add2(healthbar, color_rgb8, animsprite, state_name) {
-    let ret = healthbar_state_background_add2(kdmyEngine_obtain(healthbar), color_rgb8, kdmyEngine_obtain(animsprite), kdmyEngine_ptrToString(state_name));
-    return ret ? 1 : 0
-}
-function __js__healthbar_state_opponent_add(healthbar, icon_mdlhldr, bar_mdlhldr, state_name) {
-    let ret = healthbar_state_opponent_add(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(icon_mdlhldr), kdmyEngine_obtain(bar_mdlhldr), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__healthbar_state_opponent_add2(healthbar, icon_mdlhldr, bar_color_rgb8, state_name) {
-    let ret = healthbar_state_opponent_add2(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(icon_mdlhldr), bar_color_rgb8, kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__healthbar_state_player_add(healthbar, icon_mdlhldr, bar_mdlhldr, state_name) {
-    let ret = healthbar_state_player_add(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(icon_mdlhldr), kdmyEngine_obtain(bar_mdlhldr), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__healthbar_state_player_add2(healthbar, icon_modelholder, bar_color_rgb8, state_name) {
-    let ret = healthbar_state_player_add2(kdmyEngine_obtain(healthbar), kdmyEngine_obtain(icon_modelholder), bar_color_rgb8, kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__healthbar_state_toggle(healthbar, state_name) {
-    let ret = healthbar_state_toggle(kdmyEngine_obtain(healthbar), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__healthbar_state_toggle_background(healthbar, state_name) {
-    let ret = healthbar_state_toggle_background(kdmyEngine_obtain(healthbar), kdmyEngine_ptrToString(state_name));
-    return ret ? 1 : 0
-}
-function __js__healthbar_state_toggle_opponent(healthbar, state_name) {
-    let ret = healthbar_state_toggle_opponent(kdmyEngine_obtain(healthbar), kdmyEngine_ptrToString(state_name));
-    return ret ? 1 : 0
-}
-function __js__healthbar_state_toggle_player(healthbar, state_name) {
-    let ret = healthbar_state_toggle_player(kdmyEngine_obtain(healthbar), kdmyEngine_ptrToString(state_name));
-    return ret ? 1 : 0
-}
-function __js__healthwatcher_add_opponent(healthwatcher, playerstats, can_recover, can_die) {
-    let ret = healthwatcher_add_opponent(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(playerstats), can_recover, can_die);
-    return ret ? 1 : 0
-}
-function __js__healthwatcher_add_player(healthwatcher, playerstats, can_recover, can_die) {
-    let ret = healthwatcher_add_player(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(playerstats), can_recover, can_die);
-    return ret ? 1 : 0
-}
-function __js__healthwatcher_balance(healthwatcher, healthbar) {
-    healthwatcher_balance(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(healthbar))
-}
-function __js__healthwatcher_clear(healthwatcher) {
-    healthwatcher_clear(kdmyEngine_obtain(healthwatcher))
-}
-function __js__healthwatcher_enable_dead(healthwatcher, playerstats, can_die) {
-    let ret = healthwatcher_enable_dead(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(playerstats), can_die);
-    return ret ? 1 : 0
-}
-function __js__healthwatcher_enable_recover(healthwatcher, playerstats, can_recover) {
-    let ret = healthwatcher_enable_recover(kdmyEngine_obtain(healthwatcher), kdmyEngine_obtain(playerstats), can_recover);
-    return ret ? 1 : 0
-}
-function __js__healthwatcher_has_deads(healthwatcher, in_players_or_opponents) {
-    let ret = healthwatcher_has_deads(kdmyEngine_obtain(healthwatcher), in_players_or_opponents);
-    return ret
-}
-function __js__healthwatcher_reset_opponents(healthwatcher) {
-    healthwatcher_reset_opponents(kdmyEngine_obtain(healthwatcher))
-}
-function __js__json_load_from_string(json_sourcecode) {
-    let ret = json_load_from_string(kdmyEngine_ptrToString(json_sourcecode));
-    return ModuleLuaScript.kdmyEngine_obtain(ret)
-}
-function __js__kdmyEngine_change_window_title(title, from_modding_context) {
-    luascriptplatform.ChangeWindowTitle(kdmyEngine_ptrToString(title), from_modding_context)
-}
-function __js__kdmyEngine_create_array(size) {
-    return kdmyEngine_obtain(new Array(size))
-}
-function __js__kdmyEngine_create_object() {
-    return kdmyEngine_obtain(new Object)
-}
-function __js__kdmyEngine_forget_obtained(obj_id) {
-    let ret = kdmyEngine_forget(obj_id);
-    if (!ret)
-        throw new Error("Uknown object id:" + obj_id)
-}
-function __js__kdmyEngine_get_language() {
-    const code = window.navigator.language;
-    const lang = new Intl.DisplayNames([code], {
-        type: "language"
-    });
-    const name = lang.of(code);
-    return kdmyEngine_stringToPtr(name)
-}
-function __js__kdmyEngine_get_locationquery() {
-    let query = location.search;
-    if (query.length > 0 && query[0] == "?")
-        query = query.substring(1);
-    let name = location.pathname;
-    let idx = name.lastIndexOf("/");
-    if (idx >= 0)
-        name = name.substring(idx + 1);
-    let str = name + " ";
-    for (let part of query.split("&")) {
-        let idx = part.indexOf("=");
-        if (idx < 0) {
-            str += decodeURIComponent(part) + " ";
-            continue
-        }
-        let key = part.substring(0, idx);
-        let value = part.substring(idx + 1);
-        if (value.includes(" ") && value[0] != '"' && value[value.length - 1] != '"') {
-            value = '"' + value + '"'
-        }
-        str += "-" + decodeURIComponent(key) + " " + value + " "
-    }
-    return kdmyEngine_stringToPtr(str)
-}
-function __js__kdmyEngine_get_screen_size(screen_width, screen_height) {
-    kdmyEngine_set_int32(screen_width, pvr_context.screen_width);
-    kdmyEngine_set_int32(screen_height, pvr_context.screen_height)
-}
-function __js__kdmyEngine_get_useragent() {
-    return kdmyEngine_stringToPtr(navigator.userAgent)
-}
-function __js__kdmyEngine_open_link(url) {
-    let target_url = kdmyEngine_ptrToString(url);
-    if (!target_url || target_url.startsWith("javascript:") || target_url.startsWith("blob:"))
-        return;
-    window.open(target_url, "_blank", "noopener,noreferrer")
-}
-function __js__kdmyEngine_parse_json(L, json) {
-    return luascript_helper_parse_json(L, ModuleLuaScript.kdmyEngine_obtain(json))
-}
-function __js__kdmyEngine_read_array_item_object(array_id, index) {
-    let array = kdmyEngine_obtain(array_id);
-    if (!array)
-        throw new Error("Uknown array id:" + array_id);
-    let ret = array[index];
-    return kdmyEngine_obtain(ret)
-}
-function __js__kdmyEngine_read_prop_boolean(obj_id, field_name) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    let ret = obj[field];
-    return ret ? 1 : 0
-}
-function __js__kdmyEngine_read_prop_double(obj_id, field_name) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    let ret = obj[field];
-    return ret
-}
-function __js__kdmyEngine_read_prop_float(obj_id, field_name) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    let ret = obj[field];
-    return ret
-}
-function __js__kdmyEngine_read_prop_floatboolean(obj_id, field_name) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    let ret = obj[field];
-    return ret >= 1 || ret === true
-}
-function __js__kdmyEngine_read_prop_integer(obj_id, field_name) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    let ret = obj[field];
-    return ret
-}
-function __js__kdmyEngine_read_prop_object(obj_id, field_name) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    let ret = obj[field];
-    return kdmyEngine_obtain(typeof ret === "object" ? ret : null)
-}
-function __js__kdmyEngine_read_prop_string(obj_id, field_name) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    let ret = obj[field];
-    return kdmyEngine_stringToPtr(ret)
-}
-function __js__kdmyEngine_read_window_object(variable_name) {
-    let obj = window[kdmyEngine_ptrToString(variable_name)];
-    return obj === undefined ? 0 : kdmyEngine_obtain(obj)
-}
-function __js__kdmyEngine_require_window_attention() {
-    alert(document.title + "\n Environment:require_window_attention()")
-}
-function __js__kdmyEngine_write_in_array_boolean(array_id, index, value) {
-    let array = kdmyEngine_obtain(array_id);
-    if (!array)
-        throw new Error("Uknown array id:" + array_id);
-    array[index] = value
-}
-function __js__kdmyEngine_write_in_array_double(array_id, index, value) {
-    let array = kdmyEngine_obtain(array_id);
-    if (!array)
-        throw new Error("Uknown array id:" + array_id);
-    array[index] = value
-}
-function __js__kdmyEngine_write_in_array_float(array_id, index, value) {
-    let array = kdmyEngine_obtain(array_id);
-    if (!array)
-        throw new Error("Uknown array id:" + array_id);
-    array[index] = value
-}
-function __js__kdmyEngine_write_in_array_integer(array_id, index, value) {
-    let array = kdmyEngine_obtain(array_id);
-    if (!array)
-        throw new Error("Uknown array id:" + array_id);
-    array[index] = value
-}
-function __js__kdmyEngine_write_in_array_object(array_id, index, value) {
-    let array = kdmyEngine_obtain(array_id);
-    if (!array)
-        throw new Error("Uknown array id:" + array_id);
-    array[index] = kdmyEngine_obtain(value)
-}
-function __js__kdmyEngine_write_in_array_string(array_id, index, value) {
-    let array = kdmyEngine_obtain(array_id);
-    if (!array)
-        throw new Error("Uknown array id:" + array_id);
-    array[index] = kdmyEngine_ptrToString(value)
-}
-function __js__kdmyEngine_write_prop_boolean(obj_id, field_name, value) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    obj[field] = value
-}
-function __js__kdmyEngine_write_prop_double(obj_id, field_name, value) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    obj[field] = value
-}
-function __js__kdmyEngine_write_prop_float(obj_id, field_name, value) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    obj[field] = value
-}
-function __js__kdmyEngine_write_prop_integer(obj_id, field_name, value) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    obj[field] = value
-}
-function __js__kdmyEngine_write_prop_object(obj_id, field_name, value) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    obj[field] = kdmyEngine_obtain(value)
-}
-function __js__kdmyEngine_write_prop_string(obj_id, field_name, value) {
-    let obj = kdmyEngine_obtain(obj_id);
-    if (!obj)
-        throw new Error("Uknown object id:" + obj_id);
-    let field = kdmyEngine_ptrToString(field_name);
-    obj[field] = kdmyEngine_ptrToString(value)
-}
-function __js__layout_animation_is_completed(layout, item_name) {
-    return layout_animation_is_completed(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(item_name))
-}
-function __js__layout_camera_is_completed(layout) {
-    return layout_camera_is_completed(kdmyEngine_obtain(layout))
-}
-function __js__layout_camera_set_view(layout, x, y, z) {
-    layout_camera_set_view(kdmyEngine_obtain(layout), x, y, z)
-}
-function __js__layout_contains_action(layout, target_name, action_name) {
-    return layout_contains_action(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(target_name), kdmyEngine_ptrToString(action_name))
-}
-function __js__layout_disable_antialiasing(layout, antialiasing) {
-    layout_disable_antialiasing(kdmyEngine_obtain(layout), antialiasing)
-}
-function __js__layout_get_attached_value2(layout, name, result) {
-    const value = [null];
-    let type = layout_get_attached_value2(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name), value);
-    switch (type) {
-    case LAYOUT_TYPE_NOTFOUND:
-        break;
-    case LAYOUT_TYPE_STRING:
-        kdmyEngine_set_uint32(result, kdmyEngine_stringToPtr(value[0]));
-        break;
-    case LAYOUT_TYPE_FLOAT:
-        kdmyEngine_set_float32(result, value[0]);
-        break;
-    case LAYOUT_TYPE_INTEGER:
-        kdmyEngine_set_int32(result, value[0]);
-        break;
-    case LAYOUT_TYPE_HEX:
-        kdmyEngine_set_uint32(result, value[0]);
-        break;
-    case LAYOUT_TYPE_BOOLEAN:
-        kdmyEngine_set_int32(result, value[0] ? 1 : 0);
-        break;
-    default:
-        console.warn("Unknown layout type-value ", type, value[0]);
-        break
-    }
-    return type
-}
-function __js__layout_get_attached_value_type(layout, name) {
-    return layout_get_attached_value_type(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name))
-}
-function __js__layout_get_camera_helper(layout) {
-    const camera = layout_get_camera_helper(kdmyEngine_obtain(layout));
-    return kdmyEngine_obtain(camera)
-}
-function __js__layout_get_group_modifier(layout, group_name) {
-    let modifier = layout_get_group_modifier(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
-    return kdmyEngine_obtain(modifier)
-}
-function __js__layout_get_group_shader(layout, group_name) {
-    let psshader = layout_get_group_shader(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
-    return kdmyEngine_obtain(psshader)
-}
-function __js__layout_get_placeholder(layout, group_name) {
-    let placeholder = layout_get_placeholder(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name));
-    return kdmyEngine_obtain(placeholder)
-}
-function __js__layout_get_secondary_camera_helper(layout) {
-    const camera = layout_get_secondary_camera_helper(kdmyEngine_obtain(layout));
-    return kdmyEngine_obtain(camera)
-}
-function __js__layout_get_soundplayer(layout, name) {
-    const soundplayer = layout_get_soundplayer(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
-    return kdmyEngine_obtain(soundplayer)
-}
-function __js__layout_get_sprite(layout, name) {
-    const sprite = layout_get_sprite(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
-    return kdmyEngine_obtain(sprite)
-}
-function __js__layout_get_textsprite(layout, name) {
-    const textsprite = layout_get_textsprite(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
-    return kdmyEngine_obtain(textsprite)
-}
-function __js__layout_get_videoplayer(layout, name) {
-    let ret = layout_get_videoplayer(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name));
-    return kdmyEngine_obtain(ret)
-}
-function __js__layout_get_viewport_size(layout, viewport_width, viewport_height) {
-    const values = [0, 0];
-    layout_get_viewport_size(kdmyEngine_obtain(layout), values);
-    kdmyEngine_set_float32(viewport_width, values[0]);
-    kdmyEngine_set_float32(viewport_height, values[1])
-}
-function __js__layout_resume(layout) {
-    layout_resume(kdmyEngine_obtain(layout))
-}
-function __js__layout_screen_to_layout_coordinates(layout, screen_x, screen_y, calc_with_camera, layout_x, layout_y) {
-    const output_coords = [0, 0];
-    layout_screen_to_layout_coordinates(kdmyEngine_obtain(layout), screen_x, screen_y, calc_with_camera, output_coords);
-    kdmyEngine_set_float32(layout_x, output_coords[0]);
-    kdmyEngine_set_float32(layout_y, output_coords[1])
-}
-function __js__layout_set_group_alpha(layout, group_name, alpha) {
-    layout_set_group_alpha(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), alpha)
-}
-function __js__layout_set_group_antialiasing(layout, group_name, antialiasing) {
-    layout_set_group_antialiasing(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), antialiasing)
-}
-function __js__layout_set_group_offsetcolor(layout, group_name, r, g, b, a) {
-    layout_set_group_offsetcolor(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), r, g, b, a)
-}
-function __js__layout_set_group_shader(layout, group_name, psshader) {
-    return layout_set_group_shader(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), kdmyEngine_obtain(psshader))
-}
-function __js__layout_set_group_visibility(layout, group_name, visible) {
-    layout_set_group_visibility(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(group_name), visible)
-}
-function __js__layout_stop_all_triggers(layout) {
-    return layout_stop_all_triggers(kdmyEngine_obtain(layout))
-}
-function __js__layout_stop_trigger(layout, trigger_name) {
-    return layout_stop_trigger(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(trigger_name))
-}
-function __js__layout_suspend(layout) {
-    layout_suspend(kdmyEngine_obtain(layout))
-}
-function __js__layout_trigger_action(layout, target_name, action_name) {
-    return layout_trigger_action(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(target_name), kdmyEngine_ptrToString(action_name))
-}
-function __js__layout_trigger_any(layout, action_triger_camera_interval_name) {
-    return layout_trigger_any(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(action_triger_camera_interval_name))
-}
-function __js__layout_trigger_camera(layout, camera_name) {
-    return layout_trigger_camera(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(camera_name))
-}
-function __js__layout_trigger_trigger(layout, trigger_name) {
-    return layout_trigger_trigger(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(trigger_name))
-}
-function __js__math2d_rand() {
-    window.crypto.getRandomValues(MATH2D_PRNG);
-    let percent = MATH2D_PRNG[0] / 4294967295;
-    return percent
-}
-function __js__menu_destroy(menu) {
-    let ret = menu_destroy(kdmyEngine_obtain(menu));
-    return kdmyEngine_obtain(ret)
-}
-function __js__menu_get_drawable(menu) {
-    let ret = menu_get_drawable(kdmyEngine_obtain(menu));
-    return kdmyEngine_obtain(ret)
-}
-function __js__menu_get_item_rect(menu, index, x, y, width, height) {
-    const output_location = [0, 0];
-    const output_size = [0, 0];
-    let ret = menu_get_item_rect(kdmyEngine_obtain(menu), index, output_location, output_size);
-    kdmyEngine_set_float32(x, output_location[0]);
-    kdmyEngine_set_float32(y, output_location[1]);
-    kdmyEngine_set_float32(width, output_size[2]);
-    kdmyEngine_set_float32(height, output_size[3]);
-    return ret ? 1 : 0
-}
-function __js__menu_get_items_count(menu) {
-    let ret = menu_get_items_count(kdmyEngine_obtain(menu));
-    return ret
-}
-function __js__menu_get_selected_index(menu) {
-    let ret = menu_get_selected_index(kdmyEngine_obtain(menu));
-    return ret
-}
-function __js__menu_get_selected_item_name(menu) {
-    let ret = menu_get_selected_item_name(kdmyEngine_obtain(menu));
-    return kdmyEngine_stringToPtr(ret)
-}
-function __js__menu_has_item(menu, name) {
-    let ret = menu_has_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
-    return ret ? 1 : 0
-}
-function __js__menu_index_of_item(menu, name) {
-    let ret = menu_index_of_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
-    return ret
-}
-function __js__menu_select_horizontal(menu, offset) {
-    let ret = menu_select_horizontal(kdmyEngine_obtain(menu), offset);
-    return ret ? 1 : 0
-}
-function __js__menu_select_index(menu, index) {
-    menu_select_index(kdmyEngine_obtain(menu), index)
-}
-function __js__menu_select_item(menu, name) {
-    let ret = menu_select_item(kdmyEngine_obtain(menu), kdmyEngine_ptrToString(name));
-    return ret ? 1 : 0
-}
-function __js__menu_select_vertical(menu, offset) {
-    let ret = menu_select_vertical(kdmyEngine_obtain(menu), offset);
-    return ret ? 1 : 0
-}
-function __js__menu_set_item_text(menu, index, text) {
-    let ret = menu_set_item_text(kdmyEngine_obtain(menu), index, kdmyEngine_ptrToString(text));
-    return ret ? 1 : 0
-}
-function __js__menu_set_item_visibility(menu, index, visible) {
-    let ret = menu_set_item_visibility(kdmyEngine_obtain(menu), index, visible);
-    return ret ? 1 : 0
-}
-function __js__menu_set_text_force_case(menu, none_or_lowercase_or_uppercase) {
-    menu_set_text_force_case(kdmyEngine_obtain(menu), none_or_lowercase_or_uppercase)
-}
-function __js__menu_toggle_choosen(menu, enable) {
-    menu_toggle_choosen(kdmyEngine_obtain(menu), enable)
-}
-function __js__menu_trasition_in(menu) {
-    menu_trasition_in(kdmyEngine_obtain(menu))
-}
-function __js__menu_trasition_out(menu) {
-    menu_trasition_out(kdmyEngine_obtain(menu))
-}
-function __js__menumanifest_destroy(menumanifest) {
-    menumanifest_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(menumanifest)))
-}
-function __js__messagebox_get_modifier(messagebox) {
-    const modifier = messagebox_get_modifier(kdmyEngine_obtain(messagebox));
-    return kdmyEngine_obtain(modifier)
-}
-function __js__messagebox_hide(messagebox, animated) {
-    messagebox_hide(kdmyEngine_obtain(messagebox), animated)
-}
-function __js__messagebox_hide_image(messagebox, hide) {
-    messagebox_hide_image(kdmyEngine_obtain(messagebox), hide)
-}
-function __js__messagebox_hide_image_background(messagebox, hide) {
-    messagebox_hide_image_background(kdmyEngine_obtain(messagebox), hide)
-}
-function __js__messagebox_set_button_single(messagebox, center_text) {
-    messagebox_set_button_single(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(center_text))
-}
-function __js__messagebox_set_button_single_icon(messagebox, center_icon_name) {
-    messagebox_set_button_single_icon(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(center_icon_name))
-}
-function __js__messagebox_set_buttons_icons(messagebox, left_icon_name, right_icon_name) {
-    messagebox_set_buttons_icons(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(left_icon_name), kdmyEngine_ptrToString(right_icon_name))
-}
-function __js__messagebox_set_buttons_text(messagebox, left_text, right_text) {
-    messagebox_set_buttons_text(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(left_text), kdmyEngine_ptrToString(right_text))
-}
-function __js__messagebox_set_image_background_color(messagebox, color_rgb8) {
-    messagebox_set_image_background_color(kdmyEngine_obtain(messagebox), color_rgb8)
-}
-function __js__messagebox_set_image_background_color_default(messagebox) {
-    messagebox_set_image_background_color_default(kdmyEngine_obtain(messagebox))
-}
-function __js__messagebox_set_image_sprite(messagebox, sprite) {
-    messagebox_set_image_sprite(kdmyEngine_obtain(messagebox), sprite)
-}
-function __js__messagebox_set_message(messagebox, text) {
-    messagebox_set_message(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(text))
-}
-function __js__messagebox_set_title(messagebox, text) {
-    messagebox_set_title(kdmyEngine_obtain(messagebox), kdmyEngine_ptrToString(text))
-}
-function __js__messagebox_set_z_index(messagebox, z_index) {
-    messagebox_set_z_index(kdmyEngine_obtain(messagebox), z_index)
-}
-function __js__messagebox_show(messagebox, animated) {
-    messagebox_show(kdmyEngine_obtain(messagebox), animated)
-}
-function __js__messagebox_show_buttons_icons(messagebox, show) {
-    messagebox_show_buttons_icons(kdmyEngine_obtain(messagebox), show)
-}
-function __js__messagebox_use_small_size(messagebox, small_or_normal) {
-    messagebox_use_small_size(kdmyEngine_obtain(messagebox), small_or_normal)
-}
-function __js__missnotefx_play_effect(missnotefx) {
-    missnotefx_play_effect(kdmyEngine_obtain(missnotefx))
-}
-function __js__modding_choose_native_menu_option(modding, name) {
-    let ret = modding_choose_native_menu_option(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name));
-    return ret ? 1 : 0
-}
-function __js__modding_exit(modding) {
-    modding_exit(kdmyEngine_obtain(modding))
-}
-function __js__modding_get_active_menu(modding) {
-    let ret = modding_get_active_menu(kdmyEngine_obtain(modding));
-    return kdmyEngine_obtain(ret)
-}
-function __js__modding_get_layout(modding) {
-    let ret = modding_get_layout(kdmyEngine_obtain(modding));
-    return kdmyEngine_obtain(ret)
-}
-function __js__modding_get_loaded_weeks(modding, out_size) {
-    const size = [0];
-    let ret = modding_get_loaded_weeks(kdmyEngine_obtain(modding), size);
-    kdmyEngine_set_uint32(out_size, size[0]);
-    return kdmyEngine_obtain(ret)
-}
-function __js__modding_get_native_background_music(modding) {
-    let ret = modding_get_native_background_music(kdmyEngine_obtain(modding));
-    return kdmyEngine_obtain(ret)
-}
-function __js__modding_get_native_menu(modding) {
-    let ret = modding_get_native_menu(kdmyEngine_obtain(modding));
-    return kdmyEngine_obtain(ret)
-}
-function __js__modding_set_active_menu(modding, menu) {
-    modding_set_active_menu(kdmyEngine_obtain(modding), kdmyEngine_obtain(menu))
-}
 function __js__modding_set_exit_delay(modding, delay_ms) {
     modding_set_exit_delay(kdmyEngine_obtain(modding), delay_ms)
 }
-function __js__modding_set_halt(modding, halt) {
-    modding_set_halt(kdmyEngine_obtain(modding), halt)
+function __asyncjs__modding_get_messagebox(modding) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await modding_get_messagebox(kdmyEngine_obtain(modding));
+        return kdmyEngine_obtain(ret)
+    })
 }
 function __js__modding_set_menu_in_layout_placeholder(modding, placeholder_name, menu) {
     modding_set_menu_in_layout_placeholder(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(placeholder_name), kdmyEngine_obtain(menu))
+}
+function __js__modding_storage_set(modding, week_name, name, data, data_size) {
+    let arraybuffer = data == 0 ? null : new ArrayBuffer(data_size);
+    if (arraybuffer) {
+        new Uint8Array(arraybuffer).set(HEAPU8.subarray(data, data + data_size), 0)
+    }
+    let ret = modding_storage_set(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(name), arraybuffer, data_size);
+    return ret ? 1 : 0
 }
 function __js__modding_storage_get(modding, week_name, name, data) {
     let arraybuffer = [null];
@@ -2157,41 +1396,92 @@ function __js__modding_storage_get(modding, week_name, name, data) {
     kdmyEngine_set_uint32(data, ptr);
     return ret
 }
-function __js__modding_storage_set(modding, week_name, name, data, data_size) {
-    let arraybuffer = data == 0 ? null : new ArrayBuffer(data_size);
-    if (arraybuffer) {
-        new Uint8Array(arraybuffer).set(HEAPU8.subarray(data, data + data_size), 0)
-    }
-    let ret = modding_storage_set(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(name), arraybuffer, data_size);
+function __js__modding_get_loaded_weeks(modding, out_size) {
+    const size = [0];
+    let ret = modding_get_loaded_weeks(kdmyEngine_obtain(modding), size);
+    kdmyEngine_set_uint32(out_size, size[0]);
+    return kdmyEngine_obtain(ret)
+}
+function __asyncjs__modding_launch_week(modding, week_name, difficult, alt_tracks, bf, gf, gameplay_manifest, song_idx, ws_label) {
+    return Asyncify.handleAsync(async() => {
+        let ret = modding_launch_week(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(week_name), kdmyEngine_ptrToString(difficult), alt_tracks, kdmyEngine_ptrToString(bf), kdmyEngine_ptrToString(gf), kdmyEngine_ptrToString(gameplay_manifest), song_idx, kdmyEngine_ptrToString(ws_label));
+        _free(difficult);
+        _free(bf);
+        _free(gf);
+        _free(gameplay_manifest);
+        return ret
+    })
+}
+function __asyncjs__modding_launch_credits(modding) {
+    return Asyncify.handleAsync(async() => {
+        modding_launch_credits(kdmyEngine_obtain(modding))
+    })
+}
+function __asyncjs__modding_launch_startscreen(modding) {
+    return Asyncify.handleAsync(async() => {
+        let ret = modding_launch_startscreen(kdmyEngine_obtain(modding));
+        return ret ? 1 : 0
+    })
+}
+function __asyncjs__modding_launch_mainmenu(modding) {
+    return Asyncify.handleAsync(async() => {
+        let ret = modding_launch_mainmenu(kdmyEngine_obtain(modding));
+        return ret ? 1 : 0
+    })
+}
+function __asyncjs__modding_launch_settings(modding) {
+    return Asyncify.handleAsync(async() => {
+        modding_launch_settings(kdmyEngine_obtain(modding))
+    })
+}
+function __asyncjs__modding_launch_freeplay(modding) {
+    return Asyncify.handleAsync(async() => {
+        modding_launch_freeplay(kdmyEngine_obtain(modding))
+    })
+}
+function __asyncjs__modding_launch_weekselector(modding) {
+    return Asyncify.handleAsync(async() => {
+        let ret = modding_launch_weekselector(kdmyEngine_obtain(modding));
+        return ret
+    })
+}
+function __asyncjs__modelholder_init(src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await modelholder_init(kdmyEngine_ptrToString(src));
+        return kdmyEngine_obtain(ret)
+    })
+}
+function __asyncjs__modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await modelholder_init2(vertex_color_rgb8, kdmyEngine_ptrToString(atlas_src), kdmyEngine_ptrToString(animlist_src));
+        return kdmyEngine_obtain(ret)
+    })
+}
+function __js__modelholder_destroy(modelholder) {
+    modelholder_destroy(kdmyEngine_obtain(modelholder))
+}
+function __js__modelholder_is_invalid(modelholder) {
+    let ret = modelholder_is_invalid(kdmyEngine_obtain(modelholder));
     return ret ? 1 : 0
 }
-function __js__modding_unlockdirective_create(modding, name, value) {
-    modding_unlockdirective_create(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name), value)
-}
-function __js__modding_unlockdirective_get(modding, name) {
-    let ret = modding_unlockdirective_get(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name));
-    return ret
-}
-function __js__modding_unlockdirective_has(modding, name) {
-    let ret = modding_unlockdirective_has(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name));
+function __js__modelholder_has_animlist(modelholder) {
+    let ret = modelholder_has_animlist(kdmyEngine_obtain(modelholder));
     return ret ? 1 : 0
-}
-function __js__modding_unlockdirective_remove(modding, name) {
-    modding_unlockdirective_remove(kdmyEngine_obtain(modding), kdmyEngine_ptrToString(name))
 }
 function __js__modelholder_create_animsprite(modelholder, animation_name, fallback_static, no_return_null) {
     let ret = modelholder_create_animsprite(kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), fallback_static, no_return_null);
     return kdmyEngine_obtain(ret)
 }
-function __js__modelholder_destroy(modelholder) {
-    modelholder_destroy(kdmyEngine_obtain(modelholder))
+function __js__modelholder_get_atlas(modelholder) {
+    let ret = modelholder_get_atlas(kdmyEngine_obtain(modelholder));
+    return kdmyEngine_obtain(ret)
+}
+function __js__modelholder_get_vertex_color(modelholder) {
+    let ret = modelholder_get_vertex_color(kdmyEngine_obtain(modelholder));
+    return ret
 }
 function __js__modelholder_get_animlist(modelholder) {
     let ret = modelholder_get_animlist(kdmyEngine_obtain(modelholder));
-    return kdmyEngine_obtain(ret)
-}
-function __js__modelholder_get_atlas(modelholder) {
-    let ret = modelholder_get_atlas(kdmyEngine_obtain(modelholder));
     return kdmyEngine_obtain(ret)
 }
 function __js__modelholder_get_atlas_entry(modelholder, atlas_entry_name, return_copy) {
@@ -2208,157 +1498,20 @@ function __js__modelholder_get_texture_resolution(modelholder, resolution_width,
     kdmyEngine_set_int32(resolution_width, values[0]);
     kdmyEngine_set_int32(resolution_height, values[1])
 }
-function __js__modelholder_get_vertex_color(modelholder) {
-    let ret = modelholder_get_vertex_color(kdmyEngine_obtain(modelholder));
-    return ret
-}
-function __js__modelholder_has_animlist(modelholder) {
-    let ret = modelholder_has_animlist(kdmyEngine_obtain(modelholder));
-    return ret ? 1 : 0
-}
-function __js__modelholder_is_invalid(modelholder) {
-    let ret = modelholder_is_invalid(kdmyEngine_obtain(modelholder));
-    return ret ? 1 : 0
-}
 function __js__modelholder_utils_is_known_extension(filename) {
     let ret = modelholder_utils_is_known_extension(kdmyEngine_ptrToString(filename));
     return ret ? 1 : 0
 }
-function __js__playerstats_add_extra_health(playerstats, multiplier) {
-    playerstats_add_extra_health(kdmyEngine_obtain(playerstats), multiplier)
-}
-function __js__playerstats_add_health(playerstats, health, die_if_negative) {
-    let ret = playerstats_add_health(kdmyEngine_obtain(playerstats), health, die_if_negative);
-    return ret
-}
-function __js__playerstats_add_hit(playerstats, multiplier, base_note_duration, hit_time_difference) {
-    let ret = playerstats_add_hit(kdmyEngine_obtain(playerstats), multiplier, base_note_duration, hit_time_difference);
-    return ret
-}
-function __js__playerstats_add_miss(playerstats, multiplier) {
-    playerstats_add_miss(kdmyEngine_obtain(playerstats), multiplier)
-}
-function __js__playerstats_add_penality(playerstats, on_empty_strum) {
-    playerstats_add_penality(kdmyEngine_obtain(playerstats), on_empty_strum)
-}
-function __js__playerstats_add_sustain(playerstats, quarters, is_released) {
-    playerstats_add_sustain(kdmyEngine_obtain(playerstats), quarters, is_released)
-}
-function __js__playerstats_add_sustain_delayed_hit(playerstats, multiplier, hit_time_difference) {
-    let ret = playerstats_add_sustain_delayed_hit(kdmyEngine_obtain(playerstats), multiplier, hit_time_difference);
-    return ret
-}
-function __js__playerstats_enable_penality_on_empty_strum(playerstats, enable) {
-    playerstats_enable_penality_on_empty_strum(kdmyEngine_obtain(playerstats), enable)
-}
-function __js__playerstats_get_accuracy(playerstats) {
-    let ret = playerstats_get_accuracy(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_bads(playerstats) {
-    let ret = playerstats_get_bads(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_combo_breaks(playerstats) {
-    let ret = playerstats_get_combo_breaks(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_combo_streak(playerstats) {
-    let ret = playerstats_get_combo_streak(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_goods(playerstats) {
-    let ret = playerstats_get_goods(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_health(playerstats) {
-    let ret = playerstats_get_health(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_highest_combo_streak(playerstats) {
-    let ret = playerstats_get_highest_combo_streak(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_hits(playerstats) {
-    let ret = playerstats_get_hits(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_iterations(playerstats) {
-    let ret = playerstats_get_iterations(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_last_accuracy(playerstats) {
-    let ret = playerstats_get_last_accuracy(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_last_difference(playerstats) {
-    let ret = playerstats_get_last_difference(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_last_ranking(playerstats) {
-    let ret = playerstats_get_last_ranking(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_maximum_health(playerstats) {
-    let ret = playerstats_get_maximum_health(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_misses(playerstats) {
-    let ret = playerstats_get_misses(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_notes_per_seconds(playerstats) {
-    let ret = playerstats_get_notes_per_seconds(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_notes_per_seconds_highest(playerstats) {
-    let ret = playerstats_get_notes_per_seconds_highest(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_penalties(playerstats) {
-    let ret = playerstats_get_penalties(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_score(playerstats) {
-    let ret = playerstats_get_score(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_shits(playerstats) {
-    let ret = playerstats_get_shits(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_get_sicks(playerstats) {
-    let ret = playerstats_get_sicks(kdmyEngine_obtain(playerstats));
-    return ret
-}
-function __js__playerstats_is_dead(playerstats) {
-    let ret = playerstats_is_dead(kdmyEngine_obtain(playerstats));
-    return ret ? 1 : 0
-}
-function __js__playerstats_kill(playerstats) {
-    playerstats_kill(kdmyEngine_obtain(playerstats))
-}
-function __js__playerstats_kill_if_negative_health(playerstats) {
-    playerstats_kill_if_negative_health(kdmyEngine_obtain(playerstats))
-}
-function __js__playerstats_raise(playerstats, with_full_health) {
-    playerstats_raise(kdmyEngine_obtain(playerstats), with_full_health)
-}
-function __js__playerstats_reset(playerstats) {
-    playerstats_reset(kdmyEngine_obtain(playerstats))
-}
-function __js__playerstats_reset_notes_per_seconds(playerstats) {
-    playerstats_reset_notes_per_seconds(kdmyEngine_obtain(playerstats))
-}
-function __js__playerstats_set_health(playerstats, health) {
-    playerstats_set_health(kdmyEngine_obtain(playerstats), health)
+function __js__psshader_init(vertex_sourcecode, fragment_sourcecode) {
+    let psshader = PSShader.BuildFromSource(pvr_context, kdmyEngine_ptrToString(vertex_sourcecode), kdmyEngine_ptrToString(fragment_sourcecode));
+    return kdmyEngine_obtain(psshader)
 }
 function __js__psshader_destroy(psshader) {
     kdmyEngine_obtain(kdmyEngine_get_uint32(psshader)).Destroy()
 }
-function __js__psshader_init(vertex_sourcecode, fragment_sourcecode) {
-    let psshader = PSShader.BuildFromSource(pvr_context, kdmyEngine_ptrToString(vertex_sourcecode), kdmyEngine_ptrToString(fragment_sourcecode));
-    return kdmyEngine_obtain(psshader)
+function __js__psshader_set_uniform_any(psshader, name, values) {
+    const val = new Float32Array(wasmMemory.buffer, values, 128);
+    kdmyEngine_obtain(psshader).SetUniformAny(kdmyEngine_ptrToString(name), val)
 }
 function __js__psshader_set_uniform1f(psshader, name, value) {
     kdmyEngine_obtain(psshader).SetUniform1F(kdmyEngine_ptrToString(name), value)
@@ -2366,89 +1519,17 @@ function __js__psshader_set_uniform1f(psshader, name, value) {
 function __js__psshader_set_uniform1i(psshader, name, value) {
     kdmyEngine_obtain(psshader).SetUniform1I(kdmyEngine_ptrToString(name), value)
 }
-function __js__psshader_set_uniform_any(psshader, name, values) {
-    const val = new Float32Array(buffer, values, 128);
-    kdmyEngine_obtain(psshader).SetUniformAny(kdmyEngine_ptrToString(name), val)
-}
-function __js__rankingcounter_add_state(rankingcounter, modelholder, state_name) {
-    let ret = rankingcounter_add_state(kdmyEngine_obtain(rankingcounter), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__rankingcounter_animation_end(rankingcounter) {
-    rankingcounter_animation_end(kdmyEngine_obtain(rankingcounter))
-}
-function __js__rankingcounter_animation_restart(rankingcounter) {
-    rankingcounter_animation_restart(kdmyEngine_obtain(rankingcounter))
-}
-function __js__rankingcounter_animation_set(rankingcounter, animsprite) {
-    rankingcounter_animation_set(kdmyEngine_obtain(rankingcounter), kdmyEngine_obtain(animsprite))
-}
-function __js__rankingcounter_hide_accuracy(rankingcounter, hide) {
-    rankingcounter_hide_accuracy(kdmyEngine_obtain(rankingcounter), hide)
-}
-function __js__rankingcounter_reset(rankingcounter) {
-    rankingcounter_reset(kdmyEngine_obtain(rankingcounter))
-}
-function __js__rankingcounter_set_alpha(rankingcounter, alpha) {
-    rankingcounter_set_alpha(kdmyEngine_obtain(rankingcounter), alpha)
-}
-function __js__rankingcounter_set_default_ranking_animation2(rankingcounter, animsprite) {
-    rankingcounter_set_default_ranking_animation2(kdmyEngine_obtain(rankingcounter), kdmyEngine_obtain(animsprite))
-}
-function __js__rankingcounter_set_default_ranking_text_animation2(rankingcounter, animsprite) {
-    rankingcounter_set_default_ranking_text_animation2(kdmyEngine_obtain(rankingcounter), kdmyEngine_obtain(animsprite))
-}
-function __js__rankingcounter_toggle_state(rankingcounter, state_name) {
-    rankingcounter_toggle_state(kdmyEngine_obtain(rankingcounter), kdmyEngine_ptrToString(state_name))
-}
-function __js__rankingcounter_use_percent_instead(rankingcounter, use_accuracy_percenter) {
-    rankingcounter_use_percent_instead(kdmyEngine_obtain(rankingcounter), use_accuracy_percenter)
-}
-function __js__roundstats_get_drawable(roundstats) {
-    let ret = roundstats_get_drawable(kdmyEngine_obtain(roundstats));
-    return kdmyEngine_obtain(ret)
-}
-function __js__roundstats_hide(roundstats, hide) {
-    roundstats_hide(kdmyEngine_obtain(roundstats), hide)
-}
-function __js__roundstats_hide_nps(roundstats, hide) {
-    roundstats_hide_nps(kdmyEngine_obtain(roundstats), hide)
-}
-function __js__roundstats_reset(roundstats) {
-    roundstats_reset(kdmyEngine_obtain(roundstats))
-}
-function __js__roundstats_set_draw_y(roundstats, y) {
-    roundstats_set_draw_y(kdmyEngine_obtain(roundstats), y)
-}
-function __js__roundstats_tweenkeyframe_set_bpm(roundstats, beats_per_minute) {
-    roundstats_tweenkeyframe_set_bpm(kdmyEngine_obtain(roundstats), beats_per_minute)
-}
-function __js__roundstats_tweenkeyframe_set_on_beat(roundstats, tweenkeyframe, rollback_beats, beat_duration) {
-    roundstats_tweenkeyframe_set_on_beat(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenkeyframe), rollback_beats, beat_duration)
-}
-function __js__roundstats_tweenkeyframe_set_on_hit(roundstats, tweenkeyframe, rollback_beats, beat_duration) {
-    roundstats_tweenkeyframe_set_on_hit(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenkeyframe), rollback_beats, beat_duration)
-}
-function __js__roundstats_tweenkeyframe_set_on_miss(roundstats, tweenkeyframe, rollback_beats, beat_duration) {
-    roundstats_tweenkeyframe_set_on_miss(kdmyEngine_obtain(roundstats), kdmyEngine_obtain(tweenkeyframe), rollback_beats, beat_duration)
-}
 function __js__songplayer_changesong(songplayer, src, prefer_no_copyright) {
     return songplayer_changesong(kdmyEngine_obtain(songplayer), kdmyEngine_ptrToString(src), prefer_no_copyright)
 }
-function __js__songplayer_get_duration(songplayer) {
-    return songplayer_get_duration(kdmyEngine_obtain(songplayer))
-}
-function __js__songplayer_get_timestamp(songplayer) {
-    return songplayer_get_timestamp(kdmyEngine_obtain(songplayer))
-}
-function __js__songplayer_is_completed(songplayer) {
-    return songplayer_is_completed(kdmyEngine_obtain(songplayer))
-}
-function __js__songplayer_mute(songplayer, muted) {
-    songplayer_mute(kdmyEngine_obtain(songplayer), muted)
-}
-function __js__songplayer_mute_track(songplayer, vocals_or_instrumental, muted) {
-    songplayer_mute_track(kdmyEngine_obtain(songplayer), vocals_or_instrumental, muted)
+function __asyncjs__songplayer_play(songplayer, songinfo) {
+    return Asyncify.handleAsync(async() => {
+        const _songinfo = {
+            completed: 0,
+            timestamp: 0
+        };
+        await songplayer_play(kdmyEngine_obtain(songplayer), _songinfo)
+    })
 }
 function __js__songplayer_pause(songplayer) {
     songplayer_pause(kdmyEngine_obtain(songplayer))
@@ -2456,76 +1537,56 @@ function __js__songplayer_pause(songplayer) {
 function __js__songplayer_seek(songplayer, timestamp) {
     songplayer_seek(kdmyEngine_obtain(songplayer), timestamp)
 }
-function __js__songplayer_set_volume(songplayer, volume) {
-    songplayer_set_volume(kdmyEngine_obtain(songplayer), volume)
+function __js__songplayer_get_duration(songplayer) {
+    return songplayer_get_duration(kdmyEngine_obtain(songplayer))
+}
+function __js__songplayer_is_completed(songplayer) {
+    return songplayer_is_completed(kdmyEngine_obtain(songplayer))
+}
+function __js__songplayer_get_timestamp(songplayer) {
+    return songplayer_get_timestamp(kdmyEngine_obtain(songplayer))
+}
+function __js__songplayer_mute_track(songplayer, vocals_or_instrumental, muted) {
+    songplayer_mute_track(kdmyEngine_obtain(songplayer), vocals_or_instrumental, muted)
+}
+function __js__songplayer_mute(songplayer, muted) {
+    songplayer_mute(kdmyEngine_obtain(songplayer), muted)
 }
 function __js__songplayer_set_volume_track(songplayer, vocals_or_instrumental, volume) {
     songplayer_set_volume_track(kdmyEngine_obtain(songplayer), vocals_or_instrumental, volume)
 }
-function __js__songprogressbar_animation_end(songprogressbar) {
-    songprogressbar_animation_end(kdmyEngine_obtain(songprogressbar))
+function __js__songplayer_set_volume(songplayer, volume) {
+    songplayer_set_volume(kdmyEngine_obtain(songplayer), volume)
 }
-function __js__songprogressbar_animation_restart(songprogressbar) {
-    songprogressbar_animation_restart(kdmyEngine_obtain(songprogressbar))
-}
-function __js__songprogressbar_animation_set(songprogressbar, animsprite) {
-    songprogressbar_animation_set(kdmyEngine_obtain(songprogressbar), kdmyEngine_obtain(animsprite))
-}
-function __js__songprogressbar_get_drawable(songprogressbar) {
-    let ret = songprogressbar_get_drawable(kdmyEngine_obtain(songprogressbar));
-    return kdmyEngine_obtain(ret)
-}
-function __js__songprogressbar_hide_time(songprogressbar, hidden) {
-    songprogressbar_hide_time(kdmyEngine_obtain(songprogressbar), hidden)
-}
-function __js__songprogressbar_manual_set_position(songprogressbar, elapsed, duration, should_update_time_text) {
-    let ret = songprogressbar_manual_set_position(kdmyEngine_obtain(songprogressbar), elapsed, duration, should_update_time_text);
-    return ret
-}
-function __js__songprogressbar_manual_set_text(songprogressbar, text) {
-    songprogressbar_manual_set_text(kdmyEngine_obtain(songprogressbar), kdmyEngine_ptrToString(text))
-}
-function __js__songprogressbar_manual_update_enable(songprogressbar, enabled) {
-    songprogressbar_manual_update_enable(kdmyEngine_obtain(songprogressbar), enabled)
-}
-function __js__songprogressbar_set_background_color(songprogressbar, r, g, b, a) {
-    songprogressbar_set_background_color(kdmyEngine_obtain(songprogressbar), r, g, b, a)
-}
-function __js__songprogressbar_set_bar_back_color(songprogressbar, r, g, b, a) {
-    songprogressbar_set_bar_back_color(kdmyEngine_obtain(songprogressbar), r, g, b, a)
-}
-function __js__songprogressbar_set_bar_progress_color(songprogressbar, r, g, b, a) {
-    songprogressbar_set_bar_progress_color(kdmyEngine_obtain(songprogressbar), r, g, b, a)
-}
-function __js__songprogressbar_set_duration(songprogressbar, duration) {
-    songprogressbar_set_duration(kdmyEngine_obtain(songprogressbar), duration)
-}
-function __js__songprogressbar_set_songplayer(songprogressbar, songplayer) {
-    songprogressbar_set_songplayer(kdmyEngine_obtain(songprogressbar), kdmyEngine_obtain(songplayer))
-}
-function __js__songprogressbar_set_text_color(songprogressbar, r, g, b, a) {
-    songprogressbar_set_text_color(kdmyEngine_obtain(songprogressbar), r, g, b, a)
-}
-function __js__songprogressbar_set_visible(songprogressbar, visible) {
-    songprogressbar_set_visible(kdmyEngine_obtain(songprogressbar), visible)
-}
-function __js__songprogressbar_show_elapsed(songprogressbar, elapsed_or_remain_time) {
-    songprogressbar_show_elapsed(kdmyEngine_obtain(songprogressbar), elapsed_or_remain_time)
+function __asyncjs__soundplayer_init(src) {
+    return Asyncify.handleAsync(async() => {
+        let ret = await soundplayer_init(kdmyEngine_ptrToString(src));
+        return kdmyEngine_obtain(ret)
+    })
 }
 function __js__soundplayer_destroy(soundplayer) {
     soundplayer_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(soundplayer)))
 }
+function __js__soundplayer_play(soundplayer) {
+    soundplayer_play(kdmyEngine_obtain(soundplayer))
+}
+function __js__soundplayer_pause(soundplayer) {
+    soundplayer_pause(kdmyEngine_obtain(soundplayer))
+}
+function __js__soundplayer_stop(soundplayer) {
+    soundplayer_stop(kdmyEngine_obtain(soundplayer))
+}
+function __js__soundplayer_loop_enable(soundplayer, enable) {
+    soundplayer_loop_enable(kdmyEngine_obtain(soundplayer), enable)
+}
 function __js__soundplayer_fade(soundplayer, in_or_out, duration) {
     soundplayer_fade(kdmyEngine_obtain(soundplayer), in_or_out, duration)
 }
-function __js__soundplayer_get_duration(soundplayer) {
-    return soundplayer_get_duration(kdmyEngine_obtain(soundplayer))
+function __js__soundplayer_set_volume(soundplayer, volume) {
+    soundplayer_set_volume(kdmyEngine_obtain(soundplayer), volume)
 }
-function __js__soundplayer_get_position(soundplayer) {
-    return soundplayer_get_position(kdmyEngine_obtain(soundplayer))
-}
-function __js__soundplayer_has_ended(soundplayer) {
-    return soundplayer_has_ended(kdmyEngine_obtain(soundplayer))
+function __js__soundplayer_set_mute(soundplayer, muted) {
+    soundplayer_set_mute(kdmyEngine_obtain(soundplayer), muted)
 }
 function __js__soundplayer_has_fading(soundplayer) {
     return soundplayer_has_fading(kdmyEngine_obtain(soundplayer))
@@ -2536,85 +1597,33 @@ function __js__soundplayer_is_muted(soundplayer) {
 function __js__soundplayer_is_playing(soundplayer) {
     return soundplayer_is_playing(kdmyEngine_obtain(soundplayer))
 }
-function __js__soundplayer_loop_enable(soundplayer, enable) {
-    soundplayer_loop_enable(kdmyEngine_obtain(soundplayer), enable)
+function __js__soundplayer_get_duration(soundplayer) {
+    return soundplayer_get_duration(kdmyEngine_obtain(soundplayer))
 }
-function __js__soundplayer_pause(soundplayer) {
-    soundplayer_pause(kdmyEngine_obtain(soundplayer))
-}
-function __js__soundplayer_play(soundplayer) {
-    soundplayer_play(kdmyEngine_obtain(soundplayer))
+function __js__soundplayer_get_position(soundplayer) {
+    return soundplayer_get_position(kdmyEngine_obtain(soundplayer))
 }
 function __js__soundplayer_seek(soundplayer, timestamp) {
     return soundplayer_seek(kdmyEngine_obtain(soundplayer), timestamp)
 }
-function __js__soundplayer_set_mute(soundplayer, muted) {
-    soundplayer_set_mute(kdmyEngine_obtain(soundplayer), muted)
-}
-function __js__soundplayer_set_volume(soundplayer, volume) {
-    soundplayer_set_volume(kdmyEngine_obtain(soundplayer), volume)
-}
-function __js__soundplayer_stop(soundplayer) {
-    soundplayer_stop(kdmyEngine_obtain(soundplayer))
-}
-function __js__sprite_blend_enable(sprite, enabled) {
-    sprite_blend_enable(kdmyEngine_obtain(sprite), enabled)
-}
-function __js__sprite_blend_set(sprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
-    sprite_blend_set(kdmyEngine_obtain(sprite), src_rgb, dst_rgb, src_alpha, dst_alpha)
-}
-function __js__sprite_center_draw_location(sprite, x, y, ref_width, ref_height, applied_draw_x, applied_draw_y) {
-    const values = [0, 0];
-    sprite_center_draw_location(kdmyEngine_obtain(sprite), x, y, ref_width, ref_height, values);
-    kdmyEngine_set_float32(applied_draw_x, values[0]);
-    kdmyEngine_set_float32(applied_draw_y, values[1])
-}
-function __js__sprite_crop(sprite, dx, dy, dwidth, dheight) {
-    return sprite_crop(kdmyEngine_obtain(sprite), dx, dy, dwidth, dheight)
-}
-function __js__sprite_crop_enable(sprite, enable) {
-    sprite_crop_enable(kdmyEngine_obtain(sprite), enable)
-}
-function __js__sprite_flip_rendered_texture(sprite, flip_x, flip_y) {
-    sprite_flip_rendered_texture(kdmyEngine_obtain(sprite), flip_x < 0 ? null : flip_x, flip_y < 0 ? null : flip_y)
-}
-function __js__sprite_flip_rendered_texture_enable_correction(sprite, enabled) {
-    sprite_flip_rendered_texture_enable_correction(kdmyEngine_obtain(sprite), enabled)
-}
-function __js__sprite_get_shader(sprite) {
-    let psshader = sprite_get_shader(kdmyEngine_obtain(sprite));
-    return kdmyEngine_obtain(psshader)
-}
-function __js__sprite_get_source_size(sprite, source_width, source_height) {
-    const values = [0, 0];
-    sprite_get_source_size(kdmyEngine_obtain(sprite), values);
-    kdmyEngine_set_float32(source_width, values[0]);
-    kdmyEngine_set_float32(source_height, values[1])
-}
-function __js__sprite_is_crop_enabled(sprite) {
-    return sprite_is_crop_enabled(kdmyEngine_obtain(sprite))
-}
-function __js__sprite_is_textured(sprite) {
-    return sprite_is_textured(kdmyEngine_obtain(sprite))
+function __js__soundplayer_has_ended(soundplayer) {
+    return soundplayer_has_ended(kdmyEngine_obtain(soundplayer))
 }
 function __js__sprite_matrix_get_modifier(sprite) {
     const modifier = sprite_matrix_get_modifier(kdmyEngine_obtain(sprite));
     return kdmyEngine_obtain(modifier)
 }
+function __js__sprite_set_offset_source(sprite, x, y, width, height) {
+    sprite_set_offset_source(kdmyEngine_obtain(sprite), x, y, width, height)
+}
+function __js__sprite_set_offset_frame(sprite, x, y, width, height) {
+    sprite_set_offset_frame(kdmyEngine_obtain(sprite), x, y, width, height)
+}
+function __js__sprite_set_offset_pivot(sprite, x, y) {
+    sprite_set_offset_pivot(kdmyEngine_obtain(sprite), x, y)
+}
 function __js__sprite_matrix_reset(sprite) {
     sprite_matrix_reset(kdmyEngine_obtain(sprite))
-}
-function __js__sprite_resize_draw_size(sprite, max_width, max_height, applied_draw_width, applied_draw_height) {
-    const values = [0, 0];
-    sprite_resize_draw_size(kdmyEngine_obtain(sprite), max_width, max_height, values);
-    kdmyEngine_set_float32(applied_draw_width, values[0]);
-    kdmyEngine_set_float32(applied_draw_height, values[1])
-}
-function __js__sprite_set_alpha(sprite, alpha) {
-    sprite_set_alpha(kdmyEngine_obtain(sprite), alpha)
-}
-function __js__sprite_set_antialiasing(sprite, antialiasing) {
-    sprite_set_antialiasing(kdmyEngine_obtain(sprite), antialiasing)
 }
 function __js__sprite_set_draw_location(sprite, x, y) {
     sprite_set_draw_location(kdmyEngine_obtain(sprite), x, y)
@@ -2625,23 +1634,8 @@ function __js__sprite_set_draw_size(sprite, width, height) {
 function __js__sprite_set_draw_size_from_source_size(sprite) {
     sprite_set_draw_size_from_source_size(kdmyEngine_obtain(sprite))
 }
-function __js__sprite_set_offset_frame(sprite, x, y, width, height) {
-    sprite_set_offset_frame(kdmyEngine_obtain(sprite), x, y, width, height)
-}
-function __js__sprite_set_offset_pivot(sprite, x, y) {
-    sprite_set_offset_pivot(kdmyEngine_obtain(sprite), x, y)
-}
-function __js__sprite_set_offset_source(sprite, x, y, width, height) {
-    sprite_set_offset_source(kdmyEngine_obtain(sprite), x, y, width, height)
-}
-function __js__sprite_set_offsetcolor(sprite, r, g, b, a) {
-    sprite_set_offsetcolor(kdmyEngine_obtain(sprite), r, g, b, a)
-}
-function __js__sprite_set_shader(sprite, psshader) {
-    sprite_set_shader(kdmyEngine_obtain(sprite), kdmyEngine_obtain(psshader))
-}
-function __js__sprite_set_vertex_color(sprite, r, g, b) {
-    sprite_set_vertex_color(kdmyEngine_obtain(sprite), r, g, b)
+function __js__sprite_set_alpha(sprite, alpha) {
+    sprite_set_alpha(kdmyEngine_obtain(sprite), alpha)
 }
 function __js__sprite_set_visible(sprite, visible) {
     sprite_set_visible(kdmyEngine_obtain(sprite), visible)
@@ -2652,324 +1646,120 @@ function __js__sprite_set_z_index(sprite, index) {
 function __js__sprite_set_z_offset(sprite, offset) {
     sprite_set_z_offset(kdmyEngine_obtain(sprite), offset)
 }
+function __js__sprite_get_source_size(sprite, source_width, source_height) {
+    const values = [0, 0];
+    sprite_get_source_size(kdmyEngine_obtain(sprite), values);
+    kdmyEngine_set_float32(source_width, values[0]);
+    kdmyEngine_set_float32(source_height, values[1])
+}
+function __js__sprite_set_vertex_color(sprite, r, g, b) {
+    sprite_set_vertex_color(kdmyEngine_obtain(sprite), r, g, b)
+}
+function __js__sprite_set_offsetcolor(sprite, r, g, b, a) {
+    sprite_set_offsetcolor(kdmyEngine_obtain(sprite), r, g, b, a)
+}
+function __js__sprite_is_textured(sprite) {
+    return sprite_is_textured(kdmyEngine_obtain(sprite))
+}
+function __js__sprite_crop(sprite, dx, dy, dwidth, dheight) {
+    return sprite_crop(kdmyEngine_obtain(sprite), dx, dy, dwidth, dheight)
+}
+function __js__sprite_is_crop_enabled(sprite) {
+    return sprite_is_crop_enabled(kdmyEngine_obtain(sprite))
+}
+function __js__sprite_crop_enable(sprite, enable) {
+    sprite_crop_enable(kdmyEngine_obtain(sprite), enable)
+}
+function __js__sprite_resize_draw_size(sprite, max_width, max_height, applied_draw_width, applied_draw_height) {
+    const values = [0, 0];
+    sprite_resize_draw_size(kdmyEngine_obtain(sprite), max_width, max_height, values);
+    kdmyEngine_set_float32(applied_draw_width, values[0]);
+    kdmyEngine_set_float32(applied_draw_height, values[1])
+}
+function __js__sprite_center_draw_location(sprite, x, y, ref_width, ref_height, applied_draw_x, applied_draw_y) {
+    const values = [0, 0];
+    sprite_center_draw_location(kdmyEngine_obtain(sprite), x, y, ref_width, ref_height, values);
+    kdmyEngine_set_float32(applied_draw_x, values[0]);
+    kdmyEngine_set_float32(applied_draw_y, values[1])
+}
+function __js__sprite_set_antialiasing(sprite, antialiasing) {
+    sprite_set_antialiasing(kdmyEngine_obtain(sprite), antialiasing)
+}
+function __js__sprite_flip_rendered_texture(sprite, flip_x, flip_y) {
+    sprite_flip_rendered_texture(kdmyEngine_obtain(sprite), flip_x < 0 ? null : flip_x, flip_y < 0 ? null : flip_y)
+}
+function __js__sprite_flip_rendered_texture_enable_correction(sprite, enabled) {
+    sprite_flip_rendered_texture_enable_correction(kdmyEngine_obtain(sprite), enabled)
+}
+function __js__sprite_set_shader(sprite, psshader) {
+    sprite_set_shader(kdmyEngine_obtain(sprite), kdmyEngine_obtain(psshader))
+}
+function __js__sprite_get_shader(sprite) {
+    let psshader = sprite_get_shader(kdmyEngine_obtain(sprite));
+    return kdmyEngine_obtain(psshader)
+}
+function __js__sprite_blend_enable(sprite, enabled) {
+    sprite_blend_enable(kdmyEngine_obtain(sprite), enabled)
+}
+function __js__sprite_blend_set(sprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    sprite_blend_set(kdmyEngine_obtain(sprite), src_rgb, dst_rgb, src_alpha, dst_alpha)
+}
 function __js__sprite_trailing_enabled(sprite, enabled) {
     sprite_trailing_enabled(kdmyEngine_obtain(sprite), enabled)
-}
-function __js__sprite_trailing_set_offsetcolor(sprite, r, g, b) {
-    sprite_trailing_set_offsetcolor(kdmyEngine_obtain(sprite), r, g, b)
 }
 function __js__sprite_trailing_set_params(sprite, length, trail_delay, trail_alpha, darken_colors) {
     sprite_trailing_set_params(kdmyEngine_obtain(sprite), length, trail_delay, trail_alpha, darken_colors == 0 ? null : kdmyEngine_get_uint32(darken_colors))
 }
-function __js__streakcounter_animation_end(streakcounter) {
-    streakcounter_animation_end(kdmyEngine_obtain(streakcounter))
+function __js__sprite_trailing_set_offsetcolor(sprite, r, g, b) {
+    sprite_trailing_set_offsetcolor(kdmyEngine_obtain(sprite), r, g, b)
 }
-function __js__streakcounter_animation_restart(streakcounter) {
-    streakcounter_animation_restart(kdmyEngine_obtain(streakcounter))
+function __js__textsprite_set_text_intern(textsprite, intern, text) {
+    textsprite_set_text_intern(kdmyEngine_obtain(textsprite), intern, kdmyEngine_ptrToString(text))
 }
-function __js__streakcounter_animation_set(streakcounter, animsprite) {
-    streakcounter_animation_set(kdmyEngine_obtain(streakcounter), kdmyEngine_obtain(animsprite))
-}
-function __js__streakcounter_get_drawable(streakcounter) {
-    let ret = streakcounter_get_drawable(kdmyEngine_obtain(streakcounter));
-    return kdmyEngine_obtain(ret)
-}
-function __js__streakcounter_hide_combo_sprite(streakcounter, hide) {
-    streakcounter_hide_combo_sprite(kdmyEngine_obtain(streakcounter), hide)
-}
-function __js__streakcounter_reset(streakcounter) {
-    streakcounter_reset(kdmyEngine_obtain(streakcounter))
-}
-function __js__streakcounter_set_alpha(streakcounter, alpha) {
-    streakcounter_set_alpha(kdmyEngine_obtain(streakcounter), alpha)
-}
-function __js__streakcounter_set_combo_draw_location(streakcounter, x, y) {
-    streakcounter_set_combo_draw_location(kdmyEngine_obtain(streakcounter), x, y)
-}
-function __js__streakcounter_state_add(streakcounter, combo_modelholder, number_modelholder, state_name) {
-    let ret = streakcounter_state_add(kdmyEngine_obtain(streakcounter), kdmyEngine_obtain(combo_modelholder), kdmyEngine_obtain(number_modelholder), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__streakcounter_state_toggle(streakcounter, state_name) {
-    let ret = streakcounter_state_toggle(kdmyEngine_obtain(streakcounter), kdmyEngine_ptrToString(state_name));
-    return ret ? 1 : 0
-}
-function __js__strum_animation_end(strum) {
-    strum_animation_end(kdmyEngine_obtain(strum))
-}
-function __js__strum_animation_restart(strum) {
-    strum_animation_restart(kdmyEngine_obtain(strum))
-}
-function __js__strum_disable_beat_synced_idle_and_continous(strum, disabled) {
-    strum_disable_beat_synced_idle_and_continous(kdmyEngine_obtain(strum), disabled)
-}
-function __js__strum_draw_sick_effect_apart(strum, enable) {
-    strum_draw_sick_effect_apart(kdmyEngine_obtain(strum), enable)
-}
-function __js__strum_enable_background(strum, enable) {
-    strum_enable_background(kdmyEngine_obtain(strum), enable)
-}
-function __js__strum_enable_sick_effect(strum, enable) {
-    strum_enable_sick_effect(kdmyEngine_obtain(strum), enable)
-}
-function __js__strum_force_key_release(strum) {
-    strum_force_key_release(kdmyEngine_obtain(strum))
-}
-function __js__strum_get_drawable(strum) {
-    let ret = strum_get_drawable(kdmyEngine_obtain(strum));
-    return kdmyEngine_obtain(ret)
-}
-function __js__strum_get_duration(strum) {
-    let ret = strum_get_duration(kdmyEngine_obtain(strum));
-    return ret
-}
-function __js__strum_get_marker_duration(strum) {
-    let ret = strum_get_marker_duration(kdmyEngine_obtain(strum));
-    return ret
-}
-function __js__strum_get_modifier(strum) {
-    let ret = strum_get_modifier(kdmyEngine_obtain(strum));
-    return kdmyEngine_obtain(ret)
-}
-function __js__strum_get_name(strum) {
-    let ret = strum_get_name(kdmyEngine_obtain(strum));
-    return kdmyEngine_stringToPtr(ret)
-}
-function __js__strum_get_press_state(strum) {
-    let ret = strum_get_press_state(kdmyEngine_obtain(strum));
-    return ret
-}
-function __js__strum_get_press_state_changes(strum) {
-    let ret = strum_get_press_state_changes(kdmyEngine_obtain(strum));
-    return ret
-}
-function __js__strum_get_press_state_use_alt_anim(strum) {
-    let ret = strum_get_press_state_use_alt_anim(kdmyEngine_obtain(strum));
-    return ret ? 1 : 0
-}
-function __js__strum_reset(strum, scroll_speed, state_name) {
-    strum_reset(kdmyEngine_obtain(strum), scroll_speed, kdmyEngine_ptrToString(state_name))
-}
-function __js__strum_set_alpha(strum, alpha) {
-    strum_set_alpha(kdmyEngine_obtain(strum), alpha)
-}
-function __js__strum_set_alpha_background(strum, alpha) {
-    let ret = strum_set_alpha_background(kdmyEngine_obtain(strum), alpha);
-    return ret
-}
-function __js__strum_set_alpha_sick_effect(strum, alpha) {
-    let ret = strum_set_alpha_sick_effect(kdmyEngine_obtain(strum), alpha);
-    return ret
-}
-function __js__strum_set_bpm(strum, bpm) {
-    strum_set_bpm(kdmyEngine_obtain(strum), bpm)
-}
-function __js__strum_set_draw_offset(strum, offset_milliseconds) {
-    strum_set_draw_offset(kdmyEngine_obtain(strum), offset_milliseconds)
-}
-function __js__strum_set_extra_animation(strum, strum_script_target, strum_script_on, undo, animsprite) {
-    strum_set_extra_animation(kdmyEngine_obtain(strum), strum_script_target, strum_script_on, undo, kdmyEngine_obtain(animsprite))
-}
-function __js__strum_set_extra_animation_continuous(strum, strum_script_target, animsprite) {
-    strum_set_extra_animation_continuous(kdmyEngine_obtain(strum), strum_script_target, kdmyEngine_obtain(animsprite))
-}
-function __js__strum_set_keep_aspect_ratio_background(strum, enable) {
-    strum_set_keep_aspect_ratio_background(kdmyEngine_obtain(strum), enable)
-}
-function __js__strum_set_marker_duration_multiplier(strum, multipler) {
-    strum_set_marker_duration_multiplier(kdmyEngine_obtain(strum), multipler)
-}
-function __js__strum_set_note_tweenkeyframe(strum, tweenkeyframe) {
-    strum_set_note_tweenkeyframe(kdmyEngine_obtain(strum), kdmyEngine_obtain(tweenkeyframe))
-}
-function __js__strum_set_player_id(strum, player_id) {
-    strum_set_player_id(kdmyEngine_obtain(strum), player_id)
-}
-function __js__strum_set_scroll_direction(strum, direction) {
-    strum_set_scroll_direction(kdmyEngine_obtain(strum), direction)
-}
-function __js__strum_set_scroll_speed(strum, speed) {
-    strum_set_scroll_speed(kdmyEngine_obtain(strum), speed)
-}
-function __js__strum_set_sickeffect_size_ratio(strum, size_ratio) {
-    strum_set_sickeffect_size_ratio(kdmyEngine_obtain(strum), size_ratio)
-}
-function __js__strum_set_visible(strum, visible) {
-    strum_set_visible(kdmyEngine_obtain(strum), visible)
-}
-function __js__strum_state_add(strum, mdlhldr_mrkr, mdlhldr_sck_ffct, mdlhldr_bckgrnd, state_name) {
-    strum_state_add(kdmyEngine_obtain(strum), kdmyEngine_obtain(mdlhldr_mrkr), kdmyEngine_obtain(mdlhldr_sck_ffct), kdmyEngine_obtain(mdlhldr_bckgrnd), kdmyEngine_ptrToString(state_name))
-}
-function __js__strum_state_toggle(strum, state_name) {
-    let ret = strum_state_toggle(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__strum_state_toggle_background(strum, state_name) {
-    let ret = strum_state_toggle_background(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
-    return ret ? 1 : 0
-}
-function __js__strum_state_toggle_marker(strum, state_name) {
-    let ret = strum_state_toggle_marker(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__strum_state_toggle_notes(strum, state_name) {
-    let ret = strum_state_toggle_notes(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__strum_state_toggle_sick_effect(strum, state_name) {
-    let ret = strum_state_toggle_sick_effect(kdmyEngine_obtain(strum), kdmyEngine_ptrToString(state_name));
-    return ret ? 1 : 0
-}
-function __js__strum_update_draw_location(strum, x, y) {
-    strum_update_draw_location(kdmyEngine_obtain(strum), x, y)
-}
-function __js__strums_animation_end(strums) {
-    strums_animation_end(kdmyEngine_obtain(strums))
-}
-function __js__strums_animation_restart(strums) {
-    strums_animation_restart(kdmyEngine_obtain(strums))
-}
-function __js__strums_animation_set(strums, animsprite) {
-    strums_animation_set(kdmyEngine_obtain(strums), kdmyEngine_obtain(animsprite))
-}
-function __js__strums_decorators_add(strums, modelholder, animation_name, timestamp) {
-    let ret = strums_decorators_add(kdmyEngine_obtain(strums), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), timestamp);
-    return ret ? 1 : 0
-}
-function __js__strums_decorators_add2(strums, modelholder, animation_name, timestamp, from_strum_index, to_strum_index) {
-    let ret = strums_decorators_add2(kdmyEngine_obtain(strums), kdmyEngine_obtain(modelholder), kdmyEngine_ptrToString(animation_name), timestamp, from_strum_index, to_strum_index);
-    return ret ? 1 : 0
-}
-function __js__strums_decorators_get_count(strums) {
-    let ret = strums_decorators_get_count(kdmyEngine_obtain(strums));
-    return ret
-}
-function __js__strums_decorators_set_alpha(strums, alpha) {
-    strums_decorators_set_alpha(kdmyEngine_obtain(strums), alpha)
-}
-function __js__strums_decorators_set_scroll_speed(strums, speed) {
-    strums_decorators_set_scroll_speed(kdmyEngine_obtain(strums), speed)
-}
-function __js__strums_decorators_set_visible(strums, decorator_timestamp, visible) {
-    strums_decorators_set_visible(kdmyEngine_obtain(strums), decorator_timestamp, visible)
-}
-function __js__strums_disable_beat_synced_idle_and_continous(strums, disabled) {
-    strums_disable_beat_synced_idle_and_continous(kdmyEngine_obtain(strums), disabled)
-}
-function __js__strums_enable_background(strums, enable) {
-    strums_enable_background(kdmyEngine_obtain(strums), enable)
-}
-function __js__strums_enable_post_sick_effect_draw(strums, enable) {
-    strums_enable_post_sick_effect_draw(kdmyEngine_obtain(strums), enable)
-}
-function __js__strums_force_key_release(strums) {
-    strums_force_key_release(kdmyEngine_obtain(strums))
-}
-function __js__strums_get_drawable(strums) {
-    let ret = strums_get_drawable(kdmyEngine_obtain(strums));
-    return kdmyEngine_obtain(ret)
-}
-function __js__strums_get_lines_count(strums) {
-    let ret = strums_get_lines_count(kdmyEngine_obtain(strums));
-    return ret
-}
-function __js__strums_get_strum_line(strums, index) {
-    let ret = strums_get_strum_line(kdmyEngine_obtain(strums), index);
-    return kdmyEngine_obtain(ret)
-}
-function __js__strums_reset(strums, scroll_speed, state_name) {
-    strums_reset(kdmyEngine_obtain(strums), scroll_speed, kdmyEngine_ptrToString(state_name))
-}
-function __js__strums_set_alpha(strums, alpha) {
-    let ret = strums_set_alpha(kdmyEngine_obtain(strums), alpha);
-    return ret
-}
-function __js__strums_set_alpha_background(strums, alpha) {
-    strums_set_alpha_background(kdmyEngine_obtain(strums), alpha)
-}
-function __js__strums_set_alpha_sick_effect(strums, alpha) {
-    strums_set_alpha_sick_effect(kdmyEngine_obtain(strums), alpha)
-}
-function __js__strums_set_bpm(strums, bpm) {
-    strums_set_bpm(kdmyEngine_obtain(strums), bpm)
-}
-function __js__strums_set_draw_offset(strums, offset_milliseconds) {
-    strums_set_draw_offset(kdmyEngine_obtain(strums), offset_milliseconds)
-}
-function __js__strums_set_keep_aspect_ratio_background(strums, enable) {
-    strums_set_keep_aspect_ratio_background(kdmyEngine_obtain(strums), enable)
-}
-function __js__strums_set_marker_duration_multiplier(strums, multipler) {
-    strums_set_marker_duration_multiplier(kdmyEngine_obtain(strums), multipler)
-}
-function __js__strums_set_scroll_direction(strums, direction) {
-    strums_set_scroll_direction(kdmyEngine_obtain(strums), direction)
-}
-function __js__strums_set_scroll_speed(strums, speed) {
-    strums_set_scroll_speed(kdmyEngine_obtain(strums), speed)
-}
-function __js__strums_state_add(strums, mdlhldr_mrkr, mdlhldr_sck_ffct, mdlhldr_bckgrnd, state_name) {
-    strums_state_add(kdmyEngine_obtain(strums), kdmyEngine_obtain(mdlhldr_mrkr), kdmyEngine_obtain(mdlhldr_sck_ffct), kdmyEngine_obtain(mdlhldr_bckgrnd), kdmyEngine_ptrToString(state_name))
-}
-function __js__strums_state_toggle(strums, state_name) {
-    let ret = strums_state_toggle(kdmyEngine_obtain(strums), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__strums_state_toggle_marker_and_sick_effect(strums, state_name) {
-    strums_state_toggle_marker_and_sick_effect(kdmyEngine_obtain(strums), kdmyEngine_ptrToString(state_name))
-}
-function __js__strums_state_toggle_notes(strums, state_name) {
-    let ret = strums_state_toggle_notes(kdmyEngine_obtain(strums), kdmyEngine_ptrToString(state_name));
-    return ret
-}
-function __js__textsprite_background_enable(textsprite, enabled) {
-    textsprite_background_enable(kdmyEngine_obtain(textsprite), enabled)
-}
-function __js__textsprite_background_set_color(textsprite, r, g, b, a) {
-    textsprite_background_set_color(kdmyEngine_obtain(textsprite), r, g, b, a)
-}
-function __js__textsprite_background_set_offets(textsprite, offset_x, offset_y) {
-    textsprite_background_set_offets(kdmyEngine_obtain(textsprite), offset_x, offset_y)
-}
-function __js__textsprite_background_set_size(textsprite, size) {
-    textsprite_background_set_size(kdmyEngine_obtain(textsprite), size)
-}
-function __js__textsprite_blend_enable(textsprite, enabled) {
-    textsprite_blend_enable(kdmyEngine_obtain(textsprite), enabled)
-}
-function __js__textsprite_blend_set(textsprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
-    textsprite_blend_set(kdmyEngine_obtain(textsprite), src_rgb, dst_rgb, src_alpha, dst_alpha)
-}
-function __js__textsprite_border_enable(textsprite, enable) {
-    textsprite_border_enable(kdmyEngine_obtain(textsprite), enable)
-}
-function __js__textsprite_border_set_color(textsprite, r, g, b, a) {
-    textsprite_border_set_color(kdmyEngine_obtain(textsprite), r, g, b, a)
-}
-function __js__textsprite_border_set_offset(textsprite, x, y) {
-    textsprite_border_set_offset(kdmyEngine_obtain(textsprite), x, y)
-}
-function __js__textsprite_border_set_size(textsprite, border_size) {
-    textsprite_border_set_size(kdmyEngine_obtain(textsprite), border_size)
+function __js__textsprite_set_font_size(textsprite, font_size) {
+    textsprite_set_font_size(kdmyEngine_obtain(textsprite), font_size)
 }
 function __js__textsprite_force_case(textsprite, none_or_lowercase_or_uppercase) {
     textsprite_force_case(kdmyEngine_obtain(textsprite), none_or_lowercase_or_uppercase)
 }
-function __js__textsprite_get_draw_size(textsprite, draw_width, draw_height) {
-    const values = [0, 0];
-    textsprite_get_draw_size(kdmyEngine_obtain(textsprite), values);
-    kdmyEngine_set_float32(draw_width, values[0]);
-    kdmyEngine_set_float32(draw_height, values[1])
+function __js__textsprite_set_paragraph_align(textsprite, align) {
+    textsprite_set_paragraph_align(kdmyEngine_obtain(textsprite), align)
 }
-function __js__textsprite_get_font_size(textsprite) {
-    return textsprite_get_font_size(kdmyEngine_obtain(textsprite))
+function __js__textsprite_set_paragraph_space(textsprite, space) {
+    textsprite_set_paragraph_space(kdmyEngine_obtain(textsprite), space)
 }
-function __js__textsprite_get_shader(textsprite) {
-    let psshader = textsprite_get_shader(kdmyEngine_obtain(textsprite));
-    return kdmyEngine_obtain(psshader)
+function __js__textsprite_set_maxlines(textsprite, max_lines) {
+    textsprite_set_maxlines(kdmyEngine_obtain(textsprite), max_lines)
+}
+function __js__textsprite_set_color_rgba8(textsprite, rbga8_color) {
+    textsprite_set_color_rgba8(kdmyEngine_obtain(textsprite), rbga8_color)
+}
+function __js__textsprite_set_color(textsprite, r, g, b) {
+    textsprite_set_color(kdmyEngine_obtain(textsprite), r, g, b)
+}
+function __js__textsprite_set_alpha(textsprite, alpha) {
+    textsprite_set_alpha(kdmyEngine_obtain(textsprite), alpha)
+}
+function __js__textsprite_set_visible(textsprite, visible) {
+    textsprite_set_visible(kdmyEngine_obtain(textsprite), visible)
+}
+function __js__textsprite_set_draw_location(textsprite, x, y) {
+    textsprite_set_draw_location(kdmyEngine_obtain(textsprite), x, y)
+}
+function __js__textsprite_set_z_index(textsprite, z_index) {
+    textsprite_set_z_index(kdmyEngine_obtain(textsprite), z_index)
+}
+function __js__textsprite_set_z_offset(textsprite, offset) {
+    textsprite_set_z_offset(kdmyEngine_obtain(textsprite), offset)
+}
+function __js__textsprite_set_max_draw_size(textsprite, max_width, max_height) {
+    textsprite_set_max_draw_size(kdmyEngine_obtain(textsprite), max_width, max_height)
 }
 function __js__textsprite_matrix_flip(textsprite, flip_x, flip_y) {
     textsprite_matrix_flip(kdmyEngine_obtain(textsprite), flip_x, flip_y)
+}
+function __js__textsprite_set_align(textsprite, align_vertical, align_horizontal) {
+    textsprite_set_align(kdmyEngine_obtain(textsprite), align_vertical, align_horizontal)
 }
 function __js__textsprite_matrix_get_modifier(textsprite) {
     const modifier = textsprite_matrix_get_modifier(kdmyEngine_obtain(textsprite));
@@ -2978,62 +1768,112 @@ function __js__textsprite_matrix_get_modifier(textsprite) {
 function __js__textsprite_matrix_reset(textsprite) {
     textsprite_matrix_reset(kdmyEngine_obtain(textsprite))
 }
-function __js__textsprite_set_align(textsprite, align_vertical, align_horizontal) {
-    textsprite_set_align(kdmyEngine_obtain(textsprite), align_vertical, align_horizontal)
+function __js__textsprite_get_font_size(textsprite) {
+    return textsprite_get_font_size(kdmyEngine_obtain(textsprite))
 }
-function __js__textsprite_set_alpha(textsprite, alpha) {
-    textsprite_set_alpha(kdmyEngine_obtain(textsprite), alpha)
+function __js__textsprite_get_draw_size(textsprite, draw_width, draw_height) {
+    const values = [0, 0];
+    textsprite_get_draw_size(kdmyEngine_obtain(textsprite), values);
+    kdmyEngine_set_float32(draw_width, values[0]);
+    kdmyEngine_set_float32(draw_height, values[1])
+}
+function __js__textsprite_border_enable(textsprite, enable) {
+    textsprite_border_enable(kdmyEngine_obtain(textsprite), enable)
+}
+function __js__textsprite_border_set_size(textsprite, border_size) {
+    textsprite_border_set_size(kdmyEngine_obtain(textsprite), border_size)
+}
+function __js__textsprite_border_set_color(textsprite, r, g, b, a) {
+    textsprite_border_set_color(kdmyEngine_obtain(textsprite), r, g, b, a)
+}
+function __js__textsprite_border_set_offset(textsprite, x, y) {
+    textsprite_border_set_offset(kdmyEngine_obtain(textsprite), x, y)
 }
 function __js__textsprite_set_antialiasing(textsprite, antialiasing) {
     textsprite_set_antialiasing(kdmyEngine_obtain(textsprite), antialiasing)
 }
-function __js__textsprite_set_color(textsprite, r, g, b) {
-    textsprite_set_color(kdmyEngine_obtain(textsprite), r, g, b)
-}
-function __js__textsprite_set_color_rgba8(textsprite, rbga8_color) {
-    textsprite_set_color_rgba8(kdmyEngine_obtain(textsprite), rbga8_color)
-}
-function __js__textsprite_set_draw_location(textsprite, x, y) {
-    textsprite_set_draw_location(kdmyEngine_obtain(textsprite), x, y)
-}
-function __js__textsprite_set_font_size(textsprite, font_size) {
-    textsprite_set_font_size(kdmyEngine_obtain(textsprite), font_size)
-}
-function __js__textsprite_set_max_draw_size(textsprite, max_width, max_height) {
-    textsprite_set_max_draw_size(kdmyEngine_obtain(textsprite), max_width, max_height)
-}
-function __js__textsprite_set_maxlines(textsprite, max_lines) {
-    textsprite_set_maxlines(kdmyEngine_obtain(textsprite), max_lines)
-}
-function __js__textsprite_set_paragraph_align(textsprite, align) {
-    textsprite_set_paragraph_align(kdmyEngine_obtain(textsprite), align)
-}
-function __js__textsprite_set_paragraph_space(textsprite, space) {
-    textsprite_set_paragraph_space(kdmyEngine_obtain(textsprite), space)
+function __js__textsprite_set_wordbreak(textsprite, wordbreak) {
+    textsprite_set_wordbreak(kdmyEngine_obtain(textsprite), wordbreak)
 }
 function __js__textsprite_set_shader(textsprite, psshader) {
     textsprite_set_shader(kdmyEngine_obtain(textsprite), kdmyEngine_obtain(psshader))
 }
-function __js__textsprite_set_text_intern(textsprite, intern, text) {
-    textsprite_set_text_intern(kdmyEngine_obtain(textsprite), intern, kdmyEngine_ptrToString(text))
+function __js__textsprite_get_shader(textsprite) {
+    let psshader = textsprite_get_shader(kdmyEngine_obtain(textsprite));
+    return kdmyEngine_obtain(psshader)
 }
-function __js__textsprite_set_visible(textsprite, visible) {
-    textsprite_set_visible(kdmyEngine_obtain(textsprite), visible)
+function __js__textsprite_background_enable(textsprite, enabled) {
+    textsprite_background_enable(kdmyEngine_obtain(textsprite), enabled)
 }
-function __js__textsprite_set_wordbreak(textsprite, wordbreak) {
-    textsprite_set_wordbreak(kdmyEngine_obtain(textsprite), wordbreak)
+function __js__textsprite_background_set_size(textsprite, size) {
+    textsprite_background_set_size(kdmyEngine_obtain(textsprite), size)
 }
-function __js__textsprite_set_z_index(textsprite, z_index) {
-    textsprite_set_z_index(kdmyEngine_obtain(textsprite), z_index)
+function __js__textsprite_background_set_offets(textsprite, offset_x, offset_y) {
+    textsprite_background_set_offets(kdmyEngine_obtain(textsprite), offset_x, offset_y)
 }
-function __js__textsprite_set_z_offset(textsprite, offset) {
-    textsprite_set_z_offset(kdmyEngine_obtain(textsprite), offset)
+function __js__textsprite_background_set_color(textsprite, r, g, b, a) {
+    textsprite_background_set_color(kdmyEngine_obtain(textsprite), r, g, b, a)
+}
+function __js__textsprite_blend_enable(textsprite, enabled) {
+    textsprite_blend_enable(kdmyEngine_obtain(textsprite), enabled)
+}
+function __js__textsprite_blend_set(textsprite, src_rgb, dst_rgb, src_alpha, dst_alpha) {
+    textsprite_blend_set(kdmyEngine_obtain(textsprite), src_rgb, dst_rgb, src_alpha, dst_alpha)
 }
 function __js__timer_ms_gettime32_JS() {
     return Math.trunc(performance.now())
 }
-function __js__tweenkeyframe_add_cubic(tweenkeyframe, at, id, value) {
-    let ret = tweenkeyframe_add_cubic(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+function __js__tweenkeyframe_init() {
+    let ret = tweenkeyframe_init();
+    return kdmyEngine_obtain(ret)
+}
+function __js__tweenkeyframe_init2(animlist_item) {
+    let ret = tweenkeyframe_init2(kdmyEngine_obtain(animlist_item));
+    return kdmyEngine_obtain(ret)
+}
+function __js__tweenkeyframe_destroy(tweenkeyframe) {
+    tweenkeyframe_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(tweenkeyframe)))
+}
+function __js__tweenkeyframe_animate_percent(tweenkeyframe, percent) {
+    tweenkeyframe_animate_percent(kdmyEngine_obtain(tweenkeyframe), percent)
+}
+function __js__tweenkeyframe_get_ids_count(tweenkeyframe) {
+    let ret = tweenkeyframe_get_ids_count(kdmyEngine_obtain(tweenkeyframe));
+    return ret
+}
+function __js__tweenkeyframe_peek_value(tweenkeyframe) {
+    let ret = tweenkeyframe_peek_value(kdmyEngine_obtain(tweenkeyframe));
+    return ret
+}
+function __js__tweenkeyframe_peek_value_by_index(tweenkeyframe, index) {
+    let ret = tweenkeyframe_peek_value_by_index(kdmyEngine_obtain(tweenkeyframe), index);
+    return ret
+}
+function __js__tweenkeyframe_peek_entry_by_index(tweenkeyframe, index, out_id, out_value) {
+    const values = [0, 0];
+    let ret = tweenkeyframe_peek_entry_by_index(kdmyEngine_obtain(tweenkeyframe), index, values);
+    kdmyEngine_set_int32(out_id, values[0]);
+    kdmyEngine_set_float32(out_value, values[1]);
+    return ret ? 1 : 0
+}
+function __js__tweenkeyframe_peek_value_by_id(tweenkeyframe, id) {
+    let ret = tweenkeyframe_peek_value_by_id(kdmyEngine_obtain(tweenkeyframe), id);
+    return ret
+}
+function __js__tweenkeyframe_add_easeout(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_easeout(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_easeinout(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_easeinout(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_linear(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_linear(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
+function __js__tweenkeyframe_add_steps(tweenkeyframe, at, id, value, steps_count, steps_method) {
+    let ret = tweenkeyframe_add_steps(kdmyEngine_obtain(tweenkeyframe), at, id, value, steps_count, steps_method);
     return ret
 }
 function __js__tweenkeyframe_add_ease(tweenkeyframe, at, id, value) {
@@ -3044,118 +1884,41 @@ function __js__tweenkeyframe_add_easein(tweenkeyframe, at, id, value) {
     let ret = tweenkeyframe_add_easein(kdmyEngine_obtain(tweenkeyframe), at, id, value);
     return ret
 }
-function __js__tweenkeyframe_add_easeinout(tweenkeyframe, at, id, value) {
-    let ret = tweenkeyframe_add_easeinout(kdmyEngine_obtain(tweenkeyframe), at, id, value);
-    return ret
-}
-function __js__tweenkeyframe_add_easeout(tweenkeyframe, at, id, value) {
-    let ret = tweenkeyframe_add_easeout(kdmyEngine_obtain(tweenkeyframe), at, id, value);
-    return ret
-}
-function __js__tweenkeyframe_add_expo(tweenkeyframe, at, id, value) {
-    let ret = tweenkeyframe_add_expo(kdmyEngine_obtain(tweenkeyframe), at, id, value);
-    return ret
-}
-function __js__tweenkeyframe_add_interpolator(tweenkeyframde, at, id, value, type) {
-    let ret = tweenkeyframe_add_interpolator(kdmyEngine_obtain(tweenkeyframde), at, id, value, type);
-    return ret
-}
-function __js__tweenkeyframe_add_linear(tweenkeyframe, at, id, value) {
-    let ret = tweenkeyframe_add_linear(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+function __js__tweenkeyframe_add_cubic(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_cubic(kdmyEngine_obtain(tweenkeyframe), at, id, value);
     return ret
 }
 function __js__tweenkeyframe_add_quad(tweenkeyframe, at, id, value) {
     let ret = tweenkeyframe_add_quad(kdmyEngine_obtain(tweenkeyframe), at, id, value);
     return ret
 }
+function __js__tweenkeyframe_add_expo(tweenkeyframe, at, id, value) {
+    let ret = tweenkeyframe_add_expo(kdmyEngine_obtain(tweenkeyframe), at, id, value);
+    return ret
+}
 function __js__tweenkeyframe_add_sin(tweenkeyframe, at, id, value) {
     let ret = tweenkeyframe_add_sin(kdmyEngine_obtain(tweenkeyframe), at, id, value);
     return ret
 }
-function __js__tweenkeyframe_add_steps(tweenkeyframe, at, id, value, steps_count, steps_method) {
-    let ret = tweenkeyframe_add_steps(kdmyEngine_obtain(tweenkeyframe), at, id, value, steps_count, steps_method);
+function __js__tweenkeyframe_add_interpolator(tweenkeyframde, at, id, value, type) {
+    let ret = tweenkeyframe_add_interpolator(kdmyEngine_obtain(tweenkeyframde), at, id, value, type);
     return ret
 }
-function __js__tweenkeyframe_animate_percent(tweenkeyframe, percent) {
-    tweenkeyframe_animate_percent(kdmyEngine_obtain(tweenkeyframe), percent)
-}
-function __js__tweenkeyframe_destroy(tweenkeyframe) {
-    tweenkeyframe_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(tweenkeyframe)))
-}
-function __js__tweenkeyframe_get_ids_count(tweenkeyframe) {
-    let ret = tweenkeyframe_get_ids_count(kdmyEngine_obtain(tweenkeyframe));
-    return ret
-}
-function __js__tweenkeyframe_init() {
-    let ret = tweenkeyframe_init();
+function __js__tweenlerp_init() {
+    let ret = tweenlerp_init();
     return kdmyEngine_obtain(ret)
 }
-function __js__tweenkeyframe_init2(animlist_item) {
-    let ret = tweenkeyframe_init2(kdmyEngine_obtain(animlist_item));
-    return kdmyEngine_obtain(ret)
+function __js__tweenlerp_destroy(tweenlerp) {
+    tweenlerp_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(tweenlerp)))
 }
-function __js__tweenkeyframe_peek_entry_by_index(tweenkeyframe, index, out_id, out_value) {
-    const values = [0, 0];
-    let ret = tweenkeyframe_peek_entry_by_index(kdmyEngine_obtain(tweenkeyframe), index, values);
-    kdmyEngine_set_int32(out_id, values[0]);
-    kdmyEngine_set_float32(out_value, values[1]);
-    return ret ? 1 : 0
+function __js__tweenlerp_end(tweenlerp) {
+    tweenlerp_end(kdmyEngine_obtain(tweenlerp))
 }
-function __js__tweenkeyframe_peek_value(tweenkeyframe) {
-    let ret = tweenkeyframe_peek_value(kdmyEngine_obtain(tweenkeyframe));
-    return ret
+function __js__tweenlerp_mark_as_completed(tweenlerp) {
+    tweenlerp_mark_as_completed(kdmyEngine_obtain(tweenlerp))
 }
-function __js__tweenkeyframe_peek_value_by_id(tweenkeyframe, id) {
-    let ret = tweenkeyframe_peek_value_by_id(kdmyEngine_obtain(tweenkeyframe), id);
-    return ret
-}
-function __js__tweenkeyframe_peek_value_by_index(tweenkeyframe, index) {
-    let ret = tweenkeyframe_peek_value_by_index(kdmyEngine_obtain(tweenkeyframe), index);
-    return ret
-}
-function __js__tweenlerp_add_cubic(tweenlerp, id, start, end, duration) {
-    let ret = tweenlerp_add_cubic(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
-    return ret
-}
-function __js__tweenlerp_add_ease(tweenlerp, id, start, end, duration) {
-    let ret = tweenlerp_add_ease(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
-    return ret
-}
-function __js__tweenlerp_add_easein(tweenlerp, id, start, end, duration) {
-    let ret = tweenlerp_add_easein(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
-    return ret
-}
-function __js__tweenlerp_add_easeinout(tweenlerp, id, start, end, duration) {
-    let ret = tweenlerp_add_easeinout(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
-    return ret
-}
-function __js__tweenlerp_add_easeout(tweenlerp, id, start, end, duration) {
-    let ret = tweenlerp_add_easeout(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
-    return ret
-}
-function __js__tweenlerp_add_expo(tweenlerp, id, start, end, duration) {
-    let ret = tweenlerp_add_expo(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
-    return ret
-}
-function __js__tweenlerp_add_interpolator(tweenlerp, id, start, end, duration, type) {
-    let ret = tweenlerp_add_interpolator(kdmyEngine_obtain(tweenlerp), id, start, end, duration, type);
-    return ret
-}
-function __js__tweenlerp_add_linear(tweenlerp, id, start, end, duration) {
-    let ret = tweenlerp_add_linear(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
-    return ret
-}
-function __js__tweenlerp_add_quad(tweenlerp, id, start, end, duration) {
-    let ret = tweenlerp_add_quad(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
-    return ret
-}
-function __js__tweenlerp_add_sin(tweenlerp, id, start, end, duration) {
-    let ret = tweenlerp_add_sin(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
-    return ret
-}
-function __js__tweenlerp_add_steps(tweenlerp, id, start, end, duration, steps_count, steps_method) {
-    let ret = tweenlerp_add_steps(kdmyEngine_obtain(tweenlerp), id, start, end, duration, steps_count, steps_method);
-    return ret
+function __js__tweenlerp_restart(tweenlerp) {
+    tweenlerp_restart(kdmyEngine_obtain(tweenlerp))
 }
 function __js__tweenlerp_animate(tweenlerp, elapsed) {
     let ret = tweenlerp_animate(kdmyEngine_obtain(tweenlerp), elapsed);
@@ -3165,23 +1928,9 @@ function __js__tweenlerp_animate_percent(tweenlerp, percent) {
     let ret = tweenlerp_animate_percent(kdmyEngine_obtain(tweenlerp), percent);
     return ret
 }
-function __js__tweenlerp_change_bounds_by_id(tweenlerp, id, new_start, new_end) {
-    let ret = tweenlerp_change_bounds_by_id(kdmyEngine_obtain(tweenlerp), id, new_start, new_end);
+function __js__tweenlerp_is_completed(tweenlerp) {
+    let ret = tweenlerp_is_completed(kdmyEngine_obtain(tweenlerp));
     return ret ? 1 : 0
-}
-function __js__tweenlerp_change_bounds_by_index(tweenlerp, index, new_start, new_end) {
-    let ret = tweenlerp_change_bounds_by_index(kdmyEngine_obtain(tweenlerp), index, new_start, new_end);
-    return ret ? 1 : 0
-}
-function __js__tweenlerp_change_duration_by_index(tweenlerp, index, new_duration) {
-    let ret = tweenlerp_change_duration_by_index(kdmyEngine_obtain(tweenlerp), index, new_duration);
-    return ret ? 1 : 0
-}
-function __js__tweenlerp_destroy(tweenlerp) {
-    tweenlerp_destroy(kdmyEngine_obtain(kdmyEngine_get_uint32(tweenlerp)))
-}
-function __js__tweenlerp_end(tweenlerp) {
-    tweenlerp_end(kdmyEngine_obtain(tweenlerp))
 }
 function __js__tweenlerp_get_elapsed(tweenlerp) {
     let ret = tweenlerp_get_elapsed(kdmyEngine_obtain(tweenlerp));
@@ -3191,20 +1940,13 @@ function __js__tweenlerp_get_entry_count(tweenlerp) {
     let ret = tweenlerp_get_entry_count(kdmyEngine_obtain(tweenlerp));
     return ret
 }
-function __js__tweenlerp_init() {
-    let ret = tweenlerp_init();
-    return kdmyEngine_obtain(ret)
+function __js__tweenlerp_peek_value(tweenlerp) {
+    let ret = tweenlerp_peek_value(kdmyEngine_obtain(tweenlerp));
+    return ret
 }
-function __js__tweenlerp_is_completed(tweenlerp) {
-    let ret = tweenlerp_is_completed(kdmyEngine_obtain(tweenlerp));
-    return ret ? 1 : 0
-}
-function __js__tweenlerp_mark_as_completed(tweenlerp) {
-    tweenlerp_mark_as_completed(kdmyEngine_obtain(tweenlerp))
-}
-function __js__tweenlerp_override_start_with_end_by_index(tweenlerp, index) {
-    let ret = tweenlerp_override_start_with_end_by_index(kdmyEngine_obtain(tweenlerp), index);
-    return ret ? 1 : 0
+function __js__tweenlerp_peek_value_by_index(tweenlerp, index) {
+    let ret = tweenlerp_peek_value_by_index(kdmyEngine_obtain(tweenlerp), index);
+    return ret
 }
 function __js__tweenlerp_peek_entry_by_index(tweenlerp, index, out_id, out_value, out_duration) {
     const values = [0, 0, 0];
@@ -3214,51 +1956,104 @@ function __js__tweenlerp_peek_entry_by_index(tweenlerp, index, out_id, out_value
     kdmyEngine_set_float32(out_duration, values[2]);
     return ret ? 1 : 0
 }
-function __js__tweenlerp_peek_value(tweenlerp) {
-    let ret = tweenlerp_peek_value(kdmyEngine_obtain(tweenlerp));
-    return ret
-}
 function __js__tweenlerp_peek_value_by_id(tweenlerp, id) {
     let ret = tweenlerp_peek_value_by_id(kdmyEngine_obtain(tweenlerp), id);
     return ret
 }
-function __js__tweenlerp_peek_value_by_index(tweenlerp, index) {
-    let ret = tweenlerp_peek_value_by_index(kdmyEngine_obtain(tweenlerp), index);
-    return ret
+function __js__tweenlerp_change_bounds_by_index(tweenlerp, index, new_start, new_end) {
+    let ret = tweenlerp_change_bounds_by_index(kdmyEngine_obtain(tweenlerp), index, new_start, new_end);
+    return ret ? 1 : 0
 }
-function __js__tweenlerp_restart(tweenlerp) {
-    tweenlerp_restart(kdmyEngine_obtain(tweenlerp))
+function __js__tweenlerp_override_start_with_end_by_index(tweenlerp, index) {
+    let ret = tweenlerp_override_start_with_end_by_index(kdmyEngine_obtain(tweenlerp), index);
+    return ret ? 1 : 0
+}
+function __js__tweenlerp_change_bounds_by_id(tweenlerp, id, new_start, new_end) {
+    let ret = tweenlerp_change_bounds_by_id(kdmyEngine_obtain(tweenlerp), id, new_start, new_end);
+    return ret ? 1 : 0
+}
+function __js__tweenlerp_change_duration_by_index(tweenlerp, index, new_duration) {
+    let ret = tweenlerp_change_duration_by_index(kdmyEngine_obtain(tweenlerp), index, new_duration);
+    return ret ? 1 : 0
 }
 function __js__tweenlerp_swap_bounds_by_index(tweenlerp, index) {
     let ret = tweenlerp_swap_bounds_by_index(kdmyEngine_obtain(tweenlerp), index);
     return ret ? 1 : 0
 }
-function __js__videoplayer_fade_audio(videoplayer, in_or_out, duration) {
-    videoplayer_fade_audio(kdmyEngine_obtain(videoplayer), in_or_out, duration)
-}
-function __js__videoplayer_get_duration(videoplayer) {
-    let ret = videoplayer_get_duration(kdmyEngine_obtain(videoplayer));
+function __js__tweenlerp_add_ease(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_ease(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
     return ret
 }
-function __js__videoplayer_get_position(videoplayer) {
-    let ret = videoplayer_get_position(kdmyEngine_obtain(videoplayer));
+function __js__tweenlerp_add_easein(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_easein(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_easeout(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_easeout(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_easeinout(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_easeinout(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_linear(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_linear(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_steps(tweenlerp, id, start, end, duration, steps_count, steps_method) {
+    let ret = tweenlerp_add_steps(kdmyEngine_obtain(tweenlerp), id, start, end, duration, steps_count, steps_method);
+    return ret
+}
+function __js__tweenlerp_add_interpolator(tweenlerp, id, start, end, duration, type) {
+    let ret = tweenlerp_add_interpolator(kdmyEngine_obtain(tweenlerp), id, start, end, duration, type);
+    return ret
+}
+function __js__tweenlerp_add_cubic(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_cubic(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_quad(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_quad(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_expo(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_expo(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
+    return ret
+}
+function __js__tweenlerp_add_sin(tweenlerp, id, start, end, duration) {
+    let ret = tweenlerp_add_sin(kdmyEngine_obtain(tweenlerp), id, start, end, duration);
     return ret
 }
 function __js__videoplayer_get_sprite(videoplayer) {
     let ret = videoplayer_get_sprite(kdmyEngine_obtain(videoplayer));
     return kdmyEngine_obtain(ret)
 }
-function __js__videoplayer_has_audio_track(videoplayer) {
-    let ret = videoplayer_has_audio_track(kdmyEngine_obtain(videoplayer));
-    return ret ? 1 : 0
+function __js__videoplayer_replay(videoplayer) {
+    videoplayer_replay(kdmyEngine_obtain(videoplayer))
 }
-function __js__videoplayer_has_ended(videoplayer) {
-    let ret = videoplayer_has_ended(kdmyEngine_obtain(videoplayer));
-    return ret ? 1 : 0
+function __js__videoplayer_play(videoplayer) {
+    videoplayer_play(kdmyEngine_obtain(videoplayer))
 }
-function __js__videoplayer_has_video_track(videoplayer) {
-    let ret = videoplayer_has_video_track(kdmyEngine_obtain(videoplayer));
-    return ret ? 1 : 0
+function __js__videoplayer_pause(videoplayer) {
+    videoplayer_pause(kdmyEngine_obtain(videoplayer))
+}
+function __js__videoplayer_stop(videoplayer) {
+    videoplayer_stop(kdmyEngine_obtain(videoplayer))
+}
+function __js__videoplayer_loop_enable(videoplayer, enable) {
+    videoplayer_loop_enable(kdmyEngine_obtain(videoplayer), enable)
+}
+function __js__videoplayer_fade_audio(videoplayer, in_or_out, duration) {
+    videoplayer_fade_audio(kdmyEngine_obtain(videoplayer), in_or_out, duration)
+}
+function __js__videoplayer_set_volume(videoplayer, volume) {
+    videoplayer_set_volume(kdmyEngine_obtain(videoplayer), volume)
+}
+function __js__videoplayer_set_mute(videoplayer, muted) {
+    videoplayer_set_mute(kdmyEngine_obtain(videoplayer), muted)
+}
+function __js__videoplayer_seek(videoplayer, timestamp) {
+    videoplayer_seek(kdmyEngine_obtain(videoplayer), timestamp)
 }
 function __js__videoplayer_is_muted(videoplayer) {
     let ret = videoplayer_is_muted(kdmyEngine_obtain(videoplayer));
@@ -3268,59 +2063,151 @@ function __js__videoplayer_is_playing(videoplayer) {
     let ret = videoplayer_is_playing(kdmyEngine_obtain(videoplayer));
     return ret ? 1 : 0
 }
-function __js__videoplayer_loop_enable(videoplayer, enable) {
-    videoplayer_loop_enable(kdmyEngine_obtain(videoplayer), enable)
+function __js__videoplayer_get_duration(videoplayer) {
+    let ret = videoplayer_get_duration(kdmyEngine_obtain(videoplayer));
+    return ret
 }
-function __js__videoplayer_pause(videoplayer) {
-    videoplayer_pause(kdmyEngine_obtain(videoplayer))
+function __js__videoplayer_get_position(videoplayer) {
+    let ret = videoplayer_get_position(kdmyEngine_obtain(videoplayer));
+    return ret
 }
-function __js__videoplayer_play(videoplayer) {
-    videoplayer_play(kdmyEngine_obtain(videoplayer))
+function __js__videoplayer_has_ended(videoplayer) {
+    let ret = videoplayer_has_ended(kdmyEngine_obtain(videoplayer));
+    return ret ? 1 : 0
 }
-function __js__videoplayer_replay(videoplayer) {
-    videoplayer_replay(kdmyEngine_obtain(videoplayer))
+function __js__videoplayer_has_video_track(videoplayer) {
+    let ret = videoplayer_has_video_track(kdmyEngine_obtain(videoplayer));
+    return ret ? 1 : 0
 }
-function __js__videoplayer_seek(videoplayer, timestamp) {
-    videoplayer_seek(kdmyEngine_obtain(videoplayer), timestamp)
+function __js__videoplayer_has_audio_track(videoplayer) {
+    let ret = videoplayer_has_audio_track(kdmyEngine_obtain(videoplayer));
+    return ret ? 1 : 0
 }
-function __js__videoplayer_set_mute(videoplayer, muted) {
-    videoplayer_set_mute(kdmyEngine_obtain(videoplayer), muted)
+function __js__week_unlockdirective_create(roundcontext, name, completed_round, completed_week, value) {
+    week_unlockdirective_create(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week, value)
 }
-function __js__videoplayer_set_volume(videoplayer, volume) {
-    videoplayer_set_volume(kdmyEngine_obtain(videoplayer), volume)
+function __js__week_unlockdirective_has(roundcontext, name) {
+    let ret = week_unlockdirective_has(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
+    return ret ? 1 : 0
 }
-function __js__videoplayer_stop(videoplayer) {
-    videoplayer_stop(kdmyEngine_obtain(videoplayer))
+function __js__week_unlockdirective_remove(roundcontext, name, completed_round, completed_week) {
+    week_unlockdirective_remove(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week)
 }
-function __js__week_change_character_camera_name(roundcontext, opponent_or_player, new_name) {
-    week_change_character_camera_name(kdmyEngine_obtain(roundcontext), opponent_or_player, kdmyEngine_ptrToString(new_name))
+function __js__week_unlockdirective_get(roundcontext, name) {
+    let ret = week_unlockdirective_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
+    return ret
 }
-function __js__week_disable_ask_ready(roundcontext, disable) {
-    week_disable_ask_ready(kdmyEngine_obtain(roundcontext), disable)
+function __js__week_storage_set(roundcontext, name, data, data_size) {
+    let arraybuffer = data == 0 ? null : new ArrayBuffer(data_size);
+    if (arraybuffer) {
+        new Uint8Array(arraybuffer).set(HEAPU8.subarray(data, data + data_size), 0)
+    }
+    let ret = week_storage_set(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), arraybuffer, data_size);
+    return ret ? 1 : 0
 }
-function __js__week_disable_camera_bumping(roundcontext, disable) {
-    week_disable_camera_bumping(kdmyEngine_obtain(roundcontext), disable)
+function __js__week_storage_get(roundcontext, name, data) {
+    let arraybuffer = [null];
+    let ret = week_storage_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), arraybuffer);
+    let ptr;
+    if (arraybuffer[0]) {
+        ptr = _malloc(ret);
+        if (ptr != 0)
+            HEAPU8.set(new Uint8Array(arraybuffer[0]), ptr)
+    } else {
+        ptr = 0
+    }
+    kdmyEngine_set_uint32(data, ptr);
+    return ret
 }
-function __js__week_disable_countdown(roundcontext, disable) {
-    week_disable_countdown(kdmyEngine_obtain(roundcontext), disable)
+function __js__week_ui_set_visibility(roundcontext, visible) {
+    week_ui_set_visibility(kdmyEngine_obtain(roundcontext), visible)
 }
-function __js__week_disable_girlfriend_cry(roundcontext, disable) {
-    week_disable_girlfriend_cry(kdmyEngine_obtain(roundcontext), disable)
+function __js__week_ui_get_layout(roundcontext) {
+    let ret = week_ui_get_layout(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
 }
-function __js__week_disable_layout_rollback(roundcontext, disable) {
-    week_disable_layout_rollback(kdmyEngine_obtain(roundcontext), disable)
+function __js__week_ui_get_camera(roundcontext) {
+    let ret = week_ui_get_camera(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_set_halt(roundcontext, halt) {
+    week_set_halt(kdmyEngine_obtain(roundcontext), halt)
 }
 function __js__week_disable_week_end_results(roundcontext, disable) {
     week_disable_week_end_results(kdmyEngine_obtain(roundcontext), disable)
 }
-function __js__week_enable_credits_on_completed(roundcontext) {
-    week_enable_credits_on_completed(kdmyEngine_obtain(roundcontext))
+function __js__week_disable_girlfriend_cry(roundcontext, disable) {
+    week_disable_girlfriend_cry(kdmyEngine_obtain(roundcontext), disable)
 }
-function __js__week_end(roundcontext, round_or_week, loose_or_win) {
-    week_end(kdmyEngine_obtain(roundcontext), round_or_week, loose_or_win)
+function __js__week_disable_ask_ready(roundcontext, disable) {
+    week_disable_ask_ready(kdmyEngine_obtain(roundcontext), disable)
 }
-function __js__week_get_character(roundcontext, character_index) {
-    let ret = week_get_character(kdmyEngine_obtain(roundcontext), character_index);
+function __js__week_disable_countdown(roundcontext, disable) {
+    week_disable_countdown(kdmyEngine_obtain(roundcontext), disable)
+}
+function __js__week_disable_camera_bumping(roundcontext, disable) {
+    week_disable_camera_bumping(kdmyEngine_obtain(roundcontext), disable)
+}
+function __js__week_ui_get_strums_count(roundcontext) {
+    let ret = week_ui_get_strums_count(kdmyEngine_obtain(roundcontext));
+    return ret
+}
+function __js__week_ui_get_strums(roundcontext, strums_id) {
+    let ret = week_ui_get_strums(kdmyEngine_obtain(roundcontext), strums_id);
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_roundstats(roundcontext) {
+    let ret = week_ui_get_roundstats(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_rankingcounter(roundcontext) {
+    let ret = week_ui_get_rankingcounter(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_streakcounter(roundcontext) {
+    let ret = week_ui_get_streakcounter(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_round_textsprite(roundcontext) {
+    let ret = week_ui_get_round_textsprite(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_songprogressbar(roundcontext) {
+    let ret = week_ui_get_songprogressbar(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_countdown(roundcontext) {
+    let ret = week_ui_get_countdown(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_ui_get_healthbar(roundcontext) {
+    let ret = week_ui_get_healthbar(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_stage_layout(roundcontext) {
+    let ret = week_get_stage_layout(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_healthwatcher(roundcontext) {
+    let ret = week_get_healthwatcher(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_missnotefx(roundcontext) {
+    let ret = week_get_missnotefx(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_update_bpm(roundcontext, bpm) {
+    week_update_bpm(kdmyEngine_obtain(roundcontext), bpm)
+}
+function __js__week_update_speed(roundcontext, speed) {
+    week_update_speed(kdmyEngine_obtain(roundcontext), speed)
+}
+function __js__week_get_messagebox(roundcontext) {
+    let ret = week_get_messagebox(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_girlfriend(roundcontext) {
+    let ret = week_get_girlfriend(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(ret)
 }
 function __js__week_get_character_count(roundcontext) {
@@ -3329,6 +2216,18 @@ function __js__week_get_character_count(roundcontext) {
 }
 function __js__week_get_conductor(roundcontext, character_index) {
     let ret = week_get_conductor(kdmyEngine_obtain(roundcontext), character_index);
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_character(roundcontext, character_index) {
+    let ret = week_get_character(kdmyEngine_obtain(roundcontext), character_index);
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_playerstats(roundcontext, character_index) {
+    let ret = week_get_playerstats(kdmyEngine_obtain(roundcontext), character_index);
+    return kdmyEngine_obtain(ret)
+}
+function __js__week_get_songplayer(roundcontext) {
+    let ret = week_get_songplayer(kdmyEngine_obtain(roundcontext));
     return kdmyEngine_obtain(ret)
 }
 function __js__week_get_current_chart_info(roundcontext, bpm, speed) {
@@ -3351,206 +2250,200 @@ function __js__week_get_current_song_info(roundcontext, name, difficult, index) 
     kdmyEngine_set_uint32(difficult, kdmyEngine_stringToPtr(values.difficult));
     kdmyEngine_set_int32(index, values.index)
 }
-function __js__week_get_dialogue(roundcontext) {
-    let ret = week_get_dialogue(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
+function __js__week_change_character_camera_name(roundcontext, opponent_or_player, new_name) {
+    week_change_character_camera_name(kdmyEngine_obtain(roundcontext), opponent_or_player, kdmyEngine_ptrToString(new_name))
 }
-function __js__week_get_girlfriend(roundcontext) {
-    let ret = week_get_girlfriend(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_get_healthwatcher(roundcontext) {
-    let ret = week_get_healthwatcher(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_get_messagebox(roundcontext) {
-    let ret = week_get_messagebox(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_get_missnotefx(roundcontext) {
-    let ret = week_get_missnotefx(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_get_playerstats(roundcontext, character_index) {
-    let ret = week_get_playerstats(kdmyEngine_obtain(roundcontext), character_index);
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_get_songplayer(roundcontext) {
-    let ret = week_get_songplayer(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_get_stage_layout(roundcontext) {
-    let ret = week_get_stage_layout(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
+function __js__week_disable_layout_rollback(roundcontext, disable) {
+    week_disable_layout_rollback(kdmyEngine_obtain(roundcontext), disable)
 }
 function __js__week_override_common_folder(roundcontext, custom_common_path) {
     week_override_common_folder(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(custom_common_path))
 }
-function __js__week_set_halt(roundcontext, halt) {
-    week_set_halt(kdmyEngine_obtain(roundcontext), halt)
+function __js__week_enable_credits_on_completed(roundcontext) {
+    week_enable_credits_on_completed(kdmyEngine_obtain(roundcontext))
+}
+function __js__week_end(roundcontext, round_or_week, loose_or_win) {
+    week_end(kdmyEngine_obtain(roundcontext), round_or_week, loose_or_win)
+}
+function __js__week_get_dialogue(roundcontext) {
+    let ret = week_get_dialogue(kdmyEngine_obtain(roundcontext));
+    return kdmyEngine_obtain(ret)
 }
 function __js__week_set_ui_shader(roundcontext, psshader) {
     week_set_ui_shader(kdmyEngine_obtain(roundcontext), kdmyEngine_obtain(psshader))
 }
-function __js__week_storage_get(roundcontext, name, data) {
-    let arraybuffer = [null];
-    let ret = week_storage_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), arraybuffer);
-    let ptr;
-    if (arraybuffer[0]) {
-        ptr = _malloc(ret);
-        if (ptr != 0)
-            HEAPU8.set(new Uint8Array(arraybuffer[0]), ptr)
-    } else {
-        ptr = 0
-    }
-    kdmyEngine_set_uint32(data, ptr);
-    return ret
-}
-function __js__week_storage_set(roundcontext, name, data, data_size) {
-    let arraybuffer = data == 0 ? null : new ArrayBuffer(data_size);
-    if (arraybuffer) {
-        new Uint8Array(arraybuffer).set(HEAPU8.subarray(data, data + data_size), 0)
-    }
-    let ret = week_storage_set(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), arraybuffer, data_size);
-    return ret ? 1 : 0
-}
-function __js__week_ui_get_camera(roundcontext) {
-    let ret = week_ui_get_camera(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_countdown(roundcontext) {
-    let ret = week_ui_get_countdown(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_healthbar(roundcontext) {
-    let ret = week_ui_get_healthbar(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_layout(roundcontext) {
-    let ret = week_ui_get_layout(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_rankingcounter(roundcontext) {
-    let ret = week_ui_get_rankingcounter(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_round_textsprite(roundcontext) {
-    let ret = week_ui_get_round_textsprite(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_roundstats(roundcontext) {
-    let ret = week_ui_get_roundstats(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_songprogressbar(roundcontext) {
-    let ret = week_ui_get_songprogressbar(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_streakcounter(roundcontext) {
-    let ret = week_ui_get_streakcounter(kdmyEngine_obtain(roundcontext));
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_strums(roundcontext, strums_id) {
-    let ret = week_ui_get_strums(kdmyEngine_obtain(roundcontext), strums_id);
-    return kdmyEngine_obtain(ret)
-}
-function __js__week_ui_get_strums_count(roundcontext) {
-    let ret = week_ui_get_strums_count(kdmyEngine_obtain(roundcontext));
-    return ret
-}
-function __js__week_ui_set_visibility(roundcontext, visible) {
-    week_ui_set_visibility(kdmyEngine_obtain(roundcontext), visible)
-}
-function __js__week_unlockdirective_create(roundcontext, name, completed_round, completed_week, value) {
-    week_unlockdirective_create(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week, value)
-}
-function __js__week_unlockdirective_get(roundcontext, name) {
-    let ret = week_unlockdirective_get(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
-    return ret
-}
-function __js__week_unlockdirective_has(roundcontext, name) {
-    let ret = week_unlockdirective_has(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name));
-    return ret ? 1 : 0
-}
-function __js__week_unlockdirective_remove(roundcontext, name, completed_round, completed_week) {
-    week_unlockdirective_remove(kdmyEngine_obtain(roundcontext), kdmyEngine_ptrToString(name), completed_round, completed_week)
-}
-function __js__week_update_bpm(roundcontext, bpm) {
-    week_update_bpm(kdmyEngine_obtain(roundcontext), bpm)
-}
-function __js__week_update_speed(roundcontext, speed) {
-    week_update_speed(kdmyEngine_obtain(roundcontext), speed)
-}
-
-
-
-function callRuntimeCallbacks(callbacks) {
-    while (callbacks.length > 0) {
-        var callback = callbacks.shift();
-        if (typeof callback == "function") {
-            callback(ModuleLuaScript);
-            continue
-        }
-        var func = callback.func;
-        if (typeof func == "number") {
-            if (callback.arg === undefined) {
-                (function () {})()
-            } else {
-                (function (a1) {
-                    dynCall_vi.apply(null, [func, a1])
-                })(callback.arg)
-            }
-        } else {
-            func(callback.arg === undefined ? null : callback.arg)
-        }
-    }
-}
-function demangle(func) {
-    return func
-}
-function demangleAll(text) {
-    var regex = /\b_Z[\w\d_]+/g;
-    return text.replace(regex, function (x) {
-        var y = demangle(x);
-        return x === y ? x : y + " [" + x + "]"
+function __asyncjs__week_rebuild_ui(roundcontext) {
+    return Asyncify.handleAsync(async() => {
+        await week_rebuild_ui(kdmyEngine_obtain(roundcontext))
     })
 }
-var wasmTableMirror = [];
-function getWasmTableEntry(funcPtr) {
-    var func = wasmTableMirror[funcPtr];
-    if (!func) {
-        if (funcPtr >= wasmTableMirror.length)
-            wasmTableMirror.length = funcPtr + 1;
-        wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr)
-    }
-    return func
+function __asyncjs__week_set_gameover_option(roundcontext, opt, nro, str) {
+    return Asyncify.handleAsync(async() => {
+        await week_set_gameover_option(kdmyEngine_obtain(roundcontext), opt, nro, kdmyEngine_ptrToString(str))
+    })
 }
-function handleException(e) {
-    if (e instanceof ExitStatus || e == "unwind") {
-        return EXITSTATUS
-    }
-    quit_(1, e)
+function __js__kdmyEngine_read_prop_float(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return ret
 }
-function jsStackTrace() {
-    var error = new Error;
-    if (!error.stack) {
-        try {
-            throw new Error
-        } catch (e) {
-            error = e
+function __js__kdmyEngine_read_prop_string(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return kdmyEngine_stringToPtr(ret)
+}
+function __js__kdmyEngine_read_prop_integer(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return ret
+}
+function __js__kdmyEngine_read_prop_object(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return kdmyEngine_obtain(typeof ret === "object" ? ret : null)
+}
+function __js__kdmyEngine_read_prop_boolean(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return ret ? 1 : 0
+}
+function __js__kdmyEngine_read_prop_floatboolean(obj_id, field_name) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    let ret = obj[field];
+    return ret >= 1 || ret === true
+}
+function __js__kdmyEngine_forget_obtained(obj_id) {
+    let ret = kdmyEngine_forget(obj_id);
+    if (!ret)
+        throw new Error("Uknown object id:" + obj_id)
+}
+function __js__kdmyEngine_create_object() {
+    return kdmyEngine_obtain(new Object)
+}
+function __js__kdmyEngine_create_array(size) {
+    return kdmyEngine_obtain(new Array(size))
+}
+function __js__kdmyEngine_read_array_item_object(array_id, index) {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array)
+        throw new Error("Uknown array id:" + array_id);
+    let ret = array[index];
+    return kdmyEngine_obtain(ret)
+}
+function __js__kdmyEngine_read_window_object(variable_name) {
+    let obj = window[kdmyEngine_ptrToString(variable_name)];
+    return obj === undefined ? 0 : kdmyEngine_obtain(obj)
+}
+function __js__kdmyEngine_write_prop_float(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value
+}
+function __js__kdmyEngine_write_prop_string(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = kdmyEngine_ptrToString(value)
+}
+function __js__kdmyEngine_write_prop_integer(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value
+}
+function __js__kdmyEngine_write_prop_object(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = kdmyEngine_obtain(value)
+}
+function __js__kdmyEngine_write_prop_boolean(obj_id, field_name, value) {
+    let obj = kdmyEngine_obtain(obj_id);
+    if (!obj)
+        throw new Error("Uknown object id:" + obj_id);
+    let field = kdmyEngine_ptrToString(field_name);
+    obj[field] = value
+}
+function __js__kdmyEngine_write_in_array_object(array_id, index, value) {
+    let array = kdmyEngine_obtain(array_id);
+    if (!array)
+        throw new Error("Uknown array id:" + array_id);
+    array[index] = kdmyEngine_obtain(value)
+}
+function ExitStatus(status) {
+    this.name = "ExitStatus";
+    this.message = "Program terminated with exit(" + status + ")";
+    this.status = status
+}
+function callRuntimeCallbacks(callbacks) {
+    while (callbacks.length > 0) {
+        callbacks.shift()(ModuleLuaScript)
+    }
+}
+var UTF8Decoder = typeof TextDecoder != "undefined" ? new TextDecoder("utf8") : undefined;
+function UTF8ArrayToString(heapOrArray, idx, maxBytesToRead) {
+    var endIdx = idx + maxBytesToRead;
+    var endPtr = idx;
+    while (heapOrArray[endPtr] && !(endPtr >= endIdx))
+        ++endPtr;
+    if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
+        return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr))
+    }
+    var str = "";
+    while (idx < endPtr) {
+        var u0 = heapOrArray[idx++];
+        if (!(u0 & 128)) {
+            str += String.fromCharCode(u0);
+            continue
         }
-        if (!error.stack) {
-            return "(no stack trace available)"
+        var u1 = heapOrArray[idx++] & 63;
+        if ((u0 & 224) == 192) {
+            str += String.fromCharCode((u0 & 31) << 6 | u1);
+            continue
+        }
+        var u2 = heapOrArray[idx++] & 63;
+        if ((u0 & 240) == 224) {
+            u0 = (u0 & 15) << 12 | u1 << 6 | u2
+        } else {
+            u0 = (u0 & 7) << 18 | u1 << 12 | u2 << 6 | heapOrArray[idx++] & 63
+        }
+        if (u0 < 65536) {
+            str += String.fromCharCode(u0)
+        } else {
+            var ch = u0 - 65536;
+            str += String.fromCharCode(55296 | ch >> 10, 56320 | ch & 1023)
         }
     }
-    return error.stack.toString()
+    return str
 }
-function setWasmTableEntry(idx, func) {
-    wasmTable.set(idx, func);
-    wasmTableMirror[idx] = wasmTable.get(idx)
+function UTF8ToString(ptr, maxBytesToRead) {
+    return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : ""
 }
 function ___assert_fail(condition, filename, line, func) {
-    abort("Assertion failed: " + UTF8ToString(condition) + ", at: " + [filename ? UTF8ToString(filename) : "unknown filename", line, func ? UTF8ToString(func) : "unknown function"])
+    abort(`Assertion failed: ${UTF8ToString(condition)}, at: ` + [filename ? UTF8ToString(filename) : "unknown filename", line, func ? UTF8ToString(func) : "unknown function"])
 }
 var PATH = {
     isAbs: path => path.charAt(0) === "/",
@@ -3614,31 +2507,31 @@ var PATH = {
         return path.substr(lastSlash + 1)
     },
     join: function () {
-        var paths = Array.prototype.slice.call(arguments, 0);
+        var paths = Array.prototype.slice.call(arguments);
         return PATH.normalize(paths.join("/"))
     },
     join2: (l, r) => {
         return PATH.normalize(l + "/" + r)
     }
 };
-function getRandomDevice() {
+function initRandomFill() {
     if (typeof crypto == "object" && typeof crypto["getRandomValues"] == "function") {
-        var randomBuffer = new Uint8Array(1);
-        return function () {
-            crypto.getRandomValues(randomBuffer);
-            return randomBuffer[0]
-        }
+        return view => crypto.getRandomValues(view)
     } else if (ENVIRONMENT_IS_NODE) {
         try {// @ts-ignore
             var crypto_module = require("crypto");
-            return function () {
-                return crypto_module["randomBytes"](1)[0]
+            var randomFillSync = crypto_module["randomFillSync"];
+            if (randomFillSync) {
+                return view => crypto_module["randomFillSync"](view)
             }
+            var randomBytes = crypto_module["randomBytes"];
+            return view => (view.set(randomBytes(view.byteLength)), view)
         } catch (e) {}
     }
-    return function () {
-        abort("randomDevice")
-    }
+    abort("initRandomDevice")
+}
+function randomFill(view) {// @ts-ignore
+    return (randomFill = initRandomFill())(view)
 }
 var PATH_FS = {
     resolve: function () {
@@ -3693,6 +2586,69 @@ var PATH_FS = {
         return outputParts.join("/")
     }
 };
+function lengthBytesUTF8(str) {
+    var len = 0;
+    for (var i = 0; i < str.length; ++i) {
+        var c = str.charCodeAt(i);
+        if (c <= 127) {
+            len++
+        } else if (c <= 2047) {
+            len += 2
+        } else if (c >= 55296 && c <= 57343) {
+            len += 4;
+            ++i
+        } else {
+            len += 3
+        }
+    }
+    return len
+}
+function stringToUTF8Array(str, heap, outIdx, maxBytesToWrite) {
+    if (!(maxBytesToWrite > 0))
+        return 0;
+    var startIdx = outIdx;
+    var endIdx = outIdx + maxBytesToWrite - 1;
+    for (var i = 0; i < str.length; ++i) {
+        var u = str.charCodeAt(i);
+        if (u >= 55296 && u <= 57343) {
+            var u1 = str.charCodeAt(++i);
+            u = 65536 + ((u & 1023) << 10) | u1 & 1023
+        }
+        if (u <= 127) {
+            if (outIdx >= endIdx)
+                break;
+            heap[outIdx++] = u
+        } else if (u <= 2047) {
+            if (outIdx + 1 >= endIdx)
+                break;
+            heap[outIdx++] = 192 | u >> 6;
+            heap[outIdx++] = 128 | u & 63
+        } else if (u <= 65535) {
+            if (outIdx + 2 >= endIdx)
+                break;
+            heap[outIdx++] = 224 | u >> 12;
+            heap[outIdx++] = 128 | u >> 6 & 63;
+            heap[outIdx++] = 128 | u & 63
+        } else {
+            if (outIdx + 3 >= endIdx)
+                break;
+            heap[outIdx++] = 240 | u >> 18;
+            heap[outIdx++] = 128 | u >> 12 & 63;
+            heap[outIdx++] = 128 | u >> 6 & 63;
+            heap[outIdx++] = 128 | u & 63
+        }
+    }
+    heap[outIdx] = 0;
+    return outIdx - startIdx
+}
+function intArrayFromString(stringy, dontAddNull, length) {
+    var len = length > 0 ? length : lengthBytesUTF8(stringy) + 1;
+    var u8array = new Array(len);
+    var numBytesWritten = stringToUTF8Array(stringy, u8array, 0, u8array.length);
+    if (dontAddNull)
+        u8array.length = numBytesWritten;
+    return u8array
+}
 var TTY = {
     ttys: [],
     init: function () {},
@@ -3715,10 +2671,10 @@ var TTY = {
             stream.seekable = false
         },
         close: function (stream) {
-            stream.tty.ops.flush(stream.tty)
+            stream.tty.ops.fsync(stream.tty)
         },
-        flush: function (stream) {
-            stream.tty.ops.flush(stream.tty)
+        fsync: function (stream) {
+            stream.tty.ops.fsync(stream.tty)
         },
         read: function (stream, buffer, offset, length, pos) {
             if (!stream.tty || !stream.tty.ops.get_char) {
@@ -3810,7 +2766,7 @@ var TTY = {
                     tty.output.push(val)
             }
         },
-        flush: function (tty) {
+        fsync: function (tty) {
             if (tty.output && tty.output.length > 0) {
                 out(UTF8ArrayToString(tty.output, 0));
                 tty.output = []
@@ -3827,7 +2783,7 @@ var TTY = {
                     tty.output.push(val)
             }
         },
-        flush: function (tty) {
+        fsync: function (tty) {
             if (tty.output && tty.output.length > 0) {
                 err(UTF8ArrayToString(tty.output, 0));
                 tty.output = []
@@ -4123,7 +3079,7 @@ var MEMFS = {
             var ptr;
             var allocated;
             var contents = stream.node.contents;
-            if (!(flags & 2) && contents.buffer === buffer) {
+            if (!(flags & 2) && contents.buffer === HEAP8.buffer) {
                 allocated = false;
                 ptr = contents.byteOffset
             } else {
@@ -4147,33 +3103,95 @@ var MEMFS = {
             }
         },
         msync: function (stream, buffer, offset, length, mmapFlags) {
-            if (!FS.isFile(stream.node.mode)) {
-                throw new FS.ErrnoError(43)
-            }
-            if (mmapFlags & 2) {
-                return 0
-            }
-            var bytesWritten = MEMFS.stream_ops.write(stream, buffer, 0, length, offset, false);
+            MEMFS.stream_ops.write(stream, buffer, 0, length, offset, false);
             return 0
         }
     }
 };
 function asyncLoad(url, onload, onerror, noRunDep) {
-    var dep = !noRunDep ? getUniqueRunDependency("al " + url) : "";
-    readAsync(url, function (arrayBuffer) {
-        assert(arrayBuffer, 'Loading data file "' + url + '" failed (no arrayBuffer).');
+    var dep = !noRunDep ? getUniqueRunDependency(`al ${url}`) : "";
+    readAsync(url, arrayBuffer => {
+        assert(arrayBuffer, `Loading data file "${url}" failed (no arrayBuffer).`);
         onload(new Uint8Array(arrayBuffer));
         if (dep)
             removeRunDependency(dep)
-    }, function (event) {
+    }, event => {
         if (onerror) {
             onerror()
         } else {
-            throw 'Loading data file "' + url + '" failed.'
+            throw `Loading data file "${url}" failed.`
         }
     });
     if (dep)
         addRunDependency(dep)
+}
+var preloadPlugins = ModuleLuaScript["preloadPlugins"] || [];
+function FS_handledByPreloadPlugin(byteArray, fullname, finish, onerror) {// @ts-ignore
+    if (typeof Browser != "undefined")// @ts-ignore
+        Browser.init();
+    var handled = false;
+    preloadPlugins.forEach(function (plugin) {
+        if (handled)
+            return;
+        if (plugin["canHandle"](fullname)) {
+            plugin["handle"](byteArray, fullname, finish, onerror);
+            handled = true
+        }
+    });
+    return handled
+}
+function FS_createPreloadedFile(parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) {
+    var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
+    var dep = getUniqueRunDependency(`cp ${fullname}`);
+    function processData(byteArray) {
+        function finish(byteArray) {
+            if (preFinish)
+                preFinish();
+            if (!dontCreateFile) {
+                FS.createDataFile(parent, name, byteArray, canRead, canWrite, canOwn)
+            }
+            if (onload)
+                onload();
+            removeRunDependency(dep)
+        }
+        if (FS_handledByPreloadPlugin(byteArray, fullname, finish, () => {
+                if (onerror)
+                    onerror();
+                    removeRunDependency(dep)
+                })) {
+                return
+            }
+        finish(byteArray)
+    }
+    addRunDependency(dep);
+    if (typeof url == "string") {
+        asyncLoad(url, byteArray => processData(byteArray), onerror)
+    } else {
+        processData(url)
+    }
+}
+function FS_modeStringToFlags(str) {
+    var flagModes = {
+        "r": 0,
+        "r+": 2,
+        "w": 512 | 64 | 1,
+        "w+": 512 | 64 | 2,
+        "a": 1024 | 64 | 1,
+        "a+": 1024 | 64 | 2
+    };
+    var flags = flagModes[str];
+    if (typeof flags == "undefined") {
+        throw new Error(`Unknown file open mode: ${str}`)
+    }
+    return flags
+}
+function FS_getMode(canRead, canWrite) {
+    var mode = 0;
+    if (canRead)
+        mode |= 292 | 73;
+    if (canWrite)
+        mode |= 146;
+    return mode
 }
 var FS = {
     root: null,
@@ -4190,7 +3208,7 @@ var FS = {
     filesystems: null,
     syncFSRequests: 0,
     lookupPath: (path, opts = {}) => {
-        path = PATH_FS.resolve(FS.cwd(), path);
+        path = PATH_FS.resolve(path);
         if (!path)
             return {
                 path: "",
@@ -4204,7 +3222,7 @@ var FS = {
         if (opts.recurse_count > 8) {
             throw new FS.ErrnoError(32)
         }
-        var parts = PATH.normalizeArray(path.split("/").filter(p => !!p), false);
+        var parts = path.split("/").filter(p => !!p);
         var current = FS.root;
         var current_path = "/";
         for (var i = 0; i < parts.length; i++) {
@@ -4246,9 +3264,9 @@ var FS = {
                 var mount = node.mount.mountpoint;
                 if (!path)
                     return mount;
-                return mount[mount.length - 1] !== "/" ? mount + "/" + path : mount + path
+                return mount[mount.length - 1] !== "/" ? `${mount}/${path}` : mount + path
             }
-            path = path ? node.name + "/" + path : node.name;
+            path = path ? `${node.name}/${path}` : node.name;
             node = node.parent
         }
     },
@@ -4327,21 +3345,6 @@ var FS = {
     },
     isSocket: mode => {
         return (mode & 49152) === 49152
-    },
-    flagModes: {
-        "r": 0,
-        "r+": 2,
-        "w": 577,
-        "w+": 578,
-        "a": 1089,
-        "a+": 1090
-    },
-    modeStringToFlags: str => {
-        var flags = FS.flagModes[str];
-        if (typeof flags == "undefined") {
-            throw new Error("Unknown file open mode: " + str)
-        }
-        return flags
     },
     flagsToPermissionString: flag => {
         var perms = ["r", "w", "rw"][flag & 3];
@@ -4431,7 +3434,8 @@ var FS = {
             FS.FSStream = function () {
                 this.shared = {}
             };
-            FS.FSStream.prototype = {
+            FS.FSStream.prototype = {};
+            Object.defineProperties(FS.FSStream.prototype, {
                 object: {
                     get: function () {
                         return this.node
@@ -4464,14 +3468,14 @@ var FS = {
                     }
                 },
                 position: {
-                    get function () {
+                    get: function () {
                         return this.shared.position
                     },
                     set: function (val) {
                         this.shared.position = val
                     }
                 }
-            }
+            })
         }
         stream = Object.assign(new FS.FSStream, stream);
         var fd = FS.nextfd(fd_start, fd_end);
@@ -4520,7 +3524,7 @@ var FS = {
         }
         FS.syncFSRequests++;
         if (FS.syncFSRequests > 1) {
-            err("warning: " + FS.syncFSRequests + " FS.syncfs operations in flight at once, probably just doing extra work")
+            err(`warning: ${FS.syncFSRequests} FS.syncfs operations in flight at once, probably just doing extra work`)
         }
         var mounts = FS.getMounts(FS.root.mount);
         var completed = 0;
@@ -4942,7 +3946,7 @@ var FS = {
         if (path === "") {
             throw new FS.ErrnoError(44)
         }
-        flags = typeof flags == "string" ? FS.modeStringToFlags(flags) : flags;
+        flags = typeof flags == "string" ? FS_modeStringToFlags(flags) : flags;
         mode = typeof mode == "undefined" ? 438 : mode;
         if (flags & 64) {
             mode = mode & 4095 | 32768
@@ -5135,7 +4139,7 @@ var FS = {
         return stream.stream_ops.mmap(stream, length, position, prot, flags)
     },
     msync: (stream, buffer, offset, length, mmapFlags) => {
-        if (!stream || !stream.stream_ops.msync) {
+        if (!stream.stream_ops.msync) {
             return 0
         }
         return stream.stream_ops.msync(stream, buffer, offset, length, mmapFlags)
@@ -5151,7 +4155,7 @@ var FS = {
         opts.flags = opts.flags || 0;
         opts.encoding = opts.encoding || "binary";
         if (opts.encoding !== "utf8" && opts.encoding !== "binary") {
-            throw new Error('Invalid encoding type "' + opts.encoding + '"')
+            throw new Error(`Invalid encoding type "${opts.encoding}"`)
         }
         var ret;
         var stream = FS.open(path, opts.flags);
@@ -5214,9 +4218,16 @@ var FS = {
         TTY.register(FS.makedev(6, 0), TTY.default_tty1_ops);
         FS.mkdev("/dev/tty", FS.makedev(5, 0));
         FS.mkdev("/dev/tty1", FS.makedev(6, 0));
-        var random_device = getRandomDevice();
-        FS.createDevice("/dev", "random", random_device);
-        FS.createDevice("/dev", "urandom", random_device);
+        var randomBuffer = new Uint8Array(1024),
+        randomLeft = 0;
+        var randomByte = () => {
+            if (randomLeft === 0) {
+                randomLeft = randomFill(randomBuffer).byteLength
+            }
+            return randomBuffer[--randomLeft]
+        };
+        FS.createDevice("/dev", "random", randomByte);
+        FS.createDevice("/dev", "urandom", randomByte);
         FS.mkdir("/dev/shm");
         FS.mkdir("/dev/shm/tmp")
     },
@@ -5274,6 +4285,7 @@ var FS = {
         if (FS.ErrnoError)
             return;
         FS.ErrnoError = function ErrnoError(errno, node) {
+            this.name = "ErrnoError";
             this.node = node;
             this.setErrno = function (errno) {
                 this.errno = errno
@@ -5317,21 +4329,12 @@ var FS = {
             FS.close(stream)
         }
     },
-    getMode: (canRead, canWrite) => {
-        var mode = 0;
-        if (canRead)
-            mode |= 292 | 73;
-        if (canWrite)
-            mode |= 146;
-        return mode
-    },
     findObject: (path, dontResolveLastLink) => {
         var ret = FS.analyzePath(path, dontResolveLastLink);
-        if (ret.exists) {
-            return ret.object
-        } else {
+        if (!ret.exists) {
             return null
         }
+        return ret.object
     },
     analyzePath: (path, dontResolveLastLink) => {
         try {
@@ -5389,7 +4392,7 @@ var FS = {
     },
     createFile: (parent, name, properties, canRead, canWrite) => {
         var path = PATH.join2(typeof parent == "string" ? parent : FS.getPath(parent), name);
-        var mode = FS.getMode(canRead, canWrite);
+        var mode = FS_getMode(canRead, canWrite);
         return FS.create(path, mode)
     },
     createDataFile: (parent, name, data, canRead, canWrite, canOwn) => {
@@ -5398,7 +4401,7 @@ var FS = {
             parent = typeof parent == "string" ? parent : FS.getPath(parent);
             path = name ? PATH.join2(parent, name) : parent
         }
-        var mode = FS.getMode(canRead, canWrite);
+        var mode = FS_getMode(canRead, canWrite);
         var node = FS.create(path, mode);
         if (data) {
             if (typeof data == "string") {
@@ -5417,7 +4420,7 @@ var FS = {
     },
     createDevice: (parent, name, input, output) => {
         var path = PATH.join2(typeof parent == "string" ? parent : FS.getPath(parent), name);
-        var mode = FS.getMode(!!input, !!output);
+        var mode = FS_getMode(!!input, !!output);
         if (!FS.createDevice.major)
             FS.createDevice.major = 64;
         var dev = FS.makedev(FS.createDevice.major++, 0);
@@ -5531,9 +4534,8 @@ var FS = {
                     throw new Error("Couldn't load " + url + ". Status: " + xhr.status);
                 if (xhr.response !== undefined) {
                     return new Uint8Array(xhr.response || [])
-                } else {
-                    return intArrayFromString(xhr.responseText || "", true)
                 }
+                return intArrayFromString(xhr.responseText || "", true)
             };
             var lazyArray = this;
             lazyArray.setDataGetter(chunkNum => {
@@ -5612,8 +4614,7 @@ var FS = {
                 return fn.apply(null, arguments)
             }
         });
-        stream_ops.read = (stream, buffer, offset, length, position) => {
-            FS.forceLoadFile(node);
+        function writeChunks(stream, buffer, offset, length, position) {
             var contents = stream.node.contents;
             if (position >= contents.length)
                 return 0;
@@ -5628,140 +4629,25 @@ var FS = {
                 }
             }
             return size
+        }
+        stream_ops.read = (stream, buffer, offset, length, position) => {
+            FS.forceLoadFile(node);
+            return writeChunks(stream, buffer, offset, length, position)
+        };
+        stream_ops.mmap = (stream, length, position, prot, flags) => {
+            FS.forceLoadFile(node);
+            var ptr = mmapAlloc(length);// @ts-ignore
+            if (!ptr) {
+                throw new FS.ErrnoError(48)
+            }
+            writeChunks(stream, HEAP8, ptr, length, position);
+            return {
+                ptr: ptr,
+                allocated: true
+            }
         };
         node.stream_ops = stream_ops;
         return node
-    },
-    createPreloadedFile: (parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) => {
-        var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
-        var dep = getUniqueRunDependency("cp " + fullname);
-        function processData(byteArray) {
-            function finish(byteArray) {
-                if (preFinish)
-                    preFinish();
-                if (!dontCreateFile) {
-                    FS.createDataFile(parent, name, byteArray, canRead, canWrite, canOwn)
-                }
-                if (onload)
-                    onload();
-                removeRunDependency(dep)
-            }// @ts-ignore
-            if (Browser.handledByPreloadPlugin(byteArray, fullname, finish, () => {
-                    if (onerror)
-                        onerror();
-                        removeRunDependency(dep)
-                    })) {
-                    return
-                }
-            finish(byteArray)
-        }
-        addRunDependency(dep);
-        if (typeof url == "string") {
-            asyncLoad(url, byteArray => processData(byteArray), onerror)
-        } else {
-            processData(url)
-        }
-    },
-    indexedDB: () => {// @ts-ignore
-        return window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
-    },
-    DB_NAME: () => {
-        return "EM_FS_" + window.location.pathname
-    },
-    DB_VERSION: 20,
-    DB_STORE_NAME: "FILE_DATA",
-    saveFilesToDB: (paths, onload, onerror) => {
-        onload = onload || (() => {});
-        onerror = onerror || (() => {});
-        var indexedDB = FS.indexedDB();
-        try {
-            var openRequest = indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
-        } catch (e) {
-            return onerror(e)
-        }
-        openRequest.onupgradeneeded = () => {
-            out("creating db");
-            var db = openRequest.result;
-            db.createObjectStore(FS.DB_STORE_NAME)
-        };
-        openRequest.onsuccess = () => {
-            var db = openRequest.result;
-            var transaction = db.transaction([FS.DB_STORE_NAME], "readwrite");
-            var files = transaction.objectStore(FS.DB_STORE_NAME);
-            var ok = 0,
-            fail = 0,
-            total = paths.length;
-            function finish() {
-                if (fail == 0)
-                    onload();
-                else
-                    onerror()
-            }
-            paths.forEach(path => {
-                var putRequest = files.put(FS.analyzePath(path).object.contents, path);
-                putRequest.onsuccess = () => {
-                    ok++;
-                    if (ok + fail == total)
-                        finish()
-                };
-                putRequest.onerror = () => {
-                    fail++;
-                    if (ok + fail == total)
-                        finish()
-                }
-            });
-            transaction.onerror = onerror
-        };
-        openRequest.onerror = onerror
-    },
-    loadFilesFromDB: (paths, onload, onerror) => {
-        onload = onload || (() => {});
-        onerror = onerror || (() => {});
-        var indexedDB = FS.indexedDB();
-        try {
-            var openRequest = indexedDB.open(FS.DB_NAME(), FS.DB_VERSION)
-        } catch (e) {
-            return onerror(e)
-        }
-        openRequest.onupgradeneeded = onerror;
-        openRequest.onsuccess = () => {
-            var db = openRequest.result;
-            try {
-                var transaction = db.transaction([FS.DB_STORE_NAME], "readonly")
-            } catch (e) {
-                onerror(e);
-                return
-            }
-            var files = transaction.objectStore(FS.DB_STORE_NAME);
-            var ok = 0,
-            fail = 0,
-            total = paths.length;
-            function finish() {
-                if (fail == 0)
-                    onload();
-                else
-                    onerror()
-            }
-            paths.forEach(path => {
-                var getRequest = files.get(path);
-                getRequest.onsuccess = () => {
-                    if (FS.analyzePath(path).exists) {
-                        FS.unlink(path)
-                    }
-                    FS.createDataFile(PATH.dirname(path), PATH.basename(path), getRequest.result, true, true, true);
-                    ok++;
-                    if (ok + fail == total)
-                        finish()
-                };
-                getRequest.onerror = () => {
-                    fail++;
-                    if (ok + fail == total)
-                        finish()
-                }
-            });
-            transaction.onerror = onerror
-        };
-        openRequest.onerror = onerror
     }
 };
 var SYSCALLS = {
@@ -5774,9 +4660,7 @@ var SYSCALLS = {
         if (dirfd === -100) {
             dir = FS.cwd()
         } else {
-            var dirstream = FS.getStream(dirfd);
-            if (!dirstream)
-                throw new FS.ErrnoError(8);
+            var dirstream = SYSCALLS.getStreamFromFD(dirfd);
             dir = dirstream.path
         }
         if (path.length == 0) {
@@ -5797,31 +4681,44 @@ var SYSCALLS = {
             throw e
         }
         HEAP32[buf >> 2] = stat.dev;
-        HEAP32[buf + 4 >> 2] = 0;
         HEAP32[buf + 8 >> 2] = stat.ino;
         HEAP32[buf + 12 >> 2] = stat.mode;
-        HEAP32[buf + 16 >> 2] = stat.nlink;
+        HEAPU32[buf + 16 >> 2] = stat.nlink;
         HEAP32[buf + 20 >> 2] = stat.uid;
         HEAP32[buf + 24 >> 2] = stat.gid;
         HEAP32[buf + 28 >> 2] = stat.rdev;
-        HEAP32[buf + 32 >> 2] = 0;
-        tempI64 = [stat.size >>> 0, (tempDouble = stat.size, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        tempI64 = [stat.size >>> 0, (tempDouble = stat.size, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
         HEAP32[buf + 40 >> 2] = tempI64[0],
         HEAP32[buf + 44 >> 2] = tempI64[1];
         HEAP32[buf + 48 >> 2] = 4096;
         HEAP32[buf + 52 >> 2] = stat.blocks;
-        HEAP32[buf + 56 >> 2] = stat.atime.getTime() / 1e3 | 0;
-        HEAP32[buf + 60 >> 2] = 0;
-        HEAP32[buf + 64 >> 2] = stat.mtime.getTime() / 1e3 | 0;
-        HEAP32[buf + 68 >> 2] = 0;
-        HEAP32[buf + 72 >> 2] = stat.ctime.getTime() / 1e3 | 0;
-        HEAP32[buf + 76 >> 2] = 0;
-        tempI64 = [stat.ino >>> 0, (tempDouble = stat.ino, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
-        HEAP32[buf + 80 >> 2] = tempI64[0],
-        HEAP32[buf + 84 >> 2] = tempI64[1];
+        var atime = stat.atime.getTime();
+        var mtime = stat.mtime.getTime();
+        var ctime = stat.ctime.getTime();
+        tempI64 = [Math.floor(atime / 1e3) >>> 0, (tempDouble = Math.floor(atime / 1e3), +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 56 >> 2] = tempI64[0],
+        HEAP32[buf + 60 >> 2] = tempI64[1];
+        HEAPU32[buf + 64 >> 2] = atime % 1e3 * 1e3;
+        tempI64 = [Math.floor(mtime / 1e3) >>> 0, (tempDouble = Math.floor(mtime / 1e3), +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 72 >> 2] = tempI64[0],
+        HEAP32[buf + 76 >> 2] = tempI64[1];
+        HEAPU32[buf + 80 >> 2] = mtime % 1e3 * 1e3;
+        tempI64 = [Math.floor(ctime / 1e3) >>> 0, (tempDouble = Math.floor(ctime / 1e3), +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 88 >> 2] = tempI64[0],
+        HEAP32[buf + 92 >> 2] = tempI64[1];
+        HEAPU32[buf + 96 >> 2] = ctime % 1e3 * 1e3;
+        tempI64 = [stat.ino >>> 0, (tempDouble = stat.ino, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        HEAP32[buf + 104 >> 2] = tempI64[0],
+        HEAP32[buf + 108 >> 2] = tempI64[1];
         return 0
     },
     doMsync: function (addr, stream, len, flags, offset) {
+        if (!FS.isFile(stream.node.mode)) {
+            throw new FS.ErrnoError(43)
+        }
+        if (flags & 2) {
+            return 0
+        }
         var buffer = HEAPU8.slice(addr, addr + len);
         FS.msync(stream, buffer, offset, len, flags)
     },
@@ -5852,7 +4749,7 @@ function ___syscall_dup3(fd, suggestFD, flags) {
             FS.close(suggest);
         return FS.createStream(old, suggestFD, suggestFD + 1).fd
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -5905,7 +4802,7 @@ function ___syscall_fcntl64(fd, cmd, varargs) {
             }
         }
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -5958,10 +4855,10 @@ function ___syscall_ioctl(fd, op, varargs) {
                 return 0
             }
         default:
-            abort("bad ioctl syscall " + op)
+            return -28
         }
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -5971,7 +4868,7 @@ function ___syscall_lstat64(path, buf) {
         path = SYSCALLS.getStr(path);
         return SYSCALLS.doStat(FS.lstat, path, buf)
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -5984,7 +4881,7 @@ function ___syscall_openat(dirfd, path, flags, varargs) {
         var mode = varargs ? SYSCALLS.get() : 0;
         return FS.open(path, flags, mode).fd
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -5998,7 +4895,7 @@ function ___syscall_renameat(olddirfd, oldpath, newdirfd, newpath) {
         FS.rename(oldpath, newpath);
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -6009,7 +4906,7 @@ function ___syscall_rmdir(path) {
         FS.rmdir(path);
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
@@ -6027,13 +4924,10 @@ function ___syscall_unlinkat(dirfd, path, flags) {
         }
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return -e.errno
     }
-}
-function __emscripten_date_now() {
-    return Date.now()
 }
 var nowIsMonotonic = true;
 function __emscripten_get_now_is_monotonic() {
@@ -6042,8 +4936,11 @@ function __emscripten_get_now_is_monotonic() {
 function __emscripten_throw_longjmp() {
     throw Infinity
 }
+function readI53FromI64(ptr) {
+    return HEAPU32[ptr >> 2] + HEAP32[ptr + 4 >> 2] * 4294967296
+}
 function __gmtime_js(time, tmPtr) {
-    var date = new Date(HEAP32[time >> 2] * 1e3);
+    var date = new Date(readI53FromI64(time) * 1e3);
     HEAP32[tmPtr >> 2] = date.getUTCSeconds();
     HEAP32[tmPtr + 4 >> 2] = date.getUTCMinutes();
     HEAP32[tmPtr + 8 >> 2] = date.getUTCHours();
@@ -6055,8 +4952,19 @@ function __gmtime_js(time, tmPtr) {
     var yday = (date.getTime() - start) / (1e3 * 60 * 60 * 24) | 0;
     HEAP32[tmPtr + 28 >> 2] = yday
 }
+function isLeapYear(year) {
+    return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+}
+var MONTH_DAYS_LEAP_CUMULATIVE = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
+var MONTH_DAYS_REGULAR_CUMULATIVE = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+function ydayFromDate(date) {
+    var leap = isLeapYear(date.getFullYear());
+    var monthDaysCumulative = leap ? MONTH_DAYS_LEAP_CUMULATIVE : MONTH_DAYS_REGULAR_CUMULATIVE;
+    var yday = monthDaysCumulative[date.getMonth()] + date.getDate() - 1;
+    return yday
+}
 function __localtime_js(time, tmPtr) {
-    var date = new Date(HEAP32[time >> 2] * 1e3);
+    var date = new Date(readI53FromI64(time) * 1e3);
     HEAP32[tmPtr >> 2] = date.getSeconds();
     HEAP32[tmPtr + 4 >> 2] = date.getMinutes();
     HEAP32[tmPtr + 8 >> 2] = date.getHours();
@@ -6064,10 +4972,10 @@ function __localtime_js(time, tmPtr) {
     HEAP32[tmPtr + 16 >> 2] = date.getMonth();
     HEAP32[tmPtr + 20 >> 2] = date.getFullYear() - 1900;
     HEAP32[tmPtr + 24 >> 2] = date.getDay();
-    var start = new Date(date.getFullYear(), 0, 1);
-    var yday = (date.getTime() - start.getTime()) / (1e3 * 60 * 60 * 24) | 0;
+    var yday = ydayFromDate(date) | 0;
     HEAP32[tmPtr + 28 >> 2] = yday;
     HEAP32[tmPtr + 36 >> 2] =  - (date.getTimezoneOffset() * 60);
+    var start = new Date(date.getFullYear(), 0, 1);
     var summerOffset = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
     var winterOffset = start.getTimezoneOffset();// @ts-ignore
     var dst = (summerOffset != winterOffset && date.getTimezoneOffset() == Math.min(winterOffset, summerOffset)) | 0;
@@ -6089,23 +4997,34 @@ function __mktime_js(tmPtr) {
         date.setTime(date.getTime() + (trueOffset - guessedOffset) * 6e4)
     }
     HEAP32[tmPtr + 24 >> 2] = date.getDay();
-    var yday = (date.getTime() - start.getTime()) / (1e3 * 60 * 60 * 24) | 0;
+    var yday = ydayFromDate(date) | 0;
     HEAP32[tmPtr + 28 >> 2] = yday;
     HEAP32[tmPtr >> 2] = date.getSeconds();
     HEAP32[tmPtr + 4 >> 2] = date.getMinutes();
     HEAP32[tmPtr + 8 >> 2] = date.getHours();
     HEAP32[tmPtr + 12 >> 2] = date.getDate();
-    HEAP32[tmPtr + 16 >> 2] = date.getMonth();
+    HEAP32[tmPtr + 16 >> 2] = date.getMonth();// @ts-ignore
+    HEAP32[tmPtr + 20 >> 2] = date.getYear();
     return date.getTime() / 1e3 | 0
 }
-function _tzset_impl(timezone, daylight, tzname) {
+function stringToUTF8(str, outPtr, maxBytesToWrite) {
+    return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite)
+}
+function stringToNewUTF8(str) {
+    var size = lengthBytesUTF8(str) + 1;
+    var ret = _malloc(size);
+    if (ret)
+        stringToUTF8(str, ret, size);
+    return ret
+}
+function __tzset_js(timezone, daylight, tzname) {
     var currentYear = (new Date).getFullYear();
     var winter = new Date(currentYear, 0, 1);
     var summer = new Date(currentYear, 6, 1);
     var winterOffset = winter.getTimezoneOffset();
     var summerOffset = summer.getTimezoneOffset();
     var stdTimezoneOffset = Math.max(winterOffset, summerOffset);
-    HEAP32[timezone >> 2] = stdTimezoneOffset * 60;
+    HEAPU32[timezone >> 2] = stdTimezoneOffset * 60;
     HEAP32[daylight >> 2] = Number(winterOffset != summerOffset);
     function extractZone(date) {
         var match = date.toTimeString().match(/\(([A-Za-z ]+)\)$/);
@@ -6113,8 +5032,8 @@ function _tzset_impl(timezone, daylight, tzname) {
     }
     var winterName = extractZone(winter);
     var summerName = extractZone(summer);
-    var winterNamePtr = allocateUTF8(winterName);
-    var summerNamePtr = allocateUTF8(summerName);
+    var winterNamePtr = stringToNewUTF8(winterName);
+    var summerNamePtr = stringToNewUTF8(summerName);
     if (summerOffset < winterOffset) {
         HEAPU32[tzname >> 2] = winterNamePtr;
         HEAPU32[tzname + 4 >> 2] = summerNamePtr
@@ -6123,19 +5042,16 @@ function _tzset_impl(timezone, daylight, tzname) {
         HEAPU32[tzname + 4 >> 2] = winterNamePtr
     }
 }
-function __tzset_js(timezone, daylight, tzname) {// @ts-ignore
-    if (__tzset_js.called)
-        return;// @ts-ignore
-    __tzset_js.called = true;
-    _tzset_impl(timezone, daylight, tzname)
-}
 function _abort() {
     abort("")
+}
+function _emscripten_date_now() {
+    return Date.now()
 }
 var _emscripten_get_now;
 if (ENVIRONMENT_IS_NODE) {
     _emscripten_get_now = () => {// @ts-ignore
-        var t = process["hrtime"]();
+        var t = process.hrtime();
         return t[0] * 1e3 + t[1] / 1e6
     }
 } else
@@ -6147,9 +5063,10 @@ function getHeapMax() {
     return 2147483648
 }
 function emscripten_realloc_buffer(size) {
+    var b = wasmMemory.buffer;
     try {
-        wasmMemory.grow(size - buffer.byteLength + 65535 >>> 16);
-        updateGlobalBufferAndViews(wasmMemory.buffer);
+        wasmMemory.grow(size - b.byteLength + 65535 >>> 16);
+        updateMemoryViews();
         return 1
     } catch (e) {}
 }
@@ -6160,7 +5077,7 @@ function _emscripten_resize_heap(requestedSize) {
     if (requestedSize > maxHeapSize) {
         return false
     }
-    let alignUp = (x, multiple) => x + (multiple - x % multiple) % multiple;
+    var alignUp = (x, multiple) => x + (multiple - x % multiple) % multiple;
     for (var cutDown = 1; cutDown <= 4; cutDown *= 2) {
         var overGrownHeapSize = oldSize * (1 + .2 / cutDown);
         overGrownHeapSize = Math.min(overGrownHeapSize, requestedSize + 100663296);
@@ -6202,12 +5119,18 @@ function getEnvStrings() {// @ts-ignore
     }// @ts-ignore
     return getEnvStrings.strings
 }
+function stringToAscii(str, buffer) {
+    for (var i = 0; i < str.length; ++i) {
+        HEAP8[buffer++ >> 0] = str.charCodeAt(i)
+    }
+    HEAP8[buffer >> 0] = 0
+}
 function _environ_get(__environ, environ_buf) {
     var bufSize = 0;
     getEnvStrings().forEach(function (string, i) {
         var ptr = environ_buf + bufSize;
         HEAPU32[__environ + i * 4 >> 2] = ptr;
-        writeAsciiToMemory(string, ptr);
+        stringToAscii(string, ptr);
         bufSize += string.length + 1
     });
     return 0
@@ -6222,16 +5145,27 @@ function _environ_sizes_get(penviron_count, penviron_buf_size) {
     HEAPU32[penviron_buf_size >> 2] = bufSize;
     return 0
 }
-function _exit(status) {
-    exit(status)
+function _proc_exit(code) {
+    EXITSTATUS = code;
+    if (!keepRuntimeAlive()) {
+        if (ModuleLuaScript["onExit"])
+            ModuleLuaScript["onExit"](code);
+        ABORT = true
+    }
+    quit_(code, new ExitStatus(code))
 }
+function exitJS(status, implicit) {
+    EXITSTATUS = status;
+    _proc_exit(status)
+}
+var _exit = exitJS;
 function _fd_close(fd) {
     try {
         var stream = SYSCALLS.getStreamFromFD(fd);
         FS.close(stream);
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return e.errno
     }
@@ -6247,7 +5181,10 @@ function doReadv(stream, iov, iovcnt, offset) {
             return -1;
         ret += curr;
         if (curr < len)
-            break
+            break;
+        if (typeof offset !== "undefined") {
+            offset += curr
+        }
     }
     return ret
 }
@@ -6255,10 +5192,10 @@ function _fd_read(fd, iov, iovcnt, pnum) {
     try {
         var stream = SYSCALLS.getStreamFromFD(fd);
         var num = doReadv(stream, iov, iovcnt);
-        HEAP32[pnum >> 2] = num;
+        HEAPU32[pnum >> 2] = num;
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return e.errno
     }
@@ -6273,14 +5210,14 @@ function _fd_seek(fd, offset_low, offset_high, whence, newOffset) {
             return 61;
         var stream = SYSCALLS.getStreamFromFD(fd);
         FS.llseek(stream, offset, whence);
-        tempI64 = [stream.position >>> 0, (tempDouble = stream.position, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
+        tempI64 = [stream.position >>> 0, (tempDouble = stream.position, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? +Math.floor(tempDouble / 4294967296) >>> 0 : ~~+Math.ceil((tempDouble -  + (~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0)],
         HEAP32[newOffset >> 2] = tempI64[0],
         HEAP32[newOffset + 4 >> 2] = tempI64[1];
         if (stream.getdents && offset === 0 && whence === 0)
             stream.getdents = null;
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return e.errno
     }
@@ -6294,7 +5231,10 @@ function doWritev(stream, iov, iovcnt, offset) {
         var curr = FS.write(stream, HEAP8, ptr, len, offset);
         if (curr < 0)
             return -1;
-        ret += curr
+        ret += curr;
+        if (typeof offset !== "undefined") {
+            offset += curr
+        }
     }
     return ret
 }
@@ -6305,33 +5245,24 @@ function _fd_write(fd, iov, iovcnt, pnum) {
         HEAPU32[pnum >> 2] = num;
         return 0
     } catch (e) {
-        if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError))
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
             throw e;
         return e.errno
     }
 }
-function _getTempRet0() {
-    return getTempRet0()
-}
-function _setTempRet0(val) {
-    setTempRet0(val)
-}
-function __isLeapYear(year) {
-    return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
-}
-function __arraySum(array, index) {
+function arraySum(array, index) {
     var sum = 0;
     for (var i = 0; i <= index; sum += array[i++]) {}
     return sum
 }
-var __MONTH_DAYS_LEAP = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-var __MONTH_DAYS_REGULAR = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-function __addDays(date, days) {
+var MONTH_DAYS_LEAP = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+var MONTH_DAYS_REGULAR = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+function addDays(date, days) {
     var newDate = new Date(date.getTime());
     while (days > 0) {
-        var leap = __isLeapYear(newDate.getFullYear());
+        var leap = isLeapYear(newDate.getFullYear());
         var currentMonth = newDate.getMonth();
-        var daysInCurrentMonth = (leap ? __MONTH_DAYS_LEAP : __MONTH_DAYS_REGULAR)[currentMonth];
+        var daysInCurrentMonth = (leap ? MONTH_DAYS_LEAP : MONTH_DAYS_REGULAR)[currentMonth];
         if (days > daysInCurrentMonth - newDate.getDate()) {
             days -= daysInCurrentMonth - newDate.getDate() + 1;
             newDate.setDate(1);
@@ -6347,6 +5278,9 @@ function __addDays(date, days) {
         }
     }
     return newDate
+}
+function writeArrayToMemory(array, buffer) {
+    HEAP8.set(array, buffer)
 }
 function _strftime(s, maxsize, format, tm) {
     var tm_zone = HEAP32[tm + 40 >> 2];
@@ -6440,7 +5374,7 @@ function _strftime(s, maxsize, format, tm) {
         }
     }
     function getWeekBasedYear(date) {
-        var thisDate = __addDays(new Date(date.tm_year + 1900, 0, 1), date.tm_yday);
+        var thisDate = addDays(new Date(date.tm_year + 1900, 0, 1), date.tm_yday);
         var janFourthThisYear = new Date(thisDate.getFullYear(), 0, 4);
         var janFourthNextYear = new Date(thisDate.getFullYear() + 1, 0, 4);
         var firstWeekStartThisYear = getFirstWeekStartDate(janFourthThisYear);
@@ -6448,12 +5382,10 @@ function _strftime(s, maxsize, format, tm) {
         if (compareByDay(firstWeekStartThisYear, thisDate) <= 0) {
             if (compareByDay(firstWeekStartNextYear, thisDate) <= 0) {
                 return thisDate.getFullYear() + 1
-            } else {
-                return thisDate.getFullYear()
             }
-        } else {
-            return thisDate.getFullYear() - 1
+            return thisDate.getFullYear()
         }
+        return thisDate.getFullYear() - 1
     }
     var EXPANSION_RULES_2 = {
         "%a": function (date) {
@@ -6496,7 +5428,7 @@ function _strftime(s, maxsize, format, tm) {
             return leadingNulls(twelveHour, 2)
         },
         "%j": function (date) {
-            return leadingNulls(date.tm_mday + __arraySum(__isLeapYear(date.tm_year + 1900) ? __MONTH_DAYS_LEAP : __MONTH_DAYS_REGULAR, date.tm_mon - 1), 3)
+            return leadingNulls(date.tm_mday + arraySum(isLeapYear(date.tm_year + 1900) ? MONTH_DAYS_LEAP : MONTH_DAYS_REGULAR, date.tm_mon - 1), 3)
         },
         "%m": function (date) {
             return leadingNulls(date.tm_mon + 1, 2)
@@ -6510,9 +5442,8 @@ function _strftime(s, maxsize, format, tm) {
         "%p": function (date) {
             if (date.tm_hour >= 0 && date.tm_hour < 12) {
                 return "AM"
-            } else {
-                return "PM"
             }
+            return "PM"
         },
         "%S": function (date) {
             return leadingNulls(date.tm_sec, 2)
@@ -6535,12 +5466,12 @@ function _strftime(s, maxsize, format, tm) {
             if (!val) {
                 val = 52;
                 var dec31 = (date.tm_wday + 7 - date.tm_yday - 1) % 7;
-                if (dec31 == 4 || dec31 == 5 && __isLeapYear(date.tm_year % 400 - 1)) {
+                if (dec31 == 4 || dec31 == 5 && isLeapYear(date.tm_year % 400 - 1)) {
                     val++
                 }
             } else if (val == 53) {
                 var jan1 = (date.tm_wday + 371 - date.tm_yday) % 7;
-                if (jan1 != 4 && (jan1 != 3 || !__isLeapYear(date.tm_year)))
+                if (jan1 != 4 && (jan1 != 3 || !isLeapYear(date.tm_year)))
                     val = 1
             }
             return leadingNulls(val, 2)
@@ -6628,6 +5559,7 @@ function _system(command) {
     setErrNo(52);
     return -1
 }
+var wasmTableMirror = [];
 function runAndAbortIfError(func) {
     try {
         return func()
@@ -6635,47 +5567,44 @@ function runAndAbortIfError(func) {
         abort(e)
     }
 }
-function callUserCallback(func, synchronous) {
+function handleException(e) {
+    if (e instanceof ExitStatus || e == "unwind") {
+        return EXITSTATUS
+    }
+    quit_(1, e)
+}
+function maybeExit() {
+    if (!keepRuntimeAlive()) {
+        try {
+            _exit(EXITSTATUS)
+        } catch (e) {
+            handleException(e)
+        }
+    }
+}
+function callUserCallback(func) {
     if (ABORT) {
         return
     }
-    if (synchronous) {
-        func();
-        return
-    }
     try {
-        func()
+        func();
+        maybeExit()
     } catch (e) {
         handleException(e)
     }
 }
-function runtimeKeepalivePush() {}
-function runtimeKeepalivePop() {}
 var Asyncify = {
-    State: {
-        Normal: 0,
-        Unwinding: 1,
-        Rewinding: 2,
-        Disabled: 3
-    },
-    state: 0,
-    StackSize: 4096,
-    currData: null,
-    handleSleepReturnValue: 0,
-    exportCallStack: [],
-    callStackNameToId: {},
-    callStackIdToName: {},
-    callStackId: 0,
-    asyncPromiseHandlers: null,
-    sleepCallbacks: [],
-    getCallStackId: function (funcName) {
-        var id = Asyncify.callStackNameToId[funcName];
-        if (id === undefined) {
-            id = Asyncify.callStackId++;
-            Asyncify.callStackNameToId[funcName] = id;
-            Asyncify.callStackIdToName[id] = funcName
+    instrumentWasmImports: function (imports) {
+        var importPatterns = [/^invoke_.*$/, /^fd_sync$/, /^__wasi_fd_sync$/, /^__asyncjs__.*$/, /^emscripten_sleep$/, /^emscripten_wget$/, /^emscripten_wget_data$/, /^emscripten_scan_registers$/, /^emscripten_lazy_load_code$/, /^_load_secondary_module$/, /^emscripten_fiber_swap$/];
+        for (var x in imports) {
+            (function (x) {
+                var original = imports[x];
+                var sig = original.sig;
+                if (typeof original == "function") {
+                    var isAsyncifyImport = original.isAsync || importPatterns.some(pattern => !!x.match(pattern))
+                }
+            })(x)
         }
-        return id
     },
     instrumentWasmExports: function (exports) {
         var ret = {};
@@ -6702,10 +5631,35 @@ var Asyncify = {
         }
         return ret
     },
+    State: {
+        Normal: 0,
+        Unwinding: 1,
+        Rewinding: 2,
+        Disabled: 3
+    },
+    state: 0,
+    StackSize: 4096,
+    currData: null,
+    handleSleepReturnValue: 0,
+    exportCallStack: [],
+    callStackNameToId: {},
+    callStackIdToName: {},
+    callStackId: 0,
+    asyncPromiseHandlers: null,
+    sleepCallbacks: [],
+    getCallStackId: function (funcName) {
+        var id = Asyncify.callStackNameToId[funcName];
+        if (id === undefined) {
+            id = Asyncify.callStackId++;
+            Asyncify.callStackNameToId[funcName] = id;
+            Asyncify.callStackIdToName[id] = funcName
+        }
+        return id
+    },
     maybeStopUnwind: function () {
         if (Asyncify.currData && Asyncify.state === Asyncify.State.Unwinding && Asyncify.exportCallStack.length === 0) {
             Asyncify.state = Asyncify.State.Normal;
-            runAndAbortIfError(ModuleLuaScript["_asyncify_stop_unwind"]);// @ts-ignore
+            runAndAbortIfError(_asyncify_stop_unwind);// @ts-ignore
             if (typeof Fibers != "undefined") {// @ts-ignore
                 Fibers.trampoline()
             }
@@ -6750,16 +5704,16 @@ var Asyncify = {
         if (Asyncify.state === Asyncify.State.Normal) {
             var reachedCallback = false;
             var reachedAfterCallback = false;
-            startAsync(handleSleepReturnValue => {
+            startAsync((handleSleepReturnValue = 0) => {
                 if (ABORT)
                     return;
-                Asyncify.handleSleepReturnValue = handleSleepReturnValue || 0;
+                Asyncify.handleSleepReturnValue = handleSleepReturnValue;
                 reachedCallback = true;
                 if (!reachedAfterCallback) {
                     return
                 }
                 Asyncify.state = Asyncify.State.Rewinding;
-                runAndAbortIfError(() => ModuleLuaScript["_asyncify_start_rewind"](Asyncify.currData));// @ts-ignore
+                runAndAbortIfError(() => _asyncify_start_rewind(Asyncify.currData));// @ts-ignore
                 if (typeof Browser != "undefined" && Browser.mainLoop.func) {// @ts-ignore
                     Browser.mainLoop.resume()
                 }
@@ -6787,20 +5741,20 @@ var Asyncify = {
             reachedAfterCallback = true;
             if (!reachedCallback) {
                 Asyncify.state = Asyncify.State.Unwinding;
-                Asyncify.currData = Asyncify.allocateData();
-                runAndAbortIfError(() => ModuleLuaScript["_asyncify_start_unwind"](Asyncify.currData));// @ts-ignore
+                Asyncify.currData = Asyncify.allocateData();// @ts-ignore
                 if (typeof Browser != "undefined" && Browser.mainLoop.func) {// @ts-ignore
                     Browser.mainLoop.pause()
                 }
+                runAndAbortIfError(() => _asyncify_start_unwind(Asyncify.currData))
             }
         } else if (Asyncify.state === Asyncify.State.Rewinding) {
             Asyncify.state = Asyncify.State.Normal;
-            runAndAbortIfError(ModuleLuaScript["_asyncify_stop_rewind"]);
+            runAndAbortIfError(_asyncify_stop_rewind);
             _free(Asyncify.currData);
             Asyncify.currData = null;
             Asyncify.sleepCallbacks.forEach(func => callUserCallback(func))
         } else {
-            abort("invalid state: " + Asyncify.state)
+            abort(`invalid state: ${Asyncify.state}`)
         }
         return Asyncify.handleSleepReturnValue
     },
@@ -6855,17 +5809,9 @@ Object.defineProperties(FSNode.prototype, {
     }
 });
 FS.FSNode = FSNode;
+FS.createPreloadedFile = FS_createPreloadedFile;
 FS.staticInit();
-var ASSERTIONS = false;
-function intArrayFromString(stringy, dontAddNull, length) {
-    var len = length > 0 ? length : lengthBytesUTF8(stringy) + 1;
-    var u8array = new Array(len);
-    var numBytesWritten = stringToUTF8Array(stringy, u8array, 0, u8array.length);
-    if (dontAddNull)
-        u8array.length = numBytesWritten;
-    return u8array
-}
-var asmLibraryArg = {
+var wasmImports = {
     "__assert_fail": ___assert_fail,
     "__asyncjs__animlist_init": __asyncjs__animlist_init,
     "__asyncjs__atlas_init": __asyncjs__atlas_init,
@@ -6906,7 +5852,6 @@ var asmLibraryArg = {
     "__js__animsprite_init_from_atlas": __js__animsprite_init_from_atlas,
     "__js__animsprite_init_from_tweenlerp": __js__animsprite_init_from_tweenlerp,
     "__js__animsprite_is_frame_animation": __js__animsprite_is_frame_animation,
-    "__js__animsprite_restart": __js__animsprite_restart,
     "__js__animsprite_set_delay": __js__animsprite_set_delay,
     "__js__animsprite_set_loop": __js__animsprite_set_loop,
     "__js__atlas_destroy": __js__atlas_destroy,
@@ -7006,12 +5951,6 @@ var asmLibraryArg = {
     "__js__conductor_set_character": __js__conductor_set_character,
     "__js__conductor_use_strum_line": __js__conductor_use_strum_line,
     "__js__conductor_use_strums": __js__conductor_use_strums,
-    "__js__countdown_get_drawable": __js__countdown_get_drawable,
-    "__js__countdown_has_ended": __js__countdown_has_ended,
-    "__js__countdown_ready": __js__countdown_ready,
-    "__js__countdown_set_bpm": __js__countdown_set_bpm,
-    "__js__countdown_set_default_animation2": __js__countdown_set_default_animation2,
-    "__js__countdown_start": __js__countdown_start,
     "__js__dialogue_apply_state": __js__dialogue_apply_state,
     "__js__dialogue_apply_state2": __js__dialogue_apply_state2,
     "__js__dialogue_close": __js__dialogue_close,
@@ -7022,65 +5961,6 @@ var asmLibraryArg = {
     "__js__dialogue_set_alpha": __js__dialogue_set_alpha,
     "__js__dialogue_set_antialiasing": __js__dialogue_set_antialiasing,
     "__js__dialogue_set_offsetcolor": __js__dialogue_set_offsetcolor,
-    "__js__drawable_blend_enable": __js__drawable_blend_enable,
-    "__js__drawable_blend_set": __js__drawable_blend_set,
-    "__js__drawable_get_alpha": __js__drawable_get_alpha,
-    "__js__drawable_get_modifier": __js__drawable_get_modifier,
-    "__js__drawable_get_shader": __js__drawable_get_shader,
-    "__js__drawable_get_z_index": __js__drawable_get_z_index,
-    "__js__drawable_set_alpha": __js__drawable_set_alpha,
-    "__js__drawable_set_antialiasing": __js__drawable_set_antialiasing,
-    "__js__drawable_set_offsetcolor": __js__drawable_set_offsetcolor,
-    "__js__drawable_set_offsetcolor_to_default": __js__drawable_set_offsetcolor_to_default,
-    "__js__drawable_set_shader": __js__drawable_set_shader,
-    "__js__drawable_set_z_index": __js__drawable_set_z_index,
-    "__js__drawable_set_z_offset": __js__drawable_set_z_offset,
-    "__js__healthbar_animation_end": __js__healthbar_animation_end,
-    "__js__healthbar_animation_restart": __js__healthbar_animation_restart,
-    "__js__healthbar_animation_set": __js__healthbar_animation_set,
-    "__js__healthbar_bump_enable": __js__healthbar_bump_enable,
-    "__js__healthbar_disable_icon_overlap": __js__healthbar_disable_icon_overlap,
-    "__js__healthbar_disable_progress_animation": __js__healthbar_disable_progress_animation,
-    "__js__healthbar_disable_warnings": __js__healthbar_disable_warnings,
-    "__js__healthbar_enable_extra_length": __js__healthbar_enable_extra_length,
-    "__js__healthbar_enable_low_health_flash_warning": __js__healthbar_enable_low_health_flash_warning,
-    "__js__healthbar_enable_vertical": __js__healthbar_enable_vertical,
-    "__js__healthbar_get_bar_midpoint": __js__healthbar_get_bar_midpoint,
-    "__js__healthbar_get_drawable": __js__healthbar_get_drawable,
-    "__js__healthbar_get_percent": __js__healthbar_get_percent,
-    "__js__healthbar_hide_warnings": __js__healthbar_hide_warnings,
-    "__js__healthbar_load_warnings": __js__healthbar_load_warnings,
-    "__js__healthbar_set_alpha": __js__healthbar_set_alpha,
-    "__js__healthbar_set_bpm": __js__healthbar_set_bpm,
-    "__js__healthbar_set_bump_animation_opponent": __js__healthbar_set_bump_animation_opponent,
-    "__js__healthbar_set_bump_animation_player": __js__healthbar_set_bump_animation_player,
-    "__js__healthbar_set_health_position": __js__healthbar_set_health_position,
-    "__js__healthbar_set_health_position2": __js__healthbar_set_health_position2,
-    "__js__healthbar_set_opponent_bar_color": __js__healthbar_set_opponent_bar_color,
-    "__js__healthbar_set_opponent_bar_color_rgb8": __js__healthbar_set_opponent_bar_color_rgb8,
-    "__js__healthbar_set_player_bar_color": __js__healthbar_set_player_bar_color,
-    "__js__healthbar_set_player_bar_color_rgb8": __js__healthbar_set_player_bar_color_rgb8,
-    "__js__healthbar_set_visible": __js__healthbar_set_visible,
-    "__js__healthbar_show_drain_warning": __js__healthbar_show_drain_warning,
-    "__js__healthbar_show_locked_warning": __js__healthbar_show_locked_warning,
-    "__js__healthbar_state_background_add": __js__healthbar_state_background_add,
-    "__js__healthbar_state_background_add2": __js__healthbar_state_background_add2,
-    "__js__healthbar_state_opponent_add": __js__healthbar_state_opponent_add,
-    "__js__healthbar_state_opponent_add2": __js__healthbar_state_opponent_add2,
-    "__js__healthbar_state_player_add": __js__healthbar_state_player_add,
-    "__js__healthbar_state_player_add2": __js__healthbar_state_player_add2,
-    "__js__healthbar_state_toggle": __js__healthbar_state_toggle,
-    "__js__healthbar_state_toggle_background": __js__healthbar_state_toggle_background,
-    "__js__healthbar_state_toggle_opponent": __js__healthbar_state_toggle_opponent,
-    "__js__healthbar_state_toggle_player": __js__healthbar_state_toggle_player,
-    "__js__healthwatcher_add_opponent": __js__healthwatcher_add_opponent,
-    "__js__healthwatcher_add_player": __js__healthwatcher_add_player,
-    "__js__healthwatcher_balance": __js__healthwatcher_balance,
-    "__js__healthwatcher_clear": __js__healthwatcher_clear,
-    "__js__healthwatcher_enable_dead": __js__healthwatcher_enable_dead,
-    "__js__healthwatcher_enable_recover": __js__healthwatcher_enable_recover,
-    "__js__healthwatcher_has_deads": __js__healthwatcher_has_deads,
-    "__js__healthwatcher_reset_opponents": __js__healthwatcher_reset_opponents,
     "__js__json_load_from_string": __js__json_load_from_string,
     "__js__kdmyEngine_change_window_title": __js__kdmyEngine_change_window_title,
     "__js__kdmyEngine_create_array": __js__kdmyEngine_create_array,
@@ -7094,7 +5974,6 @@ var asmLibraryArg = {
     "__js__kdmyEngine_parse_json": __js__kdmyEngine_parse_json,
     "__js__kdmyEngine_read_array_item_object": __js__kdmyEngine_read_array_item_object,
     "__js__kdmyEngine_read_prop_boolean": __js__kdmyEngine_read_prop_boolean,
-    "__js__kdmyEngine_read_prop_double": __js__kdmyEngine_read_prop_double,
     "__js__kdmyEngine_read_prop_float": __js__kdmyEngine_read_prop_float,
     "__js__kdmyEngine_read_prop_floatboolean": __js__kdmyEngine_read_prop_floatboolean,
     "__js__kdmyEngine_read_prop_integer": __js__kdmyEngine_read_prop_integer,
@@ -7102,14 +5981,8 @@ var asmLibraryArg = {
     "__js__kdmyEngine_read_prop_string": __js__kdmyEngine_read_prop_string,
     "__js__kdmyEngine_read_window_object": __js__kdmyEngine_read_window_object,
     "__js__kdmyEngine_require_window_attention": __js__kdmyEngine_require_window_attention,
-    "__js__kdmyEngine_write_in_array_boolean": __js__kdmyEngine_write_in_array_boolean,
-    "__js__kdmyEngine_write_in_array_double": __js__kdmyEngine_write_in_array_double,
-    "__js__kdmyEngine_write_in_array_float": __js__kdmyEngine_write_in_array_float,
-    "__js__kdmyEngine_write_in_array_integer": __js__kdmyEngine_write_in_array_integer,
     "__js__kdmyEngine_write_in_array_object": __js__kdmyEngine_write_in_array_object,
-    "__js__kdmyEngine_write_in_array_string": __js__kdmyEngine_write_in_array_string,
     "__js__kdmyEngine_write_prop_boolean": __js__kdmyEngine_write_prop_boolean,
-    "__js__kdmyEngine_write_prop_double": __js__kdmyEngine_write_prop_double,
     "__js__kdmyEngine_write_prop_float": __js__kdmyEngine_write_prop_float,
     "__js__kdmyEngine_write_prop_integer": __js__kdmyEngine_write_prop_integer,
     "__js__kdmyEngine_write_prop_object": __js__kdmyEngine_write_prop_object,
@@ -7120,7 +5993,6 @@ var asmLibraryArg = {
     "__js__layout_contains_action": __js__layout_contains_action,
     "__js__layout_disable_antialiasing": __js__layout_disable_antialiasing,
     "__js__layout_get_attached_value2": __js__layout_get_attached_value2,
-    "__js__layout_get_attached_value_type": __js__layout_get_attached_value_type,
     "__js__layout_get_camera_helper": __js__layout_get_camera_helper,
     "__js__layout_get_group_modifier": __js__layout_get_group_modifier,
     "__js__layout_get_group_shader": __js__layout_get_group_shader,
@@ -7146,7 +6018,6 @@ var asmLibraryArg = {
     "__js__layout_trigger_camera": __js__layout_trigger_camera,
     "__js__layout_trigger_trigger": __js__layout_trigger_trigger,
     "__js__math2d_rand": __js__math2d_rand,
-    "__js__menu_destroy": __js__menu_destroy,
     "__js__menu_get_drawable": __js__menu_get_drawable,
     "__js__menu_get_item_rect": __js__menu_get_item_rect,
     "__js__menu_get_items_count": __js__menu_get_items_count,
@@ -7175,14 +6046,12 @@ var asmLibraryArg = {
     "__js__messagebox_set_buttons_text": __js__messagebox_set_buttons_text,
     "__js__messagebox_set_image_background_color": __js__messagebox_set_image_background_color,
     "__js__messagebox_set_image_background_color_default": __js__messagebox_set_image_background_color_default,
-    "__js__messagebox_set_image_sprite": __js__messagebox_set_image_sprite,
     "__js__messagebox_set_message": __js__messagebox_set_message,
     "__js__messagebox_set_title": __js__messagebox_set_title,
     "__js__messagebox_set_z_index": __js__messagebox_set_z_index,
     "__js__messagebox_show": __js__messagebox_show,
     "__js__messagebox_show_buttons_icons": __js__messagebox_show_buttons_icons,
     "__js__messagebox_use_small_size": __js__messagebox_use_small_size,
-    "__js__missnotefx_play_effect": __js__missnotefx_play_effect,
     "__js__modding_choose_native_menu_option": __js__modding_choose_native_menu_option,
     "__js__modding_exit": __js__modding_exit,
     "__js__modding_get_active_menu": __js__modding_get_active_menu,
@@ -7211,66 +6080,11 @@ var asmLibraryArg = {
     "__js__modelholder_has_animlist": __js__modelholder_has_animlist,
     "__js__modelholder_is_invalid": __js__modelholder_is_invalid,
     "__js__modelholder_utils_is_known_extension": __js__modelholder_utils_is_known_extension,
-    "__js__playerstats_add_extra_health": __js__playerstats_add_extra_health,
-    "__js__playerstats_add_health": __js__playerstats_add_health,
-    "__js__playerstats_add_hit": __js__playerstats_add_hit,
-    "__js__playerstats_add_miss": __js__playerstats_add_miss,
-    "__js__playerstats_add_penality": __js__playerstats_add_penality,
-    "__js__playerstats_add_sustain": __js__playerstats_add_sustain,
-    "__js__playerstats_add_sustain_delayed_hit": __js__playerstats_add_sustain_delayed_hit,
-    "__js__playerstats_enable_penality_on_empty_strum": __js__playerstats_enable_penality_on_empty_strum,
-    "__js__playerstats_get_accuracy": __js__playerstats_get_accuracy,
-    "__js__playerstats_get_bads": __js__playerstats_get_bads,
-    "__js__playerstats_get_combo_breaks": __js__playerstats_get_combo_breaks,
-    "__js__playerstats_get_combo_streak": __js__playerstats_get_combo_streak,
-    "__js__playerstats_get_goods": __js__playerstats_get_goods,
-    "__js__playerstats_get_health": __js__playerstats_get_health,
-    "__js__playerstats_get_highest_combo_streak": __js__playerstats_get_highest_combo_streak,
-    "__js__playerstats_get_hits": __js__playerstats_get_hits,
-    "__js__playerstats_get_iterations": __js__playerstats_get_iterations,
-    "__js__playerstats_get_last_accuracy": __js__playerstats_get_last_accuracy,
-    "__js__playerstats_get_last_difference": __js__playerstats_get_last_difference,
-    "__js__playerstats_get_last_ranking": __js__playerstats_get_last_ranking,
-    "__js__playerstats_get_maximum_health": __js__playerstats_get_maximum_health,
-    "__js__playerstats_get_misses": __js__playerstats_get_misses,
-    "__js__playerstats_get_notes_per_seconds": __js__playerstats_get_notes_per_seconds,
-    "__js__playerstats_get_notes_per_seconds_highest": __js__playerstats_get_notes_per_seconds_highest,
-    "__js__playerstats_get_penalties": __js__playerstats_get_penalties,
-    "__js__playerstats_get_score": __js__playerstats_get_score,
-    "__js__playerstats_get_shits": __js__playerstats_get_shits,
-    "__js__playerstats_get_sicks": __js__playerstats_get_sicks,
-    "__js__playerstats_is_dead": __js__playerstats_is_dead,
-    "__js__playerstats_kill": __js__playerstats_kill,
-    "__js__playerstats_kill_if_negative_health": __js__playerstats_kill_if_negative_health,
-    "__js__playerstats_raise": __js__playerstats_raise,
-    "__js__playerstats_reset": __js__playerstats_reset,
-    "__js__playerstats_reset_notes_per_seconds": __js__playerstats_reset_notes_per_seconds,
-    "__js__playerstats_set_health": __js__playerstats_set_health,
     "__js__psshader_destroy": __js__psshader_destroy,
     "__js__psshader_init": __js__psshader_init,
     "__js__psshader_set_uniform1f": __js__psshader_set_uniform1f,
     "__js__psshader_set_uniform1i": __js__psshader_set_uniform1i,
     "__js__psshader_set_uniform_any": __js__psshader_set_uniform_any,
-    "__js__rankingcounter_add_state": __js__rankingcounter_add_state,
-    "__js__rankingcounter_animation_end": __js__rankingcounter_animation_end,
-    "__js__rankingcounter_animation_restart": __js__rankingcounter_animation_restart,
-    "__js__rankingcounter_animation_set": __js__rankingcounter_animation_set,
-    "__js__rankingcounter_hide_accuracy": __js__rankingcounter_hide_accuracy,
-    "__js__rankingcounter_reset": __js__rankingcounter_reset,
-    "__js__rankingcounter_set_alpha": __js__rankingcounter_set_alpha,
-    "__js__rankingcounter_set_default_ranking_animation2": __js__rankingcounter_set_default_ranking_animation2,
-    "__js__rankingcounter_set_default_ranking_text_animation2": __js__rankingcounter_set_default_ranking_text_animation2,
-    "__js__rankingcounter_toggle_state": __js__rankingcounter_toggle_state,
-    "__js__rankingcounter_use_percent_instead": __js__rankingcounter_use_percent_instead,
-    "__js__roundstats_get_drawable": __js__roundstats_get_drawable,
-    "__js__roundstats_hide": __js__roundstats_hide,
-    "__js__roundstats_hide_nps": __js__roundstats_hide_nps,
-    "__js__roundstats_reset": __js__roundstats_reset,
-    "__js__roundstats_set_draw_y": __js__roundstats_set_draw_y,
-    "__js__roundstats_tweenkeyframe_set_bpm": __js__roundstats_tweenkeyframe_set_bpm,
-    "__js__roundstats_tweenkeyframe_set_on_beat": __js__roundstats_tweenkeyframe_set_on_beat,
-    "__js__roundstats_tweenkeyframe_set_on_hit": __js__roundstats_tweenkeyframe_set_on_hit,
-    "__js__roundstats_tweenkeyframe_set_on_miss": __js__roundstats_tweenkeyframe_set_on_miss,
     "__js__songplayer_changesong": __js__songplayer_changesong,
     "__js__songplayer_get_duration": __js__songplayer_get_duration,
     "__js__songplayer_get_timestamp": __js__songplayer_get_timestamp,
@@ -7281,22 +6095,6 @@ var asmLibraryArg = {
     "__js__songplayer_seek": __js__songplayer_seek,
     "__js__songplayer_set_volume": __js__songplayer_set_volume,
     "__js__songplayer_set_volume_track": __js__songplayer_set_volume_track,
-    "__js__songprogressbar_animation_end": __js__songprogressbar_animation_end,
-    "__js__songprogressbar_animation_restart": __js__songprogressbar_animation_restart,
-    "__js__songprogressbar_animation_set": __js__songprogressbar_animation_set,
-    "__js__songprogressbar_get_drawable": __js__songprogressbar_get_drawable,
-    "__js__songprogressbar_hide_time": __js__songprogressbar_hide_time,
-    "__js__songprogressbar_manual_set_position": __js__songprogressbar_manual_set_position,
-    "__js__songprogressbar_manual_set_text": __js__songprogressbar_manual_set_text,
-    "__js__songprogressbar_manual_update_enable": __js__songprogressbar_manual_update_enable,
-    "__js__songprogressbar_set_background_color": __js__songprogressbar_set_background_color,
-    "__js__songprogressbar_set_bar_back_color": __js__songprogressbar_set_bar_back_color,
-    "__js__songprogressbar_set_bar_progress_color": __js__songprogressbar_set_bar_progress_color,
-    "__js__songprogressbar_set_duration": __js__songprogressbar_set_duration,
-    "__js__songprogressbar_set_songplayer": __js__songprogressbar_set_songplayer,
-    "__js__songprogressbar_set_text_color": __js__songprogressbar_set_text_color,
-    "__js__songprogressbar_set_visible": __js__songprogressbar_set_visible,
-    "__js__songprogressbar_show_elapsed": __js__songprogressbar_show_elapsed,
     "__js__soundplayer_destroy": __js__soundplayer_destroy,
     "__js__soundplayer_fade": __js__soundplayer_fade,
     "__js__soundplayer_get_duration": __js__soundplayer_get_duration,
@@ -7343,84 +6141,6 @@ var asmLibraryArg = {
     "__js__sprite_trailing_enabled": __js__sprite_trailing_enabled,
     "__js__sprite_trailing_set_offsetcolor": __js__sprite_trailing_set_offsetcolor,
     "__js__sprite_trailing_set_params": __js__sprite_trailing_set_params,
-    "__js__streakcounter_animation_end": __js__streakcounter_animation_end,
-    "__js__streakcounter_animation_restart": __js__streakcounter_animation_restart,
-    "__js__streakcounter_animation_set": __js__streakcounter_animation_set,
-    "__js__streakcounter_get_drawable": __js__streakcounter_get_drawable,
-    "__js__streakcounter_hide_combo_sprite": __js__streakcounter_hide_combo_sprite,
-    "__js__streakcounter_reset": __js__streakcounter_reset,
-    "__js__streakcounter_set_alpha": __js__streakcounter_set_alpha,
-    "__js__streakcounter_set_combo_draw_location": __js__streakcounter_set_combo_draw_location,
-    "__js__streakcounter_state_add": __js__streakcounter_state_add,
-    "__js__streakcounter_state_toggle": __js__streakcounter_state_toggle,
-    "__js__strum_animation_end": __js__strum_animation_end,
-    "__js__strum_animation_restart": __js__strum_animation_restart,
-    "__js__strum_disable_beat_synced_idle_and_continous": __js__strum_disable_beat_synced_idle_and_continous,
-    "__js__strum_draw_sick_effect_apart": __js__strum_draw_sick_effect_apart,
-    "__js__strum_enable_background": __js__strum_enable_background,
-    "__js__strum_enable_sick_effect": __js__strum_enable_sick_effect,
-    "__js__strum_force_key_release": __js__strum_force_key_release,
-    "__js__strum_get_drawable": __js__strum_get_drawable,
-    "__js__strum_get_duration": __js__strum_get_duration,
-    "__js__strum_get_marker_duration": __js__strum_get_marker_duration,
-    "__js__strum_get_modifier": __js__strum_get_modifier,
-    "__js__strum_get_name": __js__strum_get_name,
-    "__js__strum_get_press_state": __js__strum_get_press_state,
-    "__js__strum_get_press_state_changes": __js__strum_get_press_state_changes,
-    "__js__strum_get_press_state_use_alt_anim": __js__strum_get_press_state_use_alt_anim,
-    "__js__strum_reset": __js__strum_reset,
-    "__js__strum_set_alpha": __js__strum_set_alpha,
-    "__js__strum_set_alpha_background": __js__strum_set_alpha_background,
-    "__js__strum_set_alpha_sick_effect": __js__strum_set_alpha_sick_effect,
-    "__js__strum_set_bpm": __js__strum_set_bpm,
-    "__js__strum_set_draw_offset": __js__strum_set_draw_offset,
-    "__js__strum_set_extra_animation": __js__strum_set_extra_animation,
-    "__js__strum_set_extra_animation_continuous": __js__strum_set_extra_animation_continuous,
-    "__js__strum_set_keep_aspect_ratio_background": __js__strum_set_keep_aspect_ratio_background,
-    "__js__strum_set_marker_duration_multiplier": __js__strum_set_marker_duration_multiplier,
-    "__js__strum_set_note_tweenkeyframe": __js__strum_set_note_tweenkeyframe,
-    "__js__strum_set_player_id": __js__strum_set_player_id,
-    "__js__strum_set_scroll_direction": __js__strum_set_scroll_direction,
-    "__js__strum_set_scroll_speed": __js__strum_set_scroll_speed,
-    "__js__strum_set_sickeffect_size_ratio": __js__strum_set_sickeffect_size_ratio,
-    "__js__strum_set_visible": __js__strum_set_visible,
-    "__js__strum_state_add": __js__strum_state_add,
-    "__js__strum_state_toggle": __js__strum_state_toggle,
-    "__js__strum_state_toggle_background": __js__strum_state_toggle_background,
-    "__js__strum_state_toggle_marker": __js__strum_state_toggle_marker,
-    "__js__strum_state_toggle_notes": __js__strum_state_toggle_notes,
-    "__js__strum_state_toggle_sick_effect": __js__strum_state_toggle_sick_effect,
-    "__js__strum_update_draw_location": __js__strum_update_draw_location,
-    "__js__strums_animation_end": __js__strums_animation_end,
-    "__js__strums_animation_restart": __js__strums_animation_restart,
-    "__js__strums_animation_set": __js__strums_animation_set,
-    "__js__strums_decorators_add": __js__strums_decorators_add,
-    "__js__strums_decorators_add2": __js__strums_decorators_add2,
-    "__js__strums_decorators_get_count": __js__strums_decorators_get_count,
-    "__js__strums_decorators_set_alpha": __js__strums_decorators_set_alpha,
-    "__js__strums_decorators_set_scroll_speed": __js__strums_decorators_set_scroll_speed,
-    "__js__strums_decorators_set_visible": __js__strums_decorators_set_visible,
-    "__js__strums_disable_beat_synced_idle_and_continous": __js__strums_disable_beat_synced_idle_and_continous,
-    "__js__strums_enable_background": __js__strums_enable_background,
-    "__js__strums_enable_post_sick_effect_draw": __js__strums_enable_post_sick_effect_draw,
-    "__js__strums_force_key_release": __js__strums_force_key_release,
-    "__js__strums_get_drawable": __js__strums_get_drawable,
-    "__js__strums_get_lines_count": __js__strums_get_lines_count,
-    "__js__strums_get_strum_line": __js__strums_get_strum_line,
-    "__js__strums_reset": __js__strums_reset,
-    "__js__strums_set_alpha": __js__strums_set_alpha,
-    "__js__strums_set_alpha_background": __js__strums_set_alpha_background,
-    "__js__strums_set_alpha_sick_effect": __js__strums_set_alpha_sick_effect,
-    "__js__strums_set_bpm": __js__strums_set_bpm,
-    "__js__strums_set_draw_offset": __js__strums_set_draw_offset,
-    "__js__strums_set_keep_aspect_ratio_background": __js__strums_set_keep_aspect_ratio_background,
-    "__js__strums_set_marker_duration_multiplier": __js__strums_set_marker_duration_multiplier,
-    "__js__strums_set_scroll_direction": __js__strums_set_scroll_direction,
-    "__js__strums_set_scroll_speed": __js__strums_set_scroll_speed,
-    "__js__strums_state_add": __js__strums_state_add,
-    "__js__strums_state_toggle": __js__strums_state_toggle,
-    "__js__strums_state_toggle_marker_and_sick_effect": __js__strums_state_toggle_marker_and_sick_effect,
-    "__js__strums_state_toggle_notes": __js__strums_state_toggle_notes,
     "__js__textsprite_background_enable": __js__textsprite_background_enable,
     "__js__textsprite_background_set_color": __js__textsprite_background_set_color,
     "__js__textsprite_background_set_offets": __js__textsprite_background_set_offets,
@@ -7576,7 +6296,6 @@ var asmLibraryArg = {
     "__syscall_renameat": ___syscall_renameat,
     "__syscall_rmdir": ___syscall_rmdir,
     "__syscall_unlinkat": ___syscall_unlinkat,
-    "_emscripten_date_now": __emscripten_date_now,
     "_emscripten_get_now_is_monotonic": __emscripten_get_now_is_monotonic,
     "_emscripten_throw_longjmp": __emscripten_throw_longjmp,
     "_gmtime_js": __gmtime_js,
@@ -7584,6 +6303,7 @@ var asmLibraryArg = {
     "_mktime_js": __mktime_js,
     "_tzset_js": __tzset_js,
     "abort": _abort,
+    "emscripten_date_now": _emscripten_date_now,
     "emscripten_get_now": _emscripten_get_now,
     "emscripten_memcpy_big": _emscripten_memcpy_big,
     "emscripten_resize_heap": _emscripten_resize_heap,
@@ -7594,15 +6314,13 @@ var asmLibraryArg = {
     "fd_read": _fd_read,
     "fd_seek": _fd_seek,
     "fd_write": _fd_write,
-    "getTempRet0": _getTempRet0,
     "invoke_vii": invoke_vii,
-    "setTempRet0": _setTempRet0,
     "strftime": _strftime,
     "system": _system
 };
 var asm = createWasm();
-var ___wasm_call_ctors = ModuleLuaScript["___wasm_call_ctors"] = function () {
-    return (___wasm_call_ctors = ModuleLuaScript["___wasm_call_ctors"] = ModuleLuaScript["asm"]["__wasm_call_ctors"]).apply(null, arguments)
+var ___wasm_call_ctors = function () {
+    return (___wasm_call_ctors = ModuleLuaScript["asm"]["__wasm_call_ctors"]).apply(null, arguments)
 };
 var _lua_pushstring = ModuleLuaScript["_lua_pushstring"] = function () {
     return (_lua_pushstring = ModuleLuaScript["_lua_pushstring"] = ModuleLuaScript["asm"]["lua_pushstring"]).apply(null, arguments)
@@ -7781,32 +6499,29 @@ var _luascript_set_engine_globals_JS = ModuleLuaScript["_luascript_set_engine_gl
 var _lua_rawseti = ModuleLuaScript["_lua_rawseti"] = function () {
     return (_lua_rawseti = ModuleLuaScript["_lua_rawseti"] = ModuleLuaScript["asm"]["lua_rawseti"]).apply(null, arguments)
 };
-var _saveSetjmp = ModuleLuaScript["_saveSetjmp"] = function () {
-    return (_saveSetjmp = ModuleLuaScript["_saveSetjmp"] = ModuleLuaScript["asm"]["saveSetjmp"]).apply(null, arguments)
+var ___errno_location = function () {
+    return (___errno_location = ModuleLuaScript["asm"]["__errno_location"]).apply(null, arguments)
 };
-var ___errno_location = ModuleLuaScript["___errno_location"] = function () {
-    return (___errno_location = ModuleLuaScript["___errno_location"] = ModuleLuaScript["asm"]["__errno_location"]).apply(null, arguments)
+var _setThrew = function () {
+    return (_setThrew = ModuleLuaScript["asm"]["setThrew"]).apply(null, arguments)
 };
-var _setThrew = ModuleLuaScript["_setThrew"] = function () {
-    return (_setThrew = ModuleLuaScript["_setThrew"] = ModuleLuaScript["asm"]["setThrew"]).apply(null, arguments)
+var _emscripten_stack_set_limits = function () {
+    return (_emscripten_stack_set_limits = ModuleLuaScript["asm"]["emscripten_stack_set_limits"]).apply(null, arguments)
 };
-var _emscripten_stack_set_limits = ModuleLuaScript["_emscripten_stack_set_limits"] = function () {
-    return (_emscripten_stack_set_limits = ModuleLuaScript["_emscripten_stack_set_limits"] = ModuleLuaScript["asm"]["emscripten_stack_set_limits"]).apply(null, arguments)
+var _emscripten_stack_get_base = function () {
+    return (_emscripten_stack_get_base = ModuleLuaScript["asm"]["emscripten_stack_get_base"]).apply(null, arguments)
 };
-var _emscripten_stack_get_base = ModuleLuaScript["_emscripten_stack_get_base"] = function () {
-    return (_emscripten_stack_get_base = ModuleLuaScript["_emscripten_stack_get_base"] = ModuleLuaScript["asm"]["emscripten_stack_get_base"]).apply(null, arguments)
+var _emscripten_stack_get_end = function () {
+    return (_emscripten_stack_get_end = ModuleLuaScript["asm"]["emscripten_stack_get_end"]).apply(null, arguments)
 };
-var _emscripten_stack_get_end = ModuleLuaScript["_emscripten_stack_get_end"] = function () {
-    return (_emscripten_stack_get_end = ModuleLuaScript["_emscripten_stack_get_end"] = ModuleLuaScript["asm"]["emscripten_stack_get_end"]).apply(null, arguments)
+var stackSave = function () {
+    return (stackSave = ModuleLuaScript["asm"]["stackSave"]).apply(null, arguments)
 };
-var stackSave = ModuleLuaScript["stackSave"] = function () {
-    return (stackSave = ModuleLuaScript["stackSave"] = ModuleLuaScript["asm"]["stackSave"]).apply(null, arguments)
+var stackRestore = function () {
+    return (stackRestore = ModuleLuaScript["asm"]["stackRestore"]).apply(null, arguments)
 };
-var stackRestore = ModuleLuaScript["stackRestore"] = function () {
-    return (stackRestore = ModuleLuaScript["stackRestore"] = ModuleLuaScript["asm"]["stackRestore"]).apply(null, arguments)
-};
-var stackAlloc = ModuleLuaScript["stackAlloc"] = function () {
-    return (stackAlloc = ModuleLuaScript["stackAlloc"] = ModuleLuaScript["asm"]["stackAlloc"]).apply(null, arguments)
+var stackAlloc = function () {
+    return (stackAlloc = ModuleLuaScript["asm"]["stackAlloc"]).apply(null, arguments)
 };
 var dynCall_ii = ModuleLuaScript["dynCall_ii"] = function () {
     return (dynCall_ii = ModuleLuaScript["dynCall_ii"] = ModuleLuaScript["asm"]["dynCall_ii"]).apply(null, arguments)
@@ -7835,18 +6550,20 @@ var dynCall_jiji = ModuleLuaScript["dynCall_jiji"] = function () {
 var dynCall_iidiiii = ModuleLuaScript["dynCall_iidiiii"] = function () {
     return (dynCall_iidiiii = ModuleLuaScript["dynCall_iidiiii"] = ModuleLuaScript["asm"]["dynCall_iidiiii"]).apply(null, arguments)
 };
-var _asyncify_start_unwind = ModuleLuaScript["_asyncify_start_unwind"] = function () {
-    return (_asyncify_start_unwind = ModuleLuaScript["_asyncify_start_unwind"] = ModuleLuaScript["asm"]["asyncify_start_unwind"]).apply(null, arguments)
+var _asyncify_start_unwind = function () {
+    return (_asyncify_start_unwind = ModuleLuaScript["asm"]["asyncify_start_unwind"]).apply(null, arguments)
 };
-var _asyncify_stop_unwind = ModuleLuaScript["_asyncify_stop_unwind"] = function () {
-    return (_asyncify_stop_unwind = ModuleLuaScript["_asyncify_stop_unwind"] = ModuleLuaScript["asm"]["asyncify_stop_unwind"]).apply(null, arguments)
+var _asyncify_stop_unwind = function () {
+    return (_asyncify_stop_unwind = ModuleLuaScript["asm"]["asyncify_stop_unwind"]).apply(null, arguments)
 };
-var _asyncify_start_rewind = ModuleLuaScript["_asyncify_start_rewind"] = function () {
-    return (_asyncify_start_rewind = ModuleLuaScript["_asyncify_start_rewind"] = ModuleLuaScript["asm"]["asyncify_start_rewind"]).apply(null, arguments)
+var _asyncify_start_rewind = function () {
+    return (_asyncify_start_rewind = ModuleLuaScript["asm"]["asyncify_start_rewind"]).apply(null, arguments)
 };
-var _asyncify_stop_rewind = ModuleLuaScript["_asyncify_stop_rewind"] = function () {
-    return (_asyncify_stop_rewind = ModuleLuaScript["_asyncify_stop_rewind"] = ModuleLuaScript["asm"]["asyncify_stop_rewind"]).apply(null, arguments)
+var _asyncify_stop_rewind = function () {
+    return (_asyncify_stop_rewind = ModuleLuaScript["asm"]["asyncify_stop_rewind"]).apply(null, arguments)
 };
+var ___start_em_js = ModuleLuaScript["___start_em_js"] = 56800;
+var ___stop_em_js = ModuleLuaScript["___stop_em_js"] = 159519;
 function invoke_vii(index, a1, a2) {
     var sp = stackSave();
     try {
@@ -7859,19 +6576,13 @@ function invoke_vii(index, a1, a2) {
     }
 }
 var calledRun;
-function ExitStatus(status) {
-    this.name = "ExitStatus";
-    this.message = "Program terminated with exit(" + status + ")";
-    this.status = status
-}
 dependenciesFulfilled = function runCaller() {
     if (!calledRun)
         run();
     if (!calledRun)
         dependenciesFulfilled = runCaller
 };
-function run(args) {
-    args = args || arguments_;
+function run() {
     if (runDependencies > 0) {
         return
     }
@@ -7902,20 +6613,6 @@ function run(args) {
     } else {
         doRun()
     }
-}
-ModuleLuaScript["run"] = run;
-function exit(status, implicit) {
-    EXITSTATUS = status;
-    procExit(status)
-}
-function procExit(code) {
-    EXITSTATUS = code;
-    if (!keepRuntimeAlive()) {
-        if (ModuleLuaScript["onExit"])
-            ModuleLuaScript["onExit"](code);
-        ABORT = true
-    }
-    quit_(code, new ExitStatus(code))
 }
 if (ModuleLuaScript["preInit"]) {
     if (typeof ModuleLuaScript["preInit"] == "function")

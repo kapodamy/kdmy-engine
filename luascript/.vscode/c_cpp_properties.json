@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include",
-                "~/AppData/Local/emsdk/upstream/emscripten/cache/sysroot/include"
+                "${env:EMSDK}/upstream/emscripten/cache/sysroot/include"
             ],
             "defines": [
                 "_DEBUG",
