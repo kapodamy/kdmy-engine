@@ -20,8 +20,7 @@ class Program {
     private const int ATTACH_PARENT_PROCESS = -1;
 
     [DllImport("kernel32", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    static extern bool AllocConsole();
+    static extern int AllocConsole();
 
     [STAThread]
     static int Main() {
@@ -33,7 +32,7 @@ class Program {
 
         // before any print, check if is necessary alloc the consoles
         if (HasCommandLineSwitch(argv, "-console")) {
-            should_attach_console = !AllocConsole();
+            should_attach_console = AllocConsole() == 0;
         }
         if (should_attach_console) AttachConsole(ATTACH_PARENT_PROCESS);
 

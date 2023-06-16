@@ -10,8 +10,8 @@ internal unsafe partial class Memory {
     public readonly static MemoryClearDelegate Zeros;
 
 
-    [LibraryImport("kernel32")]
-    private static partial void RtlMoveMemory(byte* Destination, byte* Source, int Length);
+    [DllImport("kernel32", SetLastError = false)]
+    private static extern void RtlMoveMemory(byte* Destination, byte* Source, int Length);
 
     internal static unsafe void ZerosInternal(byte* src, long len) {
         uint* ptr = (uint*)src;

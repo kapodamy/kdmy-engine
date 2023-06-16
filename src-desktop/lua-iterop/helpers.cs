@@ -332,7 +332,7 @@ L_store_and_return:
 
         for (int i = 1 ; i <= args_count ; i++) {
             nint len;
-            char* str = LUA.luaL_tolstring(L, i, out len);
+            char* str = LUA.luaL_tolstring(L, i, &len);
 
             // lua adds a tab character between each argument
             if (i > 1) message.Append('\t');

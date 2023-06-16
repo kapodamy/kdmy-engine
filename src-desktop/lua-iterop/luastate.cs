@@ -317,7 +317,7 @@ L_destroyed:
     public byte[] luaL_checklstring(int idx) {
         unsafe {
             nint length;
-            char* ptr = LUA.luaL_checklstring(L, idx, out length);
+            char* ptr = LUA.luaL_checklstring(L, idx, &length);
 
             if (ptr == null) return null;
 
