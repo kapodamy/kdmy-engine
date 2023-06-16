@@ -11,7 +11,7 @@ internal unsafe partial class Memory {
 
 
     [LibraryImport("kernel32")]
-    static partial void RtlMoveMemory(byte* Destination, byte* Source, int Length);
+    private static partial void RtlMoveMemory(byte* Destination, byte* Source, int Length);
 
     internal static unsafe void ZerosInternal(byte* src, long len) {
         uint* ptr = (uint*)src;

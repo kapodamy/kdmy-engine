@@ -12,7 +12,7 @@ namespace Engine.Platform;
 public class IconLoader : IDisposable {
     private const PixelFormat FORMAT = PixelFormat.Format32bppArgb;
 
-    private IntPtr raw_data;
+    private nint raw_data;
     public RawIcon[] icons;
 
     public IconLoader(byte[] icon_data) {
@@ -63,7 +63,7 @@ public class IconLoader : IDisposable {
         raw_data = Marshal.AllocHGlobal(size);
 
         for (int i = 0, icn_offset = 0 ; i < icons.Length ; i++) {
-            IntPtr icn = icons[i].pixels = new IntPtr((byte*)raw_data + icn_offset);
+            nint icn = icons[i].pixels = (nint)((byte*)raw_data + icn_offset);
             int pixel_count = icons[i].width * icons[i].height;
             int stride = icons[i].width * sizeof(uint);
 
@@ -157,7 +157,7 @@ public class IconLoader : IDisposable {
     public struct RawIcon {
         public int width;
         public int height;
-        public IntPtr pixels;
+        public nint pixels;
     }
 
 }

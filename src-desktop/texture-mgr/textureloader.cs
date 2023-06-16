@@ -104,7 +104,7 @@ public static class TextureLoader {
             }
         } else {
             if (image_data == null) {
-                IntPtr buffer_ptr = Marshal.AllocHGlobal(total_bytes_pow2);
+                nint buffer_ptr = Marshal.AllocHGlobal(total_bytes_pow2);
                 image_data = new ImageData(buffer_ptr, width, height, tex_width, tex_height);
             }
 
@@ -183,7 +183,7 @@ public static class TextureLoader {
     }
 
 
-    internal static unsafe void Parallel_For(IntPtr ptr, int length, Worker worker) {
+    internal static unsafe void Parallel_For(nint ptr, int length, Worker worker) {
         uint* data = (uint*)ptr;
         const int chunk_size = CHUNK_SIZE / sizeof(uint);
         int chunks = length / chunk_size;

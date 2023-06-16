@@ -782,8 +782,8 @@ public class PVRContext {
 
     public static void TakeScreenshot() {
         int width, height;
-        IntPtr ptr = PVRContext.global_context.webopengl.ReadFrameBuffer(out width, out height);
-        if (ptr == IntPtr.Zero) return;
+        nint ptr = PVRContext.global_context.webopengl.ReadFrameBuffer(out width, out height);
+        if (ptr == 0x00) return;
 
         string filename = "../screenshots/" + DateTime.Now.ToString("yyyy-MM-ddTHHmmss.fff") + ".png";
         filename = IO.GetAbsolutePath(filename, true, false);

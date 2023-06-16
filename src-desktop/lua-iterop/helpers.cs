@@ -61,7 +61,7 @@ internal static unsafe class LuaInteropHelpers {
         luascript.shared_size += SHARED_ARRAY_CHUNK_SIZE;
 
         int new_size = luascript.shared_size * sizeof(LuascriptObject);
-        luascript.shared_array = (LuascriptObject*)Marshal.ReAllocHGlobal((IntPtr)luascript.shared_array, (IntPtr)new_size);
+        luascript.shared_array = (LuascriptObject*)Marshal.ReAllocHGlobal((nint)luascript.shared_array, new_size);
         Debug.Assert(luascript.shared_array != null, "reallocation failed");
 
         for (int i = 0 ; i < SHARED_ARRAY_CHUNK_SIZE ; i++) {
@@ -215,7 +215,7 @@ L_store_and_return:
 
         void* ptr = LUA.lua_touserdata(L, -1);
 
-        GCHandle handle = GCHandle.FromIntPtr((IntPtr)ptr);
+        GCHandle handle = GCHandle.FromIntPtr((nint)ptr);
         ManagedLuaState luascript = (ManagedLuaState)handle.Target;
 
         Debug.Assert(luascript != null);
@@ -262,7 +262,7 @@ L_store_and_return:
         udata->was_allocated_by_lua = false;
 
         if (was_allocated_by_lua) {
-            GCHandle handle = GCHandle.FromIntPtr((IntPtr)obj_ptr);
+            GCHandle handle = GCHandle.FromIntPtr((nint)obj_ptr);
             if (handle.IsAllocated) {
                 object obj = handle.Target;
 
@@ -318,7 +318,7 @@ L_store_and_return:
         int length = 0;
         while (msg[length] != '\0') length++;
 
-        string str = LUA.MarshalStringBack(msg, (IntPtr)length);
+        string str = LUA.MarshalStringBack(msg, length);
 
         if (tocont != 0)
             Console.Write(str);
@@ -331,7 +331,7 @@ L_store_and_return:
         StringBuilder message = new StringBuilder(128);
 
         for (int i = 1 ; i <= args_count ; i++) {
-            IntPtr len;
+            nint len;
             char* str = LUA.luaL_tolstring(L, i, out len);
 
             // lua adds a tab character between each argument

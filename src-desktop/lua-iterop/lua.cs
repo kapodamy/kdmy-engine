@@ -56,7 +56,7 @@ internal unsafe static class LUA {
 
 
     public static string lua_tostring(lua_State* L, int i) {
-        IntPtr len;
+        nint len;
         char* ptr = lua_tolstring(L, i, out len);
 
         return MarshalStringBack(ptr, len);
@@ -94,7 +94,7 @@ internal unsafe static class LUA {
     }
 
     public static void* lua_newuserdata(lua_State* L, int s) {
-        return lua_newuserdatauv(L, (IntPtr)s, 1);
+        return lua_newuserdatauv(L, s, 1);
     }
 
     public static int luaL_getmetatable(lua_State* L, string n) {
@@ -102,7 +102,7 @@ internal unsafe static class LUA {
     }
 
     public static string luaL_optstring(lua_State* L, int arg, string d) {
-        IntPtr len;
+        nint len;
         char* ptr = luaL_optlstring(L, arg, null, out len);
 
         return MarshalStringBack(ptr, len);
@@ -114,7 +114,7 @@ internal unsafe static class LUA {
     }
 
     public static string luaL_checkstring(lua_State* L, int n) {
-        IntPtr len;
+        nint len;
         char* ptr = luaL_checklstring(L, n, out len);
         return MarshalStringBack(ptr, len);
     }
@@ -173,7 +173,7 @@ internal unsafe static class LUA {
     public static extern void luaL_openlibs(lua_State* L);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int luaL_loadbufferx(lua_State* L, byte* buff, IntPtr sz, byte* name, char* mode);
+    public static extern int luaL_loadbufferx(lua_State* L, byte* buff, nint sz, byte* name, char* mode);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern void lua_rotate(lua_State* L, int idx, int n);
@@ -254,7 +254,7 @@ internal unsafe static class LUA {
     public static extern void lua_pushnil(lua_State* L);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void* lua_newuserdatauv(lua_State* L, IntPtr sz, int nuvalue);
+    public static extern void* lua_newuserdatauv(lua_State* L, nint sz, int nuvalue);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     private static extern int lua_getfield(lua_State* L, int idx, byte* k);
@@ -263,10 +263,10 @@ internal unsafe static class LUA {
     public static extern int lua_setmetatable(lua_State* L, int objindex);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern char* lua_tolstring(lua_State* L, int idx, out IntPtr len);
+    public static extern char* lua_tolstring(lua_State* L, int idx, out nint len);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern char* luaL_optlstring(lua_State* L, int arg, char* def, out IntPtr l);
+    public static extern char* luaL_optlstring(lua_State* L, int arg, char* def, out nint l);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern lua_Number luaL_checknumber(lua_State* L, int arg);
@@ -296,10 +296,10 @@ internal unsafe static class LUA {
     public static extern void* luaL_testudata(lua_State* L, int ud, byte* tname);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern char* luaL_checklstring(lua_State* L, int arg, out IntPtr l);
+    public static extern char* luaL_checklstring(lua_State* L, int arg, out nint l);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern char* lua_pushlstring(lua_State* L, byte* s, IntPtr len);
+    public static extern char* lua_pushlstring(lua_State* L, byte* s, nint len);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern lua_Integer luaL_checkinteger(lua_State* L, int arg);
@@ -320,7 +320,7 @@ internal unsafe static class LUA {
     public static extern void luaL_traceback(lua_State* L, lua_State* L1, byte* msg, int level);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern char* luaL_tolstring(lua_State* L, int idx, out IntPtr len);
+    public static extern char* luaL_tolstring(lua_State* L, int idx, out nint len);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern void lua_setwarnf(lua_State* L, lua_WarnFunction f, void* ud);
@@ -343,7 +343,7 @@ internal unsafe static class LUA {
         STRING_BUFFER[size - 1] = 0x00;
         return STRING_BUFFER;
     }
-    internal static string MarshalStringBack(char* ptr, IntPtr len) {
+    internal static string MarshalStringBack(char* ptr, nint len) {
         if (ptr == null) return null;
 
         int size = (int)len;
@@ -351,7 +351,7 @@ internal unsafe static class LUA {
 
         if (size > STRING_BUFFER.Length) STRING_BUFFER = new byte[size];
 
-        Marshal.Copy((IntPtr)ptr, STRING_BUFFER, 0, size);
+        Marshal.Copy((nint)ptr, STRING_BUFFER, 0, size);
         return Encoding.UTF8.GetString(STRING_BUFFER, 0, size);
     }
 
@@ -417,7 +417,7 @@ internal unsafe static class LUA {
         Encoding.UTF8.GetBytes(name, 0, name.Length, str, offset);
 
         fixed (byte* str_ptr = str) {
-            return luaL_loadbufferx(L, str_ptr, (IntPtr)buff_size, str_ptr + offset, null);
+            return luaL_loadbufferx(L, str_ptr, buff_size, str_ptr + offset, null);
         }
     }
 }

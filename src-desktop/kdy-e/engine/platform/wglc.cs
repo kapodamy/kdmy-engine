@@ -145,15 +145,15 @@ public class WebGLContext {
         } else if (pixelDataBuffer is PixelUnPackBuffer pb) {
             gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pb.pbo);
 
-            if (pb.mapped_buffer != IntPtr.Zero) {
+            if (pb.mapped_buffer != 0x00) {
                 gl.unmapBuffer(gl.PIXEL_UNPACK_BUFFER);
-                pb.mapped_buffer = IntPtr.Zero;
+                pb.mapped_buffer = 0x00;
             }
 
             gl.texImage2D(
                 gl.TEXTURE_2D, 0, gl.RGBA,
                 bitmap_data.pow2_width, bitmap_data.pow2_height, 0,
-                gl.RGBA, gl.UNSIGNED_BYTE, IntPtr.Zero
+                gl.RGBA, gl.UNSIGNED_BYTE, 0x00
             );
 
             gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, WebGLBuffer.Null);
@@ -404,7 +404,7 @@ public class WebGLContext {
         //this.gl.flush();
     }
 
-    public IntPtr ReadFrameBuffer(out int width, out int height) {
+    public nint ReadFrameBuffer(out int width, out int height) {
         int[] viewport = new int[4];
         this.gl.getIntegerv(this.gl.VIEWPORT, viewport);
 
@@ -413,7 +413,7 @@ public class WebGLContext {
         width = viewport[2];
         height = viewport[3];
 
-        IntPtr data = Marshal.AllocHGlobal(width * height * sizeof(uint));
+        nint data = Marshal.AllocHGlobal(width * height * sizeof(uint));
 
         //this.gl.pixelStorei(this.gl.PACK_ALIGNMENT, 1);
         this.gl.readPixels(x, y, width, height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, data);
@@ -422,7 +422,7 @@ public class WebGLContext {
         if (error != this.gl.NONE) {
             Console.Error.WriteLine("[ERROR] webopengl_read_framebuffer() failed: " + error.ToString());
             Marshal.FreeHGlobal(data);
-            return IntPtr.Zero;
+            return 0x00;
         }
 
         return data;
@@ -1077,7 +1077,7 @@ public class PSFramebuffer {
 
         this.texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.pow2_width, this.pow2_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, IntPtr.Zero);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.pow2_width, this.pow2_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, 0x00);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture, 0);
@@ -1117,7 +1117,7 @@ public class PSFramebuffer {
 
         // resize color attachment
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.pow2_width, this.pow2_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, IntPtr.Zero);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.pow2_width, this.pow2_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, 0x00);
 
         // resize stencil attachment
         //gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbuffer);

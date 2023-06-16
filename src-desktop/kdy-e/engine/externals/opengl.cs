@@ -76,8 +76,8 @@ public partial class WebGL2RenderingContext {
     }
 
     public string getString(GLenum name) {
-        IntPtr ptr = NativeMethods.glGetString(name);
-        if (ptr == IntPtr.Zero) return null;
+        nint ptr = NativeMethods.glGetString(name);
+        if (ptr == 0x00) return null;
         return Marshal.PtrToStringAnsi(ptr);
     }
 
@@ -117,7 +117,7 @@ public partial class WebGL2RenderingContext {
         if (maxLength < 1) return String.Empty;
 
         int length;
-        IntPtr temp = Marshal.AllocHGlobal(maxLength * 2);
+        nint temp = Marshal.AllocHGlobal(maxLength * 2);
         NativeMethods.glGetProgramInfoLog(program.value, maxLength, out length, temp);
 
         string str = Marshal.PtrToStringAnsi(temp, length);
@@ -160,7 +160,7 @@ public partial class WebGL2RenderingContext {
         if (maxLength < 1) return String.Empty;
 
         int length;
-        IntPtr temp = Marshal.AllocHGlobal(maxLength * 2);
+        nint temp = Marshal.AllocHGlobal(maxLength * 2);
         NativeMethods.glGetShaderInfoLog(shader.value, maxLength, out length, temp);
 
         string str = Marshal.PtrToStringAnsi(temp, length);
@@ -229,7 +229,7 @@ public partial class WebGL2RenderingContext {
 
     internal void vertexAttribPointer(uint index, int size, GLenum type, bool normalized, int stride, int offset) {
         byte flag = normalized ? (byte)1 : (byte)0;
-        NativeMethods.glVertexAttribPointer(index, size, type, flag, stride, (IntPtr)offset);
+        NativeMethods.glVertexAttribPointer(index, size, type, flag, stride, offset);
     }
 
     internal uint getAttribLocation(WebGLProgram program, string name) {
@@ -327,12 +327,12 @@ public partial class WebGL2RenderingContext {
     internal void texImage2D(GLenum target, int level, GLenum internalformat, GLenum format, GLenum type, ImageData data) {
         int width = data.pow2_width;
         int height = data.pow2_height;
-        IntPtr ptr = data.Addr;
+        nint ptr = data.Addr;
 
         NativeMethods.glTexImage2D(target, level, internalformat, width, height, 0, format, type, ptr);
     }
 
-    internal void texImage2D(GLenum target, int level, GLenum internalformat, int width, int height, int border, GLenum format, GLenum type, IntPtr pixels) {
+    internal void texImage2D(GLenum target, int level, GLenum internalformat, int width, int height, int border, GLenum format, GLenum type, nint pixels) {
         NativeMethods.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
     }
 
@@ -362,7 +362,7 @@ public partial class WebGL2RenderingContext {
         NativeMethods.glGetIntegerv(GLenum.GL_NUM_EXTENSIONS, count);
 
         for (uint i = 0 ; i < count[0] ; i++) {
-            IntPtr readed_ext_name_ptr = NativeMethods.glGetStringi(GLenum.GL_EXTENSIONS, i);
+            nint readed_ext_name_ptr = NativeMethods.glGetStringi(GLenum.GL_EXTENSIONS, i);
             string readed_ext_name = Marshal.PtrToStringAnsi(readed_ext_name_ptr);
 
             if (readed_ext_name == gl_ext_name) {
@@ -404,45 +404,45 @@ public partial class WebGL2RenderingContext {
 
     internal void bufferData(GLenum target, float[] srcData, GLenum usage) {
         GCHandle handle = GCHandle.Alloc(srcData, GCHandleType.Pinned);
-        IntPtr data = handle.AddrOfPinnedObject();
+        nint data = handle.AddrOfPinnedObject();
 
-        NativeMethods.glBufferData(target, new IntPtr(srcData.Length * sizeof(float)), data, usage);
+        NativeMethods.glBufferData(target, srcData.Length * sizeof(float), data, usage);
 
         handle.Free();
     }
 
     internal void bufferData(GLenum target, uint[] srcData, GLenum usage) {
         GCHandle handle = GCHandle.Alloc(srcData, GCHandleType.Pinned);
-        IntPtr data = handle.AddrOfPinnedObject();
+        nint data = handle.AddrOfPinnedObject();
 
-        NativeMethods.glBufferData(target, new IntPtr(srcData.Length * sizeof(uint)), data, usage);
+        NativeMethods.glBufferData(target, srcData.Length * sizeof(uint), data, usage);
 
         handle.Free();
     }
 
     internal void bufferData(GLenum target, int maxelements, float[] srcData, GLenum usage) {
         GCHandle handle = GCHandle.Alloc(srcData, GCHandleType.Pinned);
-        IntPtr data = handle.AddrOfPinnedObject();
+        nint data = handle.AddrOfPinnedObject();
 
-        NativeMethods.glBufferData(target, new IntPtr(maxelements * sizeof(float)), data, usage);
+        NativeMethods.glBufferData(target, maxelements * sizeof(float), data, usage);
 
         handle.Free();
     }
 
     internal void bufferData(GLenum target, int maxelements, uint[] srcData, GLenum usage) {
         GCHandle handle = GCHandle.Alloc(srcData, GCHandleType.Pinned);
-        IntPtr data = handle.AddrOfPinnedObject();
+        nint data = handle.AddrOfPinnedObject();
 
-        NativeMethods.glBufferData(target, new IntPtr(maxelements * sizeof(float)), data, usage);
+        NativeMethods.glBufferData(target, maxelements * sizeof(float), data, usage);
 
         handle.Free();
     }
 
     internal void bufferData(GLenum target, int maxelements, byte[] srcData, GLenum usage) {
         GCHandle handle = GCHandle.Alloc(srcData, GCHandleType.Pinned);
-        IntPtr data = handle.AddrOfPinnedObject();
+        nint data = handle.AddrOfPinnedObject();
 
-        NativeMethods.glBufferData(target, new IntPtr(maxelements * sizeof(byte)), data, usage);
+        NativeMethods.glBufferData(target, maxelements * sizeof(byte), data, usage);
 
         handle.Free();
     }
@@ -482,7 +482,7 @@ public partial class WebGL2RenderingContext {
         NativeMethods.glGetIntegerv(pname, data);
     }
 
-    internal void readPixels(int x, int y, int width, int height, GLenum format, GLenum type, IntPtr data) {
+    internal void readPixels(int x, int y, int width, int height, GLenum format, GLenum type, nint data) {
         NativeMethods.glReadPixels(x, y, width, height, format, type, data);
     }
 
@@ -532,7 +532,7 @@ public partial class WebGL2RenderingContext {
 
         if (buffSize < 1) return new WebGLActiveInfo() { size = -1, type = GLenum.GL_INVALID_VALUE };
 
-        IntPtr ptr = Marshal.AllocHGlobal(buffSize);
+        nint ptr = Marshal.AllocHGlobal(buffSize);
         int length;
         int size;
         GLenum type;
@@ -557,10 +557,10 @@ public partial class WebGL2RenderingContext {
 
     internal void drawElementsInstanced(GLenum mode, int count, GLenum type, int offset, int primcount) {
         KDY_draw_calls_count++;
-        NativeMethods.glDrawElementsInstanced(mode, count, type, (IntPtr)offset, primcount);
+        NativeMethods.glDrawElementsInstanced(mode, count, type, (nint)offset, primcount);
     }
 
-    internal IntPtr mapBuffer(GLenum target, GLenum access) {
+    internal nint mapBuffer(GLenum target, GLenum access) {
         return NativeMethods.glMapBuffer(target, access);
     }
 
@@ -572,7 +572,7 @@ public partial class WebGL2RenderingContext {
         NativeMethods.glFinish();
     }
 
-    internal void texSubImage2D(GLenum target, int level, int xoffset, int yoffset, int width, int height, GLenum format, GLenum type, IntPtr pixels) {
+    internal void texSubImage2D(GLenum target, int level, int xoffset, int yoffset, int width, int height, GLenum format, GLenum type, nint pixels) {
         NativeMethods.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
     }
 
@@ -580,14 +580,14 @@ public partial class WebGL2RenderingContext {
 
     public struct DataView {
         internal readonly int length;
-        internal readonly IntPtr pointer;
+        internal readonly nint pointer;
 
-        public DataView(IntPtr buffer, int byteOffset, int byteLength) {
-            if (buffer == IntPtr.Zero) throw new ArgumentNullException("buffer");
+        public DataView(nint buffer, int byteOffset, int byteLength) {
+            if (buffer == 0x00) throw new ArgumentNullException("buffer");
             if (byteLength < 1) throw new ArgumentOutOfRangeException("byteLength");
             if (byteOffset < 0 || byteOffset >= byteLength) throw new ArgumentOutOfRangeException("byteOffset");
 
-            pointer = IntPtr.Add(buffer, byteOffset);
+            pointer = buffer + byteOffset;
             length = byteLength;
         }
     }

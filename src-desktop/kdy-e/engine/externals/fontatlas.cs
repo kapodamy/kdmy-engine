@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Engine.Utils;
 
 namespace Engine.Externals;
@@ -7,7 +6,7 @@ namespace Engine.Externals;
 public class FontCharMap {
     public FontCharData[] char_array;
     public int char_array_size;
-    public IntPtr texture;
+    public nint texture;
     public ushort texture_width;
     public ushort texture_height;
     public uint texture_byte_size;
@@ -48,40 +47,40 @@ public static class FontAtlas {
     public static extern void fontatlas_enable_sdf(bool enable);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr fontatlas_init(IntPtr font_data, int font_data_size);
+    public static extern nint fontatlas_init(nint font_data, int font_data_size);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]// FontAtlas** pointer_to_fontatlas_pointer
-    private static extern void fontatlas_destroy(ref IntPtr pointer_to_fontatlas_pointer);
+    private static extern void fontatlas_destroy(ref nint pointer_to_fontatlas_pointer);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]// uint32_t characters_to_add
-    private static extern IntPtr fontatlas_atlas_build(IntPtr fontatlas, byte font_height, sbyte gaps, IntPtr characters_to_add);
+    private static extern nint fontatlas_atlas_build(nint fontatlas, byte font_height, sbyte gaps, nint characters_to_add);
 
     /*[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void fontatlas_atlas_destroy_texture_only(IntPtr fontcharmap);*/
+    private static extern void fontatlas_atlas_destroy_texture_only(nint fontcharmap);*/
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]//FontCharMap** pointer_to_fontcharmap_pointer
-    private static extern void fontatlas_atlas_destroy(ref IntPtr pointer_to_fontcharmap_pointer);
+    private static extern void fontatlas_atlas_destroy(ref nint pointer_to_fontcharmap_pointer);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "fontatlas_get_version")]
-    private static extern IntPtr __fontatlas_get_version();
+    private static extern nint __fontatlas_get_version();
 
 
-    public static IntPtr kdmyEngine_allocate(byte[] fontdata) {
-        IntPtr ptr = Marshal.AllocHGlobal(fontdata.Length);
+    public static nint kdmyEngine_allocate(byte[] fontdata) {
+        nint ptr = Marshal.AllocHGlobal(fontdata.Length);
         Marshal.Copy(fontdata, 0, ptr, fontdata.Length);
         return ptr;
     }
-    public static IntPtr kdmyEngine_allocate(int[] fontdata) {
-        IntPtr ptr = Marshal.AllocHGlobal(fontdata.Length);
+    public static nint kdmyEngine_allocate(int[] fontdata) {
+        nint ptr = Marshal.AllocHGlobal(fontdata.Length);
         Marshal.Copy(fontdata, 0, ptr, fontdata.Length);
         return ptr;
     }
-    public static void kdmyEngine_deallocate(IntPtr ptr) {
+    public static void kdmyEngine_deallocate(nint ptr) {
         Marshal.FreeHGlobal(ptr);
     }
 
-    public static FontCharMap kdmyEngine_parseFontCharMap(IntPtr fontcharmap_ptr) {
-        if (fontcharmap_ptr == IntPtr.Zero) return null;
+    public static FontCharMap kdmyEngine_parseFontCharMap(nint fontcharmap_ptr) {
+        if (fontcharmap_ptr == 0x00) return null;
 
         FontCharMapUnparsed unparsed_fontcharmap = (FontCharMapUnparsed)Marshal.PtrToStructure(
             fontcharmap_ptr, typeof(FontCharMapUnparsed)
@@ -99,7 +98,7 @@ public static class FontAtlas {
         };
 
 
-        IntPtr char_array_ptr = unparsed_fontcharmap.char_array;
+        nint char_array_ptr = unparsed_fontcharmap.char_array;
         fontcharmap.char_array = fontcharmap.char_array_size > 0 ? new FontCharData[fontcharmap.char_array_size] : null;
         for (int i = 0 ; i < fontcharmap.char_array_size ; i++) {
             FontCharDataUnparsed unparsed_fontchardata = (FontCharDataUnparsed)Marshal.PtrToStructure(
@@ -122,7 +121,7 @@ public static class FontAtlas {
                 has_entry = unparsed_fontchardata.has_atlas_entry != 0
             };
 
-            IntPtr kernings_ptr = unparsed_fontchardata.kernings;
+            nint kernings_ptr = unparsed_fontchardata.kernings;
             char_array_ptr += Marshal.SizeOf(typeof(FontCharDataUnparsed));
 
             if (fontcharmap.char_array[i].kernings_size > 0) {
@@ -144,23 +143,23 @@ public static class FontAtlas {
     }
 
 
-    public static IntPtr _fontatlas_init(IntPtr font_data, int font_data_size) {
+    public static nint _fontatlas_init(nint font_data, int font_data_size) {
         return fontatlas_init(font_data, font_data_size);
     }
 
-    public static void _fontatlas_destroy(IntPtr fontatlas) {
+    public static void _fontatlas_destroy(nint fontatlas) {
         fontatlas_destroy(ref fontatlas);
     }
 
-    public static IntPtr _fontatlas_atlas_build(IntPtr fontatlas, byte font_height, sbyte gaps, IntPtr characters_to_add) {
+    public static nint _fontatlas_atlas_build(nint fontatlas, byte font_height, sbyte gaps, nint characters_to_add) {
         return fontatlas_atlas_build(fontatlas, font_height, gaps, characters_to_add);
     }
 
-    public static void _fontatlas_atlas_destroy(IntPtr fontcharmap) {
+    public static void _fontatlas_atlas_destroy(nint fontcharmap) {
         fontatlas_atlas_destroy(ref fontcharmap);
     }
 
-    public static IntPtr _fontatlas_atlas_build_complete(IntPtr fontatlas, byte font_height, sbyte gaps) {
+    public static nint _fontatlas_atlas_build_complete(nint fontatlas, byte font_height, sbyte gaps) {
         Grapheme grapheme = new Grapheme();
 
         int index;
@@ -194,14 +193,14 @@ public static class FontAtlas {
         }
 
         GCHandle hnd = GCHandle.Alloc(codepoints, GCHandleType.Pinned);
-        IntPtr ret = fontatlas_atlas_build(fontatlas, font_height, gaps, hnd.AddrOfPinnedObject());
+        nint ret = fontatlas_atlas_build(fontatlas, font_height, gaps, hnd.AddrOfPinnedObject());
         hnd.Free();
 
         return ret;
     }
 
     public static string fontatlas_get_version() {
-        IntPtr ptr = __fontatlas_get_version();
+        nint ptr = __fontatlas_get_version();
         return Marshal.PtrToStringAnsi(ptr);
     }
 
@@ -223,9 +222,9 @@ public static class FontAtlas {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     private struct FontCharMapUnparsed {
-        public IntPtr char_array;
+        public nint char_array;
         public int char_array_size;
-        public IntPtr texture;
+        public nint texture;
         public ushort texture_width;
         public ushort texture_height;
         public uint texture_byte_size;
@@ -240,7 +239,7 @@ public static class FontAtlas {
         public short advancex;
         public int width;
         public int height;
-        public IntPtr kernings;
+        public nint kernings;
         public int kernings_size;
         public FontCharDataAtlasEntryUnparsed atlas_entry;
         public byte has_atlas_entry;

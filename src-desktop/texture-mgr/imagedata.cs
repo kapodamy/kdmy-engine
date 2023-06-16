@@ -15,7 +15,7 @@ public class ImageData : IDisposable {
     public readonly int pow2_height;
 
     private IPixelDataBuffer pixelbuffer;
-    private IntPtr ptr;
+    private nint ptr;
     private Bitmap bitmap;
     private BitmapData bitmapdata;
 
@@ -26,12 +26,12 @@ public class ImageData : IDisposable {
         this.pow2_height = pow2_height;
         this.size = pow2_width * pow2_height * sizeof(uint);
         this.pixelbuffer = buffer;
-        this.ptr = IntPtr.Zero;
+        this.ptr = 0x00;
         this.bitmap = null;
         this.bitmapdata = null;
     }
 
-    public ImageData(IntPtr ptr, int orig_width, int orig_height, int pow2_width, int pow2_height) {
+    public ImageData(nint ptr, int orig_width, int orig_height, int pow2_width, int pow2_height) {
         this.orig_width = orig_width;
         this.orig_height = orig_height;
         this.pow2_width = pow2_width;
@@ -67,13 +67,13 @@ public class ImageData : IDisposable {
             bitmap.Dispose();
             bitmap = null;
             bitmapdata = null;
-        } else if (ptr != IntPtr.Zero) {
+        } else if (ptr != 0x00) {
             Marshal.FreeHGlobal(ptr);
-            ptr = IntPtr.Zero;
+            ptr = 0x00;
         }
     }
 
-    public IntPtr Addr { get => this.pixelbuffer != null ? this.pixelbuffer.DataPointer : this.ptr; }
+    public nint Addr { get => this.pixelbuffer != null ? this.pixelbuffer.DataPointer : this.ptr; }
 
     public IPixelDataBuffer pixelDataBuffer { get => this.pixelbuffer; }
 

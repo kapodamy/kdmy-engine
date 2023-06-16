@@ -48,7 +48,7 @@ public partial class ExpansionsLoader : Form {
 
 
     [DllImport("uxtheme", CharSet = CharSet.Unicode)]
-    private extern static int SetWindowTheme(IntPtr hWnd, string pszSubAppName, string pszSubIdList);
+    private extern static int SetWindowTheme(nint hWnd, string pszSubAppName, string pszSubIdList);
 
     private readonly string expansions_dir;
     private readonly Bitmap blank_bitmap;

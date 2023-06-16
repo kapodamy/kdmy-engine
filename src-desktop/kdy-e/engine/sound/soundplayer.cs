@@ -17,7 +17,7 @@ public enum Fading : int {
 public class SoundPlayer {
 
     private int stream_id;
-    private IntPtr filehandle;
+    private nint filehandle;
     private GCHandle gchandle;
     private bool is_muted;
 
@@ -42,7 +42,7 @@ public class SoundPlayer {
 
         byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
         GCHandle gchandle;
-        IntPtr filehandle;
+        nint filehandle;
 
         if (buffer != null) {
             gchandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
@@ -52,7 +52,7 @@ public class SoundPlayer {
             Encoding.UTF8.GetBytes(full_path, 0, full_path.Length, full_path_ptr, 0);
 
             filehandle = AICA.filehandle_init(full_path_ptr);
-            if (filehandle == IntPtr.Zero) {
+            if (filehandle == 0x00) {
                 Console.Error.WriteLine("soundplayer_init() filehandle_init failed for: " + src);
                 return null;
             }
@@ -72,10 +72,10 @@ public class SoundPlayer {
 
     public void Destroy() {
         Luascript.DropShared(this);
-        if (this.filehandle == IntPtr.Zero) return;
+        if (this.filehandle == 0x00) return;
         AICA.sndbridge_dispose(this.stream_id);
         AICA.filehandle_destroy(this.filehandle);
-        this.filehandle = IntPtr.Zero;
+        this.filehandle = 0x00;
         if (this.gchandle.IsAllocated) this.gchandle.Free();
     }
 

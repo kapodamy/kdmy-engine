@@ -25,7 +25,7 @@ public class PixelUnPackBufferBuilder : IPixelDataBufferBuilder {
 
         gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pbo);
         gl.bufferData(gl.PIXEL_UNPACK_BUFFER, byte_size, (byte[])null, gl.STREAM_DRAW);
-        IntPtr mapped_buffer = gl.mapBuffer(gl.PIXEL_UNPACK_BUFFER, gl.WRITE_ONLY);
+        nint mapped_buffer = gl.mapBuffer(gl.PIXEL_UNPACK_BUFFER, gl.WRITE_ONLY);
 
         PixelUnPackBuffer buffer = new PixelUnPackBuffer(gl, byte_size, pbo, mapped_buffer);
 
@@ -58,16 +58,16 @@ public class PixelUnPackBuffer : IPixelDataBuffer {
     private readonly WebGL2RenderingContext gl;
     private readonly int length;
     internal WebGLBuffer pbo;
-    internal IntPtr mapped_buffer;
+    internal nint mapped_buffer;
 
-    public PixelUnPackBuffer(WebGL2RenderingContext gl, int length, WebGLBuffer pbo, IntPtr mapped_buffer) {
+    public PixelUnPackBuffer(WebGL2RenderingContext gl, int length, WebGLBuffer pbo, nint mapped_buffer) {
         this.gl = gl;
         this.length = length;
         this.pbo = pbo;
         this.mapped_buffer = mapped_buffer;
     }
 
-    public IntPtr DataPointer => mapped_buffer;
+    public nint DataPointer => mapped_buffer;
 
     public int Length => length;
 
@@ -76,9 +76,9 @@ public class PixelUnPackBuffer : IPixelDataBuffer {
 
         gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pbo);
 
-        if (mapped_buffer != IntPtr.Zero) {
+        if (mapped_buffer != 0x00) {
             gl.unmapBuffer(gl.PIXEL_UNPACK_BUFFER);
-            mapped_buffer = IntPtr.Zero;
+            mapped_buffer = 0x00;
         }
 
         gl.deleteBuffer(pbo);

@@ -32,14 +32,14 @@ public class FontType : IFontRender {
     private int instance_id;
     private int instance_references;
     private string instance_path;
-    private IntPtr fontatlas;
-    private IntPtr font_ptr;
+    private nint fontatlas;
+    private nint font_ptr;
     private float space_width;
     private FontCharMap fontcharmap_primary;
-    private IntPtr fontcharmap_primary_ptr;
+    private nint fontcharmap_primary_ptr;
     private Texture fontcharmap_primary_texture;
     private FontCharMap fontcharmap_secondary;
-    private IntPtr fontcharmap_secondary_ptr;
+    private nint fontcharmap_secondary_ptr;
     private Texture fontcharmap_secondary_texture;
 
 
@@ -73,16 +73,16 @@ public class FontType : IFontRender {
             instance_references = 1,
             instance_path = full_path,
 
-            fontatlas = IntPtr.Zero,
-            font_ptr = IntPtr.Zero,
+            fontatlas = 0x00,
+            font_ptr = 0x00,
             space_width = FontType.GLYPHS_HEIGHT * FontType.FAKE_SPACE,
 
             fontcharmap_primary = null,
-            fontcharmap_primary_ptr = IntPtr.Zero,
+            fontcharmap_primary_ptr = 0x00,
             fontcharmap_primary_texture = null,
 
             fontcharmap_secondary = null,
-            fontcharmap_secondary_ptr = IntPtr.Zero,
+            fontcharmap_secondary_ptr = 0x00,
             fontcharmap_secondary_texture = null,
         };
 
@@ -131,8 +131,8 @@ public class FontType : IFontRender {
             if (this.fontcharmap_secondary_texture != null) this.fontcharmap_secondary_texture.Destroy();
         }
 
-        if (this.fontatlas != IntPtr.Zero) FontAtlas._fontatlas_destroy(this.fontatlas);
-        if (this.font_ptr != IntPtr.Zero) FontAtlas.kdmyEngine_deallocate(this.font_ptr);
+        if (this.fontatlas != 0x00) FontAtlas._fontatlas_destroy(this.fontatlas);
+        if (this.font_ptr != 0x00) FontAtlas.kdmyEngine_deallocate(this.font_ptr);
 
         //free(this.instance_path);
         //free(fonttype);
@@ -517,18 +517,18 @@ public class FontType : IFontRender {
         this.font_ptr = FontAtlas.kdmyEngine_allocate(font);
         this.fontatlas = FontAtlas._fontatlas_init(this.font_ptr, font.Length);
 
-        return this.fontatlas == IntPtr.Zero;
+        return this.fontatlas == 0x00;
     }
 
-    private IntPtr InternalRetrieveFontcharmap(int[] characters_map) {
-        IntPtr fontcharmap_ptr = IntPtr.Zero;
+    private nint InternalRetrieveFontcharmap(int[] characters_map) {
+        nint fontcharmap_ptr = 0x00;
 
 #if SDF_FONT
         FontAtlas.fontatlas_enable_sdf(true);
 #endif
 
         if (characters_map != null) {
-            IntPtr characters_map_ptr = FontAtlas.kdmyEngine_allocate(characters_map);
+            nint characters_map_ptr = FontAtlas.kdmyEngine_allocate(characters_map);
             fontcharmap_ptr = FontAtlas._fontatlas_atlas_build(
                 this.fontatlas, FontType.GLYPHS_HEIGHT, FontType.GLYPHS_GAPS, characters_map_ptr
             );
@@ -570,7 +570,7 @@ public class FontType : IFontRender {
 
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpack_alignment);
 
-        fontcharmap.texture = IntPtr.Zero;
+        fontcharmap.texture = 0x00;
 
         Texture tex = Texture.InitFromRAW(
             texture, (int)fontcharmap.texture_byte_size, true,

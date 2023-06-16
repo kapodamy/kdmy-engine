@@ -30,19 +30,19 @@ internal static class Glfw {
     public static extern bool GetGamepadState(int id, out GamePadState state);
 
     [DllImport(GLFW, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr glfwGetJoystickName(int joystick);
+    private static extern nint glfwGetJoystickName(int joystick);
 
     [DllImport(GLFW, EntryPoint = "glfwGetKey", CallingConvention = CallingConvention.Cdecl)]
     public static extern InputState GetKey(Window window, Keys key);
 
     [DllImport(GLFW, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr glfwGetKeyName(Keys key, int scanCode);
+    private static extern nint glfwGetKeyName(Keys key, int scanCode);
 
     [DllImport(GLFW, EntryPoint = "glfwGetKeyScancode", CallingConvention = CallingConvention.Cdecl)]
     public static extern int GetKeyScanCode(Keys key);
 
     [DllImport(GLFW, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr glfwGetVideoMode(Monitor monitor);
+    private static extern nint glfwGetVideoMode(Monitor monitor);
 
     [DllImport(GLFW, EntryPoint = "glfwGetWindowMonitor", CallingConvention = CallingConvention.Cdecl)]
     public static extern Monitor GetWindowMonitor(Window window);
@@ -78,7 +78,7 @@ internal static class Glfw {
     public static extern void SwapInterval(int interval);
 
     [DllImport(GLFW, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr glfwGetVersionString();
+    private static extern nint glfwGetVersionString();
 
     [DllImport(GLFW, EntryPoint = "glfwWindowHint", CallingConvention = CallingConvention.Cdecl)]
     public static extern void WindowHint(Hint hint, int value);
@@ -90,7 +90,7 @@ internal static class Glfw {
     public static extern void GetMonitorWorkArea(Monitor monitor, out int x, out int y, out int width, out int height);
 
     [DllImport(GLFW, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr glfwCreateWindow(int width, int height, byte[] title, Monitor monitor, Window share);
+    private static extern nint glfwCreateWindow(int width, int height, byte[] title, Monitor monitor, Window share);
 
     [DllImport(GLFW, EntryPoint = "glfwMakeContextCurrent", CallingConvention = CallingConvention.Cdecl)]
     public static extern void MakeContextCurrent(Window window);
@@ -186,8 +186,8 @@ internal static class Glfw {
         glfwSetWindowTitle(window, buffer);
     }
 
-    private static string StringFromPtr(IntPtr ptr) {
-        if (ptr == IntPtr.Zero) return null;
+    private static string StringFromPtr(nint ptr) {
+        if (ptr == 0x00) return null;
 
         int length = 0;
         while (Marshal.ReadByte(ptr, length) != 0x00) length++;

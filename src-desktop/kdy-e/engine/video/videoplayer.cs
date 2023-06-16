@@ -24,13 +24,13 @@ public class VideoPlayer : ISetProperty {
     private bool is_muted;
     private int sndbridge_stream_id;
     private GCHandle gchandle;
-    private IntPtr audio_filehandle;
-    private IntPtr video_filehandle;
+    private nint audio_filehandle;
+    private nint video_filehandle;
     private Sprite sprite;
-    private IntPtr ffgraph;
-    private IntPtr ffgraph_sndbridge;
-    private IntPtr buffer_front;
-    private IntPtr buffer_back;
+    private nint ffgraph;
+    private nint ffgraph_sndbridge;
+    private nint buffer_front;
+    private nint buffer_back;
     private int buffer_size;
     private FFGraphInfo info;
     private Thread decoder;
@@ -45,7 +45,7 @@ public class VideoPlayer : ISetProperty {
     private volatile bool loop_enabled;
     private double last_video_playback_time;
     private Mutex mutex;
-    private IntPtr buffered_file;
+    private nint buffered_file;
 
     private VideoPlayer() { }
 
@@ -65,10 +65,10 @@ public class VideoPlayer : ISetProperty {
         Encoding.UTF8.GetBytes(full_path, 0, full_path.Length, full_path_ptr, 0);
 
         byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
-        IntPtr buffered_file = IntPtr.Zero;
+        nint buffered_file = 0x00;
         GCHandle gchandle;
-        IntPtr audio_filehandle;
-        IntPtr video_filehandle;
+        nint audio_filehandle;
+        nint video_filehandle;
 
         if (buffer != null) {
             gchandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
@@ -91,8 +91,8 @@ public class VideoPlayer : ISetProperty {
         }
 
         // Initialize FFgraph and SoundBridge
-        IntPtr ffgraph = IntPtr.Zero;
-        IntPtr ffgraph_sndbridge = IntPtr.Zero;
+        nint ffgraph = 0x00;
+        nint ffgraph_sndbridge = 0x00;
         int sndbridge_stream_id = -1;
         WebGLTexture tex = WebGLTexture.Null;
         Texture tex_managed = null;
@@ -100,7 +100,7 @@ public class VideoPlayer : ISetProperty {
         // initialize FFgraph
         ffgraph = FFgraph.ffgraph_init(video_filehandle, audio_filehandle);
 
-        if (ffgraph == IntPtr.Zero) {
+        if (ffgraph == 0x00) {
             Console.Error.WriteLine("videoplayer_init() ffgraph_init() failed for: " + src);
             goto L_failed;
         }
@@ -121,7 +121,7 @@ public class VideoPlayer : ISetProperty {
             }
         }
 
-        IntPtr buffer_front = IntPtr.Zero, buffer_back = IntPtr.Zero;
+        nint buffer_front = 0x00, buffer_back = 0x00;
         int texture_data_size = 0;
         bool frame_available = false;
         if (info.video_has_stream) {
@@ -132,7 +132,7 @@ public class VideoPlayer : ISetProperty {
             WebGL2RenderingContext gl = PVRContext.global_context.webopengl.gl;
             tex = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, tex);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, info.video_width, info.video_height, 0, gl.RGB, gl.UNSIGNED_BYTE, IntPtr.Zero);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, info.video_width, info.video_height, 0, gl.RGB, gl.UNSIGNED_BYTE, 0x00);
             gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
 
             tex_managed = Texture.InitFromRAW(
@@ -177,15 +177,15 @@ public class VideoPlayer : ISetProperty {
         };
 
 L_failed:
-        if (ffgraph != IntPtr.Zero) FFgraph.ffgraph_destroy(ffgraph);
-        if (ffgraph_sndbridge != IntPtr.Zero) FFgraph.ffgraph_sndbridge_destroy_helper(ffgraph_sndbridge);
+        if (ffgraph != 0x00) FFgraph.ffgraph_destroy(ffgraph);
+        if (ffgraph_sndbridge != 0x00) FFgraph.ffgraph_sndbridge_destroy_helper(ffgraph_sndbridge);
         if (sndbridge_stream_id >= 0) AICA.sndbridge_dispose(sndbridge_stream_id);
-        if (buffered_file != IntPtr.Zero) Marshal.FreeHGlobal(buffered_file);
+        if (buffered_file != 0x00) Marshal.FreeHGlobal(buffered_file);
 
         if (gchandle.IsAllocated) gchandle.Free();
 
-        if (audio_filehandle != IntPtr.Zero) AICA.filehandle_destroy(audio_filehandle);
-        if (video_filehandle != IntPtr.Zero) AICA.filehandle_destroy(video_filehandle);
+        if (audio_filehandle != 0x00) AICA.filehandle_destroy(audio_filehandle);
+        if (video_filehandle != 0x00) AICA.filehandle_destroy(video_filehandle);
 
         return null;
     }
@@ -203,19 +203,19 @@ L_failed:
 
         if (this.gchandle.IsAllocated) this.gchandle.Free();
         FFgraph.ffgraph_destroy(this.ffgraph);
-        if (this.ffgraph_sndbridge != IntPtr.Zero) FFgraph.ffgraph_sndbridge_destroy_helper(this.ffgraph_sndbridge);
+        if (this.ffgraph_sndbridge != 0x00) FFgraph.ffgraph_sndbridge_destroy_helper(this.ffgraph_sndbridge);
         if (this.sndbridge_stream_id >= 0) AICA.sndbridge_dispose(this.sndbridge_stream_id);
 
         AICA.filehandle_destroy(this.audio_filehandle);
         AICA.filehandle_destroy(this.video_filehandle);
 
-        if (this.buffered_file != IntPtr.Zero) Marshal.FreeHGlobal(this.buffered_file);
+        if (this.buffered_file != 0x00) Marshal.FreeHGlobal(this.buffered_file);
 
         this.sprite.Destroy();
         if (texture_managed != null) texture_managed.Destroy();
 
-        if (this.buffer_front != IntPtr.Zero) Marshal.FreeHGlobal(this.buffer_front);
-        if (this.buffer_back != IntPtr.Zero) Marshal.FreeHGlobal(this.buffer_back);
+        if (this.buffer_front != 0x00) Marshal.FreeHGlobal(this.buffer_front);
+        if (this.buffer_back != 0x00) Marshal.FreeHGlobal(this.buffer_back);
 
 
         // free(this);
@@ -407,7 +407,7 @@ L_failed:
         mutex.WaitOne();
 
         // prepare texture swap, use the buffer which is not current
-        IntPtr buffer = this.current_buffer_is_front ? this.buffer_back : this.buffer_front;
+        nint buffer = this.current_buffer_is_front ? this.buffer_back : this.buffer_front;
 
         // do texture update
         WebGL2RenderingContext gl = PVRContext.global_context.webopengl.gl;
@@ -423,7 +423,7 @@ L_failed:
 
 
     private void InternalDecoder() {
-        IntPtr front, back;
+        nint front, back;
         int size = this.buffer_size;
         bool no_audio = !this.info.audio_has_stream;
         int audio_id = this.sndbridge_stream_id;
@@ -490,7 +490,7 @@ L_prepare:
                     Interlocked.Exchange(ref this.last_video_playback_time, time);
                     this.frame_available = true;
                     next_frame_time = time;
-                    IntPtr tmp = back;
+                    nint tmp = back;
                     back = front;
                     front = tmp;
                 }

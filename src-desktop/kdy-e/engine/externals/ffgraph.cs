@@ -23,33 +23,33 @@ internal static class FFgraph {
 
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr ffgraph_init(IntPtr video_filehandle, IntPtr audio_filehandle);
+    public static extern nint ffgraph_init(nint video_filehandle, nint audio_filehandle);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void ffgraph_destroy(IntPtr ffgraph);
+    public static extern void ffgraph_destroy(nint ffgraph);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void ffgraph_get_streams_info(IntPtr ffgraph, ref FFGraphInfo output_info);
+    public static extern void ffgraph_get_streams_info(nint ffgraph, ref FFGraphInfo output_info);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int ffgraph_read_audio_samples(IntPtr ffgraph, [Out] float[] out_samples, int max_samples_per_channel);
+    public static extern int ffgraph_read_audio_samples(nint ffgraph, [Out] float[] out_samples, int max_samples_per_channel);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern double ffgraph_read_video_frame(IntPtr ffgraph, out IntPtr out_frame, out int out_frame_size);
+    public static extern double ffgraph_read_video_frame(nint ffgraph, out nint out_frame, out int out_frame_size);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern double ffgraph_read_video_frame2(IntPtr ffgraph, IntPtr buffer, int buffer_size);
+    public static extern double ffgraph_read_video_frame2(nint ffgraph, nint buffer, int buffer_size);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void ffgraph_seek(IntPtr ffgraph, double time_in_seconds);
+    public static extern void ffgraph_seek(nint ffgraph, double time_in_seconds);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void ffgraph_seek2(IntPtr ffgraph, double time_in_seconds, bool audio_or_video);
+    public static extern void ffgraph_seek2(nint ffgraph, double time_in_seconds, bool audio_or_video);
 
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr ffgraph_sndbridge_create_helper(IntPtr ffgraph, bool allow_seek, bool allow_destroy);
+    public static extern nint ffgraph_sndbridge_create_helper(nint ffgraph, bool allow_seek, bool allow_destroy);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void ffgraph_sndbridge_destroy_helper(IntPtr ffgraph_sndbridge);
+    public static extern void ffgraph_sndbridge_destroy_helper(nint ffgraph_sndbridge);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "ffgraph_get_runtime_info")]
-    private static extern IntPtr __ffgraph_get_runtime_info();
+    private static extern nint __ffgraph_get_runtime_info();
 
     public static string ffgraph_get_runtime_info() {
         try {
-            IntPtr ptr = __ffgraph_get_runtime_info();
+            nint ptr = __ffgraph_get_runtime_info();
             return Marshal.PtrToStringAnsi(ptr);
         } catch (DllNotFoundException) {
             return null;

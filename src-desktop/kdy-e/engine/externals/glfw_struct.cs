@@ -14,10 +14,10 @@ internal struct GamePadState {
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct Window {
-    private readonly IntPtr handle;
+    private readonly nint handle;
     public static readonly Window None;
 
-    public Window(IntPtr handle) {
+    public Window(nint handle) {
         this.handle = handle;
     }
 
@@ -40,7 +40,7 @@ internal struct Window {
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct Monitor {
-    private readonly IntPtr handle;
+    private readonly nint handle;
     public static readonly Monitor None;
 
     public override bool Equals(object obj) {
@@ -74,9 +74,9 @@ internal struct VideoMode {
 internal struct Icon {
     public readonly int width;
     public readonly int height;
-    public readonly IntPtr pixels;
+    public readonly nint pixels;
 
-    public Icon(int width, int height, IntPtr pixels) {
+    public Icon(int width, int height, nint pixels) {
         this.width = width;
         this.height = height;
         this.pixels = pixels;

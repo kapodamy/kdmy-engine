@@ -14,17 +14,17 @@ public enum DDSCompression {
 }
 
 public struct DDSBitmap {
-    public IntPtr ptr;
+    public nint ptr;
     public uint length;
     public uint width;
     public uint height;
 }
 
 public class DDSPixelDataBuffer : IPixelDataBuffer {
-    private readonly IntPtr dds_ptr;
+    private readonly nint dds_ptr;
     private readonly GCHandle dds_buffer_handle;
 
-    private readonly IntPtr first_bitmap_ptr;
+    private readonly nint first_bitmap_ptr;
     private readonly int first_bitmap_size;
 
     public unsafe DDSPixelDataBuffer(GCHandle hnd, void* ptr, DDSBitmap[] bitmaps, DDSCompression compression) {
@@ -33,7 +33,7 @@ public class DDSPixelDataBuffer : IPixelDataBuffer {
         if (bitmaps.Length < 1) throw new ArgumentException($"invalid {nameof(bitmaps)} length");
 
         this.dds_buffer_handle = hnd;
-        this.dds_ptr = new IntPtr(ptr);
+        this.dds_ptr = (int)ptr;
 
         this.first_bitmap_ptr = bitmaps[0].ptr;
         this.first_bitmap_size = (int)bitmaps[0].length;
@@ -46,7 +46,7 @@ public class DDSPixelDataBuffer : IPixelDataBuffer {
         }
     }
 
-    public IntPtr DataPointer { get => first_bitmap_ptr; }
+    public nint DataPointer { get => first_bitmap_ptr; }
 
     public int Length { get => first_bitmap_size; }
 
@@ -61,7 +61,7 @@ public class DDSPixelDataBuffer : IPixelDataBuffer {
             Marshal.FreeHGlobal(this.dds_ptr);
 
         for (int i = 0 ; i < this.Mipmaps.Length ; i++) {
-            this.Mipmaps[i].ptr = IntPtr.Zero;
+            this.Mipmaps[i].ptr = 0x00;
         }
     }
 }
@@ -189,13 +189,13 @@ internal unsafe class DDS {
                 byte[] buffer = new byte[8 * 1024];
                 int read;
                 while ((read = fs.Read(buffer, 0, buffer.Length)) != 0) {
-                    Marshal.Copy(buffer, 0, (IntPtr)data_ptr, read);
+                    Marshal.Copy(buffer, 0, (nint)data_ptr, read);
                     data_ptr += read;
                 }
             }
         } catch (Exception e) {
             Console.Error.WriteLine($"[ERROR] DDS::Parse() can not open {filename}:\n {e.Message}");
-            if (ptr != null) Marshal.FreeHGlobal((IntPtr)ptr);
+            if (ptr != null) Marshal.FreeHGlobal((nint)ptr);
             return null;
         }
 
@@ -350,7 +350,7 @@ internal unsafe class DDS {
         DDSBitmap[] bitmaps = new DDSBitmap[mipmap_count];
 
         for (uint i = 0, width = dds->dwWidth, height = dds->dwHeight ; i < mipmap_count ; i++) {
-            bitmaps[i].ptr = new IntPtr(offset + (byte*)data_ptr);
+            bitmaps[i].ptr = (nint)(offset + (byte*)data_ptr);
             bitmaps[i].length = block_size * ((width + 3) / 4) * ((height + 3) / 4);
             bitmaps[i].width = width;
             bitmaps[i].height = height;

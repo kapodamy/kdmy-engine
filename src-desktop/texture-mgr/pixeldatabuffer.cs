@@ -9,6 +9,6 @@ public interface IPixelDataBufferBuilder {
 }
 
 public interface IPixelDataBuffer : IDisposable {
-    IntPtr DataPointer { get; }
+    nint DataPointer { get; }
     int Length { get; }
 }

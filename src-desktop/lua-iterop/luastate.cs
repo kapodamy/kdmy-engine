@@ -34,7 +34,7 @@ public struct LuaState {
             Debug.Assert(this.L != null);
 
             void* ptr = LuaInteropHelpers.luascript_read_userdata(L, metatable_name);
-            GCHandle handle = GCHandle.FromIntPtr((IntPtr)ptr);
+            GCHandle handle = GCHandle.FromIntPtr((nint)ptr);
 
             if (handle.IsAllocated) {
                 T obj = (T)handle.Target;
@@ -55,7 +55,7 @@ public struct LuaState {
     public T ReadNullableUserdata<T>(int idx, string metatable_name) where T : class {
         unsafe {
             void* ptr = LuaInteropHelpers.luascript_read_nullable_userdata(L, idx, metatable_name);
-            GCHandle handle = GCHandle.FromIntPtr((IntPtr)ptr);
+            GCHandle handle = GCHandle.FromIntPtr((nint)ptr);
 
             if (handle.IsAllocated) return (T)handle.Target;
 
@@ -207,13 +207,13 @@ public struct LuaState {
     }
 
     public T luaL_testudata<T>(int ud, string tname) where T : class {
-        IntPtr opaque_handle;
+        nint opaque_handle;
         unsafe {
             void* ptr = LUA.luaL_testudata(L, ud, tname);
 
             if (ptr == null) goto L_destroyed;
 
-            opaque_handle = new IntPtr(ptr);
+            opaque_handle = (nint)ptr;
         }
 
         GCHandle handle = GCHandle.FromIntPtr(opaque_handle);
@@ -243,7 +243,7 @@ L_destroyed:
 
     public void lua_pushlstring(byte[] s, int len) {
         unsafe {
-            fixed (byte* ptr = s) LUA.lua_pushlstring(L, ptr, (IntPtr)len);
+            fixed (byte* ptr = s) LUA.lua_pushlstring(L, ptr, len);
         }
     }
 
@@ -316,13 +316,13 @@ L_destroyed:
 
     public byte[] luaL_checklstring(int idx) {
         unsafe {
-            IntPtr length;
+            nint length;
             char* ptr = LUA.luaL_checklstring(L, idx, out length);
 
             if (ptr == null) return null;
 
             byte[] buffer = new byte[(uint)length];
-            Marshal.Copy((IntPtr)ptr, buffer, 0, buffer.Length);
+            Marshal.Copy((nint)ptr, buffer, 0, buffer.Length);
 
             return buffer;
         }

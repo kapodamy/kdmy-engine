@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace Engine.Externals;
 
@@ -11,22 +10,22 @@ internal static class AICA {
     public const int StreamID_BACKEND_FAILED = -3;
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr filehandle_init(/* const char* */byte[] fullpath);
+    public static extern nint filehandle_init(/* const char* */byte[] fullpath);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr filehandle_init2(/* const byte* */IntPtr data, int size);
+    public static extern nint filehandle_init2(/* const byte* */nint data, int size);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr filehandle_init3(/* const char* */byte[] fullpath);
+    public static extern nint filehandle_init3(/* const char* */byte[] fullpath);
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void filehandle_destroy(IntPtr handle);
+    public static extern void filehandle_destroy(nint handle);
 
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int sndbridge_queue_ogg(IntPtr ogg_filehandle);
+    public static extern int sndbridge_queue_ogg(nint ogg_filehandle);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int sndbridge_queue(IntPtr external_decoder);
+    public static extern int sndbridge_queue(nint external_decoder);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern void sndbridge_dispose(int stream);
 
@@ -61,10 +60,10 @@ internal static class AICA {
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     private static extern void sndbridge_set_master_muted(int muted);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "sndbridge_get_runtime_info")]
-    private static extern IntPtr __sndbridge_get_runtime_info();
+    private static extern nint __sndbridge_get_runtime_info();
 
     public static string sndbridge_get_runtime_info() {
-        IntPtr ptr = __sndbridge_get_runtime_info();
+        nint ptr = __sndbridge_get_runtime_info();
         return Marshal.PtrToStringAnsi(ptr);
     }
 
