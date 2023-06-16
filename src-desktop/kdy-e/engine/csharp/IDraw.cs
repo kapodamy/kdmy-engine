@@ -1,7 +1,7 @@
 ﻿using Engine.Platform;
 
-namespace Engine {
-    public interface IDraw {
-        void Draw(PVRContext pvrctx);
-    }
+namespace Engine;
+
+public interface IDraw {
+    void Draw(PVRContext pvrctx);
 }

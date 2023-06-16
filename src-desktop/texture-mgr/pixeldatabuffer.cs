@@ -1,16 +1,14 @@
 ﻿using System;
 
-namespace Engine.Platform {
+namespace Engine.Platform;
 
-    public interface IPixelDataBufferBuilder {
-        IPixelDataBuffer CreatePixelDataBuffer(int byte_size);
+public interface IPixelDataBufferBuilder {
+    IPixelDataBuffer CreatePixelDataBuffer(int byte_size);
 
-        bool CanCreatePixelDataBuffer();
-    }
+    bool CanCreatePixelDataBuffer();
+}
 
-    public interface IPixelDataBuffer : IDisposable {
-        IntPtr DataPointer { get; }
-        int Length { get; }
-    }
-
+public interface IPixelDataBuffer : IDisposable {
+    IntPtr DataPointer { get; }
+    int Length { get; }
 }

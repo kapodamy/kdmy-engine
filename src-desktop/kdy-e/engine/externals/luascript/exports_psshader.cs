@@ -2,6 +2,8 @@
 using Engine.Externals.LuaInterop;
 using Engine.Platform;
 
+namespace Engine.Externals.LuaScriptInterop;
+
 public static class ExportsPSShader {
 
     public const string PSSHADER = "PSShader";
