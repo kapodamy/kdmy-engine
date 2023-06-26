@@ -643,7 +643,7 @@ public static class FunkinSave {
     }
 
 
-    public static bool StorageSet(string week_name, string name, byte[] data, uint data_size) {
+    public static bool StorageSet(string week_name, string name, ReadOnlySpan<byte> data, uint data_size) {
         int week_id;
 
         if (week_name == null) {
@@ -673,10 +673,8 @@ public static class FunkinSave {
 
         if (storage == null) storage = new Storage();
 
-        data = CloneUtils.CloneArray(data, (int)data_size);
-
         //free(storage.data);
-        storage.data = data;
+        storage.data = data.ToArray();
         storage.data_size = data_size;
         storage.week_id = (ushort)week_id;
 

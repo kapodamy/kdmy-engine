@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 
 namespace LuaNativeMethods;
@@ -53,6 +54,13 @@ internal unsafe static class LUA {
     public const int ERRERR = 5;
 
     private const string DLL = "lua";// "lua.dll"
+
+    private static byte* STRING_BUFFER;
+    private static int STRING_BUFFER_LENGTH = 256;
+
+    static LUA() {
+        STRING_BUFFER = (byte*)NativeMemory.Alloc((nuint)STRING_BUFFER_LENGTH);
+    }
 
 
     public static string lua_tostring(lua_State* L, int i) {
@@ -110,8 +118,7 @@ internal unsafe static class LUA {
     }
 
     public static int luaL_argerror(lua_State* L, int arg, string extramsg) {
-        fixed (byte* ptr = MarshalString(extramsg))
-            return luaL_argerror(L, arg, ptr);
+        return luaL_argerror(L, arg, MarshalString(extramsg));
     }
 
     public static string luaL_checkstring(lua_State* L, int n) {
@@ -125,8 +132,7 @@ internal unsafe static class LUA {
     }
 
     public static void luaL_traceback(lua_State* L, lua_State* L1, string msg, int level) {
-        fixed (byte* ptr = MarshalString(msg))
-            luaL_traceback(L, L1, ptr, level);
+        luaL_traceback(L, L1, MarshalString(msg), level);
     }
 
     public static void lua_insert(lua_State* L, int idx) {
@@ -330,33 +336,39 @@ internal unsafe static class LUA {
     public static extern void lua_rawseti(lua_State* L, int index, int n);
 
 
-    private static byte[] STRING_BUFFER = new byte[256];
-    private static byte[] MarshalString(string str) {
+    private static byte* MarshalString(string str) {
         if (str == null) return null;
 
-        int size = Encoding.UTF8.GetByteCount(str) + 1;
-        if (size > STRING_BUFFER.Length) STRING_BUFFER = new byte[size];
+        int size = Encoding.UTF8.GetByteCount(str) + 1;// + 1 for null terminator
 
-        Encoding.UTF8.GetBytes(str, 0, str.Length, STRING_BUFFER, 0);
-        STRING_BUFFER[size - 1] = 0x00;
+        if (size > STRING_BUFFER_LENGTH) {
+            STRING_BUFFER_LENGTH = Math.Min(size, 1024 * 1024);
+            STRING_BUFFER = (byte*)NativeMemory.Realloc(STRING_BUFFER, (nuint)STRING_BUFFER_LENGTH);
+        }
+
+        Span<byte> span = new Span<byte>(STRING_BUFFER, STRING_BUFFER_LENGTH);
+        int written = Encoding.UTF8.GetBytes(str, span);
+
+        // null-terminator
+        STRING_BUFFER[written] = 0x00;
+
         return STRING_BUFFER;
     }
+
     internal static string MarshalStringBack(char* ptr, nint len) {
         if (ptr == null) return null;
 
         int size = (int)len;
-        if (size < 0) return String.Empty;
 
-        if (size > STRING_BUFFER.Length) STRING_BUFFER = new byte[size];
-
-        Marshal.Copy((nint)ptr, STRING_BUFFER, 0, size);
-        return Encoding.UTF8.GetString(STRING_BUFFER, 0, size);
+        if (size < 1)
+            return String.Empty;
+        else
+            return Encoding.UTF8.GetString((byte*)ptr, size);
     }
 
 
     public static int lua_getfield(lua_State* L, int idx, string k) {
-        fixed (byte* ptr = MarshalString(k))
-            return lua_getfield(L, idx, ptr);
+        return lua_getfield(L, idx, MarshalString(k));
     }
 
     public static int luaL_error(lua_State* L, string str) {
@@ -364,45 +376,39 @@ internal unsafe static class LUA {
         // FIMXE: "luaL_error()" uses longjmp and maybe can break "fixed"
         //        and thus creating a memory leak
         //
-        fixed (byte* ptr = MarshalString(str))
-            return luaL_error(L, ptr);
+        return luaL_error(L, MarshalString(str));
     }
 
     public static void* luaL_checkudata(lua_State* L, int ud, string tname) {
-        fixed (byte* ptr = MarshalString(tname))
-            return luaL_checkudata(L, ud, ptr);
+        return luaL_checkudata(L, ud, MarshalString(tname));
     }
 
     public static void* luaL_testudata(lua_State* L, int ud, string tname) {
-        fixed (byte* ptr = MarshalString(tname))
-            return luaL_testudata(L, ud, ptr);
+        return luaL_testudata(L, ud, MarshalString(tname));
     }
 
     public static void lua_setfield(lua_State* L, int idx, string k) {
-        fixed (byte* ptr = MarshalString(k)) lua_setfield(L, idx, ptr);
+        lua_setfield(L, idx, MarshalString(k));
     }
 
     public static int luaL_newmetatable(lua_State* L, string tname) {
-        fixed (byte* ptr = MarshalString(tname))
-            return luaL_newmetatable(L, ptr);
+        return luaL_newmetatable(L, MarshalString(tname));
     }
 
     public static int lua_getglobal(lua_State* L, string name) {
-        fixed (byte* ptr = MarshalString(name))
-            return lua_getglobal(L, ptr);
+        return lua_getglobal(L, MarshalString(name));
     }
 
     public static int luaL_loadstring(lua_State* L, string s) {
-        fixed (byte* ptr = MarshalString(s))
-            return luaL_loadstring(L, ptr);
+        return luaL_loadstring(L, MarshalString(s));
     }
 
     public static void lua_setglobal(lua_State* L, string name) {
-        fixed (byte* ptr = MarshalString(name)) lua_setglobal(L, ptr);
+        lua_setglobal(L, MarshalString(name));
     }
 
     public static void lua_pushstring(lua_State* L, string s) {
-        fixed (byte* ptr = MarshalString(s)) lua_pushstring(L, ptr);
+        lua_pushstring(L, MarshalString(s));
     }
 
     public static int luaL_loadbufferx(lua_State* L, string buff, string name) {
@@ -418,4 +424,5 @@ internal unsafe static class LUA {
             return luaL_loadbufferx(L, str_ptr, buff_size, str_ptr + offset, null);
         }
     }
+
 }

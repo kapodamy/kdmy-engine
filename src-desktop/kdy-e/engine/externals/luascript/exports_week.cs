@@ -442,7 +442,7 @@ public static class ExportsWeek {
         RoundContext roundcontext = (RoundContext)L.Context;
 
         string name = L.luaL_checkstring(1);
-        byte[] data;
+        ReadOnlySpan<byte> data;
         uint data_size;
 
         if (L.lua_isnil(2)) {

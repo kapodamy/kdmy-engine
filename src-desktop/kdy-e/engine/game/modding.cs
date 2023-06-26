@@ -98,7 +98,7 @@ public class Modding {
         FunkinSave.DeleteUnlockDirective(name);
     }
 
-    public bool StorageSet(string week_name, string name, byte[] data, uint data_size) {
+    public bool StorageSet(string week_name, string name, ReadOnlySpan<byte> data, uint data_size) {
         bool ret = FunkinSave.StorageSet(week_name, name, data, data_size);
         if (ret) this.has_funkinsave_changes = true;
         return ret;

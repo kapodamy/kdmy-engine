@@ -314,17 +314,14 @@ L_destroyed:
         }
     }
 
-    public byte[] luaL_checklstring(int idx) {
+    public ReadOnlySpan<byte> luaL_checklstring(int idx) {
         unsafe {
             nint length;
             char* ptr = LUA.luaL_checklstring(L, idx, &length);
 
             if (ptr == null) return null;
 
-            byte[] buffer = new byte[(uint)length];
-            Marshal.Copy((nint)ptr, buffer, 0, buffer.Length);
-
-            return buffer;
+            return new ReadOnlySpan<byte>(ptr, checked((int)length));
         }
     }
 

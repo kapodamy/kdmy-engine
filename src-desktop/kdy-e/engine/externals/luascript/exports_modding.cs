@@ -1,3 +1,4 @@
+using System;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
 using Engine.Game.Common;
@@ -192,7 +193,7 @@ public static class ExportsModding {
 
         string week_name = L.luaL_optstring(1, null);
         string name = L.luaL_checkstring(2);
-        byte[] data;
+        ReadOnlySpan<byte> data;
         uint data_size;
 
         if (L.lua_isnil(3)) {
