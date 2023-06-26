@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net7.0-windows</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Engine.Externals.FFGraphInterop</RootNamespace>
+		<AssemblyName>kdy_ffgraph</AssemblyName>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<PlatformTarget>x64</PlatformTarget>
+		<IsPublishable>False</IsPublishable>
+		<Platforms>x64</Platforms>
+		<UpdateAssemblyInfo>true</UpdateAssemblyInfo>
+		<UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	</PropertyGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\soundbridge\soundbridge.csproj" />
+	</ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DefineConstants>$(DefineConstants);FF_API_SLICE_OFFSET;FF_API_OLD_CHANNEL_LAYOUT;FF_API_AVCTX_FRAME_NUMBER;FF_API_REORDERED_OPAQUE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <DefineConstants>$(DefineConstants);FF_API_SLICE_OFFSET;FF_API_OLD_CHANNEL_LAYOUT;FF_API_AVCTX_FRAME_NUMBER;FF_API_REORDERED_OPAQUE</DefineConstants>
+  </PropertyGroup>
+</Project>

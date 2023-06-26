@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using Engine.Externals;
+using Engine.Externals.FFGraphInterop;
 using Engine.Externals.GLFW;
 using Engine.Externals.LuaScriptInterop;
+using Engine.Externals.SoundBridge;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
 
-namespace Engine.Video; 
+namespace Engine.Video;
 
 public class VideoPlayer : ISetProperty {
     private const double BEHIND_TOLERANCE = 0.005;// 5ms
@@ -18,17 +19,16 @@ public class VideoPlayer : ISetProperty {
     private static readonly bool runtime_available;
 
     static VideoPlayer() {
-        runtime_available = FFgraph.ffgraph_get_runtime_info() != null;
+        runtime_available = FFGraph.GetRuntimeInfo() != null;
     }
 
     private bool is_muted;
-    private int sndbridge_stream_id;
-    private GCHandle gchandle;
-    private nint audio_filehandle;
-    private nint video_filehandle;
+    private Stream sndbridge_stream;
+    private IFileSource audio_filehandle;
+    private IFileSource video_filehandle;
     private Sprite sprite;
-    private nint ffgraph;
-    private nint ffgraph_sndbridge;
+    private FFGraph ffgraph;
+    private IDecoder ffgraph_sndbridge;
     private nint buffer_front;
     private nint buffer_back;
     private int buffer_size;
@@ -45,7 +45,6 @@ public class VideoPlayer : ISetProperty {
     private volatile bool loop_enabled;
     private double last_video_playback_time;
     private Mutex mutex;
-    private nint buffered_file;
 
     private VideoPlayer() { }
 
@@ -61,62 +60,52 @@ public class VideoPlayer : ISetProperty {
 
         full_path = IO.GetAbsolutePath(full_path, true, true);
 
-        byte[] full_path_ptr = new byte[Encoding.UTF8.GetByteCount(full_path) + 1];
-        Encoding.UTF8.GetBytes(full_path, 0, full_path.Length, full_path_ptr, 0);
-
         byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
-        nint buffered_file = 0x00;
-        GCHandle gchandle;
-        nint audio_filehandle;
-        nint video_filehandle;
+        IFileSource audio_filehandle;
+        IFileSource video_filehandle;
 
         if (buffer != null) {
-            gchandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            audio_filehandle = AICA.filehandle_init2(gchandle.AddrOfPinnedObject(), buffer.Length);
-            video_filehandle = AICA.filehandle_init2(gchandle.AddrOfPinnedObject(), buffer.Length);
+            audio_filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
+            video_filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
         } else {
             if (FS.FileLength(src) > MAX_BUFFERED_SIZE) {
-                audio_filehandle = AICA.filehandle_init(full_path_ptr);
-                video_filehandle = AICA.filehandle_init(full_path_ptr);
+                audio_filehandle = FileHandleUtil.Init(full_path, true);
+                video_filehandle = FileHandleUtil.Init(full_path, true);
             } else {
                 // load file contents in RAM
                 buffer = FS.ReadArrayBuffer(src);
-                buffered_file = Marshal.AllocHGlobal(buffer.Length);
-                Marshal.Copy(buffer, 0, buffered_file, buffer.Length);
 
-                audio_filehandle = AICA.filehandle_init2(buffered_file, buffer.Length);
-                video_filehandle = AICA.filehandle_init2(buffered_file, buffer.Length);
+                audio_filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
+                video_filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
             }
-            gchandle = default(GCHandle);
         }
 
         // Initialize FFgraph and SoundBridge
-        nint ffgraph = 0x00;
-        nint ffgraph_sndbridge = 0x00;
-        int sndbridge_stream_id = -1;
+        FFGraph ffgraph = null;
+        IDecoder ffgraph_sndbridge = null;
+        Stream sndbridge_stream = null;
         WebGLTexture tex = WebGLTexture.Null;
         Texture tex_managed = null;
 
         // initialize FFgraph
-        ffgraph = FFgraph.ffgraph_init(video_filehandle, audio_filehandle);
+        ffgraph = FFGraph.Init(video_filehandle, audio_filehandle);
 
-        if (ffgraph == 0x00) {
+        if (ffgraph == null) {
             Console.Error.WriteLine("videoplayer_init() ffgraph_init() failed for: " + src);
             goto L_failed;
         }
 
         // adquire information about audio/video streams
-        FFGraphInfo info = new FFGraphInfo();
-        FFgraph.ffgraph_get_streams_info(ffgraph, ref info);
+        FFGraphInfo info = ffgraph.GetStreamsInfo();
 
         if (info.audio_has_stream) {
             // adquire ExternalDecoder of the audio track
-            ffgraph_sndbridge = FFgraph.ffgraph_sndbridge_create_helper(ffgraph, true, false);
+            ffgraph_sndbridge = new FFGraphSoundBridgeDecoder(ffgraph, true, false);
 
             // initialize SoundBridge stream
-            sndbridge_stream_id = AICA.sndbridge_queue(ffgraph_sndbridge);
-            if (sndbridge_stream_id < 0) {
-                Console.Error.WriteLine("videoplayer_init() sndbridge_queue() failed for: " + src);
+            StreamResult ret = SoundBridge.Enqueue(ffgraph_sndbridge, out sndbridge_stream);
+            if (ret != StreamResult.Success) {
+                Console.Error.WriteLine($"[ERROR] videoplayer_init() SoundBridge::Enqueue() {ret} for: {src}");
                 goto L_failed;
             }
         }
@@ -140,7 +129,7 @@ public class VideoPlayer : ISetProperty {
             );
 
             // adquire first video frame
-            frame_available = FFgraph.ffgraph_read_video_frame2(ffgraph, buffer_front, texture_data_size) >= 0;
+            frame_available = ffgraph.ReadVideoFrame2(buffer_front, texture_data_size) >= 0;
         }
 
         bool longest_is_video = info.video_has_stream && info.video_seconds_duration > info.audio_seconds_duration;
@@ -150,13 +139,12 @@ public class VideoPlayer : ISetProperty {
         if (tex_managed != null) sprite.SetTexture(tex_managed, false);
 
         return new VideoPlayer() {
-            gchandle = gchandle,
             video_filehandle = video_filehandle,
             audio_filehandle = audio_filehandle,
             ffgraph_sndbridge = ffgraph_sndbridge,
             sprite = sprite,
             is_muted = false,
-            sndbridge_stream_id = sndbridge_stream_id,
+            sndbridge_stream = sndbridge_stream,
             ffgraph = ffgraph,
             buffer_front = buffer_front,
             buffer_back = buffer_back,
@@ -172,20 +160,16 @@ public class VideoPlayer : ISetProperty {
             longest_is_video = longest_is_video,
             loop_enabled = false,
             last_video_playback_time = 0.0,
-            mutex = new Mutex(),
-            buffered_file = buffered_file
+            mutex = new Mutex()
         };
 
 L_failed:
-        if (ffgraph != 0x00) FFgraph.ffgraph_destroy(ffgraph);
-        if (ffgraph_sndbridge != 0x00) FFgraph.ffgraph_sndbridge_destroy_helper(ffgraph_sndbridge);
-        if (sndbridge_stream_id >= 0) AICA.sndbridge_dispose(sndbridge_stream_id);
-        if (buffered_file != 0x00) Marshal.FreeHGlobal(buffered_file);
+        if (ffgraph != null) ffgraph.Dispose();
+        if (ffgraph_sndbridge != null) ffgraph_sndbridge.Dispose();
+        if (sndbridge_stream >= 0) sndbridge_stream.Dispose();
 
-        if (gchandle.IsAllocated) gchandle.Free();
-
-        if (audio_filehandle != 0x00) AICA.filehandle_destroy(audio_filehandle);
-        if (video_filehandle != 0x00) AICA.filehandle_destroy(video_filehandle);
+        if (audio_filehandle != null) audio_filehandle.Dispose();
+        if (video_filehandle != null) video_filehandle.Dispose();
 
         return null;
     }
@@ -201,15 +185,12 @@ L_failed:
         this.decoder = null;
         this.mutex.Dispose();
 
-        if (this.gchandle.IsAllocated) this.gchandle.Free();
-        FFgraph.ffgraph_destroy(this.ffgraph);
-        if (this.ffgraph_sndbridge != 0x00) FFgraph.ffgraph_sndbridge_destroy_helper(this.ffgraph_sndbridge);
-        if (this.sndbridge_stream_id >= 0) AICA.sndbridge_dispose(this.sndbridge_stream_id);
+        this.ffgraph.Dispose();
+        if (this.ffgraph_sndbridge != null) this.ffgraph_sndbridge.Dispose();
+        if (this.sndbridge_stream != null) this.sndbridge_stream.Dispose();
 
-        AICA.filehandle_destroy(this.audio_filehandle);
-        AICA.filehandle_destroy(this.video_filehandle);
-
-        if (this.buffered_file != 0x00) Marshal.FreeHGlobal(this.buffered_file);
+        this.audio_filehandle.Dispose();
+        this.video_filehandle.Dispose();
 
         this.sprite.Destroy();
         if (texture_managed != null) texture_managed.Destroy();
@@ -235,8 +216,8 @@ L_failed:
     }
 
     public void Pause() {
-        if (this.info.audio_has_stream) {
-            AICA.sndbridge_pause(this.sndbridge_stream_id);
+        if (this.sndbridge_stream != null) {
+            this.sndbridge_stream.Pause();
         }
         if (this.decoder != null && this.decoder.IsAlive) {
             this.decoder_running = false;
@@ -245,15 +226,15 @@ L_failed:
     }
 
     public void Stop() {
-        if (this.info.audio_has_stream) {
-            AICA.sndbridge_stop(this.sndbridge_stream_id);
+        if (this.sndbridge_stream != null) {
+            this.sndbridge_stream.Stop();
         }
         if (this.decoder != null && this.decoder.IsAlive) {
             this.decoder_running = false;
             this.decoder.Join();
         }
         if (this.info.video_has_stream) {
-            FFgraph.ffgraph_seek2(this.ffgraph, 0.0, false);
+            this.ffgraph.Seek2(0.0, false);
             this.last_video_playback_time = 0.0;
             this.video_track_ended = false;
         }
@@ -262,27 +243,27 @@ L_failed:
     public void LoopEnable(bool enable) {
         if (this.info.video_has_stream)
             this.loop_enabled = enable;
-        else
-            AICA.sndbridge_loop(this.sndbridge_stream_id, enable);
+        else if (this.sndbridge_stream != null)
+            this.sndbridge_stream.SetLooped(enable);
     }
 
     public void FadeAudio(bool in_or_out, float duration) {
-        if (this.info.audio_has_stream) {
-            AICA.sndbridge_do_fade(this.sndbridge_stream_id, in_or_out, duration);
+        if (this.sndbridge_stream != null) {
+            this.sndbridge_stream.DoFade(in_or_out, duration / 1000f);
         }
     }
 
 
     public void SetVolume(float volume) {
-        if (this.sndbridge_stream_id >= 0) {
-            AICA.sndbridge_set_volume(this.sndbridge_stream_id, volume);
+        if (this.sndbridge_stream != null) {
+            this.sndbridge_stream.SetVolume(volume);
         }
     }
 
     public void SetMute(bool muted) {
-        if (this.sndbridge_stream_id >= 0) {
+        if (this.sndbridge_stream != null) {
             this.is_muted = muted;
-            AICA.sndbridge_mute(this.sndbridge_stream_id, muted);
+            this.sndbridge_stream.Mute(muted);
         }
     }
 
@@ -295,12 +276,12 @@ L_failed:
 
             this.last_video_playback_time = timestamp;
             this.decoder_seek_request = this.decoder != null && this.decoder.IsAlive;
-            FFgraph.ffgraph_seek2(this.ffgraph, timestamp / 1000.0, false);
+            this.ffgraph.Seek2(timestamp / 1000.0, false);
 
             if (!this.decoder_seek_request) {
                 // playback is paused, read a single frame to keep the sprite updated
-                this.last_video_playback_time = FFgraph.ffgraph_read_video_frame2(
-                    this.ffgraph, this.buffer_front, this.buffer_size
+                this.last_video_playback_time = this.ffgraph.ReadVideoFrame2(
+                    this.buffer_front, this.buffer_size
                 );
                 this.frame_available = this.last_video_playback_time >= 0;
             }
@@ -308,8 +289,8 @@ L_failed:
             this.mutex.ReleaseMutex();
         }
 
-        if (this.sndbridge_stream_id >= 0) {
-            AICA.sndbridge_seek(this.sndbridge_stream_id, timestamp);
+        if (this.sndbridge_stream != null) {
+            this.sndbridge_stream.Seek(timestamp / 1000.0);
         }
     }
 
@@ -354,15 +335,15 @@ L_failed:
     public bool IsPlaying() {
         if (this.longest_is_video)
             return this.decoder_running;
-        if (this.info.audio_has_stream)
-            return AICA.sndbridge_is_active(this.sndbridge_stream_id);
+        if (this.sndbridge_stream != null)
+            return this.sndbridge_stream.IsActive;
         else
             return false;
     }
 
     public Fading HasFaddingAudio() {
-        if (this.sndbridge_stream_id >= 0) {
-            return (Fading)AICA.sndbridge_has_fade_active(this.sndbridge_stream_id);
+        if (this.sndbridge_stream != null) {
+            return (Fading)this.sndbridge_stream.ActiveFade;
         }
         return Fading.NONE;
     }
@@ -377,16 +358,16 @@ L_failed:
     public double GetPosition() {
         if (longest_is_video)
             return this.last_video_playback_time;
-        else if (this.sndbridge_stream_id >= 0)
-            return AICA.sndbridge_position(this.sndbridge_stream_id);
+        else if (this.sndbridge_stream != null)
+            return this.sndbridge_stream.Position * 1000.0;
         else
             return -1.0;
     }
 
     public bool HasEnded() {
         bool audio_track_ended = true;
-        if (this.sndbridge_stream_id >= 0)
-            audio_track_ended = AICA.sndbridge_has_ended(this.sndbridge_stream_id);
+        if (this.sndbridge_stream != null)
+            audio_track_ended = this.sndbridge_stream.HasEnded;
 
         return this.video_track_ended && audio_track_ended;
     }
@@ -397,6 +378,7 @@ L_failed:
     }
 
     public bool HasAudioTrack() {
+        // WARNING: audio playback can be unavailable
         return this.info.audio_has_stream;
     }
 
@@ -425,8 +407,8 @@ L_failed:
     private void InternalDecoder() {
         nint front, back;
         int size = this.buffer_size;
-        bool no_audio = !this.info.audio_has_stream;
-        int audio_id = this.sndbridge_stream_id;
+        bool no_audio = this.sndbridge_stream == null;
+        Stream audio = this.sndbridge_stream;
 
         if (this.current_buffer_is_front) {
             front = this.buffer_front;
@@ -441,12 +423,12 @@ L_prepare:
         double time_offset = Glfw.GetTime();
         double next_frame_time = Double.NegativeInfinity;
 
-        if (!no_audio) AICA.sndbridge_play(audio_id);
+        if (!no_audio) audio.Play();
 
         while (this.decoder_running) {
-            if (this.video_track_ended && (no_audio || AICA.sndbridge_has_ended(audio_id))) {
-                if (!no_audio) AICA.sndbridge_stop(audio_id);
-                FFgraph.ffgraph_seek(this.ffgraph, 0.0);
+            if (this.video_track_ended && (no_audio || audio.HasEnded)) {
+                if (!no_audio) audio.Stop();
+                this.ffgraph.Seek(0.0);
 
                 // loop again 
                 this.video_track_ended = false;
@@ -460,7 +442,7 @@ L_prepare:
             }
 
             this.mutex.WaitOne();
-            time = FFgraph.ffgraph_read_video_frame2(this.ffgraph, front, size);
+            time = this.ffgraph.ReadVideoFrame2(front, size);
 
             if (this.decoder_running) {
                 if (this.decoder_seek_request) {
@@ -500,8 +482,8 @@ L_prepare:
     }
 
     private void InternalRunDecoderAsync() {
-        if (!this.info.video_has_stream) {
-            AICA.sndbridge_play(this.sndbridge_stream_id);
+        if (!this.info.video_has_stream && this.sndbridge_stream != null) {
+            this.sndbridge_stream.Play();
             return;
         }
 

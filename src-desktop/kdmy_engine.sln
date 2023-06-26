@@ -18,6 +18,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fontatlas", "fontatlas\font
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "soundbridge", "soundbridge\soundbridge.csproj", "{4216BFED-F792-4C5E-9ECA-10FB877853CA}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ffgraph", "ffgraph\ffgraph.csproj", "{25F3A0A7-82F8-4862-A744-54D0B4BB7263}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -44,6 +46,10 @@ Global
 		{4216BFED-F792-4C5E-9ECA-10FB877853CA}.Debug|x64.Build.0 = Debug|x64
 		{4216BFED-F792-4C5E-9ECA-10FB877853CA}.Release|x64.ActiveCfg = Release|Any CPU
 		{4216BFED-F792-4C5E-9ECA-10FB877853CA}.Release|x64.Build.0 = Release|Any CPU
+		{25F3A0A7-82F8-4862-A744-54D0B4BB7263}.Debug|x64.ActiveCfg = Debug|x64
+		{25F3A0A7-82F8-4862-A744-54D0B4BB7263}.Debug|x64.Build.0 = Debug|x64
+		{25F3A0A7-82F8-4862-A744-54D0B4BB7263}.Release|x64.ActiveCfg = Release|Any CPU
+		{25F3A0A7-82F8-4862-A744-54D0B4BB7263}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
