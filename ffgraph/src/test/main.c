@@ -1,6 +1,7 @@
 #include "../ffgraph.h"
 #include <malloc.h>
 #include <stdio.h>
+#include <assert.h>
 
 
 static void dump_data(uint32_t size, void* data) {
@@ -20,7 +21,8 @@ static void dump_data(uint32_t size, void* data) {
 static FILE* audio_raw;
 static float samples[1024 * 1024];
 
-int main(int argc, char** argv) {
+int main2(int argc, char** argv) {
+    //printf("<%llx>\n", AV_NOPTS_VALUE);
     float buffer[8192 * 2];
     int sizes[] = {
         8192,
@@ -145,7 +147,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-int main2(int argc, char** argv) {
+int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
 
@@ -154,6 +156,8 @@ int main2(int argc, char** argv) {
     audio_raw = fopen("./audio.data", "wb");
     FileHandle_t* audio_filehandle = filehandle_init3("./a.webm");
     FileHandle_t* video_filehandle = filehandle_init3("./a.webm");
+
+    assert (audio_filehandle != NULL && video_filehandle != NULL);
 
     FFGraph* ffgraph = ffgraph_init(video_filehandle, audio_filehandle);
 

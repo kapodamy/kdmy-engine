@@ -4,8 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/include/**",
-                "~/AppData/Local/emsdk/upstream/emscripten/cache/sysroot/include"
+                "${workspaceFolder}/include/",
+                "${env:EMSDK}/include"
             ],
             "defines": [
                 "_DEBUG",

@@ -9,15 +9,16 @@ FFGraph* ffgraph_init(FileHandle_t* video_filehandle, FileHandle_t* audio_fileha
     }
 
     FFGraphFormat* video = ffgraphfmt_init(video_filehandle, AVMEDIA_TYPE_VIDEO);
+    if (video) videoconverter_init(video->codec_ctx, &video->ffgraphconv);
+
     FFGraphFormat* audio = ffgraphfmt_init(audio_filehandle, AVMEDIA_TYPE_AUDIO);
+    if (audio) audioconverter_init(audio->codec_ctx, &audio->ffgraphconv);
 
     if (!video && !audio) {
         printf("ffgraph_init() failed, no audio/video stream available.\n");
         return NULL;
     }
 
-    if (video) videoconverter_init(video->codec_ctx, &video->ffgraphconv);
-    if (audio) audioconverter_init(audio->codec_ctx, &audio->ffgraphconv);
 
     FFGraph* ffgraph = malloc(sizeof(FFGraph));
     ffgraph->video = video;

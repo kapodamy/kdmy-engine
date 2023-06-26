@@ -37,6 +37,9 @@
         "avio.h": "c",
         "filehandle.h": "c",
         "externaldecoder.h": "c",
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "avutil.h": "c",
+        "malloc.h": "c",
+        "stdio.h": "c"
     }
 }
