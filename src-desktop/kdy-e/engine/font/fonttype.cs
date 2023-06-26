@@ -554,10 +554,15 @@ public class FontType : IFontRender {
         WebGLTexture texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
+#if SDF_MIPMAPS
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR_MIPMAP_NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+#else
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+#endif
 
         // gl.LUMINANCE in WebGL and GL_RED in OpenGL
         gl.texImage2D(
@@ -566,7 +571,9 @@ public class FontType : IFontRender {
             GLenum.GL_RED, gl.UNSIGNED_BYTE, fontcharmap.texture
         );
 
+#if SDF_MIPMAPS
         gl.generateMipmap(gl.TEXTURE_2D);
+#endif
 
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpack_alignment);
 
@@ -659,6 +666,7 @@ public class FontType : IFontRender {
     private static float InternalCalcSmoothing(PVRContext pvrctx, float height) {
         SIMDMatrix matrix = pvrctx.CurrentMatrix;
 
+#if SDF_SMOOTHNESS_BY_MATRIX_SCALE_DECOMPOSITION
         double x = matrix[15] * Math.Sqrt(
             (matrix[0] * matrix[0]) +
             (matrix[1] * matrix[1]) +
@@ -674,6 +682,16 @@ public class FontType : IFontRender {
         double smoothness = FontType.GLYPHS_SMOOTHING_COEFF / (FontType.GLYPHS_HEIGHT * scale);
 
         return (float)smoothness;
+
+#else
+        float x = 1f, y = 1f;
+        matrix.MultiplyPoint(ref x, ref y);
+
+        float scale = (MathF.Abs((x + y) / 2f) * height) / FontType.GLYPHS_HEIGHT;
+        float smoothness = FontType.GLYPHS_SMOOTHING_COEFF / (FontType.GLYPHS_HEIGHT * scale);
+
+        return smoothness;
+#endif
     }
 
 
