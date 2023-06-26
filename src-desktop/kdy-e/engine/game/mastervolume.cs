@@ -1,5 +1,5 @@
 ﻿using CsharpWrapper;
-using Engine.Externals;
+using Engine.Externals.SoundBridge;
 using Engine.Font;
 using Engine.Game.Common;
 using Engine.Platform;
@@ -55,7 +55,7 @@ public class MasterVolume {
         //MasterVolume.antibounce_timestamp = 0.0;
 
 
-        AICA.sndbridge_set_master_volume(EngineSettings.master_volume / 100f);
+        SoundBridge.SetMasterVolume(EngineSettings.master_volume / 100f);
 
         // check if necessary warn the player if muted
         if (EngineSettings.master_volume < 1) {
@@ -79,7 +79,7 @@ public class MasterVolume {
 
         new_volume = Math2D.Clamp(new_volume, 0, 100);
         if (new_volume != EngineSettings.master_volume) {
-            AICA.sndbridge_set_master_volume(new_volume / 100f);
+            SoundBridge.SetMasterVolume(new_volume / 100f);
             if (MasterVolume.beep != null) MasterVolume.beep.Replay();
         }
 

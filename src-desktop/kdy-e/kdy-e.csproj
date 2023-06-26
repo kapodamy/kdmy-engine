@@ -48,6 +48,7 @@
   <ItemGroup>
     <ProjectReference Include="..\fontatlas\fontatlas.csproj" />
     <ProjectReference Include="..\lua-iterop\lua-iterop.csproj" />
+    <ProjectReference Include="..\soundbridge\soundbridge.csproj" />
     <ProjectReference Include="..\texture-mgr\texture-mgr.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net7.0-windows</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Engine.Externals.SoundBridge</RootNamespace>
+		<AssemblyName>kdy_AICA</AssemblyName>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<PlatformTarget>x64</PlatformTarget>
+		<IsPublishable>False</IsPublishable>
+		<Platforms>x64</Platforms>
+		<UpdateAssemblyInfo>true</UpdateAssemblyInfo>
+		<UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	</PropertyGroup>
+</Project>

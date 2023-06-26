@@ -3,6 +3,7 @@ using System.Diagnostics;
 using CsharpWrapper;
 using Engine.Externals;
 using Engine.Externals.GLFW;
+using Engine.Externals.SoundBridge;
 using Engine.Font;
 using Engine.Image;
 using Engine.Utils;
@@ -257,7 +258,7 @@ public class PVRContext {
     private void IconifyCallback(Window window, bool focusing) {
         if (window == this.nativeWindow) {
             this.is_minimized = !focusing;
-            if (this.mute_on_minimize) AICA.sndbridge_set_master_muted(focusing);
+            if (this.mute_on_minimize) SoundBridge.SetMasterMuted(focusing);
         }
     }
 
@@ -728,9 +729,9 @@ public class PVRContext {
         global_context.mute_on_minimize = enable;
 
         if (enable)
-            AICA.sndbridge_set_master_muted(global_context.is_minimized);
+            SoundBridge.SetMasterMuted(global_context.is_minimized);
         else
-            AICA.sndbridge_set_master_muted(false);
+            SoundBridge.SetMasterMuted(false);
     }
 
     public bool IsOffscreen() {

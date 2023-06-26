@@ -1,12 +1,10 @@
 using System;
-using System.Runtime.InteropServices;
-using System.Text;
-using Engine.Externals;
 using Engine.Externals.LuaScriptInterop;
+using Engine.Externals.SoundBridge;
 using Engine.Platform;
 using Engine.Utils;
 
-namespace Engine.Sound; 
+namespace Engine.Sound;
 
 public enum Fading : int {
     NONE = 0,
@@ -16,9 +14,8 @@ public enum Fading : int {
 
 public class SoundPlayer {
 
-    private int stream_id;
-    private nint filehandle;
-    private GCHandle gchandle;
+    private Stream stream;
+    private IFileSource filehandle;
     private bool is_muted;
 
     private SoundPlayer() {
@@ -34,89 +31,86 @@ public class SoundPlayer {
             !full_path.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) &&
             !full_path.EndsWith(".logg", StringComparison.OrdinalIgnoreCase)
             ) {
-            Console.Error.WriteLine("songplayer_init() format not supported: " + src);
+            Console.Error.WriteLine("[ERROR] songplayer_init() format not supported: " + src);
             return null;
         }
 
         full_path = IO.GetAbsolutePath(full_path, true, true);
 
         byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
-        GCHandle gchandle;
-        nint filehandle;
+        IFileSource filehandle;
 
         if (buffer != null) {
-            gchandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            filehandle = AICA.filehandle_init2(gchandle.AddrOfPinnedObject(), buffer.Length);
+            filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
         } else {
-            byte[] full_path_ptr = new byte[Encoding.UTF8.GetByteCount(full_path) + 1];
-            Encoding.UTF8.GetBytes(full_path, 0, full_path.Length, full_path_ptr, 0);
-
-            filehandle = AICA.filehandle_init(full_path_ptr);
-            if (filehandle == 0x00) {
-                Console.Error.WriteLine("soundplayer_init() filehandle_init failed for: " + src);
+            filehandle = FileHandleUtil.Init(full_path, true);
+            if (filehandle == null) {
+                Console.Error.WriteLine("[ERROR] soundplayer_init() filehandle_init failed for: " + src);
                 return null;
             }
-
-            gchandle = new GCHandle();
         }
 
-        int stream_id = AICA.sndbridge_queue_ogg(filehandle);
-        if (stream_id < 0) {
-            AICA.filehandle_destroy(filehandle);
-            Console.Error.WriteLine("soundplayer_init() sndbridge_queue_ogg failed for: " + src);
+        Stream stream;
+        StreamResult res = SoundBridge.Enqueue(filehandle, out stream);
+        if (res != StreamResult.Success) {
+            filehandle.Dispose();
+            Console.Error.WriteLine($"[ERROR] soundplayer_init() SoundBridge::Enqueue() returned {res} for: {src}");
             return null;
         }
 
-        return new SoundPlayer() { filehandle = filehandle, stream_id = stream_id, gchandle = gchandle };
+        return new SoundPlayer() { filehandle = filehandle, stream = stream, is_muted = false };
     }
 
     public void Destroy() {
+        if (this.stream == null) return;
+
         Luascript.DropShared(this);
-        if (this.filehandle == 0x00) return;
-        AICA.sndbridge_dispose(this.stream_id);
-        AICA.filehandle_destroy(this.filehandle);
-        this.filehandle = 0x00;
-        if (this.gchandle.IsAllocated) this.gchandle.Free();
+
+        this.stream.Dispose();
+        this.filehandle.Dispose();
+
+        this.stream = null;
+        this.filehandle = null;
     }
 
 
     public void Replay() {
-        AICA.sndbridge_stop(this.stream_id);
-        AICA.sndbridge_play(this.stream_id);
+        this.stream.Stop();
+        this.stream.Play();
     }
 
     public void Play() {
-        AICA.sndbridge_play(this.stream_id);
+        this.stream.Play();
     }
 
     public void Pause() {
-        AICA.sndbridge_pause(this.stream_id);
+        this.stream.Pause();
     }
 
     public void Stop() {
-        AICA.sndbridge_stop(this.stream_id);
+        this.stream.Stop();
     }
 
     public void LoopEnable(bool enable) {
-        AICA.sndbridge_loop(this.stream_id, enable);
+        this.stream.SetLooped(enable);
     }
 
     public void Fade(bool in_or_out, float duration) {
-        AICA.sndbridge_do_fade(this.stream_id, in_or_out, duration);
+        this.stream.DoFade(in_or_out, duration / 1000f);
     }
 
 
     public void SetVolume(float volume) {
-        AICA.sndbridge_set_volume(this.stream_id, volume);
+        this.stream.SetVolume(volume);
     }
 
     public void SetMute(bool muted) {
         this.is_muted = muted;
-        AICA.sndbridge_mute(this.stream_id, muted);
+        this.stream.Mute(muted);
     }
 
     public void Seek(double timestamp) {
-        AICA.sndbridge_seek(this.stream_id, timestamp);
+        this.stream.Seek(timestamp / 1000.0);
     }
 
     public void SetProperty(int property_id, float value) {
@@ -155,23 +149,23 @@ public class SoundPlayer {
     }
 
     public bool IsPlaying() {
-        return AICA.sndbridge_is_active(this.stream_id);
+        return this.stream.IsActive;
     }
 
     public Fading HasFadding() {
-        return (Fading)AICA.sndbridge_has_fade_active(this.stream_id);
+        return (Fading)this.stream.ActiveFade;
     }
 
     public double GetDuration() {
-        return AICA.sndbridge_duration(this.stream_id);
+        return this.stream.Duration * 1000.0;
     }
 
     public double GetPosition() {
-        return AICA.sndbridge_position(this.stream_id);
+        return this.stream.Position * 1000.0;
     }
 
     public bool HasEnded() {
-        return AICA.sndbridge_has_ended(this.stream_id);
+        return this.stream.HasEnded;
     }
 
 }
