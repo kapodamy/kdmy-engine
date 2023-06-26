@@ -97,7 +97,7 @@ public static class TextureLoader {
                 // copy bitmap pixels to pixel buffer object
                 Rectangle rectangle = new Rectangle(0, 0, width, height);
                 BitmapData data = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, FORMAT);
-                unsafe { Memory.Copy((byte*)image_data.Addr, (byte*)data.Scan0, image_data.size); }
+                unsafe { NativeMemory.Copy((byte*)image_data.Addr, (byte*)data.Scan0, (nuint)image_data.size); }
                 bitmap.UnlockBits(data);
             } else {
                 image_data = new ImageData(bitmap, tex_width, tex_height);
