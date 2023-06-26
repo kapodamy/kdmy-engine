@@ -17,7 +17,7 @@ public static class GameMain {
 
     // this file contains all shared data across the game
     public const string ENGINE_NAME = "kdmy-engine";
-    public const string ENGINE_VERSION = "0.57";
+    public const string ENGINE_VERSION = "0.58";
 
     /**
      * The background music used in all menus, inherited from introscreen
