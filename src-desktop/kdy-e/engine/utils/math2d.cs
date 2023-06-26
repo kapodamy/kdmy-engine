@@ -8,8 +8,8 @@ public static class Math2D {
 
     public static readonly float DEG_TO_RAD = (float)(Math.PI / 180.0);
     public const int MAX_INT32 = 0x7FFFFFFF;
-    public static readonly float LOG100 = (float)Math.Log(100);
-    public const double HALF_PI = Math.PI / 2.0;
+    public static readonly float LOG100 = MathF.Log(100);
+    public const float HALF_PI = MathF.PI / 2f;
 
     private static readonly Random random;
 
@@ -209,7 +209,7 @@ L_stop_checking_equal:
     }
 
     public static float PointsDistance(float x1, float y1, float x2, float y2) {
-        return (float)Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2));
+        return MathF.Sqrt(MathF.Pow(x1 - x2, 2f) + MathF.Pow(y1 - y2, 2f));
     }
 
     public static int PowerOfTwoCalc(int dimmen) {
@@ -260,19 +260,19 @@ L_stop_checking_equal:
     }
 
     public static float LerpCubic(float percent) {
-        return (float)Math.Pow(percent, 3.0);
+        return MathF.Pow(percent, 3f);
     }
 
     public static float LerpQuad(float percent) {
-        return (float)Math.Pow(percent, 2.0);
+        return MathF.Pow(percent, 2f);
     }
 
     public static float LerpExpo(float percent) {
-        return (float)Math.Pow(2.0, 10.0 * (percent - 1));
+        return MathF.Pow(2f, 1f * (percent - 1f));
     }
 
     public static float LerpSin(float percent) {
-        return (float)Math.Sin(percent * Math2D.HALF_PI);
+        return MathF.Sin(percent * Math2D.HALF_PI);
     }
 
 

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Engine.Utils;
 
-namespace Engine.Platform; 
+namespace Engine.Platform;
 
 public enum Corner {
     TOPLEFT,
@@ -45,7 +45,7 @@ public struct CornerRotation {
     }
 
     internal void Clear() {
-    angle = x = y = 0f;
+        angle = x = y = 0f;
     }
 }
 
@@ -83,8 +83,8 @@ public class SH4Matrix {
     public void RotateByRads(float angle) {
         if (angle == 0) return;
 
-        float sin = (float)Math.Sin(angle);
-        float cos = (float)Math.Cos(angle);
+        float sin = MathF.Sin(angle);
+        float cos = MathF.Cos(angle);
 
         float a = this.matrix[0];
         float b = this.matrix[1];
@@ -306,7 +306,7 @@ public class SH4Matrix {
         for (int i = 0 ; i < SH4Matrix.SIZE ; i++) dest.matrix[i] = this.matrix[i];
     }
 
-public void CornerRotate(CornerRotation matrix_corner, float x, float y, float width, float height) {
+    public void CornerRotate(CornerRotation matrix_corner, float x, float y, float width, float height) {
         Translate(x, y);
         RotateByRads(matrix_corner.angle);
         Translate(-x, -y);
@@ -318,20 +318,20 @@ public void CornerRotate(CornerRotation matrix_corner, float x, float y, float w
         Scale(scale_x, scale_y);
     }
 
-public float this[int index] {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    get
-    {
+    public float this[int index] {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
 #if DEBUG
-        if (index < 0 || index > 16) throw new ArgumentOutOfRangeException();
+            if (index < 0 || index > 16) throw new ArgumentOutOfRangeException();
 #endif
-        return this.matrix[index];
+            return this.matrix[index];
+        }
     }
-}
 
 
 
-    public void InternalRotate(float draw_x, float draw_y, float draw_width, float draw_height, Modifier modifier) {
+    private void InternalRotate(float draw_x, float draw_y, float draw_width, float draw_height, Modifier modifier) {
         if (modifier.rotate == 0) return;
 
         if (!modifier.rotate_pivot_enabled == true || draw_width < 0 || draw_height < 0) {
@@ -347,9 +347,9 @@ public float this[int index] {
         Translate(-x, -y);
     }
 
-    public static float InternalCalcScaleOffset(float dimmen, float scale_dimmen, float offset_dimmen) {
+    private static float InternalCalcScaleOffset(float dimmen, float scale_dimmen, float offset_dimmen) {
         float sign = Math.Sign(scale_dimmen);
-        float offset = dimmen * ((float)Math.Abs(scale_dimmen) - 1.0f);
+        float offset = dimmen * (MathF.Abs(scale_dimmen) - 1.0f);
         float translate = offset * sign * offset_dimmen;
 
         return translate;
