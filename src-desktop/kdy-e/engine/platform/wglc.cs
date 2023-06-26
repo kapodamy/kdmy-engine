@@ -6,7 +6,7 @@ using Engine.Externals.GLFW;
 using Engine.Image;
 using Engine.Utils;
 
-namespace Engine.Platform; 
+namespace Engine.Platform;
 
 public class WebGLContext {
 

@@ -203,26 +203,22 @@ public partial class WebGL2RenderingContext {
     }
 
     internal void uniformMatrix4fv(WebGLUniformLocation location, bool transpose, float[] matrix) {
-        byte flag = transpose ? (byte)1 : (byte)0;
         unsafe {
-            fixed (float* ptr = matrix) {
-                NativeMethods.glUniformMatrix4fv(location.value, 1, flag, ptr);
-            }
+            byte flag = transpose ? (byte)1 : (byte)0;
+            fixed (float* ptr = matrix) NativeMethods.glUniformMatrix4fv(location.value, 1, flag, ptr);
         }
     }
 
     internal void uniformMatrix4fv(WebGLUniformLocation location, bool transpose, SH4Matrix sh4matrix) {
-        byte flag = transpose ? (byte)1 : (byte)0;
         unsafe {
-            fixed (float* ptr = sh4matrix.matrix) {
-                NativeMethods.glUniformMatrix4fv(location.value, 1, flag, ptr);
-            }
+            byte flag = transpose ? (byte)1 : (byte)0;
+            fixed (float* ptr = sh4matrix.matrix) NativeMethods.glUniformMatrix4fv(location.value, 1, flag, ptr);
         }
     }
 
     internal void uniformMatrix4fv(WebGLUniformLocation location, bool transpose, SIMDMatrix matrix) {
-        byte flag = transpose ? (byte)1 : (byte)0;
         unsafe {
+            byte flag = transpose ? (byte)1 : (byte)0;
             NativeMethods.glUniformMatrix4fv(location.value, 1, flag, matrix.Pointer);
         }
     }

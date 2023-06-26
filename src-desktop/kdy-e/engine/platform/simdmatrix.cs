@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -11,6 +12,7 @@ namespace Engine.Platform;
 //
 // Matrix computation using x86 SSE instructions
 //
+
 public class SIMDMatrix {
     private const int LENGTH = 16;
     private const int BYTE_SIZE = sizeof(float) * LENGTH;
@@ -21,15 +23,12 @@ public class SIMDMatrix {
     private const int ROW3 = 0x0C;
 
     internal unsafe float* matrix;
-    private unsafe float* matrix_temp;
 
     public readonly int Length = LENGTH;
 
     public SIMDMatrix() {
         unsafe {
             matrix = (float*)NativeMemory.AlignedAlloc(BYTE_SIZE, SSE_ALIGNMENT);
-            // this matrix should allocated once if SIMDMatrix is not used in multithreaded envirioment
-            matrix_temp = (float*)NativeMemory.AlignedAlloc(BYTE_SIZE, SSE_ALIGNMENT);
 
             Clear();
         }
@@ -37,12 +36,10 @@ public class SIMDMatrix {
 
     public void Destroy() {
         unsafe {
-            if (this.matrix == null) return;
-
-            NativeMemory.AlignedFree(matrix);
-            NativeMemory.AlignedFree(matrix_temp);
-            this.matrix = null;
-            this.matrix_temp = null;
+            if (this.matrix != null) {
+                NativeMemory.AlignedFree(matrix);
+                this.matrix = null;
+            }
         }
     }
 
@@ -66,44 +63,12 @@ public class SIMDMatrix {
 
     public void RotateByRads(float angle) {
         if (angle == 0f) return;
-
-        unsafe {
-            // TODO: ¿SIMD optimization?
-            float sin = (float)Math.Sin(angle);
-            float cos = (float)Math.Cos(angle);
-
-            float a = this.matrix[0];
-            float b = this.matrix[1];
-            float c = this.matrix[2];
-            float d = this.matrix[3];
-            float e = this.matrix[4];
-            float g = this.matrix[5];
-            float h = this.matrix[6];
-            float i = this.matrix[7];
-
-            this.matrix[0] = a * cos + e * sin;
-            this.matrix[1] = b * cos + g * sin;
-            this.matrix[2] = c * cos + h * sin;
-            this.matrix[3] = d * cos + i * sin;
-            this.matrix[4] = e * cos - a * sin;
-            this.matrix[5] = g * cos - b * sin;
-            this.matrix[6] = h * cos - c * sin;
-            this.matrix[7] = i * cos - d * sin;
-        }
+        MultiplyInternalRotation(angle);
     }
 
     public void Scale(float sx, float sy) {
         if (sx == 1f && sy == 1f) return;
-
-        unsafe {
-            float* tmp = this.matrix_temp;
-            tmp[00] = sx; tmp[01] = 0f; tmp[02] = 0f; tmp[03] = 0f;
-            tmp[04] = 0f; tmp[05] = sy; tmp[06] = 0f; tmp[07] = 0f;
-            tmp[08] = 0f; tmp[09] = 0f; tmp[10] = 1f; tmp[11] = 0f;
-            tmp[12] = 0f; tmp[13] = 0f; tmp[14] = 0f; tmp[15] = 1f;
-
-            MultiplyInternal(tmp);
-        }
+        MultiplyInternal(sx, 0f, 0f, 0f, 0f, sy, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f);
     }
 
     public void ScaleX(float sx) {
@@ -116,16 +81,7 @@ public class SIMDMatrix {
 
     public void Skew(float sx, float sy) {
         if (sx == 0f && sy == 0f) return;
-
-        unsafe {
-            float* tmp = this.matrix_temp;
-            tmp[00] = 1f; tmp[01] = sy; tmp[02] = 0f; tmp[03] = 0f;
-            tmp[04] = sy; tmp[05] = 1f; tmp[06] = 0f; tmp[07] = 0f;
-            tmp[08] = 0f; tmp[09] = 0f; tmp[10] = 1f; tmp[11] = 0f;
-            tmp[12] = 0f; tmp[13] = 0f; tmp[14] = 0f; tmp[15] = 1f;
-
-            MultiplyInternal(tmp);
-        }
+        MultiplyInternal(1f, sy, 0f, 0f, sx, 1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f);
     }
 
     public void SkewX(float sx) {
@@ -138,16 +94,7 @@ public class SIMDMatrix {
 
     public void Translate(float tx, float ty) {
         if (tx == 0f && ty == 0f) return;
-
-        unsafe {
-            float* tmp = this.matrix_temp;
-            tmp[00] = 1f; tmp[01] = 0f; tmp[02] = 0f; tmp[03] = 0f;
-            tmp[04] = 0f; tmp[05] = 1f; tmp[06] = 0f; tmp[07] = 0f;
-            tmp[08] = 0f; tmp[09] = 0f; tmp[10] = 1f; tmp[11] = 0f;
-            tmp[12] = tx; tmp[13] = ty; tmp[14] = 0f; tmp[15] = 1f;
-
-            MultiplyInternal(tmp);
-        }
+        MultiplyInternal(1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0f, tx, ty, 0f, 1f);
     }
 
     public void TranslateX(float tx) {
@@ -161,7 +108,38 @@ public class SIMDMatrix {
 
     public void MultiplyWithMatrix(SIMDMatrix matrix2) {
         unsafe {
-            MultiplyInternal(matrix2.matrix);
+            float* mat1 = this.matrix;
+            float* mat2 = matrix2.matrix;
+
+            Vector128<float> mat1_row0 = Sse.LoadAlignedVector128(mat1 + ROW0);
+            Vector128<float> mat1_row1 = Sse.LoadAlignedVector128(mat1 + ROW1);
+            Vector128<float> mat1_row2 = Sse.LoadAlignedVector128(mat1 + ROW2);
+            Vector128<float> mat1_row3 = Sse.LoadAlignedVector128(mat1 + ROW3);
+
+            Vector128<float> result_row0 = Sse.Multiply(mat1_row0, Vector128.Create(mat2[0 + ROW0]));
+            result_row0 = Sse.Add(result_row0, Sse.Multiply(mat1_row1, Vector128.Create(mat2[1 + ROW0])));
+            result_row0 = Sse.Add(result_row0, Sse.Multiply(mat1_row2, Vector128.Create(mat2[2 + ROW0])));
+            result_row0 = Sse.Add(result_row0, Sse.Multiply(mat1_row3, Vector128.Create(mat2[3 + ROW0])));
+
+            Vector128<float> result_row1 = Sse.Multiply(mat1_row0, Vector128.Create(mat2[0 + ROW1]));
+            result_row1 = Sse.Add(result_row1, Sse.Multiply(mat1_row1, Vector128.Create(mat2[1 + ROW1])));
+            result_row1 = Sse.Add(result_row1, Sse.Multiply(mat1_row2, Vector128.Create(mat2[2 + ROW1])));
+            result_row1 = Sse.Add(result_row1, Sse.Multiply(mat1_row3, Vector128.Create(mat2[3 + ROW1])));
+
+            Vector128<float> result_row2 = Sse.Multiply(mat1_row0, Vector128.Create(mat2[0 + ROW2]));
+            result_row2 = Sse.Add(result_row2, Sse.Multiply(mat1_row1, Vector128.Create(mat2[1 + ROW2])));
+            result_row2 = Sse.Add(result_row2, Sse.Multiply(mat1_row2, Vector128.Create(mat2[2 + ROW2])));
+            result_row2 = Sse.Add(result_row2, Sse.Multiply(mat1_row3, Vector128.Create(mat2[3 + ROW2])));
+
+            Vector128<float> result_row3 = Sse.Multiply(mat1_row0, Vector128.Create(mat2[0 + ROW3]));
+            result_row3 = Sse.Add(result_row3, Sse.Multiply(mat1_row1, Vector128.Create(mat2[1 + ROW3])));
+            result_row3 = Sse.Add(result_row3, Sse.Multiply(mat1_row2, Vector128.Create(mat2[2 + ROW3])));
+            result_row3 = Sse.Add(result_row3, Sse.Multiply(mat1_row3, Vector128.Create(mat2[3 + ROW3])));
+
+            Sse.StoreAligned(this.matrix + ROW0, result_row0);
+            Sse.StoreAligned(this.matrix + ROW1, result_row1);
+            Sse.StoreAligned(this.matrix + ROW2, result_row2);
+            Sse.StoreAligned(this.matrix + ROW3, result_row3);
         }
     }
 
@@ -219,19 +197,10 @@ public class SIMDMatrix {
     }
 
     public void MultiplyPoint(ref float target_2d_x, ref float target_2d_y) {
-        unsafe {
-            float* tmp = this.matrix_temp;
+        float z = 0f;
+        float w = 1f;
 
-            tmp[0] = target_2d_x;
-            tmp[1] = target_2d_y;
-            tmp[2] = 0f;// z
-            tmp[3] = 1f;// w
-
-            MultiplyInternalVector(tmp);
-
-            target_2d_x = tmp[0];
-            target_2d_y = tmp[1];
-        }
+        MultiplyInternalVector(ref target_2d_x, ref target_2d_y, ref z, ref w);
     }
 
 
@@ -339,15 +308,15 @@ public class SIMDMatrix {
 
     public override string ToString() {
         unsafe {
-            StringBuilder sb = new StringBuilder(256);
-
+            StringBuilder sb = new StringBuilder(SIMDMatrix.LENGTH * 12 * 3);
             sb.Append('{');
-            for (int i = 0 ; i < LENGTH ; i++) {
-                if (i > 0) Console.Write(", ");
-                sb.Append(this.matrix[i]);
-            }
-            sb.Append('}');
 
+            for (int i = 0 ; i < SIMDMatrix.LENGTH ; i++) {
+                if (i > 0) sb.Append(", ");
+                sb.Append(this.matrix[i].ToString(CultureInfo.InvariantCulture.NumberFormat));
+            }
+
+            sb.Append('}');
             return sb.ToString();
         }
     }
@@ -371,54 +340,55 @@ public class SIMDMatrix {
     }
 
     private static float InternalCalcScaleOffset(float dimmen, float scale_dimmen, float offset_dimmen) {
-        float sign = Math.Sign(scale_dimmen);
-        float offset = dimmen * ((float)Math.Abs(scale_dimmen) - 1.0f);
+        float sign = MathF.Sign(scale_dimmen);
+        float offset = dimmen * (MathF.Abs(scale_dimmen) - 1.0f);
         float translate = offset * sign * offset_dimmen;
 
         return translate;
     }
 
-    private unsafe void MultiplyInternal(float* mat) {
-        float* result = this.matrix;
-        float* mat2 = mat;
-        float* mat1 = this.matrix;
 
-        Vector128<float> mat2_row0 = Sse.LoadAlignedVector128(mat2 + ROW0);
-        Vector128<float> mat2_row1 = Sse.LoadAlignedVector128(mat2 + ROW1);
-        Vector128<float> mat2_row2 = Sse.LoadAlignedVector128(mat2 + ROW2);
-        Vector128<float> mat2_row3 = Sse.LoadAlignedVector128(mat2 + ROW3);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private unsafe void MultiplyInternal(float a, float b, float c, float d, float e, float f, float g, float h, float i, float j, float k, float l, float m, float n, float o, float p) {
+        float* mat = this.matrix;
 
-        Vector128<float> result_row0 = Sse.Multiply(mat2_row0, Vector128.Create(mat1[0 + ROW0]));
-        result_row0 = Sse.Add(result_row0, Sse.Multiply(mat2_row1, Vector128.Create(mat1[1 + ROW0])));
-        result_row0 = Sse.Add(result_row0, Sse.Multiply(mat2_row2, Vector128.Create(mat1[2 + ROW0])));
-        result_row0 = Sse.Add(result_row0, Sse.Multiply(mat2_row3, Vector128.Create(mat1[3 + ROW0])));
+        Vector128<float> mat_row0 = Sse.LoadAlignedVector128(mat + ROW0);
+        Vector128<float> mat_row1 = Sse.LoadAlignedVector128(mat + ROW1);
+        Vector128<float> mat_row2 = Sse.LoadAlignedVector128(mat + ROW2);
+        Vector128<float> mat_row3 = Sse.LoadAlignedVector128(mat + ROW3);
 
-        Vector128<float> result_row1 = Sse.Multiply(mat2_row0, Vector128.Create(mat1[0 + ROW1]));
-        result_row1 = Sse.Add(result_row1, Sse.Multiply(mat2_row1, Vector128.Create(mat1[1 + ROW1])));
-        result_row1 = Sse.Add(result_row1, Sse.Multiply(mat2_row2, Vector128.Create(mat1[2 + ROW1])));
-        result_row1 = Sse.Add(result_row1, Sse.Multiply(mat2_row3, Vector128.Create(mat1[3 + ROW1])));
+        Vector128<float> result_row0 = Sse.Multiply(mat_row0, Vector128.Create(a));
+        result_row0 = Sse.Add(result_row0, Sse.Multiply(mat_row1, Vector128.Create(b)));
+        result_row0 = Sse.Add(result_row0, Sse.Multiply(mat_row2, Vector128.Create(c)));
+        result_row0 = Sse.Add(result_row0, Sse.Multiply(mat_row3, Vector128.Create(d)));
 
-        Vector128<float> result_row2 = Sse.Multiply(mat2_row0, Vector128.Create(mat1[0 + ROW2]));
-        result_row2 = Sse.Add(result_row2, Sse.Multiply(mat2_row1, Vector128.Create(mat1[1 + ROW2])));
-        result_row2 = Sse.Add(result_row2, Sse.Multiply(mat2_row2, Vector128.Create(mat1[2 + ROW2])));
-        result_row2 = Sse.Add(result_row2, Sse.Multiply(mat2_row3, Vector128.Create(mat1[3 + ROW2])));
+        Vector128<float> result_row1 = Sse.Multiply(mat_row0, Vector128.Create(e));
+        result_row1 = Sse.Add(result_row1, Sse.Multiply(mat_row1, Vector128.Create(f)));
+        result_row1 = Sse.Add(result_row1, Sse.Multiply(mat_row2, Vector128.Create(g)));
+        result_row1 = Sse.Add(result_row1, Sse.Multiply(mat_row3, Vector128.Create(h)));
 
-        Vector128<float> result_row3 = Sse.Multiply(mat2_row0, Vector128.Create(mat1[0 + ROW3]));
-        result_row3 = Sse.Add(result_row3, Sse.Multiply(mat2_row1, Vector128.Create(mat1[1 + ROW3])));
-        result_row3 = Sse.Add(result_row3, Sse.Multiply(mat2_row2, Vector128.Create(mat1[2 + ROW3])));
-        result_row3 = Sse.Add(result_row3, Sse.Multiply(mat2_row3, Vector128.Create(mat1[3 + ROW3])));
+        Vector128<float> result_row2 = Sse.Multiply(mat_row0, Vector128.Create(i));
+        result_row2 = Sse.Add(result_row2, Sse.Multiply(mat_row1, Vector128.Create(j)));
+        result_row2 = Sse.Add(result_row2, Sse.Multiply(mat_row2, Vector128.Create(k)));
+        result_row2 = Sse.Add(result_row2, Sse.Multiply(mat_row3, Vector128.Create(l)));
 
-        Sse.StoreAligned(result + ROW0, result_row0);
-        Sse.StoreAligned(result + ROW1, result_row1);
-        Sse.StoreAligned(result + ROW2, result_row2);
-        Sse.StoreAligned(result + ROW3, result_row3);
+        Vector128<float> result_row3 = Sse.Multiply(mat_row0, Vector128.Create(m));
+        result_row3 = Sse.Add(result_row3, Sse.Multiply(mat_row1, Vector128.Create(n)));
+        result_row3 = Sse.Add(result_row3, Sse.Multiply(mat_row2, Vector128.Create(o)));
+        result_row3 = Sse.Add(result_row3, Sse.Multiply(mat_row3, Vector128.Create(p)));
+
+        Sse.StoreAligned(this.matrix + ROW0, result_row0);
+        Sse.StoreAligned(this.matrix + ROW1, result_row1);
+        Sse.StoreAligned(this.matrix + ROW2, result_row2);
+        Sse.StoreAligned(this.matrix + ROW3, result_row3);
     }
 
-    private unsafe void MultiplyInternalVector(float* vector) {
-        Vector128<float> x = Vector128.Create(vector[0]);
-        Vector128<float> y = Vector128.Create(vector[1]);
-        Vector128<float> z = Vector128.Create(vector[2]);
-        Vector128<float> w = Vector128.Create(vector[3]);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private unsafe void MultiplyInternalVector(ref float vx, ref float vy, ref float vz, ref float vw) {
+        Vector128<float> x = Vector128.Create(vx);
+        Vector128<float> y = Vector128.Create(vy);
+        Vector128<float> z = Vector128.Create(vz);
+        Vector128<float> w = Vector128.Create(vw);
 
         Vector128<float> mat2_row0 = Sse.LoadAlignedVector128(this.matrix + ROW0);
         Vector128<float> mat2_row1 = Sse.LoadAlignedVector128(this.matrix + ROW1);
@@ -434,9 +404,26 @@ public class SIMDMatrix {
         Vector128<float> r2 = Sse.Add(p3, p4);
         Vector128<float> res = Sse.Add(r1, r2);
 
-        Sse.StoreAligned(vector, res);
+        vx = res[0];
+        vy = res[1];
+        vz = res[2];
+        vw = res[3];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private unsafe void MultiplyInternalRotation(float radians) {
+        Vector128<float> mat_row0 = Sse.LoadAlignedVector128(this.matrix + ROW0);
+        Vector128<float> mat_row1 = Sse.LoadAlignedVector128(this.matrix + ROW1);
+
+        Vector128<float> v_cos = Vector128.Create(MathF.Cos(radians));
+        Vector128<float> v_sin = Vector128.Create(MathF.Sin(radians));
+
+        Vector128<float> res0 = Sse.Add(Sse.Multiply(mat_row0, v_cos), Sse.Multiply(mat_row1, v_sin));
+        Vector128<float> res1 = Sse.Subtract(Sse.Multiply(mat_row1, v_cos), Sse.Multiply(mat_row0, v_sin));
+
+        Sse.StoreAligned(this.matrix + ROW0, res0);
+        Sse.StoreAligned(this.matrix + ROW1, res1);
     }
 
 }
-
 

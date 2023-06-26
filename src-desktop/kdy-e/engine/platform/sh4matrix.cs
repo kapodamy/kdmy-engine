@@ -1,5 +1,7 @@
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Engine.Utils;
 
 namespace Engine.Platform; 
@@ -351,6 +353,19 @@ public float this[int index] {
         float translate = offset * sign * offset_dimmen;
 
         return translate;
+    }
+
+    public override string ToString() {
+        StringBuilder sb = new StringBuilder(SH4Matrix.SIZE * 12 * 3);
+        sb.Append('{');
+
+        for (int i = 0 ; i < SH4Matrix.SIZE ; i++) {
+            if (i > 0) sb.Append(", ");
+            sb.Append(this.matrix[i].ToString(CultureInfo.InvariantCulture.NumberFormat));
+        }
+
+        sb.Append('}');
+        return sb.ToString();
     }
 
 }
