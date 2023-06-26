@@ -8,11 +8,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kdy-e", "kdy-e\kdy-e.csproj", "{7C76AA79-86A1-4580-A743-2610DAF56995}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kdy-e", "kdy-e\kdy-e.csproj", "{7C76AA79-86A1-4580-A743-2610DAF56995}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lua-iterop", "lua-iterop\lua-iterop.csproj", "{0A9500B9-1FC4-4033-851F-B33D5DD2B5CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "lua-iterop", "lua-iterop\lua-iterop.csproj", "{0A9500B9-1FC4-4033-851F-B33D5DD2B5CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "texture-mgr", "texture-mgr\texture-mgr.csproj", "{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "texture-mgr", "texture-mgr\texture-mgr.csproj", "{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fontatlas", "fontatlas\fontatlas.csproj", "{FF76D8EE-0F82-4F61-963C-16E6F0C42C87}"
 EndProject

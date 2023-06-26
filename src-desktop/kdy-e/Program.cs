@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Engine;
-using Engine.Externals;
+using Engine.Externals.FFGraphInterop;
 using Engine.Externals.FontAtlasInterop;
 using Engine.Externals.GLFW;
 using Engine.Externals.LuaInterop;
+using Engine.Externals.SoundBridge;
 using Engine.Game;
 using Engine.Platform;
 
@@ -60,10 +61,10 @@ class Program {
 
         AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
 
-        Console.Error.WriteLine("AICA:" + AICA.sndbridge_get_runtime_info());
-        Console.Error.WriteLine("FontAtlas: FreeType V" + FontAtlas.fontatlas_get_version());
+        Console.Error.WriteLine("AICA:" + SoundBridge.GetRuntimeInfo());
+        Console.Error.WriteLine("FontAtlas: FreeType V" + FontAtlas.GetVersion());
         Console.Error.WriteLine("LuaScript: " + ManagedLuaState.GetVersion());
-        Console.Error.WriteLine("FFGraph: " + FFgraph.ffgraph_get_runtime_info() ?? "<not loaded>");
+        Console.Error.WriteLine("FFGraph: " + FFGraph.GetRuntimeInfo() ?? "<not loaded>");
 
         Thread.CurrentThread.Name = "MainThread";// used in texture loading
         EngineSettings.LoadINI();
