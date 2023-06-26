@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lua-iterop", "lua-iterop\lu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "texture-mgr", "texture-mgr\texture-mgr.csproj", "{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fontatlas", "fontatlas\fontatlas.csproj", "{FF76D8EE-0F82-4F61-963C-16E6F0C42C87}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -32,6 +34,10 @@ Global
 		{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}.Debug|x64.Build.0 = Debug|x64
 		{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}.Release|x64.ActiveCfg = Release|x64
 		{31710E91-A1F9-4C16-B6E8-A6702D0B8A31}.Release|x64.Build.0 = Release|x64
+		{FF76D8EE-0F82-4F61-963C-16E6F0C42C87}.Debug|x64.ActiveCfg = Debug|x64
+		{FF76D8EE-0F82-4F61-963C-16E6F0C42C87}.Debug|x64.Build.0 = Debug|x64
+		{FF76D8EE-0F82-4F61-963C-16E6F0C42C87}.Release|x64.ActiveCfg = Release|Any CPU
+		{FF76D8EE-0F82-4F61-963C-16E6F0C42C87}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Engine;
 using Engine.Externals;
+using Engine.Externals.FontAtlasInterop;
 using Engine.Externals.GLFW;
 using Engine.Externals.LuaInterop;
 using Engine.Game;

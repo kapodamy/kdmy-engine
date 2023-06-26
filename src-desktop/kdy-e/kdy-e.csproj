@@ -46,6 +46,7 @@
     <Content Include="Properties\icon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\fontatlas\fontatlas.csproj" />
     <ProjectReference Include="..\lua-iterop\lua-iterop.csproj" />
     <ProjectReference Include="..\texture-mgr\texture-mgr.csproj" />
   </ItemGroup>
