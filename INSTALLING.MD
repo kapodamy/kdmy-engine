@@ -48,10 +48,6 @@ Building *assets* folder:
 Every strum line can have a background, a model (texture + atlas) is required with the name **strumBackground** (strumBackground.xml+strumBackground.png)  in `/assets/common/image/week-round` folder. In **test files** folder the file `/assets/test/strumBackground.xml` is an example of strums having backgrounds.
 This feature is optional.
 
-### 2b. Week 7 assets
-
-The engine does not support *Adobe Animate* JSON animations (Animation.json + spritemap1.json + spritemap1.png files). Possibly in the future it will be implemented.
-
 ## 3. Building the engine
 
 See [BUILDING.MD](BUILDING.MD "BUILDING.MD") for instructions.
