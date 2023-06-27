@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Engine.Utils;
 
-public class Grapheme {
+public ref struct Grapheme {
     public int code;
     public int size;
 }
@@ -42,7 +42,7 @@ public static partial class StringUtils {
     }
 
     public static bool LowercaseEndsWithKDY(this string str, string substring) {
-        return str.ToLower(CultureInfo.InvariantCulture).EndsWith(substring);
+        return str.EndsWith(substring, StringComparison.InvariantCultureIgnoreCase);
     }
 
 
@@ -50,10 +50,10 @@ public static partial class StringUtils {
         if (String.IsNullOrEmpty(str) || String.IsNullOrEmpty(substring) || index > str.Length) return str;
         if (index < 0) throw new ArgumentOutOfRangeException("index", "index was negative");
 
-        string part_a = str.SubstringKDY(0, index);
-        string part_b = str.SubstringKDY(index, str.Length);
+        ReadOnlySpan<char> part_a = str.SubstringKDY(0, index);
+        ReadOnlySpan<char> part_b = str.SubstringKDY(index, str.Length);
 
-        return part_a + substring + part_b;
+        return String.Concat(part_a, substring, (ReadOnlySpan<char>)part_b);
     }
 
     public static string Concat(params string[] strs) {
@@ -87,7 +87,7 @@ public static partial class StringUtils {
         bool start = trim_start;
         bool end = !trim_start && trim_end;
 
-        while (StringUtils.GetCharacterCodepoint(str, index, grapheme)) {
+        while (StringUtils.GetCharacterCodepoint(str, index, ref grapheme)) {
             bool whitespace = false;
             switch (grapheme.code) {
                 case 0x0A:
@@ -116,7 +116,7 @@ public static partial class StringUtils {
             }
         }
 
-        return str.SubstringKDY(start_index, end_index);
+        return str.SubstringKDY(start_index, end_index).ToString();
     }
 
 
@@ -126,7 +126,7 @@ public static partial class StringUtils {
         int size = 0;
         int index = 0;
         Grapheme grapheme = new Grapheme();
-        while (StringUtils.GetCharacterCodepoint(str, index, grapheme)) {
+        while (StringUtils.GetCharacterCodepoint(str, index, ref grapheme)) {
             if (grapheme.code < 0x80) size++;
             else if (grapheme.code < 0x800) size += 2;
             else if (grapheme.code < 0x10000) size += 3;
@@ -139,7 +139,7 @@ public static partial class StringUtils {
     }
 
 
-    public static bool GetCharacterCodepoint(string str, int index, Grapheme grapheme) {
+    public static bool GetCharacterCodepoint(string str, int index, ref Grapheme grapheme) {
         if (index >= str.Length) return false;
 
         grapheme.code = Char.ConvertToUtf32(str, index);

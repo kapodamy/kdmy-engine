@@ -153,7 +153,7 @@ public class FontGlyph : IFontRender {
         float space_width = InternalFindSpaceWidth(height);
 
         for (int i = text_index ; i < text_end_index ; i++) {
-            if (!StringUtils.GetCharacterCodepoint(text, i, grapheme)) continue;
+            if (!StringUtils.GetCharacterCodepoint(text, i, ref grapheme)) continue;
             i += grapheme.size - 1;
 
             if (grapheme.code == FontGlyph.LINEFEED) {
@@ -297,7 +297,7 @@ public class FontGlyph : IFontRender {
         pvrctx.SetVertexAlpha(this.alpha);
 
         // count required glyphs
-        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
+        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
             index += grapheme.size;
 
             switch (grapheme.code) {
@@ -325,7 +325,7 @@ public class FontGlyph : IFontRender {
         int maximum = GlyphRenderer.Prepare(total_glyphs, has_border);
 
         index = text_index;
-        while (added < maximum && index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
+        while (added < maximum && index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
             index += grapheme.size;
 
             // ignore "\r" characters
@@ -438,7 +438,7 @@ public class FontGlyph : IFontRender {
         Grapheme grapheme = new Grapheme();
 
         // read character info
-        if (!StringUtils.GetCharacterCodepoint(atlas_entry_name, 0, grapheme)) return -1;
+        if (!StringUtils.GetCharacterCodepoint(atlas_entry_name, 0, ref grapheme)) return -1;
 
         int index = grapheme.size;
 

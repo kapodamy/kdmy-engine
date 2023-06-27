@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using Engine.Utils;
 
-namespace Engine.Platform; 
+namespace Engine.Platform;
 
 public static class IO {
 
@@ -77,29 +77,32 @@ public static class IO {
     }
 
     internal static string GetAbsolutePath(string src, bool is_file, bool resolve_expansion) {
+        string base_path = IO.engine_directory;
         string path = src;
+        int index = 0;
 
         if (resolve_expansion && src.StartsWithKDY("/assets", 0)) {
             path = Expansions.ResolvePath(path, is_file);
         }
 
         if (path.StartsWith("/~assets") || path.StartsWith("/~expansions")) {
-            path = path.Substring(2);
+            index = 2;
         } else {
             switch (path[0]) {
                 case '/':
                 case '\\':
-                    path = path.Substring(1);
+                    index = 1;
                     break;
             }
 
-            if (!path.StartsWith("assets") && !path.StartsWith("expansions")) {
+            if (!path.StartsWithKDY("assets", index) && !path.StartsWithKDY("expansions", index)) {
                 Console.Error.WriteLine("io_get_absolute_path() path outside of 'assets' or 'expansions' folder: " + path);
-                path = "assets/" + path;
+                base_path = "assets/";
             }
         }
 
-        string new_path = engine_directory + path;
+        string new_path = String.Concat((ReadOnlySpan<char>)base_path, path.AsSpan(index));
+
         return new_path.Replace(FS.CHAR_SEPARATOR, Path.DirectorySeparatorChar);
     }
 

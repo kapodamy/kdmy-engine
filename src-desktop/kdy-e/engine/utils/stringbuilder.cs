@@ -232,7 +232,7 @@ public static class STRINGBUILDER {
         }
     }
 
-    private static string InternalHelperCreateFormattedStringNumber(double value, int modifier, bool comma) {
+    private static ReadOnlySpan<char> InternalHelperCreateFormattedStringNumber(double value, int modifier, bool comma) {
         string str = value.ToString("G17", CultureInfo.InvariantCulture);
         int index = str.IndexOf('.');
 
@@ -244,7 +244,7 @@ public static class STRINGBUILDER {
         index += modifier;
         if (index >= str.Length) return str;
 
-        return str.Substring(0, index + 1);
+        return str.AsSpan(0, index + 1);
     }
 
     private static string InternalHelperCreateFormattedStringPad(string number, int modifier) {

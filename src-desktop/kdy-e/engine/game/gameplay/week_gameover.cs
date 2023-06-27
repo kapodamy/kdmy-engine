@@ -171,7 +171,7 @@ public class WeekGameOver : IDraw, IAnimate {
     public static int ReadVersion() {
         Grapheme garapheme = new Grapheme() { code = 0, size = 0 };
         string version = FS.ReadText(WeekGameOver.LAYOUT_VERSION);
-        StringUtils.GetCharacterCodepoint(version, 0, garapheme);
+        StringUtils.GetCharacterCodepoint(version, 0, ref garapheme);
         //free(version);
         return garapheme.code;
     }

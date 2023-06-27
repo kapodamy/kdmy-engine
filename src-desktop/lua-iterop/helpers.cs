@@ -315,10 +315,7 @@ L_store_and_return:
             return;
         }
 
-        int length = 0;
-        while (msg[length] != '\0') length++;
-
-        string str = LUA.MarshalStringBack(msg, length);
+        string str = Marshal.PtrToStringUTF8((nint)msg);
 
         if (tocont != 0)
             Console.Write(str);

@@ -2927,7 +2927,7 @@ public static partial class StringUtils {
     };
 
     private static readonly int[,] STRING_LOWERCASE_TO_COMPONENTS = new int[,] {
-        { 0x00DF, 0x0073, 0x0073, 0x0000, 0x0000 },
+        {0x00DF, 0x0073, 0x0073, 0x0000, 0x0000},
         {0x0130, 0x0069, 0x0307, 0x0000, 0x0000},
         {0x0149, 0x02BC, 0x006E, 0x0000, 0x0000},
         {0x01F0, 0x006A, 0x030C, 0x0000, 0x0000},
@@ -3043,7 +3043,7 @@ public static partial class StringUtils {
         StringBuilder stringbuilder = new StringBuilder(str.Length);
 
         int index = 0;
-        while (StringUtils.GetCharacterCodepoint(str, index, grapheme)) {
+        while (StringUtils.GetCharacterCodepoint(str, index, ref grapheme)) {
             index += grapheme.size;
 
             for (int i = 0 ; STRING_LOWERCASE_TO_COMPONENTS[i, 0] != 0x0000 ; i++) {
@@ -3075,7 +3075,7 @@ L_stop_searching:
         StringBuilder stringbuilder = new StringBuilder(str.Length);
 
         int index = 0;
-        while (StringUtils.GetCharacterCodepoint(str, index, grapheme)) {
+        while (StringUtils.GetCharacterCodepoint(str, index, ref grapheme)) {
             index += grapheme.size;
 
             for (int i = 0 ; STRING_UPPERCASES[i] != 0x0000 ; i++) {

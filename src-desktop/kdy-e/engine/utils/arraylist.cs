@@ -1,5 +1,5 @@
 using System;
-using System.Reflection;
+using System.Collections;
 
 namespace Engine.Utils;
 
@@ -11,6 +11,7 @@ public class ArrayList<T> {
     private int length;
     private int size;
     private T[] array;
+    private readonly ArrayListComparer comparer;
 
     public ArrayList() : this(ArrayList<T>.DEFAULT_CAPACITY) { }
 
@@ -20,6 +21,7 @@ public class ArrayList<T> {
         this.array = new T[initial_capacity];
         this.length = initial_capacity;
         this.size = 0;
+        this.comparer = new ArrayListComparer();
     }
 
     public void Destroy(bool keep_array_alive) {
@@ -28,7 +30,6 @@ public class ArrayList<T> {
     }
 
     public void Destroy2(out int size_ptr, ref T[] array_ptr) {
-        // javacript only
         size_ptr = this.size;
 
         if (this.size < 1) {
@@ -167,17 +168,6 @@ public class ArrayList<T> {
         ArrayList<T> copy = new ArrayList<T>(this.size);
         copy.size = this.size;
 
-        Type type = typeof(T);
-        if (!type.IsValueType) {
-            MethodInfo inst = type.GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (inst != null) {
-                for (int i = 0 ; i < this.size ; i++) {
-                    copy.array[i] = (T)inst.Invoke(this.array[i], null);
-                }
-                return copy;
-            }
-        }
-
         for (int i = 0 ; i < this.size ; i++) {
             copy.array[i] = this.array[i];
         }
@@ -186,17 +176,17 @@ public class ArrayList<T> {
     }
 
     public void Sort(SortDelegate sort_fn) {
-        Array.Sort(this.array, 0, this.size, new ArrayListComparer(sort_fn));
+        Array.Sort(this.array, 0, this.size, this.comparer);
     }
 
 
-    public System.Collections.IEnumerator GetEnumerator() {
+    public System.Collections.Generic.IEnumerator<T> GetEnumerator() {
         return new ArrayListEnumerator(this);
     }
 
 
-    private class ArrayListEnumerator : System.Collections.IEnumerator {
-        private ArrayList<T> arraylist;
+    private struct ArrayListEnumerator : System.Collections.Generic.IEnumerator<T> {
+        private readonly ArrayList<T> arraylist;
         private int index;
 
         public ArrayListEnumerator(ArrayList<T> arraylist) {
@@ -210,17 +200,22 @@ public class ArrayList<T> {
             return this.index < arraylist.size;
         }
 
-        public object Current {
-            get { return this.arraylist.array[this.index]; }
-        }
-
         public void Reset() {
             this.index = -1;
         }
 
+        void IDisposable.Dispose() {
+
+        }
+
+
+        object System.Collections.IEnumerator.Current => this.arraylist.array[this.index];
+
+        public T Current => this.arraylist.array[this.index];
+
     }
 
-    private sealed class ArrayListComparer : System.Collections.Generic.IComparer<T> {
+    private struct ArrayListComparer : System.Collections.Generic.IComparer<T> {
 
         private readonly SortDelegate sort_fn;
 

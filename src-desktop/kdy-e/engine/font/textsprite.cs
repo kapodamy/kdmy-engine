@@ -468,7 +468,7 @@ public class TextSprite : IVertex {
         float last_known_break_width = 0f;
 
         while (true) {
-            bool eof_reached = !StringUtils.GetCharacterCodepoint(text, index, grapheme);
+            bool eof_reached = !StringUtils.GetCharacterCodepoint(text, index, ref grapheme);
 
             if (grapheme.code == FontGlyph.LINEFEED || eof_reached || loose_index > 0) {
                 int new_index = index + grapheme.size;

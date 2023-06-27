@@ -17,10 +17,10 @@ public class Tokenizer {
         if (str == null) return null;
         if (String.IsNullOrEmpty(token_chars)) throw new ArgumentException("token_chars");
 
-        if (!duplicate_string_before_init) str = String.Intern(str);
+        //if (!duplicate_string_before_init) str = String.Intern(str);
 
         return new Tokenizer() {
-            tokens = String.Intern(token_chars),
+            tokens = token_chars,
             str = str,
             length = str.Length,
             empty = !ignore_empty_tokens,

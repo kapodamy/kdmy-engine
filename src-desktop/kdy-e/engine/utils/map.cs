@@ -34,18 +34,16 @@ public class Map<T> {
         }
     }
 
-    public IEnumerator GetEnumerator() {
+    public IEnumerator<T> GetEnumerator() {
         return new MapEnumerator(table);
     }
 
 
-    private class MapEnumerator : IEnumerator, IDisposable {
-        private Dictionary<int, T> table;
-        private Dictionary<int, T>.ValueCollection.Enumerator values;
+    private struct MapEnumerator : IEnumerator<T> {
+        private Dictionary<int, T>.Enumerator values;
 
         public MapEnumerator(Dictionary<int, T> table) {
-            this.table = table;
-            Reset();
+            this.values = table.GetEnumerator();
         }
 
 
@@ -53,18 +51,19 @@ public class Map<T> {
             return this.values.MoveNext();
         }
 
-        public object Current {
-            get { return values.Current; }
+        void IEnumerator.Reset() {
+            ((IEnumerator)this.values).Reset();
         }
 
-        public void Reset() {
+        void IDisposable.Dispose() {
             this.values.Dispose();
-            this.values = table.Values.GetEnumerator();
         }
 
-        public void Dispose() {
-            this.values.Dispose();
-        }
+
+        object IEnumerator.Current => values.Current.Value;
+
+        public T Current => values.Current.Value;
+
     }
 
 }

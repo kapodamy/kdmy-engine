@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 using Engine.Platform;
 
 namespace Engine.Utils;
 
-public class XmlParserAttribute {
+public readonly struct XmlParserAttribute {
     public readonly string name;
     public readonly string value;
 
@@ -15,7 +17,7 @@ public class XmlParserAttribute {
     }
 }
 
-public class XmlParserAttributes {
+public readonly struct XmlParserAttributes {
 
     private readonly XmlParserAttribute[] attributes;
 
@@ -32,11 +34,11 @@ public class XmlParserAttributes {
 
     public XmlParserAttribute this[int index] { get => this.attributes[index]; }
 
-    public System.Collections.IEnumerator GetEnumerator() {
+    public IEnumerator<XmlParserAttribute> GetEnumerator() {
         return new XmlParserAttributesEnumerator(this.attributes);
     }
 
-    private class XmlParserAttributesEnumerator : System.Collections.IEnumerator {
+    private struct XmlParserAttributesEnumerator : IEnumerator<XmlParserAttribute> {
         private int index;
         private XmlParserAttribute[] attributes;
 
@@ -54,9 +56,14 @@ public class XmlParserAttributes {
             index = -1;
         }
 
-        public object Current {
-            get => this.attributes[this.index];
+        public void Dispose() {
+
         }
+
+
+        public XmlParserAttribute Current => this.attributes[this.index];
+
+        object IEnumerator.Current => this.attributes[this.index];
 
     }
 }
@@ -95,11 +102,11 @@ public class XmlParserNodeList {
 
     public XmlParserNode this[int index] { get => new XmlParserNode(this.nodes[index]); }
 
-    public System.Collections.IEnumerator GetEnumerator() {
+    public IEnumerator<XmlParserNode> GetEnumerator() {
         return new XmlParserNodeListEnumerator(this.nodes);
     }
 
-    private class XmlParserNodeListEnumerator : System.Collections.IEnumerator {
+    private struct XmlParserNodeListEnumerator : IEnumerator<XmlParserNode> {
         private int index;
         private XmlNode[] nodes;
 
@@ -117,24 +124,29 @@ public class XmlParserNodeList {
             index = -1;
         }
 
-        public object Current {
-            get => new XmlParserNode(this.nodes[this.index]);
+        void IDisposable.Dispose() {
+
         }
 
-    }
+        object IEnumerator.Current => new XmlParserNode(this.nodes[this.index]);
 
+        public XmlParserNode Current => new XmlParserNode(this.nodes[this.index]);
+    }
 
 }
 
 public class XmlParserNode {
 
-    private XmlNode element;
+    private readonly XmlNode element;
+
+    public readonly XmlParserAttributes Attributes;
 
     internal XmlParserNode(XmlNode elem) {
         this.element = elem;
+        this.Attributes = new XmlParserAttributes(elem.Attributes);
     }
 
-    public string OuterHTML { get => this.element.OuterXml; }
+    public string OuterHTML => this.element.OuterXml;
 
     public string GetAttribute(string name) {
         if (this.element is XmlElement) {
@@ -144,32 +156,17 @@ public class XmlParserNode {
         return null;
     }
 
-    public string TagName { get => this.element.Name; }
+    public string TagName => this.element.Name;
 
-    public XmlParserNodeList Children {
-        get => new XmlParserNodeList(this.element.ChildNodes);
-        /*public XmlParserNodeList Children {
-            get
-            {
-                XmlNodeList children = this.element.ChildNodes;
-                for (int i = 0 ; i < children.Count ; i++) {
-                    yield return new XmlParserNode(children[i]);
-                }
-            }
-        }*/
-    }
+    public XmlParserNodeList Children => new XmlParserNodeList(this.element.ChildNodes);
 
-    public int Length { get => this.element.ChildNodes.Count; }
+    public int Length => this.element.ChildNodes.Count;
 
     public bool HasAttribute(string attributeName) {
-        if (this.element is XmlElement)
-            return ((XmlElement)this.element).HasAttribute(attributeName);
-        else
-            return false;
-    }
-
-    public XmlParserAttributes Attributes {
-        get => new XmlParserAttributes(element.Attributes);
+        for (int i = 0 ; i < this.Attributes.Length ; i++) {
+            if (this.Attributes[i].name == attributeName) return true;
+        }
+        return false;
     }
 
     public string TextContent {
@@ -192,7 +189,7 @@ public class XmlParserNode {
     }
 
     public XmlParserNodeList GetChildrenList(string tag_name) {
-        System.Collections.Generic.List<XmlNode> nodes = new System.Collections.Generic.List<XmlNode>();
+        List<XmlNode> nodes = new List<XmlNode>();
 
         foreach (XmlNode node in this.element.ChildNodes) {
             if (node.NodeType == XmlNodeType.Element && node.Name == tag_name) {
@@ -241,4 +238,5 @@ public class XmlParser {
     public XmlParserNode GetRoot() {
         return new XmlParserNode(this.xml.DocumentElement);
     }
+
 }

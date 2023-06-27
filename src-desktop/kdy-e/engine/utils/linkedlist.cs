@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Engine.Utils;
@@ -240,41 +241,51 @@ public class LinkedList<T> {
         return -1;
     }
 
-    public System.Collections.IEnumerator GetEnumerator() {
+    public System.Collections.Generic.IEnumerator<T> GetEnumerator() {
         return new LinkedListEnumerator(this.head);
     }
 
 
-    private class LinkedListEnumerator : System.Collections.IEnumerator {
-        private LinkedListNode head;
+    private struct LinkedListEnumerator : System.Collections.Generic.IEnumerator<T> {
+        private readonly LinkedListNode head;
         private LinkedListNode current;
-        private bool first;
+        private bool last;
 
         public LinkedListEnumerator(LinkedListNode head) {
-            this.current = this.head = head;
-            this.first = true;
+            this.head = head;
+            this.current = null;
+            this.last = head == null;
         }
+
 
         public bool MoveNext() {
-            if (current != null) {
-                if (first) {
-                    first = false;
-                    return true;
-                }
-                current = current.next;
-            }
-            return current != null;
-        }
+            if (last) return false;
 
-        public object Current {
-            get { return current.item; }
+            if (this.current == null) {
+                this.current = this.head;
+                return true;
+            }
+
+            this.current = this.current.next;
+            if (this.current.next == null) this.last = true;
+
+            return true;
         }
 
         public void Reset() {
-            this.first = true;
-            this.current = this.head;
+            if (this.head == null) return;
+            this.current = null;
+            this.last = false;
         }
 
+        void IDisposable.Dispose() {
+
+        }
+
+
+        object System.Collections.IEnumerator.Current => current.item;
+
+        public T Current => current.item;
     }
 
 }

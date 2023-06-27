@@ -49,12 +49,14 @@ internal unsafe class OGGOpusDecoder : IDecoder {
             int length = comments_info->comment_lengths[i];
             string comment = Marshal.PtrToStringUTF8((nint)comments_info->user_comments[i], length);
 
+            if (length < 1 || comment == null) continue;
+
             if (comment.StartsWith(OggUtil.LOOPSTART)) {
-                Int64.TryParse(comment.Substring(OggUtil.LOOPSTART.Length), out oggopusdecoder.loop_start);
+                Int64.TryParse(comment.AsSpan(OggUtil.LOOPSTART.Length), out oggopusdecoder.loop_start);
             }
 
             if (comment.StartsWith(OggUtil.LOOPLENGTH)) {
-                Int64.TryParse(comment.Substring(OggUtil.LOOPLENGTH.Length), out oggopusdecoder.loop_length);
+                Int64.TryParse(comment.AsSpan(OggUtil.LOOPLENGTH.Length), out oggopusdecoder.loop_length);
             }
         }
 

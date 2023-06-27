@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 
 namespace Engine.Utils;
@@ -198,6 +199,10 @@ L_stop_checking_equal:
     }
 
     public static uint BitCount(uint value) {
+        if (Popcnt.IsSupported) {
+            return Popcnt.PopCount(value);
+        }
+
         // POPCNT .Net Impl
         value = value - ((value >> 1) & 0x55555555);
         value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
@@ -268,7 +273,7 @@ L_stop_checking_equal:
     }
 
     public static float LerpExpo(float percent) {
-        return MathF.Pow(2f, 1f * (percent - 1f));
+        return MathF.Pow(2f, 10f * (percent - 1f));
     }
 
     public static float LerpSin(float percent) {

@@ -638,10 +638,10 @@ public static class VertexProps {
 
         if (only_if_prefixed && trim_index < 1) goto L_invalid;
 
-        str = str.Substring(trim_index);
-        if (str.Length < 1) goto L_invalid;
+        ReadOnlySpan<char> substr = str.SubstringKDY(trim_index, str.Length);
+        if (substr.Length < 1) goto L_invalid;
 
-        if (!UInt32.TryParse(str, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value))
+        if (!UInt32.TryParse(substr, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value))
             goto L_invalid;
 
         // add alpha component

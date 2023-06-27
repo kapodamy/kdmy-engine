@@ -149,7 +149,7 @@ public class FontType : IFontRender {
         int line_chars = 0;
         Grapheme grapheme = new Grapheme();
 
-        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
+        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
             index += grapheme.size;
 
             //override hard-spaces with white-spaces
@@ -360,7 +360,7 @@ public class FontType : IFontRender {
 
 
         // count the amount of glyph required
-        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
+        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
             index += grapheme.size;
 
             if (grapheme.code == 0xA0) continue;
@@ -382,7 +382,7 @@ public class FontType : IFontRender {
 
         // add glyphs to the vertex buffer
         index = text_index;
-        while (added < maximum && index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
+        while (added < maximum && index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
             index += grapheme.size;
 
             //override hard-spaces with white-spaces
@@ -586,7 +586,7 @@ public class FontType : IFontRender {
         int index = text_index;
 
         // step 1: count all unmapped codepoints
-        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
+        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
             index += grapheme.size;
 
             switch (grapheme.code) {
@@ -617,7 +617,7 @@ public class FontType : IFontRender {
 
         index = text_index;
         new_codepoints = actual;
-        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, grapheme)) {
+        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
             index += grapheme.size;
 
             if (FontType.InternalGetFontchardata(this.fontcharmap_primary, grapheme.code) != null) continue;

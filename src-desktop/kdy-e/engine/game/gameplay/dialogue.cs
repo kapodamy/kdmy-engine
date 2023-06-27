@@ -1282,7 +1282,7 @@ public class Dialogue : IAnimate, IDraw {
         //free(this.current_dialog_mask);
         this.current_dialog_mask = null;
 
-        while (StringUtils.GetCharacterCodepoint(line.text, index, grapheme)) {
+        while (StringUtils.GetCharacterCodepoint(line.text, index, ref grapheme)) {
             switch (grapheme.code) {
                 case 0x20:// space
                 case 0x09:// tab

@@ -59,12 +59,14 @@ internal unsafe class OGGVorbisDecoder : IDecoder {
             int length = comments_info->comment_lengths[i];
             string comment = Marshal.PtrToStringUTF8((nint)comments_info->user_comments[i], length);
 
+            if (length < 1 || comment == null) continue;
+
             if (comment.StartsWith(OggUtil.LOOPSTART)) {
-                Int64.TryParse(comment.Substring(OggUtil.LOOPSTART.Length), out oggvorbisdecoder.loop_start);
+                Int64.TryParse(comment.AsSpan(OggUtil.LOOPSTART.Length), out oggvorbisdecoder.loop_start);
             }
 
             if (comment.StartsWith(OggUtil.LOOPLENGTH)) {
-                Int64.TryParse(comment.Substring(OggUtil.LOOPLENGTH.Length), out oggvorbisdecoder.loop_length);
+                Int64.TryParse(comment.AsSpan(OggUtil.LOOPLENGTH.Length), out oggvorbisdecoder.loop_length);
             }
         }
 
