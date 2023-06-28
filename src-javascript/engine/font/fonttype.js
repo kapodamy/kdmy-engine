@@ -1,6 +1,8 @@
 "use strict";
 
 const SDF_FONT = true;
+const SDF_SMOOTHNESS_BY_MATRIX_SCALE_DECOMPOSITION = false;
+const SDF_MIPMAPS = false;
 
 const FONTTYPE_POOL = new Map();
 var FONTTYPE_IDS = 0;
@@ -517,13 +519,25 @@ function fonttype_internal_upload_texture(fontcharmap) {
     let texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
+    if (SDF_MIPMAPS) {
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    } else {
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
+
     gl.texImage2D(
         gl.TEXTURE_2D, 0, gl.LUMINANCE,
         fontcharmap.texture_width, fontcharmap.texture_height, 0,
         gl.LUMINANCE, gl.UNSIGNED_BYTE, fontcharmap.texture
     );
 
-    gl.generateMipmap(gl.TEXTURE_2D);
+    if (SDF_MIPMAPS) {
+        gl.generateMipmap(gl.TEXTURE_2D);
+    }
 
     //gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpack_alignment);
 
@@ -534,7 +548,10 @@ function fonttype_internal_upload_texture(fontcharmap) {
         fontcharmap.texture_width, fontcharmap.texture_height,
         fontcharmap.texture_width, fontcharmap.texture_height
     );
-    tex.has_mipmaps = true;
+
+    if (SDF_MIPMAPS) {
+        tex.has_mipmaps = true;
+    }
 
     return tex;
 }
@@ -616,20 +633,30 @@ function fonttype_internal_get_fontchardata(/**@type {FontCharMap}*/ fontcharmap
 function fonttype_internal_calc_smoothing(pvrctx, height) {
     const matrix = pvrctx.current_matrix;
 
-    let x = matrix[15] * Math.sqrt(
-        (matrix[0] * matrix[0]) +
-        (matrix[1] * matrix[1]) +
-        (matrix[2] * matrix[2])
-    );
-    let y = matrix[15] * Math.sqrt(
-        (matrix[4] * matrix[4]) +
-        (matrix[5] * matrix[5]) +
-        (matrix[6] * matrix[6])
-    );
+    if (SDF_SMOOTHNESS_BY_MATRIX_SCALE_DECOMPOSITION) {
+        let x = matrix[15] * Math.sqrt(
+            (matrix[0] * matrix[0]) +
+            (matrix[1] * matrix[1]) +
+            (matrix[2] * matrix[2])
+        );
+        let y = matrix[15] * Math.sqrt(
+            (matrix[4] * matrix[4]) +
+            (matrix[5] * matrix[5]) +
+            (matrix[6] * matrix[6])
+        );
 
-    let scale = (Math.abs((x + y) / 2.0) * height) / FONTTYPE_GLYPHS_HEIGHT;
-    let smoothing = FONTTYPE_GLYPHS_SMOOTHING_COEFF / (FONTTYPE_GLYPHS_HEIGHT * scale);
+        let scale = (Math.abs((x + y) / 2.0) * height) / FONTTYPE_GLYPHS_HEIGHT;
+        let smoothing = FONTTYPE_GLYPHS_SMOOTHING_COEFF / (FONTTYPE_GLYPHS_HEIGHT * scale);
 
-    return smoothing;
+        return smoothing;
+    } else {
+        let coord = [1.0, 1.0];
+        sh4matrix_multiply_point(matrix, coord);
+
+        let scale = (Math.abs((coord[0] + coord[1]) / 2.0) * height) / FONTTYPE_GLYPHS_HEIGHT;
+        let smoothness = FONTTYPE_GLYPHS_SMOOTHING_COEFF / (FONTTYPE_GLYPHS_HEIGHT * scale);
+
+        return smoothness;
+    }
 }
 
