@@ -419,6 +419,7 @@ public class MainMenu {
             GamepadButtons buttons = gamepad.HasPressedDelayed(Credits.BUTTONS);
             if (buttons.Bool()) {
                 if ((buttons & (GamepadButtons.A | GamepadButtons.START)).Bool() && donate_url != null) {
+                    gamepad.ClearButtons2(GamepadButtons.A | GamepadButtons.START);
                     LuascriptPlatform.OpenWWWLink(donate_url);
                     continue;
                 }

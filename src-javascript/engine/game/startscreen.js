@@ -50,6 +50,7 @@ async function startscreen_main() {
                 if (soundplayer_confirm) soundplayer_play(soundplayer_confirm);
                 layout_trigger_any(layout, "start_pressed");
                 await modding_helper_notify_event(modding, "start_pressed");
+                gamepad_clear_buttons2(maple_pad, MAINMENU_GAMEPAD_OK);
             }
         } else if (enter_pressed) {
             if (total_elapsed >= delay_after_start) {

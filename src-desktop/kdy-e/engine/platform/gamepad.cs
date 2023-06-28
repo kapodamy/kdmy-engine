@@ -5,7 +5,7 @@ using Engine.Utils;
 using KallistiOS;
 using KallistiOS.MAPLE;
 
-namespace Engine.Platform; 
+namespace Engine.Platform;
 
 [Flags]
 public enum GamepadButtons : uint {
@@ -198,6 +198,13 @@ public class Gamepad {
         this.InternalUpdateState();
         this.clear_mask = ~this.buttons;
         this.buttons = GamepadButtons.NOTHING;
+    }
+
+    public void ClearButtons2(GamepadButtons buttons_to_clear) {
+        this.clear_mask = 0x00;
+        this.InternalUpdateState();
+        this.clear_mask = ~(this.buttons & buttons_to_clear);
+        this.buttons &= ~buttons_to_clear;
     }
 
     public static void ClearAllGamepads() {

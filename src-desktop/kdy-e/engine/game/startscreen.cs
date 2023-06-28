@@ -57,6 +57,7 @@ public class StartScreen {
                     if (soundplayer_confirm != null) soundplayer_confirm.Play();
                     layout.TriggerAny("start_pressed");
                     modding.HelperNotifyEvent("start_pressed");
+                    maple_pad.ClearButtons2(MainMenu.GAMEPAD_OK);
                 }
             } else if (enter_pressed) {
                 if (total_elapsed >= delay_after_start) {

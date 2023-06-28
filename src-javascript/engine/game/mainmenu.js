@@ -407,6 +407,7 @@ async function mainmenu_show_donate() {
         let buttons = gamepad_has_pressed_delayed(gamepad, CREDITS_BUTTONS);
         if (buttons) {
             if ((buttons & (GAMEPAD_A | GAMEPAD_START)) && donate_url) {
+                gamepad_clear_buttons2(gamepad, GAMEPAD_A | GAMEPAD_START);
                 window.open(donate_url, "_blank", "noopener,noreferrer");
                 continue;
             }

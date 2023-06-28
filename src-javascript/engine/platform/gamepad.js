@@ -189,6 +189,13 @@ function gamepad_clear_buttons(/**@type {GamepadKDY}*/gamepad) {
     gamepad.buttons = 0x00;
 }
 
+function gamepad_clear_buttons2(/**@type {GamepadKDY}*/gamepad, buttons_to_clear) {
+    gamepad.clear_mask = 0x00;
+    gamepad_internal_update_state(gamepad);
+    gamepad.clear_mask = ~(gamepad.buttons & buttons_to_clear);
+    gamepad.buttons &= ~buttons_to_clear;
+}
+
 function gamepad_clear_all_gamepads() {
     for (let [gamepad, id] of GAMEPAD_POOL) {
         gamepad.clear_mask = 0x00;
