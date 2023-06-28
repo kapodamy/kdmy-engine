@@ -1519,8 +1519,10 @@ function __js__psshader_set_uniform1f(psshader, name, value) {
 function __js__psshader_set_uniform1i(psshader, name, value) {
     kdmyEngine_obtain(psshader).SetUniform1I(kdmyEngine_ptrToString(name), value)
 }
-function __js__songplayer_changesong(songplayer, src, prefer_no_copyright) {
-    return songplayer_changesong(kdmyEngine_obtain(songplayer), kdmyEngine_ptrToString(src), prefer_no_copyright)
+function __asyncjs__songplayer_changesong(songplayer, src, prefer_alternative) {
+    return Asyncify.handleAsync(async() => {
+        return await songplayer_changesong(kdmyEngine_obtain(songplayer), kdmyEngine_ptrToString(src), prefer_alternative)
+    })
 }
 function __asyncjs__songplayer_play(songplayer, songinfo) {
     return Asyncify.handleAsync(async() => {
@@ -5835,6 +5837,7 @@ var wasmImports = {
     "__asyncjs__modding_spawn_screen": __asyncjs__modding_spawn_screen,
     "__asyncjs__modelholder_init": __asyncjs__modelholder_init,
     "__asyncjs__modelholder_init2": __asyncjs__modelholder_init2,
+    "__asyncjs__songplayer_changesong": __asyncjs__songplayer_changesong,
     "__asyncjs__songplayer_play": __asyncjs__songplayer_play,
     "__asyncjs__soundplayer_init": __asyncjs__soundplayer_init,
     "__asyncjs__week_rebuild_ui": __asyncjs__week_rebuild_ui,
@@ -6085,7 +6088,6 @@ var wasmImports = {
     "__js__psshader_set_uniform1f": __js__psshader_set_uniform1f,
     "__js__psshader_set_uniform1i": __js__psshader_set_uniform1i,
     "__js__psshader_set_uniform_any": __js__psshader_set_uniform_any,
-    "__js__songplayer_changesong": __js__songplayer_changesong,
     "__js__songplayer_get_duration": __js__songplayer_get_duration,
     "__js__songplayer_get_timestamp": __js__songplayer_get_timestamp,
     "__js__songplayer_is_completed": __js__songplayer_is_completed,

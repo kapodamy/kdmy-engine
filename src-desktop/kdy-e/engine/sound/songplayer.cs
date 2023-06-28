@@ -2,7 +2,6 @@ using System;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using Engine.Utils;
-using KallistiOS.THD;
 
 namespace Engine.Sound; 
 
@@ -18,8 +17,6 @@ public class SongPlayer {
     private const string NAME_INSTRUMENTAL = "Inst";
     private const string NAME_VOICES = "Voices";
     public const char TRACKS_SEPARATOR = '|';
-
-    private static readonly SongPlayer SILENCE = new SongPlayer();
 
     private bool paused = true;
     private int playbacks_size = 0;
@@ -39,7 +36,7 @@ public class SongPlayer {
             Console.Error.WriteLine("[ERROR] songplayer_init() fallback failed, missing file: " + src);
             Console.Error.WriteLine("[ERROR] songplayer_init() cannot load any file, there will only be silence.");
 
-            return SongPlayer.SILENCE;
+            return new SongPlayer() { playbacks = null, playbacks_size = 0, paused = true, index_instrumental = -1, index_voices = -1 };
         }
 
         SongPlayer songplayer;
@@ -104,11 +101,14 @@ public class SongPlayer {
         Luascript.DropShared(this);
         if (this == SongPlayer.SILENCE) return;
 
+        if (this.playbacks != null) {
         for (int i = 0 ; i < this.playbacks_size ; i++) {
             this.playbacks[i].Destroy();
         }
 
         //free(this.playbacks);
+        }
+
         //free(songplayer);
     }
 
@@ -194,9 +194,26 @@ public class SongPlayer {
         return duration;
     }
 
-    public bool ChangeSong(string src, bool prefer_no_copyright) {
-        Console.Error.WriteLine("songplayer_changesong() not implemented");
-        return false;
+    public bool ChangeSong(string src, bool prefer_alternative) {
+        SongPlayer song = SongPlayer.Init(src, prefer_alternative);
+
+        if (song == null) return false;
+
+        if (this.playbacks != null) {
+            for (int i = 0 ; i < this.playbacks_size ; i++) {
+                this.playbacks[i].Destroy();
+            }
+            //free(this.playbacks);
+        }
+
+        this.index_instrumental = song.index_instrumental;
+        this.index_voices = song.index_voices;
+        this.paused = song.paused;
+        this.playbacks = song.playbacks;
+        this.playbacks_size = song.playbacks_size;
+        //free(song);
+
+        return true;
     }
 
     public bool IsCompleted() {

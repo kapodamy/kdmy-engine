@@ -7,7 +7,6 @@ const SONGPLAYER_NAME_INSTRUMENTAL = "Inst";
 const SONGPLAYER_NAME_VOICES = "Voices";
 const SONGPLAYER_TRACKS_SEPARATOR = '|';
 
-const SONGPLAYER_SILENCE = { playbacks: null, playbacks_size: 0, paused: 1 };
 
 async function songplayer_init(src, prefer_alternative) {
     const output_paths = [null, null];
@@ -20,7 +19,7 @@ async function songplayer_init(src, prefer_alternative) {
         console.error("songplayer_init() fallback failed, missing file: " + src);
         console.error("songplayer_init() cannot load any file, there will only be silence.");
 
-        return SONGPLAYER_SILENCE;
+        return { playbacks: null, playbacks_size: 0, paused: 1, index_instrumental: -1, index_voices: -1 };
     }
 
     let songplayer;
@@ -87,17 +86,17 @@ async function songplayer_init2(is_not_splitted, path_voices, path_instrumental)
 }
 
 function songplayer_destroy(songplayer) {
-    if (songplayer == SONGPLAYER_SILENCE) return;
+    if (songplayer.playbacks) {
+        // javacript only (needs the C counterpart)
+        for (let i = 0; i < songplayer.playbacks_size; i++) {
+            if (IO_CHROMIUM_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
+            songplayer.playbacks[i].pause();
+            songplayer.playbacks[i].srcObject = null;
+            songplayer.playbacks[i].remove();
+        }
 
-    // javacript only (needs the C counterpart)
-    for (let i = 0; i < songplayer.playbacks_size; i++) {
-        if (IO_CHROMIUM_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
-        songplayer.playbacks[i].pause();
-        songplayer.playbacks[i].srcObject = null;
-        songplayer.playbacks[i].remove();
+        songplayer.playbacks = undefined;
     }
-
-    songplayer.playbacks = undefined;
 
     ModuleLuaScript.kdmyEngine_drop_shared_object(songplayer);
     songplayer = undefined;
@@ -186,9 +185,30 @@ function songplayer_get_duration(songplayer) {
     return duration;
 }
 
-function songplayer_changesong(songplayer, src, prefer_no_copyright) {
-    console.log("songplayer_changesong() not implemented");
-    return 0;
+async function songplayer_changesong(songplayer, src, prefer_alternative) {
+    let song = await songplayer_init(src, prefer_alternative);
+
+    if (!song) return 0;
+
+    if (songplayer.playbacks) {
+        // javacript only (needs the C counterpart)
+        for (let i = 0; i < songplayer.playbacks_size; i++) {
+            if (IO_CHROMIUM_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
+            songplayer.playbacks[i].pause();
+            songplayer.playbacks[i].srcObject = null;
+            songplayer.playbacks[i].remove();
+        }
+        songplayer.playbacks = undefined;
+    }
+
+    songplayer.index_instrumental = song.index_instrumental;
+    songplayer.index_voices = song.index_voices;
+    songplayer.paused = song.paused;
+    songplayer.playbacks = song.playbacks;
+    songplayer.playbacks_size = song.playbacks_size;
+    song = undefined;
+
+    return 1;
 }
 
 function songplayer_is_completed(songplayer) {
