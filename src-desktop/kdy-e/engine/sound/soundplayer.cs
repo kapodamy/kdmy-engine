@@ -31,7 +31,7 @@ public class SoundPlayer {
             !full_path.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) &&
             !full_path.EndsWith(".logg", StringComparison.OrdinalIgnoreCase)
             ) {
-            Console.Error.WriteLine("[ERROR] songplayer_init() format not supported: " + src);
+            Logger.Error($"songplayer_init() format not supported: {src}");
             return null;
         }
 
@@ -45,7 +45,7 @@ public class SoundPlayer {
         } else {
             filehandle = FileHandleUtil.Init(full_path, true);
             if (filehandle == null) {
-                Console.Error.WriteLine("[ERROR] soundplayer_init() filehandle_init failed for: " + src);
+                Logger.Error($"soundplayer_init() filehandle_init failed for: {src}");
                 return null;
             }
         }
@@ -54,7 +54,7 @@ public class SoundPlayer {
         StreamResult res = SoundBridge.Enqueue(filehandle, out stream);
         if (res != StreamResult.Success) {
             filehandle.Dispose();
-            Console.Error.WriteLine($"[ERROR] soundplayer_init() SoundBridge::Enqueue() returned {res} for: {src}");
+            Logger.Error($"soundplayer_init() SoundBridge::Enqueue() returned {res} for: {src}");
             return null;
         }
 

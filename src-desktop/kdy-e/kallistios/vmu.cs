@@ -1,4 +1,5 @@
 ﻿using System;
+using Engine;
 using Engine.Utils;
 
 #pragma warning disable CS8981
@@ -52,7 +53,7 @@ public static class vmu {
                 eyecatch_size = 32 + 72 * 56 / 2;
                 break;
             default:
-                Console.Error.WriteLine("[ERROR] vmu_pkg_parse() unknown eyecatch type");
+                Logger.Error("vmu_pkg_parse() unknown eyecatch type");
                 return -1;
         }
 

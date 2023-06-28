@@ -15,6 +15,9 @@
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Include="..\kdy-e\engine\csharp\Logger.cs" Link="Logger.cs" />
+	</ItemGroup>
+	<ItemGroup>
 	  <ProjectReference Include="..\soundbridge\soundbridge.csproj" />
 	</ItemGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">

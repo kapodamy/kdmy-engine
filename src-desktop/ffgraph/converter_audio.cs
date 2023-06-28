@@ -45,7 +45,8 @@ internal unsafe class AudioConverter : IFFGraphFormatConverter {
         if (count == 0) {
             return false;
         } else if (count < 0) {
-            Console.Error.WriteLine("[ERROR] audio_process() call to swr_convert() failed, reason: %s", FFmpeg.av_err2str(count));
+            string e = FFmpeg.av_err2str(count);
+            Logger.Error($"AudioConverter::Process() call to swr_convert() failed, reason: {e}");
             return true;
         }
 
@@ -123,14 +124,14 @@ internal unsafe class AudioConverter : IFFGraphFormatConverter {
         );
 
         if (ret < 0) {
-            Console.Error.WriteLine("[ERROR] audioconverter_init() call to swr_alloc_set_opts2() failed.");
+            Logger.Error("AudioConverter::Init() call to swr_alloc_set_opts2() failed.");
             FFmpeg.swr_free(&swr_ctx);
             return null;
         }
 
         ret = FFmpeg.swr_init(swr_ctx); // obligatory
         if (ret < 0) {
-            Console.Error.WriteLine("[ERROR] audioconverter_init() call to swr_init() failed.");
+            Logger.Error("AudioConverter::Init() call to swr_init() failed.");
             FFmpeg.swr_free(&swr_ctx);
             return null;
         }

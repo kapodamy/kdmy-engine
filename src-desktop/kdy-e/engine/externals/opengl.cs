@@ -231,7 +231,7 @@ public partial class WebGL2RenderingContext {
     internal uint getAttribLocation(WebGLProgram program, string name) {
         int position = NativeMethods.glGetAttribLocation(program.value, name);
 
-        if (position < 0) Console.Error.WriteLine("getAttribLocation() warning, missing '" + name + "' attribute");
+        if (position < 0) Logger.Warn($"glGetAttribLocation() missing '{name}' attribute");
         return (uint)position;
     }
 
@@ -367,7 +367,7 @@ public partial class WebGL2RenderingContext {
         }
 
 #if DEBUG
-        Console.WriteLine($"[WARN] {gl_ext_name} (${name}) not found or not supported");
+        Logger.Warn($"{gl_ext_name} ({name}) not found or not supported");
 #endif
         return null;
     }

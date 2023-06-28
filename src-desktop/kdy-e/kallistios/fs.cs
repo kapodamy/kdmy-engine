@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Engine;
 
 #pragma warning disable CS8981
 
@@ -53,7 +54,7 @@ public static class fs {
             File.Delete(fn);
             return 0;
         } catch (Exception e) {
-            Console.Error.WriteLine("[ERROR] fs_unlink() {0}\n{1}", fn, e.Message);
+            Logger.Error($"fs_unlink() {fn}:\n{e.Message}");
             return -1;
         }
     }
@@ -104,7 +105,7 @@ public static class fs {
 
             return hnd;
         } catch (Exception e) {
-            Console.Error.WriteLine("[ERROR] fs_open() {0}\n{1}", fn, e);
+            Logger.Error($"fs_open() {fn}:\n{e}");
             return -1;
         }
     }
@@ -347,9 +348,7 @@ public static class fs {
             vmi_file.Flush();
             vmi_file.Dispose();
         } catch (Exception e) {
-            Console.Error.WriteLine("[WARN] Can not create/update " + vmi_path);
-            Console.Error.WriteLine(e);
-            Console.Error.WriteLine();
+            Logger.Warn($"Can not create/update {vmi_path}, reason:\n{e}");
             if (vmi_file != null) vmi_file.Dispose();
         }
     }

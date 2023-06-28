@@ -138,7 +138,7 @@ public static class ExportsMenu {
         if (L.IsUserdataAllocated(MENU))
             menu.Destroy();
         else
-            Console.Error.WriteLine("[ERROR] script_menu_destroy() object was not allocated by lua\n");
+            Logger.Warn("script_menu_destroy() object was not allocated by lua");
 
         return 0;
     }*/

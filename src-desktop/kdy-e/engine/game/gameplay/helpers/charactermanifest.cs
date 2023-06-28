@@ -309,7 +309,7 @@ public class CharacterManifest {
             case Align.END:
                 break;
             default:
-                Console.Error.WriteLine("[WARN] charactermanifest_internal_align() invalid align: " + str);
+                Logger.Warn($"charactermanifest_internal_align() invalid align: {str}");
                 align = Align.CENTER;
                 break;
         }

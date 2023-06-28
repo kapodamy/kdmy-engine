@@ -155,10 +155,7 @@ public class StreakCounter : IDraw, IAnimate {
     public void HideComboSprite(bool hide) {
         bool combo_enabled = !hide;
         if (combo_enabled && this.combo_sprite.StateList().Count() < 1) {
-            Console.Error.WriteLine("[WARN]" +
-                "streakcounter_hide_combo_sprite() failed, " +
-                "combo sprite does not have states to show"
-            );
+            Logger.Warn("streakcounter_hide_combo_sprite() failed, combo sprite does not have states to show");
             return;
         }
         this.combo_enabled = combo_enabled;

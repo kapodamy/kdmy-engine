@@ -55,20 +55,18 @@ internal unsafe class OggUtil {
                 dec = OGGOpusDecoder.Init(file_hnd);
                 break;
             case OggUtil.CODEC_ERROR:
-                Console.Error.WriteLine("oggdecoder_init() can not identify the audio codec");
+                Logger.Error("OggUtil::InitOggDecoder() can not identify the audio codec");
                 return null;
             case OggUtil.CODEC_UNKNOWN:
-                Console.Error.WriteLine("oggdecoder_init() unknown audio codec");
+                Logger.Error("OggUtil::InitOggDecoder() unknown audio codec");
                 return null;
             default:
                 return null;
         }
 
         if (dec == null) {
-            Console.Error.WriteLine(
-                "oggdecoder_init() can not initialize the decoder for: %s\n",
-                result == OggUtil.CODEC_OPUS ? "opus" : "vorbis"
-            );
+            string codec = result == OggUtil.CODEC_OPUS ? "opus" : "vorbis";
+            Logger.Error($"OggUtil::InitOggDecoder() can not initialize the decoder for: {codec}");
             return null;
         }
 
@@ -84,7 +82,7 @@ internal unsafe class OggUtil {
 
         if (ogg_fd.Read(&oggheader, oggheader_size) != oggheader_size) goto L_error;
         if (oggheader.magic != OggS) {
-            Console.Error.WriteLine("soundplayer_get_ogg_codec() OggS failed, ¿endianess problem?");
+            Logger.Warn("OggUtil::GetOggCodec() failed, ¿endianess problem?");
             goto L_error;
         }
         if (oggheader.version != VERSION) goto L_error;

@@ -30,7 +30,7 @@ internal static class PreloadCache {
         string filelist = File.ReadAllText(filelist_absolute_path);
         if (String.IsNullOrEmpty(filelist)) return -1;
 
-        Console.WriteLine("PreloadCache::AddFileList() reading " + src_filelist);
+        Logger.Info($"PreloadCache::AddFileList() reading {src_filelist}");
 
         Stopwatch stopwatch = new Stopwatch();
         Tokenizer tokenizer = Tokenizer.Init("\r\n", true, false, filelist);
@@ -57,7 +57,7 @@ internal static class PreloadCache {
 
             absolute_path = IO.GetAbsolutePath(path, true, true);
             if (!File.Exists(absolute_path)) {
-                Console.Error.WriteLine($"[WARN] PreCache::AddFileList() file not found {line} (resolved as {path})");
+                Logger.Warn($"PreCache::AddFileList() file not found {line} (resolved as {path})");
                 continue;
             }
 
@@ -67,9 +67,9 @@ internal static class PreloadCache {
         double elapsed = stopwatch.ElapsedMilliseconds / 1000.0;
 
         if (added < 1)
-            Console.WriteLine($"PreloadCache::AddFileList() no files cached (took {elapsed}sec)");
+            Logger.Info($"PreloadCache::AddFileList() no files cached (took {elapsed}sec)");
         else
-            Console.WriteLine($"PreloadCache::AddFileList() {added} files cached in {elapsed}sec");
+            Logger.Info($"PreloadCache::AddFileList() {added} files cached in {elapsed}sec");
 L_return:
         tokenizer.Destroy();
         return added < 1 ? -1 : id;
@@ -152,10 +152,10 @@ L_return:
             memory_used += buffer.Length;
             added++;
         } catch (OutOfMemoryException) {
-            Console.Error.WriteLine($"[WARN] PreCache::AddFileList() out of memory for {src} (resolved as {path})");
+            Logger.Warn($"PreCache::AddFileList() out of memory for {src} (resolved as {path})");
             return false;
         } catch (Exception e) {
-            Console.Error.WriteLine($"[WARN] PreCache::AddFileList() exception for {src} (resolved as {path}):\n{e.Message}");
+            Logger.Warn($"PreCache::AddFileList() exception for {src} (resolved as {path}):\n{e.Message}");
             return true;
         }
 

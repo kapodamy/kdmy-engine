@@ -570,7 +570,7 @@ public class Sprite : IVertex {
         AnimSprite animation = AnimationGetAttached(animation_name);
 
         if (animation == null) {
-            Console.Error.WriteLine("sprite_animation_play() animation no added: " + animation_name);
+            Logger.Log($"sprite_animation_play() animation no added: {animation_name}");
             return true;
         }
 
@@ -582,7 +582,7 @@ public class Sprite : IVertex {
         //this.animation_selected = null;
 
         if (index < 0 || index >= this.animation_list.Count()) {
-            Console.Error.WriteLine("sprite_animation_play_by_index() rejected, index was out-of-bounds");
+            Logger.Log("sprite_animation_play_by_index() rejected, index was out-of-bounds");
             return;
         }
 
@@ -705,7 +705,7 @@ public class Sprite : IVertex {
 
     public AnimSprite AnimationGetAttached(string animation_name) {
         if (this.animation_list.Count() < 1) {
-            Console.Error.WriteLine("sprite_get_attached() No animation attached, can not play: " + animation_name);
+            Logger.Log($"sprite_animation_get_attached() no animation attached, can not play: {animation_name}");
             return null;
         }
 

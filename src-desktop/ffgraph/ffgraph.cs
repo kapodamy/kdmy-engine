@@ -42,7 +42,7 @@ public unsafe class FFGraph {
 
     public static FFGraph Init(IFileSource video_filehandle, IFileSource audio_filehandle) {
         if (video_filehandle == audio_filehandle) {
-            Console.Error.WriteLine("[ERROR] ffgraph_init() error: due to design constraints both filehandles can not be equal.");
+            Logger.Error("FFGraph::Init() error: due to design constraints both filehandles can not be equal.");
             return null;
         }
 
@@ -50,7 +50,7 @@ public unsafe class FFGraph {
         FFGraphFormat audio = FFGraphFormat.Init(audio_filehandle, AVMediaType.AVMEDIA_TYPE_AUDIO);
 
         if (video == null && audio == null) {
-            Console.Error.WriteLine("[ERROR] ffgraph_init() failed, no audio/video stream available.");
+            Logger.Error("FFGraph::Init() failed, no audio/video stream available.");
             return null;
         }
 
@@ -184,8 +184,8 @@ public unsafe class FFGraph {
 #if DEBUG
 
     public static int Main() {
-        Console.WriteLine("version: " + Marshal.PtrToStringUTF8((nint)FFmpeg.av_version_info()));
-        Console.WriteLine("runtime: " + GetRuntimeInfo());
+        Logger.Info("version: " + Marshal.PtrToStringUTF8((nint)FFmpeg.av_version_info()));
+        Logger.Info("runtime: " + GetRuntimeInfo());
 
         int video_frame_index = 0;
         int samples_max = 1024 * 1024;
@@ -210,7 +210,7 @@ L_read_streams:
             int frame_size;
             double seconds = ffgraph.ReadVideoFrame(&frame, &frame_size);
             if (seconds < 0 || iters++ >= frame_video_stop) {
-                Console.WriteLine("break: seconds < 0");
+                Logger.Log("break: seconds < 0");
                 break;
             }
 
@@ -225,7 +225,7 @@ L_read_streams:
         while (!ffgraph.audio_fmt.has_ended) {
             int readed = ffgraph.ReadAudioSamples(samples, (uint)(samples_max / info.audio_channels));
             if (readed < 0 || iters++ >= samples_audio_stop) {
-                Console.WriteLine("break: readed < 0");
+                Logger.Log("break: readed < 0");
                 break;
             }
 

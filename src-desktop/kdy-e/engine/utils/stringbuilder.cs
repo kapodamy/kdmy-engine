@@ -215,7 +215,7 @@ public static class STRINGBUILDER {
                         InternalHelperCreateFormattedStringCheckArg(values, args_index, typeof(bool));
                     break;
                 default:
-                    Console.Error.WriteLine("InternalHelperCreateFormattedString() Unknown identifier " + SPECIAL + format[i - 1]);
+                    Logger.Warn($"StringBuilder::InternalHelperCreateFormattedString() unknown identifier {SPECIAL}{format[i - 1]}");
                     break;
             }
 

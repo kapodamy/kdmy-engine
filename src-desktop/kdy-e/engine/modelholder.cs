@@ -113,9 +113,7 @@ public class ModelHolder {
             if (!String.IsNullOrEmpty(altas_texture) && FS.FileExists(altas_texture)) {
                 modelholder.texture = Texture.Init(altas_texture);
                 if (modelholder.texture == null) {
-                    Console.Error.WriteLine(
-                        $"[ERROR] modelholder_init() atlas texture not found: atlas={manifest_atlas} texture={altas_texture}"
-                    );
+                    Logger.Error($"modelholder_init() atlas texture not found: atlas={manifest_atlas} texture={altas_texture}");
                 }
             }
         }
@@ -125,8 +123,8 @@ public class ModelHolder {
             if (FS.FileExists(texture_src)) {
                 modelholder.texture = Texture.Init(texture_src);
             } else {
-                Console.Error.WriteLine($"modelholder_init() missing manifest texture: {manifest_texture}");
-                Console.Error.WriteLine($"modelholder_init() missing manifest texture: {texture_src}");
+                Logger.Error($"modelholder_init() missing manifest texture: {manifest_texture}");
+                Logger.Error($"modelholder_init() missing manifest texture: {texture_src}");
             }
         }
 
@@ -140,7 +138,7 @@ public class ModelHolder {
         bool no_atlas = modelholder.atlas == ModelHolder.STUB_ATLAS;
         bool no_animlist = modelholder.animlist == ModelHolder.STUB_ANIMLIST;
         if (!from_manifest && modelholder.texture == null && no_atlas && no_animlist) {
-            Console.Error.WriteLine("modelholder_init() failed, missing resources of " + src);
+            Logger.Error($"modelholder_init() failed, missing resources of {src}");
             modelholder.Destroy();
             return null;
         }
@@ -193,9 +191,9 @@ public class ModelHolder {
             }
 
             if (modelholder.texture != null) {
-                Console.Error.WriteLine($"[WARN] modelholder_init2() expected {atlas_texture}, found {texture_path}");
+                Logger.Warn($"modelholder_init2() expected {atlas_texture}, found {texture_path}");
             } else {
-                Console.Error.WriteLine($"[ERROR] modelholder_init2() missing texture file: {atlas_texture} in {atlas_src}");
+                Logger.Error($"modelholder_init2() missing texture file: {atlas_texture} in {atlas_src}");
             }
 
             //free(temp);

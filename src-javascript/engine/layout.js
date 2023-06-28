@@ -2367,7 +2367,7 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
             case "Action":
                 /*if (!parent_context) {
                     console.warn(
-                        "layout_init(): layout_parse_group() action found in the layout root, " +
+                        "layout_parse_group() action found in the layout root, " +
                         "will be imported as root group action."
                     );
                 }*/
@@ -2382,7 +2382,7 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
             case "Camera":
                 /*if (parent_context) {
                     console.warn(
-                        "layout_init(): layout_parse_group() groups can not contains cameras"
+                        "layout_parse_group() groups can not contains cameras"
                     );
                 }*/
                 layout_parse_camera(item, layout_context);
@@ -2432,11 +2432,11 @@ async function layout_parse_fonts(unparsed_root, layout_context) {
         let glyph_color_by_difference = vertexprops_parse_boolean(item, "colorByDifference", 0);
 
         if (!name) {
-            console.error("missing font name: " + item.outerHTML);
+            console.error("layout_parse_fonts() missing font name: " + item.outerHTML);
             continue;
         }
         if (!path) {
-            console.error("missing font path: " + item.outerHTML);
+            console.error("layout_parse_fonts() missing font path: " + item.outerHTML);
             continue;
         }
 
@@ -2456,7 +2456,7 @@ async function layout_parse_fonts(unparsed_root, layout_context) {
 
             arraylist_add(fonts_arraylist, { name: strdup(name), fontholder: fontholder });
         } catch (e) {
-            console.error("Unable to read the font: " + path, e);
+            console.error("layout_parse_fonts() unable to read the font: " + path, e);
             continue;
         } finally {
             path = undefined;
@@ -2620,11 +2620,11 @@ function layout_parse_externalvalues(unparsed_root, layout_context) {
         let unparsed_value = item.getAttribute("value");
 
         if (!name) {
-            console.error("missing AttachValue name: " + item.outerHTML);
+            console.error("layout_parse_externalvalues() missing AttachValue name: " + item.outerHTML);
             continue;
         }
         if (!unparsed_type) {
-            console.error("missing AttachValue type: " + item.outerHTML);
+            console.error("layout_parse_externalvalues() missing AttachValue type: " + item.outerHTML);
             continue;
         }
 
@@ -2657,7 +2657,7 @@ function layout_parse_externalvalues(unparsed_root, layout_context) {
                 invalid = false;
                 break;
             default:
-                console.error("unknown AttachValue type: " + item.outerHTML);
+                console.error("layout_parse_externalvalues() unknown AttachValue type: " + item.outerHTML);
                 continue;
         }
 
@@ -2934,7 +2934,7 @@ async function layout_parse_sprite_action(unparsed_action, animlist, atlas, acti
                 break;
             default:
                 if (!from_video) {
-                    console.warn("Unknown action entry: " + unparsed_entry.tagName);
+                    console.warn("layout_parse_sprite_action() unknown action entry: " + unparsed_entry.tagName);
                 }
                 break;
         }
@@ -3022,7 +3022,7 @@ async function layout_parse_text_action(unparsed_action, animlist, action_entrie
                 layout_helper_add_action_setblending(unparsed_entry, entries);
                 break;
             default:
-                console.warn("Unknown Text action entry:" + unparsed_entry.tagName);
+                console.warn("layout_parse_text_action() unknown Text action entry:" + unparsed_entry.tagName);
                 break;
         }
     }
@@ -3126,7 +3126,7 @@ function layout_parse_sound_action(unparsed_action, animlist, action_entries) {
                 layout_helper_add_action_animationremove(unparsed_entry, entries);*/
             default:
                 if (layout_helper_add_action_media(unparsed_entry, entries))
-                    console.warn("Unknown Sound action entry:" + unparsed_entry.tagName);
+                    console.warn("layout_parse_sound_action() unknown Sound action entry:" + unparsed_entry.tagName);
                 break;
         }
     }
@@ -3205,12 +3205,12 @@ function layout_parse_macro_actions(unparsed_actions, macro) {
                 camera_name = unparsed_action.getAttribute("camera");
                 break;
             default:
-                console.warn("Unknown Macro action:" + unparsed_action.tagName);
+                console.warn("layout_parse_macro_actions() unknown Macro action:" + unparsed_action.tagName);
                 continue;
         }
 
         if (!unparsed_action.hasAttribute("id")) {
-            console.warn("Missing event id in Macro action:" + unparsed_action.outerHTML);
+            console.warn("layout_parse_macro_actions() missing event id in Macro action:" + unparsed_action.outerHTML);
             target_name = undefined;
             action_name = undefined;
             trigger_name = undefined;
@@ -3804,7 +3804,7 @@ function layout_helper_add_action_atlasapply(unparsed_entry, atlas, action_entri
     let atlas_entry = atlas_get_entry_copy(atlas, atlas_entry_name);
 
     if (!atlas_entry) {
-        console.warn(`missing atlas entry name '${atlas_entry_name}': ${unparsed_entry.outerHTML}`);
+        console.warn(`layout_helper_add_action_atlasapply() missing atlas entry name '${atlas_entry_name}': ${unparsed_entry.outerHTML}`);
         return;
     }
 
@@ -3827,7 +3827,7 @@ function layout_helper_add_action_animation(unparsed_entry, animlist, action_ent
     let animsprite = animsprite_init_from_animlist(animlist, anim_name);
 
     if (!animsprite) {
-        console.warn(`Missing animation '${anim_name}': ${unparsed_entry.outerHTML}`);
+        console.warn(`layout_helper_add_action_animation() missing animation '${anim_name}': ${unparsed_entry.outerHTML}`);
         return;
     }
 
@@ -3851,7 +3851,7 @@ function layout_helper_add_action_animationfromatlas(unparsed_entry, atlas, acti
 
     let anim_name = unparsed_entry.getAttribute("name");
     if (!anim_name) {
-        console.error("Missing animation name on: " + unparsed_entry.outerHTML);
+        console.error("layout_helper_add_action_animationfromatlas() missing animation name on: " + unparsed_entry.outerHTML);
         return;
     }
 
@@ -3868,7 +3868,7 @@ function layout_helper_add_action_animationfromatlas(unparsed_entry, atlas, acti
     let override_size = vertexprops_parse_boolean(unparsed_entry, "overrideSize", 0);
 
     if (!animsprite) {
-        console.warn(`Missing animation '${anim_name}': ${unparsed_entry.outerHTML}`);
+        console.warn(`layout_helper_add_action_animationfromatlas() missing animation '${anim_name}': ${unparsed_entry.outerHTML}`);
         return;
     }
 

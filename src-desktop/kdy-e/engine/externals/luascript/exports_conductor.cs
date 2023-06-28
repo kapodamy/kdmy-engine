@@ -20,7 +20,7 @@ public static class ExportsConductor {
         if (L.IsUserdataAllocated(CONDUCTOR))
             conductor.Destroy();
         else
-            Console.WriteLine("script_conductor_destroy() object was not allocated by lua");
+            Logger.Warn("script_conductor_destroy() object was not allocated by lua");
 
         return 0;
     }

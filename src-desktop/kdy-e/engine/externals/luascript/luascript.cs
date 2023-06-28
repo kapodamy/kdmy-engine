@@ -317,7 +317,7 @@ public class Luascript {
         ManagedLuaState lua = ManagedLuaState.Init(context);
 
         if (lua == null) {
-            Console.Error.WriteLine("[ERROR] luascript_init() cannot create lua state, not enough memory");
+            Logger.Error("luascript_init() cannot create lua state, not enough memory");
             return null;
         }
 
@@ -328,7 +328,7 @@ public class Luascript {
 
         if (status != ManagedLuaState.LUA_OK) {
             string error_message = lua.LuaStateHandle.lua_tostring(-1);
-            Console.Error.WriteLine($"luascript_init() luaL_loadfile() failed: {error_message}");
+            Logger.Error($"luascript_init() luaL_loadfile() failed: {error_message}");
 
             lua.Dispose();
             return null;

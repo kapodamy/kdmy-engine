@@ -157,7 +157,7 @@ public static class FS {
 
             return true;
         } catch (Exception e) {
-            Console.Error.WriteLine("fs_folder_enumerate() failed on: {0}.\n{1}", src, e.Message);
+            Logger.Warn($"fs_folder_enumerate() failed on {src}: {e.Message}");
 
             folder_enumerator.___entries = null;
             folder_enumerator.name = null;
@@ -515,7 +515,7 @@ L_exit:
 
         int count = fs_tls.fs_stk.Count();
         if (count < 1) {
-            Console.Error.WriteLine("fs: fs_folder_stack_pop() failed, folder stack was empty");
+            Logger.Warn("fs_folder_stack_pop() failed, folder stack was empty");
             return;
         }
 

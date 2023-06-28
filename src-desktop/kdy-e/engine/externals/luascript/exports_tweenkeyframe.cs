@@ -32,7 +32,7 @@ public static class ExportsTweenKeyframe {
         if (L.IsUserdataAllocated(TWEENKEYFRAME))
             tweenkeyframe.Destroy();
         else
-            Console.WriteLine("script_tweenkeyframe_destroy() object was not allocated by lua");
+            Logger.Warn("script_tweenkeyframe_destroy() object was not allocated by lua");
 
         return 0;
     }

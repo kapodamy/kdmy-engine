@@ -579,7 +579,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
 
             if (!note) {
                 if (ddr_key.in_song_timestamp > song_timestamp) {
-                    //console.warn(`[hold] in future ts_k=${key_timestamp} ts_s=${song_timestamp}`);
+                    //console.warn(`strum: [hold] in future ts_k=${key_timestamp} ts_s=${song_timestamp}`);
                 }
 
                 // maybe the key event is a penalty hit/press or future event (do not discard)
@@ -587,7 +587,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
             }
 
             if (note.state == NoteState.RELEASE) {
-                //console.info(`[hold] sustain recover!  ts_k=${key_timestamp} ts_n=${note.timestamp}`);
+                //console.info(`strum: [hold] sustain recover!  ts_k=${key_timestamp} ts_n=${note.timestamp}`);
 
                 if (Number.isNaN(note.hit_diff)) {
                     // never pressed compute hit
@@ -625,7 +625,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
             if (note_attributes.can_kill_on_hit) playerstats_kill_if_negative_health(playerstats);
             if (weekscript) weekscript_notify_note_hit(weekscript, strum, hit_index, playerstats);
 
-            //console.info(`[hold] note hit!  ts=${key_timestamp} diff=${lowest_diff} rank=${rank}`);
+            //console.info(`strum: [hold] note hit!  ts=${key_timestamp} diff=${lowest_diff} rank=${rank}`);
 
             // check if necessary display the sick effect
             if (rank == PLAYERSTATS_RANK_SICK && sick_effect_ready) {
@@ -663,7 +663,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
                 if (index_ahead++ > notes_ahead) break;
 
                 note = chart_notes[j];
-                //console.log(`[release] note found!  ts_k=${key_timestamp} ts_n=${note.timestamp}`);
+                //console.log(`strum: [release] note found!  ts_k=${key_timestamp} ts_n=${note.timestamp}`);
                 break;
             }
 
@@ -671,7 +671,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
 
             if (!note) {
                 if (key_timestamp <= song_timestamp) {
-                    //console.log(`[release] empty strum at ${key_timestamp}`);
+                    //console.log(`strum: [release] empty strum at ${key_timestamp}`);
                 }
 
                 //
@@ -686,7 +686,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
 
             // clear if the note is not sustain
             if (note.duration < strum.minimum_sustain_duration) {
-                //console.info(`[release] clear non-sustain ts=${note.timestamp}`);
+                //console.info(`strum: [release] clear non-sustain ts=${note.timestamp}`);
                 note.state = NoteState.CLEAR;
                 note.release_time = Infinity;
                 notes_cleared++;
@@ -698,13 +698,13 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
             let end_timestamp = note.endTimestamp;
 
             if (key_timestamp < end_timestamp) {
-                //console.log(`[release] early! left duration ${end_timestamp - key_timestamp}`);
+                //console.log(`strum: [release] early! left duration ${end_timestamp - key_timestamp}`);
 
                 // early release
                 note.state = NoteState.RELEASE;
                 note.release_time = key_timestamp;
             } else {
-                //console.log(`[release] sustain clear! remain was ${end_timestamp - note.release_time}`);
+                //console.log(`strum: [release] sustain clear! remain was ${end_timestamp - note.release_time}`);
                 arraylist_remove(strum.sustain_queue, note);
                 note.state = NoteState.CLEAR;
                 note.release_time = Infinity;
@@ -740,7 +740,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
         // check if the note is non-sustain
         if (note.duration < strum.minimum_sustain_duration) {
             if (song_offset_timestamp >= end_timestamp) {
-                //console.info(`[missed] non-sustain note ts=${note.timestamp}`);
+                //console.info(`strum: [missed] non-sustain note ts=${note.timestamp}`);
                 note.state = NoteState.MISS;
                 note.release_time = -Infinity;
 
@@ -768,7 +768,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
         }
 
         if (song_timestamp > end_timestamp) {
-            //console.info(`[missed] sustain note ts=${note.timestamp} ts_end=${end_timestamp}`);
+            //console.info(`strum: [missed] sustain note ts=${note.timestamp} ts_end=${end_timestamp}`);
             arraylist_remove(strum.sustain_queue, note);
 
             note.state = NoteState.MISS;
@@ -779,7 +779,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
         // consider as missed if the worst possible ranking can not be assigned
         let miss_timestamp = note.timestamp + marker_duration;
         if (song_timestamp >= miss_timestamp) {
-            //console.info($`[miss] sustain loosing ts_n=${note.timestamp} ts_s=${song_timestamp}`);
+            //console.info($`strum: [miss] sustain loosing ts_n=${note.timestamp} ts_s=${song_timestamp}`);
             if (note.state == NoteState.PENDING) {
                 arraylist_add(strum.sustain_queue, note);
                 note.state = NoteState.RELEASE;
@@ -985,7 +985,7 @@ function strum_find_penalties_note_hit(strum, song_timestamp, ddrkeys_fifo, play
                 // ignore if the accuracy less than 50%
                 if (diff < 0.50) continue;
 
-                //console.log(`[penality] hit on pending note ts=${note.timestamp}`);
+                //console.log(`strum: [penality] hit on pending note ts=${note.timestamp}`);
                 strum.extra_animations_have_penalties = 1;
                 strum_internal_update_press_state(strum, STRUM_PRESS_STATE_PENALTY_HIT);
 
@@ -1031,13 +1031,13 @@ function strum_find_penalties_empty_hit(strum, song_timestamp, ddrkeys_fifo, pla
         if (key_timestamp > song_timestamp) continue;// maybe is a future penality
 
         if (ddr_key.holding) {
-            //console.log(`[penality] key hold on empty strum ts=${key_timestamp}`);
+            //console.log(`strum: [penality] key hold on empty strum ts=${key_timestamp}`);
             playerstats_add_penality(playerstats, 1);
             strum_internal_update_press_state(strum, STRUM_PRESS_STATE_PENALTY_NOTE);
             strum.marker_state = STRUM_MARKER_STATE_CONFIRM;
             strum.extra_animations_have_penalties = 1;
         } else {
-            //console.log(`[penality] key release on empty strum ts=${key_timestamp}`);
+            //console.log(`strum: [penality] key release on empty strum ts=${key_timestamp}`);
             strum.marker_state = STRUM_MARKER_STATE_NOTHING;
             strum_internal_update_press_state(strum, STRUM_PRESS_STATE_NONE);
         }
@@ -2045,7 +2045,7 @@ function strum_internal_check_sustain_queue(strum, song_timestamp, playerstats) 
                 if (quarter < total_quarters) strum_internal_update_press_state(strum, STRUM_PRESS_STATE_MISS);
             }
 
-            //console.log(`[sustain] ts=${note.timestamp} release=${is_released} quarters=${quarters}`);
+            //console.log(`strum: [sustain] ts=${note.timestamp} release=${is_released} quarters=${quarters}`);
         }
 
         note.previous_quarter = quarter;
@@ -2072,7 +2072,7 @@ function strum_internal_set_note_drawables(strum, notepool) {
         let id = strum.chart_notes_id_map[i];
 
         if (id < 0 || id >= notepool.size) {
-            console.error("Invalid note id found in the chart: " + id);
+            console.error("strum_internal_set_note_drawables() invalid note id found in the chart: " + id);
             strum.drawable_notes[i] = null;
             strum.attribute_notes[i] = null;
             continue;

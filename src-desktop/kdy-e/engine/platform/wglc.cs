@@ -100,7 +100,7 @@ public class WebGLContext {
 
         if (pixelDataBuffer is DDSPixelDataBuffer dds) {
             if (this.s3tc_ext == null) {
-                Console.Error.WriteLine("[ERROR] WebGLContext::CreateTexture() EXT_texture_compression_s3tc is not supported");
+                Logger.Error("EXT_texture_compression_s3tc is not supported");
                 return WebGLTexture.Null;
             }
 
@@ -164,7 +164,8 @@ public class WebGLContext {
         GLenum error = gl.getError();
         if (error != GLenum.GL_NONE) {
             gl.deleteTexture(tex);
-            Console.Error.WriteLine("[ERROR] texImage2D() failed: " + error.ToString());
+            string e = ((int)error).ToString("X");
+            Logger.Error($"texImage2D() failed: 0x{e}");
             return WebGLTexture.Null;
         }
 
@@ -420,7 +421,8 @@ public class WebGLContext {
 
         GLenum error = this.gl.getError();
         if (error != this.gl.NONE) {
-            Console.Error.WriteLine("[ERROR] webopengl_read_framebuffer() failed: " + error.ToString());
+            string e = ((uint)error).ToString("X");
+            Logger.Error($"webopengl_read_framebuffer() failed: 0x{e}");
             Marshal.FreeHGlobal(data);
             return 0x00;
         }
@@ -470,7 +472,7 @@ public class WebGLContext {
 
         string msg = gl.getShaderInfoLog(shader);
         string type = is_vertex_shader ? "vertex" : "fragment";
-        Console.Error.WriteLine($"[ERROR] webopengl_internal_create_shader() failed to create a {type} shader:\n${msg}\n{source}");
+        Logger.Error($"webopengl_internal_create_shader() failed to create a {type} shader:\n{msg}\n{source}");
         gl.deleteShader(shader);
 
         string error_msg = type + " shader compilation failed\n" + msg;
@@ -502,7 +504,7 @@ public class WebGLContext {
         if (status == gl.TRUE) return program;
 
         // something went wrong with the link
-        Console.Error.WriteLine("InternalCreateProgram() failed");
+        Logger.Error("WebGLContext::InternalCreateProgram() failed");
         gl.deleteProgram(program);
         throw new Exception("Shaders compilation failed\n");
     }
@@ -1020,7 +1022,7 @@ public class PSShader {
 
         // something went wrong with the link
         string msg = gl.getProgramInfoLog(program);
-        Console.Error.WriteLine($"[ERROR] WebGLContextProgramPostprocessing::BuildProgram() failed: {msg}");
+        Logger.Error($"WebGLContextProgramPostprocessing::BuildProgram() failed: {msg}");
         gl.deleteProgram(program);
 
         return null;
@@ -1090,7 +1092,8 @@ public class PSFramebuffer {
 
         GLenum status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
         if (status != gl.FRAMEBUFFER_COMPLETE) {
-            Console.Error.WriteLine("framebuffer is not complete, status was 0x" + ((int)status).ToString("X"));
+            string e = ((int)status).ToString("X");
+            Logger.Error($"framebuffer is not complete, status was 0x{e}");
         }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, WebGLFramebuffer.Null);

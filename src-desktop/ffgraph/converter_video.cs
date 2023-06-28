@@ -53,12 +53,12 @@ internal unsafe class VideoConverter : IFFGraphFormatConverter {
 
         int size = FFmpeg.av_image_get_buffer_size(PIX_FMT, codec_ctx->width, codec_ctx->height, 1);
         if (size < 0) {
-            Console.Error.WriteLine("[ERROR] videoconverter_init() call to av_image_get_buffer_size() failed.");
+            Logger.Error("VideoConverter::Init() call to av_image_get_buffer_size() failed.");
             return null;
         }
         byte* buffer = (byte*)FFmpeg.av_malloc((nuint)size);
         if (buffer == null) {
-            Console.Error.WriteLine("[ERROR] videoconverter_init() failed to allocate the buffer.");
+            Logger.Error("VideoConverter::Init() failed to allocate the buffer.");
             return null;
         }
 
@@ -84,13 +84,13 @@ internal unsafe class VideoConverter : IFFGraphFormatConverter {
             null, null, null
         );
         if (converter.sws_ctx == null) {
-            Console.Error.WriteLine("[ERROR] videoconverter_init() call to sws_getContext() failed.");
+            Logger.Error("VideoConverter::Init() call to sws_getContext() failed.");
             goto L_failed;
         }
 
         converter.frame = FFmpeg.av_frame_alloc();
         if (converter.frame == null) {
-            Console.Error.WriteLine("[ERROR] videoconverter_init() call to av_frame_alloc() failed.");
+            Logger.Error("VideoConverter::Init() call to av_frame_alloc() failed.");
             goto L_failed;
         }
 

@@ -66,7 +66,7 @@ internal unsafe class IOHandler : IDisposable {
         try {
             buffer = (byte*)FFmpeg.av_malloc((nuint)buffer_size);
         } catch {
-            Console.Error.WriteLine("[ERROR] iohandler_init() Can not allocate the buffer.");
+            Logger.Error("IOHanlder::Init() Can not allocate the buffer.");
             return null;
         }
 
@@ -80,7 +80,7 @@ internal unsafe class IOHandler : IDisposable {
         );
 
         if (iohandler.avio_ctx == null) {
-            Console.Error.WriteLine("[ERROR] call to avio_alloc_context() failed.");
+            Logger.Error("IOHanlder::Init() call to avio_alloc_context() failed.");
             iohandler.file_hnd.Free();
             return null;
         }

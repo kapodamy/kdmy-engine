@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Engine;
 
 #pragma warning disable CS8981
 
@@ -98,7 +99,7 @@ public static class thd {
             wrapper.kthread.state = STATE.RUNNING;
             wrapper.kthread.rv = wrapper.routine(wrapper.param);
         } catch (Exception e) {
-            Console.Error.WriteLine(e);
+            Logger.Error(e.ToString());
         }
 
         wrapper.kthread.state = STATE.FINISHED;

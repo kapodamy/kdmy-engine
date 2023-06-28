@@ -3,7 +3,7 @@ using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using Engine.Utils;
 
-namespace Engine.Sound; 
+namespace Engine.Sound;
 
 public class SongPlayerInfo {
     public double timestamp;
@@ -33,8 +33,8 @@ public class SongPlayer {
         );
 
         if (path_voices == null && path_instrumental == null && !is_not_splitted) {
-            Console.Error.WriteLine("[ERROR] songplayer_init() fallback failed, missing file: " + src);
-            Console.Error.WriteLine("[ERROR] songplayer_init() cannot load any file, there will only be silence.");
+            Logger.Error($"songplayer_init() fallback failed, missing file: {src}");
+            Logger.Error($"songplayer_init() cannot load any file, there will only be silence.");
 
             return new SongPlayer() { playbacks = null, playbacks_size = 0, paused = true, index_instrumental = -1, index_voices = -1 };
         }
@@ -99,14 +99,12 @@ public class SongPlayer {
 
     public void Destroy() {
         Luascript.DropShared(this);
-        if (this == SongPlayer.SILENCE) return;
 
         if (this.playbacks != null) {
-        for (int i = 0 ; i < this.playbacks_size ; i++) {
-            this.playbacks[i].Destroy();
-        }
-
-        //free(this.playbacks);
+            for (int i = 0 ; i < this.playbacks_size ; i++) {
+                this.playbacks[i].Destroy();
+            }
+            //free(this.playbacks);
         }
 
         //free(songplayer);
@@ -294,7 +292,7 @@ public class SongPlayer {
                 if (dot_index > 0) {
                     string folder_path = src.SubstringKDY(0, dot_index - 1);
                     if (!FS.FolderExists(folder_path)) {
-                        Console.Error.WriteLine("[WARN] songplayer_init() folder not found: " + src);
+                        Logger.Warn($"songplayer_init() folder not found: {src}");
                     }
                     //free(folder_path);
                 }
@@ -310,14 +308,14 @@ public class SongPlayer {
             if (FS.FileExists(voices)) {
                 path_voices = voices;
             } else {
-                Console.Error.WriteLine("[WARN] songplayer_init() missing voices: " + voices);
+                Logger.Warn($"songplayer_init() missing voices: {voices}");
                 //free(voices);
             }
 
             if (FS.FileExists(instrumental)) {
                 path_instrumental = instrumental;
             } else {
-                Console.Error.WriteLine("[WARN] songplayer_init() missing instrumental: " + instrumental);
+                Logger.Warn($"songplayer_init() missing instrumental: {instrumental}");
                 //free(instrumental);
             }
         }
@@ -370,7 +368,7 @@ public class SongPlayer {
 
         if (!check_if_exists || FS.FileExists(path)) return path;
 
-        Console.Error.WriteLine("[WARN] songplayer_internal_separe_paths() missing: " + path);
+        Logger.Warn($"songplayer_internal_separe_paths() missing: {path}");
 
         //free(path);
         return null;

@@ -103,7 +103,7 @@ public partial class FontAtlas {
 
     private const int MAX_TEXTURE_DIMMEN = 2048;
     private static bool sdf_enabled = false;
-    
+
     private FontAtlas() { }
 
     public static void EnableSDF(bool enable) {
@@ -140,12 +140,14 @@ public partial class FontAtlas {
             Marshal.Copy(font_data, 0, (nint)fontatlas.font, font_data_size);
 
             if ((error = FreeType.FT_Init_FreeType(&lib)) != 0) {
-                Console.Error.WriteLine("fontatlas_init() could not init FreeType Library: {0}", FreeType.FT_Error_String(error));
+                string e = FreeType.FT_Error_String(error);
+                Logger.Error($"FontAtlas::Init() could not init FreeType Library: {e}");
                 goto L_failed;
             }
 
             if ((error = FreeType.FT_New_Memory_Face(lib, fontatlas.font, font_data_size, 0, &face)) != 0) {
-                Console.Error.WriteLine("fontatlas_init() failed to load font: {0}", FreeType.FT_Error_String(error));
+                string e = FreeType.FT_Error_String(error);
+                Logger.Error($"FontAtlas::Init() failed to load font: {e}");
                 goto L_failed;
             }
 
@@ -194,11 +196,8 @@ L_failed:
 
         int error = FreeType.FT_Load_Glyph(face, glyph_index, FreeType.FT_LOAD_RENDER);
         if (error != 0) {
-            Console.Error.WriteLine(
-                "fontatlas_atlas_build() Failed to load glyph for codepoint {0}, error: {1}",
-                codepoint,
-                FreeType.FT_Error_String(error)
-            );
+            string e = FreeType.FT_Error_String(error);
+            Logger.Warn($"FontAtlas::PickGlyph() failed to load glyph for codepoint {codepoint}, error: {e}");
 
             goto L_failed;
         }
@@ -229,11 +228,11 @@ L_failed:
         }
 
         if (error != 0) {
-            /*Console.Error.WriteLine(
-             "fontatlas_atlas_build() Failed to pick the glyph bitmap of codepoint {0}, error: {1}",
-                chardata.codepoint,
-                FreeType.FT_Error_String(error)
-            );*/
+            /*
+            uint c = chardata.codepoint;
+            string e = FreeType.FT_Error_String(error);
+            Logger.Warn($"FontAtlas::PickBitmap() failed to pick the glyph bitmap of codepoint {c}, error: {e}");
+            */
             chardata.bitmap = null;
             return;
         }
@@ -254,10 +253,7 @@ L_failed:
         NativeMemory.Copy(buffer, chardata.bitmap, texture_size);
 
         if (glyph->bitmap.pixel_mode != FT_Pixel_Mode.GRAY) {
-            Console.Error.WriteLine(
-                "fontatlas_atlas_build() Warning: glyph pixel_mode is not FT_PIXEL_MODE_GRAY in codepoint {0}",
-                chardata.codepoint
-            );
+            Logger.Warn($"FontAtlas::PickBitmap() glyph pixel_mode is not FT_PIXEL_MODE_GRAY in codepoint {chardata.codepoint}");
         }
     }
 
@@ -290,12 +286,12 @@ L_failed:
 
                 int error = FreeType.FT_Get_Kerning(face, previous, current, FT_Kerning_Mode.DEFAULT, &kerning);
                 if (error != 0) {
-                    /*Console.Error.WriteLine(
-                        "fontatlas_atlas_build() cannot load kernigs of previous={0} current={1}: {2}",
-                        previous,
-                        current,
-                        FreeType.FT_Error_String(error);
-                    );*/
+                    /*
+                    uint p = previous;
+                    uint c = current;
+                    string e = FreeType.FT_Error_String(error);
+                    Logger.Warn($"FontAtlas::PickKernings() cannot load kernigs of previous={p} current={c}: {e}");
+                    */
                     continue;
                 }
 
@@ -428,11 +424,8 @@ L_failed:
             //Debug.Assert(chardata != null);
 
             if ((error = FreeType.FT_Set_Pixel_Sizes(this.face, 0, font_height)) != 0) {
-                Console.Error.WriteLine(
-                    "fontatlas_atlas_build() Failed to use font_height {0} using 64 instead, error: {1}",
-                    font_height,
-                    FreeType.FT_Error_String(error)
-                );
+                string s = FreeType.FT_Error_String(error);
+                Logger.Warn($"FontAtlas::AtlasBuild() failed to use font_height {font_height} using 64 instead, error: {s}");
 
                 // fallback to 64px
                 FreeType.FT_Set_Pixel_Sizes(this.face, 0, 64);

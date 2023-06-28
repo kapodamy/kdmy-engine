@@ -129,7 +129,7 @@ public class Chart {
                 int self_notes_length = JSONParser.ReadArrayLength(self_notes);
 
                 if (self_notes_length < 3) {
-                    Console.Error.WriteLine("[WARN] chart: section=" + i + "note=" + j + "has less than 3 fields");
+                    Logger.Warn($"chart_init() section={i} note={j} has less than 3 fields");
                 }
 
                 double timestamp = JSONParser.ReadArrayItemNumberDouble(self_notes, 0, 0.0);
@@ -192,8 +192,9 @@ public class Chart {
 
                 if (direction >= unknown_notes) {
                     // custom event data
-                    Console.Error.WriteLine("[INFO] custom direction detected will be used as event. " +
-                        "timestamp=" + timestamp + " direction:" + direction + " duration=" + duration + " data=" + data
+                    Logger.Info(
+                        "chart_init() custom direction detected will be used as event. " +
+                        $"timestamp={timestamp} direction={direction} duration={duration} data={data}"
                     );
 
                     chart_events.Add(new ChartEventEntry() {

@@ -4,7 +4,7 @@ using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using Engine.Utils;
 
-namespace Engine; 
+namespace Engine;
 
 public class Camera : IAnimate, ISetProperty {
 
@@ -617,8 +617,8 @@ public class Camera : IAnimate, ISetProperty {
 
 
     public void DebugLogInfo() {
-        Console.WriteLine("[LOG] camera offset: x=" + this.offset_x + " y=" + this.offset_y + " z=" + this.offset_z);
-        Console.WriteLine("[LOG] camera position: x=" + this.modifier.translate_x + " y=" + this.modifier.translate_y + " z=" + this.modifier.scale_x);
+        Logger.Log($"camera offset: x={this.offset_x} y={this.offset_y} z={this.offset_z}");
+        Logger.Log($"camera position: x={this.modifier.translate_x} y={this.modifier.translate_y} z={this.modifier.scale_x}");
     }
 
     public void InternalTweenlerpAbsolute(int index, float value) {

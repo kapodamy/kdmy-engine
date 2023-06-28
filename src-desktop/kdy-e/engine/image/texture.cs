@@ -119,7 +119,7 @@ public class Texture {
         this.data_vram = PVRContext.global_context.webopengl.CreateTexture(this.width, this.height, this.data_ram);
 
         if (this.data_vram.IsNull) {
-            Console.Error.WriteLine($"[ERROR] texture_upload_to_pvr() failed, id={this.id} src={this.src_filename}");
+            Logger.Error($"texture_upload_to_pvr() failed, id={this.id} src={this.src_filename}");
         }
 
         if (this.cache_references > 0) return;

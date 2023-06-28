@@ -99,7 +99,7 @@ public class MenuManifest {
             case Align.END:
                 break;
             default:
-                Console.Error.WriteLine("[WARN] menumanifest_init() unknown 'itemsAlign' value in: " + src);
+                Logger.Warn($"menumanifest_init() unknown 'itemsAlign' value in: {src}");
                 align = Align.CENTER;
                 break;
         }

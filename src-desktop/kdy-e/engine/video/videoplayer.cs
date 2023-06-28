@@ -54,7 +54,7 @@ public class VideoPlayer : ISetProperty {
         if (!FS.FileExists(full_path)) { return null; }
 
         if (!runtime_available) {
-            Console.Error.WriteLine($"[ERROR] VideoPlayer::Init() can not load '${src}'. FFgraph or FFmpeg libraries are not available");
+            Logger.Error($"videoplayer_init() can not load '{src}'. FFgraph or FFmpeg libraries are not available");
             return null;
         }
 
@@ -91,7 +91,7 @@ public class VideoPlayer : ISetProperty {
         ffgraph = FFGraph.Init(video_filehandle, audio_filehandle);
 
         if (ffgraph == null) {
-            Console.Error.WriteLine("videoplayer_init() ffgraph_init() failed for: " + src);
+            Logger.Error($"videoplayer_init() ffgraph_init() failed for: {src}");
             goto L_failed;
         }
 
@@ -105,7 +105,7 @@ public class VideoPlayer : ISetProperty {
             // initialize SoundBridge stream
             StreamResult ret = SoundBridge.Enqueue(ffgraph_sndbridge, out sndbridge_stream);
             if (ret != StreamResult.Success) {
-                Console.Error.WriteLine($"[ERROR] videoplayer_init() SoundBridge::Enqueue() {ret} for: {src}");
+                Logger.Error($"videoplayer_init() SoundBridge::Enqueue() {ret} for: {src}");
                 goto L_failed;
             }
         }

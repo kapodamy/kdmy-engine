@@ -33,9 +33,7 @@ public static class TextureLoader {
         try {
             bitmap = new Bitmap(src);
         } catch (Exception e) {
-            Console.Error.WriteLine(
-                $"[ERROR] read_texture_from_path() failed to read/parse: {src}\n" + e.Message
-            );
+            Logger.Error($"read_texture_from_path() failed to read/parse: {src}\n{e.Message}");
             return null;
         }
 
@@ -53,9 +51,7 @@ public static class TextureLoader {
                 bitmap = new Bitmap(stream);
             }
         } catch (Exception e) {
-            Console.Error.WriteLine(
-                $"[ERROR] read_texture_from_stream() failed to read/parse:\n" + e.Message
-            );
+            Logger.Error($"read_texture_from_stream() failed to read/parse:\n{e.Message}");
             return null;
         }
 
@@ -84,7 +80,7 @@ public static class TextureLoader {
         if (buffer_builder != null && buffer_builder.CanCreatePixelDataBuffer()) {
             buffer = buffer_builder.CreatePixelDataBuffer(total_bytes_pow2);
             if (buffer == null) {
-                Console.Error.WriteLine("[ERROR] TextureLoader::ReadTexture() pixel data buffer creation failed");
+                Logger.Error("textureloader_read_texture() pixel data buffer creation failed");
                 bitmap.Dispose();
                 return null;
             }
@@ -119,9 +115,7 @@ public static class TextureLoader {
                     }
                 }
             } catch (Exception e) {
-                Console.Error.WriteLine(
-                    $"[ERROR] read_texture_from_bitmap() failed to reallocate pixels\n" + e.Message
-                );
+                Logger.Error($"textureloader_read_texture() failed to reallocate pixels: {e.Message}");
                 image_data.Dispose();
                 return null;
             } finally {

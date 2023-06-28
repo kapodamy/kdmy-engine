@@ -7,6 +7,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Engine;
 using Engine.Utils;
 
 #pragma warning disable CA1416
@@ -122,14 +123,14 @@ public partial class ExpansionsLoader : Form {
 
             string about_src = Path.Combine(dir.FullName, Engine.Platform.Expansions.ABOUT_FILENAME);
             if (!File.Exists(about_src)) {
-                Console.WriteLine($"ExpansionLoader: missing file {about_src}");
+                Logger.Error($"ExpansionsLoader::LoadExpansions() missing file {about_src}");
                 expansions.Add(expansion);
                 continue;
             }
 
             JSONToken json = JSONParser.LoadDirectFrom(about_src);
             if (json == null) {
-                Console.Error.WriteLine("ExpansionsLoader::LoadExpansions() can not open: " + about_src);
+                Logger.Warn($"ExpansionsLoader::LoadExpansions() can not open: {about_src}");
                 continue;
             }
 
@@ -160,9 +161,7 @@ public partial class ExpansionsLoader : Form {
                 if (File.Exists(window_icon_path)) {
                     expansion.window_icon = File.ReadAllBytes(window_icon_path);
                 } else {
-                    Console.Error.WriteLine(
-                        $"[WARN] ExpansionsLoader::LoadExpansios() file '{window_icon_path}' not found"
-                    );
+                    Logger.Warn($"ExpansionsLoader::LoadExpansions() file '{window_icon_path}' not found");
                     expansion.window_icon = null;
                 }
             }

@@ -49,7 +49,7 @@ public class FontGlyph : IFontRender {
         Atlas atlas = Atlas.Init(src_atlas);
         if (atlas == null || String.IsNullOrEmpty(atlas.texture_filename)) {
             if (atlas != null) atlas.Destroy();
-            Console.Error.WriteLine("FontGlyph.init() missing atlas file or texture filename not specified");
+            Logger.Warn("fontglyph_init() missing atlas file or texture filename not specified");
             return null;
         }
 
@@ -61,7 +61,7 @@ public class FontGlyph : IFontRender {
             fontglyph = FontGlyph.Init2(texture, atlas, suffix, allow_animation);
         } else {
             fontglyph = null;
-            Console.Error.WriteLine("FontGlyph.init() texture specified by atlas not found: " + texture_path);
+            Logger.Warn($"fontglyph_init() texture specified by atlas not found: {texture_path}");
         }
 
         atlas.Destroy();

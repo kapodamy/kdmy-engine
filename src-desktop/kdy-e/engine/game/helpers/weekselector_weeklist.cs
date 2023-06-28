@@ -566,7 +566,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
         }
 
         if (modelholder == null) {
-            Console.Error.WriteLine("[ERROR] weekselector_weeklist_internal_load_host_async() modelholder_init failed");
+            Logger.Error("weekselector_weeklist_internal_load_host_async() modelholder_init failed");
             if (host_load_id == weeklist.host_load_id) {
                 weeklist.host_statesprite.StateRemove(WeekSelectorMdlSelect.HEY);
                 weeklist.host_statesprite.StateRemove(WeekSelectorMdlSelect.IDLE);

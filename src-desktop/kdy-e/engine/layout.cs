@@ -172,7 +172,7 @@ public class Layout : IDraw, IAnimate {
         XmlParser xml = XmlParser.Init(src);
 
         if (xml == null) {
-            Console.Error.WriteLine("[ERROR] layout_init() error reading: " + src);
+            Logger.Error($"layout_init() error reading: {src}");
             return null;
         }
 
@@ -362,7 +362,7 @@ public class Layout : IDraw, IAnimate {
             }
 
             if (!intial_action_found)
-                Console.Error.WriteLine("[WARN] layout_init() initial action not found" + initial_action_name);
+                Logger.Warn($"layout_init() initial action not found {initial_action_name}");
         }
 
         for (int i = 0 ; i < layout.group_list_size ; i++) {
@@ -383,7 +383,7 @@ public class Layout : IDraw, IAnimate {
             }
 
             if (!intial_action_found)
-                Console.Error.WriteLine("[WARN] layout_init() initial action not found" + initial_action_name);
+                Logger.Warn($"layout_init() initial action not found {initial_action_name}");
         }
 
         for (int i = 0 ; i < layout.sound_list_size ; i++) {
@@ -404,7 +404,7 @@ public class Layout : IDraw, IAnimate {
             }
 
             if (!intial_action_found)
-                Console.Error.WriteLine("[WARN] layout_init() initial action not found" + initial_action_name);
+                Logger.Warn($"layout_init() initial action not found {initial_action_name}");
         }
 
         for (int i = 0 ; i < layout.video_list_size ; i++) {
@@ -427,7 +427,7 @@ public class Layout : IDraw, IAnimate {
             }
 
             if (!intial_action_found)
-                Console.Error.WriteLine("[WARN] layout_init() initial action not found" + initial_action_name);
+                Logger.Warn($"layout_init() initial action not found {initial_action_name}");
         }
 
         for (int i = 0 ; i < layout.trigger_list_size ; i++) {
@@ -563,7 +563,7 @@ public class Layout : IDraw, IAnimate {
 
     public int TriggerAny(string action_triger_camera_interval_name) {
         if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
-            Console.WriteLine($"layout_trigger_any() target='{action_triger_camera_interval_name}'");
+            Logger.Log($"layout_trigger_any() target='{action_triger_camera_interval_name}'");
         }
         int res = 0;
         res += TriggerAction(null, action_triger_camera_interval_name);
@@ -571,7 +571,7 @@ public class Layout : IDraw, IAnimate {
         res += TriggerTrigger(action_triger_camera_interval_name);
 
         if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
-            Console.WriteLine($"layout_trigger_any() target='{action_triger_camera_interval_name}' result={res}");
+            Logger.Log($"layout_trigger_any() target='{action_triger_camera_interval_name}' result={res}");
         }
 
         return res;
@@ -582,7 +582,7 @@ public class Layout : IDraw, IAnimate {
         string initial_action_name;
 
         if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
-            Console.WriteLine($"layout_trigger_action() target='{target_name}' action='{action_name}'");
+            Logger.Log($"layout_trigger_action() target='{target_name}' action='{action_name}'");
         }
 
         for (int i = 0 ; i < this.vertex_list_size ; i++) {
@@ -663,7 +663,7 @@ public class Layout : IDraw, IAnimate {
         }
 
         if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
-            Console.WriteLine($"layout_trigger_action() target='{target_name}' action='{action_name}' res={count}");
+            Logger.Log($"layout_trigger_action() target='{target_name}' action='{action_name}' res={count}");
         }
 
         return count;
@@ -787,14 +787,14 @@ public class Layout : IDraw, IAnimate {
 
     public bool TriggerCamera(string camera_name) {
         if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
-            Console.WriteLine($"layout_trigger_camera() target='{camera_name}'");
+            Logger.Log($"layout_trigger_camera() target='{camera_name}'");
         }
         return this.camera_helper.FromLayout(this, camera_name);
     }
 
     public int TriggerTrigger(string trigger_name) {
         if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
-            Console.WriteLine($"layout_trigger_trigger() target='{trigger_name}'");
+            Logger.Log($"layout_trigger_trigger() target='{trigger_name}'");
         }
 
         int count = 0;
@@ -805,7 +805,7 @@ public class Layout : IDraw, IAnimate {
         }
 
         if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
-            Console.WriteLine($"layout_trigger_trigger() target='{trigger_name}' res={count}");
+            Logger.Log($"layout_trigger_trigger() target='{trigger_name}' res={count}");
         }
 
         return count;
@@ -930,7 +930,7 @@ public class Layout : IDraw, IAnimate {
             if (this.values[i].name != name) continue;
 
             if ((this.values[i].type & expected_type) == 0x00) {
-                Console.Error.WriteLine("[WARN] layout_get_attached_value() type missmatch of: " + name);
+                Logger.Warn($"layout_get_attached_value() type missmatch of: {name}");
 
                 if (expected_type == AttachedValueType.FLOAT && this.values[i].type == AttachedValueType.INTEGER)
                     return this.values[i].value;
@@ -939,7 +939,7 @@ public class Layout : IDraw, IAnimate {
             }
             return this.values[i].value;
         }
-        //Console.Error.WriteLine("layout_get_attached_value() value not found: " + name);
+        //Logger.Warn($"layout_get_attached_value() value not found: {name}");
         return default_value;
     }
 
@@ -1039,7 +1039,7 @@ public class Layout : IDraw, IAnimate {
         if (group_name != null) {
             int index = HelperGetGroupIndex(group_name);
             if (index >= 0) {
-                Console.Error.WriteLine("layout_external_create_group() the group '" + group_name + "' already exists");
+                Logger.Error($"layout_external_create_group() the group '{group_name}' already exists");
                 return -1;
             }
         }
@@ -1638,7 +1638,7 @@ public class Layout : IDraw, IAnimate {
 
         if (data == null) {
             string path = FS.GetFullPathAndOverride(src);
-            Console.Error.WriteLine("[WARN] layout_helper_get_resource() missing resource '" + src + "' (" + path + ")");
+            Logger.Warn($"layout_helper_get_resource() missing resource '{src}' ({path})");
             //free(path);
         }
 
@@ -1695,7 +1695,7 @@ public class Layout : IDraw, IAnimate {
     private static uint HelperParseHex(XmlParserNode node, string attr_name, uint def_value) {
         uint value;
         if (!VertexProps.ParseHex(node.GetAttribute(attr_name), out value, false)) {
-            Console.Error.WriteLine("[ERROR] layout_helper_parse_hex() invalid value of '" + attr_name + "': " + node.OuterHTML);
+            Logger.Error($"layout_helper_parse_hex() invalid value of '{attr_name}': {node.OuterHTML}");
             return def_value;
         }
 
@@ -1709,7 +1709,7 @@ public class Layout : IDraw, IAnimate {
         float value = VertexProps.ParseFloat2(str, Single.NaN);
 
         if (Single.IsNaN(value)) {
-            Console.Error.WriteLine("[ERROR] layout_parse_float(): invalid value: " + str);
+            Logger.Error($"layout_parse_float(): invalid value: {str}");
             return def_value;
         }
 
@@ -1728,7 +1728,7 @@ public class Layout : IDraw, IAnimate {
         Align align = VertexProps.ParseAlign2(node.GetAttribute(attribute));
         if (align == Align.BOTH) {
             align = Align.START;
-            Console.Error.WriteLine("layout_helper_parse_align2() invalid align found at: " + node.OuterHTML);
+            Logger.Error($"layout_helper_parse_align2() invalid align found at: {node.OuterHTML}");
         }
 
         return align;
@@ -2133,10 +2133,10 @@ public class Layout : IDraw, IAnimate {
         trigger.context.running = trigger.loop < 1 || trigger.context.loop_count < trigger.loop;
 
         if (trigger.action_name != null && TriggerAction(null, trigger.action_name) < 1) {
-            Console.Error.WriteLine("[WARN] layout_helper_commit_trigger() no actions with name: " + trigger.action_name);
+            Logger.Warn($"layout_helper_commit_trigger() no actions with name: {trigger.action_name}");
         }
         if (trigger.camera_name != null && !TriggerCamera(trigger.camera_name)) {
-            Console.Error.WriteLine("[WARN] layout_helper_commit_trigger() no camera with name: " + trigger.camera_name);
+            Logger.Warn($"layout_helper_commit_trigger() no camera with name: {trigger.camera_name}");
         }
         if (trigger.stop_trigger_name != null) {
             StopTrigger(trigger.stop_trigger_name);
@@ -2156,7 +2156,7 @@ public class Layout : IDraw, IAnimate {
                 continue;
             }
 
-            Console.Error.WriteLine("layout_helper_commit_trigger() self-trigger avoided: " + trigger.action_name);
+            Logger.Warn($"layout_helper_commit_trigger() self-trigger avoided: {trigger.action_name}");
         }
 
         trigger.context.reject_recursive = false;
@@ -2165,7 +2165,7 @@ public class Layout : IDraw, IAnimate {
 
     private static void HelperSetShaderUniform(PSShader psshader, ActionEntry action_entry) {
         if (psshader == null) {
-            Console.Error.WriteLine($"[WARN] layout_helper_set_shader_uniform() can not set {action_entry.uniform_name}, there no shader");
+            Logger.Warn($"layout_helper_set_shader_uniform() can not set {action_entry.uniform_name}, there no shader");
             return;
         }
 
@@ -2173,13 +2173,13 @@ public class Layout : IDraw, IAnimate {
 
         switch (ret) {
             case 0:
-                Console.Error.WriteLine($"[WARN] layout_helper_set_shader_uniform() the shader does not have {action_entry.uniform_name}");
+                Logger.Warn($"layout_helper_set_shader_uniform() the shader does not have {action_entry.uniform_name}");
                 break;
             case -1:
-                Console.Error.WriteLine($"[WARN] layout_helper_set_shader_uniform() type of {action_entry.uniform_name} is not supported");
+                Logger.Warn($"layout_helper_set_shader_uniform() type of {action_entry.uniform_name} is not supported");
                 break;
             case -2:
-                Console.Error.WriteLine($"[ERROR] layout_helper_set_shader_uniform() bad setter for {action_entry.uniform_name}");
+                Logger.Error($"layout_helper_set_shader_uniform() bad setter for {action_entry.uniform_name}");
                 break;
         }
     }
@@ -2192,7 +2192,7 @@ public class Layout : IDraw, IAnimate {
     private static void ParsePlaceholder(XmlParserNode unparsed_plchdlr, LayoutContext layout_context, int group_id) {
         string name = unparsed_plchdlr.GetAttribute("name");
         if (String.IsNullOrEmpty(name)) {
-            Console.Error.WriteLine("[WARN] Missing placeholder name: " + unparsed_plchdlr.OuterHTML);
+            Logger.Warn($"layout_parse_placeholder() missing placeholder name: {unparsed_plchdlr.OuterHTML}");
             return;
         }
 
@@ -2280,7 +2280,7 @@ public class Layout : IDraw, IAnimate {
                 atlas_texture_path = atlas.GetTexturePath();
                 if (!FS.FileExists(atlas_texture_path)) {
                     // the imagePath attribute has an invalid filename
-                    Console.Error.WriteLine($"[WARN] layout_parse_sprite() texture pointed by imagePath='{atlas_texture_path}' not found in atlas '{atlas_filename}'");
+                    Logger.Warn($"layout_parse_sprite() texture pointed by imagePath='{atlas_texture_path}' not found in atlas '{atlas_filename}'");
                     string temp_value = FS.GetFilenameWithoutExtension(atlas_filename);
                     string temp_texture_filename = StringUtils.Concat(temp_value, ".png");
                     atlas_texture_path = FS.BuildPath2(atlas_filename, temp_texture_filename);
@@ -2347,7 +2347,7 @@ public class Layout : IDraw, IAnimate {
         }
 
         if (fontholder == null) {
-            Console.Error.WriteLine("[ERROR] layout_parse_text() the font '" + font_name + "' is not attached");
+            Logger.Error($"layout_parse_text() the font '{font_name}' is not attached");
             return;
         }
 
@@ -2442,9 +2442,8 @@ public class Layout : IDraw, IAnimate {
             switch (item.TagName) {
                 case "Action":
                     /*if (parent_context == null) {
-                        Console.Error.WriteLine(
-                            "[WARN] layout_init(): layout_parse_group() action found in the layout root, " +
-                            "will be imported as root group action."
+                        Logger.Warn(
+                            $"layout_parse_group() action found in the layout root, will be imported as root group action."
                         );
                     }*/
                     Layout.ParseGroupAction(item, layout_context.animlist, actions_arraylist);
@@ -2457,9 +2456,7 @@ public class Layout : IDraw, IAnimate {
                     break;
                 case "Camera":
                     /*if (parent_context) {
-                        Console.Error.WriteLine(
-                            "[ERROR] layout_init(): layout_parse_group() groups can not contains cameras"
-                        );
+                        Logger.Error($"layout_parse_group() groups can not contain cameras");
                     }*/
                     Layout.ParseCamera(item, layout_context);
                     break;
@@ -2482,7 +2479,7 @@ public class Layout : IDraw, IAnimate {
                     Layout.ParseTriggers(item, layout_context);
                     break;
                 default:
-                    Console.Error.WriteLine("[WARN] layout_parse_group() unknown element: " + item.TagName);
+                    Logger.Warn($"layout_parse_group() unknown element: {item.TagName}");
                     break;
             }
         }
@@ -2508,11 +2505,11 @@ public class Layout : IDraw, IAnimate {
             bool glyph_color_by_difference = VertexProps.ParseBoolean(item, "colorByDifference", false);
 
             if (String.IsNullOrEmpty(name)) {
-                Console.Error.WriteLine("[ERROR] missing font name: " + item.OuterHTML);
+                Logger.Error($"layout_parse_fonts() missing font name: {item.OuterHTML}");
                 continue;
             }
             if (String.IsNullOrEmpty(path)) {
-                Console.Error.WriteLine("[ERROR] missing font path: " + item.OuterHTML);
+                Logger.Error($"layout_parse_fonts() missing font path: {item.OuterHTML}");
                 continue;
             }
 
@@ -2532,7 +2529,7 @@ public class Layout : IDraw, IAnimate {
 
                 fonts_arraylist.Add(new Font() { name = name, fontholder = fontholder });
             } catch (Exception e) {
-                Console.Error.WriteLine("[ERROR] Unable to read the font: {0}\n{1}", path, e.Message);
+                Logger.Error($"layout_parse_fonts() Unable to read the font {path}: {e.Message}");
                 continue;
             } finally {
                 //free(path);
@@ -2683,7 +2680,7 @@ public class Layout : IDraw, IAnimate {
                     layout_context.animlist, anim_name
                 );
             } else {
-                Console.Error.WriteLine($"[WARN] layout_parse_camera() can not import '{anim_name}', layout does not have an animlist");
+                Logger.Warn($"layout_parse_camera() can not import '{anim_name}', layout does not have an animlist");
             }
         }
 
@@ -2701,11 +2698,11 @@ public class Layout : IDraw, IAnimate {
             string unparsed_value = item.GetAttribute("value");
 
             if (String.IsNullOrEmpty(name)) {
-                Console.Error.WriteLine("[ERROR] missing AttachValue name: " + item.OuterHTML);
+                Logger.Error($"layout_parse_externalvalues() missing AttachValue name: {item.OuterHTML}");
                 continue;
             }
             if (String.IsNullOrEmpty(unparsed_type)) {
-                Console.Error.WriteLine("[ERROR] missing AttachValue type: " + item.OuterHTML);
+                Logger.Error($"layout_parseexternal_values() missing AttachValue type: {item.OuterHTML}");
                 continue;
             }
 
@@ -2740,12 +2737,12 @@ public class Layout : IDraw, IAnimate {
                     invalid = !VertexProps.IsValueBoolean(unparsed_value);
                     break;
                 default:
-                    Console.Error.WriteLine("[ERROR] unknown AttachValue type: " + item.OuterHTML);
+                    Logger.Error($"layout_parse_externalvalues() unknown AttachValue type: {item.OuterHTML}");
                     continue;
             }
 
             if (invalid) {
-                Console.Error.WriteLine("[ERROR] layout_parse_externalvalues() value in : " + item.OuterHTML);
+                Logger.Error($"layout_parse_externalvalues() value in: {item.OuterHTML}");
                 continue;
             }
 
@@ -2806,13 +2803,13 @@ public class Layout : IDraw, IAnimate {
     private static void ParseSound(XmlParserNode unparsed_sound, LayoutContext layout_context) {
         string src = unparsed_sound.GetAttribute("src");
         if (String.IsNullOrEmpty(src)) {
-            Console.Error.WriteLine("[ERROR] layout_parse_sound() missing sound 'src'");
+            Logger.Error($"layout_parse_sound() missing sound '{src}'");
             return;
         }
 
         SoundPlayer soundplayer = SoundPlayer.Init(src);
         if (soundplayer == null) {
-            Console.Error.WriteLine("[WARN] layout_parse_sound() can not load:" + src);
+            Logger.Warn($"layout_parse_sound() can not load: {src}");
             return;
         }
 
@@ -2850,13 +2847,13 @@ public class Layout : IDraw, IAnimate {
     private static void ParseVideo(XmlParserNode unparsed_video, LayoutContext layout_context, int group_id) {
         string src = unparsed_video.GetAttribute("src");
         if (String.IsNullOrEmpty(src)) {
-            Console.Error.WriteLine("[ERROR] layout_parse_video() missing video 'src'");
+            Logger.Error($"layout_parse_video() missing video '{src}'");
             return;
         }
 
         VideoPlayer videoplayer = VideoPlayer.Init(src);
         if (videoplayer == null) {
-            Console.Error.WriteLine("[WARN] layout_parse_video() can not load:" + src);
+            Logger.Warn($"layout_parse_video() can not load: {src}");
             return;
         }
 
@@ -2916,7 +2913,7 @@ public class Layout : IDraw, IAnimate {
 
         foreach (XmlParserNode unparsed_macro in list) {
             if (!unparsed_macro.HasAttribute("name")) {
-                Console.Error.WriteLine("[WARN] layout_parse_macro() missing name in:" + unparsed_macro.OuterHTML);
+                Logger.Warn($"layout_parse_macro() missing name in: {unparsed_macro.OuterHTML}");
                 continue;
             }
 
@@ -2925,7 +2922,7 @@ public class Layout : IDraw, IAnimate {
             AnimSprite animsprite = AnimSprite.InitFromAnimlist(layout_context.animlist, animation);
 
             if (animsprite == null) {
-                Console.Error.WriteLine("[WARN] layout_parse_macro() missing animation: " + animation);
+                Logger.Warn($"layout_parse_macro() missing animation: {animation}");
                 continue;
             }
 
@@ -3020,7 +3017,7 @@ public class Layout : IDraw, IAnimate {
                     break;
                 default:
                     if (!from_video) {
-                        Console.Error.WriteLine("[WARN] Unknown action entry: " + unparsed_entry.TagName);
+                        Logger.Warn($"layout_parse_sprite_action() Unknown action entry: {unparsed_entry.TagName}");
                     }
                     break;
             }
@@ -3108,7 +3105,7 @@ public class Layout : IDraw, IAnimate {
                     Layout.HelperAddActionSetblending(unparsed_entry, entries);
                     break;
                 default:
-                    Console.Error.WriteLine("[WARN] Unknown Text action entry:" + unparsed_entry.TagName);
+                    Logger.Warn($"layout_parse_text_action() unknown Text action entry: {unparsed_entry.TagName}");
                     break;
             }
         }
@@ -3212,7 +3209,7 @@ public class Layout : IDraw, IAnimate {
                     Layout.HelperAddActionAnimationremove(unparsed_entry, entries);*/
                 default:
                     if (Layout.HelperAddActionMedia(unparsed_entry, entries))
-                        Console.Error.WriteLine("[WARN] Unknown Sound action entry:" + unparsed_entry.TagName);
+                        Logger.Warn($"layout_parse_action() unknown Sound action entry: {unparsed_entry.TagName}");
                     break;
             }
         }
@@ -3291,12 +3288,12 @@ public class Layout : IDraw, IAnimate {
                     camera_name = unparsed_action.GetAttribute("camera");
                     break;
                 default:
-                    Console.Error.WriteLine("[WARN] Unknown Macro action:" + unparsed_action.TagName);
+                    Logger.Warn($"layout_parse_macro_actions() unknown Macro action: {unparsed_action.TagName}");
                     continue;
             }
 
             if (!unparsed_action.HasAttribute("id")) {
-                Console.Error.WriteLine("[WARN] Missing event id in Macro action:" + unparsed_action.OuterHTML);
+                Logger.Warn($"layout_parse_macroaction() Missing event id in Macro action: {unparsed_action.OuterHTML}");
                 //free(target_name);
                 //free(action_name);
                 //free(trigger_name);
@@ -3677,8 +3674,8 @@ public class Layout : IDraw, IAnimate {
 
     private static void HelperAddActionProperties(XmlParserNode unparsed_entry, bool is_textsprite, ArrayList<ActionEntry> action_entries) {
         if (unparsed_entry.Attributes.Length < 1) {
-            Console.Error.WriteLine(
-                "[WARN] layout_helper_add_action_properties() 'Properties' was empty" + unparsed_entry.OuterHTML
+            Logger.Warn(
+                $"layout_helper_add_action_properties() 'Properties' was empty: {unparsed_entry.OuterHTML}"
             );
             return;
         }
@@ -3695,9 +3692,8 @@ public class Layout : IDraw, IAnimate {
             }
 
             if (property_id < 0) {
-                Console.Error.WriteLine(
-                    "layout_helper_add_action_properties() unknown property '" +
-                    name + "' in: " + unparsed_entry.OuterHTML
+                Logger.Warn(
+                    $"layout_helper_add_action_properties() unknown property '{name}' in: {unparsed_entry.OuterHTML}"
                 );
                 continue;
             }
@@ -3860,13 +3856,13 @@ public class Layout : IDraw, IAnimate {
         float width = Layout.HelperParseFloat(unparsed_entry, "width", Single.NaN);
         float height = Layout.HelperParseFloat(unparsed_entry, "height", Single.NaN);
         if (Single.IsNaN(width) && Single.IsNaN(height)) {
-            Console.Error.WriteLine("[ERROR] layout_helper_add_action_size() invalid size: " + unparsed_entry.OuterHTML);
+            Logger.Error($"layout_helper_add_action_size() invalid size: {unparsed_entry.OuterHTML}");
             return;
         }
 
         bool has_resize = width < 0f || height < 0f;
         if (has_resize && (Single.IsNaN(width) || Single.IsNaN(height))) {
-            Console.Error.WriteLine("[WARN] layout_helper_add_action_size() invalid resize: " + unparsed_entry.OuterHTML);
+            Logger.Warn($"layout_helper_add_action_size() invalid resize: {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -3881,10 +3877,7 @@ public class Layout : IDraw, IAnimate {
 
     private static void HelperAddActionAtlasapply(XmlParserNode unparsed_entry, Atlas atlas, ArrayList<ActionEntry> action_entries) {
         if (atlas == null) {
-            Console.Error.WriteLine(
-                "[ERROR] layout_helper_add_action_atlasapply() missing atlas, can not import: " +
-                unparsed_entry.OuterHTML
-            );
+            Logger.Error($"layout_helper_add_action_atlasapply() missing atlas, can not import: {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -3892,7 +3885,7 @@ public class Layout : IDraw, IAnimate {
         AtlasEntry atlas_entry = atlas.GetEntryCopy(atlas_entry_name);
 
         if (atlas_entry == null) {
-            Console.Error.WriteLine("missing atlas entry name '" + atlas_entry_name + "': " + unparsed_entry.OuterHTML);
+            Logger.Warn($"layout_helper_add_action_atlasapply() missing atlas entry name '{atlas_entry_name}': {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -3907,7 +3900,7 @@ public class Layout : IDraw, IAnimate {
 
     private static void HelperAddActionAnimation(XmlParserNode unparsed_entry, AnimList animlist, ArrayList<ActionEntry> action_entries) {
         if (animlist == null) {
-            Console.Error.WriteLine("[ERROR] layout_helper_add_action_animation() failed, missing animlist");
+            Logger.Error("layout_helper_add_action_animation() failed, missing animlist");
             return;
         }
 
@@ -3915,7 +3908,7 @@ public class Layout : IDraw, IAnimate {
         AnimSprite animsprite = AnimSprite.InitFromAnimlist(animlist, anim_name);
 
         if (animsprite == null) {
-            Console.Error.WriteLine("Missing animation '" + anim_name + "': " + unparsed_entry.OuterHTML);
+            Logger.Warn($"layout_helper_add_action_animation() missing animation '{anim_name}': {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -3931,15 +3924,13 @@ public class Layout : IDraw, IAnimate {
 
     private static void HelperAddActionAnimationfromatlas(XmlParserNode unparsed_entry, Atlas atlas, ArrayList<ActionEntry> action_entries) {
         if (atlas == null) {
-            Console.Error.WriteLine(
-                "[ERROR] layout_helper_add_action_animationfromatlas() failed, sprite has no atlas. " + unparsed_entry.OuterHTML
-            );
+            Logger.Error($"layout_helper_add_action_animationfromatlas() failed, sprite has no atlas: {unparsed_entry.OuterHTML}");
             return;
         }
 
         string anim_name = unparsed_entry.GetAttribute("name");
         if (anim_name == null) {
-            Console.Error.WriteLine("[ERROR] Missing animation name on: " + unparsed_entry.OuterHTML);
+            Logger.Error($"Missing animation name on: {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -3956,7 +3947,7 @@ public class Layout : IDraw, IAnimate {
         bool override_size = VertexProps.ParseBoolean(unparsed_entry, "overrideSize", false);
 
         if (animsprite == null) {
-            Console.Error.WriteLine("[WARN] Missing animation '" + anim_name + "': " + unparsed_entry.OuterHTML);
+            Logger.Warn($"layout_helper_add_action_animationfromatlas() missing animation '{anim_name}': {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -4004,7 +3995,7 @@ public class Layout : IDraw, IAnimate {
         float max_height = Layout.HelperParseFloat(unparsed_entry, "maxHeight", Single.NaN);
 
         if (Single.IsNaN(max_width) && Single.IsNaN(max_height)) {
-            Console.Error.WriteLine("[ERROR] layout_helper_add_action_resize() invalid resize: " + unparsed_entry.OuterHTML);
+            Logger.Error($"layout_helper_add_action_resize() invalid resize: {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -4077,9 +4068,9 @@ public class Layout : IDraw, IAnimate {
 
     private static void HelperAddActionMediaproperties(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
         if (unparsed_entry.Attributes.Length < 1) {
-            Console.Error.WriteLine(
-                "[WARN] layout_helper_add_action_properties() 'Properties' was empty" + unparsed_entry.OuterHTML
-            );
+            Logger.Warn(
+                $"layout_helper_add_action_properties() 'Properties' was empty: {unparsed_entry.OuterHTML}"
+             );
             return;
         }
 
@@ -4090,9 +4081,8 @@ public class Layout : IDraw, IAnimate {
             property_id = VertexProps.ParseMediaProperty2(name);
 
             if (property_id < 0) {
-                Console.Error.WriteLine(
-                    "[WARN] layout_helper_add_action_mediaproperties() unknown property '" +
-                    name + "' in: " + unparsed_entry.OuterHTML
+                Logger.Warn(
+                    $"layout_helper_add_action_mediaproperties() unknown property '{name}' in: {unparsed_entry.OuterHTML}"
                 );
                 continue;
             }
@@ -4140,7 +4130,7 @@ public class Layout : IDraw, IAnimate {
                     target = sourcecode_fragment;
                     break;
                 default:
-                    Console.Error.WriteLine($"[WARN] layout_helper_add_action_setshader() unknown element: {source.OuterHTML}");
+                    Logger.Warn($"layout_helper_add_action_setshader() unknown element: {source.OuterHTML}");
                     continue;
             }
 
@@ -4154,7 +4144,7 @@ public class Layout : IDraw, IAnimate {
         if (String.IsNullOrEmpty(str_vertex) && String.IsNullOrEmpty(str_fragment)) {
             //free(str_vertex);
             //free(str_fragment);
-            Console.Error.WriteLine($"[WARN] layout_helper_add_action_setshader() empty shader: {unparsed_entry.OuterHTML}");
+            Logger.Warn($"layout_helper_add_action_setshader() empty shader: {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -4164,7 +4154,7 @@ public class Layout : IDraw, IAnimate {
         //free(str_fragment);
 
         if (psshader == null) {
-            Console.Error.WriteLine($"[WARN] layout_helper_add_action_setshader() compilation failed: {unparsed_entry.OuterHTML}");
+            Logger.Warn($"layout_helper_add_action_setshader() compilation failed: {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -4187,7 +4177,7 @@ public class Layout : IDraw, IAnimate {
         string unparsed_values = unparsed_entry.GetAttribute("values");
 
         if (String.IsNullOrEmpty(name)) {
-            Console.Error.WriteLine("[ERROR] layout_helper_add_action_setshaderuniform() missing name: " + unparsed_entry.OuterHTML);
+            Logger.Error($"layout_helper_add_action_setshaderuniform() missing name: {unparsed_entry.OuterHTML}");
             return;
         }
 
@@ -4200,7 +4190,7 @@ public class Layout : IDraw, IAnimate {
             while ((str = tokenizer.ReadNext()) != null) {
                 double temp_value = VertexProps.ParseDouble2(str, Double.NaN);
                 if (Double.IsNaN(temp_value)) {
-                    Console.Error.WriteLine("[WARN] layout_helper_add_action_setshaderuniform() invalid value: " + str);
+                    Logger.Warn($"layout_helper_add_action_setshaderuniform() invalid value: {str}");
                     temp_value = 0.0;
                 }
 
@@ -4260,7 +4250,7 @@ public class Layout : IDraw, IAnimate {
         float offset_x = Layout.HelperParseFloat(unparsed_entry, "offsetX", Single.NaN);
         float offset_y = Layout.HelperParseFloat(unparsed_entry, "offsetY", Single.NaN);
         if (Single.IsNaN(offset_x) && Single.IsNaN(offset_y)) {
-            Console.Error.WriteLine("[ERROR] layout_helper_add_action_borderoffser() invalid offset: " + unparsed_entry.OuterHTML);
+            Logger.Error($"layout_helper_add_action_borderoffser() invalid offset: {unparsed_entry.OuterHTML}");
             return;
         }
 

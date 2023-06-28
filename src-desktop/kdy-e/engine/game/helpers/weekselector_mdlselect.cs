@@ -440,7 +440,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
         }
 
         if (modelholder == null) {
-            Console.Error.WriteLine("[ERROR] weekselector_mdlselect_internal_load_async() modelholder_init failed");
+            Logger.Error("weekselector_mdlselect_internal_load_async() modelholder_init failed");
             return null;
         }
 

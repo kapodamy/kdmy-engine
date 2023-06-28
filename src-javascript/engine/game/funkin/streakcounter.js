@@ -130,10 +130,7 @@ function streakcounter_reset(streakcounter) {
 function streakcounter_hide_combo_sprite(streakcounter, hide) {
     let combo_enabled = !hide;
     if (combo_enabled && linkedlist_count(statesprite_state_list(streakcounter.combo_sprite)) < 1) {
-        console.warn(
-            "streakcounter_hide_combo_sprite() failed, " +
-            "combo sprite does not have states to show"
-        );
+        console.warn( "streakcounter_hide_combo_sprite() failed, combo sprite does not have states to show");
         return;
     }
     streakcounter.combo_enabled = combo_enabled;

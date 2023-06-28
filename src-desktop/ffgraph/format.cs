@@ -31,7 +31,7 @@ internal unsafe class FFGraphFormat : IDisposable {
             case AVMediaType.AVMEDIA_TYPE_VIDEO:
                 break;
             default:
-                Console.Error.WriteLine($"[ERROR] ffgraphfmt_init() unknown required_type: {required_type}");
+                Logger.Error($"FFGraphFormat::Init() unknown required_type: {required_type}");
                 return null;
         }
 
@@ -52,27 +52,27 @@ internal unsafe class FFGraphFormat : IDisposable {
         };
 
         if (ffgraphfmt.packet == null) {
-            Console.Error.WriteLine("[ERROR] ffgraphfmt_init() AVPacket allocation failed.");
+            Logger.Error("FFGraphFormat::Init() AVPacket allocation failed.");
             ffgraphfmt.Dispose();
             return null;
         }
         if (ffgraphfmt.fmt_ctx == null) {
-            Console.Error.WriteLine("[ERROR] ffgraphfmt_init() AVFormatContext allocation failed.");
+            Logger.Error("FFGraphFormat::Init() AVFormatContext allocation failed.");
             ffgraphfmt.Dispose();
             return null;
         }
         if (ffgraphfmt.iohandle == null) {
-            Console.Error.WriteLine("[ERROR] ffgraphfmt_init() AVIOContext allocation failed.");
+            Logger.Error("FFGraphFormat::Init() AVIOContext allocation failed.");
             ffgraphfmt.Dispose();
             return null;
         }
         if (ffgraphfmt.codec_ctx == null) {
-            Console.Error.WriteLine("[ERROR] ffgraphfmt_init() AVCodecContext allocation failed.");
+            Logger.Error("FFGraphFormat::Init() AVCodecContext allocation failed.");
             ffgraphfmt.Dispose();
             return null;
         }
         if (ffgraphfmt.av_frame == null) {
-            Console.Error.WriteLine("[ERROR] ffgraphfmt_init() AVFrame allocation failed.");
+            Logger.Error("FFGraphFormat::Init() AVFrame allocation failed.");
             ffgraphfmt.Dispose();
             return null;
         }
@@ -83,20 +83,16 @@ internal unsafe class FFGraphFormat : IDisposable {
 
         int ret = FFmpeg.avformat_open_input(&fmt_ctx, null, null, null);
         if (ret < 0) {
-            Console.Error.WriteLine(
-                "[ERROR] ffgraphfmt_init() open input failed, reason: {0}",
-                FFmpeg.av_err2str(ret)
-            );
+            string e = FFmpeg.av_err2str(ret);
+            Logger.Error($"FFGraphFormat::Init() open input failed, reason: {e}");
             ffgraphfmt.Dispose();
             return null;
         }
 
         ret = FFmpeg.avformat_find_stream_info(ffgraphfmt.fmt_ctx, null);
         if (ret < 0) {
-            Console.Error.WriteLine(
-                "[ERROR] ffgraphfmt_init() failed to find then stream info, reason: {0}",
-                FFmpeg.av_err2str(ret)
-            );
+            string e = FFmpeg.av_err2str(ret);
+            Logger.Error($"FFGraphFormat::Init() failed to find the stream info, reason: {e}");
             ffgraphfmt.Dispose();
             return null;
         }
@@ -104,10 +100,8 @@ internal unsafe class FFGraphFormat : IDisposable {
         AVCodec* av_codec;
         ffgraphfmt.stream_idx = FFmpeg.av_find_best_stream(ffgraphfmt.fmt_ctx, required_type, -1, -1, &av_codec, 0x00);
         if (ffgraphfmt.stream_idx < 0) {
-            Console.Error.WriteLine(
-                "[ERROR] ffgraphfmt_init() open input failed, reason: {0}",
-                FFmpeg.av_err2str(ffgraphfmt.stream_idx)
-            );
+            string e = FFmpeg.av_err2str(ret);
+            Logger.Error($"FFGraphFormat::Init() failed to find the best/default stream, reason: {e}");
             ffgraphfmt.Dispose();
             return null;
         } else {
@@ -120,10 +114,8 @@ internal unsafe class FFGraphFormat : IDisposable {
 
         ret = FFmpeg.avcodec_open2(ffgraphfmt.codec_ctx, ffgraphfmt.av_codec, null);
         if (ret < 0) {
-            Console.Error.WriteLine(
-                "[ERROR] ffgraphfmt_init() open input failed, reason: {0}",
-                FFmpeg.av_err2str(ret)
-            );
+            string e = FFmpeg.av_err2str(ret);
+            Logger.Error($"FFGraphFormat::Init() failed to open the codec, reason: {e}");
             ffgraphfmt.Dispose();
             return null;
         }
@@ -196,10 +188,8 @@ L_process:
                 if (ret == FFmpeg.AVERROR_EOF) {
                     running = false;
                 } else if (ret != FFmpeg.AVERROR(FFmpeg.EAGAIN)) {
-                    Console.Error.WriteLine(
-                        "[ERROR] ffgraphfmt_read_and_seek() error in avcodec_send_packet(): " +
-                        FFmpeg.av_err2str(ret)
-                    );
+                    string e = FFmpeg.av_err2str(ret);
+                    Logger.Error($"FFGraphFormat::ReadAndSeek() call to avcodec_send_packet() failed: {e}");
                 }
                 goto L_drop_packet;
             }
@@ -236,10 +226,8 @@ L_receive_frame:
                 running = false;
             } else {
 #if DEBUG
-                Console.Error.WriteLine(
-                    "[ERROR] ffgraphfmt_read_and_seek() call to avcodec_receive_frame() failed, reason: " +
-                    FFmpeg.av_err2str(ret)
-                );
+                string e = FFmpeg.av_err2str(ret);
+                Logger.Error($"FFGraphFormat::ReadAndSeek() call to avcodec_receive_frame() failed, reason: {e}");
 #endif
             }
 
@@ -269,10 +257,8 @@ L_drop_packet:
         // seek to the nearest previous timestamp
         int err = FFmpeg.avformat_seek_file(this.fmt_ctx, this.stream_idx, 0, timestamp, timestamp, 0x00);
         if (err < 0) {
-            Console.Error.WriteLine(
-                "[ERROR] ffgraphfmt_seek() seeking failed, reason: {0}.",
-                FFmpeg.av_err2str(err)
-            );
+            string e = FFmpeg.av_err2str(err);
+            Logger.Error($"FFGraphFormat::Seek() seeking failed, reason: {e}.");
             return;
         }
 

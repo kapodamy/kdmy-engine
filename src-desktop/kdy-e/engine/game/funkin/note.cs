@@ -481,7 +481,7 @@ L_build_state:
         if (state_alone != null)
             ImgUtils.GetStateSpriteOriginalSize(state_alone, ref alone_size_width, ref alone_size_height);
         else
-            Console.Error.WriteLine("[WARN] note_internal_resize_sprites() warning state_alone was NULL");
+            Logger.Warn("note_internal_resize_sprites() warning state_alone was NULL");
 
         // resize the sustain body sprites using the same scale as alone sprite
         float scale_factor;

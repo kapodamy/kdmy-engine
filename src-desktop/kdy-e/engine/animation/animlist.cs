@@ -74,7 +74,7 @@ public class AnimList {
         FS.SetWorkingFolder(full_path, true);
 
         XmlParserNode anims_list = xml.GetRoot();
-        Debug.Assert(anims_list != null && anims_list.TagName == "AnimationList", "missing AnimationList in: " + src);
+        Debug.Assert(anims_list != null && anims_list.TagName == "AnimationList", $"missing AnimationList in: {src}");
 
         XmlParserNodeList anims = anims_list.Children;
         LinkedList<CachedAtlas> atlas_cache = new LinkedList<CachedAtlas>();
@@ -104,7 +104,7 @@ public class AnimList {
                     parsed_animations.AddItem(AnimList.ReadTweenkeyframeAnimation(anims[i]));
                     continue;
                 default:
-                    Console.Error.WriteLine("Unknown animation: " + anims[i].TagName);
+                    Logger.Warn($"animlist_init() unknown animation: {anims[i].TagName}");
                     continue;
             }
 
@@ -204,9 +204,7 @@ public class AnimList {
             if (is_macro) return null;
 
             if (def_atlas == null) {
-                Console.Error.WriteLine(
-                    "animlist_load_required_atlas() animation without atlas", animlist_item.OuterHTML
-                );
+                Logger.Warn($"animlist_load_required_atlas() animation without atlas: {animlist_item.OuterHTML}");
             }
             return def_atlas;
         }
@@ -229,9 +227,7 @@ public class AnimList {
         }
 
         if (obj.atlas == null) {
-            Console.Error.WriteLine(
-                "animlist_load_required_atlas() missing atlas " + filename, animlist_item.OuterHTML
-            );
+            Logger.Warn($"animlist_load_required_atlas() missing atlas {filename}: {animlist_item.OuterHTML}");
         }
 
         return obj.atlas;
@@ -244,11 +240,11 @@ public class AnimList {
     private static AnimListItem ReadFrameAnimation(XmlParserNode entry, Atlas atlas, float default_fps) {
         string name = entry.GetAttribute("name");
         if (name == null) {
-            Console.Error.WriteLine("animlist_read_frame_animation() missing animation name", entry.OuterHTML);
+            Logger.Warn($"animlist_read_frame_animation() missing animation name: {entry.OuterHTML}");
             return null;
         }
         if (atlas == null) {
-            Console.Error.WriteLine("animlist_read_frame_animation() missing atlas", entry.OuterHTML);
+            Logger.Warn($"animlist_read_frame_animation() missing atlas: {entry.OuterHTML}");
             return null;
         }
 
@@ -304,7 +300,7 @@ public class AnimList {
                 case "AlternateSet":
                     int frame_count = parsed_frames.Count();
                     if (AnimList.AddAlternateEntry(parsed_alternates, frame_count, last_alternate_index))
-                        Console.Error.WriteLine($"consecutive AlternateSet found (no enough frames in '{name}')");
+                        Logger.Warn($"animlist_read_frame_animation() consecutives AlternateSet found (no enough frames in '{name}')");
                     else
                         last_alternate_index = frame_count;
                     break;
@@ -313,7 +309,7 @@ public class AnimList {
                     anim.loop_from_index = parsed_frames.Count() - offset;
                     break;
                 default:
-                    Console.Error.WriteLine("Unknown frame type: " + frames[i].TagName, frames[i]);
+                    Logger.Warn($"animlist_read_frame_animation() unknown frame type {frames[i].TagName}: {frames[i].OuterHTML}");
                     break;
             }
         }
@@ -388,7 +384,7 @@ public class AnimList {
             }
         }
 
-        Console.Error.WriteLine("animlist: Missing atlas entry: " + name, atlas);
+        Logger.Warn($"animlist_add_entry_from_atlas() Missing atlas entry: '{name}'");
     }
 
 
@@ -423,7 +419,7 @@ public class AnimList {
                 return AnimInterpolator.SIN;
         }
 
-        Console.Error.WriteLine("animlist: unknown interpolator type " + type);
+        Logger.Warn($"animlist_parse_interpolator() unknown interpolator type: {type}");
         return AnimInterpolator.LINEAR;
     }
 
@@ -434,7 +430,7 @@ public class AnimList {
             for (int i = 0 ; i < MacroExecutor.MACROEXECUTOR_REGISTER_COUNT ; i++) {
                 if (value == ("reg" + i)) return i;
             }
-            Console.Error.WriteLine("animlist_parse_register() invalid register", value);
+            Logger.Warn($"animlist_parse_register() invalid register: {value}");
         }
         return -1;
     }
@@ -675,9 +671,8 @@ public class AnimList {
                     parsed_instructions.AddItem(instruction);
                     break;
                 default:
-                    Console.Error.WriteLine(
-                        "animlist: unknown instruction: " + unparsed_list[i].TagName,
-                        unparsed_list[i].OuterHTML
+                    Logger.Warn(
+                        $"animlist_read_macro_animation() unknown instruction {unparsed_list[i].TagName}: {unparsed_list[i].OuterHTML}"
                     );
                     break;
             }
@@ -710,7 +705,7 @@ public class AnimList {
 
         Tokenizer tokenizer = Tokenizer.Init("\x20", true, false, unparsed_values);
         if (tokenizer == null) {
-            Console.Error.WriteLine("missing attribute values in RandomExact", unparsed_randomexact);
+            Logger.Warn($"missing attribute values in RandomExact: {unparsed_randomexact.OuterHTML}");
             size = -1;
             return null;
         }
@@ -723,9 +718,8 @@ public class AnimList {
             AnimList.ParseComplexValue(str, Single.NaN, ref parsed_value);
 
             if (parsed_value.reference == VertexProps.TEXTSPRITE_PROP_STRING && parsed_value.kind == MacroExecutorValueKind.PROPERTY) {
-                Console.Error.WriteLine(
-                    "animlist_read_macro_animation() illegal property used: string",
-                    unparsed_randomexact.OuterHTML
+                Logger.Error(
+                    $"animlist_read_macro_animation() illegal 'string' property used: {unparsed_randomexact.OuterHTML}"
                 );
 
                 //free(string);
@@ -733,9 +727,8 @@ public class AnimList {
             }
 
             if (Single.IsNaN(parsed_value.literal) && parsed_value.kind == MacroExecutorValueKind.LITERAL) {
-                Console.Error.WriteLine(
-                    "animlist_read_macro_animation() invalid or unreconized value found",
-                    unparsed_randomexact.OuterHTML
+                Logger.Error(
+                    $"animlist_read_macro_animation() invalid or unreconized value found: {unparsed_randomexact.OuterHTML}"
                 );
 
                 //free(string);
@@ -763,12 +756,12 @@ public class AnimList {
         if (value < 0) value = VertexProps.ParseCameraProperty(node, name, false);
 
         if (value == VertexProps.TEXTSPRITE_PROP_STRING) {
-            Console.Error.WriteLine("[ERROR] animlist_parse_property() illegal property: string", node.OuterHTML);
+            Logger.Error($"animlist_parse_property() illegal 'string' property: {node.OuterHTML}");
             return -1;
         }
 
         if (value < 0 && warn) {
-            Console.Error.WriteLine("[WARN] animlist_parse_property() unknown property: " + node.OuterHTML);
+            Logger.Warn($"animlist_parse_property() unknown property: {node.OuterHTML}");
         }
 
         return value;
@@ -782,7 +775,7 @@ public class AnimList {
         if (entry.HasAttribute("referenceDuration")) {
             reference_duration = VertexProps.ParseFloat(entry, "referenceDuration", Single.NaN);
             if (Single.IsNaN(reference_duration)) {
-                Console.Error.WriteLine("[WARN] animlist: invalid tweenkeyframe 'referenceDuration' value: " + entry.OuterHTML);
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid tweenkeyframe 'referenceDuration' value: {entry.OuterHTML}");
                 reference_duration = 1;
             }
         }
@@ -793,7 +786,7 @@ public class AnimList {
 
             string unparsed_at = node.GetAttribute("at");
             if (String.IsNullOrEmpty(unparsed_at)) {
-                Console.Error.WriteLine("[WARN] animlist: missing Keyframe 'at' attribute: " + node.OuterHTML);
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() missing Keyframe 'at' attribute: {node.OuterHTML}");
                 continue;
             }
 
@@ -801,7 +794,7 @@ public class AnimList {
 
             if (unparsed_at.IndexOf('%') >= 0) {
                 if (reference_duration > 1) {
-                    Console.Error.WriteLine("[WARN] animlist: invalid Keyframe , 'at' is a percent value and TweenKeyframe have 'referenceDuration' attribute: " + node.OuterHTML);
+                    Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid Keyframe, 'at' is a percent value and TweenKeyframe have 'referenceDuration' attribute: {node.OuterHTML}");
                     continue;
                 }
 
@@ -812,14 +805,14 @@ public class AnimList {
                 }
             } else {
                 if (reference_duration < 1) {
-                    Console.Error.WriteLine("[WARN] animlist: invalid Keyframe , 'at' is a timestamp value and TweenKeyframe does not have 'referenceDuration' attribute: " + node.OuterHTML);
+                    Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid Keyframe, 'at' is a timestamp value and TweenKeyframe does not have 'referenceDuration' attribute: {node.OuterHTML}");
                     continue;
                 }
                 at = VertexProps.ParseFloat2(unparsed_at, Single.NaN);
             }
 
             if (Single.IsNaN(at)) {
-                Console.Error.WriteLine("[WARN] animlist: invalid 'at' value: " + node.OuterHTML);
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid 'at' value: {node.OuterHTML}");
                 continue;
             }
 
@@ -835,19 +828,19 @@ public class AnimList {
 
             int steps_count = VertexProps.ParseInteger(node, "stepsCount", -1);
             if (keyframe_interpolator == AnimInterpolator.STEPS && steps_count < 0) {
-                Console.Error.WriteLine("[WARN] animlist: invalid o missing 'stepsCount' value: " + node.OuterHTML);
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid o missing 'stepsCount' value: {node.OuterHTML}");
                 continue;
             }
 
             Align steps_dir = VertexProps.ParseAlign2(node.GetAttribute("stepsMethod"));
             if (keyframe_interpolator == AnimInterpolator.STEPS && (steps_dir == Align.CENTER || steps_dir < 0)) {
-                Console.Error.WriteLine("[WARN] animlist: invalid o missing 'stepsMethod' value: " + node.OuterHTML);
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid o missing 'stepsMethod' value: {node.OuterHTML}");
                 continue;
             }
 
             float value = VertexProps.ParseFloat(node, "value", Single.NaN);
             if (Single.IsNaN(value)) {
-                Console.Error.WriteLine("[WARN] animlist: invalid 'value' value: " + node.OuterHTML);
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid 'value' value: {node.OuterHTML}");
                 continue;
             }
 

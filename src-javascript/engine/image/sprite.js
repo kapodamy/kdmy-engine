@@ -661,7 +661,7 @@ function sprite_animate(sprite, elapsed) {
 
 function sprite_animation_get_attached(sprite, animation_name) {
     if (linkedlist_count(sprite.animation_list) < 1) {
-        console.warn("No animation attached, can not play: " + animation_name);
+        console.warn("sprite_animation_get_attached() no animation attached, can not play: " + animation_name);
         return null;
     }
 

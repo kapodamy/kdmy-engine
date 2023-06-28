@@ -27,7 +27,7 @@ public static class ExportsPSShader {
         if (L.IsUserdataAllocated(PSSHADER))
             psshader.Destroy();
         else
-            Console.WriteLine("script_psshader_destroy() object was not allocated by lua");
+            Logger.Warn("script_psshader_destroy() object was not allocated by lua");
 
         return 0;
     }

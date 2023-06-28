@@ -139,7 +139,7 @@ public class Conductor {
 
     public int MapAutomatically(bool should_map_extras) {
         if (this.character == null) {
-            Console.Error.WriteLine("[ERROR] conductor_map_automatically() failed, no character set");
+            Logger.Error("conductor_map_automatically() failed, no character set");
             return 0;
         }
 
@@ -147,7 +147,7 @@ public class Conductor {
         int size = this.mappings.Size();
 
         if (size < 1) {
-            Console.Error.WriteLine("[ERROR] conductor_map_automatically() failed, no strums are set");
+            Logger.Error("conductor_map_automatically() failed, no strums are set");
             return 0;
         }
 

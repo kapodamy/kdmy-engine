@@ -45,7 +45,7 @@ public static class ExportsAtlas {
         if (L.IsUserdataAllocated(ATLAS))
             atlas.Destroy();
         else
-            Console.WriteLine("script_atlas_destroy() object was not allocated by lua");
+            Logger.Warn("script_atlas_destroy() object was not allocated by lua");
 
         return 0;
     }

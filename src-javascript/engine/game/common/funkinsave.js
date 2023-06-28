@@ -106,7 +106,7 @@ async function funkinsave_read_from_vmu() {
 
     if (total < 0) {
         // something bad happen
-        console.error("fs_total() on " + vmu_path + " failed");
+        console.error("funkinsave_read_from_vmu() call to fs_total() on " + vmu_path + " failed");
         vmu_path = undefined;
         vms_data = undefined;
         return 3;
@@ -130,7 +130,7 @@ async function funkinsave_read_from_vmu() {
     if (readed != total) {
         vmu_path = undefined;
         vms_data = undefined;
-        console.error("failed to read the VMS file at " + vmu_path);
+        console.error("funkinsave_read_from_vmu() failed to read the VMS file at " + vmu_path);
         return 3;
     }
 
@@ -138,7 +138,7 @@ async function funkinsave_read_from_vmu() {
     const vmu_pkg = new vmu_pkg_t();
 
     if (vmu_pkg_parse(vms_data, vmu_pkg) != 0) {
-        console.warn("vmu_pkg_parse() returned failed on: " + vmu_path);
+        console.warn("funkinsave_read_from_vmu() call to vmu_pkg_parse() returned failed on: " + vmu_path);
 
         vmu_path = undefined;
         vms_data = undefined;

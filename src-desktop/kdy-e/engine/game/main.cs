@@ -39,9 +39,9 @@ public static class GameMain {
 
         utsname osinfo;
         UTSNAME.uname(out osinfo);
-        Console.Error.WriteLine($"[LOG] {ENGINE_NAME} {ENGINE_VERSION}");
-        Console.Error.WriteLine($"[LOG] Console: {osinfo.machine}");
-        Console.Error.WriteLine($"[LOG] OS: {osinfo.version}\r\n");
+        Logger.Log($"{ENGINE_NAME} {ENGINE_VERSION}");
+        Logger.Log($"Console: {osinfo.machine}");
+        Logger.Log($"OS: {osinfo.version}\r\n");
 
         // (JS & CS only) preload fonts
         //new FontHolder("/assets/common/font/vcr.ttf", -1, null);
@@ -50,7 +50,7 @@ public static class GameMain {
 
         WeekEnumerator.Enumerate();
 
-        if (Funkin.weeks_array.size < 1) Console.Error.WriteLine("[WARN] main() no weeks detected");
+        if (Funkin.weeks_array.size < 1) Logger.Warn("main() no weeks detected");
 
         // load savedata
         FunkinSave.PickFirstAvailableVMU();
@@ -128,7 +128,7 @@ public static class GameMain {
             -1,
             null
         );
-        Console.Error.WriteLine("[LOG] week_main() execution done, engine is terminated");
+        Logger.Log("week_main() execution done, engine is terminated");
         return 0;*/
 
         IntroScreen.Main();

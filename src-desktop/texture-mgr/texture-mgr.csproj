@@ -15,6 +15,9 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\kdy-e\engine\csharp\Logger.cs" Link="Logger.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
   </ItemGroup>
 </Project>

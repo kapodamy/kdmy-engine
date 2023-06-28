@@ -85,7 +85,7 @@ public class Dialogue : IAnimate, IDraw {
         XmlParser xml = XmlParser.Init(src);
         if (xml == null || xml.GetRoot() == null) {
             if (xml != null) xml.Destroy();
-            Console.Error.WriteLine("[ERROR] dialogue_init() can not load dialogue xml file: " + src);
+            Logger.Error($"dialogue_init() can not load dialogue xml file: {src}");
             //free(src);
             return null;
         }
@@ -189,7 +189,7 @@ public class Dialogue : IAnimate, IDraw {
                                 Dialogue.InternalParseImportPortraitList(node2, portraits);
                                 break;
                             default:
-                                Console.Error.WriteLine("[ERROR] dialogue_init() unknown definition: " + node2.TagName);
+                                Logger.Error($"dialogue_init() unknown definition: {node2.TagName}");
                                 break;
                         }
                     }
@@ -714,7 +714,7 @@ public class Dialogue : IAnimate, IDraw {
             this.dialog_external.full_path = full_path;
             //free(source);
         } else {
-            Console.Error.WriteLine("[ERROR] dialogue_show_dialog() can not read: " + src_dialog);
+            Logger.Error($"dialogue_show_dialog() can not read: {src_dialog}");
             //free(full_path);
             return false;
         }
@@ -816,7 +816,7 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         if (!this.texsprite_speech.HasFont()) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_prepare_dialog() speech textsprite does not have font");
+            Logger.Error($"dialogue_internal_prepare_dialog() speech textsprite does not have font");
             this.do_exit = true;
             return false;
         }
@@ -827,7 +827,7 @@ public class Dialogue : IAnimate, IDraw {
         if (this.anims_ui.close != null) this.anims_ui.close.Restart();
 
         if (this.current_speechimage == null && this.speechimages_size > 0) {
-            Console.Error.WriteLine("[WARN] dialogue_internal_prepare_dialog() no speech background choosen, auto-choosing the first one declared");
+            Logger.Warn("dialogue_internal_prepare_dialog() no speech background choosen, auto-choosing the first one declared");
             this.current_speechimage = this.speechimages[0];
         }
 
@@ -904,7 +904,7 @@ public class Dialogue : IAnimate, IDraw {
                     break;
                 case Type.LUA:
                     if (this.script == null) {
-                        Console.Error.WriteLine("[ERROR] dialogue_internal_apply_state() no lua script attached");
+                        Logger.Error($"dialogue_internal_apply_state() no lua script attached");
                         break;
                     }
                     if (!String.IsNullOrEmpty(action.lua_function))
@@ -1415,7 +1415,7 @@ public class Dialogue : IAnimate, IDraw {
                     Dialogue.InternalParseAudio(node, audios);
                     break;
                 default:
-                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_audiolist() unknown node: " + node.TagName);
+                    Logger.Error($"dialogue_internal_parse_audiolist() unknown node: {node.TagName}");
                     break;
             }
         }
@@ -1435,7 +1435,7 @@ public class Dialogue : IAnimate, IDraw {
                     Dialogue.InternalParseColor(node, max_width, max_height, backgrounds);
                     break;
                 default:
-                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_backgroundlist() unknown node: " + node.TagName);
+                    Logger.Error($"dialogue_internal_parse_backgroundlist() unknown node: {node.TagName}");
                     break;
             }
         }
@@ -1450,7 +1450,7 @@ public class Dialogue : IAnimate, IDraw {
                     Dialogue.InternalParsePortrait(node, base_model, portraits);
                     break;
                 default:
-                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_portraitlist() unknown node: " + node.TagName);
+                    Logger.Error($"dialogue_internal_parse_portraitlist() unknown node: {node.TagName}");
                     break;
             }
         }
@@ -1463,7 +1463,7 @@ public class Dialogue : IAnimate, IDraw {
         if (!String.IsNullOrEmpty(animation_list)) {
             animlist = AnimList.Init(animation_list);
             if (String.IsNullOrEmpty(animation_list)) {
-                Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animationui() can not initialize: " + root_node.OuterHTML);
+                Logger.Error($"dialogue_internal_parse_animationui() can not initialize: {root_node.OuterHTML}");
                 return;
             }
         }
@@ -1475,7 +1475,7 @@ public class Dialogue : IAnimate, IDraw {
                     Dialogue.InternalParseAnimationUISet(node, animlist, anims_ui);
                     break;
                 default:
-                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animationui() unknown node: " + node.TagName);
+                    Logger.Error($"dialogue_internal_parse_animationui() unknown node: {node.TagName}");
                     break;
             }
         }
@@ -1585,7 +1585,7 @@ public class Dialogue : IAnimate, IDraw {
                             break;
                         default:
                             action.repeat_anim = RepeatAnim.NONE;
-                            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_state() unknown repeatAnim value: " + node.OuterHTML);
+                            Logger.Error($"dialogue_internal_parse_state() unknown repeatAnim value: {node.OuterHTML}");
                             break;
                     }
                     break;
@@ -1638,7 +1638,7 @@ public class Dialogue : IAnimate, IDraw {
                     action.type = Type.NOWAIT;
                     break;
                 default:
-                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_state() unknown state action: " + node.OuterHTML);
+                    Logger.Error($"dialogue_internal_parse_state() unknown state action: {node.OuterHTML}");
                     continue;
             }
 
@@ -1682,7 +1682,7 @@ public class Dialogue : IAnimate, IDraw {
                 break;
             default:
                 is_vertical = true;
-                Console.Error.WriteLine("[ERROR] dialogue_internal_parse_multiple_choice() unknown orientation value:" + orientation);
+                Logger.Error($"dialogue_internal_parse_multiple_choice() unknown orientation value: {orientation}");
                 break;
         }
 
@@ -1693,7 +1693,7 @@ public class Dialogue : IAnimate, IDraw {
             if (ModelHolder.UtilsIsKnownExtension(icon_model)) {
                 ModelHolder modeholder = ModelHolder.Init(icon_model);
                 if (modeholder == null) {
-                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_multiple_choice() can not initialize: " + icon_model);
+                    Logger.Error($"dialogue_internal_parse_multiple_choice() can not initialize: {icon_model}");
                 } else {
                     texture = modeholder.GetTexture(true);
                     anim = modeholder.CreateAnimsprite(icon_model_name ?? Dialogue.ICON, true, false);
@@ -1736,7 +1736,7 @@ public class Dialogue : IAnimate, IDraw {
                     Dialogue.InternalParseChoice(node, dialogs, choices);
                     break;
                 default:
-                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_multiplechoice() unknown: " + node.OuterHTML);
+                    Logger.Error($"dialogue_internal_parse_multiplechoice() unknown: {node.OuterHTML}");
                     break;
             }
         }
@@ -1840,7 +1840,7 @@ public class Dialogue : IAnimate, IDraw {
                     align_horizontal = Dialogue.InternalReadAlign(node, "horizontal");
                     break;
                 default:
-                    Console.Error.WriteLine("[ERROR] dialogue_internal_parse_speechimagelist() unknown node: " + node.TagName);
+                    Logger.Error($"dialogue_internal_parse_speechimagelist() unknown node: {node.TagName}");
                     break;
             }
         }
@@ -1849,7 +1849,7 @@ public class Dialogue : IAnimate, IDraw {
     private static void InternalParseImportPortraitList(XmlParserNode root_node, ArrayList<Portrait> portraits) {
         string dialogue_src = root_node.GetAttribute("dialogueSrc");
         if (String.IsNullOrEmpty(dialogue_src)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_importportraitlist() missing dialogueSrc: " + root_node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_importportraitlist() missing dialogueSrc: {root_node.OuterHTML}");
             return;
         }
 
@@ -1861,7 +1861,7 @@ public class Dialogue : IAnimate, IDraw {
         XmlParser xmlparser = XmlParser.Init(dialogue_src);
         if (xmlparser == null || xmlparser.GetRoot() == null) {
             if (xmlparser != null) xmlparser.Destroy();
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_importportraitlist() can not load: " + dialogue_src);
+            Logger.Error($"dialogue_internal_parse_importportraitlist() can not load: {dialogue_src}");
             return;
         }
 
@@ -1894,17 +1894,17 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         if (String.IsNullOrEmpty(name)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_audio() missing name: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_audio() missing name: {node.OuterHTML}");
             return;
         }
         if (String.IsNullOrEmpty(src)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_audio() missing src: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_audio() missing src: {node.OuterHTML}");
             return;
         }
 
         SoundPlayer soundplayer = SoundPlayer.Init(src);
         if (soundplayer == null) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_audio() can not initialize: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_audio() can not initialize: {node.OuterHTML}");
             return;
         }
 
@@ -1946,13 +1946,13 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         if (String.IsNullOrEmpty(name)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_image() missing name: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_image() missing name: {node.OuterHTML}");
             return;
         }
 
         if (src == null) src = base_src;
         if (String.IsNullOrEmpty(src)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_image() missing src: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_image() missing src: {node.OuterHTML}");
             return;
         }
 
@@ -1977,7 +1977,7 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         if (init_failed) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_image() can not initialize: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_image() can not initialize: {node.OuterHTML}");
             return;
         }
 
@@ -2002,7 +2002,7 @@ public class Dialogue : IAnimate, IDraw {
 
         string name = node.GetAttribute("name");
         if (String.IsNullOrEmpty(name)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_image() missing name: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_image() missing name: {node.OuterHTML}");
             return;
         }
 
@@ -2037,15 +2037,15 @@ public class Dialogue : IAnimate, IDraw {
         bool color_by_difference = VertexProps.ParseBoolean(node, "colorByDifference", false);
 
         if (String.IsNullOrEmpty(name)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_font() missing name: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_font() missing name: {node.OuterHTML}");
             return;
         }
         if (String.IsNullOrEmpty(src)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_font() missing src: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_font() missing src: {node.OuterHTML}");
             return;
         }
         if (!FS.FileExists(src)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_font() font file not found: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_font() font file not found: {node.OuterHTML}");
             return;
         }
 
@@ -2067,7 +2067,7 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         if (instance == null) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_font() can not initialize: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_font() can not initialize: {node.OuterHTML}");
             return;
         }
 
@@ -2129,18 +2129,18 @@ public class Dialogue : IAnimate, IDraw {
             case null:
                 break;
             default:
-                Console.Error.WriteLine("[WARN] dialogue_internal_parse_portrait() unknown position: " + node.OuterHTML);
+                Logger.Warn($"dialogue_internal_parse_portrait() unknown position: {node.OuterHTML}");
                 break;
         }
 
         if (String.IsNullOrEmpty(name)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_portrait() missing name: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_portrait() missing name: {node.OuterHTML}");
             return;
         }
 
         if (src == null) src = base_model;
         if (String.IsNullOrEmpty(src)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_portrait() missing src: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_portrait() missing src: {node.OuterHTML}");
             return;
         }
 
@@ -2173,7 +2173,7 @@ public class Dialogue : IAnimate, IDraw {
 
 L_check_failed:
         if (statesprite == null) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_portrait() can not initialize: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_portrait() can not initialize: {node.OuterHTML}");
             return;
         }
 
@@ -2214,19 +2214,19 @@ L_check_failed:
         string anim = node.GetAttribute("anim");
 
         if (String.IsNullOrEmpty(name)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animation_ui_set() missing name: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_animation_ui_set() missing name: {node.OuterHTML}");
             return;
         }
 
         AnimSprite animsprite = null;
         if (!String.IsNullOrEmpty(anim)) {
             if (animlist == null) {
-                Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animation_ui_set() can not initialize without animlist: " + node.OuterHTML);
+                Logger.Error($"dialogue_internal_parse_animation_ui_set() can not initialize without animlist: {node.OuterHTML}");
                 return;
             }
             animsprite = AnimSprite.InitFromAnimlist(animlist, anim);
             if (animsprite == null) {
-                Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animation_ui_set() can not initialize: " + node.OuterHTML);
+                Logger.Error($"dialogue_internal_parse_animation_ui_set() can not initialize: {node.OuterHTML}");
                 return;
             }
         }
@@ -2293,7 +2293,7 @@ L_check_failed:
                 anims_ui.close = animsprite;
                 break;
             default:
-                Console.Error.WriteLine("[ERROR] dialogue_internal_parse_animation_ui_set() unknown name: " + node.OuterHTML);
+                Logger.Error($"dialogue_internal_parse_animation_ui_set() unknown name: {node.OuterHTML}");
                 if (animsprite != null) animsprite.Destroy();
                 break;
         }
@@ -2319,7 +2319,7 @@ L_check_failed:
         string lua_eval = node.GetAttribute("luaEval");
 
         if (text == null) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_choice() missing text in:" + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_choice() missing text in: {node.OuterHTML}");
             return;
         }
 
@@ -2361,7 +2361,7 @@ L_check_failed:
         string src = node.GetAttribute("src");
 
         if (String.IsNullOrEmpty(name)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_speechimage() missing name: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_speechimage() missing name: {node.OuterHTML}");
             return null;
         }
 
@@ -2372,7 +2372,7 @@ L_check_failed:
 
         if (src == null) src = base_src;
         if (String.IsNullOrEmpty(src)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_speechimage() missing src: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_speechimage() missing src: {node.OuterHTML}");
             return null;
         }
 
@@ -2421,7 +2421,7 @@ L_check_failed:
 
 L_check_failed:
         if (statesprite == null) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_speechimage() can not initialize: " + node.OuterHTML);
+            Logger.Error($"dialogue_internal_parse_speechimage() can not initialize: {node.OuterHTML}");
             return null;
         }
 
@@ -2440,7 +2440,7 @@ L_check_failed:
     private static void InternalLoadPsychCharacterJSON(string src, ArrayList<Portrait> portraits) {
         JSONToken json = JSONParser.LoadFrom(src);
         if (json == null) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_load_psych_character_json() can not load: " + src);
+            Logger.Error($"dialogue_internal_load_psych_character_json() can not load: {src}");
             return;
         }
 
@@ -2469,13 +2469,13 @@ L_check_failed:
                 break;
             default:
                 dialogue_pos = 0f;
-                Console.Error.WriteLine("[ERROR] dialogue_internal_load_psych_character_json() unrecognized dialogue_pos: " + src);
+                Logger.Error($"dialogue_internal_load_psych_character_json() unrecognized dialogue_pos: {src}");
                 break;
         }
 
         string image = JSONParser.ReadString(json, "image", null);
         if (String.IsNullOrEmpty(image)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_load_psych_character_json() missing 'image' in json: " + src);
+            Logger.Error($"dialogue_internal_load_psych_character_json() missing 'image' in json: {src}");
             goto L_return;
         } else if (image.IndexOf('.', 0) >= 0) {
             // append atlas extension
@@ -2504,7 +2504,7 @@ L_check_failed:
         }
 
         if (modelholder == null) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_load_psych_character_json() unreconized image path: " + image);
+            Logger.Error($"dialogue_internal_load_psych_character_json() unreconized image path: {image}");
             goto L_return;
         }
 
@@ -2570,7 +2570,7 @@ L_return:
         string source = FS.ReadText(full_path);
 
         if (String.IsNullOrEmpty(source)) {
-            Console.Error.WriteLine("[ERROR] dialogue_internal_parse_dialog() can not read: " + src);
+            Logger.Error($"dialogue_internal_parse_dialog() can not read: {src}");
             //free(full_path);
             return -1;
         }
@@ -2690,7 +2690,7 @@ L_return:
             case Align.END:
                 break;
             default:
-                Console.Error.WriteLine("[ERROR] dialogue_internal_read_align() invalid align value: " + unparsed_align);
+                Logger.Error($"dialogue_internal_read_align() invalid align value: {unparsed_align}");
                 align = Align.NONE;
                 break;
         }

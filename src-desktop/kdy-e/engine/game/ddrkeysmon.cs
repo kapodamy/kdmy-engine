@@ -196,7 +196,7 @@ public class DDRKeymon {
 
         if (available >= DDRKeymon.FIFO_LENGTH) {
             // imminent overflow, drop first key
-            Console.Error.WriteLine("[WARN] ddrkeymon_append_key() queue overflow, ¿are you checking the queue?");
+            Logger.Warn("ddrkeymon_append_key() queue overflow, ¿are you checking the queue?");
             this.ddrkeys_fifo.Purge2(true);
 
             if (available >= DDRKeymon.FIFO_LENGTH) {

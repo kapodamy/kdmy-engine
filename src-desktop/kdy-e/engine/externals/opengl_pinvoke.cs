@@ -211,8 +211,8 @@ public partial class WebGL2RenderingContext {
                 }
             }
 
-            Console.Error.WriteLine("Fatal error: OpenGL function " + functionName + " not found");
-            throw new MissingMethodException("OpenGL function " + functionName + " not found");
+            Logger.Error($"Fatal: OpenGL function '{functionName}' not found");
+            throw new MissingMethodException($"OpenGL function '{functionName}' not found");
         }
 
         static NativeMethods() {

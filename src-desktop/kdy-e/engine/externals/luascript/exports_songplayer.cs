@@ -10,9 +10,9 @@ public static class ExportsSongPlayer {
         SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
 
         string src = L.luaL_checkstring(2);
-        bool prefer_no_copyright = L.lua_toboolean(3);
+        bool prefer_alternative = L.lua_toboolean(3);
 
-        bool ret = songplayer.ChangeSong(src, prefer_no_copyright);
+        bool ret = songplayer.ChangeSong(src, prefer_alternative);
 
         L.lua_pushboolean(ret);
         return 1;

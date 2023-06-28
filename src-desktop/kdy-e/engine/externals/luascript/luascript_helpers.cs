@@ -187,7 +187,7 @@ public static class LuascriptHelpers {
             case LuaType.TNONE:
                 break;
             default:
-                Console.Error.WriteLine("[ERROR] luascripthelpers_to_basic_value() invalid value at idx " + idx);
+                Logger.Error($"luascripthelpers_to_basic_value() invalid value at idx={idx}");
                 break;
         }
 

@@ -194,7 +194,7 @@ internal unsafe class DDS {
                 }
             }
         } catch (Exception e) {
-            Console.Error.WriteLine($"[ERROR] DDS::Parse() can not open {filename}:\n {e.Message}");
+            Logger.Error($"DDS::Parse() can not open {filename}:\n {e.Message}");
             if (ptr != null) Marshal.FreeHGlobal((nint)ptr);
             return null;
         }
@@ -251,12 +251,12 @@ internal unsafe class DDS {
         compression = DDSCompression.Unknown;
 
         if (dds->signature != SIGNATURE) {
-            Console.WriteLine("[ERROR] DDS::Parse() invalid file siganture (not a .DDS file)");
+            Logger.Error("DDS::Parse() invalid file siganture (not a .DDS file)");
             return null;
         }
 
         if (dds->dwSize != HEADER_SIZE) {
-            Console.WriteLine("[ERROR] DDS::Parse() invalid header size");
+            Logger.Error("DDS::Parse() invalid header size");
             return null;
         }
 
@@ -266,13 +266,13 @@ internal unsafe class DDS {
         //            of such a file might not set these flags."
         //
         if (!dds->dwFlags.HasFlag(DDSD.WIDTH | DDSD.HEIGHT)) {
-            Console.WriteLine("[ERROR] DDS::Parse() missing one or more required flags in the header");
+            Logger.Error("DDS::Parse() missing one or more required flags in the header");
             return null;
         }
 
         if (dds->dwFlags.HasFlag(DDSD.MIPMAPCOUNT)) {
             if (dds->dwMipMapCount < 1) {
-                Console.WriteLine("[ERROR] DDS::Parse() invalid mipmap count");
+                Logger.Error("DDS::Parse() invalid mipmap count");
                 return null;
             }
             mipmap_count = dds->dwMipMapCount;
@@ -280,22 +280,22 @@ internal unsafe class DDS {
         }
 
         if (!dds->dwCaps.HasFlag(DDSCAPS.TEXTURE)) {
-            Console.WriteLine("[ERROR] DDS::Parse() missing DDSCAPS_TEXTURE flag in the header");
+            Logger.Error("DDS::Parse() missing DDSCAPS_TEXTURE flag in the header");
             return null;
         }
 
         if (dds->dwCaps2 != DDSCAPS2.NOTHING) {
-            Console.WriteLine("[ERROR] DDS::Parse() expected texture, found CUBEMAP or VOLUME");
+            Logger.Error("DDS::Parse() expected texture, found CUBEMAP or VOLUME");
             return null;
         }
 
         if (dds->ddspf.dwSize != PIXELFORMAT_SIZE) {
-            Console.WriteLine("[ERROR] DDS::Parse() invalid PIXELFORMAT header size");
+            Logger.Error("DDS::Parse() invalid PIXELFORMAT header size");
             return null;
         }
 
         if (!dds->ddspf.dwFlags.HasFlag(DDPF.FOURCC)) {
-            Console.WriteLine("[ERROR] DDS::Parse() uncompressed texture load is not implemented");
+            Logger.Error("DDS::Parse() uncompressed texture load is not implemented");
             return null;
         }
 
@@ -311,11 +311,11 @@ internal unsafe class DDS {
                 compression = DDSCompression.DXT5;
                 break;
             case FOURCC_DX10:
-                Console.WriteLine($"[ERROR] DDS::Parse() DX10 and DXGI pixel formats are not supported");
+                Logger.Error("DDS::Parse() DX10 and DXGI pixel formats are not supported");
                 return null;
             default:
                 string fourcc = Encoding.ASCII.GetString((byte*)&dds->ddspf.dwFourCC, 4);
-                Console.WriteLine($"[ERROR] DDS::Parse() unknown fourCC '{fourcc}'");
+                Logger.Error($"DDS::Parse() unknown fourCC '{fourcc}'");
                 return null;
         }
 
@@ -333,14 +333,14 @@ internal unsafe class DDS {
                 i++;
                 if (i < mipmap_count) {
                     mipmap_count = i;
-                    Console.WriteLine("[WARN] DDS::Parse() invalid mipmap count or dimens are not pow-of-two");
+                    Logger.Warn("DDS::Parse() invalid mipmap count or dimens are not pow-of-two");
                 }
                 break;
             }
         }
 
         if (expected_size > (data_size - BITMAPS_OFFSET)) {
-            Console.WriteLine("[ERROR] DDS::Parse() the .DDS file is truncated");
+            Logger.Error("DDS::Parse() the .DDS file is truncated");
             return null;
         }
 

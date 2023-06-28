@@ -25,7 +25,7 @@ public static class Expansions {
 
     public static void Load(string expansion_name) {
         if (expansion_name != null && FS.IsInvalidFilename(expansion_name)) {
-            Console.Error.WriteLine($"[ERROR] Expansions::Load() invalid expansion name, ilegal filename: ${expansion_name}");
+            Logger.Error($"expansions_load() invalid expansion name, ilegal filename: {expansion_name}");
             return;
         }
 
@@ -128,7 +128,7 @@ public static class Expansions {
 
         string expansion_path = Expansions.SYMBOLIC_PATH + expansion_name;
         if (!IO.ResourceExists(expansion_path, false, true)) {
-            Console.Error.WriteLine($"[ERROR] expansions_load() '{expansion_name}' not found in {Expansions.PATH}");
+            Logger.Error($"expansions_load() '{expansion_name}' not found in {Expansions.PATH}");
             //free(expansion_path);
             return;
         }
@@ -169,7 +169,7 @@ public static class Expansions {
             if (name == Expansions.SELF_NAME) {
                 InternalAddToChain(chain, expansion_path);
             } else if (FS.IsInvalidFilename(name)) {
-                Console.Error.WriteLine($"[ERROR] expansions_internal_load_dependency() '{name}' is not a valid folder name");
+                Logger.Error($"expansions_internal_load_dependency() '{name}' is not a valid folder name");
             } else {
                 InternalLoadDependency(chain, name);
             }

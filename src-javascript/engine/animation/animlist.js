@@ -94,7 +94,7 @@ async function animlist_init(src) {
                 linkedlist_add_item(parsed_animations, animlist_read_tweenkeyframe_animation(anims[i]));
                 continue;
             default:
-                console.warn("Unknown animation: " + anims[i].tagName);
+                console.warn("animlist_init() unknown animation: " + anims[i].tagName);
                 continue;
         }
 
@@ -297,7 +297,7 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
             case "AlternateSet":
                 let frame_count = linkedlist_count(parsed_frames);
                 if (animlist_add_alternate_entry(parsed_alternates, frame_count, last_alternate_index))
-                    console.error(`consecutive AlternateSet found (no enough frames in '${name}')`);
+                    console.error(`animlist_read_frame_animation() consecutive AlternateSet found (no enough frames in '${name}')`);
                 else
                     last_alternate_index = frame_count;
                 break;
@@ -306,7 +306,7 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
                 anim.loop_from_index = linkedlist_count(parsed_frames) - offset;
                 break;
             default:
-                console.error("Unknown frame type: " + frames[i].tagName, frames[i]);
+                console.error("animlist_read_frame_animation() unknown frame type: " + frames[i].tagName, frames[i]);
                 break;
         }
     }
@@ -381,7 +381,7 @@ function animlist_add_entry_from_atlas(frame_list, name, atlas) {
         }
     }
 
-    console.error("animlist: Missing atlas entry: " + name, atlas);
+    console.error("animlist_add_entry_from_atlas() Missing atlas entry: " + name, atlas);
 }
 
 
@@ -420,7 +420,7 @@ function animlist_parse_interpolator(node, name) {
             return ANIM_MACRO_INTERPOLATOR_SIN;
     }
 
-    console.warn("animlist: unknown interpolator type " + type);
+    console.warn("animlist_parse_interpolator() unknown interpolator type " + type);
     return ANIM_MACRO_INTERPOLATOR_LINEAR;
 }
 
@@ -686,7 +686,7 @@ function animlist_read_macro_animation(entry, atlas) {
                 break;
             default:
                 console.warn(
-                    "animlist: unknown instruction: " + unparsed_list[i].tagName,
+                    "animlist_read_macro_animation() unknown instruction: " + unparsed_list[i].tagName,
                     unparsed_list[i].outerHTML
                 );
                 break;
@@ -793,7 +793,7 @@ function animlist_read_tweenkeyframe_animation(entry) {
     if (entry.hasAttribute("referenceDuration")) {
         reference_duration = vertexprops_parse_float(entry, "referenceDuration", NaN);
         if (Number.isNaN(reference_duration)) {
-            console.warn("animlist: invalid tweenkeyframe 'referenceDuration' value: " + entry.outerHTML);
+            console.warn("animlist_read_tweenkeyframe_animation() invalid tweenkeyframe 'referenceDuration' value: " + entry.outerHTML);
             reference_duration = 1;
         }
     }
@@ -804,7 +804,7 @@ function animlist_read_tweenkeyframe_animation(entry) {
 
         let unparsed_at = node.getAttribute("at");
         if (!unparsed_at) {
-            console.warn("animlist: missing Keyframe 'at' attribute: " + node.outerHTML);
+            console.warn("animlist_read_tweenkeyframe_animation() missing Keyframe 'at' attribute: " + node.outerHTML);
             continue;
         }
 
@@ -812,7 +812,7 @@ function animlist_read_tweenkeyframe_animation(entry) {
 
         if (unparsed_at.indexOf('%') >= 0) {
             if (reference_duration > 1) {
-                console.warn("animlist: invalid Keyframe , 'at' is a percent value and TweenKeyframe have 'referenceDuration' attribute: " + node.outerHTML);
+                console.warn("animlist_read_tweenkeyframe_animation() invalid Keyframe , 'at' is a percent value and TweenKeyframe have 'referenceDuration' attribute: " + node.outerHTML);
                 continue;
             }
 
@@ -823,14 +823,14 @@ function animlist_read_tweenkeyframe_animation(entry) {
             }
         } else {
             if (reference_duration < 1) {
-                console.warn("animlist: invalid Keyframe , 'at' is a timestamp value and TweenKeyframe does not have 'referenceDuration' attribute: " + node.outerHTML);
+                console.warn("animlist_read_tweenkeyframe_animation() invalid Keyframe , 'at' is a timestamp value and TweenKeyframe does not have 'referenceDuration' attribute: " + node.outerHTML);
                 continue;
             }
             at = vertexprops_parse_float2(unparsed_at, NaN);
         }
 
         if (Number.isNaN(at)) {
-            console.warn("animlist: invalid 'at' value: " + node.outerHTML);
+            console.warn("animlist_read_tweenkeyframe_animation() invalid 'at' value: " + node.outerHTML);
             continue;
         }
 
@@ -846,19 +846,19 @@ function animlist_read_tweenkeyframe_animation(entry) {
 
         let steps_count = vertexprops_parse_integer(node, "stepsCount", -1);
         if (keyframe_interpolator == ANIM_MACRO_INTERPOLATOR_STEPS && steps_count < 0) {
-            console.warn("animlist: invalid o missing 'stepsCount' value: " + node.outerHTML);
+            console.warn("animlist_read_tweenkeyframe_animation() invalid o missing 'stepsCount' value: " + node.outerHTML);
             continue;
         }
 
         let steps_dir = vertexprops_parse_align2(node.getAttribute("stepsMethod"));
         if (keyframe_interpolator == ANIM_MACRO_INTERPOLATOR_STEPS && (steps_dir == ALIGN_CENTER || steps_dir < 0)) {
-            console.warn("animlist: invalid o missing 'stepsMethod' value: " + node.outerHTML);
+            console.warn("animlist_read_tweenkeyframe_animation() invalid o missing 'stepsMethod' value: " + node.outerHTML);
             continue;
         }
 
         let value = vertexprops_parse_float(node, "value", NaN);
         if (Number.isNaN(value)) {
-            console.warn("animlist: invalid 'value' value: " + node.outerHTML);
+            console.warn("animlist_read_tweenkeyframe_animation() invalid 'value' value: " + node.outerHTML);
             continue;
         }
 

@@ -33,7 +33,7 @@ public static class ExportsModelHolder {
         if (L.IsUserdataAllocated(MODELHOLDER))
             modelholder.Destroy();
         else
-            Console.WriteLine("script_modelholder_destroy() object was not allocated by lua");
+            Logger.Warn("script_modelholder_destroy() object was not allocated by lua");
 
         return 0;
     }

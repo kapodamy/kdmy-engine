@@ -4,7 +4,7 @@ using Engine.Game.Common;
 using Engine.Platform;
 using Engine.Utils;
 
-namespace Engine.Image; 
+namespace Engine.Image;
 
 [DebuggerDisplay("name={name} x={x} y={y} width={width} height={height} frame=\\{ x={frame_x} y={frame_y} width={frame_width} height={frame_height} \\} pivot=\\{ x={pivot_x} y={pivot_y} \\}")]
 public class AtlasEntry {
@@ -60,7 +60,7 @@ public class Atlas {
         XmlParser xml = XmlParser.Init(src);
 
         if (xml == null) {
-            Console.Error.WriteLine("[ERROR] atlas_init() error loading " + src);
+            Logger.Error($"atlas_init() error loading {src}");
             return null;
         }
 
@@ -101,7 +101,7 @@ public class Atlas {
                 case "SubTexture":
                     break;
                 default:
-                    Console.Error.WriteLine("unknown TextureAtlas entry: " + unparsed_entry.OuterHTML);
+                    Logger.Warn($"atlas_init() unknown TextureAtlas entry: {unparsed_entry.OuterHTML}");
                     continue;
             }
 
@@ -278,7 +278,7 @@ public class Atlas {
         }
 
         if (index < 0) {
-            Console.Error.WriteLine("atlas_parse_resolution() invalid resolution", resolution_string);
+            Logger.Warn($"atlas_parse_resolution() invalid resolution: {resolution_string}");
             return false;
         }
 
@@ -290,7 +290,7 @@ public class Atlas {
         );
 
         if (width == UInt32.MaxValue || height == UInt32.MaxValue) {
-            Console.Error.WriteLine("atlas_parse_resolution() invalid resolution", resolution_string);
+            Logger.Warn($"atlas_parse_resolution() invalid resolution: {resolution_string}");
             return false;
         }
 
@@ -430,7 +430,7 @@ L_parse_field_failed:
             sub_width == Math2D.MAX_INT32 || sub_height == Math2D.MAX_INT32 ||
             tile_width == Math2D.MAX_INT32 || tile_height == Math2D.MAX_INT32
         ) {
-            Console.Error.WriteLine("missing fields in TileSet: " + unparsed_tileset.OuterHTML);
+            Logger.Warn($"atlas_parse_tileset() missing fields in TileSet: {unparsed_tileset.OuterHTML}");
             return;
         }
 
@@ -445,10 +445,10 @@ L_parse_field_failed:
 
         foreach (XmlParserNode unparsed_tile in unparsed_tileset.Children) {
             if (unparsed_tile.TagName != "Tile") {
-                Console.Error.WriteLine("unknown TileSet entry: " + unparsed_tile.OuterHTML);
+                Logger.Warn($"atlas_parse_tileset() unknown TileSet entry: {unparsed_tile.OuterHTML}");
                 continue;
             } else if (!unparsed_tile.HasAttribute("name")) {
-                Console.Error.WriteLine("missing tile name: " + unparsed_tile.OuterHTML);
+                Logger.Warn($"atlas_parse_tileset() missing tile name: {unparsed_tile.OuterHTML}");
                 index++;
                 continue;
             }

@@ -576,7 +576,7 @@ public class Week {
 
         if (single_song) {
             if (single_song_index > gameplaymanifest.songs_size) {
-                Console.Error.WriteLine("[ERROR] week_main() is out of bounds, check your gameplay manifest");
+                Logger.Error("week_main() is out of bounds, check your gameplay manifest");
                 gameplaymanifest.Destroy();
                 //free(songs_attempts);
                 return 1;
@@ -649,12 +649,12 @@ public class Week {
                 if (String.IsNullOrEmpty(dialog_text)) {
                     // nothing to do
                 } else if (roundcontext.dialogue == null) {
-                    Console.Error.WriteLine($"[ERROR] week_round() can not load '{dialog_text}' there no dialogue instance");
+                    Logger.Error($"week_main() can not load '{dialog_text}' there no dialogue instance");
                 } else if (roundcontext.dialogue.ShowDialog(dialog_text)) {
                     if (roundcontext.script != null) roundcontext.script.NotifyDialogueBuiltinOpen(dialog_text);
                     show_dialog = true;
                 } else {
-                    Console.Error.WriteLine($"[ERROR] week_round() failed to read '{dialog_text}' file");
+                    Logger.Error($"week_main() failed to read '{dialog_text}' file");
                 }
             }
 
@@ -889,7 +889,7 @@ public class Week {
 
         placeholder = layout.GetPlaceholder("ui_healthbar");
         if (placeholder == null) {
-            Console.Error.WriteLine("[ERROR] missing layout ui_healthbar placeholder");
+            Logger.Error("week_init_ui_layout() missing layout ui_healthbar placeholder");
             placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
         }
         ui.healthbar_is_vertical = (bool)layout.GetAttachedValue("ui_healthbar_isVertical", AttachedValueType.BOOLEAN, false);
@@ -911,7 +911,7 @@ public class Week {
 
         placeholder = layout.GetPlaceholder("ui_roundstats");
         if (placeholder == null) {
-            Console.Error.WriteLine("[ERROR] missing layout ui_roundstats placeholder");
+            Logger.Error("week_init_ui_layout() missing layout ui_roundstats placeholder");
             placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
         }
         ui.roundstats_x = placeholder.x;
@@ -923,7 +923,7 @@ public class Week {
 
         placeholder = layout.GetPlaceholder("ui_songprogressbar");
         if (placeholder == null) {
-            Console.Error.WriteLine("[ERROR] missing layout ui_songprogressbar placeholder");
+            Logger.Error("week_init_ui_layout() missing layout ui_songprogressbar placeholder");
             placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
         }
         ui.songprogressbar_bordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_borderSize", AttachedValueType.FLOAT, 2.0);
@@ -947,7 +947,7 @@ public class Week {
 
         placeholder = layout.GetPlaceholder("ui_song_info");
         if (placeholder == null) {
-            Console.Error.WriteLine("[ERROR] missing layout ui_song_info placeholder");
+            Logger.Error("week_init_ui_layout() missing layout ui_song_info placeholder");
             placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
         }
         ui.songinfo_x = placeholder.x;
@@ -1631,7 +1631,7 @@ public class Week {
                     int id = players[i].layout_strums_id < 0 ? i : players[i].layout_strums_id;
 
                     if (id >= initparams.layout_strums_size) {
-                        Console.Error.WriteLine($"[ERROR] week_main() invalid player[{i}].layoutStrumsId={id}");
+                        Logger.Error($"week_init_chart_and_players() invalid player[{i}].layoutStrumsId={id}");
                         continue;
                     } else if (id < 0) {
                         continue;
@@ -1711,7 +1711,7 @@ public class Week {
             int layout_strums_id = players[i].layout_strums_id < 0 ? i : players[i].layout_strums_id;
 
             if (layout_strums_id >= initparams.layout_strums_size) {
-                Console.Error.WriteLine($"[ERROR] week_main() invalid player[{i}].layoutStrumsId={layout_strums_id}");
+                Logger.Error($"week_init_chart_and_players() invalid player[{i}].layoutStrumsId={layout_strums_id}");
                 layout_strums_id = -1;
             }
 
@@ -1838,7 +1838,7 @@ public class Week {
             int mapped = roundcontext.players[i].conductor.MapAutomatically(false);
 
             if (mapped != count) {
-                Console.Error.WriteLine($"[WARN] conductor_map_automatically() only mapped {mapped} of {count} lines");
+                Logger.Warn($"week_init_chart_and_players() only mapped {mapped} of {count} lines");
             }
         }
 
@@ -2177,7 +2177,7 @@ public class Week {
                     roundcontext.initparams.layout_girlfriend
                 );
             } else {
-                Console.Error.WriteLine("[ERROR] week_place_in_layout() missing layout space for declared girlfriend");
+                Logger.Error("week_place_in_layout() missing layout space for declared girlfriend");
             }
         }
 
@@ -2191,7 +2191,7 @@ public class Week {
                         initparams.layout_characters[i]
                     );
                 } else {
-                    Console.Error.WriteLine($"[ERROR] week_place_in_layout() missing layout space for declared player[{i}]");
+                    Logger.Error($"week_place_in_layout() missing layout space for declared player[{i}]");
                 }
             }
             if (roundcontext.players[i].strums != null) {
@@ -2246,7 +2246,7 @@ public class Week {
         Week.BEAT_WATCHER.ChangeBpm(bpm);
         Week.QUARTER_WATCHER.ChangeBpm(bpm);
 
-        //Console.Error.WriteLine($"[INFO] week_update_bpm() original={roundcontext.settings.original_bpm} new={bpm}");
+        //Logger.Info($"week_update_bpm() original={roundcontext.settings.original_bpm} new={bpm}");
 
         roundcontext.settings.bpm = bpm;
     }
@@ -2742,7 +2742,7 @@ public class Week {
         Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
         GamepadButtons preesed = GamepadButtons.NOTHING;
 
-        Console.Error.WriteLine("[LOG] week_halt() waiting for script signal...");
+        Logger.Log("week_halt() waiting for script signal...");
 
         if (peek_global_beatwatcher) BeatWatcher.GlobalSetTimestampFromKosTimer();
 
@@ -2768,14 +2768,14 @@ public class Week {
             if (peek_global_beatwatcher) BeatWatcher.GlobalSetTimestampFromKosTimer();
 
             if (roundcontext.scriptcontext.force_end_flag) {
-                Console.Error.WriteLine("[LOG] week_halt() wait interrupted because week_end() was called");
+                Logger.Log("week_halt() wait interrupted because week_end() was called");
                 return;
             }
         }
 
         Week.InternalDoAntibounce(roundcontext);
 
-        Console.Error.WriteLine("[LOG] week_halt() wait done");
+        Logger.Log("week_halt() wait done");
     }
 
     public static void PeekChartEvents(RoundContext roundcontext, double timestamp) {
@@ -3147,7 +3147,7 @@ public class Week {
     private static LayoutPlaceholder InternalReadPlaceholder(Layout layout, string prefix_name, int number_suffix) {
         string placeholder_name = Week.InternalConcatSuffix(prefix_name, number_suffix);
         LayoutPlaceholder placeholder = layout.GetPlaceholder(placeholder_name);
-        if (placeholder == null) Console.Error.WriteLine("[ERROR] Missing layout placeholder: " + placeholder_name);
+        if (placeholder == null) Logger.Error($"week_internal_read_placeholder() missing layout placeholder: {placeholder_name}");
         //free(placeholder_name);
         return placeholder;
     }
@@ -3187,13 +3187,13 @@ public class Week {
         GameplayManifest gameplaymanifest = GameplayManifest.Init(src);
 
         if (gameplaymanifest == null) {
-            Console.Error.WriteLine("[ERROR] week_main() missing file " + src);
+            Logger.Error($"week_internal_load_gameplay_manifest() missing file {src}");
             return null;
         }
 
         if (gameplaymanifest.songs_size < 1) {
             gameplaymanifest.Destroy();
-            Console.Error.WriteLine("[ERROR] week_main() no songs defined, goodbye.File: " + src);
+            Logger.Error($"week_internal_load_gameplay_manifest() no songs defined, goodbye. File: {src}");
             return null;
         }
 
@@ -3261,7 +3261,7 @@ public class Week {
 
     private static LayoutPlaceholder InternalReadPlaceholderCounter(Layout layout, string name, bool warn) {
         LayoutPlaceholder placeholder = layout.GetPlaceholder(name);
-        if (warn && placeholder == null) Console.Error.WriteLine($"[ERROR] week: missing layout '{name}' placeholder");
+        if (warn && placeholder == null) Logger.Error($"week_internal_read_placeholder_counter() missing layout '{name}' placeholder");
         return placeholder;
     }
 

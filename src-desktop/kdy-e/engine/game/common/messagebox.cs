@@ -198,7 +198,7 @@ public class MessageBox : IDraw, IAnimate {
             this.image.SetTexture(texture, true);
             this.image.SetDrawSizeFromSourceSize();
         } else {
-            Console.Error.WriteLine("[WARN] messagebox_set_image_from_texture() can not load: " + filename);
+            Logger.Warn($"messagebox_set_image_from_texture() can not load: {filename}");
         }
 
         SetImageSprite(this.image);
@@ -243,9 +243,7 @@ L_dipose_and_return:
         if (atlas != null) atlas.Destroy();
         if (texture != null) texture.Destroy();
 
-        Console.Error.WriteLine("[WARN]" +
-            "messagebox_set_image_from_atlas() can not load the atlas, texture or entry: " + filename
-        );
+        Logger.Warn($"messagebox_set_image_from_atlas() can not load the atlas, texture or entry: {filename}");
 
         this.image.SetVisible(false);
         SetImageSprite(this.image);

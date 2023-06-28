@@ -15,7 +15,7 @@ public class PixelUnPackBufferBuilder : IPixelDataBufferBuilder {
     public IPixelDataBuffer CreatePixelDataBuffer(int byte_size) {
         WebGLBuffer pbo = gl.createBuffer();
         if (pbo.IsNull) {
-            Console.Error.WriteLine("[ERROR] PixelUnPackBufferBuilder::CreatePixelDataBuffer() buffer creation failed");
+            Logger.Error("PixelUnPackBufferBuilder::CreatePixelDataBuffer() buffer creation failed");
             return null;
         }
 
@@ -31,7 +31,8 @@ public class PixelUnPackBufferBuilder : IPixelDataBufferBuilder {
 
         GLenum error = gl.getError();
         if (error != GLenum.GL_NONE) {
-            Console.Error.WriteLine("[ERROR] PixelUnPackBufferBuilder::CreatePixelDataBuffer() gl error 0x" + ((int)error).ToString("X"));
+            string e = ((int)error).ToString("X");
+            Logger.Error($"PixelUnPackBufferBuilder::CreatePixelDataBuffer() gl error 0x{e}");
             buffer.Dispose();
             return null;
         }
@@ -39,7 +40,8 @@ public class PixelUnPackBufferBuilder : IPixelDataBufferBuilder {
 
         error = gl.getError();
         if (error != GLenum.GL_NONE) {
-            Console.Error.WriteLine("[ERROR] PixelUnPackBufferBuilder::CreatePixelDataBuffer() gl error 0x" + ((int)error).ToString("X"));
+            string e = ((int)error).ToString("X");
+            Logger.Error($"PixelUnPackBufferBuilder::CreatePixelDataBuffer() gl error 0x{e}");
             buffer.Dispose();
             return null;
         }

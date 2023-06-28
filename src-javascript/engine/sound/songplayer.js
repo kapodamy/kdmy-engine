@@ -402,7 +402,7 @@ async function songplayer_internal_init_player(path) {
         try {
             path = await songplayer_internal_chrome_url(path);
         } catch (e) {
-            console.error("failed to load the file: " + path, e);
+            console.error("songplayer_internal_init_player() failed to load the file: " + path, e);
             return null;
         }
     }
@@ -417,7 +417,7 @@ async function songplayer_internal_init_player(path) {
                 if (!IO_CHROMIUM_DETECTED) player.currentTime = 0;
                 player.onerror = function () {
                     console.error(
-                        `playback error: code=${player.error.code} message=${player.error.message}`
+                        `songplayer_internal_init_player() playback error: code=${player.error.code} message=${player.error.message}`
                     );
                 };
                 resolve(player);
@@ -429,7 +429,7 @@ async function songplayer_internal_init_player(path) {
         }));
     } catch (e) {
         if (IO_CHROMIUM_DETECTED) URL.revokeObjectURL(path);
-        console.error("failed to initialize the audio: " + path, e);
+        console.error("songplayer_internal_init_player() failed to initialize the audio: " + path, e);
         return null;
     }
 }

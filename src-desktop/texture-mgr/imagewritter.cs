@@ -25,7 +25,7 @@ public class ImageWritter {
         try {
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         } catch (Exception e) {
-            Console.Error.WriteLine("[ERROR] failed to create folder " + dir + "\n" + e.Message);
+            Logger.Error($"screenshot: failed to create folder {dir}: {e.Message}");
             Marshal.FreeHGlobal(rgba_pixels);
         }
 
@@ -35,7 +35,7 @@ public class ImageWritter {
                 bitmap.Save(filename, ImageFormat.Png);
             }
         } catch (Exception e) {
-            Console.Error.WriteLine("[ERROR] failed to write " + filename + "\n" + e.Message);
+            Logger.Error($"screenshot: failed to write {filename}: {e.Message}");
         } finally {
             Marshal.FreeHGlobal(rgba_pixels);
         }

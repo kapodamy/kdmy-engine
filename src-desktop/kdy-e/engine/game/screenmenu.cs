@@ -20,7 +20,7 @@ public class ScreenMenu {
     public static ScreenMenu Init(string layout_src, string script_src) {
         Layout layout = Layout.Init(layout_src);
         if (layout == null) {
-            Console.Error.WriteLine("[ERROR] screenmenu_init() failed to load layout: " + layout_src);
+            Logger.Error($"screenmenu_init() failed to load layout: {layout_src}");
             return null;
         }
 

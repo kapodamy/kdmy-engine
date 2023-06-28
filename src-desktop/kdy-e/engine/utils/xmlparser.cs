@@ -226,7 +226,7 @@ public class XmlParser {
 
             return new XmlParser() { xml = doc };
         } catch (Exception e) {
-            Console.Error.WriteLine("xmlparser_init() can not parse " + src + ":\n" + e.Message);
+            Logger.Error($"xmlparser_init() can not parse {src}:\n{e.Message}");
             return null;
         }
     }

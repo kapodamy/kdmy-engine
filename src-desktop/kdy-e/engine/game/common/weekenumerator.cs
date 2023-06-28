@@ -94,7 +94,7 @@ public static class WeekEnumerator {
         string weeks_path = Expansions.overrided_weeks_folder ?? Funkin.WEEKS_FOLDER;
 
         if (!FS.FolderEnumerate(weeks_path, folder_enumerator)) {
-            Console.Error.WriteLine("[ERROR] + weekenumerator_enumerate() can not read " + weeks_path);
+            Logger.Error($"weekenumerator_enumerate() can not read {weeks_path}");
             FS.FolderStackPop();
             return;
         }
@@ -207,11 +207,9 @@ public static class WeekEnumerator {
                     };
 
                     if (String.IsNullOrEmpty(customdifficults[i].name)) {
-                        Console.Error.WriteLine("[ERROR] weekenumerator_parse_week() difficult name in week: " + week_name);
+                        Logger.Error($"weekenumerator_parse_week() difficult name in week: {week_name}");
                     } else if (FS.IsInvalidFilename(customdifficults[i].name)) {
-                        Console.Error.WriteLine("[ERROR]" +
-                            "weekenumerator_parse_week() forbidden difficult name: " + customdifficults[i].name
-                        );
+                        Logger.Error($"weekenumerator_parse_week() forbidden difficult name: {customdifficults[i].name}");
                         //free(customdifficults[i].name);
                         customdifficults[i].name = null;
                     }
@@ -293,7 +291,7 @@ public static class WeekEnumerator {
 
             JSONParser.Destroy(json);
         } catch (Exception e) {
-            Console.Error.WriteLine("[ERROR] weekenumerator_parse_week()" + e.Message);
+            Logger.Error($"weekenumerator_parse_week() {e.Message}");
         }
 
         return week_parsed;
@@ -303,7 +301,7 @@ public static class WeekEnumerator {
         string path = JSONParser.ReadString(json, json_property_name, null);
         if (path == null) return null;
         if (path.Length < 1) {
-            Console.Error.WriteLine("[ERROR] weekenumerator_parse_path() invalid '" + json_property_name + "' found");
+            Logger.Error($"weekenumerator_parse_path() invalid '{json_property_name}' found");
             //free(path);
             return null;
         }
@@ -313,7 +311,7 @@ public static class WeekEnumerator {
         }
 
         if (path.IndexOf(FS.CHAR_SEPARATOR_REJECT, 0) >= 0) {
-            Console.Error.WriteLine("[ERROR] weekenumerator_parse_path() invalid char separator in: " + path);
+            Logger.Error($"weekenumerator_parse_path() invalid char separator in: {path}");
             //free(path);
             return null;
         }

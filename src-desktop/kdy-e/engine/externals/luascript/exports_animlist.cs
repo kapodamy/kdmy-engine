@@ -23,7 +23,7 @@ public static class ExportsAnimList {
         if (L.IsUserdataAllocated(ANIMLIST))
             animlist.Destroy();
         else
-            Console.WriteLine("script_animlist_destroy() object was not allocated by lua");
+            Logger.Warn("script_animlist_destroy() object was not allocated by lua");
 
         return 0;
     }

@@ -15,7 +15,7 @@ public class StartScreen {
     public static bool Main() {
         Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
         if (layout == null) {
-            Console.Error.WriteLine("[WARN] startscreen_main() can not load mainmenu layout");
+            Logger.Warn("startscreen_main() can not load mainmenu layout");
             return false;
         }
 

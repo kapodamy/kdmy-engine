@@ -647,12 +647,12 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             if (!dialog_text) {
                 // nothing to do
             } else if (roundcontext.dialogue == null) {
-                console.error(`[ERROR] week_round() can not load '${dialog_text}' there no dialogue instance`);
+                console.error(`week_main() can not load '${dialog_text}' there no dialogue instance`);
             } else if (await dialogue_show_dialog(roundcontext.dialogue, dialog_text)) {
                 if (roundcontext.script != null) await weekscript_notify_dialogue_builtin_open(roundcontext.script, dialog_text);
                 show_dialog = 1;
             } else {
-                console.error(`week_round() failed to read '${dialog_text}' file`);
+                console.error(`week_main() failed to read '${dialog_text}' file`);
             }
         }
 
@@ -884,7 +884,7 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
 
     placeholder = layout_get_placeholder(layout, "ui_healthbar");
     if (!placeholder) {
-        console.error("missing layout ui_healthbar placeholder");
+        console.error("week_init_ui_layout() missing layout ui_healthbar placeholder");
         placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
     }
     ui.healthbar_is_vertical = layout_get_attached_value(layout, "ui_healthbar_isVertical", LAYOUT_TYPE_BOOLEAN, 0);
@@ -906,7 +906,7 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
 
     placeholder = layout_get_placeholder(layout, "ui_roundstats");
     if (!placeholder) {
-        console.error("missing layout ui_roundstats placeholder");
+        console.error("week_init_ui_layout() missing layout ui_roundstats placeholder");
         placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
     }
     ui.roundstats_x = placeholder.x;
@@ -919,7 +919,7 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
 
     placeholder = layout_get_placeholder(layout, "ui_songprogressbar");
     if (!placeholder) {
-        console.error("missing layout ui_songprogressbar placeholder");
+        console.error("week_init_ui_layout() missing layout ui_songprogressbar placeholder");
         placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
     }
     ui.songprogressbar_bordersize = layout_get_attached_value(layout, "ui_songprogressbar_borderSize", LAYOUT_TYPE_FLOAT, 2);
@@ -944,7 +944,7 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
 
     placeholder = layout_get_placeholder(layout, "ui_song_info");
     if (!placeholder) {
-        console.error("missing layout ui_song_info placeholder");
+        console.error("week_init_ui_layout() missing layout ui_song_info placeholder");
         placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
     }
     ui.songinfo_x = placeholder.x;
@@ -1611,7 +1611,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
                 let id = players[i].layout_strums_id < 0 ? i : players[i].layout_strums_id;
 
                 if (id >= initparams.layout_strums_size) {
-                    console.error(`week_main() invalid player[${i}].layoutStrumsId=${id}`);
+                    console.error(`week_init_chart_and_players() invalid player[${i}].layoutStrumsId=${id}`);
                     continue;
                 } else if (id < 0) {
                     continue;
@@ -1692,7 +1692,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
         let layout_strums_id = players[i].layout_strums_id < 0 ? i : players[i].layout_strums_id;
 
         if (layout_strums_id >= initparams.layout_strums_size) {
-            console.error(`week_main() invalid player[${i}].layoutStrumsId=${layout_strums_id}`);
+            console.error(`week_init_chart_and_players() invalid player[${i}].layoutStrumsId=${layout_strums_id}`);
             layout_strums_id = -1;
         }
 
@@ -1821,7 +1821,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
         let mapped = conductor_map_automatically(roundcontext.players[i].conductor, 0);
 
         if (mapped != count) {
-            console.warn(`conductor_map_automatically() only mapped ${mapped} of ${count} lines`);
+            console.warn(`week_init_chart_and_players() only mapped ${mapped} of ${count} lines`);
         }
     }
 
@@ -3136,7 +3136,7 @@ function week_internal_read_value_prefix(layout, name, number_suffix, type, defa
 function week_internal_read_placeholder(layout, prefix_name, number_suffix) {
     let placeholder_name = week_internal_concat_suffix(prefix_name, number_suffix);
     let placeholder = layout_get_placeholder(layout, placeholder_name);
-    if (!placeholder) console.error("Missing layout placeholder: " + placeholder_name);
+    if (!placeholder) console.error("week_internal_read_placeholder() missing layout placeholder: " + placeholder_name);
     placeholder_name = undefined;
     return placeholder;
 }
@@ -3198,13 +3198,13 @@ async function week_internal_load_gameplay_manifest(src) {
     let gameplaymanifest = await gameplaymanifest_init(src);
 
     if (!gameplaymanifest) {
-        console.error("week_main() missing file " + src);
+        console.error("week_internal_load_gameplay_manifest() missing file " + src);
         return null;
     }
 
     if (gameplaymanifest.songs_size < 1) {
         gameplaymanifest_destroy(gameplaymanifest);
-        console.error("week_main() no songs defined, goodbye. File: " + src);
+        console.error("week_internal_load_gameplay_manifest() no songs defined, goodbye. File: " + src);
         return null;
     }
 
@@ -3273,7 +3273,7 @@ function week_internal_pick_counters_values_from_layout(/**@type {RoundContext}*
 
 function week_internal_read_placeholder_counter(layout, name, warn) {
     let placeholder = layout_get_placeholder(layout, name);
-    if (warn && !placeholder) console.error(`week: missing layout '${name}' placeholder`);
+    if (warn && !placeholder) console.error(`week_internal_read_placeholder_counter() missing layout '${name}' placeholder`);
     return placeholder;
 }
 

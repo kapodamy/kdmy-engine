@@ -52,7 +52,7 @@ internal static class WASAPI {
 
         if (hresult != 0) {
             Exception e = Marshal.GetExceptionForHR(hresult, -1);
-            Console.WriteLine("WASAPI::ActivateAudioInterfaceAsync() failed: " + e.Message);
+            Logger.Warn($"WASAPI::ActivateAudioInterfaceAsync() failed: {e.Message}");
         }
     }
 }

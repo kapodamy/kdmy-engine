@@ -537,8 +537,8 @@ public class FontType : IFontRender {
 
         WebGL2RenderingContext gl = PVRContext.global_context.webopengl.gl;
 
-        int unpack_alignment = gl.getParameter(gl.UNPACK_ALIGNMENT);
-        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+        //int unpack_alignment = gl.getParameter(gl.UNPACK_ALIGNMENT);
+        //gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
 
         WebGLTexture texture = gl.createTexture();
@@ -554,7 +554,6 @@ public class FontType : IFontRender {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 #endif
 
-        // gl.LUMINANCE in WebGL and GL_RED in OpenGL
         gl.texImage2D(
             gl.TEXTURE_2D, 0, GLenum.GL_RED,
             fontcharmap.texture_width, fontcharmap.texture_height, 0,
@@ -565,7 +564,7 @@ public class FontType : IFontRender {
         gl.generateMipmap(gl.TEXTURE_2D);
 #endif
 
-        gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpack_alignment);
+        //gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpack_alignment);
 
         fontcharmap.texture = 0x00;
 
@@ -574,7 +573,10 @@ public class FontType : IFontRender {
             fontcharmap.texture_width, fontcharmap.texture_height,
             fontcharmap.texture_width, fontcharmap.texture_height
         );
+
+#if SDF_MIPMAPS
         tex.has_mipmaps = true;
+#endif
 
         return tex;
     }

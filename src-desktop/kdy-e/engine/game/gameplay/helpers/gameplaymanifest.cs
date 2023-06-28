@@ -467,15 +467,11 @@ public class GameplayManifest {
         if (song.has_players) players_count = song.players_size;
 
         if (players_count < 0 && selected_states_array_size > 0) {
-            Console.Error.WriteLine("[ERROR]" +
-                "gameplaymanifest_parse_song() 'selectedStateNamePerPlayer' found without 'players'"
-            );
+            Logger.Error("gameplaymanifest_parse_song() 'selectedStateNamePerPlayer' found without 'players'");
         } else if (selected_states_array_size > 0) {
 
             if (players_count != selected_states_array_size) {
-                Console.Error.WriteLine("[WARN]" +
-                    "gameplaymanifest_parse_song() 'selectedStateNamePerPlayer.length' != 'players.length'"
-                );
+                Logger.Warn("gameplaymanifest_parse_song() 'selectedStateNamePerPlayer.length' != 'players.length'");
             } else {
                 song.selected_state_name_per_player = new string[selected_states_array_size];
                 song.selected_state_name_per_player_size = selected_states_array_size;
@@ -518,7 +514,7 @@ public class GameplayManifest {
 
             JSONToken note_json = JSONParser.ReadArrayItemObject(notes_array, i);
             if (note_json == null) {
-                Console.Error.WriteLine("[ERROR] gameplaymanifest_parse_notes() invalid note definition");
+                Logger.Error("gameplaymanifest_parse_notes() invalid note definition");
                 continue;
             }
 
@@ -649,7 +645,7 @@ public class GameplayManifest {
                 if (index < 0) {
                     throw new Exception("Invalid note index found in strum index=" + i);
                 } else if (index >= distribution.notes_size) {
-                    Console.Error.WriteLine("[ERROR] gameplaymanifest_parse_strums() invalid 'noteId' index = " + index);
+                    Logger.Error($"gameplaymanifest_parse_strums() invalid 'noteId' index= {index}");
                     index = 0;
                 }
 
@@ -846,7 +842,7 @@ public class GameplayManifest {
 
             JSONToken state_json = JSONParser.ReadArrayItemObject(states_array, i);
             if (state_json == null) {
-                Console.Error.WriteLine("[WARN] gameplaymanifest_parse_healthbar_states() invalid healthbar state at " + i);
+                Logger.Warn($"gameplaymanifest_parse_healthbar_states() invalid healthbar state at {i}");
                 continue;
             }
 

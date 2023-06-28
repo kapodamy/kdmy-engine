@@ -21,7 +21,7 @@ public static class ExportsSoundPlayer {
         if (L.IsUserdataAllocated(SOUNDPLAYER))
             soundplayer.Destroy();
         else
-            Console.WriteLine("script_soundplayer_destroy() object was not allocated by lua");
+            Logger.Warn("script_soundplayer_destroy() object was not allocated by lua");
 
         return 0;
     }

@@ -417,7 +417,7 @@ public class Strum {
                 int id = this.chart_notes[i].id;
                 double timestamp = this.chart_notes[i].timestamp;
                 if (timestamp == last_timestamp && id == last_id) {
-                    Console.Error.WriteLine($"duplicated note found: ts={timestamp} id={id}");
+                    Logger.Warn($"strum_set_notes() duplicated note found: ts={timestamp} id={id}");
                 } else {
                     last_timestamp = timestamp;
                     last_id = id;
@@ -446,7 +446,7 @@ public class Strum {
         //
         // Note: the caller MUST change later the scroll direction in order to take effect
         //
-        Console.Error.WriteLine("[WARN] strum_force_rebuild() was called, this never should happen");
+        Logger.Warn("strum_force_rebuild() was called, this never should happen");
 
         this.dimmen_length = length_dimmen;
         this.dimmen_opposite = invdimmen;
@@ -634,7 +634,7 @@ public class Strum {
 
                 if (note == null) {
                     if (ddr_key.in_song_timestamp > song_timestamp) {
-                        //Console.Error.WriteLine("[WARN] [hold] in future ts_k=" + key_timestamp+" ts_s=" + song_timestamp);
+                        Logger.Warn($"strum: [hold] in future ts_k={key_timestamp} ts_s={song_timestamp}");
                     }
 
                     // maybe the key event is a penalty hit/press or future event (do not discard)
@@ -642,7 +642,7 @@ public class Strum {
                 }
 
                 if (note.state == NoteState.RELEASE) {
-                    //Console.Error.WriteLine("[INFO] "[hold] sustain recover!  ts_k=" + key_timestamp + " ts_n=" + note.timestamp);
+                    //Logger.Info($"strum: [hold] sustain recover!  ts_k={key_timestamp} ts_n={note.timestamp}");
 
                     if (Double.IsNaN(note.hit_diff)) {
                         // never pressed compute hit
@@ -680,7 +680,7 @@ public class Strum {
                 if (note_attributes.can_kill_on_hit) playerstats.KillIfNegativeHealth();
                 if (weekscript != null) weekscript.NotifyNoteHit(this, hit_index, playerstats);
 
-                //Console.Error.WriteLine($"[INFO] [hold] note hit!  ts={key_timestamp} diff={lowest_diff} rank={rank}");
+                //Logger.Info($"strum: [hold] note hit!  ts={key_timestamp} diff={lowest_diff} rank={rank}");
 
                 // check if necessary display the sick effect
                 if (rank == Ranking.SICK && sick_effect_ready) {
@@ -718,7 +718,7 @@ public class Strum {
                     if (index_ahead++ > notes_ahead) break;
 
                     note = chart_notes[j];
-                    //Console.Error.WriteLine($"[LOG] [release] note found!  ts_k={key_timestamp} ts_n={note.timestamp}");
+                    //Logger.Log($"strum: [release] note found!  ts_k={key_timestamp} ts_n={note.timestamp}");
                     break;
                 }
 
@@ -726,7 +726,7 @@ public class Strum {
 
                 if (note == null) {
                     if (key_timestamp <= song_timestamp) {
-                        //Console.Error.WriteLine($"[LOG] (`[release] empty strum at {key_timestamp}");
+                        //Logger.Log($"strum: [release] empty strum at {key_timestamp}");
                     }
 
                     //
@@ -741,7 +741,7 @@ public class Strum {
 
                 // clear if the note is not sustain
                 if (note.duration < this.minimum_sustain_duration) {
-                    //Console.Error.WriteLine($"[INFO] [release] clear non-sustain ts={note.timestamp}");
+                    //Logger.Info($"strum: [release] clear non-sustain ts={note.timestamp}");
                     note.state = NoteState.CLEAR;
                     note.release_time = Double.PositiveInfinity;
                     notes_cleared++;
@@ -753,13 +753,13 @@ public class Strum {
                 double end_timestamp = note.EndTimestamp;
 
                 if (key_timestamp < end_timestamp) {
-                    //Console.Error.WriteLine($"[LOG] [release] early! left duration {end_timestamp - key_timestamp}");
+                    //Logger.Log($"strum: [release] early! left duration {end_timestamp - key_timestamp}");
 
                     // early release
                     note.state = NoteState.RELEASE;
                     note.release_time = key_timestamp;
                 } else {
-                    //Console.Error.WriteLine($"[LOG] [release] sustain clear! remain was {end_timestamp - note.release_time}");
+                    //Logger.Log($"strum: [release] sustain clear! remain was {end_timestamp - note.release_time}");
                     this.sustain_queue.Remove(note);
                     note.state = NoteState.CLEAR;
                     note.release_time = Double.PositiveInfinity;
@@ -796,7 +796,7 @@ L_discard_key_event:
             // check if the note is non-sustain
             if (note.duration < this.minimum_sustain_duration) {
                 if (song_offset_timestamp >= end_timestamp) {
-                    //Console.Error.WriteLine($"[INFO] [missed] non-sustain note ts={note.timestamp}");
+                    //Logger.Info($"strum: [missed] non-sustain note ts={note.timestamp}");
                     note.state = NoteState.MISS;
                     note.release_time = Double.NegativeInfinity;
 
@@ -824,7 +824,7 @@ L_discard_key_event:
             }
 
             if (song_timestamp > end_timestamp) {
-                //Console.Error.WriteLine($"[INFO] [missed] sustain note ts={note.timestamp} ts_end={end_timestamp}");
+                //Logger.Info($"strum: [missed] sustain note ts={note.timestamp} ts_end={end_timestamp}");
                 this.sustain_queue.Remove(note);
 
                 note.state = NoteState.MISS;
@@ -836,7 +836,7 @@ L_discard_key_event:
             // consider as missed if the worst possible ranking can not be assigned
             double miss_timestamp = note.timestamp + marker_duration;
             if (song_timestamp >= miss_timestamp) {
-                //Console.Error.WriteLine($"[INFO] [miss] sustain loosing ts_n={note.timestamp} ts_s={song_timestamp}");
+                //Logger.Info($"strum: [miss] sustain loosing ts_n={note.timestamp} ts_s={song_timestamp}");
                 if (note.state == NoteState.PENDING) {
                     this.sustain_queue.Add(note);
                     note.state = NoteState.RELEASE;
@@ -1041,7 +1041,7 @@ L_discard_key_event:
                     // ignore if the accuracy less than 50%
                     if (diff < 0.50) continue;
 
-                    //Console.Error.WriteLine("[LOG] [penality] hit on pending note ts=" + note.timestamp);
+                    //Logger.Log($"strum: [penality] hit on pending note ts={note.timestamp}");
                     this.extra_animations_have_penalties = true;
                     InternalUpdatePressState(StrumPressState.PENALTY_HIT);
 
@@ -1087,13 +1087,13 @@ L_discard_key_event:
             if (key_timestamp > song_timestamp) continue;// maybe is a future penality
 
             if (ddr_key.holding) {
-                //Console.Error.WriteLine("[LOG] [penality] key hold on empty strum ts=" + key_timestamp);
+                //Logger.Log($"strum: [penality] key hold on empty strum ts={key_timestamp}");
                 playerstats.AddPenality(true);
                 InternalUpdatePressState(StrumPressState.PENALTY_NOTE);
                 this.marker_state = StrumMarkerState.CONFIRM;
                 this.extra_animations_have_penalties = true;
             } else {
-                //Console.Error.WriteLine("[LOG] [penality] key release on empty strum ts=" + key_timestamp);
+                //Logger.Log($"strum: [penality] key release on empty strum ts={key_timestamp}");
                 this.marker_state = StrumMarkerState.NOTHING;
                 InternalUpdatePressState(StrumPressState.NONE);
             }
@@ -1549,7 +1549,7 @@ L_discard_key_event:
 
         AttachedAnimations extra_animations = InternalExtraGetHolder(strum_script_target);
         if (extra_animations == null) {
-            Console.Error.WriteLine("[WARN] strum_set_extra_animation() unknown strum_script_target" + strum_script_target);
+            Logger.Warn($"strum_set_extra_animation() unknown strum_script_target={strum_script_target}");
             return;
         }
 
@@ -1579,7 +1579,7 @@ L_discard_key_event:
                 SetExtraAnimation(strum_script_target, StrumScriptOn.PENALITY, undo, animsprite);
                 return;
             default:
-                Console.Error.WriteLine("[WARN] strum_set_extra_animation() unknown strum_script_on = " + strum_script_on);
+                Logger.Warn($"strum_set_extra_animation() unknown strum_script_on={strum_script_on}");
                 return;
         }
 
@@ -1619,10 +1619,7 @@ L_discard_key_event:
                 SetExtraAnimationContinuous(StrumScriptTarget.NOTE, animsprite);
                 return;
             default:
-                Console.Error.WriteLine("[WARN]" +
-                    "strum_set_extra_animation_continuous() unknown strum_script_target=" +
-                    strum_script_target
-                );
+                Logger.Warn($"strum_set_extra_animation_continuous() unknown strum_script_target={strum_script_target}");
                 return;
         }
 
@@ -2102,7 +2099,7 @@ L_discard_key_event:
                     if (quarter < total_quarters) InternalUpdatePressState(StrumPressState.MISS);
                 }
 
-                //Console.Error.WriteLine($"[LOG] [sustain] ts={note.timestamp} release={is_released} quarters={quarters}");
+                //Logger.Log($"strum: [sustain] ts={note.timestamp} release={is_released} quarters={quarters}");
             }
 
             note.previous_quarter = quarter;
@@ -2129,7 +2126,7 @@ L_discard_key_event:
             int id = this.chart_notes_id_map[i];
 
             if (id < 0 || id >= notepool.size) {
-                Console.Error.WriteLine("[ERROR] Invalid note id found in the chart: " + id);
+                Logger.Error($"strum_internal_set_note_drawables() invalid note id found in the chart: {id}");
                 this.drawable_notes[i] = null;
                 this.attribute_notes[i] = null;
                 continue;

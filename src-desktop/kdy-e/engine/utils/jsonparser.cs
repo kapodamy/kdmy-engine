@@ -46,7 +46,7 @@ public static class JSONParser {
         try {
             return JSONParser.Parse(source);
         } catch (Exception e) {
-            Console.Error.WriteLine("json_load() can not parse " + src + "\n", e.Message);
+            Logger.Error($"json_load_from() can not parse {src}\n{e.Message}");
             return null;
         }
     }
@@ -58,7 +58,7 @@ public static class JSONParser {
             byte[] buffer = Encoding.UTF8.GetBytes(json_sourcecode);
             return JSONParser.Parse(buffer);
         } catch (Exception e) {
-            Console.Error.WriteLine("json_load() can not parse string '" + json_sourcecode + "'\n", e.Message);
+            Logger.Error($"json_load_string() can not parse string '{json_sourcecode}':\n{e.Message}");
             return null;
         }
     }
@@ -70,7 +70,7 @@ public static class JSONParser {
         try {
             return JSONParser.Parse(buffer);
         } catch (Exception e) {
-            Console.Error.WriteLine("json_direct_load() can not parse " + abosolute_src + "\n", e.Message);
+            Logger.Error($"json_load_direct() can not parse {abosolute_src}\n{e.Message}");
             return null;
         }
     }
@@ -93,7 +93,7 @@ public static class JSONParser {
                 return token;
         }
 
-        Console.Error.WriteLine("json: expected object in " + name);
+        Logger.Warn($"json: expected object in {name}");
         return null;
     }
 
@@ -104,7 +104,7 @@ public static class JSONParser {
 
         if (token.type == JSONValueType.Array) return token;
 
-        Console.Error.WriteLine("json: expected array in " + name);
+        Logger.Warn($"json: expected array in {name}");
         return null;
     }
 
@@ -125,7 +125,7 @@ public static class JSONParser {
         if (token.type == JSONValueType.NumberLong) return (long)token.value;
         if (token.type == JSONValueType.NumberDouble) return (double)token.value;
 
-        Console.Error.WriteLine("json: expected number in " + index + ": " + token);
+        Logger.Warn($"json: expected number in {index}: {token}");
         return default_value;
     }
 
@@ -135,7 +135,7 @@ public static class JSONParser {
 
         if (token.type == JSONValueType.NumberLong) return (long)token.value;
 
-        Console.Error.WriteLine("json: expected number in " + index + ": " + token);
+        Logger.Warn($"json: expected number in {index}: {token}");
         return default_value;
     }
 
@@ -145,7 +145,7 @@ public static class JSONParser {
 
         if (token.type == JSONValueType.Boolean) return (bool)token.value;
 
-        Console.Error.WriteLine("json: expected boolean in " + index + ": " + token);
+        Logger.Warn($"json: expected boolean in {index}: {token}");
         return default_value;
     }
 
@@ -155,7 +155,7 @@ public static class JSONParser {
 
         if (token.type == JSONValueType.String) return (string)token.value;
 
-        Console.Error.WriteLine("json: expected string in " + index + ": " + token);
+        Logger.Warn($"json: expected string in {index}: {token}");
         return default_value;
     }
 
@@ -170,7 +170,7 @@ public static class JSONParser {
                 return VertexProps.ParseHex2((string)token.value, default_value, false);
         }
 
-        Console.Error.WriteLine("json: expected number or hexadecimal number string in " + index + ": " + token);
+        Logger.Warn($"json: expected number or hexadecimal number string in {index}: {token}");
         return default_value;
     }
 
@@ -179,7 +179,7 @@ public static class JSONParser {
         if (token == null) return null;
         if (token.type == JSONValueType.Object) return token;
 
-        Console.Error.WriteLine("json: expected object at index " + index);
+        Logger.Warn($"json: expected object at index {index}");
         return null;
     }
 
@@ -189,7 +189,7 @@ public static class JSONParser {
         if (token.type == JSONValueType.Null) return null;
         if (token.type == JSONValueType.Array) return token;
 
-        Console.Error.WriteLine("json: expected array at index " + index);
+        Logger.Warn($"json: expected array at index {index}");
         return null;
     }
 
@@ -200,7 +200,7 @@ public static class JSONParser {
         if (token.type == JSONValueType.NumberLong) return (long)token.value;
         if (token.type == JSONValueType.NumberDouble) return (double)token.value;
 
-        Console.Error.WriteLine("json: expected number in " + name + ": " + token);
+        Logger.Warn($"json: expected number in {name}: {token}");
         return default_value;
     }
 
@@ -209,7 +209,7 @@ public static class JSONParser {
         if (token == null) return default_value;
         if (token.type == JSONValueType.NumberLong) return (long)token.value;
 
-        Console.Error.WriteLine("json: expected number in " + name + ": " + token);
+        Logger.Warn($"json: expected number in {name} : {token}");
         return default_value;
     }
 
@@ -219,7 +219,7 @@ public static class JSONParser {
 
         if (token.type == JSONValueType.Boolean) return (bool)token.value;
 
-        Console.Error.WriteLine("json: expected boolean in " + name + ": " + token);
+        Logger.Warn($"json: expected boolean in {name}: {token}");
         return default_value;
     }
 
@@ -230,7 +230,7 @@ public static class JSONParser {
         if (token.type == JSONValueType.Null) return null;
         if (token.type == JSONValueType.String) return (string)token.value;
 
-        Console.Error.WriteLine("json: expected string in " + name + ": " + token);
+        Logger.Warn($"json: expected string in {name}: {token}");
         return default_value;
     }
 
@@ -241,7 +241,7 @@ public static class JSONParser {
         if (token.type == JSONValueType.NumberLong) return (uint)((long)token.value);
         if (token.type == JSONValueType.String) return VertexProps.ParseHex2((string)token.value, default_value, true);
 
-        Console.Error.WriteLine("json: expected number or hexadecimal number string in " + name + ": " + token);
+        Logger.Warn($"json: expected number or hexadecimal number string in {name}: {token}");
         return default_value;
     }
 

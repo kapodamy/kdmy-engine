@@ -73,7 +73,7 @@ public class PVRContext {
      */
     public float WaitReady() {
         if (this.is_closed) {
-            Console.Error.WriteLine("[LOG] The main window was closed, forcing exit...");
+            Logger.Log("The main window was closed, forcing exit...");
             Glfw.Terminate();
             Environment.Exit(0);
             return Single.NaN;
@@ -456,7 +456,7 @@ public class PVRContext {
         else
             this.cursor_hide_timestamp = Double.PositiveInfinity;
 
-        Console.Error.WriteLine("PowerVR backend init completed\n");
+        Logger.Info("PowerVR backend init completed\n");
     }
 
 
@@ -542,7 +542,7 @@ public class PVRContext {
         int next_index = this.stack_index + 1;
 
         if (this.stack_index >= STACK_LENGTH) {
-            Console.Error.WriteLine("pvr_context_save() the PVRContext stack is full");
+            Logger.Warn("pvr_context_save() the PVRContext stack is full");
             return false;
         }
 
@@ -589,9 +589,9 @@ public class PVRContext {
     public bool Restore() {
         if (this.stack_index < 1) {
             if (this.shader_stack.Length > 0) {
-                Console.Error.WriteLine("[WARN] pvr_context_restore() the current PVRContext has stacked shaders on empty stack");
+                Logger.Warn("pvr_context_restore() the current PVRContext has stacked shaders on empty stack");
             }
-            Console.Error.WriteLine("pvr_context_restore() the PVRContext stack was empty");
+            Logger.Warn("pvr_context_restore() the PVRContext stack was empty");
             return false;
         }
 
@@ -843,7 +843,7 @@ public class PVRContext {
         this.FlushFramebuffer();
 
         if (this.shader_stack.Length >= PVRContext.SHADER_STACK_LENGTH) {
-            Console.Error.WriteLine("[WARN] PVRContext::ShaderStackPush() failed, the stack is full");
+            Logger.Warn("PVRContext::ShaderStackPush() failed, the stack is full");
             return false;
         }
 
@@ -857,7 +857,7 @@ public class PVRContext {
         this.FlushFramebuffer();
 
         if (this.shader_stack.Length < 1) {
-            Console.Error.WriteLine("[WARN] PVRContext::ShaderStackPop() failed, the stack is empty");
+            Logger.Warn("PVRContext::ShaderStackPop() failed, the stack is empty");
             return false;
         }
 

@@ -148,15 +148,13 @@ public static class VertexProps {
         string property = node.GetAttribute(name);
 
         if (String.IsNullOrEmpty(property)) {
-            Console.Error.WriteLine(
-                "[WARN] vertexprops_parse_sprite_property() missing " + name + " attribute" + "\n" + node.OuterHTML
-            );
+            Logger.Warn($"vertexprops_parse_sprite_property() missing '{name}' attribute: {node.OuterHTML}");
             return -2;
         }
 
         int id = ParseSpriteProperty2(property);
         if (id < 0 && warn)
-            Console.Error.WriteLine("[WARN] vertexprops_parse_sprite_property() unknown property " + property + "\n" + node.OuterHTML);
+            Logger.Warn($"vertexprops_parse_sprite_property() unknown property '{property}': {node.OuterHTML}");
 
         return id;
     }
@@ -245,15 +243,13 @@ public static class VertexProps {
         string property = node.GetAttribute(name);
 
         if (String.IsNullOrEmpty(property)) {
-            Console.Error.WriteLine(
-                "[WARN] vertexprops_parse_textsprite_property: missing " + name + " attribute" + "\n" + node.OuterHTML
-            );
+            Logger.Warn($"vertexprops_parse_textsprite_property: missing '{name}' attribute: {node.OuterHTML}");
             return -2;
         }
 
         int id = ParseTextSpriteProperty2(property);
         if (id < 0 && warn)
-            Console.Error.WriteLine("[WARN] vertexprops_parse_sprite_property() unknown property " + property + "\n" + node.OuterHTML);
+            Logger.Warn($"vertexprops_parse_sprite_property() unknown property '{property}': {node.OuterHTML}");
 
         return id;
     }
@@ -329,7 +325,7 @@ public static class VertexProps {
 
         int id = ParseTextSpriteForceCase2(value);
         if (id < 0) {
-            if (warn) Console.Error.WriteLine("Unknown value " + value + " in: " + node.OuterHTML);
+            if (warn) Logger.Warn($"vertexprops_parse_textsprite_forcecase() unknown value '{value}' in: {node.OuterHTML}");
             return TEXTSPRITE_FORCE_NONE;
         }
 
@@ -358,15 +354,13 @@ public static class VertexProps {
         string property = node.GetAttribute(name);
 
         if (String.IsNullOrEmpty(property)) {
-            Console.Error.WriteLine(
-                "[WARN] vertexprops_parse_media_property: missing " + name + " attribute" + "\n" + node.OuterHTML
-            );
+            Logger.Warn($"vertexprops_parse_media_property: missing '{name}' attribute: {node.OuterHTML}");
             return -2;
         }
 
         int id = ParseMediaProperty2(property);
         if (id < 0 && warn)
-            Console.Error.WriteLine("[WARN] vertexprops_parse_media_property() unknown property " + property + "\n" + node.OuterHTML);
+            Logger.Warn($"vertexprops_parse_media_property() unknown property '{property}': {node.OuterHTML}");
 
         return id;
     }
@@ -391,15 +385,13 @@ public static class VertexProps {
         string property = node.GetAttribute(name);
 
         if (String.IsNullOrEmpty(property)) {
-            Console.Error.WriteLine(
-                "[WARN] vertexprops_parse_layout_property: missing " + name + " attribute" + "\n" + node.OuterHTML
-            );
+            Logger.Warn($"vertexprops_parse_layout_property: missing '{name}' attribute: {node.OuterHTML}");
             return -2;
         }
 
         int id = ParseLayoutProperty2(property);
         if (id < 0 && warn)
-            Console.Error.WriteLine("[WARN] vertexprops_parse_layout_property() unknown property " + property + "\n" + node.OuterHTML);
+            Logger.Warn($"vertexprops_parse_layout_property() unknown property '{property}': {node.OuterHTML}");
 
         return id;
     }
@@ -426,15 +418,13 @@ public static class VertexProps {
         string property = node.GetAttribute(name);
 
         if (String.IsNullOrEmpty(property)) {
-            Console.Error.WriteLine(
-                "[WARN] vertexprops_parse_camera_property: missing " + name + " attribute" + "\n" + node.OuterHTML
-            );
+            Logger.Warn($"vertexprops_parse_camera_property: missing '{name}' attribute: {node.OuterHTML}");
             return -2;
         }
 
         int id = ParseCameraProperty2(property);
         if (id < 0 && warn)
-            Console.Error.WriteLine("[WARN] vertexprops_parse_camera_property() unknown property " + property + "\n" + node.OuterHTML);
+            Logger.Warn($"vertexprops_parse_camera_property() unknown property '{property}': {node.OuterHTML}");
 
         return id;
     }
@@ -462,9 +452,7 @@ public static class VertexProps {
 
         if (String.IsNullOrEmpty(value)) {
             if (warn_missing) {
-                Console.Error.WriteLine(
-                    "[WARN] vertexprops_parse_align() missing " + name + " attribute" + "\n" + node.OuterHTML
-                );
+                Logger.Warn($"vertexprops_parse_align() missing '{name}' attribute: {node.OuterHTML}");
             }
             return Align.START;
         }
@@ -477,7 +465,7 @@ public static class VertexProps {
             id = Align.INVALID;
 
         if (id == Align.INVALID) {
-            Console.Error.WriteLine("[WARN] vertexprops_parse_align() unknown align value: " + value + "\n" + node.OuterHTML);
+            Logger.Warn($"vertexprops_parse_align() unknown align value '{value}': {node.OuterHTML}");
             return Align.START;
         }
 
@@ -508,9 +496,7 @@ public static class VertexProps {
 
         if (String.IsNullOrEmpty(value)) {
             if (warn_missing) {
-                Console.Error.WriteLine(
-                    "[WARN] vertexprops_parse_playback() missing " + name + " attribute" + "\n" + node.OuterHTML
-                );
+                Logger.Warn($"vertexprops_parse_playback() missing '{name}' attribute: {node.OuterHTML}");
             }
             return PLAYBACK_NONE;
         }
@@ -518,7 +504,7 @@ public static class VertexProps {
         int id = ParsePlayback2(value);
 
         if (id == -1) {
-            Console.Error.WriteLine("[WARN] vertexprops_parse_playback() unknown align value: " + value + "\n" + node.OuterHTML);
+            Logger.Warn($"vertexprops_parse_playback() unknown align value '{value}': {node.OuterHTML}");
             return PLAYBACK_NONE;
         }
 
@@ -672,9 +658,7 @@ L_invalid:
 
         if (String.IsNullOrEmpty(value)) {
             if (warn_missing) {
-                Console.Error.WriteLine(
-                    "[WARN] vertexprops_parse_wordbreak() missing " + name + " attribute" + "\n" + node.OuterHTML
-                );
+                Logger.Warn($"vertexprops_parse_wordbreak() missing {name} attribute: {node.OuterHTML}");
             }
             return FONT_WORDBREAK_BREAK;
         }
@@ -682,7 +666,7 @@ L_invalid:
         int id = ParseWordbreak2(value);
 
         if (id == -1) {
-            Console.Error.WriteLine("vertexprops_parse_wordbreak() unknown wordbreak value: " + value + "\n" + node.OuterHTML);
+            Logger.Warn($"vertexprops_parse_wordbreak() unknown wordbreak value '{value}': {node.OuterHTML}");
             return FONT_WORDBREAK_BREAK;
         }
 
@@ -725,7 +709,7 @@ L_invalid:
         Double.TryParse(value, FLAGS_FLOAT, CultureInfo.InvariantCulture, out val);
 
         if (Double.IsNaN(val)) {
-            Console.Error.WriteLine("[ERROR] vertexprops_parse_double2(): invalid value: " + value);
+            Logger.Warn($"vertexprops_parse_double2() invalid value: {value}");
             return def_value;
         }
 
@@ -767,7 +751,7 @@ L_invalid:
             case null:
                 return Blend.DEFAULT;
         }
-        Console.Error.WriteLine("vertexprops_parse_blending() unknown blending: " + value);
+        Logger.Warn($"vertexprops_parse_blending() unknown blending: {value}");
         return Blend.INVALID_VALUE;
     }
 
@@ -842,7 +826,7 @@ L_invalid:
         long val;
         if (Int64.TryParse(value, FLAGS_INT, CultureInfo.InvariantCulture, out val)) return val;
 
-        Console.Error.WriteLine("[ERROR] layout_parse_integer2(): invalid value: " + value);
+        Logger.Warn($"layout_parse_integer2(): invalid value: {value}");
         return def_value;
     }
 

@@ -23,7 +23,7 @@ public class WeekScript {
         string lua_sourcecode = FS.ReadText(src);
         if (lua_sourcecode == null) {
             string path = FS.GetFullPathAndOverride(src);
-            Console.Error.WriteLine("[ERROR] weekscript_init() missing file '" + path + "'");
+            Logger.Error($"weekscript_init() missing file '{path}'");
             return null;
         }
 
@@ -33,7 +33,7 @@ public class WeekScript {
         //free(filename);
 
         if (luascript == null) {
-            Console.Error.WriteLine($"[ERROR] weekscript_init() call to luascript_init() failed lua={src}");
+            Logger.Error($"weekscript_init() call to luascript_init() failed lua={src}");
             return null;
         }
 

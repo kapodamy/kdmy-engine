@@ -14,4 +14,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\kdy-e\engine\csharp\Logger.cs" Link="Logger.cs" />
+	</ItemGroup>
 </Project>

@@ -244,8 +244,8 @@ public sealed class ManagedLuaState : IDisposable {
             }
 
             string error_message = LUA.lua_tostring(L, -1);
-            Console.Error.WriteLine("lua_imported_fn() call to '{0}' failed.\n{1}\n", fn_name, error_message);
-            //Console.Error.Flush();
+            Logger.Error($"ManagedLuaState::CallPushedGlobalFunction() call to '{fn_name}' failed.\n{error_message}");
+
             LUA.lua_pop(this.L, 1);
         }
 
@@ -274,7 +274,7 @@ public sealed class ManagedLuaState : IDisposable {
                     case LUA.TNONE:
                         break;
                     default:
-                        Console.Error.WriteLine("[ERROR] ManagedLuaState::CallPushedGlobalFunctionWithReturn() unknown lua return type");
+                        Logger.Error("ManagedLuaState::CallPushedGlobalFunctionWithReturn() unknown lua return type");
                         break;
                 }
 
@@ -282,8 +282,8 @@ public sealed class ManagedLuaState : IDisposable {
             }
 
             string error_message = LUA.lua_tostring(L, -1);
-            Console.Error.WriteLine("lua_imported_fn() call to '{0}' failed.\n{1}\n", fn_name, error_message);
-            //Console.Error.Flush();
+            Logger.Error($"ManagedLuaState::CallPushedGlobalFunctionWithReturn() call to '{fn_name}' failed.\n{error_message}");
+
             LUA.lua_pop(this.L, 1);
         }
 
@@ -300,8 +300,8 @@ public sealed class ManagedLuaState : IDisposable {
             }
 
             string error_message = LUA.lua_tostring(L, -1);
-            Console.Error.WriteLine("lua_imported_fn() call to '{0}' failed.\n{1}\n", fn_name, error_message);
-            //Console.Error.Flush();
+            Logger.Error($"ManagedLuaState::CallPushedGlobalFunctionWithReturnBool() call to '{fn_name}' failed.\n{error_message}");
+
             LUA.lua_pop(this.L, 1);
         }
 

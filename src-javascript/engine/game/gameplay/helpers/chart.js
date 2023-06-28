@@ -125,7 +125,7 @@ async function chart_init(src, difficult) {
             let self_notes_length = json_read_array_length(self_notes);
 
             if (self_notes_length < 3) {
-                console.warn(`chart: section=${i} note=${j} has less than 3 fields`);
+                console.warn(`chart_init() section=${i} note=${j} has less than 3 fields`);
             }
 
             let timestamp = json_read_array_item_number(self_notes, 0, 0);
@@ -188,7 +188,7 @@ async function chart_init(src, difficult) {
             if (direction >= unknown_notes) {
                 // custom event data
                 console.info(
-                    "custom direction detected will be used as event. " +
+                    "chart_init() custom direction detected will be used as event. " +
                     `timestamp=${timestamp} direction:${direction} duration=${duration} data=${data}`
                 );
 

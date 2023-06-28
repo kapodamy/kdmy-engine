@@ -75,7 +75,7 @@ public static class ExportsAnimSprite {
         if (L.IsUserdataAllocated(ANIMSPRITE))
             animsprite.Destroy();
         else
-            Console.WriteLine("script_animsprite_destroy() object was not allocated by lua");
+            Logger.Warn("script_animsprite_destroy() object was not allocated by lua");
 
         return 0;
     }

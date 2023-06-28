@@ -222,7 +222,7 @@ public static class SettingsMenu {
         };
 
         if (SettingsMenu.is_running) {
-            Console.Error.WriteLine("[ERROR] SettingsMenu::Main() is already running, only a single instance is allowed");
+            Logger.Error("settingsmenu_main() is already running, only a single instance is allowed");
             return;
         }
 
@@ -244,7 +244,7 @@ public static class SettingsMenu {
 
         Layout layout = Layout.Init("/assets/common/image/settings-menu/main.xml");
         if (layout == null) {
-            Console.Error.WriteLine("[ERROR] settingsmenu_main() can not load the layout");
+            Logger.Error("settingsmenu_main() can not load the layout");
             return;
         }
 
@@ -397,7 +397,7 @@ public static class SettingsMenu {
         Layout layout = Layout.Init("/assets/common/image/settings-menu/binds_gameplay.xml");
 
         if (layout == null) {
-            Console.Error.WriteLine("[ERROR] settingsmenu_in_gameplay_binding() can not load the layout");
+            Logger.Error("settingsmenu_in_gameplay_binding() can not load the layout");
             return;
         }
 
@@ -582,7 +582,7 @@ public static class SettingsMenu {
         Layout layout = Layout.Init("/assets/common/image/settings-menu/binds_menus.xml");
 
         if (layout == null) {
-            Console.Error.WriteLine("[ERROR] settingsmenu_in_menus_binding() can not load the layout");
+            Logger.Error("settingsmenu_in_menus_binding() can not load the layout");
             return;
         }
 
@@ -978,7 +978,7 @@ public static class SettingsMenu {
         Layout layout = Layout.Init("/assets/common/image/settings-menu/common.xml");
 
         if (layout == null) {
-            Console.Error.WriteLine("[ERROR] settingsmenu_show_common() can not load the layout");
+            Logger.Error("settingsmenu_show_common() can not load the layout");
             return;
         }
 

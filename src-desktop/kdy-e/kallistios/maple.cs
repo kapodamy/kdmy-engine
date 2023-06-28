@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CsharpWrapper;
+using Engine;
 using Engine.Externals.GLFW;
 
 #pragma warning disable CS8981
@@ -161,11 +162,8 @@ L_continue:
             device._status.joy2x = device._status.joy2y = 0;
             device._status.ltrig = device._status.rtrig = 0;
 
-            Console.Error.WriteLine(
-                "[LOG] gamepad id={0} name={1} status={2}",
-                (int)joystick,
-                Glfw.GetJoystickName(joystick),
-                status.ToString()
+            Logger.Log(
+                $"gamepad id={(int)joystick} name={Glfw.GetJoystickName(joystick)} status={status}"
             );
         }
     }

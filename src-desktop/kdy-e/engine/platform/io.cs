@@ -33,7 +33,7 @@ public static class IO {
             else
                 return File.ReadAllText(absolute_path, Encoding.UTF8);
         } catch (Exception e) {
-            Console.Error.WriteLine("read_text() src=" + src + ":\r\n" + e.Message);
+            Logger.Error($"read_text() src={src}\n{e.Message}");
             return null;
         }
     }
@@ -48,7 +48,7 @@ public static class IO {
             else
                 return File.ReadAllBytes(absolute_path);
         } catch (Exception e) {
-            Console.Error.WriteLine("read_text() src=" + src + ":\r\n" + e.Message);
+            Logger.Error($"read_arraybuffer() src={src}\n{e.Message}");
             return null;
         }
     }
@@ -96,7 +96,7 @@ public static class IO {
             }
 
             if (!path.StartsWithKDY("assets", index) && !path.StartsWithKDY("expansions", index)) {
-                Console.Error.WriteLine("io_get_absolute_path() path outside of 'assets' or 'expansions' folder: " + path);
+                Logger.Warn($"io_get_absolute_path() path outside of 'assets' or 'expansions' folder: {path}");
                 base_path = "assets/";
             }
         }

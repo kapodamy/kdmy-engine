@@ -23,7 +23,7 @@ public class TweenKeyframe {
 
     public static TweenKeyframe Init2(AnimListItem animlist_item) {
         if (!animlist_item.is_tweenkeyframe) {
-            Console.Error.WriteLine("[ERROR] tweenkeyframe_init2() the animlist item is not a tweenkeyframe: " + animlist_item.name);
+            Logger.Error($"tweenkeyframe_init2() the animlist item is not a tweenkeyframe: {animlist_item.name}");
             return null;
         }
 
@@ -58,7 +58,7 @@ public class TweenKeyframe {
         }
 
         if (animlist_item == null) {
-            Console.Error.WriteLine("[WARN] tweenkeyframe_init3() the animlist does not contains: " + tweenkeyframe_name);
+            Logger.Warn($"tweenkeyframe_init3() the animlist does not contains: {tweenkeyframe_name}");
             return null;
         }
 

@@ -101,9 +101,7 @@ public class IconLoader : IDisposable {
             return false;
         }
 
-        Console.Error.WriteLine(
-            "[WARN] IconLoader::LoadAsBitmap() expected ICN file format not an image."
-        );
+        Logger.Warn("IconLoader::LoadAsBitmap() expected ICN file format not an image.");
 
         int pixel_count = bitmap.Width * bitmap.Height;
         int stride = bitmap.Width * sizeof(uint);

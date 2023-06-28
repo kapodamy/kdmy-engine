@@ -575,7 +575,7 @@ public class StateSprite : IVertex {
                 this.offsetcolor[3] = value;
                 break;
             case VertexProps.SPRITE_PROP_ANIMATIONLOOP:
-                Console.Error.WriteLine("statesprite_set_property() SPRITE_PROP_ANIMATIONLOOP is not supported");
+                Logger.Warn("statesprite_set_property() SPRITE_PROP_ANIMATIONLOOP is not supported");
                 break;
             case VertexProps.SPRITE_PROP_ROTATE_PIVOT_ENABLED:
                 MatrixRotatePivotEnable(value >= 1.0f);
@@ -835,7 +835,7 @@ public class StateSprite : IVertex {
         float corner_angle = this.matrix_corner.angle;
 
         if (texture == null && atlas_entry != null) {
-            Console.Error.WriteLine("statesprite_state_add2() atlas_entry specified but the texture was null");
+            Logger.Warn("statesprite_state_add2() atlas_entry specified but the texture was null");
             atlas_entry = null;
         }
 
@@ -908,7 +908,7 @@ public class StateSprite : IVertex {
         if (statesprite_state == null && this.selected_state == null) return false;
 
         if (statesprite_state != null && statesprite_state.statesprite_id != this.id) {
-            Console.Error.WriteLine("statesprite_state_apply() attempt to apply a foreign state");
+            Logger.Error("statesprite_state_apply() attempt to apply a foreign state");
             return false;
         }
 

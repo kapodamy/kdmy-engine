@@ -313,7 +313,7 @@ function vertexprops_parse_textsprite_forcecase(node, name, warn) {
 
     let id = vertexprops_parse_textsprite_forcecase2(value);
     if (id < 0) {
-        if (warn) console.log(`Unknown value ${value} in: ${node.outerHTML}`);
+        if (warn) console.log(`vertexprops_parse_textsprite_forcecase() unknown value ${value} in: ${node.outerHTML}`);
         return TEXTSPRITE_FORCE_NONE;
     }
 
@@ -409,7 +409,7 @@ function vertexprops_parse_camera_property(node, name, warn) {
     let property = node.getAttribute(name);
 
     if (!property) {
-        console.warn("vertexprops_parse_camera_property: missing " + name + " attribute", node.outerHTML);
+        console.warn("vertexprops_parse_camera_property() missing " + name + " attribute", node.outerHTML);
         return -2;
     }
 

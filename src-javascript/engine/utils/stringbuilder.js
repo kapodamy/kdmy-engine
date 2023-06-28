@@ -248,7 +248,7 @@ function stringbuilder_helper_create_formatted_string(format, /*va_list*/values)
                     text += number_str(Math.trunc(values[args_index]), modifier, 0, 1);
                 break;
             default:
-                console.warn(`unknown identifier ${SPECIAL}` + format.charAt(i));
+                console.warn(`stringbuilder_helper_create_formatted_string() unknown identifier ${SPECIAL}` + format.charAt(i));
                 break;
         }
 

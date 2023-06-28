@@ -133,7 +133,7 @@ public class MainMenu {
     public static bool Main() {
         Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
         if (layout == null) {
-            Console.Error.WriteLine("[WARN] mainmenu_main() can not load mainmenu layout");
+            Logger.Warn("mainmenu_main() can not load mainmenu layout");
             return MainMenu.HandleSelectedOption(0);
         }
 
@@ -485,7 +485,7 @@ public class MainMenu {
                 SettingsMenu.Main();
                 return true;// main-menu
             default:
-                Console.Error.WriteLine("[LOG] unimplemented selected option:" + selected_index);
+                Logger.Log($"mainmenu_handle_selected_option() selected option: {selected_index}");
                 return false;
         }
     }

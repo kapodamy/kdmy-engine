@@ -360,7 +360,7 @@ public static class SoundBridge {
     }
 
     internal static void PrintPaError(string str, PaError err) {
-        Console.Error.WriteLine($"[ERROR] {str}{PortAudio.Pa_GetErrorText(err)}");
+        Logger.Error($"soundbridge: {str}{PortAudio.Pa_GetErrorText(err)}");
     }
 
 
@@ -373,7 +373,7 @@ public static class SoundBridge {
 
 #if DEBUG && SNDBRIDGE_DEBUG_COMPLETE
         double position = (PortAudio.Pa_GetStreamTime(stream.pastream) - stream.last_sample_time);
-        Console.Error.WriteLine($"sndbridge: END stream_id={stream.id} position_ms={position * 1000.0}");
+        Logger.Info($"sndbridge: END stream_id={stream.id} position_ms={position * 1000.0}");
 #endif
     }
 
@@ -621,10 +621,10 @@ L_check_device:
             /*if (has_desired) {
                 has_desired = false;
                 output_device_index = PortAudio.Pa_GetDefaultOutputDevice();
-                Console.Error.WriteLine("[WARN] SoundBridge::CreatePaStream() no output devices available for {DESIRED_API_NAME}");
+                Logger.Warn($"soundbridge: no output devices available for {DESIRED_API_NAME}");
                 goto L_check_device;
             }*/
-            Console.Error.WriteLine("[WARN] SoundBridge::CreatePaStream() no output devices available");
+            Logger.Warn("soundbridge: no output devices available");
             return;
         }
 
@@ -870,7 +870,7 @@ L_check_device:
 
 #if DEBUG
     public static void Main() {
-        Console.WriteLine(SoundBridge.GetRuntimeInfo());
+        Logger.Info(SoundBridge.GetRuntimeInfo());
 
         Stream stream;
         StreamResult enqueue_ret;
@@ -894,7 +894,7 @@ L_check_device:
         while (true) {
             double duration = stream.Duration;
             double position = stream.Position();
-            Console.WriteLine($"duration={duration * 1000}  time={position * 1000}");
+            Logger.Log($"duration={duration * 1000}  time={position * 1000}");
             PortAudio.Pa_Sleep(100);
             //if (i == 6) stream.Pause();
             //if (i == 10) stream.Play();
@@ -909,7 +909,7 @@ L_check_device:
 
                 duration = stream.Duration;
                 position = stream.Position();
-                Console.WriteLine($"(paused) duration={duration * 1000}  time={position * 1000}");
+                Logger.Log($"(paused) duration={duration * 1000}  time={position * 1000}");
                 stream.Play();
                 b = false;
             }
@@ -919,7 +919,7 @@ L_check_device:
 
                 duration = stream.Duration;
                 position = stream.Position();
-                Console.WriteLine($"(paused) duration={duration * 1000}  time={position * 1000}");
+                Logger.Log($"(paused) duration={duration * 1000}  time={position * 1000}");
                 stream.Play();
                 c = false;
             }
@@ -929,7 +929,7 @@ L_check_device:
 
                 duration = stream.Duration;
                 position = stream.Position();
-                Console.WriteLine($"(stop) duration={duration * 1000}  time={position * 1000}");
+                Logger.Log($"(stop) duration={duration * 1000}  time={position * 1000}");
                 stream.Play();
                 d = false;
             }
@@ -955,13 +955,13 @@ L_check_device:
         while (total < 50000) {
             double duration = stream.Duration;
             double position = stream.Position;
-            Console.WriteLine($"duration={duration * 1000}  time={position * 1000}");
+            Logger.Log($"duration={duration * 1000}  time={position * 1000}");
             PortAudio.Pa_Sleep(100);
             total += 100;
             //if (stream.HasEnded) break;
         }
 
-        Console.WriteLine("playback done");
+        Logger.Log("playback done");
 
         stream.Dispose();
     }

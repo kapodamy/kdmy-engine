@@ -1346,7 +1346,7 @@ L_read_state:
             }
 
             if (array[i] < 0)
-                Console.Error.WriteLine("[ERROR] character_init() unknown sing/miss direction: " + ltr_array[i]);
+                Logger.Error($"character_init() unknown sing/miss direction: {ltr_array[i]}");
         }
     }
 

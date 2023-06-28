@@ -19,7 +19,7 @@ public static class ExportsTweenLerp {
         if (L.IsUserdataAllocated(TWEENLERP))
             tweenlerp.Destroy();
         else
-            Console.WriteLine("script_tweenlerp_destroy() object was not allocated by lua");
+            Logger.Warn("script_tweenlerp_destroy() object was not allocated by lua");
 
         return 0;
     }

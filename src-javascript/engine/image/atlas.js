@@ -56,7 +56,7 @@ async function atlas_init(src) {
             case "SubTexture":
                 break;
             default:
-                console.warn("unknown TextureAtlas entry: " + unparsed_entry.outerHTML);
+                console.warn("atlas_init() unknown TextureAtlas entry: " + unparsed_entry.outerHTML);
                 continue;
         }
 
@@ -373,7 +373,7 @@ function atlas_parse_tileset(arraylist, unparsed_tileset) {
         !Number.isFinite(sub_width) || !Number.isFinite(sub_height) ||
         !Number.isFinite(tile_width) || !Number.isFinite(tile_height)
     ) {
-        console.warn("missing fields in TileSet: " + unparsed_tileset.outerHTML);
+        console.warn("atlas_parse_tileset() missing fields in TileSet: " + unparsed_tileset.outerHTML);
         return;
     }
 
@@ -388,10 +388,10 @@ function atlas_parse_tileset(arraylist, unparsed_tileset) {
 
     for (let unparsed_tile of unparsed_tileset.children) {
         if (unparsed_tile.tagName != "Tile") {
-            console.warn("unknown TileSet entry: " + unparsed_tile.outerHTML);
+            console.warn("atlas_parse_tileset() unknown TileSet entry: " + unparsed_tile.outerHTML);
             continue;
         } else if (!unparsed_tile.hasAttribute("name")) {
-            console.warn("missing tile name: " + unparsed_tile.outerHTML);
+            console.warn("atlas_parse_tileset() missing tile name: " + unparsed_tile.outerHTML);
             index++;
             continue;
         }

@@ -113,7 +113,7 @@ public static class FunkinSave {
         int vms_file = fs.open(vmu_path, VFSOpenMode.O_RDONLY);
 
         if (vms_file == -1) {
-            Console.WriteLine("[INFO] funkinsave_read_from_vmu() no savedata present in " + vmu_path);
+            Logger.Log($"funkinsave_read_from_vmu() no savedata present in {vmu_path}");
             //free(vmu_path);
             return 2;
         }
@@ -125,7 +125,7 @@ public static class FunkinSave {
 
         if (total < 0) {
             // something bad happen
-            Console.Error.WriteLine("[ERROR] fs_total() on " + vmu_path + " failed");
+            Logger.Error($"funkinsave_read_from_vmu() fs_total() on {vmu_path} failed");
             //free(vmu_path);
             //free(vmu_data);
             return 3;
@@ -149,7 +149,7 @@ public static class FunkinSave {
         if (readed != total) {
             //free(vmu_path);
             //free(vmu_data);
-            Console.Error.WriteLine("[ERROR] failed to read the VMS file at " + vmu_path);
+            Logger.Error($"funkinsave_read_from_vmu() failed to read the VMS file at {vmu_path}");
             return 3;
         }
 
@@ -157,7 +157,7 @@ public static class FunkinSave {
         vmu_pkg_t vmu_pkg = new vmu_pkg_t();
 
         if (vmu.pkg_parse(vms_data, ref vmu_pkg) != 0) {
-            Console.Error.WriteLine("[WARN] vmu_pkg_parse() returned failed on: " + vmu_path);
+            Logger.Warn($"funkinsave_read_from_vmu() vmu_pkg_parse() returned failed on: {vmu_path}");
 
             //free(vmu_path);
             //free(vmu_data);
@@ -496,7 +496,7 @@ public static class FunkinSave {
         vms_file = fs.open(vmu_path, VFSOpenMode.O_WRONLY);
 
         if (vms_file == -1) {
-            Console.Error.WriteLine("[ERROR] funkinsave_flush_to_vmu() failed to write to " + vmu_path + ", also the old savedata is lost :(");
+            Logger.Error($"funkinsave_flush_to_vmu() failed to write to '{vmu_path}', also the old savedata is lost :(");
             //free(vmu_path);
             //free(savedata);
             return 3;
@@ -873,7 +873,7 @@ public static class FunkinSave {
         if (index < 0) {
             index = linkedlist.Count();
             if (index >= FunkinSave.MAX_INDEXED_NAME) {
-                Console.Error.WriteLine("funkinsave_internal_name_index() failed, ran out of indices");
+                Logger.Error("funkinsave_internal_name_index() failed, ran out of indices");
                 return -1;
             }
             linkedlist.AddItem(name);

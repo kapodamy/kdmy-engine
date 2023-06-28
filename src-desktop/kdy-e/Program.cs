@@ -55,8 +55,9 @@ class Program {
 
             if (exit) return 0;
 
-            Console.WriteLine("Selected expansion: " + (EngineSettings.expansion_directory ?? "<none>"));
-            Console.WriteLine();
+            if (EngineSettings.expansion_directory != null) {
+                Logger.Info($"Selected expansion: {EngineSettings.expansion_directory}\n");
+            }
         }
 
         AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
@@ -75,7 +76,7 @@ class Program {
             switch (argv[i].ToLowerInvariant()) {
                 case "-expansion":
                     if (HasCommandLineSwitch(argv, "-expansionsloader")) {
-                        Console.Error.WriteLine("[INFO] '-expansion' argument was ignored");
+                        Logger.Info("'-expansion' argument was ignored");
                         break;
                     }
                     NextArgAs(argv, i + 1, ref EngineSettings.expansion_directory);
@@ -84,7 +85,7 @@ class Program {
                         break;
                     }
                     if (EngineSettings.expansion_directory.ToLower() == "funkin") {
-                        Console.Error.WriteLine("[INFO] '/expansions/funkin' is always applied");
+                        Logger.Info("'/expansions/funkin' is always applied");
                         EngineSettings.expansion_directory = null;
                     }
                     break;
@@ -159,10 +160,14 @@ class Program {
 
         string gamecontrollerdb_path = EngineSettings.EngineDir + Glfw.GAMECONTROLLERDB;
         if (File.Exists(gamecontrollerdb_path)) {
-            Console.WriteLine("detected 'gamecontrollerdb.txt' file, updating mappings");
-            string mappings = File.ReadAllText(gamecontrollerdb_path, Encoding.ASCII);
+            string mappings = File.ReadAllText(gamecontrollerdb_path, Encoding.UTF8);
             if (!Glfw.UpdateGamepadMappings(mappings)) {
-                Console.Error.WriteLine("[ERROR] failed to import " + gamecontrollerdb_path);
+                Logger.Error($"Failed to import gamepad mapping from {gamecontrollerdb_path}");
+            }
+        } else {
+            string mappings = Environment.GetEnvironmentVariable("SDL_GAMECONTROLLERCONFIG");
+            if (mappings != null && !Glfw.UpdateGamepadMappings(mappings)) {
+                Logger.Error($"Failed to import gamepad mapping from SDL_GAMECONTROLLERCONFIG");
             }
         }
 
@@ -189,7 +194,7 @@ class Program {
 
     private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e) {
         if (!e.IsTerminating) {
-            Console.Error.WriteLine("Unhandled exception: " + e.ExceptionObject.ToString());
+            Logger.Error($"Unhandled exception: {e.ExceptionObject}");
             return;
         }
 
@@ -203,7 +208,7 @@ class Program {
             File.WriteAllText(path, text);
             return;
         } catch {
-            Console.Error.WriteLine("Unhandled exception: " + e.ExceptionObject.ToString());
+            Logger.Error($"Unhandled exception: {e.ExceptionObject}");
         }
     }
 
