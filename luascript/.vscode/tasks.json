@@ -12,26 +12,25 @@
                 "$gcc"
             ],
             "windows": {
-                "command": "powershell",
+                "options": {
+                    "shell": {
+                        "executable": "powershell"
+                    }
+                },
+                "command": "mingw32-make",
                 "args": [
-                    "-c",
-                    "mingw32-make",
                     "wasm-build-debug"
                 ]
             },
             "linux": {
-                "command": "bash",
+                "command": "make",
                 "args": [
-                    "-c",
-                    "make",
                     "wasm-build-debug"
                 ]
             },
             "osx": {
-                "command": "bash",
+                "command": "make",
                 "args": [
-                    "-c",
-                    "make",
                     "wasm-build-debug"
                 ]
             }

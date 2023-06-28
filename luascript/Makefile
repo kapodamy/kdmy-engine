@@ -18,3 +18,4 @@ wasm-build-debug:
 windows-build-debug:
 	$(CC) $(WINDOWS_STUBS_SOURCES) $(SOURCES) lib/lua54.dll -Iinclude -O0 -g ${CFLAGS} -o output/main.exe
 
+ 

@@ -3,8 +3,8 @@
 
 
 #ifdef JAVASCRIPT
-EM_JS_PRFX(bool, songplayer_changesong, (SongPlayer songplayer, const char* src, bool prefer_no_copyright), {
-    return songplayer_changesong(kdmyEngine_obtain(songplayer), kdmyEngine_ptrToString(src), prefer_no_copyright);
+EM_ASYNC_JS_PRFX(bool, songplayer_changesong, (SongPlayer songplayer, const char* src, bool prefer_alternative), {
+    return await songplayer_changesong(kdmyEngine_obtain(songplayer), kdmyEngine_ptrToString(src), prefer_alternative);
 });
 EM_ASYNC_JS_PRFX(void, songplayer_play, (SongPlayer songplayer, SongInfo_t* songinfo), {
     const _songinfo = {completed : 0, timestamp : 0};
@@ -45,9 +45,9 @@ static int script_songplayer_changesong(lua_State* L) {
     SongPlayer songplayer = luascript_read_userdata(L, SONGPLAYER);
 
     const char* src = luaL_checkstring(L, 2);
-    bool prefer_no_copyright = lua_toboolean(L, 3);
+    bool prefer_alternative = lua_toboolean(L, 3);
 
-    bool ret = songplayer_changesong(songplayer, src, prefer_no_copyright);
+    bool ret = songplayer_changesong(songplayer, src, prefer_alternative);
 
     lua_pushboolean(L, ret);
     return 1;

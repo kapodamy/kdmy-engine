@@ -15,7 +15,7 @@ typedef struct _SongPlayer_t {
 typedef SongPlayer_t* SongPlayer;
 
 
-bool songplayer_changesong(SongPlayer songplayer, const char* src, bool prefer_no_copyright);
+bool songplayer_changesong(SongPlayer songplayer, const char* src, bool prefer_alternative);
 void songplayer_play(SongPlayer songplayer, SongInfo_t* songinfo);
 void songplayer_pause(SongPlayer songplayer);
 void songplayer_seek(SongPlayer songplayer, double timestamp);

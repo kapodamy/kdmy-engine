@@ -289,7 +289,8 @@ function updateMemoryViews() {
     ModuleLuaScript["HEAPU16"] = HEAPU16 = new Uint16Array(b);
     ModuleLuaScript["HEAPU32"] = HEAPU32 = new Uint32Array(b);
     ModuleLuaScript["HEAPF32"] = HEAPF32 = new Float32Array(b);
-    ModuleLuaScript["HEAPF64"] = HEAPF64 = new Float64Array(b)
+    ModuleLuaScript["HEAPF64"] = HEAPF64 = new Float64Array(b);
+    kdmyEngine_dataView = new DataView(b);
 }
 var wasmTable;
 var __ATPRERUN__ = [];
@@ -1055,15 +1056,16 @@ function __js__layout_get_attached_value2(layout, name, result) {
     let type = layout_get_attached_value2(kdmyEngine_obtain(layout), kdmyEngine_ptrToString(name), value);
     switch (type) {
     case LAYOUT_TYPE_NOTFOUND:
+        // nothing to do
         break;
     case LAYOUT_TYPE_STRING:
-        kdmyEngine_set_uint32(result, kdmyEngine_stringToPtr(value[0]));
+        kdmyEngine_dataView.setUint32(result, kdmyEngine_stringToPtr(value[0]), kdmyEngine_endianess);
         break;
     case LAYOUT_TYPE_FLOAT:
-        kdmyEngine_set_float32(result, value[0]);
+        kdmyEngine_dataView.setFloat64(result, value[0], kdmyEngine_endianess);
         break;
     case LAYOUT_TYPE_INTEGER:
-        kdmyEngine_set_int32(result, value[0]);
+        kdmyEngine_dataView.setBigInt64(result, BigInt(value[0]), kdmyEngine_endianess);
         break;
     case LAYOUT_TYPE_HEX:
         kdmyEngine_set_uint32(result, value[0]);
@@ -1073,7 +1075,7 @@ function __js__layout_get_attached_value2(layout, name, result) {
         break;
     default:
         console.warn("Unknown layout type-value ", type, value[0]);
-        break
+        break;
     }
     return type
 }

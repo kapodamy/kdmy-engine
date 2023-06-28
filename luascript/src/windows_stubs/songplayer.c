@@ -1,8 +1,8 @@
 #include "commons.h"
 #include "songplayer.h"
 
-bool songplayer_changesong(SongPlayer songplayer, const char* src, bool prefer_no_copyright) {
-    print_stub("songplayer_changesong", "songplayer=%p src=%s prefer_no_copyright=(bool)%i", songplayer, src, prefer_no_copyright);
+bool songplayer_changesong(SongPlayer songplayer, const char* src, bool prefer_alternative) {
+    print_stub("songplayer_changesong", "songplayer=%p src=%s prefer_alternative=(bool)%i", songplayer, src, prefer_alternative);
     return 444;
 }
 void songplayer_play(SongPlayer songplayer, SongInfo_t* songinfo) {

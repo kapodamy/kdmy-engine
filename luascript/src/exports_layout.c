@@ -73,13 +73,13 @@ EM_JS_PRFX(int, layout_get_attached_value2, (Layout layout, const char* name, vo
             // nothing to do
             break;
         case LAYOUT_TYPE_STRING:
-            kdmyEngine_set_uint32(result, kdmyEngine_stringToPtr(value[0]));
+            kdmyEngine_dataView.setUint32(result, kdmyEngine_stringToPtr(value[0]), kdmyEngine_endianess);
             break;
         case LAYOUT_TYPE_FLOAT:
-            kdmyEngine_set_float32(result, value[0]);
+            kdmyEngine_dataView.setFloat64(result, value[0], kdmyEngine_endianess);
             break;
         case LAYOUT_TYPE_INTEGER:
-            kdmyEngine_set_int32(result, value[0]);
+            kdmyEngine_dataView.setBigInt64(result, BigInt(value[0]), kdmyEngine_endianess);
             break;
         case LAYOUT_TYPE_HEX:
             kdmyEngine_set_uint32(result, value[0]);
