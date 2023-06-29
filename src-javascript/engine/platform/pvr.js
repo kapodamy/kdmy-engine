@@ -19,6 +19,8 @@ var pvr_frame_next = 1000;
 var pvr_suspended = 0;
 var pvr_init = 1;
 var pvr_callback_resume = null;
+var /**@type {MediaQueryList}*/pvr_last_match_media = null;
+var /**@type {string[]}*/ pvr_launch_args = new Array();
 
 var /** @type {HTMLInputElement} */PVR_STATUS = null;
 
@@ -91,7 +93,6 @@ function pvrctx_wait_ready() {
             // resize framebuffers if the screen size has changed
             pvr_context.CheckFramebufferSize();
             luascriptplatform.PollWindowState().then(function () {
-
                 resolve(elapsed);
             });
         });
@@ -220,7 +221,7 @@ function pvr_onoff(e) {
 
         // emulate main thread
         kos_thd_id++;
-        main_fn(1, ["1st_read.bin"]);
+        main_fn(pvr_launch_args.length, pvr_launch_args);
         return;
     }
 
@@ -246,6 +247,36 @@ async function pvr_copy_framebuffer() {
 
     return texture_init_from_raw(raw_data, byte_length, 0, canvas.width, canvas.height, PVR_WIDTH, PVR_HEIGHT);
 }
+
+function pvr_update_devicePixelRatio() {
+    if (pvr_last_match_media != null) {
+        pvr_last_match_media.removeEventListener("change", pvr_update_devicePixelRatio);
+    }
+
+    pvr_last_match_media = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    if (pvr_last_match_media) {
+        pvr_last_match_media.addEventListener("change", pvr_update_devicePixelRatio);
+    }
+
+    if (pvr_context._html5canvas instanceof OffscreenCanvas) return;
+
+    let ratio = window.devicePixelRatio;
+    let canvas = pvr_context._html5canvas;
+
+    if (ratio != 1.0) {
+        canvas.width = PVR_WIDTH * ratio;
+        canvas.height = PVR_HEIGHT * ratio;
+        canvas.style.width = `${PVR_WIDTH}px`;
+        canvas.style.height = `${PVR_HEIGHT}px`;
+    } else {
+        canvas.width = PVR_WIDTH;
+        canvas.height = PVR_HEIGHT;
+        canvas.style.width = '';
+        canvas.style.height = '';
+    }
+
+    pvr_context.resolution_changes++;
+};
 
 function pvrctx_helper_clear_modifier(modifier) {
     const BASE_MODIFIER = {
@@ -349,14 +380,31 @@ function pvrctx_is_widescreen() {
 }
 
 document.addEventListener("DOMContentLoaded", async function (e) {
+    let url_search_params = new URLSearchParams(window.location.search);
+
+    let path_name = location.pathname;
+    let idx = path_name.lastIndexOf("/");
+    if (idx >= 0) path_name = path_name.substring(idx + 1);
+    pvr_launch_args.push(path_name);
+
+    for (const [key, value] of url_search_params) {
+        if (key != null) pvr_launch_args.push(`-${key}`);
+        pvr_launch_args.push(value);
+    }
+
     /** @ts-ignore */
     PVR_STATUS = document.getElementById("pvr-status");
 
     pvr_context = new PVRContext(document.querySelector('canvas'));
     await pvr_context._initWebGL();
 
+    PVR_WIDTH = pvr_context._html5canvas.width;
+    PVR_HEIGHT = pvr_context._html5canvas.height;
+
     PVR_STATUS.value = "";
     pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+
+    if ("matchMedia" in window) pvr_update_devicePixelRatio();
 
     document.getElementById("pvr-onoff").addEventListener("click", pvr_onoff, false);
     //document.addEventListener("keypress", pvr_onoff);

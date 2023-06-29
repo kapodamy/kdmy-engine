@@ -24,7 +24,7 @@ class PVRContextState {
 }
 
 class PVRContext {
-    /**@type {HTMLCanvasElement|OffscreenCanvas}*/ _html5canvas = null;
+    /**@type {HTMLCanvasElement}*/ _html5canvas = null;
     /**@type {WebGL2Context}*/ webopengl = null;
     /**@type {PVRContextState[]}*/ stack = new Array(16);
     /**@type {number}*/ resolution_changes = 0;
@@ -87,7 +87,7 @@ class PVRContext {
         if (canvas instanceof HTMLCanvasElement) {
             this._html5canvas = canvas;
         } else if (window.OffscreenCanvas) {
-            this._html5canvas = new OffscreenCanvas(canvas[0], canvas[1]);
+            throw new Error("OffscreenCanvas is not supported");
         } else {
             this._html5canvas = document.createElement("canvas");
             this._html5canvas.width = canvas[0];
@@ -163,6 +163,7 @@ class PVRContext {
 
     CheckFramebufferSize() {
         if (this.resolution_changes == this.shader_last_resolution_changes) return;
+        webopengl_resize_projection(this.webopengl, 0, 0, this.screen_width, this.screen_height);
 
         this.shader_last_resolution_changes = this.resolution_changes;
         this.shader_framebuffer_front.Resize();

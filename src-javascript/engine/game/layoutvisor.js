@@ -210,7 +210,8 @@ function main_layout_add_listeners() {
         pvr_context._html5canvas.width = PVR_WIDTH = checked ? 864 : 640;
         pvr_context._html5canvas.height = PVR_HEIGHT = checked ? 486 : 480;
         pvr_context.resolution_changes++;
-        webopengl_resize_projection(pvr_context.webopengl, 0, 0, PVR_WIDTH, PVR_HEIGHT);
+        webopengl_resize_projection(pvr_context.webopengl, 0, 0, pvr_context.screen_width, pvr_context.screen_height);
+        pvr_update_devicePixelRatio();
 
         let classlist = document.querySelector(".layoutvisor").classList;
 
