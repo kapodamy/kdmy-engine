@@ -101,7 +101,6 @@ public class IntroScreen {
         modding.HelperNotifyEvent("intro-funkin");
         IntroScreen.DrawSparseText(funky, delay, funkin_duration, modding, maple_pad);
 
-
         layout.TriggerAny("transition-out");
         modding.HelperNotifyEvent("transition-out");
         while (true) {

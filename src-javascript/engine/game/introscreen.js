@@ -1,6 +1,7 @@
 "use strict";
 
 const INTROSCREEN_DELAY = 600;
+const INTROSCREEN_TEXT_DURATION = 0.0;
 const INTROSCREEN_TEXT_SPARSE = "--";
 const INTROSCREEN_FUNKY = "Friday--Night--Funkin";
 const INTROSCREEN_LAYOUT = "/assets/common/image/intro-screen/layout.xml";
@@ -22,10 +23,10 @@ async function introscreen_main() {
     // read delay/durations from layout
     let delay = layout_get_attached_value_as_float(layout, "delay", INTROSCREEN_DELAY);
     let custom_duration = layout_get_attached_value_as_float(
-        layout, "custom_duration", 0.0
+        layout, "custom_duration", INTROSCREEN_TEXT_DURATION
     );
 
-    if (custom_duration > 0) {
+    if (custom_duration > 0.0) {
         await modding_helper_notify_event(modding, "custom-intro");
 
         // custom intro detected wait the requeted time
@@ -143,7 +144,7 @@ async function introscreen_draw_sparse_text(text, delay, duration, modding, mapl
     let sparse_length = INTROSCREEN_TEXT_SPARSE.length;
     let last_index = 0;
 
-    while (last_index < text_length) {
+    while (true) {
         if (progress >= paragraph_duration) {
             if (last_index >= text_length) break;
             if (last_index > 0) text_buffer += "\n";
@@ -155,7 +156,6 @@ async function introscreen_draw_sparse_text(text, delay, duration, modding, mapl
             last_index = index + sparse_length;
 
             textsprite_set_text_intern(textsprite, 1, text_buffer);
-
             progress -= paragraph_duration;
         }
 
