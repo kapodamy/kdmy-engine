@@ -7,7 +7,7 @@ public interface IFontRender : IAnimate {
     float DrawText(PVRContext pvrctx, float height, float x, float y, int text_index, int text_size, string text);
     void EnableBorder(bool enable);
     void EnableColorByDifference(bool enable);
-    void MeansureChar(int codepoint, float height, FontLineInfo lineinfo);
+    void MeasureChar(int codepoint, float height, FontLineInfo lineinfo);
     float Measure(float height, string text, int text_index, int text_size);
     void SetAlpha(float alpha);
     void SetBorder(bool enable, float size, float[] rgba);

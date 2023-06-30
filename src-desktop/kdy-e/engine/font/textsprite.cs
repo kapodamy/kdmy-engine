@@ -502,8 +502,8 @@ public class TextSprite : IVertex {
                 continue;
             }
 
-            // meansure char width
-            this.font.MeansureChar(grapheme.code, this.font_size, lineinfo);
+            // measure char width
+            this.font.MeasureChar(grapheme.code, this.font_size, lineinfo);
 
             // check if the current codepoit is breakable
             bool current_is_break = false;

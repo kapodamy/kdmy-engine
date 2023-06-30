@@ -193,7 +193,7 @@ public class FontGlyph : IFontRender {
         return Math.Max(width, max_width);
     }
 
-    public void MeansureChar(int codepoint, float height, FontLineInfo lineinfo) {
+    public void MeasureChar(int codepoint, float height, FontLineInfo lineinfo) {
         if (lineinfo.space_width < 0) {
             lineinfo.space_width = InternalFindSpaceWidth(height);
         }

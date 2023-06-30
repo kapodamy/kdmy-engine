@@ -178,7 +178,7 @@ function fonttype_measure(fonttype, height, text, text_index, text_size) {
     return Math.max(width, max_width);
 }
 
-function fonttype_meansure_char(fonttype, codepoint, height, lineinfo) {
+function fonttype_measure_char(fonttype, codepoint, height, lineinfo) {
     const scale = height / FONTTYPE_GLYPHS_HEIGHT;
 
     //override hard-spaces with white-spaces

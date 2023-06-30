@@ -112,7 +112,7 @@ public class StreakCounter : IDraw, IAnimate {
 
             // center the number sprites in the draw location (y axis is already centered)
             value = Math2D.Clamp(value, 0, StreakCounterDigits.STREAKCOUNTER_MAX_VALUE);
-            float draw_width = unused_item.digits.Meansure(value);
+            float draw_width = unused_item.digits.Measure(value);
             float x = this.modifier.x;
             float y = this.modifier.y;
 

@@ -155,7 +155,7 @@ function fontglyph_measure(fontglyph, height, text, text_index, text_size) {
     return Math.max(width, max_width);
 }
 
-function fontglyph_meansure_char(fontglyph, codepoint, height, lineinfo) {
+function fontglyph_measure_char(fontglyph, codepoint, height, lineinfo) {
     if (lineinfo.space_width < 0) {
         lineinfo.space_width = fontglyph_internal_find_space_width(fontglyph, height);
     }

@@ -207,7 +207,7 @@ public class FontType : IFontRender {
         return Math.Max(width, max_width);
     }
 
-    public void MeansureChar(int codepoint, float height, FontLineInfo lineinfo) {
+    public void MeasureChar(int codepoint, float height, FontLineInfo lineinfo) {
         float scale = height / FontType.GLYPHS_HEIGHT;
 
         //override hard-spaces with white-spaces

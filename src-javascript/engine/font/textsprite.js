@@ -381,7 +381,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
         return;
     }
 
-    let meansure_char_fn = textsprite.font_from_atlas ? fontglyph_meansure_char : fonttype_meansure_char;
+    let measure_char_fn = textsprite.font_from_atlas ? fontglyph_measure_char : fonttype_measure_char;
 
     // step 1: count the paragraphs
     let line_count = MATH2D_MAX_INT32;
@@ -439,8 +439,8 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             continue;
         }
 
-        // meansure char width
-        meansure_char_fn(textsprite.font, grapheme.code, textsprite.font_size, lineinfo);
+        // measure char width
+        measure_char_fn(textsprite.font, grapheme.code, textsprite.font_size, lineinfo);
 
         // check if the current codepoit is breakable
         let current_is_break = 0;

@@ -167,7 +167,7 @@ public class StreakCounterDigits : IAnimate, IDraw {
         return completed;
     }
 
-    public float Meansure(int value) {
+    public float Measure(int value) {
         float draw_width, draw_height;
 
         //value = Math2D.Clamp(value, 0, StreakCounterDigits.STREAKCOUNTER_MAX_VALUE);
@@ -184,7 +184,7 @@ public class StreakCounterDigits : IAnimate, IDraw {
         // add leading zero
         if (index > 0) this.buffer[index - 1] = 0;
 
-        float meansured_width = 0;
+        float measured_width = 0;
 
         for (int i = 0 ; i < StreakCounterDigits.STREAKCOUNTER_DIGITS ; i++) {
             sbyte digit = this.buffer[i];
@@ -212,7 +212,7 @@ public class StreakCounterDigits : IAnimate, IDraw {
                 }
 
                 statesprite.GetDrawSize(out draw_width, out draw_height);
-                meansured_width += draw_width;
+                measured_width += draw_width;
             } else {
                 this.buffer[i] = -1;
             }
@@ -220,7 +220,7 @@ public class StreakCounterDigits : IAnimate, IDraw {
             //free(state_name);
         }
 
-        return meansured_width;
+        return measured_width;
     }
 
     public void SetDrawLocation(float x, float y, float gap) {

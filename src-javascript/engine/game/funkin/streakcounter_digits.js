@@ -158,7 +158,7 @@ function streakcounter_digits_animate(streakcounter_digits, elapsed) {
     return completed;
 }
 
-function streakcounter_digits_meansure(streakcounter_digits, value) {
+function streakcounter_digits_measure(streakcounter_digits, value) {
     const draw_size = [0, 0];
 
     //value = math2d_clamp(value, 0, STREAKCOUNTER_MAX_VALUE);
@@ -175,7 +175,7 @@ function streakcounter_digits_meansure(streakcounter_digits, value) {
     // add leading zero
     if (index > 0) streakcounter_digits.buffer[index - 1] = 0;
 
-    let meansured_width = 0;
+    let measured_width = 0;
 
     for (let i = 0; i < STREAKCOUNTER_DIGITS; i++) {
         let digit = streakcounter_digits.buffer[i];
@@ -207,7 +207,7 @@ function streakcounter_digits_meansure(streakcounter_digits, value) {
             }
 
             statesprite_get_draw_size(statesprite, draw_size);
-            meansured_width += draw_size[0];
+            measured_width += draw_size[0];
         } else {
             streakcounter_digits.buffer[i] = -1;
         }
@@ -215,7 +215,7 @@ function streakcounter_digits_meansure(streakcounter_digits, value) {
         state_name = undefined;
     }
 
-    return meansured_width;
+    return measured_width;
 }
 
 function streakcounter_digits_set_draw_location(streakcounter_digits, x, y, gap) {
