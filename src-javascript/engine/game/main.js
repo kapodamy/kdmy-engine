@@ -21,11 +21,98 @@ var weeks_array = { array: null, size: -1 };
 var custom_style_from_week = null;
 
 var DEBUG = 0;
-var SETTINGS = { // not implemented
+var SETTINGS = {
     input_offset: 0, inverse_strum_scroll: false, penality_on_empty_strum: true, use_funkin_marker_duration: true,
     song_progressbar: true, song_progressbar_remaining: false,
-    gameplay_enabled_distractions: true, gameplay_enabled_flashinglights: true, gameplay_enabled_ui_cosmetics: true,
-    show_loading_screen: true
+    gameplay_enabled_distractions: true, gameplay_enabled_flashinglights: true, gameplay_enabled_uicosmetics: true,
+    saveslots: 1, autohide_cursor: true, show_loading_screen: true,
+
+    get_setting_ini_name: function (section, name) {
+        return `$[${section}] ${name}`;
+    },
+    storage_save_number: function (section, name, value) {
+        localStorage.setItem(this.get_setting_ini_name(section, name), value.toString());
+    },
+    storage_load_number: function (section, name, default_value) {
+        let value = localStorage.getItem(this.get_setting_ini_name(section, name));
+        return value === null ? default_value : parseFloat(value);
+    },
+    storage_save_string: function (section, name, value) {
+        if (value === null)
+            localStorage.removeItem(this.get_setting_ini_name(section, name));
+        else
+            localStorage.setItem(this.get_setting_ini_name(section, name), value);
+    },
+    storage_load_string: function (section, name, default_value) {
+        let value = localStorage.getItem(this.get_setting_ini_name(section, name));
+        return value ?? default_value;
+    },
+    storage_save_boolean: function (section, name, value) {
+        localStorage.setItem(this.get_setting_ini_name(section, name), (!!value).toString());
+    },
+    storage_load_boolean: function (section, name, default_value) {
+        let value = localStorage.getItem(this.get_setting_ini_name(section, name));
+        return value === null ? default_value : (value === "true");
+    },
+
+    get_bind: function (name, /**@type {{trigger?:number,code:string,button?:number}}*/bind) {
+        let code = localStorage.getItem(this.get_setting_ini_name(this.BINDING_SECTION, name));
+        if (code != null) bind.code = code;
+    },
+
+    reload: function () {
+        this.use_funkin_marker_duration = this.storage_load_boolean(
+            this.INI_GAMEPLAY_SECTION, "use_funkin_marker_duration", this.use_funkin_marker_duration
+        );
+        this.penality_on_empty_strum = this.storage_load_boolean(
+            this.INI_GAMEPLAY_SECTION, "penality_on_empty_strum", this.penality_on_empty_strum
+        );
+        this.input_offset = this.storage_load_number(
+            this.INI_GAMEPLAY_SECTION, "input_offset", this.input_offset
+        );
+        this.inverse_strum_scroll = this.storage_load_boolean(
+            this.INI_GAMEPLAY_SECTION, "inverse_strum_scroll", this.inverse_strum_scroll
+        );
+        this.song_progressbar = this.storage_load_boolean(
+            this.INI_GAMEPLAY_SECTION, "song_progressbar", this.song_progressbar
+        );
+        this.song_progressbar_remaining = this.storage_load_boolean(
+            this.INI_GAMEPLAY_SECTION, "song_progressbar_remaining", this.song_progressbar_remaining
+        );
+        this.gameplay_enabled_distractions = this.storage_load_boolean(
+            this.INI_GAMEPLAY_SECTION, "gameplay_enabled_distractions", this.gameplay_enabled_distractions
+        );
+        this.gameplay_enabled_flashinglights = this.storage_load_boolean(
+            this.INI_GAMEPLAY_SECTION, "gameplay_enabled_flashinglights", this.gameplay_enabled_flashinglights
+        );
+        this.gameplay_enabled_uicosmetics = this.storage_load_boolean(
+            this.INI_GAMEPLAY_SECTION, "gameplay_enabled_uicosmetics", this.gameplay_enabled_uicosmetics
+        );
+
+        //this.show_fps = this.storage_load_boolean(
+        //    this.INI_MISC_SECTION, "show_fps", this.show_fps
+        //);
+        //this.fps_limit = this.storage_load_string(
+        //    this.INI_MISC_SECTION, "fps_limit", this.fps_limit
+        //);
+        //this.fullscreen = this.storage_load_boolean(
+        //    this.INI_MISC_SECTION, "fullscreen", this.fullscreen
+        //);
+        this.saveslots = this.storage_load_number(
+            this.INI_MISC_SECTION, "saveslots", this.saveslots
+        );
+        this.autohide_cursor = this.storage_load_boolean(
+            this.INI_MISC_SECTION, "autohide_cursor", this.autohide_cursor
+        );
+        //this.mute_on_minimize = this.storage_load_boolean(
+        //    this.INI_MISC_SECTION, "mute_on_minimize", this.mute_on_minimize
+        //);
+        this.show_loading_screen = this.storage_load_boolean(
+            this.INI_MISC_SECTION, "show_loading_screen", this.show_loading_screen
+        );
+    },
+
+    INI_BINDING_SECTION: "KeyboardBindings", INI_GAMEPLAY_SECTION: "Gameplay", INI_MISC_SECTION: "Misc"
 };
 
 
@@ -41,6 +128,7 @@ async function main(argc, argv) {
     fs_init();// intialize filesystem access for the main thread (this thread)
     luascriptplatform.InitializeCallbacks();
     await mastervolume_init();
+    SETTINGS.reload();
 
     if (!(await io_resource_exists(FS_ASSETS_FOLDER, 0, 1))) {
         alert("Missing assets folder");

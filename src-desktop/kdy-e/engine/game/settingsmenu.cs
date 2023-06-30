@@ -21,6 +21,15 @@ public static class SettingsMenu {
     private const string MODDING_MENU = "/assets/common/data/menus/settigsmenu-main.json";
     private static readonly KeyCallback delegate_key_callback = InternalKeyCallback;
 
+    private const string LAYOUT_BINDS_GAMEPLAY = "/assets/common/image/settings-menu/binds_gameplay.xml";
+    private const string LAYOUT_BINDS_MENUS = "/assets/common/image/settings-menu/binds_menus.xml";
+    private const string LAYOUT_BINDS_MAIN = "/assets/common/image/settings-menu/main.xml";
+    private const string LAYOUT_BINDS_COMMON = "/assets/common/image/settings-menu/common.xml";
+    private const string LAYOUT_BINDS_GAMEPLAY_DREAMCAST = "/assets/common/image/settings-menu/binds_gameplay~dreamcast.xml";
+    private const string LAYOUT_BINDS_MENUS_DREAMCAST = "/assets/common/image/settings-menu/binds_menus~dreamcast.xml";
+    private const string LAYOUT_BINDS_MAIN_DREAMCAST = "/assets/common/image/settings-menu/main~dreamcast.xml";
+    private const string LAYOUT_BINDS_COMMON_DREAMCAST = "/assets/common/image/settings-menu/common~dreamcast.xml";
+
 
     private static readonly MenuManifest MENU = new MenuManifest() {
         parameters = new MenuManifest.Parameters() {
@@ -243,7 +252,7 @@ public static class SettingsMenu {
             anim_binding = anim_binding_rollback = null;
         }
 
-        Layout layout = Layout.Init("/assets/common/image/settings-menu/main.xml");
+        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_BINDS_MAIN : SettingsMenu.LAYOUT_BINDS_MAIN_DREAMCAST);
         if (layout == null) {
             Logger.Error("settingsmenu_main() can not load the layout");
             return;
@@ -395,7 +404,7 @@ public static class SettingsMenu {
 
 
     private static void InGameplayBinding(AnimSprite anim_binding, AnimSprite anim_binding_rollback) {
-        Layout layout = Layout.Init("/assets/common/image/settings-menu/binds_gameplay.xml");
+        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_BINDS_GAMEPLAY : SettingsMenu.LAYOUT_BINDS_GAMEPLAY_DREAMCAST);
 
         if (layout == null) {
             Logger.Error("settingsmenu_in_gameplay_binding() can not load the layout");
@@ -580,7 +589,7 @@ public static class SettingsMenu {
     }
 
     private static void InMenusBinding(AnimSprite anim_binding, AnimSprite anim_binding_rollback) {
-        Layout layout = Layout.Init("/assets/common/image/settings-menu/binds_menus.xml");
+        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_BINDS_MENUS : SettingsMenu.LAYOUT_BINDS_MENUS_DREAMCAST);
 
         if (layout == null) {
             Logger.Error("settingsmenu_in_menus_binding() can not load the layout");
@@ -976,7 +985,7 @@ public static class SettingsMenu {
     }
 
     private static void ShowCommon(string title, Gamepad gamepad, SettingOption[] options, int options_count, Modding modding) {
-        Layout layout = Layout.Init("/assets/common/image/settings-menu/common.xml");
+        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_BINDS_COMMON : SettingsMenu.LAYOUT_BINDS_COMMON_DREAMCAST);
 
         if (layout == null) {
             Logger.Error("settingsmenu_show_common() can not load the layout");

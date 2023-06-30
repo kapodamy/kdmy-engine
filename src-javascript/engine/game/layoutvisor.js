@@ -207,11 +207,9 @@ function main_layout_add_listeners() {
         // @ts-ignore
         let checked = this.checked;
 
-        pvr_context._html5canvas.width = PVR_WIDTH = checked ? 864 : 640;
-        pvr_context._html5canvas.height = PVR_HEIGHT = checked ? 486 : 480;
-        pvr_context.resolution_changes++;
-        webopengl_resize_projection(pvr_context.webopengl, 0, 0, pvr_context.screen_width, pvr_context.screen_height);
         pvr_update_devicePixelRatio();
+        //pvr_context.resolution_changes++;
+        //webopengl_resize_projection(pvr_context.webopengl, 0, 0, pvr_context.screen_width, pvr_context.screen_height);
 
         let classlist = document.querySelector(".layoutvisor").classList;
 
@@ -220,7 +218,7 @@ function main_layout_add_listeners() {
         else
             classlist.remove("widescreen");
 
-        if (layoutvisor_layout) layout_update_render_size(layoutvisor_layout, PVR_WIDTH, PVR_HEIGHT);
+        if (layoutvisor_layout) layout_update_render_size(layoutvisor_layout, pvr_context._html5canvas.width, pvr_context._html5canvas.height);
 
     }, false);
 

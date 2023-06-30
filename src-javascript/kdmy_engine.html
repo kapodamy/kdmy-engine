@@ -7,15 +7,18 @@
         <input type="hidden" name="entry_point" value="main" />
 
 
-        <style type="text/css">body {background-color: whitesmoke;}</style>
+        <style type="text/css">
+            body {background-color: whitesmoke;}
+            .hide-cursor{cursor: none;}
+        </style>
     </head>
     <body>
-        <canvas width="640" height="480"></canvas>
-        <!-- <canvas width="960" height="540"></canvas> -->
+        <!--  letterbox=width+height  widescreen=width2+height2  -->
+        <canvas width="640" height="480" width2="864" height2="486"></canvas>
         <hr>
-        <button id="pvr-onoff">Suspend/Resume PVR</button>
+        <button id="pvr-onoff">Suspend/Resume PVR</button>   <button id="pvr-widescreen">Toggle widescreen</button>   <button id="pvr-fullscreen">Toggle fullscreen</button>
         <br>
-        <label>PVR status: <input type="text" readonly="" value="00 FPS" id="pvr-status"></label>
+        <label>FPS: <input type="text" readonly="" value="00" id="pvr-status"></label>
 
         <script src="engine/platform/sh4.js"></script>
         <script src="engine/platform/sh4matrix.js"></script>
@@ -81,6 +84,7 @@
         <script src="engine/game/weekselector.js"></script>
         <script src="engine/game/savemanager.js"></script>
         <script src="engine/game/freeplaymenu.js"></script>
+        <script src="engine/game/settingsmenu.js"></script>
 
         <script src="engine/image/texture.js"></script>
         <script src="engine/image/sprite.js"></script>
@@ -136,5 +140,7 @@
         <script src="engine/game/gameplay/week.js"></script>
 
         <script src="engine/game/main.js"></script>
+        
+        <script src="engine/game/mastervolume.js"></script>
     </body>
 </html>

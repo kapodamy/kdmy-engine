@@ -460,14 +460,7 @@ class maple_devinfo_t {
 class maple_device_t {
 
     /** @type {bool} Is this a valid device?*/
-    get valid() {
-        if (this._gamepad_index < 0) {
-            // VMU
-            return "indexedDB" in window;
-        }
-        let gamepad = navigator.getGamepads()[this._gamepad_index];
-        return gamepad && gamepad.connected;
-    }
+    valid;
 
     /** @type {number} Maple bus port connected to*/
     port;
@@ -479,29 +472,15 @@ class maple_device_t {
     info;
 
 
-    constructor() {
+    constructor(functions, port, unit) {
         if (KOS_MAPLE_DEVS.length >= KOS_MAX_DEVICES) throw new Error("Maximum of number of devices reached");
 
-        this.port = 0;
-        this.unit = 1;
+        this.valid = functions == MAPLE_FUNC_MEMCARD;
+        this.port = port;
+        this.unit = unit;
         this.info = new maple_devinfo_t();
+        this.info.functions = functions;
         this._gamepad_index = -1;
-        KOS_MAPLE_DEVS.push(this);
-    }
-
-    _set_gamepad_index(index) {
-        if (index < 0) throw new Error("Invalid device index");
-
-        this._gamepad_index = index;
-        this.port = index % 4;
-        this.unit = Math.trunc(index / 4) % 6;
-
-        if (this.port == 0 && this.unit == 1) {
-            // first slot is reserved for the VMU
-            index++;
-            this.port = index % 4;
-            this.unit = Math.trunc(index / 4) % 6;
-        }
     }
 
 
@@ -589,10 +568,17 @@ class maple_keyboard_device_t {
      * @property {boolean} hold
      * @property {bool} negative
      */
+    /**
+     * @callback KeyboardEventDelegate
+     * @param {KeyboardEvent} evt
+     * @returns {void}
+     */
 
     status = new cont_state_t();
     timestamp = 0;
     /** @type {maple_device_keyboard_t[]} */ #queue = null;
+
+    /**@type {KeyboardEventDelegate} */ delegate_callback = null;
 
 
     constructor() {
@@ -606,6 +592,8 @@ class maple_keyboard_device_t {
         if (evt.isComposing) return;
         if (evt.repeat) return;
 
+        if (this.delegate_callback) this.delegate_callback(evt);
+
         //
         // just like "window.performance.now()", "evt.timeStamp" returns the milliseconds since
         // the page was loaded. But here since the event was created. This should give
@@ -613,6 +601,22 @@ class maple_keyboard_device_t {
         //
         let timestamp = evt.timeStamp;
         let hold = evt.type == "keydown";
+
+        // special keys      
+        switch (evt.code) {
+            case "F11":
+                if (hold) pvr_fullscreen(null);
+                return;
+            case "F12":
+                //if (hold) PVRContext.TakeScreenshot();
+                return;
+            case "NumpadSubtract":
+                if (hold) mastervolume_volume_step(false);
+                return;
+            case "NumpadAdd":
+                if (hold) mastervolume_volume_step(true);
+                return;
+        }
 
         for (let i = 0; i < KOS_KEYBOARD_MAPPING_BUTTONS.length; i++) {
             const map = KOS_KEYBOARD_MAPPING_BUTTONS[i];
@@ -728,6 +732,32 @@ class maple_keyboard_device_t {
         return this.#queue.length;
     }
 
+    reloadMappings() {
+        SETTINGS.get_bind("menuAccept", KOS_KEYBOARD_MAPPING_BUTTONS[1]);
+        SETTINGS.get_bind("menuAlternativeTracks", KOS_KEYBOARD_MAPPING_BUTTONS[3]);
+
+        SETTINGS.get_bind("menuSelectorLeft", KOS_KEYBOARD_MAPPING_TRIGGERS[0]);
+        SETTINGS.get_bind("menuSelectorRight", KOS_KEYBOARD_MAPPING_TRIGGERS[1]);
+
+        //SETTINGS.get_bind("left0", KOS_KEYBOARD_MAPPING_BUTTONS[5]);
+        //SETTINGS.get_bind("down0", KOS_KEYBOARD_MAPPING_BUTTONS[6]);
+        //SETTINGS.get_bind("up0", KOS_KEYBOARD_MAPPING_BUTTONS[7]);
+        //SETTINGS.get_bind("right0", KOS_KEYBOARD_MAPPING_BUTTONS[8]);
+        SETTINGS.get_bind("left1", KOS_KEYBOARD_MAPPING_BUTTONS[9]);
+        SETTINGS.get_bind("down1", KOS_KEYBOARD_MAPPING_BUTTONS[10]);
+        SETTINGS.get_bind("up1", KOS_KEYBOARD_MAPPING_BUTTONS[11]);
+        SETTINGS.get_bind("right1", KOS_KEYBOARD_MAPPING_BUTTONS[12]);
+        SETTINGS.get_bind("left2", KOS_KEYBOARD_MAPPING_BUTTONS[13]);
+        SETTINGS.get_bind("down2", KOS_KEYBOARD_MAPPING_BUTTONS[14]);
+        SETTINGS.get_bind("up2", KOS_KEYBOARD_MAPPING_BUTTONS[15]);
+        SETTINGS.get_bind("right2", KOS_KEYBOARD_MAPPING_BUTTONS[16]);
+        SETTINGS.get_bind("left3", KOS_KEYBOARD_MAPPING_BUTTONS[17]);
+        SETTINGS.get_bind("down3", KOS_KEYBOARD_MAPPING_BUTTONS[18]);
+        SETTINGS.get_bind("up3", KOS_KEYBOARD_MAPPING_BUTTONS[19]);
+        SETTINGS.get_bind("right3", KOS_KEYBOARD_MAPPING_BUTTONS[20]);
+
+        SETTINGS.get_bind("diamond", KOS_KEYBOARD_MAPPING_BUTTONS[21]);
+    }
 }
 
 /**
@@ -800,8 +830,8 @@ const CONT_EX_AXIS_LY = (1 << 29);
 const CONT_EX_AXIS_RX = (1 << 30);
 const CONT_EX_AXIS_RY = (1 << 31);
 
-/** @type {maple_device_t[]} */
-const KOS_MAPLE_DEVS = new Array();
+
+const /**@type {maple_device_t[][]}*/KOS_MAPLE_DEVS = new Array(MAPLE_PORT_COUNT);
 const KOS_MAPLE_KEYBOARD = new maple_keyboard_device_t();// -1 is the keyboard (JS & C# only)
 const KOS_JSGAMEPAD_BUTTONS_MAPPING = [
     CONT_A | CONT_DPAD3_DOWN, CONT_B | CONT_DPAD3_RIGHT, CONT_X | CONT_DPAD3_LEFT, CONT_Y | CONT_DPAD3_UP,
@@ -819,36 +849,58 @@ const KOS_JSGAMEPAD_AXES_MAPPING = [
 const KOS_CONT_PLCHLDR = (1 << 16);// all "not supported" buttons in the dreamcast
 const KOS_MAX_DEVICES = MAPLE_PORT_COUNT * MAPLE_UNIT_COUNT;
 const KOS_KEYBOARD_MAPPING_BUTTONS = [
-    { button: CONT_START, code: "Enter" },
-    { button: CONT_A, code: "KeyA" },
-    // { button: CONT_B, code: "KeyZ" },
-    { button: CONT_X, code: "KeyS" },
-    // { button: CONT_Y, code: "KeyX" },
-    { button: CONT_DPAD_UP, code: "ArrowUp" },
-    { button: CONT_DPAD_DOWN, code: "ArrowDown" },
-    { button: CONT_DPAD_RIGHT, code: "ArrowRight" },
-    { button: CONT_DPAD_LEFT, code: "ArrowLeft" },
-    { button: CONT_DPAD2_UP, code: "KeyI" },
-    { button: CONT_DPAD2_DOWN, code: "KeyK" },
-    { button: CONT_DPAD2_RIGHT, code: "KeyJ" },
-    { button: CONT_DPAD2_LEFT, code: "KeyL" },
-    { button: CONT_DPAD3_LEFT, code: "KeyA" },
-    { button: CONT_DPAD3_DOWN, code: "KeyS" },
-    { button: CONT_DPAD3_UP, code: "KeyD" },
-    { button: CONT_DPAD3_RIGHT, code: "KeyF" },
-    { button: CONT_BACK_OR_SELECT, code: "Escape" },
-    { button: CONT_HOME_OR_GUIDE, code: "Home" },
-    { button: CONT_D, code: "Space" }
+    { code: "Enter", button: CONT_START },
+    { code: "KeyA", button: CONT_A },
+    { code: null, button: CONT_B },
+    { code: "KeyS", button: CONT_X },
+    { code: null, button: CONT_Y },
+    { code: "ArrowUp", button: CONT_DPAD_UP },
+    { code: "ArrowDown", button: CONT_DPAD_DOWN },
+    { code: "ArrowRight", button: CONT_DPAD_RIGHT },
+    { code: "ArrowLeft", button: CONT_DPAD_LEFT },
+    { code: "KeyF", button: CONT_DPAD2_LEFT },
+    { code: "KeyG", button: CONT_DPAD2_DOWN },
+    { code: "KeyJ", button: CONT_DPAD2_UP },
+    { code: "KeyK", button: CONT_DPAD2_RIGHT },
+    { code: null, button: CONT_DPAD3_LEFT },
+    { code: null, button: CONT_DPAD3_DOWN },
+    { code: null, button: CONT_DPAD3_UP },
+    { code: null, button: CONT_DPAD3_RIGHT },
+    { code: null, button: CONT_DPAD4_LEFT },
+    { code: null, button: CONT_DPAD4_DOWN },
+    { code: null, button: CONT_DPAD4_UP },
+    { code: null, button: CONT_DPAD4_RIGHT },
+    { code: "Space", button: CONT_D },
+    { code: "Escape", button: CONT_BACK_OR_SELECT },
+    { code: "Home", button: CONT_HOME_OR_GUIDE }
 ];
 const KOS_KEYBOARD_MAPPING_AXES = [
-    { axes: CONT_EX_TRIGGER_L, key_low: "Numpad2", key_high: "Numpad8" },
-    { axes: CONT_EX_TRIGGER_R, key_low: "Numpad4", key_high: "Numpad6" }
+    { key_low: "Numpad2", key_high: "Numpad8", axes: CONT_EX_TRIGGER_L },
+    { key_low: "Numpad4", key_high: "Numpad6", axes: CONT_EX_TRIGGER_R }
 ];
 const KOS_KEYBOARD_MAPPING_TRIGGERS = [
-    { trigger: CONT_EX_TRIGGER_L, code: "KeyQ" },
-    { trigger: CONT_EX_TRIGGER_R, code: "KeyW" }
+    { code: "KeyQ", trigger: CONT_EX_TRIGGER_L },
+    { code: "KeyW", trigger: CONT_EX_TRIGGER_R }
 ];
-(new maple_device_t()).info.functions = MAPLE_FUNC_MEMCARD;
+const KOS_GAMEPAD_TO_MAPLE_DEVICE = [
+    { index: 0, port: 0, unit: 0 },
+    { index: 1, port: 1, unit: 0 },
+    { index: 2, port: 2, unit: 0 },
+    { index: 3, port: 3, unit: 0 },
+    { index: 4, port: 0, unit: 2 },
+    { index: 5, port: 1, unit: 2 },
+    { index: 6, port: 2, unit: 2 },
+    { index: 7, port: 3, unit: 2 },
+    { index: 8, port: 0, unit: 3 },
+    { index: 9, port: 1, unit: 3 },
+    { index: 10, port: 2, unit: 3 },
+    { index: 11, port: 3, unit: 3 },
+    { index: 12, port: 0, unit: 4 },
+    { index: 13, port: 1, unit: 4 },
+    { index: 14, port: 2, unit: 4 },
+    { index: 15, port: 3, unit: 4 }
+];
+var KOS_MAPLE_slots_allocated = false;
 
 
 /**
@@ -856,7 +908,13 @@ const KOS_KEYBOARD_MAPPING_TRIGGERS = [
  * @returns {number} The number of devices connected.
  */
 function maple_enum_count() {
-    return KOS_MAPLE_DEVS.length;
+    let count = 0;
+    for (let port of KOS_MAPLE_DEVS) {
+        for (let device of port) {
+            if (device != null) count++;
+        }
+    }
+    return count;
 }
 
 /**
@@ -867,10 +925,12 @@ function maple_enum_count() {
  */
 function maple_enum_type(n, func) {
     let i = 0;
-    for (let device of KOS_MAPLE_DEVS) {
-        if (device.info.functions & func) {
-            if (i == n) return device;
-            i++;
+    for (let port of KOS_MAPLE_DEVS) {
+        for (let device of port) {
+            if (device && device.info.functions & func) {
+                if (i == n) return device;
+                i++;
+            }
         }
     }
     return null;
@@ -895,41 +955,94 @@ function maple_dev_status(dev) {
  *  @return  {maple_device_t}       The device at that address, or NULL if no device is there.
 */
 function maple_enum_dev(p, u) {
-    for (let device of KOS_MAPLE_DEVS) {
-        if (device.port == p && device.unit == u) {
-            return device.valid ? device : null;
+    for (let port of KOS_MAPLE_DEVS) {
+        for (let device of port) {
+            if (device && device.port == p && device.unit == u) {
+                return device.valid ? device : null;
+            }
         }
     }
     return null;
 }
 
 
-window.addEventListener("gamepadconnected", function (evt) {
-    for (let device of KOS_MAPLE_DEVS) {
-        if (evt.gamepad.index == device._gamepad_index) {
-            //device.valid = 1;
-            return;
+window.addEventListener("gamepadconnected", KOS_handle_gamepad_connection, false);
+window.addEventListener("gamepaddisconnected", KOS_handle_gamepad_connection, false);
+window.addEventListener("DOMContentLoaded", function () {
+    // create virtual slots
+    for (let p = 0; p < MAPLE_PORT_COUNT; p++) {
+        KOS_MAPLE_DEVS[p] = new Array(MAPLE_UNIT_COUNT);
+        for (let u = 0; u < MAPLE_UNIT_COUNT; u++) {
+            KOS_MAPLE_DEVS[p][u] = null;
         }
     }
-    let gamepad_device = new maple_device_t();
-    gamepad_device.info.functions = MAPLE_FUNC_CONTROLLER;
-    gamepad_device._set_gamepad_index(evt.gamepad.index);
-}, false);
 
-window.addEventListener("gamepaddisconnected", function (evt) {
-    for (let device of KOS_MAPLE_DEVS) {
-        if (evt.gamepad.index != device._gamepad_index) continue;
+    // allocate VMUs
+    let saveslots = SETTINGS.saveslots;
+    for (let i = 0; i < saveslots; i++) {
+        if (i < 4) {
+            KOS_MAPLE_DEVS[i][1] = new maple_device_t(MAPLE_FUNC_MEMCARD, i, 1);
+            continue;
+        }
 
-        device._status.buttons = 0;
-        device._status.joyx = 0;
-        device._status.joyx = 0;
-        device._status.joy2x = 0;
-        device._status.joy2y = 0;
-        device._status.ltrig = 0;
-        device._status.rtrig = 0;
-        return;
+        L_find_upper_available_slot:
+        for (let port = 0; port < MAPLE_PORT_COUNT; port++) {
+            for (let unit = 0; unit < MAPLE_UNIT_COUNT; unit++) {
+                for (let mapping of KOS_GAMEPAD_TO_MAPLE_DEVICE) {
+                    if (mapping.port != port && mapping.unit != unit) {
+                        // unused space, assign as VMU
+                        KOS_MAPLE_DEVS[port][unit] = new maple_device_t(
+                            MAPLE_FUNC_MEMCARD, port, unit
+                        );
+                        break L_find_upper_available_slot;
+                    }
+                }
+            }
+        }
     }
+
+    KOS_MAPLE_slots_allocated = true;
+
+    // allocate existing gamepads
+    let gamepads = window.navigator.getGamepads();
+    for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i] == null) continue;
+
+        KOS_handle_gamepad_connection(new GamepadEvent(
+            gamepads[i].connected ? "gamepadconnected" : "gamepaddisconnected",
+            { gamepad: gamepads[i] }
+        ));
+    }
+
+    // load keyboard mappings
+    KOS_MAPLE_KEYBOARD.reloadMappings();
 }, false);
+
+function KOS_handle_gamepad_connection(/**@type {GamepadEvent}*/ evt) {
+    if (!KOS_MAPLE_slots_allocated) return;
+
+    for (let mapping of KOS_GAMEPAD_TO_MAPLE_DEVICE) {
+        if (mapping.index != evt.gamepad.index) continue;
+
+        let device = KOS_MAPLE_DEVS[mapping.port][mapping.unit];
+
+        if (!device) {
+            device = new maple_device_t(MAPLE_FUNC_CONTROLLER, mapping.port, mapping.unit);
+            device._gamepad_index = evt.gamepad.index;
+            KOS_MAPLE_DEVS[mapping.port][mapping.unit] = device;
+        }
+
+        device.valid = evt.type == "gamepadconnected";
+        device._status.buttons = 0x00;
+        device._status.joyx = device._status.joyy = 0;
+        device._status.joy2x = device._status.joy2y = 0;
+        device._status.ltrig = device._status.rtrig = 0;
+
+        console.log(
+            `gamepad id=${evt.gamepad.id} timestamp=${evt.gamepad.timestamp} status=${evt.type}`
+        );
+    }
+}
 
 
 

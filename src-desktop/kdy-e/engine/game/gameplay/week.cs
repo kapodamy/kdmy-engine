@@ -443,7 +443,7 @@ public class Week {
             weekpause = null,
             weekresult = null,
             messagebox = null,
-            ui_camera = new Camera(null, 640f, 480f),
+            ui_camera = new Camera(null, PVRContext.global_context.ScreenWidth, PVRContext.global_context.ScreenHeight),
             missnotefx = null,
             songprogressbar = null,
             autouicosmetics = new AutoUICosmetics(),

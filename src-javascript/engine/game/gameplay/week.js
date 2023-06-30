@@ -440,7 +440,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         weekpause: null,
         weekresult: null,
         messagebox: null,
-        ui_camera: camera_init(null, 640, 480),
+        ui_camera: camera_init(null, pvr_context.screen_width, pvr_context.screen_height),
         missnotefx: null,
         songprogressbar: null,
         autouicosmetics: autouicosmetics_init(),

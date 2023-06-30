@@ -471,6 +471,9 @@ async function mainmenu_handle_selected_option(selected_index) {
         case 2:
             await mainmenu_show_donate();
             return 1;// main-menu
+        case 3:
+            await settingsmenu_main();
+            return 1;// main-menu
         default:
             console.log("unimplemented selected option:" + selected_index);
             return 1;

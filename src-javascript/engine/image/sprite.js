@@ -818,6 +818,11 @@ function sprite_set_vertex_color_rgb8(sprite, rbg8_color) {
     math2d_color_bytes_to_floats(rbg8_color, 0, sprite.vertex_color);
 }
 
+function sprite_set_vertex_color_rgba8(sprite, rbga8_color) {
+    sprite_set_vertex_color_rgb8(sprite, rbga8_color >>> 8);
+    sprite.alpha = (rbga8_color & 0xFF) / 255.0;
+}
+
 function sprite_set_vertex_color(sprite, r, g, b) {
     if (r >= 0) sprite.vertex_color[0] = r;
     if (g >= 0) sprite.vertex_color[1] = g;

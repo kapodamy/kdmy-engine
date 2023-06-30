@@ -257,8 +257,8 @@
         </div>
     </div>
 
-    <!-- <canvas width="640" height="480" style="border: 1px black solid;"></canvas> -->
-    <canvas width="864" height="486" style="border: 1px black solid;"></canvas>
+    <!--  letterbox=width+height  widescreen=width2+height2  -->
+    <canvas width="640" height="480" width2="864" height2="486" style="border: 1px black solid;"></canvas>
     <div>
         <i>kdmy-engine layout visor</i>
     </div>
@@ -266,7 +266,7 @@
         <hr>
         <button id="pvr-onoff">Suspend/Resume PVR</button>
         <br>
-        <label>PVR status: <input type="text" readonly="" value="00 FPS" id="pvr-status"></label>
+        <label>FPS: <input type="text" readonly="" value="00 FPS" id="pvr-status"></label>
     </div>
 
     <script src="engine/platform/localforage.js"></script>
@@ -280,6 +280,7 @@
     <script src="engine/platform/io.js"></script>
     <script src="engine/platform/fs.js"></script>
     <script src="engine/platform/gamepad.js"></script>
+    <script src="engine/platform/dds.js"></script>
     <script src="engine/platform/www_autoplay.js"></script>
 
     <script src="engine/utils/misc.js"></script>
@@ -338,6 +339,7 @@
 	<script src="engine/game/gameplay/weekscript.js"></script>
 
     <script src="engine/game/main.js"></script>
+    <script src="engine/game/mastervolume.js"></script>
     <script src="engine/game/layoutvisor.js"></script>
 	
 	<datalist id="predefined-characterManifest"></datalist>

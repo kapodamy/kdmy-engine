@@ -11,6 +11,7 @@ const PVR_DREAMCAST_VRAM_SIZE = 1024 * 1024 * 8;
 /**@type {RGBA}*/ const PVR_DEFAULT_OFFSET_COLOR = [0.0, 0.0, 0.0, -1.0];
 
 const PVR_FRAME_TIME = 0;//1000.0 / 60;
+const PVR_AUTOHIDE_CURSOR_MILLISECONDS = 3000;
 var pvr_last_timestamp = -1;
 var pvr_total_elapsed = 0;
 var pvr_total_frames = 0;
@@ -124,8 +125,8 @@ function pvr_mem_available() {
 }
 
 
-var PVR_WIDTH = 640;
-var PVR_HEIGHT = 480;
+var PVR_WIDTH = 640, PVR_HEIGHT = 480;
+var PVR_WIDTH_WS = 960, PVR_HEIGHT_WS = 540;
 var PVR_PIXELFORMAT_BYTES = 4;// in the dreamcast is 2 bytes (RGB565)
 var pvr_draw_callback = function (elapsed) { };
 
@@ -201,13 +202,15 @@ function pvr_show_fps(elapsed) {
         pvr_total_frames = 0;
         pvr_frame_next += 1000;
     }
-    PVR_STATUS.value = pvr_cur_frames + "FPS";
+    PVR_STATUS.value = pvr_cur_frames.toString();
 }
 
 function pvr_onoff(e) {
     if (e.type == "keypress") {
         if (e.key != "p" && e.key != "P") return;
         console.info("PVR: [p] key pressed");
+    } else {
+        e.target.blur();
     }
 
     if (pvr_init) {
@@ -247,8 +250,32 @@ async function pvr_copy_framebuffer() {
     let raw_data = await createImageBitmap(canvas);
     let byte_length = canvas.width * canvas.height * 4;// estimated
 
-    return texture_init_from_raw(raw_data, byte_length, 0, canvas.width, canvas.height, PVR_WIDTH, PVR_HEIGHT);
+    return texture_init_from_raw(raw_data, byte_length, 0, canvas.width, canvas.height, pvr_context.screen_width, pvr_context.screen_height);
 }
+
+async function pvr_fullscreen(e) {
+    try {
+        e.target.blur();
+
+        if (document.fullscreenElement)
+            await document.exitFullscreen();
+        else
+            await pvr_context._html5canvas.requestFullscreen({ navigationUI: "hide" });
+    } catch (err) {
+        console.error("pvr_fullscreen() failed", err);
+    }
+}
+
+async function pvr_widescreen(e) {
+    if (document.fullscreenElement) return;
+    e.target.blur();
+
+    let widescreen = SETTINGS.storage_load_boolean(SETTINGS.INI_MISC_SECTION, "widescreen", false);
+    SETTINGS.storage_save_boolean(SETTINGS.INI_MISC_SECTION, "widescreen", !widescreen);
+
+    pvr_update_devicePixelRatio();
+}
+
 
 function pvr_update_devicePixelRatio() {
     if (pvr_last_match_media != null) {
@@ -264,21 +291,50 @@ function pvr_update_devicePixelRatio() {
 
     let ratio = window.devicePixelRatio;
     let canvas = pvr_context._html5canvas;
+    let target_width = PVR_WIDTH, target_height = PVR_HEIGHT;
+
+    if (document.fullscreenElement != null) {
+        target_width = window.innerWidth;
+        target_height = window.innerHeight;
+    } else if ("main_layout_visor" in window) {
+        // @ts-ignore
+        let widescreen_checked = document.getElementById("widescreen").checked;
+        target_width = widescreen_checked ? PVR_WIDTH_WS : PVR_WIDTH
+        target_height = widescreen_checked ? PVR_HEIGHT_WS : PVR_HEIGHT;
+    } else if (SETTINGS.storage_load_boolean(SETTINGS.INI_MISC_SECTION, "widescreen", false)) {
+        target_width = PVR_WIDTH_WS;
+        target_height = PVR_HEIGHT_WS;
+    }
 
     if (ratio != 1.0) {
-        canvas.width = PVR_WIDTH * ratio;
-        canvas.height = PVR_HEIGHT * ratio;
-        canvas.style.width = `${PVR_WIDTH}px`;
-        canvas.style.height = `${PVR_HEIGHT}px`;
+        canvas.width = target_width * ratio;
+        canvas.height = target_height * ratio;
+        canvas.style.width = `${target_width}px`;
+        canvas.style.height = `${target_height}px`;
     } else {
-        canvas.width = PVR_WIDTH;
-        canvas.height = PVR_HEIGHT;
+        canvas.width = target_width;
+        canvas.height = target_height;
         canvas.style.width = '';
         canvas.style.height = '';
     }
 
     pvr_context.resolution_changes++;
-};
+}
+
+function pvr_cursor_hidder() {
+    function hide_cursor() {
+        if (SETTINGS.autohide_cursor) {
+            pvr_context._html5canvas.classList.add("hide-cursor");
+        }
+    }
+    let id = setTimeout(hide_cursor, PVR_AUTOHIDE_CURSOR_MILLISECONDS);
+
+    document.addEventListener("mousemove", function (e) {
+        clearTimeout(id);
+        pvr_context._html5canvas.classList.remove("hide-cursor");
+        id = setTimeout(hide_cursor, PVR_AUTOHIDE_CURSOR_MILLISECONDS);
+    });
+}
 
 function pvrctx_helper_clear_modifier(modifier) {
     const BASE_MODIFIER = {
@@ -378,7 +434,7 @@ function pvrctx_helper_copy_modifier(modifier_source, modifier_dest) {
 }
 
 function pvrctx_is_widescreen() {
-    return !math2d_floats_are_near_equal(640 / 480, PVR_WIDTH / PVR_HEIGHT);
+    return !math2d_floats_are_near_equal(640 / 480, pvr_context.screen_stride / pvr_context.screen_height);
 }
 
 document.addEventListener("DOMContentLoaded", async function (e) {
@@ -394,14 +450,26 @@ document.addEventListener("DOMContentLoaded", async function (e) {
         pvr_launch_args.push(value);
     }
 
+    let canvas = document.querySelector('canvas');
+
     /** @ts-ignore */
     PVR_STATUS = document.getElementById("pvr-status");
+    PVR_WIDTH = canvas.width;
+    PVR_HEIGHT = canvas.height;
+    PVR_WIDTH_WS = parseInt(canvas.getAttribute("width2"));
+    PVR_HEIGHT_WS = parseInt(canvas.getAttribute("height2"));
 
-    pvr_context = new PVRContext(document.querySelector('canvas'));
+    // @ts-ignore
+    if ("main_layout_visor" in window && document.getElementById("widescreen").checked) {
+        canvas.width = PVR_WIDTH_WS;
+        canvas.height = PVR_HEIGHT_WS;
+    } else if (SETTINGS.storage_load_boolean(SETTINGS.INI_MISC_SECTION, "widescreen", false)) {
+        canvas.width = PVR_WIDTH_WS;
+        canvas.height = PVR_HEIGHT_WS;
+    }
+
+    pvr_context = new PVRContext(canvas);
     await pvr_context._initWebGL();
-
-    PVR_WIDTH = pvr_context._html5canvas.width;
-    PVR_HEIGHT = pvr_context._html5canvas.height;
 
     PVR_STATUS.value = "";
     pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
@@ -409,7 +477,12 @@ document.addEventListener("DOMContentLoaded", async function (e) {
     if ("matchMedia" in window) pvr_update_devicePixelRatio();
 
     document.getElementById("pvr-onoff").addEventListener("click", pvr_onoff, false);
+    document.getElementById("pvr-fullscreen")?.addEventListener("click", pvr_fullscreen, false);
+    document.getElementById("pvr-widescreen")?.addEventListener("click", pvr_widescreen, false);
     //document.addEventListener("keypress", pvr_onoff);
+
+    document.addEventListener("fullscreenchange", pvr_update_devicePixelRatio);
+    pvr_cursor_hidder();
 
     if (PVR_AUTORUN)
         pvr_onoff(e);
