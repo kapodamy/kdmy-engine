@@ -419,7 +419,7 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
             } else if (return_value == -1) {
                 // custom option menu
                 weekpause.modding.callback_option = null;
-                await modding_helper_handle_custom_option(weekpause.modding, weekpause.modding_choosen_option_name);
+                await modding_helper_notify_handle_custom_option(weekpause.modding, weekpause.modding_choosen_option_name);
                 if (weekpause.modding_choosen_option_name_is_allocated) {
                     weekpause.modding_choosen_option_name = undefined;
                     weekpause.modding_choosen_option_name = null;

@@ -272,7 +272,7 @@ async function modding_helper_notify_event(modding, event_name) {
     await luascript_notify_modding_event(weekscript_get_luascript(modding.script), event_name);
 }
 
-async function modding_helper_handle_custom_option(modding, option_name) {
+async function modding_helper_notify_handle_custom_option(modding, option_name) {
     if (modding.script == null) return;
     await luascript_notify_modding_handle_custom_option(weekscript_get_luascript(modding.script), option_name);
 }

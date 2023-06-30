@@ -347,7 +347,7 @@ async function mainmenu_main() {
 
         if (choosen_option_index < 0) {
             modding.callback_option = null;
-            await modding_helper_handle_custom_option(modding, moddinghelper.choosen_name);
+            await modding_helper_notify_handle_custom_option(modding, moddinghelper.choosen_name);
             if (moddinghelper.choosen_name_is_allocated) moddinghelper.choosen_name = undefined;
         }
     }
