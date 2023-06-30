@@ -48,6 +48,7 @@ async function soundplayer_init2(src, arraybuffer) {
             soundplayer.handler.currentTime = 0;
             soundplayer.handler.oncanplay = null;
             soundplayer.handler.onerror = null;
+            mastervolume_add_mediaelement(soundplayer.handler);
             try {
                 let points = await soundplayer_internal_read_looping_points(arraybuffer ?? src);
                 soundplayer.sample_rate = points.sample_rate;
@@ -75,6 +76,7 @@ function soundplayer_destroy(soundplayer) {
         soundplayer.handler.pause();
         soundplayer.handler.src = null;
         soundplayer.handler = undefined;
+        mastervolume_remove_mediaelement(soundplayer.handler);
     }
 
     if (soundplayer.blob_url) URL.revokeObjectURL(soundplayer.blob_url);
@@ -120,7 +122,9 @@ function soundplayer_loop_enable(soundplayer, enable) {
 }
 
 function soundplayer_fade(soundplayer, in_or_out, duration) {
-    soundplayer.handler.volume = in_or_out ? 0.0 : 1.0;
+    let initial_volume = in_or_out ? 0.0 : 1.0;
+    soundplayer.handler["volume__original"] = initial_volume;
+    soundplayer.handler.volume = initial_volume * mastervolume_current_volume;
     soundplayer.fade_status = in_or_out ? FADDING_IN : FADDING_OUT;
 
     let last_timestamp = -1;
@@ -140,7 +144,10 @@ function soundplayer_fade(soundplayer, in_or_out, duration) {
             return;
         }
 
-        soundplayer.handler.volume = percent;// macroexecutor_calc_log(percent);
+        //percent = macroexecutor_calc_log(percent);
+
+        soundplayer.handler.volume = percent * mastervolume_current_volume;
+        soundplayer.handler["volume__original"] = percent;
         requestAnimationFrame(ontimeupdate);
     };
 
@@ -149,7 +156,8 @@ function soundplayer_fade(soundplayer, in_or_out, duration) {
 
 
 function soundplayer_set_volume(soundplayer, volume) {
-    soundplayer.handler.volume = volume;
+    soundplayer.handler.volume = volume * mastervolume_current_volume;
+    soundplayer.handler["volume__original"] = volume;
 }
 
 function soundplayer_set_mute(soundplayer, muted) {

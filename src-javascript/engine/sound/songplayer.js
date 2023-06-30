@@ -90,6 +90,7 @@ function songplayer_destroy(songplayer) {
         // javacript only (needs the C counterpart)
         for (let i = 0; i < songplayer.playbacks_size; i++) {
             if (IO_CHROMIUM_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
+            mastervolume_remove_mediaelement(songplayer.playbacks[i]);
             songplayer.playbacks[i].pause();
             songplayer.playbacks[i].srcObject = null;
             songplayer.playbacks[i].remove();
@@ -194,6 +195,7 @@ async function songplayer_changesong(songplayer, src, prefer_alternative) {
         // javacript only (needs the C counterpart)
         for (let i = 0; i < songplayer.playbacks_size; i++) {
             if (IO_CHROMIUM_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
+            mastervolume_remove_mediaelement(songplayer.playbacks[i]);
             songplayer.playbacks[i].pause();
             songplayer.playbacks[i].srcObject = null;
             songplayer.playbacks[i].remove();
@@ -244,14 +246,19 @@ function songplayer_mute(songplayer, muted) {
 
 function songplayer_set_volume(songplayer, volume) {
     if (songplayer.playbacks_size < 1) return;
-    for (let i = 0; i < songplayer.playbacks_size; i++) songplayer.playbacks[i].volume = volume;
+    for (let i = 0; i < songplayer.playbacks_size; i++) {
+        songplayer.playbacks[i].volume = volume * mastervolume_current_volume;
+        songplayer.playbacks[i]["volume__original"] = volume;
+    }
 }
 
 function songplayer_set_volume_track(songplayer, vocals_or_instrumental, volume) {
     if (songplayer.playbacks_size < 1) return;
     let target = vocals_or_instrumental ? songplayer.index_voices : songplayer.index_instrumental;
     if (target < 0) return;
-    songplayer.playbacks[target].volume = volume;
+
+    songplayer.playbacks[target].volume = volume * mastervolume_current_volume;
+    songplayer.playbacks[target]["volume__original"] = volume;
 }
 
 
@@ -413,6 +420,8 @@ async function songplayer_internal_init_player(path) {
             player.preload = "metadata";
 
             player.oncanplay = function () {
+                mastervolume_add_mediaelement(player);
+
                 player.oncanplay = player.onerror = null;
                 if (!IO_CHROMIUM_DETECTED) player.currentTime = 0;
                 player.onerror = function () {

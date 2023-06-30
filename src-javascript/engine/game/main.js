@@ -40,6 +40,7 @@ async function main(argc, argv) {
     // vital parts
     fs_init();// intialize filesystem access for the main thread (this thread)
     luascriptplatform.InitializeCallbacks();
+    await mastervolume_init();
 
     if (!(await io_resource_exists(FS_ASSETS_FOLDER, 0, 1))) {
         alert("Missing assets folder");

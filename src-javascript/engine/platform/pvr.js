@@ -61,6 +61,8 @@ function pvrctx_wait_ready() {
     pvr_context.shader_framebuffer_front.Invalidate();
     pvr_context.shader_framebuffer_back.Invalidate();
 
+    mastervolume_draw(pvr_context);
+
     return new Promise(function (resolve, reject) {
         const handle = requestAnimationFrame(function (now) {
             document.removeEventListener("visibilitychange", visibilitychange);

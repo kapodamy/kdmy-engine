@@ -18,6 +18,7 @@ async function videoplayer_init(src) {
         await new Promise(function (resolve, reject) {
             video.oncanplay = function (evt) {
                 video.currentTime = 0;
+                mastervolume_add_mediaelement(video);
                 video.oncanplay = null;
                 video.onerror = null;
                 resolve();
@@ -67,6 +68,10 @@ function videoplayer_destroy(videoplayer) {
     videoplayer.handler.src = null;
     videoplayer.handler = undefined;
     texture_destroy(videoplayer.texture);
+
+    mastervolume_remove_mediaelement(videoplayer.handler);
+
+    ModuleLuaScript.kdmyEngine_drop_shared_object(videoplayer);
     videoplayer = undefined;
 }
 
