@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Engine.Externals.SoundBridge.Interop;
 
 namespace Engine.Externals.SoundBridge;
@@ -121,7 +122,7 @@ public class Stream : IDisposable {
         this.buffer_used = 0;
         this.played_time = seconds;
         this.looped_needs_time_reset = false;
-        this.sample_position = (uint)(this.played_time * this.sample_rate);
+        this.sample_position = (uint)(seconds * this.sample_rate);
 
         this.decoder.Seek(seconds);
 
@@ -369,7 +370,7 @@ public static class SoundBridge {
         Stream stream = (Stream)GCHandle.FromIntPtr(userdata).Target;
         stream.completed = true;
         stream.callback_running = false;
-        stream.played_time += PortAudio.Pa_GetStreamTime(stream.pastream) - stream.last_sample_time;
+        Interlocked.Exchange(ref stream.played_time, stream.played_time + PortAudio.Pa_GetStreamTime(stream.pastream) - stream.last_sample_time);
 
 #if DEBUG && SNDBRIDGE_DEBUG_COMPLETE
         double position = (PortAudio.Pa_GetStreamTime(stream.pastream) - stream.last_sample_time);
@@ -387,7 +388,7 @@ public static class SoundBridge {
         if (stream.halt) {
             if (stream.looped_needs_time_reset) {
                 stream.looped_needs_time_reset = false;
-                stream.played_time += stream.last_sample_time;
+                Interlocked.Exchange(ref stream.played_time, stream.played_time + stream.last_sample_time);
             }
 
             // playback ended, silence output to keep alive the stream
@@ -423,7 +424,7 @@ L_prepare_return:
             stream.fetching = false;
             stream.looped_needs_time_reset = true;
 
-            stream.played_time += ti->outputBufferDacTime - stream.last_sample_time;
+            Interlocked.Exchange(ref stream.played_time, stream.played_time + ti->outputBufferDacTime - stream.last_sample_time);
             stream.last_sample_time = (double)frameCount / stream.sample_rate;
 
             return PaStreamCallbackResult.paContinue;
