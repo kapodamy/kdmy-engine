@@ -740,14 +740,27 @@ function funkinsave_is_vmu_missing() {
 }
 
 function funkinsave_pick_first_available_vmu() {
+    let pick_first_device = 1;
+    let found = 0;
+
     for (let i = 0, count = maple_enum_count(); i < count; i++) {
         let dev = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
 
         if (dev && dev.valid) {
-            funkinsave.maple_port = dev.port;
-            funkinsave.maple_unit = dev.unit;
-            return;
+            if (pick_first_device) {
+                funkinsave.maple_port = dev.port;
+                funkinsave.maple_unit = dev.unit;
+                pick_first_device = 0;
+            }
+            found++;
         }
+    }
+
+    // JS & C# only
+    if (found > 1) {
+        // more than 1 virtual saveslots found, dont pick an vmu
+        funkinsave.maple_port = -1;
+        funkinsave.maple_unit = -1;
     }
 }
 

@@ -377,7 +377,7 @@ public class SaveManager {
 
     public static int ShouldShow(bool attempt_to_save_or_load) {
         if (SaveManager.game_withoutsavedata) return -1;
-        if (FunkinSave.IsVMUMissing()) return 1;
+        if (FunkinSave.IsVMUMissing()) return -1;
 
         // attempt to automatically load/save
         int result;

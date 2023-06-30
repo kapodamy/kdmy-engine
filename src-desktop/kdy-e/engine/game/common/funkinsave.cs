@@ -767,14 +767,27 @@ public static class FunkinSave {
     }
 
     public static void PickFirstAvailableVMU() {
+        bool pick_first_device = true;
+        int found = 0;
+
         for (int i = 0, count = maple.enum_count() ; i < count ; i++) {
             maple_device_t dev = maple.enum_type(i, MAPLE_FUNC.MEMCARD);
 
             if (dev != null && dev.valid) {
-                FunkinSave.maple_port = dev.port;
-                FunkinSave.maple_unit = dev.unit;
-                return;
+                if (pick_first_device) {
+                    FunkinSave.maple_port = dev.port;
+                    FunkinSave.maple_unit = dev.unit;
+                    pick_first_device = false;
+                }
+                found++;
             }
+        }
+
+        // JS & C# only
+        if (found > 1) {
+            // more than 1 virtual saveslots found, dont pick an vmu
+            FunkinSave.maple_port = UInt32.MaxValue;
+            FunkinSave.maple_unit = UInt32.MaxValue;
         }
     }
 

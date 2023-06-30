@@ -352,7 +352,7 @@ async function savemanager_show(savemanager) {
 
 async function savemanager_should_show(attempt_to_save_or_load) {
     if (savemanager_game_withoutsavedata) return -1;
-    if (funkinsave_is_vmu_missing()) return 1;
+    if (funkinsave_is_vmu_missing()) return -1;
 
     // attempt to automatically load/save
     let result;
