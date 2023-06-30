@@ -327,7 +327,7 @@ let d = `#pragma header
         //pvr_context_add_shader(pvr_context, ps_b);
         //pvr_context_add_shader(pvr_context, ps_c);
 
-        //pvr_context_draw_solid_color(pvr_context, [1, 0, 0], 0, 0, 640, 480);
+        //pvr_context_draw_solid_color(pvr_context, [1, 0, 0], 0, 0, pvr_context.screen_width, pvr_context.screen_height);
         //pvr_context_draw_solid_color(pvr_context, PVR_CLEAR_COLOR, 1, 1, 638, 478);
         sprite_draw(sprite, pvr_context);
 
@@ -346,7 +346,7 @@ let d = `#pragma header
         sprite_animate(sprite, elapsed);
 
         framebuffer1.Use();
-        pvr_context_draw_solid_color(pvr_context, [1, 0, 0], 0, 0, 640, 480);
+        pvr_context_draw_solid_color(pvr_context, [1, 0, 0], 0, 0, pvr_context.screen_width, pvr_context.screen_height);
         pvr_context_draw_solid_color(pvr_context, PVR_CLEAR_COLOR, 1, 1, 638, 478);
         sprite_draw(sprite, pvr_context);
 
@@ -376,7 +376,7 @@ let d = `#pragma header
         "Aenean accumsan porta efficitur."
     );
 
-    pvr_context_draw_solid_color(pvr_context, [0.9, 0.9, 0.9], 0, 0, 640, 480);
+    pvr_context_draw_solid_color(pvr_context, [0.9, 0.9, 0.9], 0, 0, pvr_context.screen_width, pvr_context.screen_height);
     pvr_context_draw_solid_color(pvr_context, [1, 1, 1], 150, 100, 293, 172);
     textsprite_draw(textsprite, pvr_context);
     return;*/
@@ -393,10 +393,10 @@ let d = `#pragma header
         let character_boyfriend = await character_init(manifest_boyfriend);
     
         character_set_bpm(character_boyfriend, 100);
-        character_set_draw_location(character_boyfriend, 200, 480);
+        character_set_draw_location(character_boyfriend, 200, pvr_context.screen_height);
         character_set_z_index(character_boyfriend, 200);
         //character_set_draw_align(character_boyfriend, ALIGN_CENTER, ALIGN_BOTH);
-        //character_set_layout_resolution(character_boyfriend, PVR_WIDTH, PVR_HEIGHT);
+        //character_set_layout_resolution(character_boyfriend, pvr_context.screen_width, pvr_context.screen_height);
         //character_set_offset(character_boyfriend, manifest_boyfriend.offset_x, manifest_boyfriend.offset_y);
         //character_set_idle_speed(character_boyfriend, 1.0);
         //character_use_alternate_sing_animations(character_boyfriend, 0);
@@ -514,7 +514,7 @@ let d = `#pragma header
         //layout_animate(layout_test, elapsed*0.1);
         layout_draw(layout_test, pvr_context);
         pvr_context.render_alpha = 0.8;
-        pvr_context_draw_solid_color(pvr_context, [0, 0, 0], 0, 0, 640, 480);
+        pvr_context_draw_solid_color(pvr_context, [0, 0, 0], 0, 0, pvr_context.screen_width, pvr_context.screen_height);
     }
     return;
     */
@@ -732,7 +732,7 @@ let d = `#pragma header
         ],
         items_size: 9
     };
-    let menu = await menu_init(MENU_MANIFEST, 10, 100, 1, 640, 300);
+    let menu = await menu_init(MENU_MANIFEST, 10, 100, 1, pvr_context.screen_width, 300);
     window["menu"] = menu;
     menu_select_index(menu, 0);
 
@@ -740,7 +740,7 @@ let d = `#pragma header
         let elapsed = await pvr_wait_ready();
         pvr_context_reset(pvr_context);
         pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
-        pvr_context_draw_solid_color(pvr_context, "#AAAAAAAA", 10, 100, 640, 300);
+        pvr_context_draw_solid_color(pvr_context, "#AAAAAAAA", 10, 100, pvr_context.screen_width, 300);
 
         menu_animate(menu, elapsed);
         menu_draw(menu, pvr_context);
@@ -1066,8 +1066,8 @@ let d = `#pragma header
     
         pvr_context_set_global_antialiasing(pvr_context, PVR_FLAG_DISABLE);
         //pvr_context_set_global_offsetcolor_multiply(pvr_context, PVR_FLAG_DISABLE);
-        layout.modifier_camera.width = 640;
-        layout.modifier_camera.height = 480;
+        layout.modifier_camera.width = pvr_context.screen_width;
+        layout.modifier_camera.height = pvr_context.screen_height;
         layout.modifier_camera.scale_direction_x = -0.5;
         layout.modifier_camera.scale_direction_y = -0.5;
     
@@ -1087,11 +1087,11 @@ let d = `#pragma header
             layout.modifier_camera.translate_y += keys.translate_y;
     
             //pvr_context.html5canvasctx.lineWidth = 1;
-            //pvr_context.html5canvasctx.moveTo(PVR_WIDTH / 2, 0);
-            //pvr_context.html5canvasctx.lineTo(PVR_WIDTH / 2, PVR_HEIGHT);
+            //pvr_context.html5canvasctx.moveTo(pvr_context.screen_width / 2, 0);
+            //pvr_context.html5canvasctx.lineTo(pvr_context.screen_width / 2, pvr_context.screen_height);
             //pvr_context.html5canvasctx.stroke();
-            //pvr_context.html5canvasctx.moveTo(0, PVR_HEIGHT / 2);
-            //pvr_context.html5canvasctx.lineTo(PVR_WIDTH, PVR_HEIGHT / 2);
+            //pvr_context.html5canvasctx.moveTo(0, pvr_context.screen_height / 2);
+            //pvr_context.html5canvasctx.lineTo(pvr_context.screen_width, pvr_context.screen_height / 2);
             //pvr_context.html5canvasctx.stroke();
     
             let total = performance.now() - start;
@@ -1150,7 +1150,7 @@ let d = `#pragma header
     healthbar_state_background_add2(healthbar, 0x00000, null, null);
     healthbar_state_player_add2(healthbar, boyfriend_moldelholder, 0x00FF00, null);
     healthbar_state_opponent_add2(healthbar, dad_moldelholder, 0xFF0000, null);
-    healthbar_set_layout_size(healthbar, 640, 480);
+    healthbar_set_layout_size(healthbar, pvr_context.screen_width, pvr_context.screen_height);
     healthbar_internal_calc_dimmensions(healthbar);
     healthbar_state_toggle(healthbar, null);
     healthbar_set_bump_animation(healthbar, ui_animlist);

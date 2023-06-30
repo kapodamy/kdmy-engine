@@ -140,6 +140,7 @@ L_continue:
         // gamepad connection/disconnection
         Glfw.SetJoystickCallback(maple.joystickCallback);
 
+        // allocate existing gamepads
         for (int i = 0, total = Glfw.JOYSTICK_LAST ; i < total ; i++) {
             if (Glfw.JoystickIsGamepad(i)) InternalGamepadConnection(i, ConnectionStatus.Connected);
         }
@@ -546,8 +547,8 @@ internal static class maple_mappings {
         new KeyboardToCONT(Keys.HOME, CONT.HOME_OR_GUIDE)
     };
     public static readonly KeyboardToAxis[] KEYBOARD_MAPPING_AXES = {
-        new KeyboardToAxis(Keys.UNKNOWN, Keys.KP_8, CONTEx.AXIS_LY),
-        new KeyboardToAxis(Keys.UNKNOWN, Keys.KP_6, CONTEx.AXIS_LX)
+        new KeyboardToAxis(Keys.KP_2, Keys.KP_8, CONTEx.AXIS_LY),
+        new KeyboardToAxis(Keys.KP_4, Keys.KP_6, CONTEx.AXIS_LX)
     };
     public static readonly KeyboardToTrigger[] KEYBOARD_MAPPING_TRIGGERS = {
         new KeyboardToTrigger(Keys.Q, CONTEx.TRIGGER_L),

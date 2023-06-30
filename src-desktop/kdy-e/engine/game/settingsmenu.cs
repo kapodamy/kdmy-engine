@@ -12,6 +12,7 @@ using Engine.Sound;
 using Engine.Utils;
 
 namespace Engine.Game;
+
 public static class SettingsMenu {
     private const string KEY_NONE = "(none)";
     private const string KEY_BIND = "(waiting)";
@@ -872,7 +873,7 @@ public static class SettingsMenu {
                               "These elements normally are shown near or surrounding girlfriend's speakers",
                 is_bool = true,
                 value_bool = true,
-                ini_key = "gameplay_enabled_ui_cosmetics"
+                ini_key = "gameplay_enabled_uicosmetics"
             },
 
         };
@@ -1000,7 +1001,7 @@ public static class SettingsMenu {
             "menu_fontBorderSize", 4f
         );
         LayoutPlaceholder menu_placeholder = layout.GetPlaceholder("menu");
-        if (menu_placeholder == null) throw new System.Exception("Missing menu placeholder");
+        if (menu_placeholder == null) throw new Exception("Missing menu placeholder");
 
         // create menu options
         SettingsMenu.MENU_COMMON.parameters.is_vertical = is_vertical;
@@ -1183,7 +1184,7 @@ public static class SettingsMenu {
         );
 
         LayoutPlaceholder menu_placeholder = layout.GetPlaceholder("menu-selector");
-        if (menu_placeholder == null) throw new System.Exception("Missing menu-selector placeholder");
+        if (menu_placeholder == null) throw new Exception("Missing menu-selector placeholder");
 
         // create selector menu
         SettingsMenu.MENU_COMMON.parameters.font_border_size = 0f;

@@ -7,7 +7,7 @@ const IO_REQUEST_JSON = 3;
 const IO_REQUEST_ARRAYBUFFER = 4;
 const IO_REQUEST_HEAD = 5;
 
-const IO_CHROMIUM_DETECTED = "NavigatorUAData" in self;
+const IO_CHROMIUM_DETECTED = navigator.userAgent.includes("Chrome/") && location.protocol == "file:";
 
 /** @type {Worker} **/
 var IO_WORKER;

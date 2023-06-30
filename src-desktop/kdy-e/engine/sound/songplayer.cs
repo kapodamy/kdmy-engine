@@ -2,6 +2,7 @@ using System;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Platform;
 using Engine.Utils;
+using KallistiOS.THD;
 
 namespace Engine.Sound;
 

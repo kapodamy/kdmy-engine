@@ -258,7 +258,7 @@ class LuascriptPlatform {
 
 
     #NotifyKeyboard(/**@type {KeyboardEvent}*/event, is_pressed) {
-        const scancode = event.keyCode;
+        const scancode = event.code;
         let key = this.#GLFW_KEY_UNKNOWN;
         switch (event.code) {
             case "Space": key = this.#GLFW_KEY_SPACE;
@@ -390,6 +390,15 @@ class LuascriptPlatform {
         if (event.metaKey) mods |= this.#GLFW_MOD_SUPER;
         if (event.getModifierState("CapsLock")) mods |= this.#GLFW_MOD_CAPS_LOCK;
         if (event.getModifierState("NumLock")) mods |= this.#GLFW_MOD_NUM_LOCK;
+
+        // special keys
+        switch (key) {
+            case this.#GLFW_KEY_F11:
+            case this.#GLFW_KEY_F12:
+            case this.#GLFW_KEY_KP_SUBTRACT:
+            case this.#GLFW_KEY_KP_ADD:
+                return;
+        }
 
         const array = this.#luascript_instances.array;
         const size = this.#luascript_instances.size;
