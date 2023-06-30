@@ -172,7 +172,13 @@ async function menu_init(menumanifest, x, y, z, width, height) {
         menu_internal_build_map(menu);
     }
 
-    menu_internal_set_index_selected(menu, 0);
+    // select the first visible item
+    for (let i = 0; i < menu.items_size; i++) {
+        if (!menu.items[i].hidden) {
+            menu_internal_set_index_selected(menu, i);
+            break;
+        }
+    }
 
     return menu;
 }
@@ -230,6 +236,7 @@ function menu_trasition_out(menu) {
 function menu_select_item(menu, name) {
     for (let i = 0; i < menu.items_size; i++) {
         if (menu.items[i].name == name) {
+            if (menu.items[i].hidden) return 0;
             menu_internal_set_index_selected(menu, i);
             return 1;
         };
@@ -239,6 +246,7 @@ function menu_select_item(menu, name) {
 }
 
 function menu_select_index(menu, index) {
+    if (index >= 0 && index < menu.items_size && menu.items[index].hidden) return;
     menu_internal_set_index_selected(menu, index);
 }
 
@@ -305,7 +313,7 @@ function menu_set_item_visibility(menu, index, visible) {
         for (index = menu.index_selected; index > 0; index--) {
             if (!menu.items[menu.index_selected].hidden) break;
         }
-        menu_internal_set_index_selected(menu, index);
+        menu_internal_set_index_selected(menu, menu.index_selected);
     }
 
     menu_internal_build_map(menu);

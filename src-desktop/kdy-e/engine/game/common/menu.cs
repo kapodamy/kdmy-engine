@@ -7,6 +7,7 @@ using Engine.Game.Gameplay.Helpers;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Utils;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Engine.Game.Common;
 
@@ -216,8 +217,13 @@ public class Menu : IAnimate, IDraw {
             InternalBuildMap();
         }
 
-        InternalSetIndexSelected(0);
-
+        // select the first visible item
+        for (int i = 0 ; i < this.items_size ; i++) {
+            if (!this.items[i].hidden) {
+                this.InternalSetIndexSelected(i);
+                break;
+            }
+        }
 
     }
 
@@ -274,6 +280,7 @@ public class Menu : IAnimate, IDraw {
     public bool SelectItem(string name) {
         for (int i = 0 ; i < this.items_size ; i++) {
             if (this.items[i].name == name) {
+                if (this.items[i].hidden) return 0;
                 InternalSetIndexSelected(i);
                 return true;
             };
@@ -283,6 +290,7 @@ public class Menu : IAnimate, IDraw {
     }
 
     public void SelectIndex(int index) {
+        if (index >= 0 && index < this.items_size && this.items[index].hidden) return;
         InternalSetIndexSelected(index);
     }
 
@@ -347,7 +355,7 @@ public class Menu : IAnimate, IDraw {
             for (index = this.index_selected ; index > 0 ; index--) {
                 if (!this.items[this.index_selected].hidden) break;
             }
-            InternalSetIndexSelected(index);
+            InternalSetIndexSelected(this.index_selected);
         }
 
         InternalBuildMap();
