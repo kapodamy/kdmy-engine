@@ -9,19 +9,16 @@ const FS_EXPANSIONS_FOLDER = "/expansions";
 const FS_ASSETS_COMMON_FOLDER = "/assets/common/";
 const FS_NO_OVERRIDE_COMMON = "/~assets/common/";
 
-var fs_tls_init = 1;
 var fs_tls_key = {};
 var fs_cod = null;
 
 function fs_init() {
-    if (fs_tls_init) {
+    if (kthread_getspecific(fs_tls_key)) {
+        throw new Error("Duplicate call to fs_init()");
+    } else {
         // first run, initialize the thread local storage key
         kthread_key_create(fs_tls_key, fs_destroy);
-        fs_tls_init = 0;
-
     }
-
-    if (kthread_getspecific(fs_tls_key)) throw new Error("Duplicate call to fs_init()");
 
     let fs_tls = {
         fs_cwd: strdup(FS_ASSETS_FOLDER),
@@ -40,23 +37,23 @@ function fs_destroy(fs_tls) {
 
 async function fs_readtext(src) {
     src = await fs_get_full_path_and_override(src);
-    return await io_foreground_request(src, IO_REQUEST_STRING);
+    return await io_request_file(src, IO_REQUEST_TEXT);
 }
 
 async function fs_readblob(src) {
     src = await fs_get_full_path_and_override(src);
-    return await io_foreground_request(src, IO_REQUEST_BLOB);
+    return await io_request_file(src, IO_REQUEST_BLOB);
 }
 
 async function fs_readarraybuffer(src) {
     src = await fs_get_full_path_and_override(src);
-    return await io_foreground_request(src, IO_REQUEST_ARRAYBUFFER);
+    return await io_request_file(src, IO_REQUEST_ARRAYBUFFER);
 }
 
 async function fs_readimagebitmap(src) {
     src = await fs_get_full_path_and_override(src);
     if (DDS.IsDDS(src)) {
-        let arraybuffer = await io_foreground_request(src, IO_REQUEST_ARRAYBUFFER);
+        let arraybuffer = await io_request_file(src, IO_REQUEST_ARRAYBUFFER);
         if (!arraybuffer) return null;
 
         let dds = DDS.Parse(arraybuffer);
@@ -64,22 +61,12 @@ async function fs_readimagebitmap(src) {
 
         return { data: dds, size: dds.size };
     }
-    return await io_foreground_request(src, IO_REQUEST_BITMAP);
-}
-
-async function fs_readjson__(src) {
-    try {
-        src = await fs_get_full_path_and_override(src);
-        return await io_foreground_request(src, IO_REQUEST_JSON);
-    } catch (e) {
-        console.error("fs: ", e);
-        return null;
-    }
+    return await io_request_file(src, IO_REQUEST_BITMAP);
 }
 
 async function fs_readxml(src) {
     src = await fs_get_full_path_and_override(src);
-    let result = await io_foreground_request(src, IO_REQUEST_STRING);
+    let result = await io_request_file(src, IO_REQUEST_TEXT);
     let xml = new DOMParser().parseFromString(result, "text/xml");
 
     if (xml.querySelector("parsererror")) {
@@ -109,88 +96,72 @@ async function fs_folder_exists(src) {
 
 async function fs_file_length(src) {
     src = await fs_get_full_path_and_override(src);
-    return await io_file_size(src, null);
+    return await io_file_size(src);
 }
 
 async function fs_folder_enumerate(src, folder_enumerator) {
     // needs C implemetation
-    let text = await fs_readtext(src);
-    if (!text) return 0;
 
-    folder_enumerator.___index = 0;
-    folder_enumerator.___entries = new Array();
-    folder_enumerator.name = null;
-    folder_enumerator.is_file = 0;
-    folder_enumerator.is_folder = 0;
+    const collator_natural = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+    const collator_insensitive = new Intl.Collator(undefined, { sensitivity: 'accent' });
 
-    if (navigator.userAgent.includes("Gecko/")) {
-        let entries = text.split("\n");
+    async function __enumerate_to(entries, target_folder, resolve_expansion) {
+        let path = await io_native_get_absolute_path(target_folder, false, true, resolve_expansion);
+        if (!await io_native_resource_exists(path, false, true)) return;
 
-        for (let entry of entries) {
-            if (!entry.startsWith("201:")) continue;
+        let info = await io_native_enumerate_folder(path);
+        if (!info) return;
 
-            let entry_descriptor = entry.trim().split(' ');
-            let type = entry_descriptor[entry_descriptor.length - 1];
-            let name = decodeURIComponent(entry_descriptor[1]);
-            let is_file = type == "FILE";
-            let is_folder = type == "DIRECTORY";
-
-            folder_enumerator.___entries.push({ name, is_file, is_folder });
+        for (let i = 0; i < info.length; i++) {
+            __add_unique(entries, info[i]);
         }
-
-        return 1;
-    } else if (navigator.userAgent.includes("Code/") && navigator.userAgent.includes("Electron/")) {
-        let html = new DOMParser().parseFromString(text, "text/html");
-
-        if (html.activeElement.tagName == "parsererror")
-            throw new SyntaxError(html.activeElement.textContent);
-
-        let entries = html.querySelectorAll("table>tbody>tr");
-
-        for (let entry of entries) {
-            if (!entry.querySelector("td")) continue;
-            let is_file = entry.querySelector("td:nth-child(2)").textContent.length > 0;
-            let is_folder = !is_file;
-            let name = entry.querySelector("td:nth-child(1)").textContent;
-
-            if (name == "../") continue;
-            name = name.substring(0, name.length - 1);
-
-            folder_enumerator.___entries.push({ name, is_file, is_folder });
-        }
-        return 1;
-    } else if (IO_CHROMIUM_DETECTED) {
-        const PREFIX = "addRow(";
-        const SUFFIX = ");";
-
-        let doc = (new DOMParser()).parseFromString(text, "text/html");
-
-        // extract the entries
-        for (let script of doc.querySelectorAll("script")) {
-            // step 1: find all "<script>addArrow(...);</script>"
-            let content = script.textContent.trim();
-            if (!content.startsWith(PREFIX)) continue;
-            if (!content.endsWith(SUFFIX)) break;// unexpected
-
-            // step 2: extract the entry
-            let entry = content.substring(PREFIX.length, content.length - SUFFIX.length);
-
-            // step 3: parse the entry
-            let fake_json = `[${entry}]`;
-            let fake_parsed_json = JSON.parse(fake_json);
-
-            // step 4: read the entry
-            folder_enumerator.___entries.push({
-                name: fake_parsed_json[0],
-                is_folder: fake_parsed_json[2],
-                is_file: !fake_parsed_json[2]
-            });
-        }
-
-        return 1;
     }
 
-    throw new KDMYEngineIOError("Unknown web browser, fs_read_folder() can not continue");
+    function __add_unique(entries, new_entry) {
+        for (let entry of entries) {
+            if (entry.name === new_entry.name) return;
+            if (collator_insensitive.compare(entry.name, new_entry.name) === 0) return;
+        }
+        entries.push(new_entry);
+    }
+
+    try {
+        let entries = new Array();
+
+        // this is a disaster, enumerate src under "/expansions" too
+        if (!src.startsWith("/~assets/")) {
+            for (let i = expansions_chain_array_size - 1; i >= 0; i--) {
+                let path = await expansions_get_path_from_expansion(src, i);
+                if (path == null) continue;
+
+                await __enumerate_to(entries, path, true);
+            }
+        }
+
+        // now enumerate the resqueted folder
+        await __enumerate_to(entries, src, false);
+
+        if (entries.length < 1) {
+            return false;
+        }
+
+        folder_enumerator.___index = 0;
+        folder_enumerator.___entries = entries;
+        folder_enumerator.name = null;
+        folder_enumerator.is_file = 0;
+        folder_enumerator.is_folder = 0;
+
+        // sort filenames if one or more expansions was enumerated
+        entries.sort((a, b) => collator_natural.compare(a.name, b.name));
+
+        return true;
+    } catch (e) {
+        console.warn(`fs_folder_enumerate() failed on ${src}`, e);
+
+        folder_enumerator.___entries = null;
+        folder_enumerator.name = null;
+        return false;
+    }
 }
 
 function fs_folder_enumerate_next(folder_enumerator) {

@@ -180,7 +180,25 @@ class PVRContext {
 
 }
 
+async function pvr_context_init() {
+    if (pvr_context) return;
 
+    let canvas = document.querySelector('canvas');
+
+    // @ts-ignore
+    if ("main_layout_visor" in window && document.getElementById("widescreen").checked) {
+        canvas.width = PVR_WIDTH_WS;
+        canvas.height = PVR_HEIGHT_WS;
+    } else if (SETTINGS.widescreen) {
+        canvas.width = PVR_WIDTH_WS;
+        canvas.height = PVR_HEIGHT_WS;
+    }
+
+    pvr_context = new PVRContext(canvas);
+    await pvr_context._initWebGL();
+
+    pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+}
 
 /** @param {PVRContext} pvrctx */
 function pvr_context_reset(pvrctx) {

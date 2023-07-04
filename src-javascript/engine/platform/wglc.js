@@ -1317,7 +1317,7 @@ function webopengl_set_shader_version(sourcecode) {
 async function webopengl_internal_load_shader(shader_prefix, vertexshader_or_fragmentshader) {
     const shader_suffix = vertexshader_or_fragmentshader ? "vertexshader" : "fragmentshader";
     let src = `assets/shaders/${shader_prefix}_${shader_suffix}.glsl`;
-    let text = await io_foreground_request(src, IO_REQUEST_STRING);
+    let text = await io_request_file(src, IO_REQUEST_TEXT);
 
     if (shader_prefix != "stock" && text) text = webopengl_set_shader_version(text);
 

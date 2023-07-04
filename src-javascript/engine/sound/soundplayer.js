@@ -9,7 +9,7 @@ async function soundplayer_init(src) {
     let full_path = await fs_get_full_path_and_override(src);
 
     if (!await fs_file_exists(full_path)) { return null; }
-    if (!IO_CHROMIUM_DETECTED) return await soundplayer_init2(full_path, null);
+    if (!IO_WEBKIT_DETECTED) return await soundplayer_init2(full_path, null);
 
     /** @type {ArrayBuffer} */
     let arraybuffer = await fs_readarraybuffer(full_path);

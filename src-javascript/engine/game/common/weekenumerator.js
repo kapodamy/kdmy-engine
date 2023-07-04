@@ -19,8 +19,10 @@ async function weekenumerator_enumerate() {
     fs_set_working_folder(FUNKIN_WEEKS_FOLDER, 0);
 
     let folder_enumerator = { name: null, is_file: 0, is_folder: 0 };
-    if (!await fs_folder_enumerate(FUNKIN_WEEKS_FOLDER, folder_enumerator)) {
-        console.error("weekenumerator_enumerate() can not read " + FUNKIN_WEEKS_FOLDER);
+    let weeks_path = expansions_overrided_weeks_folder ?? FUNKIN_WEEKS_FOLDER;
+
+    if (!await fs_folder_enumerate(weeks_path, folder_enumerator)) {
+        console.error(`weekenumerator_enumerate() can not read ${weeks_path}`);
         fs_folder_stack_pop();
         return;
     }
@@ -84,7 +86,7 @@ function weekenumerator_get_greetings(weekinfo) {
     return null;
 }
 
-function weekenumerator_get_asset( weekinfo,  relative_path) {
+function weekenumerator_get_asset(weekinfo, relative_path) {
     return string_concat(
         4, FUNKIN_WEEKS_FOLDER, weekinfo.name, FS_CHAR_SEPARATOR, relative_path
     );

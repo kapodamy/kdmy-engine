@@ -89,7 +89,7 @@ function songplayer_destroy(songplayer) {
     if (songplayer.playbacks) {
         // javacript only (needs the C counterpart)
         for (let i = 0; i < songplayer.playbacks_size; i++) {
-            if (IO_CHROMIUM_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
+            if (IO_WEBKIT_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
             mastervolume_remove_mediaelement(songplayer.playbacks[i]);
             songplayer.playbacks[i].pause();
             songplayer.playbacks[i].srcObject = null;
@@ -194,7 +194,7 @@ async function songplayer_changesong(songplayer, src, prefer_alternative) {
     if (songplayer.playbacks) {
         // javacript only (needs the C counterpart)
         for (let i = 0; i < songplayer.playbacks_size; i++) {
-            if (IO_CHROMIUM_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
+            if (IO_WEBKIT_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
             mastervolume_remove_mediaelement(songplayer.playbacks[i]);
             songplayer.playbacks[i].pause();
             songplayer.playbacks[i].srcObject = null;
@@ -405,7 +405,7 @@ async function songplayer_internal_chrome_url(path) {
 }
 
 async function songplayer_internal_init_player(path) {
-    if (IO_CHROMIUM_DETECTED) {
+    if (IO_WEBKIT_DETECTED) {
         try {
             path = await songplayer_internal_chrome_url(path);
         } catch (e) {
@@ -423,7 +423,7 @@ async function songplayer_internal_init_player(path) {
                 mastervolume_add_mediaelement(player);
 
                 player.oncanplay = player.onerror = null;
-                if (!IO_CHROMIUM_DETECTED) player.currentTime = 0;
+                if (!IO_WEBKIT_DETECTED) player.currentTime = 0;
                 player.onerror = function () {
                     console.error(
                         `songplayer_internal_init_player() playback error: code=${player.error.code} message=${player.error.message}`
@@ -437,7 +437,7 @@ async function songplayer_internal_init_player(path) {
             }
         }));
     } catch (e) {
-        if (IO_CHROMIUM_DETECTED) URL.revokeObjectURL(path);
+        if (IO_WEBKIT_DETECTED) URL.revokeObjectURL(path);
         console.error("songplayer_internal_init_player() failed to initialize the audio: " + path, e);
         return null;
     }

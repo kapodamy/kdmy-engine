@@ -25,7 +25,8 @@ var SETTINGS = {
     input_offset: 0, inverse_strum_scroll: false, penality_on_empty_strum: true, use_funkin_marker_duration: true,
     song_progressbar: true, song_progressbar_remaining: false,
     gameplay_enabled_distractions: true, gameplay_enabled_flashinglights: true, gameplay_enabled_uicosmetics: true,
-    saveslots: 1, autohide_cursor: true, show_loading_screen: true,
+    autohide_cursor: true, show_loading_screen: true, saveslots: 1,
+    widescreen: false, style_from_week_name: null,
 
     get_setting_ini_name: function (section, name) {
         return `$[${section}] ${name}`;
@@ -110,6 +111,9 @@ var SETTINGS = {
         this.show_loading_screen = this.storage_load_boolean(
             this.INI_MISC_SECTION, "show_loading_screen", this.show_loading_screen
         );
+        this.widescreen = this.storage_load_boolean(
+            this.INI_MISC_SECTION, "widescreen", this.widescreen
+        );
     },
 
     INI_BINDING_SECTION: "KeyboardBindings", INI_GAMEPLAY_SECTION: "Gameplay", INI_MISC_SECTION: "Misc"
@@ -126,23 +130,14 @@ const FUNKIN_LOADING_SCREEN_TEXTURE = "/assets/common/image/funkin/funkay.png";
 async function main(argc, argv) {
     // vital parts
     fs_init();// intialize filesystem access for the main thread (this thread)
-    luascriptplatform.InitializeCallbacks();
+    await pvr_context_init();
     await mastervolume_init();
-    SETTINGS.reload();
 
-    if (!(await io_resource_exists(FS_ASSETS_FOLDER, 0, 1))) {
-        alert("Missing assets folder");
-        return 1;
-    }
-
-    /**@type {utsname}*/
-    let osinfo = { machine: null, nodename: null, release: null, sysname: null, version: null };
+    let /**@type {utsname}*/ osinfo = { machine: null, nodename: null, release: null, sysname: null, version: null };
     uname(osinfo);
     console.info(`${ENGINE_NAME} ${ENGINE_VERSION}`);
     console.info(`Console: ${osinfo.machine}`);
     console.info(`OS: ${osinfo.version}\r\n`);
-
-    //await www_autoplay();
 
     // (JS & CS only) preload fonts
     await Promise.all([
@@ -150,7 +145,6 @@ async function main(argc, argv) {
         //fontholder_init("/assets/common/font/pixel.otf", -1, null),
         fontholder_init("/assets/common/font/alphabet.xml", -1, null)
     ]);
-
 
     await weekenumerator_enumerate();
 
@@ -177,7 +171,7 @@ async function main(argc, argv) {
         if (try_choose_last_played) {
             try_choose_last_played = false;
             weekinfo = null;
-            const last_played = funkinsave_get_last_played_week();
+            const last_played = SETTINGS.style_from_week_name ?? funkinsave_get_last_played_week();
 
             if (last_played != null) {
                 for (let i = 0; i < weeks_array.size; i++) {

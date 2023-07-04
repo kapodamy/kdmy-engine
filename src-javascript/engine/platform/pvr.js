@@ -18,7 +18,6 @@ var pvr_total_frames = 0;
 var pvr_cur_frames = 0;
 var pvr_frame_next = 1000;
 var pvr_suspended = 0;
-var pvr_init = 1;
 var pvr_callback_resume = null;
 var /**@type {MediaQueryList}*/pvr_last_match_media = null;
 var /**@type {string[]}*/ pvr_launch_args = new Array();
@@ -209,25 +208,8 @@ function pvr_onoff(e) {
     if (e.type == "keypress") {
         if (e.key != "p" && e.key != "P") return;
         console.info("PVR: [p] key pressed");
-    } else {
+    } else if (e && e.target && e.target.blur) {
         e.target.blur();
-    }
-
-    if (pvr_init) {
-        pvr_init = 0;
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
-
-        // read the entry point
-        /**@type {HTMLInputElement} */
-        let entry_point_input = document.querySelector("input[name=entry_point]");
-        let entry_point = entry_point_input.value;
-        /** @type {function} */
-        let main_fn = window[entry_point];
-
-        // emulate main thread
-        kos_thd_id++;
-        main_fn(pvr_launch_args.length, pvr_launch_args);
-        return;
     }
 
     pvr_suspended = pvr_suspended ? 0 : 1;
@@ -270,8 +252,8 @@ async function pvr_widescreen(e) {
     if (document.fullscreenElement) return;
     e.target.blur();
 
-    let widescreen = SETTINGS.storage_load_boolean(SETTINGS.INI_MISC_SECTION, "widescreen", false);
-    SETTINGS.storage_save_boolean(SETTINGS.INI_MISC_SECTION, "widescreen", !widescreen);
+    SETTINGS.widescreen = !SETTINGS.widescreen;
+    SETTINGS.storage_save_boolean(SETTINGS.INI_MISC_SECTION, "widescreen", SETTINGS.widescreen);
 
     pvr_update_devicePixelRatio();
 }
@@ -301,7 +283,7 @@ function pvr_update_devicePixelRatio() {
         let widescreen_checked = document.getElementById("widescreen").checked;
         target_width = widescreen_checked ? PVR_WIDTH_WS : PVR_WIDTH
         target_height = widescreen_checked ? PVR_HEIGHT_WS : PVR_HEIGHT;
-    } else if (SETTINGS.storage_load_boolean(SETTINGS.INI_MISC_SECTION, "widescreen", false)) {
+    } else if (SETTINGS.widescreen) {
         target_width = PVR_WIDTH_WS;
         target_height = PVR_HEIGHT_WS;
     }
@@ -458,23 +440,7 @@ document.addEventListener("DOMContentLoaded", async function (e) {
     PVR_HEIGHT = canvas.height;
     PVR_WIDTH_WS = parseInt(canvas.getAttribute("width2"));
     PVR_HEIGHT_WS = parseInt(canvas.getAttribute("height2"));
-
-    // @ts-ignore
-    if ("main_layout_visor" in window && document.getElementById("widescreen").checked) {
-        canvas.width = PVR_WIDTH_WS;
-        canvas.height = PVR_HEIGHT_WS;
-    } else if (SETTINGS.storage_load_boolean(SETTINGS.INI_MISC_SECTION, "widescreen", false)) {
-        canvas.width = PVR_WIDTH_WS;
-        canvas.height = PVR_HEIGHT_WS;
-    }
-
-    pvr_context = new PVRContext(canvas);
-    await pvr_context._initWebGL();
-
     PVR_STATUS.value = "";
-    pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
-
-    if ("matchMedia" in window) pvr_update_devicePixelRatio();
 
     document.getElementById("pvr-onoff").addEventListener("click", pvr_onoff, false);
     document.getElementById("pvr-fullscreen")?.addEventListener("click", pvr_fullscreen, false);
@@ -482,11 +448,120 @@ document.addEventListener("DOMContentLoaded", async function (e) {
     //document.addEventListener("keypress", pvr_onoff);
 
     document.addEventListener("fullscreenchange", pvr_update_devicePixelRatio);
-    pvr_cursor_hidder();
 
-    if (PVR_AUTORUN)
-        pvr_onoff(e);
-    /*else
-        pvr_draw_top_text("(PVR is not running)");*/
+    if (PVR_AUTORUN) pvr_call_entry_point();
 }, false);
+
+async function pvr_call_entry_point() {
+    // emulate main thread
+    kos_thd_id++;
+
+    // read the entry point
+    let /**@type {HTMLInputElement} */ entry_point_input = document.querySelector("input[name=entry_point]");
+    let /**@type {function(number,string[]):void}*/entry_point = window[entry_point_input.value];
+
+    //
+    // prepare startup
+    //
+    let expansion_directory = null;
+
+    // adquire the executable name and arguments
+    let args = pvr_launch_args;
+
+    // load ini file containing all settings
+    SETTINGS.reload();
+
+    // parse command line arguments
+    for (let i = 1; i < pvr_launch_args.length; i++) {
+        let next_argument = i + i;
+        let is_last_argument = next_argument >= pvr_launch_args.length;
+
+
+        switch (args[i].toLowerCase()) {
+            case "-expansionsloader":
+                expansion_directory = await expansionsloader_main();
+                if (!expansion_directory) continue;
+
+                if (expansion_directory != null) {
+                    console.info(`Selected expansion: ${expansion_directory}`);
+                }
+                break;
+            case "-expansion":
+                if (is_last_argument) continue;
+                expansion_directory = args[next_argument];
+                if (!expansion_directory) {
+                    expansion_directory = null;
+                    break;
+                }
+                if (expansion_directory.toLowerCase() == "funkin") {
+                    console.info("'/expansions/funkin' is always applied");
+                    expansion_directory = null;
+                }
+                break;
+            case "-style":
+                if (is_last_argument || !args[next_argument]) continue;
+                SETTINGS.style_from_week_name = strdup(args[next_argument]);
+                break;
+            case "-fullscreen":
+                SETTINGS.fullscreen = true;
+                break;
+            case "-nowidescreen":
+                SETTINGS.widescreen = false;
+                break;
+            case "-layoutdebugtriggercalls":
+                LAYOUT_DEBUG_PRINT_TRIGGER_CALLS = true;
+                break;
+            case "-saveslots":
+                if (is_last_argument) continue;
+                SETTINGS.saveslots = parseInt(args[next_argument]);
+                if (!Number.isFinite(SETTINGS.saveslots)) SETTINGS.saveslots = 1;
+                break;
+            case "-h":
+            case "-help":
+            case "--help":
+            case "/help":
+            case "/h":
+                alert(
+                    `${ENGINE_NAME} ${ENGINE_VERSION}` +
+                    "\r\n" +
+                    `    ${args[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionloader] [-layoutdebugtriggercalls]\r\n` +
+                    "\r\n" +
+                    "Options:\r\n" +
+                    "    -help                      Show this help message\r\n" +
+                    "    -saveslots                 Number of emulated VMU (Visual Memory Card) availabe. Defaults to 1\r\n" +
+                    "    -expansion                 Folder name inside of '/expansions' folder, this overrides the '/assets' folder contents. Disabled by default\r\n" +
+                    "    -style                     Week name (folder name inside of '/assets/weeks' folder) and picks the folder '/assets/weeks/WEEK_NAME/custom' or the defined in 'about.json' file. Defaults to the last played week\r\n" +
+                    "    -fullscreen                Starts the engine in fullscreen, toggle to windowed pressing 'F11' key. Defaults to windowed\r\n" +
+                    "    -nowidescreen              Forces the 4:3 aspect ratio like in the dreamcast. Defaults to 16:9, but changes if resized\r\n" +
+                    "    -console                   Opens a console window for all engine and lua scripts messages\r\n" +
+                    "    -expansionloader           Opens a window to choose the expansion to use\r\n" +
+                    "    -layoutdebugtriggercalls   Prints in console all layout_triger_***() calls\r\n" +
+                    "\r\n" +
+                    "Notes:\r\n" +
+                    "  -nowidescreen uses the 640x480 window size, otherwise defaults to 950x540. Anyways, the window still can be resized.\r\n" +
+                    "  in -saveslots, the maximum is 8 VMUS, and the names are a1, b1, c1, d1, a3, b5, etc...\r\n" +
+                    "  the folder '/expansions/funkin' is always applied, place modifications here if you do not want to messup '/assets' contents\r\n" +
+                    "  the files override order is:   '<requested file in assets>' --> '/assets/weeks/WEEK_NAME/custom_commons' --> '/expansions/EXPANSION_NAME' --> '/expansions/funkin' --> '/assets/*'\r\n" +
+                    "  shaders under '/assets/shaders' can not be overrided (for now).\n" +
+                    "  -style only overrides '/assets/common' folder while expansions overrides everything under '/assets'\r\n" +
+                    "\r\n"
+                );
+                return 0;
+            default:
+                continue;
+        }
+        i++;
+    }
+
+    // load selected expansion or default ("funkin" folder)
+    await expansions_load(expansion_directory);
+
+    //await www_autoplay();
+    await pvr_context_init();
+    pvr_cursor_hidder();
+    pvr_update_devicePixelRatio();
+
+    // now run the engine
+    setTimeout(entry_point, 0, pvr_launch_args.length, pvr_launch_args);
+}
 

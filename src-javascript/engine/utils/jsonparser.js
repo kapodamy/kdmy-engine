@@ -9,7 +9,13 @@ const JSON_VALUE_TYPE_OBJECT = 6;
 const JSON_VALUE_TYPE_UNKNOWN = 7;
 
 async function json_load_from(src) {
-    return await fs_readjson__(src);
+    try {
+        src = await fs_get_full_path_and_override(src);
+        return await io_request_file(src, IO_REQUEST_JSON);
+    } catch (e) {
+        console.error("json_load_from() failed", e);
+        return null;
+    }
 }
 
 function json_load_from_string(json_sourcecode) {
@@ -19,6 +25,14 @@ function json_load_from_string(json_sourcecode) {
         return JSON.parse(json_sourcecode)
     } catch (e) {
         console.error("json_load_from_string() failed ", e);
+        return null;
+    }
+}
+async function json_load_direct(src) {
+    try {
+        return await io_native_foreground_request(src, IO_REQUEST_JSON);
+    } catch (e) {
+        console.error("son_load_direct() failed", e);
         return null;
     }
 }

@@ -11,14 +11,241 @@
             body {background-color: whitesmoke;}
             .hide-cursor{cursor: none;}
         </style>
+        <style type="text/css">
+
+            .exl-dialog {
+                display: flex;
+                flex-direction: row;
+                font-family: Lato,Helvetica Neue,Helvetica,Roboto,Arial,sans-serif;
+            }
+
+            .exl-list * {
+                box-sizing: border-box;
+            }
+
+            .exl-list-cont {
+                width: 50vw;
+                min-width: 700px;
+            }
+
+            #exl-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                height: calc(106px * 5);
+                overflow-y: scroll;
+            }
+
+            .exl-item {
+                border: unset;
+                background-color: #fff;
+                padding: 16px;
+                width: 100%;
+                border: 1px solid transparent;
+                border-top-color: #f2f2f2;
+            }
+            .exl-item-cont {
+                height: 100%;
+                width: 100%;
+                align-items: center;
+                justify-content: flex-start;
+                flex-direction: row;
+                display: flex;
+            }
+
+            .exl-img-cont {
+                max-height: 73px;
+                width: 115px;
+                margin-right: 16px;
+                border-radius: 10px;
+                height: 73px;
+                overflow: hidden;
+                justify-content: center;
+                align-items: center;
+                flex-direction: row;
+                display: flex;
+            }
+
+            .exl-thumb {
+                height: 100%;
+                object-fit: cover;
+                width: 100%;
+                max-width: 100%;
+                border: 0;
+            }
+
+            .exl-info-cont {
+                width: calc(100% - 131px);
+                height: 100%;
+                background-color: inherit !important;
+                align-self: auto;
+                align-items: flex-start;
+                justify-content: space-between;
+                flex-direction: column;
+                display: flex;
+            }
+
+            .exl-title {
+                white-space: normal;
+                font-size: 18px;
+                line-height: 21px;
+                min-height: 21px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                width: 100%;
+                font-weight: 700;
+            }
+
+            .exl-info-cont2 {
+                margin-top: 4px;
+                align-self: auto;
+                align-items: center;
+                justify-content: flex-start;
+                flex-direction: row;
+                display: flex;
+            }
+
+            .exl-info-separt {
+                color: #575757;
+                font-size: 12px;
+                line-height: 14px;
+                margin: 0 4px;
+                font-weight: 400;
+            }
+
+            .exl-info-version {
+                color: slategray;
+                font-size: 12px;
+                line-height: 14px;
+                font-weight: 400;
+                margin: 0 4px;
+            }
+
+            .exl-info-submiter {
+                font-size: 14px;
+                line-height: 14px;
+                box-sizing: border-box;
+            }
+
+            .exl-item:not(.exl-item-selected):hover {
+                background-color: aliceblue;
+            }
+
+            .exl-item:hover {
+                cursor: pointer;
+                border-color: white;
+            }
+
+            .exl-item:active {
+                border-color: aliceblue;
+                background-color: whitesmoke;
+            }
+
+            .exl-selected-exp {
+                flex-direction: column;
+                display: flex;
+                width: 40vw;
+                height: 570px
+            }
+
+            .exl-preview-cont {
+                max-width: 100%;
+                max-height: 300px;
+                margin: 0px 16px;
+                overflow: hidden;
+            }
+
+            .exl-preview {
+                height: 100%;
+                object-fit: contain;
+                width: 100%;
+                max-width: 100%;
+                border: 0;
+            }
+
+            .exl-summary {
+                font-size: 15px;
+                overflow-y: auto;
+                flex-shrink: 10;
+                margin-top: 0.5em;
+                white-space: pre-line;
+            }
+
+            .exl-h3-title {
+                margin-bottom: 0;
+            }
+
+            .exl-hr {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .exl-item-selected {
+                background-color: #bbeeff;
+                border: 1px darkblue solid;
+            }
+
+            .expansions-buttons {
+                margin: 12px;
+                text-align: end;
+            }
+
+            .expansions-buttons>button {
+                width: 25%;
+            }
+
+        </style>
     </head>
     <body>
-        <!--  letterbox=width+height  widescreen=width2+height2  -->
-        <canvas width="640" height="480" width2="864" height2="486"></canvas>
-        <hr>
-        <button id="pvr-onoff">Suspend/Resume PVR</button>   <button id="pvr-widescreen">Toggle widescreen</button>   <button id="pvr-fullscreen">Toggle fullscreen</button>
-        <br>
-        <label>FPS: <input type="text" readonly="" value="00" id="pvr-status"></label>
+        <div id="window">
+            <!--  letterbox=width+height  widescreen=width2+height2  -->
+            <canvas width="640" height="480" width2="864" height2="486"></canvas>
+            <hr>
+            <button id="pvr-onoff">Suspend/Resume PVR</button>   <button id="pvr-widescreen">Toggle widescreen</button>   <button id="pvr-fullscreen">Toggle fullscreen</button>
+            <br>
+            <label>FPS: <input type="text" readonly="" value="00" id="pvr-status"></label>
+        </div>
+
+        <div id="expansions-dialog" style="display: none;">
+            <div class="expansions-buttons">
+                <button id="exl-launch">Launch selected expansion</button>
+                  
+                <button id="exl-refresh">Refresh list</button>
+            </div>
+            <div class="exl-dialog">
+                <fieldset class="exl-list-cont">
+                    <legend>Available expansions</legend>
+                    <ul id="exl-list"></ul>
+                </fieldset>
+                <fieldset class="exl-selected-exp">
+                    <legend>Selected expansion</legend>
+                    <div class="exl-preview-cont">
+                        <img class="exl-preview" src="" style="visibility: hidden;">
+                    </div>
+                    <hr class="exl-hr">
+                    <h3 class="exl-h3-title">Description:</h3>
+                    <div class="exl-summary"></div>
+                </fieldset>
+            </div>
+        </div>
+    
+        <template id="exl-item">    
+            <li class="exl-item">
+                <div class="exl-item-cont">
+                    <div class="exl-img-cont">
+                        <img loading="lazy" class="exl-thumb" src="" />
+                    </div>
+                    <div class="exl-info-cont">
+                        <div class="exl-title"></div>
+                        <div class="exl-info-cont2">
+                            <span class="exl-info-version"></span>
+                            <span class="exl-info-separt"> - </span>
+                            <span class="exl-info-submiter"></span>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </template>      
 
         <script src="engine/platform/sh4.js"></script>
         <script src="engine/platform/sh4matrix.js"></script>
@@ -28,6 +255,7 @@
         <script src="engine/platform/pvr.js"></script>
         <script src="engine/platform/io.js"></script>
         <script src="engine/platform/fs.js"></script>
+        <script src="engine/platform/expansions.js"></script>
         <script src="engine/platform/gamepad.js"></script>
         <script src="engine/platform/dds.js"></script>
         
@@ -140,6 +368,7 @@
         <script src="engine/game/gameplay/week.js"></script>
 
         <script src="engine/game/main.js"></script>
+        <script src="engine/game/expansionsloader.js"></script>
         
         <script src="engine/game/mastervolume.js"></script>
     </body>

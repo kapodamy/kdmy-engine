@@ -356,7 +356,6 @@ function kthread_key_create(key, destructor) {
 function kthread_getspecific(key) {
     let data = kos_tls_keys.get(key);
     if (!data) {
-        console.warn("kthread_getspecific() key not found: " + key.key_id);
         return null;
     }
 
