@@ -7,7 +7,7 @@ namespace Engine;
 internal static class Logger {
 
     public static void Info(string str) {
-        Print('*', ConsoleColor.White, ConsoleColor.DarkBlue, str);
+        Print('i', ConsoleColor.White, ConsoleColor.DarkCyan, str);
     }
 
     public static void Warn(string str) {
@@ -15,11 +15,11 @@ internal static class Logger {
     }
 
     public static void Error(string str) {
-        Print('X', ConsoleColor.White, ConsoleColor.DarkRed, str);
+        Print('x', ConsoleColor.White, ConsoleColor.DarkRed, str);
     }
 
     public static void Log(string str) {
-        Print('·', ConsoleColor.White, ConsoleColor.Black, str);
+        Print('·', ConsoleColor.Black, ConsoleColor.White, str);
     }
 
 
@@ -27,16 +27,15 @@ internal static class Logger {
     private static void Print(char icon, ConsoleColor fg, ConsoleColor bg, string str) {
         ConsoleColor fg_orig = Console.ForegroundColor;
         ConsoleColor bg_orig = Console.BackgroundColor;
-        TextWriter std = Console.Out;
 
         Console.ForegroundColor = fg;
         Console.BackgroundColor = bg;
-        std.Write(icon);
-        std.Write(' ');
+        Console.Out.Write(icon);
 
         Console.ForegroundColor = fg_orig;
         Console.BackgroundColor = bg_orig;
-        std.WriteLine(str);
+        Console.Out.Write(' ');
+        Console.Out.WriteLine(str);
     }
 
 }

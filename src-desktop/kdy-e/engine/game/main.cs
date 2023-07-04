@@ -1,6 +1,9 @@
 using System;
 using CsharpWrapper;
-using Engine.Externals.LuaScriptInterop;
+using Engine.Externals.FFGraphInterop;
+using Engine.Externals.FontAtlasInterop;
+using Engine.Externals.LuaInterop;
+using Engine.Externals.SoundBridge;
 using Engine.Font;
 using Engine.Game.Common;
 using Engine.Game.Gameplay.Helpers;
@@ -30,15 +33,20 @@ public static class GameMain {
     public static WeekInfo custom_style_from_week = null;
 
 
-    public static int Main(string[] argc, int argv) {
+    public static int Main(int argc, string[] argv) {
         // vital parts
-        FS.Init();// intialize filesystem access for the main thread (this thread)
-        LuascriptPlatform.InitializeCallbacks();
-        PVRContext.MuteAudioOutputOnMinimized(EngineSettings.mute_on_minimize);
+        FS.Init();
+        PVRContext.Init();
         MasterVolume.Init();
 
         utsname osinfo;
         UTSNAME.uname(out osinfo);
+
+        Logger.Info("AICA:" + SoundBridge.GetRuntimeInfo());
+        Logger.Info("FontAtlas: FreeType V" + FontAtlas.GetVersion());
+        Logger.Info("LuaScript: " + ManagedLuaState.GetVersion());
+        Logger.Info("FFGraph: " + FFGraph.GetRuntimeInfo() ?? "<not loaded>");
+        Console.WriteLine();
         Logger.Log($"{ENGINE_NAME} {ENGINE_VERSION}");
         Logger.Log($"Console: {osinfo.machine}");
         Logger.Log($"OS: {osinfo.version}\r\n");
@@ -73,9 +81,7 @@ public static class GameMain {
             if (try_choose_last_played) {
                 try_choose_last_played = false;
                 weekinfo = null;
-                string last_played = FunkinSave.GetLastPlayedWeek();
-
-                if (CsharpWrapper.EngineSettings.style != null) last_played = CsharpWrapper.EngineSettings.style;
+                string last_played = EngineSettings.style_from_week_name ?? FunkinSave.GetLastPlayedWeek();
 
                 if (last_played != null) {
                     for (int i = 0 ; i < Funkin.weeks_array.size ; i++) {
@@ -112,7 +118,7 @@ public static class GameMain {
         GameMain.background_menu_music = SoundPlayer.Init(Funkin.BACKGROUND_MUSIC);
         if (GameMain.background_menu_music != null) background_menu_music.LoopEnable(true);
 
-        // this code is for quick week debugging only
+        // the following code is for quick debugging only
         /*
         FreeplayMenu.Main();
 			Credits.Main();

@@ -280,7 +280,7 @@ public class Menu : IAnimate, IDraw {
     public bool SelectItem(string name) {
         for (int i = 0 ; i < this.items_size ; i++) {
             if (this.items[i].name == name) {
-                if (this.items[i].hidden) return 0;
+                if (this.items[i].hidden) return false;
                 InternalSetIndexSelected(i);
                 return true;
             };

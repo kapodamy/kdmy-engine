@@ -11,7 +11,7 @@ public class ArrayList<T> {
     private int length;
     private int size;
     private T[] array;
-    private readonly ArrayListComparer comparer;
+    private ArrayListComparer comparer;
 
     public ArrayList() : this(ArrayList<T>.DEFAULT_CAPACITY) { }
 
@@ -176,7 +176,9 @@ public class ArrayList<T> {
     }
 
     public void Sort(SortDelegate sort_fn) {
+        this.comparer.sort_fn = sort_fn;
         Array.Sort(this.array, 0, this.size, this.comparer);
+        this.comparer.sort_fn = null;
     }
 
 
@@ -217,11 +219,7 @@ public class ArrayList<T> {
 
     private struct ArrayListComparer : System.Collections.Generic.IComparer<T> {
 
-        private readonly SortDelegate sort_fn;
-
-        public ArrayListComparer(SortDelegate sort_fn) {
-            this.sort_fn = sort_fn;
-        }
+        public SortDelegate sort_fn;
 
         public int Compare(T x, T y) {
             return sort_fn(x, y);

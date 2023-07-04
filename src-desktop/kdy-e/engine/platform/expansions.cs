@@ -1,7 +1,9 @@
 ﻿using System;
+using System.IO;
+using Engine.Externals.GLFW;
 using Engine.Utils;
 
-namespace Engine.Platform; 
+namespace Engine.Platform;
 
 public static class Expansions {
     public const string PATH = "/expansions/";
@@ -13,9 +15,12 @@ public static class Expansions {
     private const char COMMENT_CHAR = ';';
     private const string SELF_NAME = "/self/";
 
-    public static string[] chain_array;
-    public static int chain_array_size;
+    internal static string[] chain_array;
+    internal static int chain_array_size;
+
     public static string overrided_weeks_folder;
+    public static byte[] startup_icon;
+    public static string startup_title;
 
     static Expansions() {
         chain_array = null;
@@ -35,8 +40,9 @@ public static class Expansions {
         //    }
         //}
         //free(chain_array);
+        chain_array_size = 0;
 
-        // force clear preload cache 
+        // force clear preload cache
         PreloadCache.ClearCache();
 
         ArrayList<string> chain = new ArrayList<string>();
@@ -48,25 +54,41 @@ public static class Expansions {
         InternalLoadDependency(chain, expansion_name);
         Expansions.overrided_weeks_folder = null;
 
-        string expansion_base_path = Expansions.SYMBOLIC_PATH + expansion_name + FS.CHAR_SEPARATOR;
-        string about_path = expansion_base_path + Expansions.ABOUT_FILENAME;
+        string expansion_base_path = StringUtils.Concat(Expansions.SYMBOLIC_PATH, expansion_name, FS.CHAR_SEPARATOR.ToString());
+        string about_path = StringUtils.Concat(expansion_base_path, Expansions.ABOUT_FILENAME);
         bool has_about = IO.ResourceExists(about_path, true, false);
 
         if (has_about) {
-            about_path = IO.GetAbsolutePath(expansion_base_path + Expansions.ABOUT_FILENAME, true, false);
+            string about_json_path = StringUtils.Concat(expansion_base_path, Expansions.ABOUT_FILENAME);
+
+            //free(about_path);
+            about_path = IO.GetAbsolutePath(about_json_path, true, false, false);
+
             JSONToken json = JSONParser.LoadDirectFrom(about_path);
             bool override_weeks_folder = JSONParser.ReadBoolean(json, "overrideWeeksFolder", false);
-            JSONParser.Destroy(json);
 
-            if (override_weeks_folder) overrided_weeks_folder = expansion_base_path + "weeks";
+            // JS & C# only
+            string window_title = JSONParser.ReadString(json, "windowTitle", null);
+            string window_icon = JSONParser.ReadString(json, "windowIcon", null);
+            Expansions.InternalUpdateWindow(expansion_base_path, window_title, window_icon);
+
+            JSONParser.Destroy(json);
+            //free(about_json_path);
+
+            if (override_weeks_folder) {
+                overrided_weeks_folder = StringUtils.Concat(expansion_base_path, "weeks");
+            }
         }
+
+        //free(expansion_base_path);
+        //free(about_path);
 
         chain_array_size = chain.Trim();
         chain_array = chain.PeekArray();
         chain.Destroy(true);
     }
 
-    public static string ResolvePath(string path, bool is_file) {
+    public static string ResolvePath(string path, bool is_file, bool is_folder) {
         if (path == null) return null;
         if (!path.StartsWithKDY(FS.ASSETS_FOLDER, 0)) return path;
 
@@ -83,7 +105,7 @@ public static class Expansions {
                 chain_array[i], FS.CHAR_SEPARATOR.ToString(), relative_path
             );
 
-            if (IO.ResourceExists(overrided_path, is_file, !is_file)) {
+            if (IO.ResourceExists(overrided_path, is_file, is_folder)) {
                 //if (last_overrided_path != null) free(last_overrided_path);
                 last_overrided_path = overrided_path;
                 continue;
@@ -126,19 +148,20 @@ public static class Expansions {
     private static void InternalLoadDependency(ArrayList<string> chain, string expansion_name) {
         if (String.IsNullOrEmpty(expansion_name)) return;
 
-        string expansion_path = Expansions.SYMBOLIC_PATH + expansion_name;
+        string expansion_path = StringUtils.Concat(Expansions.SYMBOLIC_PATH, expansion_name);
         if (!IO.ResourceExists(expansion_path, false, true)) {
             Logger.Error($"expansions_load() '{expansion_name}' not found in {Expansions.PATH}");
             //free(expansion_path);
             return;
         }
 
-        string expansion_preload_ini_path = expansion_path + FS.CHAR_SEPARATOR + PreloadCache.PRELOAD_FILENAME;
+        string expansion_preload_ini_path = StringUtils.Concat(expansion_path, FS.CHAR_SEPARATOR.ToString(), PreloadCache.PRELOAD_FILENAME);
         if (IO.ResourceExists(expansion_preload_ini_path, true, false)) {
             PreloadCache.AddFileList(expansion_preload_ini_path);
         }
+        //free(expansion_preload_ini_path);
 
-        string chain_ini_path = expansion_path + FS.CHAR_SEPARATOR + Expansions.CHAIN_FILENAME;
+        string chain_ini_path = StringUtils.Concat(expansion_path, FS.CHAR_SEPARATOR.ToString(), Expansions.CHAIN_FILENAME);
         bool has_chain = IO.ResourceExists(chain_ini_path, true, false);
 
         if (!has_chain) {
@@ -155,14 +178,13 @@ public static class Expansions {
         if (tokenizer == null) {
             InternalAddToChain(chain, expansion_path);
             //free(uparsed_chain);
-            //free(tokenizer);
             return;
         }
 
         string name;
         while ((name = tokenizer.ReadNext()) != null) {
             if (String.IsNullOrEmpty(name) || name[0] == Expansions.COMMENT_CHAR) {
-                //free(entry);
+                //free(name);
                 continue;
             }
 
@@ -171,10 +193,11 @@ public static class Expansions {
             } else if (FS.IsInvalidFilename(name)) {
                 Logger.Error($"expansions_internal_load_dependency() '{name}' is not a valid folder name");
             } else {
+                // warning: recursive call
                 InternalLoadDependency(chain, name);
             }
 
-            //free(entry);
+            //free(name);
         }
 
         InternalAddToChain(chain, expansion_path);
@@ -192,12 +215,42 @@ public static class Expansions {
             string lowercase_expansion_name = StringUtils.ToLowerCase(expansion_path);
             bool equals = lowercase_expansion == lowercase_expansion_name;
 
-            if (equals) return;
-
             //free(lowercase_expansion);
             //free(lowercase_expansion_name);
+
+            if (equals) return;
         }
         chain.Add(expansion_path);
     }
 
+    private static void InternalUpdateWindow(string expansion_base_path, string window_title, string window_icon) {
+        window_icon = FS.ResolvePath(expansion_base_path + window_icon);
+        window_icon = IO.GetAbsolutePath(window_icon, true, false, false);
+
+        PVRContext pvr_context = PVRContext.global_context;
+        byte[] icon = null;
+
+        if (File.Exists(window_icon)) icon = File.ReadAllBytes(window_icon);
+
+        if (pvr_context == null) {
+            Expansions.startup_icon = icon;
+            Expansions.startup_title = window_title;
+            return;
+        }
+
+        using (IconLoader loader = new IconLoader(icon ?? Engine.Properties.Resources.icon)) {
+            Icon[] icons = new Icon[loader.icons.Length];
+            for (int i = 0 ; i < icons.Length ; i++) {
+                icons[i] = new Icon(
+                    loader.icons[i].width,
+                    loader.icons[i].height,
+                    loader.icons[i].pixels
+                );
+            }
+
+            Window hnd = PVRContext.InternalNativeWindow;
+            Glfw.SetWindowTitle(hnd, window_title ?? pvr_context.native_window_title);
+            Glfw.SetWindowIcon(hnd, icons.Length, icons);
+        }
+    }
 }

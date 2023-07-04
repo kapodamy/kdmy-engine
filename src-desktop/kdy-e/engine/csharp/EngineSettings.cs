@@ -6,17 +6,15 @@ using Settings;
 namespace CsharpWrapper;
 
 internal static class EngineSettings {
+    private const string INI_FILE = "settings.ini";
+
     public const string INI_BINDING_SECTION = "KeyboardBindings";
     public const string INI_MISC_SECTION = "Misc";
     public const string INI_GAMEPLAY_SECTION = "Gameplay";
 
     public static INI ini;
-    public static bool ini_exists;
 
     public static string expansion_directory = null;// folder name inside of "/expansions/"
-    public static byte[] expansion_window_icon = null;// window icon bytes
-    public static string expansion_window_title = null;// window title
-    public static string style = null;// folder name inside of "/expansions/"
     public static bool widescreen = true;// uses 1280x720 (like Funkin) instead of 640x480
     public static bool pixelbufferobjects = false;// uses the OpenGL PBO (no async support)
 
@@ -37,12 +35,17 @@ internal static class EngineSettings {
     public static bool gameplay_enabled_flashinglights = true;
     public static bool gameplay_enabled_uicosmetics = true;
 
-    internal static void LoadINI() {
-        if (ini == null) {
-            string ini_path = EngineSettings.EngineDir + "settings.ini";
+    public static bool fullscreen = false;
+    public static int saveslots = 1;
+    public static string style_from_week_name = null;
 
-            ini_exists = File.Exists(ini_path);
-            ini = new INI(ini_path);
+
+    public static bool IniExists => File.Exists(EngineSettings.EngineDir + INI_FILE);
+
+    internal static void LoadINI() {
+        bool ini_uninitialized = ini == null;
+        if (ini_uninitialized) {
+            ini = new INI(EngineSettings.EngineDir + "settings.ini");
         }
 
         input_offset = GetInt(true, "input_offset", input_offset);
@@ -72,6 +75,11 @@ internal static class EngineSettings {
         mute_on_minimize = GetBool(false, "mute_on_minimize", mute_on_minimize);
         master_volume = GetInt(false, "master_volume", master_volume);
         show_loading_screen = GetBool(false, "show_loading_screen", show_loading_screen);
+
+        fullscreen = GetBool(false, "fullscreen", fullscreen);
+        saveslots = GetInt(false, "saveslots", 1);
+
+        expansion_directory = ini.GetString("Expansion", "expansion_directory", expansion_directory);
     }
 
     internal static void Reload() {

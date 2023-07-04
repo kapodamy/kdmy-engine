@@ -35,7 +35,7 @@ public class SoundPlayer {
             return null;
         }
 
-        full_path = IO.GetAbsolutePath(full_path, true, true);
+        full_path = IO.GetAbsolutePath(full_path, true, false, true);
 
         byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
         IFileSource filehandle;

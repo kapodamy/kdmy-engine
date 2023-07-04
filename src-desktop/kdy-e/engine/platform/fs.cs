@@ -6,22 +6,22 @@ using KallistiOS.TLS;
 
 namespace Engine.Platform;
 
-public class FSFolderEnumerator {
+public struct FSFolderEnumerator {
     internal struct Entry {
         public string name;
         public long length;
     }
 
-    internal int ___index = 0;
-    internal Entry[] ___entries = null;
+    internal int ___index;
+    internal Entry[] ___entries;
 
-    public string name = null;
-    public bool is_file = false;
-    public bool is_folder = false;
-    public long length = -1;
+    public string name;
+    public bool is_file;
+    public bool is_folder;
+    public long length;
 
     internal static void EnumerateTo(ArrayList<Entry> entries, string target_folder, bool resolve_expansion) {
-        string path = IO.GetAbsolutePath(target_folder, false, resolve_expansion);
+        string path = IO.GetAbsolutePath(target_folder, false, true, resolve_expansion);
         DirectoryInfo directoryInfo = new DirectoryInfo(path);
         if (!directoryInfo.Exists) return;
 
@@ -127,7 +127,7 @@ public static class FS {
         return IO.FileSize(src);
     }
 
-    public static bool FolderEnumerate(string src, FSFolderEnumerator folder_enumerator) {
+    public static bool FolderEnumerate(string src, ref FSFolderEnumerator folder_enumerator) {
         try {
             ArrayList<FSFolderEnumerator.Entry> entries = new ArrayList<FSFolderEnumerator.Entry>();
 
@@ -165,7 +165,7 @@ public static class FS {
         }
     }
 
-    public static bool FolderEnumerateNext(FSFolderEnumerator folder_enumerator) {
+    public static bool FolderEnumerateNext(ref FSFolderEnumerator folder_enumerator) {
         if (folder_enumerator.___entries == null) return false;
         if (folder_enumerator.___index >= folder_enumerator.___entries.Length) return false;
 
@@ -176,7 +176,7 @@ public static class FS {
         return true;
     }
 
-    public static void FolderEnumerateClose(FSFolderEnumerator folder_enumerator) {
+    public static void FolderEnumerateClose(ref FSFolderEnumerator folder_enumerator) {
         folder_enumerator.___entries = null;
         folder_enumerator.___index = -1;
         folder_enumerator.name = null;

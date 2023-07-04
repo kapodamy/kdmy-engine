@@ -108,7 +108,7 @@ public static class maple {
         maple.DEVICES = new maple_device_t[MAPLE_PORT_COUNT, MAPLE_UNIT_COUNT];
 
         // allocate VMUs
-        int saveslots = EngineSettings.GetInt(false, "saveslots", 1);
+        int saveslots = EngineSettings.saveslots;
         for (int i = 0 ; i < saveslots ; i++) {
             if (i < 4) {
                 maple.DEVICES[i, 1] = new maple_device_t(MAPLE_FUNC.MEMCARD, (uint)i, 1U, -1);
@@ -650,8 +650,8 @@ internal static class maple_mappings {
         }
     }
 
-    internal struct GamePadButtonToCONT {
-        public GamepadButton glfw_button;
+    internal readonly struct GamePadButtonToCONT {
+        public readonly GamepadButton glfw_button;
         public readonly CONT cont_button;
 
         public GamePadButtonToCONT(GamepadButton glfw_button, CONT cont_button) {
@@ -664,7 +664,7 @@ internal static class maple_mappings {
         }
     }
 
-    internal struct GamePadAxisToAxis {
+    internal readonly struct GamePadAxisToAxis {
         public readonly GamepadAxis glfw_axis;
         public readonly CONTEx axis;
 
@@ -679,7 +679,7 @@ internal static class maple_mappings {
 
     }
 
-    internal struct GamePadToMaple {
+    internal readonly struct GamePadToMaple {
         public readonly int index;
         public readonly uint port;
         public readonly uint unit;

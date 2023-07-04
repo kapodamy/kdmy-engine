@@ -4,7 +4,7 @@
 
 namespace KallistiOS.UTSNAME;
 
-internal struct utsname {
+internal ref struct utsname {
     public string sysname;
     public string nodename;
     public string release;

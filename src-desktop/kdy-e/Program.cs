@@ -5,11 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Engine;
-using Engine.Externals.FFGraphInterop;
-using Engine.Externals.FontAtlasInterop;
 using Engine.Externals.GLFW;
-using Engine.Externals.LuaInterop;
-using Engine.Externals.SoundBridge;
 using Engine.Game;
 using Engine.Platform;
 
@@ -17,69 +13,89 @@ namespace CsharpWrapper;
 
 class Program {
 
-    [DllImport("kernel32")]
-    static extern bool AttachConsole(int dwProcessId);
     private const int ATTACH_PARENT_PROCESS = -1;
 
+    [DllImport("kernel32")]
+    private static extern bool AttachConsole(int dwProcessId);
+
     [DllImport("kernel32", SetLastError = true)]
-    static extern int AllocConsole();
+    private static extern int AllocConsole();
+
+    [DllImport("kernel32")]
+    private static extern nint GetConsoleWindow();
+
 
     [STAThread]
     static int Main() {
         Application.SetHighDpiMode(HighDpiMode.SystemAware);
         Application.SetCompatibleTextRenderingDefault(false);
+        Application.EnableVisualStyles();
 
-        bool should_attach_console = true;
-        string[] argv = Environment.GetCommandLineArgs();
+        // adquire the executable name and arguments
+        string[] args = Environment.GetCommandLineArgs();
 
-        // before any print, check if is necessary alloc the consoles
-        if (HasCommandLineSwitch(argv, "-console")) {
-            should_attach_console = AllocConsole() == 0;
-        }
-        if (should_attach_console) AttachConsole(ATTACH_PARENT_PROCESS);
+        // before continue, check if is necessary alloc the logging console
+        if (GetConsoleWindow() == 0x00) {
+            bool should_attach = true;
 
-        // show expansions loader if is necessary
-        if (HasCommandLineSwitch(argv, "-expansionsloader")) {
-            ExpansionsLoader form = new ExpansionsLoader();
-
-            Application.Run(form);
-            Application.Exit();
-
-            bool exit = form.NotLaunchAndExit;
-            if (!exit) {
-                EngineSettings.expansion_directory = form.SelectedExpansionDirectory;
-                EngineSettings.expansion_window_icon = form.SelectedExpansionWindowIcon;
-                EngineSettings.expansion_window_title = form.SelectedExpansionWindowTitle;
+            for (int i = 1 ; i < args.Length ; i++) {
+                if (args[0].Equals("-console", StringComparison.InvariantCultureIgnoreCase)) {
+                    should_attach = AllocConsole() == 0;
+                }
             }
-            form.Destroy();
 
-            if (exit) return 0;
-
-            if (EngineSettings.expansion_directory != null) {
-                Logger.Info($"Selected expansion: {EngineSettings.expansion_directory}\n");
-            }
+            if (should_attach) AttachConsole(ATTACH_PARENT_PROCESS);
         }
 
+        // catch any unhandled exception before crash
         AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
 
-        Console.Error.WriteLine("AICA:" + SoundBridge.GetRuntimeInfo());
-        Console.Error.WriteLine("FontAtlas: FreeType V" + FontAtlas.GetVersion());
-        Console.Error.WriteLine("LuaScript: " + ManagedLuaState.GetVersion());
-        Console.Error.WriteLine("FFGraph: " + FFGraph.GetRuntimeInfo() ?? "<not loaded>");
+        // used in texture loading
+        Thread.CurrentThread.Name = "MainThread";
 
-        Thread.CurrentThread.Name = "MainThread";// used in texture loading
+        // load ini file containing all settings
         EngineSettings.LoadINI();
 
-        bool force_fullscreen = false;
+        // check if the ini file and saves folder exists
+        if (!EngineSettings.IniExists && !Directory.Exists(EngineSettings.EngineDir + "saves")) {
+            // skip save selector for fresh installations
+            FunkinSave.WriteToVMU();
+        }
 
-        for (int i = 1 ; i < argv.Length ; i++) {
-            switch (argv[i].ToLowerInvariant()) {
-                case "-expansion":
-                    if (HasCommandLineSwitch(argv, "-expansionsloader")) {
-                        Logger.Info("'-expansion' argument was ignored");
-                        break;
+        // try load GAMECONTROLLERDB or SDL_GAMECONTROLLERCONFIG
+        string gamecontrollerdb_path = EngineSettings.EngineDir + Glfw.GAMECONTROLLERDB;
+        if (File.Exists(gamecontrollerdb_path)) {
+            string mappings = File.ReadAllText(gamecontrollerdb_path, Encoding.UTF8);
+            if (!Glfw.UpdateGamepadMappings(mappings)) {
+                Logger.Error($"Failed to import gamepad mapping from {gamecontrollerdb_path}");
+            }
+        } else {
+            string mappings = Environment.GetEnvironmentVariable("SDL_GAMECONTROLLERCONFIG");
+            if (mappings != null && !Glfw.UpdateGamepadMappings(mappings)) {
+                Logger.Error($"Failed to import gamepad mapping from SDL_GAMECONTROLLERCONFIG");
+            }
+        }
+
+        // pick the expansion directory name from the ini (if present)
+        string expansion_directory = EngineSettings.expansion_directory;
+
+        // parse command line arguments
+        for (int i = 1 ; i < args.Length ; i++) {
+            int next_argument = i + i;
+            bool is_last_argument = next_argument >= args.Length;
+
+
+            switch (args[i].ToLowerInvariant()) {
+                case "-expansionsloader":
+                    expansion_directory = ExpansionsLoader.Main();
+                    if (expansion_directory == null) return 0;
+                    if (expansion_directory != null) {
+                        Logger.Info($"Selected expansion: {expansion_directory}\n");
                     }
-                    NextArgAs(argv, i + 1, ref EngineSettings.expansion_directory);
+                    break;
+                case "-expansion":
+                    if (is_last_argument) continue;
+                    EngineSettings.expansion_directory = args[next_argument];
                     if (String.IsNullOrEmpty(EngineSettings.expansion_directory)) {
                         EngineSettings.expansion_directory = null;
                         break;
@@ -90,16 +106,21 @@ class Program {
                     }
                     break;
                 case "-style":
-                    NextArgAs(argv, i + 1, ref EngineSettings.style);
+                    if (is_last_argument || String.IsNullOrEmpty(args[next_argument])) continue;
+                    EngineSettings.style_from_week_name = args[next_argument].ToString();
                     break;
                 case "-fullscreen":
-                    force_fullscreen = true;
+                    EngineSettings.fullscreen = true;
                     break;
                 case "-nowidescreen":
                     EngineSettings.widescreen = false;
                     break;
                 case "-layoutdebugtriggercalls":
                     Layout.DEBUG_PRINT_TRIGGER_CALLS = true;
+                    break;
+                case "-saveslots":
+                    if (is_last_argument) continue;
+                    if (!Int32.TryParse(args[next_argument], out EngineSettings.saveslots)) EngineSettings.saveslots = 1;
                     break;
                 case "-h":
                 case "-help":
@@ -109,7 +130,7 @@ class Program {
                     Console.WriteLine(
                         $"{GameMain.ENGINE_NAME} {GameMain.ENGINE_VERSION}\r\n" +
                         "\r\n" +
-                        $"    {argv[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionloader] [-layoutdebugtriggercalls]\r\n" +
+                        $"    {args[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionloader] [-layoutdebugtriggercalls]\r\n" +
                         "\r\n" +
                         "Options:\r\n" +
                         "    -help                      Show this help message\r\n" +
@@ -138,58 +159,17 @@ class Program {
             i++;
         }
 
-        // Load selected expansion, do this in another thread to not mess-up the engine startup
-        Thread thread = new Thread(delegate () {
-            FS.Init();
-            Expansions.Load(EngineSettings.expansion_directory);
-        });
-        thread.Start();
-        thread.Join();
+        // load selected expansion or default ("funkin" folder)
+        Expansions.Load(expansion_directory);
 
-        PVRContext.InitializeGlobalContext();
+        // initialize GLFW and OpenGL
+        PVRContext.Init();
+
+        // load keyboard mappings (GLFW must be already initialized)
         KallistiOS.MAPLE.maple_mappings.LoadKeyboardMappings();
 
-        if (force_fullscreen && !PVRContext.IsRunningInFullscreen) {
-            PVRContext.ToggleFullscreen();
-        }
-
-        if (!EngineSettings.ini_exists && !Directory.Exists(EngineSettings.EngineDir + "saves")) {
-            // skip save selector for fresh installations
-            FunkinSave.WriteToVMU();
-        }
-
-        string gamecontrollerdb_path = EngineSettings.EngineDir + Glfw.GAMECONTROLLERDB;
-        if (File.Exists(gamecontrollerdb_path)) {
-            string mappings = File.ReadAllText(gamecontrollerdb_path, Encoding.UTF8);
-            if (!Glfw.UpdateGamepadMappings(mappings)) {
-                Logger.Error($"Failed to import gamepad mapping from {gamecontrollerdb_path}");
-            }
-        } else {
-            string mappings = Environment.GetEnvironmentVariable("SDL_GAMECONTROLLERCONFIG");
-            if (mappings != null && !Glfw.UpdateGamepadMappings(mappings)) {
-                Logger.Error($"Failed to import gamepad mapping from SDL_GAMECONTROLLERCONFIG");
-            }
-        }
-
-        return GameMain.Main(argv, argv.Length);
-    }
-
-    private static void NextArgAs(string[] argv, int index, ref string val) {
-        if (index >= argv.Length) return;
-        val = argv[index];
-    }
-
-    private static void NextArgAs(string[] argv, int index, ref int val) {
-        if (index >= argv.Length) return;
-        int value = (int)val;
-        if (Int32.TryParse(argv[index], out value)) val = value;
-    }
-
-    private static bool HasCommandLineSwitch(string[] argv, string arg) {
-        for (int i = 1 ; i < argv.Length ; i++) {
-            if (argv[i].ToLowerInvariant() == arg) return true;
-        }
-        return false;
+        // now run the engine
+        return GameMain.Main(args.Length, args);
     }
 
     private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e) {

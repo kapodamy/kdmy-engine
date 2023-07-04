@@ -60,14 +60,13 @@ internal struct Monitor {
     }
 }
 
-[StructLayout(LayoutKind.Sequential)]
-internal struct VideoMode {
-    public readonly int width;
-    public readonly int height;
-    public readonly int redBits;
-    public readonly int greenBits;
-    public readonly int blueBits;
-    public readonly int refreshRate;
+internal class VideoMode {
+    public int width;
+    public int height;
+    public int redBits;
+    public int greenBits;
+    public int blueBits;
+    public int refreshRate;
 }
 
 [StructLayout(LayoutKind.Sequential)]

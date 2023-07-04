@@ -25,16 +25,14 @@ public class LuascriptPlatform {
         luascript_instances = new ArrayList<Luascript>(2);
     }
 
-    public static void InitializeCallbacks() {
-        Window window = PVRContext.InternalNativeWindow;
-
+    internal static void __initialize(Window window, PVRContext pvr_context) {
         last_mouse_position_x = Double.NaN;
         last_mouse_position_y = Double.NaN;
-        last_window_focused = !PVRContext.global_context.IsOffscreen();
-        last_window_minimized = PVRContext.global_context.IsMinimized();
-        last_resolution_changes = PVRContext.global_context.resolution_changes;
+        last_window_focused = !pvr_context.IsOffscreen();
+        last_window_minimized = pvr_context.IsMinimized();
+        last_resolution_changes = pvr_context.resolution_changes;
 
-        //Glfw.SetKeyCallback(window, InternalCallbackKeyboard);// used by KOS wrapper
+        //Glfw.SetKeyCallback(window, InternalCallbackKeyboard);// already used by KOS wrapper
         Glfw.SetCursorPositionCallback(window, CALLBACK_POSITION);
         Glfw.SetCursorEnterCallback(window, CALLBACK_ENTER);
         Glfw.SetMouseButtonCallback(window, CALLBACK_BUTTON);

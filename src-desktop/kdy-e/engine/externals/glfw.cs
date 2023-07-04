@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using Engine.Game;
 
 namespace Engine.Externals.GLFW;
 
@@ -18,6 +19,16 @@ internal static class Glfw {
     public const int CURSOR_HIDDEN = 0x00034002;
 
     public const string GAMECONTROLLERDB = "gamecontrollerdb.txt";
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct VideoModeStruct {
+        public readonly int width;
+        public readonly int height;
+        public readonly int redBits;
+        public readonly int greenBits;
+        public readonly int blueBits;
+        public readonly int refreshRate;
+    }
 
 
     [DllImport(GLFW, EntryPoint = "glfwInit", CallingConvention = CallingConvention.Cdecl)]
@@ -150,7 +161,20 @@ internal static class Glfw {
     }
 
     public static VideoMode GetVideoMode(Monitor monitor) {
-        return Marshal.PtrToStructure<VideoMode>(glfwGetVideoMode(monitor));
+        nint ptr = glfwGetVideoMode(monitor);
+
+        if (ptr == 0x00) return null;
+
+        VideoModeStruct strct = Marshal.PtrToStructure<VideoModeStruct>(ptr);
+
+        return new VideoMode() {
+            width = strct.width,
+            height = strct.height,
+            redBits = strct.redBits,
+            greenBits = strct.greenBits,
+            blueBits = strct.blueBits,
+            refreshRate = strct.refreshRate
+        };
     }
 
     public static void WindowHint(Hint hint, bool value) {

@@ -38,7 +38,7 @@ public class WebGLContext {
 
     internal WebGLContext() {
         this.gl = new WebGL2RenderingContext();
-        Console.Error.WriteLine("OpenGL: " + this.gl.getString(GLenum.GL_VERSION));
+        Logger.Info("OpenGL: " + this.gl.getString(GLenum.GL_VERSION));
 
         // setup GLSL programs
         WebGLProgram program_solid = InternalCreateProgram(gl, "solid");

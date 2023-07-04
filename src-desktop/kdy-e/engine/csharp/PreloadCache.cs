@@ -22,9 +22,9 @@ internal static class PreloadCache {
             return -1;
         }
 
-        src_filelist = FS.GetFullPath(src_filelist);
+        src_filelist = FS.ResolvePath(src_filelist);
 
-        string filelist_absolute_path = IO.GetAbsolutePath(src_filelist, true, false);
+        string filelist_absolute_path = IO.GetAbsolutePath(src_filelist, true, false, false);
         if (!File.Exists(filelist_absolute_path)) return -1;
 
         string filelist = File.ReadAllText(filelist_absolute_path);
@@ -45,7 +45,7 @@ internal static class PreloadCache {
             string path = FS.BuildPath2(src_filelist, line);
             if (path.StartsWith(FS.ASSETS_FOLDER)) path = FS.GetFullPathAndOverride(path);
 
-            string absolute_path = IO.GetAbsolutePath(path, false, true);
+            string absolute_path = IO.GetAbsolutePath(path, false, true, true);
             if (Directory.Exists(absolute_path)) {
                 foreach (string file in ListFilesOfFolder(absolute_path)) {
                     if (!AddFileToCache(line, path, file, id, ref added)) {
@@ -55,7 +55,7 @@ internal static class PreloadCache {
                 continue;
             }
 
-            absolute_path = IO.GetAbsolutePath(path, true, true);
+            absolute_path = IO.GetAbsolutePath(path, true, false, true);
             if (!File.Exists(absolute_path)) {
                 Logger.Warn($"PreCache::AddFileList() file not found {line} (resolved as {path})");
                 continue;

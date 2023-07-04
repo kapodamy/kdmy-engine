@@ -93,7 +93,7 @@ public static class WeekEnumerator {
         FSFolderEnumerator folder_enumerator = new FSFolderEnumerator();
         string weeks_path = Expansions.overrided_weeks_folder ?? Funkin.WEEKS_FOLDER;
 
-        if (!FS.FolderEnumerate(weeks_path, folder_enumerator)) {
+        if (!FS.FolderEnumerate(weeks_path, ref folder_enumerator)) {
             Logger.Error($"weekenumerator_enumerate() can not read {weeks_path}");
             FS.FolderStackPop();
             return;
@@ -101,7 +101,7 @@ public static class WeekEnumerator {
 
         LinkedList<WeekInfo> parsed_weeks = new LinkedList<WeekInfo>();
 
-        while (FS.FolderEnumerateNext(folder_enumerator)) {
+        while (FS.FolderEnumerateNext(ref folder_enumerator)) {
             if (folder_enumerator.is_file) continue;
             string folder_name = folder_enumerator.name;
 
@@ -111,7 +111,7 @@ public static class WeekEnumerator {
             FS.SetWorkingFolder(Funkin.WEEKS_FOLDER, false);
         }
 
-        FS.FolderEnumerateClose(folder_enumerator);
+        FS.FolderEnumerateClose(ref folder_enumerator);
 
         Funkin.weeks_array.size = parsed_weeks.Count();
         Funkin.weeks_array.array = parsed_weeks.ToArray();

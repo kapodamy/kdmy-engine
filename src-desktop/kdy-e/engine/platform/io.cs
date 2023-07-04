@@ -14,7 +14,7 @@ public static class IO {
     }
 
     public static ImageData ReadTexture(string src) {
-        string absolute_path = IO.GetAbsolutePath(src, true, true);
+        string absolute_path = IO.GetAbsolutePath(src, true, false, true);
         byte[] buffer = PreloadCache.RetrieveBuffer(absolute_path);
 
         if (buffer != null)
@@ -25,7 +25,7 @@ public static class IO {
 
     internal static string ReadText(string src) {
         try {
-            string absolute_path = IO.GetAbsolutePath(src, true, true);
+            string absolute_path = IO.GetAbsolutePath(src, true, false, true);
             byte[] buffer = PreloadCache.RetrieveBuffer(absolute_path);
 
             if (buffer != null)
@@ -40,7 +40,7 @@ public static class IO {
 
     internal static byte[] ReadArrayBuffer(string src) {
         try {
-            string absolute_path = IO.GetAbsolutePath(src, true, true);
+            string absolute_path = IO.GetAbsolutePath(src, true, false, true);
             byte[] buffer = PreloadCache.RetrieveBuffer(absolute_path);
 
             if (buffer != null)
@@ -55,14 +55,14 @@ public static class IO {
 
     internal static bool ResourceExists(string src, bool expect_file, bool expect_folder) {
         try {
-            bool is_file0 = File.Exists(IO.GetAbsolutePath(src, true, false));
-            bool is_folder0 = Directory.Exists(IO.GetAbsolutePath(src, false, false));
-            bool is_file1 = File.Exists(IO.GetAbsolutePath(src, true, true));
-            bool is_folder1 = Directory.Exists(IO.GetAbsolutePath(src, false, true));
+            src = IO.GetAbsolutePath(src, expect_file, expect_folder, true);
 
-            bool is_file = is_file0 || is_file1;
-            bool is_folder = is_folder0 || is_folder1;
-            return (expect_file && is_file) || (expect_folder && is_folder);
+            if (expect_file)
+                return File.Exists(src);
+            else if (expect_folder)
+                return Directory.Exists(src);
+            else
+                return false;
         } catch {
             return false;
         }
@@ -70,19 +70,19 @@ public static class IO {
 
     internal static long FileSize(string src) {
         try {
-            return new FileInfo(GetAbsolutePath(src, true, true)).Length;
+            return new FileInfo(GetAbsolutePath(src, true, false, true)).Length;
         } catch {
             return -1L;
         }
     }
 
-    internal static string GetAbsolutePath(string src, bool is_file, bool resolve_expansion) {
+    internal static string GetAbsolutePath(string src, bool is_file, bool is_folder, bool resolve_expansion) {
         string base_path = IO.engine_directory;
         string path = src;
         int index = 0;
 
         if (resolve_expansion && src.StartsWithKDY("/assets", 0)) {
-            path = Expansions.ResolvePath(path, is_file);
+            path = Expansions.ResolvePath(path, is_file, is_folder);
         }
 
         if (path.StartsWith("/~assets") || path.StartsWith("/~expansions")) {

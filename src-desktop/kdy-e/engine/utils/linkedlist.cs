@@ -263,6 +263,7 @@ public class LinkedList<T> {
 
             if (this.current == null) {
                 this.current = this.head;
+                this.last = this.head.next == null;
                 return true;
             }
 

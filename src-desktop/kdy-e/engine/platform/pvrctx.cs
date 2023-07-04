@@ -3,6 +3,7 @@ using System.Diagnostics;
 using CsharpWrapper;
 using Engine.Externals;
 using Engine.Externals.GLFW;
+using Engine.Externals.LuaScriptInterop;
 using Engine.Externals.SoundBridge;
 using Engine.Font;
 using Engine.Game.Common;
@@ -308,6 +309,8 @@ public class PVRContext {
             );
         } else {
             VideoMode videoMode = Glfw.GetVideoMode(primary);
+            if (videoMode == null) return;
+
             Glfw.SetWindowMonitor(
                 this.nativeWindow,
                 primary,
@@ -354,7 +357,7 @@ public class PVRContext {
     }
 
 
-    public PVRContext() {
+    private PVRContext() {
         for (int i = 0 ; i < PVRContext.STACK_LENGTH ; i++) this.stack[i] = new PVRContextState();
         this.global_offsetcolor = this.stack[0].offsetcolor;
         PVRContext.HelperClearOffsetColor(this.vertex_offsetcolor);
@@ -368,13 +371,25 @@ public class PVRContext {
         Glfw.WindowHint(Hint.Doublebuffer, true);
         Glfw.WindowHint(Hint.Decorated, true);
 
-        int width = EngineSettings.widescreen ? 960 : 640;
-        int height = EngineSettings.widescreen ? 540 : 480;
+        int width;
+        int height;
+        Monitor monitor;
+
+        if (EngineSettings.fullscreen) {
+            monitor = Glfw.GetPrimaryMonitor();
+            VideoMode videoMode = Glfw.GetVideoMode(monitor);
+            width = videoMode.width;
+            height = videoMode.height;
+        } else {
+            monitor = Monitor.None;
+            width = EngineSettings.widescreen ? 960 : 640;
+            height = EngineSettings.widescreen ? 540 : 480;
+        }
 
         string title;
-        if (EngineSettings.expansion_window_title != null) {
-            title = EngineSettings.expansion_window_title;
-            EngineSettings.expansion_window_title = null;
+        if (Expansions.startup_title != null) {
+            title = Expansions.startup_title;
+            Expansions.startup_title = null;
         } else {
 #if DEBUG
             title = $"{Engine.Game.GameMain.ENGINE_NAME} {Engine.Game.GameMain.ENGINE_VERSION}";
@@ -385,11 +400,11 @@ public class PVRContext {
 
         this.last_timestamp = 0;
         this.native_window_title = title;
-        this.nativeWindow = Glfw.CreateWindow(width, height, title, Monitor.None, Window.None);
+        this.nativeWindow = Glfw.CreateWindow(width, height, title, monitor, Window.None);
         Glfw.MakeContextCurrent(this.nativeWindow);
         Glfw.GetWindowPosition(this.nativeWindow, out this.last_windowed_x, out this.last_windowed_y);
 
-        Console.Error.WriteLine("GLFW: " + Glfw.GetVersionString());
+        Logger.Info("GLFW: " + Glfw.GetVersionString());
 
         this.last_windowed_width = width;
         this.last_windowed_height = height;
@@ -414,31 +429,27 @@ public class PVRContext {
         Glfw.SetWindowSizeCallback(nativeWindow, this.sizeCallback);
         Glfw.SetCloseCallback(this.nativeWindow, this.closeCallback);
 
-        if (EngineSettings.GetBool(false, "fullscreen", false)) {
-            UpdateWindowMonitor(false);
-        }
-
         this.webopengl.ClearScreen(PVRContext.CLEAR_COLOR);
         Glfw.SwapBuffers(this.nativeWindow);
         this.webopengl.ClearScreen(PVRContext.CLEAR_COLOR);
 
-        byte[] icon_data = EngineSettings.expansion_window_icon;
-        EngineSettings.expansion_window_icon = null;
-
-        if (icon_data == null) icon_data = Engine.Properties.Resources.icon;
-        using (IconLoader loader = new IconLoader(icon_data)) {
-            Icon[] icons = new Icon[loader.icons.Length];
+        using (IconLoader icon = new IconLoader(Expansions.startup_icon ?? Engine.Properties.Resources.icon)) {
+            Icon[] icons = new Icon[icon.icons.Length];
             for (int i = 0 ; i < icons.Length ; i++) {
                 icons[i] = new Icon(
-                    loader.icons[i].width,
-                    loader.icons[i].height,
-                    loader.icons[i].pixels
+                    icon.icons[i].width,
+                    icon.icons[i].height,
+                    icon.icons[i].pixels
                 );
             }
+
+            Expansions.startup_icon = null;
             Glfw.SetWindowIcon(this.nativeWindow, icons.Length, icons);
         }
 
+        LuascriptPlatform.__initialize(this.nativeWindow, this);
         maple.__initialize(this.nativeWindow);
+        SoundBridge.SetMasterMuted(EngineSettings.mute_on_minimize && this.is_minimized);
 
         this.shader_framebuffer_front = new PSFramebuffer(this);
         this.shader_framebuffer_back = new PSFramebuffer(this);
@@ -788,7 +799,7 @@ public class PVRContext {
         if (ptr == 0x00) return;
 
         string filename = "../screenshots/" + DateTime.Now.ToString("yyyy-MM-ddTHHmmss.fff") + ".png";
-        filename = IO.GetAbsolutePath(filename, true, false);
+        filename = IO.GetAbsolutePath(filename, true, false, false);
 
         // async file writting to avoid suttering
         Engine.Game.GameMain.SpawnCoroutine(null, delegate (object param) {
@@ -797,7 +808,8 @@ public class PVRContext {
         }, null);
     }
 
-    public static void InitializeGlobalContext() {
+    public static void Init() {
+        if (PVRContext.global_context != null) return;
         PVRContext.global_context = new PVRContext();
     }
 

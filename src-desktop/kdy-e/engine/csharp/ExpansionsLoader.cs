@@ -8,6 +8,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Engine;
+using Engine.Platform;
 using Engine.Utils;
 
 #pragma warning disable CA1416
@@ -44,8 +45,8 @@ public partial class ExpansionsLoader : Form {
 
     }
 
-    public const int ICON_WIDTH = 80;
-    public const int ICON_HEIGHT = 45;
+    private const int ICON_WIDTH = 80;
+    private const int ICON_HEIGHT = 45;
 
 
     [DllImport("uxtheme", CharSet = CharSet.Unicode)]
@@ -57,9 +58,24 @@ public partial class ExpansionsLoader : Form {
     private Expansion selected_expansion;
     private readonly ImageList imagelist;
     private bool do_launch;
-    private Icon icon;
+    private readonly Icon icon;
 
-    public ExpansionsLoader() {
+
+    public static string Main() {
+        ExpansionsLoader form = new ExpansionsLoader();
+
+        Application.Run(form);
+        Application.Exit();
+
+        string selected_expansion_directory = form.do_launch ? form.selected_expansion.directory : null;
+
+        form.Destroy();
+
+        return selected_expansion_directory;
+    }
+
+
+    private ExpansionsLoader() {
         expansions_dir = Path.Combine(EngineSettings.EngineDir, "expansions");
         expansions = new Expansion[0];
         imagelist = new ImageList();
@@ -84,15 +100,7 @@ public partial class ExpansionsLoader : Form {
         Icon = icon;
     }
 
-    public string SelectedExpansionDirectory { get => selected_expansion.directory; }
-
-    public byte[] SelectedExpansionWindowIcon { get => selected_expansion.window_icon; }
-
-    public string SelectedExpansionWindowTitle { get => selected_expansion.window_title; }
-
-    public bool NotLaunchAndExit { get => !do_launch; }
-
-    public void Destroy() {
+    private void Destroy() {
         foreach (Expansion expansion in expansions) expansion.Dispose();
         blank_bitmap.Dispose();
         imagelist.Dispose();
@@ -115,9 +123,9 @@ public partial class ExpansionsLoader : Form {
         DirectoryInfo directory = new DirectoryInfo(expansions_dir);
 
         foreach (DirectoryInfo dir in directory.EnumerateDirectories()) {
-            string name = dir.Name.ToLowerInvariant();
+            string dir_relative_path = $"{Expansions.PATH}{dir.Name}{FS.CHAR_SEPARATOR}";
 
-            if (name == "funkin") continue;
+            if (dir.Name.ToLowerInvariant() == "funkin") continue;
 
             Expansion expansion = new Expansion(dir.Name);
 
@@ -145,19 +153,28 @@ public partial class ExpansionsLoader : Form {
             JSONParser.Destroy(json);
 
             if (screenshoot_path != null) {
-                screenshoot_path = Path.Combine(dir.FullName, screenshoot_path);
+                screenshoot_path = IO.GetAbsolutePath(
+                    FS.ResolvePath($"{dir_relative_path}{screenshoot_path}"), true, false, false
+                );
+
                 if (File.Exists(screenshoot_path)) {
                     expansion.screenshoot = Image.FromFile(screenshoot_path);
                 }
             }
             if (icon_path != null) {
-                icon_path = Path.Combine(dir.FullName, icon_path);
+                icon_path = IO.GetAbsolutePath(
+                    FS.ResolvePath($"{dir_relative_path}{icon_path}"), true, false, false
+                );
+
                 if (File.Exists(icon_path)) {
                     expansion.icon = Image.FromFile(icon_path);
                 }
             }
             if (window_icon_path != null) {
-                window_icon_path = Path.Combine(dir.FullName, window_icon_path);
+                window_icon_path = IO.GetAbsolutePath(
+                    FS.ResolvePath($"{dir_relative_path}{window_icon_path}"), true, false, false
+                );
+
                 if (File.Exists(window_icon_path)) {
                     expansion.window_icon = File.ReadAllBytes(window_icon_path);
                 } else {
