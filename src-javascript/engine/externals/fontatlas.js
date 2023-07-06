@@ -86,7 +86,7 @@ var quit_ = (status, toThrow) => {
     throw toThrow
 };
 var ENVIRONMENT_IS_WEB = typeof window == "object";
-var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";
+var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";//@ts-ignore
 var ENVIRONMENT_IS_NODE = typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string";
 var scriptDirectory = "";
 function locateFile(path) {
@@ -96,12 +96,12 @@ function locateFile(path) {
     return scriptDirectory + path
 }
 var read_, readAsync, readBinary, setWindowTitle;
-if (ENVIRONMENT_IS_NODE) {
-    var fs = require("fs");
+if (ENVIRONMENT_IS_NODE) {//@ts-ignore
+    var fs = require("fs");//@ts-ignore
     var nodePath = require("path");
     if (ENVIRONMENT_IS_WORKER) {
         scriptDirectory = nodePath.dirname(scriptDirectory) + "/"
-    } else {
+    } else {//@ts-ignore
         scriptDirectory = __dirname + "/"
     }
     read_ = (filename, binary) => {
@@ -123,26 +123,26 @@ if (ENVIRONMENT_IS_NODE) {
             else
                 onload(binary ? data.buffer : data)
         })
-    };
-    if (!ModuleFontAtlas["thisProgram"] && process.argv.length > 1) {
+    };//@ts-ignore
+    if (!ModuleFontAtlas["thisProgram"] && process.argv.length > 1) {//@ts-ignore
         thisProgram = process.argv[1].replace(/\\/g, "/")
-    }
+    }//@ts-ignore
     arguments_ = process.argv.slice(2);
     if (typeof module != "undefined") {
         module["exports"] = ModuleFontAtlas
-    }
+    }//@ts-ignore
     process.on("uncaughtException", ex => {
         if (ex !== "unwind" && !(ex instanceof ExitStatus) && !(ex.context instanceof ExitStatus)) {
             throw ex
         }
-    });
+    });//@ts-ignore
     var nodeMajor = process.versions.node.split(".")[0];
-    if (nodeMajor < 15) {
+    if (nodeMajor < 15) {//@ts-ignore
         process.on("unhandledRejection", reason => {
             throw reason
         })
     }
-    quit_ = (status, toThrow) => {
+    quit_ = (status, toThrow) => {//@ts-ignore
         process.exitCode = status;
         throw toThrow
     };
@@ -150,7 +150,7 @@ if (ENVIRONMENT_IS_NODE) {
 } else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
     if (ENVIRONMENT_IS_WORKER) {
         scriptDirectory = self.location.href
-    } else if (typeof document != "undefined" && document.currentScript) {
+    } else if (typeof document != "undefined" && document.currentScript) {//@ts-ignore
         scriptDirectory = document.currentScript.src
     }
     if (scriptDirectory.indexOf("blob:") !== 0) {
@@ -547,7 +547,7 @@ function initRandomFill() {
     if (typeof crypto == "object" && typeof crypto["getRandomValues"] == "function") {
         return view => crypto.getRandomValues(view)
     } else if (ENVIRONMENT_IS_NODE) {
-        try {
+        try {//@ts-ignore
             var crypto_module = require("crypto");
             var randomFillSync = crypto_module["randomFillSync"];
             if (randomFillSync) {
@@ -559,7 +559,7 @@ function initRandomFill() {
     }
     abort("initRandomDevice")
 }
-function randomFill(view) {
+function randomFill(view) {//@ts-ignore
     return (randomFill = initRandomFill())(view)
 }
 var PATH_FS = {
@@ -752,10 +752,10 @@ var TTY = {
             if (!tty.input.length) {
                 var result = null;
                 if (ENVIRONMENT_IS_NODE) {
-                    var BUFSIZE = 256;
+                    var BUFSIZE = 256;//@ts-ignore
                     var buf = Buffer.alloc(BUFSIZE);
                     var bytesRead = 0;
-                    try {
+                    try {//@ts-ignore
                         bytesRead = fs.readSync(process.stdin.fd, buf, 0, BUFSIZE, -1)
                     } catch (e) {
                         if (e.toString().includes("EOF"))
@@ -772,8 +772,8 @@ var TTY = {
                     result = window.prompt("Input: ");
                     if (result !== null) {
                         result += "\n"
-                    }
-                } else if (typeof readline == "function") {
+                    }//@ts-ignore
+                } else if (typeof readline == "function") {//@ts-ignore
                     result = readline();
                     if (result !== null) {
                         result += "\n"
@@ -1166,8 +1166,8 @@ function asyncLoad(url, onload, onerror, noRunDep) {
         addRunDependency(dep)
 }
 var preloadPlugins = ModuleFontAtlas["preloadPlugins"] || [];
-function FS_handledByPreloadPlugin(byteArray, fullname, finish, onerror) {
-    if (typeof Browser != "undefined")
+function FS_handledByPreloadPlugin(byteArray, fullname, finish, onerror) {//@ts-ignore
+    if (typeof Browser != "undefined")//@ts-ignore
         Browser.init();
     var handled = false;
     preloadPlugins.forEach(function (plugin) {
@@ -1573,8 +1573,8 @@ var FS = {
             return callback(errCode)
         }
         function done(errCode) {
-            if (errCode) {
-                if (!done.errored) {
+            if (errCode) {//@ts-ignore
+                if (!done.errored) {//@ts-ignore
                     done.errored = true;
                     return doCallback(errCode)
                 }
@@ -2532,11 +2532,11 @@ var FS = {
             this.lengthKnown = false;
             this.chunks = []
         }
-        LazyUint8Array.prototype.get = function LazyUint8Array_get(idx) {
+        LazyUint8Array.prototype.get = function LazyUint8Array_get(idx) {//@ts-ignore
             if (idx > this.length - 1 || idx < 0) {
                 return undefined
-            }
-            var chunkOffset = idx % this.chunkSize;
+            }//@ts-ignore
+            var chunkOffset = idx % this.chunkSize;//@ts-ignore
             var chunkNum = idx / this.chunkSize | 0;
             return this.getter(chunkNum)[chunkOffset]
         };
@@ -2625,7 +2625,7 @@ var FS = {
                 isDevice: false,
                 contents: lazyArray
             }
-        } else {
+        } else {//@ts-ignore
             var properties = {
                 isDevice: false,
                 url: url
@@ -2952,7 +2952,7 @@ var ENV = {};
 function getExecutableName() {
     return thisProgram || "./this.program"
 }
-function getEnvStrings() {
+function getEnvStrings() {//@ts-ignore
     if (!getEnvStrings.strings) {
         var lang = (typeof navigator == "object" && navigator.languages && navigator.languages[0] || "C").replace("-", "_") + ".UTF-8";
         var env = {
@@ -2973,9 +2973,9 @@ function getEnvStrings() {
         var strings = [];
         for (var x in env) {
             strings.push(x + "=" + env[x])
-        }
+        }//@ts-ignore
         getEnvStrings.strings = strings
-    }
+    }//@ts-ignore
     return getEnvStrings.strings
 }
 function stringToAscii(str, buffer) {
@@ -3059,7 +3059,7 @@ function _fd_read(fd, iov, iovcnt, pnum) {
         return e.errno
     }
 }
-function convertI32PairToI53Checked(lo, hi) {
+function convertI32PairToI53Checked(lo, hi) {//@ts-ignore
     return hi + 2097152 >>> 0 < 4194305 - !!lo ? (lo >>> 0) + hi * 4294967296 : NaN
 }
 function _fd_seek(fd, offset_low, offset_high, whence, newOffset) {

@@ -35,6 +35,7 @@ async function weekscript_init(src, context, is_week) {
             ModuleLuaScript.kdmyEngine_stringToPtr(ENGINE_NAME),
             ModuleLuaScript.kdmyEngine_stringToPtr(ENGINE_VERSION)
         );
+        ModuleLuaScript.hasGlobalsSet = 1;
     }
 
     // javascript only

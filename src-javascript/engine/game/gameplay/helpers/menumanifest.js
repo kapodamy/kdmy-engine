@@ -93,7 +93,7 @@ async function menumanifest_init(src) {
             model: json_read_string(json_item, "model", null),
             hidden: json_read_boolean(json_item, "hidden", 0),
             description: json_read_string(json_item, "description", null),
-            texture_scale: json_read_string(json_item, "textureScale", 0.0),
+            texture_scale: json_read_number(json_item, "textureScale", 0.0),
 
             placement: {
                 x: json_read_number(json_placement, "x", 0),

@@ -212,7 +212,7 @@ async function weekenumerator_parse_week(week_name) {
                 girlfriend_models: await weekenumerator_parse_characters(girlfriend_array),
                 girlfriend_models_size: Math.max(json_read_array_length(girlfriend_array), 0)
             },
-            custom_selector_layout: await weekenumerator_parse_path(json, "backgroundLayout"),
+            custom_selector_layout: await weekenumerator_parse_path(json, "customSelectorLayout"),
             custom_folder: await weekenumerator_parse_path(json, "customFolder"),
             custom_folder_gameplay: await weekenumerator_parse_path(json, "inGameplayCustomFolder"),
             has_greetings: await fs_file_exists(FUNKIN_WEEK_GREETINGS_FILE),

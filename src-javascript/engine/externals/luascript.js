@@ -65,6 +65,11 @@ const kdmyEngine_ptrToString = function (ptr) {
 const kdmyEngine_yieldAsync = function () {
   let id = Asyncify.callStackId - 1;
   if (Asyncify.callStackIdToName[id]){
+    if (Asyncify.asyncPromiseHandlers && Asyncify.asyncPromiseHandlers.kdmyEngine_allocated) {
+        // already handled, do not return a Promise to avoid deadlock
+        return void 0;
+    }
+
     return new Promise(function(resolve, reject) {
 	    Asyncify.asyncPromiseHandlers = {
 		  resolve: function(res){
@@ -74,15 +79,13 @@ const kdmyEngine_yieldAsync = function () {
 		  reject: function(err){
 			Asyncify.callStackIdToName[id] = undefined;
 			  reject(err);
-		  }
+		  },
+          kdmyEngine_allocated: true
 		};
     });
   }
-  return undefined;
+  return void 0;
 };
-const kdmyEngine_hasAsyncPending = function() {
-  return !!Asyncify.callStackIdToName[Asyncify.callStackId - 1];
-}
 function kdmyEngine_stringToPtr(str) {
     if (str == null) return 0;
 
@@ -138,7 +141,6 @@ ModuleLuaScript.kdmyEngine_ptrToString = kdmyEngine_ptrToString;
 ModuleLuaScript.kdmyEngine_deallocate = kdmyEngine_deallocate;
 ModuleLuaScript.kdmyEngine_obtain = kdmyEngine_obtain;
 ModuleLuaScript.kdmyEngine_yieldAsync = kdmyEngine_yieldAsync;
-ModuleLuaScript.kdmyEngine_hasAsyncPending = kdmyEngine_hasAsyncPending;
 ModuleLuaScript.kdmyEngine_drop_shared_object = kdmyEngine_drop_shared_object;
 ModuleLuaScript.kdmyEngine_get_ram = kdmyEngine_get_ram;
 ModuleLuaScript.kdmyEngine_endianess = kdmyEngine_endianess;

@@ -54,7 +54,6 @@
  * @property {function(number):void} kdmyEngine_deallocate
  * @property {function(object):number} kdmyEngine_obtain
  * @property {function():Promise<any>|undefined} kdmyEngine_yieldAsync
- * @property {function():boolean} kdmyEngine_hasAsyncPending
  * @property {function(object):void} kdmyEngine_drop_shared_object
  * @property {function():DataView} kdmyEngine_get_ram
  * 

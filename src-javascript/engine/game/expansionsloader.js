@@ -79,7 +79,7 @@ async function expansionsloader_internal_load_expansions() {
             continue;
         }
 
-        expansion.name = json_read_string(json, "name", dir.Name);
+        expansion.name = json_read_string(json, "name", dir.name);
         expansion.version = json_read_string(json, "version", null);
         expansion.submiter = json_read_string(json, "submiter", null);
         expansion.description = json_read_string(json, "description", null);

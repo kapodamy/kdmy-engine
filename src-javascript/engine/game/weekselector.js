@@ -191,7 +191,7 @@ async function weekselector_load_custom_week_background(/**@type {STATE}*/state)
 
     state.custom_layout = await layout_init(state.weekinfo.custom_selector_layout);
     if (state.custom_layout != null) {
-        layout_trigger_any(state.custom_layout, "principal-show");
+        layout_trigger_any(state.custom_layout, "show-principal");
         if (!state.week_unlocked) layout_trigger_any(state.custom_layout, "week-locked");
 
         has_custom_bg_music = layout_get_attached_value(
@@ -617,8 +617,8 @@ async function weekselector_page0(/**@type {UI}*/ui, /**@type {STATE}*/state) {
     }
 
     if (state.page_selected_ui == 1) {
-        weekselector_trigger_event(ui, state, "principal-hide");
-        weekselector_trigger_event(ui, state, "difficult-selector-show");
+        await weekselector_trigger_event(ui, state, "principal-hide");
+        await weekselector_trigger_event(ui, state, "difficult-selector-show");
     }
 
     if (seek_offset == 0) return;
@@ -752,6 +752,9 @@ async function weekselector_page2(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         weekselector_mdlselect_enable_arrows(ui.mdl_girlfriend, !state.choosing_boyfriend);
 
         await weekselector_trigger_event(ui, state, "model-change-show");
+        await weekselector_trigger_event(
+            ui, state, state.choosing_boyfriend ? "model-change-bf" : "model-change-gf"
+        );
     }
 
     let buttons = gamepad_has_pressed_delayed(
@@ -799,8 +802,7 @@ async function weekselector_page2(/**@type {UI}*/ui, /**@type {STATE}*/state) {
             state.quit = 1;
     }
 
-    if (state.page_selected_ui != 2)
-        weekselector_trigger_event(ui, state, "model-change-hide");
+    if (state.page_selected_ui != 2) await weekselector_trigger_event(ui, state, "model-change-hide");
 
     if (character_model_seek != 0) {
         let old_choose_boyfriend = state.choosing_boyfriend;
@@ -817,7 +819,7 @@ async function weekselector_page2(/**@type {UI}*/ui, /**@type {STATE}*/state) {
             weekselector_mdlselect_enable_arrows(ui.mdl_boyfriend, state.choosing_boyfriend);
             weekselector_mdlselect_enable_arrows(ui.mdl_girlfriend, !state.choosing_boyfriend);
 
-            weekselector_trigger_event(
+            await weekselector_trigger_event(
                 ui, state, state.choosing_boyfriend ? "model-change-bf" : "model-change-gf"
             );
         }
