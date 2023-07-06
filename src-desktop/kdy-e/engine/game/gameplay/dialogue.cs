@@ -357,7 +357,6 @@ public class Dialogue : IAnimate, IDraw {
         }
         for (int i = 0 ; i < this.portraits_size ; i++) {
             //free(this.portraits[i].name);
-            //free(this.portraits[i].random_from_prefix);
             this.portraits[i].statesprite.DestroyTextureIfStateless();
             this.portraits[i].statesprite.Destroy();
         }
@@ -377,7 +376,6 @@ public class Dialogue : IAnimate, IDraw {
                 //free(this.states[i].actions[j].lua_eval);
                 //free(this.states[i].actions[j].lua_function);
                 //free(this.states[i].actions[j].random_from_prefix);
-                //free(this.states[i].actions[j].speech_name);
                 //free(this.states[i].actions[j].title);
             }
             //free(this.states[i].name);
@@ -616,6 +614,12 @@ public class Dialogue : IAnimate, IDraw {
             }
         }
 
+        return 0;
+    }
+
+    public void Poll(float elapsed) {
+        if (this.self_hidden || this.is_completed) return;
+
         if (this.do_exit) {
             if (this.anims_ui.close != null && this.anims_ui.close.Animate(elapsed) < 1) {
                 this.anims_ui.close.UpdateDrawable(this.self_drawable, true);
@@ -623,7 +627,7 @@ public class Dialogue : IAnimate, IDraw {
                 if (this.script != null) this.script.CallFunction("f_dialogue_exit");
                 this.is_completed = true;
                 for (int i = 0 ; i < this.audios_size ; i++) this.audios[i].soundplayer.Stop();
-                return 0;
+                return;
             }
         }
 
@@ -652,8 +656,6 @@ public class Dialogue : IAnimate, IDraw {
             else if (!this.do_exit && preapare_next_line)
                 InternalPreparePrintText();
         }
-
-        return 0;
     }
 
     public void Draw(PVRContext pvrctx) {
@@ -718,6 +720,7 @@ public class Dialogue : IAnimate, IDraw {
             //free(full_path);
             return false;
         }
+
         return InternalPrepareDialog();
     }
 
@@ -730,6 +733,7 @@ public class Dialogue : IAnimate, IDraw {
 
     public void Close() {
         if (this.script != null) this.script.CallFunction("f_dialogue_closing");
+
         this.do_exit = true;
         this.current_dialog = null;
 
@@ -794,7 +798,7 @@ public class Dialogue : IAnimate, IDraw {
     }
 
 
-    public bool InternalPrepareDialog() {
+    private bool InternalPrepareDialog() {
         this.do_skip = false;
         this.do_instant_print = false;
         this.do_multiplechoice = null;

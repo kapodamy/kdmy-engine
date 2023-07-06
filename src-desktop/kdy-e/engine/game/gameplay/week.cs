@@ -2334,8 +2334,11 @@ public class Week {
             }
 
             if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
+
             layout.Animate(elapsed);
             layout.Draw(pvr_context);
+
+            roundcontext.dialogue.Poll(elapsed);
 
             if (roundcontext.dialogue.IsCompleted()) {
                 show_dialog = false;
@@ -2432,8 +2435,11 @@ public class Week {
 
 
             if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
+
             layout.Animate(elapsed);
             layout.Draw(pvr_context);
+
+            if (roundcontext.dialogue != null) roundcontext.dialogue.Poll(elapsed);
         }
 
         if (!roundcontext.settings.ask_ready) layout.TriggerCamera(Week.ROUND_CAMERA_ROUNDSTART);
@@ -2664,6 +2670,8 @@ public class Week {
             layout.Animate(elapsed);
             layout.Draw(pvr_context);
 
+            if (roundcontext.dialogue != null) roundcontext.dialogue.Poll(elapsed);
+
             if (roundcontext.scriptcontext.halt_flag) {
                 Week.Halt(roundcontext, false);
 
@@ -2762,8 +2770,11 @@ public class Week {
 
 
             if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
+
             layout.Animate(elapsed);
             layout.Draw(PVRContext.global_context);
+
+            if (roundcontext.dialogue != null) roundcontext.dialogue.Poll(elapsed);
 
             if (peek_global_beatwatcher) BeatWatcher.GlobalSetTimestampFromKosTimer();
 

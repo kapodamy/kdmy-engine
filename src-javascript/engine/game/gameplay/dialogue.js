@@ -51,16 +51,10 @@ const DIALOGUE_REPEATANIM_ALWAYS = 3;
 
 
 async function dialogue_init(src, viewport_width, viewport_height) {
-    src = fs_get_full_path(src);
-    let xml = null;
-    try {
-        xml = await fs_readxml(src);
-    } catch (e) {
-        console.error(e);
-    }
-    if (!xml || !xml.documentElement) {
-        if (xml) xml = undefined;
-        console.error("dialogue_init() can not load dialogue xml file: " + src);
+    src = await fs_get_full_path(src);
+    let xml = await fs_readxml(src);
+    if (!xml) {
+        console.error(`dialogue_init() can not load dialogue xml file: ${src}`);
         src = undefined;
         return null;
     }
@@ -111,13 +105,8 @@ async function dialogue_init(src, viewport_width, viewport_height) {
 
     // import default character portraits and speech images
     if (import_defaults) {
-        try {
-            xml_defaults = await fs_readxml(DIALOGUE_DEFAULTS_DEFINITIONS);
-        } catch (e) {
-            console.error(e);
-        }
-
-        if (xml_defaults && xml_defaults.documentElement) {
+        xml_defaults = await fs_readxml(DIALOGUE_DEFAULTS_DEFINITIONS);
+        if (xml_defaults) {
             childs_defaults = xml_defaults.documentElement.children;
         }
     }
@@ -126,13 +115,13 @@ async function dialogue_init(src, viewport_width, viewport_height) {
     let self_parse = 1;
     let childs = xml_root.children;
 
-    while (true) {
+    while (1) {
         let node;
 
         // parse first the desired xml, and later the default xml
         if (self_parse) {
             if (index >= childs.length) {
-                if (childs_defaults == null) break;
+                if (!childs_defaults) break;
                 index = 0;
                 self_parse = 0;
                 continue;
@@ -163,13 +152,13 @@ async function dialogue_init(src, viewport_width, viewport_height) {
                             await dialogue_internal_parse_font(node2, fonts);
                             break;
                         case "SpeechImageList":
-                            await dialogue_internal_parse_speechimagelist(node2, speechimages);
+                            await dialogue_internal_parse_speech_imagelist(node2, speechimages);
                             break;
                         case "ImportPortraitList":
-                            await dialogue_internal_parse_importportraitlist(node2, portraits);
+                            await dialogue_internal_parse_import_portraitlist(node2, portraits);
                             break;
                         default:
-                            console.error("dialogue_init() unknown definition: " + node2.tagName);
+                            console.error(`dialogue_init() unknown definition: ${node2.tagName}`);
                             break;
                     }
                 }
@@ -229,8 +218,8 @@ async function dialogue_init(src, viewport_width, viewport_height) {
         is_speaking: 0,
         current_dialog_codepoint_index: 0,
         current_dialog_codepoint_length: 0,
-        current_dialog_duration: 0.0,
-        current_dialog_elapsed: 0.0,
+        current_dialog_duration: 0,
+        current_dialog_elapsed: 0,
         current_dialog_mask: null,
         current_dialog_buffer: stringbuilder_init(64),
         current_dialog: null,
@@ -241,7 +230,7 @@ async function dialogue_init(src, viewport_width, viewport_height) {
         chars_per_second: 0,
         self_drawable: null,
         self_hidden: 0,
-        matrix_viewport: new Float32Array[SH4MATRIX_SIZE]
+        matrix_viewport: new Float32Array(SH4MATRIX_SIZE)
     };
 
     dialogue.self_drawable = drawable_init(300, dialogue, dialogue_draw, dialogue_animate);
@@ -288,7 +277,7 @@ async function dialogue_init(src, viewport_width, viewport_height) {
     }
 
     // create textsprite speech if not customized
-    dialogue.texsprite_speech = textsprite_init(null, 0, 28.0, 0x00000);
+    dialogue.texsprite_speech = textsprite_init(null, 0, 34.0, 0x00000);
     textsprite_set_paragraph_space(dialogue.texsprite_speech, 8.0);
     textsprite_set_wordbreak(dialogue.texsprite_speech, FONT_WORDBREAK_LOOSE);
 
@@ -311,7 +300,8 @@ async function dialogue_init(src, viewport_width, viewport_height) {
         let scale = Math.min(scale_x, scale_y);
 
         sh4matrix_scale(dialogue.matrix_viewport, scale, scale);
-        sh4matrix_translate(dialogue.matrix_viewport,
+        sh4matrix_translate(
+            dialogue.matrix_viewport,
             (viewport_width - FUNKIN_SCREEN_RESOLUTION_WIDTH * scale) / 2.0,
             (viewport_height - FUNKIN_SCREEN_RESOLUTION_HEIGHT * scale) / 2.0
         );
@@ -338,7 +328,6 @@ function dialogue_destroy(dialogue) {
     }
     for (let i = 0; i < dialogue.portraits_size; i++) {
         dialogue.portraits[i].name = undefined;
-        dialogue.portraits[i].random_from_prefix = undefined;
         statesprite_destroy_texture_if_stateless(dialogue.portraits[i].statesprite);
         statesprite_destroy(dialogue.portraits[i].statesprite);
     }
@@ -358,7 +347,6 @@ function dialogue_destroy(dialogue) {
             dialogue.states[i].actions[j].lua_eval = undefined;
             dialogue.states[i].actions[j].lua_function = undefined;
             dialogue.states[i].actions[j].random_from_prefix = undefined;
-            dialogue.states[i].actions[j].speech_name = undefined;
             dialogue.states[i].actions[j].title = undefined;
         }
         dialogue.states[i].name = undefined;
@@ -414,26 +402,26 @@ function dialogue_destroy(dialogue) {
     stringbuilder_destroy(dialogue.current_dialog_buffer);
     dialogue.current_dialog_mask = undefined;
 
-    free(dialogue);
+    dialogue = undefined;
 }
 
-
-function dialogue_apply_state(dialogue, state_name) {
-    return dialogue_apply_state2(dialogue, state_name, null);
+async function dialogue_apply_state(dialogue, state_name) {
+    return await dialogue_apply_state2(dialogue, state_name, null);
 }
 
-function dialogue_apply_state2(dialogue, state_name, if_line_label) {
+async function dialogue_apply_state2(dialogue, state_name, if_line_label) {
     if (dialogue.do_exit) return 0;
 
     let state = null;
     for (let i = 0; i < dialogue.states_size; i++) {
         if (dialogue.states[i].name == state_name && dialogue.states[i].if_line == if_line_label) {
-            return dialogue.states[i];
+            state = dialogue.states[i];
+            break;
         }
     }
     if (!state) return 0;
 
-    return dialogue_internal_apply_state(dialogue, state);
+    return await dialogue_internal_apply_state(dialogue, state);
 }
 
 function dialogue_animate(dialogue, elapsed) {
@@ -540,7 +528,7 @@ function dialogue_animate(dialogue, elapsed) {
 
         // if the speak animation is completed and there not longer speech switch to idle
         if (!dialogue.is_speaking && portrait.is_speaking) {
-            portrait.is_speaking = false;
+            portrait.is_speaking = 0;
             dialogue_internal_stop_portrait_animation(portrait);
             continue;
         }
@@ -561,14 +549,14 @@ function dialogue_animate(dialogue, elapsed) {
 
     if (dialogue.current_background >= 0 && dialogue.anims_ui.background_in) {
         let sprite = dialogue.backgrounds[dialogue.current_background].sprite;
-        if (sprite_animate(dialogue.anims_ui.background_in, elapsed) < 1) {
+        if (animsprite_animate(dialogue.anims_ui.background_in, elapsed) < 1) {
             animsprite_update_sprite(dialogue.anims_ui.background_in, sprite, 1);
         }
     }
 
     if (dialogue.change_background_from >= 0 && dialogue.anims_ui.background_out) {
         let sprite = dialogue.backgrounds[dialogue.change_background_from].sprite;
-        if (sprite_animate(dialogue.anims_ui.background_out, elapsed) < 1) {
+        if (animsprite_animate(dialogue.anims_ui.background_out, elapsed) < 1) {
             animsprite_update_sprite(dialogue.anims_ui.background_out, sprite, 1);
         } else {
             dialogue.change_background_from = -1;
@@ -579,7 +567,7 @@ function dialogue_animate(dialogue, elapsed) {
         let is_opening = dialogue.current_speechimage_is_opening;
         let sprite = dialogue.current_speechimage.statesprite;
 
-        let completed = sprite_animate(sprite, elapsed) > 0;
+        let completed = statesprite_animate(sprite, elapsed) > 0;
 
         // once opening animation is done, switch to idle animation
         if (completed && is_opening && statesprite_state_toggle(sprite, DIALOGUE_IDLE)) {
@@ -597,14 +585,20 @@ function dialogue_animate(dialogue, elapsed) {
         }
     }
 
+    return 0;
+}
+
+async function dialogue_poll(dialogue, elapsed) {
+    if (dialogue.self_hidden || dialogue.is_completed) return;
+
     if (dialogue.do_exit) {
         if (dialogue.anims_ui.close && animsprite_animate(dialogue.anims_ui.close, elapsed) < 1) {
             animsprite_update_drawable(dialogue.anims_ui.close, dialogue.self_drawable, 1);
         } else {
-            if (dialogue.script) _dialogue_lua_call(dialogue.script, luascript_call_function, "f_dialogue_exit");
+            if (dialogue.script != null) await luascript_call_function(dialogue.script, "f_dialogue_exit");
             dialogue.is_completed = 1;
             for (let i = 0; i < dialogue.audios_size; i++) soundplayer_stop(dialogue.audios[i].soundplayer);
-            return 0;
+            return;
         }
     }
 
@@ -615,29 +609,27 @@ function dialogue_animate(dialogue, elapsed) {
         let buttons = gamepad_has_pressed_delayed(
             dialogue.gamepad, GAMEPAD_A | GAMEPAD_X | GAMEPAD_START | GAMEPAD_BACK
         );
-        if ((buttons & GAMEPAD_A) != 0x00) {
+        if (buttons & GAMEPAD_A) {
             dialogue.current_dialog_elapsed = dialogue.current_dialog_duration;
             preapare_next_line = 1;
-        } else if ((buttons & GAMEPAD_X) != 0x00) {
+        } else if (buttons & GAMEPAD_X) {
             if (dialogue.is_speaking)
                 dialogue.do_no_wait = 1;
             else
                 preapare_next_line = 1;
-        } else if ((buttons & (GAMEPAD_START | GAMEPAD_BACK)) != 0x00) {
+        } else if (buttons & (GAMEPAD_START | GAMEPAD_BACK)) {
             dialogue.do_exit = 1;
-            dialogue_close(dialogue);
+            await dialogue_close(dialogue);
         }
 
         if (dialogue.is_speaking)
-            dialogue_internal_print_text(dialogue);
+            await dialogue_internal_print_text(dialogue);
         else if (!dialogue.do_exit && preapare_next_line)
-            dialogue_internal_prepare_print_text(dialogue);
+            await dialogue_internal_prepare_print_text(dialogue);
     }
-
-    return 0;
 }
 
-function dialogue_draw(dialogue,/**@type {PVRContext} */ pvrctx) {
+function dialogue_draw(dialogue, pvrctx) {
     if (dialogue.self_hidden || dialogue.is_completed) return;
 
     // apply viewport matrix
@@ -695,7 +687,7 @@ async function dialogue_show_dialog(dialogue, src_dialog) {
         dialogue.dialog_external.full_path = full_path;
         source = undefined;
     } else {
-        console.error("dialogue_show_dialog() can not read: " + src_dialog);
+        console.error(`dialogue_show_dialog() can not read: ${src_dialog}`);
         full_path = undefined;
         return 0;
     }
@@ -711,7 +703,7 @@ async function dialogue_show_dialog2(dialogue, text_dialog_content) {
 }
 
 async function dialogue_close(dialogue) {
-    if (dialogue.script) _dialogue_lua_call(dialogue.script, luascript_call_function, "f_dialogue_closing");
+    if (dialogue.script != null) await luascript_call_function(dialogue.script, "f_dialogue_closing");
 
     dialogue.do_exit = 1;
     dialogue.current_dialog = null;
@@ -736,7 +728,7 @@ function dialogue_suspend(dialogue) {
         dialogue.audios[i].was_playing = soundplayer_is_playing(dialogue.audios[i].soundplayer);
         if (dialogue.audios[i].was_playing) {
             soundplayer_pause(dialogue.audios[i].soundplayer);
-            if (soundplayer_has_fading(dialogue.audios[i].soundplayer) == FADDING_OUT) soundplayer_set_volume(dialogue.audios[i].soundplayer, 0);
+            if (soundplayer_has_fading(dialogue.audios[i].soundplayer) == FADDING_OUT) soundplayer_set_volume(dialogue.audios[i].soundplayer, 0.0);
         }
     }
 }
@@ -766,11 +758,11 @@ function dialogue_set_antialiasing(dialogue, pvrflag) {
 }
 
 function dialogue_set_alpha(dialogue, alpha) {
-    dialogue_set_alpha(dialogue.self_drawable, alpha);
+    drawable_set_alpha(dialogue.self_drawable, alpha);
 }
 
 function dialogue_set_script(dialogue, weekscript) {
-    if (weekscript)
+    if (weekscript != null)
         dialogue.script = weekscript_get_luascript(weekscript);
     else
         dialogue.script = null;
@@ -793,7 +785,7 @@ async function dialogue_internal_prepare_dialog(dialogue) {
     linkedlist_clear(dialogue.visible_portraits);
 
     // apply any initial state
-    dialogue_apply_state2(dialogue, null, null);
+    await dialogue_apply_state2(dialogue, null, null);
     for (let i = 0; i < dialogue.states_size; i++) {
         if (dialogue.states[i].initial) await dialogue_internal_apply_state(dialogue, dialogue.states[i]);
     }
@@ -804,21 +796,22 @@ async function dialogue_internal_prepare_dialog(dialogue) {
         return 0;
     }
 
-    dialogue_internal_prepare_print_text(dialogue);
+    await dialogue_internal_prepare_print_text(dialogue);
 
     if (dialogue.anims_ui.open) animsprite_restart(dialogue.anims_ui.open);
     if (dialogue.anims_ui.close) animsprite_restart(dialogue.anims_ui.close);
 
-    if (dialogue.current_speechimage == null && dialogue.speechimages_size > 0) {
+    if (!dialogue.current_speechimage && dialogue.speechimages_size > 0) {
         console.warn("dialogue_internal_prepare_dialog() no speech background choosen, auto-choosing the first one declared");
         dialogue.current_speechimage = dialogue.speechimages[0];
     }
 
     gamepad_enforce_buttons_delay(dialogue.gamepad);
+
     return 1;
 }
 
-function dialogue_internal_apply_state(dialogue, state) {
+async function dialogue_internal_apply_state(dialogue, state) {
     if (dialogue.do_exit) return 0;
 
     let audio;
@@ -885,21 +878,21 @@ function dialogue_internal_apply_state(dialogue, state) {
                 background_changed = 1;
                 break;
             case DIALOGUE_TYPE_LUA:
-                if (!dialogue.script) {
+                if (dialogue.script == null) {
                     console.error("dialogue_internal_apply_state() no lua script attached");
                     break;
                 }
                 if (action.lua_function)
-                    _dialogue_lua_call(dialogue.script, luascript_call_function, action.lua_function);
-                if (action.luascript_eval)
-                    _dialogue_lua_call(dialogue.script, luascript_eval, action.luascript_eval);
+                    await luascript_call_function(dialogue.script, action.lua_function);
+                if (action.lua_eval)
+                    await luascript_eval(dialogue.script, action.lua_eval);
                 break;
             case DIALOGUE_TYPE_EXIT:
-                dialogue_close(dialogue);
+                await dialogue_close(dialogue);
                 return 1;
             case DIALOGUE_TYPE_PORTRAIT_ADD:
                 let portrait_index = -1;
-                if (action.random_from_prefix && dialogue.portraits_size > 0) {
+                if (action.random_from_prefix != null && dialogue.portraits_size > 0) {
                     let index;
                     if (action.random_from_prefix.length == 0) {
                         // random choose
@@ -971,8 +964,8 @@ function dialogue_internal_apply_state(dialogue, state) {
             case DIALOGUE_TYPE_PORTRAIT_REMOVEALL:
                 if (action.animate_remove) {
                     for (let portrait of linkedlist_iterate4(dialogue.visible_portraits)) {
-                        portrait.is_added = false;
-                        portrait.is_removed = true;
+                        portrait.is_added = 0;
+                        portrait.is_removed = 1;
                     }
 
                     if (dialogue.anims_ui.portrait_left_out)
@@ -981,13 +974,12 @@ function dialogue_internal_apply_state(dialogue, state) {
                         animsprite_restart(dialogue.anims_ui.portrait_center_out);
                     if (dialogue.anims_ui.portrait_right_out)
                         animsprite_restart(dialogue.anims_ui.portrait_right_out);
-
                 } else {
                     linkedlist_clear(dialogue.visible_portraits, null);
                 }
                 break;
             case DIALOGUE_TYPE_AUDIO_UI:
-                if (action.click_char != null) {
+                if (action.click_char) {
                     audio = dialogue_internal_get_audio(dialogue, action.click_char);
                     if (dialogue.click_char) soundplayer_stop(dialogue.click_char);
 
@@ -996,7 +988,7 @@ function dialogue_internal_apply_state(dialogue, state) {
                     else
                         dialogue.click_char = null;
                 }
-                if (action.click_text != null) {
+                if (action.click_text) {
                     audio = dialogue_internal_get_audio(dialogue, action.click_text);
                     if (dialogue.click_text) soundplayer_stop(dialogue.click_text);
 
@@ -1039,49 +1031,49 @@ function dialogue_internal_apply_state(dialogue, state) {
                     dialogue.current_speechimage_repeat = action.repeat_anim;
                 break;
             case DIALOGUE_TYPE_TEXT_FONT:
-                if (dialogue.texsprite_speech == null) break;
+                if (!dialogue.texsprite_speech) break;
                 let fontholder = dialogue_internal_get_font(dialogue, action.name);
                 if (fontholder) textsprite_change_font(dialogue.texsprite_speech, fontholder);
                 break;
             case DIALOGUE_TYPE_TEXT_COLOR:
-                if (dialogue.texsprite_speech == null) break;
+                if (!dialogue.texsprite_speech) break;
                 textsprite_set_color(dialogue.texsprite_speech, action.rgba[0], action.rgba[1], action.rgba[2]);
                 if (!Number.isNaN(action.rgba[3])) textsprite_set_alpha(dialogue.texsprite_speech, action.rgba[3]);
                 break;
             case DIALOGUE_TYPE_TEXT_BORDERCOLOR:
-                if (dialogue.texsprite_speech == null) break;
+                if (!dialogue.texsprite_speech) break;
                 textsprite_border_set_color(dialogue.texsprite_speech, action.rgba[0], action.rgba[1], action.rgba[2], action.rgba[3]);
                 break;
             case DIALOGUE_TYPE_TEXT_BORDEROFFSET:
-                if (dialogue.texsprite_speech == null) break;
+                if (!dialogue.texsprite_speech) break;
                 textsprite_border_set_offset(dialogue.texsprite_speech, action.offset_x, action.offset_y);
                 break;
             case DIALOGUE_TYPE_TEXT_SIZE:
-                if (dialogue.texsprite_speech == null) break;
+                if (!dialogue.texsprite_speech) break;
                 if (!Number.isNaN(action.size)) textsprite_set_font_size(dialogue.texsprite_speech, action.size);
                 break;
             case DIALOGUE_TYPE_TEXT_BORDERSIZE:
-                if (dialogue.texsprite_speech == null) break;
+                if (!dialogue.texsprite_speech) break;
                 if (!Number.isNaN(action.size)) textsprite_border_set_size(dialogue.texsprite_speech, action.size);
                 break;
             case DIALOGUE_TYPE_TEXT_BORDERENABLE:
-                if (dialogue.texsprite_speech == null) break;
+                if (!dialogue.texsprite_speech) break;
                 textsprite_border_enable(dialogue.texsprite_speech, action.enabled);
                 break;
             case DIALOGUE_TYPE_TEXT_PARAGRAPHSPACE:
-                if (dialogue.texsprite_speech == null) break;
+                if (!dialogue.texsprite_speech) break;
                 if (!Number.isNaN(action.size)) textsprite_set_paragraph_space(dialogue.texsprite_speech, action.size);
                 break;
             case DIALOGUE_TYPE_TEXT_ALIGN:
-                if (dialogue.texsprite_speech == null) break;
+                if (!dialogue.texsprite_speech) break;
                 textsprite_set_align(dialogue.texsprite_speech, action.align_vertical, action.align_horizontal);
                 if (action.align_paragraph != ALIGN_NONE) textsprite_set_paragraph_align(dialogue.texsprite_speech, action.align_paragraph);
                 break;
             case DIALOGUE_TYPE_RUNMULTIPLECHOICE:
-                dialogue.do_multiplechoice = dialogue_internal_get_multiplechoice(action.name);
+                dialogue.do_multiplechoice = dialogue_internal_get_multiplechoice(dialogue, action.name);
                 break;
             case DIALOGUE_TYPE_TITLE:
-                if (dialogue.texsprite_title == null) break;
+                if (!dialogue.texsprite_title) break;
                 textsprite_set_text_intern(dialogue.texsprite_title, 1, action.title);
                 break;
             case DIALOGUE_TYPE_NOWAIT:
@@ -1152,7 +1144,7 @@ function dialogue_internal_draw_background(dialogue, pvrctx) {
 }
 
 function dialogue_internal_draw_portraits(dialogue, pvrctx) {
-    const draw_size = [0, 0];
+    let draw_size = [-1.0, -1.0];
     let portrait_line_x, portrait_line_y, portrait_line_width;
 
     if (dialogue.current_speechimage) {
@@ -1218,42 +1210,41 @@ function dialogue_internal_draw_portraits(dialogue, pvrctx) {
 }
 
 function dialogue_internal_draw_speech(dialogue, pvrctx) {
-    if (dialogue.current_speechimage == null) return;
+    if (!dialogue.current_speechimage) return;
 
     statesprite_draw(dialogue.current_speechimage.statesprite, pvrctx);
     textsprite_draw(dialogue.texsprite_title, pvrctx);
     textsprite_draw(dialogue.texsprite_speech, pvrctx);
 }
 
-
-function dialogue_internal_prepare_print_text(dialogue) {
+async function dialogue_internal_prepare_print_text(dialogue) {
     if (!dialogue.current_dialog) return;
 
     if (dialogue.current_dialog_line < dialogue.current_dialog.lines_size) {
         let dialog_line = dialogue.current_dialog.lines[dialogue.current_dialog_line];
-        dialogue_apply_state2(dialogue, dialog_line.target_state_name, null);
-        dialogue_apply_state2(dialogue, dialog_line.target_state_name, dialog_line.text);
+        await dialogue_apply_state2(dialogue, dialog_line.target_state_name, null);
+        await dialogue_apply_state2(dialogue, dialog_line.target_state_name, dialog_line.text);
         if (dialogue.do_exit) return;
     }
 
     if (dialogue.do_skip) {
         dialogue.current_dialog_line++;
         dialogue.do_skip = 0;
-        dialogue_internal_prepare_print_text(dialogue);
+        await dialogue_internal_prepare_print_text(dialogue);
         return;
     }
 
     if (dialogue.current_dialog_line >= dialogue.current_dialog.lines_size) {
-        dialogue_close(dialogue);
+        await dialogue_close(dialogue);
         return;
     }
 
     let line = dialogue.current_dialog.lines[dialogue.current_dialog_line];
 
     if (dialogue.do_instant_print) {
-        dialogue_internal_notify_script(dialogue, 1);
+        await dialogue_internal_notify_script(dialogue, 1);
         textsprite_set_text(dialogue.texsprite_speech, line.text);
-        dialogue_internal_notify_script(dialogue, 0);
+        await dialogue_internal_notify_script(dialogue, 0);
         dialogue_internal_toggle_idle(dialogue);
         dialogue.do_instant_print = 0;
         dialogue.is_speaking = 0;
@@ -1299,12 +1290,12 @@ function dialogue_internal_prepare_print_text(dialogue) {
 
     if (dialogue.current_dialog_line > 0 && dialogue.click_text) soundplayer_replay(dialogue.click_text);
 
-    dialogue_internal_notify_script(dialogue, 1);
+    await dialogue_internal_notify_script(dialogue, 1);
     textsprite_set_text(dialogue.texsprite_speech, dialogue.current_dialog_mask);
 }
 
-function dialogue_internal_print_text(dialogue) {
-    if (dialogue.current_dialog == null) return;
+async function dialogue_internal_print_text(dialogue) {
+    if (!dialogue.current_dialog) return;
 
     let line = dialogue.current_dialog.lines[dialogue.current_dialog_line];
     let buffer = dialogue.current_dialog_buffer;
@@ -1325,7 +1316,7 @@ function dialogue_internal_print_text(dialogue) {
         return;
     }
 
-    dialogue_internal_notify_script(dialogue, 0);
+    await dialogue_internal_notify_script(dialogue, 0);
     textsprite_set_text(dialogue.texsprite_speech, line.text);
 
     dialogue.is_speaking = 0;
@@ -1333,19 +1324,17 @@ function dialogue_internal_print_text(dialogue) {
 
     if (dialogue.do_no_wait) {
         dialogue.do_no_wait = 0;
-        dialogue_internal_prepare_print_text(dialogue);
+        await dialogue_internal_prepare_print_text(dialogue);
         return;
     }
 
     dialogue_internal_toggle_idle(dialogue);
 }
 
-
-
 function dialogue_internal_toggle_idle(dialogue) {
     for (let portrait of linkedlist_iterate4(dialogue.visible_portraits)) {
         if (!portrait.is_speaking) continue;
-        portrait.is_speaking = false;
+        portrait.is_speaking = 0;
         if (statesprite_state_toggle(portrait.statesprite, DIALOGUE_IDLE) || statesprite_state_toggle(portrait.statesprite, null)) {
             let anim = statesprite_state_get(portrait.statesprite).animation;
             if (anim) animsprite_restart(anim);
@@ -1356,7 +1345,7 @@ function dialogue_internal_toggle_idle(dialogue) {
 }
 
 function dialogue_internal_destroy_external_dialog(dialogue) {
-    if (dialogue.dialog_external == null) return;
+    if (!dialogue.dialog_external) return;
 
     for (let i = 0; i < dialogue.dialogs_size; i++) {
         if (dialogue.dialogs[i] == dialogue.dialog_external) return;
@@ -1381,7 +1370,7 @@ function dialogue_internal_parse_external_dialog(dialogue, source) {
     dialogue.current_dialog = dialogue.dialog_external;
 }
 
-function dialogue_internal_notify_script(dialogue, is_line_start) {
+async function dialogue_internal_notify_script(dialogue, is_line_start) {
     if (dialogue.script == null) return;
 
     let current_dialog_line = dialogue.current_dialog_line;
@@ -1389,10 +1378,9 @@ function dialogue_internal_notify_script(dialogue, is_line_start) {
     let text = dialogue.current_dialog.lines[dialogue.current_dialog_line].text;
 
     if (is_line_start)
-        _dialogue_lua_call(dialogue.script, luascript_notify_dialogue_line_starts, current_dialog_line, state_name, text);
+        await luascript_notify_dialogue_line_starts(dialogue.script, current_dialog_line, state_name, text);
     else
-        _dialogue_lua_call(dialogue.script, luascript_notify_dialogue_line_ends, current_dialog_line, state_name, text);
-
+        await luascript_notify_dialogue_line_ends(dialogue.script, current_dialog_line, state_name, text);
 }
 
 
@@ -1404,7 +1392,7 @@ async function dialogue_internal_parse_audiolist(root_node, audios) {
                 await dialogue_internal_parse_audio(node, audios);
                 break;
             default:
-                console.error("dialogue_internal_parse_audiolist() unknown node: " + node.tagName);
+                console.error(`dialogue_internal_parse_audiolist() unknown node: ${node.tagName}`);
                 break;
         }
     }
@@ -1424,7 +1412,7 @@ async function dialogue_internal_parse_backgroundlist(root_node, backgrounds) {
                 dialogue_internal_parse_color(node, max_width, max_height, backgrounds);
                 break;
             default:
-                console.error("dialogue_internal_parse_backgroundlist() unknown node: " + node.tagName);
+                console.error(`dialogue_internal_parse_backgroundlist() unknown node: ${node.tagName}`);
                 break;
         }
     }
@@ -1439,7 +1427,7 @@ async function dialogue_internal_parse_portraitlist(root_node, portraits) {
                 await dialogue_internal_parse_portrait(node, base_model, portraits);
                 break;
             default:
-                console.error("dialogue_internal_parse_portraitlist() unknown node: " + node.tagName);
+                console.error(`dialogue_internal_parse_portraitlist() unknown node: ${node.tagName}`);
                 break;
         }
     }
@@ -1449,10 +1437,10 @@ async function dialogue_internal_parse_animationui(root_node, anims_ui) {
     let animation_list = root_node.getAttribute("animationList");
     let animlist = null;
 
-    if (animation_list) {
+    if (!animation_list) {
         animlist = await animlist_init(animation_list);
-        if (!animlist) {
-            console.error("dialogue_internal_parse_animationui() can not initialize: " + root_node.outerHTML);
+        if (!animation_list) {
+            console.error(`dialogue_internal_parse_animationui() can not initialize: ${root_node.outerHTML}`);
             return;
         }
     }
@@ -1461,10 +1449,10 @@ async function dialogue_internal_parse_animationui(root_node, anims_ui) {
         switch (node.tagName) {
             case "Set":
             case "UnSet":
-                dialogue_internal_parse_animationui_set(node, animlist, anims_ui);
+                dialogue_internal_parse_animation_uiset(node, animlist, anims_ui);
                 break;
             default:
-                console.error("dialogue_internal_parse_animationui() unknown node: " + node.tagName);
+                console.error(`dialogue_internal_parse_animationui() unknown node: ${node.tagName}`);
                 break;
         }
     }
@@ -1533,7 +1521,7 @@ function dialogue_internal_parse_state(root_node, states) {
                 break;
             case "PortraitRemoveAll":
                 action.type = DIALOGUE_TYPE_PORTRAIT_REMOVEALL;
-                action.animate_remove = vertexprops_parse_boolean(node, "animateRemove", false);
+                action.animate_remove = vertexprops_parse_boolean(node, "animateRemove", 0);
                 break;
             case "AudioUI":
                 action.type = DIALOGUE_TYPE_AUDIO_UI;
@@ -1574,7 +1562,7 @@ function dialogue_internal_parse_state(root_node, states) {
                         break;
                     default:
                         action.repeat_anim = DIALOGUE_REPEATANIM_NONE;
-                        console.error("dialogue_internal_parse_state() unknown repeatAnim value: " + node.outerHTML);
+                        console.error(`dialogue_internal_parse_state() unknown repeatAnim value: ${node.outerHTML}`);
                         break;
                 }
                 break;
@@ -1608,7 +1596,7 @@ function dialogue_internal_parse_state(root_node, states) {
                 break;
             case "TextParagraphSpace":
                 action.type = DIALOGUE_TYPE_TEXT_PARAGRAPHSPACE;
-                action.size = vertexprops_parse_float(node, "size", 0.0);
+                action.size = vertexprops_parse_float(node, "size", 0);
                 break;
             case "TextAlign":
                 action.type = DIALOGUE_TYPE_TEXT_ALIGN;
@@ -1627,7 +1615,7 @@ function dialogue_internal_parse_state(root_node, states) {
                 action.type = DIALOGUE_TYPE_NOWAIT;
                 break;
             default:
-                console.error("dialogue_internal_parse_state() unknown state action: " + node.outerHTML);
+                console.error(`dialogue_internal_parse_state() unknown state action: ${node.outerHTML}`);
                 continue;
         }
 
@@ -1652,11 +1640,11 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
     let orientation = root_node.getAttribute("orientation");
     let can_leave = vertexprops_parse_boolean(root_node, "canLeave", 0);
     let state_on_leave = root_node.getAttribute("stateOnLeave");
-    let icon_color = vertexprops_parse_hex2(root_node.getAttribute("selectorIconColor"), 0x00FFFF, 0);
+    let icon_color = vertexprops_parse_hex2(root_node.getAttribute("selectorIconColor"), 0x00FFF, 0);
     let icon_model = root_node.getAttribute("selectorIconColor");
     let icon_model_name = root_node.getAttribute("selectorIconModelName");
     let default_index = vertexprops_parse_integer(root_node, "defaultIndex", 0);
-    let font_size = vertexprops_parse_float(root_node, "fontSize", -1);
+    let font_size = vertexprops_parse_float(root_node, "fontSize", -1.0);
 
     let is_vertical;
 
@@ -1671,18 +1659,18 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
             break;
         default:
             is_vertical = 1;
-            console.error("dialogue_internal_parse_multiple_choice() unknown orientation value:" + orientation);
+            console.error(`dialogue_internal_parse_multiple_choice() unknown orientation value: ${orientation}`);
             break;
     }
 
     let texture = null;
     let anim = null;
 
-    if (icon_model) {
+    if (!icon_model) {
         if (modelholder_utils_is_known_extension(icon_model)) {
             let modeholder = await modelholder_init(icon_model);
-            if (modeholder == null) {
-                console.error("dialogue_internal_parse_multiple_choice() can not initialize: " + icon_model);
+            if (!modeholder) {
+                console.error(`dialogue_internal_parse_multiple_choice() can not initialize: ${icon_model}`);
             } else {
                 texture = modelholder_get_texture(modeholder, 1);
                 anim = modelholder_create_animsprite(modeholder, icon_model_name ?? DIALOGUE_ICON, 1, 0);
@@ -1694,7 +1682,7 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
         }
     }
 
-    if (anim == null) anim = animsprite_init_from_animlist(animlist, DIALOGUE_ICON);
+    if (!anim) anim = animsprite_init_from_animlist(animlist, DIALOGUE_ICON);
 
     let icon = sprite_init(texture);
     sprite_set_vertex_color_rgb8(icon, icon_color);
@@ -1725,7 +1713,7 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
                 await dialogue_internal_parse_choice(node, dialogs, choices);
                 break;
             default:
-                console.error("dialogue_internal_parse_multiplechoice() unknown: " + node.outerHTML);
+                console.error(`dialogue_internal_parse_multiplechoice() unknown: ${node.outerHTML}`);
                 break;
         }
     }
@@ -1734,7 +1722,7 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
     arraylist_add(multiplechoices, multiplechoice);
 }
 
-async function dialogue_internal_parse_speechimagelist(root_node, speechimages) {
+async function dialogue_internal_parse_speech_imagelist(root_node, speechimages) {
     let base_src = root_node.getAttribute("baseSrc");
     let text_x = 0.0;
     let text_y = 0.0;
@@ -1761,8 +1749,8 @@ async function dialogue_internal_parse_speechimagelist(root_node, speechimages) 
     for (let node of root_node.children) {
         switch (node.tagName) {
             case "SpeechImage":
-                let speechimage = await dialogue_internal_parse_speechimage(node, base_src, speechimages);
-                if (speechimage == null) continue;
+                let speechimage = await dialogue_internal_parse_speech_image(node, base_src, speechimages);
+                if (!speechimage) continue;
 
                 speechimage.text_x = text_x;
                 speechimage.text_y = text_y;
@@ -1829,16 +1817,16 @@ async function dialogue_internal_parse_speechimagelist(root_node, speechimages) 
                 align_horizontal = dialogue_internal_read_align(node, "horizontal");
                 break;
             default:
-                console.error("dialogue_internal_parse_speechimagelist() unknown node: " + node.tagName);
+                console.error(`dialogue_internal_parse_speechimagelist() unknown node: ${node.tagName}`);
                 break;
         }
     }
 }
 
-async function dialogue_internal_parse_importportraitlist(root_node, portraits) {
+async function dialogue_internal_parse_import_portraitlist(root_node, portraits) {
     let dialogue_src = root_node.getAttribute("dialogueSrc");
     if (!dialogue_src) {
-        console.error("dialogue_internal_parse_importportraitlist() missing dialogueSrc: " + root_node.outerHTML);
+        console.error(`dialogue_internal_parse_importportraitlist() missing dialogueSrc: ${root_node.outerHTML}`);
         return;
     }
 
@@ -1847,16 +1835,9 @@ async function dialogue_internal_parse_importportraitlist(root_node, portraits) 
         return;
     }
 
-    let xmlparser = null;
-    try {
-        xmlparser = await fs_readxml(dialogue_src);
-    } catch (e) {
-        console.error(e);
-    }
-
-    if (!xmlparser || !xmlparser.documentElement) {
-        if (!xmlparser) xmlparser = undefined;
-        console.error("dialogue_internal_parse_importportraitlist() can not load: " + dialogue_src);
+    let xmlparser = await fs_readxml(dialogue_src);
+    if (!xmlparser) {
+        console.error(`dialogue_internal_parse_importportraitlist() can not load: ${dialogue_src}`);
         return;
     }
 
@@ -1867,13 +1848,14 @@ async function dialogue_internal_parse_importportraitlist(root_node, portraits) 
         if (node.tagName != "Definition") continue;
         for (let node2 of root_node.children) {
             if (node2.tagName != "PortraitList") continue;
-            await dialogue_internal_parse_importportraitlist(node2, portraits);
+            await dialogue_internal_parse_import_portraitlist(node2, portraits);
         }
     }
 
     fs_folder_stack_pop();
     xmlparser = undefined;
 }
+
 
 async function dialogue_internal_parse_audio(node, audios) {
     //<Audio name="bg_music2" src="/assets/music/weeb.ogg" volume="1.0" looped="true" defaultAs="clickText|clickChar" />
@@ -1888,17 +1870,17 @@ async function dialogue_internal_parse_audio(node, audios) {
     }
 
     if (!name) {
-        console.error("dialogue_internal_parse_audio() missing name: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_audio() missing name: ${node.outerHTML}`);
         return;
     }
     if (!src) {
-        console.error("dialogue_internal_parse_audio() missing src: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_audio() missing src: ${node.outerHTML}`);
         return;
     }
 
     let soundplayer = await soundplayer_init(src);
     if (!soundplayer) {
-        console.error("dialogue_internal_parse_audio() can not initialize: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_audio() can not initialize: ${node.outerHTML}`);
         return;
     }
 
@@ -1907,7 +1889,7 @@ async function dialogue_internal_parse_audio(node, audios) {
 
     let audio = {
         name: name,
-        was_playing: false,
+        was_playing: 0,
         soundplayer: soundplayer
     };
 
@@ -1940,13 +1922,13 @@ async function dialogue_internal_parse_image(node, max_width, max_height, base_s
     }
 
     if (!name) {
-        console.error("dialogue_internal_parse_image() missing name: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_image() missing name: ${node.outerHTML}`);
         return;
     }
 
-    if (src == null) src = base_src;
+    if (!src) src = base_src;
     if (!src) {
-        console.error("dialogue_internal_parse_image() missing src: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_image() missing src: ${node.outerHTML}`);
         return;
     }
 
@@ -1957,8 +1939,8 @@ async function dialogue_internal_parse_image(node, max_width, max_height, base_s
 
     if (modelholder_utils_is_known_extension(src)) {
         let modelholder = await modelholder_init(src);
-        init_failed = modelholder == null;
-        if (modelholder != null) {
+        init_failed = !modelholder;
+        if (modelholder) {
             texture = modelholder_get_texture(modelholder, 1);
             animsprite = modelholder_create_animsprite(modelholder, entry_name, 1, 0);
             vertex_color_rgb8 = modelholder_get_vertex_color(modelholder);
@@ -1971,7 +1953,7 @@ async function dialogue_internal_parse_image(node, max_width, max_height, base_s
     }
 
     if (init_failed) {
-        console.error("dialogue_internal_parse_image() can not initialize: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_image() can not initialize: ${node.outerHTML}`);
         return;
     }
 
@@ -1996,7 +1978,7 @@ function dialogue_internal_parse_color(node, max_width, max_height, backgrounds)
 
     let name = node.getAttribute("name");
     if (!name) {
-        console.error("dialogue_internal_parse_image() missing name: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_image() missing name: ${node.outerHTML}`);
         return;
     }
 
@@ -2031,15 +2013,15 @@ async function dialogue_internal_parse_font(node, fonts) {
     let color_by_difference = vertexprops_parse_boolean(node, "colorByDifference", 0);
 
     if (!name) {
-        console.error("dialogue_internal_parse_font() missing name: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_font() missing name: ${node.outerHTML}`);
         return;
     }
     if (!src) {
-        console.error("dialogue_internal_parse_font() missing src: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_font() missing src: ${node.outerHTML}`);
         return;
     }
-    if (!(await fs_file_exists(src))) {
-        console.error("dialogue_internal_parse_font() font file not found: " + node.outerHTML);
+    if (!await fs_file_exists(src)) {
+        console.error(`dialogue_internal_parse_font() font file not found: ${node.outerHTML}`);
         return;
     }
 
@@ -2061,7 +2043,7 @@ async function dialogue_internal_parse_font(node, fonts) {
     }
 
     if (!instance) {
-        console.error("dialogue_internal_parse_font() can not initialize: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_font() can not initialize: ${node.outerHTML}`);
         return;
     }
 
@@ -2094,7 +2076,7 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
     let speak_anim_looped = vertexprops_parse_boolean(node, "speakAnimLooped", 1);
     let idle_anim_looped = vertexprops_parse_boolean(node, "idleAnimLooped", 1);
     let simple_anim_looped = vertexprops_parse_boolean(node, "animLooped", 1);
-    let mirror = vertexprops_parse_boolean(node, "mirror", false);
+    let mirror = vertexprops_parse_boolean(node, "mirror", 0);
     let position = vertexprops_parse_float(node, "positionPercent", 0.0);
     let position_align = node.getAttribute("position");
     let x = vertexprops_parse_float(node, "x", 0.0);
@@ -2123,52 +2105,52 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
         case null:
             break;
         default:
-            console.warn("dialogue_internal_parse_portrait() unknown position: " + node.outerHTML);
+            console.warn(`dialogue_internal_parse_portrait() unknown position: ${node.outerHTML}`);
             break;
     }
 
     if (!name) {
-        console.error("dialogue_internal_parse_portrait() missing name: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_portrait() missing name: ${node.outerHTML}`);
         return;
     }
 
-    if (src == null) src = base_model;
+    if (!src) src = base_model;
     if (!src) {
-        console.error("dialogue_internal_parse_portrait() missing src: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_portrait() missing src: ${node.outerHTML}`);
         return;
     }
 
     let statesprite = null;
 
-    L_load:
+    L_process:
     if (modelholder_utils_is_known_extension(src)) {
         let modelholder = await modelholder_init(src);
-        if (!modelholder) break L_load;
+        if (!modelholder) break L_process;
 
         statesprite = statesprite_init_from_texture(null);
-        statesprite_change_draw_size_in_atlas_apply(statesprite, true, scale);
+        statesprite_change_draw_size_in_atlas_apply(statesprite, 1, scale);
         statesprite_set_draw_location(statesprite, 0.0, 0.0);
 
         dialogue_internal_add_state(statesprite, modelholder, simple_anim, null, scale, simple_anim_looped);
-        dialogue_internal_add_state(statesprite, modelholder, idle_anim, DIALOGUE_IDLE, scale, false);
-        dialogue_internal_add_state(statesprite, modelholder, speak_anim, DIALOGUE_SPEAK, scale, false);
+        dialogue_internal_add_state(statesprite, modelholder, idle_anim, DIALOGUE_IDLE, scale, 0);
+        dialogue_internal_add_state(statesprite, modelholder, speak_anim, DIALOGUE_SPEAK, scale, 0);
 
         modelholder_destroy(modelholder);
     } else {
         let texture = await texture_init(src);
-        if (!texture) break L_load;
+        if (!texture) break L_process;
 
         statesprite = statesprite_init_from_texture(texture);
         statesprite_set_draw_location(statesprite, 0.0, 0.0);
 
-        const draw_size = [0, 0];
-        texture_get_original_dimmensions(statesprite, draw_size);
-        statesprite_set_draw_size(statesprite, draw_size[0] * scale, draw_size[1] * scale);
+        let size = [-1.0, -1.0];
+        texture_get_original_dimmensions(texture, size);
+        statesprite_set_draw_size(statesprite, size[0] * scale, size[1] * scale);
     }
 
 
     if (!statesprite) {
-        console.error("dialogue_internal_parse_portrait() can not initialize: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_portrait() can not initialize: ${node.outerHTML}`);
         return;
     }
 
@@ -2177,7 +2159,7 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
         state.offset_y += y;
     }
     statesprite_flip_texture(statesprite, mirror, null);
-    statesprite_flip_texture_enable_correction(statesprite, 0);
+    //statesprite_flip_texture_enable_correction(statesprite, 0);
 
     let portrait = {
         name: name,
@@ -2199,10 +2181,9 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
     arraylist_add(portraits, portrait);
 }
 
-function dialogue_internal_parse_animationui_set(node, animlist, anims_ui) {
+function dialogue_internal_parse_animation_uiset(node, animlist, anims_ui) {
     //<Set name="backgroundIn|backgroundOut" anim="anim123" />
     //<Set name="portraitLeftIn|portraitCenterIn|portraitRightIn" anim="anim123" />
-    //<Set name="open|close" anim="anim123" />
     //<Set name="portraitIn|portraitOut" anim="anim123" />
     //<Set name="portraitLeftOut|portraitCenterOut|portraitRightOut" anim="anim123" />
 
@@ -2210,19 +2191,19 @@ function dialogue_internal_parse_animationui_set(node, animlist, anims_ui) {
     let anim = node.getAttribute("anim");
 
     if (!name) {
-        console.error("dialogue_internal_parse_animation_ui_set() missing name: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_animation_ui_set() missing name: ${node.outerHTML}`);
         return;
     }
 
     let animsprite = null;
-    if (anim) {
+    if (!anim) {
         if (!animlist) {
-            console.error("dialogue_internal_parse_animation_ui_set() can not initialize without animlist: " + node.outerHTML);
+            console.error(`dialogue_internal_parse_animation_ui_set() can not initialize without animlist: ${node.outerHTML}`);
             return;
         }
         animsprite = animsprite_init_from_animlist(animlist, anim);
         if (!animsprite) {
-            console.error("dialogue_internal_parse_animation_ui_set() can not initialize: " + node.outerHTML);
+            console.error(`dialogue_internal_parse_animation_ui_set() can not initialize: ${node.outerHTML}`);
             return;
         }
     }
@@ -2289,12 +2270,12 @@ function dialogue_internal_parse_animationui_set(node, animlist, anims_ui) {
             anims_ui.close = animsprite;
             break;
         default:
-            console.error("dialogue_internal_parse_animation_ui_set() unknown name: " + node.outerHTML);
+            console.error(`dialogue_internal_parse_animation_ui_set() unknown name: ${node.outerHTML}`);
             if (animsprite) animsprite_destroy(animsprite);
             break;
     }
 
-    if (old_anim) animlist_destroy(old_anim);
+    if (old_anim) animsprite_destroy(old_anim);
 }
 
 async function dialogue_internal_parse_choice(node, dialogs, choices) {
@@ -2309,19 +2290,19 @@ async function dialogue_internal_parse_choice(node, dialogs, choices) {
 
     let text = node.getAttribute("text");
     let dialogs_file = node.getAttribute("dialogFile");
-    let exit = vertexprops_parse_boolean(node, "exit", false);
+    let exit = vertexprops_parse_boolean(node, "exit", 0);
     let run_multiple_choice = node.getAttribute("runMultipleChoice");
     let lua_function = node.getAttribute("luaFunction");
     let lua_eval = node.getAttribute("luaEval");
 
     if (text == null) {
-        console.error("dialogue_internal_parse_choice() missing text in:" + node.outerHTML);
+        console.error(`dialogue_internal_parse_choice() missing text in: ${node.outerHTML}`);
         return;
     }
 
     let dialog_id = -1;
 
-    if (dialogs_file)
+    if (!dialogs_file)
         dialog_id = await dialogue_internal_parse_dialog_from_file(dialogs_file, dialogs);
 
     let choice = {
@@ -2336,7 +2317,7 @@ async function dialogue_internal_parse_choice(node, dialogs, choices) {
     arraylist_add(choices, choice);
 }
 
-async function dialogue_internal_parse_speechimage(node, base_src, speechimages) {
+async function dialogue_internal_parse_speech_image(node, base_src, speechimages) {
     // <Image
     //          name="normal"
     //          mirror="true|false"
@@ -2357,7 +2338,7 @@ async function dialogue_internal_parse_speechimage(node, base_src, speechimages)
     let src = node.getAttribute("src");
 
     if (!name) {
-        console.error("dialogue_internal_parse_speechimage() missing name: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_speechimage() missing name: ${node.outerHTML}`);
         return null;
     }
 
@@ -2368,16 +2349,15 @@ async function dialogue_internal_parse_speechimage(node, base_src, speechimages)
 
     if (!src) src = base_src;
     if (!src) {
-        console.error("dialogue_internal_parse_speechimage() missing src: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_speechimage() missing src: ${node.outerHTML}`);
         return null;
     }
 
     let statesprite = null;
-
-    L_load:
+    L_process:
     if (modelholder_utils_is_known_extension(src)) {
         let modelholder = await modelholder_init(src);
-        if (!modelholder) break L_load;
+        if (!modelholder) break L_process;
 
         statesprite = statesprite_init_from_texture(null);
         statesprite_set_draw_location(statesprite, 0.0, 0.0);
@@ -2388,9 +2368,9 @@ async function dialogue_internal_parse_speechimage(node, base_src, speechimages)
         if (linkedlist_count(statesprite_state_list(statesprite)) < 1) {
             let texture = modelholder_get_texture(modelholder, 1);
             if (texture) {
-                const orig_size = [0, 0];
+                let orig_size = [-1.0, -1.0];
                 texture_get_original_dimmensions(texture, orig_size);
-                statesprite_set_texture(statesprite, texture, true);
+                statesprite_set_texture(statesprite, texture, 1);
                 statesprite_set_draw_size(statesprite, orig_size[0] * scale, orig_size[1] * scale);
             } else {
                 statesprite_destroy(statesprite);
@@ -2401,23 +2381,24 @@ async function dialogue_internal_parse_speechimage(node, base_src, speechimages)
         modelholder_destroy(modelholder);
     } else {
         let texture = await texture_init(src);
-        if (!texture) break L_load;
+        if (!texture) break L_process;
 
-        const orig_size = [0, 0];
-        texture_get_original_dimmensions(texture, orig_size);
+        let size = [-1.0, -1.0];
+        texture_get_original_dimmensions(texture, size);
 
-        if (scale >= 0.0) {
-            orig_size[0] *= scale;
-            orig_size[1] *= scale;
+        if (scale >= 0) {
+            size[0] *= scale;
+            size[1] *= scale;
         }
 
         statesprite = statesprite_init_from_texture(texture);
         statesprite_set_draw_location(statesprite, 0.0, 0.0);
-        statesprite_set_draw_size(statesprite, orig_size[0], orig_size[1]);
+        statesprite_set_draw_size(statesprite, size[0], size[1]);
     }
 
+
     if (!statesprite) {
-        console.error("dialogue_internal_parse_speechimage() can not initialize: " + node.outerHTML);
+        console.error(`dialogue_internal_parse_speechimage() can not initialize: ${node.outerHTML}`);
         return null;
     }
 
@@ -2436,7 +2417,7 @@ async function dialogue_internal_parse_speechimage(node, base_src, speechimages)
 async function dialogue_internal_load_psych_character_json(src, portraits) {
     let json = await json_load_from(src);
     if (!json) {
-        console.error("dialogue_internal_load_psych_character_json() can not load: " + src);
+        console.error(`dialogue_internal_load_psych_character_json() can not load: ${src}`);
         return;
     }
 
@@ -2446,7 +2427,7 @@ async function dialogue_internal_load_psych_character_json(src, portraits) {
     fs_folder_stack_push();
     fs_set_working_folder(src, 1);
 
-    const position = [0, 0];
+    let position = [-1.0, -1.0];
     dialogue_internal_read_offset(json, "position", position);
     let scale = json_read_number(json, "scale", 1.0);
     let dialogue_pos;
@@ -2465,14 +2446,14 @@ async function dialogue_internal_load_psych_character_json(src, portraits) {
             break;
         default:
             dialogue_pos = 0.0;
-            console.error("dialogue_internal_load_psych_character_json() unrecognized dialogue_pos: " + src);
+            console.error(`dialogue_internal_load_psych_character_json() unrecognized dialogue_pos: ${src}`);
             break;
     }
 
     L_process: {
         let image = json_read_string(json, "image", null);
         if (!image) {
-            console.error("dialogue_internal_load_psych_character_json() missing 'image' of json: " + src);
+            console.error(`dialogue_internal_load_psych_character_json() missing 'image' of json: ${src}`);
             break L_process;
         } else if (image.indexOf('.', 0) >= 0) {
             // append atlas extension
@@ -2500,8 +2481,8 @@ async function dialogue_internal_load_psych_character_json(src, portraits) {
             tmp = undefined;
         }
 
-        if (modelholder == null) {
-            console.error("dialogue_internal_load_psych_character_json() unreconized image path: " + image);
+        if (!modelholder) {
+            console.error(`dialogue_internal_load_psych_character_json() unreconized image path: ${image}`);
             break L_process;
         }
 
@@ -2509,8 +2490,8 @@ async function dialogue_internal_load_psych_character_json(src, portraits) {
         for (let i = 0; i < animations_length; i++) {
             let obj = json_read_array_item_object(animations, i);
 
-            const idle_offset = [0, 0];
-            const loop_offset = [0, 0];
+            let idle_offset = [-1.0, -1.0];
+            let loop_offset = [-1.0, -1.0];
             let anim, idle_name, loop_name;
 
             dialogue_internal_read_offset(obj, "idle_offsets", idle_offset);
@@ -2537,9 +2518,9 @@ async function dialogue_internal_load_psych_character_json(src, portraits) {
 
             let portrait = {
                 name: anim,
-                is_added: false,
-                is_removed: false,
-                is_speaking: false,
+                is_added: 0,
+                is_removed: 0,
+                is_speaking: 0,
                 position: dialogue_pos,
                 statesprite: statesprite
             };
@@ -2567,13 +2548,12 @@ async function dialogue_internal_parse_dialog_from_file(src, dialogs) {
     let source = await fs_readtext(full_path);
 
     if (!source) {
-        console.error("dialogue_internal_parse_dialog() can not read: " + src);
+        console.error(`dialogue_internal_parse_dialog() can not read: ${src}`);
         full_path = undefined;
         return -1;
     }
 
-    // parse
-    const dialog = {};
+    let dialog = {};
     dialogue_internal_parse_dialog_from_string(source, dialog);
 
     // add to the arraylist 
@@ -2660,13 +2640,13 @@ function dialogue_internal_parse_dialog_from_string(source, dialog_ref) {
 }
 
 function dialogue_internal_read_color(node, rgba) {
-    let color = [0];
+    let color = [0x00];
     rgba[3] = 1.0;
     if (vertexprops_parse_hex(node.getAttribute("rgb"), color, 0)) {
-        math2d_color_bytes_to_floats(color[0], 0, rgba);
+        math2d_color_bytes_to_floats(color, 0, rgba);
         rgba[3] = vertexprops_parse_float(node, "alpha", 1.0);
     } else if (vertexprops_parse_hex(node.getAttribute("rgba"), color, 0)) {
-        math2d_color_bytes_to_floats(color[0], 1, rgba);
+        math2d_color_bytes_to_floats(color, 1, rgba);
     } else {
         rgba[0] = vertexprops_parse_float(node, "r", rgba[0]);
         rgba[1] = vertexprops_parse_float(node, "g", rgba[1]);
@@ -2688,14 +2668,13 @@ function dialogue_internal_read_align(node, attribute) {
         case ALIGN_END:
             break;
         default:
-            console.error("dialogue_internal_read_align() invalid align value: " + unparsed_align);
+            console.error(`dialogue_internal_read_align() invalid align value: ${unparsed_align}`);
             align = ALIGN_NONE;
             break;
     }
 
     return align;
 }
-
 
 function dialogue_internal_read_offset(json_obj, property, offset) {
     let json_array = json_read_array(json_obj, property);
@@ -2721,15 +2700,15 @@ function dialogue_internal_add_state(statesprite, modelholder, anim_name, state_
     let state = statesprite_state_add(statesprite, modelholder, anim_name, state_name);
     if (!state) return;
 
-    if (state.animation != null && !modelholder_has_animlist(modelholder)) {
+    if (state.animation && !modelholder_has_animlist(modelholder)) {
         let animlist = modelholder_get_animlist(modelholder);
-        if (animlist_get_animation(animlist, anim_name) == null) {
+        if (!animlist_get_animation(animlist, anim_name)) {
             // the animation was builded from an atlas, explicit set the loop count
             animsprite_set_loop(state.animation, looped ? -1 : 1);
         }
     }
 
-    const orig_size = [-1, -1];
+    const orig_size = [-1.0, -1.0];
 
     imgutils_get_statesprite_original_size(state, orig_size);
     state.draw_width = orig_size[0] * scale;
@@ -2743,7 +2722,6 @@ function dialogue_internal_stop_portrait_animation(portrait) {
         animsprite_stop(state.animation);
     }
 }
-
 
 function dialogue_internal_get_audio(dialogue, name) {
     if (!name && dialogue.audios_size > 0) {
@@ -2804,17 +2782,61 @@ function dialogue_internal_get_multiplechoice(dialogue, name) {
     return null;
 }
 
-function _dialogue_lua_call(luascript_ptr, fn, ...args) {
-    args.unshift(luascript_ptr);
 
-    let ret = fn.apply(null, args);
+/** 
+ * @typedef {object} Dialogue
+ * @property {Audio[]} audios
+ * @property {number} audios_size
+ * @property {object[]} fonts
+ * @property {number} fonts_size
+ * @property {object[]} backgrounds
+ * @property {number} backgrounds_size
+ * @property {object[]} portraits
+ * @property {number} portraits_size
+ * @property {object[]} dialogs
+ * @property {number} dialogs_size
+ * @property {object[]} states
+ * @property {number} states_size
+ * @property {object[]} multiplechoices
+ * @property {number} multiplechoices_size
+ * @property {object[]} speechimages
+ * @property {number} speechimages_size
+ * @property {object} anims_ui
 
-    if (ret instanceof Promise) {
-        console.warn(
-            "_dialogue_lua_call() the call to " +
-            fn.name +
-            " or a previous lua call was was asynchronous, this will result in out-of-order execution of lua code"
-        );
-    }
-}
+ * @property {object[]} visible_portraits
+ * @property {bool} is_completed
+ * @property {object} dialog_external
+
+ * @property {number} current_background
+ * @property {number} change_background_from
+ * @property {null|number} script
+ * @property {bool} do_exit
+ * @property {object} click_text
+ * @property {object} click_char
+ * @property {number} char_delay
+ * @property {number} chars_per_second
+ * @property {bool} do_skip
+ * @property {bool} do_instant_print
+ * @property {bool} do_no_wait
+ * @property {object} do_multiplechoice
+ * @property {object} texsprite_speech
+ * @property {object} texsprite_title
+ * @property {object} current_speechimage
+ * @property {bool} current_speechimage_is_opening
+ * @property {object} current_speechimage_repeat
+ * @property {bool} is_speaking
+ * @property {number} current_dialog_codepoint_index
+ * @property {number} current_dialog_codepoint_length
+ * @property {number} current_dialog_duration
+ * @property {number} current_dialog_elapsed
+ * @property {string} current_dialog_mask
+ * @property {object} current_dialog
+ * @property {number} current_dialog_line
+ * @property {object} current_dialog_buffer
+ * @property {bool} draw_portraits_on_top
+ * @property {GamepadKDY} gamepad
+ * @property {object} self_drawable
+ * @property {bool} self_hidden
+ * @property {object} matrix_viewport
+*/
 

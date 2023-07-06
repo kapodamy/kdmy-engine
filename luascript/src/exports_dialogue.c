@@ -4,11 +4,11 @@
 
 
 #ifdef JAVASCRIPT
-EM_JS_PRFX(bool, dialogue_apply_state, (Dialogue dialogue, const char* state_name), {
-    return dialogue_apply_state(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name));
+EM_ASYNC_JS_PRFX(bool, dialogue_apply_state, (Dialogue dialogue, const char* state_name), {
+    return await dialogue_apply_state(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name));
 });
-EM_JS_PRFX(bool, dialogue_apply_state2, (Dialogue dialogue, const char* state_name, const char* if_line_label), {
-    return dialogue_apply_state2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name), kdmyEngine_ptrToString(if_line_label));
+EM_ASYNC_JS_PRFX(bool, dialogue_apply_state2, (Dialogue dialogue, const char* state_name, const char* if_line_label), {
+    return await dialogue_apply_state2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name), kdmyEngine_ptrToString(if_line_label));
 });
 EM_JS_PRFX(bool, dialogue_is_completed, (Dialogue dialogue), {
     return dialogue_is_completed(kdmyEngine_obtain(dialogue));
@@ -22,8 +22,8 @@ EM_ASYNC_JS_PRFX(bool, dialogue_show_dialog, (Dialogue dialogue, const char* dia
 EM_ASYNC_JS_PRFX(bool, dialogue_show_dialog2, (Dialogue dialogue, const char* text_dialog_content), {
     return await dialogue_show_dialog2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(text_dialog_content));
 });
-EM_JS_PRFX(void, dialogue_close, (Dialogue dialogue), {
-    dialogue_close(kdmyEngine_obtain(dialogue));
+EM_ASYNC_JS_PRFX(void, dialogue_close, (Dialogue dialogue), {
+    await dialogue_close(kdmyEngine_obtain(dialogue));
 });
 EM_JS_PRFX(void, dialogue_hide, (Dialogue dialogue, bool hidden), {
     dialogue_hide(kdmyEngine_obtain(dialogue), hidden);

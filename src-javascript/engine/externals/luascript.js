@@ -865,11 +865,15 @@ function __js__conductor_get_character(conductor) {
     let ret = conductor_get_character(kdmyEngine_obtain(conductor));
     return kdmyEngine_obtain(ret)
 }
-function __js__dialogue_apply_state(dialogue, state_name) {
-    return dialogue_apply_state(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name))
+function __asyncjs__dialogue_apply_state(dialogue, state_name) {
+    return Asyncify.handleAsync(async() => {
+        return await dialogue_apply_state(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name))
+    })
 }
-function __js__dialogue_apply_state2(dialogue, state_name, if_line_label) {
-    return dialogue_apply_state2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name), kdmyEngine_ptrToString(if_line_label))
+function __asyncjs__dialogue_apply_state2(dialogue, state_name, if_line_label) {
+    return Asyncify.handleAsync(async() => {
+        return await dialogue_apply_state2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(state_name), kdmyEngine_ptrToString(if_line_label))
+    })
 }
 function __js__dialogue_is_completed(dialogue) {
     return dialogue_is_completed(kdmyEngine_obtain(dialogue))
@@ -887,8 +891,10 @@ function __asyncjs__dialogue_show_dialog2(dialogue, text_dialog_content) {
         return await dialogue_show_dialog2(kdmyEngine_obtain(dialogue), kdmyEngine_ptrToString(text_dialog_content))
     })
 }
-function __js__dialogue_close(dialogue) {
-    dialogue_close(kdmyEngine_obtain(dialogue))
+function __asyncjs__dialogue_close(dialogue) {
+    return Asyncify.handleAsync(async() => {
+        await dialogue_close(kdmyEngine_obtain(dialogue))
+    })
 }
 function __js__dialogue_hide(dialogue, hidden) {
     dialogue_hide(kdmyEngine_obtain(dialogue), hidden)
@@ -5821,6 +5827,9 @@ var wasmImports = {
     "__assert_fail": ___assert_fail,
     "__asyncjs__animlist_init": __asyncjs__animlist_init,
     "__asyncjs__atlas_init": __asyncjs__atlas_init,
+    "__asyncjs__dialogue_apply_state": __asyncjs__dialogue_apply_state,
+    "__asyncjs__dialogue_apply_state2": __asyncjs__dialogue_apply_state2,
+    "__asyncjs__dialogue_close": __asyncjs__dialogue_close,
     "__asyncjs__dialogue_show_dialog": __asyncjs__dialogue_show_dialog,
     "__asyncjs__dialogue_show_dialog2": __asyncjs__dialogue_show_dialog2,
     "__asyncjs__fs_readfile": __asyncjs__fs_readfile,
@@ -5958,9 +5967,6 @@ var wasmImports = {
     "__js__conductor_set_character": __js__conductor_set_character,
     "__js__conductor_use_strum_line": __js__conductor_use_strum_line,
     "__js__conductor_use_strums": __js__conductor_use_strums,
-    "__js__dialogue_apply_state": __js__dialogue_apply_state,
-    "__js__dialogue_apply_state2": __js__dialogue_apply_state2,
-    "__js__dialogue_close": __js__dialogue_close,
     "__js__dialogue_get_modifier": __js__dialogue_get_modifier,
     "__js__dialogue_hide": __js__dialogue_hide,
     "__js__dialogue_is_completed": __js__dialogue_is_completed,
@@ -6569,7 +6575,7 @@ var _asyncify_stop_rewind = function () {
     return (_asyncify_stop_rewind = ModuleLuaScript["asm"]["asyncify_stop_rewind"]).apply(null, arguments)
 };
 var ___start_em_js = ModuleLuaScript["___start_em_js"] = 56800;
-var ___stop_em_js = ModuleLuaScript["___stop_em_js"] = 159519;
+var ___stop_em_js = ModuleLuaScript["___stop_em_js"] = 159848;
 function invoke_vii(index, a1, a2) {
     var sp = stackSave();
     try {

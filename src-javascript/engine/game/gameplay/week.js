@@ -2324,8 +2324,11 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         }
 
         if (roundcontext.script != null) await weekscript_notify_frame(roundcontext.script, elapsed);
+
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
+
+        await dialogue_poll(roundcontext.dialogue, elapsed);
 
         if (dialogue_is_completed(roundcontext.dialogue)) {
             show_dialog = 0;
@@ -2419,8 +2422,11 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         }
 
         if (roundcontext.script) await weekscript_notify_frame(roundcontext.script, elapsed);
+
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
+
+        if (roundcontext.dialogue) dialogue_poll(roundcontext.dialogue, elapsed);
     }
 
     if (!roundcontext.settings.ask_ready) layout_trigger_camera(layout, WEEKROUND_CAMERA_ROUNDSTART);
@@ -2653,7 +2659,8 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
 
-        // JS only
+        if (roundcontext.dialogue) await dialogue_poll(roundcontext.dialogue, elapsed);
+
         if (roundcontext.scriptcontext.halt_flag) {
             await week_halt(roundcontext, 0);
 
@@ -2751,8 +2758,11 @@ async function week_halt(/** @type {RoundContext} */roundcontext, peek_global_be
         }
 
         if (roundcontext.script) await weekscript_notify_frame(roundcontext.script, elapsed);
+
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
+
+        if (roundcontext.dialogue) await dialogue_poll(roundcontext.dialogue, elapsed);
 
         if (peek_global_beatwatcher) beatwatcher_global_set_timestamp_from_kos_timer();
 
