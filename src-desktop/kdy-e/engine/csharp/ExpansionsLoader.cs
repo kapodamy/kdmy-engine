@@ -123,7 +123,7 @@ public partial class ExpansionsLoader : Form {
         DirectoryInfo directory = new DirectoryInfo(expansions_dir);
 
         foreach (DirectoryInfo dir in directory.EnumerateDirectories()) {
-            string dir_relative_path = $"{Expansions.PATH}{dir.Name}{FS.CHAR_SEPARATOR}";
+            string dir_relative_path = $"{Expansions.PATH}{FS.CHAR_SEPARATOR}{dir.Name}{FS.CHAR_SEPARATOR}";
 
             if (dir.Name.ToLowerInvariant() == "funkin") continue;
 

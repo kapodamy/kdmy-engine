@@ -48,7 +48,7 @@ async function expansionsloader_internal_load_expansions() {
 
     for (let dir of entries) {
         let dir_path = `${expansions_path}${dir.name}${FS_CHAR_SEPARATOR}`
-        let dir_relative_path = `${EXPANSIONS_PATH}${dir.name}${FS_CHAR_SEPARATOR}`;
+        let dir_relative_path = `${EXPANSIONS_PATH}${FS_CHAR_SEPARATOR}${dir.name}${FS_CHAR_SEPARATOR}`;
 
         if (dir.name.toLowerCase() == "funkin") continue;
 
@@ -160,7 +160,7 @@ function expansionsloader_internal_keyDown(/**@type {KeyboardEvent}*/e) {
     selected.classList.remove("exl-item-selected");
     expansionsloader_expansions[index].li_element.classList.add("exl-item-selected");
 
-        expansionsloader_internal_show_info(expansionsloader_expansions[index]);
+    expansionsloader_internal_show_info(expansionsloader_expansions[index]);
 }
 
 function expansionsloader_internal_launch(e) {
