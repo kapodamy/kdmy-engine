@@ -119,7 +119,7 @@ async function main_layout_visor() {
                 last_nosing = layoutvisor_nosing;
                 for (let obj of layoutvisor_loaded_characters) {
                     if (obj.layoutvisor_character) character_play_idle(obj.layoutvisor_character);
-            }
+                }
             }
         } else if (time > next_hit) {
             next_hit = time + math2d_random(400, 800);
@@ -576,6 +576,24 @@ function main_layout_add_listeners() {
         //@ts-ignore
         layoutvisor_nosing = !this.checked;
     });
+
+    document.getElementById("base-folder-fs").addEventListener("click", async function (e) {
+        layoutvisor_from_filesystem(true);
+    }, false);
+    document.getElementById("load-layout-file-fs").addEventListener("click", async function (e) {
+        layoutvisor_from_filesystem(false);
+    }, false);
+    document.getElementById("bind-character_manifest-fs").addEventListener("click", async function (e) {
+        // @ts-ignore
+        let parent_folder = fs_get_parent_folder(character_manifest.value);
+        if (!await fs_folder_exists(parent_folder)) parent_folder = "/";
+
+        let picked_file = await filesystemdialog_main(false, parent_folder);
+        if (!picked_file) return;
+
+        layoutvisor_localstorage_save("characterManifest", picked_file);
+        document.getElementById("item-bind-confirm").click();
+    }, false);
 }
 
 async function layoutvisor_load(e) {
@@ -1599,3 +1617,43 @@ function layoutvisor_list_fs_use_fallback_values(fallback_datalist_name, fallbac
         layoutvisor_tempdatalist.appendChild(document.createElement("option")).value = "/expansions";
     }
 }
+
+async function layoutvisor_from_filesystem(is_fake_path_or_layout_file) {
+    /**@type {HTMLInputElement} */// @ts-ignore
+    let input_basefolder = document.querySelector("input[name=base-folder]");
+
+    let ret = null;
+    try {
+        ret = await filesystemdialog_main(is_fake_path_or_layout_file, input_basefolder.value);
+        if (!ret) return;
+    } catch (e) {
+        console.error(e);
+    }
+
+    if (!ret) {
+        // try again
+        ret = await filesystemdialog_main(true, null);
+    }
+
+    if (!ret) return;
+
+    if (is_fake_path_or_layout_file) {
+        input_basefolder.value = ret;
+        return;
+    }
+
+    let file = await fs_readblob(ret);
+    if (!file) {
+        alert("failed to read " + ret);
+        return;
+    }
+
+    let idx = ret.lastIndexOf(FS_CHAR_SEPARATOR);
+
+    file.name = ret.substring(idx + 1);
+    input_basefolder.value = ret.substring(0, idx >= 0 ? idx : ret.length);
+
+    layoutvisor_localstorage_save("baseLayoutFolder", input_basefolder.value);
+    await layoutvisor_load({ target: { files: [file], value: "" } });
+}
+

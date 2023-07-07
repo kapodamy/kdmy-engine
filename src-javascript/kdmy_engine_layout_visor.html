@@ -16,9 +16,332 @@
             background-color: whitesmoke;
         }
     </style>
+    <style type="text/css">
+
+        .exl-dialog {
+            display: flex;
+            flex-direction: row;
+            font-family: Lato,Helvetica Neue,Helvetica,Roboto,Arial,sans-serif;
+        }
+
+        .exl-list * {
+            box-sizing: border-box;
+        }
+
+        .exl-list-cont {
+            width: 50vw;
+            min-width: 700px;
+        }
+
+        #exl-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            height: calc(106px * 5);
+            overflow-y: scroll;
+        }
+
+        .exl-item {
+            border: unset;
+            background-color: #fff;
+            padding: 16px;
+            width: 100%;
+            border: 1px solid transparent;
+            border-top-color: #f2f2f2;
+        }
+        .exl-item-cont {
+            height: 100%;
+            width: 100%;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: row;
+            display: flex;
+        }
+
+        .exl-img-cont {
+            max-height: 73px;
+            width: 115px;
+            margin-right: 16px;
+            border-radius: 10px;
+            height: 73px;
+            overflow: hidden;
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;
+            display: flex;
+        }
+
+        .exl-thumb {
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+            max-width: 100%;
+            border: 0;
+        }
+
+        .exl-info-cont {
+            width: calc(100% - 131px);
+            height: 100%;
+            background-color: inherit !important;
+            align-self: auto;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-direction: column;
+            display: flex;
+        }
+
+        .exl-title {
+            white-space: normal;
+            font-size: 18px;
+            line-height: 21px;
+            min-height: 21px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            font-weight: 700;
+        }
+
+        .exl-info-cont2 {
+            margin-top: 4px;
+            align-self: auto;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: row;
+            display: flex;
+        }
+
+        .exl-info-separt {
+            color: #575757;
+            font-size: 12px;
+            line-height: 14px;
+            margin: 0 4px;
+            font-weight: 400;
+        }
+
+        .exl-info-version {
+            color: slategray;
+            font-size: 12px;
+            line-height: 14px;
+            font-weight: 400;
+            margin: 0 4px;
+        }
+
+        .exl-info-submiter {
+            font-size: 14px;
+            line-height: 14px;
+            box-sizing: border-box;
+        }
+
+        .exl-item:not(.exl-item-selected):hover {
+            background-color: aliceblue;
+        }
+
+        .exl-item:hover {
+            cursor: pointer;
+            border-color: white;
+        }
+
+        .exl-item:active {
+            border-color: aliceblue;
+            background-color: whitesmoke;
+        }
+
+        .exl-selected-exp {
+            flex-direction: column;
+            display: flex;
+            width: 40vw;
+            height: 570px
+        }
+
+        .exl-preview-cont {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 0px 16px;
+            overflow: hidden;
+        }
+
+        .exl-preview {
+            height: 100%;
+            object-fit: contain;
+            width: 100%;
+            max-width: 100%;
+            border: 0;
+        }
+
+        .exl-summary {
+            font-size: 15px;
+            overflow-y: auto;
+            flex-shrink: 10;
+            margin-top: 0.5em;
+            white-space: pre-line;
+        }
+
+        .exl-h3-title {
+            margin-bottom: 0;
+        }
+
+        .exl-hr {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .exl-item-selected {
+            background-color: #bbeeff;
+            border: 1px darkblue solid;
+        }
+
+        .expansions-buttons {
+            margin: 12px;
+            text-align: end;
+        }
+
+        .expansions-buttons>button {
+            width: 25%;
+        }
+
+    </style>
+    <style type="text/css">
+        .ase-item {
+            background-color: #fff;
+            padding: 4px;
+            border: 1px solid transparent;
+            border-top-color: #f2f2f2;
+        }
+    
+        .ase-item-cont {
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: row;
+            display: flex;
+        }
+    
+        .ase-icon {
+            margin-right: 16px;
+            font-size: 24px;
+        }
+    
+        .ase-info-cont {
+            width: 90%;
+            height: 100%;
+            align-self: auto;
+        }
+    
+        .ase-info-name {
+            white-space: normal;
+            font-size: 16px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    
+        .ase-info-size {
+            margin-top: 4px;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: row;
+            display: flex;
+            color: slategray;
+            font-size: 12px;
+            font-weight: 400;
+        }
+    
+        #fs-dialog {
+            margin: 2em 2em 0em 2em;
+            background-color: whitesmoke;
+            padding: 1em 1em;
+            box-shadow: 5px 5px 20px 0px rgba(0, 0, 0, 0.6);
+            border-radius: 5px;
+        }
+    
+        .ase-header {
+            padding: 1em 8px;
+        }
+    
+        .ase-header-button {
+            font-size: 20px;
+            margin-right: 8px;
+            line-height: 20px;
+            box-sizing: border-box;
+            padding: 4px;
+            background-color: lightgray;
+            border: 1px solid darkgray;
+            cursor: pointer;
+        }
+    
+        #ase-path {
+            width: 93%;
+            font-size: 18px;
+            padding: 0em 0.5em;
+        }
+    
+        .ase-list-cont {
+            display: flex;
+            flex-direction: row;
+            font-family: Lato, Helvetica Neue, Helvetica, Roboto, Arial, sans-serif;
+        }
+    
+        #ase-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 60vh;
+            overflow-y: scroll;
+            border: 1px solid darkgray;
+        }
+    
+        .ase-header-button, #ase-path, #ase-list {
+            box-shadow: 1px 1px 1px -1px rgba(0, 0, 0, 0.75);
+        }
+
+        .ase-buttons {
+            margin: 12px;
+            text-align: end;
+        }
+    
+        .ase-buttons>button {
+            width: 15%;
+        }
+    
+        body.fs-dialog-visible {
+            background-color: darkgray;
+        }
+    
+        .ase-item-selected {
+            background-color: #bbeeff;
+            border: 1px darkblue solid;
+        }
+    
+        .ase-item:not(.ase-item-selected):hover {
+            background-color: aliceblue;
+        }
+    
+        .ase-item:hover {
+            cursor: pointer;
+            border-color: white;
+        }
+    
+        .ase-item:not(.ase-item-selected):active {
+            border-color: aliceblue;
+            background-color: whitesmoke;
+        }
+
+        .ase-info-name.bold {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .ase-item.disabled {
+            color: dimgray;
+        }
+
+        #ase-path:focus {
+            box-shadow: 0px 0px 5px 0px dodgerblue;
+        }
+
+    </style>
 </head>
 
-<body style="overflow-y: scroll;">
+<body style="overflow-y: auto;">
 
     <style type="text/css">
         .layoutvisor {
@@ -65,209 +388,292 @@
             transform: rotate(90deg);
         }
     </style>
+    <div id="window">
 
-    <section class="layoutvisor widescreen">
-        <fieldset>
-            <legend>Layout item parameters</legend>
-            <div style="display: flex;">
-                <div style="display: inline;">
-                    <div>
-                        <select id="layout-items" style="min-width: 200px"></select>
-                    </div>
-                    <div>
-                        <label>Width:<input id="item-width" type="number" style="width: 40px;" /></label>
-                        <label>Height:<input id="item-height" type="number" style="width: 40px;" /></label>
-                        <br>
-                        <label>X:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<input id="item-x" type="number"
-                                style="width: 40px;" /></label>
-                        <label>Y:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;<input id="item-y" type="number"
-                                style="width: 40px;" /></label>
-                    </div>
-                </div>
-                <div style="display: inline;">
-                    <label><input type="checkbox" id="item-visible">Visible</label>
-                    <br>
-                    <label><input type="checkbox" id="item-mousemove">Move with the mouse</label>
-                    <br>
-                    <button disabled id="item-bind">Bind placeholder to...</button>
-                </div>
-            </div>
+        <section class="layoutvisor widescreen">
             <fieldset>
-                <legend>Parallax coefficients</legend>
-                <label>X: <input type="number" step="0.01" value="1" style="width: 50px;"
-                        id="item-parallax-x" /></label>
-                <label>&nbsp;&nbsp;Y: <input type="number" step="0.001" value="1" style="width: 50px;"
-                        id="item-parallax-y" /></label>
-                <label>&nbsp;&nbsp;Z: <input type="number" step="0.001" value="1" style="width: 50px;"
-                        id="item-parallax-z" /></label>
-            </fieldset>
-            <fieldset id="item-placeholder-align" disabled>
-                <legend>Placeholder alignment</legend>
-                <label>Vertical:
-                    <select id="item-placeholder-align-vertical">
-                        <option value="4">NONE</option>
-                        <option value="0">START</option>
-                        <option value="1">CENTER</option>
-                        <option value="2">END</option>
-                    </select>
-                </label>
-                <label>&nbsp;&nbsp;&nbsp;Horizontal:
-                    <select id="item-placeholder-align-horizontal">
-                        <option value="4">NONE</option>
-                        <option value="0">START</option>
-                        <option value="1">CENTER</option>
-                        <option value="2">END</option>
-                    </select>
-                </label>
-            </fieldset>
-            <fieldset id="item-bind-to" style="display: none;">
-                <legend>Bind placeholder</legend>
-                <div id="item-bind-type" style="display: none;">
-                    <fieldset>
-                        <legend>Type</legend>
-                        <label><input type="radio" name="item-bind-type" value="none"> None</label>
+                <legend>Layout item parameters</legend>
+                <div style="display: flex;">
+                    <div style="display: inline;">
+                        <div>
+                            <select id="layout-items" style="min-width: 200px"></select>
+                        </div>
+                        <div>
+                            <label>Width:<input id="item-width" type="number" style="width: 40px;" /></label>
+                            <label>Height:<input id="item-height" type="number" style="width: 40px;" /></label>
+                            <br>
+                            <label>X:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<input id="item-x" type="number"
+                                    style="width: 40px;" /></label>
+                            <label>Y:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;<input id="item-y" type="number"
+                                    style="width: 40px;" /></label>
+                        </div>
+                    </div>
+                    <div style="display: inline;">
+                        <label><input type="checkbox" id="item-visible">Visible</label>
                         <br>
-                        <label><input type="radio" name="item-bind-type" value="ranking"> Ranking counter (displays
-                            SICK, GOOD, etc.)</label>
+                        <label><input type="checkbox" id="item-mousemove">Move with the mouse</label>
                         <br>
-                        <label><input type="radio" name="item-bind-type" value="streak"> Streak counter (displays 010,
-                            011, etc.)</label>
-                        <br>
-                        <label><input type="radio" name="item-bind-type" value="accuracy"> Accuracy counter (displays
-                            10.2ms, 20ms, etc.)</label>
-                        <br>
-                        <label><input type="radio" name="item-bind-type" value="autouicosmetics"> Autoplace all counters using
-                        this placeholder</label>
-                        <br>
-                        <label><input type="radio" name="item-bind-type" value="character" list="temp-datalist"> Character (animated sprite
-                            using charactermanifest)</label>
+                        <button disabled id="item-bind">Bind placeholder to...</button>
+                    </div>
+                </div>
+                <fieldset>
+                    <legend>Parallax coefficients</legend>
+                    <label>X: <input type="number" step="0.01" value="1" style="width: 50px;"
+                            id="item-parallax-x" /></label>
+                    <label>&nbsp;&nbsp;Y: <input type="number" step="0.001" value="1" style="width: 50px;"
+                            id="item-parallax-y" /></label>
+                    <label>&nbsp;&nbsp;Z: <input type="number" step="0.001" value="1" style="width: 50px;"
+                            id="item-parallax-z" /></label>
+                </fieldset>
+                <fieldset id="item-placeholder-align" disabled>
+                    <legend>Placeholder alignment</legend>
+                    <label>Vertical:
+                        <select id="item-placeholder-align-vertical">
+                            <option value="4">NONE</option>
+                            <option value="0">START</option>
+                            <option value="1">CENTER</option>
+                            <option value="2">END</option>
+                        </select>
+                    </label>
+                    <label>&nbsp;&nbsp;&nbsp;Horizontal:
+                        <select id="item-placeholder-align-horizontal">
+                            <option value="4">NONE</option>
+                            <option value="0">START</option>
+                            <option value="1">CENTER</option>
+                            <option value="2">END</option>
+                        </select>
+                    </label>
+                </fieldset>
+                <fieldset id="item-bind-to" style="display: none;">
+                    <legend>Bind placeholder</legend>
+                    <div id="item-bind-type" style="display: none;">
+                        <fieldset>
+                            <legend>Type</legend>
+                            <label><input type="radio" name="item-bind-type" value="none"> None</label>
+                            <br>
+                            <label><input type="radio" name="item-bind-type" value="ranking"> Ranking counter (displays
+                                SICK, GOOD, etc.)</label>
+                            <br>
+                            <label><input type="radio" name="item-bind-type" value="streak"> Streak counter (displays
+                                010,
+                                011, etc.)</label>
+                            <br>
+                            <label><input type="radio" name="item-bind-type" value="accuracy"> Accuracy counter
+                                (displays
+                                10.2ms, 20ms, etc.)</label>
+                            <br>
+                            <label><input type="radio" name="item-bind-type" value="autouicosmetics"> Autoplace all
+                                counters using
+                                this placeholder</label>
+                            <br>
+                            <label><input type="radio" name="item-bind-type" value="character" list="temp-datalist">
+                                Character (animated sprite
+                                using charactermanifest)</label>
+                        </fieldset>
+                    </div>
+                    <fieldset id="item-bind-type-ranking" style="display: none;">
+                        <legend>Configure ranking counter</legend>
+                        <strong>ui_rankingcounter_rank</strong><i> placeholder</i>
+                        <hr>
+                        <i>no additional configuration is required</i>
                     </fieldset>
+                    <fieldset id="item-bind-type-streak" style="display: none;">
+                        <legend>Configure streak counter</legend>
+                        <strong>ui_streakcounter</strong><i> placeholder</i>
+                        <hr>
+                        <label><b>ui_streakcounter_comboHeight</b>: <input style="width: 100px;"
+                                id="bind-ui_streakcounter_comboHeight" type="number" step="00000.1" value="0" /></label>
+                        <br>
+                        <label><b>ui_streakcounter_numberGap</b>: <input style="width: 100px;"
+                                id="bind-ui_streakcounter_numberGap" type="number" step="00000.1" value="0" /></label>
+                        <br>
+                        <label><b>ui_streakcounter_delay</b>: <input style="width: 100px;"
+                                id="bind-ui_streakcounter_delay" type="number" step="00000.1" value="0" /></label>
+                    </fieldset>
+                    <fieldset id="item-bind-type-accuracy" style="display: none;">
+                        <legend>Configure accuracy counter</legend>
+                        <strong>ui_rankingcounter_accuracy</strong><i> placeholder</i>
+                        <hr>
+                        <label><b>ui_rankingcounter_accuracy_percent</b>: <input
+                                id="bind-ui_rankingcounter_accuracy_percent" type="checkbox" value="false" /></label>
+                    </fieldset>
+                    <fieldset id="item-bind-type-autouicosmetics" style="display: none;">
+                        <legend>How counters are placed</legend>
+                        * Ranking counter on top-left<br>
+                        * Streak counter at 25% from left and 50% from top<br>
+                        *Accuracy counter on bottom-right<br>
+                        <i>the placeholder must have a width and height.</i>
+                    </fieldset>
+                    <fieldset id="item-bind-type-character" style="display: none;">
+                        <legend>Configure character</legend>
+                        <strong>character_#### character_girlfriend</strong><i> placeholder</i>
+                        <hr>
+                        <label><b>character_scale_### character_girlfriend_scale</b>: <input style="width: 50px;"
+                                id="bind-character_scale" type="number" step="0.02" value="1" /></label>
+                        <br>
+                        <label><input id="bind-character_facing" type="checkbox" /> Invert character facing (needs
+                            rebind)</label>
+                        <br>
+                        <label>Character manifest: <input id="bind-character_manifest" type="text"
+                                value="/assets/common/data/BOYFRIEND.json"
+                                list="predefined-characterManifest" /></label><button id="bind-character_manifest-fs" style="margin-left: 4px">📁</button>
+                    </fieldset>
+                    <div style="text-align: center;margin-top: 8px;">
+                        <button id="item-bind-confirm" style="padding-left: 50px; padding-right: 50px;">Set placeholder
+                            binding</button>
+                    </div>
+                </fieldset>
+            </fieldset>
+            <fieldset>
+                <legend>Camera</legend>
+                <div>
+                    <select id="layout-cameras" style="min-width: 200px"></select>
+                    <br>
+                    <button id="layout-cameras-start">Apply</button>
+                    <button id="layout-cameras-end">Apply end only</button>
                 </div>
-                <fieldset id="item-bind-type-ranking" style="display: none;">
-                    <legend>Configure ranking counter</legend>
-                    <strong>ui_rankingcounter_rank</strong><i> placeholder</i>
-                    <hr>
-                    <i>no additional configuration is required</i>
-                </fieldset>
-                <fieldset id="item-bind-type-streak" style="display: none;">
-                    <legend>Configure streak counter</legend>
-                    <strong>ui_streakcounter</strong><i> placeholder</i>
-                    <hr>
-                    <label><b>ui_streakcounter_comboHeight</b>: <input style="width: 100px;"
-                            id="bind-ui_streakcounter_comboHeight" type="number" step="00000.1" value="0" /></label>
+                <div>
+                    Current offset:&nbsp;&nbsp;&nbsp;&nbsp;<span class="coords camera-offset">x="0" y="0" z="1"</span>
                     <br>
-                    <label><b>ui_streakcounter_numberGap</b>: <input style="width: 100px;"
-                            id="bind-ui_streakcounter_numberGap" type="number" step="00000.1" value="0" /></label>
-                    <br>
-                    <label><b>ui_streakcounter_delay</b>: <input style="width: 100px;" id="bind-ui_streakcounter_delay"
-                            type="number" step="00000.1" value="0" /></label>
-                </fieldset>
-                <fieldset id="item-bind-type-accuracy" style="display: none;">
-                    <legend>Configure accuracy counter</legend>
-                    <strong>ui_rankingcounter_accuracy</strong><i> placeholder</i>
-                    <hr>
-                    <label><b>ui_rankingcounter_accuracy_percent</b>: <input
-                            id="bind-ui_rankingcounter_accuracy_percent" type="checkbox" value="false" /></label>
-                </fieldset>
-                <fieldset id="item-bind-type-autouicosmetics" style="display: none;">
-                    <legend>How counters are placed</legend>
-                    * Ranking counter on top-left<br>
-                    * Streak counter at 25% from left and 50% from top<br>
-                    *Accuracy counter on bottom-right<br>
-                    <i>the placeholder must have a width and height.</i>
-                </fieldset>
-                <fieldset id="item-bind-type-character" style="display: none;">
-                    <legend>Configure character</legend>
-                    <strong>character_#### character_girlfriend</strong><i> placeholder</i>
-                    <hr>
-                    <label><b>character_scale_### character_girlfriend_scale</b>: <input style="width: 50px;"
-                            id="bind-character_scale" type="number" step="0.02" value="1" /></label>
-                    <br>
-                    <label><input id="bind-character_facing" type="checkbox" /> Invert character facing (needs rebind)</label>
-                    <br>
-                    <label>Character manifest: <input id="bind-character_manifest" type="text" value="/assets/common/data/BOYFRIEND.json" list="predefined-characterManifest"/></label>
-                </fieldset>
-                <div style="text-align: center;margin-top: 8px;">
-                    <button id="item-bind-confirm" style="padding-left: 50px; padding-right: 50px;">Set placeholder
-                        binding</button>
+                    Current position:<span class="coords camera-position">x="0" y="0" z="1"</span>
                 </div>
             </fieldset>
-        </fieldset>
-        <fieldset>
-            <legend>Camera</legend>
-            <div>
-                <select id="layout-cameras" style="min-width: 200px"></select>
-                <br>
-                <button id="layout-cameras-start">Apply</button>
-                <button id="layout-cameras-end">Apply end only</button>
-            </div>
-            <div>
-                Current offset:&nbsp;&nbsp;&nbsp;&nbsp;<span class="coords camera-offset">x="0" y="0" z="1"</span>
-                <br>
-                Current position:<span class="coords camera-position">x="0" y="0" z="1"</span>
-            </div>
-        </fieldset>
-        <fieldset>
-            <legend>Camera mode</legend>
-            <div style="display: flex;">
-                <div style="display: inline;">
-                    <label><input type="radio" name="viewmode" id="viewmode-offset" checked />Offset</label>
-                    <br>
-                    <label><input type="radio" name="viewmode" id="viewmode-camera" />Positon (with parallax)</label>
+            <fieldset>
+                <legend>Camera mode</legend>
+                <div style="display: flex;">
+                    <div style="display: inline;">
+                        <label><input type="radio" name="viewmode" id="viewmode-offset" checked />Offset</label>
+                        <br>
+                        <label><input type="radio" name="viewmode" id="viewmode-camera" />Positon (with
+                            parallax)</label>
+                    </div>
+                    <div style="display: inline;margin-left: 10px;">
+                        <button id="camera-offset-reset">Reset offset</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button
+                            id="camera-offset-set">Set offset</button>
+                        <br>
+                        <button id="camera-position-reset">Reset position</button>&nbsp;&nbsp;<button
+                            id="camera-position-set">Set position</button>
+                    </div>
                 </div>
-                <div style="display: inline;margin-left: 10px;">
-                    <button id="camera-offset-reset">Reset offset</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="camera-offset-set">Set offset</button>
-                    <br>
-                    <button id="camera-position-reset">Reset position</button>&nbsp;&nbsp;<button id="camera-position-set">Set position</button>
+            </fieldset>
+            <fieldset>
+                <legend>Display mode</legend>
+                <div>
+                    <label><input type="radio" name="displaymode" id="displaymode-render" checked />Render only</label>
+                    <label><input type="radio" name="displaymode" id="displaymode-animate" />Animate</label>
+                    <label><input type="checkbox" id="widescreen" checked="true" />Widescreen</label>
+                    <label><input type="checkbox" id="sing" />Sing simulation</label>
                 </div>
-            </div>
-        </fieldset>
-        <fieldset>
-            <legend>Display mode</legend>
-            <div>
-                <label><input type="radio" name="displaymode" id="displaymode-render" checked />Render only</label>
-                <label><input type="radio" name="displaymode" id="displaymode-animate" />Animate</label>
-                <label><input type="checkbox" id="widescreen" checked="true" />Widescreen</label>
-                <label><input type="checkbox" id="sing" />Sing simulation</label>
-            </div>
-        </fieldset>
-        <fieldset>
-            <legend>Executions</legend>
-            <label>Animation speed:&nbsp;<input style="width: 80px;" type="number" id="anim-speed" step="0.1" min="0"
-                    value="1.0" /></label>
-            <br>
-            <label>Triggers:&nbsp;<select id="layout-triggers" style="min-width: 100px;"></select></label>
-            <button id="layout-triggers-execute">Execute</button>&nbsp;&nbsp;<button id="layout-triggers-stop">Stop all triggers</button>
-            <br>
-            <label>Actions:&nbsp;<select id="layout-actions" style="min-width: 100px;"></select></label>
-            <button id="layout-actions-execute">Execute</button>
-        </fieldset>
-        <fieldset>
-            <legend>Layout</legend>
-            <label>Base folder for layout: <input type="text" name="base-folder" list="temp-datalist" /></label>
-            <br>
-            <div style="height: 4px;"></div>
-            <label>Load layout: <input type="file" id="load-layout-file" /></label>
-        </fieldset>
-    </section>
+            </fieldset>
+            <fieldset>
+                <legend>Executions</legend>
+                <label>Animation speed:&nbsp;<input style="width: 80px;" type="number" id="anim-speed" step="0.1"
+                        min="0" value="1.0" /></label>
+                <br>
+                <label>Triggers:&nbsp;<select id="layout-triggers" style="min-width: 100px;"></select></label>
+                <button id="layout-triggers-execute">Execute</button>&nbsp;&nbsp;<button id="layout-triggers-stop">Stop
+                    all triggers</button>
+                <br>
+                <label>Actions:&nbsp;<select id="layout-actions" style="min-width: 100px;"></select></label>
+                <button id="layout-actions-execute">Execute</button>
+            </fieldset>
+            <fieldset>
+                <legend>Layout</legend>
+                <label>Fake layout path: <input type="text" name="base-folder" list="temp-datalist" /></label><button id="base-folder-fs" style="margin-left: 4px">📁</button>
+                <br>
+                <div style="height: 4px;"></div>
+                <span>Load layout: <button id="load-layout-file-fs" style="margin-right: 4px">📁</button><input type="file" id="load-layout-file" /></span>
+            </fieldset>
+        </section>
 
-    <div
-        style="display:none; z-index: 999; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: #00000040;">
-        <div style="background-color: white; width: 50vw; display: flex; margin: 25px auto; min-height: 400px;">
+        <div
+            style="display:none; z-index: 999; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: #00000040;">
+            <div style="background-color: white; width: 50vw; display: flex; margin: 25px auto; min-height: 400px;">
+            </div>
+        </div>
+
+        <!--  letterbox=width+height  widescreen=width2+height2  -->
+        <canvas width="640" height="480" width2="864" height2="486" style="border: 1px black solid;"></canvas>
+        <div>
+            <i>kdmy-engine layout visor</i>
+        </div>
+
+    </div>
+ 
+    <div id="expansions-dialog" style="display: none;">
+        <div class="expansions-buttons">
+            <button id="exl-launch">Launch selected expansion</button>
+              
+            <button id="exl-refresh">Refresh list</button>
+        </div>
+        <div class="exl-dialog">
+            <fieldset class="exl-list-cont">
+                <legend>Available expansions</legend>
+                <ul id="exl-list"></ul>
+            </fieldset>
+            <fieldset class="exl-selected-exp">
+                <legend>Selected expansion</legend>
+                <div class="exl-preview-cont">
+                    <img class="exl-preview" src="" style="visibility: hidden;">
+                </div>
+                <hr class="exl-hr">
+                <h3 class="exl-h3-title">Description:</h3>
+                <div class="exl-summary"></div>
+            </fieldset>
         </div>
     </div>
 
-    <!--  letterbox=width+height  widescreen=width2+height2  -->
-    <canvas width="640" height="480" width2="864" height2="486" style="border: 1px black solid;"></canvas>
-    <div>
-        <i>kdmy-engine layout visor</i>
+    <div id="fs-dialog" style="display: none;">
+        <div class="ase-header">
+            <span class="ase-header-button home">🏠</span>
+            <input id="ase-path" type="text">
+        </div>
+        <div class="ase-list-cont">
+            <ul id="ase-list"></ul>
+        </div>
+        <div class="ase-buttons">
+            <button id="ase-pick">Pick</button>
+            &nbsp;&nbsp;
+            <button id="ase-cancel">Cancel</button>
+        </div>
     </div>
+
     <div style="display: none;">
         <hr>
         <button id="pvr-onoff">Suspend/Resume PVR</button>
         <br>
         <label>FPS: <input type="text" readonly="" value="00 FPS" id="pvr-status"></label>
     </div>
+
+    <template id="exl-item">
+        <li class="exl-item">
+            <div class="exl-item-cont">
+                <div class="exl-img-cont">
+                    <img loading="lazy" class="exl-thumb" src="" />
+                </div>
+                <div class="exl-info-cont">
+                    <div class="exl-title"></div>
+                    <div class="exl-info-cont2">
+                        <span class="exl-info-version"></span>
+                        <span class="exl-info-separt"> - </span>
+                        <span class="exl-info-submiter"></span>
+                    </div>
+                </div>
+            </div>
+        </li>
+    </template>
+
+    <template id="ase-item">
+        <li class="ase-item">
+            <div class="ase-item-cont">
+                <div class="ase-icon"></div>
+                <div class="ase-info-cont">
+                    <div class="ase-info-name"></div>
+                    <div class="ase-info-size"></div>
+                </div>
+            </div>
+        </li>
+    </template>
 
     <script src="engine/platform/localforage.js"></script>
 
@@ -290,7 +696,7 @@
     <script src="engine/utils/cloneobject.js"></script>
     <script src="engine/utils/math2d.js"></script>
     <script src="engine/utils/vertexprops.js"></script>
-	<script src="engine/utils/stringfolding.js"></script>
+    <script src="engine/utils/stringfolding.js"></script>
     <script src="engine/utils/tokenizer.js"></script>
     <script src="engine/utils/stringutils.js"></script>
     <script src="engine/utils/stringbuilder.js"></script>
@@ -337,42 +743,44 @@
     <script src="engine/modelholder.js"></script>
     <script src="engine/game/gameplay/helpers/autouicosmetics.js"></script>
     <script src="engine/game/gameplay/helpers/charactermanifest.js"></script>
-	<script src="engine/game/gameplay/weekscript.js"></script>
+    <script src="engine/game/gameplay/weekscript.js"></script>
 
     <script src="engine/game/main.js"></script>
+    <script src="engine/game/expansionsloader.js"></script>
     <script src="engine/game/mastervolume.js"></script>
+    <script src="engine/game/filesystemdialog.js"></script>
     <script src="engine/game/layoutvisor.js"></script>
-	
-	<datalist id="predefined-characterManifest"></datalist>
+
+    <datalist id="predefined-characterManifest"></datalist>
     <datalist id="predefined-baseLayoutFolder"></datalist>
     <datalist id="temp-datalist"></datalist>
-    
+
     <datalist id="predefined-characterManifest-default">
-		<option value="/assets/common/data/BOYFRIEND.json"></option>
-		<option value="/assets/common/data/GIRLFRIEND.json"></option>
-		<option value="/assets/weeks/week1/DD/DADDYDEAREST.json"></option>
-		<option value="/assets/weeks/week2/SPKY/SPOOKY_KIDS.json"></option>
-		<option value="/assets/weeks/week2/LMNDMN/LEMON_DEMON.json"></option>
-		<option value="/assets/weeks/week3/PICO/PICO.json"></option>
-		<option value="/assets/weeks/week4/MM/MOMMY_MEAREST.json"></option>
-		<option value="/assets/weeks/week5/funkin/PARENTS.json"></option>
-		<option value="/assets/weeks/week5/funkin/MONSTER_CHRISTMAS.json"></option>
-		<option value="/assets/weeks/week6/funkin/SENPAI.json"></option>
-		<option value="/assets/weeks/week6/funkin/SENPAI_ANGRY.json"></option>
-		<option value="/assets/weeks/week6/funkin/SPIRIT.json"></option>
+        <option value="/assets/common/data/BOYFRIEND.json"></option>
+        <option value="/assets/common/data/GIRLFRIEND.json"></option>
+        <option value="/assets/weeks/week1/DD/DADDYDEAREST.json"></option>
+        <option value="/assets/weeks/week2/SPKY/SPOOKY_KIDS.json"></option>
+        <option value="/assets/weeks/week2/LMNDMN/LEMON_DEMON.json"></option>
+        <option value="/assets/weeks/week3/PICO/PICO.json"></option>
+        <option value="/assets/weeks/week4/MM/MOMMY_MEAREST.json"></option>
+        <option value="/assets/weeks/week5/funkin/PARENTS.json"></option>
+        <option value="/assets/weeks/week5/funkin/MONSTER_CHRISTMAS.json"></option>
+        <option value="/assets/weeks/week6/funkin/SENPAI.json"></option>
+        <option value="/assets/weeks/week6/funkin/SENPAI_ANGRY.json"></option>
+        <option value="/assets/weeks/week6/funkin/SPIRIT.json"></option>
     </datalist>
     <datalist id="predefined-baseLayoutFolder-default">
-		<option value="/assets"></option>
-		<option value="/expansions"></option>
-		<option value="/assets/weeks/tutorial/stage"></option>
-		<option value="/assets/weeks/week1"></option>
-		<option value="/assets/weeks/week2/halloween"></option>
-		<option value="/assets/weeks/week3/philly"></option>
-		<option value="/assets/weeks/week4/limo"></option>
-		<option value="/assets/weeks/week5/christmas"></option>
-		<option value="/assets/weeks/week6/weeb"></option>
-		<option value="/assets/weeks/week6/weeb_but_evil"></option>
-	</datalist>
+        <option value="/assets"></option>
+        <option value="/expansions"></option>
+        <option value="/assets/weeks/tutorial/stage"></option>
+        <option value="/assets/weeks/week1"></option>
+        <option value="/assets/weeks/week2/halloween"></option>
+        <option value="/assets/weeks/week3/philly"></option>
+        <option value="/assets/weeks/week4/limo"></option>
+        <option value="/assets/weeks/week5/christmas"></option>
+        <option value="/assets/weeks/week6/weeb"></option>
+        <option value="/assets/weeks/week6/weeb_but_evil"></option>
+    </datalist>
 
 </body>
 
