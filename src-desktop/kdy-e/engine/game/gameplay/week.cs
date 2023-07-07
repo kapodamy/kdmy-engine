@@ -2543,7 +2543,7 @@ public class Week {
                 continue;
             }
 
-            if (roundcontext.songplayer != null) roundcontext.songplayer.Poll(songinfo);
+            if (roundcontext.songplayer != null) roundcontext.songplayer.Poll(ref songinfo);
 
             if (has_reference_ddrkeymon != null)
                 song_timestamp = has_reference_ddrkeymon.PeekTimestamp();

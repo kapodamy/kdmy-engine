@@ -161,7 +161,7 @@ public class SongPlayer {
             this.playbacks[i].Seek(timestamp);
     }
 
-    public void Poll(SongPlayerInfo songinfo) {
+    public void Poll(ref SongPlayerInfo songinfo) {
         //
         // IMPORTANT: in the C version poll every stream (similar to animate() ) in
         // order to send audio samples to the AICA.
