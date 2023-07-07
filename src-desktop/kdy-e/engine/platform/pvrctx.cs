@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using CsharpWrapper;
 using Engine.Externals;
 using Engine.Externals.GLFW;
@@ -798,12 +799,12 @@ public class PVRContext {
         nint ptr = PVRContext.global_context.webopengl.ReadFrameBuffer(out width, out height);
         if (ptr == 0x00) return;
 
-        string filename = "../screenshots/" + DateTime.Now.ToString("yyyy-MM-ddTHHmmss.fff") + ".png";
-        filename = IO.GetAbsolutePath(filename, true, false, false);
+        string filename = DateTime.Now.ToString("yyyy-MM-ddTHHmmss.fff") + ".png";
+        filename = $"{EngineSettings.EngineDir}screenshots{Path.DirectorySeparatorChar}{filename}";
 
         // async file writting to avoid suttering
         Engine.Game.GameMain.SpawnCoroutine(null, delegate (object param) {
-            ImageWritter.WriteImageAndFree(ptr, width, height, true, filename);
+            ImageWritter.WritePNGImageAndFree(ptr, width, height, true, filename);
             return null;
         }, null);
     }

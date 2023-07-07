@@ -22,7 +22,7 @@ public static class ExportsSongPlayer {
         SongPlayer songplayer = L.ReadUserdata<SongPlayer>(SONGPLAYER);
 
         SongPlayerInfo songinfo_dummy = new SongPlayerInfo();
-        songplayer.Play(songinfo_dummy);
+        songplayer.Play(ref songinfo_dummy);
 
         return 0;
     }

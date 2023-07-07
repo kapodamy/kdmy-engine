@@ -47,7 +47,7 @@ async function expansionsloader_internal_load_expansions() {
     if (!entries) return expansions;
 
     for (let dir of entries) {
-        let dir_path = `${expansions_path}${dir.name}${FS_CHAR_SEPARATOR}`
+        let dir_path = `${expansions_path}${FS_CHAR_SEPARATOR}${dir.name}${FS_CHAR_SEPARATOR}`
         let dir_relative_path = `${EXPANSIONS_PATH}${FS_CHAR_SEPARATOR}${dir.name}${FS_CHAR_SEPARATOR}`;
 
         if (dir.name.toLowerCase() == "funkin") continue;
@@ -212,7 +212,7 @@ async function expansionsloader_internal_refresh(e) {
             expansionsloader_internal_build_anchors(expansion.version)
         );
         expansion.li_element.querySelector(".exl-info-submiter").appendChild(
-            expansionsloader_internal_build_anchors(expansion.name)
+            expansionsloader_internal_build_anchors(expansion.submiter)
         );
 
         exl_list.appendChild(expansion.li_element);

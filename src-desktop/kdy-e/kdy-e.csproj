@@ -11,7 +11,7 @@
     <UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-	<OutputType>Exe</OutputType>
+	<OutputType>WinExe</OutputType>
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>false</SignManifests>
