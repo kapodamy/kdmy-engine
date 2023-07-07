@@ -213,6 +213,7 @@ function expansions_internal_add_to_chain(chain, expansion_path) {
 
 async function expansions_internal_update_window(expansion_path, window_title, window_icon) {
     document.title = window_title ?? "";
+    if ("main_layout_visor" in window) document.title = "[Layout visor] " + document.title;
 
     var /**@type {HTMLLinkElement} */ link = document.querySelector("link[rel~='icon']");
 

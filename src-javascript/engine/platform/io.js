@@ -349,7 +349,7 @@ async function io_native_get_absolute_path(src, is_file, is_folder, resolve_expa
 
         if (!path.startsWith("assets", index) && !path.startsWith("expansions", index)) {
             console.warn(`io_get_absolute_path() path outside of 'assets' or 'expansions' folder: ${path}`);
-            base_path = "assets/";
+            path = "assets";
         }
     }
 

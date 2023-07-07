@@ -29,7 +29,7 @@ var layoutvisor_hookedvertex = null;
 var layoutvisor_hookedvertexindex = -1;
 var layoutvisor_itemmousemove = false;
 var layoutvisor_symbol = Symbol("layoutvisor");
-var layoutvisor_characters = new Map();
+var layoutvisor_loaded_characters = new Array();
 var layoutvisor_streakcounter = null;
 var layoutvisor_rankingcounter = null;
 var layoutvisor_rankingaccuracy = null;
@@ -117,7 +117,9 @@ async function main_layout_visor() {
         if (layoutvisor_nosing) {
             if (last_nosing != layoutvisor_nosing) {
                 last_nosing = layoutvisor_nosing;
-                for (let character of layoutvisor_characters.keys()) character_play_idle(character);
+                for (let obj of layoutvisor_loaded_characters) {
+                    if (obj.layoutvisor_character) character_play_idle(obj.layoutvisor_character);
+            }
             }
         } else if (time > next_hit) {
             next_hit = time + math2d_random(400, 800);
@@ -139,10 +141,15 @@ async function main_layout_visor() {
             }
 
             if (idle) {
-                for (let character of layoutvisor_characters.keys()) character_play_idle(character);
+                for (let obj of layoutvisor_loaded_characters) {
+                    if (obj.layoutvisor_character) character_play_idle(obj.layoutvisor_character);
+                }
             } else if (layoutvisor_combobreak) {
                 layoutvisor_combobreak = false;
-                for (let character of layoutvisor_characters.keys()) {
+                for (let obj of layoutvisor_loaded_characters) {
+                    let character = obj.layoutvisor_character;
+                    if (!character) continue;
+
                     // @ts-ignore
                     let result = character_play_extra(character, "sad", false) ||
                         character_play_extra(character, "shaking", false) ||
@@ -150,7 +157,10 @@ async function main_layout_visor() {
                         ;
                 }
             } else {
-                for (let character of layoutvisor_characters.keys()) {
+                for (let obj of layoutvisor_loaded_characters) {
+                    let character = obj.layoutvisor_character;
+                    if (!character) continue;
+
                     let direction = directions[math2d_random_int(0, directions.length - 1)];
                     if (miss) {
                         // @ts-ignore
@@ -577,8 +587,10 @@ async function layoutvisor_load(e) {
     layoutvisor_origoffsetz = 1;
     layoutvisor_draw_hook_for(-1);
 
-    for (let character of layoutvisor_characters.keys()) character_destroy(character);
-    layoutvisor_characters.clear();
+    for (let obj of layoutvisor_loaded_characters) {
+        if (obj.layoutvisor_character) character_destroy(obj.layoutvisor_character);
+    }
+    layoutvisor_loaded_characters = new Array();
 
     let cameras = document.getElementById("layout-cameras");
     cameras.textContent = "";
@@ -1269,12 +1281,21 @@ async function layoutvisor_update_character(layout_placeholder) {
     character_animate(character, 0);
     //character_play_idle(character);
 
-    layoutvisor_characters.set(character, manifest_path);
+    layout_placeholder.layoutvisor_character = character;
     layout_placeholder.vertex = character_get_drawable(character);
     layout_placeholder.vertex.layoutvisor_type = "character";
 
+    let add = true;
+    for (let obj of layoutvisor_loaded_characters) {
+        if (obj == layout_placeholder) {
+            add = false;
+            break;
+        }
+    }
+
+    if (add) layoutvisor_loaded_characters.push(layout_placeholder);
+
     if (old_character) {
-        layoutvisor_characters.delete(old_character);
         character_destroy(old_character);
     }
 }
@@ -1388,8 +1409,8 @@ function layoutvisor_update_none(layout_placeholder) {
 
 function layoutvisor_dispose_character(layout_placeholder) {
     if (!layout_placeholder.layoutvisor_character) return;
-    layoutvisor_characters.delete(layout_placeholder.layoutvisor_character);
     character_destroy(layout_placeholder.layoutvisor_character);
+    layout_placeholder.layoutvisor_character = null;
 }
 
 function layoutvisor_camera_prompt(x, y, z, is_offset) {

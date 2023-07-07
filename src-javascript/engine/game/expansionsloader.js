@@ -23,7 +23,6 @@ var /**@type {function(string):void} */expansionsloader_resolve = null;
     document.getElementById("exl-refresh").addEventListener("click", expansionsloader_internal_refresh, false);
     let exl_list = document.getElementById("exl-list");
     exl_list.addEventListener("click", expansionsloader_internal_click, false);
-    exl_list.addEventListener("click", expansionsloader_internal_click, false);
     exl_list.addEventListener("dblclick", expansionsloader_internal_doubleClick, false);
     exl_list.addEventListener("keydown", expansionsloader_internal_keyDown, false);
 }
@@ -161,7 +160,6 @@ function expansionsloader_internal_keyDown(/**@type {KeyboardEvent}*/e) {
     selected.classList.remove("exl-item-selected");
     expansionsloader_expansions[index].li_element.classList.add("exl-item-selected");
 
-    if (e.type != "dblclick")
         expansionsloader_internal_show_info(expansionsloader_expansions[index]);
 }
 
@@ -237,6 +235,7 @@ function expansionsloader_internal_show_info(/**@type {Expansion}*/expansion) {
     let summary = document.querySelector(".exl-summary");
 
     preview.style.visibility = expansion ? "" : "hidden";
+    summary.scrollTop = 0;
 
     if (!expansion) {
         //@ts-ignore
