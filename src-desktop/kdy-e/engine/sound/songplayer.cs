@@ -6,7 +6,7 @@ using KallistiOS.THD;
 
 namespace Engine.Sound;
 
-public class SongPlayerInfo {
+public ref struct SongPlayerInfo {
     public double timestamp;
     public bool completed;
 }
@@ -111,7 +111,7 @@ public class SongPlayer {
         //free(songplayer);
     }
 
-    public double Play(SongPlayerInfo songinfo) {
+    public double Play(ref SongPlayerInfo songinfo) {
         if (this.playbacks_size < 1 || !this.paused) return 0.0;
 
         double lowest_timestamp = double.PositiveInfinity;

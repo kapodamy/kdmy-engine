@@ -10,7 +10,7 @@ namespace Engine.Platform;
 
 public class ImageWritter {
 
-    public static void WriteImageAndFree(nint rgba_pixels, int width, int height, bool flip_y, string filename) {
+    public static void WritePNGImageAndFree(nint rgba_pixels, int width, int height, bool flip_y, string filename) {
         int stride = width * sizeof(uint);
         int length = width * height;
         string dir = Path.GetDirectoryName(filename);

@@ -2451,7 +2451,7 @@ public class Week {
 
         // start this round!!!!!
         dettached_controller_index = -1;
-        double elapsed_play = roundcontext.songplayer != null ? roundcontext.songplayer.Play(songinfo) : 0.0;
+        double elapsed_play = roundcontext.songplayer != null ? roundcontext.songplayer.Play(ref songinfo) : 0.0;
 
         // prepare beatwatchers
         BeatWatcher.GlobalSetTimestamp(elapsed_play);
@@ -2529,7 +2529,7 @@ public class Week {
 
                 if (roundcontext.songplayer != null) {
                     roundcontext.songplayer.Seek(song_timestamp);
-                    roundcontext.songplayer.Play(songinfo);
+                    roundcontext.songplayer.Play(ref songinfo);
                 }
 
                 for (int i = 0 ; i < roundcontext.players_size ; i++) {

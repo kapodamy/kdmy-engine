@@ -47,15 +47,12 @@ Explained here [FEATURES.MD](FEATURES.MD "FEATURES.MD")
 ![week tutorial](test%20files/kdmy%20pics/screenshots/week%20tutorial.png)
 ![pause](test%20files/kdmy%20pics/screenshots/pause.png)
 ![weekselector](test%20files/kdmy%20pics/screenshots/weekselector.png)
+![settingsmenu](test%20files/kdmy%20pics/screenshots/2022-10-28T220952.760.png)
+![layoutvisor](test%20files/kdmy%20pics/screenshots/Opera%20Captura%20de%20pantalla_2023-07-07_012455_kdmy_engine_layout_visor.html.png)
 
 ## ¿What is missing?
 
-* ~~Post-processing shaders~~. ¡DONE!
-* ~~Dialogues (waht a shame)~~. ¡DONE!
-* ~~Expansions loader (a.k.a mods loader).~~. ¡DONE!
-* ~~Lua API to manipulate strums, states and UI cosmetics~~. ¡DONE!
 * Documentation (only a part is documented).
-* ~~Video playback (kinda optional).~~ ¡DONE!
 
 ## How to compile
 

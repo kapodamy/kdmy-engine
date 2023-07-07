@@ -89,7 +89,7 @@ public class Stream : IDisposable {
                     }
                     break;
                 default:
-                    SoundBridge.PrintPaError($"sndbridge_position() failed on stream {this.id}: ", (PaError)err);
+                    SoundBridge.PrintPaError($"sndbridge_position() failed on stream {this.id}: ", err);
                     return -1.0;
             }
 
@@ -106,7 +106,7 @@ public class Stream : IDisposable {
 
         int status = PortAudio.Pa_IsStreamActive(this.pastream);
         if (status != 1 && status != 0) {
-            SoundBridge.PrintPaError($"sndbridge_seek() status failed on stream {this.id}: ", (PaError)status);
+            SoundBridge.PrintPaError($"sndbridge_seek() status failed on stream {this.id}: ", status);
             return;
         }
 
@@ -117,6 +117,7 @@ public class Stream : IDisposable {
             }
         }
 
+        bool has_halt = this.halt;
         if (this.keep_alive) SoundBridge.wait_and_halt(this, status == 1);
 
         this.buffer_used = 0;
@@ -137,7 +138,7 @@ public class Stream : IDisposable {
 
         if (status == 1) {
             if (this.keep_alive) {
-                this.halt = false;
+                if (!has_halt) this.halt = false;
                 return;
             }
 
@@ -161,7 +162,7 @@ public class Stream : IDisposable {
             case 0:
                 break;
             default:
-                SoundBridge.PrintPaError($"sndbridge_play() status failed on stream {this.id}: ", (PaError)err);
+                SoundBridge.PrintPaError($"sndbridge_play() status failed on stream {this.id}: ", err);
                 return;
         }
 
@@ -193,7 +194,7 @@ public class Stream : IDisposable {
                 if (this.halt) return;
                 break;
             default:
-                SoundBridge.PrintPaError($"sndbridge_pause() status failed on stream {this.id}: ", (PaError)err);
+                SoundBridge.PrintPaError($"sndbridge_pause() status failed on stream {this.id}: ", err);
                 return;
         }
 
@@ -227,7 +228,7 @@ public class Stream : IDisposable {
                 if (this.keep_alive) goto L_reset_stream;
                 break;
             default:
-                SoundBridge.PrintPaError("sndbridge_stop() status failed on stream {this.id}: ", (PaError)err);
+                SoundBridge.PrintPaError("sndbridge_stop() status failed on stream {this.id}: ", err);
                 return;
         }
 
@@ -332,7 +333,7 @@ public static class SoundBridge {
     private const float PI_HALF = MathF.PI / 2f;
     private const string DESIRED_API_NAME = "DSound";
     private const PaHostApiTypeId DESIRED_API_ENUM = PaHostApiTypeId.paDirectSound;
-    private const float MIN_DURATION_KEEP_ALIVE = 99990.500f; // 500 milliseconds
+    private const float MIN_DURATION_KEEP_ALIVE = 0.500f; // 500 milliseconds
     private const int WAIT_AND_HALT_TIMEOUT = 1000; // 1000 milliseconds
 
 
@@ -358,6 +359,10 @@ public static class SoundBridge {
             elapsed += 10;
         }
         stream.halt = halt;
+    }
+
+    internal static void PrintPaError(string str, int err) {
+        PrintPaError(str, (PaError)err);
     }
 
     internal static void PrintPaError(string str, PaError err) {
