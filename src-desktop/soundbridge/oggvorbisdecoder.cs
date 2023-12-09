@@ -9,14 +9,14 @@ namespace Engine.Externals.SoundBridge;
 internal unsafe class OGGVorbisDecoder : IDecoder {
     private OggVorbis_File* vf;
     private int* current_section;
-    private nint file_hnd;
+    private nint src_hnd;
     private double duration_seconds;
     private uint channels, rate;
     private long loop_start, loop_length;
 
     private OGGVorbisDecoder() { }
 
-    public static OGGVorbisDecoder Init(IFileSource file_hnd) {
+    public static OGGVorbisDecoder Init(ISourceHandle src_hnd) {
         OGGVorbisDecoder oggvorbisdecoder = new OGGVorbisDecoder();
 
         // allocate "OggVorbis_File" and "int" with a single call
@@ -25,6 +25,8 @@ internal unsafe class OGGVorbisDecoder : IDecoder {
         oggvorbisdecoder.current_section = (int*)ptr;
         oggvorbisdecoder.vf = (OggVorbis_File*)(oggvorbisdecoder.current_section + 1);
 
+        *oggvorbisdecoder.current_section = 0;
+
         ov_callbacks callbacks = new ov_callbacks() {
             read_func = &read_func,
             seek_func = &seek_func,
@@ -32,10 +34,10 @@ internal unsafe class OGGVorbisDecoder : IDecoder {
             close_func = null
         };
 
-        GCHandle gchandle = GCHandle.Alloc(file_hnd, GCHandleType.Normal);
-        oggvorbisdecoder.file_hnd = GCHandle.ToIntPtr(gchandle);
+        GCHandle gchandle = GCHandle.Alloc(src_hnd, GCHandleType.Normal);
+        oggvorbisdecoder.src_hnd = GCHandle.ToIntPtr(gchandle);
 
-        if (Vorbisfile.ov_open_callbacks(oggvorbisdecoder.file_hnd, oggvorbisdecoder.vf, null, 0, &callbacks) != 0) {
+        if (Vorbisfile.ov_open_callbacks(oggvorbisdecoder.src_hnd, oggvorbisdecoder.vf, null, 0, &callbacks) != 0) {
             NativeMemory.Free(ptr);
             gchandle.Free();
             return null;
@@ -45,8 +47,6 @@ internal unsafe class OGGVorbisDecoder : IDecoder {
         vorbis_info* vi = Vorbisfile.ov_info(oggvorbisdecoder.vf, -1);
         oggvorbisdecoder.rate = (uint)vi->rate;
         oggvorbisdecoder.channels = (uint)vi->channels;
-
-        *oggvorbisdecoder.current_section = 0;
 
         oggvorbisdecoder.duration_seconds = Vorbisfile.ov_time_total(oggvorbisdecoder.vf, -1);
 
@@ -76,7 +76,7 @@ internal unsafe class OGGVorbisDecoder : IDecoder {
     public void Dispose() {
         Vorbisfile.ov_clear(this.vf);
         NativeMemory.Free(this.current_section); // this.vf is also free'd too
-        GCHandle.FromIntPtr(this.file_hnd).Free();
+        GCHandle.FromIntPtr(this.src_hnd).Free();
     }
 
 
@@ -90,7 +90,7 @@ internal unsafe class OGGVorbisDecoder : IDecoder {
 
         int offset = 0;
         for (int i = 0 ; i < readed ; i++) {
-            for (int j = 0 ; j < channels ; j++) {
+            for (uint j = 0 ; j < channels ; j++) {
                 buffer[offset++] = pcm_channels[j][i];
             }
         }
@@ -98,10 +98,11 @@ internal unsafe class OGGVorbisDecoder : IDecoder {
         return readed;
     }
 
-    public void GetInfo(out uint rate, out uint channels, out double duration) {
+    public SampleFormat GetInfo(out uint rate, out uint channels, out double duration) {
         rate = this.rate;
         channels = this.channels;
         duration = this.duration_seconds;
+        return SampleFormat.FLOAT32;
     }
 
     public bool Seek(double seconds) {
@@ -115,27 +116,27 @@ internal unsafe class OGGVorbisDecoder : IDecoder {
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static IFileSource recover(nint gchandle_ptr) {
-        return (IFileSource)GCHandle.FromIntPtr(gchandle_ptr).Target;
+    private static ISourceHandle recover(nint gchandle_ptr) {
+        return (ISourceHandle)GCHandle.FromIntPtr(gchandle_ptr).Target;
     }
 
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static nint read_func(void* ptr, nint size, nint nmemb, nint datasource) {
-        IFileSource file_hnd = recover(datasource);
-        return file_hnd.Read(ptr, (int)(size * nmemb));
+        ISourceHandle src_hnd = recover(datasource);
+        return src_hnd.Read(ptr, (int)(size * nmemb));
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static int seek_func(nint datasource, long offset, int whence) {
-        IFileSource file_hnd = recover(datasource);
-        return (int)file_hnd.Seek(offset, (SeekOrigin)whence);
+        ISourceHandle src_hnd = recover(datasource);
+        return src_hnd.Seek(offset, (SeekOrigin)whence);
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static int tell_func(nint datasource) {
-        IFileSource file_hnd = recover(datasource);
-        return (int)file_hnd.Tell();
+        ISourceHandle src_hnd = recover(datasource);
+        return (int)src_hnd.Tell();
     }
 
 }

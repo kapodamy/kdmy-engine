@@ -4,32 +4,36 @@ using System.Runtime.InteropServices;
 
 namespace Engine.Externals.SoundBridge;
 
-internal unsafe class UnmanagedBufferHandle : IFileSource {
+internal unsafe class UnmanagedBufferHandle : ISourceHandle {
+    internal const int EINVAL = 22;
+    internal const int ESPIPE = 29;
+    
     private long size;
     private long offset;
-    private void* data;
+    private byte* data;
     private readonly bool allow_dispose;
 
     public UnmanagedBufferHandle(void* data, long size, bool allow_dispose) {
-        this.data = data;
+        this.data = (byte*)data;
         this.size = size;
         this.allow_dispose = allow_dispose;
     }
 
 
     public int Read(void* buffer, int buffer_size) {
-        if (offset >= size) return -1;
+        if (buffer_size < 0) return -1;
+        if (this.offset >= size) return 0;
 
-        long end = offset + buffer_size;
-        if (end > size) buffer_size = (int)(size - offset);
+        long end = this.offset + buffer_size;
+        if (end > this.size) buffer_size = (int)(this.size - this.offset);
 
-        NativeMemory.Copy((byte*)data + offset, buffer, (nuint)buffer_size);
-        offset += buffer_size;
+        NativeMemory.Copy(this.data + this.offset, buffer, (nuint)buffer_size);
+        this.offset += buffer_size;
 
         return buffer_size;
     }
 
-    public long Seek(long offset, SeekOrigin whence) {
+    public int Seek(long offset, SeekOrigin whence) {
         long newoffset;
 
         switch (whence) {
@@ -40,36 +44,36 @@ internal unsafe class UnmanagedBufferHandle : IFileSource {
                 newoffset = this.offset + offset;
                 break;
             case SeekOrigin.End:
-                newoffset = size - offset;
+                newoffset = this.size - offset;
                 break;
             default:
-                return -1;
+                return UnmanagedBufferHandle.EINVAL;
         }
 
-        if (newoffset < 0 || newoffset > size) return -2;
+        if (newoffset < 0 || newoffset > this.size) return UnmanagedBufferHandle.ESPIPE;
         this.offset = newoffset;
-        return newoffset;
+        return 0;
     }
 
     public long Tell() {
-        return offset;
+        return this.offset;
     }
 
     public long Length() {
-        return size;
+        return this.size;
     }
 
     public void Dispose() {
-        if (data == null) return;
-        if (allow_dispose) NativeMemory.Free(data);
+        if (this.data == null) return;
+        if (this.allow_dispose) NativeMemory.Free(this.data);
 
-        data = null;
-        size = offset = -1;
+        this.data = null;
+        this.size = this.offset = -1;
     }
 
 }
 
-internal unsafe class ManagedBufferHandle : IFileSource {
+internal unsafe class ManagedBufferHandle : ISourceHandle {
     private readonly int base_offset;
     private int base_length;
     private int offset;
@@ -83,21 +87,22 @@ internal unsafe class ManagedBufferHandle : IFileSource {
 
 
     public int Read(void* buffer, int buffer_size) {
-        if (offset >= base_length) return -1;
+        if (buffer_size < 0) return -1;
+        if (this.offset >= this.base_length) return 0;
 
-        long end = offset + buffer_size;
-        if (end > base_length) buffer_size = (int)(base_length - offset);
+        long end = this.offset + buffer_size;
+        if (end > this.base_length) buffer_size = (int)(this.base_length - this.offset);
 
         fixed (byte* buff = data) {
-            NativeMemory.Copy(buff + offset + base_offset, buffer, (nuint)buffer_size);
+            NativeMemory.Copy(buff + this.offset + this.base_offset, buffer, (nuint)buffer_size);
         }
 
-        offset += buffer_size;
+        this.offset += buffer_size;
 
         return buffer_size;
     }
 
-    public long Seek(long offset, SeekOrigin whence) {
+    public int Seek(long offset, SeekOrigin whence) {
         long newoffset;
 
         switch (whence) {
@@ -108,32 +113,33 @@ internal unsafe class ManagedBufferHandle : IFileSource {
                 newoffset = this.offset + offset;
                 break;
             case SeekOrigin.End:
-                newoffset = base_length - offset;
+                newoffset = this.base_length - offset;
                 break;
             default:
-                return -1;
+                return UnmanagedBufferHandle.EINVAL;
         }
 
-        if (newoffset < 0 || newoffset > base_length) return -2;
+        if (newoffset < 0 || newoffset > this.base_length) return UnmanagedBufferHandle.ESPIPE;
         this.offset = (int)newoffset;
-        return newoffset;
+        return 0;
     }
 
     public long Tell() {
-        return offset;
+        return this.offset;
     }
 
     public long Length() {
-        return base_length;
+        return this.base_length;
     }
 
     public void Dispose() {
-        data = null;
-        base_length = offset = -1;
+        this.data = null;
+        this.base_length = this.offset = -1;
     }
 }
 
-internal unsafe class FileHandle : IFileSource {
+internal unsafe class FileHandle : ISourceHandle {
+    private const int EIO = 5;
 
     private readonly FileStream file;
     private readonly bool allow_dispose;
@@ -144,27 +150,32 @@ internal unsafe class FileHandle : IFileSource {
     }
 
     public int Read(void* buffer, int buffer_size) {
-        if (file.Position >= file.Length)
+        if (buffer_size < 0)
             return -1;
         else
-            return file.Read(new Span<byte>(buffer, buffer_size));
+            return this.file.Read(new Span<byte>(buffer, buffer_size));
     }
     
-    public long Seek(long offset, SeekOrigin whence) {
-        return file.Seek(offset, whence);
+    public int Seek(long offset, SeekOrigin whence) {
+        try {
+            this.file.Seek(offset, whence);
+            return 0;
+        } catch {
+            return FileHandle.EIO;
+        }
     }
 
     public long Tell() {
-        return file.Position;
+        return this.file.Position;
     }
 
     public long Length() {
-        return file.Length;
+        return this.file.Length;
     }
 
     public void Dispose() {
-        if (file == null) return;
-        if (allow_dispose) file.Dispose();
+        if (this.file == null) return;
+        if (this.allow_dispose) this.file.Dispose();
     }
 }
 
@@ -172,7 +183,7 @@ public unsafe class FileHandleUtil {
 
     public const int MAX_SIZE_IN_MEMORY = 128 * 1024 * 1024;// 128MiB
 
-    public static IFileSource Init(string fullpath, bool try_load_in_ram) {
+    public static ISourceHandle Init(string fullpath, bool try_load_in_ram) {
         FileStream file;
 
         try {
@@ -208,13 +219,13 @@ public unsafe class FileHandleUtil {
         return new UnmanagedBufferHandle(buffer, readed, true);
     }
 
-    public static IFileSource Init(nint buffer, int size) {
+    public static ISourceHandle Init(nint buffer, int size) {
         if (buffer == 0x00) return null;
 
         return new UnmanagedBufferHandle((void*)buffer, size, false);
     }
 
-    public static IFileSource Init(byte[] buffer, int offset, int size) {
+    public static ISourceHandle Init(byte[] buffer, int offset, int size) {
         if (buffer == null) return null;
         if (offset >= buffer.Length || offset > size || offset < 0) throw new ArgumentOutOfRangeException("offset");
         if (size > buffer.Length || size < offset || size < 0) throw new ArgumentOutOfRangeException("size");

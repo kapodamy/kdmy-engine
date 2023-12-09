@@ -38,21 +38,21 @@ internal unsafe class OggUtil {
     };
 
 
-    public static IDecoder InitOggDecoder(IFileSource file_hnd) {
-        //Debug.Assert(file_hnd != null);
-        //Debug.Assert(file_hnd->read != null);
-        //Debug.Assert(file_hnd->seek != null);
-        //Debug.Assert(file_hnd->tell != null);
+    public static IDecoder InitOggDecoder(ISourceHandle src_hnd) {
+        //Debug.Assert(src_hnd != null);
+        //Debug.Assert(src_hnd->read != null);
+        //Debug.Assert(src_hnd->seek != null);
+        //Debug.Assert(src_hnd->tell != null);
 
-        int result = OggUtil.GetOggCodec(file_hnd);
+        int result = OggUtil.GetOggCodec(src_hnd);
         IDecoder dec;
 
         switch (result) {
             case OggUtil.CODEC_VORBIS:
-                dec = OGGVorbisDecoder.Init(file_hnd);
+                dec = OGGVorbisDecoder.Init(src_hnd);
                 break;
             case OggUtil.CODEC_OPUS:
-                dec = OGGOpusDecoder.Init(file_hnd);
+                dec = OGGOpusDecoder.Init(src_hnd);
                 break;
             case OggUtil.CODEC_ERROR:
                 Logger.Error("OggUtil::InitOggDecoder() can not identify the audio codec");
@@ -73,7 +73,7 @@ internal unsafe class OggUtil {
         return dec;
     }
 
-    public static byte GetOggCodec(IFileSource ogg_fd) {
+    public static byte GetOggCodec(ISourceHandle ogg_fd) {
         OggPacket oggheader;
         int oggheader_size = sizeof(OggPacket);
         long original_offset = ogg_fd.Tell();

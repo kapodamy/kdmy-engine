@@ -8,6 +8,7 @@ namespace Engine.Externals.SoundBridge;
 
 using CbTimeInfo = PaStreamCallbackTimeInfo;
 using CbFlags = PaStreamCallbackFlags;
+using CbResult = PaStreamCallbackResult;
 
 
 public enum StreamFading : int {
@@ -155,8 +156,8 @@ public class Stream : IDisposable {
             case 1:
                 if (this.halt) {
                     this.Stop();
-                    this.halt = false;
                     this.looped_needs_time_reset = false;
+                    this.halt = false;
                 }
                 return;
             case 0:
@@ -175,13 +176,11 @@ public class Stream : IDisposable {
         this.buffer_used = 0;
         this.fetching = false;
         this.completed = false;
-        this.buffer_used = 0;
         this.halt = false;
 
         PaError ret = PortAudio.Pa_StartStream(this.pastream);
         if (ret != PaError.paNoError) {
             SoundBridge.PrintPaError($"sndbridge_play() start failed on stream {this.id}: ", ret);
-            return;
         }
     }
 
@@ -312,10 +311,6 @@ L_reset_stream:
 
         this.decoder.Dispose();
         this.gchandle.Free();
-
-        SoundBridge.stream_count--;
-
-        // SoundBridge.DisposeBackend();
     }
 
 
@@ -341,7 +336,6 @@ public static class SoundBridge {
     private static volatile bool backend_needs_initialize;
     private static volatile float master_volume;
     private static volatile bool master_mute;
-    internal static volatile uint stream_count;
 
 
     static SoundBridge() {
@@ -366,7 +360,7 @@ public static class SoundBridge {
     }
 
     internal static void PrintPaError(string str, PaError err) {
-        Logger.Error($"soundbridge: {str}{PortAudio.Pa_GetErrorText(err)}");
+        Logger.Error($"sndbridge: {str}{PortAudio.Pa_GetErrorText(err)}");
     }
 
 
@@ -378,13 +372,13 @@ public static class SoundBridge {
         Interlocked.Exchange(ref stream.played_time, stream.played_time + PortAudio.Pa_GetStreamTime(stream.pastream) - stream.last_sample_time);
 
 #if DEBUG && SNDBRIDGE_DEBUG_COMPLETE
-        double position = (PortAudio.Pa_GetStreamTime(stream.pastream) - stream.last_sample_time);
+        double position = PortAudio.Pa_GetStreamTime(stream.pastream) - stream.last_sample_time;
         Logger.Info($"sndbridge: END stream_id={stream.id} position_ms={position * 1000.0}");
 #endif
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-    private static unsafe PaStreamCallbackResult read_cb(void* _i, void* output, uint frameCount, CbTimeInfo* ti, CbFlags _f, nint userdata) {
+    private static unsafe CbResult read_cb(void* _i, void* output, uint frameCount, CbTimeInfo* ti, CbFlags _f, nint userdata) {
         Stream stream = (Stream)GCHandle.FromIntPtr(userdata).Target;
         float* output_float = (float*)output;
 
@@ -471,7 +465,7 @@ L_prepare_return:
         uint minimun_can_read = 64 * stream.channels;
         float* buf = stream.buffer + (buffer_used * stream.channels);
 
-        while (available_space > minimun_can_read) {
+        while (available_space >= minimun_can_read) {
             int readed = stream.decoder.Read(buf, available_space);
             if (readed < 1) {
                 if (readed == SoundBridge.HOLE) continue;
@@ -559,7 +553,7 @@ L_copy_and_return:
                 percent = calc_s_curve(percent);
 #endif
                 fade_progress++;
-                for (int c = 0 ; c < channels ; c++) output[offset++] *= percent;
+                for (uint c = 0 ; c < channels ; c++) output[offset++] *= percent;
             }
         } else {
             for (uint s = 0 ; s < to_process ; s++) {
@@ -568,7 +562,7 @@ L_copy_and_return:
                 percent = calc_s_curve(percent);
 #endif
                 fade_progress++;
-                for (int c = 0 ; c < channels ; c++) output[offset++] *= percent;
+                for (uint c = 0 ; c < channels ; c++) output[offset++] *= percent;
             }
 
             if (has_short_fade) {
@@ -627,10 +621,10 @@ L_check_device:
             /*if (has_desired) {
                 has_desired = false;
                 output_device_index = PortAudio.Pa_GetDefaultOutputDevice();
-                Logger.Warn($"soundbridge: no output devices available for {DESIRED_API_NAME}");
+                Logger.Warn($"sndbridge: no output devices available for {DESIRED_API_NAME}");
                 goto L_check_device;
             }*/
-            Logger.Warn("soundbridge: no output devices available");
+            Logger.Warn("sndbridge: no output devices available");
             return;
         }
 
@@ -695,7 +689,7 @@ L_check_device:
 
         string dev_name = Marshal.PtrToStringUTF8((nint)device_info->name);
         PrintPaError(
-            $"Pa_OpenStream() failed. sample_rate={stream.sample_rate} channels={stream.channels} latency={latency} device={dev_name}",
+            $"Pa_OpenStream() failed. sample_rate={stream.sample_rate} channels={stream.channels} latency={latency} device={dev_name}\n",
             err
         );
 
@@ -708,14 +702,13 @@ L_check_device:
     }
 
     internal static void DisposeBackend() {
-        if (SoundBridge.stream_count > 0) return;
         PortAudio.Pa_Terminate();
         SoundBridge.backend_needs_initialize = true;
     }
 
 
-    public static StreamResult Enqueue(IFileSource ogg_filehandle, out Stream stream) {
-        IDecoder oggdecoder = OggUtil.InitOggDecoder(ogg_filehandle);
+    public static StreamResult Enqueue(ISourceHandle ogg_sourcehandle, out Stream stream) {
+        IDecoder oggdecoder = OggUtil.InitOggDecoder(ogg_sourcehandle);
         if (oggdecoder == null) {
             stream = null;
             return StreamResult.DecoderFailed;
@@ -741,7 +734,12 @@ L_check_device:
 
         uint sample_rate, channels;
         double duration;
-        external_decoder.GetInfo(out sample_rate, out channels, out duration);
+        SampleFormat sample_format = external_decoder.GetInfo(out sample_rate, out channels, out duration);
+
+        if (sample_format != SampleFormat.FLOAT32) {
+            Logger.Error("sndbridge: SoundBridge::Enqueue() failed, the sample format must be float32");
+            return StreamResult.CreateFailed;
+        }
 
         stream = new Stream() {
             decoder = external_decoder,
@@ -881,12 +879,12 @@ L_check_device:
         Stream stream;
         StreamResult enqueue_ret;
 
-        /*IFileHandle mem = FileHandleUtil.Init("./vorbis.ogg", true);
+        /*ISourceHandle mem = FileHandleUtil.Init("./vorbis.ogg", true);
         Debug.Assert(mem);
-        enqueue_ret = SoundBridge.Enqueue(mem);*/
+        enqueue_ret = SoundBridge.Enqueue(mem, out stream);*/
 
-        // FileHandle mem = FileHandleUtil.Init("./vorbis.ogg", true);
-        IFileSource mem = FileHandleUtil.Init("./goldgrab.logg", true);
+        // ISourceHandle mem = FileHandleUtil.Init("./vorbis.ogg", true);
+        ISourceHandle mem = FileHandleUtil.Init("./goldgrab.logg", true);
         enqueue_ret = SoundBridge.Enqueue(mem, out stream);
 
         if (enqueue_ret != StreamResult.Success) return;
@@ -900,7 +898,7 @@ L_check_device:
         while (true) {
             double duration = stream.Duration;
             double position = stream.Position();
-            Logger.Log($"duration={duration * 1000}  time={position * 1000}");
+            Logger.Log($"duration={duration}  time={position}");
             PortAudio.Pa_Sleep(100);
             //if (i == 6) stream.Pause();
             //if (i == 10) stream.Play();
@@ -915,7 +913,7 @@ L_check_device:
 
                 duration = stream.Duration;
                 position = stream.Position();
-                Logger.Log($"(paused) duration={duration * 1000}  time={position * 1000}");
+                Logger.Log($"(paused) duration={duration}  time={position}");
                 stream.Play();
                 b = false;
             }
@@ -925,7 +923,7 @@ L_check_device:
 
                 duration = stream.Duration;
                 position = stream.Position();
-                Logger.Log($"(paused) duration={duration * 1000}  time={position * 1000}");
+                Logger.Log($"(paused) duration={duration}  time={position}");
                 stream.Play();
                 c = false;
             }
@@ -935,7 +933,7 @@ L_check_device:
 
                 duration = stream.Duration;
                 position = stream.Position();
-                Logger.Log($"(stop) duration={duration * 1000}  time={position * 1000}");
+                Logger.Log($"(stop) duration={duration}  time={position}");
                 stream.Play();
                 d = false;
             }
@@ -943,11 +941,11 @@ L_check_device:
         */
 
         /*while (true) {
-            sndbridge_play(stream_id);
+            stream.Play();
             Pa_Sleep(2000);
-            sndbridge_pause(stream_id);
+            stream.Pause();
             Pa_Sleep(2000);
-            //sndbridge_seek(stream_id, 0.0);
+            //stream.Seek(0.0);
         }*/
 
         //stream.SetLooped(false);
@@ -961,7 +959,7 @@ L_check_device:
         while (total < 50000) {
             double duration = stream.Duration;
             double position = stream.Position;
-            Logger.Log($"duration={duration * 1000}  time={position * 1000}");
+            Logger.Log($"duration={duration}  time={position}");
             PortAudio.Pa_Sleep(100);
             total += 100;
             //if (stream.HasEnded) break;

@@ -3,10 +3,10 @@ using System.IO;
 
 namespace Engine.Externals.SoundBridge;
 
-public unsafe interface IFileSource : IDisposable {
+public unsafe interface ISourceHandle : IDisposable {
     int Read(void* buffer, int buffer_size);
 
-    long Seek(long offset, SeekOrigin whence);
+    int Seek(long offset, SeekOrigin whence);
 
     long Tell();
 

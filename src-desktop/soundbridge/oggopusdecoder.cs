@@ -13,11 +13,11 @@ internal unsafe class OGGOpusDecoder : IDecoder {
     private uint bytes_per_channel, channels;
     private double duration;
     private long loop_start, loop_length;
-    private nint file_hnd;
+    private nint src_hnd;
 
     private OGGOpusDecoder() { }
 
-    public static OGGOpusDecoder Init(IFileSource file_hnd) {
+    public static OGGOpusDecoder Init(ISourceHandle src_hnd) {
         OGGOpusDecoder oggopusdecoder = new OGGOpusDecoder();
 
         OpusFileCallbacks callbacks = new OpusFileCallbacks() {
@@ -27,10 +27,10 @@ internal unsafe class OGGOpusDecoder : IDecoder {
             close = null
         };
 
-        GCHandle gchandle = GCHandle.Alloc(file_hnd, GCHandleType.Normal);
-        oggopusdecoder.file_hnd = GCHandle.ToIntPtr(gchandle);
+        GCHandle gchandle = GCHandle.Alloc(src_hnd, GCHandleType.Normal);
+        oggopusdecoder.src_hnd = GCHandle.ToIntPtr(gchandle);
 
-        OggOpusFile* op = Opusfile.op_open_callbacks(oggopusdecoder.file_hnd, &callbacks, null, 0, null);
+        OggOpusFile* op = Opusfile.op_open_callbacks(oggopusdecoder.src_hnd, &callbacks, null, 0, null);
         if (op == null) {
             gchandle.Free();
             return null;
@@ -65,7 +65,7 @@ internal unsafe class OGGOpusDecoder : IDecoder {
 
     public void Dispose() {
         Opusfile.op_free(this.op);
-        GCHandle.FromIntPtr(this.file_hnd).Free();
+        GCHandle.FromIntPtr(this.src_hnd).Free();
     }
 
 
@@ -74,10 +74,11 @@ internal unsafe class OGGOpusDecoder : IDecoder {
         return Opusfile.op_read_float(this.op, buffer, (int)buf_size, null);
     }
 
-    public void GetInfo(out uint rate, out uint channels, out double duration) {
+    public SampleFormat GetInfo(out uint rate, out uint channels, out double duration) {
         rate = OGGOpusDecoder.OPUS_RATE;
         channels = this.channels;
         duration = this.duration;
+        return SampleFormat.FLOAT32;
     }
 
     public bool Seek(double seconds) {
@@ -92,33 +93,27 @@ internal unsafe class OGGOpusDecoder : IDecoder {
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static IFileSource recover(nint gchandle_ptr) {
-        return (IFileSource)GCHandle.FromIntPtr(gchandle_ptr).Target;
+    private static ISourceHandle recover(nint gchandle_ptr) {
+        return (ISourceHandle)GCHandle.FromIntPtr(gchandle_ptr).Target;
     }
 
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static int read_func(nint stream, byte* ptr, int nbytes) {
-        IFileSource file_hnd = recover(stream);
-        return file_hnd.Read(ptr, nbytes);
+        ISourceHandle src_hnd = recover(stream);
+        return src_hnd.Read(ptr, nbytes);
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static int seek_func(nint stream, long offset, int whence) {
-        IFileSource file_hnd = recover(stream);
-
-        int ret;
-        if (file_hnd.Seek(offset, (SeekOrigin)whence) < 0)
-            ret = -1;
-        else
-            ret = 0;
-        return ret;
+        ISourceHandle src_hnd = recover(stream);
+        return src_hnd.Seek(offset, (SeekOrigin)whence);
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static long tell_func(nint stream) {
-        IFileSource file_hnd = recover(stream);
-        return file_hnd.Tell();
+        ISourceHandle src_hnd = recover(stream);
+        return src_hnd.Tell();
     }
 
 }
