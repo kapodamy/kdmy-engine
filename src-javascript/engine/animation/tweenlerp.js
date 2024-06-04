@@ -4,29 +4,24 @@
 function tweenlerp_init() {
     return {
         arraylist: arraylist_init(),
-        progress: 0,
-        has_completed: 0
+        progress: 0.0,
+        has_completed: false
     }
 }
 
 function tweenlerp_destroy(tweenlerp) {
-    arraylist_destroy(tweenlerp.arraylist, 0);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(tweenlerp);
+    arraylist_destroy(tweenlerp.arraylist, false);
+    luascript_drop_shared(tweenlerp);
     tweenlerp = undefined;
 }
 
 function tweenlerp_clone(tweenlerp) {
-    if (!tweenlerp) return null;
+    let copy = clone_object_shallow(tweenlerp);
+    copy.arraylist = arraylist_clone(tweenlerp.arraylist);
 
-    let copy = {
-        arraylist: arraylist_clone(tweenlerp.arraylist),
-        progress: tweenlerp.progress,
-        has_completed: tweenlerp.has_completed
-    };
-
-    //  (JS & C# only) clone steps_bounds
+    // (JS only) clone steps_bounds
     for (let entry of arraylist_iterate4(copy.arraylist)) {
-        entry.steps_bounds = [entry.steps_bounds[0], entry.steps_bounds[1], entry.steps_bounds[2]];
+        entry.steps_bounds = clone_array(entry.steps_bounds, entry.steps_bounds.length);
     }
 
     return copy;
@@ -39,18 +34,18 @@ function tweenlerp_end(tweenlerp) {
         entry.value = entry.end;
     }
 
-    tweenlerp.has_completed = 1;
+    tweenlerp.has_completed = true;
 }
 
 function tweenlerp_mark_as_completed(tweenlerp) {
-    tweenlerp.has_completed = 1;
+    tweenlerp.has_completed = true;
 }
 
 
 function tweenlerp_restart(tweenlerp) {
-    tweenlerp.progress = 0;
-    tweenlerp.has_completed = 0;
-    tweenlerp_animate_percent(tweenlerp, 0);
+    tweenlerp.progress = 0.0;
+    tweenlerp.has_completed = false;
+    tweenlerp_animate_percent(tweenlerp, 0.0);
 }
 
 function tweenlerp_animate(tweenlerp, elapsed) {
@@ -72,7 +67,7 @@ function tweenlerp_animate_timestamp(tweenlerp, timestamp) {
         if (tweenlerp_internal_animate_entry(array_tweens[i], tweenlerp.progress)) completed++;
     }
 
-    if (completed >= size_tweens) tweenlerp.has_completed = 1;
+    if (completed >= size_tweens) tweenlerp.has_completed = true;
 
     return completed;
 }
@@ -119,11 +114,16 @@ function tweenlerp_peek_value_by_index(tweenlerp, index) {
 
 function tweenlerp_peek_entry_by_index(tweenlerp, index, output_id_value_duration_pair) {
     let entry = arraylist_get(tweenlerp.arraylist, index);
-    if (!entry) return null;
+    if (!entry) {
+        output_id_value_duration_pair[0] = -1;
+        output_id_value_duration_pair[1] = NaN;
+        output_id_value_duration_pair[2] = NaN;
+        return false;
+    }
     output_id_value_duration_pair[0] = entry.id;
     output_id_value_duration_pair[1] = entry.value;
     output_id_value_duration_pair[2] = entry.duration;
-    return output_id_value_duration_pair;
+    return true;
 }
 
 function tweenlerp_peek_value_by_id(tweenlerp, id) {
@@ -140,8 +140,8 @@ function tweenlerp_peek_value_by_id(tweenlerp, id) {
 function tweenlerp_change_bounds_by_index(tweenlerp, index, new_start, new_end) {
     let tweenlerp_entry = arraylist_get(tweenlerp.arraylist, index);
 
-    if (Number.isFinite(new_start)) tweenlerp_entry.start = new_start;
-    if (Number.isFinite(new_end)) tweenlerp_entry.end = new_end;
+    if (!Number.isNaN(new_start)) tweenlerp_entry.start = new_start;
+    if (!Number.isNaN(new_end)) tweenlerp_entry.end = new_end;
 
     return tweenlerp_internal_animate_entry(tweenlerp_entry, tweenlerp.progress);
 }
@@ -163,10 +163,10 @@ function tweenlerp_change_bounds_by_id(tweenlerp, id, new_start, new_end) {
         array[i].start = new_start;
         array[i].end = new_end;
         tweenlerp_internal_animate_entry(array[i], tweenlerp.progress);
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
 function tweenlerp_change_duration_by_index(tweenlerp, index, new_duration) {
@@ -238,7 +238,7 @@ function tweenlerp_add_quad(tweenlerp, id, start, end, duration) {
 
 function tweenlerp_add_expo(tweenlerp, id, start, end, duration) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_EXPO, -1, -1
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_EXPO, -1, -1
     );
 }
 
@@ -254,8 +254,8 @@ function tweenlerp_add_interpolator(tweenlerp, id, start, end, duration, type) {
 
 
 function tweenlerp_vertex_set_properties(tweenlerp, vertex, setter) {
-    let array = arraylist_peek_array(tweenlerp.arraylist);
-    let size = arraylist_size(tweenlerp.arraylist);
+    const array = arraylist_peek_array(tweenlerp.arraylist);
+    const size = arraylist_size(tweenlerp.arraylist);
 
     for (let i = 0; i < size; i++) {
         if (array[i].id < 0 || array[i].id == TEXTSPRITE_PROP_STRING) continue;
@@ -273,7 +273,7 @@ function tweenlerp_internal_by_linear(tweenlerp_entry, progress) {
 }
 
 function tweenlerp_internal_by_steps(tweenlerp_entry, progress) {
-    let completed = math2d_inverselerp(0, tweenlerp_entry.duration, progress);
+    let completed = math2d_inverselerp(0.0, tweenlerp_entry.duration, progress);
     return macroexecutor_calc_steps(
         completed, tweenlerp_entry.steps_bounds, tweenlerp_entry.steps_count, tweenlerp_entry.steps_dir
     );
@@ -299,7 +299,7 @@ function tweenlerp_internal_animate_entry(tweenlerp_entry, progress) {
     // calculate the completed percent
     if (progress > tweenlerp_entry.duration) progress = tweenlerp_entry.duration;
 
-    let progress_percent = math2d_inverselerp(0, tweenlerp_entry.duration, progress);
+    let progress_percent = math2d_inverselerp(0.0, tweenlerp_entry.duration, progress);
     let percent = tweenlerp_entry.callback(tweenlerp_entry, progress_percent);
 
     tweenlerp_entry.value = math2d_lerp(tweenlerp_entry.start, tweenlerp_entry.end, percent);
@@ -368,6 +368,9 @@ function tweenlerp_internal_add(tweenlerp, id, start, end, duration, interp, ste
     if (tweenlerp.has_completed)
         tweenlerp.has_completed = tweenlerp_internal_animate_entry(tweenlerp_entry, tweenlerp.progress);
 
-    return arraylist_add(tweenlerp.arraylist, tweenlerp_entry) - 1;
+    let index = arraylist_size(tweenlerp.arraylist);
+    arraylist_add(tweenlerp.arraylist, tweenlerp_entry);
+
+    return index;
 }
 

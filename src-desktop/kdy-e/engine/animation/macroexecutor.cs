@@ -31,7 +31,7 @@ public enum AnimInterpolator : int {
     SIN = 9
 }
 
-public class MacroExecutorInstruction {
+public class MacroExecutorInstruction : ICloneable {
     public int property;
     public AnimMacroType type;
     internal MacroExecutorValue value;
@@ -44,6 +44,8 @@ public class MacroExecutorInstruction {
     internal MacroExecutorValue steps_method;
     internal MacroExecutorValue duration;
     internal AnimInterpolator interpolator;
+
+    public object Clone() => this.MemberwiseClone();
 }
 
 public enum MacroExecutorValueKind {
@@ -80,9 +82,8 @@ public class MacroExecutor : IAnimate {
 
     private int interpolators_stack_size;
     private int instructions_size;
-    internal AtlasEntry[] frames;
-    internal int frame_count;
-    private bool frames_dispose;
+    private AtlasEntry[] frames;
+    private int frame_count;
     private float random_start;
     private float random_end;
     private float random_value;
@@ -102,13 +103,13 @@ public class MacroExecutor : IAnimate {
 
     private MacroExecutor() { }
 
-    public MacroExecutor(MacroExecutorInstruction[] instructions, int instructions_size, AtlasEntry[] frames, int frame_count) {
+    public MacroExecutor(AnimListItem animlist_item) {
         this.interpolators_stack_size = 0;
-        this.instructions_size = instructions_size;
+        this.instructions = CloneUtils.CloneClassArray(animlist_item.instructions, animlist_item.instructions_count);
+        this.instructions_size = animlist_item.instructions_count;
 
-        this.frames = frames;
-        this.frame_count = frame_count;
-        this.frames_dispose = false;
+        this.frames = CloneUtils.CloneClassArray(animlist_item.frames, animlist_item.frame_count);
+        this.frame_count = animlist_item.frame_count;
 
         this.random_start = 0f;
         this.random_end = 1.0f;
@@ -116,21 +117,25 @@ public class MacroExecutor : IAnimate {
         this.speed = 1.0f;
         this.registers = new float[MACROEXECUTOR_REGISTER_COUNT];
 
-        for (int i = 0 ; i < instructions_size ; i++) {
-            if (instructions[i] == null)
-                continue;
-            if (instructions[i].type == AnimMacroType.INTERPOLATOR)
+        for (int i = 0 ; i < this.instructions_size ; i++) {
+            MacroExecutorInstruction instruction = this.instructions[i];
+
+            // JS & C# only
+            if (instruction == null) throw new NullReferenceException();
+
+            // clone values array
+            instruction.values = CloneUtils.CloneStructArray(instruction.values, instruction.values_size);
+
+            if (instruction.type == AnimMacroType.INTERPOLATOR)
                 this.interpolators_stack_size++;
         }
 
         ClearRegisters();
 
-        this.interpolators_stack = new InStackInstruction[this.interpolators_stack_size];
-        this.instructions = instructions;
-
-        for (int i = 0 ; i < this.interpolators_stack_size ; i++) {
-            this.interpolators_stack[i] = new InStackInstruction();
-        }
+        if (this.interpolators_stack_size > 0)
+            this.interpolators_stack = new InStackInstruction[this.interpolators_stack_size];
+        else
+            this.interpolators_stack = null;
 
         this.index = 0;
         this.on_yield = false;
@@ -141,17 +146,26 @@ public class MacroExecutor : IAnimate {
 
         this.state = new float[MACROEXECUTOR_VERTEX_PROP_COUNT];
         this.state_flags = new bool[MACROEXECUTOR_VERTEX_PROP_COUNT];
-        StateClear();
 
+        StateClear();
+        this.last_step = true;
+
+        // JS & C# only
         for (int i = 0 ; i < this.interpolators_stack_size ; i++)
             this.interpolators_stack[i] = new InStackInstruction();
 
-        this.last_step = true;
     }
 
     public void Destroy() {
+
+        //for (int i = 0; i < this.instructions_size; i++) {
+        //free(this.instructions[i].values);
+        //}
+
         //free(this.interpolators_stack);
+        //free(this.frames);
         //free(this.instructions);
+
         //free(this);
     }
 
@@ -223,8 +237,8 @@ public class MacroExecutor : IAnimate {
                     this.on_yield = instruction.type == AnimMacroType.YIELD;
                     this.sleep_time = ResolveValue(instruction.value);
                     // check for ANIM_MACRO_PAUSE with zero duration 
-                    if (!this.on_yield && this.sleep_time < 1) {
-                        this.sleep_time = 0;
+                    if (!this.on_yield && this.sleep_time <= 0f) {
+                        this.sleep_time = 0f;
                         this.on_yield = true;
                     }
                     return 0;
@@ -372,22 +386,19 @@ public class MacroExecutor : IAnimate {
         if (this.instructions == null) return false;
         if (this.index < this.instructions_size) return false;
 
-        int running = 0;
         for (int i = 0 ; i < this.interpolators_stack_size ; i++) {
-            InStackInstruction interpolator = this.interpolators_stack[i];
-            if (interpolator == null || interpolator.definition == null) continue;
-
-            running++;
+            if (this.interpolators_stack[i].definition == null) continue;
+            return false;
         }
 
-        return running > 0 ? false : true;
+        return true;
     }
 
     public void ForceEnd(Sprite sprite) {
         // end all pending interpolators
         for (int i = 0 ; i < this.interpolators_stack_size ; i++) {
             InStackInstruction interpolator = this.interpolators_stack[i];
-            if (interpolator == null || interpolator.definition == null) continue;
+            if (interpolator.definition == null) continue;
 
             StateSave(interpolator.definition.property, interpolator.end);
 
@@ -397,7 +408,6 @@ public class MacroExecutor : IAnimate {
         // execute all instructions in "one cycle"
         for (; this.index < this.instructions_size ; this.index++) {
             MacroExecutorInstruction instruction = this.instructions[this.index];
-            if (instruction == null) continue;
 
             switch (instruction.type) {
                 case AnimMacroType.INTERPOLATOR:
@@ -441,84 +451,42 @@ public class MacroExecutor : IAnimate {
             StateApply(sprite, true);
     }
 
-    public MacroExecutor Clone(bool clone_frames) {
-        //if (!this) return null;
+    public MacroExecutor Clone() {
+        MacroExecutor copy = (MacroExecutor)this.MemberwiseClone();
 
-        MacroExecutor copy = new MacroExecutor() {
-            interpolators_stack_size = this.interpolators_stack_size,
-            instructions_size = this.instructions_size,
-            frames = this.frames,
-            frame_count = this.frame_count,
-            frames_dispose = this.frames_dispose,
-            random_start = this.random_start,
-            random_end = this.random_end,
-            random_value = this.random_value,
-            speed = this.speed,
-            registers = this.registers,
-            interpolators_stack = this.interpolators_stack,
-            instructions = this.instructions,
-            index = this.index,
-            on_yield = this.on_yield,
-            sleep_time = this.sleep_time,
-            frame_index_restart = this.frame_index_restart,
-            frame_allow_change = this.frame_allow_change,
-            state = this.state,
-            state_flags = this.state_flags,
-            last_step = this.last_step
-        };
-        //if (!copy) return null;
+        copy.interpolators_stack = CloneUtils.CloneClassArray(this.interpolators_stack, this.interpolators_stack_size);
+        copy.frames = CloneUtils.CloneClassArray(this.frames, this.frame_count);
+        copy.instructions = CloneUtils.CloneClassArray(this.instructions, this.instructions_size);
 
-        if (clone_frames) {
-            copy.frames_dispose = true;
-            copy.frames = CloneUtils.CloneArray(copy.frames, copy.frame_count);
-        } else {
-            copy.frame_count = 0;
-            copy.frames = null;
+        for (int i = 0 ; i < copy.instructions_size ; i++) {
+            MacroExecutorInstruction instruction = copy.instructions[i];
+            instruction.values = CloneUtils.CloneStructArray(instruction.values, instruction.values_size);
         }
 
-        copy.interpolators_stack = new InStackInstruction[copy.interpolators_stack_size];
         for (int i = 0 ; i < copy.interpolators_stack_size ; i++) {
-            copy.interpolators_stack[i] = new InStackInstruction() {
-                definition = this.interpolators_stack[i].definition,
-                end = this.interpolators_stack[i].end,
-                duration = this.interpolators_stack[i].duration,
-                steps_bounds = this.interpolators_stack[i].steps_bounds,
-                progress = this.interpolators_stack[i].progress,
-                start = this.interpolators_stack[i].start,
-                steps_count = this.interpolators_stack[i].steps_count,
-                steps_method = this.interpolators_stack[i].steps_method,
-            };
+            MacroExecutorInstruction definition = this.interpolators_stack[i].definition;
+            if (definition == null) continue;
+
+            for (int j = 0 ; j < this.instructions_size ; j++) {
+                if (this.instructions[j] == definition) {
+                    copy.interpolators_stack[i].definition = copy.instructions[index];
+                    break;
+                }
+            }
         }
-
-        copy.instructions = CloneUtils.CloneArray(copy.instructions, copy.instructions_size);
-
-        // C# and JS only
-        copy.registers = CloneUtils.CloneArray(copy.registers, MACROEXECUTOR_REGISTER_COUNT);
-        copy.state = CloneUtils.CloneArray(copy.state, MACROEXECUTOR_VERTEX_PROP_COUNT);
-        copy.state_flags = CloneUtils.CloneArray(copy.state_flags, MACROEXECUTOR_VERTEX_PROP_COUNT);
 
         return copy;
     }
 
-    public float StatePeek(int property, float default_value) {
-        if (property < 0 || property >= MACROEXECUTOR_VERTEX_PROP_COUNT)
-            throw new ArgumentOutOfRangeException("property", "macroexecutor_state_peek() invalid property enumeration");
-
-        if (this.state_flags[property])
-            return default_value;
-        else
-            return this.state[property];
+    public int GetFrameCount() {
+        return this.frame_count;
     }
 
-    public void RegistersWrite(int id, float value) {
-        if (id < 0 || id >= MACROEXECUTOR_REGISTER_COUNT) return;
-        if (Single.IsNaN(value)) return;
-        this.registers[id] = value;
-    }
+    public AtlasEntry GetFrame(int index) {
+        if (this.frame_count < 1) return null;
+        if (index < 0) index = (int)this.state[VertexProps.SPRITE_PROP_FRAMEINDEX];
 
-    public float RegistersRead(int id) {
-        if (id < 0 || id >= MACROEXECUTOR_REGISTER_COUNT) return Single.NaN;
-        return this.registers[id];
+        return this.frames[index];
     }
 
 
@@ -653,8 +621,7 @@ public class MacroExecutor : IAnimate {
 
         if (!inmediate) {
             for (; i < this.interpolators_stack_size ; i++) {
-                InStackInstruction interpolator = this.interpolators_stack[i];
-                if (interpolator.definition != null) continue;
+                if (this.interpolators_stack[i].definition != null) continue;
                 break;
             }
             if (i >= this.interpolators_stack_size) return;
@@ -676,16 +643,17 @@ public class MacroExecutor : IAnimate {
             return;
         }
 
-        this.interpolators_stack[i].definition = instruction;
-        this.interpolators_stack[i].duration = duration;
-        this.interpolators_stack[i].steps_bounds[0] = 0.0f;
-        this.interpolators_stack[i].steps_bounds[1] = 0.0f;
-        this.interpolators_stack[i].steps_bounds[2] = 0.0f;
-        this.interpolators_stack[i].progress = 0.0f;
-        this.interpolators_stack[i].start = start;
-        this.interpolators_stack[i].end = end;
-        this.interpolators_stack[i].steps_count = (int)steps_count;
-        this.interpolators_stack[i].steps_method = (Align)((int)steps_method);
+        InStackInstruction stack_entry = this.interpolators_stack[i];
+        stack_entry.definition = instruction;
+        stack_entry.duration = duration;
+        stack_entry.steps_bounds[0] = 0.0f;
+        stack_entry.steps_bounds[1] = 0.0f;
+        stack_entry.steps_bounds[2] = 0.0f;
+        stack_entry.progress = 0.0f;
+        stack_entry.start = start;
+        stack_entry.end = end;
+        stack_entry.steps_count = (int)steps_count;
+        stack_entry.steps_method = (Align)((int)steps_method);
 
         InterpolatorRun(0.0f, this.interpolators_stack[i]);
     }
@@ -857,7 +825,7 @@ public class MacroExecutor : IAnimate {
     }
 
 
-    private class InStackInstruction {
+    private class InStackInstruction : ICloneable {
         public MacroExecutorInstruction definition;
 
         public float end;
@@ -870,6 +838,12 @@ public class MacroExecutor : IAnimate {
 
         public InStackInstruction() {
             this.steps_bounds = new float[3];
+        }
+
+        public object Clone() {
+            InStackInstruction copy = (InStackInstruction)this.MemberwiseClone();
+            copy.steps_bounds = CloneUtils.CloneStructArray(this.steps_bounds, this.steps_bounds.Length);
+            return copy;
         }
     }
 

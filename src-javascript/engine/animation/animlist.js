@@ -48,6 +48,8 @@ async function animlist_init(src) {
     try {
         xml = await fs_readxml(src);
     } catch (e) {
+        full_path = undefined;
+
         if (e instanceof KDMYEngineIOError) {
             console.error(`animlist_init() error loading "${src}"`, e);
             return null;
@@ -59,8 +61,7 @@ async function animlist_init(src) {
 
     // C and C# only
     //fs_folder_stack_push();
-    //fs_set_working_folder(full_path, 1);
-
+    //fs_set_working_folder(full_path, true);
 
 
     let anims_list = xml.querySelector("AnimationList");
@@ -113,7 +114,7 @@ async function animlist_init(src) {
 
     let animlist = {};
     animlist.entries_count = linkedlist_count(parsed_animations);
-    animlist.entries = linkedlist_to_array(parsed_animations);
+    animlist.entries = linkedlist_to_solid_array(parsed_animations, NaN);
 
     // destroy the list and release all allocated items
     linkedlist_destroy2(parsed_animations, free);
@@ -123,11 +124,12 @@ async function animlist_init(src) {
     // dispose atlas cache
     for (let entry of linkedlist_iterate4(atlas_cache)) {
         if (entry.atlas) atlas_destroy(entry.atlas);
-        entry.path = undefined;
+        entry.absolute_path = undefined;
         entry = undefined;
     }
 
     linkedlist_destroy(atlas_cache);
+    xml = undefined;
 
     animlist.src = full_path;
     animlist.id = ANIMLIST_IDS++;
@@ -145,26 +147,24 @@ function animlist_destroy(animlist) {
     if (animlist.references > 0) return;
 
     for (let i = 0; i < animlist.entries_count; i++) {
+        animlist.entries[i].name = undefined;
         animlist.entries[i].frames = undefined;
         animlist.entries[i].alternate_set = undefined;
 
         for (let j = 0; j < animlist.entries[i].instructions_count; j++) {
             animlist.entries[i].instructions[j].values = undefined;
-            animlist.entries[i].instructions[j] = undefined;
         }
 
         if (animlist.entries[i].is_tweenkeyframe) animlist.entries[i].tweenkeyframe_entries = undefined;
 
-        animlist.entries[i].frames = undefined;
         animlist.entries[i].instructions = undefined;
 
-
-        ModuleLuaScript.kdmyEngine_drop_shared_object(animlist.entries[i]);
-        animlist.entries[i] = undefined;
+        luascript_drop_shared(animlist.entries[i]);
     }
 
     animlist.entries = undefined;
-    ModuleLuaScript.kdmyEngine_drop_shared_object(animlist);
+    animlist.src = undefined;
+    luascript_drop_shared(animlist);
     ANIMLIST_POOL.delete(animlist.id);
     animlist = undefined;
 }
@@ -205,20 +205,21 @@ async function animlist_load_required_atlas(animlist_item, atlas_list, def_atlas
         return def_atlas;
     }
 
+    // In C & C# use "fs_get_full_path_and_override(filename)" instead
+    let absolute_path = fs_build_path2(ref_path, filename);
     let obj = null;
 
     for (let entry of linkedlist_iterate4(atlas_list)) {
-        if (entry.path == filename) {
+        if (entry.absolute_path == absolute_path) {
             obj = entry;
             break;
         }
     }
 
-    if (!obj) {
-        // JS only (build path)
-        let atlas_path = fs_build_path2(ref_path, filename);
-        obj = { path: filename, atlas: await animlist_load_atlas(atlas_path) };
-        atlas_path = undefined;
+    if (obj) {
+        absolute_path = undefined;
+    } else {
+        obj = { absolute_path: absolute_path, atlas: await animlist_load_atlas(absolute_path) };
         linkedlist_add_item(atlas_list, obj);
     }
 
@@ -251,8 +252,8 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
     anim.name = name;
     anim.loop = vertexprops_parse_integer(entry, "loop", 1);
     anim.frame_rate = vertexprops_parse_float(entry, "frameRate", default_fps);
-    anim.alternate_per_loop = vertexprops_parse_boolean(entry, "alternateInLoops", 0);
-    anim.alternate_no_random = !vertexprops_parse_boolean(entry, "alternateRandomize", 0);
+    anim.alternate_per_loop = vertexprops_parse_boolean(entry, "alternateInLoops", false);
+    anim.alternate_no_random = !vertexprops_parse_boolean(entry, "alternateRandomize", false);
     anim.loop_from_index = 0;
 
     let frames = entry.children;
@@ -265,7 +266,7 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
             case "FrameArray":
                 let name_prefix = frames[i].getAttribute("entryPrefixName");
                 let name_suffix = frames[i].getAttribute("entrySuffixName");
-                let has_number_suffix = vertexprops_parse_boolean(frames[i], "hasNumberSuffix", 1);
+                let has_number_suffix = vertexprops_parse_boolean(frames[i], "hasNumberSuffix", true);
                 let index_start = vertexprops_parse_integer(frames[i], "indexStart", 0);
                 let index_end = vertexprops_parse_integer(frames[i], "indexEnd", -1);
 
@@ -275,20 +276,15 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
                 animlist_read_entries_to_frames_array(
                     parsed_frames, frame_name, has_number_suffix, atlas, index_start, index_end
                 );
-
-                //if (name_prefix) name_prefix = undefined;
-                //if (name_suffix) name_suffix = undefined;
-                frame_name = undefined;
                 break;
             case "Frame":
-                let name_frame = frames[i].getAttribute("entryName");
-                if (name_frame) name = name_frame;
+                let entry_name = frames[i].getAttribute("entryName");
+                if (!entry_name) entry_name = name;
 
-                animlist_add_entry_from_atlas(parsed_frames, name, atlas);
-                if (name_frame != name) name_frame = undefined;
+                animlist_add_entry_from_atlas(parsed_frames, entry_name, atlas);
                 break;
             case "Pause":
-                let duration = vertexprops_parse_float(frames[i], "duration", 1);
+                let duration = vertexprops_parse_float(frames[i], "duration", 1.0);
                 let last_frame = linkedlist_get_last_item(parsed_frames);
                 if (last_frame) {
                     while (duration-- > 0) linkedlist_add_item(parsed_frames, last_frame);
@@ -306,7 +302,7 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
                 anim.loop_from_index = linkedlist_count(parsed_frames) - offset;
                 break;
             default:
-                console.error("animlist_read_frame_animation() unknown frame type: " + frames[i].tagName, frames[i]);
+                console.error("animlist_read_frame_animation() unknown frame type: " + frames[i].tagName, frames[i].outerHTML);
                 break;
         }
     }
@@ -385,15 +381,11 @@ function animlist_add_entry_from_atlas(frame_list, name, atlas) {
 }
 
 
-function animlist_parse_step_method(node) {
-    return vertexprops_parse_align(node, "stepsMethod", 0, 0);
-}
-
-function animlist_parse_interpolator(node, name) {
+function animlist_parse_interpolator(node, name, default_interpolator) {
     let type = node.getAttribute(name);
 
     if (!type)
-        return ANIM_MACRO_INTERPOLATOR_LINEAR;
+        return default_interpolator;
 
     type = type.toLowerCase();
 
@@ -530,45 +522,38 @@ function animlist_parse_complex_value2(node, name, def_value, value) {
 
 function animlist_add_alternate_entry(list, frame_count, index) {
     let length = frame_count - index;
-    if (length < 1) return 1;
+    if (length < 1) return true;
     linkedlist_add_item(list, { index, length });
-    return 0;
+    return false;
 }
 
-
-function animlist_parse_float_with_rate(node, attr_name, frame_time, def_value) {
-    let value = vertexprops_parse_float(node, attr_name, def_value);
-    if (isNaN(value)) return NaN;
-
-    return value * frame_time;
-}
 
 function animlist_read_macro_animation(entry, atlas) {
 
     let anim = {};
-    anim.is_tweenkeyframe = 0;
+    anim.is_tweenkeyframe = false;
     anim.name = entry.getAttribute("name");
     anim.loop = vertexprops_parse_integer(entry, "loop", 1);
     anim.frames = null;
     anim.frames_count = 0;
     anim.frame_restart_index = vertexprops_parse_integer(entry, "frameRestartIndex", -1);
-    anim.frame_allow_size_change = vertexprops_parse_boolean(entry, "frameAllowChangeSize", 0);
+    anim.frame_allow_size_change = vertexprops_parse_boolean(entry, "frameAllowChangeSize", false);
 
     anim.alternate_set = null;
     anim.alternate_set_size = 0;
 
     let atlasPrefixEntryName = entry.getAttribute("atlasPrefixEntryName");
-    let atlasHasNumberSuffix = vertexprops_parse_boolean(entry, "atlasHasNumberSuffix", 1);
+    let atlasHasNumberSuffix = vertexprops_parse_boolean(entry, "atlasHasNumberSuffix", true);
 
     let unparsed_list = entry.children;
-    let parsed_instructions = linkedlist_init();
+    let parsed_instructions = arraylist_init2(unparsed_list.length);
 
     let instruction, property_id;
 
     for (let i = 0; i < unparsed_list.length; i++) {
         switch (unparsed_list[i].tagName) {
             case "Interpolator":
-                property_id = animlist_parse_property(unparsed_list[i], "property", 1);
+                property_id = animlist_parse_property(unparsed_list[i], "property", true);
                 if (property_id < 0) continue;
 
                 instruction = {
@@ -584,14 +569,14 @@ function animlist_read_macro_animation(entry, atlas) {
 
                 animlist_parse_complex_value2(unparsed_list[i], "start", NaN, instruction.start);
                 animlist_parse_complex_value2(unparsed_list[i], "end", NaN, instruction.end);
-                animlist_parse_complex_value2(unparsed_list[i], "duration", 0, instruction.duration);
-                animlist_parse_complex_value2(unparsed_list[i], "steps_count", 1, instruction.steps_count);
-                animlist_parse_complex_value2(unparsed_list[i], "steps_method", 0, instruction.steps_method);
+                animlist_parse_complex_value2(unparsed_list[i], "duration", 0.0, instruction.duration);
+                animlist_parse_complex_value2(unparsed_list[i], "steps_count", 1.0, instruction.steps_count);
+                animlist_parse_complex_value2(unparsed_list[i], "steps_method", 0.0, instruction.steps_method);
 
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             case "Set":
-                property_id = animlist_parse_property(unparsed_list[i], "property", 1);
+                property_id = animlist_parse_property(unparsed_list[i], "property", true);
                 if (property_id < 0) continue;
 
                 instruction = {
@@ -600,9 +585,9 @@ function animlist_read_macro_animation(entry, atlas) {
                     value: { reference: -1, literal: NaN, kind: ANIM_MACRO_VALUE_KIND_LITERAL }
                 };
 
-                animlist_parse_complex_value2(unparsed_list[i], "value", 0, instruction.value);
+                animlist_parse_complex_value2(unparsed_list[i], "value", 0.0, instruction.value);
 
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             case "Yield":
                 instruction = {
@@ -610,9 +595,9 @@ function animlist_read_macro_animation(entry, atlas) {
                     value: { reference: -1, literal: NaN, kind: ANIM_MACRO_VALUE_KIND_LITERAL }
                 };
 
-                animlist_parse_complex_value2(unparsed_list[i], "duration", 0, instruction.value);
+                animlist_parse_complex_value2(unparsed_list[i], "duration", 0.0, instruction.value);
 
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             case "Pause":
                 instruction = {
@@ -620,15 +605,15 @@ function animlist_read_macro_animation(entry, atlas) {
                     value: { reference: -1, literal: NaN, kind: ANIM_MACRO_VALUE_KIND_LITERAL }
                 };
 
-                animlist_parse_complex_value2(unparsed_list[i], "duration", 1, instruction.value);
+                animlist_parse_complex_value2(unparsed_list[i], "duration", 1.0, instruction.value);
 
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             case "Reset":
                 instruction = {
                     type: ANIM_MACRO_RESET
                 };
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             case "RandomSetup":
                 instruction = {
@@ -640,13 +625,13 @@ function animlist_read_macro_animation(entry, atlas) {
                 animlist_parse_complex_value2(unparsed_list[i], "start", 0.0, instruction.start);
                 animlist_parse_complex_value2(unparsed_list[i], "end", 1.0, instruction.end);
 
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             case "RandomChoose":
                 instruction = {
                     type: ANIM_MACRO_RANDOM_CHOOSE
                 };
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             case "RandomExact":
                 const values_size = [0];
@@ -660,10 +645,10 @@ function animlist_read_macro_animation(entry, atlas) {
                     values: values_array,
                     values_size: values_size[0]
                 };
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             case "RegisterProp":
-                property_id = animlist_parse_property(unparsed_list[i], "property", 1);
+                property_id = animlist_parse_property(unparsed_list[i], "property", true);
                 if (property_id < 0) continue;
 
                 instruction = {
@@ -671,7 +656,7 @@ function animlist_read_macro_animation(entry, atlas) {
                     register_index: animlist_parse_register(unparsed_list[i]),
                     property: property_id
                 };
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             case "RegisterSet":
                 instruction = {
@@ -682,7 +667,7 @@ function animlist_read_macro_animation(entry, atlas) {
 
                 animlist_parse_complex_value2(unparsed_list[i], "value", 0.0, instruction.value);
 
-                linkedlist_add_item(parsed_instructions, instruction);
+                arraylist_add(parsed_instructions, instruction);
                 break;
             default:
                 console.warn(
@@ -693,9 +678,8 @@ function animlist_read_macro_animation(entry, atlas) {
         }
     }
 
-    anim.instructions_count = linkedlist_count(parsed_instructions);
-    anim.instructions = linkedlist_to_solid_array(parsed_instructions);
-    linkedlist_destroy2(parsed_instructions, free);// note: keep "instruction[].values" allocated
+    // note: keep "instruction[].values" allocated
+    arraylist_destroy2(parsed_instructions, anim , "instructions_count", "instructions");
 
     if (atlasPrefixEntryName) {
         let parsed_frames = linkedlist_init();
@@ -718,9 +702,9 @@ function animlist_read_macro_animation(entry, atlas) {
 function animlist_parse_randomexact(unparsed_randomexact, out_size) {
     let unparsed_values = unparsed_randomexact.getAttribute("values");
 
-    let tokenizer = tokenizer_init("\x20", 1, 0, unparsed_values);
+    let tokenizer = tokenizer_init("\x20", true, false, unparsed_values);
     if (!tokenizer) {
-        console.warn("missing attribute values in RandomExact", unparsed_randomexact);
+        console.warn("animlist_parse_randomexact() missing attribute values in RandomExact", unparsed_randomexact);
 
         out_size[0] = -1;
         return null;
@@ -749,12 +733,12 @@ function animlist_parse_randomexact(unparsed_randomexact, out_size) {
                 unparsed_randomexact.outerHTML
             );
 
-            //free(string);
+            str = undefined;
             continue;
         }
 
         arraylist_add(parsed_values, parsed_value);
-        str = undefined;// In C free() the returned string
+        str = undefined;
     }
 
     tokenizer_destroy(tokenizer);
@@ -789,13 +773,14 @@ function animlist_read_tweenkeyframe_animation(entry) {
     let nodes = entry.querySelectorAll("Keyframe");
     let arraylist = arraylist_init2(nodes.length);
 
-    let reference_duration = 1;
+    let reference_duration = 1.0;
     if (entry.hasAttribute("referenceDuration")) {
         reference_duration = vertexprops_parse_float(entry, "referenceDuration", NaN);
         if (Number.isNaN(reference_duration)) {
             console.warn("animlist_read_tweenkeyframe_animation() invalid tweenkeyframe 'referenceDuration' value: " + entry.outerHTML);
-            reference_duration = 1;
+            reference_duration = 1.0;
         }
+    }
 
     let default_interpolator = ANIM_INTERPOLATOR_LINEAR;
     if (entry.hasAttribute("defaultInterpolator")) {
@@ -815,7 +800,7 @@ function animlist_read_tweenkeyframe_animation(entry) {
         let at = NaN;
 
         if (unparsed_at.indexOf('%') >= 0) {
-            if (reference_duration > 1) {
+            if (reference_duration > 1.0) {
                 console.warn("animlist_read_tweenkeyframe_animation() invalid Keyframe , 'at' is a percent value and TweenKeyframe have 'referenceDuration' attribute: " + node.outerHTML);
                 continue;
             }
@@ -826,7 +811,7 @@ function animlist_read_tweenkeyframe_animation(entry) {
                 str = undefined;
             }
         } else {
-            if (reference_duration < 1) {
+            if (reference_duration < 1.0) {
                 console.warn("animlist_read_tweenkeyframe_animation() invalid Keyframe , 'at' is a timestamp value and TweenKeyframe does not have 'referenceDuration' attribute: " + node.outerHTML);
                 continue;
             }
@@ -838,15 +823,15 @@ function animlist_read_tweenkeyframe_animation(entry) {
             continue;
         }
 
-        if (reference_duration > 1)
+        if (reference_duration > 1.0)
             at /= reference_duration;
         else
             at /= 100.0;
 
 
-        let id = animlist_parse_property(node, "id", 0);
+        let id = animlist_parse_property(node, "id", false);
 
-        let keyframe_interpolator = animlist_parse_interpolator(node, "type");
+        let keyframe_interpolator = animlist_parse_interpolator(node, "type", default_interpolator);
 
         let steps_count = vertexprops_parse_integer(node, "stepsCount", -1);
         if (keyframe_interpolator == ANIM_INTERPOLATOR_STEPS && steps_count < 0) {
@@ -873,14 +858,8 @@ function animlist_read_tweenkeyframe_animation(entry) {
         arraylist_add(arraylist, keyframe);
     }
 
-    let interpolator = ANIM_MACRO_INTERPOLATOR_LINEAR;
-    if (entry.hasAttribute("defaultInterpolator"))
-        interpolator = animlist_parse_interpolator(entry, "defaultInterpolator")
-
-
     let item = {
         name: entry.getAttribute("name"),
-        tweenkeyframe_default_interpolator: interpolator,
         is_tweenkeyframe: 1,
         tweenkeyframe_entries: null,
         tweenkeyframe_entries_count: 0

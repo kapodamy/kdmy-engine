@@ -2,23 +2,21 @@
 
 
 function tweenkeyframe_init() {
-    return {
-        arraylist_keyframes: arraylist_init(),
-        arraylist_values: arraylist_init(),
-        default_interpolator: ANIM_MACRO_INTERPOLATOR_LINEAR
-    }
+    let tweenkeyframe = {
+        entries: arraylist_init(/*sizeof(Entry)*/)
+    };
+
+    return tweenkeyframe;
 }
 
 function tweenkeyframe_init2(animlist_item) {
     if (!animlist_item.is_tweenkeyframe) {
-        console.error("tweenkeyframe_init2() the animlist item is not a tweenkeyframe: " + animlist_item.name);
+        console.error("tweenkeyframe_init2() the animlist item is not a tweenkeyframe: %s", animlist_item.name);
         return null;
     }
 
     let tweenkeyframe = {
-        arraylist_keyframes: arraylist_init2(animlist_item.tweenkeyframe_entries_count),
-        arraylist_values: arraylist_init(),
-        default_interpolator: animlist_item.tweenkeyframe_default_interpolator
+        entries: arraylist_init2(animlist_item.tweenkeyframe_entries_count)
     };
 
     for (let i = 0; i < animlist_item.tweenkeyframe_entries_count; i++) {
@@ -47,7 +45,7 @@ function tweenkeyframe_init3(animlist, tweenkeyframe_name) {
     }
 
     if (!animlist_item) {
-        console.warn("tweenkeyframe_init3() the animlist does not contains: " + tweenkeyframe_name);
+        console.warn("tweenkeyframe_init3() the animlist does not contains: %s", tweenkeyframe_name);
         return null;
     }
 
@@ -55,9 +53,15 @@ function tweenkeyframe_init3(animlist, tweenkeyframe_name) {
 }
 
 function tweenkeyframe_destroy(tweenkeyframe) {
-    arraylist_destroy(tweenkeyframe.arraylist_keyframes, 0);
-    arraylist_destroy(tweenkeyframe.arraylist_values, 0);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(tweenkeyframe);
+    if (!tweenkeyframe) return;
+
+    for (let entry of arraylist_iterate4(tweenkeyframe.entries)) {
+        arraylist_destroy(entry.steps, false);
+    }
+
+    arraylist_destroy(tweenkeyframe.entries, false);
+    luascript_drop_shared(tweenkeyframe);
+
     tweenkeyframe = undefined;
 }
 
@@ -65,15 +69,11 @@ function tweenkeyframe_clone(tweenkeyframe) {
     if (!tweenkeyframe) return null;
 
     let copy = {
-        arraylist_keyframes: arraylist_clone(tweenkeyframe.arraylist_keyframes),
-        arraylist_values: arraylist_clone(tweenkeyframe.arraylist_values),
-        progress: tweenkeyframe.progress,
-        has_completed: tweenkeyframe.has_completed
+        entries: arraylist_clone(tweenkeyframe.entries)
     };
 
-    //  (JS & C# only) clone steps_bounds
-    for (let entry of arraylist_iterate4(copy.arraylist_keyframes)) {
-        entry.steps_bounds = [entry.steps_bounds[0], entry.steps_bounds[1], entry.steps_bounds[2]];
+    for (let entry of arraylist_iterate4(copy.entries)) {
+        entry.steps = arraylist_clone(entry.steps);
     }
 
     return copy;
@@ -81,115 +81,127 @@ function tweenkeyframe_clone(tweenkeyframe) {
 
 
 function tweenkeyframe_animate_percent(tweenkeyframe, percent) {
-    const array = arraylist_peek_array(tweenkeyframe.arraylist_keyframes);
-    const size = arraylist_size(tweenkeyframe.arraylist_keyframes);
+    let array = arraylist_peek_array(tweenkeyframe.entries);
+    let entries_size = arraylist_size(tweenkeyframe.entries);
 
     let final_percent = math2d_clamp_double(percent, 0.0, 1.0);
 
-    for (let i = 0; i < size; i++) {
-        let keyframe_entry = array[i];
-        if (percent >= keyframe_entry.percent_start && percent <= keyframe_entry.percent_end) {
-            tweenkeyframe_internal_animate_entry(keyframe_entry, percent);
-        } else if (percent >= keyframe_entry.percent_end) {
-            keyframe_entry.keyframe_value.value = keyframe_entry.value_end;
+    for (let i = 0; i < entries_size; i++) {
+        let entry = array[i];
+        let steps = arraylist_peek_array(entry.steps);
+        let steps_size = arraylist_size(entry.steps);
+
+        for (let j = 0; j < steps_size; j++) {
+            let step = steps[i];
+
+            if (percent >= step.percent_start && percent <= step.percent_end) {
+                entry.value = tweenkeyframe_internal_animate_entry(step, final_percent);
+            } else if (percent >= step.percent_end) {
+                entry.value = step.value_end;
+            }
         }
     }
-
 }
 
 
 function tweenkeyframe_get_ids_count(tweenkeyframe) {
-    return arraylist_size(tweenkeyframe.arraylist_values);
+    return arraylist_size(tweenkeyframe.entries);
 }
 
 
 function tweenkeyframe_peek_value(tweenkeyframe) {
-    if (arraylist_size(tweenkeyframe.arraylist_values) < 1) return NaN;
-    return arraylist_get(tweenkeyframe.arraylist_values, 0).value;
+    if (arraylist_size(tweenkeyframe.entries) < 1) return NaN;
+    let entry = arraylist_get(tweenkeyframe.entries, 0);
+    return entry.value;
 }
 
 function tweenkeyframe_peek_value_by_index(tweenkeyframe, index) {
-    let keyframe_value = arraylist_get(tweenkeyframe.arraylist_values, index);
-    if (!keyframe_value) return NaN;
+    let entry = arraylist_get(tweenkeyframe.entries, index);
+    if (!entry) return NaN;
 
-    return keyframe_value.value;
+    return entry.value;
 }
 
 function tweenkeyframe_peek_entry_by_index(tweenkeyframe, index, output_id_value_pair) {
-    let keyframe_value = arraylist_get(tweenkeyframe.arraylist_values, index);
-    if (!keyframe_value) return null;
+    let entry = arraylist_get(tweenkeyframe.entries, index);
+    if (!entry) {
+        output_id_value_pair[0] = -1;
+        output_id_value_pair[1] = NaN;
+        return false;
+    }
 
-    output_id_value_pair[0] = keyframe_value.id;
-    output_id_value_pair[1] = keyframe_value.value;
-    return output_id_value_pair;
+    output_id_value_pair[0] = entry.id;
+    output_id_value_pair[1] = entry.value;
+    return true;
 }
 
 function tweenkeyframe_peek_value_by_id(tweenkeyframe, id) {
-    for (let keyframe_value of tweenkeyframe.arraylist_values) {
-        if (keyframe_value.id == id) return keyframe_value.value;
+    for (let entry of arraylist_iterate4(tweenkeyframe.entries)) {
+        if (entry.id == id) return entry.value;
     }
 
     return NaN;
 }
 
 
-function tweenkeyframe_add_easeout(tweenkeyframe, at, id, value) {
-    return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_EASE_OUT, -1, -1
-    );
-}
-
-function tweenkeyframe_add_easeinout(tweenkeyframe, at, id, value) {
-    return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_EASE_IN_OUT, -1, -1
-    );
-}
-
-function tweenkeyframe_add_linear(tweenkeyframe, at, id, value) {
-    return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_EASE_OUT, -1, -1
-    );
-}
-
-function tweenkeyframe_add_steps(tweenkeyframe, at, id, value, steps_count, steps_method) {
-    return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_EASE_IN_OUT, -1, -1
-    );
-}
-
 function tweenkeyframe_add_ease(tweenkeyframe, at, id, value) {
     return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_LINEAR, -1, -1
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_EASE, -1, -1
     );
 }
 
 function tweenkeyframe_add_easein(tweenkeyframe, at, id, value) {
     return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_EASE_IN, -1, -1
+    );
+}
+
+function tweenkeyframe_add_easeout(tweenkeyframe, at, id, value) {
+    return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_EASE_OUT, -1, -1
+    );
+}
+
+function tweenkeyframe_add_easeinout(tweenkeyframe, at, id, value) {
+    return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_EASE_IN_OUT, -1, -1
+    );
+}
+
+function tweenkeyframe_add_linear(tweenkeyframe, at, id, value) {
+    return tweenkeyframe_internal_add(
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_LINEAR, -1, -1
+    );
+}
+
+function tweenkeyframe_add_steps(tweenkeyframe, at, id, value, steps_count, steps_method) {
+    return tweenkeyframe_internal_add(
         tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_STEPS,
+        steps_method, steps_count
     );
 }
 
 function tweenkeyframe_add_cubic(tweenkeyframe, at, id, value) {
     return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_CUBIC, -1, -1
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_CUBIC, -1, -1
     );
 }
 
 function tweenkeyframe_add_quad(tweenkeyframe, at, id, value) {
     return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_QUAD, -1, -1
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_QUAD, -1, -1
     );
 }
 
 function tweenkeyframe_add_expo(tweenkeyframe, at, id, value) {
     return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_EXPO, -1, -1
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_EXPO, -1, -1
     );
 }
 
 function tweenkeyframe_add_sin(tweenkeyframe, at, id, value) {
     return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_SIN, -1, -1
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_SIN, -1, -1
     );
 }
 
@@ -201,8 +213,8 @@ function tweenkeyframe_add_interpolator(tweenkeyframe, at, id, value, type) {
 
 
 function tweenkeyframe_vertex_set_properties(tweenkeyframe, vertex, setter) {
-    const array = arraylist_peek_array(tweenkeyframe.arraylist_values);
-    const size = arraylist_size(tweenkeyframe.arraylist_values);
+    let array = arraylist_peek_array(tweenkeyframe.entries);
+    let size = arraylist_size(tweenkeyframe.entries);
 
     for (let i = 0; i < size; i++) {
         if (array[i].id < 0 || array[i].id == TEXTSPRITE_PROP_STRING) continue;
@@ -212,171 +224,161 @@ function tweenkeyframe_vertex_set_properties(tweenkeyframe, vertex, setter) {
 }
 
 
-function tweenkeyframe_internal_by_brezier(tweenkeyframe_entry, percent) {
-    return macroexecutor_calc_cubicbezier(percent, tweenkeyframe_entry.brezier_points);
+function tweenkeyframe_internal_by_brezier(step, percent) {
+    return macroexecutor_calc_cubicbezier(percent, step.brezier_points);
 }
 
-function tweenkeyframe_internal_by_linear(tweenkeyframe_entry, percent) {
+function tweenkeyframe_internal_by_linear(step, percent) {
     return percent;
 }
 
-function tweenkeyframe_internal_by_steps(tweenkeyframe_entry, percent) {
+function tweenkeyframe_internal_by_steps(step, percent) {
     return macroexecutor_calc_steps(
-        percent, tweenkeyframe_entry.steps_bounds, tweenkeyframe_entry.steps_count, tweenkeyframe_entry.steps_dir
+        percent, step.steps_bounds, step.steps_count, step.steps_dir
     );
 }
 
-function tweenkeyframe_internal_by_cubic(tweenkeyframe_entry, percent) {
+function tweenkeyframe_internal_by_cubic(step, percent) {
     return math2d_lerp_cubic(percent);
 }
 
-function tweenkeyframe_internal_by_quad(tweenkeyframe_entry, percent) {
+function tweenkeyframe_internal_by_quad(step, percent) {
     return math2d_lerp_quad(percent);
 }
 
-function tweenkeyframe_internal_by_expo(tweenkeyframe_entry, percent) {
+function tweenkeyframe_internal_by_expo(step, percent) {
     return math2d_lerp_expo(percent);
 }
 
-function tweenkeyframe_internal_by_sin(tweenkeyframe_entry, percent) {
+function tweenkeyframe_internal_by_sin(step, percent) {
     return math2d_lerp_sin(percent);
 }
 
 
-function tweenkeyframe_internal_animate_entry(tweenkeyframe_entry, percent) {
-    let interp_percent = tweenkeyframe_entry.callback(tweenkeyframe_entry, percent);
-    let value = math2d_lerp(tweenkeyframe_entry.value_start, tweenkeyframe_entry.value_end, interp_percent);
-    tweenkeyframe_entry.keyframe_value.value = value;
+function tweenkeyframe_internal_animate_entry(step, percent) {
+    let interp_percent = step.callback(step, percent);
+    let value = math2d_lerp(step.value_start, step.value_end, interp_percent);
+
+    return value;
 }
 
 function tweenkeyframe_internal_add(tweenkeyframe, at, id, value, interp, steps_dir, steps_count) {
-    let keyframe_entry = null;
-    let keyframe_entry_index = 0;
+    let entry = null;
+    let step = null;
 
-    // find a duplicated entry and replace
-    for (let entry of arraylist_iterate4(tweenkeyframe.arraylist_keyframes)) {
-        if (entry.id == id && entry.percent_start == at) {
-            keyframe_entry = entry;
+    // find the requested entry
+    for (let existing_entry of arraylist_iterate4(tweenkeyframe.entries)) {
+        if (existing_entry.id == id) {
+            entry = existing_entry;
             break;
         }
-        keyframe_entry_index++;
     }
 
-    if (!keyframe_entry) {
-        let new_keyframe_entry = {
-            steps_dir, steps_count, steps_bounds: [0.0, 0.0, 0.0],
+    // create new entry (if necessary)
+    if (!entry) {
+        entry = arraylist_add(tweenkeyframe.entries, {
+            id: id,
+            value: 0.0,
+            steps: arraylist_init(/*sizeof(Step)*/),
+        });
+    }
+
+    // find a duplicated step and replace if exists
+    for (let existing_step of arraylist_iterate4(entry.steps)) {
+        if (existing_step.percent_start == at) {
+            step = existing_step;
+            break;
+        }
+    }
+
+    // create new step (if necessary)
+    if (!step) {
+        step = arraylist_add(entry.steps, {
+            steps_dir: steps_dir,
+            steps_count: steps_count,
+            steps_bounds: [0.0, 0.0, 0.0],
 
             brezier_points: null,
             callback: null,
-
-            id,
 
             value_start: value,
             value_end: value,
 
             percent_start: at,
-            percent_end: 1.0,
-
-            keyframe_value: null
-        };
-
-        arraylist_add(tweenkeyframe.arraylist_keyframes, new_keyframe_entry);
-        keyframe_entry = new_keyframe_entry;
+            percent_end: 1.0
+        });
     }
 
     switch (interp) {
-        case ANIM_MACRO_INTERPOLATOR_EASE:
-            keyframe_entry.callback = tweenkeyframe_internal_by_brezier;
-            keyframe_entry.brezier_points = CUBIC_BREZIER_EASE;
+        case ANIM_INTERPOLATOR_EASE:
+            step.callback = tweenkeyframe_internal_by_brezier;
+            step.brezier_points = CUBIC_BREZIER_EASE;
             break;
-        case ANIM_MACRO_INTERPOLATOR_EASE_IN:
-            keyframe_entry.callback = tweenkeyframe_internal_by_brezier;
-            keyframe_entry.brezier_points = CUBIC_BREZIER_EASE_IN;
+        case ANIM_INTERPOLATOR_EASE_IN:
+            step.callback = tweenkeyframe_internal_by_brezier;
+            step.brezier_points = CUBIC_BREZIER_EASE_IN;
             break;
-        case ANIM_MACRO_INTERPOLATOR_EASE_OUT:
-            keyframe_entry.callback = tweenkeyframe_internal_by_brezier;
-            keyframe_entry.brezier_points = CUBIC_BREZIER_EASE_OUT;
+        case ANIM_INTERPOLATOR_EASE_OUT:
+            step.callback = tweenkeyframe_internal_by_brezier;
+            step.brezier_points = CUBIC_BREZIER_EASE_OUT;
             break;
-        case ANIM_MACRO_INTERPOLATOR_EASE_IN_OUT:
-            keyframe_entry.callback = tweenkeyframe_internal_by_brezier;
-            keyframe_entry.brezier_points = CUBIC_BREZIER_EASE_IN_OUT;
+        case ANIM_INTERPOLATOR_EASE_IN_OUT:
+            step.callback = tweenkeyframe_internal_by_brezier;
+            step.brezier_points = CUBIC_BREZIER_EASE_IN_OUT;
             break;
-        case ANIM_MACRO_INTERPOLATOR_STEPS:
-            keyframe_entry.callback = tweenkeyframe_internal_by_steps;
+        case ANIM_INTERPOLATOR_STEPS:
+            step.callback = tweenkeyframe_internal_by_steps;
             break;
-        case ANIM_MACRO_INTERPOLATOR_LINEAR:
-            keyframe_entry.callback = tweenkeyframe_internal_by_linear;
+        case ANIM_INTERPOLATOR_LINEAR:
+            step.callback = tweenkeyframe_internal_by_linear;
             break;
-        case ANIM_MACRO_INTERPOLATOR_CUBIC:
-            keyframe_entry.callback = tweenkeyframe_internal_by_cubic;
+        case ANIM_INTERPOLATOR_CUBIC:
+            step.callback = tweenkeyframe_internal_by_cubic;
             break;
-        case ANIM_MACRO_INTERPOLATOR_QUAD:
-            keyframe_entry.callback = tweenkeyframe_internal_by_quad;
+        case ANIM_INTERPOLATOR_QUAD:
+            step.callback = tweenkeyframe_internal_by_quad;
             break;
-        case ANIM_MACRO_INTERPOLATOR_EXPO:
-            keyframe_entry.callback = tweenkeyframe_internal_by_expo;
+        case ANIM_INTERPOLATOR_EXPO:
+            step.callback = tweenkeyframe_internal_by_expo;
             break;
-        case ANIM_MACRO_INTERPOLATOR_SIN:
-            keyframe_entry.callback = tweenkeyframe_internal_by_sin;
+        case ANIM_INTERPOLATOR_SIN:
+            step.callback = tweenkeyframe_internal_by_sin;
             break;
-        case -1:
-            console.assert(tweenkeyframe.default_interpolator != -1, "invalid default interpolator");
-            interp = tweenkeyframe.default_interpolator;
-            return tweenkeyframe_internal_add(tweenkeyframe, at, id, value, interp, steps_dir, steps_count);
         default:
-            arraylist_remove(tweenkeyframe.arraylist_keyframes, keyframe_entry);
+            if (DEBUG) {
+                console.error("tweenkeyframe_internal_add() unknown interpolator provided");
+            }
+            // this never should happen
+            arraylist_remove(entry.steps, step);
             return -1;
     }
 
-    // store id for values
-    let value_index = 0;
+    tweenkeyframe_internal_calculate_ends(entry);
 
-    L_find_or_add_id: {
-        for (let value_entry of arraylist_iterate4(tweenkeyframe.arraylist_values)) {
-            if (value_entry.id == id) {
-                keyframe_entry.keyframe_value = value_entry;
-                break L_find_or_add_id;
-            }
-            value_index++;
-        }
-
-        let new_value_entry = { id: keyframe_entry.id, value: NaN };
-        value_index = arraylist_add(tweenkeyframe.arraylist_values, new_value_entry) - 1;
-        keyframe_entry.keyframe_value = new_value_entry;
-    }
-
-    tweenkeyframe_internal_calculate_ends(tweenkeyframe);
-    return value_index;
+    return arraylist_index_of(tweenkeyframe.entries, entry);
 }
 
 
-function tweenkeyframe_internal_calculate_ends(tweenkeyframe) {
-    arraylist_sort(tweenkeyframe.arraylist_keyframes, tweenkeyframe_internal_sort);
+function tweenkeyframe_internal_calculate_ends(entry) {
+    // sort steps by starting percent
+    arraylist_sort(entry.steps, tweenkeyframe_internal_sort);
 
-    const array = arraylist_peek_array(tweenkeyframe.arraylist_keyframes);
-    let last_index = arraylist_size(tweenkeyframe.arraylist_keyframes) - 1;
+    let steps = arraylist_peek_array(entry.steps);
+    let steps_count = arraylist_size(entry.steps);
 
-    for (let value of arraylist_iterate4(tweenkeyframe.arraylist_values)) {
-        let last_entry = null;
-
-        for (let i = last_index; i >= 0; i--) {
-            if (array[i].id != value.id) continue;
-
-            if (last_entry) {
-                array[i].value_end = last_entry.value_start;
-                array[i].percent_end = last_entry.percent_start;
-            } else {
-                array[i].value_end = array[i].value_start;
-                array[i].percent_end = 1.0;
-            }
-            last_entry = array[i];
+    for (let i = 0, j = 1; i < steps_count; i++, j++) {
+        if (j < steps_count) {
+            steps[i].value_end = steps[j].value_start;
+            steps[i].percent_end = steps[j].percent_start;
+        } else {
+            steps[i].value_end = steps[i].value_start;
+            steps[i].percent_end = 1.0;
         }
     }
 }
 
 function tweenkeyframe_internal_sort(a, b) {
-    let combo_a = a.percent_start + a.id;
-    let combo_b = b.percent_start + b.id;
-    return combo_a - combo_b;
+    return a.percent_start - b.percent_start;
 }
+
 

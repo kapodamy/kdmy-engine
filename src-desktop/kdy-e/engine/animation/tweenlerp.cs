@@ -23,16 +23,8 @@ public class TweenLerp : IAnimate {
     }
 
     public TweenLerp Clone() {
-        TweenLerp copy = new TweenLerp() {
-            arraylist = this.arraylist.Clone(),
-            progress = this.progress,
-            has_completed = this.has_completed
-        };
-
-        //  (JS & C# only) clone steps_bounds
-        foreach (TweenLerpEntry entry in copy.arraylist) {
-            entry.steps_bounds = new float[] { entry.steps_bounds[0], entry.steps_bounds[1], entry.steps_bounds[2] };
-        }
+        TweenLerp copy = (TweenLerp)this.MemberwiseClone();
+        copy.arraylist = this.arraylist.Clone();
 
         return copy;
     }
@@ -383,13 +375,16 @@ public class TweenLerp : IAnimate {
         if (this.has_completed)
             this.has_completed = InternalAnimateEntry(tweenlerp_entry, (float)this.progress);
 
-        return this.arraylist.Add(tweenlerp_entry) - 1;
+        int index = this.arraylist.Size();
+        this.arraylist.Add(tweenlerp_entry);
+
+        return index;
     }
 
 
     private delegate float TweenLerpCallback(TweenLerpEntry tweenlerp_entry, float progress_percent);
 
-    private class TweenLerpEntry {
+    private class TweenLerpEntry : ICloneable {
         public float duration;
         public float value;
         public int id;
@@ -400,6 +395,12 @@ public class TweenLerp : IAnimate {
         public int steps_count;
         public Align steps_dir;
         public TweenLerpCallback callback;
+
+        public object Clone() {
+            TweenLerpEntry copy = (TweenLerpEntry)this.MemberwiseClone();
+            copy.steps_bounds = CloneUtils.CloneStructArray(steps_bounds, steps_bounds.Length);
+            return copy;
+        }
     }
 
 

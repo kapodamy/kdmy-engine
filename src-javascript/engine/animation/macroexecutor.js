@@ -21,55 +21,82 @@ const MACROEXECUTOR_VERTEX_PROP_COUNT = 74;
 const MACROEXECUTOR_REGISTER_COUNT = 4;// this must match ANIM_MACRO_SPECIAL_REGISTER* count
 
 
-function macroexecutor_init(instructions, instructions_size, frames, frame_count) {
+function macroexecutor_init(animlist_item) {
     let macroexecutor = {};
     macroexecutor.interpolators_stack_size = 0;
-    macroexecutor.instructions_size = instructions_size;
+    macroexecutor.instructions = clone_object(animlist_item.instructions);
+    macroexecutor.instructions_size = animlist_item.instructions_count;
 
-    macroexecutor.frames = frames;
-    macroexecutor.frame_count = frame_count;
-    macroexecutor.frames_dispose = 0;
+    macroexecutor.frames = clone_object(frames);
+    macroexecutor.frame_count = animlist_item.frame_count;
 
-    macroexecutor.random_start = 0;
+    macroexecutor.random_start = 0.0;
     macroexecutor.random_end = 1.0;
     macroexecutor.random_value = 0.5;
     macroexecutor.speed = 1.0;
     macroexecutor.registers = new Array(MACROEXECUTOR_REGISTER_COUNT);
 
-    for (let i = 0; i < instructions_size; i++) {
-        if (!instructions[i])
-            continue;
-        if (instructions[i].type == ANIM_MACRO_INTERPOLATOR)
+    for (let i = 0; i < macroexecutor.instructions_size; i++) {
+        let instruction = macroexecutor.instructions[i];
+
+        // JS & C# only
+        if (!instruction) throw new Error("null item found");
+
+        // (C & C# only) clone values array
+        //instruction.values = clone_array(instruction.values, instruction.values_size);
+
+        if (instruction.type == ANIM_MACRO_INTERPOLATOR)
             macroexecutor.interpolators_stack_size++;
     }
 
     macroexecutor_clear_registers(macroexecutor);
 
-    macroexecutor.interpolators_stack = new Array(macroexecutor.interpolators_stack_size);
-    macroexecutor.instructions = instructions;
+    if (macroexecutor.interpolators_stack_size > 0)
+        macroexecutor.interpolators_stack = new Array(macroexecutor.interpolators_stack_size);
+    else
+        macroexecutor.interpolators_stack = null;
 
     macroexecutor.index = 0;
-    macroexecutor.on_yield = 0;
-    macroexecutor.sleep_time = 0;
+    macroexecutor.on_yield = false;
+    macroexecutor.sleep_time = 0.0;
 
     macroexecutor.frame_index_restart = -1;
-    macroexecutor.frame_allow_change = 0;
+    macroexecutor.frame_allow_change = false;
 
     macroexecutor.state = new Array(MACROEXECUTOR_VERTEX_PROP_COUNT);
     macroexecutor.state_flags = new Array(MACROEXECUTOR_VERTEX_PROP_COUNT);
+
     macroexecutor_state_clear(macroexecutor);
+    macroexecutor.last_step = true;
 
-    for (let i = 0; i < macroexecutor.interpolators_stack_size; i++)
-        macroexecutor.interpolators_stack[i] = null;
-
-    macroexecutor.last_step = 1;
+    // JS & C# only
+    for (let i = 0; i < macroexecutor.interpolators_stack_size; i++) {
+        macroexecutor.interpolators_stack[i] = {
+            definition: null,
+            end: NaN,
+            duration: NaN,
+            steps_bounds: null,
+            progress: NaN,
+            start: NaN,
+            steps_count: -1,
+            steps_method: ALIGN_NONE
+        };
+    }
 
     return macroexecutor;
 }
 
 function macroexecutor_destroy(macroexecutor) {
+    if (!macroexecutor) return;
+
+    for (let i = 0; i < macroexecutor.instructions_size; i++) {
+        macroexecutor.instructions[i].values = undefined;
+    }
+
     macroexecutor.interpolators_stack = undefined;
+    macroexecutor.frames = undefined;
     macroexecutor.instructions = undefined;
+
     macroexecutor = undefined;
 }
 
@@ -88,9 +115,9 @@ function macroexecutor_set_speed(macroexecutor, speed) {
 
 function macroexecutor_restart(macroexecutor) {
     macroexecutor.index = 0;
-    macroexecutor.on_yield = 0;
-    macroexecutor.sleep_time = 0;
-    macroexecutor.last_step = 1;
+    macroexecutor.on_yield = false;
+    macroexecutor.sleep_time = 0.0;
+    macroexecutor.last_step = true;
 
     macroexecutor_state_clear(macroexecutor);
 
@@ -100,7 +127,7 @@ function macroexecutor_restart(macroexecutor) {
     }
 
     for (let i = 0; i < macroexecutor.interpolators_stack_size; i++)
-        macroexecutor.interpolators_stack[i] = null;
+        macroexecutor.interpolators_stack[i].definition = null;
 }
 
 function macroexecutor_animate(macroexecutor, elapsed) {
@@ -109,18 +136,18 @@ function macroexecutor_animate(macroexecutor, elapsed) {
     let running = macroexecutor_interpolators_check(macroexecutor, elapsed);
 
     if (macroexecutor.sleep_time > 0.0 || macroexecutor.on_yield) {
-        if (macroexecutor.on_yield && running > 0) return;
+        if (macroexecutor.on_yield && running > 0) return 0;
 
         if (macroexecutor.sleep_time > 0.0) {
             macroexecutor.sleep_time -= elapsed;
-            if (macroexecutor.sleep_time > 0) return;
+            if (macroexecutor.sleep_time > 0) return 0;
 
             elapsed = -macroexecutor.sleep_time;
         }
 
         // pause/yield instruction completed
         macroexecutor.sleep_time = 0.0;
-        macroexecutor.on_yield = 0;
+        macroexecutor.on_yield = false;
         macroexecutor.index++;
     }
 
@@ -141,9 +168,9 @@ function macroexecutor_animate(macroexecutor, elapsed) {
                 macroexecutor.on_yield = instruction.type == ANIM_MACRO_YIELD;
                 macroexecutor.sleep_time = macroexecutor_resolve_value(macroexecutor, instruction.value);
                 // check for ANIM_MACRO_PAUSE with zero duration 
-                if (!macroexecutor.on_yield && macroexecutor.sleep_time < 1) {
-                    macroexecutor.sleep_time = 0;
-                    macroexecutor.on_yield = 1;
+                if (!macroexecutor.on_yield && macroexecutor.sleep_time <= 0.0) {
+                    macroexecutor.sleep_time = 0.0;
+                    macroexecutor.on_yield = true;
                 }
                 return 0;
             case ANIM_MACRO_RESET:
@@ -257,7 +284,7 @@ function macroexecutor_state_apply_minimal(macroexecutor, sprite) {
 function macroexecutor_state_to_modifier(macroexecutor, modifier, no_stack_changes) {
     for (let i = 0; i < MACROEXECUTOR_VERTEX_PROP_COUNT; i++) {
         if (macroexecutor.state_flags[i])
-            pvrctx_helper_set_modifier_property(modifier, i, macroexecutor.state[i]);
+            pvr_context_helper_set_modifier_property(modifier, i, macroexecutor.state[i]);
     }
 
     if (no_stack_changes) return;
@@ -284,29 +311,25 @@ function macroexecutor_state_from_modifier(macroexecutor, modifier) {
 }
 
 function macroexecutor_is_completed(macroexecutor) {
-    if (!macroexecutor.instructions) return 0;
-    if (macroexecutor.index < macroexecutor.instructions_size) return 0;
+    if (!macroexecutor.instructions) return false;
+    if (macroexecutor.index < macroexecutor.instructions_size) return false;
 
-    let running = 0;
     for (let i = 0; i < macroexecutor.interpolators_stack_size; i++) {
-        let interpolator = macroexecutor.interpolators_stack[i];
-        if (!interpolator || !interpolator.definition) continue;
-
-        running++;
+        if (!macroexecutor.interpolators_stack[i].definition) continue;
+        return false;
     }
 
-    return running > 0 ? 0 : 1;
+    return true;
 }
 
 function macroexecutor_force_end(macroexecutor, sprite) {
     // end all pending interpolators
     for (let i = 0; i < macroexecutor.interpolators_stack_size; i++) {
-        let interpolator = macroexecutor.interpolators_stack[i];
-        if (!interpolator || !interpolator.definition) continue;
+        let stack_entry = macroexecutor.interpolators_stack[i];
+        if (!stack_entry.definition) continue;
 
-        macroexecutor_state_save(macroexecutor, interpolator.definition.property, interpolator.end);
-
-        macroexecutor.interpolators_stack[i].definition = null;
+        macroexecutor_state_save(macroexecutor, stack_entry.definition.property, stack_entry.end);
+        stack_entry.definition = null;
     }
 
     // execute all instructions in "one cycle"
@@ -316,7 +339,7 @@ function macroexecutor_force_end(macroexecutor, sprite) {
 
         switch (instruction.type) {
             case ANIM_MACRO_INTERPOLATOR:
-                macroexecutor_interpolator_stack(macroexecutor, instruction, 1);
+                macroexecutor_interpolator_stack(macroexecutor, instruction, true);
                 break;
             case ANIM_MACRO_SET:
                 let value = macroexecutor_resolve_value(macroexecutor, instruction.value);
@@ -350,56 +373,47 @@ function macroexecutor_force_end(macroexecutor, sprite) {
     }
 
     macroexecutor.sleep_time = 0.0;
-    macroexecutor.on_yield = 0;
+    macroexecutor.on_yield = false;
 
     if (sprite)
-        macroexecutor_state_apply(macroexecutor, sprite, 1);
+        macroexecutor_state_apply(macroexecutor, sprite, true);
 }
 
-function macroexecutor_clone(macroexecutor, clone_frames) {
-    if (!macroexecutor) return null;
+function macroexecutor_clone(macroexecutor) {
+    let copy = clone_object_shallow(macroexecutor);
 
-    let copy = clone_struct(macroexecutor);
-    if (!copy) return null;
+    copy.interpolators_stack = clone_object_shallow(macroexecutor.interpolators_stack);
+    copy.frames = clone_object_shallow(macroexecutor.frames);
+    copy.instructions = clone_object(macroexecutor.instructions);
 
-    if (clone_frames) {
-        copy.frames_dispose = 1;
-        copy.frames = clone_array(copy.frames, copy.frame_count);
-    } else {
-        copy.frame_count = 0;
-        copy.frames = null;
+    // (C & C# only) clone values array
+    /*for (let i = 0; i < copy.instructions_size; i++) {
+        let instruction = copy.instructions[i];
+        instruction.values = clone_array(instruction.values, instruction.values_size);
+    }*/
+
+    for (let i = 0; i < copy.interpolators_stack_size; i++) {
+        let stack_entry = copy.interpolators_stack[i]?.definition;
+        if (!stack_entry) continue;
+
+        for (let j = 0; j < macroexecutor.instructions_size; j++) {
+            if (stack_entry == macroexecutor.instructions[j]) {
+                copy.interpolators_stack[i].definition = copy.instructions[j];
+                break;
+            }
+        }
     }
-
-    copy.interpolators_stack = clone_array(copy.interpolators_stack, copy.interpolators_stack_size);
-    copy.instructions = clone_array(copy.instructions, copy.instructions_size);
-
-    // C# and JS only
-    copy.registers = clone_array(copy.registers, MACROEXECUTOR_REGISTER_COUNT);
-    copy.state = clone_array(copy.state, MACROEXECUTOR_VERTEX_PROP_COUNT);
-    copy.state_flags = clone_array(copy.state_flags, MACROEXECUTOR_VERTEX_PROP_COUNT);
-
-    return copy;
 }
 
-function macroexecutor_state_peek(macroexecutor, property, default_value) {
-    if (property < 0 || property >= MACROEXECUTOR_VERTEX_PROP_COUNT)
-        throw new Error("macroexecutor_state_peek() invalid property enumeration");
-
-    if (macroexecutor.state_flags[property])
-        return default_value;
-    else
-        return macroexecutor.state[property];
+function macroexecutor_get_frame_count(macroexecutor) {
+    return macroexecutor.frame_count;
 }
 
-function macroexecutor_registers_write(macroexecutor, id, value) {
-    if (!Number.isFinite(id) || id < 0 || id >= MACROEXECUTOR_REGISTER_COUNT) return;
-    if (!Number.isFinite(value)) return;
-    macroexecutor.registers[Math.trunc(id)] = value;
-}
+function macroexecutor_get_frame(macroexecutor, index) {
+    if (macroexecutor.frame_count < 1) return null;
+    if (index < 0) index = macroexecutor.state[SPRITE_PROP_FRAMEINDEX];
 
-function macroexecutor_registers_read(macroexecutor, id) {
-    if (!Number.isFinite(id) || id < 0 || id >= MACROEXECUTOR_REGISTER_COUNT) return;
-    return macroexecutor.registers[Math.trunc(id)];
+    return macroexecutor.frames[index];
 }
 
 
@@ -412,7 +426,7 @@ function macroexecutor_registers_read(macroexecutor, id) {
 
 function macroexecutor_clear_flags(macroexecutor) {
     for (let i = 0; i < MACROEXECUTOR_VERTEX_PROP_COUNT; i++)
-        macroexecutor.state_flags[i] = 0;
+        macroexecutor.state_flags[i] = false;
 }
 
 
@@ -427,6 +441,7 @@ function macroexecutor_state_clear(macroexecutor) {
                 break;
             default:
                 value = 0.0;
+                break;
         }
         macroexecutor.state[i] = value;
     }
@@ -451,7 +466,7 @@ function macroexecutor_state_save(macroexecutor, property, value) {
             break;
     }
     macroexecutor.state[property] = value;
-    macroexecutor.state_flags[property] = 1;
+    macroexecutor.state_flags[property] = true;
 }
 
 
@@ -464,8 +479,8 @@ function macroexecutor_apply_frame(macroexecutor, sprite) {
     let frame = macroexecutor.frames[frame_index];
 
     if (macroexecutor.frame_allow_change) {
-        state[SPRITE_PROP_WIDTH] = frame.frame_width > 0 ? frame.frame_width : frame.width;
-        state[SPRITE_PROP_HEIGHT] = frame.frame_height > 0 ? frame.frame_height : frame.height;
+        state[SPRITE_PROP_WIDTH] = frame.frame_width > 0.0 ? frame.frame_width : frame.width;
+        state[SPRITE_PROP_HEIGHT] = frame.frame_height > 0.0 ? frame.frame_height : frame.height;
 
         if (sprite)
             sprite_set_draw_size(sprite, state[SPRITE_PROP_WIDTH], state[SPRITE_PROP_HEIGHT]);
@@ -485,8 +500,8 @@ function macroexecutor_apply_frame2(macroexecutor, statesprite) {
     let frame = macroexecutor.frames[frame_index];
 
     if (macroexecutor.frame_allow_change) {
-        state[SPRITE_PROP_WIDTH] = frame.frame_width > 0 ? frame.frame_width : frame.width;
-        state[SPRITE_PROP_HEIGHT] = frame.frame_height > 0 ? frame.frame_height : frame.height;
+        state[SPRITE_PROP_WIDTH] = frame.frame_width > 0.0 ? frame.frame_width : frame.width;
+        state[SPRITE_PROP_HEIGHT] = frame.frame_height > 0.0 ? frame.frame_height : frame.height;
 
         if (statesprite)
             statesprite_set_draw_size(statesprite, state[SPRITE_PROP_WIDTH], state[SPRITE_PROP_HEIGHT]);
@@ -524,7 +539,7 @@ function macroexecutor_resolve_value(macroexecutor, value) {
     }
 
     //this never should happen
-    return 0;
+    return 0.0;
 }
 
 
@@ -533,8 +548,7 @@ function macroexecutor_interpolator_stack(macroexecutor, instruction, inmediate)
 
     if (!inmediate) {
         for (; i < macroexecutor.interpolators_stack_size; i++) {
-            let interpolator = macroexecutor.interpolators_stack[i];
-            if (interpolator && interpolator.definition) continue;
+            if (macroexecutor.interpolators_stack[i].definition) continue;
             break;
         }
         if (i >= macroexecutor.interpolators_stack_size) return;
@@ -556,31 +570,32 @@ function macroexecutor_interpolator_stack(macroexecutor, instruction, inmediate)
         return;
     }
 
-    macroexecutor.interpolators_stack[i] = {
-        definition: instruction,
-        duration: duration,
-        steps_bounds: [0.0, 0.0, 0.0],
-        progress: 0.0,
-        start: start,
-        end: end,
-        steps_count: steps_count,
-        steps_method: steps_method
-    };
+    let stack_entry = macroexecutor.interpolators_stack[i];
+    stack_entry.definition = instruction;
+    stack_entry.duration = duration;
+    stack_entry.steps_bounds[0] = 0.0;
+    stack_entry.steps_bounds[1] = 0.0;
+    stack_entry.steps_bounds[2] = 0.0;
+    stack_entry.progress = 0.0;
+    stack_entry.start = start;
+    stack_entry.end = end;
+    stack_entry.steps_count = Math.trunc(steps_count);
+    stack_entry.steps_method = Math.trunc(steps_method);
 
-    macroexecutor_interpolator_run(macroexecutor, 0.0, macroexecutor.interpolators_stack[i]);
+    macroexecutor_interpolator_run(macroexecutor, 0.0, stack_entry);
 }
 
 function macroexecutor_interpolators_check(macroexecutor, elapsed) {
     let running = 0;
 
     for (let i = 0; i < macroexecutor.interpolators_stack_size; i++) {
-        let interpolator = macroexecutor.interpolators_stack[i];
-        if (!interpolator || !interpolator.definition) continue;
+        let stack_entry = macroexecutor.interpolators_stack[i];
+        if (!stack_entry.definition) continue;
 
-        let done = macroexecutor_interpolator_run(macroexecutor, elapsed, interpolator);
+        let done = macroexecutor_interpolator_run(macroexecutor, elapsed, stack_entry);
 
         if (done)
-            macroexecutor.interpolators_stack[i].definition = null;
+            stack_entry.definition = null;
         else
             running++;
     }
@@ -593,9 +608,9 @@ function macroexecutor_interpolator_run(macroexecutor, elapsed, interpolator) {
 
     interpolator.progress += elapsed;
     let completed = interpolator.progress >= interpolator.duration;
-    if (completed || percent > 1.0) percent = 1;
+    if (completed || percent > 1.0) percent = 1.0;
 
-    let value = 0;
+    let value = 0.0;
     switch (interpolator.definition.interpolator) {
         case ANIM_INTERPOLATOR_EASE:
             value = macroexecutor_calc_cubicbezier(percent, CUBIC_BREZIER_EASE);
@@ -635,8 +650,8 @@ function macroexecutor_interpolator_run(macroexecutor, elapsed, interpolator) {
     }
 
 
-    if (!Number.isFinite(value) || isNaN(value))
-        throw new Error("macroexecutor: infinite/NaN value found");
+    if (!Number.isFinite(value))
+        throw new Error("macroexecutor_interpolator_run() infinite/NaN value found");
 
     // commit interpolation in the specific range
     value = math2d_lerp(interpolator.start, interpolator.end, value);
@@ -654,7 +669,7 @@ function macroexecutor_calc_cubicbezier(elapsed_time, points) {
     if (input == 0.0 || output == 0.0) return 0.0;// avoid NaN and division by zero exceptions
 
     let res = (elapsed_time * input) / output;
-    //res = math2d_clamp(res, 0.0, 1.0);
+    //res = math2d_clamp_float(res, 0.0, 1.0);
 
     return res;
 }
@@ -666,7 +681,7 @@ function macroexecutor_calc_steps(elapsed_time, bounds, count, direction) {
         count++;
 
         let step_in = 1.0 / count;
-        let offset = direction == ALIGN_BOTH ? 1 : -1;
+        let offset = direction == ALIGN_BOTH ? 1.0 : -1.0;
         let step_out = 1.0 / (count + offset);
         let step_mul = direction == ALIGN_END ? step_in : step_out;
 
@@ -689,12 +704,12 @@ function macroexecutor_calc_steps(elapsed_time, bounds, count, direction) {
 }
 
 function macroexecutor_calc_swing(percent) {
-    return 0.5 - Math.cos(percent * Math.PI) / 2;
+    return 0.5 - Math.cos(percent * Math.PI) / 2.0;
 }
 
 function macroexecutor_calc_log(percent) {
-    let value = Math.log(percent * 100) / MATH2D_LOG100;
-    return value < 0 ? 0 : value;
+    let value = Math.log(percent * 100.0) / MATH2D_LOG100;
+    return value < 0.0 ? 0.0 : value;
 }
 
 
@@ -725,7 +740,7 @@ function macroexecutor_clear_registers(macroexecutor) {
 function macroexecutor_random_exact(macroexecutor, instruction) {
     if (instruction.values_size < 1) {
         // this never should happen
-        macroexecutor.random_value = 0;
+        macroexecutor.random_value = 0.0;
         return;
     }
 

@@ -11,7 +11,6 @@ namespace Engine.Animation;
 public class AnimListItem {
     public string name;
     public bool is_tweenkeyframe;
-    public AnimInterpolator tweenkeyframe_default_interpolator;
     public AnimList.TweenKeyframeEntry[] tweenkeyframe_entries;
     public int tweenkeyframe_entries_count;
     public int loop;
@@ -109,7 +108,7 @@ public class AnimList {
             }
 
             Atlas atlas = AnimList.LoadRequiredAtlas(
-                anims[i], atlas_cache, default_atlas, is_macro, full_path
+                anims[i], atlas_cache, default_atlas, is_macro
             );
             AnimListItem animlist_item;
 
@@ -123,7 +122,7 @@ public class AnimList {
 
         AnimList animlist = new AnimList();
         animlist.entries_count = parsed_animations.Count();
-        animlist.entries = parsed_animations.ToArray();
+        animlist.entries = parsed_animations.ToSolidArray();
         parsed_animations.Destroy();
 
         if (default_atlas != null) default_atlas.Destroy();
@@ -131,11 +130,12 @@ public class AnimList {
         // dispose atlas cache
         foreach (CachedAtlas entry in atlas_cache) {
             if (entry.atlas != null) entry.atlas.Destroy();
-            //free(entry.path);
+            //free(entry.absolute_path);
             //free(entry);
         }
 
         atlas_cache.Destroy();
+        //free(xml);
 
         animlist.src = full_path;
         animlist.id = AnimList.IDS++;
@@ -152,12 +152,12 @@ public class AnimList {
         if (this.references > 0) return;
 
         for (int i = 0 ; i < this.entries_count ; i++) {
+            //if (this.entries[i].name != null) free(this.entries[i].name);
             //if (this.entries[i].frames != null) free(this.entries[i].frames);
             //if (this.entries[i].alternate_set != null) free(this.entries[i].alternate_set);
 
             //for (int j = 0 ; j < this.entries[i].instructions_count ; j++) {
             //    if (this.entries[i].instructions[j].values != null) free(this.entries[i].instructions[j].values);
-            //    free(this.entries[i].instructions[j]);
             //}
 
 
@@ -166,10 +166,10 @@ public class AnimList {
             //free(this.entries[i].instructions);
 
             Luascript.DropShared(this.entries[i]);
-            //free(this.entries[i]);
         }
 
         //free(this.entries);
+        //free(this.src);
         Luascript.DropShared(this);
         AnimList.POOL.Delete(this.id);
         //free(animlist);
@@ -197,37 +197,37 @@ public class AnimList {
 
 
 
-    private static Atlas LoadRequiredAtlas(XmlParserNode animlist_item, LinkedList<CachedAtlas> atlas_list, Atlas def_atlas, bool is_macro, string ref_path) {
+    private static Atlas LoadRequiredAtlas(XmlParserNode animlist_item, LinkedList<CachedAtlas> atlas_list, Atlas def_atlas, bool is_macro) {
         string filename = animlist_item.GetAttribute("atlasPath");
 
         if (filename == null) {
             if (is_macro) return null;
 
             if (def_atlas == null) {
-                Logger.Warn($"animlist_load_required_atlas() animation without atlas: {animlist_item.OuterHTML}");
+                Logger.Warn($"animlist_load_required_atlas() animation without atlas: {animlist_item.OuterXML}");
             }
             return def_atlas;
         }
 
+        string absolute_path = FS.GetFullPathAndOverride(filename);
         CachedAtlas obj = null;
 
         foreach (CachedAtlas entry in atlas_list) {
-            if (entry.path == filename) {
+            if (entry.absolute_path == absolute_path) {
                 obj = entry;
                 break;
             }
         }
 
-        if (obj == null) {
-            // JS only (build path)
-            string atlas_path = FS.BuildPath2(ref_path, filename);
-            obj = new CachedAtlas() { path = filename, atlas = LoadAtlas(atlas_path) };
-            //free(atlas_path);
+        if (obj != null) {
+            //free(absolute_path);
+        } else {
+            obj = new CachedAtlas() { absolute_path = absolute_path, atlas = LoadAtlas(absolute_path) };
             atlas_list.AddItem(obj);
         }
 
         if (obj.atlas == null) {
-            Logger.Warn($"animlist_load_required_atlas() missing atlas {filename}: {animlist_item.OuterHTML}");
+            Logger.Warn($"animlist_load_required_atlas() missing atlas {filename}: {animlist_item.OuterXML}");
         }
 
         return obj.atlas;
@@ -240,11 +240,11 @@ public class AnimList {
     private static AnimListItem ReadFrameAnimation(XmlParserNode entry, Atlas atlas, float default_fps) {
         string name = entry.GetAttribute("name");
         if (name == null) {
-            Logger.Warn($"animlist_read_frame_animation() missing animation name: {entry.OuterHTML}");
+            Logger.Warn($"animlist_read_frame_animation() missing animation name: {entry.OuterXML}");
             return null;
         }
         if (atlas == null) {
-            Logger.Warn($"animlist_read_frame_animation() missing atlas: {entry.OuterHTML}");
+            Logger.Warn($"animlist_read_frame_animation() missing atlas: {entry.OuterXML}");
             return null;
         }
 
@@ -278,17 +278,12 @@ public class AnimList {
                     AnimList.ReadEntriesToFramesArray(
                         parsed_frames, frame_name, has_number_suffix, atlas, index_start, index_end
                     );
-
-                    //if (name_prefix) free(name_prefix);
-                    //if (name_suffix) free(name_suffix);
-                    //free(frame_name);
                     break;
                 case "Frame":
-                    string name_frame = frames[i].GetAttribute("entryName");
-                    if (!String.IsNullOrEmpty(name_frame)) name = name_frame;
+                    string entry_name = frames[i].GetAttribute("entryName");
+                    if (String.IsNullOrEmpty(entry_name)) entry_name = name;
 
-                    AnimList.AddEntryFromAtlas(parsed_frames, name, atlas);
-                    //if (name_frame != name) free(name_frame);
+                    AnimList.AddEntryFromAtlas(parsed_frames, entry_name, atlas);
                     break;
                 case "Pause":
                     float duration = VertexProps.ParseFloat(frames[i], "duration", 1);
@@ -309,7 +304,7 @@ public class AnimList {
                     anim.loop_from_index = parsed_frames.Count() - offset;
                     break;
                 default:
-                    Logger.Warn($"animlist_read_frame_animation() unknown frame type {frames[i].TagName}: {frames[i].OuterHTML}");
+                    Logger.Warn($"animlist_read_frame_animation() unknown frame type {frames[i].TagName}: {frames[i].OuterXML}");
                     break;
             }
         }
@@ -672,7 +667,7 @@ public class AnimList {
                     break;
                 default:
                     Logger.Warn(
-                        $"animlist_read_macro_animation() unknown instruction {unparsed_list[i].TagName}: {unparsed_list[i].OuterHTML}"
+                        $"animlist_read_macro_animation() unknown instruction {unparsed_list[i].TagName}: {unparsed_list[i].OuterXML}"
                     );
                     break;
             }
@@ -705,7 +700,7 @@ public class AnimList {
 
         Tokenizer tokenizer = Tokenizer.Init("\x20", true, false, unparsed_values);
         if (tokenizer == null) {
-            Logger.Warn($"missing attribute values in RandomExact: {unparsed_randomexact.OuterHTML}");
+            Logger.Warn($"animlist_parse_randomexact() missing attribute values in RandomExact: {unparsed_randomexact.OuterXML}");
             size = -1;
             return null;
         }
@@ -719,24 +714,24 @@ public class AnimList {
 
             if (parsed_value.reference == VertexProps.TEXTSPRITE_PROP_STRING && parsed_value.kind == MacroExecutorValueKind.PROPERTY) {
                 Logger.Error(
-                    $"animlist_read_macro_animation() illegal 'string' property used: {unparsed_randomexact.OuterHTML}"
+                    $"animlist_read_macro_animation() illegal 'string' property used: {unparsed_randomexact.OuterXML}"
                 );
 
-                //free(string);
+                //free(str);
                 continue;
             }
 
             if (Single.IsNaN(parsed_value.literal) && parsed_value.kind == MacroExecutorValueKind.LITERAL) {
                 Logger.Error(
-                    $"animlist_read_macro_animation() invalid or unreconized value found: {unparsed_randomexact.OuterHTML}"
+                    $"animlist_read_macro_animation() invalid or unreconized value found: {unparsed_randomexact.OuterXML}"
                 );
 
-                //free(string);
+                //free(str);
                 continue;
             }
 
             parsed_values.Add(parsed_value);
-            //free(string);
+            //free(str);
 
         }
         tokenizer.Destroy();
@@ -756,12 +751,12 @@ public class AnimList {
         if (value < 0) value = VertexProps.ParseCameraProperty(node, name, false);
 
         if (value == VertexProps.TEXTSPRITE_PROP_STRING) {
-            Logger.Error($"animlist_parse_property() illegal 'string' property: {node.OuterHTML}");
+            Logger.Error($"animlist_parse_property() illegal 'string' property: {node.OuterXML}");
             return -1;
         }
 
         if (value < 0 && warn) {
-            Logger.Warn($"animlist_parse_property() unknown property: {node.OuterHTML}");
+            Logger.Warn($"animlist_parse_property() unknown property: {node.OuterXML}");
         }
 
         return value;
@@ -775,7 +770,7 @@ public class AnimList {
         if (entry.HasAttribute("referenceDuration")) {
             reference_duration = VertexProps.ParseFloat(entry, "referenceDuration", Single.NaN);
             if (Single.IsNaN(reference_duration)) {
-                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid tweenkeyframe 'referenceDuration' value: {entry.OuterHTML}");
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid tweenkeyframe 'referenceDuration' value: {entry.OuterXML}");
                 reference_duration = 1;
             }
         }
@@ -791,7 +786,7 @@ public class AnimList {
 
             string unparsed_at = node.GetAttribute("at");
             if (String.IsNullOrEmpty(unparsed_at)) {
-                Logger.Warn($"animlist_read_tweenkeyframe_animation() missing Keyframe 'at' attribute: {node.OuterHTML}");
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() missing Keyframe 'at' attribute: {node.OuterXML}");
                 continue;
             }
 
@@ -799,7 +794,7 @@ public class AnimList {
 
             if (unparsed_at.IndexOf('%') >= 0) {
                 if (reference_duration > 1) {
-                    Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid Keyframe, 'at' is a percent value and TweenKeyframe have 'referenceDuration' attribute: {node.OuterHTML}");
+                    Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid Keyframe, 'at' is a percent value and TweenKeyframe have 'referenceDuration' attribute: {node.OuterXML}");
                     continue;
                 }
 
@@ -810,14 +805,14 @@ public class AnimList {
                 }
             } else {
                 if (reference_duration < 1) {
-                    Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid Keyframe, 'at' is a timestamp value and TweenKeyframe does not have 'referenceDuration' attribute: {node.OuterHTML}");
+                    Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid Keyframe, 'at' is a timestamp value and TweenKeyframe does not have 'referenceDuration' attribute: {node.OuterXML}");
                     continue;
                 }
                 at = VertexProps.ParseFloat2(unparsed_at, Single.NaN);
             }
 
             if (Single.IsNaN(at)) {
-                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid 'at' value: {node.OuterHTML}");
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid 'at' value: {node.OuterXML}");
                 continue;
             }
 
@@ -833,19 +828,19 @@ public class AnimList {
 
             int steps_count = VertexProps.ParseInteger(node, "stepsCount", -1);
             if (keyframe_interpolator == AnimInterpolator.STEPS && steps_count < 0) {
-                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid o missing 'stepsCount' value: {node.OuterHTML}");
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid o missing 'stepsCount' value: {node.OuterXML}");
                 continue;
             }
 
             Align steps_dir = VertexProps.ParseAlign2(node.GetAttribute("stepsMethod"));
             if (keyframe_interpolator == AnimInterpolator.STEPS && (steps_dir == Align.CENTER || steps_dir < 0)) {
-                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid o missing 'stepsMethod' value: {node.OuterHTML}");
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid o missing 'stepsMethod' value: {node.OuterXML}");
                 continue;
             }
 
             float value = VertexProps.ParseFloat(node, "value", Single.NaN);
             if (Single.IsNaN(value)) {
-                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid 'value' value: {node.OuterHTML}");
+                Logger.Warn($"animlist_read_tweenkeyframe_animation() invalid 'value' value: {node.OuterXML}");
                 continue;
             }
 
@@ -861,14 +856,8 @@ public class AnimList {
             arraylist.Add(keyframe);
         }
 
-        AnimInterpolator interpolator = AnimInterpolator.LINEAR;
-        if (entry.HasAttribute("defaultInterpolator"))
-            interpolator = AnimList.ParseInterpolator(entry, "defaultInterpolator");
-
-
         AnimListItem item = new AnimListItem() {
             name = entry.GetAttribute("name"),
-            tweenkeyframe_default_interpolator = interpolator,
             is_tweenkeyframe = true,
             tweenkeyframe_entries = null,
             tweenkeyframe_entries_count = 0
@@ -896,7 +885,7 @@ public class AnimList {
     }
 
     private class CachedAtlas {
-        public string path;
+        public string absolute_path;
         public Atlas atlas;
     }
 

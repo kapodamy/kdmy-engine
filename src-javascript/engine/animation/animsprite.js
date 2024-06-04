@@ -19,16 +19,11 @@ function animsprite_init_from_atlas(frame_rate, loop, atlas, prefix, has_number_
 
         if (has_number_suffix) {
             // attempt to obtain one frame without number suffix
-            let atlas_entry = atlas_get_entry(atlas, prefix);
+            atlas_entry = atlas_get_entry(atlas, prefix);
             if (atlas_entry) {
                 linkedlist_add_item(frames, atlas_entry);
                 frame_count++;
             }
-        }
-
-        if (!atlas_entry) {
-            linkedlist_destroy(frames);
-            return null;
         }
     }*/
 
@@ -64,23 +59,17 @@ function animsprite_init_from_animlist(animlist, animation_name) {
     return null;
 }
 
-function animprite_init_from_macroexecutor(name, loop, macroexecutor) {
-    let animsprite = animsprite_internal_init(name, loop, 0);
-    animsprite.macroexecutor = macroexecutor_clone(macroexecutor, 1);
-    return animsprite;
-}
-
 function animsprite_init_from_tweenlerp(name, loop, tweenlerp) {
     if (!tweenlerp) return null;
 
-    let animsprite = animsprite_internal_init(name, loop, 0);
+    let animsprite = animsprite_internal_init(name, loop, 0.0);
     animsprite.tweenlerp = tweenlerp_clone(tweenlerp);
     return animsprite;
 }
 
 function animsprite_init_as_empty(name) {
-    let animsprite = animsprite_internal_init(name, 0, 0);
-    animsprite.is_empty = 1;
+    let animsprite = animsprite_internal_init(name, 0, 0.0);
+    animsprite.is_empty = true;
     return animsprite;
 }
 
@@ -92,6 +81,21 @@ function animsprite_init(animlist_item) {
         return null;
     }
 
+    animsprite = animsprite_internal_init(
+        animlist_item.name, animlist_item.loop, animlist_item.frame_rate
+    );
+
+    if (animlist_item.instructions_count > 0) {
+        animsprite.macroexecutor = macroexecutor_init(animlist_item);
+        macroexecutor_set_restart_in_frame(
+            animsprite.macroexecutor,
+            animlist_item.frame_restart_index, animlist_item.frame_allow_size_change
+        );
+    }
+
+    //
+    // Initialize frame animation
+    //
     if (animlist_item.alternate_set_size > 0) {
         let frame_count = 0;
         for (let i = 0; i < animlist_item.alternate_set_size; i++)
@@ -101,51 +105,22 @@ function animsprite_init(animlist_item) {
             throw new Error("Invalid animlist_item.alternate_set");
     }
 
-    animsprite = animsprite_internal_init(
-        animlist_item.name, animlist_item.loop, animlist_item.frame_rate
-    );
-
     animsprite.alternate_per_loop = animlist_item.alternate_per_loop;
     animsprite.alternate_size = animlist_item.alternate_set_size;
-    animsprite.alternate_set = clone_array(
-        animlist_item.alternate_set,
-        animlist_item.alternate_set_size
-    );
+    animsprite.alternate_set = clone_object(animlist_item.alternate_set);
     if (animlist_item.alternate_no_random) animsprite.alternate_index = 0;
 
     animsprite.frame_count = animlist_item.frame_count;
-    animsprite.frames = clone_array(animlist_item.frames, animlist_item.frame_count);
+    animsprite.frames = clone_object(animlist_item.frames/*, animlist_item.frame_count*/);
     animsprite.loop_from_index = animlist_item.loop_from_index;
-
-    if (animlist_item.instructions_count > 0) {
-        let instructions = clone_array(animlist_item.instructions, animlist_item.instructions_count);
-        for (let i = 0; i < animlist_item.instructions_count; i++) {
-            instructions[i].values = clone_array(instructions[i].values, instructions[i].values_size);
-        }
-
-        animsprite.macroexecutor = macroexecutor_init(
-            instructions, animlist_item.instructions_count, animsprite.frames, animlist_item.frame_count
-        );
-
-        macroexecutor_set_restart_in_frame(
-            animsprite.macroexecutor,
-            animlist_item.frame_restart_index, animlist_item.frame_allow_size_change
-        );
-    }
 
     return animsprite;
 }
 
 function animsprite_destroy(animsprite) {
-    if (animsprite.frames != null) {
-        for (let i = 0; i < animsprite.frame_count; i++) {
-            animsprite.frames[i].name = undefined;
-        }
-        animsprite.frames = undefined;
-    }
-
-    if (animsprite.alternate_set)
-        animsprite.alternate_set = undefined;
+    animsprite.name = undefined;
+    animsprite.frames = undefined;
+    animsprite.alternate_set = undefined;
 
     if (animsprite.macroexecutor)
         macroexecutor_destroy(animsprite.macroexecutor);
@@ -155,29 +130,24 @@ function animsprite_destroy(animsprite) {
 
     ANIMSPRITE_POOL.delete(animsprite.id);
 
-    ModuleLuaScript.kdmyEngine_drop_shared_object(animsprite);
+    luascript_drop_shared(animsprite);
     animsprite = undefined;
 }
 
 function animsprite_clone(animsprite) {
-    let copy = clone_struct(animsprite);
-    if (!copy) return null;
+    let copy = clone_object_shallow(animsprite);
 
     copy.id = ANIMSPRITE_IDS++;
     ANIMSPRITE_POOL.set(copy.id, copy);
 
-    copy.alternate_set = clone_array(animsprite.alternate_set, animsprite.alternate_size);
-    copy.frames = clone_array(animsprite.frames, animsprite.frame_count);
+    copy.alternate_set = clone_object(animsprite.alternate_set/*, animsprite.alternate_size*/);
+    copy.frames = clone_object(animsprite.frames/*, animsprite.frame_count*/);
 
-    if (copy.macroexecutor) {
-        copy.macroexecutor = macroexecutor_clone(animsprite.macroexecutor, 0);
-        copy.macroexecutor.frames = copy.frames;
-        copy.macroexecutor.frame_count = copy.frame_count;
-    }
+    if (copy.macroexecutor) 
+        copy.macroexecutor = macroexecutor_clone(animsprite.macroexecutor);
 
-    if (copy.tweenlerp) {
+    if (copy.tweenlerp) 
         copy.tweenlerp = tweenlerp_clone(animsprite.tweenlerp);
-    }
 
     return copy;
 }
@@ -190,10 +160,10 @@ function animsprite_restart(animsprite) {
     if (animsprite.is_empty) return;
 
     animsprite.loop_progress = 0;
-    animsprite.has_looped = 0;
-    animsprite.disable_loop = 0;
+    animsprite.has_looped = false;
+    animsprite.disable_loop = false;
     animsprite.delay_progress = 0.0;
-    animsprite.delay_active = animsprite.delay > 0;
+    animsprite.delay_active = animsprite.delay > 0.0;
 
     if (animsprite.macroexecutor) {
         macroexecutor_restart(animsprite.macroexecutor);
@@ -205,25 +175,24 @@ function animsprite_restart(animsprite) {
         return;
     }
 
-    animsprite.progress = 0;
+    animsprite.progress = 0.0;
     animsprite.current_index = 0;
 
-    animsprite_internal_alternate_choose(animsprite, 0);
+    animsprite_internal_alternate_choose(animsprite, false);
 }
 
 function animsprite_animate(animsprite, elapsed) {
-    if (!Number.isFinite(elapsed)) throw new Error("invalid elapsed argument");
+    if (Number.isNaN(elapsed)) throw new Error("invalid elapsed argument");
     if (animsprite.is_empty) return 0;
-    if (!Number.isFinite(animsprite.loop_progress)) return 1;
     if (animsprite.loop > 0 && animsprite.loop_progress >= animsprite.loop) return 1;
     if (animsprite.loop_progress == MATH2D_MAX_INT32) return 1;
 
-    if (animsprite.delay_active && animsprite.delay > 0) {
+    if (animsprite.delay_active && animsprite.delay > 0.0) {
         animsprite.delay_progress += elapsed;
         if (animsprite.delay_progress < animsprite.delay) return 0;
 
         elapsed = animsprite.delay_progress - animsprite.delay;
-        animsprite.delay_active = 0;
+        animsprite.delay_active = false;
         animsprite.delay_progress = 0.0;
     }
 
@@ -238,12 +207,12 @@ function animsprite_animate(animsprite, elapsed) {
             completed = tweenlerp_animate(animsprite.tweenlerp, elapsed);
 
         if (completed) {
-            animsprite.delay_active = animsprite.delay > 0;
-            animsprite.delay_progress = 0;
-            animsprite.has_looped = 1;
+            animsprite.delay_active = animsprite.delay > 0.0;
+            animsprite.delay_progress = 0.0;
+            animsprite.has_looped = true;
 
             if (animsprite.disable_loop) {
-                animsprite.loop_progress = Infinity;
+                animsprite.loop_progress = MATH2D_MAX_INT32;
                 return 1;
             }
 
@@ -262,17 +231,17 @@ function animsprite_animate(animsprite, elapsed) {
     animsprite.current_index = Math.trunc(new_index);
 
     if (animsprite.current_index >= animsprite.frame_count) {
-        animsprite.has_looped = 1;
+        animsprite.has_looped = true;
         if (animsprite.disable_loop) {
-            animsprite.loop_progress = Infinity;
+            animsprite.loop_progress = MATH2D_MAX_INT32;
             return 1;
         }
         if (animsprite.loop > 0) {
             animsprite.loop_progress++;
             if (animsprite.loop_progress >= animsprite.loop) return 1;
         }
-        animsprite_internal_alternate_choose(animsprite, 1);
-        animsprite.delay_active = animsprite.delay > 0;
+        animsprite_internal_alternate_choose(animsprite, true);
+        animsprite.delay_active = animsprite.delay > 0.0;
         animsprite.current_index = animsprite.loop_from_index;
         animsprite.progress = animsprite.loop_from_index * animsprite.frame_time;
     }
@@ -286,9 +255,9 @@ function animsprite_get_name(animsprite) {
 
 
 function animsprite_is_completed(animsprite) {
-    if (animsprite.is_empty) return 1;
-    if (animsprite.loop < 1) return 0;
-    if (animsprite.loop_progress >= animsprite.loop) return 1;
+    if (animsprite.is_empty) return true;
+    if (animsprite.loop < 1) return false;
+    if (animsprite.loop_progress >= animsprite.loop) return true;
 
     if (animsprite.macroexecutor)
         return macroexecutor_is_completed(animsprite.macroexecutor);
@@ -304,16 +273,16 @@ function animsprite_is_frame_animation(animsprite) {
 
 function animsprite_has_looped(animsprite) {
     let has_looped = animsprite.has_looped;
-    if (has_looped) animsprite.has_looped = 0;
+    if (has_looped) animsprite.has_looped = false;
     return has_looped;
 }
 
 function animsprite_disable_loop(animsprite) {
-    animsprite.disable_loop = 1;
+    animsprite.disable_loop = true;
 }
 
 function animsprite_stop(animsprite) {
-    animsprite.loop_progress = Infinity;
+    animsprite.loop_progress = MATH2D_MAX_INT32;
 }
 
 
@@ -327,7 +296,7 @@ function animsprite_force_end(animsprite) {
     else
         animsprite.current_index = animsprite.frame_count - 1;
 
-    animsprite.delay_active = 0;
+    animsprite.delay_active = false;
 
     if (animsprite.loop != 0) animsprite.loop_progress++;
 }
@@ -338,7 +307,7 @@ function animsprite_force_end2(animsprite, sprite) {
 
     if (!sprite) return;
 
-    animsprite_update_sprite(animsprite, sprite, 0);
+    animsprite_update_sprite(animsprite, sprite, false);
 }
 
 function animsprite_force_end3(animsprite, statesprite) {
@@ -347,13 +316,13 @@ function animsprite_force_end3(animsprite, statesprite) {
 
     if (!statesprite) return;
 
-    animsprite_update_statesprite(animsprite, statesprite, 0);
+    animsprite_update_statesprite(animsprite, statesprite, false);
 }
 
 function animsprite_set_delay(animsprite, delay_milliseconds) {
     animsprite.delay = delay_milliseconds;
     animsprite.delay_progress = 0.0;// ¿should clear the delay progress?
-    animsprite.delay_active = 1;
+    animsprite.delay_active = true;
 }
 
 function animsprite_update_sprite(animsprite, sprite, stack_changes) {
@@ -425,12 +394,12 @@ function animsprite_get_macroexecutor(animsprite) {
 
 
 function animsprite_rollback(animsprite, elapsed) {
-    if (animsprite.progress <= 0) return 1;// completed
+    if (animsprite.progress <= 0.0) return true;// completed
 
     if (animsprite.macroexecutor) {
         // imposible rollback a macroexecutor animation
-        animsprite.progress = 0;
-        return 1;
+        animsprite.progress = 0.0;
+        return true;
     } else if (animsprite.tweenlerp) {
         // tweenlerp animation
         tweenlerp_animate_timestamp(animsprite.tweenlerp, animsprite.progress);
@@ -440,12 +409,16 @@ function animsprite_rollback(animsprite, elapsed) {
     }
 
     animsprite.progress -= elapsed;
-    return 0;
+    return false;
 }
 
 function animsprite_helper_get_first_frame_atlas_entry(animsprite) {
-    if (animsprite.frame_count < 1) return null;
-    return animsprite.frames[0];
+    if (animsprite.macroexecutor)
+        return macroexecutor_get_frame(animsprite.macroexecutor, 0);
+    else if (animsprite.frame_count > 0)
+        return animsprite.frames[0];
+    else
+        return null;
 }
 
 function animsprite_allow_override_sprite_size(animsprite, enable) {
@@ -467,8 +440,8 @@ function animsprite_internal_apply_frame(animsprite, sprite, index) {
     if (animsprite.allow_override_size) {
         sprite_set_draw_size(
             sprite,
-            frame.frame_width > 0 ? frame.frame_width : frame.width,
-            frame.frame_height > 0 ? frame.frame_height : frame.height
+            frame.frame_width > 0.0 ? frame.frame_width : frame.width,
+            frame.frame_height > 0.0 ? frame.frame_height : frame.height
         );
     }
 }
@@ -493,8 +466,8 @@ function animsprite_internal_apply_frame2(animsprite, statesprite, index) {
     if (animsprite.allow_override_size) {
         statesprite_set_draw_size(
             statesprite,
-            frame.frame_width > 0 ? frame.frame_width : frame.width,
-            frame.frame_height > 0 ? frame.frame_height : frame.height
+            frame.frame_width > 0.0 ? frame.frame_width : frame.width,
+            frame.frame_height > 0.0 ? frame.frame_height : frame.height
         );
     }
 }
@@ -513,16 +486,14 @@ function animsprite_internal_alternate_choose(animsprite, loop) {
         index = animsprite.alternate_index;
     }
 
-
     let alternate = animsprite.alternate_set[index];
-
     animsprite.current_offset = alternate.index;
     animsprite.frame_count = alternate.length;
 }
 
 
 function animsprite_internal_init(name, loop, frame_rate) {
-    let frame_time = frame_rate > 0 ? (1000.0 / frame_rate) : 0;
+    let frame_time = frame_rate > 0.0 ? (1000.0 / frame_rate) : 0.0;
     if (name) name = strdup(name);
 
     let animsprite = {
@@ -534,30 +505,29 @@ function animsprite_internal_init(name, loop, frame_rate) {
         loop_from_index: 0,
 
         frame_time: frame_time,
-        length: 0,
 
         loop: loop,
         loop_progress: 0,
-        has_looped: 0,
-        disable_loop: 0,
+        has_looped: false,
+        disable_loop: false,
 
-        progress: 0,
+        progress: 0.0,
 
         current_index: 0,
         current_offset: 0,
 
-        delay: 0,
-        delay_progress: 0,
-        delay_active: 0,
+        delay: 0.0,
+        delay_progress: 0.0,
+        delay_active: false,
 
-        is_empty: 0,
+        is_empty: false,
 
         alternate_set: null,
         alternate_size: 0,
-        alternate_per_loop: 0,
+        alternate_per_loop: false,
         alternate_index: -1,
 
-        allow_override_size: 0,
+        allow_override_size: false,
 
         macroexecutor: null,
         tweenlerp: null

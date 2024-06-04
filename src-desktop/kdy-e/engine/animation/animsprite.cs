@@ -15,12 +15,11 @@ public class AnimSprite {
 
 
     private int id;
-    internal string name;
+    private string name;
     private AtlasEntry[] frames;
     private int frame_count;
     private int loop_from_index;
     private double frame_time;
-    private int length;
     private int loop;
     private int loop_progress;
     private bool has_looped;
@@ -55,16 +54,11 @@ public class AnimSprite {
 
             if (has_number_suffix) {
                 // attempt to obtain one frame without number suffix
-                AtlasEntry atlas_entry = atlas.GetEntry(prefix);
+                atlas_entry = atlas.GetEntry(prefix);
                 if (atlas_entry) {
                     frames.AddItem(atlas_entry);
                     frame_count++;
                 }
-            }
-
-            if (atlas_entry == null) {
-                frames.Destroy();
-                return null;
             }
         }*/
 
@@ -87,7 +81,7 @@ public class AnimSprite {
         AnimSprite animsprite = AnimSprite.InternalInit(atlas_entry.name, loop, frame_rate);
         animsprite.frame_count = 1;
         animsprite.frames = new AtlasEntry[1];
-        animsprite.frames[0] = atlas_entry.Clone();
+        animsprite.frames[0] = CloneUtils.CloneObject(atlas_entry);
         return animsprite;
     }
 
@@ -98,14 +92,6 @@ public class AnimSprite {
             }
         }
         return null;
-    }
-
-    public static AnimSprite InitFromMacroexecutor(string name, int loop, MacroExecutor macroexecutor) {
-        if (macroexecutor == null) return null;
-
-        AnimSprite animsprite = AnimSprite.InternalInit(name, loop, 0);
-        animsprite.macroexecutor = macroexecutor.Clone(true);
-        return animsprite;
     }
 
     public static AnimSprite InitFromTweenLerp(string name, int loop, TweenLerp tweenlerp) {
@@ -130,6 +116,20 @@ public class AnimSprite {
             return null;
         }
 
+        animsprite = AnimSprite.InternalInit(
+           animlist_item.name, animlist_item.loop, animlist_item.frame_rate
+        );
+
+        if (animlist_item.instructions_count > 0) {
+            animsprite.macroexecutor = new MacroExecutor(animlist_item);
+            animsprite.macroexecutor.SetRestartInFrame(
+                animlist_item.frame_restart_index, animlist_item.frame_allow_size_change
+            );
+        }
+
+        //
+        // Initialize frame animation
+        //
         if (animlist_item.alternate_set_size > 0) {
             int frame_count = 0;
             for (int i = 0 ; i < animlist_item.alternate_set_size ; i++)
@@ -139,36 +139,14 @@ public class AnimSprite {
                 throw new Exception("Invalid animlist_item.alternate_set");
         }
 
-        animsprite = AnimSprite.InternalInit(
-           animlist_item.name, animlist_item.loop, animlist_item.frame_rate
-       );
-
         animsprite.alternate_per_loop = animlist_item.alternate_per_loop;
         animsprite.alternate_size = animlist_item.alternate_set_size;
-        animsprite.alternate_set = CloneUtils.CloneArray(
-            animlist_item.alternate_set,
-            animlist_item.alternate_set_size
-        );
+        animsprite.alternate_set = CloneUtils.CloneStructArray(animlist_item.alternate_set, animlist_item.alternate_set_size);
         if (animlist_item.alternate_no_random) animsprite.alternate_index = 0;
 
         animsprite.frame_count = animlist_item.frame_count;
-        animsprite.frames = CloneUtils.CloneArray(animlist_item.frames, animlist_item.frame_count);
+        animsprite.frames = CloneUtils.CloneClassArray(animlist_item.frames, animlist_item.frame_count);
         animsprite.loop_from_index = animlist_item.loop_from_index;
-
-        if (animlist_item.instructions_count > 0) {
-            MacroExecutorInstruction[] instructions = CloneUtils.CloneArray(animlist_item.instructions, animlist_item.instructions_count);
-            for (int i = 0 ; i < animlist_item.instructions_count ; i++) {
-                instructions[i].values = CloneUtils.CloneArray(instructions[i].values, instructions[i].values_size);
-            }
-
-            animsprite.macroexecutor = new MacroExecutor(
-                instructions, animlist_item.instructions_count, animsprite.frames, animlist_item.frame_count
-            );
-
-            animsprite.macroexecutor.SetRestartInFrame(
-                animlist_item.frame_restart_index, animlist_item.frame_allow_size_change
-            );
-        }
 
         return animsprite;
     }
@@ -176,15 +154,9 @@ public class AnimSprite {
     public void Destroy() {
         //if (this == null) return;
 
-        //if (this.frames != null) {
-        //    for (int i=0 ; i<this.frame_count ; i++) {
-        //        free(this.frames[i].name);
-        //    }
-        //    free(this.frames);
-        //}
-
-        //if (this.alternate_set != null)
-        //    free(this.alternate_set);
+        //free(this.name);
+        //free(this.frames);
+        //free(this.alternate_set);
 
         if (this.macroexecutor != null)
             this.macroexecutor.Destroy();
@@ -201,52 +173,16 @@ public class AnimSprite {
     public AnimSprite Clone() {
         //if (this == null) return null;
 
-        AnimSprite copy = new AnimSprite() {
-            id = AnimSprite.IDS++,
-            name = this.name,
-
-            frames = this.frames,
-            frame_count = this.frame_count,
-
-            frame_time = this.frame_time,
-            length = this.length,
-
-            loop = this.loop,
-            loop_progress = this.loop_progress,
-            has_looped = this.has_looped,
-            disable_loop = this.disable_loop,
-
-            progress = this.progress,
-
-            current_index = this.current_index,
-            current_offset = this.current_offset,
-
-            delay = this.delay,
-            delay_progress = this.delay_progress,
-            delay_active = this.delay_active,
-
-            is_empty = this.is_empty,
-
-            alternate_set = this.alternate_set,
-            alternate_size = this.alternate_size,
-            alternate_per_loop = this.alternate_per_loop,
-            alternate_index = this.alternate_index,
-
-            macroexecutor = this.macroexecutor,
-            tweenlerp = this.tweenlerp,
-        };
-        //if (copy == null) return null;
+        AnimSprite copy = (AnimSprite)this.MemberwiseClone();
 
         copy.id = AnimSprite.IDS++;
         AnimSprite.POOL.Set(copy.id, copy);
 
-        copy.alternate_set = CloneUtils.CloneArray(this.alternate_set, this.alternate_size);
-        copy.frames = CloneUtils.CloneArray(this.frames, this.frame_count);
+        copy.alternate_set = CloneUtils.CloneStructArray(this.alternate_set, this.alternate_size);
+        copy.frames = CloneUtils.CloneClassArray(this.frames, this.frame_count);
 
         if (copy.macroexecutor != null) {
-            copy.macroexecutor = this.macroexecutor.Clone(false);
-            copy.macroexecutor.frames = copy.frames;
-            copy.macroexecutor.frame_count = copy.frame_count;
+            copy.macroexecutor = this.macroexecutor.Clone();
         }
 
         if (copy.tweenlerp != null) {
@@ -288,7 +224,6 @@ public class AnimSprite {
     public int Animate(float elapsed) {
         if (Single.IsNaN(elapsed)) throw new NaNArgumentError("invalid elapsed argument");
         if (this.is_empty) return 0;
-        if (Single.IsNaN(this.loop_progress)) return 1;
         if (this.loop > 0 && this.loop_progress >= this.loop) return 1;
         if (this.loop_progress == Int32.MaxValue) return 1;
 
@@ -516,8 +451,12 @@ public class AnimSprite {
     }
 
     public AtlasEntry HelperGetFirstFrameAtlasEntry() {
-        if (this.frame_count < 1) return null;
-        return this.frames[0];
+        if (this.macroexecutor != null)
+            return this.macroexecutor.GetFrame(0);
+        else if (this.frame_count > 0)
+            return this.frames[0];
+        else
+            return null;
     }
 
     public void AllowOverrideSpriteSize(bool enable) {
@@ -583,9 +522,7 @@ public class AnimSprite {
             index = this.alternate_index;
         }
 
-
         AnimList.AlternateEntry alternate = this.alternate_set[index];
-
         this.current_offset = alternate.index;
         this.frame_count = alternate.length;
     }
@@ -604,7 +541,6 @@ public class AnimSprite {
             loop_from_index = 0,
 
             frame_time = frame_time,
-            length = 0,
 
             loop = loop,
             loop_progress = 0,
