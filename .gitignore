@@ -5,6 +5,9 @@
 /fontatlas/.vscode/*.log
 /fontatlas/output/
 
+/luascript-js/.vscode/*.log
+/luascript-js/output/
+
 /luaworkspace/build/
 /luaworkspace/node_modules/
 /luaworkspace/package-lock.json
