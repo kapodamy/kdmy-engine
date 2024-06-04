@@ -46,7 +46,7 @@
 		</AnimationsUI>
 		<Font name="vcr" src="/assets/common/font/vcr.ttf" />
 		<Font name="alphabet_bold" src="/assets/common/font/alphabet.xml" glyphSuffix="bold" glyphAnimated="true|false" />
-		<Font name="alphabet" src="/assets/common/font/alphabet.xml" colorByDifference="false|true" />
+		<Font name="alphabet" src="/assets/common/font/alphabet.xml" colorByAddition="false|true" />
 		<Font name="pixel" src="/assets/common/font/pixel.otf" />
         
 		<ImportPortraitList dialogueSrc="another_dialogue.xml" />

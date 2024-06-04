@@ -2,7 +2,7 @@
 <Layout width="640" height="480" animationSpeed="1.0" animationList="animations.xml">
     <Font name="vcr"  	  path="/assets/common/font/vcr.ttf" />
     <Font name="bold"	  path="/assets/common/font/alphabet.xml" glyphAnimate="false" glyphSuffix="bold" />
-    <Font name="heading"  path="/assets/common/font/alphabet.xml" glyphAnimate="false" colorByDifference="true" />
+    <Font name="heading"  path="/assets/common/font/alphabet.xml" glyphAnimate="false" colorByAddition="true" />
 
 	<!-- For non-scripted credits, change this values instead -->
 	<!-- <AttachValue name="base_duration"  type="float" value="30000" /> -->

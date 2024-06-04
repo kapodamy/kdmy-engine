@@ -12,9 +12,9 @@ uniform sampler2D u_texture1;
 uniform vec4 u_color;
 uniform vec4 u_color_outline;
 uniform bool u_grayscale;
-uniform bool u_color_by_diff;
+uniform bool u_color_by_add;
 
-uniform bool u_offsetcolor_mul_or_diff;
+uniform bool u_offsetcolor_mul_or_add;
 uniform bool u_offsetcolor_enabled;
 uniform vec4 u_offsetcolor;
 
@@ -64,21 +64,21 @@ void main() {
         color = vec4(source_color.rgb, source_color.a * distance);
 #endif
     } else {
-        if(u_color_by_diff) {
-            color.r = source_color.r - texture_color.r;
-            color.g = source_color.g - texture_color.g;
-            color.b = source_color.b - texture_color.b;
-            color.a = texture_color.a * source_color.a;
+        if(u_color_by_add) {
+            color.r = texture_color.r + source_color.r;
+            color.g = texture_color.g + source_color.g;
+            color.b = texture_color.b + source_color.b;
+            color.a = texture_color.a * source_color.a;// do not add to keep transparent pixels
         } else {
             color = texture_color * source_color;
         }
     }
 
     if(u_offsetcolor_enabled) {
-        if(u_offsetcolor_mul_or_diff)
+        if(u_offsetcolor_mul_or_add)
             color *= u_offsetcolor;
         else
-            color = u_offsetcolor - color;
+            color += u_offsetcolor;
     }
 
     if(color.a <= 0.0)

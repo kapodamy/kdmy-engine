@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="../../../../../docs/Layout.xsd"
     width="1280" height="720" animationList="./anims.xml">
 
-    <Font name="fnf" path="/assets/common/font/default.xml" colorByDifference="true" glyphAnimate="true" />
+    <Font name="fnf" path="/assets/common/font/default.xml" colorByAddition="true" glyphAnimate="true" />
 
     <Sprite rgb="0x000000">
         <Action>

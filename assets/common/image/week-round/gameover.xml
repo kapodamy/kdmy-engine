@@ -42,10 +42,14 @@
         </Sprite>
 
         <!-- gameplay stats -->
-        <Group>
-            <Action>
+        <Group name="judgement" initialAction="hide_judgement">
+            <Action name="show_judgement">
                 <Static />
+                <Show />
                 <Animation name="gameover_judgement" restart="true" />
+            </Action>
+            <Action name="hide_judgement">
+                <Hide />
             </Action>
 
             <!-- stats background -->
@@ -93,7 +97,7 @@
         </Text>
     </Group>
 
-    <Group>
+    <Group name="difficult">
         <Action>
             <Static />
             <Hide />
