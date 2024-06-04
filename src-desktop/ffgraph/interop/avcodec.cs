@@ -212,7 +212,7 @@ internal unsafe struct AVCodecContext {
     readonly int initial_padding;
     public readonly AVRational framerate;
     readonly AVPixelFormat sw_pix_fmt;
-    readonly AVRational pkt_timebase;
+    public AVRational pkt_timebase;
     readonly nint codec_descriptor;
     readonly long pts_correction_num_faulty_pts;
     readonly long pts_correction_num_faulty_dts;

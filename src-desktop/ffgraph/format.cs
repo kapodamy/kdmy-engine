@@ -21,11 +21,12 @@ internal unsafe class FFGraphFormat : IDisposable {
     private AVFrame* av_frame;
     private AVStream* av_stream;
     public bool has_ended;
+    public bool has_decoded;
     public IFFGraphFormatConverter ffgraphconv;
     private int stream_idx;
 
 
-    public static FFGraphFormat Init(IFileSource filehandle, AVMediaType required_type) {
+    public static FFGraphFormat Init(ISourceHandle sourcehandle, AVMediaType required_type) {
         switch (required_type) {
             case AVMediaType.AVMEDIA_TYPE_AUDIO:
             case AVMediaType.AVMEDIA_TYPE_VIDEO:
@@ -39,7 +40,7 @@ internal unsafe class FFGraphFormat : IDisposable {
         FFGraphFormat ffgraphfmt = new FFGraphFormat() {
             packet = FFmpeg.av_packet_alloc(),
             fmt_ctx = fmt_ctx,
-            iohandle = IOHandler.Init(filehandle),
+            iohandle = IOHandler.Init(sourcehandle),
             codec_ctx = FFmpeg.avcodec_alloc_context3(null),
             av_frame = FFmpeg.av_frame_alloc(),
 
@@ -48,7 +49,8 @@ internal unsafe class FFGraphFormat : IDisposable {
             av_stream = null,
 
             stream_idx = -1,
-            has_ended = false
+            has_ended = false,
+            has_decoded = false
         };
 
         if (ffgraphfmt.packet == null) {
@@ -100,8 +102,8 @@ internal unsafe class FFGraphFormat : IDisposable {
         AVCodec* av_codec;
         ffgraphfmt.stream_idx = FFmpeg.av_find_best_stream(ffgraphfmt.fmt_ctx, required_type, -1, -1, &av_codec, 0x00);
         if (ffgraphfmt.stream_idx < 0) {
-            string e = FFmpeg.av_err2str(ret);
-            Logger.Error($"FFGraphFormat::Init() failed to find the best/default stream, reason: {e}");
+            //string e = FFmpeg.av_err2str(ret);
+            //Logger.Error($"FFGraphFormat::Init() failed to find the best/default stream, reason: {e}");
             ffgraphfmt.Dispose();
             return null;
         } else {
@@ -109,8 +111,10 @@ internal unsafe class FFGraphFormat : IDisposable {
         }
 
         AVStream* av_stream = ffgraphfmt.fmt_ctx->streams[ffgraphfmt.stream_idx];
-        FFmpeg.avcodec_parameters_to_context(ffgraphfmt.codec_ctx, av_stream->codecpar);
         ffgraphfmt.av_stream = av_stream;
+
+        FFmpeg.avcodec_parameters_to_context(ffgraphfmt.codec_ctx, av_stream->codecpar);
+        ffgraphfmt.codec_ctx->pkt_timebase = av_stream->time_base;
 
         ret = FFmpeg.avcodec_open2(ffgraphfmt.codec_ctx, ffgraphfmt.av_codec, null);
         if (ret < 0) {
@@ -164,6 +168,7 @@ internal unsafe class FFGraphFormat : IDisposable {
     public bool ReadAndSeek(long seek_to_pts) {
         bool running = true;
         bool data_readed = false;
+        bool seek_request = seek_to_pts >= 0;
         int ret;
         AVPacket* av_packet = this.packet;
 
@@ -217,6 +222,10 @@ L_receive_frame:
                     return false;
                 }
 
+                if (seek_request) {
+                    this.has_decoded = true;
+                }
+
                 // call again avcodec_receive_frame() which is required for audio samples
                 goto L_receive_frame;
             } else if (ret == FFmpeg.AVERROR(FFmpeg.EAGAIN)) {
@@ -245,6 +254,10 @@ L_drop_packet:
 
 
     public bool Read() {
+        if (this.has_decoded) {
+            this.has_decoded = false;
+            return true;
+        }
         return ReadAndSeek(-1L);
     }
 
@@ -270,6 +283,7 @@ L_drop_packet:
 
         // read until the nearest upper timestamp is found
         this.has_ended = false;
+        this.has_decoded = false;
         ReadAndSeek(timestamp);
 
         // seek converter buffer (if applicable)

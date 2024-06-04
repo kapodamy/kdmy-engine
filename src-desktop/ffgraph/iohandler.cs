@@ -11,52 +11,55 @@ internal unsafe class IOHandler : IDisposable {
 
     private const int BUFFER_SIZE = 256 * 1024;// 256KiB
     private const int BUFFER_SIZE_BIG_FILES = 1024 * 1024 * 4;// 4MiB
-    private const int FILEHANDLE_MAX_BUFFERED_FILE_LENGTH = 128 * 1024 * 1024;// 128MiB
+    private const int SOURCEHANDLE_MAX_BUFFERED_FILE_LENGTH = 128 * 1024 * 1024;// 128MiB
 
-    private GCHandle file_hnd;
+    private GCHandle src_hnd;
     private AVIOContext* avio_ctx;
 
     private IOHandler() { }
 
 
-    private static IFileSource Recover(nint ptr) {
-        return (IFileSource)GCHandle.FromIntPtr(ptr).Target;
+    private static ISourceHandle Recover(nint ptr) {
+        return (ISourceHandle)GCHandle.FromIntPtr(ptr).Target;
     }
 
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     static int Read(nint opaque, byte* buf, int buf_size) {
-        IFileSource filehandle = Recover(opaque);
+        ISourceHandle sourcehandle = Recover(opaque);
 
-        int readed = filehandle.Read(buf, buf_size);
+        int readed = sourcehandle.Read(buf, buf_size);
 
-        // check if the end-of-file was reached
-        if (readed < 0) return FFmpeg.AVERROR_EOF;
-
-        return readed;
+        if (readed == 0)
+            return FFmpeg.AVERROR_EOF;
+        else if (readed < 0)
+            return FFmpeg.AVERROR_UNKNOWN;
+        else
+            return readed;
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     static long Seek(nint opaque, long offset, int whence) {
-        IFileSource filehandle = Recover(opaque);
-        if (whence == FFmpeg.AVSEEK_SIZE) return filehandle.Length();
+        ISourceHandle sourcehandle = Recover(opaque);
+        if (whence == FFmpeg.AVSEEK_SIZE) return sourcehandle.Length();
 
         whence &= ~FFmpeg.AVSEEK_FORCE;
 
-        long new_offset = filehandle.Seek(offset, (SeekOrigin)whence);
+        int ret = sourcehandle.Seek(offset, (SeekOrigin)whence);
 
-        return new_offset < 0 ? FFmpeg.AVERROR_UNKNOWN : new_offset;
+        if (ret > 0)
+            return FFmpeg.AVERROR_UNKNOWN;
+        else
+            return sourcehandle.Tell();
     }
 
 
-    public static IOHandler Init(IFileSource filehandle) {
-        IFileSource filehnd = filehandle;
-
+    public static IOHandler Init(ISourceHandle src_hnd) {
         // just in case
-        filehnd.Seek(0, SeekOrigin.Begin);
+        src_hnd.Seek(0, SeekOrigin.Begin);
 
         int buffer_size;
-        if (filehnd.Length() > FILEHANDLE_MAX_BUFFERED_FILE_LENGTH)
+        if (src_hnd.Length() > SOURCEHANDLE_MAX_BUFFERED_FILE_LENGTH)
             buffer_size = BUFFER_SIZE_BIG_FILES;
         else
             buffer_size = BUFFER_SIZE;
@@ -72,8 +75,8 @@ internal unsafe class IOHandler : IDisposable {
 
         IOHandler iohandler = new IOHandler();
 
-        iohandler.file_hnd = GCHandle.Alloc(filehnd, GCHandleType.Normal);
-        nint ptr = GCHandle.ToIntPtr(iohandler.file_hnd);
+        iohandler.src_hnd = GCHandle.Alloc(src_hnd, GCHandleType.Normal);
+        nint ptr = GCHandle.ToIntPtr(iohandler.src_hnd);
 
         iohandler.avio_ctx = FFmpeg.avio_alloc_context(
             buffer, buffer_size, 0, ptr, &Read, null, &Seek
@@ -81,7 +84,7 @@ internal unsafe class IOHandler : IDisposable {
 
         if (iohandler.avio_ctx == null) {
             Logger.Error("IOHanlder::Init() call to avio_alloc_context() failed.");
-            iohandler.file_hnd.Free();
+            iohandler.src_hnd.Free();
             return null;
         }
 
@@ -95,7 +98,7 @@ internal unsafe class IOHandler : IDisposable {
             FFmpeg.avio_context_free(ptr);
         }
 
-        this.file_hnd.Free();
+        this.src_hnd.Free();
     }
 
     public AVIOContext* IOContext {

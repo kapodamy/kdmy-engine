@@ -421,7 +421,7 @@ internal static unsafe partial class FFmpeg {
 
     private const string AVUTIL_DLL = "avutil-58";
 
-    public const uint AVERROR_UNKNOWN = 0xb1b4b1ab;
+    public const int AVERROR_UNKNOWN = unchecked((int)0xb1b4b1ab);
     public const int AVERROR_EOF = -0x20464F45;
     public const int AV_ERROR_MAX_STRING_SIZE = 64;
     public const int AV_TIME_BASE = 1000000;

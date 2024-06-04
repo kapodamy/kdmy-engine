@@ -92,7 +92,7 @@ internal unsafe class AudioConverter : IFFGraphFormatConverter {
         NativeMemory.Copy(remaining_buffer, this.sample_buffer, remaining_bytes);
 
         this.sample_buffer_used -= forward_samples;
-        this.seconds += forward_samples / this.sample_rate; // calc again due ceiling
+        this.seconds += (double)forward_samples / this.sample_rate; // calc again due ceiling
     }
 
     public void Dispose() {

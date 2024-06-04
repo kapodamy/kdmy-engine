@@ -40,14 +40,14 @@ public unsafe class FFGraph {
         return seconds;
     }
 
-    public static FFGraph Init(IFileSource video_filehandle, IFileSource audio_filehandle) {
-        if (video_filehandle == audio_filehandle) {
-            Logger.Error("FFGraph::Init() error: due to design constraints both filehandles can not be equal.");
+    public static FFGraph Init(ISourceHandle video_sourcehandle, ISourceHandle audio_sourcehandle) {
+        if (video_sourcehandle == audio_sourcehandle) {
+            Logger.Error("FFGraph::Init() error: due to design constraints both sourcehandles can not be equal.");
             return null;
         }
 
-        FFGraphFormat video = FFGraphFormat.Init(video_filehandle, AVMediaType.AVMEDIA_TYPE_VIDEO);
-        FFGraphFormat audio = FFGraphFormat.Init(audio_filehandle, AVMediaType.AVMEDIA_TYPE_AUDIO);
+        FFGraphFormat video = FFGraphFormat.Init(video_sourcehandle, AVMediaType.AVMEDIA_TYPE_VIDEO);
+        FFGraphFormat audio = FFGraphFormat.Init(audio_sourcehandle, AVMediaType.AVMEDIA_TYPE_AUDIO);
 
         if (video == null && audio == null) {
             Logger.Error("FFGraph::Init() failed, no audio/video stream available.");
@@ -96,13 +96,23 @@ public unsafe class FFGraph {
     }
 
     public int ReadAudioSamples(void* out_samples, uint max_samples_per_channel) {
-        if (this.audio_fmt == null || this.audio_fmt.has_ended) {
+        if (this.audio_fmt == null) {
+            return -1;
+        }
+        if (max_samples_per_channel < 1) {
+            return 0;
+        }
+
+        uint ret = this.audio_converter.Read(out_samples, max_samples_per_channel);
+
+        if (ret > 0) {
+            return (int)ret;
+        } else if (ret < 1 && this.audio_fmt.has_ended) {
             return -1;
         }
 
-        if (!this.audio_fmt.Read()) {
-            return -1;
-        }
+        // ignore return value
+        this.audio_fmt.Read();
 
         return (int)this.audio_converter.Read(out_samples, max_samples_per_channel);
     }
@@ -192,10 +202,10 @@ public unsafe class FFGraph {
         float* samples = (float*)NativeMemory.Alloc((nuint)samples_max * sizeof(float));
         FileStream audio_raw = new FileStream("./_audio.data", FileMode.Create, FileAccess.Write);
 
-        IFileSource audio_filehandle = FileHandleUtil.Init("./a.webm", false);
-        IFileSource video_filehandle = FileHandleUtil.Init("./a.webm", false);
+        ISourceHandle audio_sourcehandle = FileHandleUtil.Init("./a.webm", false);
+        ISourceHandle video_sourcehandle = FileHandleUtil.Init("./a.webm", false);
 
-        FFGraph ffgraph = FFGraph.Init(video_filehandle, audio_filehandle);
+        FFGraph ffgraph = FFGraph.Init(video_sourcehandle, audio_sourcehandle);
 
         FFGraphInfo info = ffgraph.GetStreamsInfo();
 
@@ -247,8 +257,8 @@ L_read_streams:
 
         ffgraph.Dispose();
         audio_raw.Dispose();
-        video_filehandle.Dispose();
-        audio_filehandle.Dispose();
+        video_sourcehandle.Dispose();
+        audio_sourcehandle.Dispose();
 
         return 0;
     }

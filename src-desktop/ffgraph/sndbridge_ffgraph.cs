@@ -23,12 +23,13 @@ public class FFGraphSoundBridgeDecoder : IDecoder {
         return ret;
     }
 
-    public void GetInfo(out uint rate, out uint channels, out double duration_in_seconds) {
+    public SampleFormat GetInfo(out uint rate, out uint channels, out double duration_in_seconds) {
         FFGraphInfo info = this.ffgraph.GetStreamsInfo();
 
         rate = info.audio_sample_rate;
         channels = info.audio_channels;
         duration_in_seconds = info.audio_seconds_duration * 1000.0;
+        return SampleFormat.FLOAT32;
     }
 
     public bool Seek(double seconds) {

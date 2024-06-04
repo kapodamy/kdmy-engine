@@ -27,7 +27,9 @@ internal unsafe class VideoConverter : IFFGraphFormatConverter {
             (byte**)&this.frame->data, this.frame->linesize
         );
 
-        this.seconds = FFGraph.CalculateSeconds(av_stream, av_frame);
+        if (av_frame->pts != FFmpeg.AV_NOPTS_VALUE) {
+            this.seconds = FFGraph.CalculateSeconds(av_stream, av_frame);
+        }
         this.frame_duration = av_frame->duration;
 
         return false;
@@ -80,7 +82,7 @@ internal unsafe class VideoConverter : IFFGraphFormatConverter {
         converter.sws_ctx = FFmpeg.sws_getContext(
             codec_ctx->width, codec_ctx->height, codec_ctx->pix_fmt,
             codec_ctx->width, codec_ctx->height, PIX_FMT,
-            FFmpeg.SWS_BILINEAR,
+            0x00,
             null, null, null
         );
         if (converter.sws_ctx == null) {
