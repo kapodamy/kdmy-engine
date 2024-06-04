@@ -24,8 +24,8 @@ public class VideoPlayer : ISetProperty {
 
     private bool is_muted;
     private Stream sndbridge_stream;
-    private IFileSource audio_filehandle;
-    private IFileSource video_filehandle;
+    private ISourceHandle audio_sourcehandle;
+    private ISourceHandle video_sourcehandle;
     private Sprite sprite;
     private FFGraph ffgraph;
     private IDecoder ffgraph_sndbridge;
@@ -54,6 +54,7 @@ public class VideoPlayer : ISetProperty {
         if (!FS.FileExists(full_path)) { return null; }
 
         if (!runtime_available) {
+            //free(full_path);
             Logger.Error($"videoplayer_init() can not load '{src}'. FFgraph or FFmpeg libraries are not available");
             return null;
         }
@@ -61,24 +62,26 @@ public class VideoPlayer : ISetProperty {
         full_path = IO.GetAbsolutePath(full_path, true, false, true);
 
         byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
-        IFileSource audio_filehandle;
-        IFileSource video_filehandle;
+        ISourceHandle audio_sourcehandle;
+        ISourceHandle video_sourcehandle;
 
         if (buffer != null) {
-            audio_filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
-            video_filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
+            audio_sourcehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
+            video_sourcehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
         } else {
             if (FS.FileLength(src) > MAX_BUFFERED_SIZE) {
-                audio_filehandle = FileHandleUtil.Init(full_path, true);
-                video_filehandle = FileHandleUtil.Init(full_path, true);
+                audio_sourcehandle = FileHandleUtil.Init(full_path, true);
+                video_sourcehandle = FileHandleUtil.Init(full_path, true);
             } else {
                 // load file contents in RAM
                 buffer = FS.ReadArrayBuffer(src);
 
-                audio_filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
-                video_filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
+                audio_sourcehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
+                video_sourcehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
             }
         }
+
+        //free(full_path);
 
         // Initialize FFgraph and SoundBridge
         FFGraph ffgraph = null;
@@ -88,7 +91,7 @@ public class VideoPlayer : ISetProperty {
         Texture tex_managed = null;
 
         // initialize FFgraph
-        ffgraph = FFGraph.Init(video_filehandle, audio_filehandle);
+        ffgraph = FFGraph.Init(video_sourcehandle, audio_sourcehandle);
 
         if (ffgraph == null) {
             Logger.Error($"videoplayer_init() ffgraph_init() failed for: {src}");
@@ -139,8 +142,8 @@ public class VideoPlayer : ISetProperty {
         if (tex_managed != null) sprite.SetTexture(tex_managed, false);
 
         return new VideoPlayer() {
-            video_filehandle = video_filehandle,
-            audio_filehandle = audio_filehandle,
+            video_sourcehandle = video_sourcehandle,
+            audio_sourcehandle = audio_sourcehandle,
             ffgraph_sndbridge = ffgraph_sndbridge,
             sprite = sprite,
             is_muted = false,
@@ -166,10 +169,10 @@ public class VideoPlayer : ISetProperty {
 L_failed:
         if (ffgraph != null) ffgraph.Dispose();
         if (ffgraph_sndbridge != null) ffgraph_sndbridge.Dispose();
-        if (sndbridge_stream >= 0) sndbridge_stream.Dispose();
+        if (sndbridge_stream != 0x00) sndbridge_stream.Dispose();
 
-        if (audio_filehandle != null) audio_filehandle.Dispose();
-        if (video_filehandle != null) video_filehandle.Dispose();
+        if (audio_sourcehandle != null) audio_sourcehandle.Dispose();
+        if (video_sourcehandle != null) video_sourcehandle.Dispose();
 
         return null;
     }
@@ -189,11 +192,11 @@ L_failed:
         if (this.ffgraph_sndbridge != null) this.ffgraph_sndbridge.Dispose();
         if (this.sndbridge_stream != null) this.sndbridge_stream.Dispose();
 
-        this.audio_filehandle.Dispose();
-        this.video_filehandle.Dispose();
+        this.audio_sourcehandle.Dispose();
+        this.video_sourcehandle.Dispose();
 
         this.sprite.Destroy();
-        if (texture_managed != null) texture_managed.Destroy();
+        if (this.texture_managed != null) this.texture_managed.Destroy();
 
         if (this.buffer_front != 0x00) Marshal.FreeHGlobal(this.buffer_front);
         if (this.buffer_back != 0x00) Marshal.FreeHGlobal(this.buffer_back);
@@ -280,10 +283,11 @@ L_failed:
 
             if (!this.decoder_seek_request) {
                 // playback is paused, read a single frame to keep the sprite updated
+                this.current_buffer_is_front = false;
                 this.last_video_playback_time = this.ffgraph.ReadVideoFrame2(
                     this.buffer_front, this.buffer_size
                 );
-                this.frame_available = this.last_video_playback_time >= 0;
+                this.frame_available = this.last_video_playback_time >= 0.0;
             }
 
             this.mutex.ReleaseMutex();
@@ -341,7 +345,7 @@ L_failed:
             return false;
     }
 
-    public Fading HasFaddingAudio() {
+    public Fading HasFadingAudio() {
         if (this.sndbridge_stream != null) {
             return (Fading)this.sndbridge_stream.ActiveFade;
         }
@@ -386,10 +390,11 @@ L_failed:
         // check if time to show the next frame
         if (!this.frame_available) return;
 
-        mutex.WaitOne();
+        this.mutex.WaitOne();
 
         // prepare texture swap, use the buffer which is not current
         nint buffer = this.current_buffer_is_front ? this.buffer_back : this.buffer_front;
+        this.frame_available = false;
 
         // do texture update
         WebGL2RenderingContext gl = PVRContext.global_context.webopengl.gl;
@@ -400,7 +405,7 @@ L_failed:
         );
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
 
-        mutex.ReleaseMutex();
+        this.mutex.ReleaseMutex();
     }
 
 
@@ -426,6 +431,7 @@ L_prepare:
         if (!no_audio) audio.Play();
 
         while (this.decoder_running) {
+            // if loop is enabled, check if both audio and video ended and play again
             if (this.video_track_ended && (no_audio || audio.HasEnded)) {
                 if (!no_audio) audio.Stop();
                 this.ffgraph.Seek(0.0);
@@ -435,14 +441,14 @@ L_prepare:
                 goto L_prepare;
             }
 
+            this.mutex.WaitOne();
+            time = this.ffgraph.ReadVideoFrame2(front, size);
+
             double current_time = Glfw.GetTime() - time_offset;
             if (current_time < next_frame_time) {
                 Thread.Sleep(1);
                 continue;
             }
-
-            this.mutex.WaitOne();
-            time = this.ffgraph.ReadVideoFrame2(front, size);
 
             if (this.decoder_running) {
                 if (this.decoder_seek_request) {
@@ -479,6 +485,9 @@ L_prepare:
             }
             this.mutex.ReleaseMutex();
         }
+
+        // self stop
+        this.decoder_running = false;
     }
 
     private void InternalRunDecoderAsync() {
