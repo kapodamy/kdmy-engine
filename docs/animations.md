@@ -239,7 +239,7 @@ Setups a random number generator in the specified range.
 </br>
 Notes:
 
-- Generated values can be `start`, `end` or any value between them.
+- Generated values can be `start` or any value between `start` and `end` (`end` is never choosed). The range is expressed as `[start, end)`
 - Generated values are decimal, in some fields like `frameIndex` the value will be truncated.
 - **rnd** will hold the same value until [RandomChoose](#randomchoose-instruction) is executed.
 

@@ -235,7 +235,7 @@
     <xs:attributeGroup name="Font-Glpyh">
         <xs:attribute name="glyphAnimate" type="xs:boolean" default="true" use="optional" />
         <xs:attribute name="glyphSuffix" type="xs:string" use="optional" />
-        <xs:attribute name="colorByDifference" type="xs:boolean" default="false" use="optional" />
+        <xs:attribute name="colorByAddition" type="xs:boolean" default="false" use="optional" />
     </xs:attributeGroup>
     <xs:attributeGroup name="colors-components">
         <xs:attribute name="r" type="xs:float" use="optional" />
@@ -547,6 +547,7 @@
                         <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="AnimationFromAtlas" type="AnimationFromAtlas" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationEnd" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Modifier" type="Modifier" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="unbounded" />
@@ -586,6 +587,7 @@
                         <xs:element name="BackgroundColor" type="Color-any" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationEnd" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Modifier" type="Modifier" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="unbounded" />
@@ -658,6 +660,7 @@
                         <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="AnimationFromAtlas" type="AnimationFromAtlas" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationEnd" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Parallax" type="Parallax" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Modifier" type="Modifier" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Static" type="Static" minOccurs="0" maxOccurs="unbounded" />
@@ -696,11 +699,11 @@
                         <xs:element name="Show" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="Animation" type="Animation" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
+                        <xs:element name="AnimationEnd" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="SetShader" type="SetShader" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="RemoveShader" type="RemoveShader" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="SetShaderUniform" type="SetShaderUniform" minOccurs="0" maxOccurs="unbounded" />
                         <xs:element name="SetBlending" type="SetBlending" minOccurs="0" maxOccurs="unbounded" />
-                        <xs:element name="AnimationRemove" minOccurs="0" maxOccurs="unbounded" />
                     </xs:sequence>
                     <xs:attribute name="name" type="xs:string" use="optional" />
                 </xs:complexType>
@@ -783,6 +786,7 @@
             <xs:attribute name="width" type="xs:float" use="required" />
             <xs:attribute name="height" type="xs:float" use="required" />
             <xs:attribute name="keepAspectRatio" type="xs:boolean" default="true" use="optional" />
+            <xs:attribute name="printTriggerCalls" type="xs:boolean" default="false" use="optional" />
             <xs:attribute name="animationList" type="xs:anyURI" use="optional" />
             <xs:attribute name="antialiasing" type="antialiasing" default="enabled" use="optional" />
             <xs:attribute name="animationSpeed" type="xs:float" default="1.0" use="optional" />

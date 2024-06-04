@@ -470,6 +470,10 @@
                 "dialogIgnoreOnFreeplay": {
                     "type": "boolean",
                     "default": true
+                },
+                "disableResourceCacheBetweenSongs": {
+                    "type": "boolean",
+                    "default": false
                 }
             },
             "required": [

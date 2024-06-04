@@ -56,7 +56,7 @@ declare namespace KDMYEngine {
     export function f_roundend(loose: boolean): void;
 
     /**
-     * Called when the week ends, this means the game is over.
+     * Called when the week or the freeplay song ends. This function is called before {@link f_afterresults} if completed.
      * @param giveup {@link true} If a player has loose and gives up, otherwise, {@link false} the week was completed.
      */
     export function f_weekend(giveup: boolean): void;
@@ -100,11 +100,18 @@ declare namespace KDMYEngine {
     export function f_weekleave(): void;
 
     /**
+    * Called before the "Results" screen is shown, at this point the results screen layout is available.
+    * This function is called after {@link f_weekend} function if the week or freeplay song was completed.
+    * Important: this function is never called if {@link week_disable_week_end_results} has disabled the "Results" screen.
+    */
+    export function f_beforeresults(): void;
+
+    /**
      * @summary Called after the results are shown and before the player returns to the menus
      * Results are only shown once the week is completed, if the player has changed the difficult
      * in one or more songs (excluding first week's song) the player is notified with the legend
      * "__WAIT, YOU CHANGED THE DIFFICULT!__" and without saving any progress.
-     * This function is called whatever {@link week_disable_week_end_results} was used.
+     * This function is called whatever {@link week_disable_week_end_results} has disabled the "Results" screen.
      * @param {number} total_attempts total attempts taken to clear all songs
      * @param {number} songs_count the amount of songs cleared, its always 1 in freeplay mode (see {@link f_weekinit})
      * @param {number} reject_completed if the difficult was changed, otherwise, false
@@ -141,12 +148,12 @@ declare namespace KDMYEngine {
      * @param player_id Index (base-zero) of the character, normally 0 means the opponent and 1 the player.
      * @param state the state of the note
      */
-    export function f_note(timestamp: number, id: number, duration: number, data: number, special: boolean, player_id: number, state: StrumNoteState): void;
+    export function f_note(timestamp: number, id: number, duration: number, data: number, special: boolean, player_id: number, state: Ranking): void;
 
     /**
      * Called after strums are scrolled and before {@link f_frame}. In a modding context is also called
      * @param player_id Index (base-zero) of the player controller/gamepad, in modding context this value is -1.
-     * @param buttons An usigned number indicating the buttons pressed in the controller. These are bit flags/fields defined in GAMEPAD_* constants
+     * @param buttons An unsigned number indicating the buttons pressed in the controller. These are bit flags/fields defined in GAMEPAD_* constants
      */
     export function f_buttons(player_id: number, buttons: GamepadButtons): void;
 
@@ -162,9 +169,9 @@ declare namespace KDMYEngine {
 
     /**
      * @summary Called on every beat.
-     * This function is not called exactly when the beat occurs beacuse the check is done
+     * This function is not called exactly when the beat occurs because the check is done
      * on every frame (before {@link f_frame}).
-     * The milliseconds spent waiting for the frame is passed in the parameter __since__.
+     * The amount of milliseconds spent waiting for the frame is passed in the parameter __since__.
      * @param current_beat The beat number (also known as count).
      * @param since How many milliseconds transcurred since the new beat
      */
@@ -172,9 +179,9 @@ declare namespace KDMYEngine {
 
     /**
      * @summary Called on every quarter (a quarter is 1/4 of a beat).
-     * This function is not called exactly when the quarter occurs beacuse the check is done
+     * This function is not called exactly when the quarter occurs because the check is done
      * on every frame (before {@link f_frame}).
-     * The milliseconds spent waiting for the frame is passed in the parameter __since__.
+     * The amount of milliseconds spent waiting for the frame is passed in the parameter __since__.
      * @param current_quarter The quarter number (also known as count).
      * @param since How many milliseconds transcurred since the new quarter.
      */
@@ -219,7 +226,7 @@ declare namespace KDMYEngine {
     export function f_dialogue_line_ends(line_index: number, state_name: string, text: string): void;
 
     /**
-     * @summary Called after the strum scrolling is done and all key inputs are processedm, also any {@link PlayerStats} is updated.
+     * @summary Called after the strum scrolling is done and all key inputs are processed, the {@link PlayerStats} are updated.
      */
     export function f_after_strum_scroll(): void;
 
@@ -272,7 +279,7 @@ declare namespace KDMYEngine {
     /**
      * @summary (modding context only) Called when the script is loaded from a another modding context or
      * screen menu. The parameter _arg_ value is the same used in the call to {@link modding_spawn_screen}.
-     * @param arg value passed by {@link modding_spawn_screen} or "NATIVE_SCREEN" if called by the engine.
+     * @param arg value passed by {@link modding_spawn_screen} or "NATIVE_SCREEN" if was called by the engine.
      */
     export function f_modding_init(arg: BasicValue): void;
 
@@ -323,7 +330,7 @@ declare namespace KDMYEngine {
      * @summary (desktop version only) Called when a mouse button is pressed or released
      * @param button which button was pressed
      * @param is_pressed true on press, otherwise, false if was released.
-     * @param mods 	Bit field describing which keyboard modifier keys were held down.
+     * @param mods Bit field describing which keyboard modifier keys were held down.
      */
     export function f_input_mouse_button(button: MouseButton, is_pressed: boolean, mods: ModKeys): void;
 

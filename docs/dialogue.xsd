@@ -207,7 +207,7 @@
         <xs:attribute name="src" type="xs:anyURI" use="required" />
         <xs:attribute name="glyphSuffix" type="xs:string" use="optional" />
         <xs:attribute name="glyphAnimated" type="xs:boolean" use="optional" default="true" />
-        <xs:attribute name="colorByDifference" type="xs:boolean" use="optional" default="false" />
+        <xs:attribute name="colorByAddition" type="xs:boolean" use="optional" default="false" />
     </xs:complexType>
     <xs:complexType name="ImportPortraitList">
         <xs:attribute name="dialogueSrc" type="xs:anyURI" use="required" />

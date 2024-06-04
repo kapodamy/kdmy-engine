@@ -185,7 +185,7 @@
                 "fontGlyphSuffix": {
                     "type": ["string", "null"]
                 },
-                "fontColorByDifference": {
+                "fontColorByAddition": {
                     "type": "boolean",
                     "default": false
                 },

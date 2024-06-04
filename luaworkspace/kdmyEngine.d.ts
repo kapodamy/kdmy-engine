@@ -107,6 +107,14 @@ declare global {
         LINEAR = "linear",
         /** Divides the domain of output values in equidistant steps */
         STEPS = "steps",
+        /** easing using cubic curve */
+        CUBIC = "cubic",
+        /** easing using quadratic curve */
+        QUAD = "quad",
+        /** easing using exponential curve */
+        EXPO = "expo",
+        /** easing using sine curve */
+        SIN = "sin"
     }
     /** Forces {@link TextSprite} to render the text in the specific case */
     const enum TextSpriteForceCase {
@@ -123,21 +131,6 @@ declare global {
         START = "start",
         CENTER = "center",
         END = "end"
-    }
-    /** Describes a cleared note state */
-    const enum StrumNoteState {
-        /** The player has pressed a button in an empty strum or with the wrong buttons */
-        PENALITY = 0,
-        /** The note was missed */
-        MISS = 1,
-        /** Shit Ranked */
-        SHIT = 2,
-        /** Bad Ranked */
-        BAD = 3,
-        /** Good Ranked */
-        GOOD = 4,
-        /** Sick Ranked */
-        SICK = 5
     }
     /** Flags used to configure the graphics backend */
     const enum PVRFlag {
@@ -181,7 +174,7 @@ declare global {
         /** Denotes that the last step or jump happens when the interpolation ends */
         END = "end"
     }
-    /** Blending type (from OpenGL/WebGL2/OpenGLES) */
+    /** Blending type (from OpenGL/WebGL2/OpenGLES). Note: some types are not supported by the PowerVR */
     const enum Blend {
         /** Default blending used by the engine */
         DEFAULT = "DEFAULT",
@@ -208,8 +201,18 @@ declare global {
         DOWNSCROLL = "DOWNSCROLL",
         RIGHTSCROLL = "RIGHTSCROLL"
     }
+    /** Indicates in what moment the animation is used */
+    const enum StrumOn {
+        ON_HIT_DOWN = "on_hit_down",
+        ON_HIT_UP = "on_hit_up",
+        ON_MISS = "on_miss",
+        ON_PENALITY = "on_penality",
+        ON_IDLE = "on_idle",
+        /** Use in all previous events */
+        ON_ALL = "on_all"
+    }
     /** Indicates in what part of the {@link Strum} is attached */
-    const enum StrumScriptTarget {
+    const enum StrumTarget {
         MARKER = "marker",
         SICK_EFFECT = "sick_effect",
         BACKGROUND = "background",
@@ -219,16 +222,6 @@ declare global {
         NOTE = "note",
         /** In All previous parts */
         ALL = "all"
-    }
-    /** Indicates in what moment the animation is used */
-    const enum StrumScriptOn {
-        ON_HIT_DOWN = "on_hit_down",
-        ON_HIT_UP = "on_hit_up",
-        ON_MISS = "on_miss",
-        ON_PENALITY = "on_penality",
-        ON_IDLE = "on_idle",
-        /** Use in all previous events */
-        ON_ALL = "on_all"
     }
     /** Indicates the current {@link Strum} press state */
     const enum StrumPressState {
@@ -255,10 +248,156 @@ declare global {
         MISS = 5,
         PENALITY = 6
     }
+    /** Indicates which fade is active in the sound  */
     const enum Fading {
+        /** No fade active */
         NONE = 0,
         IN = 1,
         OUT = 2
+    }
+    /** Indicates which mouse button was pressed (not available on the dreamcast) */
+    const enum MouseButton {
+        BUTTON1 = 0,
+        BUTTON2 = 1,
+        BUTTON3 = 2,
+        BUTTON4 = 3,
+        BUTTON5 = 4,
+        BUTTON6 = 5,
+        BUTTON7 = 6,
+        BUTTON8 = 7
+    }
+    /** Indicates what modifier keys are pressed (not available on the dreamcast) */
+    const enum ModKeys {
+        Shift = 0x0001,
+        Control = 0x0002,
+        Alt = 0x0004,
+        Super = 0x0008,
+        CapsLock = 0x0010,
+        NumLock = 0x0020
+    }
+    /** Indicates which keyboard key is pressed (not available on the dreamcast) */
+    const enum Keys {
+        Unknown = -1,
+        Space = 32,
+        Apostrophe = 39,
+        Comma = 44,
+        Minus = 45,
+        Period = 46,
+        Slash = 47,
+        Numpad0 = 48,
+        Numpad1 = 49,
+        Numpad2 = 50,
+        Numpad3 = 51,
+        Numpad4 = 52,
+        Numpad5 = 53,
+        Numpad6 = 54,
+        Numpad7 = 55,
+        Numpad8 = 56,
+        Numpad9 = 57,
+        Semicolon = 59,
+        Equal = 61,
+        A = 65,
+        B = 66,
+        C = 67,
+        D = 68,
+        E = 69,
+        F = 70,
+        G = 71,
+        H = 72,
+        I = 73,
+        J = 74,
+        K = 75,
+        L = 76,
+        M = 77,
+        N = 78,
+        O = 79,
+        P = 80,
+        Q = 81,
+        R = 82,
+        S = 83,
+        T = 84,
+        U = 85,
+        V = 86,
+        W = 87,
+        X = 88,
+        Y = 89,
+        Z = 90,
+        LeftBracket = 91,
+        Backslash = 92,
+        RightBracket = 93,
+        GraveAccent = 96,
+        World_1 = 161,
+        World_2 = 162,
+        Escape = 256,
+        Enter = 257,
+        Tab = 258,
+        Backspace = 259,
+        Insert = 260,
+        Delete = 261,
+        Right = 262,
+        Left = 263,
+        Down = 264,
+        Up = 265,
+        PageUp = 266,
+        PageDown = 267,
+        Home = 268,
+        End = 269,
+        CapsLock = 280,
+        ScrollLock = 281,
+        NumLock = 282,
+        PrintScreen = 283,
+        Pause = 284,
+        F1 = 290,
+        F2 = 291,
+        F3 = 292,
+        F4 = 293,
+        F5 = 294,
+        F6 = 295,
+        F7 = 296,
+        F8 = 297,
+        F9 = 298,
+        F10 = 299,
+        F11 = 300,
+        F12 = 301,
+        F13 = 302,
+        F14 = 303,
+        F15 = 304,
+        F16 = 305,
+        F17 = 306,
+        F18 = 307,
+        F19 = 308,
+        F20 = 309,
+        F21 = 310,
+        F22 = 311,
+        F23 = 312,
+        F24 = 313,
+        F25 = 314,
+        KP_0 = 320,
+        KP_1 = 321,
+        KP_2 = 322,
+        KP_3 = 323,
+        KP_4 = 324,
+        KP_5 = 325,
+        KP_6 = 326,
+        KP_7 = 327,
+        KP_8 = 328,
+        KP_9 = 329,
+        KP_Decimal = 330,
+        KP_Divide = 331,
+        KP_Multiply = 332,
+        KP_Subtract = 333,
+        KP_Add = 334,
+        KP_Enter = 335,
+        KP_Equal = 336,
+        LeftShift = 340,
+        LeftControl = 341,
+        LeftAlt = 342,
+        LeftSuper = 343,
+        RightShift = 344,
+        RightControl = 345,
+        RightAlt = 346,
+        RightSuper = 347,
+        Menu = 348
     }
 
     //
@@ -307,30 +446,44 @@ declare global {
         /** Indicates if this item contains instructions required to build an {@link TweenKeyframe}. */
         readonly isTweenKeyframeAnimation: boolean;
     }
-    /** Read-only {@link Atlas} entry, all values here are expressed in pixels (except the pivots) */
+    /** Copy of {@link Atlas} entry, all values here are expressed in pixels (except the pivots) */
     interface AtlasEntry {
         /** Entry name */
-        readonly name: string;
+        name: string;
         /** X position in the texture */
-        readonly x: number;
+        x: number;
         /** Y position in the texture */
-        readonly y: number;
+        y: number;
         /** Width of the sub-texture */
-        readonly width: number;
+        width: number;
         /** Height of the sub-texture */
-        readonly height: number;
+        height: number;
         /** Frame offset x. */
-        readonly frameX: number;
+        frameX: number;
         /** Frame offset y. */
-        readonly frameY: number;
+        frameY: number;
         /** Frame offset real width. */
-        readonly frameWidth: number;
+        frameWidth: number;
         /** Frame offset real height. */
-        readonly frameHeight: number;
+        frameHeight: number;
         /** Pivot X value, the purpose of this field is unknown and is always ignored by the engine */
-        readonly pivotX: number;
+        pivotX: number;
         /** Pivot Y value, the purpose of this field is unknown and is always ignored by the engine */
-        readonly pivotY: number;
+        pivotY: number;
+    }
+    /** Accumulated statistics */
+    interface WeekResult_Stats {
+        sick: number;
+        good: number;
+        bads: number;
+        shits: number;
+        miss: number;
+        penalties: number;
+        score: number;
+        accuracy: number;
+        notesPerSeconds: number;
+        comboBreaks: number;
+        highestStreak: number;
     }
 
     //
@@ -401,6 +554,7 @@ declare global {
         set_group_visibility(group_name: string, visible: boolean): void;
         set_group_alpha(group_name: string, alpha: boolean): void;
         set_group_offsetcolor(group_name: string, r: number, g: number, b: number, a: number): void;
+        get_group_visibility(group_name: string): boolean;
         suspend(): void;
         resume(): void;
         get_placeholder(placeholder_name: string): LayoutPlaceholderInfo;
@@ -492,7 +646,7 @@ declare global {
         fade(in_or_out: boolean, duration: number): void;
         set_volume(volume: number): void;
         set_mute(muted: boolean): void;
-        has_fadding(): Fading;
+        has_fading(): Fading;
         is_muted(): boolean;
         is_playing(): boolean;
         get_duration(): number;
@@ -808,8 +962,8 @@ declare global {
         set_alpha_sick_effect(alpha: number): number;
         set_keep_aspect_ratio_background(enable: boolean): void;
         draw_sick_effect_apart(enable: boolean): void;
-        set_extra_animation(strum_script_target: StrumScriptTarget, strum_script_on: StrumScriptOn, undo: boolean, animsprite: AnimSprite): void;
-        set_extra_animation_continuous(strum_script_target: StrumScriptTarget, animsprite: AnimSprite): void;
+        set_extra_animation(strum_script_target: StrumTarget, strum_script_on: StrumOn, undo: boolean, animsprite: AnimSprite): void;
+        set_extra_animation_continuous(strum_script_target: StrumTarget, animsprite: AnimSprite): void;
         disable_beat_synced_idle_and_continous(disabled: boolean): void;
         set_bpm(bpm: number): void;
         set_notes_tweenkeyframe(tweenkeyframe: TweenKeyframe): void;
@@ -973,6 +1127,8 @@ declare global {
     }
     /** Play a sound when the player commits a penality or presses the wrong note buttons */
     interface MissNoteFX {
+        missnotefx_disable(disabled: boolean): void;
+        stop(): void;
         play_effect(): void;
     }
     /** Displays a progress bar indicating the shared health between two characters */
@@ -992,8 +1148,8 @@ declare global {
         set_player_bar_color_rgb8(color_rgb8: number): void;
         state_toggle(state_name: string): number;
         state_toggle_background(state_name: string): boolean;
-        state_toggle_player(state_name: string): boolean;
-        state_toggle_opponent(state_name: string): boolean;
+        state_toggle_player(state_name: string): number;
+        state_toggle_opponent(state_name: string): number;
         set_bump_animation_opponent(animsprite: AnimSprite): void;
         set_bump_animation_player(animsprite: AnimSprite): void;
         bump_enable(enable_bump: boolean): void;
@@ -1053,11 +1209,11 @@ declare global {
         readonly inversedScrollEnabled: boolean;
         readonly songProgressbarEnabled: boolean;
     }
-    /** Provides access to platform-specific features */
+    /** Provides access to platform-specific features. Note: some values are not available on the dreamcast */
     interface Environment {
         get_language(): string;
         get_username(): string;
-        get_cmdargs(): string;
+        get_cmdargs(): string[];
         exit(exit_code: number): string;
         change_window_title(title: string): void;
         require_window_attention(): void;
@@ -1105,6 +1261,7 @@ declare global {
          */
         parse(json_sourcecode: string): any | null;
     }
+
 
     //
     // Global metatables initializers (class static contructors in typescript)
@@ -1574,7 +1731,24 @@ declare global {
      * @param filename the sound filename or null to use/retore the default sound
      */
     function week_gameover_set_sfx_confirm(filename: string): void;
-
+    /**
+    * Gets a copy of the accumulated stats of the first character (excludes opponents). When
+    * a round/song ends the stats of the first playable character is accumulated
+    */
+    function week_get_accumulated_stats(): WeekResult_Stats;
+    /**
+    * Gets the gameover screen layout, can be null if not loaded.
+    */
+    function week_get_gameover_layout(): Layout;
+    /**
+    * Gets the pause screen layout, can be null if not loaded.
+    */
+    function week_get_pause_layout(): Layout;
+    /**
+    * Gets the results screen layout, this layout only is available after ending the week or freeplay song.
+    * Always returns null during the gameplay, call inside of {@link f_beforeresults} or {@link f_afterresults} to adquire the layout.
+    */
+    function week_get_results_layout(): Layout;
 
     //
     // Global Timer functions
@@ -1705,7 +1879,8 @@ declare global {
     //
     // Filesystem global functions
     //
-    function fs_readfile(path: string): string;
+    function fs_readfile(src: string): string;
+    function fs_get_full_path(path: string): string;
 
     //
     // Modding UI (engine screens/menus only)
