@@ -156,7 +156,7 @@ function mastervolume_draw(/**@type {PVRContext}*/pvrctx) {
     if (mastervolume_label_font) {
         let label_color = MASTERVOLUME_LABEL_COLOR;
         fonttype_enable_border(mastervolume_label_font, false);
-        //fonttype_enable_color_by_difference(mastervolume_label_font, false);
+        //fonttype_enable_color_by_addition(mastervolume_label_font, false);
         fonttype_set_alpha(mastervolume_label_font, label_color[3]);
         fonttype_set_color(mastervolume_label_font, label_color[0], label_color[1], label_color[2]);
         fonttype_draw_text(mastervolume_label_font,

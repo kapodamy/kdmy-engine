@@ -15,9 +15,9 @@ async function modding_init(layout, src_script) {
     let modding = {
         script: null,
         layout,
-        has_exit: 0,
-        has_halt: 0,
-        has_funkinsave_changes: 0,
+        has_exit: false,
+        has_halt: false,
+        has_funkinsave_changes: false,
 
         native_menu: null,
         active_menu: null,
@@ -31,13 +31,13 @@ async function modding_init(layout, src_script) {
     };
 
     if (src_script && await fs_file_exists(src_script))
-        modding.script = await weekscript_init(src_script, modding, 0);
+        modding.script = await weekscript_init(src_script, modding, false);
 
     return modding;
 }
 
 async function modding_destroy(modding) {
-    if (modding.has_funkinsave_changes) funkinsave_write_to_vmu();
+    if (modding.has_funkinsave_changes) await funkinsave_write_to_vmu();
     if (modding.script != null) weekscript_destroy(modding.script);
     if (modding.messagebox) messagebox_destroy(modding.messagebox);
     modding = undefined;
@@ -48,7 +48,7 @@ function modding_get_layout(modding) {
 }
 
 function modding_exit(modding) {
-    modding.has_exit = 1;
+    modding.has_exit = true;
 }
 
 function modding_set_halt(modding, halt) {
@@ -57,7 +57,7 @@ function modding_set_halt(modding, halt) {
 
 
 function modding_unlockdirective_create(modding, name, value) {
-    modding.has_funkinsave_changes = 1;
+    modding.has_funkinsave_changes = true;
     funkinsave_create_unlock_directive(name, value);
 }
 
@@ -72,7 +72,7 @@ function modding_unlockdirective_get(modding, name) {
 }
 
 function modding_unlockdirective_remove(modding, name) {
-    modding.has_funkinsave_changes = 1;
+    modding.has_funkinsave_changes = true;
     funkinsave_delete_unlock_directive(name);
 }
 
@@ -89,7 +89,7 @@ function modding_storage_get(modding, week_name, name, out_data) {
 
 
 function modding_choose_native_menu_option(modding, name) {
-    if (!modding.callback_option) return 0;
+    if (!modding.callback_option) return false;
     return modding.callback_option(modding.callback_private_data, name);
 }
 
@@ -120,13 +120,13 @@ function modding_get_native_background_music(modding) {
 }
 
 async function modding_replace_native_background_music(modding, music_src) {
-    if (background_menu_music != null) {
+    if (background_menu_music) {
         soundplayer_destroy(background_menu_music);
         background_menu_music = null;
     }
 
     if (music_src) {
-        background_menu_music = await songplayer_init(music_src);
+        background_menu_music = await soundplayer_init(music_src);
     }
 
     return background_menu_music;
@@ -162,12 +162,12 @@ async function modding_helper_handle_custom_menu(modding, gamepad, elapsed) {
         if (modding.custom_menu_active_gamepad_delay > 0.0) return MODDING_HELPER_RESULT_CONTINUE;
     }
 
-    let go_back = 0;
-    let has_selected = 0;
+    let go_back = false;
+    let has_selected = false;
     let has_choosen = false;
 
     if (pressed & MAINMENU_GAMEPAD_CANCEL)
-        go_back = 1;
+        go_back = true;
     else if (pressed & GAMEPAD_DALL_LEFT)
         has_selected = menu_select_horizontal(menu, -1);
     else if (pressed & GAMEPAD_DALL_RIGHT)
@@ -202,7 +202,7 @@ async function modding_helper_handle_custom_menu(modding, gamepad, elapsed) {
         let name = menu_get_selected_item_name(menu);
 
         if (!await luascript_notify_modding_menu_option_choosen(script, menu, index, name)) {
-            menu_toggle_choosen(menu, 1);
+            menu_toggle_choosen(menu, true);
             return MODDING_HELPER_RESULT_CHOOSEN;
         }
 
@@ -214,7 +214,7 @@ async function modding_helper_handle_custom_menu(modding, gamepad, elapsed) {
 
 
 async function modding_helper_notify_option(modding, selected_or_choosen) {
-    if (!modding.active_menu || modding.script == null) return 0;
+    if (!modding.active_menu || modding.script == null) return false;
 
     let index = menu_get_selected_index(modding.active_menu);
     let name = menu_get_selected_item_name(modding.active_menu);
@@ -222,20 +222,20 @@ async function modding_helper_notify_option(modding, selected_or_choosen) {
 
     if (selected_or_choosen) {
         await luascript_notify_modding_menu_option_selected(script, modding.active_menu, index, name);
-        return 0;
+        return false;
     }
 
     return await luascript_notify_modding_menu_option_choosen(script, modding.active_menu, index, name);
 }
 
 async function modding_helper_notify_option2(modding, selected_or_choosen, menu, index, name) {
-    if (modding.script == null) return 0;
+    if (modding.script == null) return false;
 
     let script = weekscript_get_luascript(modding.script);
 
     if (selected_or_choosen) {
         await luascript_notify_modding_menu_option_selected(script, menu, index, name);
-        return 0;
+        return false;
     }
 
     return await luascript_notify_modding_menu_option_choosen(script, menu, index, name);
@@ -303,9 +303,11 @@ async function modding_launch_week(modding, week_name, difficult, alt_tracks, bf
 
     funkinsave_set_last_played(gameplay_weekinfo.name, difficult);
 
-    if (!bf) bf = await freeplaymenu_helper_get_default_character_manifest(true);
-    if (!gf) gf = await freeplaymenu_helper_get_default_character_manifest(false);
+    let bf_allocated = !bf;
+    let gf_allocated = !gf;
 
+    if (bf_allocated) bf = freeplaymenu_helper_get_default_character_manifest(true);
+    if (gf_allocated) gf = freeplaymenu_helper_get_default_character_manifest(false);
 
     let week_result = await week_main(
         gameplay_weekinfo,
@@ -318,11 +320,14 @@ async function modding_launch_week(modding, week_name, difficult, alt_tracks, bf
         ws_label
     );
 
+    if (bf_allocated) bf = undefined;
+    if (gf_allocated) gf = undefined;
+
     return week_result;
 }
 
 async function modding_launch_credits(modding) {
-    return await credits_main();
+    await credits_main();
 }
 
 async function modding_launch_startscreen(modding) {
@@ -338,7 +343,7 @@ async function modding_launch_settings(modding) {
 }
 
 async function modding_launch_freeplay(modding) {
-    return await freeplaymenu_main();
+    await freeplaymenu_main();
 }
 
 async function modding_launch_weekselector(modding) {

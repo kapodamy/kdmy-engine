@@ -1,6 +1,6 @@
 "use strict";
 
-const SCREENMENU_BUTTONS_DELAY = 200;
+const SCREENMENU_BUTTONS_DELAY = 200.0;
 const SCREENMENU_BACK_BUTTONS = GAMEPAD_BACK | GAMEPAD_B;
 
 async function screenmenu_init(layout_src, script_src) {
@@ -23,10 +23,10 @@ async function screenmenu_destroy(screenmenu) {
 }
 
 async function screenmenu_display(screenmenu, pvrctx, script_arg) {
-    const script = screenmenu.modding.script != null ? weekscript_get_luascript(screenmenu.modding.script) : null;
+    const script = screenmenu.modding.script ? weekscript_get_luascript(screenmenu.modding.script) : null;
     const layout = screenmenu.layout;
 
-    if (script != null) {
+    if (script) {
         await luascript_notify_modding_init(script, script_arg);
         if (screenmenu.modding.has_exit) return await luascript_notify_modding_exit(script);
     }
@@ -41,12 +41,12 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
         pvr_context_reset(pvrctx);
 
         let pressed = gamepad_get_pressed(gamepad);
-        let back_pressed = (pressed & SCREENMENU_BACK_BUTTONS) != 0;
+        let back_pressed = (pressed & SCREENMENU_BACK_BUTTONS) != 0x00;
 
         // ignore back buttons if halt flag not is signalated and call "f_modding_back" instead
         if (back_pressed && !screenmenu.modding.has_halt) pressed &= ~SCREENMENU_BACK_BUTTONS;
 
-        if (script != null) {
+        if (script) {
             if (last_pressed != pressed) {
                 last_pressed = pressed;
                 await weekscript_notify_buttons(screenmenu.modding.script, -1, pressed);
@@ -64,34 +64,34 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
 
             let menu = screenmenu.modding.active_menu;
 
-            let go_back = 0;
-            let has_selected = 0;
+            let go_back = false;
+            let has_selected = false;
             let has_choosen = false;
 
             if (back_pressed)
-                go_back = 1;
-            else if (menu == null) {
+                go_back = true;
+            else if (!menu) {
                 break L_process_gamepad;
-            } else if ((pressed & GAMEPAD_DALL_LEFT) != 0)
+            } else if ((pressed & GAMEPAD_DALL_LEFT) != 0x00)
                 has_selected = menu_select_horizontal(menu, -1);
-            else if ((pressed & GAMEPAD_DALL_RIGHT) != 0)
+            else if ((pressed & GAMEPAD_DALL_RIGHT) != 0x00)
                 has_selected = menu_select_horizontal(menu, 1);
-            else if ((pressed & GAMEPAD_DALL_UP) != 0)
+            else if ((pressed & GAMEPAD_DALL_UP) != 0x00)
                 has_selected = menu_select_vertical(menu, -1);
-            else if ((pressed & GAMEPAD_DALL_DOWN) != 0)
+            else if ((pressed & GAMEPAD_DALL_DOWN) != 0x00)
                 has_selected = menu_select_vertical(menu, 1);
-            else if ((pressed & MAINMENU_GAMEPAD_OK) != 0)
+            else if ((pressed & MAINMENU_GAMEPAD_OK) != 0x00)
                 has_choosen = menu_get_selected_index(menu) >= 0;
 
 
             if (go_back) {
-                if (script == null) break;
+                if (!script) break;
                 if (!await luascript_notify_modding_back(script)) break;
                 active_gamepad_delay = SCREENMENU_BUTTONS_DELAY;
             }
 
             if (has_selected) {
-                if (script == null) {
+                if (!script) {
                     let index = menu_get_selected_index(menu);
                     let name = menu_get_selected_item_name(menu);
                     await luascript_notify_modding_menu_option_selected(script, menu, index, name);
@@ -100,13 +100,13 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
             }
 
             if (has_choosen) {
-                if (script == null) break;
+                if (!script) break;
 
                 let index = menu_get_selected_index(menu);
                 let name = menu_get_selected_item_name(menu);
 
                 if (!await luascript_notify_modding_menu_option_choosen(script, menu, index, name)) {
-                    menu_toggle_choosen(menu, 1);
+                    menu_toggle_choosen(menu, true);
                     break;
                 }
 
@@ -118,9 +118,9 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
         layout_draw(layout, pvrctx);
     }
 
-    // if there no script ¿exit_value should be null or pick the menu selectd option name?
+    // if there no script ¿exit_value should be null or pick the menu selected option name?
     let exit_value = null;
-    if (script != null) exit_value = await luascript_notify_modding_exit(script);
+    if (script) exit_value = await luascript_notify_modding_exit(script);
 
     // delay exit (if applicable)
     let exit_delay = screenmenu.modding.exit_delay_ms;
@@ -130,7 +130,7 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
         exit_delay -= elapsed;
         pvr_context_reset(pvrctx);
 
-        if (script != null) {
+        if (script) {
             await weekscript_notify_frame(screenmenu.modding.script, elapsed);
         }
 

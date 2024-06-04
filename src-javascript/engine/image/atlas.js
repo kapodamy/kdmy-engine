@@ -38,10 +38,8 @@ async function atlas_init(src) {
     if (atlas.texture_filename != null) {
         if (atlas.texture_filename.length > 0) {
             let path = fs_build_path2(src, atlas.texture_filename);
-            atlas.texture_filename = undefined;
             atlas.texture_filename = path;
         } else {
-            atlas.texture_filename = undefined;
             atlas.texture_filename = null;
         }
     }
@@ -70,8 +68,8 @@ async function atlas_init(src) {
             frame_y: Number.parseInt(unparsed_entry.getAttribute("frameY")),
             frame_width: Number.parseInt(unparsed_entry.getAttribute("frameWidth")),
             frame_height: Number.parseInt(unparsed_entry.getAttribute("frameHeight")),
-            pivot_x: 0,// Number.parseFloat(unparsed_entry.getAttribute("pivotX")),
-            pivot_y: 0,// Number.parseFloat(unparsed_entry.getAttribute("pivotY")),
+            pivot_x: 0.0,// Number.parseFloat(unparsed_entry.getAttribute("pivotX")),
+            pivot_y: 0.0,// Number.parseFloat(unparsed_entry.getAttribute("pivotY")),
         };
 
         console.assert(!Number.isNaN(atlas_entry.width) && !Number.isNaN(atlas_entry.height), atlas_entry);
@@ -86,6 +84,7 @@ async function atlas_init(src) {
         arraylist_add(arraylist, atlas_entry);
     }
 
+    xml = undefined;
     arraylist_destroy2(arraylist, atlas, "size", "entries");
 
     return atlas;
@@ -97,7 +96,7 @@ function atlas_destroy(atlas) {
     }
 
     atlas.entries = undefined;
-    atlas.size = undefined;
+    atlas.size = 0;
     atlas.texture_filename = undefined;
     atlas = undefined;
 }
@@ -115,15 +114,6 @@ function atlas_get_entry(atlas, name) {
     let index = atlas_get_index_of(atlas, name);
 
     return index >= 0 ? atlas.entries[index] : null;
-}
-
-function atlas_get_entry_copy(atlas, name) {
-    let index = atlas_get_index_of(atlas, name);
-
-    if (index < 0)
-        return null;
-    else
-        return clone_object(atlas.entries[index]);
 }
 
 function atlas_get_entry_with_number_suffix(atlas, name_prefix) {
@@ -152,10 +142,10 @@ function atlas_get_texture_path(atlas) {
 
 function atlas_apply(atlas, sprite, name, override_draw_size) {
     let i = atlas_get_index_of(atlas, name);
-    if (i < 0) return 1;
+    if (i < 0) return true;
 
     atlas_apply_from_entry(sprite, atlas.entries[i], override_draw_size);
-    return 0;
+    return false;
 }
 
 function atlas_apply_from_entry(sprite, atlas_entry, override_draw_size) {
@@ -184,9 +174,9 @@ function atlas_apply_from_entry(sprite, atlas_entry, override_draw_size) {
 
 function atlas_name_has_number_suffix(atlas_entry_name, start_index) {
     let string_length = atlas_entry_name.length;
-    let ignore_space = 1;
+    let ignore_space = true;
 
-    if (start_index >= string_length) return 0;
+    if (start_index >= string_length) return false;
 
     for (let j = start_index; j < string_length; j++) {
         let code = atlas_entry_name.charCodeAt(j);
@@ -196,19 +186,19 @@ function atlas_name_has_number_suffix(atlas_entry_name, start_index) {
                 switch (code) {
                     case 0x09:// tabulation
                     case 0x20:// white space
-                    case 0xff:// hard space
+                    //case 0xff:// hard space
                         // case 0x5F:// underscore (used in plain-text atlas)
-                        ignore_space = 0;
+                        ignore_space = false;
                         continue;
                 }
             }
 
             // the name does not end with numbers
-            return 0;
+            return false;
         }
     }
 
-    return 1;
+    return true;
 }
 
 function atlas_get_texture_resolution(atlas, output_resolution) {
@@ -218,7 +208,7 @@ function atlas_get_texture_resolution(atlas, output_resolution) {
 }
 
 function atlas_parse_resolution(atlas, resolution_string) {
-    if (resolution_string == null || resolution_string.length < 1) return 0;
+    if (resolution_string == null || resolution_string.length < 1) return false;
 
     let index = -1;
     let length = resolution_string.length;
@@ -233,7 +223,7 @@ function atlas_parse_resolution(atlas, resolution_string) {
 
     if (index < 0) {
         console.error("atlas_parse_resolution() invalid resolution", resolution_string);
-        return 0;
+        return false;
     }
 
     let width = vertexprops_parse_unsigned_integer(
@@ -245,12 +235,12 @@ function atlas_parse_resolution(atlas, resolution_string) {
 
     if (!Number.isFinite(width) || !Number.isFinite(height)) {
         console.error("atlas_parse_resolution() invalid resolution", resolution_string);
-        return 0;
+        return false;
     }
 
     atlas.resolution_width = width;
     atlas.resolution_height = height;
-    return 1;
+    return true;
 }
 
 function atlas_utils_is_known_extension(src) {
@@ -278,25 +268,25 @@ async function atlas_parse_from_plain_text(src_txt) {
         texture_filename: fake_texture_filename,
         resolution_width: FUNKIN_SCREEN_RESOLUTION_WIDTH,
         resolution_height: FUNKIN_SCREEN_RESOLUTION_HEIGHT,
-        has_declared_resolution: 0,
+        has_declared_resolution: false,
         size: 0,
         entries: null
     };
 
     let unparsed_entry, temp;
     let x, y, width, height;
-    let tokenizer_entries = tokenizer_init("\r\n", 1, 0, text);
+    let tokenizer_entries = tokenizer_init("\r\n", true, false, text);
     let arraylist = arraylist_init2(tokenizer_count_occurrences(tokenizer_entries));
 
     while ((unparsed_entry = tokenizer_read_next(tokenizer_entries)) != null) {
-        let tokenizer_field = tokenizer_init("\x3D", 1, 0, unparsed_entry);
+        let tokenizer_field = tokenizer_init("\x3D", true, false, unparsed_entry);
 
         temp = tokenizer_read_next(tokenizer_field);
-        let name = string_trim(temp, 0, 1);
+        let name = string_trim(temp, false, true);
         temp = undefined;
 
         temp = tokenizer_read_next(tokenizer_field);
-        let unparsed_coords = string_trim(temp, 1, 1);
+        let unparsed_coords = string_trim(temp, true, true);
         temp = undefined;
 
         tokenizer_destroy(tokenizer_field);
@@ -309,7 +299,7 @@ async function atlas_parse_from_plain_text(src_txt) {
             continue;
         }
 
-        let tokenizer_coords = tokenizer_init("\xA0\x20\x09", 1, 0, unparsed_coords);
+        let tokenizer_coords = tokenizer_init("\xA0\x20\x09", true, false, unparsed_coords);
 
         temp = tokenizer_read_next(tokenizer_coords);
         x = vertexprops_parse_integer2(temp, MATH2D_MAX_INT32);
@@ -338,7 +328,7 @@ async function atlas_parse_from_plain_text(src_txt) {
 
             arraylist_add(arraylist, {
                 name, x, y, width, height,
-                frame_x: 0, frame_y: 0, frame_width: 0, frame_height: 0, pivot_x: 0, pivot_y: 0,
+                frame_x: 0.0, frame_y: 0.0, frame_width: 0.0, frame_height: 0.0, pivot_x: 0.0, pivot_y: 0.0,
             });
 
             continue;
@@ -380,7 +370,7 @@ function atlas_parse_tileset(arraylist, unparsed_tileset) {
     if (!Number.isFinite(sub_x)) sub_x = 0;
     if (!Number.isFinite(sub_y)) sub_y = 0;
 
-    // truncate should not be necessary
+    // (JS Only) results must be truncated
     let rows = Math.trunc(sub_width / tile_width);
     let columns = Math.trunc(sub_height / tile_height);
 
@@ -415,7 +405,7 @@ function atlas_parse_tileset(arraylist, unparsed_tileset) {
             y: tile_y,
             width: tile_width,
             height: tile_height,
-            frame_x: 0, frame_y: 0, frame_width: 0, frame_height: 0, pivot_x: 0, pivot_y: 0,
+            frame_x: 0.0, frame_y: 0.0, frame_width: 0.0, frame_height: 0.0, pivot_x: 0.0, pivot_y: 0.0,
         });
 
         index++;

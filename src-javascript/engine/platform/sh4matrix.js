@@ -8,7 +8,7 @@ const SH4MATRIX_SIZE = 16;
 
 function sh4matrix_init() {
     let sh4matrix = new Float32Array(SH4MATRIX_SIZE);
-    sh4matrix[0] = sh4matrix[5] = sh4matrix[10] = sh4matrix[15] = 1;
+    sh4matrix[0] = sh4matrix[5] = sh4matrix[10] = sh4matrix[15] = 1.0;
     return sh4matrix;
 }
 
@@ -18,11 +18,11 @@ function sh4matrix_destroy(sh4matrix) {
 
 
 function sh4matrix_flip_x(sh4matrix) {
-    sh4matrix_scale_x(sh4matrix, -1);
+    sh4matrix_scale_x(sh4matrix, -1.0);
 }
 
 function sh4matrix_flip_y(sh4matrix) {
-    sh4matrix_scale_y(sh4matrix, -1);
+    sh4matrix_scale_y(sh4matrix, -1.0);
 }
 
 
@@ -31,7 +31,7 @@ function sh4matrix_rotate_by_degs(sh4matrix, angle) {
 }
 
 function sh4matrix_rotate_by_rads(sh4matrix, angle) {
-    if (angle == 0) return;
+    if (angle == 0.0) return;
 
     let sin = Math.sin(angle);
     let cos = Math.cos(angle);
@@ -57,42 +57,42 @@ function sh4matrix_rotate_by_rads(sh4matrix, angle) {
 }
 
 function sh4matrix_scale(sh4matrix, sx, sy) {
-    if (sx == 1 && sy == 1) return;
-    sh4matrix_multiply(sh4matrix, sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+    if (sx == 1.0 && sy == 1.0) return;
+    sh4matrix_multiply(sh4matrix, sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
 }
 
 function sh4matrix_scale_x(sh4matrix, sx) {
-    sh4matrix_scale(sh4matrix, sx, 1);
+    sh4matrix_scale(sh4matrix, sx, 1.0);
 }
 
 function sh4matrix_scale_y(sh4matrix, sy) {
-    sh4matrix_scale(sh4matrix, 1, sy);
+    sh4matrix_scale(sh4matrix, 1.0, sy);
 }
 
 function sh4matrix_skew(sh4matrix, sx, sy) {
-    if (sx == 0 && sy == 0) return;
-    sh4matrix_multiply(sh4matrix, 1, sy, 0, 0, sx, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+    if (sx == 0.0 && sy == 0.0) return;
+    sh4matrix_multiply(sh4matrix, 1.0, sy, 0.0, 0.0, sx, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
 }
 
 function sh4matrix_skew_x(sh4matrix, sx) {
-    sh4matrix_skew(sh4matrix, sx, 0);
+    sh4matrix_skew(sh4matrix, sx, 0.0);
 }
 
 function sh4matrix_skew_y(sh4matrix, sy) {
-    sh4matrix_skew(sh4matrix, 0, sy);
+    sh4matrix_skew(sh4matrix, 0.0, sy);
 }
 
 function sh4matrix_translate(sh4matrix, tx, ty) {
-    if (tx == 0 && ty == 0) return;
-    sh4matrix_multiply(sh4matrix, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1);
+    if (tx == 0.0 && ty == 0.0) return;
+    sh4matrix_multiply(sh4matrix, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, tx, ty, 0.0, 1.0);
 }
 
 function sh4matrix_translate_x(sh4matrix, tx) {
-    sh4matrix_translate(sh4matrix, tx, 0);
+    sh4matrix_translate(sh4matrix, tx, 0.0);
 }
 
 function sh4matrix_translate_y(sh4matrix, ty) {
-    sh4matrix_translate(sh4matrix, 0, ty);
+    sh4matrix_translate(sh4matrix, 0.0, ty);
 }
 
 
@@ -103,7 +103,7 @@ function sh4matrix_multiply_with_matrix(sh4matrix1, sh4matrix2) {
         sh4matrix2[4], sh4matrix2[5], sh4matrix2[6], sh4matrix2[7],
         sh4matrix2[8], sh4matrix2[9], sh4matrix2[10], sh4matrix2[11],
         sh4matrix2[12], sh4matrix2[13], sh4matrix2[14], sh4matrix2[15]
-    )
+    );
 }
 
 function sh4matrix_multiply(sh4matrix, a, b, c, d, e, f, g, h, i, j, k, l, m, n, ñ, o) {
@@ -141,15 +141,15 @@ function sh4matrix_apply_modifier(sh4matrix, modifier) {
 }
 
 function sh4matrix_apply_modifier2(sh4matrix, modifier, draw_x, draw_y, draw_width, draw_height) {
-    let valid_size = draw_width > 0 && draw_height > 0;
+    let valid_size = draw_width > 0.0 && draw_height > 0.0;
 
-    if (modifier.scale_direction_x != 0 && modifier.scale_x != 1.0 && valid_size) {
+    if (modifier.scale_direction_x != 0.0 && modifier.scale_x != 1.0 && valid_size) {
         sh4matrix_internal_calc_scale_offset(
             sh4matrix, sh4matrix_translate_x,
             draw_width, modifier.scale_x, modifier.scale_direction_x
         );
     }
-    if (modifier.scale_direction_y != 0 && modifier.scale_y != 1.0 && valid_size) {
+    if (modifier.scale_direction_y != 0.0 && modifier.scale_y != 1.0 && valid_size) {
         sh4matrix_internal_calc_scale_offset(
             sh4matrix, sh4matrix_translate_y,
             draw_height, modifier.scale_y, modifier.scale_direction_y
@@ -165,13 +165,13 @@ function sh4matrix_apply_modifier2(sh4matrix, modifier, draw_x, draw_y, draw_wid
     }
 
     // combo: matrix translation + matrix rotation (with or without polygon u/v)
-    let translate = modifier.tx != 0 || modifier.ty != 0;
-    if (modifier.rotate != 0) {
+    let translate = tx != 0.0 || ty != 0.0;
+    if (modifier.rotate != 0.0) {
         /*if (!translate) {
             sh4matrix_internal_rotate(sh4matrix, draw_x, draw_y, draw_width, draw_height, modifier);
         } else */if (modifier.translate_rotation) {
             sh4matrix_internal_rotate(sh4matrix, draw_x, draw_y, draw_width, draw_height, modifier);
-            if (translate) sh4matrix_translate(sh4matrix, tx, modifier.ty);
+            if (translate) sh4matrix_translate(sh4matrix, tx, ty);
         } else {
             if (translate) sh4matrix_translate(sh4matrix, tx, ty);
             sh4matrix_internal_rotate(sh4matrix, draw_x, draw_y, draw_width, draw_height, modifier);
@@ -181,7 +181,7 @@ function sh4matrix_apply_modifier2(sh4matrix, modifier, draw_x, draw_y, draw_wid
     }
 
 
-    if (modifier.skew_x != 0 || modifier.skew_y != 0)
+    if (modifier.skew_x != 0.0 || modifier.skew_y != 0.0)
         sh4matrix_skew(sh4matrix, modifier.skew_x, modifier.skew_y);
 
     if (modifier.scale_x != 1.0 || modifier.scale_y != 1.0) {
@@ -218,36 +218,36 @@ function sh4matrix_multiply_point(sh4matrix, target_2d_point) {
 
 
 function sh4matrix_is_identity(sh4matrix) {
-    return math2d_floats_are_near_equal(sh4matrix[0], 1) &&
-        math2d_floats_are_near_equal(sh4matrix[1], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[2], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[3], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[4], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[5], 1) &&
-        math2d_floats_are_near_equal(sh4matrix[6], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[7], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[8], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[9], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[10], 1) &&
-        math2d_floats_are_near_equal(sh4matrix[11], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[12], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[13], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[14], 0) &&
-        math2d_floats_are_near_equal(sh4matrix[15], 1);
+    return math2d_floats_are_near_equal(sh4matrix[0], 1.0) &&
+        math2d_floats_are_near_equal(sh4matrix[1], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[2], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[3], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[4], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[5], 1.0) &&
+        math2d_floats_are_near_equal(sh4matrix[6], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[7], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[8], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[9], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[10], 1.0) &&
+        math2d_floats_are_near_equal(sh4matrix[11], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[12], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[13], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[14], 0.0) &&
+        math2d_floats_are_near_equal(sh4matrix[15], 1.0);
 }
 
 function sh4matrix_is_equal(sh4matrix1, sh4matrix2) {
     for (let i = 0; i < SH4MATRIX_SIZE; i++) {
-        if (!math2d_floats_are_near_equal(sh4matrix1[i], sh4matrix2[i])) return 0;
+        if (!math2d_floats_are_near_equal(sh4matrix1[i], sh4matrix2[i])) return false;
     }
-    return 1;
+    return true;
 }
 
 function sh4matrix_clear(sh4matrix) {
-    sh4matrix[0] = 1; sh4matrix[1] = 0; sh4matrix[2] = 0; sh4matrix[3] = 0;
-    sh4matrix[4] = 0; sh4matrix[5] = 1; sh4matrix[6] = 0; sh4matrix[7] = 0;
-    sh4matrix[8] = 0; sh4matrix[9] = 0; sh4matrix[10] = 1; sh4matrix[11] = 0;
-    sh4matrix[12] = 0; sh4matrix[13] = 0; sh4matrix[14] = 0; sh4matrix[15] = 1;
+    sh4matrix[0] = 1.0; sh4matrix[1] = 0.0; sh4matrix[2] = 0.0; sh4matrix[3] = 0.0;
+    sh4matrix[4] = 0.0; sh4matrix[5] = 1.0; sh4matrix[6] = 0.0; sh4matrix[7] = 0.0;
+    sh4matrix[8] = 0.0; sh4matrix[9] = 0.0; sh4matrix[10] = 1.0; sh4matrix[11] = 0.0;
+    sh4matrix[12] = 0.0; sh4matrix[13] = 0.0; sh4matrix[14] = 0.0; sh4matrix[15] = 1.0;
 }
 
 function sh4matrix_set_transform(sh4matrix, a, b, c, d, e, f, g, h, i, j, k, l, m, n, ñ, o) {
@@ -276,9 +276,9 @@ function sh4matrix_scale_size(sh4matrix, draw_x, draw_y, scale_x, scale_y) {
 
 
 function sh4matrix_internal_rotate(sh4matrix, draw_x, draw_y, draw_width, draw_height, modifier) {
-    if (modifier.rotate == 0) return;
+    if (modifier.rotate == 0.0) return;
 
-    if (!modifier.rotate_pivot_enabled || draw_width < 0 || draw_height < 0) {
+    if (!modifier.rotate_pivot_enabled || draw_width < 0.0 || draw_height < 0.0) {
         sh4matrix_rotate_by_rads(sh4matrix, modifier.rotate);
         return;
     }
@@ -307,24 +307,24 @@ function sh4matrix_helper_calculate_corner_rotation(matrix_corner, corner) {
     switch (corner) {
         default:
         case CORNER_TOPLEFT:
-            angle = 0;
-            x = 0;
-            y = 0;
+            angle = 0.0;
+            x = 0.0;
+            y = 0.0;
             break;
         case CORNER_TOPRIGHT:
-            angle = -90 * MATH2D_DEG_TO_RAD;
-            x = -1;
-            y = 0;
+            angle = -90.0 * MATH2D_DEG_TO_RAD;
+            x = -1.0;
+            y = 0.0;
             break;
         case CORNER_BOTTOMLEFT:
-            angle = 90 * MATH2D_DEG_TO_RAD;
-            x = 0;
-            y = -1;
+            angle = 90.0 * MATH2D_DEG_TO_RAD;
+            x = 0.0;
+            y = -1.0;
             break;
         case CORNER_BOTTOMRIGHT:
-            angle = 180 * MATH2D_DEG_TO_RAD;
-            x = -1;
-            y = -1;
+            angle = 180.0 * MATH2D_DEG_TO_RAD;
+            x = -1.0;
+            y = -1.0;
             break;
     }
 

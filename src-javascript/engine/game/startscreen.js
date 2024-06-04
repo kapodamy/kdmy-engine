@@ -9,7 +9,7 @@ async function startscreen_main() {
     let layout = await layout_init(pvr_context_is_widescreen() ? STARTSCREEN_LAYOUT : STARTSCREEN_LAYOUT_DREAMCAST);
     if (!layout) {
         console.warn("startscreen_main() can not load mainmenu layout");
-        return 0;
+        return false;
     }
 
     let delay_after_start = layout_get_attached_value_as_float(layout, "delay_after_start", 2000.0);
@@ -17,12 +17,12 @@ async function startscreen_main() {
     let maple_pad = gamepad_init(-1);
     let modding = await modding_init(layout, STARTSCREEN_MODDING_SCRIPT);
 
-    let total_elapsed = 0;
-    let enter_pressed = 0;
-    let trigger_fade_away = 1;
-    let exit_to_bios = 0;
+    let total_elapsed = 0.0;
+    let enter_pressed = false;
+    let trigger_fade_away = true;
+    let exit_to_bios = false;
 
-    const moddinghelper = { start_pressed: 0, exit_to_bios: 0 };;
+    const moddinghelper = { start_pressed: false, exit_to_bios: false };
     modding.callback_private_data = moddinghelper;
     modding.callback_option = startscreen_internal_handle_modding_option;
 
@@ -31,7 +31,7 @@ async function startscreen_main() {
     await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
     await modding_helper_notify_event(modding, "start_screen");
 
-    while (1) {
+    while (true) {
         let elapsed = await pvrctx_wait_ready();
         layout_animate(layout, elapsed);
 
@@ -45,8 +45,8 @@ async function startscreen_main() {
             if (enter_pressed) {
                 break;
             } else {
-                enter_pressed = 1;
-                moddinghelper.start_pressed = 0;
+                enter_pressed = true;
+                moddinghelper.start_pressed = false;
                 if (soundplayer_confirm) soundplayer_play(soundplayer_confirm);
                 layout_trigger_any(layout, "start_pressed");
                 await modding_helper_notify_event(modding, "start_pressed");
@@ -55,7 +55,7 @@ async function startscreen_main() {
         } else if (enter_pressed) {
             if (total_elapsed >= delay_after_start) {
                 if (trigger_fade_away && !exit_to_bios) {
-                    trigger_fade_away = 0;
+                    trigger_fade_away = false;
                     layout_trigger_any(layout, "outro");
                     await modding_helper_notify_event(modding, "outro");
                 } else {
@@ -76,8 +76,8 @@ async function startscreen_main() {
             layout_trigger_any(layout, "outro");
             await modding_helper_notify_event(modding, "exit_to_bios");
             if (background_menu_music) soundplayer_fade(background_menu_music, false, 1000.0);
-            enter_pressed = 1;
-            exit_to_bios = 1;
+            enter_pressed = true;
+            exit_to_bios = true;
         }
 
         pvr_context_reset(pvr_context);
@@ -95,24 +95,24 @@ async function startscreen_main() {
         // boot dreamcast BIOS menu
         if (background_menu_music) soundplayer_stop(background_menu_music);
         arch_menu();
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
 function startscreen_internal_handle_modding_option(moddinghelper, option_name) {
     switch (option_name) {
         case null:
         case "exit_to_bios":
-            moddinghelper.start_pressed = 1;
+            moddinghelper.start_pressed = true;
             break;
         case "start_pressed":
-            moddinghelper.exit_to_bios = 1;
+            moddinghelper.exit_to_bios = true;
             break;
         default:
-            return 0;
+            return false;
     }
-    return 1;
+    return true;
 }
 

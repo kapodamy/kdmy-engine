@@ -36,12 +36,12 @@ const SETTINGSMENU_MENU = {
         anim_in: null,// unused
         anim_out: null,// unused
 
-        anim_transition_in_delay: 0,// unused
-        anim_transition_out_delay: 0,// unused
+        anim_transition_in_delay: 0.0,// unused
+        anim_transition_out_delay: 0.0,// unused
 
         font: "/assets/common/font/Alphabet.xml",
         font_glyph_suffix: "bold",
-        font_color_by_difference: false,// unused
+        font_color_by_addition: false,// unused
         font_size: 46.0,
         font_color: 0xFFFFFF,
         font_border_color: 0x00,// unused
@@ -153,16 +153,16 @@ const SETTINGSMENU_MENU_COMMON = {
         anim_in: null,// unused
         anim_out: null,// unused
 
-        anim_transition_in_delay: 0,// unused
-        anim_transition_out_delay: 0,// unused
+        anim_transition_in_delay: 0.0,// unused
+        anim_transition_out_delay: 0.0,// unused
 
         font: "/assets/common/font/pixel.otf",
         font_glyph_suffix: null,// unused
-        font_color_by_difference: false,// unused
+        font_color_by_addition: false,// unused
         font_size: 28.0,
         font_color: 0xFFFFFF,
         font_border_color: 0x000000FF,// unused
-        font_border_size: 4,// unused
+        font_border_size: 4.0,// unused
 
         is_sparse: false,// unused
         is_vertical: true,
@@ -192,6 +192,7 @@ var settingsmenu_submenus_font = null;
 
 
 async function settingsmenu_main() {
+    const title = "Settings";
     let main_options_help = [
         {
             name: "keyboard-bindings-gameplay",
@@ -258,14 +259,14 @@ async function settingsmenu_main() {
         layout, "menu_itemGap", SETTINGSMENU_MENU.parameters.items_gap
     );
     let menu_placeholder = layout_get_placeholder(layout, "menu");
-    if (menu_placeholder == null) throw new Error("Missing menu placeholder");
+    if (!menu_placeholder) throw new Error("Missing menu placeholder");
 
     let menumanifest = SETTINGSMENU_MENU;
     let options_help = main_options_help;
 
     if (await fs_file_exists(SETTINGSMENU_MODDING_MENU)) {
         menumanifest = await menumanifest_init(SETTINGSMENU_MODDING_MENU);
-        if (menumanifest == null) throw new Error("failed to load " + SETTINGSMENU_MODDING_MENU);
+        if (!menumanifest) throw new Error("failed to load " + SETTINGSMENU_MODDING_MENU);
 
         // since a custom menu was provided, remap option descriptions
         options_help = new Array[menumanifest.items_size];
@@ -317,7 +318,10 @@ async function settingsmenu_main() {
         soundplayer_loop_enable(bg_music, true);
         soundplayer_play(bg_music);
     } else if (background_menu_music) {
-        soundplayer_set_volume(background_menu_music, 0.5);
+        if (!backgroud_music_filename && (backgroud_music_volume <= 0.0 || Number.isNaN(backgroud_music_volume)))
+            soundplayer_pause(background_menu_music);
+        else
+            soundplayer_set_volume(background_menu_music, 0.5);
     }
 
     settingsmenu_current_menu = null;
@@ -331,7 +335,7 @@ async function settingsmenu_main() {
     await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
 
     while (!modding.has_exit) {
-        let selected_index = await settingsmenu_in_common_menu("Settings", layout, gamepad, menu, options_help, modding);
+        let selected_index = await settingsmenu_in_common_menu(title, layout, gamepad, menu, options_help, modding);
         let selected_name = selected_index < 0 ? null : menumanifest.items[selected_index].name;
         switch (selected_name) {
             case "keyboard-bindings-gameplay":
@@ -366,6 +370,7 @@ async function settingsmenu_main() {
     menu_destroy(menu);
     layout_destroy(layout);
     modding_destroy(modding);
+    fontholder_destroy(settingsmenu_submenus_font);
 
     settingsmenu_is_running = false;
 
@@ -382,6 +387,7 @@ async function settingsmenu_main() {
         if (background_menu_music) soundplayer_destroy(background_menu_music);
     } else if (background_menu_music) {
         soundplayer_set_volume(background_menu_music, 1.0);
+        soundplayer_play(background_menu_music);
     }
 }
 
@@ -724,7 +730,7 @@ async function settingsmenu_in_common_menu(title, layout, gamepad, menu, options
 
     let last_selected_index = -1;
     let selected_index = menu_get_selected_index(menu);
-    if (selected_index >= 0 && selected_index < menu_get_items_count(menu) && hint != null) {
+    if (selected_index >= 0 && selected_index < menu_get_items_count(menu) && hint) {
         textsprite_set_text_intern(hint, true, options[selected_index].description);
         last_selected_index = selected_index;
         main_helper_trigger_action_menu2(layout, SETTINGSMENU_MENU_COMMON, selected_index, title, true, false);
@@ -774,7 +780,7 @@ async function settingsmenu_in_common_menu(title, layout, gamepad, menu, options
         }
 
         selected_index = menu_get_selected_index(menu);
-        if (selected_index >= 0 && selected_index < menu_get_items_count(menu) && hint != null) {
+        if (selected_index >= 0 && selected_index < menu_get_items_count(menu) && hint) {
             textsprite_set_text_intern(hint, true, options[selected_index].description);
         }
 
@@ -793,6 +799,7 @@ async function settingsmenu_in_common_menu(title, layout, gamepad, menu, options
 }
 
 async function settingsmenu_in_gameplay_settings(gamepad, modding) {
+    const title = "GAMEPLAY SETTINGS";
     const options = [
         {
             name: "USE FUNKIN MARKER DURATION",
@@ -886,7 +893,7 @@ async function settingsmenu_in_gameplay_settings(gamepad, modding) {
         settingsmenu_internal_load_option(options[i], SETTINGS.INI_GAMEPLAY_SECTION);
     }
 
-    await settingsmenu_show_common("GAMEPLAY SETTINGS", gamepad, options, options_size, modding);
+    await settingsmenu_show_common(title, gamepad, options, options_size, modding);
 
     // save settings
     for (let i = 0; i < options_size; i++) {
@@ -968,7 +975,7 @@ async function settingsmenu_in_misc_settings(gamepad, modding) {
             hidden: false
         }
     ];
-    const options_size = 7;
+    const options_size = options.length;
 
     // load current settings
     for (let i = 0; i < options_size; i++) {
@@ -1361,6 +1368,7 @@ function settingsmenu_internal_update_holder(backs, labels, keycodes, index, ani
     settingsmenu_internal_set_key_in_label(labels[index], keycodes[index]);
 }
 
+
 function settingsmenu_internal_save_option(option, ini_section) {
     if (option.is_bool) {
         SETTINGS.storage_save_boolean(ini_section, option.ini_key, option.value_bool);
@@ -1422,6 +1430,6 @@ function settingsmenu_internal_handle_option(obj, option_name) {
         }
     }
 
-    settingsmenu_current_menu_choosen_custom = option_name;
+    settingsmenu_current_menu_choosen_custom = strdup(option_name);
     return false;
 }

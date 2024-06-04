@@ -16,7 +16,7 @@ const STATE_FINISHED = 0x0004;
     given routine. The thread will terminate and clean up resources when the
     routine completes if the thread is created detached, otherwise you must
     join the thread with thd_join() to clean up after it.
-    @param {bool} detach    Set to 1 to create a detached thread. Set to 0 to create a joinable thread.
+    @param {number} detach    Set to 1 to create a detached thread. Set to 0 to create a joinable thread.
     @param {function(any):any} routine     The function to call in the new thread.
     @param {any} param      A parameter to pass to the function called.
     @returns {object}       The new thread on success, NULL on failure.
@@ -317,7 +317,7 @@ function strdup(strl) {
 
 
 //
-// TLS stuff stub with the exception of thd_helper_spawn()
+// TLS stuff stub
 //
 
 const kos_tls_keys = new Map();
@@ -400,41 +400,6 @@ function kthread_key_delete(key) {
     console.warn("kthread_key_delete() key not found: " + key.key_id);
 }
 
-/**
- * Create a new thread.
- * This function creates a new kernel thread with default parameters to run the given routine.
- * The thread will terminate and clean up resources when the routine completes
- * This function warps {@link thd_create} to allow multi-thread filesystem support (fs_* engine functions)
- * @param {function} routine The function to call in the new thread.
- * @param {object} param A parameter to pass to the function called.
- * @returns The new thread on success, NULL on failure.
- */
-function thd_helper_spawn(routine, param) {
-    // in C, "init_data" this an allocated struct
-    let init_data = { routine, params: param };
-    return thd_create(1, thd_helper_spawn_wrapper, init_data);
-}
-
-function thd_helper_spawn_wrapper(init_data) {
-    const routine = init_data.routine;
-    const params = init_data.params;
-
-    // dispose "init_data" because was allocated in thd_helper_spawn
-    init_data = undefined;
-
-    //
-    // Initialize the filesystem for this thread and later execute the routine
-    // fs_destroy() is called when the thread ends (KallistiOS does this job).
-    //
-    // Note: This can not be implemented in javascript, because there no TLS support
-    //
-    // C only
-    //fs_init();
-
-    // now execute the routine
-    return routine(params);
-}
-
 
 
 //
@@ -458,7 +423,7 @@ class maple_devinfo_t {
  */
 class maple_device_t {
 
-    /** @type {bool} Is this a valid device?*/
+    /** @type {boolean} Is this a valid device?*/
     valid;
 
     /** @type {number} Maple bus port connected to*/
@@ -565,7 +530,7 @@ class maple_keyboard_device_t {
      * @property {number} target_button
      * @property {number} target_axis
      * @property {boolean} hold
-     * @property {bool} negative
+     * @property {boolean} negative
      */
     /**
      * @callback KeyboardEventDelegate
@@ -1261,7 +1226,7 @@ function fs_read(hnd, buffer, cnt) {
     @returns {number}                 0 on success, -1 on failure.
 */
 function fs_stat(path, buf, flag) {
-    if (path != "/vmu") return -1;
+    if (path != "/vmu/") return -1;
 
     void flag;
 

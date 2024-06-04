@@ -94,7 +94,7 @@ function glyphrenderer_append_glyph(texture, is_tex1, is_outline, sx, sy, sw, sh
     glyphrenderer_glyphs_added++;
 }
 
-function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline, by_diff, is_gryscl, tex0, tex1) {
+function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline, by_add, is_gryscl, tex0, tex1) {
     const gl = pvrctx.webopengl.gl;
     const program_glyphs = pvrctx.webopengl.program_glyphs;
 
@@ -177,20 +177,20 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
     gl.uniform4fv(program_glyphs.u_color_outline, WEBGL_RGBA);
 
     // if the offsetcolor alpha is negative, disable the offsetcolor processing
-    // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_diff" are boolean values
+    // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values
     if (pvrctx.render_offsetcolor[3] < 0) {
         gl.uniform1i(program_glyphs.u_offsetcolor_enabled, 0);
     } else {
         gl.uniform1i(program_glyphs.u_offsetcolor_enabled, 1);
         gl.uniform4fv(program_glyphs.u_offsetcolor, pvrctx.render_offsetcolor);
-        gl.uniform1i(program_glyphs.u_offsetcolor_mul_or_diff, pvrctx.render_offsetcolor_multiply ? 1 : 0);
+        gl.uniform1i(program_glyphs.u_offsetcolor_mul_or_add, pvrctx.render_offsetcolor_multiply ? 1 : 0);
     }
 
     // grayscale textures used by fonttype_draw() or rgba textures used by fontglyph_draw()
     gl.uniform1i(program_glyphs.u_grayscale, is_gryscl ? 1 : 0);
 
     // used only by fontglyph_draw() function
-    gl.uniform1i(program_glyphs.u_color_by_diff, by_diff ? 1 : 0);
+    gl.uniform1i(program_glyphs.u_color_by_add, by_add ? 1 : 0);
 
     // @ts-ignore
     if (window.ENABLE_DOTTED) gl.uniform1i(program_glyphs.u_dotted, pvrctx.webopengl.draw_dotted);

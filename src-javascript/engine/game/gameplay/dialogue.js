@@ -96,10 +96,10 @@ async function dialogue_init(src, viewport_width, viewport_height) {
     }
 
     fs_folder_stack_push();
-    fs_set_working_folder(src, 1);
+    fs_set_working_folder(src, true);
     src = undefined;
 
-    let import_defaults = vertexprops_parse_boolean(xml_root, "importDefaultDefinition", 1);
+    let import_defaults = vertexprops_parse_boolean(xml_root, "importDefaultDefinition", true);
     let xml_defaults = null;
     let childs_defaults = null;
 
@@ -112,10 +112,10 @@ async function dialogue_init(src, viewport_width, viewport_height) {
     }
 
     let index = 0;
-    let self_parse = 1;
+    let self_parse = true;
     let childs = xml_root.children;
 
-    while (1) {
+    while (true) {
         let node;
 
         // parse first the desired xml, and later the default xml
@@ -123,7 +123,7 @@ async function dialogue_init(src, viewport_width, viewport_height) {
             if (index >= childs.length) {
                 if (!childs_defaults) break;
                 index = 0;
-                self_parse = 0;
+                self_parse = false;
                 continue;
             }
             node = childs[index++];
@@ -178,6 +178,8 @@ async function dialogue_init(src, viewport_width, viewport_height) {
     xml = undefined;
 
     let dialogue = {
+        matrix_viewport: new Float32Array(SH4MATRIX_SIZE),
+
         audios: null,
         audios_size: 0,
         fonts: null,
@@ -199,23 +201,23 @@ async function dialogue_init(src, viewport_width, viewport_height) {
         visible_portraits: linkedlist_init(),
         texsprite_speech: null,
         texsprite_title: null,
-        draw_portraits_on_top: 0,
+        draw_portraits_on_top: false,
 
         current_background: -1,
         change_background_from: -1,
         script: null,
-        do_exit: 0,
+        do_exit: false,
         click_text: null,
         click_char: null,
         char_delay: 0,
-        do_skip: 0,
-        do_instant_print: 0,
-        do_no_wait: 0,
+        do_skip: false,
+        do_instant_print: false,
+        do_no_wait: false,
         do_multiplechoice: null,
         current_speechimage: null,
-        current_speechimage_is_opening: 0,
+        current_speechimage_is_opening: false,
         current_speechimage_repeat: DIALOGUE_REPEATANIM_ALWAYS,
-        is_speaking: 0,
+        is_speaking: false,
         current_dialog_codepoint_index: 0,
         current_dialog_codepoint_length: 0,
         current_dialog_duration: 0,
@@ -226,14 +228,13 @@ async function dialogue_init(src, viewport_width, viewport_height) {
         current_dialog_line: -1,
         gamepad: gamepad_init(-1),
         dialog_external: null,
-        is_completed: 1,
+        is_completed: true,
         chars_per_second: 0,
         self_drawable: null,
-        self_hidden: 0,
-        matrix_viewport: new Float32Array(SH4MATRIX_SIZE)
+        self_hidden: false
     };
 
-    dialogue.self_drawable = drawable_init(300, dialogue, dialogue_draw, dialogue_animate);
+    dialogue.self_drawable = drawable_init(300.0, dialogue, dialogue_draw, dialogue_animate);
     sh4matrix_clear(dialogue.matrix_viewport);
     gamepad_set_buttons_delay(dialogue.gamepad, 200);
 
@@ -277,7 +278,7 @@ async function dialogue_init(src, viewport_width, viewport_height) {
     }
 
     // create textsprite speech if not customized
-    dialogue.texsprite_speech = textsprite_init(null, 0, 34.0, 0x00000);
+    dialogue.texsprite_speech = textsprite_init(null, false, 34.0, 0x00000);
     textsprite_set_paragraph_space(dialogue.texsprite_speech, 8.0);
     textsprite_set_wordbreak(dialogue.texsprite_speech, FONT_WORDBREAK_LOOSE);
 
@@ -286,7 +287,7 @@ async function dialogue_init(src, viewport_width, viewport_height) {
 
 
     // create textsprite title
-    dialogue.texsprite_title = textsprite_init(null, 0, 24.0, 0x00000);
+    dialogue.texsprite_title = textsprite_init(null, false, 24.0, 0x00000);
     textsprite_set_paragraph_space(dialogue.texsprite_title, 8.0);
     textsprite_set_wordbreak(dialogue.texsprite_title, FONT_WORDBREAK_LOOSE);
 
@@ -311,7 +312,7 @@ async function dialogue_init(src, viewport_width, viewport_height) {
 }
 
 function dialogue_destroy(dialogue) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(dialogue);
+    luascript_drop_shared(dialogue);
     dialogue_internal_destroy_external_dialog(dialogue);
 
     for (let i = 0; i < dialogue.audios_size; i++) {
@@ -410,7 +411,7 @@ async function dialogue_apply_state(dialogue, state_name) {
 }
 
 async function dialogue_apply_state2(dialogue, state_name, if_line_label) {
-    if (dialogue.do_exit) return 0;
+    if (dialogue.do_exit) return false;
 
     let state = null;
     for (let i = 0; i < dialogue.states_size; i++) {
@@ -419,7 +420,7 @@ async function dialogue_apply_state2(dialogue, state_name, if_line_label) {
             break;
         }
     }
-    if (!state) return 0;
+    if (!state) return false;
 
     return await dialogue_internal_apply_state(dialogue, state);
 }
@@ -428,7 +429,7 @@ function dialogue_animate(dialogue, elapsed) {
     if (dialogue.self_hidden || dialogue.is_completed) return 1;
 
     if (dialogue.anims_ui.open && animsprite_animate(dialogue.anims_ui.open, elapsed) < 1) {
-        animsprite_update_drawable(dialogue.anims_ui.open, dialogue.self_drawable, 1);
+        animsprite_update_drawable(dialogue.anims_ui.open, dialogue.self_drawable, true);
     }
 
     let anim_portrait_left_in = !!dialogue.anims_ui.portrait_left_in;
@@ -484,18 +485,18 @@ function dialogue_animate(dialogue, elapsed) {
             }
 
             if (exists) {
-                animsprite_update_statesprite(anim, portrait.statesprite, 0);
+                animsprite_update_statesprite(anim, portrait.statesprite, false);
             } else {
-                portrait.is_added = 0;
+                portrait.is_added = false;
                 let toggled_default = statesprite_state_toggle(portrait.statesprite, null);
                 let toggled_speak = statesprite_state_toggle(portrait.statesprite, DIALOGUE_SPEAK);
 
                 if (dialogue.is_speaking && (toggled_default || toggled_speak)) {
-                    portrait.is_speaking = 1;
+                    portrait.is_speaking = true;
                     statesprite_animation_restart(portrait.statesprite);
                 } else {
                     // no speak animation, fallback to idle
-                    portrait.is_speaking = 0;
+                    portrait.is_speaking = false;
                     statesprite_state_toggle(portrait.statesprite, DIALOGUE_IDLE);
                 }
             }
@@ -516,9 +517,9 @@ function dialogue_animate(dialogue, elapsed) {
             }
 
             if (exists) {
-                animsprite_update_statesprite(anim, portrait.statesprite, 0);
+                animsprite_update_statesprite(anim, portrait.statesprite, false);
             } else {
-                portrait.is_removed = 0;
+                portrait.is_removed = false;
                 linkedlist_remove_item(dialogue.visible_portraits, portrait);
             }
         } else if (completed < 1) {
@@ -528,7 +529,7 @@ function dialogue_animate(dialogue, elapsed) {
 
         // if the speak animation is completed and there not longer speech switch to idle
         if (!dialogue.is_speaking && portrait.is_speaking) {
-            portrait.is_speaking = 0;
+            portrait.is_speaking = false;
             dialogue_internal_stop_portrait_animation(portrait);
             continue;
         }
@@ -550,14 +551,14 @@ function dialogue_animate(dialogue, elapsed) {
     if (dialogue.current_background >= 0 && dialogue.anims_ui.background_in) {
         let sprite = dialogue.backgrounds[dialogue.current_background].sprite;
         if (animsprite_animate(dialogue.anims_ui.background_in, elapsed) < 1) {
-            animsprite_update_sprite(dialogue.anims_ui.background_in, sprite, 1);
+            animsprite_update_sprite(dialogue.anims_ui.background_in, sprite, true);
         }
     }
 
     if (dialogue.change_background_from >= 0 && dialogue.anims_ui.background_out) {
         let sprite = dialogue.backgrounds[dialogue.change_background_from].sprite;
         if (animsprite_animate(dialogue.anims_ui.background_out, elapsed) < 1) {
-            animsprite_update_sprite(dialogue.anims_ui.background_out, sprite, 1);
+            animsprite_update_sprite(dialogue.anims_ui.background_out, sprite, true);
         } else {
             dialogue.change_background_from = -1;
         }
@@ -572,7 +573,7 @@ function dialogue_animate(dialogue, elapsed) {
         // once opening animation is done, switch to idle animation
         if (completed && is_opening && statesprite_state_toggle(sprite, DIALOGUE_IDLE)) {
             statesprite_animation_restart(sprite);
-            dialogue.current_speechimage_is_opening = 0;
+            dialogue.current_speechimage_is_opening = false;
         } else if (completed && !is_opening) {
             switch (dialogue.current_speechimage_repeat) {
                 case DIALOGUE_REPEATANIM_ALWAYS:
@@ -593,10 +594,10 @@ async function dialogue_poll(dialogue, elapsed) {
 
     if (dialogue.do_exit) {
         if (dialogue.anims_ui.close && animsprite_animate(dialogue.anims_ui.close, elapsed) < 1) {
-            animsprite_update_drawable(dialogue.anims_ui.close, dialogue.self_drawable, 1);
+            animsprite_update_drawable(dialogue.anims_ui.close, dialogue.self_drawable, true);
         } else {
             if (dialogue.script != null) await luascript_call_function(dialogue.script, "f_dialogue_exit");
-            dialogue.is_completed = 1;
+            dialogue.is_completed = true;
             for (let i = 0; i < dialogue.audios_size; i++) soundplayer_stop(dialogue.audios[i].soundplayer);
             return;
         }
@@ -604,21 +605,21 @@ async function dialogue_poll(dialogue, elapsed) {
 
     if (dialogue.current_dialog) {
         dialogue.current_dialog_elapsed += elapsed;
-        let preapare_next_line = 0;
+        let preapare_next_line = false;
 
         let buttons = gamepad_has_pressed_delayed(
             dialogue.gamepad, GAMEPAD_A | GAMEPAD_X | GAMEPAD_START | GAMEPAD_BACK
         );
         if (buttons & GAMEPAD_A) {
             dialogue.current_dialog_elapsed = dialogue.current_dialog_duration;
-            preapare_next_line = 1;
+            preapare_next_line = true;
         } else if (buttons & GAMEPAD_X) {
             if (dialogue.is_speaking)
-                dialogue.do_no_wait = 1;
+                dialogue.do_no_wait = true;
             else
-                preapare_next_line = 1;
+                preapare_next_line = true;
         } else if (buttons & (GAMEPAD_START | GAMEPAD_BACK)) {
-            dialogue.do_exit = 1;
+            dialogue.do_exit = true;
             await dialogue_close(dialogue);
         }
 
@@ -657,7 +658,7 @@ function dialogue_is_hidden(dialogue) {
 }
 
 async function dialogue_show_dialog(dialogue, src_dialog) {
-    if (!src_dialog) return 0;
+    if (!src_dialog) return false;
 
     let full_path = await fs_get_full_path_and_override(src_dialog);
     dialogue.current_dialog = null;
@@ -689,14 +690,14 @@ async function dialogue_show_dialog(dialogue, src_dialog) {
     } else {
         console.error(`dialogue_show_dialog() can not read: ${src_dialog}`);
         full_path = undefined;
-        return 0;
+        return false;
     }
 
     return await dialogue_internal_prepare_dialog(dialogue);
 }
 
 async function dialogue_show_dialog2(dialogue, text_dialog_content) {
-    if (!text_dialog_content) return 0;
+    if (!text_dialog_content) return false;
 
     dialogue_internal_parse_external_dialog(dialogue, text_dialog_content);
     return await dialogue_internal_prepare_dialog(dialogue);
@@ -705,13 +706,13 @@ async function dialogue_show_dialog2(dialogue, text_dialog_content) {
 async function dialogue_close(dialogue) {
     if (dialogue.script != null) await luascript_call_function(dialogue.script, "f_dialogue_closing");
 
-    dialogue.do_exit = 1;
+    dialogue.do_exit = true;
     dialogue.current_dialog = null;
 
     for (let i = 0; i < dialogue.audios_size; i++) {
         if (soundplayer_is_playing(dialogue.audios[i].soundplayer)) {
             if (dialogue.anims_ui.close)
-                soundplayer_fade(dialogue.audios[i].soundplayer, 0, 500.0);
+                soundplayer_fade(dialogue.audios[i].soundplayer, false, 500.0);
             else
                 soundplayer_stop(dialogue.audios[i].soundplayer);
         }
@@ -728,7 +729,7 @@ function dialogue_suspend(dialogue) {
         dialogue.audios[i].was_playing = soundplayer_is_playing(dialogue.audios[i].soundplayer);
         if (dialogue.audios[i].was_playing) {
             soundplayer_pause(dialogue.audios[i].soundplayer);
-            if (soundplayer_has_fading(dialogue.audios[i].soundplayer) == FADDING_OUT) soundplayer_set_volume(dialogue.audios[i].soundplayer, 0.0);
+            if (soundplayer_has_fading(dialogue.audios[i].soundplayer) == FADING_OUT) soundplayer_set_volume(dialogue.audios[i].soundplayer, 0.0);
         }
     }
 }
@@ -770,19 +771,19 @@ function dialogue_set_script(dialogue, weekscript) {
 
 
 async function dialogue_internal_prepare_dialog(dialogue) {
-    dialogue.do_skip = 0;
-    dialogue.do_instant_print = 0;
+    dialogue.do_skip = false;
+    dialogue.do_instant_print = false;
     dialogue.do_multiplechoice = null;
-    dialogue.do_exit = 0;
+    dialogue.do_exit = false;
     dialogue.current_dialog_line = 0;
-    dialogue.self_hidden = 0;
-    dialogue.is_completed = 0;
-    drawable_set_antialiasing(dialogue.self_drawable, PVR_FLAG_DEFAULT);
+    dialogue.self_hidden = false;
+    dialogue.is_completed = false;
+    drawable_set_antialiasing(dialogue.self_drawable, PVRCTX_FLAG_DEFAULT);
     drawable_set_alpha(dialogue.self_drawable, 1.0);
     drawable_set_property(dialogue.self_drawable, SPRITE_PROP_ALPHA2, 1.0);
     drawable_set_offsetcolor_to_default(dialogue.self_drawable);
-    pvrctx_helper_clear_modifier(drawable_get_modifier(dialogue.self_drawable));
-    linkedlist_clear(dialogue.visible_portraits);
+    pvr_context_helper_clear_modifier(drawable_get_modifier(dialogue.self_drawable));
+    linkedlist_clear(dialogue.visible_portraits, null);
 
     // apply any initial state
     await dialogue_apply_state2(dialogue, null, null);
@@ -792,8 +793,8 @@ async function dialogue_internal_prepare_dialog(dialogue) {
 
     if (!textsprite_has_font(dialogue.texsprite_speech)) {
         console.error("dialogue_internal_prepare_dialog() speech textsprite does not have font");
-        dialogue.do_exit = 1;
-        return 0;
+        dialogue.do_exit = true;
+        return false;
     }
 
     await dialogue_internal_prepare_print_text(dialogue);
@@ -808,16 +809,16 @@ async function dialogue_internal_prepare_dialog(dialogue) {
 
     gamepad_enforce_buttons_delay(dialogue.gamepad);
 
-    return 1;
+    return true;
 }
 
 async function dialogue_internal_apply_state(dialogue, state) {
-    if (dialogue.do_exit) return 0;
+    if (dialogue.do_exit) return false;
 
     let audio;
     let background;
-    let background_changed = 0;
-    let speechimage_changed = 0;
+    let background_changed = false;
+    let speechimage_changed = false;
 
     for (let action_index = 0; action_index < state.actions_size; action_index++) {
         let action = state.actions[action_index];
@@ -839,11 +840,11 @@ async function dialogue_internal_apply_state(dialogue, state) {
                 break;
             case DIALOGUE_TYPE_AUDIO_FADEIN:
                 audio = dialogue_internal_get_audio(dialogue, action.name);
-                if (audio) soundplayer_fade(audio.soundplayer, 1, action.duration);
+                if (audio) soundplayer_fade(audio.soundplayer, true, action.duration);
                 break;
             case DIALOGUE_TYPE_AUDIO_FADEOUT:
                 audio = dialogue_internal_get_audio(dialogue, action.name);
-                if (audio) soundplayer_fade(audio.soundplayer, 0, action.duration);
+                if (audio) soundplayer_fade(audio.soundplayer, false, action.duration);
                 break;
             case DIALOGUE_TYPE_AUDIO_STOP:
                 audio = dialogue_internal_get_audio(dialogue, action.name);
@@ -864,18 +865,18 @@ async function dialogue_internal_apply_state(dialogue, state) {
                 if (background >= 0) {
                     dialogue.current_background = background;
                     dialogue.change_background_from = -1;
-                    background_changed = 1;
+                    background_changed = true;
                 }
                 break;
             case DIALOGUE_TYPE_BACKGROUND_CHANGE:
                 dialogue.change_background_from = dialogue.current_background;
                 dialogue.current_background = dialogue_internal_get_background_index(dialogue, action.name);
-                background_changed = 1;
+                background_changed = true;
                 break;
             case DIALOGUE_TYPE_BACKGROUND_REMOVE:
                 dialogue.current_background = -1;
                 dialogue.change_background_from = -1;
-                background_changed = 1;
+                background_changed = true;
                 break;
             case DIALOGUE_TYPE_LUA:
                 if (dialogue.script == null) {
@@ -889,16 +890,15 @@ async function dialogue_internal_apply_state(dialogue, state) {
                 break;
             case DIALOGUE_TYPE_EXIT:
                 await dialogue_close(dialogue);
-                return 1;
+                return true;
             case DIALOGUE_TYPE_PORTRAIT_ADD:
                 let portrait_index = -1;
                 if (action.random_from_prefix != null && dialogue.portraits_size > 0) {
-                    let index;
                     if (action.random_from_prefix.length == 0) {
                         // random choose
                         portrait_index = math2d_random_int(0, dialogue.portraits_size);
                     } else {
-                        index = -1;
+                        portrait_index = -1;
                         let count = 0;
                         let j = 0;
 
@@ -912,20 +912,22 @@ async function dialogue_internal_apply_state(dialogue, state) {
                         for (let i = 0; i < dialogue.portraits_size; i++) {
                             if (dialogue.portraits[i].name.startsWith(action.name, 0)) {
                                 if (j == choosen) {
-                                    index = i;
+                                    portrait_index = i;
                                     break;
                                 }
                                 j++;
                             }
                         }
                     }
-                }
-                for (let i = 0; i < dialogue.portraits_size; i++) {
-                    if (dialogue.portraits[i].name == action.name) {
-                        portrait_index = i;
-                        break;
+                } else {
+                    for (let i = 0; i < dialogue.portraits_size; i++) {
+                        if (dialogue.portraits[i].name == action.name) {
+                            portrait_index = i;
+                            break;
+                        }
                     }
                 }
+
                 if (portrait_index < 0 || portrait_index >= dialogue.portraits_size) {
                     break;
                 }
@@ -936,9 +938,9 @@ async function dialogue_internal_apply_state(dialogue, state) {
 
                 linkedlist_remove_item(dialogue.visible_portraits, dialogue.portraits[portrait_index]);
                 linkedlist_add_item(dialogue.visible_portraits, dialogue.portraits[portrait_index]);
-                dialogue.portraits[portrait_index].is_added = 1;
-                dialogue.portraits[portrait_index].is_removed = 0;
-                dialogue.portraits[portrait_index].is_speaking = 0;
+                dialogue.portraits[portrait_index].is_added = true;
+                dialogue.portraits[portrait_index].is_removed = false;
+                dialogue.portraits[portrait_index].is_speaking = false;
                 statesprite_state_toggle(dialogue.portraits[portrait_index].statesprite, null);
                 statesprite_state_toggle(
                     dialogue.portraits[portrait_index].statesprite, action.no_speak ? DIALOGUE_IDLE : DIALOGUE_SPEAK
@@ -947,8 +949,8 @@ async function dialogue_internal_apply_state(dialogue, state) {
             case DIALOGUE_TYPE_PORTRAIT_REMOVE:
                 for (let i = 0; i < dialogue.portraits_size; i++) {
                     if (dialogue.portraits[i].name == action.name) {
-                        dialogue.portraits[i].is_added = 0;
-                        dialogue.portraits[i].is_removed = 1;
+                        dialogue.portraits[i].is_added = false;
+                        dialogue.portraits[i].is_removed = true;
 
                         if (dialogue.anims_ui.portrait_left_out)
                             animsprite_restart(dialogue.anims_ui.portrait_left_out);
@@ -964,8 +966,8 @@ async function dialogue_internal_apply_state(dialogue, state) {
             case DIALOGUE_TYPE_PORTRAIT_REMOVEALL:
                 if (action.animate_remove) {
                     for (let portrait of linkedlist_iterate4(dialogue.visible_portraits)) {
-                        portrait.is_added = 0;
-                        portrait.is_removed = 1;
+                        portrait.is_added = false;
+                        portrait.is_removed = true;
                     }
 
                     if (dialogue.anims_ui.portrait_left_out)
@@ -1003,26 +1005,26 @@ async function dialogue_internal_apply_state(dialogue, state) {
                 if (action.char_delay >= 0) dialogue.char_delay = action.char_delay;
                 break;
             case DIALOGUE_TYPE_TEXT_SKIP:
-                dialogue.do_skip = 1;
+                dialogue.do_skip = true;
                 break;
             case DIALOGUE_TYPE_TEXT_INSTANTPRINT:
-                dialogue.do_instant_print = 1;
+                dialogue.do_instant_print = true;
                 break;
             case DIALOGUE_TYPE_SPEECH_BACKGROUND:
                 if (action.name == null) {
                     //random choose
                     let index = math2d_random_int(0, dialogue.backgrounds_size);
                     dialogue.current_speechimage = dialogue.speechimages[index];
-                    speechimage_changed = 1;
+                    speechimage_changed = true;
                 } else if (action.name == "none") {
-                    speechimage_changed = 0;
+                    speechimage_changed = false;
                     dialogue.current_speechimage = null;
-                    dialogue.current_speechimage_is_opening = 0;
+                    dialogue.current_speechimage_is_opening = false;
                 } else {
                     for (let i = 0; i < dialogue.speechimages_size; i++) {
                         if (dialogue.speechimages[i].name == action.name) {
                             dialogue.current_speechimage = dialogue.speechimages[i];
-                            speechimage_changed = 1;
+                            speechimage_changed = true;
                             break;
                         }
                     }
@@ -1074,10 +1076,10 @@ async function dialogue_internal_apply_state(dialogue, state) {
                 break;
             case DIALOGUE_TYPE_TITLE:
                 if (!dialogue.texsprite_title) break;
-                textsprite_set_text_intern(dialogue.texsprite_title, 1, action.title);
+                textsprite_set_text_intern(dialogue.texsprite_title, true, action.title);
                 break;
             case DIALOGUE_TYPE_NOWAIT:
-                dialogue.do_no_wait = 1;
+                dialogue.do_no_wait = true;
                 break;
         }
 
@@ -1132,7 +1134,7 @@ async function dialogue_internal_apply_state(dialogue, state) {
         textsprite_set_draw_location(dialogue.texsprite_title, title_x, title_y);
     }
 
-    return 1;
+    return true;
 }
 
 function dialogue_internal_draw_background(dialogue, pvrctx) {
@@ -1156,7 +1158,7 @@ function dialogue_internal_draw_portraits(dialogue, pvrctx) {
             portrait_line_y += dialogue.current_speechimage.offset_y;
         }
     } else {
-        portrait_line_x = 0;
+        portrait_line_x = 0.0;
         portrait_line_y = FUNKIN_SCREEN_RESOLUTION_HEIGHT / 2.0;
         portrait_line_width = 0.9 * FUNKIN_SCREEN_RESOLUTION_WIDTH;
     }
@@ -1165,7 +1167,7 @@ function dialogue_internal_draw_portraits(dialogue, pvrctx) {
         statesprite_get_draw_size(portrait.statesprite, draw_size);
 
         let draw_x = portrait.position * portrait_line_width;
-        let draw_y = 0;
+        let draw_y = 0.0;
 
         switch (dialogue.current_speechimage.align_horizontal) {
             case ALIGN_NONE:
@@ -1179,13 +1181,13 @@ function dialogue_internal_draw_portraits(dialogue, pvrctx) {
                 draw_x -= draw_size[0];
                 break;
             case ALIGN_CENTER:
-                draw_x -= draw_size[0] / 2;
+                draw_x -= draw_size[0] / 2.0;
                 break;
         }
 
         switch (dialogue.current_speechimage.align_vertical) {
             case ALIGN_CENTER:
-                draw_y = draw_size[1] / -2;
+                draw_y = draw_size[1] / -2.0;
                 break;
             case ALIGN_NONE:
             case ALIGN_END:
@@ -1229,7 +1231,7 @@ async function dialogue_internal_prepare_print_text(dialogue) {
 
     if (dialogue.do_skip) {
         dialogue.current_dialog_line++;
-        dialogue.do_skip = 0;
+        dialogue.do_skip = false;
         await dialogue_internal_prepare_print_text(dialogue);
         return;
     }
@@ -1242,12 +1244,12 @@ async function dialogue_internal_prepare_print_text(dialogue) {
     let line = dialogue.current_dialog.lines[dialogue.current_dialog_line];
 
     if (dialogue.do_instant_print) {
-        await dialogue_internal_notify_script(dialogue, 1);
-        textsprite_set_text(dialogue.texsprite_speech, line.text);
-        await dialogue_internal_notify_script(dialogue, 0);
+        await dialogue_internal_notify_script(dialogue, true);
+        textsprite_set_text_intern(dialogue.texsprite_speech, true, line.text);
+        await dialogue_internal_notify_script(dialogue, false);
         dialogue_internal_toggle_idle(dialogue);
-        dialogue.do_instant_print = 0;
-        dialogue.is_speaking = 0;
+        dialogue.do_instant_print = false;
+        dialogue.is_speaking = false;
         return;
     }
 
@@ -1279,19 +1281,19 @@ async function dialogue_internal_prepare_print_text(dialogue) {
     dialogue.current_dialog_codepoint_index = 0;
     dialogue.current_dialog_codepoint_length = index;
     dialogue.current_dialog_mask = stringbuilder_get_copy(buffer);
-    dialogue.is_speaking = 1;
+    dialogue.is_speaking = true;
 
     if (dialogue.chars_per_second > 0)
         dialogue.current_dialog_duration = (index / dialogue.chars_per_second) * 1000.0;
     else
-        dialogue.current_dialog_duration = 0;
+        dialogue.current_dialog_duration = 0.0;
     dialogue.current_dialog_duration += index * dialogue.char_delay;
     dialogue.current_dialog_elapsed = 0.0;
 
     if (dialogue.current_dialog_line > 0 && dialogue.click_text) soundplayer_replay(dialogue.click_text);
 
-    await dialogue_internal_notify_script(dialogue, 1);
-    textsprite_set_text(dialogue.texsprite_speech, dialogue.current_dialog_mask);
+    await dialogue_internal_notify_script(dialogue, true);
+    textsprite_set_text_intern(dialogue.texsprite_speech, true, dialogue.current_dialog_mask);
 }
 
 async function dialogue_internal_print_text(dialogue) {
@@ -1312,18 +1314,18 @@ async function dialogue_internal_print_text(dialogue) {
         stringbuilder_add_substring(buffer, line.text, 0, next_index);
         stringbuilder_add_substring(buffer, dialogue.current_dialog_mask, next_index, length);
 
-        textsprite_set_text(dialogue.texsprite_speech, stringbuilder_intern(buffer));
+        textsprite_set_text_intern(dialogue.texsprite_speech, true, stringbuilder_intern(buffer));
         return;
     }
 
-    await dialogue_internal_notify_script(dialogue, 0);
-    textsprite_set_text(dialogue.texsprite_speech, line.text);
+    await dialogue_internal_notify_script(dialogue, false);
+    textsprite_set_text_intern(dialogue.texsprite_speech, true, line.text);
 
-    dialogue.is_speaking = 0;
+    dialogue.is_speaking = false;;
     dialogue.current_dialog_line++;
 
     if (dialogue.do_no_wait) {
-        dialogue.do_no_wait = 0;
+        dialogue.do_no_wait = false;
         await dialogue_internal_prepare_print_text(dialogue);
         return;
     }
@@ -1334,7 +1336,7 @@ async function dialogue_internal_print_text(dialogue) {
 function dialogue_internal_toggle_idle(dialogue) {
     for (let portrait of linkedlist_iterate4(dialogue.visible_portraits)) {
         if (!portrait.is_speaking) continue;
-        portrait.is_speaking = 0;
+        portrait.is_speaking = false;
         if (statesprite_state_toggle(portrait.statesprite, DIALOGUE_IDLE) || statesprite_state_toggle(portrait.statesprite, null)) {
             let anim = statesprite_state_get(portrait.statesprite).animation;
             if (anim) animsprite_restart(anim);
@@ -1439,7 +1441,7 @@ async function dialogue_internal_parse_animationui(root_node, anims_ui) {
 
     if (!animation_list) {
         animlist = await animlist_init(animation_list);
-        if (!animation_list) {
+        if (!animlist) {
             console.error(`dialogue_internal_parse_animationui() can not initialize: ${root_node.outerHTML}`);
             return;
         }
@@ -1461,7 +1463,7 @@ async function dialogue_internal_parse_animationui(root_node, anims_ui) {
 }
 
 function dialogue_internal_parse_state(root_node, states) {
-    let initial = vertexprops_parse_boolean(root_node, "initial", 0);
+    let initial = vertexprops_parse_boolean(root_node, "initial", false);
     let name = root_node.getAttribute("name");
     let if_line = root_node.getAttribute("ifLine");
     let actions = arraylist_init();
@@ -1514,14 +1516,14 @@ function dialogue_internal_parse_state(root_node, states) {
             case "PortraitAdd":
                 action.type = DIALOGUE_TYPE_PORTRAIT_ADD;
                 action.random_from_prefix = node.getAttribute("randomFromPrefix");
-                action.no_speak = vertexprops_parse_boolean(node, "noSpeak", 0);
+                action.no_speak = vertexprops_parse_boolean(node, "noSpeak", false);
                 break;
             case "PortraitRemove":
                 action.type = DIALOGUE_TYPE_PORTRAIT_REMOVE;
                 break;
             case "PortraitRemoveAll":
                 action.type = DIALOGUE_TYPE_PORTRAIT_REMOVEALL;
-                action.animate_remove = vertexprops_parse_boolean(node, "animateRemove", 0);
+                action.animate_remove = vertexprops_parse_boolean(node, "animateRemove", false);
                 break;
             case "AudioUI":
                 action.type = DIALOGUE_TYPE_AUDIO_UI;
@@ -1545,7 +1547,7 @@ function dialogue_internal_parse_state(root_node, states) {
                     let tmp = node.getAttribute("fromCommon");
                     if (tmp != "none") action.name = tmp;
                 }
-                switch (node.getAttribute("repeatAnim")) {
+                switch (node.getAttribute("repeatAnim").toLowerCase()) {
                     case "":
                     case null:
                         action.repeat_anim = DIALOGUE_REPEATANIM_NONE;
@@ -1553,7 +1555,6 @@ function dialogue_internal_parse_state(root_node, states) {
                     case "once":
                         action.repeat_anim = DIALOGUE_REPEATANIM_ONCE;
                         break;
-                    case "whileSpeaks":
                     case "whilespeaks":
                         action.repeat_anim = DIALOGUE_REPEATANIM_WHILESPEAKS;
                         break;
@@ -1592,11 +1593,11 @@ function dialogue_internal_parse_state(root_node, states) {
                 break;
             case "TextBorderEnable":
                 action.type = DIALOGUE_TYPE_TEXT_BORDERENABLE;
-                action.enabled = vertexprops_parse_boolean(node, "enabled", 0);
+                action.enabled = vertexprops_parse_boolean(node, "enabled", false);
                 break;
             case "TextParagraphSpace":
                 action.type = DIALOGUE_TYPE_TEXT_PARAGRAPHSPACE;
-                action.size = vertexprops_parse_float(node, "size", 0);
+                action.size = vertexprops_parse_float(node, "size", 0.0);
                 break;
             case "TextAlign":
                 action.type = DIALOGUE_TYPE_TEXT_ALIGN;
@@ -1616,6 +1617,7 @@ function dialogue_internal_parse_state(root_node, states) {
                 break;
             default:
                 console.error(`dialogue_internal_parse_state() unknown state action: ${node.outerHTML}`);
+                action.name = undefined;
                 continue;
         }
 
@@ -1638,9 +1640,9 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
     let title = root_node.getAttribute("title");
     let name = root_node.getAttribute("name");
     let orientation = root_node.getAttribute("orientation");
-    let can_leave = vertexprops_parse_boolean(root_node, "canLeave", 0);
+    let can_leave = vertexprops_parse_boolean(root_node, "canLeave", false);
     let state_on_leave = root_node.getAttribute("stateOnLeave");
-    let icon_color = vertexprops_parse_hex2(root_node.getAttribute("selectorIconColor"), 0x00FFF, 0);
+    let icon_color = vertexprops_parse_hex2(root_node.getAttribute("selectorIconColor"), 0x00FFF, false);
     let icon_model = root_node.getAttribute("selectorIconColor");
     let icon_model_name = root_node.getAttribute("selectorIconModelName");
     let default_index = vertexprops_parse_integer(root_node, "defaultIndex", 0);
@@ -1652,13 +1654,13 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
         case null:
         case "":
         case "vertical":
-            is_vertical = 1;
+            is_vertical = true;
             break;
         case "horizontal":
-            is_vertical = 0;
+            is_vertical = false;
             break;
         default:
-            is_vertical = 1;
+            is_vertical = true;
             console.error(`dialogue_internal_parse_multiple_choice() unknown orientation value: ${orientation}`);
             break;
     }
@@ -1672,8 +1674,8 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
             if (!modeholder) {
                 console.error(`dialogue_internal_parse_multiple_choice() can not initialize: ${icon_model}`);
             } else {
-                texture = modelholder_get_texture(modeholder, 1);
-                anim = modelholder_create_animsprite(modeholder, icon_model_name ?? DIALOGUE_ICON, 1, 0);
+                texture = modelholder_get_texture(modeholder, true);
+                anim = modelholder_create_animsprite(modeholder, icon_model_name ?? DIALOGUE_ICON, true, false);
                 icon_color = modelholder_get_vertex_color(modeholder);
                 modelholder_destroy(modeholder);
             }
@@ -1713,7 +1715,7 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
                 await dialogue_internal_parse_choice(node, dialogs, choices);
                 break;
             default:
-                console.error(`dialogue_internal_parse_multiplechoice() unknown: ${node.outerHTML}`);
+                console.error(`dialogue_internal_parse_multiplechoice() unknown: ${node.tagName}`);
                 break;
         }
     }
@@ -1741,9 +1743,9 @@ async function dialogue_internal_parse_speech_imagelist(root_node, speechimages)
     let offset_open_y = 0.0;
     let align_vertical = ALIGN_NONE;
     let align_horizontal = ALIGN_NONE;
-    let portrait_line_is_relative = 0;
-    let title_is_relative = 0;
-    let text_is_relative = 0;
+    let portrait_line_is_relative = false;
+    let title_is_relative = false;
+    let text_is_relative = false;
 
 
     for (let node of root_node.children) {
@@ -1842,7 +1844,7 @@ async function dialogue_internal_parse_import_portraitlist(root_node, portraits)
     }
 
     fs_folder_stack_push();
-    fs_set_working_folder(dialogue_src, 1);
+    fs_set_working_folder(dialogue_src, true);
 
     for (let node of root_node.children) {
         if (node.tagName != "Definition") continue;
@@ -1862,7 +1864,7 @@ async function dialogue_internal_parse_audio(node, audios) {
     let name = node.getAttribute("name");
     let src = node.getAttribute("src");
     let volume = vertexprops_parse_float(node, "volume", 1.0);
-    let looped = vertexprops_parse_boolean(node, "looped", 0);
+    let looped = vertexprops_parse_boolean(node, "looped", false);
 
     // avoid duplicates
     for (let i = 0, size = arraylist_size(audios); i < size; i++) {
@@ -1889,7 +1891,7 @@ async function dialogue_internal_parse_audio(node, audios) {
 
     let audio = {
         name: name,
-        was_playing: 0,
+        was_playing: false,
         soundplayer: soundplayer
     };
 
@@ -1910,9 +1912,9 @@ async function dialogue_internal_parse_image(node, max_width, max_height, base_s
     let name = node.getAttribute("name");
     let src = node.getAttribute("src");
     let entry_name = node.getAttribute("entryName");
-    let center = vertexprops_parse_boolean(node, "center", 0);
-    let cover = vertexprops_parse_boolean(node, "cover", 0);
-    let looped = vertexprops_parse_boolean(node, "looped", 0);
+    let center = vertexprops_parse_boolean(node, "center", false);
+    let cover = vertexprops_parse_boolean(node, "cover", false);
+    let looped = vertexprops_parse_boolean(node, "looped", false);
     let has_looped = node.hasAttribute("looped");
     let alpha = vertexprops_parse_float(node, "alpha", 1.0);
 
@@ -1941,8 +1943,8 @@ async function dialogue_internal_parse_image(node, max_width, max_height, base_s
         let modelholder = await modelholder_init(src);
         init_failed = !modelholder;
         if (modelholder) {
-            texture = modelholder_get_texture(modelholder, 1);
-            animsprite = modelholder_create_animsprite(modelholder, entry_name, 1, 0);
+            texture = modelholder_get_texture(modelholder, true);
+            animsprite = modelholder_create_animsprite(modelholder, entry_name, true, false);
             vertex_color_rgb8 = modelholder_get_vertex_color(modelholder);
             if (has_looped && animsprite) animsprite_set_loop(animsprite, looped ? -1 : 1);
             modelholder_destroy(modelholder);
@@ -2004,13 +2006,13 @@ function dialogue_internal_parse_color(node, max_width, max_height, backgrounds)
 }
 
 async function dialogue_internal_parse_font(node, fonts) {
-    //<Font name="vcr" src="vcr.ttf" glyphSuffix="bold" glyphAnimated="false"  colorByDifference="true" />
+    //<Font name="vcr" src="vcr.ttf" glyphSuffix="bold" glyphAnimated="false"  colorByAddition="true" />
 
     let name = node.getAttribute("name");
     let src = node.getAttribute("src");
     let glyph_suffix = node.getAttribute("glyphSuffix");
-    let glyph_animated = vertexprops_parse_boolean(node, "glyphAnimated", 0);
-    let color_by_difference = vertexprops_parse_boolean(node, "colorByDifference", 0);
+    let glyph_animated = vertexprops_parse_boolean(node, "glyphAnimated", false);
+    let color_by_addition = vertexprops_parse_boolean(node, "colorByAddition", false);
 
     if (!name) {
         console.error(`dialogue_internal_parse_font() missing name: ${node.outerHTML}`);
@@ -2035,11 +2037,11 @@ async function dialogue_internal_parse_font(node, fonts) {
 
     if (atlas_utils_is_known_extension(src)) {
         instance = await fontglyph_init(src, glyph_suffix, glyph_animated);
-        fontglyph_enable_color_by_difference(instance, color_by_difference);
-        is_atlas = 1;
+        fontglyph_enable_color_by_addition(instance, color_by_addition);
+        is_atlas = true;
     } else {
         instance = await fonttype_init(src);
-        is_atlas = 0;
+        is_atlas = false;
     }
 
     if (!instance) {
@@ -2073,10 +2075,10 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
     let speak_anim = node.getAttribute("speakAnim");
     let idle_anim = node.getAttribute("idleAnim");
     let simple_anim = node.getAttribute("anim");
-    let speak_anim_looped = vertexprops_parse_boolean(node, "speakAnimLooped", 1);
-    let idle_anim_looped = vertexprops_parse_boolean(node, "idleAnimLooped", 1);
-    let simple_anim_looped = vertexprops_parse_boolean(node, "animLooped", 1);
-    let mirror = vertexprops_parse_boolean(node, "mirror", 0);
+    let speak_anim_looped = vertexprops_parse_boolean(node, "speakAnimLooped", true);
+    let idle_anim_looped = vertexprops_parse_boolean(node, "idleAnimLooped", true);
+    let simple_anim_looped = vertexprops_parse_boolean(node, "animLooped", true);
+    let mirror = vertexprops_parse_boolean(node, "mirror", false);
     let position = vertexprops_parse_float(node, "positionPercent", 0.0);
     let position_align = node.getAttribute("position");
     let x = vertexprops_parse_float(node, "x", 0.0);
@@ -2128,12 +2130,12 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
         if (!modelholder) break L_process;
 
         statesprite = statesprite_init_from_texture(null);
-        statesprite_change_draw_size_in_atlas_apply(statesprite, 1, scale);
+        statesprite_change_draw_size_in_atlas_apply(statesprite, true, scale);
         statesprite_set_draw_location(statesprite, 0.0, 0.0);
 
         dialogue_internal_add_state(statesprite, modelholder, simple_anim, null, scale, simple_anim_looped);
-        dialogue_internal_add_state(statesprite, modelholder, idle_anim, DIALOGUE_IDLE, scale, 0);
-        dialogue_internal_add_state(statesprite, modelholder, speak_anim, DIALOGUE_SPEAK, scale, 0);
+        dialogue_internal_add_state(statesprite, modelholder, idle_anim, DIALOGUE_IDLE, scale, false);
+        dialogue_internal_add_state(statesprite, modelholder, speak_anim, DIALOGUE_SPEAK, scale, false);
 
         modelholder_destroy(modelholder);
     } else {
@@ -2159,15 +2161,15 @@ async function dialogue_internal_parse_portrait(node, base_model, portraits) {
         state.offset_y += y;
     }
     statesprite_flip_texture(statesprite, mirror, null);
-    //statesprite_flip_texture_enable_correction(statesprite, 0);
+    //statesprite_flip_texture_enable_correction(statesprite, false);
 
     let portrait = {
         name: name,
         statesprite: statesprite,
         position: position,
-        is_removed: 0,
-        is_added: 0,
-        is_speaking: 0,
+        is_removed: false,
+        is_added: false,
+        is_speaking: false,
         offset_speak_x: offset_speak_x,
         offset_speak_y: offset_speak_y,
         offset_idle_x: offset_idle_x,
@@ -2290,7 +2292,7 @@ async function dialogue_internal_parse_choice(node, dialogs, choices) {
 
     let text = node.getAttribute("text");
     let dialogs_file = node.getAttribute("dialogFile");
-    let exit = vertexprops_parse_boolean(node, "exit", 0);
+    let exit = vertexprops_parse_boolean(node, "exit", false);
     let run_multiple_choice = node.getAttribute("runMultipleChoice");
     let lua_function = node.getAttribute("luaFunction");
     let lua_eval = node.getAttribute("luaEval");
@@ -2332,8 +2334,8 @@ async function dialogue_internal_parse_speech_image(node, base_src, speechimages
     let scale = vertexprops_parse_float(node, "scale", 1.0);
     let open_anim = node.getAttribute("openAnim");
     let idle_anim = node.getAttribute("idleAnim");
-    let idle_looped = vertexprops_parse_boolean(node, "idleLooped", 1);
-    let mirror = vertexprops_parse_boolean(node, "mirror", 0);
+    let idle_looped = vertexprops_parse_boolean(node, "idleLooped", true);
+    let mirror = vertexprops_parse_boolean(node, "mirror", false);
     let has_mirror = node.hasAttribute("mirror");
     let src = node.getAttribute("src");
 
@@ -2362,15 +2364,15 @@ async function dialogue_internal_parse_speech_image(node, base_src, speechimages
         statesprite = statesprite_init_from_texture(null);
         statesprite_set_draw_location(statesprite, 0.0, 0.0);
 
-        dialogue_internal_add_state(statesprite, modelholder, open_anim, DIALOGUE_OPEN, scale, 0);
+        dialogue_internal_add_state(statesprite, modelholder, open_anim, DIALOGUE_OPEN, scale, false);
         dialogue_internal_add_state(statesprite, modelholder, idle_anim, DIALOGUE_IDLE, scale, idle_looped);
 
         if (linkedlist_count(statesprite_state_list(statesprite)) < 1) {
-            let texture = modelholder_get_texture(modelholder, 1);
+            let texture = modelholder_get_texture(modelholder, true);
             if (texture) {
                 let orig_size = [-1.0, -1.0];
                 texture_get_original_dimmensions(texture, orig_size);
-                statesprite_set_texture(statesprite, texture, 1);
+                statesprite_set_texture(statesprite, texture, true);
                 statesprite_set_draw_size(statesprite, orig_size[0] * scale, orig_size[1] * scale);
             } else {
                 statesprite_destroy(statesprite);
@@ -2386,7 +2388,7 @@ async function dialogue_internal_parse_speech_image(node, base_src, speechimages
         let size = [-1.0, -1.0];
         texture_get_original_dimmensions(texture, size);
 
-        if (scale >= 0) {
+        if (scale >= 0.0) {
             size[0] *= scale;
             size[1] *= scale;
         }
@@ -2403,14 +2405,13 @@ async function dialogue_internal_parse_speech_image(node, base_src, speechimages
     }
 
     if (has_mirror) statesprite_flip_texture(statesprite, mirror, null);
-    if (scale > 0.0) statesprite_change_draw_size_in_atlas_apply(statesprite, 1, scale);
+    if (scale > 0.0) statesprite_change_draw_size_in_atlas_apply(statesprite, true, scale);
 
-    let speechimage = {
+    let speechimage = arraylist_add(speechimages, {
         name: name,
         statesprite: statesprite
-    };
+    });
 
-    arraylist_add(speechimages, speechimage);
     return speechimage;
 }
 
@@ -2425,7 +2426,7 @@ async function dialogue_internal_load_psych_character_json(src, portraits) {
     let animations_length = json_read_array_length(animations);
 
     fs_folder_stack_push();
-    fs_set_working_folder(src, 1);
+    fs_set_working_folder(src, true);
 
     let position = [-1.0, -1.0];
     dialogue_internal_read_offset(json, "position", position);
@@ -2458,7 +2459,6 @@ async function dialogue_internal_load_psych_character_json(src, portraits) {
         } else if (image.indexOf('.', 0) >= 0) {
             // append atlas extension
             let tmp = string_concat(2, image, ".xml");
-            image = undefined;
             image = tmp;
         }
 
@@ -2501,8 +2501,8 @@ async function dialogue_internal_load_psych_character_json(src, portraits) {
             loop_name = json_read_string(obj, "loop_name", null);
 
             // prepare portrait
-            let anim_idle = modelholder_create_animsprite(modelholder, idle_name, 1, 0);
-            let anim_speak = modelholder_create_animsprite(modelholder, loop_name, 1, 0);
+            let anim_idle = modelholder_create_animsprite(modelholder, idle_name, true, false);
+            let anim_speak = modelholder_create_animsprite(modelholder, loop_name, true, false);
             let statesprite = statesprite_init_from_texture(null);
             statesprite_set_draw_location(statesprite, 0.0, 0.0);
 
@@ -2512,15 +2512,15 @@ async function dialogue_internal_load_psych_character_json(src, portraits) {
             loop_offset[0] += position[0];
             loop_offset[1] += position[1];
 
-            if (scale >= 0.0) statesprite_change_draw_size_in_atlas_apply(statesprite, 1, scale);
-            dialogue_internal_compute_state(modelholder, statesprite, anim_idle, idle_offset, 0);
-            dialogue_internal_compute_state(modelholder, statesprite, anim_speak, loop_offset, 1);
+            if (scale >= 0.0) statesprite_change_draw_size_in_atlas_apply(statesprite, true, scale);
+            dialogue_internal_compute_state(modelholder, statesprite, anim_idle, idle_offset, false);
+            dialogue_internal_compute_state(modelholder, statesprite, anim_speak, loop_offset, true);
 
             let portrait = {
                 name: anim,
-                is_added: 0,
-                is_removed: 0,
-                is_speaking: 0,
+                is_added: false,
+                is_removed: false,
+                is_speaking: false,
                 position: dialogue_pos,
                 statesprite: statesprite
             };
@@ -2540,7 +2540,10 @@ async function dialogue_internal_parse_dialog_from_file(src, dialogs) {
     // check if is already loaded
     let id = 0;
     for (let existing_dialog of arraylist_iterate4(dialogs)) {
-        if (existing_dialog.full_path != null && existing_dialog.full_path == full_path) return id;
+        if (existing_dialog.full_path != null && existing_dialog.full_path == full_path) {
+            full_path = undefined;
+            return id;
+        }
         id++;
     }
 
@@ -2614,15 +2617,14 @@ function dialogue_internal_parse_dialog_from_string(source, dialog_ref) {
     }
 
     if (buffered_line != null) {
-        let dialog_line;
         if (arraylist_size(lines) < 1) {
-            dialog_line = {
+            let dialog_line = {
                 target_state_name: null,
                 text: buffered_line
             };
             arraylist_add(lines, dialog_line);
         } else {
-            dialog_line = arraylist_get(lines, arraylist_size(lines) - 1);
+            let dialog_line = arraylist_get(lines, arraylist_size(lines) - 1);
             let tmp = string_concat(2, dialog_line.text, buffered_line);
             dialog_line.text = undefined;
             buffered_line = undefined;
@@ -2642,11 +2644,11 @@ function dialogue_internal_parse_dialog_from_string(source, dialog_ref) {
 function dialogue_internal_read_color(node, rgba) {
     let color = [0x00];
     rgba[3] = 1.0;
-    if (vertexprops_parse_hex(node.getAttribute("rgb"), color, 0)) {
-        math2d_color_bytes_to_floats(color, 0, rgba);
+    if (vertexprops_parse_hex(node.getAttribute("rgb"), color, false)) {
+        math2d_color_bytes_to_floats(color[0], false, rgba);
         rgba[3] = vertexprops_parse_float(node, "alpha", 1.0);
-    } else if (vertexprops_parse_hex(node.getAttribute("rgba"), color, 0)) {
-        math2d_color_bytes_to_floats(color, 1, rgba);
+    } else if (vertexprops_parse_hex(node.getAttribute("rgba"), color, false)) {
+        math2d_color_bytes_to_floats(color[0], true, rgba);
     } else {
         rgba[0] = vertexprops_parse_float(node, "r", rgba[0]);
         rgba[1] = vertexprops_parse_float(node, "g", rgba[1]);
@@ -2804,27 +2806,27 @@ function dialogue_internal_get_multiplechoice(dialogue, name) {
  * @property {object} anims_ui
 
  * @property {object[]} visible_portraits
- * @property {bool} is_completed
+ * @property {boolean} is_completed
  * @property {object} dialog_external
 
  * @property {number} current_background
  * @property {number} change_background_from
  * @property {null|number} script
- * @property {bool} do_exit
+ * @property {boolean} do_exit
  * @property {object} click_text
  * @property {object} click_char
  * @property {number} char_delay
  * @property {number} chars_per_second
- * @property {bool} do_skip
- * @property {bool} do_instant_print
- * @property {bool} do_no_wait
+ * @property {boolean} do_skip
+ * @property {boolean} do_instant_print
+ * @property {boolean} do_no_wait
  * @property {object} do_multiplechoice
  * @property {object} texsprite_speech
  * @property {object} texsprite_title
  * @property {object} current_speechimage
- * @property {bool} current_speechimage_is_opening
+ * @property {boolean} current_speechimage_is_opening
  * @property {object} current_speechimage_repeat
- * @property {bool} is_speaking
+ * @property {boolean} is_speaking
  * @property {number} current_dialog_codepoint_index
  * @property {number} current_dialog_codepoint_length
  * @property {number} current_dialog_duration
@@ -2833,10 +2835,10 @@ function dialogue_internal_get_multiplechoice(dialogue, name) {
  * @property {object} current_dialog
  * @property {number} current_dialog_line
  * @property {object} current_dialog_buffer
- * @property {bool} draw_portraits_on_top
+ * @property {boolean} draw_portraits_on_top
  * @property {GamepadKDY} gamepad
  * @property {object} self_drawable
- * @property {bool} self_hidden
+ * @property {boolean} self_hidden
  * @property {object} matrix_viewport
 */
 

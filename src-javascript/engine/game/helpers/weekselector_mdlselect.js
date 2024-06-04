@@ -25,18 +25,19 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
 
         preview: statesprite_init_from_texture(null),
 
-        icon_locked: modelholder_create_sprite(modelholder, WEEKSELECTOR_LOCKED, 1),
-        icon_up: modelholder_create_sprite(modelholder, WEEKSELECTOR_ARROW_SPRITE_NAME, 1),
-        icon_down: modelholder_create_sprite(modelholder, WEEKSELECTOR_ARROW_SPRITE_NAME, 1),
+        icon_locked: modelholder_create_sprite(modelholder, WEEKSELECTOR_LOCKED, true),
+        icon_up: modelholder_create_sprite(modelholder, WEEKSELECTOR_ARROW_SPRITE_NAME, true),
+        icon_down: modelholder_create_sprite(modelholder, WEEKSELECTOR_ARROW_SPRITE_NAME, true),
 
-        has_up: 1,
-        has_down: 1,
-        is_locked: 0,
-        is_enabled: 0,
+        has_up: true,
+        has_down: true,
+        is_locked: false,
+        is_enabled: false,
         is_boyfriend: is_boyfriend,
-        hey_playing: 0,
+        hey_playing: false,
 
         load_thread_id: 0,
+        running_threads: 0,
 
         drawable: null,
         drawable_character: null,
@@ -48,18 +49,18 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
         texturepool: texturepool
     };
 
-    beatwatcher_reset(mdlselect.beatwatcher, 1, 100);
+    beatwatcher_reset(mdlselect.beatwatcher, true, 100.0);
 
     mdlselect.drawable = drawable_init(
-        -1, mdlselect, weekselector_mdlselect_draw, weekselector_mdlselect_animate
+        -1.0, mdlselect, weekselector_mdlselect_draw, weekselector_mdlselect_animate
     );
     mdlselect.drawable_character = drawable_init(
-        -1, mdlselect.preview, statesprite_draw, statesprite_animate
+        -1.0, mdlselect.preview, statesprite_draw, statesprite_animate
     );
 
-    sprite_set_visible(mdlselect.icon_locked, 0);
-    sprite_set_visible(mdlselect.icon_up, 0);
-    sprite_set_visible(mdlselect.icon_down, 0);
+    sprite_set_visible(mdlselect.icon_locked, false);
+    sprite_set_visible(mdlselect.icon_up, false);
+    sprite_set_visible(mdlselect.icon_down, false);
 
     name = is_boyfriend ? WEEKSELECTOR_MDLSELECT_UI_BF_PREVIEW : WEEKSELECTOR_MDLSELECT_UI_GF_PREVIEW;
     let placeholder_character = layout_get_placeholder(layout, name);
@@ -77,7 +78,6 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
         let unlock_directive = json_read_string(json_obj, "unlockDirectiveName", null);
         let hide_if_locked = json_read_boolean(json_obj, "hideIfLocked", false);
         let is_locked = !funkinsave_contains_unlock_directive(unlock_directive);
-        unlock_directive = undefined;
 
         if (is_locked && hide_if_locked) continue;
         index++;
@@ -111,7 +111,6 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
         let is_locked = !funkinsave_contains_unlock_directive(unlock_directive);
 
         if (is_locked && hide_if_locked) {
-            unlock_directive = undefined;
             continue;
         }
 
@@ -121,14 +120,13 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
             throw new Error(`weekselector_mdlselect_init() invalid/missing 'manifest' in ${models}`);
         }
         let manifest_path = fs_build_path2(models, manifest);
-        manifest = undefined;
 
         mdlselect.list[index] = {
             name: json_read_string(json_obj, "name", null),
             is_locked: is_locked,
-            imported: 1,
-            week_selector_left_facing: 0,
-            week_selector_enable_beat: 0,
+            imported: true,
+            week_selector_left_facing: false,
+            week_selector_enable_beat: false,
             week_selector_model: null,
             week_selector_idle_anim_name: null,
             week_selector_choosen_anim_name: null,
@@ -159,9 +157,9 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
             mdlselect.list[index] = {
                 name: array[j].name,
                 is_locked: is_locked,
-                imported: 0,
-                week_selector_left_facing: 0,
-                week_selector_enable_beat: 0,
+                imported: false,
+                week_selector_left_facing: false,
+                week_selector_enable_beat: false,
                 week_selector_model: null,
                 week_selector_idle_anim_name: null,
                 week_selector_choosen_anim_name: null,
@@ -192,12 +190,12 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
     console.assert(placeholder, "missing :" + name);
 
     // resize&rotate&locate arrows
-    weekselector_mdlselect_internal_place_arrow(mdlselect.icon_up, arrows_height, placeholder, 0);
-    weekselector_mdlselect_internal_place_arrow(mdlselect.icon_down, arrows_height, placeholder, 1);
+    weekselector_mdlselect_internal_place_arrow(mdlselect.icon_up, arrows_height, placeholder, false);
+    weekselector_mdlselect_internal_place_arrow(mdlselect.icon_down, arrows_height, placeholder, true);
 
     sprite_resize_draw_size(
         mdlselect.icon_locked,
-        placeholder.width, placeholder.height - arrows_height * 1.5, draw_size
+        placeholder.width, placeholder.height - (arrows_height * 1.5), draw_size
     );
     sprite_center_draw_location(
         mdlselect.icon_locked,
@@ -212,7 +210,7 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
     textsprite_set_draw_location(mdlselect.label, placeholder.x, placeholder.y);
     textsprite_set_max_draw_size(mdlselect.label, placeholder.width, placeholder.height);
     textsprite_set_align(mdlselect.label, ALIGN_CENTER, ALIGN_CENTER);
-    textsprite_set_visible(mdlselect.label, 0);
+    textsprite_set_visible(mdlselect.label, false);
 
     mdlselect.placeholder_character = placeholder_character;
     placeholder_character.vertex = mdlselect.drawable_character;
@@ -222,7 +220,7 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
     );
     drawable_helper_update_from_placeholder(mdlselect.drawable, placeholder);
 
-    drawable_set_visible(mdlselect.drawable_character, 0);
+    drawable_set_visible(mdlselect.drawable_character, false);
     statesprite_set_draw_location(mdlselect.preview, placeholder_character.x, placeholder_character.y);
     statesprite_set_draw_size(
         mdlselect.preview, placeholder_character.width, placeholder_character.height
@@ -236,6 +234,18 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
 
 function weekselector_mdlselect_destroy(mdlselect) {
     if (mdlselect.animsprite) animsprite_destroy(mdlselect.animsprite);
+
+    mdlselect.load_thread_id++;
+
+    /*
+    // C/C# only
+    thd_pass();
+
+    while (mdlselect->running_threads > 0) {
+        // wait until all async operations are done
+        thd_pass();
+    }
+    */
 
     drawable_destroy(mdlselect.drawable);
     drawable_destroy(mdlselect.drawable_character);
@@ -296,9 +306,9 @@ function weekselector_mdlselect_animate(mdlselect, elapsed) {
     statesprite_animate(mdlselect.preview, elapsed);
 
     if (mdlselect.has_up)
-        animsprite_update_sprite(mdlselect.animsprite, mdlselect.icon_up, 0);
+        animsprite_update_sprite(mdlselect.animsprite, mdlselect.icon_up, false);
     if (mdlselect.has_down)
-        animsprite_update_sprite(mdlselect.animsprite, mdlselect.icon_down, 1);
+        animsprite_update_sprite(mdlselect.animsprite, mdlselect.icon_down, true);
 
     return 0;
 }
@@ -311,7 +321,7 @@ function weekselector_mdlselect_get_manifest(mdlselect) {
 }
 
 function weekselector_mdlselect_is_selected_locked(mdlselect) {
-    if (mdlselect.index < 0 || mdlselect.index >= mdlselect.list_size) return 1;
+    if (mdlselect.index < 0 || mdlselect.index >= mdlselect.list_size) return true;
     return mdlselect.list[mdlselect.index].is_locked;
 }
 
@@ -329,8 +339,8 @@ function weekselector_mdlselect_select_default(mdlselect) {
 }
 
 function weekselector_mdlselect_select(mdlselect, new_index) {
-    if (new_index < 0 || new_index >= mdlselect.list_size) return 0;
-    if (new_index == mdlselect.index) return 1;
+    if (new_index < 0 || new_index >= mdlselect.list_size) return false;
+    if (new_index == mdlselect.index) return true;
 
     mdlselect.is_locked = mdlselect.list[new_index].is_locked;
     mdlselect.index = new_index;
@@ -341,8 +351,8 @@ function weekselector_mdlselect_select(mdlselect, new_index) {
     statesprite_state_toggle(mdlselect.preview, null);
     statesprite_state_remove(mdlselect.preview, WEEKSELECTOR_MDLSELECT_IDLE);
     statesprite_state_remove(mdlselect.preview, WEEKSELECTOR_MDLSELECT_HEY);
-    drawable_set_visible(mdlselect.drawable_character, 0);
-    textsprite_set_text_intern(mdlselect.label, 1, mdlselect.list[new_index].name);
+    drawable_set_visible(mdlselect.drawable_character, false);
+    textsprite_set_text_intern(mdlselect.label, true, mdlselect.list[new_index].name);
 
     sprite_set_alpha(
         mdlselect.icon_up, mdlselect.has_up ? 1.0 : WEEKSELECTOR_ARROW_DISABLED_ALPHA
@@ -351,9 +361,9 @@ function weekselector_mdlselect_select(mdlselect, new_index) {
         mdlselect.icon_down, mdlselect.has_down ? 1.0 : WEEKSELECTOR_ARROW_DISABLED_ALPHA
     );
 
-    thd_helper_spawn(weekselector_mdlselect_internal_load_async, mdlselect);
+    main_thd_helper_spawn(true, weekselector_mdlselect_internal_load_async, mdlselect);
 
-    return 1;
+    return true;
 }
 
 function weekselector_mdlselect_scroll(mdlselect, offset) {
@@ -370,9 +380,9 @@ function weekselector_mdlselect_set_beats(mdlselect, bpm) {
 
 
 function weekselector_mdlselect_internal_place_arrow(sprite, arrow_size, placeholder, end) {
-    const draw_size = [0, 0];
+    const draw_size = [0.0, 0.0];
 
-    sprite_resize_draw_size(sprite, arrow_size, -1, draw_size);
+    sprite_resize_draw_size(sprite, arrow_size, -1.0, draw_size);
 
     // note: the sprite is rotated (corner rotation)
     let x = placeholder.x + ((placeholder.width - draw_size[1]) / 2.0);
@@ -384,21 +394,20 @@ function weekselector_mdlselect_internal_place_arrow(sprite, arrow_size, placeho
 }
 
 async function weekselector_mdlselect_internal_load_async(mdlselect) {
-    // remember the statesprite id to check if "weekselector_mdlselect" was disposed
-    let id = mdlselect.preview.id;
     let load_thread_id = mdlselect.load_thread_id;
     let character_info = mdlselect.list[mdlselect.index];
     let week_selector_left_facing = character_info.week_selector_left_facing;
     let week_selector_enable_beat = character_info.week_selector_enable_beat;
-    let flip_x = 0;
+    let flip_x = false;
 
-    if (mdlselect.is_boyfriend && !week_selector_left_facing) flip_x = 1;
-    //else if (!mdlselect.is_boyfriend && week_selector_left_facing) flip_x = 1;
+    if (mdlselect.is_boyfriend && !week_selector_left_facing) flip_x = true;
+    //else if (!mdlselect.is_boyfriend && week_selector_left_facing) flip_x = true;
 
     let modelholder = await modelholder_init(character_info.week_selector_model);
 
-    if (!STATESPRITE_POOL.has(id) || load_thread_id != mdlselect.load_thread_id) {
+    if (load_thread_id != mdlselect.load_thread_id) {
         if (modelholder) modelholder_destroy(modelholder);
+        mdlselect.running_threads--;
         return null;
     }
 
@@ -417,18 +426,18 @@ async function weekselector_mdlselect_internal_load_async(mdlselect) {
     weekselector_mdlselect_helper_import(
         mdlselect.preview, modelholder,
         mdlselect.placeholder_character,
-        0,
+        false,
         character_info.week_selector_choosen_anim_name ?? WEEKSELECTOR_MDLSELECT_HEY,
         WEEKSELECTOR_MDLSELECT_HEY
     );
     modelholder_destroy(modelholder);
 
-    texturepool_add(mdlselect.texturepool, modelholder_get_texture(modelholder, 0));
+    texturepool_add(mdlselect.texturepool, modelholder_get_texture(modelholder, false));
 
     statesprite_state_toggle(mdlselect.preview, WEEKSELECTOR_MDLSELECT_IDLE);
     statesprite_animate(mdlselect.preview, beatwatcher_remaining_until_next(mdlselect.beatwatcher));
-    statesprite_flip_texture(mdlselect.preview, flip_x, 0);
-    drawable_set_visible(mdlselect.drawable_character, 1);
+    statesprite_flip_texture(mdlselect.preview, flip_x, false);
+    drawable_set_visible(mdlselect.drawable_character, true);
 
     return null;
 }
@@ -439,8 +448,8 @@ function weekselector_mdlselect_helper_import(statesprite, mdlhldr, placeholder,
     if (!statesprite_state) return;
 
     imgutils_calc_rectangle_in_statesprite_state(
-        0,
-        0,
+        0.0,
+        0.0,
         placeholder.width,
         placeholder.height,
         placeholder.align_horizontal,
@@ -451,12 +460,12 @@ function weekselector_mdlselect_helper_import(statesprite, mdlhldr, placeholder,
     if (!statesprite_state.animation) return;
 
     if (enable_beat || name == WEEKSELECTOR_MDLSELECT_HEY) {
-        animsprite_set_loop(statesprite_state.animation, 1);
+        animsprite_set_loop(statesprite_state.animation, true);
     }
 }
 
 async function weekselector_mdlselect_helper_import_from_manifest(src, list_item) {
-    let charactermanifest = await charactermanifest_init(src, 0);
+    let charactermanifest = await charactermanifest_init(src, false);
     list_item.week_selector_left_facing = charactermanifest.week_selector_left_facing;
     list_item.week_selector_enable_beat = charactermanifest.week_selector_enable_beat;
     list_item.week_selector_model = charactermanifest.week_selector_model;

@@ -30,15 +30,11 @@ async function character_init(charactermanifest) {
     };
 
     await character_internal_get_modelholder(
-        import_context.modelholder_arraylist, charactermanifest.model_character, 0
+        import_context.modelholder_arraylist, charactermanifest.model_character, false
     );
 
 
     let character = {
-        // DEBUG ONLY
-        //name: charactermanifest.model_character,
-        //is_bf: charactermanifest.model_character.includes("BOYFRIEND"),
-
         statesprite: statesprite_init_from_texture(null),
 
         current_texture_id: -1,
@@ -58,17 +54,17 @@ async function character_init(charactermanifest) {
         current_anim_type: CharacterAnimType.BASE,
         current_action_type: CharacterActionType.NONE,
         current_anim: null,
-        current_use_frame_rollback: 0,
-        current_follow_hold: 0,
-        current_expected_duration: 0,
-        current_idle_in_next_beat: 0,
-        current_waiting_animation_end_and_idle: 0,
-        current_waiting_animation_end: 0,
+        current_use_frame_rollback: false,
+        current_follow_hold: false,
+        current_expected_duration: 0.0,
+        current_idle_in_next_beat: false,
+        current_waiting_animation_end_and_idle: false,
+        current_waiting_animation_end: false,
 
-        alt_enabled: 0,
+        alt_enabled: false,
         continuous_idle: charactermanifest.continuous_idle,
 
-        beatwatcher: { count: 0, count_beats_or_quarters: 0, drift_count: 0, drift_timestamp: 0, since: 0, tick: 0 },
+        beatwatcher: { count: 0, count_beats_or_quarters: false, drift_count: 0, drift_timestamp: 0, since: 0.0, tick: 0.0 },
 
         idle_speed: 1.0,
         allow_speed_change: charactermanifest.actions_apply_chart_speed,
@@ -76,21 +72,21 @@ async function character_init(charactermanifest) {
         drawable: null,
         drawable_animation: null,
 
-        draw_x: 0, draw_y: 1,
+        draw_x: 0.0, draw_y: 1.0,
         align_vertical: charactermanifest.align_vertical,
         align_horizontal: charactermanifest.align_horizontal,
 
         manifest_align_vertical: charactermanifest.align_vertical,
         manifest_align_horizontal: charactermanifest.align_horizontal,
 
-        reference_width: 0, reference_height: 0,
-        enable_reference_size: 0,
+        reference_width: 0.0, reference_height: 0.0,
+        enable_reference_size: false,
 
         offset_x: charactermanifest.offset_x, offset_y: charactermanifest.offset_y,
 
         is_left_facing: charactermanifest.left_facing,
 
-        inverted_enabled: 0,
+        inverted_enabled: false,
 
         inverted_size: -1,
         inverted_from: null,
@@ -99,19 +95,19 @@ async function character_init(charactermanifest) {
         character_scale: 1.0,
         played_actions_count: 0,
         commited_animations_count: 0,
-        animation_freezed: 0,
-        flip_x: 0
+        animation_freezed: false,
+        flip_x: false
     };
 
-    beatwatcher_reset(character.beatwatcher, 1, 100);
+    beatwatcher_reset(character.beatwatcher, true, 100.0);
 
     if (charactermanifest.has_reference_size) {
         character.reference_width = charactermanifest.reference_width;
         character.reference_height = charactermanifest.reference_height;
     }
 
-    statesprite_set_visible(character.statesprite, 0);
-    statesprite_flip_texture_enable_correction(character.statesprite, 0);
+    statesprite_set_visible(character.statesprite, false);
+    statesprite_flip_texture_enable_correction(character.statesprite, false);
 
     // import default actions
     character.default_state = await character_internal_import_actions(import_context, charactermanifest.actions, null, null);
@@ -123,7 +119,7 @@ async function character_init(charactermanifest) {
         await character_internal_import_actions(import_context, additionalstate.actions, additionalstate.model, additionalstate.name);
     }
 
-    character.drawable = drawable_init(0, character, character_draw, character_animate);
+    character.drawable = drawable_init(0.0, character, character_draw, character_animate);
 
     arraylist_destroy3(import_context.modelholder_arraylist, character_internal_destroy_modelholder);
     arraylist_destroy2(import_context.all_directions_names, character, "all_directions_names_size", "all_directions_names");
@@ -147,7 +143,7 @@ async function character_init(charactermanifest) {
 }
 
 function character_destroy(character) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(character);
+    luascript_drop_shared(character);
 
     statesprite_destroy(character.statesprite);
 
@@ -196,7 +192,7 @@ function character_destroy(character) {
         state = undefined;
     }
 
-    arraylist_destroy(character.states, 0);
+    arraylist_destroy(character.states, false);
 
     for (let i = 0; i < character.all_directions_names_size; i++) {
         character.all_directions_names[i] = undefined;
@@ -218,7 +214,7 @@ function character_destroy(character) {
 
     for (let texture_info of arraylist_iterate4(character.textures))
         texture_destroy(texture_info.texture);
-    arraylist_destroy(character.textures, 0);
+    arraylist_destroy(character.textures, false);
 
     character = undefined;
 }
@@ -250,8 +246,8 @@ function character_set_draw_align(character, align_vertical, align_horizontal) {
 }
 
 function character_update_reference_size(character, width, height) {
-    if (width >= 0) character.reference_width = width;
-    if (height >= 0) character.reference_height = height;
+    if (width >= 0.0) character.reference_width = width;
+    if (height >= 0.0) character.reference_height = height;
     character_internal_calculate_location(character);
 }
 
@@ -270,20 +266,20 @@ function character_state_add(character, modelholder, state_name) {
     //
     // expensive operation, call it before any gameplay
     //
-    if (!modelholder) return 0;
+    if (!modelholder) return false;
 
     let states_size = arraylist_size(character.states);
     for (let i = 0; i < states_size; i++) {
         let existing_state = arraylist_get(character.states, i);
-        if (existing_state.name == state_name) return 0;
+        if (existing_state.name == state_name) return false;
     }
 
     let id_texture = character_internal_add_texture(character.textures, modelholder);
-    let default_state = arraylist_get(character.states, 0);
+    let default_state = character.default_state;
+
     let state = character_internal_state_create(
         state_name, default_state.sing_size, default_state.miss_size, default_state.extras_size
     );
-
 
     for (let i = 0; i < default_state.sing_size; i++) {
         state.sing[i].id_texture = id_texture;
@@ -294,7 +290,7 @@ function character_state_add(character, modelholder, state_name) {
     }
 
     for (let i = 0; i < default_state.miss_size; i++) {
-        let animation = character_internal_import_animation3(modelholder, state_name, default_state.miss[i].animation, 0);
+        let animation = character_internal_import_animation3(modelholder, state_name, default_state.miss[i].animation, false);
 
         state.miss[i].id_direction = default_state.miss[i].id_direction;
         state.miss[i].stop_after_beats = default_state.miss[i].stop_after_beats;
@@ -315,7 +311,8 @@ function character_state_add(character, modelholder, state_name) {
     state.idle.id_texture = id_texture;
     character_internal_state_of_extra(state.idle, modelholder, state_name, default_state.idle);
 
-    return 1;
+    arraylist_add(character.states, state);
+    return true;
 }
 
 function character_state_toggle(character, state_name) {
@@ -326,11 +323,11 @@ function character_state_toggle(character, state_name) {
         if (state.name == state_name) {
             character.current_state = state;
             character_internal_update_texture(character);
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 
@@ -346,7 +343,7 @@ function character_play_hey(character) {
 
     if (!extra_info.is_valid) {
         character_internal_fallback_idle(character);
-        return 0;
+        return false;
     }
 
     // end current action
@@ -354,12 +351,12 @@ function character_play_hey(character) {
 
     if (extra_info.stop_after_beats <= 0.0) {
         character.current_expected_duration = Infinity;
-        character.current_waiting_animation_end = 1;
+        character.current_waiting_animation_end = true;
         character.current_waiting_animation_end_and_idle = extra_info.stop_after_beats == 0.0;
     } else {
         character.current_expected_duration = extra_info.stop_after_beats * character.beatwatcher.tick;
-        character.current_waiting_animation_end = 0;
-        character.current_waiting_animation_end_and_idle = 0;
+        character.current_waiting_animation_end = false;
+        character.current_waiting_animation_end_and_idle = false;
     }
 
     if (extra_info.base) {
@@ -369,7 +366,7 @@ function character_play_hey(character) {
     } else {
         character.current_anim = extra_info.hold;
         character.current_anim_type = CharacterAnimType.HOLD;
-        character.current_follow_hold = 0;
+        character.current_follow_hold = false;
     }
 
     animsprite_restart(character.current_anim);
@@ -377,8 +374,8 @@ function character_play_hey(character) {
     character.current_action_extra = extra_info;
     character.current_action_type = CharacterActionType.EXTRA;
 
-    character.current_use_frame_rollback = 0;
-    character.current_idle_in_next_beat = 0;
+    character.current_use_frame_rollback = false;
+    character.current_idle_in_next_beat = false;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
@@ -386,7 +383,7 @@ function character_play_hey(character) {
     character.played_actions_count++;
     character.commited_animations_count++;
 
-    return 1;
+    return true;
 }
 
 function character_play_idle(character) {
@@ -402,16 +399,16 @@ function character_play_idle(character) {
         let ret = 0;
         switch (character.current_action_type) {
             case CharacterActionType.SING:
-                ret = character_internal_animate_sing(character, 1, 1);
+                ret = character_internal_animate_sing(character, true, true);
                 break;
             case CharacterActionType.MISS:
-                ret = character_internal_animate_miss(character, 1, 1);
+                ret = character_internal_animate_miss(character, true, true);
                 break;
             case CharacterActionType.EXTRA:
-                ret = character_internal_animate_extra(character, 1, 1);
+                ret = character_internal_animate_extra(character, true, true);
                 break;
             default:
-                character.current_idle_in_next_beat = 1;
+                character.current_idle_in_next_beat = true;
                 character.current_action_type = CharacterActionType.NONE;
                 break;
         }
@@ -451,7 +448,7 @@ function character_play_idle(character) {
     } else {
         character.current_anim = extra_info.hold;
         character.current_anim_type = CharacterAnimType.HOLD;
-        character.current_follow_hold = 0;
+        character.current_follow_hold = false;
     }
 
     animsprite_restart(character.current_anim);
@@ -460,9 +457,9 @@ function character_play_idle(character) {
     character.current_action_type = CharacterActionType.IDLE;
 
     character.current_expected_duration = 0.0;
-    character.current_use_frame_rollback = 0;
-    character.current_idle_in_next_beat = 0;
-    character.current_waiting_animation_end = 0;
+    character.current_use_frame_rollback = false;
+    character.current_idle_in_next_beat = false;
+    character.current_waiting_animation_end = false;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
@@ -479,7 +476,7 @@ function character_play_sing(character, direction, prefer_sustain) {
     if (id_direction < 0) {
         // unknown direction
         character_internal_fallback_idle(character);
-        return 0;
+        return false;
     };
 
     let sing_info = null;
@@ -513,7 +510,7 @@ function character_play_sing(character, direction, prefer_sustain) {
                 }
                 //throw new Error("unknown sing direction: " + direction);
                 character_internal_fallback_idle(character);
-                return 0;
+                return false;
             }
         }
 
@@ -526,8 +523,8 @@ function character_play_sing(character, direction, prefer_sustain) {
     if (prefer_sustain) {
         // ignore "stopAfterBeats"
         character.current_expected_duration = Infinity;
-        character.current_waiting_animation_end = 0;
-        character.current_waiting_animation_end_and_idle = 0;
+        character.current_waiting_animation_end = false;
+        character.current_waiting_animation_end_and_idle = false;
 
         if (sing_info.full_sustain) {
             if (sing_info.base) {
@@ -537,12 +534,12 @@ function character_play_sing(character, direction, prefer_sustain) {
             } else {
                 character.current_anim = sing_info.hold;
                 character.current_anim_type = CharacterAnimType.HOLD;
-                character.current_follow_hold = 0;
+                character.current_follow_hold = false;
             }
         } else {
             character.current_anim = sing_info.hold ?? sing_info.base;
             character.current_anim_type = sing_info.hold ? CharacterAnimType.HOLD : CharacterAnimType.BASE;
-            character.current_follow_hold = 0;
+            character.current_follow_hold = false;
         }
     } else {
         character.current_anim = sing_info.base ?? sing_info.hold;
@@ -551,13 +548,13 @@ function character_play_sing(character, direction, prefer_sustain) {
 
         // ignore "stopAfterBeats" if negative (waits for animation completion)
         if (sing_info.stop_after_beats <= 0.0) {
-            character.current_waiting_animation_end = 1;
+            character.current_waiting_animation_end = true;
             character.current_expected_duration = Infinity;
             character.current_waiting_animation_end_and_idle = sing_info.stop_after_beats == 0.0;
         } else {
-            character.current_waiting_animation_end = 0;
+            character.current_waiting_animation_end = false;
             character.current_expected_duration = sing_info.stop_after_beats * character.beatwatcher.tick;
-            character.current_waiting_animation_end_and_idle = 0;
+            character.current_waiting_animation_end_and_idle = false;
         }
     }
 
@@ -566,8 +563,8 @@ function character_play_sing(character, direction, prefer_sustain) {
     character.current_action_sing = sing_info;
     character.current_action_type = CharacterActionType.SING;
 
-    character.current_use_frame_rollback = 0;
-    character.current_idle_in_next_beat = 0;
+    character.current_use_frame_rollback = false;
+    character.current_idle_in_next_beat = false;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
@@ -575,7 +572,7 @@ function character_play_sing(character, direction, prefer_sustain) {
     character.played_actions_count++;
     character.commited_animations_count++;
 
-    return 1;
+    return true;
 }
 
 function character_play_miss(character, direction, keep_in_hold) {
@@ -585,7 +582,7 @@ function character_play_miss(character, direction, keep_in_hold) {
     if (id_direction < 0) {
         // unknown direction
         character_internal_fallback_idle(character);
-        return 0;
+        return false;
     };
 
     let miss_info = null;
@@ -606,7 +603,7 @@ function character_play_miss(character, direction, keep_in_hold) {
                 continue L_read_state;
             }
             character_internal_fallback_idle(character);
-            return 0;
+            return false;
         }
 
         break;// JS only
@@ -618,17 +615,17 @@ function character_play_miss(character, direction, keep_in_hold) {
     if (keep_in_hold) {
         // ignore "stopAfterBeats"
         character.current_expected_duration = Infinity;
-        character.current_waiting_animation_end = 0;
-        character.current_waiting_animation_end_and_idle = 0;
+        character.current_waiting_animation_end = false;
+        character.current_waiting_animation_end_and_idle = false;
     } else if (miss_info.stop_after_beats <= 0.0) {
         // wait for animation completion
         character.current_expected_duration = Infinity;
-        character.current_waiting_animation_end = 1;
+        character.current_waiting_animation_end = true;
         character.current_waiting_animation_end_and_idle = miss_info.stop_after_beats == 0.0;
     } else {
         character.current_expected_duration = miss_info.stop_after_beats * character.beatwatcher.tick;
-        character.current_waiting_animation_end = 0;
-        character.current_waiting_animation_end_and_idle = 0;
+        character.current_waiting_animation_end = false;
+        character.current_waiting_animation_end_and_idle = false;
     }
 
     animsprite_restart(miss_info.animation);
@@ -637,8 +634,8 @@ function character_play_miss(character, direction, keep_in_hold) {
     character.current_action_type = CharacterActionType.MISS;
     character.current_action_miss = miss_info;
 
-    character.current_follow_hold = 0;
-    character.current_use_frame_rollback = 0;
+    character.current_follow_hold = false;
+    character.current_use_frame_rollback = false;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
@@ -646,7 +643,7 @@ function character_play_miss(character, direction, keep_in_hold) {
     character.played_actions_count++;
     character.commited_animations_count++;
 
-    return 1;
+    return true;
 }
 
 function character_play_extra(character, extra_animation_name, prefer_sustain) {
@@ -655,11 +652,12 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
     let id_extra = character_internal_get_extra_id(character, extra_animation_name);
     if (id_extra < 0) {
         // unknown extra
-        return 0;
+        return false;
     }
 
     let state = character.current_state;
     let extra_info = null;
+
     L_read_state: for (; ;) {
         for (let i = 0; i < state.extras_size; i++) {
             if (state.extras[i].id_extra == id_extra) {
@@ -675,7 +673,7 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
                 continue L_read_state;
             }
             //character_internal_fallback_idle(character);
-            return 0;
+            return false;
         }
 
         break;// JS only
@@ -687,23 +685,23 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
     if (prefer_sustain) {
         // ignore "stopAfterBeats"
         character.current_expected_duration = Infinity;
-        character.current_waiting_animation_end = 0;
-        character.current_waiting_animation_end_and_idle = 0;
+        character.current_waiting_animation_end = false;
+        character.current_waiting_animation_end_and_idle = false;
     } else if (extra_info.stop_after_beats <= 0.0) {
         // wait for animation completion
         character.current_expected_duration = Infinity;
-        character.current_waiting_animation_end = 1;
+        character.current_waiting_animation_end = true;
         character.current_waiting_animation_end_and_idle = extra_info.stop_after_beats == 0.0;
     } else {
         character.current_expected_duration = extra_info.stop_after_beats * character.beatwatcher.tick;
-        character.current_waiting_animation_end = 0;
-        character.current_waiting_animation_end_and_idle = 0;
+        character.current_waiting_animation_end = false;
+        character.current_waiting_animation_end_and_idle = false;
     }
 
     if (prefer_sustain) {
         character.current_anim = extra_info.hold ?? extra_info.base;
         character.current_anim_type = extra_info.hold ? CharacterAnimType.HOLD : CharacterAnimType.BASE;
-        character.current_follow_hold = 0;
+        character.current_follow_hold = false;
     } else {
         character.current_anim = extra_info.base ?? extra_info.hold;
         character.current_anim_type = extra_info.base ? CharacterAnimType.BASE : CharacterAnimType.HOLD;
@@ -715,8 +713,8 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
     character.current_action_extra = extra_info;
     character.current_action_type = CharacterActionType.EXTRA;
 
-    character.current_use_frame_rollback = 0;
-    character.current_idle_in_next_beat = 0;
+    character.current_use_frame_rollback = false;
+    character.current_idle_in_next_beat = false;
 
     character_internal_update_texture(character);
     character_internal_calculate_location(character);
@@ -724,7 +722,7 @@ function character_play_extra(character, extra_animation_name, prefer_sustain) {
     character.played_actions_count++;
     character.commited_animations_count++;
 
-    return 1;
+    return true;
 }
 
 function character_schedule_idle(character) {
@@ -732,7 +730,7 @@ function character_schedule_idle(character) {
     character.commited_animations_count++;
 
     character.current_expected_duration = 0.0;
-    character.current_idle_in_next_beat = 1;
+    character.current_idle_in_next_beat = true;
 }
 
 
@@ -750,10 +748,10 @@ function character_set_scale(character, scale_factor) {
 }
 
 function character_reset(character) {
-    beatwatcher_reset(character.beatwatcher, 1, 100);
+    beatwatcher_reset(character.beatwatcher, true, 100.0);
 
     character.idle_speed = 1.0;
-    character.alt_enabled = 0;
+    character.alt_enabled = false;
 
     drawable_set_antialiasing(character.drawable, PVRCTX_FLAG_DEFAULT);
 
@@ -803,7 +801,7 @@ function character_animate(character, elapsed) {
 
     if (character.drawable_animation != null) {
         animsprite_animate(character.drawable_animation, elapsed);
-        animsprite_update_drawable(character.drawable_animation, character.drawable, 1);
+        animsprite_update_drawable(character.drawable_animation, character.drawable, true);
     }
 
     if (character.animation_freezed) {
@@ -812,7 +810,7 @@ function character_animate(character, elapsed) {
         else
             animsprite_animate(character.current_anim, elapsed);
 
-        animsprite_update_statesprite(character.current_anim, character.statesprite, 1);
+        animsprite_update_statesprite(character.current_anim, character.statesprite, true);
         character_internal_calculate_location(character);
         return 1;
     }
@@ -833,7 +831,7 @@ function character_animate(character, elapsed) {
     else
         completed = animsprite_animate(character.current_anim, elapsed);
 
-    animsprite_update_statesprite(character.current_anim, character.statesprite, 1);
+    animsprite_update_statesprite(character.current_anim, character.statesprite, true);
     character_internal_calculate_location(character);
 
     let should_stop = character.current_expected_duration <= 0.0;
@@ -901,7 +899,7 @@ function character_animation_restart(character) {
 function character_animation_end(character) {
     if (character.drawable_animation) {
         animsprite_force_end(character.drawable_animation);
-        animsprite_update_drawable(character.drawable_animation, character.drawable, 1);
+        animsprite_update_drawable(character.drawable_animation, character.drawable, true);
     }
 }
 
@@ -946,10 +944,10 @@ function character_has_direction(character, name, is_extra) {
     let size = is_extra ? character.all_extras_names_size : character.all_directions_names_size;
 
     for (let i = 0; i < size; i++) {
-        if (array[i] === name) return 1;
+        if (array[i] === name) return true;
     }
 
-    return 0;
+    return false;
 }
 
 function character_freeze_animation(character, enabled) {
@@ -972,9 +970,9 @@ function character_trailing_set_offsetcolor(character, r, g, b) {
 
 function character_internal_import_sing(sing_info, modelholder, sing_entry, id_direction, prefix, suffix) {
 
-    sing_info.base = character_internal_import_animation(modelholder, sing_entry.anim, prefix, suffix, 0);
-    sing_info.hold = character_internal_import_animation(modelholder, sing_entry.anim_hold, prefix, suffix, 1);
-    sing_info.rollback = character_internal_import_animation(modelholder, sing_entry.direction, prefix, suffix, 0);
+    sing_info.base = character_internal_import_animation(modelholder, sing_entry.anim, prefix, suffix, false);
+    sing_info.hold = character_internal_import_animation(modelholder, sing_entry.anim_hold, prefix, suffix, true);
+    sing_info.rollback = character_internal_import_animation(modelholder, sing_entry.direction, prefix, suffix, false);
 
     sing_info.id_direction = id_direction;
     sing_info.follow_hold = sing_entry.follow_hold;
@@ -983,22 +981,22 @@ function character_internal_import_sing(sing_info, modelholder, sing_entry, id_d
     sing_info.offset_x = sing_entry.offset_x;
     sing_info.offset_y = sing_entry.offset_y;
 
-    sing_info.base_can_rollback = 0;
-    sing_info.hold_can_rollback = 0;
+    sing_info.base_can_rollback = false;
+    sing_info.hold_can_rollback = false;
 
     if (!sing_info.rollback && sing_entry.rollback) {
         if (sing_info.base != null && animsprite_is_frame_animation(sing_info.base)) {
-            sing_info.base_can_rollback = 1;
+            sing_info.base_can_rollback = true;
         }
         if (sing_info.hold != null && animsprite_is_frame_animation(sing_info.hold)) {
-            sing_info.hold_can_rollback = 1;
+            sing_info.hold_can_rollback = true;
         }
     }
 
 }
 
 function character_internal_import_miss(miss_info, modelholder, miss_entry, id_direction) {
-    miss_info.animation = character_internal_import_animation(modelholder, miss_entry.anim, null, null, 0);
+    miss_info.animation = character_internal_import_animation(modelholder, miss_entry.anim, null, null, false);
 
     miss_info.id_direction = id_direction;
     miss_info.stop_after_beats = miss_entry.stop_after_beats;
@@ -1013,13 +1011,13 @@ async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_r
         extra_info.base = null;
         extra_info.hold = null;
         extra_info.rollback = null;
-        extra_info.offset_x = 0;
-        extra_info.offset_y = 0;
+        extra_info.offset_x = 0.0;
+        extra_info.offset_y = 0.0;
         return;
     }
 
     let modelholder = await character_internal_get_modelholder(
-        mdlhldr_rrlst, extra_entry.model_src ?? model_src, 1
+        mdlhldr_rrlst, extra_entry.model_src ?? model_src, true
     );
     extra_info.id_texture = character_internal_add_texture(
         txtr_rrlst, modelholder
@@ -1027,23 +1025,29 @@ async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_r
 
     extra_info.stop_after_beats = extra_entry.stop_after_beats;
 
-    if (extra_entry.anim != null && extra_entry.anim.length < 1)
+    // this originally was:
+    //          extra_entry.ANIM_NAME != null && extra_entry.ANIM_NAME.length < 1
+    // instead of
+    //          !extra_entry
+    // revert if something breaks
+
+    if (!extra_entry)
         extra_info.base = null;
     else
-        extra_info.base = character_internal_import_animation(modelholder, extra_entry.anim, prefix, suffix, 0);
+        extra_info.base = character_internal_import_animation(modelholder, extra_entry.anim, prefix, suffix, false);
 
-    if (extra_entry.anim_hold != null && extra_entry.anim_hold.length < 1) {
+    if (!extra_entry) {
         extra_info.hold = null;
     } else {
         extra_info.hold = character_internal_import_animation(
-            modelholder, extra_entry.anim_hold, prefix, suffix, 1
+            modelholder, extra_entry.anim_hold, prefix, suffix, true
         );
     }
 
-    if (extra_entry.anim_rollback != null && extra_entry.anim_rollback.length < 1) {
+    if (!extra_entry) {
         extra_info.rollback = null;
     } else {
-        extra_info.rollback = character_internal_import_animation(modelholder, extra_entry.anim_rollback, prefix, suffix, 0);
+        extra_info.rollback = character_internal_import_animation(modelholder, extra_entry.anim_rollback, prefix, suffix, false);
     }
 
     extra_info.id_extra = id_extra;
@@ -1074,10 +1078,10 @@ function character_internal_import_animation2(modelholder, name, is_sustain) {
     // animation not found, build from atlas
     let atlas = modelholder_get_atlas(modelholder);
     let fps = atlas_get_glyph_fps(atlas);
-    if (fps <= 0) fps = FUNKIN_DEFAULT_ANIMATIONS_FRAMERATE;
+    if (fps <= 0.0) fps = FUNKIN_DEFAULT_ANIMATIONS_FRAMERATE;
 
     let loop_count = is_sustain ? 0 /*infinite*/ : 1/*once*/;
-    animsprite = animsprite_init_from_atlas(fps, loop_count, atlas, name, 1);
+    animsprite = animsprite_init_from_atlas(fps, loop_count, atlas, name, true);
     if (animsprite) return animsprite;
 
     // ¿static animation?
@@ -1114,18 +1118,18 @@ function character_internal_state_create(name, sing_size, miss_size, extras_size
         extras: new Array(extras_size),
         hey: {
             base: null, hold: null, rollback: null,
-            stop_after_beats: 0, id_extra: -1, id_texture: -1, is_valid: 0,
-            offset_x: 0, offset_y: 0
+            stop_after_beats: 0.0, id_extra: -1, id_texture: -1, is_valid: false,
+            offset_x: 0.0, offset_y: 0.0
         },
         idle: {
             base: null, hold: null, rollback: null,
-            stop_after_beats: 0, id_extra: -1, id_texture: -1, is_valid: 0,
-            offset_x: 0, offset_y: 0
+            stop_after_beats: 0, id_extra: -1, id_texture: -1, is_valid: false,
+            offset_x: 0.0, offset_y: 0
         },
         idle_alt: {
             base: null, hold: null, rollback: null,
-            stop_after_beats: 0, id_extra: -1, id_texture: -1, is_valid: 0,
-            offset_x: 0, offset_y: 0
+            stop_after_beats: 0.0, id_extra: -1, id_texture: -1, is_valid: false,
+            offset_x: 0.0, offset_y: 0.0
         }
     };
 
@@ -1140,13 +1144,13 @@ function character_internal_state_create(name, sing_size, miss_size, extras_size
 
 function character_internal_state_of_sing(new_singinfo, modelholder, state_name, sing_info) {
     new_singinfo.base = character_internal_import_animation3(
-        modelholder, state_name, sing_info.base, 0
+        modelholder, state_name, sing_info.base, false
     );
     new_singinfo.hold = character_internal_import_animation3(
-        modelholder, state_name, sing_info.hold, 1
+        modelholder, state_name, sing_info.hold, true
     );
     new_singinfo.rollback = character_internal_import_animation3(
-        modelholder, state_name, sing_info.rollback, 0
+        modelholder, state_name, sing_info.rollback, false
     );
 
     new_singinfo.id_direction = sing_info.id_direction;
@@ -1155,8 +1159,8 @@ function character_internal_state_of_sing(new_singinfo, modelholder, state_name,
     new_singinfo.stop_after_beats = sing_info.stop_after_beats;
     new_singinfo.offset_x = sing_info.offset_x;
     new_singinfo.offset_y = sing_info.offset_y;
-    new_singinfo.base_can_rollback = 0;
-    new_singinfo.hold_can_rollback = 0;
+    new_singinfo.base_can_rollback = false;
+    new_singinfo.hold_can_rollback = false;
 
     if (!sing_info.rollback) {
         new_singinfo.base_can_rollback = new_singinfo.base && animsprite_is_frame_animation(new_singinfo.base);
@@ -1167,13 +1171,13 @@ function character_internal_state_of_sing(new_singinfo, modelholder, state_name,
 
 function character_internal_state_of_extra(new_extrainfo, modelholder, state_name, extra_info) {
     new_extrainfo.base = character_internal_import_animation3(
-        modelholder, state_name, extra_info.base, 0
+        modelholder, state_name, extra_info.base, false
     );
     new_extrainfo.hold = character_internal_import_animation3(
-        modelholder, state_name, extra_info.hold, 1
+        modelholder, state_name, extra_info.hold, true
     );
     new_extrainfo.rollback = character_internal_import_animation3(
-        modelholder, state_name, extra_info.rollback, 0
+        modelholder, state_name, extra_info.rollback, false
     );
 
     new_extrainfo.id_extra = extra_info.id_extra;
@@ -1263,11 +1267,11 @@ function character_internal_update_texture(character) {
         //let scale_factor = character.layout_height / texture_info.resolution_height;
         //final_scale *= scale_factor;
 
-        statesprite_set_texture(character.statesprite, texture_info.texture, 1);
+        statesprite_set_texture(character.statesprite, texture_info.texture, true);
     }
 
-    statesprite_change_draw_size_in_atlas_apply(character.statesprite, 1, final_scale);
-    if (character.current_anim) animsprite_update_statesprite(character.current_anim, character.statesprite, 0);
+    statesprite_change_draw_size_in_atlas_apply(character.statesprite, true, final_scale);
+    if (character.current_anim) animsprite_update_statesprite(character.current_anim, character.statesprite, false);
 }
 
 function character_internal_import_opposite_dir(character, array_ptr, ltr_array) {
@@ -1275,9 +1279,13 @@ function character_internal_import_opposite_dir(character, array_ptr, ltr_array)
     let array = new Array(character.inverted_size);
     character[array_ptr] = array;
 
+    /*
     // C only
-    // char** array = malloc(character->inverted_size * sizeof(void*));
-    // *array_ptr = array;
+    int32_t* array = malloc_for_array(sizeof(int32_t), character->inverted_size);
+    *array_ptr = array;
+
+    malloc_assert(array, int32_t[]);
+    */
 
     for (let i = 0; i < character.inverted_size; i++) {
         array[i] = -1;
@@ -1296,7 +1304,7 @@ function character_internal_import_opposite_dir(character, array_ptr, ltr_array)
 }
 
 function character_internal_calculate_location(character) {
-    const draw_size = [0, 0];
+    const draw_size = [0.0, 0.0];
     const modifier = drawable_get_modifier(character.drawable);
 
     let draw_x = character.draw_x;
@@ -1304,8 +1312,8 @@ function character_internal_calculate_location(character) {
 
     statesprite_get_draw_size(character.statesprite, draw_size);
     if (character.enable_reference_size) {
-        if (character.reference_width >= 0) draw_size[0] = (character.reference_width - draw_size[0]) / 2.0;
-        if (character.reference_height >= 0) draw_size[1] = (character.reference_height - draw_size[1]) / 2.0;
+        if (character.reference_width >= 0.0) draw_size[0] = (character.reference_width - draw_size[0]) / 2.0;
+        if (character.reference_height >= 0.0) draw_size[1] = (character.reference_height - draw_size[1]) / 2.0;
     }
 
     // pick current action offsets
@@ -1325,8 +1333,8 @@ function character_internal_calculate_location(character) {
             action_offset_y = character.current_action_extra.offset_y;
             break;
         default:
-            action_offset_x = 0;
-            action_offset_y = 0;
+            action_offset_x = 0.0;
+            action_offset_y = 0.0;
             break;
     }
 
@@ -1423,18 +1431,18 @@ function character_internal_add_texture(texture_arraylist, modelholder) {
     let array = arraylist_peek_array(texture_arraylist);
     let size = arraylist_size(texture_arraylist);
 
-    const texture = modelholder_get_texture(modelholder, 0);
+    const texture = modelholder_get_texture(modelholder, false);
     if (!texture) return -1;
 
     for (let i = 0; i < size; i++) {
         if (array[i].texture == texture) return i;
     }
 
-    const resolution = [0, 0];
+    const resolution = [0.0, 0.0];
     modelholder_get_texture_resolution(modelholder, resolution);
 
     arraylist_add(texture_arraylist, {
-        texture: modelholder_get_texture(modelholder, 1),
+        texture: modelholder_get_texture(modelholder, true),
         resolution_width: resolution[0],
         resolution_height: resolution[1],
     });
@@ -1465,22 +1473,20 @@ async function character_internal_get_modelholder(modelholder_arraylist, model_s
 }
 
 function character_internal_destroy_modelholder(modelholder_arraylist_item) {
-    modelholder_arraylist_item.model_src = undefined;
     modelholder_destroy(modelholder_arraylist_item.modelholder);
 }
 
 async function character_internal_import_actions(context, actions, model_src, state_name) {
     let state = character_internal_state_create(state_name, actions.sing_size, actions.miss_size, actions.extras_size);
-    arraylist_add(context.states, state);
 
     // import all sign actions
     for (let i = 0; i < actions.sing_size; i++) {
         let index = character_internal_index_name(
-            context.all_directions_names, actions.sing[i].direction, 1
+            context.all_directions_names, actions.sing[i].direction, true
         );
 
         let modelholder = await character_internal_get_modelholder(
-            context.modelholder_arraylist, actions.sing[i].model_src ?? model_src, 1
+            context.modelholder_arraylist, actions.sing[i].model_src ?? model_src, true
         );
 
         state.sing[i].id_texture = state.sing_alt[i].id_texture = character_internal_add_texture(
@@ -1491,6 +1497,7 @@ async function character_internal_import_actions(context, actions, model_src, st
             state.sing[i],
             modelholder, actions.sing[i],
             index,
+            context.charactermanifest.sing_prefix,
             context.charactermanifest.sing_suffix
         );
         character_internal_import_sing(
@@ -1498,6 +1505,7 @@ async function character_internal_import_actions(context, actions, model_src, st
             modelholder,
             actions.sing[i],
             index,
+            context.charactermanifest.sing_alternate_prefix,
             context.charactermanifest.sing_alternate_suffix
         );
     }
@@ -1505,11 +1513,11 @@ async function character_internal_import_actions(context, actions, model_src, st
     // import all miss actions
     for (let i = 0; i < actions.miss_size; i++) {
         let index = character_internal_index_name(
-            context.all_directions_names, actions.miss[i].direction, 1
+            context.all_directions_names, actions.miss[i].direction, true
         );
 
         let modelholder = await character_internal_get_modelholder(
-            context.modelholder_arraylist, actions.miss[i].model_src ?? model_src, 1
+            context.modelholder_arraylist, actions.miss[i].model_src ?? model_src, true
         );
 
         state.miss[i].id_texture = character_internal_add_texture(
@@ -1524,7 +1532,7 @@ async function character_internal_import_actions(context, actions, model_src, st
     // import all extras
     for (let i = 0; i < actions.extras_size; i++) {
         let index = character_internal_index_name(
-            context.all_extras_names, actions.extras[i].name, 1
+            context.all_extras_names, actions.extras[i].name, true
         );
 
         await character_internal_import_extra(
@@ -1574,7 +1582,7 @@ async function character_internal_import_actions(context, actions, model_src, st
         );
     }
 
-    return state;
+    return arraylist_add(context.states, state);
 }
 
 function character_internal_animate_sing(character, completed, should_stop) {
@@ -1589,7 +1597,7 @@ function character_internal_animate_sing(character, completed, should_stop) {
     if (character.current_follow_hold && !should_stop) {
         character.commited_animations_count++;
         character.current_anim_type = CharacterAnimType.HOLD;
-        character.current_follow_hold = 0;
+        character.current_follow_hold = false;
         character.current_anim = action.hold;
         animsprite_restart(character.current_anim);
         return 1;
@@ -1613,7 +1621,7 @@ function character_internal_animate_sing(character, completed, should_stop) {
         character.current_expected_duration = Infinity;
         character.current_anim = action.rollback;
         character.current_anim_type = CharacterAnimType.ROLLBACK;
-        character.current_use_frame_rollback = 0;
+        character.current_use_frame_rollback = false;
         animsprite_restart(character.current_anim);
         return 1;
     }
@@ -1630,12 +1638,12 @@ function character_internal_animate_sing(character, completed, should_stop) {
         }
         // schedule idle
         character.current_expected_duration = 0.0;
-        character.current_idle_in_next_beat = 1;
+        character.current_idle_in_next_beat = true;
         return 1;
     }
 
     // do frame rollback
-    character.current_use_frame_rollback = 1;
+    character.current_use_frame_rollback = true;
     character.current_anim_type = CharacterAnimType.ROLLBACK;
     return 1;
 }
@@ -1662,7 +1670,7 @@ function character_internal_animate_miss(character, completed, should_stop) {
 
     // schedule idle
     character.current_expected_duration = 0.0;
-    character.current_idle_in_next_beat = 1;
+    character.current_idle_in_next_beat = true;
     return 1;
 }
 
@@ -1682,7 +1690,7 @@ function character_internal_animate_idle(character, completed, has_beat) {
     character.commited_animations_count++;
 
     if (character.current_follow_hold) {
-        character.current_follow_hold = 0;
+        character.current_follow_hold = false;
         character.current_anim = character.current_action_extra.hold;
         character.current_anim_type = CharacterAnimType.HOLD;
         animsprite_restart(character.current_anim);
@@ -1696,7 +1704,7 @@ function character_internal_animate_idle(character, completed, has_beat) {
     }
 
     character.current_expected_duration = 0.0;
-    character.current_idle_in_next_beat = 1;
+    character.current_idle_in_next_beat = true;
     return 1;
 }
 
@@ -1709,7 +1717,7 @@ function character_internal_animate_extra(character, completed, should_stop) {
     if (character.current_follow_hold && !should_stop) {
         character.commited_animations_count++;
         character.current_anim_type = CharacterAnimType.HOLD;
-        character.current_follow_hold = 0;
+        character.current_follow_hold = false;
         character.current_anim = action.hold;
         animsprite_restart(character.current_anim);
         return 1;
@@ -1728,7 +1736,7 @@ function character_internal_animate_extra(character, completed, should_stop) {
         character.current_expected_duration = Infinity;
         character.current_anim = action.rollback;
         character.current_anim_type = CharacterAnimType.ROLLBACK;
-        character.current_use_frame_rollback = 0;
+        character.current_use_frame_rollback = false;
         animsprite_restart(character.current_anim);
         return 1;
     }
@@ -1740,7 +1748,7 @@ function character_internal_animate_extra(character, completed, should_stop) {
     }
 
     character.current_expected_duration = 0.0;
-    character.current_idle_in_next_beat = 1;
+    character.current_idle_in_next_beat = true;
     return 1;
 }
 

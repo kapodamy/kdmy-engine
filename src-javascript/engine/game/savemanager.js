@@ -29,27 +29,27 @@ const SAVEMANAGER_MENU_MANIFEST = {
         anim_in: null,// unused
         anim_out: null,// unused
 
-        anim_transition_in_delay: -50,
-        anim_transition_out_delay: -50,// negative means start delays from the bottom
+        anim_transition_in_delay: -50.0,
+        anim_transition_out_delay: -50.0,// negative means start delays from the bottom
 
         font: null,// unused
         font_glyph_suffix: null,// unused
-        font_color_by_difference: 0,// unused
+        font_color_by_addition: false,// unused
         font_size: 0,// unused
         font_color: 0x00,// unused
         font_border_color: 0x00,// unused
         font_border_size: NaN,// unused
 
-        is_sparse: 0,// unused
-        is_vertical: 0,
-        is_per_page: 1,
+        is_sparse: false,// unused
+        is_vertical: false,
+        is_per_page: true,
 
         items_align: ALIGN_CENTER,// readed from the layout
-        items_gap: 40,// readed from the layout
-        items_dimmen: 80,// readed from the layout
+        items_gap: 40.0,// readed from the layout
+        items_dimmen: 80.0,// readed from the layout
         static_index: 0,// unused
         texture_scale: NaN,// unused
-        enable_horizontal_text_correction: 1// unused
+        enable_horizontal_text_correction: true// unused
     },
     items: null,
     items_size: 0
@@ -57,7 +57,7 @@ const SAVEMANAGER_MENU_MANIFEST = {
 
 /**
  * This variable is set to true if the user does not want load and/or save
- * the progress. {@link savemanager_should_show} will always return -1 if true
+ * the progress. The {@link savemanager_should_show} function will always return -1 if true
  */
 var savemanager_game_withoutsavedata = false;
 
@@ -81,7 +81,7 @@ async function savemanager_init(save_only, error_code) {
 
     gamepad_set_buttons_delay(maple_pad, 200);
     textsprite_set_align(selected_label, ALIGN_NONE, ALIGN_CENTER);
-    textsprite_set_max_draw_size(selected_label, dimmen * 1.2, -1);
+    textsprite_set_max_draw_size(selected_label, dimmen * 1.2, -1.0);
 
     SAVEMANAGER_MENU_MANIFEST.parameters.items_dimmen = dimmen;
     SAVEMANAGER_MENU_MANIFEST.parameters.items_gap = gap;
@@ -95,18 +95,18 @@ async function savemanager_init(save_only, error_code) {
     let animlist = await animlist_init(SAVEMANAGER_MENU_MANIFEST.parameters.animlist);
 
     let messagebox = await messagebox_init();
-    messagebox_hide_image(messagebox, 1);
-    messagebox_use_small_size(messagebox, 1);
-    messagebox_show_buttons_icons(messagebox, 0);
+    messagebox_hide_image(messagebox, true);
+    messagebox_use_small_size(messagebox, true);
+    messagebox_show_buttons_icons(messagebox, false);
 
     let button_icons = await modelholder_init(WEEKSELECTOR_BUTTONS_MODEL);
-    if (!button_icons) throw new Error("can not load" + WEEKSELECTOR_BUTTONS_MODEL);
+    if (!button_icons) throw new Error("can not load " + WEEKSELECTOR_BUTTONS_MODEL);
 
     let help_cancel = weekselector_helptext_init(
-        button_icons, layout, 2, 0, "b", "Continue without save", null
+        button_icons, layout, 2, false, "b", "Continue without save", null
     );
     let help_ok = weekselector_helptext_init(
-        button_icons, layout, 4, 0, "a", "Choose VMU", null
+        button_icons, layout, 4, false, "a", "Choose VMU", null
     );
     modelholder_destroy(button_icons);
 
@@ -167,14 +167,14 @@ function savemanager_destroy(savemanager) {
 }
 
 async function savemanager_show(savemanager) {
-    const location = [0, 0];
-    const size = [0, 0];
+    const location = [0.0, 0.0];
+    const size = [0.0, 0.0];
 
     let selected_index = -1;
-    let save_or_load_success = 0;
-    let next_scan = 0;
-    let last_saved_selected = 0;
-    let confirm_leave = 0;
+    let save_or_load_success = false;
+    let next_scan = 0.0;
+    let last_saved_selected = false;
+    let confirm_leave = false;
 
     let modding = await modding_init(savemanager.layout, SAVEMANAGER_MODDING_SCRIPT);
     modding.native_menu = modding.active_menu = savemanager.menu;
@@ -191,7 +191,7 @@ async function savemanager_show(savemanager) {
 
         // check for inserted VMUs
         next_scan -= elapsed;
-        if (next_scan <= 0) {
+        if (next_scan <= 0.0) {
             let last_vmu_size = savemanager.vmu_size;
             next_scan = SAVEMANAGER_SCAN_INTERVAL;
 
@@ -200,14 +200,14 @@ async function savemanager_show(savemanager) {
                 menu_select_index(savemanager.menu, -1);
                 if (last_saved_selected) {
                     layout_trigger_any(savemanager.layout, "save-not-selected");
-                    last_saved_selected = 0;
+                    last_saved_selected = false;
                 }
 
                 if (modding.active_menu == modding.native_menu) modding.active_menu = savemanager.menu;
                 modding.native_menu = savemanager.menu;
             }
 
-            if (last_vmu_size > 0 != savemanager.vmu_size > 0) {
+            if ((last_vmu_size > 0) != (savemanager.vmu_size > 0)) {
                 if (savemanager.vmu_size > 0)
                     layout_trigger_any(savemanager.layout, "no-detected-hide");
                 else
@@ -218,18 +218,19 @@ async function savemanager_show(savemanager) {
         if (menu_get_selected_item_rect(savemanager.menu, location, size)) {
             location[0] -= savemanager.padding;
             location[1] -= savemanager.padding;
-            size[0] += savemanager.padding * 2;
-            size[1] += savemanager.padding * 2;
+            size[0] += savemanager.padding * 2.0;
+            size[1] += savemanager.padding * 2.0;
 
             sprite_set_draw_location(savemanager.selected_background, location[0], location[1]);
             sprite_set_draw_size(savemanager.selected_background, size[0], size[1]);
-            sprite_set_visible(savemanager.selected_background, 1);
+            sprite_set_visible(savemanager.selected_background, true);
 
-            textsprite_set_draw_location(savemanager.selected_label, location[0], location[1] - 24);
-            textsprite_set_visible(savemanager.selected_label, 1);
+            let label_height = textsprite_get_font_size(savemanager.selected_label);
+            textsprite_set_draw_location(savemanager.selected_label, location[0], location[1] - label_height);
+            textsprite_set_visible(savemanager.selected_label, true);
         } else {
-            sprite_set_visible(savemanager.selected_background, 0);
-            textsprite_set_visible(savemanager.selected_label, 0);
+            sprite_set_visible(savemanager.selected_background, false);
+            textsprite_set_visible(savemanager.selected_label, false);
         }
 
         let res = await modding_helper_handle_custom_menu(modding, savemanager.maple_pad, elapsed);
@@ -248,13 +249,13 @@ async function savemanager_show(savemanager) {
                 savemanager_game_withoutsavedata = true;
                 break;
             }
-            if (buttons & MAINMENU_GAMEPAD_CANCEL) confirm_leave = 0;
+            if (buttons & MAINMENU_GAMEPAD_CANCEL) confirm_leave = false;
             continue;
         }
 
         if (savemanager.error_code) {
             messagebox_hide_buttons(savemanager.messagebox);
-            messagebox_show(savemanager.messagebox, 0);
+            messagebox_show(savemanager.messagebox, false);
 
             await savemanager_internal_show_error(savemanager, savemanager.error_code);
 
@@ -267,18 +268,18 @@ async function savemanager_show(savemanager) {
             if (selected_index >= 0 && selected_index < menu_get_items_count(savemanager.menu)) {
                 save_or_load_success = await savemanager_internal_commit(savemanager, selected_index);
                 savemanager_game_withoutsavedata = !save_or_load_success;
-                if (save_or_load_success && savemanager.save_only) modding.has_funkinsave_changes = 0;
+                if (save_or_load_success && savemanager.save_only) modding.has_funkinsave_changes = false;
                 if (save_or_load_success) break;
             }
         } else if (buttons & MAINMENU_GAMEPAD_CANCEL && !await modding_helper_notify_back(modding)) {
-            confirm_leave = 1;
+            confirm_leave = true;
             messagebox_set_buttons_icons(savemanager.messagebox, "a", "b");
             messagebox_set_buttons_text(savemanager.messagebox, "Yes", "No");
             messagebox_set_title(savemanager.messagebox, "Confirm");
             messagebox_set_message(
                 savemanager.messagebox, savemanager.save_only ? "¿Leave without saving?" : "¿Continue without load?"
             );
-            messagebox_show(savemanager.messagebox, 1);
+            messagebox_show(savemanager.messagebox, true);
             continue;
         }
         else if (buttons & GAMEPAD_AD_DOWN)
@@ -292,21 +293,21 @@ async function savemanager_show(savemanager) {
 
         if (selection_offset_x == 0 && selection_offset_y == 0) continue;
 
-        let success = 0;
+        let success = false;
 
-        if (selection_offset_x != 0 && menu_select_horizontal(savemanager.menu, selection_offset_x)) success = 1;
-        if (selection_offset_y != 0 && menu_select_vertical(savemanager.menu, selection_offset_y)) success = 1;
+        if (selection_offset_x != 0 && menu_select_horizontal(savemanager.menu, selection_offset_x)) success = true;
+        if (selection_offset_y != 0 && menu_select_vertical(savemanager.menu, selection_offset_y)) success = true;
 
         selected_index = menu_get_selected_index(savemanager.menu);
-        if (!success || selected_index < 0 && selected_index >= savemanager.vmu_size) continue;
+        if ((!success || selected_index < 0) && selected_index >= savemanager.vmu_size) continue;
 
         const vmu = savemanager.vmu_array[selected_index];
 
         /*
         // C only
-        char label_text[] = "VMU pu";
+        static char label_text[] = "VMU pu";
         label_text[4] = 0x41 + vmu.port;
-        label_text[5] = 0x30 + vmu.port;
+        label_text[5] = 0x30 + vmu.unit;
         */
 
         // JS only
@@ -314,7 +315,7 @@ async function savemanager_show(savemanager) {
         let slot_name = String.fromCodePoint(0x30 + vmu.unit);
         const label_text = `VMU ${port_name}${slot_name}`;
 
-        textsprite_set_text_intern(savemanager.selected_label, 1, label_text);
+        textsprite_set_text_intern(savemanager.selected_label, true, label_text);
 
         if (last_saved_selected != vmu.has_savedata) {
             last_saved_selected = vmu.has_savedata;
@@ -418,7 +419,7 @@ async function savemanager_internal_find_changes(savemanager) {
     let count = 0;
 
     // count all attached VMUs
-    while (1) {
+    while (true) {
         let dev = maple_enum_type(index++, MAPLE_FUNC_MEMCARD);
         if (!dev || !dev.valid) break;
         count++;
@@ -449,14 +450,17 @@ async function savemanager_internal_find_changes(savemanager) {
         }
     }
 
-    if (changes < 1) return 0;
+    if (changes < 1) {
+        new_vmu_array = undefined;
+        return false;
+    }
 
     // drop old VMU scan
     savemanager.vmu_array = undefined;
     savemanager.vmu_array = new_vmu_array;
     savemanager.vmu_size = count;
 
-    return 1;
+    return true;
 }
 
 async function savemanager_internal_animate(savemanager, elapsed) {
@@ -483,11 +487,11 @@ async function savemanager_internal_commit(savemanager, selected_index) {
         messagebox_set_message(savemanager.messagebox, "This vmu is empty ¿Create a new save?");
         messagebox_set_buttons_icons(savemanager.messagebox, "a", "b");
         messagebox_set_buttons_text(savemanager.messagebox, "Yes", "Pick another");
-        messagebox_show(savemanager.messagebox, 1);
+        messagebox_show(savemanager.messagebox, true);
 
         gamepad_clear_buttons(savemanager.maple_pad);
 
-        while (1) {
+        while (true) {
             let elapsed = await pvrctx_wait_ready();
             let buttons = gamepad_has_pressed_delayed(savemanager.maple_pad, MAINMENU_GAMEPAD_BUTTONS);
 
@@ -497,7 +501,7 @@ async function savemanager_internal_commit(savemanager, selected_index) {
             messagebox_animate(savemanager.messagebox, elapsed);
             messagebox_draw(savemanager.messagebox, pvr_context);
 
-            if (buttons & MAINMENU_GAMEPAD_CANCEL) return 0;
+            if (buttons & MAINMENU_GAMEPAD_CANCEL) return false;
             if (buttons & MAINMENU_GAMEPAD_OK) break;
         }
     }
@@ -505,21 +509,22 @@ async function savemanager_internal_commit(savemanager, selected_index) {
     funkinsave_set_vmu(vmu.port, vmu.unit);
     if (!savemanager.save_only && !vmu.has_savedata) {
         messagebox_set_title(savemanager.messagebox, "Creating new save...");
-        savemanager.save_only = 1;
+        savemanager.save_only = true;
     } else {
         messagebox_set_title(savemanager.messagebox, savemanager.save_only ? "Storing save..." : "Loading save...");
     }
 
     messagebox_hide_buttons(savemanager.messagebox);
-    messagebox_use_full_title(savemanager.messagebox, 1);
+    messagebox_use_full_title(savemanager.messagebox, true);
     messagebox_set_message(savemanager.messagebox, null);
-    messagebox_show(savemanager.messagebox, 0);
+    messagebox_show(savemanager.messagebox, false);
 
     pvr_context_reset(pvr_context);
     layout_draw(savemanager.layout, pvr_context);
     messagebox_draw(savemanager.messagebox, pvr_context);
+    await pvrctx_wait_ready();
 
-    messagebox_use_full_title(savemanager.messagebox, 0);
+    messagebox_use_full_title(savemanager.messagebox, false);
 
     let result;
     if (savemanager.save_only)
@@ -535,7 +540,7 @@ async function savemanager_internal_show_error(savemanager, error_code) {
         switch (error_code) {
             case 0:
                 savemanager_game_withoutsavedata = false;
-                return 1;
+                return true;
             case 1:
                 messagebox_set_message(
                     savemanager.messagebox, "The VMU was removed"
@@ -567,7 +572,7 @@ async function savemanager_internal_show_error(savemanager, error_code) {
             case 0:
                 // success
                 savemanager_game_withoutsavedata = false;
-                return 1;
+                return true;
             case 1:
                 messagebox_set_message(
                     savemanager.messagebox, "The VMU was removed"
@@ -599,7 +604,7 @@ async function savemanager_internal_show_error(savemanager, error_code) {
     messagebox_set_title(savemanager.messagebox, "Error");
     messagebox_set_button_single(savemanager.messagebox, "OK");
 
-    while (1) {
+    while (true) {
         let elapsed = await pvrctx_wait_ready();
         let buttons = gamepad_has_pressed_delayed(savemanager.maple_pad, MAINMENU_GAMEPAD_BUTTONS);
 
@@ -612,6 +617,6 @@ async function savemanager_internal_show_error(savemanager, error_code) {
         if (buttons) break;
     }
 
-    return 0;
+    return false;
 }
 

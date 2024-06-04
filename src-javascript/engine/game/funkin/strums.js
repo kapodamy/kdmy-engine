@@ -68,28 +68,19 @@ const STRUMS_DEFAULT_DISTRIBUTION = {
 };
 
 /* __attribute__((constructor)) void init_default_strums_distribution() */ {
-    for (let i = 0; i < STRUMS_DEFAULT_DISTRIBUTION.notes.length; i++) {
+    for (let i = 0; i < STRUMS_DEFAULT_DISTRIBUTION.notes_size; i++) {
         let note = STRUMS_DEFAULT_DISTRIBUTION.notes[i];
         note.sick_effect_state_name = null;
         note.model_src = FUNKIN_COMMON_NOTES;
         note.custom_sick_effect_model_src = null;
         note.damage_ratio = 1.0;
         note.heal_ratio = 1.0;
-        note.ignore_hit = 0;
-        note.ignore_miss = 0;
-        note.can_kill_on_hit = 0;
+        note.ignore_hit = false;
+        note.ignore_miss = false;
+        note.can_kill_on_hit = false;
     }
 }
 
-
-//
-//  the following default values corresponds to a screen resolution of 1280x720
-//
-const STRUMS_MARKER_DIMMEN = 50;
-const STRUMS_MARKER_INVDIMMEN = 50;
-const STRUMS_STRUM_LENGTH = 450;
-const STRUMS_GAP = 5;
-const STRUMS_SCROLL_DIRECTION = STRUM_UPSCROLL;
 
 
 async function strums_init(x, y, z, dimmen, invdimmen, length, gap, player_id, is_vertical, keep_marker_scale, strumsdefs, strumsdefs_size) {
@@ -113,7 +104,7 @@ async function strums_init(x, y, z, dimmen, invdimmen, length, gap, player_id, i
     strums.modifier.x = y;
 
     strums.is_vertical = is_vertical;
-    strums.is_inverse = 0;
+    strums.is_inverse = false;
 
     let space = gap + invdimmen;
 
@@ -149,7 +140,7 @@ async function strums_init(x, y, z, dimmen, invdimmen, length, gap, player_id, i
 }
 
 function strums_destroy(strums) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(strums);
+    luascript_drop_shared(strums);
 
     for (let i = 0; i < strums.size; i++)
         strum_destroy(strums.lines[i]);
@@ -159,7 +150,7 @@ function strums_destroy(strums) {
 
     for (let decorator of arraylist_iterate4(strums.decorators))
         statesprite_destroy(decorator.statesprite);
-    arraylist_destroy(strums.decorators, 0);
+    arraylist_destroy(strums.decorators, false);
 
     strums.lines = undefined;
     strums.sick_effects = undefined;
@@ -225,7 +216,7 @@ function strums_reset(strums, scroll_speed, state_name) {
     }
     drawable_set_antialiasing(strums.drawable, PVRCTX_FLAG_DEFAULT);
     strums_decorators_set_scroll_speed(strums, scroll_speed);
-    strums_decorators_set_visible(strums, -1.0, 1);
+    strums_decorators_set_visible(strums, -1.0, true);
     strums.decorators_last_song_timestamp = 0.0;
 }
 
@@ -292,7 +283,7 @@ function strums_animate(strums, elapsed) {
     let res = 0;
     if (strums.drawable_animation) {
         res += animsprite_animate(strums.drawable_animation, elapsed);
-        animsprite_update_drawable(strums.drawable_animation, strums.drawable, 1);
+        animsprite_update_drawable(strums.drawable_animation, strums.drawable, true);
     }
 
     for (let i = 0; i < strums.size; i++)
@@ -412,8 +403,10 @@ function strums_state_toggle(strums, state_name) {
 }
 
 function strums_state_toggle_notes(strums, state_name) {
+    let toggles = 0;
     for (let i = 0; i < strums.size; i++)
-        strum_state_toggle_notes(strums.lines[i], state_name);
+        toggles += strum_state_toggle_notes(strums.lines[i], state_name);
+    return toggles;
 }
 
 function strums_state_toggle_marker_and_sick_effect(strums, state_name) {
@@ -481,7 +474,7 @@ function strums_animation_restart(strums) {
 function strums_animation_end(strums) {
     if (strums.drawable_animation) {
         animsprite_force_end(strums.drawable_animation);
-        animsprite_update_drawable(strums.drawable_animation, strums.drawable, 1);
+        animsprite_update_drawable(strums.drawable_animation, strums.drawable, true);
     }
 
     for (let i = 0; i < strums.size; i++)
@@ -503,15 +496,15 @@ function strums_decorators_add(strums, modelholder, animation_name, timestamp) {
 }
 
 function strums_decorators_add2(strums, modelholder, animation_name, timestamp, from_strum_index, to_strum_index) {
-    if (!modelholder || timestamp < 0 || Number.isNaN(timestamp)) return 0;
-    if (from_strum_index < 0 || to_strum_index >= strums.size || to_strum_index < from_strum_index) return 0;
+    if (!modelholder || timestamp < 0.0 || Number.isNaN(timestamp)) return false;
+    if (from_strum_index < 0 || to_strum_index >= strums.size || to_strum_index < from_strum_index) return false;
 
     let statesprite = statesprite_init_from_vertex_color(modelholder_get_vertex_color(modelholder));
     let state = statesprite_state_add(statesprite, modelholder, animation_name, null);
 
     if (!state) {
         statesprite_destroy(statesprite);
-        return 0;
+        return false;
     }
 
     strums_internal_calc_decorator_bounds(strums, state, from_strum_index, to_strum_index);
@@ -522,12 +515,12 @@ function strums_decorators_add2(strums, modelholder, animation_name, timestamp, 
         statesprite: statesprite,
         to_strum_index: to_strum_index,
         from_strum_index: from_strum_index,
-        is_visible: 1
+        is_visible: true
     };
 
     arraylist_add(strums.decorators, decorator);
 
-    return 1;
+    return true;
 }
 
 function strums_decorators_set_scroll_speed(strums, speed) {
@@ -556,7 +549,7 @@ function strums_force_rebuild(strums, x, y, z, dimmen, invdimmen, length_dimmen,
     strums.modifier.x = x;
     strums.modifier.y = y;
     strums.is_vertical = is_vertical;
-    strums.is_inverse = 0;
+    strums.is_inverse = false;
     strums.gap = gap;
     strums.invdimmen = invdimmen;
 
@@ -598,7 +591,7 @@ function strums_internal_calc_decorator_bounds(strums, state, from_strum_index, 
     } else {
         x = 0.0;
         y = offset_start;
-        width = -1;
+        width = -1.0;
         height = length;
         horizontal = strums.is_inverse ? ALIGN_END : ALIGN_START;
         vertical = ALIGN_CENTER;

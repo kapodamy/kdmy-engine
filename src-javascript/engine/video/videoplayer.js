@@ -71,7 +71,7 @@ function videoplayer_destroy(videoplayer) {
 
     mastervolume_remove_mediaelement(videoplayer.handler);
 
-    ModuleLuaScript.kdmyEngine_drop_shared_object(videoplayer);
+    luascript_drop_shared(videoplayer);
     videoplayer = undefined;
 }
 

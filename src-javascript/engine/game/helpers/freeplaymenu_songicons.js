@@ -5,9 +5,8 @@ async function freeplaymenu_songicons_init(song_map, max_dimmen, font_size) {
     songicons.icons_size = arraylist_size(song_map);
     songicons.icons = new Array(songicons.icons_size);
 
-
     let last_model = null;
-    let last_model_exists = 0;
+    let last_model_exists = false;
     let base_offset_y = (font_size - max_dimmen) / 2.0;
 
     for (let i = 0; i < songicons.icons_size; i++) {
@@ -34,16 +33,16 @@ async function freeplaymenu_songicons_init(song_map, max_dimmen, font_size) {
         if (!last_model_exists) model_src = null;
 
         let sprite = null;
-        let offset_x = 0;
-        let offset_y = 0;
+        let offset_x = 0.0;
+        let offset_y = 0.0;
 
         L_load_model_holder:
         if (modelholder_utils_is_known_extension(model_src)) {
             let modelholder = await modelholder_init(model_src);
             if (!modelholder) break L_load_model_holder;
 
-            let texture = modelholder_get_texture(modelholder, 1);
-            let anim = modelholder_create_animsprite(modelholder, icon_name, 0, 0);
+            let texture = modelholder_get_texture(modelholder, true);
+            let anim = modelholder_create_animsprite(modelholder, icon_name, false, false);
             let color_rgb8 = modelholder_get_vertex_color(modelholder);
 
             if (texture)
@@ -54,8 +53,8 @@ async function freeplaymenu_songicons_init(song_map, max_dimmen, font_size) {
             if (anim) {
                 sprite_external_animation_set(sprite, anim);
             } else {
-                let atlas_entry = modelholder_get_atlas_entry(modelholder, icon_name, 0);
-                if (atlas_entry) atlas_apply_from_entry(sprite, atlas_entry, 1);
+                let atlas_entry = modelholder_get_atlas_entry(modelholder, icon_name);
+                if (atlas_entry) atlas_apply_from_entry(sprite, atlas_entry, true);
             }
 
             modelholder_destroy(modelholder);
@@ -87,17 +86,18 @@ function freeplaymenu_songicons_destroy(songicons) {
     for (let i = 0; i < songicons.icons_size; i++) {
         if (songicons.icons[i].sprite) sprite_destroy_full(songicons.icons[i].sprite);
     }
-    songicons.icons = null;
-    songicons = null;
+    songicons.icons = undefined;
+    songicons = undefined;
 }
 
 function freeplaymenu_songicons_draw_item_icon(songicons, pvrctx, menu, idx, x, y, w, h) {
     let icon = songicons.icons[idx];
-    if (!icon.sprite) return 1;
 
-    sprite_set_draw_location(icon.sprite, x + w, y + icon.offset_y);
-    sprite_draw(icon.sprite, pvrctx);
+    if (icon.sprite) {
+        sprite_set_draw_location(icon.sprite, x + w, y + icon.offset_y);
+        sprite_draw(icon.sprite, pvrctx);
+    }
 
-    return 1;
+    return true;
 }
 

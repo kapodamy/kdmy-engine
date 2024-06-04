@@ -5,15 +5,14 @@ async function menumanifest_init(src) {
     let json = await json_load_from(src);
     if (!json) throw new Error("menumanifest_init() misssing or invalid file: " + src);
 
-    let json_parameters = json_read_array_item_object(json, "parameters");
+    let json_parameters = json_read_object(json, "parameters");
     if (!json_parameters) throw new Error("menumanifest_init() misssing parameters in json: " + src);
 
     fs_folder_stack_push();
-    fs_set_working_folder(src, 1);
+    fs_set_working_folder(src, true);
 
     let align_value = json_read_string(json, "itemsAlign", null);
     let align = vertexprops_parse_align2(align_value);
-    align_value = undefined;
     switch (align) {
         case -1:
             align = ALIGN_CENTER;
@@ -56,27 +55,27 @@ async function menumanifest_init(src) {
             anim_in: json_read_string(json_parameters, "animIn", null),
             anim_out: json_read_string(json_parameters, "animOut", null),
 
-            anim_transition_in_delay: json_read_number(json_parameters, "transitionInDelay", 0),
-            anim_transition_out_delay: json_read_number(json_parameters, "transitionOutDelay", 0),
+            anim_transition_in_delay: json_read_number(json_parameters, "transitionInDelay", 0.0),
+            anim_transition_out_delay: json_read_number(json_parameters, "transitionOutDelay", 0.0),
 
             font: json_read_string(json_parameters, "fontPath", null),
             font_glyph_suffix: json_read_string(json_parameters, "fontSuffix", null),
-            font_color_by_difference: json_read_boolean(json_parameters, "fontColorByDifference", 0),
-            font_size: json_read_number(json_parameters, "fontSize", 0),
+            font_color_by_addition: json_read_boolean(json_parameters, "fontColorByAddition", false),
+            font_size: json_read_number(json_parameters, "fontSize", 0.0),
             font_color: json_read_hex(json_parameters, "fontColor", 0xFFFFFF),
             font_border_color: json_read_hex(json_parameters, "fontBorderColor", 0x0),
-            font_border_size: json_read_number(json_parameters, "fontBorderSize", 0),
+            font_border_size: json_read_number(json_parameters, "fontBorderSize", 0.0),
 
-            is_sparse: json_read_boolean(json_parameters, "isSparse", 0),
-            is_vertical: json_read_boolean(json_parameters, "isVertical", 1),
-            is_per_page: json_read_boolean(json_parameters, "isPerPage", 0),
+            is_sparse: json_read_boolean(json_parameters, "isSparse", false),
+            is_vertical: json_read_boolean(json_parameters, "isVertical", true),
+            is_per_page: json_read_boolean(json_parameters, "isPerPage", false),
 
             items_align: align,
-            items_gap: json_read_number(json_parameters, "itemsGap", 0),
-            items_dimmen: json_read_number(json_parameters, "itemsDimmen", 0),
-            static_index: json_read_number(json_parameters, "staticIndex", 0),
+            items_gap: json_read_number(json_parameters, "itemsGap", 0.0),
+            items_dimmen: json_read_number(json_parameters, "itemsDimmen", 0.0),
+            static_index: json_read_number(json_parameters, "staticIndex", 0.0),
             texture_scale: json_read_number(json_parameters, "textureScale", NaN),
-            enable_horizontal_text_correction: json_read_boolean(json_parameters, "enableHorizontalTextCorrection", 0)
+            enable_horizontal_text_correction: json_read_boolean(json_parameters, "enableHorizontalTextCorrection", false)
         },
 
         items: new Array(array_items_length),
@@ -91,15 +90,15 @@ async function menumanifest_init(src) {
             name: json_read_string(json_item, "name", null),
             text: json_read_string(json_item, "text", null),
             model: json_read_string(json_item, "model", null),
-            hidden: json_read_boolean(json_item, "hidden", 0),
+            hidden: json_read_boolean(json_item, "hidden", false),
             description: json_read_string(json_item, "description", null),
             texture_scale: json_read_number(json_item, "textureScale", 0.0),
 
             placement: {
-                x: json_read_number(json_placement, "x", 0),
-                y: json_read_number(json_placement, "y", 0),
-                dimmen: json_read_number(json_placement, "dimmen", 0),
-                gap: json_read_number(json_placement, "gap", 0)
+                x: json_read_number(json_placement, "x", 0.0),
+                y: json_read_number(json_placement, "y", 0.0),
+                dimmen: json_read_number(json_placement, "dimmen", 0.0),
+                gap: json_read_number(json_placement, "gap", 0.0)
             },
 
             anim_selected: json_read_string(json_item, "animSelected", null),
@@ -117,7 +116,7 @@ async function menumanifest_init(src) {
 }
 
 function menumanifest_destroy(menumanifest) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(menumanifest);
+    luascript_drop_shared(menumanifest);
 
     for (let i = 0; i < menumanifest.items_size; i++) {
         menumanifest.items[i].name = undefined;
@@ -170,14 +169,9 @@ function menumanifest_get_option_index(menumanifest, option_name) {
 
 function menumanifest_internal_parse_path(json, property_name) {
     let str = json_read_string(json, property_name, null);
-    if (str == null) return null;
-    if (str.length < 1) {
-        str = undefined;
-        return null;
-    }
+    if (!str) return null;
 
     let path = fs_get_full_path(str);
-    str = undefined;
 
     return path;
 }

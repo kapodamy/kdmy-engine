@@ -11,7 +11,7 @@ function weekselector_weektitle_init(layout) {
         drawable: null
     };
 
-    weektitle.drawable = drawable_init(-1, weektitle, weekselector_weektitle_draw, null);
+    weektitle.drawable = drawable_init(-1.0, weektitle, weekselector_weektitle_draw, null);
     sprite_set_alpha(weektitle.sprite, WEEKSELECTOR_WEEKTITLE_ALT_ALPHA);
 
     return weektitle;
@@ -31,8 +31,8 @@ function weekselector_weektitle_draw(weektitle, pvrctx) {
 }
 
 function weekselector_weektitle_move(weektitle, weeklist, use_warns_placeholder) {
-    const draw_size = [0, 0];
-    const draw_location = [0, 0];
+    const draw_size = [0.0, 0.0];
+    const draw_location = [0.0, 0.0];
     const atlas_entry = {};
 
     if (!weektitle.placeholder1 && !weektitle.placeholder2) return;
@@ -56,15 +56,15 @@ function weekselector_weektitle_move(weektitle, weeklist, use_warns_placeholder)
         draw_size, draw_location
     );
 
-    sprite_set_texture(weektitle.sprite, sprite_get_texture(title_sprite), 0);
-    atlas_apply_from_entry(weektitle.sprite, atlas_entry, 0);
+    sprite_set_texture(weektitle.sprite, sprite_get_texture(title_sprite), false);
+    atlas_apply_from_entry(weektitle.sprite, atlas_entry, false);
     sprite_set_draw_size(weektitle.sprite, draw_size[0], draw_size[1]);
     sprite_set_draw_location(weektitle.sprite, draw_location[0], draw_location[1]);
 }
 
 function weekselector_weektitle_move_difficult(weektitle, weekdifficult) {
-    const draw_size = [0, 0];
-    const draw_location = [0, 0];
+    const draw_size = [0.0, 0.0];
+    const draw_location = [0.0, 0.0];
 
     if (weektitle.placeholder1) weektitle.placeholder1.vertex = null;
     if (weektitle.placeholder2) weektitle.placeholder2.vertex = null;
@@ -74,7 +74,7 @@ function weekselector_weektitle_move_difficult(weektitle, weekdifficult) {
     let difficult_statesprite = weekselector_difficult_peek_statesprite(weekdifficult);
     let statesprite_state = statesprite_state_get(difficult_statesprite);
     if (!statesprite_state) {
-        sprite_set_texture(weektitle.sprite, null, 0);
+        sprite_set_texture(weektitle.sprite, null, false);
         return;
     }
     imgutils_get_statesprite_original_size(statesprite_state, draw_size);
@@ -87,8 +87,8 @@ function weekselector_weektitle_move_difficult(weektitle, weekdifficult) {
         draw_size, draw_location
     );
 
-    sprite_set_texture(weektitle.sprite, statesprite_state.texture, 0);
-    atlas_apply_from_entry(weektitle.sprite, statesprite_state.frame_info, 0);
+    sprite_set_texture(weektitle.sprite, statesprite_state.texture, false);
+    atlas_apply_from_entry(weektitle.sprite, statesprite_state.frame_info, false);
     sprite_set_draw_size(weektitle.sprite, draw_size[0], draw_size[1]);
     sprite_set_draw_location(weektitle.sprite, draw_location[0], draw_location[1]);
     sprite_set_alpha(weektitle.sprite, 1.0);

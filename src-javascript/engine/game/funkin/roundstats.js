@@ -8,18 +8,18 @@ const ROUNDSTATS_SEPARATOR = " | ";
 function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
     const STRUCT = {
         tweenkeyframe: null,
-        rollback_beats: 0,
-        duration_rollback: 0,
-        beat_duration: 0,
-        rollback_active: 0,
-        target_elapsed: 0,
-        target_duration: 0,
-        is_completed: 0
+        rollback_beats: 0.0,
+        rollback_duration: 0.0,
+        beat_duration: 0.0,
+        rollback_active: false,
+        target_elapsed: 0.0,
+        target_duration: 0.0,
+        is_completed: false
     };
 
     let roundstats = {
         textsprite: textsprite_init2(fontholder, font_size, ROUNDSTATS_FONT_COLOR),
-        next_clear: 0,
+        next_clear: 0.0,
         drawable: null,
         drawable_animation: null,
         builder: stringbuilder_init(128),
@@ -27,7 +27,7 @@ function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
         beatwatcher: {},
 
         tweenkeyframe_active: null,// this can be "tweenkeyframe_hit" or "tweenkeyframe_miss"
-        tweenkeyframe_multiplier: 1,
+        tweenkeyframe_multiplier: 1.0,
 
         last_count_hit: 0,
         last_count_miss: 0,
@@ -36,10 +36,10 @@ function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
         tweenkeyframe_beat: clone_struct(STRUCT),
         tweenkeyframe_hit: clone_struct(STRUCT),
         tweenkeyframe_miss: clone_struct(STRUCT),
-        enable_nps: 0
+        enable_nps: false
     };
 
-    beatwatcher_reset(roundstats.beatwatcher, 1, 100);
+    beatwatcher_reset(roundstats.beatwatcher, true, 100.0);
 
     roundstats.drawable = drawable_init(z, roundstats, roundstats_draw, roundstats_animate);
 
@@ -47,12 +47,12 @@ function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
     modifier.x = x;
     modifier.y = y;
 
-    textsprite_border_enable(roundstats.textsprite, 1);
+    textsprite_border_enable(roundstats.textsprite, true);
     textsprite_border_set_color_rgba8(roundstats.textsprite, ROUNDSTATS_FONT_BORDER_COLOR);
     textsprite_border_set_size(roundstats.textsprite, ROUNDSTATS_FONT_BORDER_SIZE);
-    textsprite_set_visible(roundstats.textsprite, 0);
+    textsprite_set_visible(roundstats.textsprite, false);
     textsprite_set_draw_location(roundstats.textsprite, x, y);
-    textsprite_set_max_draw_size(roundstats.textsprite, layout_width, -1);
+    textsprite_set_max_draw_size(roundstats.textsprite, layout_width, -1.0);
     textsprite_set_align(roundstats.textsprite, ALIGN_START, ALIGN_CENTER);
 
     roundstats_reset(roundstats);
@@ -61,7 +61,7 @@ function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
 }
 
 function roundstats_destroy(roundstats) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(roundstats);
+    luascript_drop_shared(roundstats);
 
     drawable_destroy(roundstats.drawable);
     if (roundstats.drawable_animation) animsprite_destroy(roundstats.drawable_animation);
@@ -86,19 +86,19 @@ function roundstats_set_draw_y(roundstats, y) {
 }
 
 function roundstats_reset(roundstats) {
-    roundstats.next_clear = 1000;
+    roundstats.next_clear = 1000.0;
     roundstats.tweenkeyframe_active = null;
-    roundstats.tweenkeyframe_multiplier = 1;
+    roundstats.tweenkeyframe_multiplier = 1.0;
     roundstats.last_count_hit = 0;
     roundstats.last_count_miss = 0;
 
-    beatwatcher_reset(roundstats.beatwatcher, 1, 100);
+    beatwatcher_reset(roundstats.beatwatcher, true, 100.0);
 
-    drawable_set_antialiasing(roundstats.drawable, PVR_FLAG_DEFAULT);
+    drawable_set_antialiasing(roundstats.drawable, PVRCTX_FLAG_DEFAULT);
 
-    roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_beat, 0);
-    roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_hit, 0);
-    roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_miss, 0);
+    roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_beat, false);
+    roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_hit, false);
+    roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_miss, false);
 }
 
 function roundstats_get_drawable(roundstats) {
@@ -119,7 +119,7 @@ function roundstats_peek_playerstats(roundstats, song_timestamp, playerstats) {
     }
 
     if (roundstats.next_clear > song_timestamp) {
-        roundstats.next_clear += 1000;
+        roundstats.next_clear += 1000.0;
         playerstats_reset_notes_per_seconds(playerstats);
     }
 
@@ -132,11 +132,11 @@ function roundstats_peek_playerstats(roundstats, song_timestamp, playerstats) {
     stringbuilder_add_format(builder, "Accuracy: $2d%", accuracy);
     stringbuilder_add(builder, ROUNDSTATS_SEPARATOR);
 
-    if (accuracy > 0) {
+    if (accuracy > 0.0) {
         stringbuilder_add_format(
             builder, " $s $s",
             funkin_get_letter_rank(playerstats),
-            funking_get_wife3_accuracy(playerstats)
+            funkin_get_wife3_accuracy(playerstats)
         );
     } else {
         stringbuilder_add(builder, FUNKIN_NO_ACCURACY);
@@ -145,7 +145,7 @@ function roundstats_peek_playerstats(roundstats, song_timestamp, playerstats) {
     //stringbuilder_add(builder, ROUNDSTATS_SEPARATOR);
 
     // now use the builded stats string
-    textsprite_set_text_intern(roundstats.textsprite, 1, stringbuilder_intern(builder));
+    textsprite_set_text_intern(roundstats.textsprite, true, stringbuilder_intern(builder));
 
     //
     // configure the active tweenkeyframe
@@ -174,7 +174,7 @@ function roundstats_peek_playerstats(roundstats, song_timestamp, playerstats) {
     } else {
         roundstats.tweenkeyframe_multiplier += tweenkeyframe_multiplier;
     }
-    roundstats_internal_tweenkeyframe_setup(tweenkeyframe_active, 0);
+    roundstats_internal_tweenkeyframe_setup(tweenkeyframe_active, false);
 }
 
 
@@ -215,11 +215,11 @@ function roundstats_animate(roundstats, elapsed) {
         // if the active tweenkeyframe is completed, do rollback
         if (!roundstats.tweenkeyframe_active.rollback_active) {
             if (completed) {
-                roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_active, 1);
+                roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_active, true);
             } else if (!ignore_beat && !beat_rollback_active) {
                 // still running, ignore beat tweernlerp
-                beat_rollback_active = 1;
-                roundstats.tweenkeyframe_beat.rollback_active = 1;
+                beat_rollback_active = true;
+                roundstats.tweenkeyframe_beat.rollback_active = true;
             }
         }
     }
@@ -227,16 +227,16 @@ function roundstats_animate(roundstats, elapsed) {
     // beat check
     if (beatwatcher_poll(roundstats.beatwatcher)) {
         elapsed += roundstats.beatwatcher.since;
-        roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_beat, 0);// run again
+        roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_beat, false);// run again
     }
 
     if (!ignore_beat) {
         completed = roundstats_internal_tweenkeyframe_run(roundstats, roundstats.tweenkeyframe_beat, elapsed);
         if (completed && !beat_rollback_active)
-            roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_beat, 1);// do rollback
+            roundstats_internal_tweenkeyframe_setup(roundstats.tweenkeyframe_beat, true);// do rollback
     }
 
-    const draw_size = [0, 0];
+    const draw_size = [0.0, 0.0];
     const modifier = drawable_get_modifier(roundstats.drawable);
     textsprite_get_draw_size(roundstats.textsprite, draw_size);
     modifier.width = draw_size[0];
@@ -262,15 +262,15 @@ function roundstats_internal_tweenkeyframe_set(tweenkeyframe_info, tweenkeyframe
 }
 
 function roundstats_internal_tweenkeyframe_duration(tweenkeyframe_info, beat_duration) {
-    tweenkeyframe_info.duration_rollback = tweenkeyframe_info.rollback_beats * beat_duration;
+    tweenkeyframe_info.rollback_duration = tweenkeyframe_info.rollback_beats * beat_duration;
     tweenkeyframe_info.beat_duration = beat_duration * tweenkeyframe_info.beat_duration;
     roundstats_internal_tweenkeyframe_setup(tweenkeyframe_info, tweenkeyframe_info.rollback_active);
 }
 
 function roundstats_internal_tweenkeyframe_run(roundstats, tweenkeyframe_info, elapsed) {
-    const entry = [/*id*/0, /*value*/0];
+    const entry = [/*id*/0.0, /*value*/0.0];
 
-    if (!tweenkeyframe_info.tweenkeyframe || tweenkeyframe_info.is_completed) return 1;
+    if (!tweenkeyframe_info.tweenkeyframe || tweenkeyframe_info.is_completed) return true;
 
     tweenkeyframe_info.target_elapsed += elapsed;
 
@@ -292,16 +292,16 @@ function roundstats_internal_tweenkeyframe_run(roundstats, tweenkeyframe_info, e
         if (!vertexprops_is_property_enumerable(entry[0]))
             entry[1] *= roundstats.tweenkeyframe_multiplier;
 
-        textsprite_set_property(roundstats.drawable, entry[0], entry[1]);
+        drawable_set_property(roundstats.drawable, entry[0], entry[1]);
     }
 
     return tweenkeyframe_info.is_completed;
 }
 
 function roundstats_internal_tweenkeyframe_setup(tweenkeyframe_info, rollback) {
-    tweenkeyframe_info.is_completed = 0;
+    tweenkeyframe_info.is_completed = false;
     tweenkeyframe_info.rollback_active = rollback;
-    tweenkeyframe_info.target_elapsed = 0;
+    tweenkeyframe_info.target_elapsed = 0.0;
     tweenkeyframe_info.target_duration = rollback ? tweenkeyframe_info.rollback_duration : tweenkeyframe_info.beat_duration;
     return tweenkeyframe_info.tweenkeyframe == null;
 }

@@ -3,16 +3,16 @@
 function imgutils_calc_size(orig_width, orig_height, max_width, max_height, result_size) {
     let width, height;
 
-    if (max_width < 0 && max_height < 0) {
+    if (max_width < 0.0 && max_height < 0.0) {
         width = orig_width;
         height = orig_height;
-    } else if (orig_width == 0 && orig_height == 0) {
-        if (max_width > 0) width = max_width;
-        if (max_height > 0) height = max_height;
-    } else if (max_width == 0 || max_height == 0) {
-        width = height = 0;
+    } else if (orig_width == 0.0 && orig_height == 0.0) {
+        if (max_width > 0.0) width = max_width;
+        if (max_height > 0.0) height = max_height;
+    } else if (max_width == 0.0 || max_height == 0.0) {
+        width = height = 0.0;
     } else {
-        if (max_width > 0 && max_height > 0) {
+        if (max_width > 0.0 && max_height > 0.0) {
             let scale_x = max_width / orig_width;
             let scale_y = max_height / orig_height;
 
@@ -22,12 +22,12 @@ function imgutils_calc_size(orig_width, orig_height, max_width, max_height, resu
                 max_height = -Infinity;
         }
 
-        if (max_height > 0) {
+        if (max_height > 0.0) {
             height = max_height;
             width = (orig_width * max_height) / orig_height;
         }
 
-        if (max_width > 0) {
+        if (max_width > 0.0) {
             height = (orig_height * max_width) / orig_width;
             width = max_width;
         }
@@ -43,8 +43,8 @@ function imgutils_calc_size2(texture, atlas_entry, max_width, max_height, resize
     let orig_width, orig_height;
 
     if (atlas_entry) {
-        orig_width = atlas_entry.frame_width > 0 ? atlas_entry.frame_width : atlas_entry.width;
-        orig_height = atlas_entry.frame_height > 0 ? atlas_entry.frame_height : atlas_entry.height;
+        orig_width = atlas_entry.frame_width > 0.0 ? atlas_entry.frame_width : atlas_entry.width;
+        orig_height = atlas_entry.frame_height > 0.0 ? atlas_entry.frame_height : atlas_entry.height;
     } else if (texture) {
         orig_width = texture.original_width;
         orig_height = texture.original_height;
@@ -58,8 +58,8 @@ function imgutils_calc_size2(texture, atlas_entry, max_width, max_height, resize
 }
 
 function imgutils_calc_centered_location(x, y, width, height, ref_width, ref_height, location_result) {
-    if (ref_width >= 0) x += ((ref_width - width) / 2);
-    if (ref_height >= 0) y += ((ref_height - height) / 2);
+    if (ref_width >= 0.0) x += ((ref_width - width) / 2.0);
+    if (ref_height >= 0.0) y += ((ref_height - height) / 2.0);
 
     location_result[0] = x;
     location_result[1] = y;
@@ -69,12 +69,12 @@ function imgutils_calc_centered_location(x, y, width, height, ref_width, ref_hei
 
 function imgutils_get_statesprite_original_size(statesprite_state, output_size) {
     if (statesprite_state.frame_info) {
-        if (statesprite_state.frame_info.frame_width > 0)
+        if (statesprite_state.frame_info.frame_width > 0.0)
             output_size[0] = statesprite_state.frame_info.frame_width;
         else
             output_size[0] = statesprite_state.frame_info.width;
 
-        if (statesprite_state.frame_info.frame_height > 0)
+        if (statesprite_state.frame_info.frame_height > 0.0)
             output_size[1] = statesprite_state.frame_info.frame_height;
         else
             output_size[1] = statesprite_state.frame_info.height;
@@ -87,12 +87,12 @@ function imgutils_calc_rectangle(x, y, max_width, max_height, src_width, src_hei
     const draw_size = [src_width, src_height];
     imgutils_calc_size(src_width, src_height, max_width, max_height, draw_size);
 
-    if (max_width > 0 && (align_hrzntl == ALIGN_CENTER || align_hrzntl == ALIGN_END)) {
+    if (max_width > 0.0 && (align_hrzntl == ALIGN_CENTER || align_hrzntl == ALIGN_END)) {
         let offset = (max_width - draw_size[0]);
         if (align_hrzntl == ALIGN_CENTER) offset /= 2.0;
         x += offset;
     }
-    if (max_height > 0 && (align_vrtcl == ALIGN_CENTER || align_vrtcl == ALIGN_END)) {
+    if (max_height > 0.0 && (align_vrtcl == ALIGN_CENTER || align_vrtcl == ALIGN_END)) {
         let offset = (max_height - draw_size[1]);
         if (align_hrzntl == ALIGN_CENTER) offset /= 2.0;
         y += offset;
@@ -110,8 +110,8 @@ function imgutils_calc_rectangle(x, y, max_width, max_height, src_width, src_hei
 }
 
 function imgutils_calc_rectangle_in_sprite(x, y, max_width, max_height, align_hrzntl, align_vrtcl, sprite) {
-    const draw_size = [0, 0];
-    const draw_location = [-1, -1];
+    const draw_size = [0.0, 0.0];
+    const draw_location = [-1.0, -1.0];
 
     sprite_get_source_size(sprite, draw_size);
     imgutils_calc_rectangle(
@@ -124,8 +124,8 @@ function imgutils_calc_rectangle_in_sprite(x, y, max_width, max_height, align_hr
 }
 
 function imgutils_calc_rectangle_in_statesprite_state(off_x, off_y, max_width, max_height, align_hrzntl, align_vrtcl, statesprite_state) {
-    const draw_size = [0, 0];
-    const draw_location = [0, 0];
+    const draw_size = [0.0, 0.0];
+    const draw_location = [0.0, 0.0];
 
     if (!statesprite_state) return;
 
@@ -135,15 +135,15 @@ function imgutils_calc_rectangle_in_statesprite_state(off_x, off_y, max_width, m
         draw_size[0], draw_size[1], align_hrzntl, align_vrtcl, draw_size, draw_location
     );
 
-    statesprite_state.draw_width = draw_size[0]
+    statesprite_state.draw_width = draw_size[0];
     statesprite_state.draw_height = draw_size[1];
     statesprite_state.offset_x = draw_location[0];
     statesprite_state.offset_y = draw_location[1];
 }
 
 function imgutils_calc_resize_sprite(sprite, max_width, max_height, cover, center) {
-    const draw_size = [0, 0];
-    const location = [0, 0];
+    const draw_size = [0.0, 0.0];
+    const location = [0.0, 0.0];
     if (cover) {
         sprite_get_source_size(sprite, draw_size);
         let ratio_width = draw_size[0] / max_width;
@@ -151,9 +151,9 @@ function imgutils_calc_resize_sprite(sprite, max_width, max_height, cover, cente
 
         // resize the longest dimension of the sprite
         if (ratio_width > ratio_height)
-            sprite_resize_draw_size(sprite, -1, max_height, draw_size);
+            sprite_resize_draw_size(sprite, -1.0, max_height, draw_size);
         else
-            sprite_resize_draw_size(sprite, max_width, -1, draw_size);
+            sprite_resize_draw_size(sprite, max_width, -1.0, draw_size);
     } else {
         sprite_resize_draw_size(sprite, max_width, max_height, draw_size);
     }

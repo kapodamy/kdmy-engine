@@ -54,7 +54,7 @@ function clone_array(array_ptr, elements, struct_size = NaN) {
  * @param {number} elements amount of elements on the array to set
  * @param {any} struct_ptr pointer to the struct to clone
  * @param {number?} struct_size size of the struct in bytes
- * @returns {bool} returns false if the array was null
+ * @returns {boolean} returns false if the array was null
  */
 function clone_struct_as_array_items(array_ptr, elements, struct_ptr, struct_size = NaN) {
     if (array_ptr == null) return 0;
@@ -72,7 +72,7 @@ function clone_struct_as_array_items(array_ptr, elements, struct_ptr, struct_siz
  * @param {object} struct_src source struct pointer
  * @param {object} struct_dest  destination struct pointer
  * @param {number} struct_size the size of the struct
- * @returns {bool} false if one of the struct was null
+ * @returns {boolean} false if one of the struct was null
  */
 function clone_struct_to(struct_src, struct_dest, struct_size = NaN) {
     if (struct_src instanceof Array)

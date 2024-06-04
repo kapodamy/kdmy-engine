@@ -1,22 +1,16 @@
 "use strict";
 
-const HEALTHBAR_LENGTH_NORMAL = "normal";
-const HEALTHBAR_LENGTH_EXTRA = "extra";
-const HEALTHBAR_LENGTH_LONG = "long";
-
 const HEALTHBAR_DEFAULT_COLOR_BACKGROUND = 0x000000;// black
 const HEALTHBAR_DEFAULT_COLOR_DAD = 0xFF0000;// red
 const HEALTHBAR_DEFAULT_COLOR_BOYFRIEND = 0x00FF00;// green
 
 
 const HEALTHBAR_DEFAULT_DIMMEN = 20;// 20px in a 1280x720 screen
-const HEALTHBAR_DEFAULT_BORDER_SIZE = 4;// 4px in a 1280x720 screen
+const HEALTHBAR_DEFAULT_BORDER_SIZE = 4.0;// 4px in a 1280x720 screen
 
 const HEALTHBAR_DEFAULT_ICON_SIZE = 80;//80px in a 1280x720 screen
 
-const HEALTHBAR_SCALE_TO_DIMMEN_ICON = 80 / HEALTHBAR_DEFAULT_DIMMEN;
-const HEALTHBAR_SCALE_TO_DIMMEN_BORDER = 4 / HEALTHBAR_DEFAULT_DIMMEN;
-const HEALTHBAR_SCALE_TO_DIMMEN_BAR = 1.0;
+const HEALTHBAR_SCALE_TO_DIMMEN_ICON = 80.0 / HEALTHBAR_DEFAULT_DIMMEN;
 
 const HEALTHBAR_ICON_PREFIX_WINNER = "winner";
 const HEALTHBAR_ICON_PREFIX_WINNING = "winning";
@@ -31,21 +25,10 @@ const HEALTHBAR_WARNING_LOCKED = "locked";
 const HEALTHBAR_WARNING_OPPONENT_RECOVER = "opponentRecover";
 
 const HEALTHBAR_CHARACTER_WARNING_PERCENT = 0.25;// warn if less or equal to 25%
-const HEALTHBAR_HEALTH_TRANSITION_RATIO = 8;// the transition duration in BMP/N
+const HEALTHBAR_HEALTH_TRANSITION_RATIO = 8.0;// the transition duration in BMP/N
 
-const HEALTHBAR_RATIO_SIZE_NORMAL = 600;// 600px in a 1280x720 screen
-const HEALTHBAR_RATIO_SIZE_EXTRA = HEALTHBAR_RATIO_SIZE_NORMAL;
-const HEALTHBAR_RATIO_SIZE_LONG = 1180;// 1180px in a 1280x70 screen
-
-const HEALTHBAR_STUB_MODELHOLDER = {
-    atlas: MODELHOLDER_STUB_ATLAS,
-    animlist: MODELHOLDER_STUB_ANIMLIST,
-    vertex_color_rgb8: 0x000000,
-    texture: null,
-    id: -1,
-    instance_references: 0,
-    instance_src: null
-};
+const HEALTHBAR_RATIO_SIZE_NORMAL = 600.0;// 600px in a 1280x720 screen
+// const HEALTHBAR_RATIO_SIZE_LONG = 1180.0;// 1180px in a 1280x70 screen
 
 /**@type {RGBA}*/let HEALTHBAR_LOW_HEALTH_WARN_COLOR = [1.0, 0.0, 0.0, 0.5];// rgba: half-transparent red
 const HEALTHBAR_LOW_HEALTH_PERCENT = 0.10;// warn if less or equal to 10%
@@ -58,8 +41,8 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
     let healthbar = {
         x, y, z, length, dimmen, border, icon_overlap, warn_height, lock_height,
 
-        is_vertical: 0,
-        enable_overlap: 1,
+        is_vertical: false,
+        enable_overlap: true,
 
         sprite_background: statesprite_init_from_vertex_color(HEALTHBAR_DEFAULT_COLOR_BACKGROUND),
 
@@ -69,14 +52,14 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
         sprite_icon_opponent: statesprite_init_from_texture(null),
         sprite_icon_player: statesprite_init_from_texture(null),
 
-        flip_icon_opponent: 0,
-        flip_icon_player: 1,
+        flip_icon_opponent: false,
+        flip_icon_player: true,
 
-        health_bar_length: length - (border * 2),
-        extra_enabled: 0,
-        extra_translation: 0,
+        health_bar_length: length - (border * 2.0),
+        extra_enabled: false,
+        extra_translation: 0.0,
 
-        // note: in C replace "Symbol" with an unique constantselected_state_background: Symbol,
+        // note: in C replace "Symbol" with an unique constant
         selected_state_player: Symbol,
         selected_state_opponent: Symbol,
 
@@ -85,7 +68,7 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
 
         bump_modifier_opponent: {},
         bump_modifier_player: {},
-        enable_bump: 1,
+        enable_bump: true,
 
         resolutions_player: linkedlist_init(),
         resolutions_opponent: linkedlist_init(),
@@ -95,7 +78,7 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
 
         beatwatcher: {},
 
-        transition_enabled: 1,
+        transition_enabled: true,
         tweenlerp: tweenlerp_init(),
 
         last_health: NaN,
@@ -106,30 +89,30 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
         drawable_animation: null,
 
         sprite_warnings: statesprite_init_from_texture(null),
-        enable_warnings: 1,
-        enable_flash_warning: 0,
-        low_health_flash_warning: 0,
+        enable_warnings: true,
+        enable_flash_warning: false,
+        low_health_flash_warning: 0.0,
 
-        has_warning_locked: 0,
-        has_warning_drain: 0,
+        has_warning_locked: false,
+        has_warning_drain: false,
         has_warning_opponent_recover: -1,
-        warning_locked_position: 0,
-        warning_drain_x: 0,
-        warning_drain_y: 0,
+        warning_locked_position: 0.0,
+        warning_drain_x: 0.0,
+        warning_drain_y: 0.0,
 
         modifier: null,
-        drawable: {},
+        drawable: null,
 
-        first_init: 1
+        first_init: true
     };
 
-    beatwatcher_reset(healthbar.beatwatcher, 1, 100);
+    beatwatcher_reset(healthbar.beatwatcher, true, 100.0);
 
-    pvrctx_helper_clear_modifier(healthbar.bump_modifier_opponent);
+    pvr_context_helper_clear_modifier(healthbar.bump_modifier_opponent);
     healthbar.bump_modifier_opponent.x = x;
     healthbar.bump_modifier_opponent.x = y;
 
-    pvrctx_helper_clear_modifier(healthbar.bump_modifier_player);
+    pvr_context_helper_clear_modifier(healthbar.bump_modifier_player);
     healthbar.bump_modifier_player.x = x;
     healthbar.bump_modifier_player.x = y;
 
@@ -139,15 +122,14 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
     statesprite_set_draw_location(healthbar.sprite_bar_opponent, x, y);
     statesprite_set_draw_location(healthbar.sprite_bar_player, x, y);
 
-    // hide from the PVR backend, draw these sprites manually
-    statesprite_set_visible(healthbar.sprite_icon_opponent, 0);
-    statesprite_set_visible(healthbar.sprite_icon_player, 0);
-    statesprite_set_visible(healthbar.sprite_background, 0);
-    statesprite_set_visible(healthbar.sprite_bar_opponent, 0);
-    statesprite_set_visible(healthbar.sprite_bar_player, 0);
+    statesprite_set_visible(healthbar.sprite_icon_opponent, false);
+    statesprite_set_visible(healthbar.sprite_icon_player, false);
+    statesprite_set_visible(healthbar.sprite_background, false);
+    statesprite_set_visible(healthbar.sprite_bar_opponent, false);
+    statesprite_set_visible(healthbar.sprite_bar_player, false);
 
-    statesprite_crop_enable(healthbar.sprite_bar_opponent, 1);
-    statesprite_crop_enable(healthbar.sprite_bar_player, 1);
+    statesprite_crop_enable(healthbar.sprite_bar_opponent, true);
+    statesprite_crop_enable(healthbar.sprite_bar_player, true);
 
     healthbar.drawable = drawable_init(z, healthbar, healthbar_draw, healthbar_animate);
 
@@ -156,19 +138,21 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
     healthbar.modifier.y = y;
 
     let transition_ms = healthbar.beatwatcher.tick / HEALTHBAR_HEALTH_TRANSITION_RATIO;
-    tweenlerp_add_easeout(healthbar.tweenlerp, -1, 0, 0, transition_ms);
+    tweenlerp_add_easeout(healthbar.tweenlerp, -1, 0.0, 0.0, transition_ms);
 
     return healthbar;
 }
 
 function healthbar_destroy(healthbar) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(healthbar);
+    luascript_drop_shared(healthbar);
 
     drawable_destroy(healthbar.drawable);
     if (healthbar.drawable_animation) animsprite_destroy(healthbar.drawable_animation);
 
-    if (healthbar.selected_state_player != Symbol) healthbar.selected_state_player = undefined;
-    if (healthbar.selected_state_opponent != Symbol) healthbar.selected_state_opponent = undefined;
+    if (healthbar.selected_state_player != Symbol)
+        healthbar.selected_state_player = undefined;
+    if (healthbar.selected_state_opponent != Symbol)
+        healthbar.selected_state_opponent = undefined;
 
     tweenlerp_destroy(healthbar.tweenlerp);
 
@@ -232,13 +216,17 @@ function healthbar_state_opponent_add(healthbar, icon_mdlhldr, bar_mdlhldr, stat
 }
 
 function healthbar_state_opponent_add2(healthbar, icon_mdlhldr, bar_color_rgb8, state_name) {
-    HEALTHBAR_STUB_MODELHOLDER.vertex_color_rgb8 = bar_color_rgb8 | 0x00;
-    return healthbar_internal_add_chrctr_state(
+    let mdl = modelholder_init3(bar_color_rgb8, null, null, null);
+
+    let ret = healthbar_internal_add_chrctr_state(
         healthbar.sprite_icon_opponent, healthbar.sprite_bar_opponent,
-        icon_mdlhldr, HEALTHBAR_STUB_MODELHOLDER,
+        icon_mdlhldr, mdl,
         healthbar.resolutions_opponent,
         state_name
     );
+
+    modelholder_destroy(mdl);
+    return ret;
 }
 
 function healthbar_state_player_add(healthbar, icon_mdlhldr, bar_mdlhldr, state_name) {
@@ -251,19 +239,23 @@ function healthbar_state_player_add(healthbar, icon_mdlhldr, bar_mdlhldr, state_
 }
 
 function healthbar_state_player_add2(healthbar, icon_modelholder, bar_color_rgb8, state_name) {
-    HEALTHBAR_STUB_MODELHOLDER.vertex_color_rgb8 = bar_color_rgb8 | 0x00;
-    return healthbar_internal_add_chrctr_state(
+    let mdl = modelholder_init3(bar_color_rgb8, null, null, null);
+
+    let ret = healthbar_internal_add_chrctr_state(
         healthbar.sprite_icon_player, healthbar.sprite_bar_player,
-        icon_modelholder, HEALTHBAR_STUB_MODELHOLDER,
+        icon_modelholder, mdl,
         healthbar.resolutions_player,
         state_name
     );
+
+    modelholder_destroy(mdl);
+    return ret;
 }
 
 
 function healthbar_state_background_add(healthbar, modelholder, state_name) {
     let state = statesprite_state_add(healthbar.sprite_background, modelholder, state_name, state_name);
-    return state ? 1 : 0;
+    return state != null;
 }
 
 function healthbar_state_background_add2(healthbar, color_rgb8, animsprite, state_name) {
@@ -272,7 +264,7 @@ function healthbar_state_background_add2(healthbar, color_rgb8, animsprite, stat
         healthbar.sprite_background, null, animsprite, null, color_rgb8, state_name
     );
     if (!state && animsprite) animsprite_destroy(animsprite);
-    return state ? 1 : 0;
+    return state != null;
 }
 
 function healthbar_load_warnings(healthbar, modelholder, use_alt_icons) {
@@ -281,19 +273,19 @@ function healthbar_load_warnings(healthbar, modelholder, use_alt_icons) {
     success += healthbar_internal_add_warning(
         healthbar.sprite_warnings, modelholder, use_alt_icons, healthbar.warn_height,
         HEALTHBAR_WARNING_FAST_DRAIN
-    );
+    ) ? 1 : 0;
     success += healthbar_internal_add_warning(
         healthbar.sprite_warnings, modelholder, use_alt_icons, healthbar.warn_height,
         HEALTHBAR_WARNING_SLOW_DRAIN
-    );
+    ) ? 1 : 0;
     success += healthbar_internal_add_warning(
         healthbar.sprite_warnings, modelholder, use_alt_icons, healthbar.lock_height,
         HEALTHBAR_WARNING_LOCKED
-    );
+    ) ? 1 : 0;
     success += healthbar_internal_add_warning(
         healthbar.sprite_warnings, modelholder, use_alt_icons, healthbar.warn_height,
         HEALTHBAR_WARNING_OPPONENT_RECOVER
-    );
+    ) ? 1 : 0;
 
     return success >= 4;
 }
@@ -318,12 +310,12 @@ function healthbar_set_player_bar_color(healthbar, r, g, b) {
 
 function healthbar_state_toggle(healthbar, state_name) {
     let success = 0;
-    success += healthbar_state_toggle_background(healthbar, state_name);
+    success += healthbar_state_toggle_background(healthbar, state_name) ? 1 : 0;
     success += healthbar_state_toggle_player(healthbar, state_name);
     success += healthbar_state_toggle_opponent(healthbar, state_name);
 
     if (healthbar.first_init) {
-        healthbar.first_init = 0;
+        healthbar.first_init = false;
         healthbar_internal_calc_dimmensions(healthbar);
     }
 
@@ -428,15 +420,15 @@ function healthbar_animation_restart(healthbar) {
 function healthbar_animation_end(healthbar) {
     if (healthbar.bump_animation_opponent) {
         animsprite_force_end(healthbar.bump_animation_opponent);
-        animsprite_update_modifier(healthbar.bump_animation_opponent, healthbar.bump_modifier_opponent, 1);
+        animsprite_update_modifier(healthbar.bump_animation_opponent, healthbar.bump_modifier_opponent, true);
     }
     if (healthbar.bump_animation_player) {
         animsprite_force_end(healthbar.bump_animation_player);
-        animsprite_update_modifier(healthbar.bump_animation_player, healthbar.bump_modifier_player, 1);
+        animsprite_update_modifier(healthbar.bump_animation_player, healthbar.bump_modifier_player, true);
     }
     if (healthbar.drawable_animation) {
         animsprite_force_end(healthbar.drawable_animation);
-        animsprite_update_drawable(healthbar.drawable_animation, healthbar.drawable, 1);
+        animsprite_update_drawable(healthbar.drawable_animation, healthbar.drawable, true);
     }
 
     statesprite_animation_end(healthbar.sprite_background);
@@ -449,8 +441,8 @@ function healthbar_animation_end(healthbar) {
 
 function healthbar_animate(healthbar, elapsed) {
     let since_beat = elapsed;
-    let has_bump_opponent = healthbar.enable_bump && healthbar.bump_animation_opponent != null;
-    let has_bump_player = healthbar.enable_bump && healthbar.bump_animation_opponent != null;
+    let has_bump_opponent = healthbar.enable_bump && (healthbar.bump_animation_opponent != null);
+    let has_bump_player = healthbar.enable_bump && (healthbar.bump_animation_opponent != null);
     let res = 0;
 
     if (beatwatcher_poll(healthbar.beatwatcher)) {
@@ -470,27 +462,27 @@ function healthbar_animate(healthbar, elapsed) {
             healthbar.low_health_flash_warning = healthbar.beatwatcher.tick / HEALTHBAR_LOW_HEALTH_FLASH_RATIO;
         }
 
-    } else if (healthbar.low_health_flash_warning > 0) {
+    } else if (healthbar.low_health_flash_warning > 0.0) {
         healthbar.low_health_flash_warning -= elapsed;
     }
 
     if (has_bump_opponent) {
         res += animsprite_animate(healthbar.bump_animation_opponent, since_beat);
         animsprite_update_modifier(
-            healthbar.bump_animation_opponent, healthbar.bump_modifier_opponent, 1
+            healthbar.bump_animation_opponent, healthbar.bump_modifier_opponent, true
         );
     }
 
     if (has_bump_player) {
         res += animsprite_animate(healthbar.bump_animation_player, since_beat);
         animsprite_update_modifier(
-            healthbar.bump_animation_player, healthbar.bump_modifier_player, 1
+            healthbar.bump_animation_player, healthbar.bump_modifier_player, true
         );
     }
 
     if (healthbar.drawable_animation) {
         res += animsprite_animate(healthbar.drawable_animation, elapsed);
-        animsprite_update_drawable(healthbar.drawable_animation, healthbar.drawable, 1);
+        animsprite_update_drawable(healthbar.drawable_animation, healthbar.drawable, true);
     }
 
     if (healthbar.transition_enabled) {
@@ -516,7 +508,7 @@ function healthbar_draw(healthbar, pvrctx) {
     pvr_context_save(pvrctx);
     drawable_helper_apply_in_context(healthbar.drawable, pvrctx);
 
-    let has_low_warning_flash = healthbar.low_health_flash_warning > 0;
+    let has_low_warning_flash = healthbar.low_health_flash_warning > 0.0;
     if (has_low_warning_flash) {
         pvr_context_save(pvrctx);
         pvr_context_set_global_offsetcolor(pvrctx, HEALTHBAR_LOW_HEALTH_WARN_COLOR);
@@ -525,11 +517,11 @@ function healthbar_draw(healthbar, pvrctx) {
     if (healthbar.extra_enabled) {
         let x, y;
         if (healthbar.is_vertical) {
-            x = 0;
+            x = 0.0;
             y = healthbar.extra_translation;
         } else {
             x = healthbar.extra_translation;
-            y = 0;
+            y = 0.0;
         }
         sh4matrix_translate(pvrctx.current_matrix, x, y);
     }
@@ -553,7 +545,7 @@ function healthbar_draw(healthbar, pvrctx) {
     }
 
     if (healthbar.enable_warnings && healthbar.has_warning_locked) {
-        const half_dimmen = healthbar.dimmen / 2;
+        const half_dimmen = healthbar.dimmen / 2.0;
         let x, y;
         if (healthbar.is_vertical) {
             x = healthbar.modifier.y + half_dimmen;
@@ -599,7 +591,7 @@ function healthbar_set_health_position(healthbar, max_health, health, opponent_r
     healthbar.has_warning_opponent_recover = opponent_recover ? (healthbar.beatwatcher.count + 2) : -1;
 
     if (!healthbar.transition_enabled || isNaN(healthbar.last_health)) {
-        tweenlerp_change_bounds_by_index(healthbar.tweenlerp, 0, -1, health);
+        tweenlerp_change_bounds_by_index(healthbar.tweenlerp, 0, -1.0, health);
         tweenlerp_end(healthbar.tweenlerp);
         healthbar_internal_calc_health_positions(healthbar, health);
         return health;
@@ -616,7 +608,7 @@ function healthbar_set_health_position(healthbar, max_health, health, opponent_r
 
 function healthbar_set_health_position2(healthbar, percent) {
     percent = math2d_clamp_float(percent, 0.0, 1.0);
-    tweenlerp_change_bounds_by_index(healthbar.tweenlerp, 0, -1, percent);
+    tweenlerp_change_bounds_by_index(healthbar.tweenlerp, 0, -1.0, percent);
     tweenlerp_end(healthbar.tweenlerp);
     healthbar_internal_calc_health_positions(healthbar, percent);
 }
@@ -641,9 +633,9 @@ function healthbar_enable_low_health_flash_warning(healthbar, enable) {
 
 
 function healthbar_hide_warnings(healthbar) {
-    healthbar.has_warning_drain = 0;
-    healthbar.has_warning_locked = 0;
-    healthbar.low_health_flash_warning = 0;
+    healthbar.has_warning_drain = false;
+    healthbar.has_warning_locked = false;
+    healthbar.low_health_flash_warning = false;
 }
 
 function healthbar_show_drain_warning(healthbar, use_fast_drain) {
@@ -717,7 +709,7 @@ function healthbar_internal_calc_dimmensions(healthbar) {
     // resize & center background in the screen
     const null_resolution = [-1, -1];
     healthbar_internal_center_bar(
-        healthbar, width, height, 0,
+        healthbar, width, height, 0.0,
         null_resolution, healthbar.sprite_background
     );
 
@@ -730,7 +722,7 @@ function healthbar_internal_calc_dimmensions(healthbar) {
         healthbar, width, height, healthbar.border, resolution_bar, healthbar.sprite_bar_opponent
     );
     healthbar_internal_center_icon(
-        healthbar, 1, resolution_icon, healthbar.sprite_icon_opponent
+        healthbar, true, resolution_icon, healthbar.sprite_icon_opponent
     );
 
     // resize & center player health bar and icon
@@ -742,7 +734,7 @@ function healthbar_internal_calc_dimmensions(healthbar) {
         healthbar, width, height, healthbar.border, resolution_bar, healthbar.sprite_bar_player
     );
     healthbar_internal_center_icon(
-        healthbar, 0, resolution_icon, healthbar.sprite_icon_player
+        healthbar, false, resolution_icon, healthbar.sprite_icon_player
     );
 
     // apply again the selected state
@@ -770,8 +762,8 @@ function healthbar_internal_calc_health_positions(healthbar, player_health) {
         player_health = math2d_lerp(0.0, 2.0, player_health);
         if (player_health > 1.0) {
             let extra_percent = player_health - 1.0;
-            let extra_length = healthbar.length / 2;
-            healthbar.extra_translation = math2d_lerp(0, extra_length, extra_percent) * -1.0;
+            let extra_length = healthbar.length / 2.0;
+            healthbar.extra_translation = math2d_lerp(0.0, extra_length, extra_percent) * -1.0;
             player_health = 1.0;
         }
     }
@@ -821,11 +813,11 @@ function healthbar_internal_calc_health_positions(healthbar, player_health) {
 
     // calculate the icon & bar positions
     healthbar_internal_calc_chrctr(
-        healthbar, 0,
+        healthbar, false,
         health_position_opponent, healthbar.sprite_bar_opponent, healthbar.sprite_icon_opponent
     );
     healthbar_internal_calc_chrctr(
-        healthbar, 1,
+        healthbar, true,
         health_position_player, healthbar.sprite_bar_player, healthbar.sprite_icon_player
     );
 
@@ -835,7 +827,7 @@ function healthbar_internal_calc_health_positions(healthbar, player_health) {
     else healthbar.warning_locked_position += healthbar.modifier.x;
 
     // calc the top-right corner of the player icon
-    const temp = [0, 0];
+    const temp = [0.0, 0.0];
     statesprite_get_draw_location(healthbar.sprite_icon_player, temp);
     healthbar.warning_drain_x = temp[0];
     healthbar.warning_drain_y = temp[1];
@@ -886,8 +878,8 @@ function healthbar_internal_add_chrctr_state2(icon, bar, icn_mdlhldr, hlth_mdlhl
 
 
 function healthbar_internal_center_bar(healthbar, width, height, border, resolution, statesprite) {
-    let has_borders = border > 0;
-    let double_border = border * 2;
+    let has_borders = border > 0.0;
+    let double_border = border * 2.0;
 
     for (let state of linkedlist_iterate4(statesprite_state_list(statesprite))) {
         // if this state does not have texture or there are borders resize as-is
@@ -905,8 +897,8 @@ function healthbar_internal_center_bar(healthbar, width, height, border, resolut
             healthbar, state, resolution, HEALTHBAR_DEFAULT_DIMMEN, HEALTHBAR_SCALE_TO_DIMMEN_ICON
         );
 
-        state.offset_x = (width - state.draw_width) / 2;
-        state.offset_y = (height - state.draw_height) / 2;
+        state.offset_x = (width - state.draw_width) / 2.0;
+        state.offset_y = (height - state.draw_height) / 2.0;
     }
 }
 
@@ -952,8 +944,8 @@ function healthbar_internal_resize_state(healthbar, state, resolution, def_size,
     } else {
         // resize using the ratio of 1:N the health bar size
         let icon_dimmen = healthbar.dimmen * scale_to_dimmen;
-        let width = -1;
-        let height = -1;
+        let width = -1.0;
+        let height = -1.0;
 
         if (healthbar.is_vertical) width = icon_dimmen;
         else height = icon_dimmen;
@@ -967,11 +959,11 @@ function healthbar_internal_resize_state(healthbar, state, resolution, def_size,
 function healthbar_internal_icon_flip(statesprite, is_vertical, do_flip) {
     let x, y;
     if (is_vertical) {
-        x = 0;
+        x = false;
         y = do_flip;
     } else {
         x = do_flip;
-        y = 0;
+        y = false;
     }
     statesprite_flip_texture(statesprite, x, y);
 }
@@ -984,7 +976,7 @@ function healthbar_internal_toggle_chrctr_state(healthbar, slctd_ptr, prefix, st
     healthbar[slctd_ptr] = strdup(state_name);
 
     // C version
-    //if (*slctd_ptr) string_free(*slctd_ptr);
+    //if (*slctd_ptr) free_chk(*slctd_ptr);
     //*slctd_ptr = strdup(state_name);
 
     return healthbar_internal_toggle_chrctr_state2(prefix, state_name, bar, icon);
@@ -994,8 +986,8 @@ function healthbar_internal_toggle_chrctr_state2(prefix, state_name, bar, icon) 
     let success = 0;
     let sub_state_name = string_concat_for_state_name(2, prefix, state_name);
 
-    success += statesprite_state_toggle(bar, sub_state_name);
-    success += statesprite_state_toggle(icon, sub_state_name);
+    success += statesprite_state_toggle(bar, sub_state_name) ? 1 : 0;
+    success += statesprite_state_toggle(icon, sub_state_name) ? 1 : 0;
 
     sub_state_name = undefined;
     return success;
@@ -1025,10 +1017,10 @@ function healthbar_internal_set_chrctr_state(prefix, state_name, bar, icon) {
 }
 
 function healthbar_internal_calc_chrctr(healthbar, invert, position, bar, icon) {
-    let crop_width = -1;
-    let crop_height = -1;
-    let crop_x = 0;
-    let crop_y = 0;
+    let crop_width = -1.0;
+    let crop_height = -1.0;
+    let crop_x = 0.0;
+    let crop_y = 0.0;
 
     if (invert) {
         // player bar, invert the position
@@ -1050,8 +1042,8 @@ function healthbar_internal_calc_chrctr(healthbar, invert, position, bar, icon) 
     let x = healthbar.modifier.x;
     let y = healthbar.modifier.y;
 
-    //let half_dimmen = healthbar.dimmen / -2;
-    let half_dimmen = 0;// mimics Funkin behavior
+    //let half_dimmen = healthbar.dimmen / -2.0;
+    let half_dimmen = 0.0;// mimics Funkin behavior
 
     if (healthbar.is_vertical) {
         x += half_dimmen;
@@ -1066,9 +1058,9 @@ function healthbar_internal_calc_chrctr(healthbar, invert, position, bar, icon) 
 function healthbar_internal_draw_chrctr(pvrctx, bump_modifier, icon) {
     pvr_context_save(pvrctx);
 
-    const draw_size = [0, 0];
-    const draw_location = [0, 0];
-    const offsets = [0, 0];
+    const draw_size = [0.0, 0.0];
+    const draw_location = [0.0, 0.0];
+    const offsets = [0.0, 0.0];
 
     statesprite_get_draw_size(icon, draw_size);
     statesprite_get_draw_location(icon, draw_location);
@@ -1090,27 +1082,27 @@ function healthbar_internal_add_warning(sprite, modelholder, use_alt, height, st
     let anim_name;
 
     if (use_alt)
-        anim_name = state_name.concat(HEALTHBAR_WARNING_ALT_SUFFIX);
+        anim_name = string_concat(2, state_name, HEALTHBAR_WARNING_ALT_SUFFIX);
     else
-        anim_name = state_name;
+        anim_name = strdup(state_name);
 
     statesprite_state_remove(sprite, state_name);
     let state = statesprite_state_add(sprite, modelholder, anim_name, state_name);
 
     if (use_alt) anim_name = undefined;
 
-    if (!state) return 0;
+    if (!state) return false;
 
-    const temp = [0, 0];
+    const temp = [0.0, 0.0];
     imgutils_get_statesprite_original_size(state, temp);
-    imgutils_calc_size(temp[0], temp[1], -1, height, temp);
+    imgutils_calc_size(temp[0], temp[1], -1.0, height, temp);
 
     state.draw_width = temp[0];
     state.draw_height = temp[1];
-    state.offset_x = state.draw_width / -2;
-    state.offset_y = state.draw_height / -2;
+    state.offset_x = state.draw_width / -2.0;
+    state.offset_y = state.draw_height / -2.0;
 
-    return 1;
+    return true;
 }
 
 function healthbar_internal_save_resolutions(linkedlist, state_name, mdlhldr_bar, mdlhldr_icn) {

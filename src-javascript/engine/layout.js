@@ -44,7 +44,6 @@ const LAYOUT_ACTION_SOUNDFADE = 30;
 const LAYOUT_ACTION_SEEK = 31;
 
 const LAYOUT_GROUP_ROOT = Symbol("root-group");
-const LAYOUT_BPM_STEPS = 32;// 1/32 beats
 var LAYOUT_DEBUG_PRINT_TRIGGER_CALLS = false;
 
 
@@ -59,7 +58,7 @@ async function layout_init(src) {
 
     // change the current working folder but remember the old one
     fs_folder_stack_push();
-    fs_set_working_folder(src, 1);
+    fs_set_working_folder(src, true);
 
     let layout_context = {
         animlist: null,
@@ -78,13 +77,14 @@ async function layout_init(src) {
     let root = xml.querySelector("Layout");
 
     // step 1: read attributes of the root
-    let viewport_width = layout_helper_parse_float(root, "width", -1);
-    let viewport_height = layout_helper_parse_float(root, "height", -1);
+    let viewport_width = layout_helper_parse_float(root, "width", -1.0);
+    let viewport_height = layout_helper_parse_float(root, "height", -1.0);
     let animation_speed = layout_helper_parse_float(root, "animationSpeed", 1.0);
-    let keep_aspect_ratio = vertexprops_parse_boolean(root, "keepAspectRatio", 0);
+    let keep_aspect_ratio = vertexprops_parse_boolean(root, "keepAspectRatio", false);
+    let self_print_trigger_calls = vertexprops_parse_boolean(root, "printTriggerCalls", false);
 
-    if (viewport_width < 1) throw new Error("Invalid/missing layout width");
-    if (viewport_height < 1) throw new Error("Invalid/missing layout height");
+    if (viewport_width < 1.0) throw new Error("Invalid/missing layout width");
+    if (viewport_height < 1.0) throw new Error("Invalid/missing layout height");
 
     let animlist_filename = root.getAttribute("animationList");
     if (animlist_filename) {
@@ -157,15 +157,16 @@ async function layout_init(src) {
         external_vertex_list_size: 0,
 
         single_item: null,
-        suspended: 0,
+        suspended: false,
 
-        beatwatcher_synced_triggers: 0,
-        beatwatcher_last_timestamp: 0,
+        beatwatcher_synced_triggers: false,
+        beatwatcher_last_timestamp: 0.0,
         beatwatcher_resyncs_count: 0,
         beatwatcher: {},
 
-        antialiasing_disabled: 0,
+        antialiasing_disabled: false,
         resolution_changes: 0,
+        self_print_trigger_calls: self_print_trigger_calls,
 
         psshader: null
     };
@@ -180,8 +181,8 @@ async function layout_init(src) {
     layout.camera_helper = camera_init(layout.modifier_camera, viewport_width, viewport_height);
     layout.camera_secondary_helper = camera_init(layout.modifier_camera_secondary, viewport_width, viewport_height);
 
-    layout.modifier_viewport.x = 0;
-    layout.modifier_viewport.y = 0;
+    layout.modifier_viewport.x = 0.0;
+    layout.modifier_viewport.y = 0.0;
     layout.modifier_viewport.width = layout.viewport_width;
     layout.modifier_viewport.height = layout.viewport_height;
 
@@ -200,7 +201,7 @@ async function layout_init(src) {
     let list = arraylist_peek_array(layout_context.resource_pool.textures);
     for (let i = 0; i < layout.textures_size; i++) {
         layout.textures[i] = list[i].data;
-        list[i].src = undefined;
+        list[i].path = undefined;
     }
 
     // step 8: build z-buffer
@@ -211,11 +212,11 @@ async function layout_init(src) {
     // step 9: cleanup
     for (let definition of arraylist_iterate4(layout_context.resource_pool.atlas)) {
         if (definition.data) atlas_destroy(definition.data);
-        definition.src = undefined;
+        definition.path = undefined;
     }
 
-    arraylist_destroy(layout_context.resource_pool.textures, 0);
-    arraylist_destroy(layout_context.resource_pool.atlas, 0);
+    arraylist_destroy(layout_context.resource_pool.textures, false);
+    arraylist_destroy(layout_context.resource_pool.atlas, false);
 
     if (layout_context.animlist) animlist_destroy(layout_context.animlist);
 
@@ -241,7 +242,7 @@ async function layout_init(src) {
         }
 
         if (!intial_action_found)
-            console.warn("layout_init() initial action not found" + initial_action_name);
+            console.warn("layout_init() initial action not found: " + initial_action_name);
     }
 
     for (let i = 0; i < layout.group_list_size; i++) {
@@ -262,7 +263,7 @@ async function layout_init(src) {
         }
 
         if (!intial_action_found)
-            console.warn("layout_init() initial action not found" + initial_action_name);
+            console.warn("layout_init() initial action not found: " + initial_action_name);
     }
 
     for (let i = 0; i < layout.sound_list_size; i++) {
@@ -283,7 +284,7 @@ async function layout_init(src) {
         }
 
         if (!intial_action_found)
-            console.warn("layout_init() initial action not found" + initial_action_name);
+            console.warn("layout_init() initial action not found: " + initial_action_name);
     }
 
     for (let i = 0; i < layout.video_list_size; i++) {
@@ -306,7 +307,7 @@ async function layout_init(src) {
         }
 
         if (!intial_action_found)
-            console.warn("layout_init() initial action not found" + initial_action_name);
+            console.warn("layout_init() initial action not found: " + initial_action_name);
     }
 
     for (let i = 0; i < layout.trigger_list_size; i++) {
@@ -320,12 +321,14 @@ async function layout_init(src) {
     camera_set_parent_layout(layout.camera_secondary_helper, layout);
 
     // set default beats per second
-    let bpm = layout_helper_parse_float(root, "defaultBPM", 100);
-    beatwatcher_reset(layout.beatwatcher, 1, bpm);
+    let bpm = layout_helper_parse_float(root, "defaultBPM", 100.0);
+    beatwatcher_reset(layout.beatwatcher, true, bpm);
     layout_set_bpm(layout, bpm);
 
     // restore previous working folder
     fs_folder_stack_pop();
+
+    xml = undefined;
 
     return layout;
 }
@@ -345,6 +348,7 @@ function layout_destroy(layout) {
                 break;
             case VERTEX_DRAWABLE:
                 layout.vertex_list[i].placeholder.vertex = null;// external drawable ¡DO NOT DISPOSE!
+                layout.vertex_list[i].placeholder.name = undefined;
                 layout.vertex_list[i].placeholder = undefined;
                 break;
             case VERTEX_TEXTSPRITE:
@@ -355,7 +359,7 @@ function layout_destroy(layout) {
     layout.vertex_list = undefined;
 
     for (let i = 0; i < layout.values_size; i++) {
-        if (layout.values[i].type == LAYOUT_TYPE_STRING) layout.values[i].misc = undefined;
+        if (layout.values[i].type == LAYOUT_TYPE_STRING) layout.values[i].value = undefined;
         layout.values[i].name = undefined;
     }
     layout.values = undefined;
@@ -376,6 +380,8 @@ function layout_destroy(layout) {
         layout.group_list[i].initial_action_name = undefined;
         layout_helper_destroy_actions(layout.group_list[i].actions, layout.group_list[i].actions_size);
         if (layout.group_list[i].psframebuffer) layout.group_list[i].psframebuffer.Destroy();
+
+        layout.group_list[i] = undefined;
     }
     layout.group_list = undefined;
 
@@ -387,7 +393,6 @@ function layout_destroy(layout) {
 
     for (let i = 0; i < layout.trigger_list_size; i++) {
         layout.trigger_list[i].name = undefined;
-        layout.trigger_list[i].initial_action_name = undefined;
         layout.trigger_list[i].action_name = undefined;
         layout.trigger_list[i].camera_name = undefined;
         layout.trigger_list[i].trigger_name = undefined;
@@ -432,15 +437,15 @@ function layout_destroy(layout) {
     layout.external_vertex_list = undefined;
     layout.z_buffer = undefined;
 
-    ModuleLuaScript.kdmyEngine_drop_shared_object(layout.modifier_camera);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(layout.modifier_camera_secondary);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(layout);
+    luascript_drop_shared(layout.modifier_camera);
+    luascript_drop_shared(layout.modifier_camera_secondary);
+    luascript_drop_shared(layout);
     layout = undefined;
 }
 
 
 function layout_trigger_any(layout, action_triger_camera_interval_name) {
-    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS || layout.self_print_trigger_calls) {
         console.log(`layout_trigger_any() target='{action_triger_camera_interval_name}'`);
     }
     let res = 0;
@@ -448,7 +453,7 @@ function layout_trigger_any(layout, action_triger_camera_interval_name) {
     res += layout_trigger_camera(layout, action_triger_camera_interval_name) ? 1 : 0;
     res += layout_trigger_trigger(layout, action_triger_camera_interval_name);
 
-    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS || layout.self_print_trigger_calls) {
         console.log(`layout_trigger_any() target='{action_triger_camera_interval_name}' result={res}`);
     }
 
@@ -459,7 +464,7 @@ function layout_trigger_action(layout, target_name, action_name) {
     let count = 0;
     let initial_action_name;
 
-    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS || layout.self_print_trigger_calls) {
         console.log(`layout_trigger_action() target='{target_name}' action='{action_name}'`);
     }
 
@@ -540,7 +545,7 @@ function layout_trigger_action(layout, target_name, action_name) {
         }
     }
 
-    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS || layout.self_print_trigger_calls) {
         console.log(`layout_trigger_action() target='{target_name}' action='{action_name}' res={count}`);
     }
 
@@ -647,12 +652,12 @@ function layout_update_render_size(layout, screen_width, screen_height) {
         let scale = Math.min(scale_x, scale_y);
 
         layout.modifier_viewport.scale_x = layout.modifier_viewport.scale_y = scale;
-        layout.modifier_viewport.translate_x = (screen_width - layout.viewport_width * scale) / 2;
-        layout.modifier_viewport.translate_y = (screen_height - layout.viewport_height * scale) / 2;
+        layout.modifier_viewport.translate_x = (screen_width - layout.viewport_width * scale) / 2.0;
+        layout.modifier_viewport.translate_y = (screen_height - layout.viewport_height * scale) / 2.0;
     } else {
         layout.modifier_viewport.scale_x = screen_width / layout.viewport_width;
         layout.modifier_viewport.scale_y = screen_height / layout.viewport_height;
-        layout.modifier_viewport.translate_x = layout.modifier_viewport.translate_y = 0;
+        layout.modifier_viewport.translate_x = layout.modifier_viewport.translate_y = 0.0;
     }
 }
 
@@ -683,14 +688,14 @@ function layout_camera_is_completed(layout) {
 }
 
 function layout_trigger_camera(layout, camera_name) {
-    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS || layout.self_print_trigger_calls) {
         console.log(`layout_trigger_camera() target='{camera_name}'`);
     }
     return camera_from_layout(layout.camera_helper, layout, camera_name);
 }
 
 function layout_trigger_trigger(layout, trigger_name) {
-    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS || layout.self_print_trigger_calls) {
         console.log(`layout_trigger_trigger() target='{trigger_name}'`);
     }
 
@@ -701,7 +706,7 @@ function layout_trigger_trigger(layout, trigger_name) {
         }
     }
 
-    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS) {
+    if (LAYOUT_DEBUG_PRINT_TRIGGER_CALLS || layout.self_print_trigger_calls) {
         console.log(`layout_trigger_trigger() target='{trigger_name}' res={count}`);
     }
 
@@ -711,22 +716,22 @@ function layout_trigger_trigger(layout, trigger_name) {
 function layout_stop_trigger(layout, trigger_name) {
     for (let i = 0; i < layout.trigger_list_size; i++) {
         if (layout.trigger_list[i].name == trigger_name)
-            layout.trigger_list[i].context.running = 0;
+            layout.trigger_list[i].context.running = false;
     }
 }
 
 function layout_stop_all_triggers(layout) {
     for (let i = 0; i < layout.trigger_list_size; i++) {
-        layout.trigger_list[i].context.running = 0;
+        layout.trigger_list[i].context.running = false;
     }
 }
 
 function layout_set_placeholder_drawable_by_id(layout, id, drawable) {
-    if (id < 0 || id >= layout.vertex_list_size) return 0;
-    if (layout.vertex_list[id].type != VERTEX_DRAWABLE) return 0;
+    if (id < 0 || id >= layout.vertex_list_size) return false;
+    if (layout.vertex_list[id].type != VERTEX_DRAWABLE) return false;
 
     layout.vertex_list[id].placeholder.vertex = drawable;
-    return 1;
+    return true;
 }
 
 function layout_sync_triggers_with_global_beatwatcher(layout, enable) {
@@ -909,7 +914,7 @@ function layout_external_vertex_create_entries(layout, amount) {
             type: -1,
             group_id: 0,// layout root
             parallax: { x: 1.0, y: 1.0, z: 1.0 },
-            static_camera: 0,
+            static_camera: false,
             placeholder: null
         };
     }
@@ -924,12 +929,12 @@ function layout_external_vertex_create_entries(layout, amount) {
 }
 
 function layout_external_vertex_set_entry(layout, index, vertex_type, vertex, group_id) {
-    if (index < 0 || index >= layout.external_vertex_list_size) return 0;
+    if (index < 0 || index >= layout.external_vertex_list_size) return false;
     if (group_id < 0 || group_id >= layout.group_list_size) group_id = 0;
     layout.external_vertex_list[index].vertex = vertex;
     layout.external_vertex_list[index].type = vertex_type;
     layout.external_vertex_list[index].group_id = group_id;
-    return 1;
+    return true;
 }
 
 function layout_external_create_group(layout, group_name, parent_group_id) {
@@ -952,42 +957,11 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
     if (!layout.group_list) throw new Error("layout_external_create_group() out-of-memory");
 
     layout.group_list[group_id] = {
-        name: strdup(group_name),
-        group_id: parent_group_id,
-        actions: null,
-        actions_size: 0,
-        initial_action_name: null,
-        antialiasing: PVRCTX_FLAG_DEFAULT,
-
-        visible: 1,
-        alpha: 1.0,
-        alpha2: 1.0,
-        offsetcolor: [],
-        modifier: {},
-        parallax: { x: 1.0, y: 1.0, z: 1.0 },
-        static_camera: 0,
-        static_screen: null,
-
-        animation: null,
-        psshader: null,
-        psframebuffer: null,
-
-        blend_enabled: 1,
-        blend_src_rgb: BLEND_DEFAULT,
-        blend_dst_rgb: BLEND_DEFAULT,
-        blend_src_alpha: BLEND_DEFAULT,
-        blend_dst_alpha: BLEND_DEFAULT,
-
-        viewport_x: -1,
-        viewport_y: -1,
-        viewport_width: -1,
-        viewport_height: -1,
-
         context: {
-            visible: 1,
-            alpha: 1.0,
-            antialiasing: PVR_FLAG_DEFAULT,
             matrix: new Float32Array(SH4MATRIX_SIZE),
+            visible: true,
+            alpha: 1.0,
+            antialiasing: PVRCTX_FLAG_DEFAULT,
             offsetcolor: [],
             parallax: { x: 1.0, y: 1.0, z: 1.0 },
 
@@ -995,7 +969,38 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
             next_sibling: null,
             parent_group: null,
             last_z_index: -1,
-        }
+        },
+
+        name: strdup(group_name),
+        group_id: parent_group_id,
+        actions: null,
+        actions_size: 0,
+        initial_action_name: null,
+        antialiasing: PVRCTX_FLAG_DEFAULT,
+
+        visible: true,
+        alpha: 1.0,
+        alpha2: 1.0,
+        offsetcolor: [],
+        modifier: {},
+        parallax: { x: 1.0, y: 1.0, z: 1.0 },
+        static_camera: false,
+        static_screen: null,
+
+        animation: null,
+        psshader: null,
+        psframebuffer: null,
+
+        blend_enabled: false,
+        blend_src_rgb: BLEND_DEFAULT,
+        blend_dst_rgb: BLEND_DEFAULT,
+        blend_src_alpha: BLEND_DEFAULT,
+        blend_dst_alpha: BLEND_DEFAULT,
+
+        viewport_x: -1.0,
+        viewport_y: -1.0,
+        viewport_width: -1.0,
+        viewport_height: -1.0
     };
 
     // append to parent group
@@ -1012,27 +1017,27 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
 
 function layout_set_group_static_to_camera(layout, group_name, enable) {
     let index = layout_helper_get_group_index(layout, group_name);
-    if (index < 0) return 0
+    if (index < 0) return false;
     layout.group_list[index].static_camera = !!enable;
-    return 1;
+    return true;
 }
 
 function layout_set_group_static_to_camera_by_id(layout, group_id, enable) {
-    if (group_id < 0 || group_id >= layout.group_list_size) return 0
+    if (group_id < 0 || group_id >= layout.group_list_size) return false;
     layout.group_list[group_id].static_camera = !!enable;
-    return 1;
+    return true;
 }
 
 function layout_set_group_static_to_screen_by_id(layout, group_id, sh4matrix) {
-    if (group_id < 0 || group_id >= layout.group_list_size) return 0;
+    if (group_id < 0 || group_id >= layout.group_list_size) return false;
     layout.group_list[group_id].static_screen = sh4matrix;
-    return 1;
+    return true;
 }
 
 function layout_external_vertex_set_entry_static(layout, vertex_index, enable) {
-    if (vertex_index < 0 || vertex_index >= layout.external_vertex_list_size) return 0;
+    if (vertex_index < 0 || vertex_index >= layout.external_vertex_list_size) return false;
     layout.external_vertex_list[vertex_index].static_camera = enable;
-    return 1;
+    return true;
 }
 
 function layout_set_group_visibility(layout, group_name, visible) {
@@ -1093,6 +1098,17 @@ function layout_get_group_id(layout, group_name) {
     return layout_helper_get_group_index(layout, group_name);
 }
 
+function layout_get_group_visibility(layout, group_name) {
+    let index = layout_helper_get_group_index(layout, group_name);
+    if (index >= 0) return layout.group_list[index].visible;
+    return false;
+}
+
+function layout_get_group_visibility_by_id(layout, group_id) {
+    if (group_id < 0 || group_id >= layout.group_list_size) return false;
+    return layout.group_list[group_id].visible;
+}
+
 function layout_get_camera_placeholder(layout, camera_name) {
     for (let i = 0; i < layout.camera_list_size; i++) {
         if (layout.camera_list[i].name == camera_name) {
@@ -1114,10 +1130,10 @@ function layout_set_single_item_to_draw(layout, item_name) {
         }
         if (name == item_name) {
             layout.single_item = layout.vertex_list[i];
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 function layout_suspend(layout) {
@@ -1137,7 +1153,7 @@ function layout_suspend(layout) {
             if (videoplayer_has_fading_audio(videoplayer) == FADING_OUT) videoplayer_set_volume(videoplayer, 0.0);
         }
     }
-    layout.suspended = 1;
+    layout.suspended = true;
 }
 
 function layout_resume(layout) {
@@ -1149,7 +1165,7 @@ function layout_resume(layout) {
         let videoplayer = layout.video_list[i].videoplayer;
         if (layout.video_list[i].was_playing) videoplayer_play(videoplayer);
     }
-    layout.suspended = 0;
+    layout.suspended = false;
 }
 
 function layout_disable_antialiasing(layout, disable) {
@@ -1181,10 +1197,10 @@ function layout_get_group_shader(layout, group_name) {
 
 function layout_set_group_shader(layout, group_name, psshader) {
     let index = layout_helper_get_group_index(layout, group_name);
-    if (index < 0) return 0;
+    if (index < 0) return false;
 
     layout.group_list[index].psshader = psshader;
-    return 1;
+    return true;
 }
 
 
@@ -1304,8 +1320,8 @@ function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
                     layout.z_buffer[i].z_index = drawable_get_z_index(vertex);
                     layout.z_buffer[i].visible = drawable_is_visible(vertex);
                 } else {
-                    layout.z_buffer[i].z_index = MATH2D_MAX_INT32;
-                    layout.z_buffer[i].visible = 0;
+                    layout.z_buffer[i].z_index = Infinity;
+                    layout.z_buffer[i].visible = false;
                 }
                 break;
         }
@@ -1370,7 +1386,7 @@ function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
             pvr_context_set_framebuffer(pvrctx, null);
         }
 
-        const draw_location = [0, 0];
+        const draw_location = [0.0, 0.0];
         const matrix = pvrctx.current_matrix;
         let draw_fn;
 
@@ -1452,8 +1468,8 @@ function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
         ty += py * ((translate_y * scale_y) - translate_y);
 
         // camera with parallax scale correction
-        tx += (layout.viewport_width * (Math.abs(scale_x) - 1.0) * Math.sign(scale_x)) / -2;
-        ty += (layout.viewport_height * (Math.abs(scale_y) - 1.0) * Math.sign(scale_y)) / -2;
+        tx += (layout.viewport_width * (Math.abs(scale_x) - 1.0) * Math.sign(scale_x)) / -2.0;
+        ty += (layout.viewport_height * (Math.abs(scale_y) - 1.0) * Math.sign(scale_y)) / -2.0;
 
         // apply translation (with all parallax corrections)
         sh4matrix_translate(matrix, tx, ty);
@@ -1484,10 +1500,10 @@ function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
             );
 
             // draw group framebuffer in the screen
-            let x = group.viewport_x > 0 ? group.viewport_x : 0;
-            let y = group.viewport_y > 0 ? group.viewport_y : 0;
-            let width = group.viewport_width > 0 ? group.viewport_width : layout.viewport_width;
-            let height = group.viewport_height > 0 ? group.viewport_height : layout.viewport_height;
+            let x = group.viewport_x > 0.0 ? group.viewport_x : 0.0;
+            let y = group.viewport_y > 0.0 ? group.viewport_y : 0.0;
+            let width = group.viewport_width > 0.0 ? group.viewport_width : layout.viewport_width;
+            let height = group.viewport_height > 0.0 ? group.viewport_height : layout.viewport_height;
 
             //pvr_context_apply_modifier(pvrctx, layout.modifier_viewport);
             pvr_context_set_vertex_alpha(pvrctx, group.context.alpha);
@@ -1546,28 +1562,31 @@ function layout_helper_destroy_actions(actions, actions_size) {
 }
 
 async function layout_helper_get_resource(resource_pool, src, is_texture) {
+    let path = await fs_get_full_path_and_override(src);
     let pool = is_texture ? resource_pool.textures : resource_pool.atlas;
 
     for (let definition of arraylist_iterate4(pool)) {
-        if (definition.src == src) return definition.data;
+        if (definition.path == path) {
+            path = undefined;
+            return definition.data;
+        }
     }
 
     // resource not found in the pool load it
     let data;
 
     if (is_texture)
-        data = await texture_init_deferred(src, 1/* do not upload to the PVR VRAM */);
+        data = await texture_init_deferred(path, true/* do not upload to the PVR VRAM */);
     else
-        data = await atlas_init(src);
+        data = await atlas_init(path);
 
     if (!data) {
-        let path = await fs_get_full_path_and_override(src);
-        console.warn(`layout_helper_get_resource() missing resource '${src}' (${path})`);
+        console.warn(`layout_helper_get_resource() missing resource '${path}' (${src})`);
         path = undefined;
     }
 
     if (data) {
-        let new_definition = { data: data, src: strdup(src), is_texture: is_texture };
+        let new_definition = { data: data, path: path, is_texture: is_texture };
         arraylist_add(pool, new_definition);
     }
 
@@ -1577,10 +1596,8 @@ async function layout_helper_get_resource(resource_pool, src, is_texture) {
 function layout_helper_location(action_entry, width, height, v_width, v_height, location) {
     const align_vertical = action_entry.align_vertical;
     const align_horizontal = action_entry.align_horizontal;
-    const location_x = action_entry.x;
-    const location_y = action_entry.y;
 
-    let offset_x = 0, offset_y = 0;
+    let offset_x = 0.0, offset_y = 0.0;
     // Note: align center means relative to the viewport
 
     // vertical align
@@ -1599,7 +1616,7 @@ function layout_helper_location(action_entry, width, height, v_width, v_height, 
     // horizontal align
     switch (align_horizontal) {
         case ALIGN_START:
-            offset_x = 0;
+            offset_x = 0.0;
             break;
         case ALIGN_CENTER:
             offset_x = (v_width - width) / 2.0;
@@ -1609,11 +1626,8 @@ function layout_helper_location(action_entry, width, height, v_width, v_height, 
             break;
     }
 
-    offset_x += location_x;
-    offset_y += location_y;
-
-    location[0] = offset_x;
-    location[1] = offset_y;
+    location[0] = offset_x + action_entry.x;
+    location[1] = offset_y + action_entry.y;
 
     return location;
 }
@@ -1631,7 +1645,7 @@ function layout_helper_parse_hex(node, attr_name, def_value) {
 function layout_helper_parse_float(node, attr_name, def_value) {
     if (!node.getAttribute(attr_name)) return def_value;
 
-    let value = vertexprops_parse_float(node, attr_name, def_value);
+    let value = vertexprops_parse_float(node, attr_name, NaN);
 
     if (Number.isNaN(value)) {
         console.error("layout_parse_float(): invalid value: " + node.getAttribute(attr_name));
@@ -1643,7 +1657,7 @@ function layout_helper_parse_float(node, attr_name, def_value) {
 
 function layout_helper_parse_align(node, is_vertical) {
     let attribute = is_vertical ? "alignVertical" : "alignHorizontal";
-    return vertexprops_parse_align(node, attribute, 0, 1);
+    return vertexprops_parse_align(node, attribute, false, true);
 }
 
 function layout_helper_parse_align2(node, is_vertical, def_value) {
@@ -1673,13 +1687,13 @@ function layout_helper_parse_color(node, rgba) {
         math2d_color_bytes_to_floats(raw_value, has_alpha, rgba);
     } else if (node.hasAttribute("rgb")) {
         let rgb8_color = layout_helper_parse_hex(node, "rgb", 0xFFFFFF);
-        math2d_color_bytes_to_floats(rgb8_color, 0, rgba);
+        math2d_color_bytes_to_floats(rgb8_color, false, rgba);
     } else if (node.hasAttribute("rgba")) {
         let rgba8_color = layout_helper_parse_hex(node, "rgba", 0xFFFFFFFF);
-        math2d_color_bytes_to_floats(rgba8_color, 1, rgba);
+        math2d_color_bytes_to_floats(rgba8_color, true, rgba);
     } else if (node.hasAttribute("argb")) {
         let rgba8_color = layout_helper_parse_hex(node, "argb", 0xFFFFFFFF);
-        math2d_color_bytes_to_floats(rgba8_color, 1, rgba);
+        math2d_color_bytes_to_floats(rgba8_color, true, rgba);
         // move alpha location
         let a = rgba[0];
         let r = rgba[1];
@@ -1721,28 +1735,28 @@ function layout_helper_get_group_index(layout, name) {
     return -1;
 }
 
-function layout_helper_execute_action(layout, vertex, action) {
-    switch (vertex.type) {
+function layout_helper_execute_action(layout, item, action) {
+    switch (item.type) {
         case VERTEX_SPRITE:
             layout_helper_execute_action_in_sprite(
-                action, vertex, layout.viewport_width, layout.viewport_height
+                action, item, layout.viewport_width, layout.viewport_height
             );
             break;
         case VERTEX_TEXTSPRITE:
             layout_helper_execute_action_in_textsprite(
-                action, vertex, layout.viewport_width, layout.viewport_height
+                action, item, layout.viewport_width, layout.viewport_height
             );
             break;
     }
 }
 
 function layout_helper_execute_trigger(layout, trigger) {
-    trigger.context.running = 1;
-    trigger.context.progress_delay = 0;
-    trigger.context.loop_waiting = 0;
+    trigger.context.running = true;
+    trigger.context.progress_delay = 0.0;
+    trigger.context.loop_waiting = false;
     trigger.context.loop_count = 0;
 
-    if (trigger.start_delay > 0) return;
+    if (trigger.start_delay > 0.0) return;
 
     // there no start delay, commit now
     layout_helper_commit_trigger(layout, trigger);
@@ -1755,12 +1769,12 @@ function layout_helper_set_parallax_info(parallax_info, parallax_action) {
 }
 
 function layout_helper_stack_groups(parent_group) {
-    let parent_visible = parent_group.context.visible && parent_group.context.alpha > 0;
+    let parent_visible = parent_group.context.visible && parent_group.context.alpha > 0.0;
     let group = parent_group.context.next_child;
 
     while (group) {
         let group_alpha = group.alpha * group.alpha2;
-        group.context.visible = parent_visible && group.visible && group_alpha > 0;
+        group.context.visible = parent_visible && group.visible && group_alpha > 0.0;
         group.context.parent_group = parent_group;
 
         if (group.context.visible) {
@@ -1807,7 +1821,7 @@ function layout_helper_group_animate(group, elapsed) {
     if (!group.animation) return 1;
 
     let completed = animsprite_animate(group.animation, elapsed);
-    animsprite_update_using_callback(group.animation, group, layout_helper_group_set_property, 1);
+    animsprite_update_using_callback(group.animation, group, layout_helper_group_set_property, true);
 
     return completed;
 }
@@ -1862,12 +1876,11 @@ function layout_helper_parse_property(unparsed_entry, property_id, value_holder,
         misc: null,
     };
 
-    arraylist_add(action_entries, action_entry);
-
     if (vertexprops_is_property_boolean(property_id)) {
         let value = vertexprops_parse_boolean(unparsed_entry, value_holder, -1);
         if (value != -1) {
-            action_entry.value = value;
+            action_entry.value = value ? 1.0 : 0.0;
+            arraylist_add(action_entries, action_entry);
             return;
         }
     }
@@ -1875,10 +1888,10 @@ function layout_helper_parse_property(unparsed_entry, property_id, value_holder,
         case TEXTSPRITE_PROP_ALIGN_V:
         case TEXTSPRITE_PROP_ALIGN_H:
         case TEXTSPRITE_PROP_ALIGN_PARAGRAPH:
-            action_entry.value = vertexprops_parse_align(unparsed_entry, value_holder, 1, 1);
+            action_entry.value = vertexprops_parse_align(unparsed_entry, value_holder, true, true);
             break;
         case TEXTSPRITE_PROP_FORCE_CASE:
-            action_entry.value = vertexprops_parse_textsprite_forcecase(unparsed_entry, value_holder, 1);
+            action_entry.value = vertexprops_parse_textsprite_forcecase(unparsed_entry, value_holder, true);
             break;
         case TEXTSPRITE_PROP_FONT_COLOR:
             action_entry.value = layout_helper_parse_hex(unparsed_entry, value_holder, 0xFFFFFF);
@@ -1887,18 +1900,20 @@ function layout_helper_parse_property(unparsed_entry, property_id, value_holder,
             action_entry.misc = strdup(unparsed_entry.getAttribute(value_holder));
             break;
         case MEDIA_PROP_PLAYBACK:
-            action_entry.value = vertexprops_parse_playback(unparsed_entry, value_holder, 1);
+            action_entry.value = vertexprops_parse_playback(unparsed_entry, value_holder, true);
             break;
         case SPRITE_PROP_ANTIALIASING:
             action_entry.value = vertexprops_parse_flag(unparsed_entry, value_holder, PVRCTX_FLAG_DEFAULT);
             break;
         case FONT_PROP_WORDBREAK:
-            action_entry.value = vertexprops_parse_wordbreak(unparsed_entry, value_holder, 1);
+            action_entry.value = vertexprops_parse_wordbreak(unparsed_entry, value_holder, true);
             break;
         default:
-            action_entry.value = layout_helper_parse_float(unparsed_entry, value_holder, 0);
+            action_entry.value = layout_helper_parse_float(unparsed_entry, value_holder, 0.0);
             break;
     }
+
+    arraylist_add(action_entries, action_entry);
 }
 
 function layout_herper_parse_offsetmovefromto(unparsed_offsetmovefromto, output_xyz) {
@@ -1910,7 +1925,7 @@ function layout_herper_parse_offsetmovefromto(unparsed_offsetmovefromto, output_
 function layout_helper_zbuffer_build(layout) {
     let j = 0;
     for (let i = 0; i < layout.z_buffer_size; i++) {
-        layout.z_buffer[i] = { item: null, visible: 0, z_index: 0 };
+        layout.z_buffer[i] = { item: null, visible: false, z_index: 0.0 };
     }
     for (let i = 0; i < layout.vertex_list_size; i++) {
         layout.z_buffer[j++].item = layout.vertex_list[i];
@@ -1927,7 +1942,7 @@ function layout_helper_zbuffer_sort(entry1, entry2) {
 function layout_helper_add_group_to_parent(parent_context, group) {
     if (parent_context.next_child) {
         let sibling_group = parent_context.next_child;
-        while (1) {
+        while (true) {
             if (!sibling_group.context.next_sibling) break;
             sibling_group = sibling_group.context.next_sibling;
         }
@@ -1942,7 +1957,7 @@ function layout_helper_check_trigger_queue(layout, elapsed) {
 
     // complex timestamp based checker
     if (layout.beatwatcher_synced_triggers) {
-        let do_sync = 0;
+        let do_sync = false;
         let has_beat = beatwatcher_poll(layout.beatwatcher);
 
         // check if the beatwatcher was resynchronized
@@ -1955,9 +1970,9 @@ function layout_helper_check_trigger_queue(layout, elapsed) {
             }
 
             // wait for a beat, this keep harmonic all beat-dependent animations (in theory)
-            if (!has_beat) return;
+            if (!has_beat) return 0;
 
-            do_sync = 1;
+            do_sync = true;
             layout.beatwatcher.resyncs = layout.beatwatcher_resyncs_count = 0;
         }
 
@@ -1968,12 +1983,12 @@ function layout_helper_check_trigger_queue(layout, elapsed) {
         if (do_sync) {
             // resync all trigger progress and check later the queue
             for (let i = 0; i < layout.trigger_list_size; i++) {
-                layout.trigger_list[i].context.progress_delay = 0;
+                layout.trigger_list[i].context.progress_delay = 0.0;
             }
         }
 
         for (let i = 0; i < layout.trigger_list_size; i++) {
-            let trigger_is_completed = 0;
+            let trigger_is_completed = false;
             let trigger = layout.trigger_list[i];
 
             if (!trigger.context.running) {
@@ -1981,10 +1996,10 @@ function layout_helper_check_trigger_queue(layout, elapsed) {
                 continue;
             }
 
-            let commit = 0;
+            let commit = false;
             trigger.context.progress_delay += elapsed;
 
-            while (1) {
+            while (true) {
                 let target_delay;
                 if (trigger.context.loop_waiting) {
                     target_delay = trigger.loop_delay;
@@ -1994,20 +2009,20 @@ function layout_helper_check_trigger_queue(layout, elapsed) {
 
                 if (trigger.context.progress_delay >= target_delay) {
                     trigger.context.progress_delay -= target_delay;// keep in sync
-                    commit = 1;
-                    trigger.context.loop_waiting = 1;
+                    commit = true;
+                    trigger.context.loop_waiting = true;
                     trigger.context.loop_count++;
                 } else {
                     break;
                 }
 
                 if (trigger.loop < 1) {
-                    trigger_is_completed = 1;
+                    trigger_is_completed = true;
                     break;
                 }
                 if (trigger.context.loop_count >= trigger.loop) {
-                    trigger.context.running = 0;
-                    trigger_is_completed = 1;
+                    trigger.context.running = false;
+                    trigger_is_completed = true;
                     break;
                 }
             }
@@ -2053,10 +2068,10 @@ function layout_helper_check_trigger_queue(layout, elapsed) {
 function layout_helper_commit_trigger(layout, trigger) {
     // increase the number of loops (or queue for the next loop) and check if still should run
     trigger.context.loop_count++;
-    trigger.context.loop_waiting = 1;
+    trigger.context.loop_waiting = true;
     trigger.context.running = trigger.loop < 1 || trigger.context.loop_count < trigger.loop;
 
-    if (trigger.action_name != null && !layout_trigger_action(layout, null, trigger.action_name)) {
+    if (trigger.action_name != null && layout_trigger_action(layout, null, trigger.action_name) < 1) {
         console.warn(`layout_helper_commit_trigger() no actions with name: ${trigger.action_name}`);
     }
     if (trigger.camera_name != null && !layout_trigger_camera(layout, trigger.camera_name)) {
@@ -2069,7 +2084,7 @@ function layout_helper_commit_trigger(layout, trigger) {
         return;
     }
 
-    trigger.context.reject_recursive = 1;// avoid self-trigger
+    trigger.context.reject_recursive = true;// avoid self-trigger
 
     for (let i = 0; i < layout.trigger_list_size; i++) {
         let trigger2 = layout.trigger_list[i];
@@ -2126,22 +2141,22 @@ function layout_parse_placeholder(unparsed_plchdlr, layout_context, group_id) {
 
         name: strdup(name),
 
-        align_vertical: layout_helper_parse_align2(unparsed_plchdlr, 1, ALIGN_NONE),
-        align_horizontal: layout_helper_parse_align2(unparsed_plchdlr, 0, ALIGN_NONE),
+        align_vertical: layout_helper_parse_align2(unparsed_plchdlr, true, ALIGN_NONE),
+        align_horizontal: layout_helper_parse_align2(unparsed_plchdlr, false, ALIGN_NONE),
 
-        x: layout_helper_parse_float(unparsed_plchdlr, "x", 0),
-        y: layout_helper_parse_float(unparsed_plchdlr, "y", 0),
-        z: layout_helper_parse_float(unparsed_plchdlr, "z", 0),
-        height: layout_helper_parse_float(unparsed_plchdlr, "height", -1),
-        width: layout_helper_parse_float(unparsed_plchdlr, "width", -1),
+        x: layout_helper_parse_float(unparsed_plchdlr, "x", 0.0),
+        y: layout_helper_parse_float(unparsed_plchdlr, "y", 0.0),
+        z: layout_helper_parse_float(unparsed_plchdlr, "z", 0.0),
+        height: layout_helper_parse_float(unparsed_plchdlr, "height", -1.0),
+        width: layout_helper_parse_float(unparsed_plchdlr, "width", -1.0),
 
-        parallax: { x: 1, y: 1, z: 1 },
+        parallax: { x: 1.0, y: 1.0, z: 1.0 },
         static_camera: vertexprops_parse_boolean(unparsed_plchdlr, "static", false),
 
         vertex: null
     };
 
-    const xyz = [0, 0, 0];
+    const xyz = [0.0, 0.0, 0.0];
 
     let unparsed_parallax = unparsed_plchdlr.querySelector("Parallax");
     if (unparsed_parallax) {
@@ -2158,10 +2173,10 @@ function layout_parse_placeholder(unparsed_plchdlr, layout_context, group_id) {
         if (Number.isFinite(xyz[1])) placeholder.y = xyz[1];
         if (Number.isFinite(xyz[2])) placeholder.z = xyz[2];
         placeholder.align_vertical = layout_helper_parse_align2(
-            unparsed_location, 1, placeholder.align_vertical
+            unparsed_location, true, placeholder.align_vertical
         );
         placeholder.align_horizontal = layout_helper_parse_align2(
-            unparsed_location, 0, placeholder.align_horizontal
+            unparsed_location, false, placeholder.align_horizontal
         );
     }
 
@@ -2174,7 +2189,7 @@ function layout_parse_placeholder(unparsed_plchdlr, layout_context, group_id) {
     let unparsed_static = unparsed_plchdlr.querySelector("Static");
     if (unparsed_static) {
         placeholder.static_camera = vertexprops_parse_boolean(
-            unparsed_static, "enable", 1
+            unparsed_static, "enable", true
         );
     }
 
@@ -2199,9 +2214,9 @@ async function layout_parse_sprite(unparsed_sprite, layout_context, group_id) {
     let atlas;
     let atlas_texture_path = null;
     if (atlas_filename) {
-        atlas = await layout_helper_get_resource(layout_context.resource_pool, atlas_filename, 0);
+        atlas = await layout_helper_get_resource(layout_context.resource_pool, atlas_filename, false);
         if (atlas && !texture_filename) {
-            atlas_texture_path = atlas_get_texture_path(atlas);
+            atlas_texture_path = strdup(atlas_get_texture_path(atlas));
             if (!await fs_file_exists(atlas_texture_path)) {
                 // the imagePath attribute has an invalid filename
                 console.warn(`layout_parse_sprite() texture pointed by imagePath='${atlas_texture_path}' not found in atlas '${atlas_filename}'`);
@@ -2215,6 +2230,8 @@ async function layout_parse_sprite(unparsed_sprite, layout_context, group_id) {
     } else {
         atlas = null;
     }
+
+    atlas_texture_path = undefined;
 
     if (texture_filename || atlas_texture_path) {
         let src = texture_filename ?? atlas_texture_path;
@@ -2231,7 +2248,7 @@ async function layout_parse_sprite(unparsed_sprite, layout_context, group_id) {
         if (!Number.isNaN(rgba[3])) sprite_set_alpha(sprite, rgba[3]);
     }
 
-    let vertex = {
+    let item = {
         type: VERTEX_SPRITE,
         name: unparsed_sprite.getAttribute("name"),
         vertex: sprite,
@@ -2249,15 +2266,15 @@ async function layout_parse_sprite(unparsed_sprite, layout_context, group_id) {
     for (let action of actions) {
         await layout_parse_sprite_action(action, layout_context.animlist, atlas, actions_arraylist, 0);
     }
-    arraylist_destroy2(actions_arraylist, vertex, "actions_size", "actions");
+    arraylist_destroy2(actions_arraylist, item, "actions_size", "actions");
 
-    arraylist_add(layout_context.vertex_list, vertex);
+    arraylist_add(layout_context.vertex_list, item);
 }
 
 async function layout_parse_text(unparsed_text, layout_context, group_id) {
     let fontholder = null;
     let font_name = unparsed_text.getAttribute("fontName");
-    let font_size = layout_helper_parse_float(unparsed_text, "fontSize", 12);
+    let font_size = layout_helper_parse_float(unparsed_text, "fontSize", 12.0);
     let font_color = [1.0, 1.0, 1.0, NaN];
     let actions = unparsed_text.querySelectorAll("Action");
 
@@ -2275,7 +2292,7 @@ async function layout_parse_text(unparsed_text, layout_context, group_id) {
         return;
     }
 
-    let vertex = {
+    let item = {
         name: unparsed_text.getAttribute("name"),
         type: VERTEX_TEXTSPRITE,
         vertex: textsprite_init2(fontholder, font_size, 0x000000),
@@ -2284,63 +2301,32 @@ async function layout_parse_text(unparsed_text, layout_context, group_id) {
         group_id: group_id,
         initial_action_name: unparsed_text.getAttribute("initialAction"),
         parallax: { x: 1.0, y: 1.0, z: 1.0 },
-        static_camera: 0,
+        static_camera: false,
         animation: null,
         placeholder: null
     };
 
-    textsprite_set_color(vertex.vertex, font_color[0], font_color[1], font_color[2]);
-    if (!Number.isNaN(font_color[3])) textsprite_set_alpha(vertex.vertex, font_color[3]);
+    textsprite_set_color(item.vertex, font_color[0], font_color[1], font_color[2]);
+    if (!Number.isNaN(font_color[3])) textsprite_set_alpha(item.vertex, font_color[3]);
 
     let actions_arraylist = arraylist_init2(actions.length);
     for (let action of actions) {
         await layout_parse_text_action(action, layout_context.animlist, actions_arraylist);
     }
-    arraylist_destroy2(actions_arraylist, vertex, "actions_size", "actions");
+    arraylist_destroy2(actions_arraylist, item, "actions_size", "actions");
 
-    arraylist_add(layout_context.vertex_list, vertex);
+    arraylist_add(layout_context.vertex_list, item);
 }
 
 async function layout_parse_group(unparsed_group, layout_context, parent_context) {
     let actions_arraylist = arraylist_init2(unparsed_group.children.length);
 
     let group = {
-        name: parent_context ? unparsed_group.getAttribute("name") : LAYOUT_GROUP_ROOT,
-        group_id: arraylist_size(layout_context.group_list),
-        actions: null,
-        actions_size: -1,
-        initial_action_name: unparsed_group.getAttribute("initialAction"),
-
-        visible: vertexprops_parse_boolean(unparsed_group, "visible", 1),
-        alpha: layout_helper_parse_float(unparsed_group, "alpha", 1.0),
-        alpha2: 1.0,
-        antialiasing: vertexprops_parse_flag(unparsed_group, "antialiasing", PVRCTX_FLAG_DEFAULT),
-        offsetcolor: [],
-        modifier: {},
-        parallax: { x: 1.0, y: 1.0, z: 1.0 },
-        static_camera: 0,
-        static_screen: null,
-
-        animation: null,
-        psshader: null,
-        psframebuffer: null,
-
-        blend_enabled: 1,
-        blend_src_rgb: BLEND_DEFAULT,
-        blend_dst_rgb: BLEND_DEFAULT,
-        blend_src_alpha: BLEND_DEFAULT,
-        blend_dst_alpha: BLEND_DEFAULT,
-
-        viewport_x: -1,
-        viewport_y: -1,
-        viewport_width: -1,
-        viewport_height: -1,
-
         context: {
-            visible: 1,
-            alpha: 1.0,
-            antialiasing: PVR_FLAG_DEFAULT,
             matrix: new Float32Array(SH4MATRIX_SIZE),
+            visible: true,
+            alpha: 1.0,
+            antialiasing: PVRCTX_FLAG_DEFAULT,
             offsetcolor: [],
             parallax: { x: 1.0, y: 1.0, z: 1.0 },
             last_z_index: -1,
@@ -2348,19 +2334,50 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
             next_child: null,
             next_sibling: null,
             parent_group: null
-        }
+        },
+
+        name: parent_context ? unparsed_group.getAttribute("name") : LAYOUT_GROUP_ROOT,
+        group_id: arraylist_size(layout_context.group_list),
+        actions: null,
+        actions_size: -1,
+        initial_action_name: unparsed_group.getAttribute("initialAction"),
+
+        visible: vertexprops_parse_boolean(unparsed_group, "visible", true),
+        alpha: layout_helper_parse_float(unparsed_group, "alpha", 1.0),
+        alpha2: 1.0,
+        antialiasing: vertexprops_parse_flag(unparsed_group, "antialiasing", PVRCTX_FLAG_DEFAULT),
+        offsetcolor: [],
+        modifier: {},
+        parallax: { x: 1.0, y: 1.0, z: 1.0 },
+        static_camera: false,
+        static_screen: null,
+
+        animation: null,
+        psshader: null,
+        psframebuffer: null,
+
+        blend_enabled: false,
+        blend_src_rgb: BLEND_DEFAULT,
+        blend_dst_rgb: BLEND_DEFAULT,
+        blend_src_alpha: BLEND_DEFAULT,
+        blend_dst_alpha: BLEND_DEFAULT,
+
+        viewport_x: -1.0,
+        viewport_y: -1.0,
+        viewport_width: -1.0,
+        viewport_height: -1.0
     };
+
+    arraylist_add(layout_context.group_list, group);
 
     //sh4matrix_reset(group.matrix);
     pvr_context_helper_clear_modifier(group.modifier);
     pvr_context_helper_clear_offsetcolor(group.offsetcolor);
 
-    if (vertexprops_parse_boolean(unparsed_group, "framebuffer", 0)) {
+    if (vertexprops_parse_boolean(unparsed_group, "framebuffer", false)) {
         // assume layout as part of the main PVRContext renderer
         group.psframebuffer = new PSFramebuffer(pvr_context);
     }
-
-    arraylist_add(layout_context.group_list, group);
 
     for (let item of unparsed_group.children) {
         switch (item.tagName) {
@@ -2380,11 +2397,11 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
                 await layout_parse_text(item, layout_context, group.group_id);
                 break;
             case "Camera":
-                /*if (parent_context) {
+                if (parent_context) {
                     console.warn(
                         "layout_parse_group() groups can not contains cameras"
                     );
-                }*/
+                }
                 layout_parse_camera(item, layout_context);
                 break;
             case "Group":
@@ -2401,6 +2418,11 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
                 break;
             case "AttachValue":
             case "Font":
+                if (parent_context) {
+                    console.warn(
+                        "layout_parse_group() groups can not contains " + item.tagName
+                    );
+                }
                 break;
             case "Trigger":
                 await layout_parse_triggers(item, layout_context);
@@ -2427,9 +2449,9 @@ async function layout_parse_fonts(unparsed_root, layout_context) {
     for (let item of unparsed_fonts) {
         let name = item.getAttribute("name");
         let path = item.getAttribute("path");
-        let glyph_animate = vertexprops_parse_boolean(item, "glyphAnimate", 1);
+        let glyph_animate = vertexprops_parse_boolean(item, "glyphAnimate", true);
         let glyph_suffix = item.getAttribute("glyphSuffix");
-        let glyph_color_by_difference = vertexprops_parse_boolean(item, "colorByDifference", 0);
+        let glyph_color_by_addition = vertexprops_parse_boolean(item, "colorByAddition", false);
 
         if (!name) {
             console.error("layout_parse_fonts() missing font name: " + item.outerHTML);
@@ -2446,7 +2468,7 @@ async function layout_parse_fonts(unparsed_root, layout_context) {
 
             if (is_atlas) {
                 font = await fontglyph_init(path, glyph_suffix, glyph_animate);
-                if (glyph_color_by_difference) fontglyph_enable_color_by_difference(font, 1);
+                if (glyph_color_by_addition) fontglyph_enable_color_by_addition(font, true);
             } else {
                 font = await fonttype_init(path);
             }
@@ -2458,8 +2480,6 @@ async function layout_parse_fonts(unparsed_root, layout_context) {
         } catch (e) {
             console.error("layout_parse_fonts() unable to read the font: " + path, e);
             continue;
-        } finally {
-            path = undefined;
         }
     }
 
@@ -2467,22 +2487,22 @@ async function layout_parse_fonts(unparsed_root, layout_context) {
 }
 
 function layout_parse_camera(unparsed_camera, layout_context) {
-    const xyz = [0, 0, 0];
+    const xyz = [0.0, 0.0, 0.0];
 
     let duration_beats = layout_helper_parse_float(unparsed_camera, "durationInBeats", NaN);
     let duration_milliseconds = layout_helper_parse_float(unparsed_camera, "duration", NaN);
-    let enable_offset_zoom = vertexprops_parse_boolean(unparsed_camera, "offsetZoom", 1);
+    let enable_offset_zoom = vertexprops_parse_boolean(unparsed_camera, "offsetZoom", true);
 
     let duration_in_beats, duration, has_duration;
 
     if (Number.isNaN(duration_beats) && Number.isNaN(duration_milliseconds)) {
-        duration_in_beats = 1;
-        duration = 1;
-        has_duration = 0;
+        duration_in_beats = true;
+        duration = 1.0;
+        has_duration = false;
     } else {
         duration_in_beats = Number.isNaN(duration_milliseconds);
         duration = duration_in_beats ? duration_beats : duration_milliseconds;
-        has_duration = 1;
+        has_duration = true;
     }
 
     let camera_placeholder = {
@@ -2494,16 +2514,16 @@ function layout_parse_camera(unparsed_camera, layout_context) {
         duration_in_beats: duration_in_beats,
         duration: duration,
 
-        move_only: 0,
-        has_from: 0,
+        move_only: false,
+        has_from: false,
 
-        is_empty: 0,
+        is_empty: false,
 
-        has_parallax_offset_only: 0,
+        has_parallax_offset_only: false,
 
-        move_offset_only: 0,
-        has_offset_from: 0,
-        has_offset_to: 0,
+        move_offset_only: false,
+        has_offset_from: false,
+        has_offset_to: false,
 
         to_offset_x: NaN,
         to_offset_y: NaN,
@@ -2517,7 +2537,7 @@ function layout_parse_camera(unparsed_camera, layout_context) {
 
         from_x: NaN, from_y: NaN, from_z: NaN,
         to_x: NaN, to_y: NaN, to_z: NaN,
-        offset_x: 0, offset_y: 0, offset_z: 1
+        offset_x: 0.0, offset_y: 0.0, offset_z: 1.0
     };
 
     let anim_name = unparsed_camera.getAttribute("animationName");
@@ -2537,7 +2557,7 @@ function layout_parse_camera(unparsed_camera, layout_context) {
         !unparsed_move_offset && !unparsed_from_offset && !unparsed_to_offset
     ) {
         // no animation or tween is defined
-        camera_placeholder.is_empty = 1;
+        camera_placeholder.is_empty = true;
 
         arraylist_add(layout_context.camera_list, camera_placeholder);
         return;
@@ -2545,7 +2565,7 @@ function layout_parse_camera(unparsed_camera, layout_context) {
 
 
     if (unparsed_move) {
-        camera_placeholder.move_only = 1;
+        camera_placeholder.move_only = true;
         layout_herper_parse_offsetmovefromto(unparsed_move, xyz);
         camera_placeholder.from_x = camera_placeholder.to_x = xyz[0];
         camera_placeholder.from_y = camera_placeholder.to_y = xyz[1];
@@ -2556,7 +2576,7 @@ function layout_parse_camera(unparsed_camera, layout_context) {
             camera_placeholder.from_x = xyz[0];
             camera_placeholder.from_y = xyz[1];
             camera_placeholder.from_z = xyz[2];
-            camera_placeholder.has_from = 1;
+            camera_placeholder.has_from = true;
         }
         if (unparsed_to) {
             layout_herper_parse_offsetmovefromto(unparsed_to, xyz);
@@ -2571,27 +2591,27 @@ function layout_parse_camera(unparsed_camera, layout_context) {
         camera_placeholder.offset_x = xyz[0];
         camera_placeholder.offset_y = xyz[1];
         camera_placeholder.offset_z = xyz[2];
-        camera_placeholder.has_parallax_offset_only = 1;
+        camera_placeholder.has_parallax_offset_only = true;
     } else if (unparsed_move_offset) {
         layout_herper_parse_offsetmovefromto(unparsed_move_offset, xyz);
         camera_placeholder.to_offset_x = xyz[0];
         camera_placeholder.to_offset_y = xyz[1];
         camera_placeholder.to_offset_z = xyz[2];
-        camera_placeholder.move_offset_only = 1;
+        camera_placeholder.move_offset_only = true;
     } else {
         if (unparsed_from_offset) {
             layout_herper_parse_offsetmovefromto(unparsed_from_offset, xyz);
             camera_placeholder.from_offset_x = xyz[0];
             camera_placeholder.from_offset_y = xyz[1];
             camera_placeholder.from_offset_z = xyz[2];
-            camera_placeholder.has_offset_from = 1;
+            camera_placeholder.has_offset_from = true;
         }
         if (unparsed_to_offset) {
             layout_herper_parse_offsetmovefromto(unparsed_to_offset, xyz);
             camera_placeholder.to_offset_x = xyz[0];
             camera_placeholder.to_offset_y = xyz[1];
             camera_placeholder.to_offset_z = xyz[2];
-            camera_placeholder.has_offset_to = 1;
+            camera_placeholder.has_offset_to = true;
         }
     }
 
@@ -2632,7 +2652,7 @@ function layout_parse_externalvalues(unparsed_root, layout_context) {
 
         switch (unparsed_type.toLowerCase()) {
             case "string":
-                value = unparsed_value;
+                value = strdup(unparsed_value);
                 type = LAYOUT_TYPE_STRING;
                 invalid = false;
                 break;
@@ -2652,18 +2672,19 @@ function layout_parse_externalvalues(unparsed_root, layout_context) {
                 invalid = !Number.isFinite(value);
                 break;
             case "boolean":
-                value = vertexprops_parse_boolean2(unparsed_value, 0);
+                value = vertexprops_parse_boolean2(unparsed_value, null);
                 type = LAYOUT_TYPE_BOOLEAN;
-                invalid = false;
+                invalid = value != null;
                 break;
             default:
+                invalid = true;
                 type = LAYOUT_TYPE_NOTFOUND;
                 console.error("layout_parse_externalvalues() unknown AttachValue type: " + item.outerHTML);
                 continue;
         }
 
         if (invalid) {
-            console.error("layout_parse_externalvalues() value in : " + item.outerHTML);
+            console.error("layout_parse_externalvalues() value in: " + item.outerHTML);
             continue;
         }
 
@@ -2685,37 +2706,37 @@ function layout_parse_triggers(unparsed_trigger, layout_context) {
 
         loop: vertexprops_parse_integer(unparsed_trigger, "loop", 1),// 1 means execute once
 
-        loop_delay: 0,
-        loop_delay_beats: 0,
-        loop_delay_beats_in_beats: 0,
+        loop_delay: 0.0,
+        loop_delay_beats: 0.0,
+        loop_delay_beats_in_beats: false,
 
-        start_delay: 0,
-        start_delay_beats: 0,
-        start_delay_beats_in_beats: 0,
+        start_delay: 0.0,
+        start_delay_beats: 0.0,
+        start_delay_beats_in_beats: false,
 
         context: {
-            running: 0,
-            reject_recursive: 0,
-            progress_delay: 0,
-            loop_waiting: 0,
-            loop_count: 0,
+            running: false,
+            reject_recursive: false,
+            progress_delay: 0.0,
+            loop_waiting: false,
+            loop_count: false,
         }
     };
 
     if (unparsed_trigger.hasAttribute("loopDelayBeats")) {
-        trigger.loop_delay_beats_in_beats = 1;
-        trigger.loop_delay_beats = layout_helper_parse_float(unparsed_trigger, "loopDelayBeats", 0);
+        trigger.loop_delay_beats_in_beats = true;
+        trigger.loop_delay_beats = layout_helper_parse_float(unparsed_trigger, "loopDelayBeats", 0.0);
     } else if (unparsed_trigger.hasAttribute("loopDelay")) {
-        trigger.loop_delay_beats_in_beats = 0;
-        trigger.loop_delay = layout_helper_parse_float(unparsed_trigger, "loopDelay", 0);
+        trigger.loop_delay_beats_in_beats = false;
+        trigger.loop_delay = layout_helper_parse_float(unparsed_trigger, "loopDelay", 0.0);
     }
 
     if (unparsed_trigger.hasAttribute("startDelayBeats")) {
-        trigger.start_delay_beats_in_beats = 1;
-        trigger.start_delay_beats = layout_helper_parse_float(unparsed_trigger, "startDelayBeats", 0);
+        trigger.start_delay_beats_in_beats = true;
+        trigger.start_delay_beats = layout_helper_parse_float(unparsed_trigger, "startDelayBeats", 0.0);
     } else if (unparsed_trigger.hasAttribute("startDelay")) {
-        trigger.start_delay_beats_in_beats = 0;
-        trigger.start_delay = layout_helper_parse_float(unparsed_trigger, "startDelay", 0);
+        trigger.start_delay_beats_in_beats = false;
+        trigger.start_delay = layout_helper_parse_float(unparsed_trigger, "startDelay", 0.0);
     }
 
     arraylist_add(layout_context.trigger_list, trigger);
@@ -2724,7 +2745,7 @@ function layout_parse_triggers(unparsed_trigger, layout_context) {
 async function layout_parse_sound(unparsed_sound, layout_context) {
     let src = unparsed_sound.getAttribute("src");
     if (!src) {
-        console.error("layout_parse_sound() missing sound 'src'");
+        console.error("layout_parse_sound() missing attribute 'src'");
         return;
     }
 
@@ -2735,9 +2756,9 @@ async function layout_parse_sound(unparsed_sound, layout_context) {
     }
 
     let volume = layout_helper_parse_float(unparsed_sound, "volume", 1.0);
-    let looped = vertexprops_parse_boolean(unparsed_sound, "looped", 0);
+    let looped = vertexprops_parse_boolean(unparsed_sound, "looped", false);
     //let pan = layout_helper_parse_float(unparsed_sound, "pan", 0.0);
-    //let muted = vertexprops_parse_boolean(unparsed_sound, "muted", 0);
+    //let muted = vertexprops_parse_boolean(unparsed_sound, "muted", false);
     let actions = unparsed_sound.querySelectorAll("Action");
     let actions_arraylist = arraylist_init2(actions.length);
 
@@ -2749,7 +2770,7 @@ async function layout_parse_sound(unparsed_sound, layout_context) {
         actions_size: 0,
         actions: null,
 
-        was_playing: 0
+        was_playing: false
     };
 
     soundplayer_set_volume(sound.soundplayer, volume);
@@ -2766,20 +2787,20 @@ async function layout_parse_sound(unparsed_sound, layout_context) {
 async function layout_parse_video(unparsed_video, layout_context, group_id) {
     let src = unparsed_video.getAttribute("src");
     if (!src) {
-        console.error("layout_parse_video() missing video 'src'");
+        console.error("layout_parse_video() missing attribute 'src'");
         return;
     }
 
     let videoplayer = await videoplayer_init(src);
     if (!videoplayer) {
-        console.warn("layout_parse_video() can not load:" + src);
+        console.warn("layout_parse_video() can not load: " + src);
         return;
     }
 
     let volume = layout_helper_parse_float(unparsed_video, "volume", 1.0);
-    let looped = vertexprops_parse_boolean(unparsed_video, "looped", 0);
+    let looped = vertexprops_parse_boolean(unparsed_video, "looped", false);
     //let pan = layout_helper_parse_float(unparsed_video, "pan", 0.0);
-    //let muted = vertexprops_parse_boolean(unparsed_video, "muted", 0);
+    //let muted = vertexprops_parse_boolean(unparsed_video, "muted", false);
     let actions = unparsed_video.querySelectorAll("Action");
     let actions_arraylist = arraylist_init2(actions.length);
 
@@ -2791,7 +2812,7 @@ async function layout_parse_video(unparsed_video, layout_context, group_id) {
         actions_size: 0,
         actions: null,
 
-        was_playing: 0,
+        was_playing: false,
         in_vertex_list_index: arraylist_size(layout_context.vertex_list)
     };
 
@@ -2831,7 +2852,7 @@ function layout_parse_macro(/** @type {Element} */ unparsed_root, layout_context
 
     for (let unparsed_macro of list) {
         if (!unparsed_macro.hasAttribute("name")) {
-            console.warn("layout_parse_macro() missing name in:" + unparsed_macro.outerHTML);
+            console.warn("layout_parse_macro() missing name in: " + unparsed_macro.outerHTML);
             continue;
         }
 
@@ -2847,7 +2868,7 @@ function layout_parse_macro(/** @type {Element} */ unparsed_root, layout_context
         let macro = {
             name: name,
             loop: vertexprops_parse_integer(unparsed_macro, "loopByBeats", 0),
-            loop_by_beats: vertexprops_parse_boolean(unparsed_macro, "loopByBeats", 0),
+            loop_by_beats: vertexprops_parse_boolean(unparsed_macro, "loopByBeats", false),
             actions: null,
             actions_size: 0
         };
@@ -2882,10 +2903,10 @@ async function layout_parse_sprite_action(unparsed_action, animlist, atlas, acti
                 layout_helper_add_action_color(unparsed_entry, entries);
                 break;
             case "Property":
-                layout_helper_add_action_property(unparsed_entry, 0, entries);
+                layout_helper_add_action_property(unparsed_entry, true, entries);
                 break;
             case "Properties":
-                layout_helper_add_action_properties(unparsed_entry, 0, entries);
+                layout_helper_add_action_properties(unparsed_entry, false, entries);
                 break;
             case "AtlasApply":
                 layout_helper_add_action_atlasapply(unparsed_entry, atlas, entries);
@@ -2901,6 +2922,9 @@ async function layout_parse_sprite_action(unparsed_action, animlist, atlas, acti
                 break;
             case "AnimationRemove":
                 layout_helper_add_action_animationremove(unparsed_entry, entries);
+                break;
+            case "AnimationEnd":
+                layout_helper_add_action_animationend(unparsed_entry, entries);
                 break;
             case "Parallax":
                 layout_helper_add_action_parallax(unparsed_entry, entries);
@@ -2957,10 +2981,10 @@ async function layout_parse_text_action(unparsed_action, animlist, action_entrie
     for (let unparsed_entry of unparsed_action.children) {
         switch (unparsed_entry.tagName) {
             case "Property":
-                layout_helper_add_action_property(unparsed_entry, 1, entries);
+                layout_helper_add_action_property(unparsed_entry, true, entries);
                 break;
             case "Properties":
-                layout_helper_add_action_properties(unparsed_entry, 1, entries);
+                layout_helper_add_action_properties(unparsed_entry, true, entries);
                 break;
             case "Location":
                 layout_helper_add_action_location(unparsed_entry, entries);
@@ -2997,6 +3021,9 @@ async function layout_parse_text_action(unparsed_action, animlist, action_entrie
             case "AnimationRemove":
                 layout_helper_add_action_animationremove(unparsed_entry, entries);
                 break;
+            case "AnimationEnd":
+                layout_helper_add_action_animationend(unparsed_entry, entries);
+                break;
             case "Parallax":
                 layout_helper_add_action_parallax(unparsed_entry, entries);
                 break;
@@ -3023,7 +3050,7 @@ async function layout_parse_text_action(unparsed_action, animlist, action_entrie
                 layout_helper_add_action_setblending(unparsed_entry, entries);
                 break;
             default:
-                console.warn("layout_parse_text_action() unknown Text action entry:" + unparsed_entry.tagName);
+                console.warn("layout_parse_text_action() unknown Text action entry: " + unparsed_entry.tagName);
                 break;
         }
     }
@@ -3050,10 +3077,10 @@ async function layout_parse_group_action(unparsed_action, animlist, action_entri
                 layout_helper_add_action_modifier(unparsed_entry, entries);
                 break;
             case "Property":
-                layout_helper_add_action_property(unparsed_entry, 0, entries);
+                layout_helper_add_action_property(unparsed_entry, true, entries);
                 break;
             case "Properties":
-                layout_helper_add_action_properties(unparsed_entry, 0, entries);
+                layout_helper_add_action_properties(unparsed_entry, false, entries);
                 break;
             case "OffsetColor":
                 layout_helper_add_action_offsetcolor(unparsed_entry, entries);
@@ -3073,6 +3100,9 @@ async function layout_parse_group_action(unparsed_action, animlist, action_entri
                 break;
             case "AnimationRemove":
                 layout_helper_add_action_animationremove(unparsed_entry, entries);
+                break;
+            case "AnimationEnd":
+                layout_helper_add_action_animationend(unparsed_entry, entries);
                 break;
             case "SetShader":
                 await layout_helper_add_action_setshader(unparsed_entry, entries);
@@ -3124,10 +3154,13 @@ function layout_parse_sound_action(unparsed_action, animlist, action_entries) {
                 layout_helper_add_action_animation(unparsed_entry, animlist, entries);
                 break;
             case "AnimationRemove":
-                layout_helper_add_action_animationremove(unparsed_entry, entries);*/
+                layout_helper_add_action_animationremove(unparsed_entry, entries);
+            case "AnimationEnd":
+                layout_helper_add_action_animationend(unparsed_entry, entries);
+                break;*/
             default:
                 if (layout_helper_add_action_media(unparsed_entry, entries))
-                    console.warn("layout_parse_sound_action() unknown Sound action entry:" + unparsed_entry.tagName);
+                    console.warn("layout_parse_sound_action() unknown Sound action entry: " + unparsed_entry.tagName);
                 break;
         }
     }
@@ -3162,7 +3195,7 @@ async function layout_parse_video_action(unparsed_action, animlist, action_entri
                 break;
             default:
                 if (!layout_helper_add_action_media(unparsed_entry, entries)) break;
-                await layout_parse_sprite_action(unparsed_action, animlist, null, action_entries, 1);
+                await layout_parse_sprite_action(unparsed_action, animlist, null, action_entries, true);
                 break;
         }
     }
@@ -3212,11 +3245,6 @@ function layout_parse_macro_actions(unparsed_actions, macro) {
 
         if (!unparsed_action.hasAttribute("id")) {
             console.warn("layout_parse_macro_actions() missing event id in Macro action:" + unparsed_action.outerHTML);
-            target_name = undefined;
-            action_name = undefined;
-            trigger_name = undefined;
-            stop_trigger_name = undefined;
-            camera_name = undefined;
             continue;
         }
 
@@ -3243,8 +3271,8 @@ function layout_parse_macro_actions(unparsed_actions, macro) {
 //////////////////////////////////
 
 function layout_helper_execute_action_in_sprite(action, item, viewport_width, viewport_height) {
-    const location = [0, 0];
-    const draw_size = [0, 0];
+    const location = [0.0, 0.0];
+    const draw_size = [0.0, 0.0];
 
     let sprite = item.vertex;
 
@@ -3301,11 +3329,11 @@ function layout_helper_execute_action_in_sprite(action, item, viewport_width, vi
                 if (entry.restart) animsprite_restart(item.animation);
                 if (entry.stop_in_loop) animsprite_disable_loop(item.animation);
 
-                sprite_animation_play_by_animsprite(sprite, item.animation, 0);
-                sprite_animate(sprite, 0);
+                sprite_animation_play_by_animsprite(sprite, item.animation, false);
+                sprite_animate(sprite, 0.0);
                 break;
             case LAYOUT_ACTION_ANIMATIONREMOVE:
-                sprite_animation_play_by_animsprite(sprite, null, 0);
+                sprite_animation_play_by_animsprite(sprite, null, false);
                 break;
             case LAYOUT_ACTION_ANIMATIONEND:
                 sprite_animation_end(sprite);
@@ -3360,7 +3388,7 @@ function layout_helper_execute_action_in_textsprite(action, item, viewport_width
                 );
                 break;
             case LAYOUT_ACTION_TEXTBORDEROFFSET:
-                textsprite_border_set_offset(textsprite, action.x, action.y);
+                textsprite_border_set_offset(textsprite, entry.x, entry.y);
                 break;
             case LAYOUT_ACTION_TEXTBACKGROUND:
                 if (entry.has_enable) textsprite_background_enable(textsprite, entry.enable);
@@ -3372,7 +3400,7 @@ function layout_helper_execute_action_in_textsprite(action, item, viewport_width
                 break;
             case LAYOUT_ACTION_PROPERTY:
                 if (entry.property == TEXTSPRITE_PROP_STRING)
-                    textsprite_set_text_intern(textsprite, 1, entry.misc);
+                    textsprite_set_text_intern(textsprite, true, entry.misc);
                 else
                     textsprite_set_property(textsprite, entry.property, entry.value);
                 break;
@@ -3474,7 +3502,7 @@ function layout_helper_execute_action_in_group(action, group) {
                 if (entry.restart) animsprite_restart(group.animation);
                 if (entry.stop_in_loop) animsprite_disable_loop(group.animation);
 
-                layout_helper_group_animate(group, 0);
+                layout_helper_group_animate(group, 0.0);
                 break;
             case LAYOUT_ACTION_ANIMATIONREMOVE:
                 group.animation = null;
@@ -3537,7 +3565,7 @@ function layout_helper_execute_action_in_sound(action, item) {
                 if (entry.stop_in_loop) animsprite_disable_loop(item.animation);
 
                 soundplayer_animation_set(soundplayer, entry.misc);
-                soundplayer_animate(soundplayer, 0);
+                soundplayer_animate(soundplayer, 0.0);
                 break;
             case LAYOUT_ACTION_ANIMATIONREMOVE:
                 soundplayer_animation_set(soundplayer, null);
@@ -3580,9 +3608,9 @@ function layout_helper_execute_action_in_video(action, item_video, item_sprite, 
 function layout_helper_add_action_property(unparsed_entry, is_textsprite, action_entries) {
     let property_id = vertexprops_parse_sprite_property(unparsed_entry, "name", !is_textsprite);
     if (property_id == -1 && is_textsprite) {
-        property_id = vertexprops_parse_textsprite_property(unparsed_entry, "name", 1);
+        property_id = vertexprops_parse_textsprite_property(unparsed_entry, "name", true);
     } else if (property_id == -1) {
-        property_id = vertexprops_parse_layout_property(unparsed_entry, "name", 1);
+        property_id = vertexprops_parse_layout_property(unparsed_entry, "name", true);
     }
 
     if (property_id < 0) return;
@@ -3593,7 +3621,7 @@ function layout_helper_add_action_property(unparsed_entry, is_textsprite, action
 function layout_helper_add_action_properties(unparsed_entry, is_textsprite, action_entries) {
     if (unparsed_entry.attributes.length < 1) {
         console.warn(
-            "layout_helper_add_action_properties() 'Properties' was empty" + unparsed_entry.outerHTML
+            "layout_helper_add_action_properties() 'Properties' was empty: " + unparsed_entry.outerHTML
         );
         return;
     }
@@ -3629,7 +3657,6 @@ function layout_helper_add_action_offsetcolor(unparsed_entry, action_entries) {
     };
     layout_helper_parse_color(unparsed_entry, entry.rgba);
     arraylist_add(action_entries, entry);
-    return entry;
 }
 
 function layout_helper_add_action_color(unparsed_entry, action_entries) {
@@ -3650,15 +3677,14 @@ function layout_helper_add_action_modifier(unparsed_entry, action_entries) {
 
     for (let i = 0; i < unparsed_entry.attributes.length; i++) {
         let attribute = unparsed_entry.attributes[i].name;
-        let name = attribute.toLowerCase();
         let value;
 
-        switch (name) {
+        switch (attribute.toLowerCase()) {
             case "rotatepivotenabled":
             case "scalesize":
             case "scaletranslation":
             case "translaterotation":
-                value = vertexprops_parse_boolean(unparsed_entry, attribute, 0);
+                value = vertexprops_parse_boolean(unparsed_entry, attribute, false);
                 break;
             default:
                 value = layout_helper_parse_float(unparsed_entry, attribute, NaN);
@@ -3666,7 +3692,7 @@ function layout_helper_add_action_modifier(unparsed_entry, action_entries) {
                 break;
         }
 
-        switch (name) {
+        switch (attribute.toLowerCase()) {
             case "x":
                 modifier_mask.x = value;
                 break;
@@ -3760,10 +3786,10 @@ function layout_helper_add_action_parallax(unparsed_entry, action_entries) {
 function layout_helper_add_action_location(unparsed_entry, action_entries) {
     let entry = {
         type: LAYOUT_ACTION_LOCATION,
-        align_vertical: layout_helper_parse_align(unparsed_entry, 1),
-        align_horizontal: layout_helper_parse_align(unparsed_entry, 0),
-        x: layout_helper_parse_float(unparsed_entry, "x", 0),
-        y: layout_helper_parse_float(unparsed_entry, "y", 0),
+        align_vertical: layout_helper_parse_align(unparsed_entry, true),
+        align_horizontal: layout_helper_parse_align(unparsed_entry, false),
+        x: layout_helper_parse_float(unparsed_entry, "x", 0.0),
+        y: layout_helper_parse_float(unparsed_entry, "y", 0.0),
         z: layout_helper_parse_float(unparsed_entry, "z", NaN),
     };
     arraylist_add(action_entries, entry);
@@ -3777,7 +3803,7 @@ function layout_helper_add_action_size(unparsed_entry, action_entries) {
         return;
     }
 
-    let has_resize = width < 0 || height < 0;
+    let has_resize = width < 0.0 || height < 0.0;
     if (has_resize && (Number.isNaN(width) || Number.isNaN(height))) {
         console.warn("layout_helper_add_action_size() invalid resize: " + unparsed_entry.outerHTML);
         return;
@@ -3788,7 +3814,10 @@ function layout_helper_add_action_size(unparsed_entry, action_entries) {
 }
 
 function layout_helper_add_action_visibility(unparsed_entry, action_entries) {
-    let entry = { type: LAYOUT_ACTION_VISIBILITY, visible: unparsed_entry.tagName != "Hide" };
+    let entry = {
+        type: LAYOUT_ACTION_VISIBILITY,
+        visible: unparsed_entry.tagName != "Hide"
+    };
     arraylist_add(action_entries, entry);
 }
 
@@ -3802,7 +3831,7 @@ function layout_helper_add_action_atlasapply(unparsed_entry, atlas, action_entri
     }
 
     let atlas_entry_name = unparsed_entry.getAttribute("entry");
-    let atlas_entry = atlas_get_entry_copy(atlas, atlas_entry_name);
+    let atlas_entry = clone_object(atlas_get_entry(atlas, atlas_entry_name));
 
     if (!atlas_entry) {
         console.warn(`layout_helper_add_action_atlasapply() missing atlas entry name '${atlas_entry_name}': ${unparsed_entry.outerHTML}`);
@@ -3812,7 +3841,7 @@ function layout_helper_add_action_atlasapply(unparsed_entry, atlas, action_entri
     let entry = {
         type: LAYOUT_ACTION_ATLASAPPLY,
         misc: atlas_entry,
-        override_size: vertexprops_parse_boolean(unparsed_entry, "overrideSize", 0)
+        override_size: vertexprops_parse_boolean(unparsed_entry, "overrideSize", false)
     };
 
     arraylist_add(action_entries, entry);
@@ -3835,8 +3864,8 @@ function layout_helper_add_action_animation(unparsed_entry, animlist, action_ent
     let entry = {
         type: LAYOUT_ACTION_ANIMATION,
         misc: animsprite,
-        restart: vertexprops_parse_boolean(unparsed_entry, "restart", 1),
-        stop_in_loop: vertexprops_parse_boolean(unparsed_entry, "stopOnLoop", 0)
+        restart: vertexprops_parse_boolean(unparsed_entry, "restart", true),
+        stop_in_loop: vertexprops_parse_boolean(unparsed_entry, "stopOnLoop", false)
     };
 
     arraylist_add(action_entries, entry);
@@ -3857,16 +3886,16 @@ function layout_helper_add_action_animationfromatlas(unparsed_entry, atlas, acti
     }
 
     let loop = vertexprops_parse_integer(unparsed_entry, "loop", 1);
-    let has_number_suffix = vertexprops_parse_boolean(unparsed_entry, "hasNumberSuffix", 1);
-    let fps = vertexprops_parse_float(unparsed_entry, "fps", 0);
+    let has_number_suffix = vertexprops_parse_boolean(unparsed_entry, "hasNumberSuffix", true);
+    let fps = vertexprops_parse_float(unparsed_entry, "fps", 0.0);
 
-    if (fps < 1) {
+    if (fps < 1.0) {
         fps = atlas_get_glyph_fps(atlas);
-        if (fps < 1) fps = FUNKIN_DEFAULT_ANIMATIONS_FRAMERATE;
+        if (fps < 1.0) fps = FUNKIN_DEFAULT_ANIMATIONS_FRAMERATE;
     }
 
     let animsprite = animsprite_init_from_atlas(fps, loop, atlas, anim_name, has_number_suffix);
-    let override_size = vertexprops_parse_boolean(unparsed_entry, "overrideSize", 0);
+    let override_size = vertexprops_parse_boolean(unparsed_entry, "overrideSize", false);
 
     if (!animsprite) {
         console.warn(`layout_helper_add_action_animationfromatlas() missing animation '${anim_name}': ${unparsed_entry.outerHTML}`);
@@ -3900,7 +3929,7 @@ function layout_helper_add_action_textborder(unparsed_entry, action_entries) {
         type: LAYOUT_ACTION_TEXTBORDER,
         size: layout_helper_parse_float(unparsed_entry, "size", NaN),
         has_enable: unparsed_entry.hasAttribute("enable"),
-        enable: vertexprops_parse_boolean(unparsed_entry, "enable", 0),
+        enable: vertexprops_parse_boolean(unparsed_entry, "enable", false),
         rgba: [NaN, NaN, NaN, NaN]
     };
 
@@ -3921,15 +3950,15 @@ function layout_helper_add_action_resize(unparsed_entry, action_entries) {
         return;
     }
 
-    if (Number.isNaN(max_width)) max_width = -1;
-    if (Number.isNaN(max_height)) max_height = -1;
+    if (Number.isNaN(max_width)) max_width = -1.0;
+    if (Number.isNaN(max_height)) max_height = -1.0;
 
     let entry = {
         type: LAYOUT_ACTION_RESIZE,
         max_width,
         max_height,
-        cover: vertexprops_parse_boolean(unparsed_entry, "cover", 0),
-        center: vertexprops_parse_boolean(unparsed_entry, "center", 0)
+        cover: vertexprops_parse_boolean(unparsed_entry, "cover", false),
+        center: vertexprops_parse_boolean(unparsed_entry, "center", false)
     };
 
     arraylist_add(action_entries, entry);
@@ -3968,7 +3997,7 @@ function layout_helper_add_action_media(unparsed_entry, action_entries) {
             value = PLAYBACK_UNMUTE;
             break;
         default:
-            return 1;
+            return true;
     }
 
     let entry = {
@@ -3979,7 +4008,7 @@ function layout_helper_add_action_media(unparsed_entry, action_entries) {
     };
 
     arraylist_add(action_entries, entry);
-    return 0;
+    return false;
 }
 
 function layout_helper_add_action_mediaproperty(unparsed_entry, action_entries) {
@@ -3991,7 +4020,7 @@ function layout_helper_add_action_mediaproperty(unparsed_entry, action_entries) 
 function layout_helper_add_action_mediaproperties(unparsed_entry, action_entries) {
     if (unparsed_entry.attributes.length < 1) {
         console.warn(
-            "layout_helper_add_action_properties() 'Properties' was empty" + unparsed_entry.outerHTML
+            "layout_helper_add_action_properties() 'Properties' was empty: " + unparsed_entry.outerHTML
         );
         return;
     }
@@ -4025,9 +4054,8 @@ async function layout_helper_add_action_setshader(unparsed_entry, action_entries
         return;
     }
 
-
-    let sourcecode_vertex = stringbuilder_init();
-    let sourcecode_fragment = stringbuilder_init();
+    let sourcecode_vertex = stringbuilder_init(-1);
+    let sourcecode_fragment = stringbuilder_init(-1);
 
     if (shader_vertex_src) {
         let tmp = await fs_readtext(shader_vertex_src);
@@ -4090,7 +4118,6 @@ function layout_helper_add_action_removeshader(unparsed_entry, action_entries) {
 }
 
 function layout_helper_add_action_setshaderuniform(unparsed_entry, action_entries) {
-
     let values = new Array(16);
     for (let i = 0; i < 16; i++) values[i] = 0.0;
 
@@ -4105,7 +4132,7 @@ function layout_helper_add_action_setshaderuniform(unparsed_entry, action_entrie
 
     if (unparsed_values != null) {
         // separator: white-space, hard-space, tabulation, carrier-return, new-line
-        let tokenizer = tokenizer_init("\x20\xA0\t\r\n", 1, 0, unparsed_values);
+        let tokenizer = tokenizer_init("\x20\xA0\t\r\n", true, false, unparsed_values);
         let index = 0;
         let str;
 
@@ -4125,14 +4152,13 @@ function layout_helper_add_action_setshaderuniform(unparsed_entry, action_entrie
         values[0] = value;
     }
 
-
     let entry = { type: LAYOUT_ACTION_SETSHADERUNIFORM, uniform_name: name, misc: values };
     arraylist_add(action_entries, entry);
 }
 
 function layout_helper_add_action_setblending(unparsed_entry, action_entries) {
     let has_enable = unparsed_entry.hasAttribute("enabled");
-    let enabled = vertexprops_parse_boolean(unparsed_entry, "enabled", 1);
+    let enabled = vertexprops_parse_boolean(unparsed_entry, "enabled", true);
 
     let blend_src_rgb = vertexprops_parse_blending(unparsed_entry.getAttribute("srcRGB"));
     let blend_dst_rgb = vertexprops_parse_blending(unparsed_entry.getAttribute("dstRGB"));
@@ -4179,7 +4205,7 @@ function layout_helper_add_action_textborderoffset(unparsed_entry, action_entrie
 }
 
 function layout_helper_add_action_textbackground(unparsed_entry, action_entries) {
-    let enable = vertexprops_parse_boolean(unparsed_entry, "enable", 0);
+    let enable = vertexprops_parse_boolean(unparsed_entry, "enable", false);
     let has_enable = unparsed_entry.hasAttribute("enable");
     let size = layout_helper_parse_float(unparsed_entry, "size", NaN);
     let offset_x = layout_helper_parse_float(unparsed_entry, "offsetX", NaN);

@@ -99,7 +99,7 @@ function playerstats_init() {
 }
 
 function playerstats_destroy(playerstats) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(playerstats);
+    luascript_drop_shared(playerstats);
 
     playerstats = undefined;
 }
@@ -144,11 +144,11 @@ function playerstats_add_hit(playerstats, multiplier, base_note_duration, hit_ti
     }
 
     health_gain *= multiplier;
-    if (playerstats.can_recover || (health_gain < 0 && !playerstats.can_recover)) {
+    if (playerstats.can_recover || (health_gain < 0.0 && !playerstats.can_recover)) {
         let health = health_gain + playerstats.health;
-        if (playerstats.health < 0 && multiplier < 0) playerstats.deads_by_fault++;
+        if (playerstats.health < 0.0 && multiplier < 0.0) playerstats.deads_by_fault++;
         playerstats.health = Math.min(health, playerstats.health_max);
-        if (playerstats.health > 0 && playerstats.deads_by_fault > 0) playerstats.deads_by_fault = 0;
+        if (playerstats.health > 0.0 && playerstats.deads_by_fault > 0) playerstats.deads_by_fault = 0;
     }
 
     playerstats.accuracy_accumulator += hit_accuracy;
@@ -157,7 +157,8 @@ function playerstats_add_hit(playerstats, multiplier, base_note_duration, hit_ti
 }
 
 function playerstats_add_sustain(playerstats, quarters, is_released) {
-    if (Number.isNaN(quarters)) throw new NaNArgumentError();
+    // JS only
+    if (Number.isNaN(quarters)) throw new NaNArgumentError("quarters");
 
     if (is_released) {
         playerstats.last_ranking = RANKING_MISS;
@@ -171,16 +172,16 @@ function playerstats_add_sustain(playerstats, quarters, is_released) {
                 playerstats.iterations++;
                 break;
         }
-        if (!playerstats.can_recover && quarters > 0) return;
+        if (!playerstats.can_recover && quarters > 0.0) return;
 
     }
 
     let health = playerstats.health + (quarters * FUNKIN_HEALTH_DIFF_OVER_SUSTAIN);
     playerstats.health = Math.min(health, playerstats.health_max);
 
-    if (playerstats.health < 0)
+    if (playerstats.health < 0.0)
         playerstats.deads_by_fault++;
-    else if (playerstats.health > 0 && playerstats.deads_by_fault > 0)
+    else if (playerstats.health > 0.0 && playerstats.deads_by_fault > 0)
         playerstats.deads_by_fault = 0;
 
     playerstats.score += quarters * FUNKIN_SCORE_MISS;
@@ -210,9 +211,9 @@ function playerstats_add_penality(playerstats, on_empty_strum) {
     if (!playerstats.penalize_on_empty_strum && on_empty_strum) return;
 
     let health = FUNKIN_HEALTH_DIFF_OVER_PENALITY;
-    if (!on_empty_strum) health *= 2;
+    if (!on_empty_strum) health *= 2.0;
     playerstats.health += health;
-    if (playerstats.health < 0) playerstats.deads_by_fault++;
+    if (playerstats.health < 0.0) playerstats.deads_by_fault++;
 
     playerstats.score += FUNKIN_SCORE_PENALITY;
     playerstats.last_ranking = RANKING_PENALITY;
@@ -231,14 +232,14 @@ function playerstats_add_penality(playerstats, on_empty_strum) {
 
 function playerstats_add_miss(playerstats, multiplier) {
     //
-    // FIXME: ¿should decrease the accumulated accuracy? ¿with what criteria? 
+    // ¿should decrease the accumulated accuracy? ¿with what criteria? 
     //
 
     playerstats.health += FUNKIN_HEALTH_DIFF_OVER_MISS * multiplier;
 
-    if (playerstats.health < 0 && multiplier > 0)
+    if (playerstats.health < 0.0 && multiplier > 0.0)
         playerstats.deads_by_fault++;
-    else if (playerstats.health > 0 && multiplier < 0 && playerstats.deads_by_fault > 0)
+    else if (playerstats.health > 0.0 && multiplier < 0.0 && playerstats.deads_by_fault > 0)
         playerstats.deads_by_fault = 0;
 
     playerstats.miss++;
@@ -254,7 +255,7 @@ function playerstats_reset(playerstats) {
     playerstats.ranking_bad = 0;
     playerstats.ranking_shit = 0;
     playerstats.score = 0;
-    playerstats.accuracy = 0;
+    playerstats.accuracy = 0.0;
     playerstats.iterations = 0;
     playerstats.hits = 0;
     playerstats.miss = 0;
@@ -264,9 +265,9 @@ function playerstats_reset(playerstats) {
     playerstats.highest_streak = 0;
     playerstats.nps_current = 0;
     playerstats.nps_highest = 0;
-    playerstats.accuracy_accumulator = 0;
-    playerstats.accuracy_counter = 0;
-    playerstats.accuracy_counter_last = 0;
+    playerstats.accuracy_accumulator = 0.0;
+    playerstats.accuracy_counter = 0.0;
+    playerstats.accuracy_counter_last = 0.0;
     playerstats.deads_by_fault = 0;
 
     //
@@ -276,7 +277,7 @@ function playerstats_reset(playerstats) {
     playerstats.last_diff = NaN;
     playerstats.last_accuracy = NaN;
 
-    playerstats.health = FUNKIN_HEALTH_BASE / 2;
+    playerstats.health = FUNKIN_HEALTH_BASE / 2.0;
     playerstats.health_max = FUNKIN_HEALTH_BASE;
 }
 
@@ -399,7 +400,7 @@ function playerstats_get_sicks(playerstats) {
 function playerstats_set_health(playerstats, health) {
     if (Number.isNaN(health)) throw new NaNArgumentError("health");
     playerstats.health = Math.min(health, playerstats.health_max);
-    if (health >= 0) playerstats.deads_by_fault = 0;
+    if (health >= 0.0) playerstats.deads_by_fault = 0;
 }
 
 function playerstats_add_health(playerstats, health, die_if_negative) {
@@ -407,31 +408,31 @@ function playerstats_add_health(playerstats, health, die_if_negative) {
 
     health += playerstats.health;
 
-    if (!die_if_negative && health < 0)
-        health = 0;
+    if (!die_if_negative && health < 0.0)
+        health = 0.0;
     else if (health > playerstats.health_max)
         health = playerstats.health_max;
 
-    if (die_if_negative && health < 0) playerstats.deads_by_fault++;
+    if (die_if_negative && health < 0.0) playerstats.deads_by_fault++;
 
     return playerstats.health = health;
 }
 
 
 function playerstats_raise(playerstats, with_full_health) {
-    if (playerstats.health < 0) playerstats.health = with_full_health ? playerstats.health_max : 0;
+    if (playerstats.health < 0.0) playerstats.health = with_full_health ? playerstats.health_max : 0.0;
     playerstats.deads_by_fault = 0;
 }
 
 function playerstats_kill(playerstats) {
-    playerstats.health = -1;
+    playerstats.health = -1.0;
     playerstats.deads_by_fault++;
 }
 
 function playerstats_kill_if_negative_health(playerstats) {
-    if (playerstats.health < 0) {
+    if (playerstats.health < 0.0) {
         playerstats.deads_by_fault++;
-        playerstats.health = 0;
+        playerstats.health = 0.0;
     }
 }
 

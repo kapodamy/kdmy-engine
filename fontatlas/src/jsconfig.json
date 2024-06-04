@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2022",
+        "checkJs": true,
+        "noImplicitAny": false,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true
+    },
+    "compileOnSave": true,
+    "include": [
+        "*.js"
+    ],
+    "exclude": [
+    ]
+}

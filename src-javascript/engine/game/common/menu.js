@@ -13,12 +13,12 @@ async function menu_init(menumanifest, x, y, z, width, height) {
         fontholder = await fontholder_init(params.font, params.font_size, params.font_glyph_suffix);
         if (!fontholder) throw new Error("Missing or invalid font: " + params.font);
         if (fontholder.font_from_atlas) {
-            fontglyph_enable_color_by_difference(fontholder.font, params.font_color_by_difference);
+            fontglyph_enable_color_by_addition(fontholder.font, params.font_color_by_addition);
         }
     }
 
-    let border = [0, 0, 0, 0];
-    math2d_color_bytes_to_floats(params.font_border_color, 1, border);
+    let border = [0.0, 0.0, 0.0, 0.0];
+    math2d_color_bytes_to_floats(params.font_border_color, true, border);
 
     let anim_discarded = null;
     let anim_idle = null;
@@ -59,22 +59,22 @@ async function menu_init(menumanifest, x, y, z, width, height) {
             anim_in: null,
             anim_out: null,
 
-            is_text: 0,
+            is_text: false,
             vertex: null,
 
-            center_x: 0,
-            center_y: 0,
+            center_x: 0.0,
+            center_y: 0.0,
 
             cell_dimmen: NaN,
             cell_gap: menumanifest.items[i].placement.gap,
             placement_x: menumanifest.items[i].placement.x,
             placement_y: menumanifest.items[i].placement.y,
 
-            rollback_active: 0,
-            render_distance: 0,
-            has_scale: 0,
+            rollback_active: false,
+            render_distance: 0.0,
+            has_scale: false,
 
-            hidden: 0
+            hidden: false
         };
 
         menu_internal_build_item(items[i], src_item, params, modelholder, fontholder, border);
@@ -130,29 +130,28 @@ async function menu_init(menumanifest, x, y, z, width, height) {
         x, y, width, height,
 
         index_selected: -1,
-        item_choosen: 0,
-        offset: 0,
+        item_choosen: false,
 
-        transition_active: 0,
-        transition_out: 0,
+        transition_active: false,
+        transition_out: false,
 
         render_start: 0,
         render_end: -1,
-        render_distance: 0,
-        render_distance_end: 0,
-        render_distance_last: 0,
+        render_distance: 0.0,
+        render_distance_end: 0.0,
+        render_distance_last: 0.0,
 
         per_page: params.is_per_page,
         map: null,
         map_size: 0,
-        drawcallback_before: 0,
-        drawcallback_privatedata: 0,
+        drawcallback_before: false,
+        drawcallback_privatedata: null,
         drawcallback: null
     };
 
     if (params.static_index) {
         menu.tweenlerp = tweenlerp_init();
-        tweenlerp_add_linear(menu.tweenlerp, 0, 0, 0, 100);
+        tweenlerp_add_linear(menu.tweenlerp, 0, 0.0, 0.0, 100.0);
     }
 
     menu.drawable = drawable_init(z, menu, menu_draw, menu_animate);
@@ -184,7 +183,7 @@ async function menu_init(menumanifest, x, y, z, width, height) {
 }
 
 function menu_destroy(menu) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(menu);
+    luascript_drop_shared(menu);
 
     if (menu.fontholder) fontholder_destroy(menu.fontholder);
 
@@ -223,12 +222,12 @@ function menu_get_drawable(menu) {
 }
 
 function menu_trasition_in(menu) {
-    menu.transition_out = 0;
+    menu.transition_out = false;
     menu_internal_transition(menu);
 }
 
 function menu_trasition_out(menu) {
-    menu.transition_out = 1;
+    menu.transition_out = true;
     menu_internal_transition(menu);
 }
 
@@ -236,13 +235,13 @@ function menu_trasition_out(menu) {
 function menu_select_item(menu, name) {
     for (let i = 0; i < menu.items_size; i++) {
         if (menu.items[i].name == name) {
-            if (menu.items[i].hidden) return 0;
+            if (menu.items[i].hidden) return false;
             menu_internal_set_index_selected(menu, i);
-            return 1;
+            return true;
         };
     }
     menu_internal_set_index_selected(menu, -1);
-    return 0;
+    return false;
 }
 
 function menu_select_index(menu, index) {
@@ -251,17 +250,17 @@ function menu_select_index(menu, index) {
 }
 
 function menu_select_vertical(menu, offset) {
-    if (offset == 0) return 1;
+    if (offset == 0) return true;
     if (menu.sparse) return menu_internal_set_selected_sparse(menu, 0, offset);
-    if (!menu.is_vertical) return 0;
+    if (!menu.is_vertical) return false;
 
     return menu_internal_scroll(menu, offset);
 }
 
 function menu_select_horizontal(menu, offset) {
-    if (offset == 0) return 1;
+    if (offset == 0) return true;
     if (menu.sparse) return menu_internal_set_selected_sparse(menu, offset, 0);
-    if (menu.is_vertical) return 0;
+    if (menu.is_vertical) return false;
 
     return menu_internal_scroll(menu, offset);
 }
@@ -273,16 +272,16 @@ function menu_toggle_choosen(menu, enable) {
         if (menu.items[i].anim_discarded) animsprite_restart(menu.items[i].anim_discarded);
 
         if (menu.index_selected == i) {
-            menu.items[i].rollback_active = 0;
+            menu.items[i].rollback_active = false;
 
             if (menu.items[i].anim_rollback) {
                 animsprite_restart(menu.items[i].anim_rollback);
                 animsprite_force_end(menu.items[i].anim_rollback);
 
                 if (menu.items[i].is_text) {
-                    animsprite_update_textsprite(menu.items[i].anim_rollback, menu.items[i].vertex, 1);
+                    animsprite_update_textsprite(menu.items[i].anim_rollback, menu.items[i].vertex, true);
                 } else {
-                    animsprite_update_statesprite(menu.items[i].anim_rollback, menu.items[i].vertex, 1);
+                    animsprite_update_statesprite(menu.items[i].anim_rollback, menu.items[i].vertex, true);
                 }
             }
         }
@@ -298,14 +297,14 @@ function menu_get_items_count(menu) {
 }
 
 function menu_set_item_text(menu, index, text) {
-    if (index < 0 || index >= menu.items_size) return 0;
-    if (!menu.items[index].is_text) return 0;
-    textsprite_set_text_intern(menu.items[index].vertex, 0, text);
-    return 1;
+    if (index < 0 || index >= menu.items_size) return false;
+    if (!menu.items[index].is_text) return false;
+    textsprite_set_text_intern(menu.items[index].vertex, false, text);
+    return true;
 }
 
 function menu_set_item_visibility(menu, index, visible) {
-    if (index < 0 || index >= menu.items_size) return 0;
+    if (index < 0 || index >= menu.items_size) return false;
 
     menu.items[index].hidden = !visible;
 
@@ -317,7 +316,7 @@ function menu_set_item_visibility(menu, index, visible) {
     }
 
     menu_internal_build_map(menu);
-    return 1;
+    return true;
 }
 
 function menu_has_valid_selection(menu) {
@@ -337,7 +336,7 @@ function menu_animate(menu, elapsed) {
                 menu_internal_animate(menu, i, menu.items[i].anim_discarded, elapsed);
             } else if (menu.items[i].rollback_active) {
                 if (menu_internal_animate(menu, i, menu.items[i].anim_rollback, elapsed)) {
-                    menu.items[i].rollback_active = 0;
+                    menu.items[i].rollback_active = false;
                 }
             } else {
                 menu_internal_animate(menu, i, menu.items[i].anim_idle, elapsed);
@@ -429,7 +428,7 @@ function menu_draw(menu, pvrctx) {
 
 
 function menu_get_item_rect(menu, index, output_location, output_size) {
-    if (index < 0 || index >= menu.items_size) return 0;
+    if (index < 0 || index >= menu.items_size) return false;
 
     let item = menu.items[index];
     if (item.is_text) {
@@ -445,7 +444,7 @@ function menu_get_item_rect(menu, index, output_location, output_size) {
     else
         output_location[0] += menu.render_distance;
 
-    return 1;
+    return true;
 }
 
 function menu_get_selected_item_rect(menu, output_location, output_size) {
@@ -475,10 +474,10 @@ function menu_set_draw_callback(menu, before_or_after, callback, privatedata) {
 function menu_has_item(menu, name) {
     for (let i = 0; i < menu.items_size; i++) {
         if (menu.items[i].name == name) {
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 function menu_index_of_item(menu, name) {
@@ -498,17 +497,17 @@ async function menu_internal_build_item(item, src_item, params, modelholder, fon
     item.hidden = src_item.hidden;
 
     let dimmen = item.is_text ? params.font_size : params.items_dimmen;
-    if (src_item.placement.dimmen > 0) dimmen = src_item.placement.dimmen;
+    if (src_item.placement.dimmen > 0.0) dimmen = src_item.placement.dimmen;
 
     if (item.is_text) {
         let font_color = params.font_color;
         if (src_item.has_font_color) font_color = src_item.font_color;
 
-        // do not intern the text
+        // important: do not intern the text
         item.vertex = textsprite_init2(fontholder, dimmen, font_color);
-        textsprite_set_text_intern(item.vertex, 0, src_item.text);
-        if (params.font_border_size > 0) {
-            textsprite_border_enable(item.vertex, 1);
+        textsprite_set_text_intern(item.vertex, false, src_item.text);
+        if (params.font_border_size > 0.0) {
+            textsprite_border_enable(item.vertex, true);
             textsprite_border_set_color(
                 item.vertex, border[0], border[1], border[2], border[3]
             );
@@ -522,16 +521,16 @@ async function menu_internal_build_item(item, src_item, params, modelholder, fon
                 modelholder = temp;
             }
         }
-        let statesprite = statesprite_init_from_texture(modelholder_get_texture(modelholder));
+        let statesprite = statesprite_init_from_texture(modelholder_get_texture(modelholder, true));
         statesprite_set_vertex_color_rgb8(statesprite, modelholder_get_vertex_color(modelholder));
-        if (modelholder_is_invalid(modelholder)) statesprite_set_alpha(statesprite, 0);
+        if (modelholder_is_invalid(modelholder)) statesprite_set_alpha(statesprite, 0.0);
 
         item.vertex = statesprite;
 
-        let scale = src_item.texture_scale > 0 ? src_item.texture_scale : params.texture_scale;
-        if (scale > 0) {
-            item.has_scale = 1;
-            statesprite_change_draw_size_in_atlas_apply(item.vertex, 1, scale);
+        let scale = src_item.texture_scale > 0.0 ? src_item.texture_scale : params.texture_scale;
+        if (scale > 0.0) {
+            item.has_scale = true;
+            statesprite_change_draw_size_in_atlas_apply(item.vertex, true, scale);
         }
     }
 
@@ -570,13 +569,13 @@ async function menu_internal_build_item(item, src_item, params, modelholder, fon
     }
 
     if (!params.is_vertical && item.is_text && params.enable_horizontal_text_correction) {
-        const draw_size = [0, 0];
+        const draw_size = [0.0, 0.0];
         textsprite_get_draw_size(item.vertex, draw_size);
         dimmen = draw_size[0];
     }
 
     item.cell_dimmen = dimmen;
-    item.cell_gap = Number.isFinite(src_item.placement.gap) ? src_item.placement.gap : 0;
+    item.cell_gap = Number.isFinite(src_item.placement.gap) ? src_item.placement.gap : 0.0;
 }
 
 function menu_internal_load_anim(modelholder, absolute_name, prefix, suffix) {
@@ -590,14 +589,14 @@ function menu_internal_load_anim(modelholder, absolute_name, prefix, suffix) {
 
     if (temp == null) return null;
 
-    let animsprite = modelholder_create_animsprite(modelholder, temp, 1, !prefix && !suffix);
+    let animsprite = modelholder_create_animsprite(modelholder, temp, true, !prefix && !suffix);
     if (!absolute_name) temp = undefined;
 
     return animsprite;
 }
 
 function menu_internal_calc_item_bounds(menu, index) {
-    const draw_size = [0, 0];
+    const draw_size = [0.0, 0.0];
     const menu_item = menu.items[index];
     let offset_x, offset_y;
 
@@ -608,30 +607,30 @@ function menu_internal_calc_item_bounds(menu, index) {
     } else {
         let max_width, max_height;
         if (menu.is_vertical) {
-            max_width = -1;
+            max_width = -1.0;
             max_height = menu_item.cell_dimmen;
         } else {
             max_width = menu_item.cell_dimmen;
-            max_height = -1;
+            max_height = -1.0;
         }
         statesprite_resize_draw_size(menu_item.vertex, max_width, max_height, draw_size);
     }
 
     if (menu.sparse) {
-        offset_x = (draw_size[0] / -2) + menu.x;
-        offset_y = (draw_size[1] / -2) + menu.y;
+        offset_x = (draw_size[0] / -2.0) + menu.x;
+        offset_y = (draw_size[1] / -2.0) + menu.y;
     } else if (menu.align == ALIGN_START) {
-        offset_x = 0;
-        offset_y = 0;
+        offset_x = 0.0;
+        offset_y = 0.0;
     } else {
         if (menu.is_vertical) {
             offset_x = menu.width - draw_size[0];
-            if (menu.align == ALIGN_CENTER) offset_x /= 2;
-            offset_y = 0;
+            if (menu.align == ALIGN_CENTER) offset_x /= 2.0;
+            offset_y = 0.0;
         } else {
             offset_y = menu.height - draw_size[1];
-            if (menu.align == ALIGN_CENTER) offset_y /= 2;
-            offset_x = 0;
+            if (menu.align == ALIGN_CENTER) offset_y /= 2.0;
+            offset_x = 0.0;
         }
     }
 
@@ -650,9 +649,9 @@ function menu_internal_animate(menu, index, anim, elapsed) {
     let completed = animsprite_animate(anim, elapsed);
 
     if (menu.items[index].is_text)
-        animsprite_update_textsprite(anim, menu.items[index].vertex, 1);
+        animsprite_update_textsprite(anim, menu.items[index].vertex, true);
     else
-        animsprite_update_statesprite(anim, menu.items[index].vertex, 1);
+        animsprite_update_statesprite(anim, menu.items[index].vertex, true);
 
     return completed;
 }
@@ -669,14 +668,14 @@ function menu_internal_set_index_selected(menu, new_index) {
                 animsprite_force_end(menu.items[old_index].anim_rollback);
                 if (menu.items[old_index].is_text) {
                     animsprite_update_textsprite(
-                        menu.items[old_index].anim_rollback, menu.items[old_index].vertex, 1
+                        menu.items[old_index].anim_rollback, menu.items[old_index].vertex, true
                     );
                 } else {
                     animsprite_update_statesprite(
-                        menu.items[old_index].anim_rollback, menu.items[old_index].vertex, 1
+                        menu.items[old_index].anim_rollback, menu.items[old_index].vertex, true
                     );
                 }
-                menu.items[old_index].rollback_active = 0;
+                menu.items[old_index].rollback_active = false;
             }
         }
         if (menu.items[old_index].anim_idle)
@@ -684,7 +683,7 @@ function menu_internal_set_index_selected(menu, new_index) {
     }
 
     if (new_index >= 0 && new_index < menu.items_size) {
-        menu.items[new_index].rollback_active = 0;
+        menu.items[new_index].rollback_active = false;
 
         if (menu.items[new_index].anim_self)
             animsprite_restart(menu.items[new_index].anim_self);
@@ -695,11 +694,11 @@ function menu_internal_set_index_selected(menu, new_index) {
 
             if (menu.items[new_index].is_text) {
                 animsprite_update_textsprite(
-                    menu.items[new_index].anim_rollback, menu.items[new_index].vertex, 1
+                    menu.items[new_index].anim_rollback, menu.items[new_index].vertex, true
                 );
             } else {
                 animsprite_update_statesprite(
-                    menu.items[new_index].anim_rollback, menu.items[new_index].vertex, 1
+                    menu.items[new_index].anim_rollback, menu.items[new_index].vertex, true
                 );
             }
         }
@@ -764,7 +763,7 @@ function menu_internal_set_index_selected(menu, new_index) {
 
     menu.render_start = -1;
     menu.render_end = menu.items_size;
-    menu.render_distance = 0;
+    menu.render_distance = 0.0;
 
     for (let i = 0; i < menu.map_size; i++) {
         if (menu.map[i] > menu.index_selected) {
@@ -779,7 +778,7 @@ function menu_internal_set_index_selected(menu, new_index) {
     }
 
     if (menu.render_start < 0 && menu.map_size > 0) {
-        menu.render_start = menu.map[menu.map.length - 1];
+        menu.render_start = menu.map[menu.map_size - 1];
         menu.render_distance = menu.items[menu.render_start].render_distance;
     }
 
@@ -790,13 +789,13 @@ function menu_internal_transition(menu) {
     let anim;
     let transition_delay = menu.transition_out ? menu.transition_delay_out : menu.transition_delay_in;
 
-    let reverse = transition_delay < 0;
+    let reverse = transition_delay < 0.0;
     if (reverse) transition_delay = Math.abs(transition_delay);
 
     let nonvisible_first_delay = transition_delay * menu.render_start;
     let nonvisible_last_delay = transition_delay * menu.render_end;
 
-    menu.transition_active = 1;
+    menu.transition_active = true;
 
     for (let i = 0; i < menu.items_size; i++) {
         if (menu.transition_out)
@@ -828,7 +827,7 @@ function menu_internal_transition(menu) {
 function menu_internal_set_selected_sparse(menu, offset_x, offset_y) {
     if (menu.index_selected < 0 || menu.index_selected >= menu.items_size) {
         menu_select_index(menu, 0);
-        return 1;
+        return true;
     }
 
     let short_index = -1;
@@ -866,10 +865,10 @@ function menu_internal_set_selected_sparse(menu, offset_x, offset_y) {
         }
     }
 
-    if (short_index < 0) return 0;
+    if (short_index < 0) return false;
 
     menu_internal_set_index_selected(menu, short_index);
-    return 1;
+    return true;
 }
 
 function menu_internal_build_map(menu) {
@@ -879,11 +878,11 @@ function menu_internal_build_map(menu) {
     menu.map = null;
     menu.map_size = 0;
 
-    let accumulator = 0;
+    let accumulator = 0.0;
     for (let i = 0; i < menu.items_size; i++) {
         if (menu.items[i].hidden) continue;
         menu.items[i].render_distance = accumulator;
-        accumulator += menu.items[i].cell_dimmen + (menu.items[i].cell_gap * 2) + menu.gap;
+        accumulator += menu.items[i].cell_dimmen + (menu.items[i].cell_gap * 2.0) + menu.gap;
     }
 
     let render_distance = Infinity;
@@ -905,7 +904,7 @@ function menu_internal_build_map(menu) {
     }
 
     let j = 0;
-    let next_distance = -1;
+    let next_distance = -1.0;
     for (let i = 0; i < menu.items_size; i++) {
         if (menu.items[i].hidden) continue;
 
@@ -945,10 +944,10 @@ function menu_internal_scroll(menu, offset) {
         new_index += offset;
     }
 
-    if (new_index < 0 || new_index >= menu.items_size) return 0;
+    if (new_index < 0 || new_index >= menu.items_size) return false;
 
     menu_internal_set_index_selected(menu, new_index);
-    return 1;
+    return true;
 }
 
 function menu_internal_draw_callback(menu, pvrctx, index) {
@@ -962,8 +961,8 @@ function menu_internal_draw_callback(menu, pvrctx, index) {
         textsprite_get_draw_location(item.vertex, location);
         textsprite_get_draw_size(item.vertex, size);
     } else {
-        sprite_get_draw_location(item.vertex, location);
-        sprite_get_draw_size(item.vertex, size);
+        statesprite_get_draw_location(item.vertex, location);
+        statesprite_get_draw_size(item.vertex, size);
     }
 
     return !menu.drawcallback(

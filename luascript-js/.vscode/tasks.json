@@ -1,0 +1,41 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build WASM (debug)",
+            "type": "shell",
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "command": "make",
+            "args": [
+                "wasm-build-debug"
+            ]
+        },
+        {
+            "label": "build WASM (release)",
+            "type": "shell",
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "command": "make",
+            "args": [
+                "wasm-build-release"
+            ]
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ]
+        }
+    ]
+}

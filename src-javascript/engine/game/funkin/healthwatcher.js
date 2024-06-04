@@ -8,10 +8,10 @@ function healthwatcher_init() {
 }
 
 function healthwatcher_destroy(healthwatcher) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(healthwatcher);
+    luascript_drop_shared(healthwatcher);
 
-    arraylist_destroy(healthwatcher.players, 0);
-    arraylist_destroy(healthwatcher.opponents, 0);
+    arraylist_destroy(healthwatcher.players, false);
+    arraylist_destroy(healthwatcher.opponents, false);
     healthwatcher = undefined;
 }
 
@@ -21,7 +21,7 @@ function healthwatcher_add_opponent(healthwatcher, playerstats, can_recover, can
         healthwatcher.opponents, healthwatcher.players, playerstats, can_recover, can_die
     );
     if (success) {
-        playerstats_set_health(playerstats, 0);
+        playerstats_set_health(playerstats, 0.0);
     }
     return success;
 }
@@ -31,7 +31,7 @@ function healthwatcher_add_player(healthwatcher, playerstats, can_recover, can_d
         healthwatcher.players, healthwatcher.opponents, playerstats, can_recover, can_die
     );
     if (success) {
-        playerstats_set_health(playerstats, playerstats_get_maximum_health(playerstats) / 2);
+        playerstats_set_health(playerstats, playerstats_get_maximum_health(playerstats) / 2.0);
     }
     return success;
 }
@@ -51,17 +51,17 @@ function healthwatcher_has_deads(healthwatcher, in_players_or_opponents) {
 
 function healthwatcher_enable_dead(healthwatcher, playerstats, can_die) {
     let character = healthwatcher_internal_get_character(healthwatcher, playerstats);
-    if (!character) return 0;
+    if (!character) return false;
 
     character.can_die = can_die;
-    return 1;
+    return true;
 }
 
 function healthwatcher_enable_recover(healthwatcher, playerstats, can_recover) {
     let character = healthwatcher_internal_get_character(healthwatcher, playerstats);
-    if (!character) return 0;
+    if (!character) return false;
     playerstats_enable_health_recover(playerstats, can_recover);
-    return 1;
+    return true;
 }
 
 function healthwatcher_clear(healthwatcher) {
@@ -70,19 +70,19 @@ function healthwatcher_clear(healthwatcher) {
 }
 
 function healthwatcher_balance(healthwatcher, healthbar) {
-    let opponents_total = 0;
-    let accumulated = 0;
-    let maximum = 0;
+    let opponents_total = 0.0;
+    let accumulated = 0.0;
+    let maximum = 0.0;
     let players_count = arraylist_size(healthwatcher.players);
 
     for (let character of arraylist_iterate4(healthwatcher.opponents)) {
         let health = playerstats_get_health(character.playerstats);
-        if (health > 0) opponents_total += health;
+        if (health > 0.0) opponents_total += health;
 
-        if (character.can_die && health < 0)
+        if (character.can_die && health < 0.0)
             playerstats_kill(character.playerstats);
         else if (players_count > 0)
-            playerstats_set_health(character.playerstats, 0);
+            playerstats_set_health(character.playerstats, 0.0);
 
         if (players_count < 1) maximum += playerstats_get_maximum_health(character.playerstats);
     }
@@ -96,7 +96,7 @@ function healthwatcher_balance(healthwatcher, healthbar) {
             if (character.can_die)
                 playerstats_kill_if_negative_health(character.playerstats);
             else
-                playerstats_raise(character.playerstats, 0);
+                playerstats_raise(character.playerstats, false);
 
             accumulated += playerstats_get_health(character.playerstats);
             maximum += playerstats_get_maximum_health(character.playerstats);
@@ -105,7 +105,9 @@ function healthwatcher_balance(healthwatcher, healthbar) {
 
     if (healthbar) {
         let opponents_recover = opponents_total > 0;
-        if (players_count < 0) opponents_recover = !opponents_recover;
+
+        // Note: originally was "if (players_count < 0)" change if something breaks
+        if (players_count < 1) opponents_recover = !opponents_recover;
 
         healthbar_set_health_position(healthbar, maximum, accumulated, opponents_recover);
     }
@@ -113,7 +115,7 @@ function healthwatcher_balance(healthwatcher, healthbar) {
 
 function healthwatcher_reset_opponents(healthwatcher) {
     for (let character of arraylist_iterate4(healthwatcher.opponents)) {
-        playerstats_set_health(character.playerstats, 0);
+        playerstats_set_health(character.playerstats, 0.0);
     }
 }
 
@@ -122,14 +124,14 @@ function healthwatcher_reset_opponents(healthwatcher) {
 
 function healthwatcher_internal_add(arraylist1, arraylist2, playerstats, can_recover, can_die) {
     for (let character of arraylist_iterate4(arraylist1)) {
-        if (character.playerstats == playerstats) return 0;
+        if (character.playerstats == playerstats) return false;
     }
     for (let character of arraylist_iterate4(arraylist2)) {
-        if (character.playerstats == playerstats) return 0;
+        if (character.playerstats == playerstats) return false;
     }
     arraylist_add(arraylist1, { playerstats, can_die });
     playerstats_enable_health_recover(playerstats, can_recover);
-    return 1;
+    return true;
 }
 
 function healthwatcher_internal_get_character(healthwatcher, playerstats) {
@@ -147,7 +149,7 @@ function healthwatcher_internal_get_character(healthwatcher, playerstats) {
         totals.maximum += playerstats_get_maximum_health(character.playerstats);
 
         if (playerstats_is_dead(character.playerstats)) {
-            if (!character.can_die) playerstats_raise(character.playerstats);
+            if (!character.can_die) playerstats_raise(character.playerstats, false);
         } else {
             totals.accumulated += playerstats_get_health(character.playerstats);
         }
@@ -165,11 +167,11 @@ function healthwatcher_internal_get_character(healthwatcher, playerstats) {
         let maximum = playerstats_get_maximum_health(character.playerstats);
         let health = playerstats_get_health(character.playerstats) + amount;
 
-        if (health < 0) {
+        if (health < 0.0) {
             if (character.can_die) {
                 playerstats_kill(character.playerstats);
             } else {
-                health = 0;
+                health = 0.0;
             }
         } else if (health > maximum) {
             health = maximum;

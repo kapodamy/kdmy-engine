@@ -49,11 +49,17 @@ function arraylist_destroy2(arraylist, obj, size_ptr, array_ptr) {
     }
     
     free(arraylist);
+    *arraylist = null;
     */
 }
 
 function arraylist_destroy3(arraylist, free_function) {
-    for (let i = 0; i < arraylist.size; i++) free_function(arraylist.array[i]);
+    if (free_function) {
+        for (let i = 0; i < arraylist.size; i++) {
+            if (arraylist.array[i] != null) free_function(arraylist.array[i]);
+        }
+    }
+
     arraylist.array = undefined;
     arraylist = undefined;
 }
@@ -82,17 +88,6 @@ function arraylist_get(arraylist, index) {
     return arraylist.array[index];
 }
 
-function arraylist_insert_on_null_slot(arraylist, item) {
-    for (let i = 0; i < arraylist.size; i++) {
-        if (arraylist.array[i] == null) {
-            arraylist.array[i] = item;
-            return -1;
-        }
-    }
-
-    return arraylist_add(arraylist, item);
-}
-
 function arraylist_add(arraylist, item) {
     let size = arraylist.size + 1;
 
@@ -103,9 +98,13 @@ function arraylist_add(arraylist, item) {
             throw new Error("arraylist_add() out of memory length=" + arraylist.length);
     }
 
+    // (C only)
+    //item = &arraylist->array[arraylist->size];
+
     arraylist.array[arraylist.size] = item;
     arraylist.size = size;
-    return size;
+
+    return item;
 }
 
 function arraylist_set(arraylist, index, item) {
@@ -151,9 +150,9 @@ function arraylist_index_of(arraylist, item) {
 function arraylist_has(arraylist, item) {
     for (let i = 0; i < arraylist.size; i++) {
         if (arraylist.array[i] == item)
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
 function arraylist_remove(arraylist, item) {
@@ -174,7 +173,7 @@ function arraylist_remove(arraylist, item) {
 }
 
 function arraylist_remove_at(arraylist, index) {
-    if (index < 0 || index >= arraylist.size) return 0;
+    if (index < 0 || index >= arraylist.size) return false;
 
     // JS only
     let j = index;
@@ -183,18 +182,27 @@ function arraylist_remove_at(arraylist, index) {
     }
 
     arraylist.size = j;
-    return 1;
+    return true;
 
     /*
     
     // dreamcast version
-    index *= sizeof(void*);
-    arraylist->size--;
-    int32 amount = arraylist->size * sizeof(void*);
-    memmove(arraylist->array + index, arraylist->array + index + sizeof(void*), amount);
-    
-    return 1;
+    int32_t next_index = index + 1;
+    int32_t new_size = arraylist->size - 1;
 
+    if (next_index >= arraylist->size) {
+        arraylist->size = new_size;
+        return true;
+    }
+
+    const uint8_t* array = arraylist->array;
+
+    uint8_t* item_ptr = array + (index * arraylist->element_size);
+    uint8_t* next_item_ptr = item_ptr + arraylist->element_size;
+
+    memmove(item_ptr, next_item_ptr, (arraylist->size - index) * arraylist->element_size);
+
+    return true;
     */
 }
 
@@ -216,18 +224,6 @@ function arraylist_sort(arraylist, sort_fn) {
     qsort(arraylist.array, arraylist.size, NaN, sort_fn);
 }
 
-
-
-/** @deprecated */
-function arraylist_iterate_prepare(arraylist) {
-    arraylist.iterate_index = 0;
-}
-
-/** @deprecated */
-function* arraylist_iterate(arraylist) {
-    for (; arraylist.iterate_index < arraylist.size; arraylist.iterate_index++)
-        yield arraylist.array[arraylist.iterate_index];
-}
 
 function* arraylist_iterate4(arraylist) {
     for (let i = 0; i < arraylist.size; i++)

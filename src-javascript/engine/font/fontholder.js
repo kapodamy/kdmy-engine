@@ -8,7 +8,7 @@ async function fontholder_init(src, default_size_px, glyph_suffix) {
     let is_altas_type = string_lowercase_ends_with(src, ".xml");
 
     if (is_altas_type)
-        font_instance = await fontglyph_init(src, glyph_suffix, 1);
+        font_instance = await fontglyph_init(src, glyph_suffix, true);
     else
         font_instance = await fonttype_init(src);
 
@@ -19,7 +19,7 @@ function fontholder_init2(font_instance, is_altas_type, default_size_px) {
     return {
         font: font_instance,
         font_from_atlas: is_altas_type,
-        font_size: default_size_px > 0 ? default_size_px : FONTHOLDER_DEFAULT_SIZE_PIXELS
+        font_size: default_size_px > 0.0 ? default_size_px : FONTHOLDER_DEFAULT_SIZE_PIXELS
     };
 }
 

@@ -17,22 +17,22 @@ async function credits_main() {
 
     let moddingcontext = await modding_init(layout, "/assets/common/credits/credits.lua");
     let gamepad = gamepad_init(-1);
-    let end_timestamp_base = -1;
-    let end_timestamp_before_shoot = -1;
-    let end_timestamp_shoot = -1;
-    let end_timestamp_ending = -1;
-    let fade_duration = 0;
-    let is_scripted = 1;
+    let end_timestamp_base = -1.0;
+    let end_timestamp_before_shoot = -1.0;
+    let end_timestamp_shoot = -1.0;
+    let end_timestamp_ending = -1.0;
+    let fade_duration = 0.0;
+    let is_scripted = true;
     let state = 0;
 
     if (moddingcontext.script == null) {
-        end_timestamp_base = layout_get_attached_value_as_float(layout, "base_duration", 25000);
-        end_timestamp_before_shoot = layout_get_attached_value_as_float(layout, "before_shoot_duration", 5000);
-        end_timestamp_shoot = layout_get_attached_value_as_float(layout, "shoot_duration", 3000);
-        end_timestamp_ending = layout_get_attached_value_as_float(layout, "after_shoot_duration", 5000);
+        end_timestamp_base = layout_get_attached_value_as_float(layout, "base_duration", 25000.0);
+        end_timestamp_before_shoot = layout_get_attached_value_as_float(layout, "before_shoot_duration", 5000.0);
+        end_timestamp_shoot = layout_get_attached_value_as_float(layout, "shoot_duration", 3000.0);
+        end_timestamp_ending = layout_get_attached_value_as_float(layout, "after_shoot_duration", 5000.0);
 
         let timestamp = timer_ms_gettime64();
-        is_scripted = 0;
+        is_scripted = false;
         fade_duration = end_timestamp_ending;
 
         end_timestamp_base += timestamp;
@@ -47,7 +47,7 @@ async function credits_main() {
         let elapsed = await pvrctx_wait_ready();
         pvr_context_reset(pvr_context);
 
-        if (gamepad_get_managed_presses(gamepad, 1, buttons)) {
+        if (gamepad_get_managed_presses(gamepad, true, buttons)) {
             if (moddingcontext.script) await weekscript_notify_buttons(moddingcontext.script, -1, buttons);
         }
         if (moddingcontext.script) await weekscript_notify_frame(moddingcontext.script, elapsed);
@@ -91,8 +91,8 @@ async function credits_main() {
             case 3:
                 if (timestamp > end_timestamp_ending) {
                     layout_trigger_any(layout, "outro");
-                    let soundplayer = layout_get_soundplayer("bg-music");
-                    if (soundplayer) soundplayer_fade(soundplayer, 0, fade_duration);
+                    let soundplayer = layout_get_soundplayer(layout, "bg-music");
+                    if (soundplayer) soundplayer_fade(soundplayer, false, fade_duration);
                     state = 4;
                 }
             case 4:

@@ -95,7 +95,6 @@ async function funkinsave_read_from_vmu() {
 
     if (vms_file == -1) {
         console.info("funkinsave_read_from_vmu() no savedata present in " + vmu_path);
-        vmu_path = undefined;
         return 2;
     }
 
@@ -104,10 +103,9 @@ async function funkinsave_read_from_vmu() {
     let total = fs_total(vms_file);
     let vms_data = new ArrayBuffer(total);
 
-    if (total < 0) {
+    if (total == -1) {
         // something bad happen
         console.error("funkinsave_read_from_vmu() call to fs_total() on " + vmu_path + " failed");
-        vmu_path = undefined;
         vms_data = undefined;
         return 3;
     }
@@ -116,7 +114,6 @@ async function funkinsave_read_from_vmu() {
         let read = fs_read(vms_file, new Uint8Array(vms_data, readed), total);
         if (read < 0) {
             // something bad happen
-            vmu_path = undefined;
             vms_data = undefined;
             await fs_close(vms_file);
             return 3;
@@ -128,7 +125,6 @@ async function funkinsave_read_from_vmu() {
     await fs_close(vms_file);
 
     if (readed != total) {
-        vmu_path = undefined;
         vms_data = undefined;
         console.error("funkinsave_read_from_vmu() failed to read the VMS file at " + vmu_path);
         return 3;
@@ -138,9 +134,8 @@ async function funkinsave_read_from_vmu() {
     const vmu_pkg = new vmu_pkg_t();
 
     if (vmu_pkg_parse(vms_data, vmu_pkg) != 0) {
-        console.warn("funkinsave_read_from_vmu() call to vmu_pkg_parse() returned failed on: " + vmu_path);
+        console.warn("funkinsave_read_from_vmu() call to vmu_pkg_parse() failed on: " + vmu_path);
 
-        vmu_path = undefined;
         vms_data = undefined;
         return 4;
     }
@@ -153,13 +148,11 @@ async function funkinsave_read_from_vmu() {
 
     // version check
     if (version > FUNKINSAVE_SAVEDATA_VERSION) {
-        vmu_path = undefined;
         vms_data = undefined;
         return 5;
     }
 
     // clear in-memory savedata
-    vmu_path = undefined;
     funkinsave_internal_clear_savedata();
 
     let settings_count = savedata.getUint16(offset, ENDIANESS); offset += 2;
@@ -176,9 +169,9 @@ async function funkinsave_read_from_vmu() {
         let is_integer = funkinsave_internal_is_setting_integer(id);
         let value;
 
-        if (is_integer) value = Number(savedata.getBigInt64(offset, ENDIANESS));
+        if (is_integer) value = savedata.getBigInt64(offset, ENDIANESS);
         else value = savedata.getFloat64(offset, ENDIANESS);
-        offset += 8;
+        offset += 4;
 
         linkedlist_add_item(funkinsave.settings, { id, value });
     }
@@ -257,8 +250,8 @@ async function funkinsave_read_from_vmu() {
             linkedlist_add_item(funkinsave.freeplay_progress, {
                 week_id: week_name_index_in_table,
                 difficulty_id: difficulty_name_index_in_table,
-                song_name: song_name[0],
-                score: score
+                score: score,
+                song_name: song_name[0]
             });
         }
     }
@@ -274,7 +267,7 @@ async function funkinsave_read_from_vmu() {
         funkinsave.last_played_difficulty_index = last_played_difficulty_name_index_in_table;
 
     // done
-    savedata = undefined;
+    vms_data = undefined;
     return 0;
 }
 
@@ -393,9 +386,9 @@ async function funkinsave_write_to_vmu() {
     for (let setting of linkedlist_iterate4(funkinsave.settings)) {
         let is_integer = funkinsave_internal_is_setting_integer(setting.id);
         savedata.setUint16(offset, setting.id, ENDIANESS); offset += 2;
-        if (is_integer) savedata.setBigInt64(offset, BigInt(setting.value), ENDIANESS);
-        else savedata.setFloat64(offset, setting.value, ENDIANESS);
-        offset += 8;
+        if (is_integer) savedata.setBigInt64(offset, setting.value, ENDIANESS);
+        else savedata.setFloat32(offset, setting.value, ENDIANESS);
+        offset += 4;
     }
 
     // dump directives
@@ -448,7 +441,7 @@ async function funkinsave_write_to_vmu() {
     let vmu_path = funkinsave_internal_get_vmu_path(funkinsave.maple_port, funkinsave.maple_unit);
     const vmu_stat = { st_blksize: 0, st_size: 0 };
 
-    if (fs_stat("/vmu", vmu_stat, 0x00) == 0) {
+    if (fs_stat("/vmu/", vmu_stat, 0x00) == 0) {
         // calculate in bytes the space available
         available_space = vmu_stat.st_blksize * vmu_stat.st_size;
     }
@@ -457,17 +450,16 @@ async function funkinsave_write_to_vmu() {
     vms_file = await fs_open(vmu_path, O_RDONLY);
     if (vms_file != -1) {
         let existing_size = fs_total(vms_file);
-        if (existing_size > 0) available_space += existing_size;
+        if (existing_size != -1) available_space += existing_size;
         await fs_close(vms_file);
     }
 
     // the VMU stores data in blocks of 512 bytes, calculates how many blocks is required
-    let required_size = Math.ceil((FUNKINSAVE_VMS_HEADER.length + length) / 512) * 512;
+    let required_size = Math.ceil((FUNKINSAVE_VMS_HEADER.length + length) / 512.0) * 512.0;
     if (required_size > available_space) return 2;// no space left
 
     // delete savedata
     if (vms_file != -1 && await fs_unlink(vmu_path)) {
-        vmu_path = undefined;
         savedata = undefined;
         return 5;
     }
@@ -477,7 +469,6 @@ async function funkinsave_write_to_vmu() {
 
     if (vms_file == -1) {
         console.error("funkinsave_flush_to_vmu() failed to write to " + vmu_path + ", also the old savedata is lost :(");
-        vmu_path = undefined;
         savedata = undefined;
         return 3;
     }
@@ -539,7 +530,7 @@ function funkinsave_create_unlock_directive(name, value) {
         }
     }
 
-    let directive = { name: strdup(name), value, type: FUNKINSAVE_DIRECTIVE_TYPE_UNLOCK };
+    let directive = { name, value, type: FUNKINSAVE_DIRECTIVE_TYPE_UNLOCK };
     linkedlist_add_item(funkinsave.directives, directive);
     return;
 }
@@ -547,7 +538,7 @@ function funkinsave_create_unlock_directive(name, value) {
 function funkinsave_delete_unlock_directive(name) {
     for (let directive of linkedlist_iterate4(funkinsave.directives)) {
         if (directive.type == FUNKINSAVE_DIRECTIVE_TYPE_UNLOCK && directive.name == name) {
-            directive.name = undefined;
+            directive = undefined;
             linkedlist_remove_item(funkinsave.directives, directive);
             return;
         }
@@ -555,24 +546,24 @@ function funkinsave_delete_unlock_directive(name) {
 }
 
 function funkinsave_contains_unlock_directive(name) {
-    if (name == null || name.length < 1) return 1;
+    if (name == null || name.length < 1) return true;
 
     for (let directive of linkedlist_iterate4(funkinsave.directives)) {
         if (directive.type == FUNKINSAVE_DIRECTIVE_TYPE_UNLOCK && directive.name == name) {
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 function funkinsave_read_unlock_directive(name, value_output) {
     for (let directive of linkedlist_iterate4(funkinsave.directives)) {
         if (directive.type == FUNKINSAVE_DIRECTIVE_TYPE_UNLOCK && directive.name == name) {
             value_output[0] = directive.value;
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 
@@ -621,41 +612,39 @@ function funkinsave_storage_set(week_name, name, data, data_size) {
         week_id = FUNKINSAVE_MAX_INDEXED_NAME;
     } else {
         week_id = funkinsave_internal_name_index(funkinsave.weeks_names, week_name);
-        if (week_id < 0) return 0;
+        if (week_id < 0) return false;
     }
 
-    let storage = null;
-
-    for (let s of linkedlist_iterate4(funkinsave.storages)) {
-        if (s.week_id == week_id && s.name == name) {
-            storage = s;
+    for (let storage of linkedlist_iterate4(funkinsave.storages)) {
+        if (storage.week_id == week_id && storage.name == name) {
+            linkedlist_remove_item(funkinsave.storages, storage);
+            storage = undefined;
             break;
         }
     }
 
     if (data_size < 1) {
-        if (storage) {
-            linkedlist_remove_item(funkinsave.storages, storage);
-            storage.data = undefined;
-            storage = undefined;
-        }
-        return 1;
+        return true;
     }
 
-    if (!storage) storage = { week_id: 0, name: null, data_size: 0, data: null };
+    let new_storage = {
+        week_id: week_id,
+        name: name,
+        data_size: data_size,
+        data: clone_array(data, data_size, NaN)
+    };
 
-    data = clone_array(data, data_size, NaN);
+    linkedlist_add_item(funkinsave.storages, new_storage);
 
-    storage.data = undefined;
-    storage.data = data;
-    storage.data_size = data_size;
-    storage.week_id = week_id;
-
-    return 1;
+    return true;
 }
 
 function funkinsave_storage_get(week_name, name, out_data) {
-    let week_id = week_name == null ? FUNKINSAVE_MAX_INDEXED_NAME : funkinsave.weeks_names.indexOf(name);
+    let week_id;
+    if (week_name == null)
+        week_id = FUNKINSAVE_MAX_INDEXED_NAME;
+    else
+        week_id = linkedlist_index_of(funkinsave.weeks_names, name);
 
     for (let storage of linkedlist_iterate4(funkinsave.storages)) {
         if (storage.week_id == week_id && storage.name == name) {
@@ -698,7 +687,7 @@ function funkinsave_get_freeplay_score(week_name, difficulty_name, song_name) {
     if (!song_name) return 0;
 
     let week_id = linkedlist_index_of(funkinsave.weeks_names, week_name);
-    let difficulty_id = linkedlist_index_of(funkinsave, difficulty_name);
+    let difficulty_id = linkedlist_index_of(funkinsave.difficulty_names, difficulty_name);
     if (week_id < 0 || difficulty_id < 0) return 0;
 
     for (let progress of linkedlist_iterate4(funkinsave.freeplay_progress)) {
@@ -712,8 +701,28 @@ function funkinsave_get_freeplay_score(week_name, difficulty_name, song_name) {
 
 
 async function funkinsave_has_savedata_in_vmu(port, unit) {
+    /*
+    // C only
+    maple_device_t* dev = maple_enum_dev(port, unit);
+    if (!dev) return false;
+
+    funkinsave_internal_get_vmu_path(FUNKINSAVE_VMU_PATH, port, unit);
+    file_t dir_hnd = fs_open(FUNKINSAVE_VMU_PATH, O_RDONLY | O_DIR);
+
+    bool found = false;
+    dirent_t* entry;
+    while ((entry = fs_readdir(dir_hnd)) != NULL) {
+        if (string_equals(entry->name, FUNKINSAVE_VMU_SAVEFILE_NAME)) {
+            found = true;
+            break;
+        }
+    }
+
+    fs_close(dir_hnd);
+    return found;
+    */
     let dev = maple_enum_dev(port, unit);
-    if (!dev) return 0;
+    if (!dev) return false;
 
     //
     // There no such thing like fs_file_exists, try open the file
@@ -724,7 +733,6 @@ async function funkinsave_has_savedata_in_vmu(port, unit) {
     let found = vms_file != -1;
     await fs_close(vms_file);
 
-    vmu_path = undefined;
     return found;
 }
 
@@ -740,7 +748,7 @@ function funkinsave_is_vmu_missing() {
 }
 
 function funkinsave_pick_first_available_vmu() {
-    let pick_first_device = 1;
+    let pick_first_device = true;
     let found = 0;
 
     for (let i = 0, count = maple_enum_count(); i < count; i++) {
@@ -750,15 +758,14 @@ function funkinsave_pick_first_available_vmu() {
             if (pick_first_device) {
                 funkinsave.maple_port = dev.port;
                 funkinsave.maple_unit = dev.unit;
-                pick_first_device = 0;
+                pick_first_device = false;
             }
             found++;
         }
     }
 
-    // JS & C# only
     if (found > 1) {
-        // more than 1 virtual saveslots found, dont pick an vmu
+        // various saveslots found, dont pick an vmu
         funkinsave.maple_port = -1;
         funkinsave.maple_unit = -1;
     }
@@ -773,31 +780,29 @@ function funkinsave_internal_string_bytelength(str) {
 function funkinsave_internal_dump_string(str, buffer, offset) {
     /*
     // C only
-    size_t size = 0;
-    for (size_t i = 0; i < FUNKINSAVE_MAX_STRING_SIZE ; i++) {
-        uint8_t character = str[i];
-        *buffer = character;
-        buffer++;
-        size++;
-        if (!character) return size;
-    }
-    return size;
+    uint8_t* buffer = dataview->buffer_u8;
+    size_t str_len = funkinsave_internal_string_bytelength(str);
+
+    memcpy(buffer, str, str_len);
+    buffer[str_len] = 0x00;
+
+    dataview->buffer_u8 += str_len;
+    return;
     */
 
     let buf = new Uint8Array(buffer.buffer);
     let textEncoder = new TextEncoder();
     let temp = textEncoder.encode(str);
+    let length = temp.length + 1;
 
-    if (temp.length >= FUNKINSAVE_MAX_STRING_SIZE) {
-        temp = temp.subarray(0, FUNKINSAVE_MAX_STRING_SIZE);
-        buf.set(temp, offset);
-        return FUNKINSAVE_MAX_STRING_SIZE;
+    if (length > FUNKINSAVE_MAX_STRING_SIZE) {
+        temp = temp.subarray(0, FUNKINSAVE_MAX_STRING_SIZE - 1);
     }
 
     buf.set(temp, offset);
-    buf[offset + temp.byteLength + 1] = 0x00;
+    buf[offset + length] = 0x00;
 
-    return temp.byteLength + 1;
+    return length;
 }
 
 function funkinsave_internal_clear_savedata() {
@@ -834,26 +839,25 @@ function funkinsave_internal_read_string(buffer, offset, output_string) {
     let textDecoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
     let buf = new Uint8Array(buffer.buffer, buffer.byteOffset + offset);
     let length = 0;
-    let null_found = false;
 
-    for (let i = 0; i < FUNKINSAVE_MAX_STRING_SIZE; i++) {
+    for (let i = 0, end = FUNKINSAVE_MAX_STRING_SIZE - 1; i < end; i++) {
         if (buf[i] == 0x00) {
-            null_found = true;
             break;
         }
         length++;
     }
 
-    console.assert(length > 0);
+    console.assert(buf[length] == 0x00, "buf[length] == 0x00");
     output_string[0] = textDecoder.decode(buf.subarray(0, length), { stream: false });
 
-    if (null_found) length++;
-    return length;
+    return length + 1;
 }
 
 function funkinsave_internal_is_setting_integer(id) {
-    if (id == 0xabcd) return 0;// debug only
-    return 1;
+    if (DEBUG) {
+        if (id == 0xabcd) return false;// debug only
+    }
+    return true;
 }
 
 function funkinsave_internal_calc_crc16(buffer, size, crc) {

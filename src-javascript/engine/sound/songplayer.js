@@ -39,7 +39,7 @@ async function songplayer_init2(is_not_splitted, path_voices, path_instrumental)
     let songplayer = {
         playbacks: null,
         playbacks_size: 0,
-        paused: 1,
+        paused: true,
         index_instrumental: -1,
         index_voices: -1,
     };
@@ -99,7 +99,7 @@ function songplayer_destroy(songplayer) {
         songplayer.playbacks = undefined;
     }
 
-    ModuleLuaScript.kdmyEngine_drop_shared_object(songplayer);
+    luascript_drop_shared
     songplayer = undefined;
 }
 
@@ -119,10 +119,10 @@ async function songplayer_play(songplayer, songinfo) {
     }
 
     let completed = 0;
-    let playback_success = 0;
+    let playback_success = true;
     for (let i = 0; i < songplayer.playbacks_size; i++) {
         if (songplayer.playbacks[i].currentTime >= songplayer.playbacks[i].duration) completed++;
-        songplayer.playbacks[i].play().catch(function () { playback_success = 0; });
+        songplayer.playbacks[i].play().catch(function () { playback_success = false; });
     }
 
     // wait until the first audio samples are played
@@ -132,19 +132,19 @@ async function songplayer_play(songplayer, songinfo) {
 
     while (playback_success && timestamp == reference.currentTime) await thd_pass();
 
-    songplayer.paused = 0;
+    songplayer.paused = false;
     let seconds = reference.currentTime;
 
-    songinfo.timestamp = (seconds * songplayer.playbacks_size) / 1000;
+    songinfo.timestamp = (seconds * songplayer.playbacks_size) / 1000.0;
     songinfo.completed = completed >= songplayer.playbacks_size;
 
-    return (seconds - timestamp) / 1000;
+    return (seconds - timestamp) / 1000.0;
 }
 
 function songplayer_pause(songplayer) {
     if (songplayer.playbacks_size < 1 || songplayer.paused) return;
     for (let i = 0; i < songplayer.playbacks_size; i++) songplayer.playbacks[i].pause();
-    songplayer.paused = 1;
+    songplayer.paused = true;
 }
 
 function songplayer_seek(songplayer, timestamp) {
@@ -155,12 +155,8 @@ function songplayer_seek(songplayer, timestamp) {
 }
 
 function songplayer_poll(songplayer, songinfo) {
-    //
-    // IMPORTANT: in the C version poll every stream (similar to animate() ) in
-    // order to send audio samples to the AICA.
-    //
     let ended = 0;
-    let seconds = 0;
+    let seconds = 0.0;
 
     for (let i = 0; i < songplayer.playbacks_size; i++) {
         if (songplayer.playbacks[i].ended) ended++;
@@ -189,7 +185,7 @@ function songplayer_get_duration(songplayer) {
 async function songplayer_changesong(songplayer, src, prefer_alternative) {
     let song = await songplayer_init(src, prefer_alternative);
 
-    if (!song) return 0;
+    if (!song) return false;
 
     if (songplayer.playbacks) {
         // javacript only (needs the C counterpart)
@@ -210,7 +206,7 @@ async function songplayer_changesong(songplayer, src, prefer_alternative) {
     songplayer.playbacks_size = song.playbacks_size;
     song = undefined;
 
-    return 1;
+    return true;
 }
 
 function songplayer_is_completed(songplayer) {
@@ -341,15 +337,12 @@ async function songplayer_helper_get_tracks_full_path(src) {
 
     if (separator_index < 0) {
         let path = fs_get_full_path(src);
-        src = undefined;
         return path;
     }
 
     // parse "voices.ogg|inst.ogg" format
     let path_voices = await songplayer_internal_separe_paths(0, separator_index, src, false);
     let path_instrumental = await songplayer_internal_separe_paths(separator_index + 1, src.length, src, false);
-
-    src = undefined;
 
     if (path_voices != null) {
         let tmp = fs_get_full_path(path_voices);

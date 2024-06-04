@@ -3,6 +3,7 @@
 const WEEKSELECTOR_DIFFICULTY_UI_NO_WARNS = "ui_difficult_no_warns";
 const WEEKSELECTOR_DIFFICULTY_UI_WARNS = "ui_difficult_warns";
 
+
 async function weekselector_difficult_init(animlist, modelholder, layout) {
     let weekdifficult = {
         animsprite: animsprite_init_from_animlist(animlist, WEEKSELECTOR_ARROW_SPRITE_NAME),
@@ -14,34 +15,34 @@ async function weekselector_difficult_init(animlist, modelholder, layout) {
         sprite_commons: statesprite_init_from_texture(null),
         sprite_customs: statesprite_init_from_texture(null),
 
-        icon_locked: modelholder_create_sprite(modelholder, WEEKSELECTOR_LOCKED, 1),
-        icon_left: modelholder_create_sprite(modelholder, WEEKSELECTOR_ARROW_SPRITE_NAME, 1),
-        icon_right: modelholder_create_sprite(modelholder, WEEKSELECTOR_ARROW_SPRITE_NAME, 1),
+        icon_locked: modelholder_create_sprite(modelholder, WEEKSELECTOR_LOCKED, true),
+        icon_left: modelholder_create_sprite(modelholder, WEEKSELECTOR_ARROW_SPRITE_NAME, true),
+        icon_right: modelholder_create_sprite(modelholder, WEEKSELECTOR_ARROW_SPRITE_NAME, true),
 
         placeholder1: layout_get_placeholder(layout, WEEKSELECTOR_DIFFICULTY_UI_NO_WARNS),
         placeholder2: layout_get_placeholder(layout, WEEKSELECTOR_DIFFICULTY_UI_WARNS),
 
-        has_left: 1,
-        has_right: 1,
-        is_common: 0,
-        is_locked: 0,
+        has_left: true,
+        has_right: true,
+        is_common: false,
+        is_locked: false,
 
         drawable: null
     };
 
-    sprite_flip_rendered_texture(weekdifficult.icon_right, 1, 0);
+    sprite_flip_rendered_texture(weekdifficult.icon_right, true, false);
 
     weekdifficult.drawable = drawable_init(
-        -1, weekdifficult, weekselector_difficult_draw, weekselector_difficult_animate
+        -1.0, weekdifficult, weekselector_difficult_draw, weekselector_difficult_animate
     );
-    weekselector_difficult_visible(weekdifficult, 1);
+    weekselector_difficult_visible(weekdifficult, true);
 
-    statesprite_set_visible(weekdifficult.sprite_commons, 0);
-    statesprite_set_visible(weekdifficult.sprite_customs, 0);
+    statesprite_set_visible(weekdifficult.sprite_commons, false);
+    statesprite_set_visible(weekdifficult.sprite_customs, false);
 
-    sprite_set_visible(weekdifficult.icon_locked, 0);
-    sprite_set_visible(weekdifficult.icon_left, 0);
-    sprite_set_visible(weekdifficult.icon_right, 0);
+    sprite_set_visible(weekdifficult.icon_locked, false);
+    sprite_set_visible(weekdifficult.icon_left, false);
+    sprite_set_visible(weekdifficult.icon_right, false);
 
     // prebuild the list
     statesprite_state_add(
@@ -108,14 +109,16 @@ function weekselector_difficult_animate(weekdifficult, elapsed) {
     statesprite_animate(weekdifficult.sprite_customs, elapsed);
 
     if (weekdifficult.has_left)
-        animsprite_update_sprite(weekdifficult.animsprite, weekdifficult.icon_left, 0);
+        animsprite_update_sprite(weekdifficult.animsprite, weekdifficult.icon_left, false);
     if (weekdifficult.has_right)
-        animsprite_update_sprite(weekdifficult.animsprite, weekdifficult.icon_right, 0);
+        animsprite_update_sprite(weekdifficult.animsprite, weekdifficult.icon_right, true);
+
+    return 0;
 }
 
 
 function weekselector_difficult_select(weekdifficult, new_index) {
-    if (new_index < 0 || new_index >= weekdifficult.list_size) return 0;
+    if (new_index < 0 || new_index >= weekdifficult.list_size) return false;
 
     weekdifficult.is_common = weekdifficult.list[new_index].is_common;
     weekdifficult.is_locked = weekdifficult.list[new_index].is_locked;
@@ -134,7 +137,7 @@ function weekselector_difficult_select(weekdifficult, new_index) {
         weekdifficult.icon_right, weekdifficult.has_right ? 1.0 : WEEKSELECTOR_ARROW_DISABLED_ALPHA
     );
 
-    return 1;
+    return true;
 }
 
 function weekselector_difficult_select_default(weekdifficult) {
@@ -192,14 +195,14 @@ function weekselector_difficult_relayout(weekdifficult, use_alt_placeholder) {
     );
 
     // calculte the horizontal space between arrows
-    let draw_size = [0, 0];
+    let draw_size = [0.0, 0.0];
     sprite_get_draw_size(weekdifficult.icon_left, draw_size);
-    let difficult_width = placeholder.width - (draw_size[0] * 2);
+    let difficult_width = placeholder.width - (draw_size[0] * 2.0);
 
     // resize&locate commons difficults
     for (let state of linkedlist_iterate4(statesprite_state_list(weekdifficult.sprite_commons))) {
         imgutils_calc_rectangle_in_statesprite_state(
-            draw_size[0], 0, difficult_width, placeholder.height, ALIGN_CENTER, ALIGN_CENTER, state
+            draw_size[0], 0.0, difficult_width, placeholder.height, ALIGN_CENTER, ALIGN_CENTER, state
         );
     }
     statesprite_set_draw_location(weekdifficult.sprite_commons, placeholder.x, placeholder.y);
@@ -208,7 +211,7 @@ function weekselector_difficult_relayout(weekdifficult, use_alt_placeholder) {
     // resize&locate custom difficults
     for (let state of linkedlist_iterate4(statesprite_state_list(weekdifficult.sprite_customs))) {
         imgutils_calc_rectangle_in_statesprite_state(
-            draw_size[0], 0, difficult_width, placeholder.height, ALIGN_CENTER, ALIGN_CENTER, state
+            draw_size[0], 0.0, difficult_width, placeholder.height, ALIGN_CENTER, ALIGN_CENTER, state
         );
     }
     statesprite_set_draw_location(weekdifficult.sprite_customs, placeholder.x, placeholder.y);
@@ -222,7 +225,7 @@ function weekselector_difficult_relayout(weekdifficult, use_alt_placeholder) {
 }
 
 function weekselector_difficult_selected_is_locked(weekdifficult) {
-    if (weekdifficult.index < 0 || weekdifficult.index >= weekdifficult.list_size) return 1;
+    if (weekdifficult.index < 0 || weekdifficult.index >= weekdifficult.list_size) return true;
     return weekdifficult.list[weekdifficult.index].is_locked;
 }
 
@@ -234,7 +237,7 @@ async function weekselector_difficult_load(weekdifficult, weekinfo, default_diff
     weekdifficult.list = undefined;
     statesprite_destroy(weekdifficult.sprite_customs);
     weekdifficult.sprite_customs = statesprite_init_from_texture(null);
-    statesprite_set_visible(weekdifficult.sprite_customs, 0);
+    statesprite_set_visible(weekdifficult.sprite_customs, false);
 
     if (!weekinfo) return;
 
@@ -245,11 +248,11 @@ async function weekselector_difficult_load(weekdifficult, weekinfo, default_diff
     weekdifficult.list = new Array(weekdifficult.list_size);
 
     if (weekinfo.has_difficulty_easy)
-        weekdifficult.list[index++] = { name: FUNKIN_DIFFICULT_EASY, is_locked: 0, is_common: 1 };
+        weekdifficult.list[index++] = { name: FUNKIN_DIFFICULT_EASY, is_locked: false, is_common: true };
     if (weekinfo.has_difficulty_normal)
-        weekdifficult.list[index++] = { name: FUNKIN_DIFFICULT_NORMAL, is_locked: 0, is_common: 1 };
+        weekdifficult.list[index++] = { name: FUNKIN_DIFFICULT_NORMAL, is_locked: false, is_common: true };
     if (weekinfo.has_difficulty_hard)
-        weekdifficult.list[index++] = { name: FUNKIN_DIFFICULT_HARD, is_locked: 0, is_common: 1 };
+        weekdifficult.list[index++] = { name: FUNKIN_DIFFICULT_HARD, is_locked: false, is_common: true };
 
     if (weekinfo.custom_difficults_model) {
         let modelholder = await modelholder_init(weekinfo.custom_difficults_model);
@@ -260,7 +263,7 @@ async function weekselector_difficult_load(weekdifficult, weekinfo, default_diff
                 weekdifficult.list[index++] = {
                     name: difficult.name,
                     is_locked: !funkinsave_contains_unlock_directive(difficult.unlock_directive),
-                    is_common: 0
+                    is_common: false
                 };
                 statesprite_state_add(
                     weekdifficult.sprite_customs, modelholder, difficult.name, difficult.name
@@ -273,7 +276,7 @@ async function weekselector_difficult_load(weekdifficult, weekinfo, default_diff
     console.assert(index <= weekdifficult.list_size, "weekselector_difficult_load() list overflow");
     weekdifficult.list_size = index;// trim the list
 
-    weekselector_difficult_relayout(weekdifficult, 0);
+    weekselector_difficult_relayout(weekdifficult, false);
 
     // select default difficult
     let selected = default_difficult == null ? FUNKIN_DIFFICULT_NORMAL : default_difficult;

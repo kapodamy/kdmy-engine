@@ -8,6 +8,7 @@ const WEEK_GAMEOVER_JUDGEMENT =
 const WEEK_GAMEOVER_HELP_RETRY = "retry";
 const WEEK_GAMEOVER_HELP_DIFFICULT = "change difficult";
 const WEEK_GAMEOVER_HELP_GIVEUP = "giveup";
+const WEEK_GAMEOVER_HELP_STATS = "show/hide statistics";
 
 const WEEK_GAMEOVER_DURATION_DIE = "gameover_duration_die";
 const WEEK_GAMEOVER_DURATION_RETRY = "gameover_duration_retry";
@@ -19,6 +20,7 @@ const WEEK_GAMEOVER_LAYOUT_Z_INDEX = 200;
 const WEEK_GAMEOVER_LAYOUT_DREAMCAST = "/assets/common/image/week-round/gameover~dreamcast.xml";
 const WEEK_GAMEOVER_LAYOUT_WIDESCREEN = "/assets/common/image/week-round/gameover.xml";
 const WEEK_GAMEOVER_LAYOUT_VERSION = "/assets/common/image/week-round/gameover_version.txt";
+const WEEK_GAMEOVER_MODDING_SCRIPT = "/assets/common/data/scripts/weekgameover.lua";
 
 const WEEK_GAMEOVER_BUTTONS = GAMEPAD_BACK | GAMEPAD_B | GAMEPAD_START | GAMEPAD_T_LR;
 const WEEK_GAMEOVER_BUTTONS2 = WEEK_GAMEOVER_BUTTONS | GAMEPAD_AD_LEFT | GAMEPAD_AD_RIGHT;
@@ -39,7 +41,7 @@ const WEEK_GAMEOVER_SETSFXRETRY = 10;
 
 
 async function week_gameover_init() {
-    let src = pvrctx_is_widescreen() ? WEEK_GAMEOVER_LAYOUT_WIDESCREEN : WEEK_GAMEOVER_LAYOUT_DREAMCAST;
+    let src = pvr_context_is_widescreen() ? WEEK_GAMEOVER_LAYOUT_WIDESCREEN : WEEK_GAMEOVER_LAYOUT_DREAMCAST;
     let button_icons = await modelholder_init(WEEKSELECTOR_BUTTONS_MODEL);
     let ui_icons = await modelholder_init(WEEKSELECTOR_UI_ICONS_MODEL);
     let animlist = await animlist_init(WEEKSELECTOR_UI_ANIMS);
@@ -48,24 +50,32 @@ async function week_gameover_init() {
     if (!layout) throw new Error("missing or invalid layout for gameover screen");
 
     let help_retry = weekselector_helptext_init(
-        button_icons, layout, 3, 0, WEEKSELECTOR_BUTTON_START, WEEK_GAMEOVER_HELP_RETRY, null
+        button_icons, layout, 3, false, WEEKSELECTOR_BUTTON_START, WEEK_GAMEOVER_HELP_RETRY, null
     );
     let help_difficult = weekselector_helptext_init(
-        button_icons, layout, 2, 0, WEEKSELECTOR_BUTTON_LT_RT, WEEK_GAMEOVER_HELP_DIFFICULT, null
+        button_icons, layout, 2, false, WEEKSELECTOR_BUTTON_LT_RT, WEEK_GAMEOVER_HELP_DIFFICULT, null
     );
     let help_giveup = weekselector_helptext_init(
-        button_icons, layout, 1, 0, WEEKSELECTOR_BUTTON_B, WEEK_GAMEOVER_HELP_GIVEUP, null
+        button_icons, layout, 1, false, WEEKSELECTOR_BUTTON_B, WEEK_GAMEOVER_HELP_GIVEUP, null
+    );
+    let help_stats = weekselector_helptext_init(
+        button_icons, layout, 1, true, WEEKSELECTOR_BUTTON_X, WEEK_GAMEOVER_HELP_STATS, null
     );
     modelholder_destroy(button_icons);
 
     let selector = await weekselector_difficult_init(animlist, ui_icons, layout);
-    weekselector_difficult_visible(selector, 0);
+    weekselector_difficult_visible(selector, false);
     modelholder_destroy(ui_icons);
 
     let weekgameover = {
-        layout, help_retry, help_difficult, help_giveup, selector,
+        layout,
+        help_retry,
+        help_difficult,
+        help_giveup,
+        help_stats,
+        selector,
         drawable: null,
-        disabled: 1,
+        disabled: true,
         weekinfo: null,
         difficult: null,
         choosen_difficult: weekselector_weektitle_init(layout),
@@ -92,7 +102,7 @@ async function week_gameover_init() {
         WEEK_GAMEOVER_LAYOUT_Z_INDEX, weekgameover, week_gameover_draw, week_gameover_animate
     );
 
-    layout_external_vertex_create_entries(layout, 3);
+    layout_external_vertex_create_entries(layout, 4);
     layout_external_vertex_set_entry(
         layout, 0, VERTEX_DRAWABLE, weekselector_helptext_get_drawable(help_retry), weekgameover.group_id_help
     );
@@ -101,6 +111,9 @@ async function week_gameover_init() {
     );
     layout_external_vertex_set_entry(
         layout, 2, VERTEX_DRAWABLE, weekselector_helptext_get_drawable(help_giveup), weekgameover.group_id_help
+    );
+    layout_external_vertex_set_entry(
+        layout, 3, VERTEX_DRAWABLE, weekselector_helptext_get_drawable(help_stats), weekgameover.group_id_help
     );
 
     // load default sounds
@@ -114,6 +127,10 @@ async function week_gameover_init() {
     weekgameover.duration_before = weekgameover.default_before_duration;
     weekgameover.duration_before_force_end = weekgameover.default_before_force_end_duration;
 
+    weekgameover.modding = modding_init(layout, WEEK_GAMEOVER_MODDING_SCRIPT);
+    weekgameover.modding.callback_private_data = weekgameover;
+    weekgameover.modding.callback_option = week_gameover_internal_handle_modding_option;
+
     return weekgameover;
 }
 
@@ -122,6 +139,7 @@ function week_gameover_destroy(weekgameover) {
     weekselector_helptext_destroy(weekgameover.help_retry);
     weekselector_helptext_destroy(weekgameover.help_difficult);
     weekselector_helptext_destroy(weekgameover.help_giveup);
+    weekselector_helptext_destroy(weekgameover.help_stats);
     weekselector_difficult_destroy(weekgameover.selector);
     drawable_destroy(weekgameover.drawable);
     weekselector_weektitle_destroy(weekgameover.choosen_difficult);
@@ -129,39 +147,46 @@ function week_gameover_destroy(weekgameover) {
     if (weekgameover.music_bg) soundplayer_destroy(weekgameover.music_bg);
     if (weekgameover.sfx_retry) soundplayer_destroy(weekgameover.sfx_retry);
 
+    weekgameover.modding.has_funkinsave_changes = false;// ignore fukinsave changes
+    modding_destroy(weekgameover.modding);
+
     weekgameover = undefined;
 }
 
 async function week_gameover_read_version() {
     const garapheme = { code: 0, size: 0 };
     let version = await fs_readtext(WEEK_GAMEOVER_LAYOUT_VERSION);
-    string_get_character_codepoint(version, 0, garapheme);
+
+    if (version) {
+        string_get_character_codepoint(version, 0, garapheme);
+    }
+
     version = undefined;
     return garapheme.code;
 }
 
 
 function week_gameover_hide(weekgameover) {
-    weekgameover.disabled = 1;
+    weekgameover.disabled = true;
     weekgameover.weekinfo = null;
     weekgameover.difficult = null;
     weekselector_difficult_load(weekgameover.selector, null, null);
-    drawable_set_visible(weekgameover.drawable, 0);
+    drawable_set_visible(weekgameover.drawable, false);
 }
 
 function week_gameover_display(weekgameover, timestamp, duration, playerstats, weekinfo, difficult) {
-    let percent = Math.min((timestamp / duration) * 100, 100.00);
+    let percent = Math.min((timestamp / duration) * 100.0, 100.0);
 
-    layout_set_group_visibility_by_id(weekgameover.layout, weekgameover.group_id_help, 0);
+    layout_set_group_visibility_by_id(weekgameover.layout, weekgameover.group_id_help, false);
 
-    weekselector_difficult_visible(weekgameover.selector, 0);
+    weekselector_difficult_visible(weekgameover.selector, false);
     layout_trigger_any(weekgameover.layout, null);// restart any animation and/or camera
-    drawable_set_visible(weekgameover.drawable, 1);
+    drawable_set_visible(weekgameover.drawable, true);
 
     let title = layout_get_textsprite(weekgameover.layout, "title");
     if (title) {
         const display_name = weekinfo.display_name ? weekinfo.display_name : weekinfo.name;
-        textsprite_set_text_intern(title, 1, display_name);
+        textsprite_set_text_intern(title, true, display_name);
     }
 
     let jugement = layout_get_textsprite(weekgameover.layout, "judgement");
@@ -187,21 +212,23 @@ function week_gameover_display(weekgameover, timestamp, duration, playerstats, w
 
     weekgameover.weekinfo = weekinfo;
     weekgameover.difficult = difficult;
-    weekgameover.disabled = 1;
+    weekgameover.disabled = true;
 }
 
 async function week_gameover_display_selector(weekgameover) {
     await weekselector_difficult_load(
         weekgameover.selector, weekgameover.weekinfo, weekgameover.difficult
     );
-    weekselector_difficult_relayout(weekgameover.selector, 0);// obligatory
-    weekselector_difficult_visible(weekgameover.selector, 1);
+    weekselector_difficult_relayout(weekgameover.selector, false);// obligatory
+    weekselector_difficult_visible(weekgameover.selector, true);
     layout_trigger_any(weekgameover.layout, "selector_show");
+    await modding_helper_notify_event(weekgameover.modding, "selector_show");
 }
 
-function week_gameover_display_choosen_difficult(weekgameover) {
+async function week_gameover_display_choosen_difficult(weekgameover) {
     layout_trigger_any(weekgameover.layout, "changed_difficult");
     weekselector_weektitle_move_difficult(weekgameover.choosen_difficult, weekgameover.selector);
+    await modding_helper_notify_event(weekgameover.modding, "changed_difficult");
 }
 
 function week_gameover_get_drawable(weekgameover) {
@@ -215,6 +242,12 @@ function week_gameover_get_difficult(weekgameover) {
 async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
     const pressed = [0x00];
     const layout = roundcontext.layout ?? roundcontext.ui_layout;
+
+    // trigger any initial Action
+    if (roundcontext.settings.layout_rollback)
+        layout_trigger_any(weekgameover.layout, null);
+    else
+        layout_trigger_any(weekgameover.layout, "hide_judgement");
 
     // match antialiasing with the stage layout
     layout_disable_antialiasing(weekgameover.layout, layout_is_antialiasing_disabled(layout));
@@ -241,7 +274,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         layout, WEEK_GAMEOVER_DURATION_BEFORE_FORCE_END, weekgameover.duration_giveup
     );
     let stage_has_gameover = layout_get_attached_value(
-        layout, "gameover_with_stage", LAYOUT_TYPE_BOOLEAN, 0
+        layout, "gameover_with_stage", LAYOUT_TYPE_BOOLEAN, false
     );
 
     // ¿which player is dead?    
@@ -251,14 +284,20 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
     let wait_animation = false;
 
     if (roundcontext.girlfriend) {
-        character_play_extra(roundcontext.girlfriend, "cry", 0);
+        character_play_extra(roundcontext.girlfriend, "cry", false);
     }
+
+    weekgameover.modding_decision = 1; // giveup by default
+    weekgameover.modding.has_exit = false;
+    weekgameover.modding.has_halt = false;
+    weekgameover.modding.native_menu = null;
+    await modding_helper_notify_init(weekgameover.modding, MODDING_NATIVE_MENU_SCREEN);
 
     if (!layout_trigger_any(layout, "camera_gameover")) {
         for (let i = 0; i < roundcontext.players_size; i++) {
             if (!roundcontext.players[i].playerstats) continue;
             if (roundcontext.players[i].is_opponent) {
-                character_play_extra(roundcontext.players[i].character, FUNKIN_OPPONENT_VICTORY, 0);
+                character_play_extra(roundcontext.players[i].character, FUNKIN_OPPONENT_VICTORY, false);
                 continue;
             }
 
@@ -266,7 +305,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
                 dead_player_index = i;
                 dead_character = roundcontext.players[i].character;
 
-                if (character_play_extra(dead_character, FUNKIN_PLAYER_DIES, 0)) {
+                if (character_play_extra(dead_character, FUNKIN_PLAYER_DIES, false)) {
                     wait_animation = die_animation_duration < 0.0;
                     commited_anims = character_get_commited_animations_count(dead_character);
                 }
@@ -274,7 +313,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
                 let target = roundcontext.players[i].is_opponent ? WEEKROUND_CAMERA_OPONNENT : WEEKROUND_CAMERA_PLAYER;
                 week_camera_focus_guess(roundcontext, target, i);
             } else {
-                character_play_extra(roundcontext.players[i].character, FUNKIN_PLAYER_SCARED, 0);
+                character_play_extra(roundcontext.players[i].character, FUNKIN_PLAYER_SCARED, false);
             }
         }
     }
@@ -290,15 +329,15 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
     if (stage_has_gameover) layout_trigger_any(layout, "gameover");
 
     let decision = 0;
-    let selector_unloaded = 1;
+    let selector_unloaded = true;
     let selector_buttons = GAMEPAD_T_LR;
     let ui_buttons = WEEK_GAMEOVER_BUTTONS;
-    let total = 0;
-    let gameoverloop_notified = 0;
+    let total = 0.0;
+    let gameoverloop_notified = false;
 
-    while (1) {
+    while (true) {
         if (roundcontext.scriptcontext.halt_flag) {
-            await week_halt(roundcontext, 1);
+            await week_halt(roundcontext, true);
             continue;
         }
 
@@ -306,9 +345,26 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
         if (roundcontext.script) await weekscript_notify_frame(roundcontext.script, elapsed);
 
+        let res = await modding_helper_handle_custom_menu(weekgameover.modding, controller, elapsed);
+        if (res != MODDING_HELPER_RESULT_CONTINUE || weekgameover.modding.has_exit) {
+            decision = weekgameover.modding_decision;
+            break;
+        }
+        if (weekgameover.modding.has_halt) {
+            gamepad_clear_buttons(controller);
+            continue;
+        }
+
         if (roundcontext.scriptcontext.force_end_flag) {
             gamepad_destroy(controller);
-            layout_set_single_item_to_draw(layout);
+            layout_set_single_item_to_draw(layout, null);
+
+            modding_helper_notify_event(
+                weekgameover.modding,
+                roundcontext.scriptcontext.force_end_loose_or_win ? "force_loose" : "force_win"
+            );
+            modding_helper_notify_exit2(weekgameover.modding);
+
             return roundcontext.scriptcontext.force_end_loose_or_win ? 1 : 2;
         }
 
@@ -327,7 +383,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
         } else if (buttons & GAMEPAD_START) {
             // retry
             decision = 2;
-            weekgameover.disabled = 0;
+            weekgameover.disabled = false;
             if (selector_unloaded) break;
 
             // the string returned is constant
@@ -336,7 +392,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
             if (difficult != weekgameover.difficult) {
                 weekgameover.difficult = difficult;
-                week_gameover_display_choosen_difficult(weekgameover);
+                await week_gameover_display_choosen_difficult(weekgameover);
             }
 
             decision = 2;
@@ -347,7 +403,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
                 // show the selector and wait until the custom difficulties are readed from disk
                 gamepad_clear_buttons(controller);
                 await week_gameover_display_selector(weekgameover);
-                selector_unloaded = 0;
+                selector_unloaded = false;
                 selector_buttons = WEEK_GAMEOVER_BUTTONS_SELECTOR;
                 ui_buttons = WEEK_GAMEOVER_BUTTONS2;
             } else {
@@ -355,6 +411,9 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
                 let offset = buttons & WEEK_GAMEOVER_BUTTONS_LEFT ? -1 : 1;
                 weekselector_difficult_scroll(weekgameover.selector, offset);
             }
+        } else if (buttons & GAMEPAD_X) {
+            let is_visible = layout_get_group_visibility(weekgameover.layout, "judgement");
+            layout_trigger_any(weekgameover.layout, is_visible ? "hide_judgement" : "show_judgement");
         }
 
         if (wait_animation) {
@@ -366,32 +425,45 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
         total += elapsed;
         if (weekgameover.disabled && total > die_animation_duration) {
-            weekgameover.disabled = 0;
-            layout_set_group_visibility_by_id(weekgameover.layout, weekgameover.group_id_help, 1);
+            weekgameover.disabled = false;
+            layout_set_group_visibility_by_id(weekgameover.layout, weekgameover.group_id_help, true);
             if (weekgameover.music_bg) {
                 soundplayer_replay(weekgameover.music_bg);
-                soundplayer_loop_enable(weekgameover.music_bg, 1);
+                soundplayer_loop_enable(weekgameover.music_bg, true);
             }
             if (weekgameover.sfx_die) soundplayer_stop(weekgameover.sfx_die);
 
-            gameoverloop_notified = 1;
+            gameoverloop_notified = true;
             if (roundcontext.script) await weekscript_notify_gameoverloop(roundcontext.script);
+            await modding_helper_notify_event(weekgameover.modding, "gameover_loop");
         }
     }
 
-    if (roundcontext.script && !gameoverloop_notified) await weekscript_notify_gameoverloop(roundcontext.script);
+    if (!gameoverloop_notified) {
+        if (roundcontext.script) await weekscript_notify_gameoverloop(roundcontext.script);
+        await modding_helper_notify_event(weekgameover.modding, "gameover_loop");
+    }
+
+    switch (decision) {
+        case 1:
+            await modding_helper_notify_event(weekgameover.modding, "giveup");
+            break;
+        case 2:
+            await modding_helper_notify_event(weekgameover.modding, "retry");
+            break;
+    }
 
     if (dead_character) {
         const anim = decision == 2 ? FUNKIN_PLAYER_RETRY : FUNKIN_PLAYER_GIVEUP;
-        if (!character_play_extra(dead_character, anim, 0)) {
+        if (!character_play_extra(dead_character, anim, false)) {
             // avoid waiting for retry/giveup animations
             dead_character = null;
         }
     }
 
     //if (weekgameover.sfx_die) soundplayer_stop(weekgameover.sfx_die);
-    layout_set_group_visibility_by_id(weekgameover.layout, weekgameover.group_id_help, 0);
-    
+    layout_set_group_visibility_by_id(weekgameover.layout, weekgameover.group_id_help, false);
+
     if (decision == 2) {
         layout_trigger_any(weekgameover.layout, "hide_stats");
         if (weekgameover.music_bg) soundplayer_stop(weekgameover.music_bg);
@@ -401,13 +473,13 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
     if (roundcontext.script) {
         const new_difficult = weekgameover.difficult == roundcontext.song_difficult ? null : weekgameover.difficult;
         await weekscript_notify_gameoverdecision(roundcontext.script, decision == 2, new_difficult);
-        await week_halt(roundcontext, 1);
+        await week_halt(roundcontext, true);
     }
 
     if (dead_character) commited_anims = character_get_commited_animations_count(dead_character);
 
     let before = decision == 1 ? before_force_end_duration : before_duration;
-    let trigger_transition = 1;
+    let trigger_transition = true;
 
     total = decision == 2 ? retry_animation_duration : giveup_animation_duration;
     wait_animation = total < 0.0 && dead_character;
@@ -424,7 +496,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
         for (let i = 0; i < roundcontext.players_size; i++) {
             let controller_player = roundcontext.players[i].controller;
-            if (controller_player && gamepad_get_managed_presses(controller_player, 1, pressed)) {
+            if (controller_player && gamepad_get_managed_presses(controller_player, true, pressed)) {
                 if (roundcontext.script) await weekscript_notify_buttons(roundcontext.script, i, pressed[0]);
             }
         }
@@ -449,7 +521,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
             if (decision == 2 && weekgameover.sfx_retry && !soundplayer_has_ended(weekgameover.sfx_retry)) {
                 // wait for retry sound effect (gameOverEnd.ogg is 7 seconds long)
                 total = soundplayer_get_duration(weekgameover.sfx_retry) - soundplayer_get_position(weekgameover.sfx_retry);
-                if (total <= 0) total = before;// ignore
+                if (total <= 0.0) total = before;// ignore
             } else {
                 total = before;// ignore
             }
@@ -459,9 +531,9 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
             total -= elapsed;
             if (total <= before) {
                 total = Infinity;
-                trigger_transition = 0;
+                trigger_transition = false;
                 layout_trigger_any(weekgameover.layout, decision == 2 ? "transition" : "transition_giveup");
-                if (decision == 1 && weekgameover.music_bg) soundplayer_fade(weekgameover.music_bg, 0, total);
+                if (decision == 1 && weekgameover.music_bg) soundplayer_fade(weekgameover.music_bg, false, total);
             }
         } else if (layout_animation_is_completed(weekgameover.layout, "transition_effect")) {
             break;
@@ -473,6 +545,7 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
 
     gamepad_destroy(controller);
     layout_set_single_item_to_draw(layout, null);
+    await modding_helper_notify_exit2(weekgameover.modding);
 
     return decision;
 }
@@ -543,5 +616,24 @@ async function week_gameover_set_option(weekgameover, option, nro, str) {
             weekgameover.sfx_retry = await soundplayer_init(str ?? "/assets/common/sound/gameOverEnd.ogg");
             return;
     }
+}
+
+function week_gameover_get_layout(weekgameover) {
+    return weekgameover.layout;
+}
+
+
+function week_gameover_internal_handle_modding_option(weekgameover, option) {
+
+    if (option == "giveup") {
+        weekgameover.modding_decision = 1;
+    } else if (option == "retry") {
+        weekgameover.modding_decision = 2;
+    } else {
+        // unknown option
+        return false;
+    }
+
+    return true;
 }
 

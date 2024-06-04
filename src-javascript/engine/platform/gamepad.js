@@ -65,7 +65,7 @@ var GAMEPAD_ANALOG_DEAD_ZONE = 0x40;// considered "pressed" any analog input if 
  * @property {number} delay_timestamp
  * @property {number} controller_index
  * @property {maple_device_t} device
- * @property {bool} mix_keyboard
+ * @property {boolean} mix_keyboard
  */
 
 
@@ -94,7 +94,7 @@ const GAMEPAD_BUTTONS_MAP_TO = [
 
 
 function gamepad_init(controller_device_index) {
-    return gamepad_init2(controller_device_index, 1);
+    return gamepad_init2(controller_device_index, true);
 }
 
 function gamepad_init2(controller_device_index, mix_keyboard) {
@@ -125,16 +125,17 @@ function gamepad_destroy(/**@type {GamepadKDY}*/gamepad) {
     gamepad = undefined;
 }
 
+
 function gamepad_is_dettached(/**@type {GamepadKDY}*/gamepad) {
-    if (gamepad.mix_keyboard) return 0;
-    return gamepad.device ? (!gamepad.device.valid) : 0;
+    if (gamepad.mix_keyboard) return false;
+    return gamepad.device ? (!gamepad.device.valid) : false;
 }
 
 function gamepad_pick(/**@type {GamepadKDY}*/gamepad, pick_on_start_press) {
     if (gamepad.device) {
-        if (gamepad.device.valid) return 1;
-    } else if (gamepad_internal_pick_maple_device(gamepad)) return 1;
-    if (!pick_on_start_press) return 0;
+        if (gamepad.device.valid) return true;
+    } else if (gamepad_internal_pick_maple_device(gamepad)) return true;
+    if (!pick_on_start_press) return false;
 
     //
     // Pick another maple controller connected to the dreamcast
@@ -146,10 +147,10 @@ function gamepad_pick(/**@type {GamepadKDY}*/gamepad, pick_on_start_press) {
         let device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if (!device || !device.valid) continue;
 
-        let in_use = 0;
+        let in_use = false;
         for (let j of GAMEPAD_POOL.keys()) {
             if (j.device == device) {
-                in_use = 1;
+                in_use = true;
                 break;
             }
         }
@@ -160,11 +161,11 @@ function gamepad_pick(/**@type {GamepadKDY}*/gamepad, pick_on_start_press) {
         let status = maple_dev_status(device);
         if (status.buttons & CONT_START) {
             gamepad.device = device;
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 function gamepad_get_controller_index(/**@type {GamepadKDY}*/gamepad) {
@@ -215,13 +216,13 @@ function gamepad_get_last_pressed(/**@type {GamepadKDY}*/gamepad) {
     return gamepad.buttons;
 }
 
-function gamepad_get_managed_presses(/**@type {GamepadKDY}*/gamepad, update_state, buttons) {
+function gamepad_get_managed_presses(/**@type {GamepadKDY}*/gamepad, update_state, out_buttons) {
     if (update_state) gamepad_internal_update_state(gamepad);
-    if (gamepad.buttons == gamepad.last_buttons) return 0;
+    if (gamepad.buttons == gamepad.last_buttons) return false;
 
-    buttons[0] = gamepad.buttons;
+    out_buttons[0] = gamepad.buttons;
     gamepad.last_buttons = gamepad.buttons;
-    return 1;
+    return true;
 }
 
 function gamepad_has_pressed(/**@type {GamepadKDY}*/gamepad, button_flags) {
@@ -255,13 +256,13 @@ function gamepad_internal_pick_maple_device(/**@type {GamepadKDY}*/gamepad) {
 
         if (index == gamepad.controller_index) {
             gamepad.device = device;
-            return 1;
+            return true;
         }
 
         index++;
     }
 
-    return 0;
+    return false;
 }
 
 function gamepad_internal_read_device(/**@type {GamepadKDY}*/gamepad, /**@type {cont_state_t}*/controller_status) {

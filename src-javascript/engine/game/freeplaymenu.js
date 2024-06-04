@@ -29,27 +29,27 @@ const FREEPLAYMENU_MENU_SONGS = {
         anim_in: null,// unused
         anim_out: null,// unused
 
-        anim_transition_in_delay: 0,// unused
-        anim_transition_out_delay: 0,// unused
+        anim_transition_in_delay: 0.0,// unused
+        anim_transition_out_delay: 0.0,// unused
 
         font: null,
         font_glyph_suffix: null,// unused
-        font_color_by_difference: 0,// unused
+        font_color_by_addition: false,// unused
         font_size: 28.0,
         font_color: 0xFFFFFF,
         font_border_color: 0x000000FF,// unused
-        font_border_size: 4,// unused
+        font_border_size: 4.0,// unused
 
-        is_sparse: 0,// unused
-        is_vertical: 1,
-        is_per_page: 0,
+        is_sparse: false,// unused
+        is_vertical: true,
+        is_per_page: false,
         static_index: 1,
 
         items_align: ALIGN_START,
         items_gap: 58.0,
         items_dimmen: 0.0,// unused
         texture_scale: NaN,// unused
-        enable_horizontal_text_correction: 1// unused
+        enable_horizontal_text_correction: true// unused
     },
     items: null,
     items_size: 0
@@ -98,7 +98,7 @@ async function freeplaymenu_main() {
     let bg_info_width = -1.0;
     let bg_info = layout_get_sprite(layout, FREEPLAYMENU_BG_INFO_NAME);
     if (bg_info != null) {
-        const draw_size = [0, 0];
+        const draw_size = [0.0, 0.0];
         sprite_get_draw_size(bg_info, draw_size);
         bg_info_width = draw_size[0];
     }
@@ -143,7 +143,7 @@ async function freeplaymenu_main() {
         FREEPLAYMENU_MENU_SONGS.items[i] = {
             name: null,// unused
             text: weekinfo.songs[song.song_index].name,
-            placement: { x: 0, y: 0, dimmen: 0, gap: 0 },// unused
+            placement: { x: 0.0, y: 0.0, dimmen: 0.0, gap: 0.0 },// unused
             anim_selected: null,// unused
             anim_choosen: null,// unused
             anim_discarded: null,// unused
@@ -151,7 +151,7 @@ async function freeplaymenu_main() {
             anim_rollback: null,// unused
             anim_in: null,// unused
             anim_out: null,// unused
-            hidden: 0// unused
+            hidden: false// unused
         };
     }
 
@@ -169,12 +169,12 @@ async function freeplaymenu_main() {
     menu_select_index(menu_songs, -1);
 
     // step 6: drop menu manifests
-    //free(FREEPLAYMENU_MENU_SONGS.items);
+    FREEPLAYMENU_MENU_SONGS.items = undefined;
     FREEPLAYMENU_MENU_SONGS.items = null;
 
     // step 7: create menu icons
     let songicons = await freeplaymenu_songicons_init(songs, icons_dimmen, params.font_size);
-    menu_set_draw_callback(menu_songs, 0, freeplaymenu_songicons_draw_item_icon, songicons);
+    menu_set_draw_callback(menu_songs, false, freeplaymenu_songicons_draw_item_icon, songicons);
 
     // step 8: initialize modding
     let modding = await modding_init(layout, FREEPLAYMENU_MODDING_SCRIPT);
@@ -186,8 +186,8 @@ async function freeplaymenu_main() {
 
     const state = {
         difficult_index: -1,
-        difficult_locked: 0,
-        use_alternative: 0,
+        difficult_locked: false,
+        use_alternative: false,
         map: arraylist_get(songs, 0),
         async_id_operation: 0,
         soundplayer_path: null,
@@ -206,7 +206,7 @@ async function freeplaymenu_main() {
         song_preview_volume: layout_get_attached_value_as_float(layout, "song_preview_volume", 0.7)
     };
     mutex_init(state.mutex, MUTEX_TYPE_NORMAL);
-    if (state.background) sprite_set_texture(state.background, null, 0);
+    if (state.background) sprite_set_texture(state.background, null, false);
 
     let default_bf = await freeplaymenu_helper_get_default_character_manifest(1);
     let default_gf = await freeplaymenu_helper_get_default_character_manifest(0);
@@ -218,9 +218,9 @@ async function freeplaymenu_main() {
     layout_trigger_any(layout, "transition-in");
     await modding_helper_notify_event(modding, "transition-in");
 
-    while (1) {
-        modding.has_exit = 0;
-        modding.has_halt = 0;
+    while (true) {
+        modding.has_exit = false;
+        modding.has_halt = false;
 
         let map_index = await freeplaymenu_show(menu_songs, state, songs);
         if (map_index < 0) break;// back to main menu
@@ -228,7 +228,7 @@ async function freeplaymenu_main() {
         let difficult = state.difficulties[state.difficult_index].name;
         let weekinfo = weeks_array.array[arraylist_get(songs, map_index).week_index];
         let gameplaymanifest = weekinfo.songs[state.map.song_index].freeplay_gameplaymanifest;
-        await freeplaymenu_internal_drop_soundplayer(state, 1);
+        await freeplaymenu_internal_drop_soundplayer(state, true);
 
         await freeplaymenu_internal_wait_transition(state, "before-play-song", dt_playsong);
 
@@ -244,12 +244,12 @@ async function freeplaymenu_main() {
 
         layout_resume(layout);
         await freeplaymenu_internal_wait_transition(state, "after-play-song", dt_playsong);
-        freeplaymenu_internal_song_load(state, 0);
+        freeplaymenu_internal_song_load(state, false);
         freeplaymenu_internal_show_info(state);
     }
 
     // wait for running threads
-    while (1) {
+    while (true) {
         await pvrctx_wait_ready();
         mutex_lock(state.mutex);
         let exit = state.running_threads < 1;
@@ -267,10 +267,10 @@ async function freeplaymenu_main() {
     default_gf = undefined;
     state.difficulties = undefined;
     mutex_destroy(state.mutex);
-    await freeplaymenu_internal_drop_soundplayer(state, 0);
+    await freeplaymenu_internal_drop_soundplayer(state, false);
     freeplaymenu_songicons_destroy(songicons);
     menu_destroy(menu_songs);
-    arraylist_destroy(songs, 0);
+    arraylist_destroy(songs, false);
     layout_destroy(layout);
     await modding_destroy(modding);
 
@@ -291,13 +291,13 @@ async function freeplaymenu_show(menu, state, songs) {
         menu_select_index(menu, 0);
 
         state.map = arraylist_get(songs, 0);
-        state.use_alternative = 0;
+        state.use_alternative = false;
         freeplaymenu_internal_build_difficulties(state);
         freeplaymenu_internal_show_info(state);
-        freeplaymenu_internal_song_load(state, 1);
+        freeplaymenu_internal_song_load(state, true);
 
-        await freeplaymenu_internal_trigger_action_menu(state, 1, 0);
-        await freeplaymenu_internal_modding_notify_event(state, 1, 1);
+        await freeplaymenu_internal_trigger_action_menu(state, true, false);
+        await freeplaymenu_internal_modding_notify_event(state, true, true);
     }
 
 
@@ -330,35 +330,35 @@ async function freeplaymenu_show(menu, state, songs) {
         if ((btns & (GAMEPAD_B | GAMEPAD_BACK)) && !await modding_helper_notify_back(state.modding)) {
             break;
         } else if (btns & GAMEPAD_X) {
-            let weeinfo = weeks_array.array[state.map.week_index];
-            if (!weeinfo.warning_message) {
+            let weekinfo = weeks_array.array[state.map.week_index];
+            if (!weekinfo.warning_message) {
                 state.use_alternative = !state.use_alternative;
-                await freeplaymenu_internal_modding_notify_event(state, 0, 1);
+                await freeplaymenu_internal_modding_notify_event(state, false, true);
             } else if (sound_asterik) {
                 soundplayer_replay(sound_asterik);
             }
             continue;
         } else if (btns & GAMEPAD_DPAD_UP) {
             offset = -1;
-            switch_difficult = 0;
+            switch_difficult = false;
         } else if (btns & GAMEPAD_DPAD_DOWN) {
             offset = 1;
-            switch_difficult = 0;
+            switch_difficult = false;
         } else if (btns & GAMEPAD_DPAD_LEFT) {
             if (state.map.is_locked) continue;
             offset = -1;
-            switch_difficult = 1;
+            switch_difficult = true;
         } else if (btns & GAMEPAD_DPAD_RIGHT) {
             if (state.map.is_locked) continue;
             offset = 1;
-            switch_difficult = 1;
+            switch_difficult = true;
         } else if (btns & (GAMEPAD_A | GAMEPAD_START)) {
             let index = menu_get_selected_index(menu);
             if (index < 0 || index >= menu_get_items_count(menu) || state.difficult_locked || state.map.is_locked) {
                 if (sound_asterik) soundplayer_replay(sound_asterik);
                 continue;
             }
-            if (await freeplaymenu_internal_modding_notify_option(state, 0)) continue;
+            if (await freeplaymenu_internal_modding_notify_option(state, false)) continue;
 
             map_index = index;
             break;
@@ -374,7 +374,7 @@ async function freeplaymenu_show(menu, state, songs) {
                 state.difficult_index = new_index;
                 state.difficult_locked = state.difficulties[new_index].is_locked;
                 freeplaymenu_internal_show_info(state);
-                await freeplaymenu_internal_modding_notify_event(state, 1, 0);
+                await freeplaymenu_internal_modding_notify_event(state, true, false);
             }
             continue;
         }
@@ -391,24 +391,24 @@ async function freeplaymenu_show(menu, state, songs) {
         }
 
         let selected_index = menu_get_selected_index(menu);
-        if (selected_index != old_index) await freeplaymenu_internal_trigger_action_menu(state, 0, 0);
+        if (selected_index != old_index) await freeplaymenu_internal_trigger_action_menu(state, false, false);
 
         state.map = arraylist_get(songs, menu_get_selected_index(menu));
-        state.use_alternative = 0;
+        state.use_alternative = false;
         freeplaymenu_internal_build_difficulties(state);
         freeplaymenu_internal_show_info(state);
-        freeplaymenu_internal_song_load(state, 1);
+        freeplaymenu_internal_song_load(state, true);
 
         if (selected_index != old_index) {
-            await freeplaymenu_internal_trigger_action_menu(state, 1, 0);
-            await freeplaymenu_internal_modding_notify_event(state, 1, 1);
+            await freeplaymenu_internal_trigger_action_menu(state, true, false);
+            await freeplaymenu_internal_modding_notify_event(state, true, true);
         }
     }
 
     if (sound_asterik) soundplayer_destroy(sound_asterik);
     gamepad_destroy(gamepad);
 
-    if (map_index >= 0) freeplaymenu_internal_trigger_action_menu(state, 0, 1);
+    if (map_index >= 0) freeplaymenu_internal_trigger_action_menu(state, false, true);
 
     return map_index;
 }
@@ -426,7 +426,7 @@ async function freeplaymenu_internal_load_song_async(state) {
     let seek = songinfo.freeplay_seek_time * 1000.0;
 
     if (state.map.is_locked || songinfo.name == null) {
-        await freeplaymenu_internal_drop_soundplayer(state, 0);
+        await freeplaymenu_internal_drop_soundplayer(state, false);
 
         state.running_threads--;
         mutex_unlock(state.mutex);
@@ -463,13 +463,13 @@ async function freeplaymenu_internal_load_song_async(state) {
             break L_load_soundplayer;
         }
         if (final_path == null) {
-            await freeplaymenu_internal_drop_soundplayer(state, 0);
+            await freeplaymenu_internal_drop_soundplayer(state, false);
             break L_load_soundplayer;
         }
 
         // instance a soundplayer
         let soundplayer = await soundplayer_init(final_path);
-        if (soundplayer == null) final_path = null;
+        if (!soundplayer) final_path = null;
 
         // check if the user selected another song
         if (async_id_operation != state.async_id_operation) {
@@ -480,14 +480,14 @@ async function freeplaymenu_internal_load_song_async(state) {
         // adquire mutex and swap the soundplayer
         mutex_lock(state.mutex);
 
-        await freeplaymenu_internal_drop_soundplayer(state, 0);
+        await freeplaymenu_internal_drop_soundplayer(state, false);
         state.soundplayer_path = strdup(final_path);
         state.soundplayer = soundplayer;
 
         soundplayer_set_volume(soundplayer, state.song_preview_volume);
         if (!Number.isNaN(seek)) soundplayer_seek(soundplayer, seek);
         soundplayer_play(soundplayer);
-        soundplayer_fade(soundplayer, 1, 500);
+        soundplayer_fade(soundplayer, true, 500.0);
 
         mutex_unlock(state.mutex);
     }
@@ -522,7 +522,7 @@ async function freeplaymenu_internal_load_background_async(state) {
         return null;
     }
 
-    if (string_lowercase_ends_with(src, ".json") || string_lowercase_ends_with(src, ".xml")) {
+    if (modelholder_utils_is_known_extension(src)) {
         modelholder = await modelholder_init(src);
     } else {
         // assume is a image file
@@ -537,16 +537,16 @@ async function freeplaymenu_internal_load_background_async(state) {
         let sprite_tex = null;
 
         if (modelholder) {
-            sprite_tex = modelholder_get_texture(modelholder, 1);
+            sprite_tex = modelholder_get_texture(modelholder, true);
             sprite_anim = modelholder_create_animsprite(
-                modelholder, FREEPLAYMENU_BACKGROUND_ANIM_OR_ATLAS_ENTRY_NAME, 1, 0
+                modelholder, FREEPLAYMENU_BACKGROUND_ANIM_OR_ATLAS_ENTRY_NAME, true, false
             );
         } else if (texture) {
             sprite_tex = texture_share_reference(texture);
         }
 
         freeplaymenu_internal_drop_custom_background(state);
-        if (sprite_tex) sprite_set_texture(state.background, sprite_tex, 1);
+        if (sprite_tex) sprite_set_texture(state.background, sprite_tex, true);
         if (sprite_anim) sprite_external_animation_set(state.background, sprite_anim);
 
         if (sprite_tex == null)
@@ -570,11 +570,11 @@ function freeplaymenu_internal_show_info(state) {
     let week_name = weekinfo.display_name;
     let song_name = weekinfo.songs[state.map.song_index].name;
 
-    if (!weekinfo.display_name) week_name = weekinfo.name;
+    if (weekinfo.display_name == null) week_name = weekinfo.name;
 
     let difficult, is_locked, score;
     let bg_info_width = state.bg_info_width;
-    const text_size = [0, 0];
+    const text_size = [0.0, 0.0];
 
     if (state.difficult_index >= 0 && state.difficult_index < state.difficulties_size) {
         difficult = state.difficulties[state.difficult_index].name;
@@ -582,11 +582,11 @@ function freeplaymenu_internal_show_info(state) {
         is_locked = state.difficulties[state.difficult_index].is_locked;
     } else {
         score = 0;
-        is_locked = 1;
+        is_locked = true;
         difficult = null;
     }
 
-    if (state.map.is_locked) is_locked = 1;
+    if (state.map.is_locked) is_locked = true;
 
     if (state.personal_best) {
         textsprite_set_text_formated(state.personal_best, FREEPLAYMENU_PERSONAL_BEST, score);
@@ -605,7 +605,7 @@ function freeplaymenu_internal_show_info(state) {
 
     if (desc) {
         if (state.description)
-            textsprite_set_text_intern(state.description, 1, desc);
+            textsprite_set_text_intern(state.description, true, desc);
         layout_trigger_any(layout, "description-show");
     } else {
         layout_trigger_any(layout, "description-hide");
@@ -613,7 +613,7 @@ function freeplaymenu_internal_show_info(state) {
 
     layout_trigger_any(layout, is_locked ? "locked" : "not-locked");
 
-    if (weekinfo.warning_message)
+    if (weekinfo.warning_message != null)
         layout_trigger_any(layout, state.use_alternative ? "use-alternative" : "not-use-alternative");
     else
         layout_trigger_any(layout, "hide-alternative");
@@ -643,7 +643,7 @@ async function freeplaymenu_internal_drop_soundplayer(state, wait_for_background
 
 function freeplaymenu_internal_drop_custom_background(state) {
     if (!state.background) return;
-    let tex_old = sprite_set_texture(state.background, null, 0);
+    let tex_old = sprite_set_texture(state.background, null, false);
     let anim_old = sprite_external_animation_set(state.background, null);
     if (tex_old) texture_destroy(tex_old);
     if (anim_old) animsprite_destroy(anim_old);
@@ -728,8 +728,8 @@ function freeplaymenu_internal_song_load(state, with_bg) {
     mutex_lock(state.mutex);
 
     state.async_id_operation++;
-    if (with_bg) thd_helper_spawn(freeplaymenu_internal_load_background_async, state);
-    thd_helper_spawn(freeplaymenu_internal_load_song_async, state);
+    if (with_bg) main_thd_helper_spawn(true, freeplaymenu_internal_load_background_async, state);
+    main_thd_helper_spawn(true, freeplaymenu_internal_load_song_async, state);
 
     mutex_unlock(state.mutex);
 }
@@ -740,13 +740,15 @@ async function freeplaymenu_internal_wait_transition(state, what, duration) {
 
     await modding_helper_notify_event(modding, what);
 
-    if (duration < 1) return;
+    if (duration < 1.0) return;
     if (layout_trigger_any(layout, what) < 1) return;
 
-    while (duration > 0) {
+    while (duration > 0.0) {
         let elapsed = await pvrctx_wait_ready();
         duration -= elapsed;
+
         await modding_helper_notify_frame(modding, elapsed, -1.0);
+
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
     }
@@ -762,15 +764,15 @@ async function freeplaymenu_internal_trigger_action_menu(state, selected, choose
     let week_name = weekinfo.display_name ?? weekinfo.name;
     let song_name = songs[state.map.song_index].name;
 
-    if (selected) await freeplaymenu_internal_modding_notify_option(state, 1);
+    if (selected) await freeplaymenu_internal_modding_notify_option(state, true);
 
     main_helper_trigger_action_menu(state.layout, week_name, song_name, selected, choosen);
 }
 
 async function freeplaymenu_internal_modding_notify_option(state, selected_or_choosen) {
-    let weekinfo = weeks_array.array[state.map.week_index];
-    let songs = weekinfo.songs;
-    let menu = state.modding.native_menu;
+    const weekinfo = weeks_array.array[state.map.week_index];
+    const songs = weekinfo.songs;
+    const menu = state.modding.native_menu;
 
     let week_name = weekinfo.display_name ?? weekinfo.name;
     let song_name = songs[state.map.song_index].name;

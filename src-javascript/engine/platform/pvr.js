@@ -73,7 +73,7 @@ function pvrctx_wait_ready() {
 
             let elapsed;
             if (pvr_last_timestamp < 0)
-                elapsed = 0;
+                elapsed = 0.0;
             else
                 elapsed = now - pvr_last_timestamp;
 
@@ -331,21 +331,21 @@ function pvr_context_helper_clear_modifier(modifier) {
         scale_x: 1.0,
         scale_y: 1.0,
 
-        scale_direction_x: 0,
-        scale_direction_y: 0,
+        scale_direction_x: 0.0,
+        scale_direction_y: 0.0,
 
-        rotate_pivot_enabled: 0,
+        rotate_pivot_enabled: false,
         rotate_pivot_u: 0.5,
         rotate_pivot_v: 0.5,
 
-        translate_rotation: 0,
-        scale_size: 0,
-        scale_translation: 0,
+        translate_rotation: false,
+        scale_size: false,
+        scale_translation: false,
 
-        x: 0,
-        y: 0,
-        width: -1,
-        height: -1
+        x: 0.0,
+        y: 0.0,
+        width: -1.0,
+        height: -1.0
     };
 
     for (const field in BASE_MODIFIER) modifier[field] = BASE_MODIFIER[field];
@@ -521,10 +521,10 @@ async function pvr_call_entry_point() {
             case "--help":
             case "/help":
             case "/h":
-                alert(
+               let help =
                     `${ENGINE_NAME} ${ENGINE_VERSION}` +
                     "\r\n" +
-                    `    ${args[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionloader] [-layoutdebugtriggercalls]\r\n` +
+                    `    ${args[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionsloader] [-layoutdebugtriggercalls]\r\n` +
                     "\r\n" +
                     "Options:\r\n" +
                     "    -help                      Show this help message\r\n" +
@@ -544,8 +544,9 @@ async function pvr_call_entry_point() {
                     "  the files override order is:   '<requested file in assets>' --> '/assets/weeks/WEEK_NAME/custom_commons' --> '/expansions/EXPANSION_NAME' --> '/expansions/funkin' --> '/assets/*'\r\n" +
                     "  shaders under '/assets/shaders' can not be overrided (for now).\n" +
                     "  -style only overrides '/assets/common' folder while expansions overrides everything under '/assets'\r\n" +
-                    "\r\n"
-                );
+                    "\r\n";
+                console.info(help);
+                alert(help);
                 return 0;
             default:
                 continue;

@@ -42,7 +42,7 @@ function funkin_get_letter_rank(playerstats) {
         return FUNKIN_CLEAR;
 }
 
-function funking_get_wife3_accuracy(playerstats) {
+function funkin_get_wife3_accuracy(playerstats) {
     // elegant way to calc wife3 accuracy
     const accuracy = playerstats_get_accuracy(playerstats);
     let last_rank = FUNKIN_WIFE3_ACCURACIES.length - 1;

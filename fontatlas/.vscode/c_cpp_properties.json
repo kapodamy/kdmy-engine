@@ -1,29 +1,25 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "WASM",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/include/",
-                "${env:EMSDK}/include"
+                "${workspaceFolder}/include",
+                "${env:EMSDK}/upstream/emscripten/cache/sysroot/include"
             ],
             "defines": [
-                "_DEBUG",
                 "UNICODE",
-                "_UNICODE",
-                "xJAVASCRIPT"
             ],
             "windowsSdkVersion": "8.1",
-            //"compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
-            "compilerPath": "C:/msys64/mingw32/bin/i686-w64-mingw32-gcc.exe",
-            "cStandard": "c99",
+            "compilerPath": "${env:EMSDK}\\upstream\\emscripten\\emcc.bat",//"C:/msys64/mingw64/bin/gcc.exe",
+            "cStandard": "c17",
             "cppStandard": "c++17",
-            //"intelliSenseMode": "windows-gcc-x64",
-            "intelliSenseMode": "windows-gcc-x86",
+            "intelliSenseMode": "linux-clang-x86",
             "configurationProvider": "ms-vscode.makefile-tools",
             "compilerArgs": [
                 "-Wall",
-                "-Wextra"
+                "-Wextra",
+                "-Wfloat-conversion"
             ]
         }
     ],

@@ -12,7 +12,7 @@ async function fontglyph_init(src_atlas, suffix, allow_animation) {
     let atlas = await atlas_init(src_atlas);
     if (!atlas || !atlas.texture_filename) {
         if (atlas) atlas_destroy(atlas);
-        console.error("fontglyph_init() missing atlas file or texture filename not specified");
+        console.error("fontglyph_init() missing atlas file or texture filename not specified on " + src_atlas);
         return null;
     }
 
@@ -41,34 +41,37 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
         tintcolor: [1.0, 1.0, 1.0],
         alpha: 1.0,
 
-        color_by_difference: 0,
+        color_by_addition: false,
 
         border_tintcolor: [0.0, 0.0, 0.0, 0.0],
-        border_size: 0,
-        border_enable: 0,
-        border_offset_x: 0,
-        border_offset_y: 0,
-        frame_time: 0,
-        frame_progress: 0,
+        border_size: 0.0,
+        border_enable: false,
+        border_offset_x: 0.0,
+        border_offset_y: 0.0,
+        frame_time: 0.0,
+        frame_progress: 0.0,
     };
 
-    if (allow_animation > 0) {
-        if (atlas.glyph_fps > 0)
+    if (allow_animation) {
+        if (atlas.glyph_fps > 0.0)
             fontglyph.frame_time = atlas.glyph_fps;
         else
             fontglyph.frame_time = FUNKIN_DEFAULT_ANIMATIONS_FRAMERATE;
 
-        fontglyph.frame_time = 1000 / fontglyph.frame_time;
+        fontglyph.frame_time = 1000.0 / fontglyph.frame_time;
     }
 
-    pvrctx_helper_clear_offsetcolor(fontglyph.border_tintcolor);
+    pvr_context_helper_clear_offsetcolor(fontglyph.border_tintcolor);
 
     let table_index = 0;
 
+    // calculate the amount of required frames
+    // needs C implementation
     for (let i = 0; i < atlas.size; i++) {
         let result = fontglyph_internal_parse(
             atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
         );
+
         if (result == 1) table_index++;
     }
 
@@ -78,13 +81,25 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
         fontglyph.table = realloc(fontglyph.table, table_index);
     }
 
-    // convert all linkedlists into arrays
+    // allocate frames array
+    // needs C implementation
     for (let i = 0; i < fontglyph.table_size; i++) {
-        fontglyph.table[i].frames_size = linkedlist_count(fontglyph.table[i].frames_temp);
-        fontglyph.table[i].frames = linkedlist_to_solid_array(fontglyph.table[i].frames_temp, /*sizeof(frame)*/);
+        let glyph_info = fontglyph.table[i];
+        if (glyph_info.frames_size > 0) {
+            glyph_info.frames = new Array(glyph_info.frames_size);
+            glyph_info.frames_size = 0;
+        }
+    }
 
-        linkedlist_destroy2(fontglyph.table[i].frames_temp, free);
-        fontglyph.table[i].frames_temp = null;
+    // add glyph frames
+    // needs C implementation
+    table_index = 0;
+    for (let i = 0; i < atlas.size; i++) {
+        let result = fontglyph_internal_parse(
+            atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
+        );
+
+        if (result == 1) table_index++;
     }
 
     return fontglyph;
@@ -93,24 +108,21 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
 function fontglyph_destroy(fontglyph) {
     if (!fontglyph) return;
 
-    for (let i = 0; i < fontglyph.table_size; i++) {
-        fontglyph.table[i].frames = undefined;
-    }
+    //fontglyph.frames_array = undefined;
     fontglyph.table = undefined;
 
     texture_destroy(fontglyph.texture);
 }
 
 
-function fontglyph_measure(fontglyph, height, text, text_index, text_size) {
+function fontglyph_measure(fontglyph, height, text, text_index, text_length) {
     const grapheme = { code: 0, size: 0 };
-    const text_length = text.length;
-    const text_end_index = text_index + text_size;
+    const text_end_index = text_index + text_length;
 
-    console.assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
+    console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
-    let width = 0;
-    let max_width = 0;
+    let width = 0.0;
+    let max_width = 0.0;
     let line_chars = 0;
     let space_width = fontglyph_internal_find_space_width(fontglyph, height);
 
@@ -120,19 +132,19 @@ function fontglyph_measure(fontglyph, height, text, text_index, text_size) {
 
         if (grapheme.code == FONTGLYPH_LINEFEED) {
             if (width > max_width) max_width = width;
-            width = 0;
+            width = 0.0;
             line_chars = 0;
             continue;
         }
 
-        let found = 0;
+        let found = false;
 
         for (let j = 0; j < fontglyph.table_size; j++) {
             if (fontglyph.table[j].code == grapheme.code) {
                 let frame = fontglyph.table[j].frames[fontglyph.table[j].actual_frame];
                 width += frame.glyph_width_ratio * height;
                 line_chars++;
-                found = 1;
+                found = true;
                 break;
             }
         }
@@ -156,7 +168,7 @@ function fontglyph_measure(fontglyph, height, text, text_index, text_size) {
 }
 
 function fontglyph_measure_char(fontglyph, codepoint, height, lineinfo) {
-    if (lineinfo.space_width < 0) {
+    if (lineinfo.space_width < 0.0) {
         lineinfo.space_width = fontglyph_internal_find_space_width(fontglyph, height);
     }
 
@@ -193,7 +205,7 @@ function fontglyph_set_color(fontglyph, r, g, b) {
 }
 
 function fontglyph_set_rgb8_color(fontglyph, rbg8_color) {
-    math2d_color_bytes_to_floats(rbg8_color, 0, fontglyph.tintcolor);
+    math2d_color_bytes_to_floats(rbg8_color, false, fontglyph.tintcolor);
 }
 
 function fontglyph_set_alpha(fontglyph, alpha) {
@@ -201,14 +213,14 @@ function fontglyph_set_alpha(fontglyph, alpha) {
 }
 
 function fontglyph_set_border_color_rgba8(fontglyph, rbga8_color) {
-    math2d_color_bytes_to_floats(rbga8_color, 1, fontglyph.border_color);
+    math2d_color_bytes_to_floats(rbga8_color, true, fontglyph.border_tintcolor);
 }
 
 function fontglyph_set_border_color(fontglyph, r, g, b, a) {
-    if (r >= 0) fontglyph.border_tintcolor[0] = r;
-    if (g >= 0) fontglyph.border_tintcolor[1] = g;
-    if (b >= 0) fontglyph.border_tintcolor[2] = b;
-    if (a >= 0) fontglyph.border_tintcolor[3] = a;
+    if (r >= 0.0) fontglyph.border_tintcolor[0] = r;
+    if (g >= 0.0) fontglyph.border_tintcolor[1] = g;
+    if (b >= 0.0) fontglyph.border_tintcolor[2] = b;
+    if (a >= 0.0) fontglyph.border_tintcolor[3] = a;
 }
 
 function fontglyph_set_border_size(fontglyph, size) {
@@ -230,23 +242,22 @@ function fontglyph_set_border(fontglyph, enable, size, rgba) {
     fontglyph_set_border_color(fontglyph, rgba[0], rgba[1], rgba[2], rgba[3]);
 }
 
-function fontglyph_enable_color_by_difference(fontglyph, enable) {
-    fontglyph.color_by_difference = !!enable;
+function fontglyph_enable_color_by_addition(fontglyph, enable) {
+    fontglyph.color_by_addition = !!enable;
 }
 
 
-function fontglyph_draw_text(fontglyph, pvrctx, height, x, y, text_index, text_size, text) {
+function fontglyph_draw_text(fontglyph, pvrctx, height, x, y, text_index, text_length, text) {
     const grapheme = { code: 0, size: 0 };
-    const by_diff = fontglyph.color_by_difference;
-    const has_border = fontglyph.border_enable && fontglyph.border_tintcolor[3] > 0 && fontglyph.border_size >= 0;
-    const outline_size = fontglyph.border_size * 2;
-    const text_end_index = text_index + text_size;
-    const text_length = text.length;
+    const by_add = fontglyph.color_by_addition;
+    const has_border = fontglyph.border_enable && fontglyph.border_tintcolor[3] > 0.0 && fontglyph.border_size >= 0.0;
+    const outline_size = fontglyph.border_size * 2.0;
+    const text_end_index = text_index + text_length;
 
-    console.assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
+    console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
-    let draw_x = 0;
-    let draw_y = 0;
+    let draw_x = 0.0;
+    let draw_y = 0.0;
     let index = text_index;
     let total_glyphs = 0;
     let line_chars = 0;
@@ -295,7 +306,7 @@ function fontglyph_draw_text(fontglyph, pvrctx, height, x, y, text_index, text_s
 
         if (grapheme.code == FONTGLYPH_LINEFEED) {
             draw_y += height + fontglyph.paragraph_separation;
-            draw_x = 0;
+            draw_x = 0.0;
             line_chars = 0;
             continue;
         }
@@ -330,14 +341,14 @@ function fontglyph_draw_text(fontglyph, pvrctx, height, x, y, text_index, text_s
         let dh = height;
         let dw = dh * frame.glyph_width_ratio;
 
-        if (frame.frame_width > 0) {
+        if (frame.frame_width > 0.0) {
             ratio_width = dw / frame.frame_width;
             dw = frame.width * ratio_width;
         } else {
             ratio_width = dw / frame.width;
         }
 
-        if (frame.frame_height > 0) {
+        if (frame.frame_height > 0.0) {
             ratio_height = dh / frame.frame_height;
             dh = frame.height * ratio_height;
         } else {
@@ -357,14 +368,14 @@ function fontglyph_draw_text(fontglyph, pvrctx, height, x, y, text_index, text_s
             sdy += fontglyph.border_offset_y;
 
             glyphrenderer_append_glyph(
-                fontglyph.texture, 0, 1,
+                fontglyph.texture, false, true,
                 frame.x, frame.y, frame.width, frame.height,
                 sdx, sdy, sdw, sdh
             );
         }
 
         glyphrenderer_append_glyph(
-            fontglyph.texture, 0, 0,
+            fontglyph.texture, false, false,
             frame.x, frame.y, frame.width, frame.height,
             dx, dy, dw, dh
         );
@@ -373,14 +384,14 @@ function fontglyph_draw_text(fontglyph, pvrctx, height, x, y, text_index, text_s
         line_chars++;
     }
 
-    glyphrenderer_draw(pvrctx, fontglyph.tintcolor, fontglyph.border_tintcolor, by_diff, 0, fontglyph.texture, null);
+    glyphrenderer_draw(pvrctx, fontglyph.tintcolor, fontglyph.border_tintcolor, by_add, false, fontglyph.texture, null);
 
     pvr_context_restore(pvrctx);
     return draw_y + height;
 }
 
 function fontglyph_animate(fontglyph, elapsed) {
-    if (fontglyph.frame_time <= 0) return 1;
+    if (fontglyph.frame_time <= 0.0) return 1;
 
     let frame_index = fontglyph.frame_progress / fontglyph.frame_time;
 
@@ -411,8 +422,8 @@ function fontglyph_internal_parse(atlas_entry, match_suffix, allow_animation, ta
         if (number_suffix_start > atlas_entry_name_length) return 0;// suffix not present
 
         switch (atlas_entry_name.codePointAt(index)) {
+            //case FONTGLYPH_HARDSPACE:
             case FONTGLYPH_SPACE:
-            case FONTGLYPH_HARDSPACE:
                 index++;
                 break;
             default:
@@ -427,7 +438,7 @@ function fontglyph_internal_parse(atlas_entry, match_suffix, allow_animation, ta
 
     // check if this atlas entry is an animation frame
     if (index < atlas_entry_name_length) {
-        if (!atlas_name_has_number_suffix(atlas_entry_name, index)) return 0;// suffix found
+        if (!atlas_name_has_number_suffix(atlas_entry_name, index)) return 0;// suffix not present
 
         // check if already exists an entry with this unicode code point
         let code_index = -1;
@@ -439,30 +450,33 @@ function fontglyph_internal_parse(atlas_entry, match_suffix, allow_animation, ta
         }
 
         if (code_index >= 0) {
-            if (!allow_animation) return 0;// reject, animation is disabled
+            // reject, animation is disabled
+            if (!allow_animation || table[code_index].frames_size > 0) return 0;
             // add another frame
-            let glyph_frame = fontglyph_internal_build_frame(atlas_entry);
-            linkedlist_add_item(table[code_index].frames_temp, glyph_frame);
+            fontglyph_internal_add_frame(atlas_entry, table[code_index]);
             return 2;
         }
     }
 
-    let frame = fontglyph_internal_build_frame(atlas_entry);
-
     // create entry for this unicode code point
+    // needs C implementation instead of "new Array()"
     table[table_index] = {
-        code: grapheme.code, actual_frame: 0, frames: null, frames_temp: null, frames_size: 0
+        code: grapheme.code, actual_frame: 0, frames: null, frames_size: 0
     };
-    table[table_index].actual_frame = 0;// index in the (future) frames array
 
-    table[table_index].frames_temp = linkedlist_init();
-    linkedlist_add_item(table[table_index].frames_temp, frame);
+    fontglyph_internal_add_frame(atlas_entry, table[table_index]);
 
     return 1;
 }
 
-function fontglyph_internal_build_frame(atlas_entry) {
-    let frame = {
+function fontglyph_internal_add_frame(atlas_entry, glyph_info) {
+    // needs C implementation
+    if (!glyph_info.frames) {
+        glyph_info.frames_size++;
+        return;
+    }
+
+    let frame = glyph_info.frames[glyph_info.frames_size] = {
         x: atlas_entry.x,
         y: atlas_entry.y,
         width: atlas_entry.width,
@@ -476,12 +490,13 @@ function fontglyph_internal_build_frame(atlas_entry) {
 
         glyph_width_ratio: 0.0
     };
+    glyph_info.frames_size++;
 
-    let height = atlas_entry.frame_height > 0 ? atlas_entry.frame_height : atlas_entry.height;
+    let height = atlas_entry.frame_height > 0.0 ? atlas_entry.frame_height : atlas_entry.height;
 
-    if (height > 0) {
+    if (height > 0.0) {
         // cache this frame width
-        let width = atlas_entry.frame_width > 0 ? atlas_entry.frame_width : atlas_entry.width;
+        let width = atlas_entry.frame_width > 0.0 ? atlas_entry.frame_width : atlas_entry.width;
         frame.glyph_width_ratio = width / height;
     }
 

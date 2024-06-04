@@ -14,56 +14,56 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
         font,
         font_from_atlas: font_is_truetype,
         font_size: size,
-        color: [1, 1, 1],
+        color: [1.0, 1.0, 1.0],
 
         text: null,
-        intern: 0,
+        intern: false,
 
         force_case: 0,
         last_force_case: 0,
         text_forced_case: null,
 
-        visible: 1,
-        x: 0,
-        y: 0,
-        z: 0,
+        visible: true,
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
         alpha: 1.0,
         alpha2: 1.0,
-        z_offset: 0,
+        z_offset: 0.0,
 
         align_vertical: ALIGN_START,
         align_horizontal: ALIGN_START,
-        max_width: -1,
-        max_height: -1,
+        max_width: -1.0,
+        max_height: -1.0,
 
         max_lines: -1,
         paragraph_align: ALIGN_START,
 
         matrix_source: {},
-        matrix_corner: { x: 0, y: 0, angle: 0 },
-        flip_x: 0,
-        flip_y: 0,
+        matrix_corner: { x: 0.0, y: 0.0, angle: 0.0 },
+        flip_x: false,
+        flip_y: false,
 
         paragraph_array: arraylist_init(),
 
-        modified_coords: 0,
-        modified_string: 0,
+        modified_coords: false,
+        modified_string: false,
 
-        last_draw_x: 0,
-        last_draw_y: 0,
+        last_draw_x: 0.0,
+        last_draw_y: 0.0,
 
-        last_draw_width: 0,
-        last_draw_height: 0,
+        last_draw_width: 0.0,
+        last_draw_height: 0.0,
 
         animation_external: null,
         animation_selected: null,
         animation_list: linkedlist_init(),
 
-        border_enable: 0,
-        border_size: 0,
+        border_enable: false,
+        border_size: 0.0,
         border_color: [1.0, 1.0, 1.0, 1.0],
-        border_offset_x: 0,
-        border_offset_y: 0,
+        border_offset_x: 0.0,
+        border_offset_y: 0.0,
 
         font_paragraph_separation: 0,
 
@@ -73,22 +73,22 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
 
         psshader: null,
 
-        blend_enabled: 1,
+        blend_enabled: false,
         blend_src_rgb: BLEND_DEFAULT,
         blend_dst_rgb: BLEND_DEFAULT,
         blend_src_alpha: BLEND_DEFAULT,
         blend_dst_alpha: BLEND_DEFAULT,
 
-        background_enabled: 0,
-        background_size: 0,
-        background_offset_x: 0,
-        background_offset_y: 0,
+        background_enabled: false,
+        background_size: 0.0,
+        background_offset_x: 0.0,
+        background_offset_y: 0.0,
         background_rgba: [0.0, 0.0, 0.0, 0.5],
 
         id: TEXTSPRITE_IDS++
     };
 
-    math2d_color_bytes_to_floats(rbg8_color, 0, textsprite.color);
+    math2d_color_bytes_to_floats(rbg8_color, false, textsprite.color);
 
     pvr_context_helper_clear_modifier(textsprite.matrix_source);
 
@@ -112,14 +112,14 @@ function textsprite_destroy(textsprite) {
     linkedlist_destroy(textsprite.animation_list);
 
     TEXTSPRITE_POOL.delete(textsprite.id);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(textsprite.matrix_source);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(textsprite);
+    luascript_drop_shared(textsprite.matrix_source);
+    luascript_drop_shared(textsprite);
     textsprite = undefined;
 }
 
 
 function textsprite_set_text(textsprite, text) {
-    textsprite_set_text_intern(textsprite, 0, text);
+    textsprite_set_text_intern(textsprite, false, text);
 }
 
 function textsprite_set_text_intern(textsprite, intern, text) {
@@ -131,8 +131,8 @@ function textsprite_set_text_intern(textsprite, intern, text) {
     else
         textsprite.text = strdup(text);
 
-    textsprite.modified_string = 1;
-    textsprite.modified_coords = 1;
+    textsprite.modified_string = true;
+    textsprite.modified_coords = true;
 }
 
 function textsprite_set_text_formated(textsprite, format, ...values) {
@@ -140,30 +140,30 @@ function textsprite_set_text_formated(textsprite, format, ...values) {
 
     if (!textsprite.intern) textsprite.text = undefined;
 
-    textsprite.intern = 0;
+    textsprite.intern = false;
     textsprite.text = text;
 
-    textsprite.modified_string = 1;
-    textsprite.modified_coords = 1;
+    textsprite.modified_string = true;
+    textsprite.modified_coords = true;
 }
 
 function textsprite_set_text_formated2(textsprite, format, va_args) {
     let text = stringbuilder_helper_create_formatted_string(format, va_args);
-    textsprite_set_text_intern(textsprite, 0, text);
+    textsprite_set_text_intern(textsprite, false, text);
 }
 
 function textsprite_set_font_size(textsprite, font_size) {
-    textsprite.modified_string = 1;
+    textsprite.modified_string = true;
     textsprite.font_size = font_size;
 }
 
 function textsprite_force_case(textsprite, none_or_lowercase_or_uppercase) {
-    textsprite.modified_string = 1;
+    textsprite.modified_string = true;
     textsprite.force_case = none_or_lowercase_or_uppercase;
 }
 
 function textsprite_set_paragraph_align(textsprite, align) {
-    textsprite.modified_coords = 1;
+    textsprite.modified_coords = true;
     textsprite.paragraph_align = align;
 }
 
@@ -172,18 +172,18 @@ function textsprite_set_paragraph_space(textsprite, space) {
 }
 
 function textsprite_set_maxlines(textsprite, max_lines) {
-    textsprite.modified_string = 1;
+    textsprite.modified_string = true;
     textsprite.max_lines = max_lines;
 }
 
 function textsprite_set_color_rgba8(textsprite, rbg8_color) {
-    math2d_color_bytes_to_floats(rbg8_color, 0, textsprite.color);
+    math2d_color_bytes_to_floats(rbg8_color, false, textsprite.color);
 }
 
 function textsprite_set_color(textsprite, r, g, b) {
-    if (r >= 0) textsprite.color[0] = r;
-    if (g >= 0) textsprite.color[1] = g;
-    if (b >= 0) textsprite.color[2] = b;
+    if (r >= 0.0) textsprite.color[0] = r;
+    if (g >= 0.0) textsprite.color[1] = g;
+    if (b >= 0.0) textsprite.color[2] = b;
 }
 
 
@@ -196,9 +196,9 @@ function textsprite_set_visible(textsprite, visible) {
 }
 
 function textsprite_set_draw_location(textsprite, x, y) {
-    textsprite.modified_coords = 1;
-    if (x != null) textsprite.x = x;
-    if (y != null) textsprite.y = y;
+    textsprite.modified_coords = true;
+    if (Number.isFinite(x)) textsprite.x = x;
+    if (Number.isFinite(y)) textsprite.y = y;
 }
 
 function textsprite_get_draw_location(textsprite, output_location) {
@@ -220,20 +220,20 @@ function textsprite_get_z_index(textsprite) {
 }
 
 function textsprite_set_max_draw_size(textsprite, max_width, max_height) {
-    textsprite.modified_coords = 1;
+    textsprite.modified_coords = true;
     if (Number.isFinite(max_width)) textsprite.max_width = max_width;
     if (Number.isFinite(max_height)) textsprite.max_height = max_height;
 }
 
 function textsprite_matrix_flip(textsprite, flip_x, flip_y) {
-    textsprite.modified_coords = 1;
+    textsprite.modified_coords = true;
     if (flip_x != null) textsprite.flip_x = flip_x;
     if (flip_y != null) textsprite.flip_y = flip_y;
 }
 
 
 function textsprite_set_align(textsprite, align_vertical, align_horizontal) {
-    textsprite.modified_coords = 1;
+    textsprite.modified_coords = true;
     if (align_vertical != ALIGN_NONE) {
         if (align_vertical == ALIGN_BOTH) align_vertical = ALIGN_START;
         textsprite.align_vertical = align_vertical;
@@ -245,12 +245,12 @@ function textsprite_set_align(textsprite, align_vertical, align_horizontal) {
 }
 
 function textsprite_set_align_vertical(textsprite, align) {
-    textsprite.modified_coords = 1;
+    textsprite.modified_coords = true;
     textsprite.align_vertical = align;
 }
 
 function textsprite_set_align_horizontal(textsprite, align) {
-    textsprite.modified_coords = 1;
+    textsprite.modified_coords = true;
     textsprite.align_horizontal = align;
 }
 
@@ -260,29 +260,29 @@ function textsprite_matrix_get_modifier(textsprite) {
 }
 
 function textsprite_matrix_reset(textsprite) {
-    pvrctx_helper_clear_modifier(textsprite.matrix_source);
-    textsprite.flip_x = textsprite.flip_y = 0;
-    textsprite.matrix_corner = { x: 0, y: 0, angle: 0 };
+    pvr_context_helper_clear_modifier(textsprite.matrix_source);
+    textsprite.flip_x = textsprite.flip_y = false;
+    textsprite.matrix_corner = { x: 0.0, y: 0.0, angle: 0.0 };
 }
 
 function textsprite_matrix_translate(textsprite, translate_x, translate_y) {
-    if (translate_x != null)
+    if (Number.isFinite(translate_x))
         textsprite.matrix_source.translate_x = translate_x;
-    if (translate_y != null)
+    if (Number.isFinite(translate_y))
         textsprite.matrix_source.translate_y = translate_y;
 }
 
 function textsprite_matrix_skew(textsprite, skew_x, skew_y) {
-    if (skew_x != null)
+    if (Number.isFinite(skew_x))
         textsprite.matrix_source.skew_x = skew_x;
-    if (skew_y != null)
+    if (Number.isFinite(skew_y))
         textsprite.matrix_source.skew_y = skew_y;
 }
 
 function textsprite_matrix_scale(textsprite, scale_x, scale_y) {
-    if (scale_x != null)
+    if (Number.isFinite(scale_x))
         textsprite.matrix_source.scale_x = scale_x;
-    if (scale_y != null)
+    if (Number.isFinite(scale_y))
         textsprite.matrix_source.scale_y = scale_y;
 }
 
@@ -296,14 +296,14 @@ function textsprite_matrix_rotate_pivot_enable(textsprite, enable) {
 }
 
 function textsprite_matrix_rotate_pivot(textsprite, u, v) {
-    if (u != null) textsprite.matrix_source.rotate_pivot_u = u;
-    if (v != null) textsprite.matrix_source.rotate_pivot_v = v;
+    if (Number.isFinite(u)) textsprite.matrix_source.rotate_pivot_u = u;
+    if (Number.isFinite(v)) textsprite.matrix_source.rotate_pivot_v = v;
 }
 
 
 function textsprite_matrix_scale_offset(textsprite, direction_x, direction_y) {
-    if (direction_x != null) textsprite.matrix_source.scale_direction_x = direction_x;
-    if (direction_y != null) textsprite.matrix_source.scale_direction_y = direction_y;
+    if (Number.isFinite(direction_x)) textsprite.matrix_source.scale_direction_x = direction_x;
+    if (Number.isFinite(direction_y)) textsprite.matrix_source.scale_direction_y = direction_y;
 }
 
 
@@ -319,8 +319,8 @@ function textsprite_matrix_calculate(textsprite, pvrctx) {
     if (textsprite.flip_x || textsprite.flip_y) {
         sh4matrix_scale(
             matrix,
-            textsprite.flip_x ? -1 : 1,
-            textsprite.flip_y ? -1 : 1
+            textsprite.flip_x ? -1.0 : 1.0,
+            textsprite.flip_y ? -1.0 : 1.0
         );
     }
 
@@ -333,7 +333,7 @@ function textsprite_matrix_calculate(textsprite, pvrctx) {
     );
 
     // step 3: apply corner rotation
-    if (textsprite.matrix_corner.angle != 0) {
+    if (textsprite.matrix_corner.angle != 0.0) {
         sh4matrix_corner_rotate(
             matrix, textsprite.matrix_corner,
             textsprite.last_draw_x, textsprite.last_draw_y,
@@ -347,7 +347,7 @@ function textsprite_matrix_calculate(textsprite, pvrctx) {
 
 function textsprite_calculate_paragraph_alignment(textsprite) {
     const grapheme = { code: 0, size: 0 };
-    const lineinfo = { line_char_count: 0, last_char_width: 0, previous_codepoint: 0x0000, space_width: -1 };
+    const lineinfo = { line_char_count: 0, last_char_width: 0.0, previous_codepoint: 0x0000, space_width: -1.0 };
 
     if (!textsprite.modified_string && !textsprite.modified_coords) return;
 
@@ -375,9 +375,9 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
     arraylist_clear(textsprite.paragraph_array);
 
     if (!text) {
-        textsprite.modified_string = 0;
-        textsprite.last_draw_width = 0;
-        textsprite.last_draw_height = 0;
+        textsprite.modified_string = false;
+        textsprite.last_draw_width = 0.0;
+        textsprite.last_draw_height = 0.0;
         return;
     }
 
@@ -394,17 +394,17 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
     let index = 0;
     let index_previous = 0;
     let index_current_line = 0;
-    let accumulated_width = 0;
+    let accumulated_width = 0.0;
     let index_last_detected_break = 0;
-    let last_break_was_dotcommatab = 0;
-    let calculated_text_height = 0;
-    let max_height = textsprite.max_height < 0 ? MATH2D_MAX_INT32 : textsprite.max_height;
-    let max_width = textsprite.max_width < 0 ? MATH2D_MAX_INT32 : textsprite.max_width;
+    let last_break_was_dotcommatab = false;
+    let calculated_text_height = 0.0;
+    let max_height = textsprite.max_height < 0.0 ? Infinity : textsprite.max_height;
+    let max_width = textsprite.max_width < 0.0 ? Infinity : textsprite.max_width;
     let last_known_break_index = 0;
     let loose_index = 0;
-    let last_known_break_width = 0;
+    let last_known_break_width = 0.0;
 
-    while (1) {
+    while (true) {
         let eof_reached = !string_get_character_codepoint(text, index, grapheme);
 
         if (grapheme.code == FONTGLYPH_LINEFEED || eof_reached || loose_index > 0) {
@@ -422,7 +422,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             });
 
             index_last_detected_break = index_current_line = new_index;
-            last_break_was_dotcommatab = 1;
+            last_break_was_dotcommatab = true;
 
             calculated_text_height += textsprite.font_size + textsprite.font_paragraph_separation;
             if (calculated_text_height >= max_height) break;
@@ -431,9 +431,9 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             lineinfo.previous_codepoint = 0x0000;
             index_previous = index;
             index = new_index;
-            accumulated_width = 0;
+            accumulated_width = 0.0;
             last_known_break_index = index;
-            last_known_break_width = -1;
+            last_known_break_width = -1.0;
 
             if (eof_reached) break;
             continue;
@@ -443,7 +443,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
         measure_char_fn(textsprite.font, grapheme.code, textsprite.font_size, lineinfo);
 
         // check if the current codepoit is breakable
-        let current_is_break = 0;
+        let current_is_break = false;
         let break_in_index = -1;
         let break_char_count = 1;
         let break_codepoint = grapheme.code;
@@ -453,9 +453,9 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             case FONTGLYPH_SPACE:
                 if (last_break_was_dotcommatab) {
                     last_known_break_width = accumulated_width;
-                    current_is_break = 1;
+                    current_is_break = true;
                 }
-                last_break_was_dotcommatab = 0;
+                last_break_was_dotcommatab = false;
                 break;
             case FONTGLYPH_TAB:
             case 0x2C:// comma
@@ -463,11 +463,11 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             case 0x3A:// dot dot
             case 0x3B:// dot comma
                 last_known_break_width = accumulated_width;
-                current_is_break = 1;
-                last_break_was_dotcommatab = 1;
+                current_is_break = true;
+                last_break_was_dotcommatab = true;
                 break;
             default:
-                last_break_was_dotcommatab = 1;
+                last_break_was_dotcommatab = true;
                 break;
         }
 
@@ -478,7 +478,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
                 break_in_index = index;
                 break_char_count = 0;
                 break_codepoint = 0x0000;
-                break_width = 0;
+                break_width = 0.0;
             } else {
                 switch (textsprite.wordbreak) {
                     case FONT_WORDBREAK_NONE:
@@ -489,7 +489,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
                         if (index_current_line != index_last_detected_break) {
                             // break and reparse the overflowing word
                             loose_index = last_known_break_index;
-                            if (last_known_break_width >= 0) accumulated_width = last_known_break_width;
+                            if (last_known_break_width >= 0.0) accumulated_width = last_known_break_width;
                             continue;
                         }
                     case FONT_WORDBREAK_BREAK:
@@ -515,13 +515,13 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             if (calculated_text_height >= max_height) break;
 
             index_last_detected_break = index_current_line = break_in_index;
-            last_break_was_dotcommatab = 0;
+            last_break_was_dotcommatab = false;
 
             lineinfo.line_char_count = break_char_count;
             lineinfo.previous_codepoint = break_codepoint;
             accumulated_width = break_width;
             last_known_break_index = break_in_index;
-            last_known_break_width = -1;
+            last_known_break_width = -1.0;
         }
 
         index_previous = index;
@@ -533,7 +533,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
     }
 
     // step 3: find the longest/wide paragraph
-    let max_line_width = 0;
+    let max_line_width = 0.0;
     let align_to_start = textsprite.paragraph_align == ALIGN_START;
     let align_to_center = textsprite.paragraph_align == ALIGN_CENTER;
 
@@ -541,25 +541,25 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
         if (paragraphinfo.offset > max_line_width) max_line_width = paragraphinfo.offset;
     }
 
-    if (max_line_width == 0 || align_to_start) {
+    if (max_line_width == 0.0 || align_to_start) {
         for (let paragraphinfo of arraylist_iterate4(textsprite.paragraph_array)) {
             // ALIGN_START is used, put all offsets in zero
-            paragraphinfo.offset = 0;
+            paragraphinfo.offset = 0.0;
         }
     } else {
         // step 5: calculate paragraph offsets
         for (let paragraphinfo of arraylist_iterate4(textsprite.paragraph_array)) {
             if (max_line_width == paragraphinfo.offset) {
-                paragraphinfo.offset = 0;
+                paragraphinfo.offset = 0.0;
                 continue;
             }
 
             paragraphinfo.offset = max_line_width - paragraphinfo.offset;// align to end
-            if (align_to_center) paragraphinfo.offset /= 2;// align to center
+            if (align_to_center) paragraphinfo.offset /= 2.0;// align to center
         }
     }
 
-    textsprite.modified_string = 0;
+    textsprite.modified_string = false;
     textsprite.last_draw_width = max_line_width;
     textsprite.last_draw_height = calculated_text_height;
 }
@@ -568,7 +568,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
 function textsprite_set_property(textsprite, property_id, value) {
     switch (property_id) {
         case TEXTSPRITE_PROP_STRING:
-            textsprite_set_text_intern(textsprite, 0, value);
+            textsprite_set_text_intern(textsprite, false, value);
             break;
         case TEXTSPRITE_PROP_FONT_SIZE:
             textsprite_set_font_size(textsprite, value);
@@ -592,7 +592,7 @@ function textsprite_set_property(textsprite, property_id, value) {
             textsprite_set_paragraph_align(textsprite, value);
             break;
         case TEXTSPRITE_PROP_BORDER_ENABLE:
-            textsprite.border_enable = value == 1.0;
+            textsprite.border_enable = value >= 1.0;
             break;
         case TEXTSPRITE_PROP_BORDER_SIZE:
             textsprite.border_size = value;
@@ -671,7 +671,7 @@ function textsprite_set_property(textsprite, property_id, value) {
                 animsprite_set_loop(textsprite.animation_selected, value);
             break;
         case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
-            textsprite_matrix_rotate_pivot_enable(textsprite, value >= 1);
+            textsprite_matrix_rotate_pivot_enable(textsprite, value >= 1.0);
             break;
         case SPRITE_PROP_ROTATE_PIVOT_U:
             textsprite_matrix_rotate_pivot(textsprite, value, null);
@@ -707,7 +707,7 @@ function textsprite_set_property(textsprite, property_id, value) {
             textsprite.wordbreak = Math.trunc(value);
             break;
         case TEXTSPRITE_PROP_BACKGROUND_ENABLED:
-            textsprite.background_enabled = value == 1.0;
+            textsprite.background_enabled = value >= 1.0;
             break;
         case TEXTSPRITE_PROP_BACKGROUND_SIZE:
             textsprite.background_size = value;
@@ -744,11 +744,11 @@ function textsprite_set_property(textsprite, property_id, value) {
         case TEXTSPRITE_PROP_MAX_WIDTH:
         case TEXTSPRITE_PROP_MAX_HEIGHT:
         case TEXTSPRITE_PROP_PARAGRAPH_SEPARATION:
-            textsprite.modified_coords = 1;
+            textsprite.modified_coords = true;
             break;
         case FONT_PROP_WORDBREAK:
         case TEXTSPRITE_PROP_FONT_SIZE:
-            textsprite.modified_string = 1;
+            textsprite.modified_string = true;
             break;
     }
 
@@ -773,7 +773,7 @@ function textsprite_get_max_draw_size(textsprite, max_draw_size) {
 }
 
 function textsprite_draw(textsprite, pvrctx) {
-    if (textsprite.alpha <= 0) return;
+    if (textsprite.alpha <= 0.0) return;
     if (!textsprite.text_forced_case && !textsprite.text) return;
 
     // check if all calculations are up-to-date
@@ -839,7 +839,7 @@ function textsprite_draw_internal(textsprite, pvrctx) {
 
 
     if (textsprite.background_enabled) {
-        let size = textsprite.background_size * 2;
+        let size = textsprite.background_size * 2.0;
         let x = textsprite.last_draw_x - textsprite.background_size + textsprite.background_offset_x;
         let y = textsprite.last_draw_y - textsprite.background_size + textsprite.background_offset_y;
         let width = textsprite.last_draw_width + size;
@@ -849,7 +849,7 @@ function textsprite_draw_internal(textsprite, pvrctx) {
         pvr_context_draw_solid_color(pvrctx, textsprite.background_rgba, x, y, width, height);
     }
 
-    if (arraylist_size(textsprite.paragraph_array) < 2) {
+    if (arraylist_size(textsprite.paragraph_array) < 2.0) {
         // let the font handle the draw
         draw_fn(
             textsprite.font,
@@ -898,8 +898,8 @@ function textsprite_draw_calc(textsprite) {
     // step 3: cache the drawing coordinates
     textsprite.last_draw_x = textsprite.x + offset_x;
     textsprite.last_draw_y = textsprite.y + offset_y;
-    textsprite.modified_coords = 0;
-    textsprite.modified_string = 0;
+    textsprite.modified_coords = false;
+    textsprite.modified_string = false;
 }
 
 function textsprite_animation_set(textsprite, animsprite) {
@@ -915,7 +915,7 @@ function textsprite_animation_restart(textsprite) {
 function textsprite_animation_end(textsprite) {
     if (!textsprite.animation_selected) return;
     animsprite_force_end(textsprite.animation_selected);
-    animsprite_update_textsprite(textsprite.animation_selected, textsprite, 1);
+    animsprite_update_textsprite(textsprite.animation_selected, textsprite, true);
 }
 
 function textsprite_animation_stop(textsprite) {
@@ -930,7 +930,7 @@ function textsprite_animation_external_set(textsprite, animsprite) {
 function textsprite_animation_external_end(textsprite) {
     if (textsprite.animation_external) {
         animsprite_force_end(textsprite.animation_external);
-        animsprite_update_textsprite(textsprite.animation_external, textsprite, 1);
+        animsprite_update_textsprite(textsprite.animation_external, textsprite, true);
     }
 }
 
@@ -944,12 +944,12 @@ function textsprite_animate(textsprite, elapsed) {
 
     if (textsprite.animation_selected) {
         result = animsprite_animate(textsprite.animation_selected, elapsed);
-        animsprite_update_textsprite(textsprite.animation_selected, textsprite, 1);
+        animsprite_update_textsprite(textsprite.animation_selected, textsprite, true);
     }
 
     if (textsprite.animation_external) {
         result = animsprite_animate(textsprite.animation_external, elapsed);
-        animsprite_update_textsprite(textsprite.animation_external, textsprite, 0);
+        animsprite_update_textsprite(textsprite.animation_external, textsprite, false);
     }
 
     if (textsprite.modified_string && textsprite.modified_coords) textsprite_draw_calc(textsprite);
@@ -963,7 +963,7 @@ function textsprite_border_enable(textsprite, enable) {
 }
 
 function textsprite_border_set_size(textsprite, border_size) {
-    textsprite.border_size = Number.isFinite(border_size) ? border_size : 0;
+    textsprite.border_size = Number.isFinite(border_size) ? border_size : 0.0;
 }
 
 function textsprite_border_set_color(textsprite, r, g, b, a) {
@@ -993,7 +993,7 @@ function textsprite_set_antialiasing(textsprite, antialiasing) {
 
 function textsprite_set_wordbreak(textsprite, wordbreak) {
     textsprite.wordbreak = wordbreak;
-    textsprite.modified_coords = 1;
+    textsprite.modified_coords = true;
 }
 
 function textsprite_has_font(textsprite) {

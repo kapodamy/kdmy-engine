@@ -14,6 +14,7 @@ const WEEKRESULT_SONG_TEXT2 = "~song resume~\nAttempts $i\nScore    $l\nAvg. acc
 
 const WEEKRESULT_LAYOUT_WIDESCREEN = "/assets/common/image/week-round/results.xml";
 const WEEKRESULT_LAYOUT_DREAMCAST = "/assets/common/image/week-round/results~dreamcast.xml";
+const WEEKRESULT_MODDING_SCRIPT = "/assets/common/data/scripts/weekresult.lua";
 
 
 function week_result_init() {
@@ -50,6 +51,8 @@ function week_result_init() {
 }
 
 function week_result_destroy(weekresult) {
+    // Note: do not dispose the "active_layout" field
+
     weekresult = undefined;
 }
 
@@ -98,16 +101,33 @@ async function week_result_helper_show_summary(weekresult, roundcontext, attempt
     let layout = await layout_init(src);
     if (!layout) return;
 
-    if (reject)
+    weekresult.active_layout = layout;
+
+    if (roundcontext.script) {
+        await weekscript_notify_beforeresults(roundcontext.script);
+        await week_halt(roundcontext, true);
+    }
+
+    let modding = await modding_init(layout, WEEKRESULT_MODDING_SCRIPT);
+    modding.has_exit = false;
+    modding.has_halt = false;
+    modding.native_menu = null;
+    await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
+
+    if (reject) {
         layout_trigger_any(layout, "week_not_cleared");
-    else if (freeplay)
-        layout_trigger_any("song_cleared");
-    else
-        layout_trigger_any("week_cleared");
+        await modding_helper_notify_event(modding, "week_not_cleared");
+    } else if (freeplay) {
+        layout_trigger_any(layout, "song_cleared");
+        await modding_helper_notify_event(modding, "song_cleared");
+    } else {
+        layout_trigger_any(layout, "week_cleared");
+        await modding_helper_notify_event(modding, "week_cleared");
+    }
 
     let textsprite1 = layout_get_textsprite(layout, "stats");
     let textsprite2 = layout_get_textsprite(layout, "stats2");
-    let transition_delay = layout_get_attached_value_as_float(layout, "transition_delay", 0);
+    let transition_delay = layout_get_attached_value_as_float(layout, "transition_delay", 0.0);
 
     if (songs_count < 0) {
         // show the stats for the current (completed) song
@@ -164,11 +184,11 @@ async function week_result_helper_show_summary(weekresult, roundcontext, attempt
             );
     }
 
-    let transition = 0;
+    let transition = false;
     let controller = gamepad_init(-1);
     gamepad_clear_buttons(controller);
 
-    while (1) {
+    while (true) {
         let elapsed = await pvrctx_wait_ready();
         pvr_context_reset(pvr_context);
 
@@ -182,19 +202,54 @@ async function week_result_helper_show_summary(weekresult, roundcontext, attempt
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
 
+        let res = await modding_helper_handle_custom_menu(modding, controller, elapsed);
+        if (res != MODDING_HELPER_RESULT_CONTINUE || modding.has_exit) break;
+        if (modding.has_halt) continue;
+
+        if (roundcontext.script && roundcontext.scriptcontext.halt_flag) {
+            gamepad_clear_buttons(controller);
+            continue;
+        }
+
         if (transition) {
-            if (transition_delay > 0) {
+            if (transition_delay > 0.0) {
                 transition_delay -= elapsed;
-                if (transition_delay < 0) layout_trigger_any(layout, "transition");
+                if (transition_delay < 0.0) layout_trigger_any(layout, "transition");
                 continue;
             }
             if (layout_animation_is_completed(layout, "transition_effect")) break;
         } else if (gamepad_get_pressed(controller)) {
-            transition = 1;
-            layout_set_group_visibility(layout, "allstats", 0);
+            transition = true;
+            layout_set_group_visibility(layout, "allstats", false);
         }
     }
 
+    await modding_helper_notify_exit2(modding);
+    modding.has_funkinsave_changes = false;// ignore funkinsave changes
+    await modding_destroy(modding);
+
+    weekresult.active_layout = null;
+
+    gamepad_destroy(controller);
     layout_destroy(layout);
+}
+
+
+function week_result_get_layout(weekresult) {
+    return weekresult.active_layout;
+}
+
+function week_result_get_accumulated_stats(weekresult, output_stats) {
+    output_stats.sick = weekresult.accumulated_stats_week.sick;
+    output_stats.good = weekresult.accumulated_stats_week.good;
+    output_stats.bads = weekresult.accumulated_stats_week.bads;
+    output_stats.shits = weekresult.accumulated_stats_week.shits;
+    output_stats.miss = weekresult.accumulated_stats_week.miss;
+    output_stats.penalties = weekresult.accumulated_stats_week.penalties;
+    output_stats.score = weekresult.accumulated_stats_week.score;
+    output_stats.accuracy = weekresult.accumulated_stats_week.accuracy;
+    output_stats.notesperseconds = weekresult.accumulated_stats_week.notesperseconds;
+    output_stats.combobreaks = weekresult.accumulated_stats_week.combobreaks;
+    output_stats.higheststreak = weekresult.accumulated_stats_week.higheststreak;
 }
 

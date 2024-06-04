@@ -8,7 +8,7 @@ function texturepool_init(max_size) {
 
 function texturepool_destroy(texpool) {
     for (const tex of linkedlist_iterate4(texpool.list)) {
-        texture_cache(tex, 0);
+        texture_cache(tex, false);
         texture_destroy(tex);
     }
     linkedlist_destroy(texpool.list);
@@ -40,7 +40,7 @@ function texturepool_add(texpool, texture) {
 
     // adquire
     texpool.used_bytes = used_bytes;
-    texture_cache(texture, 1);
+    texture_cache(texture, true);
     texture_share_reference(texture);
     linkedlist_add_item(texpool.list, texture);
 

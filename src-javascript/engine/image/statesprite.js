@@ -5,8 +5,8 @@ const STATESPRITE_POOL = new Map();
 
 
 function statesprite_draw(statesprite, pvrctx) {
-    if (statesprite.draw_width < 1 || statesprite.draw_height < 1) return;
-    if (statesprite.alpha <= 0) return;
+    if (statesprite.draw_width < 1.0 || statesprite.draw_height < 1.0) return;
+    if (statesprite.alpha <= 0.0) return;
 
     let sprite_vertex = statesprite.vertex;
     let render_alpha = statesprite.alpha * statesprite.alpha2;
@@ -34,14 +34,14 @@ function statesprite_draw(statesprite, pvrctx) {
             let ratio_width, ratio_height;
 
             // complex frame size redimension
-            if (statesprite.frame_width > 0) {
+            if (statesprite.frame_width > 0.0) {
                 ratio_width = draw_width / statesprite.frame_width;
                 frame_width = statesprite.src_width * ratio_width;
             } else {
                 ratio_width = draw_width / statesprite.src_width;
                 frame_width = draw_width;
             }
-            if (statesprite.frame_height > 0) {
+            if (statesprite.frame_height > 0.0) {
                 ratio_height = draw_height / statesprite.frame_height;
                 frame_height = statesprite.src_height * ratio_height;
             } else {
@@ -56,15 +56,15 @@ function statesprite_draw(statesprite, pvrctx) {
 
                 crop_x = statesprite.crop.x;
                 crop_y = statesprite.crop.y;
-                crop_width = crop_height = 0;
+                crop_width = crop_height = 0.0;
 
-                if (statesprite.crop.width != -1 && statesprite.crop.width < frame_width)
+                if (statesprite.crop.width != -1.0 && statesprite.crop.width < frame_width)
                     crop_width = frame_width - statesprite.crop.width;
 
-                if (statesprite.crop.height != -1 && statesprite.crop.height < frame_height)
+                if (statesprite.crop.height != -1.0 && statesprite.crop.height < frame_height)
                     crop_height = frame_height - statesprite.crop.height;
             } else {
-                crop_x = crop_y = crop_width = crop_height = 0;
+                crop_x = crop_y = crop_width = crop_height = 0.0;
             }
 
             // draw location & size
@@ -109,7 +109,7 @@ function statesprite_draw(statesprite, pvrctx) {
         }
 
         // cache the calculated vertex
-        statesprite.vertex_dirty = 0;
+        statesprite.vertex_dirty = false;
     }
 
     pvr_context_save(pvrctx);
@@ -135,7 +135,7 @@ function statesprite_draw(statesprite, pvrctx) {
     }
 
     // do corner rotation (if required)
-    if (statesprite.matrix_corner.angle != 0) {
+    if (statesprite.matrix_corner.angle != 0.0) {
         sh4matrix_corner_rotate(
             pvrctx.current_matrix, statesprite.matrix_corner,
             draw_x, draw_y, statesprite.draw_width, statesprite.draw_height
@@ -148,7 +148,7 @@ function statesprite_draw(statesprite, pvrctx) {
         /**@type {RGBA}*/ let trailing_offsetcolor = [
             statesprite.trailing_offsetcolor[0], statesprite.trailing_offsetcolor[1], statesprite.trailing_offsetcolor[2], 1.0
         ];
-        if (statesprite.trailing_offsetcolor[3] >= 0) {
+        if (statesprite.trailing_offsetcolor[3] >= 0.0) {
             trailing_offsetcolor[0] *= statesprite.offsetcolor[0];
             trailing_offsetcolor[1] *= statesprite.offsetcolor[1];
             trailing_offsetcolor[2] *= statesprite.offsetcolor[2];
@@ -179,7 +179,7 @@ function statesprite_draw(statesprite, pvrctx) {
         }
 
         // restore previous values
-        pvr_context_set_vertex_textured_darken(pvrctx, 0);
+        pvr_context_set_vertex_textured_darken(pvrctx, false);
     }
 
     pvr_context_set_vertex_alpha(pvrctx, render_alpha);
@@ -199,7 +199,7 @@ function statesprite_draw(statesprite, pvrctx) {
             sprite_vertex[2], sprite_vertex[3], // source size
 
             sprite_vertex[4], sprite_vertex[5], // draw location
-            sprite_vertex[6], sprite_vertex[7], // draw size
+            sprite_vertex[6], sprite_vertex[7] // draw size
         );
     } else {
         // un-textured vertex
@@ -224,72 +224,72 @@ function statesprite_init_from_texture(texture) {
     let statesprite = {};
 
     statesprite.matrix_source = {};
-    pvrctx_helper_clear_modifier(statesprite.matrix_source);
+    pvr_context_helper_clear_modifier(statesprite.matrix_source);
 
-    statesprite.src_x = 0;
-    statesprite.src_y = 0;
+    statesprite.src_x = 0.0;
+    statesprite.src_y = 0.0;
 
     statesprite.vertex_color = [1.0, 1.0, 1.0];
 
     statesprite.offsetcolor = [];
-    pvrctx_helper_clear_offsetcolor(statesprite.offsetcolor);
+    pvr_context_helper_clear_offsetcolor(statesprite.offsetcolor);
 
     statesprite.texture = texture;
     if (texture) {
         statesprite.src_width = statesprite.texture.original_width;
         statesprite.src_height = statesprite.texture.original_height;
     } else {
-        statesprite.src_width = 0;
-        statesprite.src_height = 0;
+        statesprite.src_width = 0.0;
+        statesprite.src_height = 0.0;
     }
 
-    statesprite.draw_x = 100;
-    statesprite.draw_y = 100;
-    statesprite.draw_width = -1;
-    statesprite.draw_height = -1;
+    statesprite.draw_x = 100.0;
+    statesprite.draw_y = 100.0;
+    statesprite.draw_width = -1.0;
+    statesprite.draw_height = -1.0;
 
     statesprite.alpha = 1.0;
     statesprite.alpha2 = 1.0;
-    statesprite.visible = 1;
-    statesprite.z_index = 1;
-    statesprite.z_offset = 0;
+    statesprite.visible = true;
+    statesprite.z_index = 1.0;
+    statesprite.z_offset = 0.0;
 
-    statesprite.frame_x = 0;
-    statesprite.frame_y = 0;
-    statesprite.frame_width = 0;
-    statesprite.frame_height = 0;
-    statesprite.pivot_x = 0;
-    statesprite.pivot_y = 0;
+    statesprite.frame_x = 0.0;
+    statesprite.frame_y = 0.0;
+    statesprite.frame_width = 0.0;
+    statesprite.frame_height = 0.0;
+    statesprite.pivot_x = 0.0;
+    statesprite.pivot_y = 0.0;
 
-    statesprite.id = SPRITE_IDS++;
+    statesprite.id = STATESPRITE_IDS++;
     STATESPRITE_POOL.set(statesprite.id, statesprite);
 
     statesprite.vertex = new Array(8);
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 
     statesprite.animation_external = null;
 
-    statesprite.matrix_corner = { x: 0, y: 0, angle: 0 };
+    statesprite.matrix_corner = { x: 0.0, y: 0.0, angle: 0.0 };
 
-    statesprite.crop = { x: 0, y: 0, width: -1, height: -1 };
-    statesprite.crop_enabled = 0;
+    statesprite.crop = { x: 0.0, y: 0.0, width: -1.0, height: -1.0 };
+    statesprite.crop_enabled = false;
 
-    statesprite.flip_x = 0;
-    statesprite.flip_y = 0;
-    statesprite.flip_correction = 1;
+    statesprite.flip_x = false;
+    statesprite.flip_y = false;
+    statesprite.flip_correction = true;
 
     statesprite.state_list = linkedlist_init();
-    statesprite.offset_x = 0;
-    statesprite.offset_y = 0;
+    statesprite.offset_x = 0.0;
+    statesprite.offset_y = 0.0;
     statesprite.selected_state = null;
 
     statesprite.scale_texture = 1.0;
     statesprite.antialiasing = PVRCTX_FLAG_DEFAULT;
-    statesprite.atlas_to_draw_size_enabled = 0;
+    statesprite.atlas_to_draw_size_enabled = false;
 
     statesprite.psshader = null;
 
-    statesprite.blend_enabled = 1;
+    statesprite.blend_enabled = false;
     statesprite.blend_src_rgb = BLEND_DEFAULT;
     statesprite.blend_dst_rgb = BLEND_DEFAULT;
     statesprite.blend_src_alpha = BLEND_DEFAULT;
@@ -299,29 +299,29 @@ function statesprite_init_from_texture(texture) {
     statesprite.trailing_used = 0;
     statesprite.trailing_length = 10;
     statesprite.trailing_alpha = 0.9;
-    statesprite.trailing_delay = 0;
-    statesprite.trailing_darken = 1;
-    statesprite.trailing_disabled = 1;
+    statesprite.trailing_delay = 0.0;
+    statesprite.trailing_darken = true;
+    statesprite.trailing_disabled = true;
     statesprite.trailing_progress = 0.0;
-    statesprite.trailing_offsetcolor = [1, 1, 1];
+    statesprite.trailing_offsetcolor = [1.0, 1.0, 1.0];
 
     sprite_internal_JS_init_trail_array(statesprite, 0, statesprite.trailing_length);
-
+    
     return statesprite;
 }
 
 function statesprite_destroy_texture_if_stateless(statesprite) {
-    if (!statesprite.texture) return 0;
+    if (!statesprite.texture) return false;
 
     // if the texture belongs to any state, return
     // it will fail in case of duplicated refereces (is a caller problem)
     for (let state of linkedlist_iterate4(statesprite.state_list)) {
-        if (state.texture && state.texture == statesprite.texture) return 0;
+        if (state.texture && state.texture == statesprite.texture) return false;
     }
 
     texture_destroy(statesprite.texture);
     statesprite.texture = null;
-    return 1;
+    return true;
 }
 
 function statesprite_destroy(statesprite) {
@@ -346,11 +346,11 @@ function statesprite_set_texture(statesprite, texture, update_offset_source_size
     statesprite.texture = texture;
 
     if (update_offset_source_size && texture) {
-        statesprite.src_x = 0;
-        statesprite.src_y = 0;
+        statesprite.src_x = 0.0;
+        statesprite.src_y = 0.0;
         statesprite.src_width = statesprite.texture.original_width;
         statesprite.src_height = statesprite.texture.original_height;
-        statesprite.vertex_dirty = 1;
+        statesprite.vertex_dirty = true;
     }
 
     return old_texture;
@@ -366,11 +366,11 @@ function statesprite_set_offset_source(statesprite, x, y, width, height) {
         statesprite.draw_width = width * statesprite.scale_texture;
         statesprite.draw_height = height * statesprite.scale_texture;
     } else {
-        if (statesprite.draw_width < 0) statesprite.draw_width = width * statesprite.scale_texture;
-        if (statesprite.draw_height < 0) statesprite.draw_height = height * statesprite.scale_texture;
+        if (statesprite.draw_width < 0.0) statesprite.draw_width = width * statesprite.scale_texture;
+        if (statesprite.draw_height < 0.0) statesprite.draw_height = height * statesprite.scale_texture;
     }
 
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 }
 
 function statesprite_set_offset_frame(statesprite, x, y, width, height) {
@@ -379,15 +379,15 @@ function statesprite_set_offset_frame(statesprite, x, y, width, height) {
     statesprite.frame_width = width;
     statesprite.frame_height = height;
 
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 
     if (statesprite.atlas_to_draw_size_enabled) {
         if (width > 0) statesprite.draw_width = width * statesprite.scale_texture;
         if (height > 0) statesprite.draw_height = height * statesprite.scale_texture;
     } else {
-        if (statesprite.draw_width < 0 && width > 0)
+        if (statesprite.draw_width < 0.0 && width > 0.0)
             statesprite.draw_width = width * statesprite.scale_texture;
-        if (statesprite.draw_height < 0 && height > 0)
+        if (statesprite.draw_height < 0.0 && height > 0.0)
             statesprite.draw_height = height * statesprite.scale_texture;
     }
 }
@@ -395,20 +395,20 @@ function statesprite_set_offset_frame(statesprite, x, y, width, height) {
 function statesprite_set_offset_pivot(statesprite, x, y) {
     statesprite.pivot_x = x;
     statesprite.pivot_y = y;
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 }
 
 
 function statesprite_set_draw_location(statesprite, x, y) {
     statesprite.draw_x = x;
     statesprite.draw_y = y;
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 }
 
 function statesprite_set_draw_size(statesprite, width, height) {
     statesprite.draw_width = width;
     statesprite.draw_height = height;
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 }
 
 function statesprite_set_alpha(statesprite, alpha) {
@@ -431,19 +431,19 @@ function statesprite_set_property(statesprite, property_id, value) {
     switch (property_id) {
         case SPRITE_PROP_X:
             statesprite.draw_x = value;
-            statesprite.vertex_dirty = 1;
+            statesprite.vertex_dirty = true;
             break;
         case SPRITE_PROP_Y:
             statesprite.draw_y = value;
-            statesprite.vertex_dirty = 1;
+            statesprite.vertex_dirty = true;
             break;
         case SPRITE_PROP_WIDTH:
             statesprite.draw_width = value;
-            statesprite.vertex_dirty = 1;
+            statesprite.vertex_dirty = true;
             break;
         case SPRITE_PROP_HEIGHT:
             statesprite.draw_height = value;
-            statesprite.vertex_dirty = 1;
+            statesprite.vertex_dirty = true;
             break;
         case SPRITE_PROP_ROTATE:
             statesprite_matrix_rotate(statesprite, value);
@@ -545,20 +545,20 @@ function statesprite_set_property(statesprite, property_id, value) {
 }
 
 function statesprite_set_offsetcolor(statesprite, r, g, b, a) {
-    if (r >= 0) statesprite.offsetcolor[0] = r;
-    if (g >= 0) statesprite.offsetcolor[1] = g;
-    if (b >= 0) statesprite.offsetcolor[2] = b;
-    if (a >= 0) statesprite.offsetcolor[3] = a;
+    if (r >= 0.0) statesprite.offsetcolor[0] = r;
+    if (g >= 0.0) statesprite.offsetcolor[1] = g;
+    if (b >= 0.0) statesprite.offsetcolor[2] = b;
+    if (a >= 0.0) statesprite.offsetcolor[3] = a;
 }
 
 function statesprite_set_vertex_color(statesprite, r, g, b) {
-    if (r >= 0) statesprite.vertex_color[0] = r;
-    if (g >= 0) statesprite.vertex_color[1] = g;
-    if (b >= 0) statesprite.vertex_color[2] = b;
+    if (r >= 0.0) statesprite.vertex_color[0] = r;
+    if (g >= 0.0) statesprite.vertex_color[1] = g;
+    if (b >= 0.0) statesprite.vertex_color[2] = b;
 }
 
 function statesprite_set_vertex_color_rgb8(statesprite, rbg8_color) {
-    math2d_color_bytes_to_floats(rbg8_color, 0, statesprite.vertex_color);
+    math2d_color_bytes_to_floats(rbg8_color, false, statesprite.vertex_color);
 }
 
 
@@ -571,7 +571,7 @@ function statesprite_animation_set(statesprite, animsprite) {
 function statesprite_animation_restart(statesprite) {
     if (statesprite.animation_external) {
         animsprite_restart(statesprite.animation_external);
-        animsprite_update_statesprite(statesprite.animation_external, statesprite, 1);
+        animsprite_update_statesprite(statesprite.animation_external, statesprite, true);
     }
 }
 
@@ -591,7 +591,7 @@ function statesprite_animate(statesprite, elapsed) {
 
     if (statesprite.animation_external) {
         result = animsprite_animate(statesprite.animation_external, elapsed);
-        animsprite_update_statesprite(statesprite.animation_external, statesprite, 1);
+        animsprite_update_statesprite(statesprite.animation_external, statesprite, true);
     }
 
     if (statesprite.trailing_disabled) return result;
@@ -658,8 +658,8 @@ function statesprite_get_modifier(statesprite) {
 }
 
 function statesprite_get_draw_size(statesprite, size) {
-    size[0] = statesprite.draw_width >= 0 ? statesprite.draw_width : statesprite.src_width;
-    size[1] = statesprite.draw_height >= 0 ? statesprite.draw_height : statesprite.src_height;
+    size[0] = statesprite.draw_width >= 0.0 ? statesprite.draw_width : statesprite.src_width;
+    size[1] = statesprite.draw_height >= 0.0 ? statesprite.draw_height : statesprite.src_height;
     return size;
 }
 
@@ -674,8 +674,8 @@ function statesprite_get_alpha(statesprite) {
 }
 
 function statesprite_get_offset_source_size(statesprite, size) {
-    size[0] = statesprite.frame_width > 0 ? statesprite.frame_width : statesprite.src_width;
-    size[1] = statesprite.frame_height > 0 ? statesprite.frame_height : statesprite.src_height;
+    size[0] = statesprite.frame_width > 0.0 ? statesprite.frame_width : statesprite.src_width;
+    size[1] = statesprite.frame_height > 0.0 ? statesprite.frame_height : statesprite.src_height;
     return size;
 }
 
@@ -686,8 +686,8 @@ function statesprite_is_visible(statesprite) {
 
 function statesprite_matrix_reset(statesprite) {
     pvr_context_helper_clear_modifier(statesprite.matrix_source);
-    statesprite.flip_x = statesprite.flip_y = 0;
-    statesprite.matrix_corner = { x: 0, y: 0, angle: 0 };
+    statesprite.flip_x = statesprite.flip_y = false;
+    statesprite.matrix_corner = { x: 0.0, y: 0.0, angle: 0.0 };
 }
 
 function statesprite_matrix_scale(statesprite, scale_x, scale_y) {
@@ -734,9 +734,9 @@ function statesprite_matrix_scale_size(statesprite, enable_scale_size) {
 
 function statesprite_state_add(statesprite, modelholder, animation_name, state_name) {
     if (!modelholder) return null;
-    let atlas_entry = modelholder_get_atlas_entry2(modelholder, animation_name, 0);
-    let animsprite = modelholder_create_animsprite(modelholder, animation_name, 0, 0);
-    let texture = modelholder_get_texture(modelholder, 0);
+    let atlas_entry = modelholder_get_atlas_entry2(modelholder, animation_name);
+    let animsprite = modelholder_create_animsprite(modelholder, animation_name, false, false);
+    let texture = modelholder_get_texture(modelholder, false);
     let vertex_color = modelholder_get_vertex_color(modelholder);
 
     if (!atlas_entry && animsprite) {
@@ -794,7 +794,7 @@ function statesprite_state_add2(statesprite, texture, animsprt, atlas_entry, rgb
 
 function statesprite_state_toggle(statesprite, state_name) {
     if (statesprite.selected_state && statesprite.selected_state.state_name == state_name)
-        return 1;
+        return true;
 
     let state = null;
 
@@ -805,11 +805,11 @@ function statesprite_state_toggle(statesprite, state_name) {
         }
     }
 
-    if (!state) return 0;
+    if (!state) return false;
 
     statesprite_state_apply(statesprite, state);
 
-    return 1;
+    return true;
 }
 
 function statesprite_state_list(statesprite) {
@@ -823,9 +823,9 @@ function statesprite_state_name(statesprite) {
 
 function statesprite_state_has(statesprite, state_name) {
     for (let state of linkedlist_iterate4(statesprite.state_list)) {
-        if (state.state_name == state_name) return 1;
+        if (state.state_name == state_name) return true;
     }
-    return 0;
+    return false;
 }
 
 function statesprite_state_get(statesprite) {
@@ -833,11 +833,11 @@ function statesprite_state_get(statesprite) {
 }
 
 function statesprite_state_apply(statesprite, statesprite_state) {
-    if (!statesprite_state && !statesprite.selected_state) return 0;
+    if (!statesprite_state && !statesprite.selected_state) return false;
 
     if (statesprite_state && statesprite_state.statesprite_id != statesprite.id) {
         console.warn("statesprite_state_apply() attempt to apply a foreign state");
-        return 0;
+        return false;
     }
 
     let state = statesprite_state ? statesprite_state : statesprite.selected_state;
@@ -861,8 +861,8 @@ function statesprite_state_apply(statesprite, statesprite_state) {
     } else {
         statesprite_set_offset_pivot(
             statesprite,
-            0,
-            0
+            0.0,
+            0.0
         );
     }
 
@@ -878,8 +878,8 @@ function statesprite_state_apply(statesprite, statesprite_state) {
     statesprite.matrix_corner.angle = state.corner_rotation.angle;
 
     statesprite.selected_state = state;
-    statesprite.vertex_dirty = 1;
-    return 1;
+    statesprite.vertex_dirty = true;
+    return true;
 }
 
 function statesprite_state_get_offsets(statesprite, output_offsets) {
@@ -897,12 +897,12 @@ function statesprite_state_set_offsets(statesprite, offset_x, offset_y, update_s
         statesprite.selected_state.offset_y = offset_y;
     }
 
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 }
 
 function statesprite_state_remove(statesprite, state_name) {
     let i = 0;
-    linkedlist_iterator_prepare(statesprite.state_list);
+
     for (let state of linkedlist_iterate4(statesprite.state_list)) {
         if (state.state_name == state_name) {
             if (statesprite.animation_external == state.animation) statesprite.animation_external = null;
@@ -923,21 +923,21 @@ function statesprite_state_remove(statesprite, state_name) {
 
 
 function statesprite_resize_draw_size(statesprite, max_width, max_height, applied_size) {
-    let orig_width = statesprite.frame_width > 0 ? statesprite.frame_width : statesprite.src_width;
-    let orig_height = statesprite.frame_height > 0 ? statesprite.frame_height : statesprite.src_height;
+    let orig_width = statesprite.frame_width > 0.0 ? statesprite.frame_width : statesprite.src_width;
+    let orig_height = statesprite.frame_height > 0.0 ? statesprite.frame_height : statesprite.src_height;
 
     let width, height;
 
-    if (max_width < 1 && max_height < 1) {
+    if (max_width < 1.0 && max_height < 1.0) {
         width = orig_width;
         height = orig_height;
-    } else if (orig_width == 0 && orig_height == 0) {
-        width = max_width < 0 ? max_height : max_width;
-        height = max_height < 0 ? max_width : max_height;
-    } else if (max_width == 0 || max_height == 0) {
-        width = height = 0;
+    } else if (orig_width == 0.0 && orig_height == 0.0) {
+        width = max_width < 0.0 ? max_height : max_width;
+        height = max_height < 0.0 ? max_width : max_height;
+    } else if (max_width == 0.0 || max_height == 0.0) {
+        width = height = 0.0;
     } else {
-        if (max_width > 0 && max_height > 0) {
+        if (max_width > 0.0 && max_height > 0.0) {
             let scale_x = max_width / orig_width;
             let scale_y = max_height / orig_height;
 
@@ -947,12 +947,12 @@ function statesprite_resize_draw_size(statesprite, max_width, max_height, applie
                 max_height = -Infinity;
         }
 
-        if (max_height > 0) {
+        if (max_height > 0.0) {
             height = max_height;
             width = (orig_width * max_height) / orig_height;
         }
 
-        if (max_width > 0) {
+        if (max_width > 0.0) {
             height = (orig_height * max_width) / orig_width;
             width = max_width;
         }
@@ -960,7 +960,7 @@ function statesprite_resize_draw_size(statesprite, max_width, max_height, applie
 
     statesprite.draw_width = width;
     statesprite.draw_height = height;
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 
     if (applied_size) {
         applied_size[0] = width;
@@ -971,12 +971,12 @@ function statesprite_resize_draw_size(statesprite, max_width, max_height, applie
 }
 
 function statesprite_center_draw_location(statesprite, x, y, ref_width, ref_height, applied_location) {
-    if (ref_width >= 0) x += ((ref_width - statesprite.draw_width) / 2);
-    if (ref_height >= 0) y += ((ref_height - statesprite.draw_height) / 2);
+    if (ref_width >= 0.0) x += ((ref_width - statesprite.draw_width) / 2.0);
+    if (ref_height >= 0.0) y += ((ref_height - statesprite.draw_height) / 2.0);
 
     statesprite.draw_x = x;
     statesprite.draw_y = y;
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 
     if (applied_location) {
         applied_location[0] = statesprite.draw_x;
@@ -997,15 +997,15 @@ function statesprite_crop(statesprite, dx, dy, dwidth, dheight) {
     if (dwidth != null) statesprite.crop.width = dwidth;
     if (dheight != null) statesprite.crop.height = dheight;
 
-    let invalid = statesprite.crop.x < 0 &&
-        statesprite.crop.y < 0 &&
-        statesprite.crop.width == 0 &&
-        statesprite.crop.height == 0;
+    let invalid = statesprite.crop.x < 0.0 &&
+        statesprite.crop.y < 0.0 &&
+        statesprite.crop.width == 0.0 &&
+        statesprite.crop.height == 0.0;
 
     // disable cropping if the bounds are invalid
-    if (statesprite.crop_enabled && invalid) statesprite.crop_enabled = 0;
+    if (statesprite.crop_enabled && invalid) statesprite.crop_enabled = false;
 
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
     return !invalid;
 }
 
@@ -1020,7 +1020,7 @@ function statesprite_crop_enable(statesprite, enable) {
 function statesprite_flip_texture(statesprite, flip_x, flip_y) {
     if (flip_x != null) statesprite.flip_x = !!flip_x;
     if (flip_y != null) statesprite.flip_y = !!flip_y;
-    statesprite.vertex_dirty = 1;
+    statesprite.vertex_dirty = true;
 }
 
 function statesprite_flip_texture_enable_correction(statesprite, enabled) {
@@ -1028,7 +1028,7 @@ function statesprite_flip_texture_enable_correction(statesprite, enabled) {
 }
 
 function statesprite_change_draw_size_in_atlas_apply(statesprite, enable, scale_factor) {
-    if (!Number.isFinite(scale_factor)) throw new NaNArgumentError("invalid scale_factor");
+    if (Number.isNaN(scale_factor)) throw new NaNArgumentError("invalid scale_factor");
     statesprite.scale_texture = scale_factor;
     statesprite.atlas_to_draw_size_enabled = !!enable;
 }
@@ -1068,7 +1068,7 @@ function statesprite_trailing_set_params(statesprite, length, trail_delay, trail
         sprite_internal_JS_init_trail_array(statesprite, statesprite.trailing_length, length);
         statesprite.trailing_length = length;
     }
-    if (darken_colors != null) statesprite.trailing_darken = darken_colors ? 1 : 0;
+    if (darken_colors != null) statesprite.trailing_darken = darken_colors ? true : false;
     if (statesprite.trailing_used > length) statesprite.trailing_used = length;
     if (!Number.isNaN(trail_delay)) statesprite.trailing_delay = trail_delay;
     if (!Number.isNaN(trail_alpha)) statesprite.trailing_alpha = trail_alpha;

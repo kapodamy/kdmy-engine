@@ -11,7 +11,7 @@ function streakcounter_digits_init(delay) {
         buffer: new Array(STREAKCOUNTER_DIGITS),
         digits: new Array(STREAKCOUNTER_DIGITS),
         animations: new Array(STREAKCOUNTER_DIGITS),
-        has_animations: 0,
+        has_animations: false,
 
         delay,
 
@@ -21,14 +21,14 @@ function streakcounter_digits_init(delay) {
     };
 
     // fake drawable for pair animations
-    streakcounter_digits.drawable = drawable_init(-1, streakcounter_digits, null, null);
-    drawable_set_visible(streakcounter_digits.drawable, 0);
+    streakcounter_digits.drawable = drawable_init(-1.0, streakcounter_digits, null, null);
+    drawable_set_visible(streakcounter_digits.drawable, false);
 
     for (let i = 0; i < STREAKCOUNTER_DIGITS; i++) {
         streakcounter_digits.buffer[i] = -1;
         streakcounter_digits.animations[i] = null;
         streakcounter_digits.digits[i] = statesprite_init_from_texture(null);
-        statesprite_set_visible(streakcounter_digits.digits[i], 0);
+        statesprite_set_visible(streakcounter_digits.digits[i], false);
     }
 
     return streakcounter_digits;
@@ -41,18 +41,21 @@ function streakcounter_digits_destroy(streakcounter_digits) {
     }
     if (streakcounter_digits.animation_pair) animsprite_destroy(streakcounter_digits.animation_pair);
     drawable_destroy(streakcounter_digits.drawable);
-    if (streakcounter_digits.selected_state != Symbol) streakcounter_digits.selected_state = undefined;
+
+    if (streakcounter_digits.selected_state != Symbol)
+        streakcounter_digits.selected_state = undefined;
+
     streakcounter_digits = undefined;
 }
 
 
 function streakcounter_digits_state_add(streakcounter_digits, max_hght, mdlhldr, state_name) {
-    const temp = [0, 0];
+    const temp = [0.0, 0.0];
     let success = 0;
 
     for (let i = 0; i < STREAKCOUNTER_NUMBERS.length; i++) {
         // C only
-        //const char number[] = { STREAKCOUNTER_NUMBERS[i], '\0' }"
+        //const char number[] = { STREAKCOUNTER_NUMBERS[i], '\0' };
 
         // JS & C# only
         const number = STREAKCOUNTER_NUMBERS[i];
@@ -67,12 +70,12 @@ function streakcounter_digits_state_add(streakcounter_digits, max_hght, mdlhldr,
             if (!statesprite_state) continue;
 
             imgutils_get_statesprite_original_size(statesprite_state, temp);
-            imgutils_calc_size(temp[0], temp[1], -1, max_hght, temp);
+            imgutils_calc_size(temp[0], temp[1], -1.0, max_hght, temp);
 
             statesprite_state.draw_width = temp[0];
             statesprite_state.draw_height = temp[1];
-            statesprite_state.offset_x = 0;
-            statesprite_state.offset_y = 0;
+            statesprite_state.offset_x = 0.0;
+            statesprite_state.offset_y = 0.0;
         }
 
         animation_name = undefined;
@@ -82,7 +85,9 @@ function streakcounter_digits_state_add(streakcounter_digits, max_hght, mdlhldr,
 }
 
 function streakcounter_digits_state_toggle(streakcounter_digits, state_name) {
-    if (streakcounter_digits.selected_state != Symbol) streakcounter_digits.selected_state = undefined;
+    if (streakcounter_digits.selected_state != Symbol)
+        streakcounter_digits.selected_state = undefined;
+
     streakcounter_digits.selected_state = strdup(state_name);
 }
 
@@ -101,12 +106,12 @@ function streakcounter_digits_animation_end(streakcounter_digits) {
         statesprite_animation_end(streakcounter_digits.digits[i]);
         if (streakcounter_digits.has_animations) {
             animsprite_force_end(streakcounter_digits.animations[i]);
-            animsprite_update_statesprite(streakcounter_digits.animations[i], streakcounter_digits.digits[i], 1);
+            animsprite_update_statesprite(streakcounter_digits.animations[i], streakcounter_digits.digits[i], true);
         }
     }
     if (streakcounter_digits.animation_pair) {
         animsprite_force_end(streakcounter_digits.animation_pair);
-        animsprite_update_drawable(streakcounter_digits.animation_pair, streakcounter_digits.drawable, 1);
+        animsprite_update_drawable(streakcounter_digits.animation_pair, streakcounter_digits.drawable, true);
     }
 }
 
@@ -146,20 +151,20 @@ function streakcounter_digits_animate(streakcounter_digits, elapsed) {
 
         completed = 0;
         animsprite_update_statesprite(
-            streakcounter_digits.animations[i], streakcounter_digits.digits[i], 1
+            streakcounter_digits.animations[i], streakcounter_digits.digits[i], true
         );
     }
 
     if (!streakcounter_digits.animation_pair) return completed;
 
     if (!animsprite_animate(streakcounter_digits.animation_pair, elapsed)) completed = 0;
-    animsprite_update_drawable(streakcounter_digits.animation_pair, streakcounter_digits.drawable, 1);
+    animsprite_update_drawable(streakcounter_digits.animation_pair, streakcounter_digits.drawable, true);
 
     return completed;
 }
 
 function streakcounter_digits_measure(streakcounter_digits, value) {
-    const draw_size = [0, 0];
+    const draw_size = [0.0, 0.0];
 
     //value = math2d_clamp_int(value, 0, STREAKCOUNTER_MAX_VALUE);
 
@@ -175,7 +180,7 @@ function streakcounter_digits_measure(streakcounter_digits, value) {
     // add leading zero
     if (index > 0) streakcounter_digits.buffer[index - 1] = 0;
 
-    let measured_width = 0;
+    let measured_width = 0.0;
 
     for (let i = 0; i < STREAKCOUNTER_DIGITS; i++) {
         let digit = streakcounter_digits.buffer[i];
@@ -188,7 +193,7 @@ function streakcounter_digits_measure(streakcounter_digits, value) {
         }
 
         // C only
-        //const char number[] = { STREAKCOUNTER_NUMBERS[i], '\0' }"
+        //const char number[] = { STREAKCOUNTER_NUMBERS[i], '\0' };
 
         // JS & C# only
         const number = STREAKCOUNTER_NUMBERS[i];
@@ -203,7 +208,7 @@ function streakcounter_digits_measure(streakcounter_digits, value) {
 
             if (streakcounter_digits.animations[i]) {
                 animsprite_restart(streakcounter_digits.animations[i]);
-                animsprite_update_statesprite(streakcounter_digits.animations[i], statesprite, 1);
+                animsprite_update_statesprite(streakcounter_digits.animations[i], statesprite, true);
             }
 
             statesprite_get_draw_size(statesprite, draw_size);
@@ -219,10 +224,10 @@ function streakcounter_digits_measure(streakcounter_digits, value) {
 }
 
 function streakcounter_digits_set_draw_location(streakcounter_digits, x, y, gap) {
-    const draw_size = [0, 0];
+    const draw_size = [0.0, 0.0];
     const modifier = drawable_get_modifier(streakcounter_digits.drawable);
-    let max_width = 0;
-    let max_height = 0;
+    let max_width = 0.0;
+    let max_height = 0.0;
 
     for (let i = 0; i < STREAKCOUNTER_DIGITS; i++) {
         if (streakcounter_digits.buffer[i] < 0) continue;

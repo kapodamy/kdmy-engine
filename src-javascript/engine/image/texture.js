@@ -25,7 +25,7 @@ async function texture_init_deferred(src, deffered) {
         return null;
     }
 
-    let texture = texture_init_from_raw(tex.data, tex.size, 0, tex.data.width, tex.data.height, 0, 0);
+    let texture = texture_init_from_raw(tex.data, tex.size, false, tex.data.width, tex.data.height, 0, 0);
 
     // remember the filename to avoid duplicated textures
     texture.src_filename = fs_get_full_path(src);
@@ -55,7 +55,7 @@ function texture_init_from_raw(ptr, size, in_vram, width, height, orig_width, or
         references: 1,
         cache_references: 0,
         has_mipmaps: false
-    }
+    };
 
     if (in_vram)
         texture.data_vram = ptr;
@@ -98,7 +98,7 @@ async function texture_cache(texture, adquire) {
         return;
     }
 
-    // there chache references and the texture still exists on SH-4 side
+    // there cache references and the texture still exists on SH-4 side
     if (texture->cache_references > 0 && texture->data_ram) return;
 
     // download the texture from the PVR VRAM, this in other platforms is nearly impossible
@@ -124,13 +124,13 @@ function texture_upload_to_pvr(texture) {
     /*
     texture->data_vram = pvr_mem_malloc(texture->size);
     if (!texture->data_vram) {
-        printf("No enough video memory\n");
+        logger_error("texture_upload_to_pvr() no enough video memory, required=%li available=%lu\n", texture->size, pvr_mem_available());
         return;
     }
 
     pvr_txr_load(texture->data_ram, texture->data_vram, texture->size);
 
-    if (texture.cache->references > 0) return;
+    if (texture.cache_references > 0) return;
 
     free(texture->data_ram);
     texture->data_ram = null;
@@ -171,7 +171,7 @@ function texture_destroy_force(texture) {
 }
 
 function texture_destroy(texture) {
-    if (!texture) return 1;
+    if (!texture) return true;
 
     texture.references--;
 
@@ -187,7 +187,7 @@ function texture_destroy(texture) {
         }
 
         */
-        return 0;
+        return false;
     }
 
     // C only
@@ -205,7 +205,7 @@ function texture_destroy(texture) {
     string_destroy(texture->src_filename);
 
     free(texture);
-    return 1;
+    return true;
 
     */
 
@@ -221,7 +221,7 @@ function texture_destroy(texture) {
     texture.vram = null;
     texture.src_filename = undefined;
     TEXTURE_POOL.delete(texture.id);
-    return 1;
+    return true;
 }
 
 

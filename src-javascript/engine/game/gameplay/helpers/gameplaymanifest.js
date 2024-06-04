@@ -58,9 +58,9 @@ async function gameplaymanifest_init(src) {
     };
 
     if (json_has_property_object(json, "default")) {
-        if (json_is_property_null(json, "default")) {
+        /*if (json_is_property_null(json, "default")) {
             throw new Error("'default' property can not be null. File: " + src);
-        }
+        }*/
 
         manifest.default = {
             distributions: GAMEPLAYMANIFEST_DEFAULT.distributions,
@@ -268,8 +268,8 @@ function gameplaymanifest_destroy_players(players, players_size) {
     for (let i = 0; i < players_size; i++) {
         players[i].manifest = undefined;
         for (let j = 0; j < players[i].states_size; j++) {
-            players[i].states.name = undefined;
-            players[i].states.model = undefined;
+            players[i].states[j].name = undefined;
+            players[i].states[j].model = undefined;
         }
         players[i].states = undefined;
     }
@@ -296,8 +296,7 @@ function gameplaymanifest_parse_song(song, json_song, players_count) {
         let stringbuilder = stringbuilder_init(song_name_length);
         stringbuilder_add_with_replace(stringbuilder, song.name, "\x20", null);
         stringbuilder_lowercase(stringbuilder);
-        let lowercase_name = stringbuilder_get_copy(stringbuilder);
-        stringbuilder_destroy(stringbuilder);
+        let lowercase_name = stringbuilder_finalize(stringbuilder);
 
         song.file = string_concat(3, FUNKIN_WEEK_SONGS_FOLDER, lowercase_name, ".ogg");
         song.chart = string_concat(3, FUNKIN_WEEK_CHARTS_FOLDER, lowercase_name, ".json");
@@ -310,8 +309,8 @@ function gameplaymanifest_parse_song(song, json_song, players_count) {
     song.script = json_read_string(json_song, "script", null);
     song.has_script = json_has_property(json_song, "script");
 
-    song.duration = json_read_number(json_song, "duration", -1);
-    if (song.duration >= 0) song.duration *= 1000.0;// convert to milliseconds
+    song.duration = json_read_number(json_song, "duration", -1.0);
+    if (song.duration >= 0.0) song.duration *= 1000.0;// convert to milliseconds
 
     song.selected_state_name = json_read_string(json_song, "selectedStateName", null);
     song.has_selected_state_name = json_has_property(json_song, "selectedStateName");
@@ -322,6 +321,8 @@ function gameplaymanifest_parse_song(song, json_song, players_count) {
     song.dialogue_params = json_read_string(json_song, "dialogueParams", null);
     song.dialog_text = json_read_string(json_song, "dialogText", null);
     song.dialog_ignore_on_freeplay = json_read_boolean(json_song, "dialogIgnoreOnFreeplay", true);
+
+    song.disable_resource_cache_between_songs = json_read_boolean(json_song, "disableResourceCacheBetweenSongs", false);
 
     song.pause_menu = json_read_string(json_song, "pauseMenu", null);
     song.has_pause_menu = json_has_property(json_song, "pauseMenu");
@@ -339,13 +340,13 @@ function gameplaymanifest_parse_song(song, json_song, players_count) {
     gameplaymanifest_parse_players(json_song, song, "players", "players_size");
 
     if (json_has_property_array(json_song, "distributions")) {
-        song.has_distributions = 1;
+        song.has_distributions = true;
         gameplaymanifest_parse_distributions(json_song, song, "distributions", "distributions_size");
     } else if (json_has_property_array(json_song, "distributionsMinimal")) {
-        song.has_distributions = 1;
+        song.has_distributions = true;
         gameplaymanifest_parse_distributions_minimal(json_song, song, "distributions", "distributions_size");
     } else if (json_has_property_array(json_song, "distributionsModels")) {
-        song.has_distributions = 1;
+        song.has_distributions = true;
         gameplaymanifest_parse_distributions_models(json_song, song, "distributions", "distributions_size");
     }
 
@@ -469,10 +470,10 @@ function gameplaymanifest_parse_distribution(json_distribution, distribution) {
     distribution.strums = null;
     distribution.strum_binds = null;
     distribution.strums_size = 0;
-    distribution.strum_binds_is_custom = 0;
+    distribution.strum_binds_is_custom = false;
 
     distribution.states = null;
-    distribution.states_size = 0
+    distribution.states_size = 0;
 
 
     if (strum_binds_array_size < 0) {
@@ -504,7 +505,7 @@ function gameplaymanifest_parse_distribution(json_distribution, distribution) {
         }
         if (strum_binds_array_size > 0) {
             distribution.strum_binds = new Array(strums_array_size);
-            distribution.strum_binds_is_custom = 1;
+            distribution.strum_binds_is_custom = true;
             for (let i = 0; i < strums_array_size; i++) {
                 distribution.strum_binds[i] = json_read_array_item_hex(strum_binds_array, i, 0x00);
             }
@@ -783,9 +784,9 @@ function gameplaymanifest_parse_players(json, obj, ptr_players, ptr_players_size
             distribution_index: json_read_number(player_json, "distributionIndex", 0),
             states: null,
             states_size: 0,
-            can_die: 0,
-            can_recover: 0,
-            is_opponent: 0,
+            can_die: false,
+            can_recover: false,
+            is_opponent: false,
         };
 
         let has_is_opponent = json_has_property_boolean(player_json, "isOpponent");

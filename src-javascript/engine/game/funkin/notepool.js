@@ -70,8 +70,7 @@ function notepool_destroy(notepool) {
             modelholder_destroy(notepool.models_custom_sick_effect[i]);
     }
 
-    notepool.drawable = undefined;
-    notepool.models = undefined;
+    notepool.drawables = undefined;
     notepool.models_custom_sick_effect = undefined;
     notepool.attributes = undefined;
     notepool = undefined;

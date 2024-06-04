@@ -10,16 +10,6 @@ const ENGINE_VERSION = "0.60";
  */
 var background_menu_music = null;
 
-/**
- * Contains all weeks definitions found
- */
-var weeks_array = { array: null, size: -1 };
-
-/**
- * Menus style (customized by a week) used across the game
- */
-var custom_style_from_week = null;
-
 var DEBUG = 0;
 var SETTINGS = {
     input_offset: 0, inverse_strum_scroll: false, penality_on_empty_strum: true, use_funkin_marker_duration: true,
@@ -128,6 +118,9 @@ const FUNKIN_LOADING_SCREEN_TEXTURE = "/assets/common/image/funkin/funkay.png";
 
 
 async function main(argc, argv) {
+    // (JS only) Initialize WASM versions of Lua and FontAtlas
+    await main_initialize_wasm_modules();
+
     // vital parts
     fs_init();// intialize filesystem access for the main thread (this thread)
     await pvr_context_init();
@@ -141,9 +134,9 @@ async function main(argc, argv) {
 
     // (JS & CS only) preload fonts
     await Promise.all([
-        fontholder_init("/assets/common/font/vcr.ttf", -1, null),
-        //fontholder_init("/assets/common/font/pixel.otf", -1, null),
-        fontholder_init("/assets/common/font/alphabet.xml", -1, null)
+        fontholder_init("/assets/common/font/vcr.ttf", -1.0, null),
+        //fontholder_init("/assets/common/font/pixel.otf", -1.0, null),
+        fontholder_init("/assets/common/font/alphabet.xml", -1.0, null)
     ]);
 
     await weekenumerator_enumerate();
@@ -152,15 +145,14 @@ async function main(argc, argv) {
 
     // load savedata
     funkinsave_pick_first_available_vmu();
-    let load_result = await savemanager_should_show(0);
+    let load_result = await savemanager_should_show(false);
     if (load_result) {
-        let savemanager = await savemanager_init(0, load_result);
+        let savemanager = await savemanager_init(false, load_result);
         await savemanager_show(savemanager);
         savemanager_destroy(savemanager);
     }
 
     // choose a random menu style
-    let try_choose_last_played = Math.random() <= 0.25;
     let visited = new Array(weeks_array.size);
     let try_choose_last_played = math2d_random_float() <= 0.25;
     let visited_count = 0;
@@ -177,8 +169,7 @@ async function main(argc, argv) {
             if (last_played != null) {
                 for (let i = 0; i < weeks_array.size; i++) {
                     if (weeks_array.array[i].name == last_played) {
-                        ;
-                        visited[i] = 1;
+                        visited[i] = true;
                         visited_count++;
                         weekinfo = weeks_array.array[i];
                     }
@@ -188,7 +179,7 @@ async function main(argc, argv) {
         } else {
             let random_index = math2d_random_int(0, weeks_array.size);
             if (visited[random_index]) continue;
-            visited[random_index] = 1;
+            visited[random_index] = true;
             visited_count++;
             weekinfo = weeks_array.array[random_index];
         }
@@ -207,7 +198,7 @@ async function main(argc, argv) {
     }
 
     background_menu_music = await soundplayer_init(FUNKIN_BACKGROUND_MUSIC);
-    if (background_menu_music) soundplayer_loop_enable(background_menu_music, 1);
+    if (background_menu_music) soundplayer_loop_enable(background_menu_music, true);
 
     /*await week_main(
         weeks_array.array[7],
@@ -226,7 +217,7 @@ async function main(argc, argv) {
 
     await introscreen_main();
 
-    while (1) {
+    while (true) {
         if (await startscreen_main()) break;
         while (await mainmenu_main());
         soundplayer_replay(background_menu_music);
@@ -295,12 +286,49 @@ function main_get_weekinfo_from_week_name(week_name) {
 }
 
 
+function main_thd_helper_spawn_wrapper(init_data) {
+    const routine = init_data.routine;
+    const param = init_data.param;
+
+    // dispose "init_data" because was allocated in main_thd_helper_spawn
+    init_data = undefined;
+
+    //
+    // Initialize the filesystem for this thread and later execute the routine,
+    // fs_destroy() is called when the thread ends (KallistiOS does this job).
+    //
+    // Note: This can not be implemented in javascript, because there no TLS support
+    //
+
+    // C only
+    //fs_init();
+
+    // now execute the routine
+    return routine(param);
+}
+
+/**
+ * Create a new thread.
+ * This function creates a new kernel thread with default parameters to run the given routine.
+ * The thread will terminate and clean up resources when the routine completes
+ * This function warps {@link thd_create} to allow multi-thread filesystem support (fs_* engine functions)
+ * @param {boolean} detached true to make the thread joinable, otherwise, false
+ * @param {function} routine The function to call in the new thread.
+ * @param {object} param A parameter to pass to the function called.
+ * @returns {kthread_t} the created thread.
+ */
+function main_thd_helper_spawn(detached, routine, param) {
+    // in C, "init_data" this an allocated struct
+    let init_data = { routine, param };
+    return thd_create(detached, main_thd_helper_spawn_wrapper, init_data);
+}
+
 async function main_spawn_coroutine(background_layout, function_routine, argument_routine) {
     //
     // Important: In JS, all calls to fs_* engine functions will fail, because there no
     // TLS support.
     //
-    let thd = thd_helper_spawn(function_routine, argument_routine);
+    let thd = thd_helper_spawn(false, function_routine, argument_routine);
     let ret;
 
     if (background_layout) {
@@ -736,7 +764,7 @@ let d = `#pragma header
 
             font: "/assets/common/font/alphabet.xml",// unused
             font_glyph_suffix: "bold",// unused
-            font_color_by_difference: 0,// unused
+            font_color_by_addition: 0,// unused
             font_size: 48,// unused
             font_color: 0x00,// unused
             font_border_color: 0x00,// unused
@@ -1012,7 +1040,7 @@ let d = `#pragma header
                 is_vertical: true,
     
                 font: "/assets/common/font/vcr.ttf",
-                font_color_by_difference: true,
+                font_color_by_addition: true,
                 font_size: 18,
                 font_color: 0xFFFFFF,
                 font_border_color: 0x00000000,

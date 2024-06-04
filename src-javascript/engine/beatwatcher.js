@@ -17,8 +17,8 @@ function beatwatcher_reset(beatwatcher, count_beats_or_quarters, beats_per_minut
     if (!count_beats_or_quarters) beatwatcher.tick /= 8.0;
     beatwatcher.count = 0;
     beatwatcher.drift_count = 0;
-    beatwatcher.drift_timestamp = 0;
-    beatwatcher.since = 0;
+    beatwatcher.drift_timestamp = 0.0;
+    beatwatcher.since = 0.0;
     beatwatcher.resyncs = 0;
     beatwatcher.last_global_timestamp = beatwatcher_global_timestamp;
 }
@@ -32,7 +32,7 @@ function beatwatcher_change_bpm(beatwatcher, beats_per_minute) {
 }
 
 function beatwatcher_remaining_until_next(beatwatcher) {
-    return ((beatwatcher.count + 1) * beatwatcher.tick) - beatwatcher_global_timestamp
+    return ((beatwatcher.count + 1) * beatwatcher.tick) - beatwatcher_global_timestamp;
 }
 
 function beatwatcher_poll(beatwatcher) {
@@ -41,23 +41,23 @@ function beatwatcher_poll(beatwatcher) {
         beatwatcher.resyncs++;
         beatwatcher.drift_timestamp -= beatwatcher.last_global_timestamp - beatwatcher_global_timestamp;
         beatwatcher.last_global_timestamp = beatwatcher_global_timestamp;
-        beatwatcher.since = 0;
-        return 0;
+        beatwatcher.since = 0.0;
+        return false;
     }
 
     let old_count = beatwatcher.count;
     let timestamp = beatwatcher_global_timestamp - beatwatcher.drift_timestamp;
 
-    beatwatcher.since = 0;
+    beatwatcher.since = 0.0;
     beatwatcher.count = Math.trunc(timestamp / beatwatcher.tick);
     beatwatcher.count += beatwatcher.drift_count;
     beatwatcher.last_global_timestamp = beatwatcher_global_timestamp;
 
     if (beatwatcher.count > old_count) {
         beatwatcher.since = timestamp - (beatwatcher.tick * old_count) - beatwatcher.tick;
-        if (beatwatcher.since < 0) beatwatcher.since = 0;
-        return 1;
+        if (beatwatcher.since < 0) beatwatcher.since = 0.0;
+        return true;
     }
 
-    return 0;
+    return false;
 }

@@ -11,9 +11,9 @@ async function songprogressbar_init(x, y, z, width, height, align, border_size, 
         songplayer: null,
         duration: NaN,
         drawable: null,
-        manual_update: 0,
+        manual_update: false,
         show_time: show_time,
-        show_time_elapsed: 1,
+        show_time_elapsed: true,
         drawable_animation: null,
         last_elapsed_seconds: NaN,
         stringbuilder: stringbuilder_init(16),
@@ -32,23 +32,23 @@ async function songprogressbar_init(x, y, z, width, height, align, border_size, 
     );
 
     // set alphas
-    textsprite_set_alpha(songprogressbar.textsprite_time, (color_rgba8_text & 0xFF) / 0xFF);
-    statesprite_set_alpha(songprogressbar.statesprite_background, (color_rgba8_background & 0xFF) / 0xFF);
-    statesprite_set_alpha(songprogressbar.statesprite_back, (color_rgba8_back & 0xFF) / 0xFF);
-    statesprite_set_alpha(songprogressbar.statesprite_progress, (color_rgba8_progress & 0xFF) / 0xFF);
+    textsprite_set_alpha(songprogressbar.textsprite_time, (color_rgba8_text & 0xFF) / 255.0);
+    statesprite_set_alpha(songprogressbar.statesprite_background, (color_rgba8_background & 0xFF) / 255.0);
+    statesprite_set_alpha(songprogressbar.statesprite_back, (color_rgba8_back & 0xFF) / 255.0);
+    statesprite_set_alpha(songprogressbar.statesprite_progress, (color_rgba8_progress & 0xFF) / 255.0);
 
     // guess border color (invert font color)
     const rgba = [0.0, 0.0, 0.0, 0.0];
-    math2d_color_bytes_to_floats(color_rgba8_text, 1, rgba);
+    math2d_color_bytes_to_floats(color_rgba8_text, true, rgba);
     textsprite_border_set_color(songprogressbar.textsprite_time, 1.0 - rgba[0], 1.0 - rgba[1], 1.0 - rgba[2], rgba[3]);
     textsprite_border_set_size(songprogressbar.textsprite_time, font_border_size);
-    textsprite_border_enable(songprogressbar.textsprite_time, 1);
+    textsprite_border_enable(songprogressbar.textsprite_time, true);
 
     // background location&size
     let background_x = x - border_size;
     let background_y = y - border_size;
-    let background_width = width + (border_size * 2);
-    let background_height = height + (border_size * 2);
+    let background_width = width + (border_size * 2.0);
+    let background_height = height + (border_size * 2.0);
     statesprite_set_draw_location(songprogressbar.statesprite_background, background_x, background_y);
     statesprite_set_draw_size(songprogressbar.statesprite_background, background_width, background_height);
 
@@ -71,7 +71,7 @@ async function songprogressbar_init(x, y, z, width, height, align, border_size, 
     border_size *= 2.0;
     textsprite_set_max_draw_size(songprogressbar.textsprite_time, width + border_size, height + border_size);
 
-    statesprite_crop_enable(songprogressbar.statesprite_progress, 1);
+    statesprite_crop_enable(songprogressbar.statesprite_progress, true);
 
     //
     // import models (if exists)
@@ -102,7 +102,7 @@ function songprogressbar_destroy(songprogressbar) {
     drawable_destroy(songprogressbar.drawable);
     stringbuilder_destroy(songprogressbar.stringbuilder);
 
-    ModuleLuaScript.kdmyEngine_drop_shared_object(songprogressbar);
+    luascript_drop_shared(songprogressbar);
     songprogressbar = undefined;
 }
 
@@ -177,7 +177,7 @@ function songprogressbar_manual_set_position(songprogressbar, elapsed, duration,
             songprogressbar_internal_seconds_to_string(songprogressbar.stringbuilder, elapsed_seconds);
             let str = stringbuilder_intern(songprogressbar.stringbuilder);
 
-            textsprite_set_text_intern(songprogressbar.textsprite_time, 1, str);
+            textsprite_set_text_intern(songprogressbar.textsprite_time, true, str);
         }
     }
 
@@ -190,7 +190,7 @@ function songprogressbar_manual_set_position(songprogressbar, elapsed, duration,
     else
         crop_width = length;
 
-    statesprite_crop(songprogressbar.statesprite_progress, 0, 0, crop_width, crop_height);
+    statesprite_crop(songprogressbar.statesprite_progress, 0.0, 0.0, crop_width, crop_height);
 
     return percent;
 }
@@ -211,7 +211,7 @@ function songprogressbar_animation_restart(songprogressbar) {
 function songprogressbar_animation_end(songprogressbar) {
     if (songprogressbar.drawable_animation) {
         animsprite_force_end(songprogressbar.drawable_animation);
-        animsprite_update_drawable(songprogressbar.drawable_animation, songprogressbar.drawable, 1);
+        animsprite_update_drawable(songprogressbar.drawable_animation, songprogressbar.drawable, true);
     }
     statesprite_animation_end(songprogressbar.statesprite_background);
     statesprite_animation_end(songprogressbar.statesprite_back);
@@ -225,7 +225,7 @@ function songprogressbar_animate(songprogressbar, elapsed) {
 
     if (songprogressbar.drawable_animation) {
         completed += animsprite_animate(songprogressbar.drawable_animation, elapsed);
-        if (!completed) animsprite_update_drawable(songprogressbar.drawable_animation, songprogressbar.drawable, 1);
+        if (!completed) animsprite_update_drawable(songprogressbar.drawable_animation, songprogressbar.drawable, true);
     }
 
     completed += statesprite_animate(songprogressbar.statesprite_background, elapsed);
@@ -234,7 +234,7 @@ function songprogressbar_animate(songprogressbar, elapsed) {
     completed += textsprite_animate(songprogressbar.textsprite_time, elapsed);
 
     if (!songprogressbar.manual_update) {
-        let current = 0, duration = 0;
+        let current = 0.0, duration = 0.0;
 
         if (songprogressbar.songplayer) {
             current = songplayer_get_timestamp(songprogressbar.songplayer);
@@ -243,7 +243,7 @@ function songprogressbar_animate(songprogressbar, elapsed) {
             current = beatwatcher_global_timestamp;// peek global beatwatcher time
             duration = songprogressbar.duration;
         }
-        songprogressbar_manual_set_position(songprogressbar, current, duration, 1);
+        songprogressbar_manual_set_position(songprogressbar, current, duration, true);
     }
 
     return completed;
@@ -284,7 +284,7 @@ function songprogressbar_internal_seconds_to_string(stringbuilder, seconds) {
 
     if (Number.isNaN(seconds)) {
         stringbuilder_clear(stringbuilder);
-        stringbuilder_add("--m--s");
+        stringbuilder_add(stringbuilder, "--m--s");
         return;
     }
 
@@ -294,15 +294,19 @@ function songprogressbar_internal_seconds_to_string(stringbuilder, seconds) {
 
     stringbuilder_clear(stringbuilder);
 
+    //
+    // The 0x30 codepoint means the number zero "0" character
+    //
+
     if (h > 0.0) {
-        if (h < 10) stringbuilder_add_char_codepoint(stringbuilder, 0x30);
+        if (h < 10.0) stringbuilder_add_char_codepoint(stringbuilder, 0x30);
         stringbuilder_add_format(stringbuilder, TIME_HOURS, Math.trunc(h));
     }
 
-    if (m < 10) stringbuilder_add_char_codepoint(stringbuilder, 0x30);
+    if (m < 10.0) stringbuilder_add_char_codepoint(stringbuilder, 0x30);
     stringbuilder_add_format(stringbuilder, TIME_MINUTES, Math.trunc(m));
 
-    if (s < 10) stringbuilder_add_char_codepoint(stringbuilder, 0x30);
+    if (s < 10.0) stringbuilder_add_char_codepoint(stringbuilder, 0x30);
     stringbuilder_add_format(stringbuilder, TIME_SECONDS, Math.trunc(s));
 
 }

@@ -2,8 +2,8 @@
 
 function linkedlist_init() {
     return {
-        tail: null,
         head: null,
+        tail: null,
         count: 0
     };
 }
@@ -41,33 +41,33 @@ function linkedlist_destroy2(linkedlist, release_function) {
     linkedlist = undefined;
 }
 
-function linkedlist_add_item(linkedlist, obj) {
-    let item = { next: null, item: obj };
+function linkedlist_add_item(linkedlist, item) {
+    let node = { next: null, item: item };
 
     if (!linkedlist.head) {
-        linkedlist.head = item;
+        linkedlist.head = node;
     } else {
-        linkedlist.tail.next = item;
+        linkedlist.tail.next = node;
     }
 
-    linkedlist.tail = item;
+    linkedlist.tail = node;
     linkedlist.count++;
 
     return linkedlist.count;
 }
 
-function linkedlist_add_item_unique(linkedlist, obj) {
-    if (linkedlist_has_item(linkedlist, obj)) return -1;
-    return linkedlist_add_item(linkedlist, obj);
+function linkedlist_add_item_unique(linkedlist, item) {
+    if (linkedlist_has_item(linkedlist, item)) return -1;
+    return linkedlist_add_item(linkedlist, item);
 }
 
-function linkedlist_has_item(linkedlist, obj) {
+function linkedlist_has_item(linkedlist, item) {
     let current = linkedlist.head;
     while (current) {
-        if (current.item == obj) return 1;
+        if (current.item == item) return true;
         current = current.next;
     }
-    return 0;
+    return false;
 }
 
 function linkedlist_to_array(linkedlist) {
@@ -87,6 +87,24 @@ function linkedlist_to_array(linkedlist) {
 
 function linkedlist_to_solid_array(linkedlist, element_size = NaN) {
 	if (linkedlist.count < 1) return null;
+    // Dreamcast only
+    /* uint8_t* array = malloc(element_size * linkedlist->count);
+    uint8_t* array_ptr = array;
+    LinkedListNode current = linkedlist->head;
+
+    while (current) {
+        if (current->item)
+            memcpy(array_ptr, current->item, element_size);
+        else
+            memset(array_ptr, 0x00, element_size);
+
+        current = current->next;
+        array_ptr += element_size;
+    }
+
+    return array;
+    */
+
     let array = linkedlist_to_array(linkedlist);
     for (let i = 0; i < array.length; i++) array[i] = clone_object(array[i]);
     return array;
@@ -102,6 +120,9 @@ function linkedlist_clear(linkedlist, release_function) {
         free(current);
         current = next;
     }
+
+    linkedlist.count = 0;
+    return;
     */
 
     // JS only
@@ -113,72 +134,6 @@ function linkedlist_clear(linkedlist, release_function) {
 
 function linkedlist_count(linkedlist) {
     return linkedlist.count;
-}
-
-/**
- * @deprecated use linkedlist_iterate3() instead
- */
-function linkedlist_iterate(linkedlist, linkedlist_iterator) {
-    if (!linkedlist_iterator.init) {
-        linkedlist_iterator.init = 1;
-        linkedlist_iterator.has_next = 1;
-        linkedlist_iterator.next = linkedlist.head;
-    }
-
-    if (linkedlist_iterator.next == null) {
-        linkedlist_iterator.has_next = 0;
-        return null;
-    }
-
-    let item = linkedlist_iterator.next.item;
-    linkedlist_iterator.next = linkedlist_iterator.next.next;
-    linkedlist_iterator.value = item;
-
-    return item;
-}
-
-/**
- * @deprecated use linkedlist_iterate3() instead
- */
-function linkedlist_iterate2(linkedlist, linkedlist_iterator) {
-    if (!linkedlist_iterator.init) {
-        linkedlist_iterator.init = 1;
-        linkedlist_iterator.has_next = 1;
-        linkedlist_iterator.next = linkedlist.head;
-    } else if (!linkedlist_iterator.has_next) {
-        return 0;
-    }
-
-    if (linkedlist_iterator.next) {
-        linkedlist_iterator.item = linkedlist_iterator.next.item;
-        linkedlist_iterator.next = linkedlist_iterator.next.next;
-    } else {
-        linkedlist_iterator.has_next = 0;
-    }
-
-    return linkedlist_iterator.has_next;
-}
-
-function linkedlist_iterate3(linkedlist, linkedlist_iterator) {
-    if (!linkedlist_iterator.init) {
-        linkedlist_iterator.init = 1;
-        linkedlist_iterator.next_entry = linkedlist.head;
-    } else if (!linkedlist_iterator.next_entry) {
-        return 0;
-    }
-
-    if (linkedlist_iterator.next_entry) {
-        linkedlist_iterator.item = linkedlist_iterator.next_entry.item;
-        linkedlist_iterator.next_entry = linkedlist_iterator.next_entry.next;
-        return 1;
-    }
-
-    //linkedlist_iterator.item = null;
-    return 0;
-}
-
-function linkedlist_iterator_prepare(linkedlist_iterator) {
-    linkedlist_iterator.init = 0;
 }
 
 function* linkedlist_iterate4(linkedlist) {
@@ -214,11 +169,11 @@ function linkedlist_get_by_index(linkedlist, index) {
     return current ? current.item : null;
 }
 
-function linkedlist_index_of(linkedlist, obj) {
+function linkedlist_index_of(linkedlist, item) {
     let index = 0;
     let current = linkedlist.head;
     while (current) {
-        if (current.item == obj) return index;
+        if (current.item == item) return index;
         current = current.next;
         index++;
     }
@@ -226,12 +181,26 @@ function linkedlist_index_of(linkedlist, obj) {
 }
 
 
-function linkedlist_remove_item(linkedlist, item) {
-    let iterator = { item: null };
-    let i = 0;
+function linkedlist_set_item(linkedlist, index, item) {
+    if (index < 0 || index >= linkedlist.count) throw new Error("index is out-of-range");
 
-    while (linkedlist_iterate3(linkedlist, iterator)) {
-        if (iterator.item == item) {
+    let i = 0;
+    let current = linkedlist.head;
+    while (current) {
+        if (i == index) {
+            current.item = item;
+            return;
+        }
+        current = current.next;
+        i++;
+    }
+}
+
+
+function linkedlist_remove_item(linkedlist, item) {
+    let i = 0;
+    for (let current_item of linkedlist_iterate4(linkedlist)) {
+        if (current_item == item) {
             linkedlist_remove_item_at(linkedlist, i);
             return i;
         }

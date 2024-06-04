@@ -30,12 +30,12 @@ function rankingcounter_init(plchldr_rank, plchldr_accuracy, fnthldr) {
     //      * alignments are ignored
     //      * the font size is calculated for the screen to avoid huge font characters in VRAM
     //
-    let ranking_height = 0;
-    if (plchldr_rank && plchldr_rank.height > 0) ranking_height = plchldr_rank.height;
+    let ranking_height = 0.0;
+    if (plchldr_rank && plchldr_rank.height > 0.0) ranking_height = plchldr_rank.height;
 
-    let font_size = 20;
+    let font_size = 20.0;
     if (plchldr_accuracy) {
-        if (plchldr_accuracy.height > 0) {
+        if (plchldr_accuracy.height > 0.0) {
             font_size = plchldr_accuracy.height;
         } else {
             // dismiss
@@ -47,9 +47,9 @@ function rankingcounter_init(plchldr_rank, plchldr_accuracy, fnthldr) {
         last_iterations: 0,
 
         textsprite: textsprite_init2(fnthldr, font_size, 0x000000),
-        show_accuracy: 0,
-        enable_accuracy: 1,
-        enable_accuracy_percent: 0,
+        show_accuracy: false,
+        enable_accuracy: true,
+        enable_accuracy_percent: false,
 
         selected_state: Symbol,// in C replace this with a unique value
         drawable_animation: null,
@@ -62,15 +62,15 @@ function rankingcounter_init(plchldr_rank, plchldr_accuracy, fnthldr) {
         drawable_accuracy: null,
         drawable_rank: null,
 
-        correction_x: 0,
-        correction_y: 0
+        correction_x: 0.0,
+        correction_y: 0.0
     };
 
     rankingcounter.drawable_rank = drawable_init(
-        -1, rankingcounter, rankingcounter_draw1, rankingcounter_animate1
+        -1.0, rankingcounter, rankingcounter_draw1, rankingcounter_animate1
     );
     rankingcounter.drawable_accuracy = drawable_init(
-        -1, rankingcounter, rankingcounter_draw2, rankingcounter_animate2
+        -1.0, rankingcounter, rankingcounter_draw2, rankingcounter_animate2
     );
 
     if (plchldr_rank) {
@@ -78,12 +78,12 @@ function rankingcounter_init(plchldr_rank, plchldr_accuracy, fnthldr) {
         plchldr_rank.vertex = rankingcounter.drawable_rank;
 
         let x = plchldr_rank.x;
-        if (plchldr_rank.width > 0) x -= plchldr_rank.width / 2;
+        if (plchldr_rank.width > 0.0) x -= plchldr_rank.width / 2.0;
 
         for (let i = 0; i < RANKINGCOUNTER_RANKING_BUFFER_SIZE; i++) {
             let statesprite = statesprite_init_from_texture(null);
             statesprite_set_draw_location(statesprite, x, plchldr_rank.y);
-            statesprite_set_visible(statesprite, 0);
+            statesprite_set_visible(statesprite, false);
 
             rankingcounter.ranking_items[i] = { statesprite, animsprite: null, id: -1 };
         }
@@ -99,7 +99,7 @@ function rankingcounter_init(plchldr_rank, plchldr_accuracy, fnthldr) {
         plchldr_accuracy.vertex = rankingcounter.drawable_accuracy;
 
         let x = plchldr_accuracy.x;
-        if (plchldr_accuracy.width > 0) x -= plchldr_accuracy.width / 2;
+        if (plchldr_accuracy.width > 0.0) x -= plchldr_accuracy.width / 2.0;
 
         textsprite_set_draw_location(
             rankingcounter.textsprite, x, plchldr_accuracy.y
@@ -110,14 +110,14 @@ function rankingcounter_init(plchldr_rank, plchldr_accuracy, fnthldr) {
         textsprite_set_align(rankingcounter.textsprite, ALIGN_CENTER, ALIGN_CENTER);
 
         // center the accuracy text on the draw location
-        textsprite_set_max_draw_size(rankingcounter.textsprite, 0, 0);
+        textsprite_set_max_draw_size(rankingcounter.textsprite, 0.0, 0.0);
     }
 
     return rankingcounter;
 }
 
 function rankingcounter_destroy(rankingcounter) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(rankingcounter);
+    luascript_drop_shared(rankingcounter);
 
     textsprite_destroy(rankingcounter.textsprite);
     drawable_destroy(rankingcounter.drawable_rank);
@@ -135,7 +135,9 @@ function rankingcounter_destroy(rankingcounter) {
     let old_animation = textsprite_animation_set(rankingcounter.textsprite, null);
     if (old_animation) animsprite_destroy(old_animation);
 
-    rankingcounter.selected_state = undefined;
+    if (rankingcounter.selected_state != Symbol) 
+        rankingcounter.selected_state = undefined;
+
     rankingcounter = undefined;
 }
 
@@ -171,7 +173,9 @@ function rankingcounter_add_state(rankingcounter, modelholder, state_name) {
 }
 
 function rankingcounter_toggle_state(rankingcounter, state_name) {
-    if (rankingcounter.selected_state != Symbol) rankingcounter.selected_state = undefined;
+    if (rankingcounter.selected_state != Symbol)
+        rankingcounter.selected_state = undefined;
+
     rankingcounter.selected_state = strdup(state_name);
 }
 
@@ -251,7 +255,7 @@ function rankingcounter_peek_ranking(rankingcounter, playerstats) {
 	
 	if (Number.isNaN(value)) return;
 
-    rankingcounter.show_accuracy = 1;
+    rankingcounter.show_accuracy = true;
     textsprite_animation_restart(rankingcounter.textsprite);
     textsprite_set_color_rgba8(rankingcounter.textsprite, color);
 
@@ -262,7 +266,7 @@ function rankingcounter_peek_ranking(rankingcounter, playerstats) {
 }
 
 function rankingcounter_reset(rankingcounter) {
-    rankingcounter.show_accuracy = 0;
+    rankingcounter.show_accuracy = false;
     rankingcounter.last_iterations = 0;
 
     drawable_set_antialiasing(rankingcounter.drawable_accuracy, PVRCTX_FLAG_DEFAULT);
@@ -369,8 +373,8 @@ function rankingcounter_animation_end(rankingcounter) {
 
     if (rankingcounter.drawable_animation) {
         animsprite_force_end(rankingcounter.drawable_animation);
-        animsprite_update_drawable(rankingcounter.drawable_animation, rankingcounter.drawable_accuracy, 0);
-        animsprite_update_drawable(rankingcounter.drawable_animation, rankingcounter.drawable_rank, 1);
+        animsprite_update_drawable(rankingcounter.drawable_animation, rankingcounter.drawable_accuracy, false);
+        animsprite_update_drawable(rankingcounter.drawable_animation, rankingcounter.drawable_rank, true);
     }
 }
 
@@ -389,7 +393,7 @@ function rankingcounter_animate1(rankingcounter, elapsed) {
 
         if (item.animsprite) {
             completed = animsprite_animate(item.animsprite, elapsed);
-            animsprite_update_statesprite(item.animsprite, item.statesprite, 1);
+            animsprite_update_statesprite(item.animsprite, item.statesprite, true);
         }
 
         if (completed) {
@@ -400,8 +404,8 @@ function rankingcounter_animate1(rankingcounter, elapsed) {
 
     if (rankingcounter.drawable_animation) {
         if (animsprite_animate(rankingcounter.drawable_animation, elapsed)) total--;
-        animsprite_update_drawable(rankingcounter.drawable_animation, rankingcounter.drawable_accuracy, 0);
-        animsprite_update_drawable(rankingcounter.drawable_animation, rankingcounter.drawable_rank, 1);
+        animsprite_update_drawable(rankingcounter.drawable_animation, rankingcounter.drawable_accuracy, false);
+        animsprite_update_drawable(rankingcounter.drawable_animation, rankingcounter.drawable_rank, true);
     }
 
     return total;
@@ -410,7 +414,7 @@ function rankingcounter_animate1(rankingcounter, elapsed) {
 function rankingcounter_animate2(rankingcounter, elapsed) {
     if (rankingcounter.enable_accuracy && rankingcounter.show_accuracy) {
         let completed = textsprite_animate(rankingcounter.textsprite, elapsed);
-        if (completed) rankingcounter.show_accuracy = 0;
+        if (completed) rankingcounter.show_accuracy = false;
         return completed;
     }
 
@@ -443,10 +447,10 @@ function rankingcounter_draw2(rankingcounter, pvrctx) {
 function rankingcounter_internal_add_state(statesprite, max_height, modelholder, prefix, state_name) {
     let animation_name = string_concat_for_state_name(2, prefix, state_name);
 
-    let texture = modelholder_get_texture(modelholder, 0);
+    let texture = modelholder_get_texture(modelholder, false);
     let vertex_color = modelholder_get_vertex_color(modelholder);
-    let animsprite = modelholder_create_animsprite(modelholder, animation_name, 0, 0);
-    let atlas_entry = modelholder_get_atlas_entry2(modelholder, animation_name, 0);
+    let animsprite = modelholder_create_animsprite(modelholder, animation_name, false, false);
+    let atlas_entry = modelholder_get_atlas_entry2(modelholder, animation_name);
 
     let state = statesprite_state_add2(
         statesprite, texture, animsprite, atlas_entry, vertex_color, animation_name
@@ -458,16 +462,16 @@ function rankingcounter_internal_add_state(statesprite, max_height, modelholder,
         return 0;
     }
 
-    let temp = [0, 0];
+    let temp = [0.0, 0.0];
     imgutils_get_statesprite_original_size(state, temp);
-    imgutils_calc_size(temp[0], temp[1], -1, max_height, temp);
+    imgutils_calc_size(temp[0], temp[1], -1.0, max_height, temp);
 
     state.draw_width = temp[0];
     state.draw_height = temp[1];
 
     // center the sprite on the draw location
-    state.offset_x = state.draw_width / -2;
-    state.offset_y = state.draw_height / -2;
+    state.offset_x = state.draw_width / -2.0;
+    state.offset_y = state.draw_height / -2.0;
 
     return 1;
 }

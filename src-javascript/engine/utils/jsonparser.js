@@ -1,12 +1,5 @@
 "use string";
 
-const JSON_VALUE_TYPE_STRING = 0;
-const JSON_VALUE_TYPE_BOOLEAN = 1;
-const JSON_VALUE_TYPE_NUMBER = 2;
-const JSON_VALUE_TYPE_ARRAY = 4;
-const JSON_VALUE_TYPE_NULL = 5;
-const JSON_VALUE_TYPE_OBJECT = 6;
-const JSON_VALUE_TYPE_UNKNOWN = 7;
 
 const JSON_VALUE_TYPE_UNKNOWN = 0;
 const JSON_VALUE_TYPE_NULL = 1;
@@ -21,7 +14,9 @@ const JSON_VALUE_TYPE_OBJECT = 7;
 async function json_load_from(src) {
     try {
         src = await fs_get_full_path_and_override(src);
-        return await io_request_file(src, IO_REQUEST_JSON);
+        let ret = await io_request_file(src, IO_REQUEST_JSON);
+        src = undefined;
+        return ret;
     } catch (e) {
         console.error("json_load_from() failed", e);
         return null;
@@ -42,7 +37,7 @@ async function json_load_direct(src) {
     try {
         return await io_native_foreground_request(src, IO_REQUEST_JSON);
     } catch (e) {
-        console.error("son_load_direct() failed", e);
+        console.error("json_load_direct() failed", e);
         return null;
     }
 }
@@ -102,7 +97,6 @@ function json_read_array_item_boolean(json_array, index, default_value) {
     if (value === undefined) return default_value;
     if (typeof (value) == "boolean") return value;
     console.warn(`json:expected boolean in ${index}: ${value}`);
-    if (typeof (value) == "number") return value == 1;
     return default_value;
 }
 
@@ -223,7 +217,7 @@ function json_has_property_array(json, name) {
 }
 
 function json_has_property_object(json, name) {
-    return json && (json[name] === null || json[name] instanceof Object);
+    return json && json[name] instanceof Object;
 }
 
 function json_has_property_hex(json, name) {
@@ -243,23 +237,24 @@ function json_get_array_item_type(json_array, index) {
     if (!json_array) return JSON_VALUE_TYPE_UNKNOWN;
 
     let value = json_array[index];
-    if (value === undefined) return JSON_VALUE_TYPE_UNKNOWN;
 
+    if (value !== undefined) {
         if (value === null) return JSON_VALUE_TYPE_NULL;
-    switch (typeof value) {
-        case "boolean":
-            return JSON_VALUE_TYPE_BOOLEAN;
-        case "number":
+        switch (typeof value) {
+            case "boolean":
+                return JSON_VALUE_TYPE_BOOLEAN;
+            case "number":
                 return Number.isInteger(value) ? JSON_VALUE_TYPE_NUMBER_LONG: JSON_VALUE_TYPE_NUMBER_DOUBLE;
-        case "object":
+            case "object":
                 if (value instanceof Array)
                     return JSON_VALUE_TYPE_ARRAY;
                 else
-            return JSON_VALUE_TYPE_OBJECT;
-        case "string":
-            return JSON_VALUE_TYPE_STRING;
-        default:
-            return JSON_VALUE_TYPE_UNKNOWN;
+                    return JSON_VALUE_TYPE_OBJECT;
+            case "string":
+                return JSON_VALUE_TYPE_STRING;
+        }
     }
+
+    return JSON_VALUE_TYPE_UNKNOWN;
 }
 

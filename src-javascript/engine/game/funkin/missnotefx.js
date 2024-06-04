@@ -4,12 +4,13 @@ async function missnotefx_init() {
     return {
         missnote1: await soundplayer_init("/assets/common/sound/missnote1.ogg"),
         missnote2: await soundplayer_init("/assets/common/sound/missnote2.ogg"),
-        missnote3: await soundplayer_init("/assets/common/sound/missnote3.ogg")
+        missnote3: await soundplayer_init("/assets/common/sound/missnote3.ogg"),
+        disabled: false
     };
 }
 
 function missnotefx_destroy(missnotefx) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(missnotefx);
+    luascript_drop_shared(missnotefx);
 
     if (missnotefx.missnote1) soundplayer_destroy(missnotefx.missnote1);
     if (missnotefx.missnote2) soundplayer_destroy(missnotefx.missnote2);
@@ -17,9 +18,20 @@ function missnotefx_destroy(missnotefx) {
     missnotefx = undefined;
 }
 
+
+function missnotefx_stop(missnotefx) {
+    if (missnotefx.missnote1) soundplayer_stop(missnotefx.missnote1);
+    if (missnotefx.missnote2) soundplayer_stop(missnotefx.missnote2);
+    if (missnotefx.missnote3) soundplayer_stop(missnotefx.missnote3);
+}
+
+function missnotefx_disable(missnotefx, disabled) {
+    missnotefx.disabled = !!disabled;
+}
+
 function missnotefx_play_effect(missnotefx) {
-    let soundplayer_id = math2d_random_int(0, 2);
-    let volume = math2d_lerp(0.1, 0.3, Math.random());
+    if (missnotefx.disabled) return;
+
     let soundplayer_id = math2d_random_int(0, 3);
     let volume = math2d_lerp(0.1, 0.3, math2d_random_float());
 

@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "CommonJS",
         "target": "ES2022",
         "checkJs": true,
         "noImplicitAny": false,

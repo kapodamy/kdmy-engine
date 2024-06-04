@@ -8,7 +8,7 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
     if (!json) throw new Error("missing or invalid file: " + src);
 
     fs_folder_stack_push();
-    fs_set_working_folder(src, 1);
+    fs_set_working_folder(src, true);
 
     let model_character = null;
     let model_health_icons = null;
@@ -63,8 +63,8 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
         align_horizontal: ALIGN_CENTER,
 
         has_reference_size: false,
-        reference_width: -1,
-        reference_height: -1,
+        reference_width: -1.0,
+        reference_height: -1.0,
 
         opposite_directions: {
             sizes: 2,
@@ -83,16 +83,16 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
     let json_actions = json_read_object(json, "actions");
     character_manifest_internal_parse_actions(json_actions, character_manifest.actions, src);
 
-    character_manifest.align_vertical = charactermanifest_internal_align(json, "alignVertical", 1);
-    character_manifest.align_horizontal = charactermanifest_internal_align(json, "alignHorizontal", 0);
+    character_manifest.align_vertical = charactermanifest_internal_align(json, "alignVertical", true);
+    character_manifest.align_horizontal = charactermanifest_internal_align(json, "alignHorizontal", false);
 
     character_manifest.has_reference_size = json_has_property(json, "referenceSize");
     if (character_manifest.has_reference_size) {
         if (!json_has_property_object(json, "referenceSize")) {
             throw new Error(`invalid 'referenceSize' in ${src}`);
         }
-        character_manifest.reference_width = json_read_number(json, "width", -1);
-        character_manifest.reference_height = json_read_number(json, "height", -1);
+        character_manifest.reference_width = json_read_number(json, "width", -1.0);
+        character_manifest.reference_height = json_read_number(json, "height", -1.0);
     }
 
     let opposite_directions = json_read_object(json, "oppositeDirections");
@@ -147,7 +147,6 @@ function charactermanifest_destroy(character_manifest) {
     character_manifest.sing_suffix = undefined;
     character_manifest.sing_alternate_suffix = undefined;
     character_manifest.sing_alternate_prefix = undefined;
-    character_manifest.allow_alternate_idle = undefined;
     character_manifest.week_selector_model = undefined;
     character_manifest.week_selector_idle_anim_name = undefined;
     character_manifest.week_selector_choosen_anim_name = undefined;
@@ -180,7 +179,7 @@ function charactermanifest_destroy(character_manifest) {
 
 
 function charactermanifest_internal_parse_extra(json_extra, ignore_name, default_beat_stop, entry) {
-    const output_offsets = [0, 0];
+    const output_offsets = [0.0, 0.0];
     if (ignore_name) {
         entry.name = null;
     } else {
@@ -210,7 +209,6 @@ function charactermanifest_internal_path_of(json, property_name, optional_src) {
         throw new Error(`missing '${property_name}' in the '${optional_src}' file`);
     }
     let path = fs_get_full_path(str);
-    str = undefined;
     return path;
 }
 
@@ -230,17 +228,16 @@ function charactermanifest_internal_align(json, property_name, is_vertical) {
             break;
     }
 
-    str = undefined;
     return align;
 }
 
 function charactermanifest_internal_read_offsets(json, output_offsets) {
-    output_offsets[0] = json_read_number(json, "offsetX", 0);
-    output_offsets[1] = json_read_number(json, "offsetY", 0);
+    output_offsets[0] = json_read_number(json, "offsetX", 0.0);
+    output_offsets[1] = json_read_number(json, "offsetY", 0.0);
 }
 
 function character_manifest_internal_parse_actions(json_actions, actions, src) {
-    const output_offsets = [0, 0];
+    const output_offsets = [0.0, 0.0];
 
     let sing_array = json_read_array(json_actions, "sing");
     let sing_array_size = json_read_array_length(sing_array);
@@ -281,7 +278,7 @@ function character_manifest_internal_parse_actions(json_actions, actions, src) {
         };
 
         if (!actions.sing[i].direction) {
-            throw new Error(`'missing actions.sing[${i}].direction' in '${src}'`)
+            throw new Error(`missing 'actions.sing[${i}].direction' in '${src}'`)
         }
     }
     for (let i = 0; i < actions.miss_size; i++) {
@@ -298,26 +295,26 @@ function character_manifest_internal_parse_actions(json_actions, actions, src) {
         };
 
         if (!actions.miss[i].direction) {
-            throw new Error(`missing actions.miss[${i}].direction in '${src}'`);
+            throw new Error(`missing 'actions.miss[${i}].direction' in '${src}'`);
         }
     }
     for (let i = 0; i < actions.extras_size; i++) {
         let item_json = json_read_array_item_object(extras_array, i);
 
         actions.extras[i] = {};
-        charactermanifest_internal_parse_extra(item_json, 0, -1, actions.extras[i]);
+        charactermanifest_internal_parse_extra(item_json, false, -1.0, actions.extras[i]);
     }
 
     actions.has_idle = json_has_property_object(json_actions, "idle");
     if (actions.has_idle) {
         let json_extra = json_read_object(json_actions, "idle");
-        charactermanifest_internal_parse_extra(json_extra, 1, -1, actions.idle);
+        charactermanifest_internal_parse_extra(json_extra, true, -1.0, actions.idle);
     }
 
     actions.has_hey = json_has_property_object(json_actions, "hey");
     if (actions.has_hey) {
         let json_extra = json_read_object(json_actions, "hey");
-        charactermanifest_internal_parse_extra(json_extra, 1, -1, actions.hey);
+        charactermanifest_internal_parse_extra(json_extra, true, -1.0, actions.hey);
     }
 
 }
@@ -337,7 +334,7 @@ function character_manifest_internal_destroy_actions(actions) {
         actions.miss[i].model_src = undefined;
     }
 
-    for (let i = 0; i < actions.extra_size; i++) {
+    for (let i = 0; i < actions.extras_size; i++) {
         actions.extras[i].name = undefined;
         actions.extras[i].anim = undefined;
         actions.extras[i].anim_hold = undefined;

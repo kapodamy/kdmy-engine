@@ -8,7 +8,7 @@
  */
 var /**@type {string}*/ filesystemdialog_current_path = null;
 var /**@type {FSEntryKDY[]}*/ filesystemdialog_current_entries = null;
-var /**@type {bool}*/ filesystemdialog_choosing_folder = false;
+var /**@type {boolean}*/ filesystemdialog_choosing_folder = false;
 var /**@type {function(string):void}*/ filesystemdialog_resolve = null;
 
 /* __attribute__((constructor)) void expansionsloader_init_defaults() */ {
@@ -37,7 +37,7 @@ var /**@type {function(string):void}*/ filesystemdialog_resolve = null;
 }
 
 
-function filesystemdialog_main(/**@type {bool}*/folder_or_file_chooser, /**@type {string}*/start_folder) {
+function filesystemdialog_main(/**@type {boolean}*/folder_or_file_chooser, /**@type {string}*/start_folder) {
     return new Promise(async function (resolve, reject) {
         if (!start_folder || start_folder == FS_CHAR_SEPARATOR) {
             filesystemdialog_resolve = resolve;

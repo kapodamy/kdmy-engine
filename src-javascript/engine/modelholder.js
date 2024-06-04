@@ -20,7 +20,7 @@ async function modelholder_init(src) {
 
     // C and C# only
     //fs_folder_stack_push();
-    //fs_set_working_folder(src, 1);
+    //fs_set_working_folder(src, true);
 
     // load the model manifest (if was specified)
     let manifest_texture = null;
@@ -37,10 +37,10 @@ async function modelholder_init(src) {
             return null;
         }
         let json = await json_load_from(full_path);
-        manifest_texture = json_read_string(json, "texture", null);
-        manifest_atlas = json_read_string(json, "atlas", null);
-        manifest_animlist = json_read_string(json, "animlist", null);
-        vertex_color = json_read_hex(json, "vertexColor", vertex_color)
+        manifest_texture = strdup(json_read_string(json, "texture", null));
+        manifest_atlas = strdup(json_read_string(json, "atlas", null));
+        manifest_animlist = strdup(json_read_string(json, "animlist", null));
+        vertex_color = json_read_hex(json, "vertexColor", vertex_color);
         json_destroy(json);
     } else {
         let temp = full_path;
@@ -61,7 +61,10 @@ async function modelholder_init(src) {
         fallback_texture_filename = undefined;
     }
 
-    // JS only
+    //
+    // (JS Only) to avoid use "fs_set_working_folder()" function build the absolute path here
+    // this is a workarround because there no thread local storage (TLS) available on javascript
+    //
     if (manifest_texture != null) manifest_texture = fs_build_path2(full_path, manifest_texture);
     if (manifest_atlas != null) manifest_atlas = fs_build_path2(full_path, manifest_atlas);
     if (manifest_animlist != null) manifest_animlist = fs_build_path2(full_path, manifest_animlist);
@@ -162,7 +165,7 @@ async function modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
     } else if (atlas_src) {
         // try use atlas name instead
         fs_folder_stack_push();
-        fs_set_working_folder(atlas_src, 1);
+        fs_set_working_folder(atlas_src, true);
 
         let temp = fs_get_filename_without_extension(atlas_src);
         let texture_path = string_concat(2, temp, ".png");
@@ -185,6 +188,22 @@ async function modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
     return modelholder;
 }
 
+function modelholder_init3(vertex_color_rgb8, texture, atlas, animlist) {
+    let modelholder = {
+        atlas: atlas ?? MODELHOLDER_STUB_ATLAS,
+        animlist: animlist ?? MODELHOLDER_STUB_ANIMLIST,
+        texture: texture,
+        vertex_color_rgb8: vertex_color_rgb8,
+
+        id: MODELHOLDER_IDS++,
+        instance_references: 1,
+        instance_src: null
+    };
+
+    MODELHOLDER_POOL.set(modelholder.id, modelholder);
+    return modelholder;
+}
+
 
 function modelholder_destroy(modelholder) {
 
@@ -192,24 +211,26 @@ function modelholder_destroy(modelholder) {
     modelholder.instance_references--;
     if (modelholder.instance_references > 0) return;
 
-    if (modelholder.atlas != MODELHOLDER_STUB_ATLAS && modelholder.atlas)
-        atlas_destroy(modelholder.atlas);
+    if (modelholder.instance_src != null) {
+        if (modelholder.atlas != MODELHOLDER_STUB_ATLAS && modelholder.atlas)
+            atlas_destroy(modelholder.atlas);
 
-    if (modelholder.animlist != MODELHOLDER_STUB_ANIMLIST)
-        animlist_destroy(modelholder.animlist);
+        if (modelholder.animlist != MODELHOLDER_STUB_ANIMLIST)
+            animlist_destroy(modelholder.animlist);
 
-    if (modelholder.texture)
-        texture_destroy(modelholder.texture);
+        if (modelholder.texture)
+            texture_destroy(modelholder.texture);
+    }
 
     MODELHOLDER_POOL.delete(modelholder.id);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(modelholder);
+    luascript_drop_shared(modelholder);
     modelholder.instance_src = undefined;
     modelholder = undefined;
 }
 
 
 function modelholder_is_invalid(modelholder) {
-    if (!modelholder) return 1;
+    if (!modelholder) return true;
     return modelholder.atlas == MODELHOLDER_STUB_ATLAS &&
         modelholder.animlist == MODELHOLDER_STUB_ANIMLIST &&
         !modelholder.texture;
@@ -244,7 +265,7 @@ function modelholder_create_sprite(modelholder, atlas_entry_name, with_animation
     let sprite;
     if (modelholder.texture) {
         sprite = sprite_init(texture_share_reference(modelholder.texture));
-        let atlas_entry = modelholder_get_atlas_entry2(modelholder, atlas_entry_name, 0);
+        let atlas_entry = modelholder_get_atlas_entry2(modelholder, atlas_entry_name);
         if (atlas_entry) atlas_apply_from_entry(sprite, atlas_entry, 1);
     } else {
         sprite = sprite_init_from_rgb8(modelholder.vertex_color_rgb8);
@@ -298,13 +319,9 @@ function modelholder_create_animsprite(modelholder, animation_name, fallback_sta
         return null;
 }
 
-function modelholder_get_atlas_entry(modelholder, atlas_entry_name, return_copy) {
+function modelholder_get_atlas_entry(modelholder, atlas_entry_name) {
     if (modelholder.atlas == MODELHOLDER_STUB_ATLAS) return null;
-
-    if (return_copy)
-        return atlas_get_entry_copy(modelholder.atlas, atlas_entry_name);
-    else
-        return atlas_get_entry(modelholder.atlas, atlas_entry_name);
+    return atlas_get_entry(modelholder.atlas, atlas_entry_name);
 }
 
 /**
@@ -312,18 +329,15 @@ function modelholder_get_atlas_entry(modelholder, atlas_entry_name, return_copy)
  * entry with number suffix (example "dance left000"), 
  * @param {Object} modelholder The modelholder instance
  * @param {string} atlas_entry_name Entry name and/or entry name prefix
- * @param {bool} return_copy 1 to clone entry (must be free() later), otherwise, 0 to obtain an reference
  * @returns {object} the atlas entry or NULL if not found
  */
-function modelholder_get_atlas_entry2(modelholder, atlas_entry_name, return_copy) {
+function modelholder_get_atlas_entry2(modelholder, atlas_entry_name) {
     if (modelholder.atlas == MODELHOLDER_STUB_ATLAS) return null;
 
     let atlas_entry = atlas_get_entry(modelholder.atlas, atlas_entry_name);
 
     if (!atlas_entry)
         atlas_entry = atlas_get_entry_with_number_suffix(modelholder.atlas, atlas_entry_name);
-
-    if (atlas_entry && return_copy) atlas_entry = clone_object(atlas_entry);
 
     return atlas_entry;
 }
@@ -332,7 +346,7 @@ function modelholder_get_texture_resolution(modelholder, output_resolution) {
     if (modelholder.atlas == MODELHOLDER_STUB_ATLAS) {
         output_resolution[0] = FUNKIN_SCREEN_RESOLUTION_WIDTH;
         output_resolution[1] = FUNKIN_SCREEN_RESOLUTION_HEIGHT;
-        return 0;
+        return false;
     }
     return atlas_get_texture_resolution(modelholder.atlas, output_resolution);
 }

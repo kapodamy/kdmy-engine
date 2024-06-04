@@ -5,7 +5,6 @@ const WEEKSELECTOR_SONGS = "TRACKS";
 const WEEKSELECTOR_SONGS_MORE = "...";
 const WEEKSELECTOR_COMPLETED = "WEEKS COMPLETED";
 const WEEKSELECTOR_CHOOSEN = "WEEK CHOOSEN";
-const WEEKSELECTOR_DIFFICULTY = "DIFFICULTY";
 const WEEKSELECTOR_ALT_WARNING = "SONGS WARNING";
 const WEEKSELECTOR_SENSIBLE_CONTENT = "SENSIBLE CONTENT";
 const WEEKSELECTOR_HELP_N_ALT = "USE ALTERNATIVE TRACKS";
@@ -14,12 +13,6 @@ const WEEKSELECTOR_HELP_GFBF_SWITCH = "SWITCH BOYFRIEND/GIRLFRIEND";
 const WEEKSELECTOR_HELP_SELECT_WEEK = "SELECT ANOTHER WEEK";
 const WEEKSELECTOR_HELP_BACK = "BACK";
 const WEEKSELECTOR_HELP_START = "PLAY THIS WEEK";
-const WEEKSELECTOR_GIRLFRIEND = "GIRLFRIEND";
-const WEEKSELECTOR_BOYFRIEND = "BOYFRIEND";
-
-const WEEKSELECTOR_ANIM_IDLE = "idle";
-const WEEKSELECTOR_ANIM_CHOOSEN = "choosen";
-const WEEKSELECTOR_CHARACTER_Z_INDEX = 3;
 
 const WEEKSELECTOR_BUTTON_DELAY = 200;
 const WEEKSELECTOR_BUTTON_X = "x";
@@ -27,8 +20,6 @@ const WEEKSELECTOR_BUTTON_B = "b";
 const WEEKSELECTOR_BUTTON_LT_RT = "lt_rt";
 const WEEKSELECTOR_BUTTON_START = "start";
 
-const WEEKSELECTOR_ARROW_NAME = "arrow_L push";
-const WEEKSELECTOR_ARROW_NAME2 = "arrow_L";
 const WEEKSELECTOR_LOCKED = "locked";
 
 const WEEKSELECTOR_BUTTONS_MODEL = "/assets/common/image/week-selector/dreamcast_buttons.xml";
@@ -78,34 +69,34 @@ class UI {
 class STATE {
     weekinfo;
 
-    /**@type {bool} */
+    /**@type {boolean} */
     update_ui = false;
-    /**@type {bool} */
+    /**@type {boolean} */
     update_extra_ui = false;
     page_selected_ui = 0;
     play_sound = new Object;
 
-    /**@type {bool} */
+    /**@type {boolean} */
     choosing_boyfriend = true;
 
-    /** @type {bool} */
+    /** @type {boolean} */
     week_unlocked;
 
-    /**@type {bool} */
+    /**@type {boolean} */
     has_choosen_alternate = false;
     difficult = "";
-    /**@type {bool} */
+    /**@type {boolean} */
     can_start = false;
 
-    /**@type {bool} */
+    /**@type {boolean} */
     quit = false;
-    /**@type {bool} */
+    /**@type {boolean} */
     back_to_main_menu = false;
 
     default_background_color = 0x00;
     custom_layout;
 
-    /**@type {bool} */
+    /**@type {boolean} */
     bg_music_paused;
     bg_music = {};
 
@@ -113,7 +104,7 @@ class STATE {
 }
 
 function weekselector_show_week_info(/**@type {UI}*/ui, weekinfo, score) {
-    let max_draw_size = [0, 0];
+    let max_draw_size = [0.0, 0.0];
     let font_size = textsprite_get_font_size(ui.songs_list);
     textsprite_get_max_draw_size(ui.songs_list, max_draw_size);
 
@@ -121,10 +112,10 @@ function weekselector_show_week_info(/**@type {UI}*/ui, weekinfo, score) {
     let max_lines = Math.trunc(max_draw_size[1] / font_size) - 1;
     let has_overflow;
     if (songs_count > max_lines) {
-        has_overflow = 1;
+        has_overflow = true;
         songs_count = max_lines;
     } else {
-        has_overflow = 0;
+        has_overflow = false;
     }
 
     let list = ui.stringbuilder;
@@ -142,8 +133,8 @@ function weekselector_show_week_info(/**@type {UI}*/ui, weekinfo, score) {
 
     // set the strings
     textsprite_set_text_formated(ui.score, "$s$l", WEEKSELECTOR_SCORE, score);
-    textsprite_set_text_intern(ui.description, 1, weekinfo.description);
-    textsprite_set_text_intern(ui.songs_list, 1, stringbuilder_intern(ui.stringbuilder));
+    textsprite_set_text_intern(ui.description, true, weekinfo.description);
+    textsprite_set_text_intern(ui.songs_list, true, stringbuilder_intern(ui.stringbuilder));
 }
 
 function weekselector_change_page(/**@type {UI}*/ui, page) {
@@ -152,10 +143,10 @@ function weekselector_change_page(/**@type {UI}*/ui, page) {
     layout_set_group_visibility(ui.layout, "ui_difficult_selector", page == 1);
     layout_set_group_visibility(ui.layout, "ui_character_selector", page == 2);
 
-    weekselector_helptext_set_visible(ui.helptext_alternate, 0);
-    weekselector_helptext_set_visible(ui.helptext_bfgf, 0);
+    weekselector_helptext_set_visible(ui.helptext_alternate, false);
+    weekselector_helptext_set_visible(ui.helptext_bfgf, false);
     weekselector_helptext_set_visible(ui.helptext_back, page > 0);
-    weekselector_helptext_set_visible(ui.helptext_start, 0);
+    weekselector_helptext_set_visible(ui.helptext_start, false);
 }
 
 async function weekselector_trigger_difficult_change(/**@type {UI}*/ui,/**@type {STATE}*/state, empty) {
@@ -165,7 +156,7 @@ async function weekselector_trigger_difficult_change(/**@type {UI}*/ui,/**@type 
 
     let default_difficult = weekselector_difficult_get_selected(ui.weekdifficult);
     if (default_difficult) {
-        let difficult_action = "selected-difficult-" + default_difficult;
+        let difficult_action = string_concat(2, "selected-difficult-", default_difficult);
         await weekselector_trigger_event(ui, state, difficult_action);
         difficult_action = undefined;
     }
@@ -177,7 +168,7 @@ async function weekselector_trigger_alternate_change(ui, /**@type {STATE}*/state
 }
 
 async function weekselector_load_custom_week_background(/**@type {STATE}*/state) {
-    if (state.custom_layout != null) {
+    if (state.custom_layout) {
         layout_destroy(state.custom_layout);
         state.custom_layout = null;
     }
@@ -187,10 +178,10 @@ async function weekselector_load_custom_week_background(/**@type {STATE}*/state)
         return;
     }
 
-    let has_custom_bg_music = 0;
+    let has_custom_bg_music = false;
 
     state.custom_layout = await layout_init(state.weekinfo.custom_selector_layout);
-    if (state.custom_layout != null) {
+    if (state.custom_layout) {
         layout_trigger_any(state.custom_layout, "show-principal");
         if (!state.week_unlocked) layout_trigger_any(state.custom_layout, "week-locked");
 
@@ -215,13 +206,15 @@ function weekselector_set_text(layout, name, format, text_or_integer) {
     if (format)
         textsprite_set_text_formated(textsprite, format, text_or_integer);
     else
-        textsprite_set_text_intern(textsprite, 1, text_or_integer);
+        textsprite_set_text_intern(textsprite, true, text_or_integer);
 }
 
 function weekselector_trigger_menu_action(ui, state, name, selected, choosen) {
     if (!state.weekinfo) return;
     main_helper_trigger_action_menu(
-        ui.layout, state.weekinfo.display_name ?? state.weekinfo.name, name, selected, choosen
+        ui.layout, 
+        state.weekinfo.display_name ?? state.weekinfo.name, 
+        name, selected, choosen
     );
 }
 
@@ -278,28 +271,28 @@ async function weekselector_main() {
         weektitle: weekselector_weektitle_init(layout),
 
         mdl_boyfriend: await weekselector_mdlselect_init(
-            animlist_ui, modelholder_ui, layout, texpool, 1
+            animlist_ui, modelholder_ui, layout, texpool, true
         ),
         mdl_girlfriend: await weekselector_mdlselect_init(
-            animlist_ui, modelholder_ui, layout, texpool, 0
+            animlist_ui, modelholder_ui, layout, texpool, false
         ),
 
         weekdifficult: await weekselector_difficult_init(animlist_ui, modelholder_ui, layout),
 
         helptext_alternate: weekselector_helptext_init(
-            modelholder_buttons_ui, layout, 3, 0, WEEKSELECTOR_BUTTON_X,
+            modelholder_buttons_ui, layout, 3, false, WEEKSELECTOR_BUTTON_X,
             WEEKSELECTOR_HELP_N_ALT, WEEKSELECTOR_HELP_W_ALT
         ),
         helptext_bfgf: weekselector_helptext_init(
-            modelholder_buttons_ui, layout, 2, 0, WEEKSELECTOR_BUTTON_LT_RT,
+            modelholder_buttons_ui, layout, 2, false, WEEKSELECTOR_BUTTON_LT_RT,
             WEEKSELECTOR_HELP_GFBF_SWITCH, null
         ),
         helptext_back: weekselector_helptext_init(
-            modelholder_buttons_ui, layout, 1, 0, WEEKSELECTOR_BUTTON_B,
+            modelholder_buttons_ui, layout, 1, false, WEEKSELECTOR_BUTTON_B,
             WEEKSELECTOR_HELP_BACK, WEEKSELECTOR_HELP_SELECT_WEEK
         ),
         helptext_start: weekselector_helptext_init(
-            modelholder_buttons_ui, layout, 1, 1, WEEKSELECTOR_BUTTON_START,
+            modelholder_buttons_ui, layout, 1, true, WEEKSELECTOR_BUTTON_START,
             WEEKSELECTOR_HELP_START, null
         ),
 
@@ -343,30 +336,30 @@ async function weekselector_main() {
     let modding = await modding_init(layout, WEEKSELECTOR_MODDING_SCRIPT);
     modding.native_menu = null;
     modding.callback_option = null;
-    await modding_init(modding, MODDING_NATIVE_MENU_SCREEN);
+    await modding_helper_notify_init(modding, MODDING_NATIVE_MENU_SCREEN);
 
     /** @type {STATE} */
     const state = {
         weekinfo: weekselector_weeklist_get_selected(ui.weeklist),
         difficult: last_difficult_played,
 
-        week_unlocked: 0,
+        week_unlocked: false,
         play_sound: 0,
 
-        default_background_color: 0,
+        default_background_color: 0x00,
 
-        can_start: 0,
-        choosing_boyfriend: 1,
-        has_choosen_alternate: 0,
+        can_start: false,
+        choosing_boyfriend: true,
+        has_choosen_alternate: false,
 
-        update_extra_ui: 1,
+        update_extra_ui: true,
         page_selected_ui: 0,
         update_ui: true,
-        quit: 0,
-        back_to_main_menu: 0,
+        quit: false,
+        back_to_main_menu: false,
 
         custom_layout: null,
-        bg_music_paused: 0,
+        bg_music_paused: false,
         bg_music: layout_get_soundplayer(layout, "background_music") ?? background_menu_music,
         modding: modding
     };
@@ -381,7 +374,7 @@ async function weekselector_main() {
     weekselector_change_page(ui, state.page_selected_ui);
     state.week_unlocked = funkinsave_contains_unlock_directive(state.weekinfo.unlock_directive);
     await weekselector_load_custom_week_background(state);
-    weekselector_trigger_menu_action(ui, state, "weeklist", 1, 0);
+    weekselector_trigger_menu_action(ui, state, "weeklist", true, false);
 
     while (!state.quit) {
         let elapsed = await pvrctx_wait_ready();
@@ -392,8 +385,8 @@ async function weekselector_main() {
         let res = await modding_helper_handle_custom_menu(state.modding, ui.maple_pads, elapsed);
 
         if (state.modding.has_exit || res == MODDING_HELPER_RESULT_BACK) {
-            state.back_to_main_menu = 1;
-            state.quit = 1;
+            state.back_to_main_menu = true;
+            state.quit = true;
             break;
         }
 
@@ -437,7 +430,7 @@ async function weekselector_main() {
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
 
-        if (state.custom_layout != null) {
+        if (state.custom_layout) {
             layout_animate(state.custom_layout, elapsed);
             layout_draw(state.custom_layout, pvr_context);
         }
@@ -452,7 +445,7 @@ async function weekselector_main() {
         await weekselector_trigger_event(ui, state, "back-to-main-menu");
     } else {
         if (state.bg_music) soundplayer_stop(state.bg_music);
-        weekselector_change_page(ui, 0);
+        weekselector_change_page(ui, false);
         if (sound_confirm) soundplayer_replay(sound_confirm);
 
         if (state.custom_layout && layout_trigger_any(state.custom_layout, "week-choosen")) {
@@ -464,14 +457,14 @@ async function weekselector_main() {
         }
 
         await modding_helper_notify_event(state.modding, "week-choosen");
-        layout_set_group_visibility(layout, "ui_game_progress", 0);
+        layout_set_group_visibility(layout, "ui_game_progress", false);
         weekselector_weektitle_move_difficult(ui.weektitle, ui.weekdifficult);
         weekselector_mdlselect_toggle_choosen(ui.mdl_boyfriend);
         weekselector_mdlselect_toggle_choosen(ui.mdl_girlfriend);
         weekselector_weeklist_toggle_choosen(ui.weeklist);
     }
 
-    while (1) {
+    while (true) {
         let elapsed = await pvrctx_wait_ready();
 
         beatwatcher_global_set_timestamp_from_kos_timer();
@@ -481,7 +474,7 @@ async function weekselector_main() {
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
 
-        if (state.custom_layout != null) {
+        if (state.custom_layout) {
             layout_animate(state.custom_layout, elapsed);
             layout_draw(state.custom_layout, pvr_context);
         }
@@ -557,7 +550,7 @@ async function weekselector_main() {
 
     background_menu_music = await soundplayer_init(FUNKIN_BACKGROUND_MUSIC);
     if (background_menu_music) {
-        soundplayer_loop_enable(background_menu_music, 1);
+        soundplayer_loop_enable(background_menu_music, true);
         soundplayer_replay(background_menu_music);
     }
 
@@ -585,7 +578,7 @@ async function weekselector_page0(/**@type {UI}*/ui, /**@type {STATE}*/state) {
             sprite_set_vertex_color_rgb8(ui.week_background_color, background_color);
         }
 
-        state.update_extra_ui = 0;
+        state.update_extra_ui = false;
     }
 
     let buttons = gamepad_has_pressed_delayed(
@@ -611,8 +604,8 @@ async function weekselector_page0(/**@type {UI}*/ui, /**@type {STATE}*/state) {
             state.page_selected_ui = 1;
         }
     } else if (buttons & (GAMEPAD_B | GAMEPAD_BACK)) {
-        state.quit = 1;
-        state.back_to_main_menu = 1;
+        state.quit = true;
+        state.back_to_main_menu = true;
         return;
     }
 
@@ -628,21 +621,21 @@ async function weekselector_page0(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         return;
     }
 
-    weekselector_trigger_menu_action(ui, state, "weeklist", 0, 0);
+    weekselector_trigger_menu_action(ui, state, "weeklist", false, false);
 
     state.weekinfo = weekselector_weeklist_get_selected(ui.weeklist);
     state.week_unlocked = funkinsave_contains_unlock_directive(state.weekinfo.unlock_directive);
     state.play_sound = WEEKSELECTOR_SND_SCROLL;
-    state.can_start = 0;
-    state.update_extra_ui = 1;
-    state.has_choosen_alternate = 0;
+    state.can_start = false;
+    state.update_extra_ui = true;
+    state.has_choosen_alternate = false;
 
-    weekselector_helptext_set_visible(ui.helptext_start, 0);
+    weekselector_helptext_set_visible(ui.helptext_start, false);
     weekselector_mdlselect_select_default(ui.mdl_boyfriend);
     weekselector_mdlselect_select_default(ui.mdl_girlfriend);
 
     await weekselector_load_custom_week_background(state);
-    weekselector_trigger_menu_action(ui, state, "weeklist", 1, 0);
+    weekselector_trigger_menu_action(ui, state, "weeklist", true, false);
 }
 
 async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
@@ -650,7 +643,7 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
 
     if (state.update_ui) {
         let weekinfo = state.weekinfo;
-        let has_alternate = weekinfo.warning_message ? 1 : 0
+        let has_alternate = weekinfo.warning_message != null;
         let has_warnings = has_alternate && !!weekinfo.sensible_content_message;
 
         weekselector_helptext_set_visible(
@@ -668,7 +661,7 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         weekselector_difficult_relayout(ui.weekdifficult, has_warnings);
 
         weekselector_helptext_set_visible(ui.helptext_start, !has_warnings);
-        await weekselector_trigger_difficult_change(ui, state, 0);
+        await weekselector_trigger_difficult_change(ui, state, false);
         await weekselector_trigger_alternate_change(ui, state);
     }
 
@@ -692,7 +685,7 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
         }
     } else if (buttons & (GAMEPAD_B | GAMEPAD_BACK)) {
         state.page_selected_ui = 0;
-        state.has_choosen_alternate = 0;
+        state.has_choosen_alternate = false;
         state.play_sound = WEEKSELECTOR_SND_CANCEL;
     } else if (buttons & GAMEPAD_T_LR) {
         if (state.weekinfo.disallow_custom_boyfriend && state.weekinfo.disallow_custom_girlfriend) {
@@ -707,13 +700,13 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
             state.play_sound = WEEKSELECTOR_SND_ASTERIK;
         } else {
             state.page_selected_ui = 0;
-            state.can_start = 1;
+            state.can_start = true;
         }
     } else if (buttons & GAMEPAD_START) {
         if (weekselector_difficult_selected_is_locked(ui.weekdifficult))
             state.play_sound = WEEKSELECTOR_SND_ASTERIK;
         else
-            state.quit = 1;
+            state.quit = true;
     }
 
     if (seek_offset == 0) return;
@@ -725,10 +718,10 @@ async function weekselector_page1(/**@type {UI}*/ui, /**@type {STATE}*/state) {
 
     if (weekselector_difficult_scroll(ui.weekdifficult, seek_offset)) {
         state.play_sound = WEEKSELECTOR_SND_SCROLL;
-        state.can_start = 1;
+        state.can_start = true;
         state.difficult = weekselector_difficult_get_selected(ui.weekdifficult);
 
-        await weekselector_trigger_difficult_change(ui, state, 0);
+        await weekselector_trigger_difficult_change(ui, state, false);
         weekselector_show_week_info(
             ui, state.weekinfo, funkinsave_get_week_score(state.weekinfo.name, state.difficult)
         );
@@ -744,8 +737,8 @@ async function weekselector_page2(/**@type {UI}*/ui, /**@type {STATE}*/state) {
     let no_custom_girlfriend = state.weekinfo.disallow_custom_girlfriend;
 
     if (state.update_ui) {
-        if (state.choosing_boyfriend && no_custom_boyfriend) state.choosing_boyfriend = 0;
-        if (!state.choosing_boyfriend && no_custom_girlfriend) state.choosing_boyfriend = 1;
+        if (state.choosing_boyfriend && no_custom_boyfriend) state.choosing_boyfriend = false;
+        if (!state.choosing_boyfriend && no_custom_girlfriend) state.choosing_boyfriend = true;
         weekselector_mdlselect_select_default(ui.mdl_boyfriend);
         weekselector_mdlselect_select_default(ui.mdl_girlfriend);
         weekselector_mdlselect_enable_arrows(ui.mdl_boyfriend, state.choosing_boyfriend);
@@ -771,42 +764,42 @@ async function weekselector_page2(/**@type {UI}*/ui, /**@type {STATE}*/state) {
     } else if (buttons & GAMEPAD_AD_DOWN) {
         seek_offset = 1;
     } else if (buttons & (GAMEPAD_B | GAMEPAD_BACK)) {
-        let has_locked = 0;
+        let has_locked = false;
         if (weekselector_mdlselect_is_selected_locked(ui.mdl_boyfriend)) {
-            has_locked = 1;
+            has_locked = true;
             weekselector_mdlselect_select_default(ui.mdl_boyfriend);
         }
         if (weekselector_mdlselect_is_selected_locked(ui.mdl_girlfriend)) {
-            has_locked = 1;
+            has_locked = true;
             weekselector_mdlselect_select_default(ui.mdl_girlfriend);
         }
         state.page_selected_ui = 1;
         state.play_sound = has_locked ? WEEKSELECTOR_SND_ASTERIK : WEEKSELECTOR_SND_CANCEL;
     } else if (buttons & GAMEPAD_A) {
         let has_locked = weekselector_mdlselect_is_selected_locked(ui.mdl_boyfriend);
-        if (weekselector_mdlselect_is_selected_locked(ui.mdl_girlfriend)) has_locked = 1;
+        if (weekselector_mdlselect_is_selected_locked(ui.mdl_girlfriend)) has_locked = true;
 
         if (has_locked) {
             state.play_sound = WEEKSELECTOR_SND_ASTERIK;
         } else {
             state.page_selected_ui = 0;
-            state.can_start = 1;
+            state.can_start = true;
         }
     } else if (buttons & GAMEPAD_START) {
         let has_locked = weekselector_mdlselect_is_selected_locked(ui.mdl_boyfriend);
-        if (weekselector_mdlselect_is_selected_locked(ui.mdl_girlfriend)) has_locked = 1;
+        if (weekselector_mdlselect_is_selected_locked(ui.mdl_girlfriend)) has_locked = true;
 
         if (has_locked)
             state.play_sound = WEEKSELECTOR_SND_ASTERIK;
         else
-            state.quit = 1;
+            state.quit = true;
     }
 
     if (state.page_selected_ui != 2) await weekselector_trigger_event(ui, state, "model-change-hide");
 
     if (character_model_seek != 0) {
         let old_choose_boyfriend = state.choosing_boyfriend;
-        state.choosing_boyfriend = character_model_seek < 1 ? 1 : 0;
+        state.choosing_boyfriend = character_model_seek < 1;
 
         if (state.choosing_boyfriend != old_choose_boyfriend) {
             if (no_custom_boyfriend || no_custom_girlfriend) {
@@ -831,7 +824,7 @@ async function weekselector_page2(/**@type {UI}*/ui, /**@type {STATE}*/state) {
 
     if (weekselector_mdlselect_scroll(mdlselect, seek_offset)) {
         state.play_sound = WEEKSELECTOR_SND_SCROLL;
-        state.can_start = 1;
+        state.can_start = true;
     } else {
         state.play_sound = WEEKSELECTOR_SND_ASTERIK;
     }

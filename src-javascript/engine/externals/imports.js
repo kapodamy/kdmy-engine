@@ -1,121 +1,21 @@
 
 /**
- * @typedef {object} ModuleLuaScript
- * @property {function(number, number, number, number):ModuleLuaScript} _luascript_init
- * @property {function(ModuleLuaScript, number):void} _luascript_drop_shared
- * @property {function(ModuleLuaScript):void} _luascript_destroy_JS
- * @property {function(number, number):void} _luascript_set_engine_globals_JS
- * @property {function(ModuleLuaScript,bool):void} _luascript_notify_weekinit
- * @property {function(ModuleLuaScript,bool):void} _luascript_notify_beforeready
- * @property {function(ModuleLuaScript):void} _luascript_notify_ready
- * @property {function(ModuleLuaScript):void} _luascript_notify_aftercountdown
- * @property {function(ModuleLuaScript,number):void} _luascript_notify_frame
- * @property {function(ModuleLuaScript,bool):void} _luascript_notify_roundend
- * @property {function(ModuleLuaScript,bool):void} _luascript_notify_weekend
- * @property {function(ModuleLuaScript):void} _luascript_notify_gameoverloop
- * @property {function(ModuleLuaScript,bool,number):void} _luascript_notify_gameoverdecision
- * @property {function(ModuleLuaScript, number, number):void} _luascript_notify_gameoverended
- * @property {function(ModuleLuaScript,bool):void} _luascript_notify_pause
- * @property {function(ModuleLuaScript):void} _luascript_notify_weekleave
- * @property {function(ModuleLuaScript, number, number, number):void} _luascript_notify_afterresults
- * @property {function(ModuleLuaScript):void} _luascript_notify_scriptchange
- * @property {function(ModuleLuaScript,number):void} _luascript_notify_pause_optionchoosen
- * @property {function(ModuleLuaScript,bool):void} _luascript_notify_pause_menuvisible
- * @property {function(ModuleLuaScript,number,number,number,number,bool,number,number):void} _luascript_notify_note
- * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_buttons
- * @property {function(ModuleLuaScript,number,number,number,number,number):void} _luascript_notify_unknownnote
- * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_beat
- * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_quarter
- * @property {function(ModuleLuaScript,number):void} _luascript_notify_timer_run
- * @property {function(ModuleLuaScript,number):void} _luascript_notify_timersong_run
- * @property {function(ModuleLuaScript,number,string):void} _luascript_notify_dialogue_builtin_open
- * @property {function(ModuleLuaScript,number,number, number):void} _luascript_notify_dialogue_line_starts
- * @property {function(ModuleLuaScript,number,number, number):void} _luascript_notify_dialogue_line_ends
- * @property {function(ModuleLuaScript):void} _luascript_notify_after_strum_scroll
- * @property {function(ModuleLuaScript,number,number,number):void} _luascript_notify_modding_menu_option_selected
- * @property {function(ModuleLuaScript,number,number,number):boolean} _luascript_notify_modding_menu_option_choosen
- * @property {function(ModuleLuaScript, bool):void} _luascript_notify_modding_window_focus
- * @property {function(ModuleLuaScript, bool):void} _luascript_notify_modding_window_minimized
- * @property {function(ModuleLuaScript, number, number):void} _luascript_notify_window_size_changed
- * @property {function(ModuleLuaScript, number, number, bool, number):void} _luascript_notify_input_keyboard
- * @property {function(ModuleLuaScript, number, number):void} _luascript_notify_input_mouse_position
- * @property {function(ModuleLuaScript, bool):void} _luascript_notify_input_mouse_enter
- * @property {function(ModuleLuaScript, number, bool, number):void} _luascript_notify_input_mouse_button
- * @property {function(ModuleLuaScript, number, number):void} _luascript_notify_input_mouse_scroll
- * @property {function(ModuleLuaScript):boolean} _luascript_notify_modding_back
- * @property {function(ModuleLuaScript,number):number} _luascript_notify_modding_exit
- * @property {function(ModuleLuaScript,number,number):void} _luascript_notify_modding_init
- * @property {function(ModuleLuaScript,number):void} _luascript_call_function
- * @property {function(ModuleLuaScript,number):void} _luascript_notify_modding_event
- * @property {function(ModuleLuaScript,number):void} _luascript_notify_modding_handle_custom_option
- * @property {function(ModuleLuaScript,number):number} _luascript_eval
- * @property {function(string):number} kdmyEngine_stringToPtr
- * @property {function(number):string} kdmyEngine_ptrToString
- * @property {function(number):void} kdmyEngine_deallocate
- * @property {function(object):number} kdmyEngine_obtain
- * @property {function():Promise<any>|undefined} kdmyEngine_yieldAsync
- * @property {function(object):void} kdmyEngine_drop_shared_object
- * @property {function():DataView} kdmyEngine_get_ram
- * 
- * @property {function(number, number):void} _lua_pushinteger
- * @property {function(number, number):number} _lua_pushstring
- * @property {function(number, number):void} _lua_pushnumber
- * @property {function(number, number):void} _lua_pushboolean
- * @property {function(number):void} _lua_pushnil
- * @property {function(number, number, number):void} _lua_setfield
- * @property {function(number, number, number):void} _lua_createtable
- * @property {function(number, number):void} _lua_settable
- * @property {function(number, number, number):void} _lua_rawseti
-    
- }}
- * 
- * @property {bool} isRuntimeInitialized
- * @property {bool} hasGlobalsSet
- * @property {boolean} kdmyEngine_endianess
- * 
+ * @typedef {object} ModuleFontAtlas
+ * @property {function(boolean):void} enable_sdf
+ * @property {function(ArrayBuffer, number):FontAtlas} init
+ * @property {function(FontAtlas):void} destroy
+ * @property {function(FontAtlas, number, number, Uint32Array):FontCharMap} atlas_build
+ * @property {function(FontAtlas, number, number):FontCharMap} atlas_build_complete
+ * @property {function(FontCharMap):void} atlas_destroy_texture_only
+ * @property {function(FontCharMap):void} atlas_destroy
+ * @property {function():string} get_version
  */
- 
-
-/** @type {ModuleLuaScript} */
-const ModuleLuaScript = {
-    // @ts-ignore
-    print: (text) => {
-        console.log("luascript-stdout", text);
-    },
-
-    // @ts-ignore
-    printErr: (text) => {
-        console.error("luascript-stderr", text);
-    },
-
-    // @ts-ignore
-    onRuntimeInitialized: () => {
-        console.info("luascript is ready to use")
-        ModuleLuaScript.isRuntimeInitialized = true;
-    },
-
-    isRuntimeInitialized: false,
-    hasGlobalsSet: false
-};
-
 
 /**
-* @typedef {object} ModuleFontAtlas
-* @property {function(number, number):ModuleFontAtlas} _fontatlas_init
-* @property {function(ModuleFontAtlas):void} _fontatlas_destroy_JS
-* @property {function(ModuleFontAtlas, number, number, number):number} _fontatlas_atlas_build
-* @property {function(number):void} _fontatlas_atlas_destroy_texture_only
-* @property {function(number):void} _fontatlas_atlas_destroy_JS
-* @property {function(ModuleFontAtlas, number, number):number} _fontatlas_atlas_build_complete
-* @property {function(number):void} _fontatlas_enable_sdf
-* @property {function(Uint8Array|Int32Array|ArrayBuffer):number} kdmyEngine_allocate
-* @property {function(number):void} kdmyEngine_deallocate
-* @property {function(number):FontCharMap} kdmyEngine_parseFontCharMap
-* 
-* @property {bool} hasInstanceActive
-* @property {bool} isRuntimeInitialized
-* 
-*/
+ * @typedef {object} FontAtlas
+ * @property {number} fontatlas_ptr
+ * @property {number} font_data_ptr
+ */
 
 /**
  * @typedef {object} FontCharMap
@@ -125,6 +25,8 @@ const ModuleLuaScript = {
  * @property {number} texture_width
  * @property {number} texture_height
  * @property {number} texture_byte_size
+ * @property {number} ascender
+ * @property {number} __ptr
  */
 
 /**
@@ -138,7 +40,7 @@ const ModuleLuaScript = {
  * @property {FontCharDataKerning[]} kernings
  * @property {number} kernings_size
  * @property {FontCharDataAtlasEntry} atlas_entry
- * @property {bool} has_entry
+ * @property {boolean} has_entry
  */
 
 /**
@@ -153,24 +55,155 @@ const ModuleLuaScript = {
  * @property {number} x
  */
 
+
+/**
+ * @typedef {object} LUA
+ * 
+ * @property {(function(lua_State,number):!object) | (function(lua_State,!object):number)} kdmyEngine_obtain
+ * @property {function(!lua_State, number): void} kdmyEngine_forget
+ * @property {function():undefined|Promise} kdmyEngine_yieldAsync
+ * 
+ * @property {function(lua_State, number):string} luaL_checkstring
+ * @property {function(lua_State, number, string):string} luaL_optstring
+ * @property {function(lua_State, string):void} LUA.lua_pushstring
+ * @property {function(lua_State, string):number} luaL_newmetatable
+ * @property {function(lua_State, lua_CFunction):void} lua_pushcfunction
+ * @property {function(lua_State, number, string):void} lua_setfield
+ * @property {function(lua_State, boolean):void} lua_pushboolean
+ * @property {function(lua_State, string):number} luaL_error
+ * @property {function(lua_State, number):number} luaL_checknumber
+ * @property {function(lua_State, number):number} luaL_checkinteger
+ * @property {function(lua_State, number):boolean} lua_toboolean
+ * @property {function(lua_State, number, number):void} lua_createtable
+ * @property {function(lua_State, number):void} lua_pushnumber
+ * @property {function(lua_State):void} lua_pushnil
+ * @property {function(lua_State, number):void} lua_pushinteger
+ * @property {function(lua_State, number, number):number} luaL_optnumber
+ * @property {function(lua_State, number, number):number} luaL_optinteger
+ * @property {function(lua_State, number):boolean} lua_isnil
+ * @property {function(lua_State, number, string):object} luaL_testudata
+ * @property {function(lua_State, number):void} lua_pop
+ * @property {function(lua_State, number, number):void} lua_rawseti
+ * @property {function(lua_State, string):void} lua_pushfstring
+ * @property {function(lua_State, ArrayBuffer, number): void} lua_pushlstring
+ * @property {function(lua_State, string): void} LUA.lua_setglobal
+ * @property {function(lua_State, number): void} lua_settable
+ * @property {function(lua_State, number): void} lua_pushvalue
+ * @property {function(lua_State): number} lua_gettop
+ * @property {function(lua_State, string): number} luaL_dostring
+ * @property {function(lua_State, number, string): number} lua_getfield
+ * @property {function(lua_State, number): number} lua_gettable
+ * @property {function(lua_State, number): number} lua_rawlen
+ * @property {function(lua_State, number): string} lua_tostring
+ * @property {function(lua_State, number, number[]): ArrayBuffer} luaL_checklstring
+ * @property {function(lua_State, number, string): LuascriptObject} luaL_checkudata
+ * @property {function(lua_State, number): object} lua_newuserdata
+ * @property {function(lua_State, string): number} luaL_getmetatable
+ * @property {function(lua_State, number): void} lua_setmetatable
+ * @property {function(lua_State, number): number} luaL_ref
+ * @property {function(lua_State, number, number): void} luaL_unref
+ * @property {function(lua_State, object): void} lua_pushlightuserdata
+ * @property {function(lua_State, number): object} lua_touserdata
+ * @property {function(lua_State):void } lua_newtable
+ * @property {function(lua_State, luaL_Reg[], 0):void } luaL_setfuncs
+ * @property {function(lua_State, string):void } lua_pushliteral
+ * @property {function(lua_State, number):void } lua_rawset
+ * @property {function(lua_State, number):number } lua_type
+ * @property {function(lua_State, number):number } lua_tonumber
+ * @property {function(lua_State, number):void } lua_remove
+ * @property {function(lua_State, lua_State, string, number):void } luaL_traceback
+ * @property {function(lua_State, number):void} lua_insert
+ * @property {function(lua_State,number,number, number, 0, null):number} lua_pcallk
+ * @property {function(lua_State, string):number} lua_getglobal
+ * @property {function():lua_State} luaL_newstate
+ * @property {function(lua_State):void} luaL_openlibs
+ * @property {function(lua_State, function(object, string, number):void, null):void} lua_setwarnf
+ * @property {function(lua_State, string, number, string, string):number} luaL_loadbufferx
+ * @property {function(lua_State):void} lua_close
+ * @property {function(lua_State, string):number} luaL_loadstring
+ *
+ * @property {number} LUA_OK
+ * @property {number} LUA_TNONE
+ * @property {number} LUA_TTABLE
+ * @property {number} LUA_TNUMBER
+ * @property {number} LUA_NOREF
+ * @property {number} LUA_REFNIL
+ * @property {number} LUA_REGISTRYINDEX
+ * @property {number} LUA_TNIL
+ * @property {number} LUA_TBOOLEAN
+ * @property {number} LUA_TSTRING
+ * @property {number} LUA_TFUNCTION
+ * @property {number} LUA_MULTRET
+ */
+
+/**
+ * @callback lua_CFunction
+ * @param {lua_State} L
+ * @returns {number|Promise<number>}
+ */
+
+/**
+ * @typedef {[string, lua_CFunction]} luaL_Reg
+ */
+
+/**
+ * @typedef {object} lua_State
+ * @property {number} ptr
+ * @property {Map<!object, number>} objectMap
+ * @property {number} objectIndexes
+ */
+
+/**
+ * @typedef {object} LuaStringBuffer
+ * @property {number} pointer
+ * @property {number} written
+ * @property {number} available
+ */
+
+
+/**
+ * @template T
+ * @param {function} fn 
+ * @param  {...any} args 
+ * @returns {T|Promise<T>}
+ */
+function LUA_warp_function(fn, ...args) {
+    if (!args[0]) return;
+
+    let ret = fn.apply(null, args);
+    let promise = LUA.kdmyEngine_yieldAsync();
+    return promise === undefined ? ret : promise;
+}
+
+/**
+ * @template T
+ * @param {T} previous_returned_value
+ * @returns {T|Promise<T>}
+ */
+function LUA_check_async(previous_returned_value) {
+    let promise = LUA.kdmyEngine_yieldAsync();
+
+    if (promise === undefined)
+        return previous_returned_value;
+    else
+        return promise;
+}
+
 /** @type {ModuleFontAtlas} */
-const ModuleFontAtlas = {
+var FontAtlas;
+
+/** @type {LUA} */
+var LUA;
+
+async function main_initialize_wasm_modules() {
+    //
+    // Dumb VSCode treat "lua.js" and "module_fontatlas.js"
+    // files as javascript ES Modules
+    //
+
     // @ts-ignore
-    print: (text) => {
-        console.log("fontatlas-stdout", text);
-    },
+    LUA = await ModuleLua();
+    // @ts-ignore
+    FontAtlas = await ModuleFontAtlas();
 
-
-    printErr: (text) => {
-        console.error("fontatlas-stderr", text);
-    },
-
-
-    onRuntimeInitialized: () => {
-        console.info("fontatlas is ready to use")
-        ModuleFontAtlas.isRuntimeInitialized = true;
-    },
-
-    isRuntimeInitialized: false,
-    hasInstanceActive: false
-};
+}

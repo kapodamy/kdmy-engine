@@ -1,6 +1,6 @@
 "use strict";
 
-const INTROSCREEN_DELAY = 600;
+const INTROSCREEN_DELAY = 600.0;
 const INTROSCREEN_TEXT_DURATION = 0.0;
 const INTROSCREEN_TEXT_SPARSE = "--";
 const INTROSCREEN_FUNKY = "Friday--Night--Funkin";
@@ -29,8 +29,8 @@ async function introscreen_main() {
     if (custom_duration > 0.0) {
         await modding_helper_notify_event(modding, "custom-intro");
 
-        // custom intro detected wait the requeted time
-        let progress = 0;
+        // custom intro detected, wait the desired time
+        let progress = 0.0;
         while (progress < custom_duration) {
             let elapsed = await pvrctx_wait_ready();
             pvr_context_reset(pvr_context);
@@ -65,9 +65,9 @@ async function introscreen_main() {
     // if there an camera animation called "camera_animation", use it
     layout_trigger_camera(layout, "camera_animation");
 
-    let engine_duration = delay * 4;
-    let greetings_duration = delay * 4;
-    let funkin_duration = delay * 5;
+    let engine_duration = delay * 4.0;
+    let greetings_duration = delay * 4.0;
+    let funkin_duration = delay * 5.0;
 
     // start this game
     if (background_menu_music) soundplayer_play(background_menu_music);
@@ -92,7 +92,7 @@ async function introscreen_main() {
 
     layout_trigger_any(layout, "transition-out");
     await modding_helper_notify_event(modding, "transition-out");
-    while (1) {
+    while (true) {
         let elapsed = await pvrctx_wait_ready();
         modding_helper_notify_frame(modding, elapsed, -1.0);
 
@@ -110,7 +110,6 @@ async function introscreen_main() {
     await modding_helper_notify_exit2(modding);
 
     // dispose resources used
-    if (funky_intro !== INTROSCREEN_FUNKY) funky_intro = undefined;
     self_text = undefined;
     intro_text = undefined;
     week_greetings = undefined;
@@ -119,8 +118,8 @@ async function introscreen_main() {
     gamepad_destroy(maple_pad);
 }
 
-async function introscreen_pause(duration, layout) {
-    let total_elapsed = 0;
+/*async function introscreen_pause(duration, layout) {
+    let total_elapsed = 0.0;
     while (total_elapsed < duration) {
         let elapsed = await pvrctx_wait_ready();
         total_elapsed += elapsed;
@@ -129,7 +128,7 @@ async function introscreen_pause(duration, layout) {
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
     }
-}
+}*/
 
 async function introscreen_draw_sparse_text(text, delay, duration, modding, maple_pad) {
     const layout = modding.layout;
@@ -137,7 +136,7 @@ async function introscreen_draw_sparse_text(text, delay, duration, modding, mapl
     if (!textsprite || !text || modding.has_exit) return;
 
     let text_length = text.length;
-    let text_buffer = "";
+    let text_buffer = stringbuilder_init(text_length);
     let lines = string_occurrences_of_string(text, INTROSCREEN_TEXT_SPARSE) + 1;
     let paragraph_duration = duration / lines;
     let progress = paragraph_duration - delay;
@@ -147,15 +146,15 @@ async function introscreen_draw_sparse_text(text, delay, duration, modding, mapl
     while (true) {
         if (progress >= paragraph_duration) {
             if (last_index >= text_length) break;
-            if (last_index > 0) text_buffer += "\n";
+            if (last_index > 0) stringbuilder_add_char(text_buffer, '\n');
 
             let index = text.indexOf(INTROSCREEN_TEXT_SPARSE, last_index);
             if (index < 0) index = text_length;
 
-            text_buffer += text.substring(last_index, index);
+            stringbuilder_add_substring(text_buffer, text, last_index, index);
             last_index = index + sparse_length;
 
-            textsprite_set_text_intern(textsprite, 1, text_buffer);
+            textsprite_set_text_intern(textsprite, true, stringbuilder_intern(text_buffer));
             progress -= paragraph_duration;
         }
 
@@ -173,7 +172,7 @@ async function introscreen_draw_sparse_text(text, delay, duration, modding, mapl
         if (gamepad_has_pressed(maple_pad, INTROSCREEN_SKIP_BUTTONS) != 0x00) break;
     }
 
-    text_buffer = undefined;
+    stringbuilder_destroy(text_buffer);
 }
 
 async function introscreen_read_intro_text(path) {
@@ -184,7 +183,7 @@ async function introscreen_read_intro_text(path) {
 
     // count lines in the file
     let index = 0;
-    while (1) {
+    while (true) {
         line_count++;
         index = lines.indexOf("\n", index);
         if (index < 0) break;

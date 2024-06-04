@@ -14,11 +14,22 @@ const FUNKIN_WEEK_SONGS_FOLDER = "songs/";
 const FUNKIN_WEEK_CHARTS_FOLDER = "charts/";
 
 
+/**
+ * Contains all weeks definitions found
+ */
+var weeks_array = { array: null, size: -1 };
+
+/**
+ * Menus style (customized by a week) used across the game
+ */
+var custom_style_from_week = null;
+
+
 async function weekenumerator_enumerate() {
     fs_folder_stack_push();
-    fs_set_working_folder(FUNKIN_WEEKS_FOLDER, 0);
+    fs_set_working_folder(FUNKIN_WEEKS_FOLDER, false);
 
-    let folder_enumerator = { name: null, is_file: 0, is_folder: 0 };
+    let folder_enumerator = { name: null, is_file: false, is_folder: false };
     let weeks_path = expansions_overrided_weeks_folder ?? FUNKIN_WEEKS_FOLDER;
 
     if (!await fs_folder_enumerate(weeks_path, folder_enumerator)) {
@@ -36,13 +47,13 @@ async function weekenumerator_enumerate() {
         fs_set_working_subfolder(folder_name);
         let parsed_week = await weekenumerator_parse_week(folder_name);
         if (parsed_week) linkedlist_add_item(parsed_weeks, parsed_week);
-        fs_set_working_folder(FUNKIN_WEEKS_FOLDER, 0);
+        fs_set_working_folder(FUNKIN_WEEKS_FOLDER, false);
     }
 
     fs_folder_enumerate_close(folder_enumerator);
 
     weeks_array.size = linkedlist_count(parsed_weeks);
-    weeks_array.array = linkedlist_to_array(parsed_weeks);
+    weeks_array.array = linkedlist_to_solid_array(parsed_weeks);
 
     // In C all string on the list must be disposed
     linkedlist_destroy2(parsed_weeks, free);
@@ -95,17 +106,18 @@ function weekenumerator_get_asset(weekinfo, relative_path) {
 async function weekenumerator_parse_week(week_name) {
     let week_parsed = null;
 
-    try {
+    L_read_json: {
         let json = await json_load_from(FUNKIN_WEEK_ABOUT_FILE);
 
         if (!json_has_property_array(json, "songs")) {
-            throw new Error("missing or invalid songs in week: " + week_name);
+            console.error("weekenumerator_parse_week() missing or invalid songs in week: " + week_name);
+            break L_read_json;
         }
 
 
-        let has_difficulty_easy = json_read_boolean(json, "hasDifficultyEasy", 1);
-        let has_difficulty_normal = json_read_boolean(json, "hasDifficultyNormal", 1);
-        let has_difficulty_hard = json_read_boolean(json, "hasDifficultyHard", 1);
+        let has_difficulty_easy = json_read_boolean(json, "hasDifficultyEasy", true);
+        let has_difficulty_normal = json_read_boolean(json, "hasDifficultyNormal", true);
+        let has_difficulty_hard = json_read_boolean(json, "hasDifficultyHard", true);
 
         let customdifficulties_array = json_read_array(json, "customDifficulties");
         let customdifficulties_array_size = json_read_array_length(customdifficulties_array);
@@ -114,12 +126,15 @@ async function weekenumerator_parse_week(week_name) {
             !has_difficulty_normal &&
             !has_difficulty_hard &&
             customdifficulties_array_size < 1) {
-            throw new Error("There no difficults in week: " + week_name);
+            console.error("weekenumerator_parse_week() There no difficults in week: " + week_name);
+            break L_read_json;
         }
 
         let customdifficults_model = await weekenumerator_parse_path(json, "customDifficultsModel");
         if (!customdifficults_model && customdifficulties_array_size > 0) {
-            throw new Error("Missing or invalid custom difficult model");
+            console.error("weekenumerator_parse_week() Missing or invalid custom difficult model");
+            customdifficults_model = undefined;
+            break L_read_json;
         }
 
         // parse all custom difficults
@@ -162,14 +177,14 @@ async function weekenumerator_parse_week(week_name) {
                 freeplay_background: json_read_string(json_song, "freeplayBackground", null),
                 freeplay_only: json_read_boolean(json_song, "freeplayOnly", false),
                 freeplay_unlock_directive: json_read_string(json_song, "freeplayUnlockDirective", null),
-                freeplay_hide_if_week_locked: json_read_boolean(json_song, "freeplayHideIfWeekLocked", 0),
-                freeplay_hide_if_locked: json_read_boolean(json_song, "freeplayHideIfLocked", 0),
+                freeplay_hide_if_week_locked: json_read_boolean(json_song, "freeplayHideIfWeekLocked", false),
+                freeplay_hide_if_locked: json_read_boolean(json_song, "freeplayHideIfLocked", false),
                 freeplay_gameplaymanifest: json_read_string(json_song, "freeplayGameplayManifest", null),
                 freeplay_song_index_in_gameplaymanifest: json_read_number(json_song, "freeplaySongIndexInGameplayManifest", -1),
                 freeplay_song_filename: await weekenumerator_parse_path(json_song, "freeplaySongFilename"),
                 freeplay_description: json_read_string(json_song, "freeplayDescription", null),
                 freeplay_seek_time: json_read_number(json_song, "freeplaySeekTime", NaN)
-            }
+            };
         }
 
         let unlockables_json = json_read_object(json, "unlockables");
@@ -219,18 +234,26 @@ async function weekenumerator_parse_week(week_name) {
             songs_default_freeplay_host_icon_model: await weekenumerator_parse_path(json, "songsDefaultFreeplayHostIconModel")
         };
 
+
+        if (week_parsed.unlockables.boyfriend_models_size > 0 && !week_parsed.unlockables.boyfriend_models) {
+            week_parsed.unlockables.boyfriend_models_size = 0;
+        }
+        if (week_parsed.unlockables.girlfriend_models_size > 0 && !week_parsed.unlockables.girlfriend_models) {
+            week_parsed.unlockables.girlfriend_models_size = 0;
+        }
+
         json_destroy(json);
-    } catch (e) {
-        console.error("weekenumerator_parse_week()", e);
+        return week_parsed;
+    
     }
 
-    return week_parsed;
+    return null;
 }
 
 async function weekenumerator_parse_path(json, json_property_name) {
     let path = json_read_string(json, json_property_name, null);
     if (path == null) return null;
-    if (path.length < 1) {
+    if (!path) {
         console.error(`weekenumerator_parse_path() invalid '${json_property_name}' found`);
         path = undefined;
         return null;
@@ -242,12 +265,10 @@ async function weekenumerator_parse_path(json, json_property_name) {
 
     if (path.indexOf(FS_CHAR_SEPARATOR_REJECT, 0) >= 0) {
         console.error(`weekenumerator_parse_path() invalid char separator in: ${path}`);
-        path = undefined;
-        return null;
     }
 
     if (path.startsWith(FS_CHAR_SEPARATOR) || path.startsWith(FS_NO_OVERRIDE_COMMON)) {
-        return path;// absolute path
+        return strdup(path);// absolute path
     }
 
     return await fs_get_full_path(path);
@@ -268,7 +289,14 @@ async function weekenumerator_parse_characters(array_json) {
             name: json_read_string(array_item, "name", null),
         };
         if (!array[i].name && !array[i].manifest) {
-            throw new Error("weekenumerator_parse_character() missing 'name' and/or 'manifest'");
+            console.warn("weekenumerator_parse_character() missing 'name' and/or 'manifest'");
+            for (; i >= 0; i--) {
+                array[i].unlock_directive = undefined;
+                array[i].name = undefined;
+                array[i].manifest = undefined;
+            }
+            array = undefined;
+            return null;
         }
     }
 

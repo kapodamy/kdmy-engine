@@ -4,22 +4,22 @@
 function conductor_init() {
     return {
         character: null,
-        disable: 0,
+        disable: false,
         mappings: arraylist_init2(4),
         last_penality_strum: null,
         last_sustain_strum: null,
         missnotefx: null,
-        has_misses: 0,
-        has_hits: 0,
+        has_misses: false,
+        has_hits: false,
         play_calls: 0
     };
 }
 
 function conductor_destroy(conductor) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(conductor);
+    luascript_drop_shared(conductor);
 
     conductor_clear_mapping(conductor);
-    arraylist_destroy(conductor.mappings, 0);
+    arraylist_destroy(conductor.mappings, false);
     conductor = undefined;
 }
 
@@ -30,8 +30,8 @@ function conductor_poll_reset(conductor) {
     }
     conductor.last_penality_strum = null;
     conductor.last_sustain_strum = null;
-    conductor.has_misses = 0;
-    conductor.has_hits = 0;
+    conductor.has_misses = false;
+    conductor.has_hits = false;
 }
 
 function conductor_set_character(conductor, character) {
@@ -48,7 +48,7 @@ function conductor_use_strum_line(conductor, strum) {
     // check if is already in use
     for (let map of arraylist_iterate4(conductor.mappings)) {
         if (map.strum == strum) {
-            map.is_disabled = 0;
+            map.is_disabled = false;
             return;
         }
     }
@@ -57,7 +57,7 @@ function conductor_use_strum_line(conductor, strum) {
         strum: strum,
         last_change_count: -1,
         directions: arraylist_init2(4),
-        is_disabled: 0
+        is_disabled: false
     });
 }
 
@@ -72,14 +72,14 @@ function conductor_use_strums(conductor, strums) {
 }
 
 function conductor_disable_strum_line(conductor, strum, should_disable) {
-    if (!strum) return 0;
+    if (!strum) return false;
     for (let map of arraylist_iterate4(conductor.mappings)) {
         if (map.strum == strum) {
             map.is_disabled = !!should_disable;
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 function conductor_remove_strum(conductor, strum) {
@@ -89,10 +89,10 @@ function conductor_remove_strum(conductor, strum) {
         if (array[i].strum == strum) {
             conductor_internal_disposed_mapped_strum(array[i]);
             arraylist_remove_at(conductor.mappings, i);
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 function conductor_clear_mapping(conductor) {
@@ -105,19 +105,19 @@ function conductor_clear_mapping(conductor) {
 
 
 function conductor_map_strum_to_player_sing_add(conductor, strum, sing_direction_name) {
-    conductor_intenal_add_mapping(conductor, strum, sing_direction_name, 0);
+    conductor_intenal_add_mapping(conductor, strum, sing_direction_name, false);
 }
 
 function conductor_map_strum_to_player_extra_add(conductor, strum, extra_animation_name) {
-    conductor_intenal_add_mapping(conductor, strum, extra_animation_name, 1);
+    conductor_intenal_add_mapping(conductor, strum, extra_animation_name, true);
 }
 
 function conductor_map_strum_to_player_sing_remove(conductor, strum, sing_direction_name) {
-    conductor_intenal_remove_mapping(conductor, strum, sing_direction_name, 0);
+    conductor_intenal_remove_mapping(conductor, strum, sing_direction_name, false);
 }
 
 function conductor_map_strum_to_player_extra_remove(conductor, strum, extra_animation_name) {
-    conductor_intenal_remove_mapping(conductor, strum, extra_animation_name, 1);
+    conductor_intenal_remove_mapping(conductor, strum, extra_animation_name, true);
 }
 
 
@@ -139,12 +139,12 @@ function conductor_map_automatically(conductor, should_map_extras) {
     for (let i = 0; i < size; i++) {
         let strum_name = strum_get_name(mappings[i].strum);
 
-        if (character_has_direction(conductor.character, strum_name, 0)) {
+        if (character_has_direction(conductor.character, strum_name, false)) {
             // strum_name --> sing_direction
             conductor_map_strum_to_player_sing_add(conductor, mappings[i].strum, strum_name);
             count++;
             continue;
-        } else if (should_map_extras && character_has_direction(conductor.character, strum_name, 1)) {
+        } else if (should_map_extras && character_has_direction(conductor.character, strum_name, true)) {
             // strum_mame --> extra_animation
             conductor_map_strum_to_player_extra_add(conductor, mappings[i].strum, strum_name);
             count++;
@@ -166,8 +166,8 @@ function conductor_poll(conductor) {
     let size = arraylist_size(conductor.mappings);
     let success = 0;
 
-    conductor.has_hits = 0;
-    conductor.has_misses = 0;
+    conductor.has_hits = false;
+    conductor.has_misses = false;
 
     for (let i = 0; i < size; i++) {
         if (array[i].is_disabled) continue;
@@ -180,7 +180,7 @@ function conductor_poll(conductor) {
         if (press_changes == array[i].last_change_count) continue;
         array[i].last_change_count = press_changes;
 
-        if (press_state_use_alt_anim) character_use_alternate_sing_animations(conductor.character);
+        if (press_state_use_alt_anim) character_use_alternate_sing_animations(conductor.character, true);
 
         switch (press_state) {
             case STRUM_PRESS_STATE_MISS:
@@ -208,37 +208,37 @@ function conductor_poll(conductor) {
             case STRUM_PRESS_STATE_HIT:
                 conductor.last_sustain_strum = null;
                 conductor.last_penality_strum = null;
-                conductor.has_misses = 0;
-                conductor.has_hits = 1;
-                success += conductor_internal_execute_sing(conductor.character, array[i].directions, 0);
+                conductor.has_misses = false;
+                conductor.has_hits = true;
+                success += conductor_internal_execute_sing(conductor.character, array[i].directions, false);
                 break;
             case STRUM_PRESS_STATE_HIT_SUSTAIN:
                 conductor.last_sustain_strum = array[i].strum;
                 conductor.last_penality_strum = null;
-                conductor.has_misses = 0;
-                conductor.has_hits = 1;
-                success += conductor_internal_execute_sing(conductor.character, array[i].directions, 1);
+                conductor.has_misses = false;
+                conductor.has_hits = true;
+                success += conductor_internal_execute_sing(conductor.character, array[i].directions, true);
                 break;
             case STRUM_PRESS_STATE_PENALTY_NOTE:
                 // button press on empty strum
-                conductor.has_misses = 1;
+                conductor.has_misses = true;
                 conductor.last_sustain_strum = null;
                 conductor.last_penality_strum = array[i].strum;
-                success += conductor_internal_execute_miss(conductor.character, array[i].directions, 1);
+                success += conductor_internal_execute_miss(conductor.character, array[i].directions, true);
                 if (conductor.missnotefx) missnotefx_play_effect(conductor.missnotefx);
                 break;
             case STRUM_PRESS_STATE_PENALTY_HIT:
                 // wrong note button
                 conductor.last_sustain_strum = null;
                 conductor.last_penality_strum = array[i].strum;
-                success += conductor_internal_execute_miss(conductor.character, array[i].directions, 0);
+                success += conductor_internal_execute_miss(conductor.character, array[i].directions, false);
                 if (conductor.missnotefx) missnotefx_play_effect(conductor.missnotefx);
                 break;
             default:
                 break;
         }
 
-        if (press_state_use_alt_anim) character_use_alternate_sing_animations(conductor.character);
+        if (press_state_use_alt_anim) character_use_alternate_sing_animations(conductor.character, false);
     }
 
     if (success > 0) {
@@ -286,11 +286,9 @@ function conductor_get_character(conductor) {
 function conductor_internal_disposed_mapped_strum(mapped_strum) {
     for (let mapped_sing of arraylist_iterate4(mapped_strum.directions)) {
         mapped_sing.name = undefined;
-        mapped_sing = undefined;
     }
-    arraylist_destroy(mapped_strum.directions, 0);
+    arraylist_destroy(mapped_strum.directions, false);
     mapped_strum.strum = null;
-    mapped_strum = undefined;
 }
 
 function conductor_intenal_add_mapping(conductor, strum, name, is_extra) {
@@ -303,13 +301,12 @@ function conductor_intenal_add_mapping(conductor, strum, name, is_extra) {
     }
 
     if (!mapped_strum) {
-        mapped_strum = {
+        mapped_strum = arraylist_add(conductor.mappings, {
             directions: arraylist_init2(4),
             is_disabled: 0,
             last_change_count: -1,
             strum: strum
-        };
-        arraylist_add(conductor.mappings, mapped_strum);
+        });
     }
 
     // check if already is added
@@ -333,9 +330,7 @@ function conductor_intenal_remove_mapping(conductor, strum, name, is_extra) {
         for (let i = 0; i < size; i++) {
             if (directions[i].name == name && directions[i].is_extra == is_extra) {
                 directions[i].name = undefined;
-                directions[i] = undefined;
                 arraylist_remove_at(mapped_strum.directions, i);
-
                 return;
             }
         }
@@ -360,7 +355,7 @@ function conductor_internal_execute_miss(character, mapping, keep_in_hold) {
         if (direction.is_extra) {
             if (character_play_extra(character, direction.name, keep_in_hold)) done++;
         } else {
-            if (character_play_miss(character, direction.name, keep_in_hold) == 1) done++;
+            if (character_play_miss(character, direction.name, keep_in_hold)) done++;
         }
     }
     return done;

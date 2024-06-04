@@ -26,9 +26,9 @@ function tokenizer_count_occurrences(tokenizer) {
     let readed = 0;
 
     for (let i = 0; i < tokenizer.length; i++) {
-        let char = tokenizer.string.charAt(i);
+        let c = tokenizer.string.charAt(i);
         
-        if (char == tokenizer.tokens.includes(char)) {
+        if (tokenizer.tokens.includes(c)) {
             if (readed > 0 || tokenizer.empty) {
                 readed = 0;
                 count++;
@@ -61,8 +61,8 @@ function tokenizer_read_next(tokenizer) {
     let length = 0;
 
     for (; index < tokenizer.length; index++) {
-        let char = tokenizer.string.charAt(index);
-        if (tokenizer.tokens.includes(char)) {
+        let c = tokenizer.string.charAt(index);
+        if (tokenizer.tokens.includes(c)) {
             if (length > 0 || tokenizer.empty) break;
             continue;
         }

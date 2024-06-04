@@ -13,19 +13,19 @@ function camera_init(modifier, viewport_width, viewport_height) {
     let camera = {
         tweenlerp: null,
         modifier: modifier,
-        progress: 600,
-        duration: 600,
-        scene_zoom: 1,
-        beat_duration: 600,
+        progress: 600.0,
+        duration: 600.0,
+        //scene_zoom: true,
+        beat_duration: 600.0,
         internal_modifier: !modifier,
-        transition_completed: 1,
-        force_update: 0,
-        has_transition_offset: 0,
-        parallax_x: 0, parallax_y: 0, parallax_z: 1,
-        offset_x: 0, offset_y: 0, offset_z: 1,
+        transition_completed: true,
+        force_update: false,
+        has_transition_offset: false,
+        parallax_x: 0.0, parallax_y: 0.0, parallax_z: 1.0,
+        offset_x: 0.0, offset_y: 0.0, offset_z: 1.0,
         parent_layout: null,
         animation: null,
-        enable_offset_zoom: 1,
+        enable_offset_zoom: true,
         half_viewport_width: viewport_width / 2.0,
         half_viewport_height: viewport_height / 2.0
     };
@@ -36,8 +36,8 @@ function camera_init(modifier, viewport_width, viewport_height) {
         pvr_context_helper_clear_modifier(camera.modifier);
         camera.modifier.width = viewport_width;
         camera.modifier.width = viewport_height;
-        camera.modifier.scale_direction_x = -0.5
-        camera.modifier.scale_direction_y = -0.5
+        camera.modifier.scale_direction_x = -0.5;
+        camera.modifier.scale_direction_y = -0.5;
     }
 
     camera_set_interpolator_type(camera, CAMERA_DEFAULT_INTERPOLATOR);
@@ -49,13 +49,13 @@ function camera_destroy(camera) {
     tweenlerp_destroy(camera.tweenlerp);
 
     if (camera.internal_modifier) {
-        ModuleLuaScript.kdmyEngine_drop_shared_object(camera.modifier);
+        luascript_drop_shared(camera.modifier);
         camera.modifier = undefined;
     }
 
     if (camera.animation) animsprite_destroy(camera.animation);
 
-    ModuleLuaScript.kdmyEngine_drop_shared_object(camera);
+    luascript_drop_shared(camera);
     camera = undefined;
 }
 
@@ -86,16 +86,16 @@ function camera_set_interpolator_type(camera, type) {
 
     camera.tweenlerp = tweenlerp_init();
 
-    tweenlerp_add_interpolator(camera.tweenlerp, -1, px, px, 0, type);
-    tweenlerp_add_interpolator(camera.tweenlerp, -1, py, py, 0, type);
-    tweenlerp_add_interpolator(camera.tweenlerp, -1, pz, pz, 0, type);
-    tweenlerp_add_interpolator(camera.tweenlerp, -1, ox, ox, 0, type);
-    tweenlerp_add_interpolator(camera.tweenlerp, -1, oy, oy, 0, type);
-    tweenlerp_add_interpolator(camera.tweenlerp, -1, oz, oz, 0, type);
+    tweenlerp_add_interpolator(camera.tweenlerp, -1, px, px, 0.0, type);
+    tweenlerp_add_interpolator(camera.tweenlerp, -1, py, py, 0.0, type);
+    tweenlerp_add_interpolator(camera.tweenlerp, -1, pz, pz, 0.0, type);
+    tweenlerp_add_interpolator(camera.tweenlerp, -1, ox, ox, 0.0, type);
+    tweenlerp_add_interpolator(camera.tweenlerp, -1, oy, oy, 0.0, type);
+    tweenlerp_add_interpolator(camera.tweenlerp, -1, oz, oz, 0.0, type);
     tweenlerp_end(camera.tweenlerp);
 
     camera.progress = camera.duration;
-    camera.transition_completed = 1;
+    camera.transition_completed = true;
 }
 
 function camera_set_transition_duration(camera, expresed_in_beats, value) {
@@ -107,14 +107,14 @@ function camera_set_transition_duration(camera, expresed_in_beats, value) {
 
 function camera_set_absolute_zoom(camera, z) {
     if (Number.isFinite(z)) camera_internal_tweenlerp_absolute(camera, CAMERA_PZ, z);
-    camera.force_update = 1;
+    camera.force_update = true;
     camera_end(camera);
 }
 
 function camera_set_absolute_position(camera, x, y) {
     if (Number.isFinite(x)) camera_internal_tweenlerp_absolute(camera, CAMERA_PX, x);
     if (Number.isFinite(y)) camera_internal_tweenlerp_absolute(camera, CAMERA_PY, y);
-    camera.force_update = 1;
+    camera.force_update = true;
     camera_end(camera);
 }
 
@@ -138,7 +138,7 @@ function camera_set_offset(camera, x, y, z) {
         camera.offset_z = z;
     }
 
-    camera.has_transition_offset = 0;
+    camera.has_transition_offset = false;
 }
 
 function camera_get_offset(camera, xyz) {
@@ -153,7 +153,7 @@ function camera_replace_modifier(camera, new_modifier) {
 
     if (camera.internal_modifier) {
         camera.modifier = undefined;
-        camera.internal_modifier = 0;
+        camera.internal_modifier = false;
     }
 
     camera.modifier = new_modifier;
@@ -181,7 +181,7 @@ function camera_move_offset(camera, end_x, end_y, end_z) {
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OY, NaN, end_y);
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OZ, NaN, end_z);
 
-    camera.has_transition_offset = 1;
+    camera.has_transition_offset = true;
     camera_end(camera);
 }
 
@@ -202,7 +202,7 @@ function camera_slide_offset(camera, start_x, start_y, start_z, end_x, end_y, en
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OY, start_y, end_y);
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OZ, start_z, end_z);
 
-    camera.has_transition_offset = 1;
+    camera.has_transition_offset = true;
     camera_repeat(camera);
 }
 
@@ -221,7 +221,7 @@ function camera_slide_x_offset(camera, start, end) {
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OX, start, end);
     tweenlerp_override_start_with_end_by_index(camera.tweenlerp, CAMERA_OY);
     tweenlerp_override_start_with_end_by_index(camera.tweenlerp, CAMERA_OZ);
-    camera.has_transition_offset = 1;
+    camera.has_transition_offset = true;
     camera_repeat(camera);
 }
 
@@ -240,7 +240,7 @@ function camera_slide_y_offset(camera, start, end) {
     tweenlerp_override_start_with_end_by_index(camera.tweenlerp, CAMERA_OX);
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OY, start, end);
     tweenlerp_override_start_with_end_by_index(camera.tweenlerp, CAMERA_OZ);
-    camera.has_transition_offset = 1;
+    camera.has_transition_offset = true;
     camera_repeat(camera);
 }
 
@@ -295,25 +295,25 @@ function camera_slide_to_offset(camera, x, y, z) {
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OY, start_y, y);
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OZ, start_z, z);
 
-    camera.has_transition_offset = 1;
+    camera.has_transition_offset = true;
 
     camera_repeat(camera);
 }
 
 function camera_from_layout(camera, layout, camera_name) {
     if (!layout) {
-        if (!camera.parent_layout) return 0;
+        if (!camera.parent_layout) return false;
         layout = camera.parent_layout;
     }
 
     let camera_placeholder = layout_get_camera_placeholder(layout, camera_name);
-    if (!camera_placeholder) return 0;
+    if (!camera_placeholder) return false;
 
     camera.enable_offset_zoom = camera_placeholder.enable_offset_zoom;
 
     if (camera_placeholder.animation) {
         camera_set_animation(camera, camera_placeholder.animation);
-        return 1;
+        return true;
     }
 
     if (!camera_placeholder.is_empty || camera_placeholder.has_duration) {
@@ -321,7 +321,7 @@ function camera_from_layout(camera, layout, camera_name) {
     }
 
     if (camera_placeholder.is_empty) {
-        return 0;
+        return false;
     }
     camera_internal_drop_animation(camera);
 
@@ -333,7 +333,7 @@ function camera_from_layout(camera, layout, camera_name) {
         camera_move_offset(
             camera, camera_placeholder.to_offset_x, camera_placeholder.to_offset_y, camera_placeholder.to_offset_z
         );
-        camera.force_update = 1;
+        camera.force_update = true;
     } else if (camera_placeholder.has_offset_from) {
         camera_slide_offset(
             camera,
@@ -353,7 +353,7 @@ function camera_from_layout(camera, layout, camera_name) {
         camera_set_transition_duration(
             camera, camera_placeholder.duration_in_beats, camera_placeholder.duration
         );
-        camera.force_update = 1;
+        camera.force_update = true;
     } else {
         if (camera_placeholder.has_from) {
             camera_slide(
@@ -371,17 +371,17 @@ function camera_from_layout(camera, layout, camera_name) {
         );
     }
 
-    return 1;
+    return true;
 }
 
 function camera_to_origin(camera, should_slide) {
     camera_internal_drop_animation(camera);
 
     if (should_slide) {
-        camera_slide_to(camera, 0, 0, 1);
+        camera_slide_to(camera, 0.0, 0.0, 1.0);
         camera_repeat(camera);
     } else {
-        camera_move(camera, 0, 0, 1);
+        camera_move(camera, 0.0, 0.0, 1.0);
     }
 }
 
@@ -389,12 +389,12 @@ function camera_to_origin_offset(camera, should_slide) {
     camera_internal_drop_animation(camera);
 
     if (should_slide) {
-        camera_slide_to_offset(camera, 0, 0, 1);
+        camera_slide_to_offset(camera, 0.0, 0.0, 1.0);
         camera_repeat(camera);
     } else {
-        camera_move_offset(camera, 0, 0, 1);
+        camera_move_offset(camera, 0.0, 0.0, 1.0);
     }
-    camera.has_transition_offset = 1;
+    camera.has_transition_offset = true;
 }
 
 function camera_get_parent_layout(camera) {
@@ -408,25 +408,25 @@ function camera_set_parent_layout(camera, layout) {
 function camera_set_animation(camera, animsprite) {
     if (camera.animation) animsprite_destroy(camera.animation);
     camera.animation = animsprite ? animsprite_clone(animsprite) : null;
-    camera.transition_completed = 1;
+    camera.transition_completed = true;
 }
 
 
 function camera_repeat(camera) {
     if (camera.animation != null) {
         animsprite_restart(camera.animation);
-        animsprite_update_using_callback(camera.animation, camera, camera_set_property, 1);
+        animsprite_update_using_callback(camera.animation, camera, camera_set_property, true);
         return;
     }
 
-    camera.progress = 0;
-    camera.transition_completed = 0;
+    camera.progress = 0.0;
+    camera.transition_completed = false;
     tweenlerp_restart(camera.tweenlerp);
 }
 
 function camera_stop(camera) {
     camera.progress = camera.duration;
-    camera.transition_completed = 1;
+    camera.transition_completed = true;
 
     if (camera.animation) {
         animsprite_stop(camera.animation);
@@ -447,15 +447,15 @@ function camera_stop(camera) {
 function camera_end(camera) {
     if (camera.animation) {
         animsprite_force_end(camera.animation);
-        animsprite_update_using_callback(camera.animation, camera, camera_set_property, 1);
+        animsprite_update_using_callback(camera.animation, camera, camera_set_property, true);
         return;
     }
 
     tweenlerp_end(camera.tweenlerp);
 
     camera.progress = camera.duration;
-    camera.transition_completed = 1;
-    camera.has_transition_offset = 0;
+    camera.transition_completed = true;
+    camera.has_transition_offset = false;
 
     camera.parallax_x = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_PX);
     camera.parallax_y = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_PY);
@@ -472,17 +472,17 @@ function camera_end(camera) {
 function camera_animate(camera, elapsed) {
     if (camera.animation) {
         let completed = animsprite_animate(camera.animation, elapsed);
-        animsprite_update_using_callback(camera.animation, camera, camera_set_property, 1);
+        animsprite_update_using_callback(camera.animation, camera, camera_set_property, true);
         return completed;
     }
 
     if (camera.transition_completed) {
         if (camera.force_update) {
-            camera.force_update = 0;
+            camera.force_update = false;
             return 0;
         }
 
-        camera.has_transition_offset = 0;
+        camera.has_transition_offset = false;
         return 1;
     }
 
@@ -549,7 +549,7 @@ function camera_apply_offset(camera, destination_matrix) {
 
 function camera_is_completed(camera) {
     if (camera.animation) return animsprite_is_completed(camera.animation);
-    if (camera.transition_completed && camera.force_update) return 0;
+    if (camera.transition_completed && camera.force_update) return false;
     return camera.progress >= camera.duration;
 }
 

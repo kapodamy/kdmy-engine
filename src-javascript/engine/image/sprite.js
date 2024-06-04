@@ -5,8 +5,8 @@ const SPRITE_POOL = new Map();
 
 
 function sprite_draw(sprite, pvrctx) {
-    if (sprite.draw_width < 1 || sprite.draw_height < 1) return;
-    if (sprite.alpha <= 0) return;
+    if (sprite.draw_width < 1.0 || sprite.draw_height < 1.0) return;
+    if (sprite.alpha <= 0.0) return;
 
     let sprite_vertex = sprite.vertex;
     let render_alpha = sprite.alpha * sprite.alpha2;
@@ -34,14 +34,14 @@ function sprite_draw(sprite, pvrctx) {
             let ratio_width, ratio_height;
 
             // complex frame size redimension
-            if (sprite.frame_width > 0) {
+            if (sprite.frame_width > 0.0) {
                 ratio_width = draw_width / sprite.frame_width;
                 frame_width = sprite.src_width * ratio_width;
             } else {
                 ratio_width = draw_width / sprite.src_width;
                 frame_width = draw_width;
             }
-            if (sprite.frame_height > 0) {
+            if (sprite.frame_height > 0.0) {
                 ratio_height = draw_height / sprite.frame_height;
                 frame_height = sprite.src_height * ratio_height;
             } else {
@@ -56,15 +56,15 @@ function sprite_draw(sprite, pvrctx) {
 
                 crop_x = sprite.crop.x;
                 crop_y = sprite.crop.y;
-                crop_width = crop_height = 0;
+                crop_width = crop_height = 0.0;
 
-                if (sprite.crop.width != -1 && sprite.crop.width < frame_width)
+                if (sprite.crop.width != -1.0 && sprite.crop.width < frame_width)
                     crop_width = frame_width - sprite.crop.width;
 
-                if (sprite.crop.height != -1 && sprite.crop.height < frame_height)
+                if (sprite.crop.height != -1.0 && sprite.crop.height < frame_height)
                     crop_height = frame_height - sprite.crop.height;
             } else {
-                crop_x = crop_y = crop_width = crop_height = 0;
+                crop_x = crop_y = crop_width = crop_height = 0.0;
             }
 
             // draw location & size
@@ -100,15 +100,15 @@ function sprite_draw(sprite, pvrctx) {
                 sprite_vertex[6] -= sprite.crop.x;
                 sprite_vertex[7] -= sprite.crop.y;
 
-                if (crop_width != -1 && crop_width < sprite_vertex[6])
+                if (crop_width != -1.0 && crop_width < sprite_vertex[6])
                     sprite_vertex[6] = crop_width;
-                if (crop_height != -1 && crop_height < sprite_vertex[7])
+                if (crop_height != -1.0 && crop_height < sprite_vertex[7])
                     sprite_vertex[7] = crop_height;
             }
         }
 
         // cache the calculated vertex
-        sprite.vertex_dirty = 0;
+        sprite.vertex_dirty = false;
     }
 
     pvr_context_save(pvrctx);
@@ -147,7 +147,7 @@ function sprite_draw(sprite, pvrctx) {
         /**@type {RGBA}*/ let trailing_offsetcolor = [
             sprite.trailing_offsetcolor[0], sprite.trailing_offsetcolor[1], sprite.trailing_offsetcolor[2], 1.0
         ];
-        if (sprite.offsetcolor[3] >= 0) {
+        if (sprite.offsetcolor[3] >= 0.0) {
             trailing_offsetcolor[0] *= sprite.offsetcolor[0];
             trailing_offsetcolor[1] *= sprite.offsetcolor[1];
             trailing_offsetcolor[2] *= sprite.offsetcolor[2];
@@ -178,7 +178,7 @@ function sprite_draw(sprite, pvrctx) {
         }
 
         // restore previous values
-        pvr_context_set_vertex_textured_darken(pvrctx, 0);
+        pvr_context_set_vertex_textured_darken(pvrctx, false);
     }
 
     pvr_context_set_vertex_alpha(pvrctx, render_alpha);
@@ -213,9 +213,7 @@ function sprite_draw(sprite, pvrctx) {
 
 function sprite_init_from_rgb8(solid_rgb8_color) {
     let percent_color = [0, 0, 0];
-
-    for (let i = 0; i < 3; i++)
-        percent_color[2 - i] = ((solid_rgb8_color >> (i * 8)) & 0xFF) / 0xFF;
+    math2d_color_bytes_to_floats(solid_rgb8_color, false, percent_color);
 
     let sprite = sprite_init(null);
     sprite_set_vertex_color(sprite, percent_color[0], percent_color[1], percent_color[2]);
@@ -229,13 +227,13 @@ function sprite_init(src_texture) {
     sprite.matrix_source = {};
     pvr_context_helper_clear_modifier(sprite.matrix_source);
 
-    sprite.flip_x = 0;
-    sprite.flip_y = 0;
-    sprite.flip_correction = 1;
-    sprite.matrix_corner = { x: 0, y: 0, angle: 0 };
+    sprite.flip_x = false;
+    sprite.flip_y = false;
+    sprite.flip_correction = true;
+    sprite.matrix_corner = { x: 0.0, y: 0.0, angle: 0.0 };
 
-    sprite.src_x = 0;
-    sprite.src_y = 0;
+    sprite.src_x = 0.0;
+    sprite.src_y = 0.0;
 
     sprite.vertex_color = [1.0, 1.0, 1.0];
 
@@ -247,28 +245,28 @@ function sprite_init(src_texture) {
         sprite.src_width = sprite.texture.original_width;
         sprite.src_height = sprite.texture.original_height;
     } else {
-        sprite.src_width = 0;
-        sprite.src_height = 0;
+        sprite.src_width = 0.0;
+        sprite.src_height = 0.0;
     }
 
-    sprite.draw_x = 0;
-    sprite.draw_y = 0;
-    sprite.draw_width = -1;
-    sprite.draw_height = -1;
+    sprite.draw_x = 0.0;
+    sprite.draw_y = 0.0;
+    sprite.draw_width = -1.0;
+    sprite.draw_height = -1.0;
 
     sprite.alpha = 1.0;
     sprite.alpha2 = 1.0;
-    sprite.visible = 1;
-    sprite.z_index = 1;
-    sprite.z_offset = 0;
+    sprite.visible = true;
+    sprite.z_index = 1.0;
+    sprite.z_offset = 0.0;
 
-    sprite.frame_x = 0;
-    sprite.frame_y = 0;
-    sprite.frame_width = 0;
-    sprite.frame_height = 0;
+    sprite.frame_x = 0.0;
+    sprite.frame_y = 0.0;
+    sprite.frame_width = 0.0;
+    sprite.frame_height = 0.0;
 
-    sprite.pivot_x = 0;
-    sprite.pivot_y = 0;
+    sprite.pivot_x = 0.0;
+    sprite.pivot_y = 0.0;
 
     sprite.id = SPRITE_IDS++;
     SPRITE_POOL.set(sprite.id, sprite);
@@ -278,16 +276,16 @@ function sprite_init(src_texture) {
     sprite.animation_external = null;
 
     sprite.vertex = new Array(8).fill(0.0);
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 
-    sprite.crop = { x: 0, y: 0, width: -1, height: -1 };
-    sprite.crop_enabled = 0;
+    sprite.crop = { x: 0.0, y: 0.0, width: -1.0, height: -1.0 };
+    sprite.crop_enabled = false;
 
     sprite.antialiasing = PVRCTX_FLAG_DEFAULT;
 
     sprite.psshader = null;
 
-    sprite.blend_enabled = 1;
+    sprite.blend_enabled = false;
     sprite.blend_src_rgb = BLEND_DEFAULT;
     sprite.blend_dst_rgb = BLEND_DEFAULT;
     sprite.blend_src_alpha = BLEND_DEFAULT;
@@ -297,11 +295,11 @@ function sprite_init(src_texture) {
     sprite.trailing_used = 0;
     sprite.trailing_length = 10;
     sprite.trailing_alpha = 0.9;
-    sprite.trailing_delay = 0;
-    sprite.trailing_darken = 1;
-    sprite.trailing_disabled = 1;
+    sprite.trailing_delay = 0.0;
+    sprite.trailing_darken = true;
+    sprite.trailing_disabled = true;
     sprite.trailing_progress = 0.0;
-    sprite.trailing_offsetcolor = [1, 1, 1];
+    sprite.trailing_offsetcolor = [1.0, 1.0, 1.0];
 
     sprite_internal_JS_init_trail_array(sprite, 0, sprite.trailing_length);
 
@@ -316,8 +314,8 @@ function sprite_destroy(sprite) {
     sprite.texture = null;
 
     SPRITE_POOL.delete(sprite.id);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(sprite.matrix_source);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(sprite);
+    luascript_drop_shared(sprite.matrix_source);
+    luascript_drop_shared
     sprite.trailing_buffer = undefined;
     sprite = undefined;
 }
@@ -358,11 +356,11 @@ function sprite_set_texture(sprite, texture, update_offset_source_size) {
     sprite.texture = texture;
 
     if (update_offset_source_size && texture) {
-        sprite.src_x = 0;
-        sprite.src_y = 0;
+        sprite.src_x = 0.0;
+        sprite.src_y = 0.0;
         sprite.src_width = sprite.texture.original_width;
         sprite.src_height = sprite.texture.original_height;
-        sprite.vertex_dirty = 1;
+        sprite.vertex_dirty = true;
     }
 
     return old_texture;
@@ -397,10 +395,10 @@ function sprite_set_offset_source(sprite, x, y, width, height) {
     sprite.src_width = width;
     sprite.src_height = height;
 
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 
-    if (sprite.draw_width < 0) sprite.draw_width = width;
-    if (sprite.draw_height < 0) sprite.draw_height = height;
+    if (sprite.draw_width < 0.0) sprite.draw_width = width;
+    if (sprite.draw_height < 0.0) sprite.draw_height = height;
 }
 
 function sprite_set_offset_frame(sprite, x, y, width, height) {
@@ -409,23 +407,23 @@ function sprite_set_offset_frame(sprite, x, y, width, height) {
     sprite.frame_width = width;
     sprite.frame_height = height;
 
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 
-    if (sprite.draw_width < 0) sprite.draw_width = width;
-    if (sprite.draw_height < 0) sprite.draw_height = height;
+    if (sprite.draw_width < 0.0) sprite.draw_width = width;
+    if (sprite.draw_height < 0.0) sprite.draw_height = height;
 }
 
 function sprite_set_offset_pivot(sprite, x, y) {
     sprite.pivot_x = x;
     sprite.pivot_y = y;
 
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 }
 
 function sprite_flip_rendered_texture(sprite, flip_x, flip_y) {
     if (flip_x != null) sprite.flip_x = flip_x;
     if (flip_y != null) sprite.flip_y = flip_y;
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 }
 
 function sprite_flip_rendered_texture_enable_correction(sprite, enabled) {
@@ -442,24 +440,24 @@ function sprite_matrix_reset(sprite) {
 function sprite_set_draw_location(sprite, x, y) {
     sprite.draw_x = x;
     sprite.draw_y = y;
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 }
 
 function sprite_set_draw_size(sprite, width, height) {
-    if (Number.isFinite(width)) sprite.draw_width = width;
-    if (Number.isFinite(height)) sprite.draw_height = height;
-    sprite.vertex_dirty = 1;
+    if (!Number.isNaN(width)) sprite.draw_width = width;
+    if (!Number.isNaN(height)) sprite.draw_height = height;
+    sprite.vertex_dirty = true;
 
     if (!sprite.texture) {
-        if (Number.isFinite(width)) sprite.src_width = width;
-        if (Number.isFinite(height)) sprite.src_height = height;
+        if (!Number.isNaN(width)) sprite.src_width = width;
+        if (!Number.isNaN(height)) sprite.src_height = height;
     }
 }
 
 function sprite_set_draw_size_from_source_size(sprite) {
     sprite.draw_width = sprite.src_width;
     sprite.draw_height = sprite.src_height;
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 }
 
 function sprite_set_alpha(sprite, alpha) {
@@ -471,7 +469,7 @@ function sprite_get_alpha(sprite) {
 }
 
 function sprite_set_visible(sprite, visible) {
-    sprite.visible = visible;
+    sprite.visible = !!visible;
 }
 
 function sprite_set_z_index(sprite, index) {
@@ -500,12 +498,9 @@ function sprite_animation_remove(sprite, animation_name) {
         return;
     }
 
-    let iterator = { item: null };
-    let anim = null;
     let i = 0;
-
-    while (linkedlist_iterate2(sprite.animation_list, iterator)) {
-        if (iterator.item.name == animation_name) {
+    for (let anim of linkedlist_iterate4(sprite.animation_list)) {
+        if (animsprite_get_name(anim) == animation_name) {
             linkedlist_remove_item_at(sprite.animation_list, i);
             return;
         }
@@ -516,22 +511,22 @@ function sprite_animation_remove(sprite, animation_name) {
 function sprite_animation_restart(sprite) {
     if (!sprite.animation_selected) return;
     animsprite_restart(sprite.animation_selected);
-    animsprite_update_sprite(sprite.animation_selected, sprite, 1);
+    animsprite_update_sprite(sprite.animation_selected, sprite, true);
 }
 
 function sprite_animation_play(sprite, animation_name) {
     //sprite.animation_selected = null;
-    if (!animation_name) return 0;
+    if (!animation_name) return false;
 
     let animation = sprite_animation_get_attached(sprite, animation_name);
 
     if (!animation) {
         console.warn("sprite_animation_play() animation no added: " + animation_name);
-        return 0;
+        return false;
     }
 
     sprite.animation_selected = animation;
-    return 1;
+    return true;
 }
 
 function sprite_animation_play_by_index(sprite, index) {
@@ -550,7 +545,7 @@ function sprite_animation_play_by_animsprite(sprite, animsprite, only_if_attache
         if (!only_if_attached)
             sprite.animation_selected = null;
 
-        return 0;
+        return false;
     }
 
     if (!only_if_attached) {
@@ -560,17 +555,17 @@ function sprite_animation_play_by_animsprite(sprite, animsprite, only_if_attache
         //         calling sprite_destroy_all_animations() or sprite_destroy_full()
         //
         sprite.animation_selected = animsprite;
-        return 1;
+        return true;
     }
 
     for (let attached_animsprite of linkedlist_iterate4(sprite.animation_list)) {
         if (attached_animsprite == animsprite) {
             sprite.animation_selected = attached_animsprite;
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 function sprite_animation_play_first(sprite) {
@@ -586,7 +581,7 @@ function sprite_animation_stop(sprite) {
 function sprite_animation_end(sprite) {
     if (sprite.animation_selected) {
         animsprite_force_end(sprite.animation_selected);
-        animsprite_update_sprite(sprite.animation_selected, sprite, 1);
+        animsprite_update_sprite(sprite.animation_selected, sprite, true);
     }
 }
 
@@ -597,12 +592,12 @@ function sprite_animate(sprite, elapsed) {
 
     if (sprite.animation_selected) {
         result = animsprite_animate(sprite.animation_selected, elapsed);
-        animsprite_update_sprite(sprite.animation_selected, sprite, 1);
+        animsprite_update_sprite(sprite.animation_selected, sprite, true);
     }
 
     if (sprite.animation_external) {
         result = animsprite_animate(sprite.animation_external, elapsed);
-        animsprite_update_sprite(sprite.animation_external, sprite, 0);
+        animsprite_update_sprite(sprite.animation_external, sprite, false);
     }
 
     if (sprite.trailing_disabled) return result;
@@ -665,11 +660,9 @@ function sprite_animation_get_attached(sprite, animation_name) {
         return null;
     }
 
-    let iterator = { item: null };
-
-    while (linkedlist_iterate2(sprite.animation_list, iterator)) {
-        if (animation_name == null || iterator.item.name == animation_name)
-            return iterator.item;
+    for (let anim of linkedlist_iterate4(sprite.animation_list)) {
+        if (animation_name == null || animsprite_get_name(anim) == animation_name)
+            return anim;
     }
 
     return null;
@@ -677,14 +670,14 @@ function sprite_animation_get_attached(sprite, animation_name) {
 
 
 function sprite_get_source_size(sprite, size) {
-    size[0] = sprite.frame_width > 0 ? sprite.frame_width : sprite.src_width;
-    size[1] = sprite.frame_height > 0 ? sprite.frame_height : sprite.src_height;
+    size[0] = sprite.frame_width > 0.0 ? sprite.frame_width : sprite.src_width;
+    size[1] = sprite.frame_height > 0.0 ? sprite.frame_height : sprite.src_height;
     return size;
 }
 
 function sprite_get_draw_size(sprite, size) {
-    size[0] = sprite.draw_width >= 0 ? sprite.draw_width : sprite.src_width;
-    size[1] = sprite.draw_height >= 0 ? sprite.draw_height : sprite.src_height;
+    size[0] = sprite.draw_width >= 0.0 ? sprite.draw_width : sprite.src_width;
+    size[1] = sprite.draw_height >= 0.0 ? sprite.draw_height : sprite.src_height;
     return size;
 }
 
@@ -699,19 +692,19 @@ function sprite_set_property(sprite, property_id, value) {
     switch (property_id) {
         case SPRITE_PROP_X:
             sprite.draw_x = value;
-            sprite.vertex_dirty = 1;
+            sprite.vertex_dirty = true;
             break;
         case SPRITE_PROP_Y:
             sprite.draw_y = value;
-            sprite.vertex_dirty = 1;
+            sprite.vertex_dirty = true;
             break;
         case SPRITE_PROP_WIDTH:
             sprite.draw_width = value;
-            sprite.vertex_dirty = 1;
+            sprite.vertex_dirty = true;
             break;
         case SPRITE_PROP_HEIGHT:
             sprite.draw_height = value;
-            sprite.vertex_dirty = 1;
+            sprite.vertex_dirty = true;
             break;
         case SPRITE_PROP_ROTATE:
             sprite_matrix_rotate(sprite, value);
@@ -741,13 +734,13 @@ function sprite_set_property(sprite, property_id, value) {
             sprite.z_index = value;
             break;
         case SPRITE_PROP_VERTEX_COLOR_R:
-            sprite_set_vertex_color(sprite, value, -1, -1);
+            sprite_set_vertex_color(sprite, value, -1.0, -1.0);
             break;
         case SPRITE_PROP_VERTEX_COLOR_G:
-            sprite_set_vertex_color(sprite, -1, value, -1);
+            sprite_set_vertex_color(sprite, -1.0, value, -1.0);
             break;
         case SPRITE_PROP_VERTEX_COLOR_B:
-            sprite_set_vertex_color(sprite, -1, -1, value);
+            sprite_set_vertex_color(sprite, -1.0, -1.0, value);
             break;
         case SPRITE_PROP_VERTEX_COLOR_OFFSET_R:
             sprite.offsetcolor[0] = value;
@@ -763,7 +756,7 @@ function sprite_set_property(sprite, property_id, value) {
             break;
         case SPRITE_PROP_ANIMATIONLOOP:
             if (sprite.animation_selected)
-                animsprite_set_loop(sprite.animation_selected, value);
+                animsprite_set_loop(sprite.animation_selected, Math.trunc(value));
             break;
         case SPRITE_PROP_ROTATE_PIVOT_ENABLED:
             sprite_matrix_rotate_pivot_enable(sprite, value >= 1.0);
@@ -815,7 +808,7 @@ function sprite_set_property(sprite, property_id, value) {
 
 
 function sprite_set_vertex_color_rgb8(sprite, rbg8_color) {
-    math2d_color_bytes_to_floats(rbg8_color, 0, sprite.vertex_color);
+    math2d_color_bytes_to_floats(rbg8_color, false, sprite.vertex_color);
 }
 
 function sprite_set_vertex_color_rgba8(sprite, rbga8_color) {
@@ -824,25 +817,25 @@ function sprite_set_vertex_color_rgba8(sprite, rbga8_color) {
 }
 
 function sprite_set_vertex_color(sprite, r, g, b) {
-    if (r >= 0) sprite.vertex_color[0] = r;
-    if (g >= 0) sprite.vertex_color[1] = g;
-    if (b >= 0) sprite.vertex_color[2] = b;
+    if (r >= 0.0) sprite.vertex_color[0] = r;
+    if (g >= 0.0) sprite.vertex_color[1] = g;
+    if (b >= 0.0) sprite.vertex_color[2] = b;
 }
 
 function sprite_get_vertex_color_rgb8(sprite) {
-    return math2d_color_floats_to_bytes(sprite.vertex_color, 0);
+    return math2d_color_floats_to_bytes(sprite.vertex_color, false);
 }
 
 
 function sprite_set_offsetcolor_rgba8(sprite, rgba8_color) {
-    math2d_color_bytes_to_floats(rgba8_color, 1, sprite.offsetcolor);
+    math2d_color_bytes_to_floats(rgba8_color, true, sprite.offsetcolor);
 }
 
 function sprite_set_offsetcolor(sprite, r, g, b, a) {
-    if (r >= 0) sprite.offsetcolor[0] = r;
-    if (g >= 0) sprite.offsetcolor[1] = g;
-    if (b >= 0) sprite.offsetcolor[2] = b;
-    if (a >= 0) sprite.offsetcolor[3] = a;
+    if (r >= 0.0) sprite.offsetcolor[0] = r;
+    if (g >= 0.0) sprite.offsetcolor[1] = g;
+    if (b >= 0.0) sprite.offsetcolor[2] = b;
+    if (a >= 0.0) sprite.offsetcolor[3] = a;
 }
 
 
@@ -855,7 +848,7 @@ function sprite_external_animation_set(sprite, animsprite) {
 function sprite_external_animation_restart(sprite) {
     if (!sprite.animation_external) return;
     animsprite_restart(sprite.animation_external);
-    animsprite_update_sprite(sprite.animation_external, sprite, 0);
+    animsprite_update_sprite(sprite.animation_external, sprite, false);
 }
 
 function sprite_external_animation_end(sprite) {
@@ -865,21 +858,21 @@ function sprite_external_animation_end(sprite) {
 
 
 function sprite_resize_draw_size(sprite, max_width, max_height, applied_draw_size) {
-    let orig_size = [0, 0];
+    let orig_size = [0.0, 0.0];
     sprite_get_source_size(sprite, orig_size);
 
     let width, height;
 
-    if (max_width < 1 && max_height < 1) {
+    if (max_width < 1.0 && max_height < 1.0) {
         width = orig_size[0];
         height = orig_size[1];
-    } else if (orig_size[0] == 0 && orig_size[1] == 0) {
-        width = max_width < 0 ? max_height : max_width;
-        height = max_height < 0 ? max_width : max_height;
-    } else if (max_width == 0 || max_height == 0) {
-        width = height = 0;
+    } else if (orig_size[0] == 0.0 && orig_size[1] == 0.0) {
+        width = max_width < 0.0 ? max_height : max_width;
+        height = max_height < 0.0 ? max_width : max_height;
+    } else if (max_width == 0.0 || max_height == 0.0) {
+        width = height = 0.0;
     } else {
-        if (max_width > 0 && max_height > 0) {
+        if (max_width > 0.0 && max_height > 0.0) {
             let scale_x = max_width / orig_size[0];
             let scale_y = max_height / orig_size[1];
 
@@ -889,12 +882,12 @@ function sprite_resize_draw_size(sprite, max_width, max_height, applied_draw_siz
                 max_height = -Infinity;
         }
 
-        if (max_height > 0) {
+        if (max_height > 0.0) {
             height = max_height;
             width = (orig_size[0] * max_height) / orig_size[1];
         }
 
-        if (max_width > 0) {
+        if (max_width > 0.0) {
             height = (orig_size[1] * max_width) / orig_size[0];
             width = max_width;
         }
@@ -902,7 +895,7 @@ function sprite_resize_draw_size(sprite, max_width, max_height, applied_draw_siz
 
     sprite.draw_width = width;
     sprite.draw_height = height;
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 
     if (applied_draw_size) {
         applied_draw_size[0] = width;
@@ -913,15 +906,15 @@ function sprite_resize_draw_size(sprite, max_width, max_height, applied_draw_siz
 }
 
 function sprite_center_draw_location(sprite, x, y, ref_width, ref_height, applied_draw_location) {
-    let draw_size = [0, 0];
+    let draw_size = [0.0, 0.0];
     sprite_get_draw_size(sprite, draw_size);
 
-    if (ref_width >= 0) x += ((ref_width - draw_size[0]) / 2);
-    if (ref_height >= 0) y += ((ref_height - draw_size[1]) / 2);
+    if (ref_width >= 0.0) x += ((ref_width - draw_size[0]) / 2.0);
+    if (ref_height >= 0.0) y += ((ref_height - draw_size[1]) / 2.0);
 
     sprite.draw_x = x;
     sprite.draw_y = y;
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 
     if (applied_draw_location) {
         applied_draw_location[0] = sprite.draw_x;
@@ -933,7 +926,7 @@ function sprite_center_draw_location(sprite, x, y, ref_width, ref_height, applie
 
 
 function sprite_is_textured(sprite) {
-    return sprite.texture ? 1 : 0;
+    return sprite.texture ? true : false;
 }
 
 function sprite_is_visible(sprite) {
@@ -969,27 +962,27 @@ function sprite_matrix_corner_rotation(sprite, corner) {
 
 function sprite_set_draw_x(sprite, value) {
     sprite.draw_x = value;
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 }
 
 function sprite_set_draw_y(sprite, value) {
     sprite.draw_y = value;
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
 }
 
 
 function sprite_crop(sprite, dx, dy, dwidth, dheight) {
-    if (Number.isFinite(dx)) sprite.crop.x = dx;
-    if (Number.isFinite(dy)) sprite.crop.y = dy;
-    if (Number.isFinite(dwidth)) sprite.crop.width = dwidth;
-    if (Number.isFinite(dheight)) sprite.crop.height = dheight;
+    if (!Number.isNaN(dx)) sprite.crop.x = dx;
+    if (!Number.isNaN(dy)) sprite.crop.y = dy;
+    if (!Number.isNaN(dwidth)) sprite.crop.width = dwidth;
+    if (!Number.isNaN(dheight)) sprite.crop.height = dheight;
 
-    let invalid = sprite.crop.x < 0 && sprite.crop.y < 0 && sprite.crop.width == 0 && sprite.crop.height == 0;
+    let invalid = sprite.crop.x < 0.0 && sprite.crop.y < 0.0 && sprite.crop.width == 0.0 && sprite.crop.height == 0.0;
 
     // disable cropping if the bounds are invalid
-    if (sprite.crop_enabled && invalid) sprite.crop_enabled = 0;
+    if (sprite.crop_enabled && invalid) sprite.crop_enabled = false;
 
-    sprite.vertex_dirty = 1;
+    sprite.vertex_dirty = true;
     return !invalid;
 }
 
@@ -1058,7 +1051,7 @@ function sprite_trailing_set_params(sprite, length, trail_delay, trail_alpha, da
         sprite.trailing_length = length;
         if (sprite.trailing_used > length) sprite.trailing_used = length;
     }
-    if (darken_colors != null) sprite.trailing_darken = darken_colors ? 1 : 0;
+    if (darken_colors != null) sprite.trailing_darken = !!darken_colors;
     if (!Number.isNaN(trail_delay)) sprite.trailing_delay = trail_delay;
     if (!Number.isNaN(trail_alpha)) sprite.trailing_alpha = trail_alpha;
 

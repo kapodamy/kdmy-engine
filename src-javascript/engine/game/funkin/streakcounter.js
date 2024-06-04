@@ -12,11 +12,11 @@ function streakcounter_init(placeholder, combo_height, number_gap, delay) {
     //      * the width is optional (should no be present)
     //      * alignments are ignored
     //
-    let number_height = 0;
-    let reference_width = 0;
+    let number_height = 0.0;
+    let reference_width = 0.0;
     if (placeholder) {
-        if (placeholder.height > 0) number_height = placeholder.height;
-        if (placeholder.width > 0) reference_width = placeholder.width;
+        if (placeholder.height > 0.0) number_height = placeholder.height;
+        if (placeholder.width > 0.0) reference_width = placeholder.width;
     }
 
     let streakcounter = {
@@ -27,21 +27,21 @@ function streakcounter_init(placeholder, combo_height, number_gap, delay) {
 
         number_height, number_gap,
 
-        ignore_combo_location: 1,
+        ignore_combo_location: true,
 
         combo_width: -1,
         combo_height: combo_height,
         combo_sprite: statesprite_init_from_texture(null),
         combo_animation: null,
-        combo_enabled: combo_height > 0,
+        combo_enabled: combo_height > 0.0,
 
         numbers_items: new Array(STREAKCOUNTER_STREAK_BUFFER_SIZE),
         numbers_id: 0
     };
 
-    statesprite_set_visible(streakcounter.combo_sprite, 0);
+    statesprite_set_visible(streakcounter.combo_sprite, false);
 
-    streakcounter.drawable = drawable_init(0, streakcounter, streakcounter_draw, streakcounter_animate);
+    streakcounter.drawable = drawable_init(0.0, streakcounter, streakcounter_draw, streakcounter_animate);
 
     if (placeholder) {
         placeholder.vertex = streakcounter.drawable;
@@ -49,8 +49,8 @@ function streakcounter_init(placeholder, combo_height, number_gap, delay) {
     }
 
     streakcounter.modifier = drawable_get_modifier(streakcounter.drawable);
-    streakcounter.modifier.x += reference_width / -2;
-    streakcounter.modifier.y += number_height / -2;
+    streakcounter.modifier.x += reference_width / -2.0;
+    streakcounter.modifier.y += number_height / -2.0;
     streakcounter.modifier.height = Math.max(combo_height, number_height);
 
     for (let i = 0; i < STREAKCOUNTER_STREAK_BUFFER_SIZE; i++) {
@@ -61,7 +61,7 @@ function streakcounter_init(placeholder, combo_height, number_gap, delay) {
 }
 
 function streakcounter_destroy(streakcounter) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(streakcounter);
+    luascript_drop_shared
 
     drawable_destroy(streakcounter.drawable);
 
@@ -78,7 +78,7 @@ function streakcounter_destroy(streakcounter) {
 function streakcounter_peek_streak(streakcounter, playerstats) {
     let value = playerstats_get_combo_streak(playerstats);
 
-    if (streakcounter.last_streak == value) return 0;
+    if (streakcounter.last_streak == value) return false;
 
     if (value >= FUNKIN_COMBO_STREAK_VISIBLE_AFTER) {
         let unused_item = streakcounter_internal_pick_item(
@@ -92,11 +92,11 @@ function streakcounter_peek_streak(streakcounter, playerstats) {
         let y = streakcounter.modifier.y;
 
         if (streakcounter.combo_enabled && streakcounter.ignore_combo_location) {
-            x -= ((streakcounter.combo_width + streakcounter.number_gap * 2) + draw_width) / 2;
+            x -= ((streakcounter.combo_width + streakcounter.number_gap * 2.0) + draw_width) / 2.0;
             statesprite_set_draw_location(streakcounter.combo_sprite, x, y);
             x += streakcounter.combo_width;
         } else {
-            x += draw_width / -2;
+            x += draw_width / -2.0;
         }
 
         // set the draw location
@@ -117,7 +117,7 @@ function streakcounter_peek_streak(streakcounter, playerstats) {
     if (streakcounter.last_streak >= FUNKIN_COMBO_STREAK_VISIBLE_AFTER)
         streak_loose = value < streakcounter.last_streak;
     else
-        streak_loose = 0;
+        streak_loose = false;
 
     streakcounter.last_streak = value;
     return streak_loose;
@@ -137,14 +137,13 @@ function streakcounter_hide_combo_sprite(streakcounter, hide) {
 }
 
 function streakcounter_set_combo_draw_location(streakcounter, x, y) {
-    streakcounter.ignore_combo_location = 0;
+    streakcounter.ignore_combo_location = false;
     statesprite_set_draw_location(streakcounter.combo_sprite, x, y);
 }
 
 
-
 function streakcounter_state_add(streakcounter, combo_modelholder, number_modelholder, state_name) {
-    const temp = [0, 0];
+    const temp = [0.0, 0.0];
 
     let success = 0;
 
@@ -168,11 +167,11 @@ function streakcounter_state_add(streakcounter, combo_modelholder, number_modelh
 
     if (statesprite_state) {
         imgutils_get_statesprite_original_size(statesprite_state, temp);
-        imgutils_calc_size(temp[0], temp[1], -1, streakcounter.combo_height, temp);
+        imgutils_calc_size(temp[0], temp[1], -1.0, streakcounter.combo_height, temp);
         statesprite_state.draw_width = temp[0];
         statesprite_state.draw_height = temp[1];
-        statesprite_state.offset_x = 0;
-        statesprite_state.offset_y = temp[1] / -2;
+        statesprite_state.offset_x = 0.0;
+        statesprite_state.offset_y = temp[1] / -2.0;
         streakcounter.combo_width = temp[0];
         success++;
     }
@@ -186,10 +185,10 @@ function streakcounter_state_toggle(streakcounter, state_name) {
 
     if (statesprite_state_toggle(streakcounter.combo_sprite, state_name)) {
         streakcounter.combo_width = statesprite_state_get(streakcounter.combo_sprite).draw_width;
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
 
@@ -271,7 +270,7 @@ function streakcounter_animate(streakcounter, elapsed) {
     res += statesprite_animate(streakcounter.combo_sprite, elapsed);
     if (streakcounter.combo_animation) {
         res += animsprite_animate(streakcounter.combo_animation, elapsed);
-        animsprite_update_statesprite(streakcounter.combo_animation, streakcounter.combo_sprite);
+        animsprite_update_statesprite(streakcounter.combo_animation, streakcounter.combo_sprite, true);
     }
 
     return res;
@@ -289,7 +288,7 @@ function streakcounter_draw(streakcounter, pvrctx) {
         if (streakcounter.numbers_items[i].id < 0) continue;
 
         if (draw_combo) {
-            draw_combo = 0;
+            draw_combo = false;
             statesprite_draw(streakcounter.combo_sprite, pvrctx);
         }
 

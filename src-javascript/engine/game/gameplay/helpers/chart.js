@@ -3,10 +3,10 @@
 const CHART_EVENT_NONE = 1;
 const CHART_EVENT_CAMERA_OPPONENT = 2;
 const CHART_EVENT_CAMERA_PLAYER = 3;
-const CHART_EVENT_CHANGE_BPM = 3;
-const CHART_EVENT_ALT_ANIM_OPPONENT = 4;
-const CHART_EVENT_ALT_ANIM_PLAYER = 5;
-const CHART_EVENT_UNKNOWN_NOTE = 6;
+const CHART_EVENT_CHANGE_BPM = 4;
+const CHART_EVENT_ALT_ANIM_OPPONENT = 5;
+const CHART_EVENT_ALT_ANIM_PLAYER = 6;
+const CHART_EVENT_UNKNOWN_NOTE = 7;
 
 class Chart {
     /**
@@ -14,7 +14,7 @@ class Chart {
      * @property {number} timestamp
      * @property {number} direction
      * @property {number} duration
-     * @property {bool} alt_anim
+     * @property {boolean} alt_anim
      * @property {number} data
      */
     /**
@@ -24,7 +24,7 @@ class Chart {
      */
     /**
      * @typedef {object} ChartEvent
-     * @property {bool} is_player_or_opponent
+     * @property {boolean} is_player_or_opponent
      * @property {number} timestamp
      * @property {number} command
      * @property {number} parameter
@@ -72,7 +72,7 @@ async function chart_init(src, difficult) {
     let song = json_read_object(json, "song");
 
     let chart = new Chart();
-    chart.bpm = json_read_number(song, "bpm", 100);
+    chart.bpm = json_read_number(song, "bpm", 100.0);
     chart.speed = json_read_number(song, "speed", 1.0);
 
     let json_notes = json_read_array(song, "notes");
@@ -91,20 +91,29 @@ async function chart_init(src, difficult) {
     let last_alt_anim_opponent = false;
     let beat_duration = math2d_beats_per_minute_to_beat_per_milliseconds(chart.bpm);
     let quarter_duration = beat_duration / 4.0;
-    let timestamp_event_accumulated = 0;
+    let timestamp_event_accumulated = 0.0;
 
     for (let i = 0; i < json_notes_length; i++) {
         let json_section = json_read_array_item_object(json_notes, i);
 
         // typeOfSection appears to be unused
-        //let type_of_section = json_read_number(json_section, "typeOfSection", 0);
-        //if (type_of_section != 0) throw new Error("Unknown typeOfSection=" + type_of_section);
+        /*if (json_has_property(json, "typeOfSection")) {
+            if (json_has_property_number_long(json, "typeOfSection")) {
+                let type_of_section = json_read_number_long(json_section, "typeOfSection", 0);
+                if (type_of_section != 0) {
+                    console.warn("Unknown typeOfSection", type_of_section);
+                    continue;
+                }
+            } else {
+                continue;
+            }
+        }*/
 
-        let length_in_steps = json_read_number(json_section, "lengthInSteps", 16);
+        let length_in_steps = json_read_number(json_section, "lengthInSteps", 16.0);
         let must_hit_section = json_read_boolean(json_section, "mustHitSection", false);
         let alt_anim = json_read_boolean(json_section, "altAnim", false);
         let change_bpm = json_read_boolean(json_section, "changeBPM", false);
-        let bpm = json_read_number(json_section, "bpm", 100);
+        let bpm = json_read_number(json_section, "bpm", 100.0);
 
         if (change_bpm) {
             beat_duration = math2d_beats_per_minute_to_beat_per_milliseconds(bpm);
@@ -128,19 +137,19 @@ async function chart_init(src, difficult) {
                 console.warn(`chart_init() section=${i} note=${j} has less than 3 fields`);
             }
 
-            let timestamp = json_read_array_item_number(self_notes, 0, 0);
-            let direction = json_read_array_item_number(self_notes, 1, 0);
-            let duration = json_read_array_item_number(self_notes, 2, 0);
+            let timestamp = json_read_array_item_number(self_notes, 0, 0.0);
+            let direction = json_read_array_item_number(self_notes, 1, 0.0);
+            let duration = json_read_array_item_number(self_notes, 2, 0.0);
             let data;
             let alt_note;
 
             // In Funkin v0.2.8 the value at index 3 can denote an alt animation
             if (json_get_array_item_type(self_notes, 3) == JSON_VALUE_TYPE_BOOLEAN) {
-                alt_note = json_read_array_item_boolean(self_notes, 3, 0);
+                alt_note = json_read_array_item_boolean(self_notes, 3, false);
                 data = alt_note ? Infinity : -Infinity;
             } else {
-                alt_note = 0;
-                data = json_read_array_item_number(self_notes, 3, 0)
+                alt_note = 0.0;
+                data = json_read_array_item_number(self_notes, 3, 0.0);
             }
 
             if (set_camera) {
@@ -238,6 +247,10 @@ async function chart_init(src, difficult) {
 }
 
 function chart_destroy(chart) {
+    for (let i = 0; i < chart.entries_size; i++) {
+        chart.entries[i].notes = undefined;
+    }
+
     chart.entries = undefined;
     chart.events = undefined;
     chart = undefined;

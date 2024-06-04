@@ -4,9 +4,9 @@
  * @typedef {object} DDRKey
  * @property {number} in_song_timestamp
  * @property {number} strum_id
- * @property {bool} holding
- * @property {bool} discard
- * @property {bool} strum_invisible
+ * @property {boolean} holding
+ * @property {boolean} discard
+ * @property {boolean} strum_invisible
  * @property {number} button
  * @property {GamepadKDY} gamepad
  */
@@ -46,14 +46,14 @@ function ddrkeymon_init(/**@type {GamepadKDY}*/gamepad, strum_binds, strum_binds
         strum_binds_size: strum_binds_size,
 
         thd_monitor: null,
-        /*volatile*/ thd_monitor_active: 0,
+        thd_monitor_active: 0,// in C, use false instead
         gamepad: gamepad
     }
 
     for (let i = 0; i < strum_binds_size; i++) {
         let count = math2d_bitcount(strum_binds[i]);
         ddrkeymon.strum_binds[i] = {
-            is_visible: 1,
+            is_visible: true,
             button_flags: strum_binds[i],
             button_count: count,
             button_array: new Array(count)
@@ -66,7 +66,7 @@ function ddrkeymon_init(/**@type {GamepadKDY}*/gamepad, strum_binds, strum_binds
         }
     }
 
-	// JS only
+	// (JS & C# only) populate queue
     clone_struct_as_array_items(
         ddrkeymon.ddrkeys_fifo.queue, DDRKEYMON_FIFO_LENGTH,
         { in_song_timestamp: -1, strum_id: -1, holding: 0, discard: 0, button: 0x00 }
@@ -95,10 +95,10 @@ function ddrkeymon_get_fifo(/**@type {DDRKeymon}*/ddrkeymon) {
 }
 
 function ddrkeymon_purge(/**@type {DDRKeysFIFO}*/ddrkeys_fifo) {
-    ddrkeymon_purge2(ddrkeys_fifo, 0);
+    ddrkeymon_purge2(ddrkeys_fifo, false);
 }
 
-function ddrkeymon_purge2(/**@type {DDRKeysFIFO}*/ddrkeys_fifo, /**@type {bool}*/force_drop_first) {
+function ddrkeymon_purge2(/**@type {DDRKeysFIFO}*/ddrkeys_fifo, /**@type {boolean}*/force_drop_first) {
     if (ddrkeys_fifo.available < 1) return;
 
     //
@@ -121,9 +121,9 @@ function ddrkeymon_purge2(/**@type {DDRKeysFIFO}*/ddrkeys_fifo, /**@type {bool}*
         available++;
 
         // debugging only
-        ddrkeys_fifo.queue[i].in_song_timestamp = -2;
+        ddrkeys_fifo.queue[i].in_song_timestamp = -2.0;
         ddrkeys_fifo.queue[i].strum_id = -2;
-        ddrkeys_fifo.queue[i].button = 0;
+        ddrkeys_fifo.queue[i].button = 0x00;
     }
 
     ddrkeys_fifo.available = available;
@@ -134,7 +134,7 @@ function ddrkeymon_purge2(/**@type {DDRKeysFIFO}*/ddrkeys_fifo, /**@type {bool}*
 
 function ddrkeymon_clear(/**@type {DDRKeymon}*/ddrkeymon) {
     for (let i = 0; i < ddrkeymon.ddrkeys_fifo.available; i++)
-        ddrkeymon.ddrkeys_fifo.queue[i].discard = 1;
+        ddrkeymon.ddrkeys_fifo.queue[i].discard = true;
     ddrkeymon.ddrkeys_fifo.available = 0;
 }
 
@@ -148,7 +148,7 @@ function ddrkeymon_start(/**@type {DDRKeymon}*/ddrkeymon, /**@type {number}*/off
 
     /*
     // C only
-    ddrkeymon->thd_monitor_active = 1;
+    ddrkeymon->thd_monitor_active = true;
     ddrkeymon->thd_monitor = thd_create(0, ddrkeymon_internal_thd, ddrkeymon);
     */
 }
@@ -156,17 +156,17 @@ function ddrkeymon_start(/**@type {DDRKeymon}*/ddrkeymon, /**@type {number}*/off
 function ddrkeymon_stop(/**@type {DDRKeymon}*/ddrkeymon) {
     if (!ddrkeymon.thd_monitor) return;
 
-    ddrkeymon_clear(ddrkeymon);
-
     // JS & C# only
     ddrkeymon.thd_monitor = null;
     ddrkeymon.thd_monitor_active++;
 
     /*
     // C only
-    ddrkeymon->thd_monitor_active = 0;
+    ddrkeymon->thd_monitor_active = false;
     thd_join(ddrkeymon->thd_monitor, NULL);
     */
+
+    ddrkeymon_clear(ddrkeymon);
 }
 
 function ddrkeymon_peek_timestamp(/**@type {DDRKeymon}*/ddrkeymon) {
@@ -208,7 +208,7 @@ function ddrkeymon_internal_append_key(ddrkeymon, timestamp, strum_id, button_id
     if (available >= DDRKEYMON_FIFO_LENGTH) {
         // imminent overflow, drop first key
         console.warn("ddrkeymon_append_key() queue overflow, ¿are you checking the queue?");
-        ddrkeymon_purge2(ddrkeymon.ddrkeys_fifo, 1);
+        ddrkeymon_purge2(ddrkeymon.ddrkeys_fifo, true);
 
         if (available >= DDRKEYMON_FIFO_LENGTH) {
             throw new Error("ddrkeymon_append_key() queue overflow");
@@ -219,7 +219,7 @@ function ddrkeymon_internal_append_key(ddrkeymon, timestamp, strum_id, button_id
     queue[available].in_song_timestamp = timestamp;
     queue[available].strum_id = strum_id;
     queue[available].holding = holding;
-    queue[available].discard = 0;
+    queue[available].discard = false;
     queue[available].strum_invisible = !ddrkeymon.strum_binds[strum_id].is_visible;
     queue[available].button = button_id;
 
@@ -247,8 +247,7 @@ function ddrkeymon_internal_process_key(ddrkeymon, timestamp, old_buttons, new_b
 }
 
 async function ddrkeymon_internal_thd(/**@type {DDRKeymon}*/ddrkeymon) {
-	let current_instance = ddrkeymon.thd_monitor_active;
-    while (ddrkeymon.thd_monitor_active == current_instance) {
+	while (ddrkeymon.thd_monitor_active) {
         const old_buttons = gamepad_get_last_pressed(ddrkeymon.gamepad);
         const new_buttons = gamepad_get_pressed(ddrkeymon.gamepad);
         const timestamp = timer_ms_gettime64();
@@ -256,6 +255,8 @@ async function ddrkeymon_internal_thd(/**@type {DDRKeymon}*/ddrkeymon) {
         ddrkeymon_internal_process_key(ddrkeymon, timestamp, old_buttons, new_buttons);
         await thd_sleep(5);//await thd_pass();
     }
+
+    return null;
 }
 
 function ddrkeymon_internal_read_gamepad(ddrkeymon) {

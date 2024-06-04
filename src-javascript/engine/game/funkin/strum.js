@@ -40,7 +40,7 @@ class StrumNote {
     /** @type {any} */
     custom_data;
 
-    /** @type {bool} */
+    /** @type {boolean} */
     hit_on_penality;
 
     constructor(chart_note, map, map_size) {
@@ -57,7 +57,7 @@ class StrumNote {
         this.timestamp = chart_note.timestamp;
         this.duration = chart_note.duration;
         this.custom_data = chart_note.data;
-        this.hit_on_penality = 0;
+        this.hit_on_penality = false;
         this.alt_anim = chart_note.alt_anim;
 
         this.state = NoteState.PENDING;
@@ -69,7 +69,7 @@ class StrumNote {
         this.previous_quarter = 0;
     }
 
-    get isSustain() { return this.duration > 0; }
+    get isSustain() { return this.duration > 0.0; }
 
     get endTimestamp() { return this.timestamp + this.duration; }
 
@@ -119,7 +119,7 @@ const STRUM_SCRIPT_ON_IDLE = 4;
 const STRUM_SCRIPT_ON_ALL = 5;
 
 /** Default sprite size of the sick effect in relation to the marker sprite size */
-const STRUM_DEFAULT_SICK_EFFECT_RATIO = 2;
+const STRUM_DEFAULT_SICK_EFFECT_RATIO = 2.0;
 
 /** Number of notes to draw after the marker */
 const STRUM_DRAW_PAST_NOTES = 1.1;
@@ -166,22 +166,22 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
         chart_notes_id_map_size: 0,
 
         scroll_velocity_base: FNF_CHART_SCROLL_VELOCITY,
-        scroll_velocity: 0,
+        scroll_velocity: 0.0,
 
         scroll_is_vertical: 1,
         scroll_is_inverse: 0,
-        scroll_window: 0,
+        scroll_window: 0.0,
 
-        last_song_timestamp: 0,
+        last_song_timestamp: 0.0,
         notes_peek_index: 0,
         notes_render_index: 0,
 
         press_state_changes: -1,
         press_state: STRUM_PRESS_STATE_NONE,
-        press_state_use_alt_anim: 0,
+        press_state_use_alt_anim: false,
 
         marker_state: STRUM_MARKER_STATE_NOTHING,
-        marker_state_changed: 0,
+        marker_state_changed: false,
         marker_sick_state: STRUM_MARKER_STATE_NOTHING,
 
         marker_sick_state_name: null,
@@ -191,20 +191,20 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
         dimmen_opposite: invdimmen,
 
         dimmen_marker: marker_dimmen,
-        marker_duration: 0,
-        marker_duration_quarter: 0,
-        minimum_sustain_duration: 0,
+        marker_duration: 0.0,
+        marker_duration_quarter: 0.0,
+        minimum_sustain_duration: 0.0,
         marker_duration_multiplier: 1.0,
 
-        key_test_limit: 0,
+        key_test_limit: 0.0,
 
         modifier: {},
 
-        enable_sick_effect: 1,
-        enable_sick_effect_draw: 1,
-        enable_background: 0,
+        enable_sick_effect: true,
+        enable_sick_effect_draw: true,
+        enable_background: false,
 
-        keep_aspect_ratio_background: 1,
+        keep_aspect_ratio_background: true,
 
         markers_scale_keep: keep_markers_scale,
         markers_scale: -1.0,
@@ -218,19 +218,19 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
         animation_sick_effect: clone_object(attached_animations),
         animation_background: clone_object(attached_animations),
 
-        extra_animations_have_penalties: 0,
-        extra_animations_have_misses: 0,
+        extra_animations_have_penalties: false,
+        extra_animations_have_misses: false,
 
-        auto_scroll_elapsed: -1,
+        auto_scroll_elapsed: -1.0,
         sustain_queue: arraylist_init(),
 
-        drawable: drawable_init(-1, null, null, null),
-        draw_offset_milliseconds: 0,
+        drawable: drawable_init(-1.0, null, null, null),
+        draw_offset_milliseconds: 0.0,
         player_id: -1,
         inverse_offset: length_dimmen - marker_dimmen,
-        use_fukin_marker_duration: 1,
+        use_fukin_marker_duration: true,
         tweenkeyframe_note: null,
-        use_beat_synced_idle_and_continous: 1,
+        use_beat_synced_idle_and_continous: true,
         beatwatcher: {}
     };
 
@@ -247,13 +247,13 @@ function strum_init(id, name, x, y, marker_dimmen, invdimmen, length_dimmen, kee
 
     strum_set_scroll_speed(strum, 1.0);
     strum_set_scroll_direction(strum, STRUM_UPSCROLL);
-    strum_set_bpm(strum, 100);
+    strum_set_bpm(strum, 100.0);
 
     return strum;
 }
 
 function strum_destroy(strum) {
-    ModuleLuaScript.kdmyEngine_drop_shared_object(strum);
+    luascript_drop_shared(strum);
 
     statesprite_destroy(strum.sprite_marker_nothing);
     statesprite_destroy(strum.sprite_marker_confirm);
@@ -279,7 +279,7 @@ function strum_destroy(strum) {
 
     if (strum.tweenkeyframe_note) tweenkeyframe_destroy(strum.tweenkeyframe_note);
 
-    arraylist_destroy(strum.sustain_queue, 0);
+    arraylist_destroy(strum.sustain_queue, false);
 
     // Note: do not release "strum.marker_sick_state_name"
 
@@ -334,10 +334,10 @@ function strum_set_notes(strum, chart, strumsdefs, strumsdefs_size, player_id, n
 
     let k = 0;
     for (let i = 0; i < player_notes_size; i++) {
-        let ignore = 1;
+        let ignore = true;
         for (let j = 0; j < note_ids_size; j++) {
             if (player_notes[i].direction == notes_ids[j]) {
-                ignore = 0;
+                ignore = false;
                 break;
             }
         }
@@ -351,7 +351,7 @@ function strum_set_notes(strum, chart, strumsdefs, strumsdefs_size, player_id, n
         qsort(strum.chart_notes, strum.chart_notes_size, NaN, StrumNote.sort_callback);
 
         // calculate the key test time limit
-        strum.key_test_limit = Math.max(strum.chart_notes[0].timestamp - strum.marker_duration, 0);
+        strum.key_test_limit = Math.max(strum.chart_notes[0].timestamp - strum.marker_duration, 0.0);
 
         // remove duplicated notes (filtered by timestamp and id)
         let j = 0;
@@ -443,7 +443,7 @@ function strum_set_scroll_direction(strum, direction) {
 }
 
 function strum_set_marker_duration_multiplier(strum, multipler) {
-    strum.marker_duration_multiplier = multipler > 0 ? multipler : 1.0;
+    strum.marker_duration_multiplier = multipler > 0.0 ? multipler : 1.0;
 
     let velocity = strum.scroll_velocity;
 
@@ -462,7 +462,7 @@ function strum_reset(strum, scroll_speed, state_name) {
         strum.chart_notes[i].release_time = -1.0;
         strum.chart_notes[i].release_button = 0x00;
         strum.chart_notes[i].previous_quarter = 0;
-        strum.chart_notes[i].hit_on_penality = 0;
+        strum.chart_notes[i].hit_on_penality = false;
     }
 
     strum_set_scroll_speed(strum, scroll_speed);
@@ -485,11 +485,11 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
     let notes_cleared = 0;
 
 
-    if (strum.auto_scroll_elapsed > 0) {
+    if (strum.auto_scroll_elapsed > 0.0) {
         // cancel strum_scroll_auto() state keep
-        strum.auto_scroll_elapsed = -1;
+        strum.auto_scroll_elapsed = -1.0;
         strum.marker_state = STRUM_MARKER_STATE_NOTHING;
-        strum.marker_state_changed = 1;
+        strum.marker_state_changed = true;
     }
 
     // step 1: enter in "key testing" mode on the early seconds of the song or at the end
@@ -500,7 +500,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
             if (ddr_key.in_song_timestamp > song_timestamp) continue;
 
             keys_processed++;
-            ddr_key.discard = 1;
+            ddr_key.discard = true;
             marker_state = ddr_key.holding ? STRUM_MARKER_STATE_CONFIRM : STRUM_MARKER_STATE_NOTHING;
         }
 
@@ -510,7 +510,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
         strum.last_song_timestamp = song_timestamp;
         if (marker_state != -1) {
             strum.marker_state = marker_state;
-            strum.marker_state_changed = 1;
+            strum.marker_state_changed = true;
         }
         return keys_processed;
     }
@@ -524,7 +524,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
     // step 3: do key checking (very extensive)
     for (let i = 0; i < ddrkeys_fifo.available && notes_cleared < notes_ahead; i++) {
         let note_attributes;
-        const ddr_key = ddrkeys_fifo.queue[i];
+        let ddr_key = ddrkeys_fifo.queue[i];
         const key_timestamp = ddr_key.in_song_timestamp;
         if (ddr_key.discard || ddr_key.strum_id != strum.strum_id) continue;
 
@@ -600,7 +600,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
                 }
 
                 // recover the sustain note
-                note.release_time = -1;
+                note.release_time = -1.0;
                 note.state = NoteState.HOLD;
                 note.release_button = ddr_key.button;
 
@@ -623,7 +623,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
             }
 
             if (note_attributes.can_kill_on_hit) playerstats_kill_if_negative_health(playerstats);
-            if (weekscript) weekscript_notify_note_hit(weekscript, strum, hit_index, playerstats);
+            if (weekscript) strum_internal_notify_note_hit(strum, weekscript, hit_index, playerstats);
 
             //console.info(`strum: [hold] note hit!  ts=${key_timestamp} diff=${lowest_diff} rank=${rank}`);
 
@@ -713,7 +713,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
         }
 
         // phase 2: discard the key event
-        ddr_key.discard = 1;
+        ddr_key.discard = true;
         keys_processed++;
 
         // phase 3: update the marker state (press/confirm/nothing)
@@ -746,8 +746,8 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
 
                 if (compute_miss) {
                     playerstats_add_miss(playerstats, strum.attribute_notes[note.id].hurt_ratio);
-                    if (weekscript) weekscript_notify_note_loss(weekscript, strum, i, playerstats, 0);
-                    strum.extra_animations_have_misses++;
+                    if (weekscript) strum_internal_notify_note_loss(strum, weekscript, i, false);
+                    strum.extra_animations_have_misses = true;
                     press_state = STRUM_PRESS_STATE_MISS;
                 }
             }
@@ -762,9 +762,9 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
 
         if (compute_miss) {
             if (note.state == NoteState.PENDING && weekscript)
-                weekscript_notify_note_loss(weekscript, strum, i, playerstats, 0);
+                strum_internal_notify_note_loss(strum, weekscript, i, false);
             if (note.state != NoteState.RELEASE)
-                strum.extra_animations_have_misses++;
+                strum.extra_animations_have_misses = true;
         }
 
         if (song_timestamp > end_timestamp) {
@@ -779,7 +779,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
         // consider as missed if the worst possible ranking can not be assigned
         let miss_timestamp = note.timestamp + marker_duration;
         if (song_timestamp >= miss_timestamp) {
-            //console.info($`strum: [miss] sustain loosing ts_n=${note.timestamp} ts_s=${song_timestamp}`);
+            //console.info(`strum: [miss] sustain loosing ts_n=${note.timestamp} ts_s=${song_timestamp}`);
             if (note.state == NoteState.PENDING) {
                 arraylist_add(strum.sustain_queue, note);
                 note.state = NoteState.RELEASE;
@@ -796,7 +796,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
 
     // step 6: check for released keys of pentalties presses
     for (let i = 0; i < ddrkeys_fifo.available; i++) {
-        const ddr_key = ddrkeys_fifo.queue[i];
+        let ddr_key = ddrkeys_fifo.queue[i];
         const key_timestamp = ddr_key.in_song_timestamp;
 
         if (ddr_key.discard || ddr_key.holding || ddr_key.strum_id != strum.strum_id) continue;
@@ -805,7 +805,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
         if (marker_state == -1) marker_state = STRUM_MARKER_STATE_NOTHING;
         if (press_state == -1) press_state = STRUM_PRESS_STATE_NONE;
 
-        ddr_key.discard = 1;
+        ddr_key.discard = true;
         keys_processed++;
     }
 
@@ -816,7 +816,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
     strum.notes_peek_index = notes_peek_index;
     if (marker_state != -1) {
         strum.marker_state = marker_state;
-        strum.marker_state_changed = 1;
+        strum.marker_state_changed = true;
     }
     strum_internal_update_press_state(strum, press_state);
 
@@ -834,7 +834,7 @@ function strum_scroll_auto(strum, song_timestamp, playerstats, weekscript) {
     const attribute_notes = strum.attribute_notes;
     const chart_notes_size = strum.chart_notes_size;
     const marker_duration = strum.marker_duration;
-    const press_time = strum.marker_duration * 2;
+    const press_time = strum.marker_duration * 2.0;
 
     let notes_peek_index = strum.notes_peek_index;
     let notes_cleared = 0;
@@ -863,18 +863,18 @@ function strum_scroll_auto(strum, song_timestamp, playerstats, weekscript) {
                     playerstats_add_hit(playerstats, heal_ratio, marker_duration, note.hit_diff);
 
                     // keep the marker in press state for a while
-                    strum.auto_scroll_elapsed = note.duration < 1 ? press_time : note.duration;
+                    strum.auto_scroll_elapsed = note.duration < 1.0 ? press_time : note.duration;
                     strum.marker_state = STRUM_AUTO_SCROLL_MARKER_STATE;
-                    strum.marker_state_changed = 1;
+                    strum.marker_state_changed = true;
                     press_state = is_sustain ? STRUM_PRESS_STATE_HIT_SUSTAIN : STRUM_PRESS_STATE_HIT;
                     press_state_use_alt_anim = note.alt_anim;
                 }
 
                 if (weekscript) {
                     if (attribute_notes[note.id].can_kill_on_hit)
-                        weekscript_notify_note_loss(weekscript, strum, notes_peek_index, playerstats, 0);
+                        strum_internal_notify_note_loss(strum, weekscript, notes_peek_index, false);
                     else
-                        weekscript_notify_note_hit(weekscript, strum, notes_peek_index, playerstats);
+                        strum_internal_notify_note_hit(strum, weekscript, notes_peek_index, playerstats);
                 }
 
                 if (is_sustain) arraylist_add(strum.sustain_queue, note);
@@ -927,7 +927,7 @@ function strum_scroll_auto(strum, song_timestamp, playerstats, weekscript) {
 
 function strum_force_key_release(strum) {
     strum.marker_state = STRUM_MARKER_STATE_NOTHING;
-    strum.marker_state_changed = 1;
+    strum.marker_state_changed = true;
     strum_internal_update_press_state(strum, STRUM_PRESS_STATE_NONE);
 
     for (let i = strum.notes_peek_index; i < strum.chart_notes_size; i++) {
@@ -938,7 +938,7 @@ function strum_force_key_release(strum) {
         }
     }
 
-    strum_animate(strum, 0);
+    strum_animate(strum, 0.0);
 }
 
 function strum_find_penalties_note_hit(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscript) {
@@ -986,23 +986,23 @@ function strum_find_penalties_note_hit(strum, song_timestamp, ddrkeys_fifo, play
                 if (diff < 0.50) continue;
 
                 //console.log(`strum: [penality] hit on pending note ts=${note.timestamp}`);
-                strum.extra_animations_have_penalties = 1;
+                strum.extra_animations_have_penalties = true;
                 strum_internal_update_press_state(strum, STRUM_PRESS_STATE_PENALTY_HIT);
 
                 if (!attribute_notes[note.id].ignore_miss) {
                     note.state = NoteState.MISS;
-                    note.hit_on_penality = 1;
+                    note.hit_on_penality = true;
                     note.release_button = 0x00;
                     note.release_time = -Infinity;
-                    playerstats_add_penality(playerstats, 0);
+                    playerstats_add_penality(playerstats, false);
                 }
-                if (weekscript) weekscript_notify_note_loss(weekscript, strum, i, playerstats, 1);
+                if (weekscript) strum_internal_notify_note_loss(strum, weekscript, i, true);
             } else {
                 // ignore key event
                 continue;
             }
 
-            ddr_key.discard = 1;
+            ddr_key.discard = true;
             keys_processed++;
         }
     }
@@ -1032,18 +1032,18 @@ function strum_find_penalties_empty_hit(strum, song_timestamp, ddrkeys_fifo, pla
 
         if (ddr_key.holding) {
             //console.log(`strum: [penality] key hold on empty strum ts=${key_timestamp}`);
-            playerstats_add_penality(playerstats, 1);
+            playerstats_add_penality(playerstats, true);
             strum_internal_update_press_state(strum, STRUM_PRESS_STATE_PENALTY_NOTE);
             strum.marker_state = STRUM_MARKER_STATE_CONFIRM;
-            strum.extra_animations_have_penalties = 1;
+            strum.extra_animations_have_penalties = true;
         } else {
             //console.log(`strum: [penality] key release on empty strum ts=${key_timestamp}`);
             strum.marker_state = STRUM_MARKER_STATE_NOTHING;
             strum_internal_update_press_state(strum, STRUM_PRESS_STATE_NONE);
         }
 
-        strum.marker_state_changed = 1;
-        ddr_key.discard = 1;
+        strum.marker_state_changed = true;
+        ddr_key.discard = true;
         keys_processed++;
     }
 
@@ -1094,15 +1094,15 @@ function strum_animate(strum, elapsed) {
     //#region marker animation
 
     // if strum_scroll_auto() function was used, keep the marker in press state for a while
-    if (strum.auto_scroll_elapsed > 0) {
+    if (strum.auto_scroll_elapsed > 0.0) {
         if (strum.marker_state != STRUM_AUTO_SCROLL_MARKER_STATE) {
-            strum.auto_scroll_elapsed = -1;
+            strum.auto_scroll_elapsed = -1.0;
         } else {
             strum.auto_scroll_elapsed -= elapsed;
-            if (strum.auto_scroll_elapsed <= 0) {
-                strum.auto_scroll_elapsed = -1;
+            if (strum.auto_scroll_elapsed <= 0.0) {
+                strum.auto_scroll_elapsed = -1.0;
                 strum.marker_state = STRUM_MARKER_STATE_NOTHING;
-                strum.marker_state_changed = 1;
+                strum.marker_state_changed = true;
                 strum_internal_update_press_state(strum, STRUM_PRESS_STATE_NONE);
             }
         }
@@ -1125,7 +1125,7 @@ function strum_animate(strum, elapsed) {
 
     // restart the marker animation (if was changed)
     if (strum.marker_state_changed) {
-        strum.marker_state_changed = 0;
+        strum.marker_state_changed = false;
         statesprite_animation_restart(current_marker);
     }
 
@@ -1139,10 +1139,10 @@ function strum_animate(strum, elapsed) {
     //#region splash effect animation
     if (strum.enable_sick_effect) {
         // check if is necessary restart the sick effect animation
-        let visible = 1;
+        let visible = true;
         switch (strum.marker_sick_state) {
             case STRUM_MARKER_STATE_NOTHING:
-                visible = 0;
+                visible = false;
                 break;
             case STRUM_MARKER_STATE_PRESS:
                 // change the state if the note has a custom sick effect
@@ -1164,21 +1164,21 @@ function strum_animate(strum, elapsed) {
     let current_event;
     if (strum.extra_animations_have_penalties) {
         current_event = STRUM_SCRIPT_ON_PENALITY;
-        strum.extra_animations_have_misses = strum.extra_animations_have_penalties = 0;
+        strum.extra_animations_have_misses = strum.extra_animations_have_penalties = false;
     } else if (strum.extra_animations_have_misses) {
         current_event = STRUM_SCRIPT_ON_MISS;
-        strum.extra_animations_have_penalties = strum.extra_animations_have_misses = 0;
+        strum.extra_animations_have_penalties = strum.extra_animations_have_misses = false;
     } else if (strum.marker_state == STRUM_MARKER_STATE_PRESS) {
         current_event = STRUM_SCRIPT_ON_HIT_DOWN;
     } else {
         current_event = STRUM_SCRIPT_ON_IDLE;
     }
 
-    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_STRUM_LINE, current_event, 0, elapsed);
-    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_NOTE, current_event, 0, elapsed);
-    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_MARKER, current_event, 0, elapsed);
-    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_SICK_EFFECT, current_event, 0, elapsed);
-    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_BACKGROUND, current_event, 0, elapsed);
+    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_STRUM_LINE, current_event, false, elapsed);
+    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_NOTE, current_event, false, elapsed);
+    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_MARKER, current_event, false, elapsed);
+    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_SICK_EFFECT, current_event, false, elapsed);
+    res += strum_internal_extra_animate(strum, STRUM_SCRIPT_TARGET_BACKGROUND, current_event, false, elapsed);
     //#endregion
 
     //#region execute continuous extra animations
@@ -1277,30 +1277,30 @@ function strum_draw(strum, pvrctx) {
 
         // do not draw cleared notes or invisible ones
         if (note.state == NoteState.CLEAR) continue;
-        if (note.state == NoteState.HOLD && note.duration < 1) continue;
+        if (note.state == NoteState.HOLD && note.duration < 1.0) continue;
         if (note.state == NoteState.MISS && note.hit_on_penality) continue;
         if (!strum.drawable_notes[note.id]) continue;
 
         let note_duration = note.duration;
         let note_timestamp = note.timestamp;
-        let body_only = 0;
+        let body_only = false;
 
         // on sustain notes only draw the remaining duration
-        if (note.duration > 0) {
+        if (note.duration > 0.0) {
             if (note.state == NoteState.HOLD) {
-                body_only = 1;
+                body_only = true;
                 note_duration -= song_timestamp - note_timestamp;
                 note_timestamp = song_timestamp;
-            } else if (note.release_time > 0) {
+            } else if (note.release_time > 0.0) {
                 // early release
-                body_only = 1;
+                body_only = true;
                 note_duration -= note.release_time - note_timestamp;
                 note_timestamp = note.release_time;
             }
 
             if (note.state != NoteState.HOLD && note_timestamp <= song_window_past) {
                 // past note, show part of the sustain body 
-                body_only = 1;
+                body_only = true;
                 let past_note_timestamp = song_timestamp - strum.marker_duration;
                 note_duration -= past_note_timestamp - note_timestamp;
                 note_timestamp = past_note_timestamp;
@@ -1309,7 +1309,7 @@ function strum_draw(strum, pvrctx) {
                 if (body_only && note_duration < strum.marker_duration) continue;
             }
 
-            if (note_duration <= 0) continue;
+            if (note_duration <= 0.0) continue;
         }
 
         let scroll_offset;
@@ -1414,14 +1414,13 @@ function strum_state_add(strum, mdlhldr_mrkr, mdlhldr_sck_ffct, mdlhldr_bckgrnd,
         STRUM_BACKGROUND_SUFFIX, state_name
     );
     if (state) strum_internal_calc_state_background(strum, state);
-
 }
 
 function strum_state_toggle(strum, state_name) {
     let success = 0;
-    success += strum_state_toggle_marker(strum, state_name);
-    success += strum_state_toggle_sick_effect(strum, state_name);
-    success += strum_state_toggle_background(strum, state_name);
+    success += strum_state_toggle_marker(strum, state_name) ? 1 : 0;
+    success += strum_state_toggle_sick_effect(strum, state_name) ? 1 : 0;
+    success += strum_state_toggle_background(strum, state_name) ? 1 : 0;
     success += strum_state_toggle_notes(strum, state_name);
     return success;
 }
@@ -1444,9 +1443,9 @@ function strum_state_toggle_marker(strum, state_name) {
     let res = 0;
 
     // toggle marker sub-states (yeah state of states)
-    res += statesprite_state_toggle(strum.sprite_marker_nothing, state_name);
-    res += statesprite_state_toggle(strum.sprite_marker_confirm, state_name);
-    res += statesprite_state_toggle(strum.sprite_marker_press, state_name);
+    res += statesprite_state_toggle(strum.sprite_marker_nothing, state_name) ? 1 : 0;
+    res += statesprite_state_toggle(strum.sprite_marker_confirm, state_name) ? 1 : 0;
+    res += statesprite_state_toggle(strum.sprite_marker_press, state_name) ? 1 : 0;
 
     return res;
 }
@@ -1475,7 +1474,7 @@ function strum_set_keep_aspect_ratio_background(strum, enable) {
 
 function strum_draw_sick_effect_apart(strum, enable) {
     strum.enable_sick_effect_draw = !!enable;
-    statesprite_set_visible(strum.sprite_sick_effect, 0);
+    statesprite_set_visible(strum.sprite_sick_effect, false);
     return strum.sprite_sick_effect;
 }
 
@@ -1606,7 +1605,7 @@ function strum_set_draw_offset(strum, offset_milliseconds) {
 }
 
 function strum_set_bpm(strum, beats_per_minute) {
-    beatwatcher_reset(strum.beatwatcher, 1, beats_per_minute);
+    beatwatcher_reset(strum.beatwatcher, true, beats_per_minute);
 }
 
 function strum_disable_beat_synced_idle_and_continous(strum, disabled) {
@@ -1636,7 +1635,6 @@ function strum_animation_restart(strum) {
     strum_internal_extra_batch(strum.animation_marker, animsprite_restart);
     strum_internal_extra_batch(strum.animation_sick_effect, animsprite_restart);
     strum_internal_extra_batch(strum.animation_background, animsprite_restart);
-
 }
 
 function strum_animation_end(strum) {
@@ -1682,7 +1680,7 @@ function strum_internal_get_note_duration(strum, note_index) {
 
 
 function strum_internal_calc_state_dimmen(state, scroll_is_vertical, dimmen, invdimmen) {
-    const draw_size = [0, 0];
+    const draw_size = [0.0, 0.0];
     let width, height;
 
     if (scroll_is_vertical) {
@@ -1703,17 +1701,14 @@ function strum_internal_state_add(statesprite, modelholder, strum_name, target, 
     if (statesprite_state_has(statesprite, state_name)) return null;
     if (!modelholder) return null;
 
-    let animation_name = `${strum_name} ${target}`;
-
-    if (state_name != null) animation_name = `${animation_name} ${state_name}`;
-
+    let animation_name = string_concat_for_state_name(3, strum_name, target, state_name);
     let state = statesprite_state_add(statesprite, modelholder, animation_name, state_name);
     animation_name = undefined;
 
-    // reset the draw location offsets beacuase is picked from last state applied
+    // reset the draw location offsets becuase is picked from last state applied
     if (state) {
-        state.offset_x = 0;
-        state.offset_y = 0;
+        state.offset_x = 0.0;
+        state.offset_y = 0.0;
     }
 
     return state;
@@ -1723,14 +1718,14 @@ function strum_internal_calc_states(strum, statesprite, calc_callback) {
     let list = statesprite_state_list(statesprite);
     for (let state of linkedlist_iterate4(list)) {
         // reset the state offsets before continue
-        state.offset_x = state.offset_y = 0;
+        state.offset_x = state.offset_y = 0.0;
         calc_callback(strum, state);
     }
     statesprite_state_apply(statesprite, null);
 }
 
 function strum_internal_calc_state_marker(strum, state) {
-    let original_size = [0, 0];
+    let original_size = [0.0, 0.0];
     let width, height;
 
     if (strum.scroll_is_vertical) {
@@ -1763,8 +1758,8 @@ function strum_internal_calc_state_marker(strum, state) {
 
 
     // center marker inside of the marker bounds
-    state.offset_x += (width - state.draw_width) / 2;
-    state.offset_y += (height - state.draw_height) / 2;
+    state.offset_x += (width - state.draw_width) / 2.0;
+    state.offset_y += (height - state.draw_height) / 2.0;
 }
 
 function strum_internal_calc_state_sick_effect(strum, state) {
@@ -1788,12 +1783,12 @@ function strum_internal_calc_state_sick_effect(strum, state) {
     );
 
     // center the splash with the marker
-    state.offset_x += (width - state.draw_width) / 2;
-    state.offset_y += (height - state.draw_height) / 2;
+    state.offset_x += (width - state.draw_width) / 2.0;
+    state.offset_y += (height - state.draw_height) / 2.0;
 }
 
 function strum_internal_calc_state_background(strum, state) {
-    const temp = [0, 0];
+    const temp = [0.0, 0.0];
     let corner;
     let width = strum.dimmen_opposite;
     let height = strum.dimmen_length;
@@ -1816,7 +1811,7 @@ function strum_internal_calc_state_background(strum, state) {
     state.draw_width = temp[0];
     state.draw_height = temp[1];
 
-    let offset_x = (strum.dimmen_opposite - state.draw_width) / 2;
+    let offset_x = (strum.dimmen_opposite - state.draw_width) / 2.0;
     let offset_y = strum.dimmen_length - state.draw_height;
 
     switch (corner) {
@@ -1916,7 +1911,7 @@ function strum_internal_extra_animate(strum, target, event, undo, elapsed) {
     subholder = strum_internal_extra_get_subholder(holder, event);
 
     if (changed)
-        strum_internal_extra_animate(strum, target, holder.last_event, 1, Infinity);
+        strum_internal_extra_animate(strum, target, holder.last_event, true, Infinity);
 
     holder.last_event = event;
     let completed = 1;
@@ -1950,7 +1945,7 @@ function strum_internal_extra_animate_sprite(strum, target, animsprite) {
 
     switch (target) {
         case STRUM_SCRIPT_TARGET_STRUM_LINE:
-            animsprite_update_drawable(strum.drawable, animsprite, 1);
+            animsprite_update_drawable(animsprite, strum.drawable, true);
             break;
         case STRUM_SCRIPT_TARGET_NOTE:
             let last_index = strum.chart_notes_id_map_size - 1;
@@ -1962,15 +1957,15 @@ function strum_internal_extra_animate_sprite(strum, target, animsprite) {
             }
             break;
         case STRUM_SCRIPT_TARGET_MARKER:
-            animsprite_update_statesprite(animsprite, strum.sprite_marker_confirm, 0);
-            animsprite_update_statesprite(animsprite, strum.sprite_marker_nothing, 0);
-            animsprite_update_statesprite(animsprite, strum.sprite_marker_press, 1);
+            animsprite_update_statesprite(animsprite, strum.sprite_marker_confirm, false);
+            animsprite_update_statesprite(animsprite, strum.sprite_marker_nothing, false);
+            animsprite_update_statesprite(animsprite, strum.sprite_marker_press, true);
             break;
         case STRUM_SCRIPT_TARGET_SICK_EFFECT:
-            animsprite_update_statesprite(animsprite, strum.sprite_sick_effect, 1);
+            animsprite_update_statesprite(animsprite, strum.sprite_sick_effect, true);
             break;
         case STRUM_SCRIPT_TARGET_BACKGROUND:
-            animsprite_update_statesprite(animsprite, strum.sprite_background, 1);
+            animsprite_update_statesprite(animsprite, strum.sprite_background, true);
             break;
     }
 }
@@ -2028,13 +2023,13 @@ function strum_internal_check_sustain_queue(strum, song_timestamp, playerstats) 
 
         if (song_timestamp > end_timestamp) {
             // the sustain note is still in hold (the player keeps holding the button)
-            arraylist_remove(strum.sustain_queue, i);
+            arraylist_remove_at(strum.sustain_queue, i);
             i--;
             size--;
             continue;
         }
 
-        if (is_released && !note_attributes.ignore_miss || !is_released && !note_attributes.ignore_hit) {
+        if ((is_released && !note_attributes.ignore_miss) || (!is_released && !note_attributes.ignore_hit)) {
             let quarters = quarter - note.previous_quarter;
             playerstats_add_sustain(playerstats, quarters, is_released);
 
@@ -2104,21 +2099,21 @@ function strum_internal_update_press_state(strum, press_state) {
         //if (press_state == strum.press_state) return;
         strum.press_state = press_state;
         strum.press_state_changes++;
-        strum.press_state_use_alt_anim = 0;
+        strum.press_state_use_alt_anim = false;
     }
 }
 
 function strum_internal_reset_scrolling(strum) {
     strum.notes_peek_index = 0;
     strum.notes_render_index = 0;
-    strum.last_song_timestamp = 0;
+    strum.last_song_timestamp = 0.0;
     strum.marker_state = STRUM_MARKER_STATE_NOTHING;
-    strum.marker_state_changed = 1;
+    strum.marker_state_changed = true;
     strum.marker_sick_state = STRUM_MARKER_STATE_NOTHING;
     strum.marker_sick_state_name = null;
-    strum.extra_animations_have_penalties = 0;
-    strum.extra_animations_have_misses = 0;
-    strum.auto_scroll_elapsed = -1;
+    strum.extra_animations_have_penalties = false;
+    strum.extra_animations_have_misses = false;
+    strum.auto_scroll_elapsed = -1.0;
 
     strum.press_state_changes = -1;
     strum.press_state = STRUM_PRESS_STATE_NONE;
@@ -2148,7 +2143,7 @@ function strum_internal_calc_marker_duration(strum, velocity) {
     strum.marker_duration_quarter = strum.marker_duration / 4.0;
 
     if (strum.chart_notes_size > 0)
-        strum.key_test_limit = Math.max(strum.chart_notes[0].timestamp - strum.marker_duration, 0);
+        strum.key_test_limit = Math.max(strum.chart_notes[0].timestamp - strum.marker_duration, 0.0);
     else
         strum.key_test_limit = -Infinity;
 }
@@ -2164,5 +2159,37 @@ function strum_internal_restart_extra_continous(strum) {
         animsprite_restart(strum.animation_sick_effect.continuous.action);
     if (strum.animation_background.continuous.action)
         animsprite_restart(strum.animation_background.continuous.action);
+}
+
+function strum_internal_notify_note_hit(strum, script, strum_note_index, playerstats) {
+    /** @type {StrumNote} */
+    let strum_note = strum.chart_notes[strum_note_index];
+    let timestamp = strum_note.timestamp;
+    let duration = strum_note.duration;
+    let note_id = strum.chart_notes_id_map[strum_note.id];
+    let special = strum.attribute_notes[strum_note.id].is_special;
+    let data = strum_note.custom_data;
+    let player_id = strum.player_id;
+    let ranking = playerstats.last_ranking;
+
+    weekscript_notify_note(script, timestamp, note_id, duration, data, special, player_id, ranking);
+}
+
+function strum_internal_notify_note_loss(strum, script, strum_note_idx, is_penalty) {
+    /** @type {StrumNote} */
+    let strum_note = strum.chart_notes[strum_note_idx];
+    let ignore_miss = strum.attribute_notes[strum_note.id].ignore_miss;
+
+    if (ignore_miss) return;
+
+    let timestamp = strum_note.timestamp;
+    let duration = strum_note.duration;
+    let note_id = strum.chart_notes_id_map[strum_note.id];
+    let data = strum_note.custom_data;
+    let special = strum.attribute_notes[strum_note.id].is_special;
+    let player_id = strum.player_id;
+    let state = is_penalty ? RANKING_PENALITY : RANKING_MISS;
+
+    weekscript_notify_note(script, timestamp, note_id, duration, data, special, player_id, state);
 }
 

@@ -313,7 +313,7 @@ function vertexprops_parse_textsprite_forcecase(node, name, warn) {
 
     let id = vertexprops_parse_textsprite_forcecase2(value);
     if (id < 0) {
-        if (warn) console.log(`vertexprops_parse_textsprite_forcecase() unknown value ${value} in: ${node.outerHTML}`);
+        if (warn) console.warn(`vertexprops_parse_textsprite_forcecase() unknown value ${value} in: ${node.outerHTML}`);
         return TEXTSPRITE_FORCE_NONE;
     }
 
@@ -538,10 +538,10 @@ function vertexprops_parse_boolean2(value, def_value) {
         switch (value.toLowerCase()) {
             case "1":
             case "true":
-                return 1;
+                return true;
             case "0":
             case "false":
-                return 0;
+                return false;
         }
     }
     return def_value;
@@ -610,11 +610,11 @@ function vertexprops_parse_hex(string, output_value, only_if_prefixed) {
 
     let regex = only_if_prefixed ? regex_obl_prefix : regex_opt_prefix;
     let matches = regex.exec(string);
-    if (!matches) return 0;
+    if (!matches) return false;
 
     let val = Number.parseInt(matches[1], 16);
 
-    if (!Number.isFinite(val)) return 0;
+    if (!Number.isFinite(val)) return false;
 
     // add alpha component
     /*let string_length = matches[1].length;
@@ -624,7 +624,7 @@ function vertexprops_parse_hex(string, output_value, only_if_prefixed) {
     }*/
 
     output_value[0] = val;
-    return 1;
+    return true;
 }
 
 function vertexprops_parse_hex2(string, default_value, only_if_prefixed) {
@@ -649,7 +649,8 @@ function vertexprops_parse_wordbreak(node, name, warn_missing) {
     let id = vertexprops_parse_wordbreak2(value);
 
     if (id == -1) {
-        console.warn("vertexprops_parse_wordbreak() unknown wordbreak value: " + value, node.outerHTML);
+        if (warn_missing)
+            console.warn("vertexprops_parse_wordbreak() unknown wordbreak value: " + value, node.outerHTML);
         return FONT_WORDBREAK_BREAK;
     }
 
@@ -702,10 +703,10 @@ function vertexprops_is_property_enumerable(property_id) {
         case TEXTSPRITE_PROP_FORCE_CASE:
         case TEXTSPRITE_PROP_BORDER_ENABLE:
         case TEXTSPRITE_PROP_BACKGROUND_ENABLED:
-            return 1;
+            return true;
     }
 
-    return 0;
+    return false;
 }
 
 function vertexprops_is_property_boolean(property_id) {
@@ -719,26 +720,12 @@ function vertexprops_is_property_boolean(property_id) {
         case SPRITE_PROP_SCALE_TRANSLATION:
         case TEXTSPRITE_PROP_BORDER_ENABLE:
         case TEXTSPRITE_PROP_BACKGROUND_ENABLED:
-            return 1;
+            return true;
         default:
-            return 0;
+            return false;
     }
 }
 
-function vertexprops_parse_boolean(node, attr_name, def_value) {
-    let value = node.getAttribute(attr_name);
-
-    switch (value) {
-        case null:
-            return def_value;
-        case "1":
-        case "true":
-        case "TRUE":
-            return 1;
-    }
-
-    return 0;
-}
 
 function vertexprops_parse_double(node, name, def_value) {
     let value = node.getAttribute(name);

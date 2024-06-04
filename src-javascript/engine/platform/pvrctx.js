@@ -17,10 +17,6 @@ class PVRContextState {
     /**@type {PVRFlag}*/ global_antialiasing = PVRCTX_FLAG_DEFAULT;
     /**@type {PVRFlag}*/ global_offsetcolor_multiply = PVRCTX_FLAG_DEFAULT;
     /**@type {number}*/  added_shaders = 0;
-
-    constructor() {
-        pvrctx_helper_clear_offsetcolor(this.offsetcolor);
-    }
 }
 
 class PVRContext {
@@ -35,7 +31,7 @@ class PVRContext {
     /**@type {PSFramebuffer}*/ shader_framebuffer_front;
     /**@type {PSFramebuffer}*/ shader_framebuffer_back;
     /**@type {PSFramebuffer}*/ target_framebuffer;
-    /**@type {bool}         */ shader_needs_flush = false;
+    /**@type {boolean}         */ shader_needs_flush = false;
     /**@type {PSShader[]}   */ shader_stack = new Array();
     /**@type {number}       */ shader_last_resolution_changes = 0;
     /**@type {number}       */ screen_stride;
@@ -57,7 +53,7 @@ class PVRContext {
     /**@type {PVRFlag}*/ vertex_offsetcolor_multiply = PVRCTX_FLAG_DEFAULT;
 
     /**@type {number}*/  render_alpha = 1.0;
-    /**@type {RGBA}*/    render_offsetcolor = [0.0, .0, 0.0, 0.0];
+    /**@type {RGBA}*/    render_offsetcolor = [0.0, 0.0, 0.0, 0.0];
     /**@type {PVRFlag}*/ render_offsetcolor_multiply = PVRCTX_FLAG_DEFAULT;
     /**@type {PVRFlag}*/ render_antialiasing = PVRCTX_FLAG_DEFAULT;
 
@@ -94,7 +90,10 @@ class PVRContext {
             this._html5canvas.height = canvas[1];
         }
 
-        for (let i = 0; i < this.stack_length; i++) this.stack[i] = new PVRContextState();
+        for (let i = 0; i < this.stack_length; i++) {
+            this.stack[i] = new PVRContextState();
+            pvr_context_helper_clear_offsetcolor(this.stack[i].offsetcolor);
+        }
         this.global_offsetcolor = this.stack[0].offsetcolor;
         pvr_context_helper_clear_offsetcolor(this.vertex_offsetcolor);
         pvr_context_helper_clear_offsetcolor(this.render_offsetcolor);
@@ -247,7 +246,7 @@ function pvr_context_clear_screen(pvrctx, rgba_color) {
     webopengl_clear_screen(pvrctx.webopengl, rgba_color);
 }
 
-/** @deprecated @param {PVRContext} pvrctx*/
+/** @param {PVRContext} pvrctx*/
 function pvr_context_flush(pvrctx) { }
 
 /** @param {PVRContext} pvrctx */
@@ -256,7 +255,7 @@ function pvr_context_save(pvrctx) {
 
     if (pvrctx.stack_index >= pvrctx.stack_length) {
         console.error("pvr_context_save() the PVRContext stack is full");
-        return 0;
+        return false;
     }
 
     //let old_irq = SH4_INTERRUPS_DISABLE();
@@ -296,7 +295,7 @@ function pvr_context_save(pvrctx) {
     // remember the last count of added shaders
     previous_state.added_shaders = pvrctx.shader_stack.length;
 
-    return 1;
+    return true;
 }
 
 /** @param {PVRContext} pvrctx */
@@ -306,7 +305,7 @@ function pvr_context_restore(pvrctx) {
             console.warn("pvr_context_restore() the current PVRContext has stacked shaders on empty stack");
         }
         console.error("pvr_context_restore() the PVRContext stack was empty");
-        return 0;
+        return false;
     }
 
     //let old_irq = SH4_INTERRUPS_DISABLE();
@@ -342,7 +341,7 @@ function pvr_context_restore(pvrctx) {
 
     webopengl_set_blend(pvrctx, 1, BLEND_DEFAULT, BLEND_DEFAULT, BLEND_DEFAULT, BLEND_DEFAULT);
 
-    return 1;
+    return true;
 }
 
 
@@ -451,12 +450,7 @@ function pvr_context_draw_framebuffer(pvrctx, psframebuffer, sx, sy, sw, sh, dx,
     webopengl_draw_framebuffer(pvrctx, psframebuffer, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
-/** @param {PVRContext} pvrctx */
-function pvr_is_offscreen(pvrctx) {
-    return document.hidden;
-}
-
-/** @param {PVRContext} pvrctx @param {PSShader} psshader @returns {bool}*/
+/** @param {PVRContext} pvrctx @param {PSShader} psshader @returns {boolean}*/
 function pvr_context_add_shader(pvrctx, psshader) {
     return pvrctx.ShaderStackPush(psshader);
 }

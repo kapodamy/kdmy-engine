@@ -6,7 +6,7 @@ const SDF_MIPMAPS = false;
 
 const FONTTYPE_POOL = new Map();
 var FONTTYPE_IDS = 0;
-const FONTTYPE_GLYPHS_HEIGHT = 72;// in the dreamcast use 64px
+const FONTTYPE_GLYPHS_HEIGHT = 72;// in the dreamcast use 32px
 const FONTTYPE_GLYPHS_OUTLINE_RATIO = 0.086;// ~6px of outline @ 72px (used in SDF)
 const FONTTYPE_GLYPHS_SMOOTHING_COEFF = 0.245;// used in SDF, idk how its works
 const FONTTYPE_GLYPHS_GAPS = 4;// space between glyph in pixels
@@ -25,44 +25,42 @@ async function fonttype_init(src) {
     }
 
     let fonttype = {
-        lines_separation: 0,
+        lines_separation: 0.0,
 
         color: [0.0, 0.0, 0.0],
         alpha: 1.0,
 
         border_color: [1.0, 1.0, 1.0, 1.0],
-        border_size: 0,
-        border_enable: 0,
-        border_offset_x: 0,
-        border_offset_y: 0,
+        border_size: 0.0,
+        border_enable: false,
+        border_offset_x: 0.0,
+        border_offset_y: 0.0,
 
         instance_id: FONTTYPE_IDS++,
         instance_references: 1,
         instance_path: full_path,
 
-        fontatlas: 0,
-        font_ptr: 0,
+        fontatlas: null,
+        font: null,
         space_width: FONTTYPE_GLYPHS_HEIGHT * FONTTYPE_FAKE_SPACE,
 
         fontcharmap_primary: null,
-        fontcharmap_primary_ptr: 0,
         fontcharmap_primary_texture: null,
 
         fontcharmap_secondary: null,
-        fontcharmap_secondary_ptr: 0,
-        fontcharmap_secondary_texture: 0
+        fontcharmap_secondary_texture: null
     };
 
     // initialize FreeType library
     if (await fonttype_internal_init_freetype(fonttype, src)) {
         full_path = undefined;
+        fonttype.font = undefined;
         fonttype = undefined;
         return null;
     }
 
     // create a texture atlas and glyphs map with all common letters, numbers and symbols
-    fonttype.fontcharmap_primary_ptr = fonttype_internal_retrieve_fontcharmap(fonttype, null);
-    fonttype.fontcharmap_primary = ModuleFontAtlas.kdmyEngine_parseFontCharMap(fonttype.fontcharmap_primary_ptr);
+    fonttype.fontcharmap_primary = fonttype_internal_retrieve_fontcharmap(fonttype, null);
     fonttype.fontcharmap_primary_texture = fonttype_internal_upload_texture(fonttype.fontcharmap_primary);
 
     if (fonttype.fontcharmap_primary) {
@@ -86,35 +84,34 @@ function fonttype_destroy(fonttype) {
     FONTTYPE_POOL.delete(fonttype.instance_id);
 
     if (fonttype.fontcharmap_primary) {
-        ModuleFontAtlas._fontatlas_atlas_destroy_JS(fonttype.fontcharmap_primary_ptr);
+        fontatlas_atlas_destroy(fonttype.fontcharmap_primary);
         texture_destroy(fonttype.fontcharmap_primary_texture);
     }
 
     if (fonttype.fontcharmap_secondary) {
-        ModuleFontAtlas._fontatlas_atlas_destroy_JS(fonttype.fontcharmap_secondary_ptr);
+        fontatlas_atlas_destroy(fonttype.fontcharmap_secondary);
         texture_destroy(fonttype.fontcharmap_secondary_texture);
     }
 
-    if (fonttype.fontatlas) ModuleFontAtlas._fontatlas_destroy_JS(fonttype.fontatlas);
-    if (fonttype.font_ptr) ModuleFontAtlas.kdmyEngine_deallocate(fonttype.font_ptr);
+    if (fonttype.fontatlas) fontatlas_destroy(fonttype.fontatlas);
 
+    fonttype.font = undefined;
     fonttype.instance_path = undefined;
     fonttype = undefined;
 }
 
 
-function fonttype_measure(fonttype, height, text, text_index, text_size) {
+function fonttype_measure(fonttype, height, text, text_index, text_length) {
     const scale = height / FONTTYPE_GLYPHS_HEIGHT;
-    const text_end_index = text_index + text_size;
-    const text_length = text.length;
+    const text_end_index = text_index + text_length;
 
-    console.assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
+    //console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
     // check for unmapped characters and them to the secondary map
     fonttype_internal_find_unmaped_codepoints_to_secondary(fonttype, text_index, text_end_index, text);
 
-    let max_width = 0;
-    let width = 0;
+    let max_width = 0.0;
+    let width = 0.0;
     let index = text_index;
     let previous_codepoint = 0;
     let line_chars = 0;
@@ -134,7 +131,7 @@ function fonttype_measure(fonttype, height, text, text_index, text_size) {
 
         if (grapheme.code == FONTGLYPH_LINEFEED) {
             if (width > max_width) max_width = width;
-            width = 0;
+            width = 0.0;
             previous_codepoint = grapheme.code;
             line_chars = 0;
             continue;
@@ -229,7 +226,7 @@ function fonttype_set_color(fonttype, r, g, b) {
 }
 
 function fonttype_set_rgb8_color(fonttype, rbg8_color) {
-    math2d_color_bytes_to_floats(rbg8_color, 0, fonttype.color);
+    math2d_color_bytes_to_floats(rbg8_color, false, fonttype.color);
 }
 
 function fonttype_set_alpha(fonttype, alpha) {
@@ -268,23 +265,22 @@ function fonttype_set_border(fonttype, enable, size, rgba) {
     fonttype_set_border_color(fonttype, rgba[0], rgba[1], rgba[2], rgba[3]);
 }
 
-function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_size, text) {
-    if (text == null || text.length < 1) return 0;
+function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_length, text) {
+    if (text == null || text_length < 1) return 0.0;
 
     const grapheme = { code: 0, size: 0 };
     const primary = fonttype.fontcharmap_primary;
     const primary_texture = fonttype.fontcharmap_primary_texture;
     const secondary = fonttype.fontcharmap_secondary;
     const secondary_texture = fonttype.fontcharmap_secondary_texture;
-    const has_border = fonttype.border_enable && fonttype.border_color[3] > 0 && fonttype.border_size >= 0;
-    const outline_size = fonttype.border_size * 2;
+    const has_border = fonttype.border_enable && fonttype.border_color[3] > 0.0 && fonttype.border_size >= 0.0;
+    const outline_size = fonttype.border_size * 2.0;
     const scale = height / FONTTYPE_GLYPHS_HEIGHT;
     const ascender = ((primary ?? secondary).ascender / 2.0) * scale;// FIXME: ¿why does dividing by 2 works?
-    const text_end_index = text_index + text_size;
-    const text_length = text.length;
+    const text_end_index = text_index + text_length;
     let border_padding1 = 0.0, border_padding2 = 0.0;
 
-    console.assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
+    //console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
     if (SDF_FONT) {
         // calculate sdf thickness
@@ -306,8 +302,8 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
         }
     }
 
-    let draw_x = 0;
-    let draw_y = 0 - ascender;
+    let draw_x = 0.0;
+    let draw_y = 0.0 - ascender;
     let line_chars = 0;
 
     let index = text_index;
@@ -328,11 +324,11 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
         if (grapheme.code == 0xA0) continue;
 
         if (fontchardata = fonttype_internal_get_fontchardata(primary, grapheme.code)) {
-            if (primary_texture && fontchardata.has_entry) total_glyphs++;
+            if (fontchardata.has_entry) total_glyphs++;
             continue;
         }
         if (fontchardata = fonttype_internal_get_fontchardata(secondary, grapheme.code)) {
-            if (secondary_texture && fontchardata.has_entry) total_glyphs++;
+            if (fontchardata.has_entry) total_glyphs++;
             continue;
         }
     }
@@ -341,6 +337,11 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
     if (has_border) total_glyphs *= 2;
     let added = 0;
     let maximum = glyphrenderer_prepare(total_glyphs, has_border);
+
+    if (SDF_FONT) {
+        let smoothing = fonttype_internal_calc_smoothing(pvrctx, height);
+        glyphrenderer_set_sdf_smoothing(pvrctx, smoothing);
+    }
 
     // add glyphs to the vertex buffer
     index = text_index;
@@ -357,7 +358,7 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
         }
 
         if (grapheme.code == FONTGLYPH_LINEFEED) {
-            draw_x = 0;
+            draw_x = 0.0;
             draw_y += height + fonttype.lines_separation - ascender;
             previous_codepoint = grapheme.code;
             line_chars = 0;
@@ -365,12 +366,12 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
         }
 
         fontchardata = fonttype_internal_get_fontchardata(primary, grapheme.code);
-        let is_secondary = 0;
+        let is_secondary = false;
         let texture = primary_texture;
 
         if (!fontchardata) {
             fontchardata = fonttype_internal_get_fontchardata(secondary, grapheme.code);
-            is_secondary = 1;
+            is_secondary = true;
             texture = secondary_texture;
         }
 
@@ -402,7 +403,7 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
             }
         }
 
-        if (texture && fontchardata.has_entry) {
+        if (fontchardata.has_entry) {
             // compute draw location and size
             let dx = x + draw_x + (fontchardata.offset_x * scale);
             let dy = y + draw_y + (fontchardata.offset_y * scale);
@@ -429,7 +430,7 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
 
                 // queue outlined glyph for batch rendering
                 glyphrenderer_append_glyph(
-                    texture, is_secondary, 1,
+                    texture, is_secondary, true,
                     fontchardata.atlas_entry.x, fontchardata.atlas_entry.y, fontchardata.width, fontchardata.height,
                     sdx, sdy, sdw, sdh
                 );
@@ -438,7 +439,7 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
 
             // queue glyph for batch rendering
             glyphrenderer_append_glyph(
-                texture, is_secondary, 0,
+                texture, is_secondary, false,
                 fontchardata.atlas_entry.x, fontchardata.atlas_entry.y, fontchardata.width, fontchardata.height,
                 dx, dy, dw, dh
             );
@@ -447,11 +448,6 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
 
         draw_x += fontchardata.advancex * scale;
         line_chars++;
-    }
-
-    if (SDF_FONT) {
-        let smoothing = fonttype_internal_calc_smoothing(pvrctx, height);
-        glyphrenderer_set_sdf_smoothing(pvrctx, smoothing);
     }
 
     // commit draw
@@ -463,51 +459,58 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
 
 
 async function fonttype_internal_init_freetype(fonttype, src) {
-    //if (fonttype.font_ptr) throw new Error("The font is already initialized");
+    //if (fonttype.font) throw new Error("The font is already initialized");
 
     let font = await fs_readarraybuffer(src);
     if (!font) return 0;
 
-    if (SDF_FONT) ModuleFontAtlas._fontatlas_enable_sdf(1);
+    if (SDF_FONT) fontatlas_enable_sdf(true);
 
     // Important: keep the font data allocated, required for FreeType library
-    fonttype.font_ptr = ModuleFontAtlas.kdmyEngine_allocate(font);
-    fonttype.fontatlas = ModuleFontAtlas._fontatlas_init(fonttype.font_ptr, font.byteLength);
+    fonttype.fontatlas = fontatlas_init(fonttype.font, font.byteLength);
 
     return !fonttype.fontatlas;
 }
 
 function fonttype_internal_retrieve_fontcharmap(fonttype, characters_map) {
-    let fontcharmap_ptr = 0;
+    let fontcharmap = null;
 
     if (characters_map) {
-        let characters_map_ptr = ModuleFontAtlas.kdmyEngine_allocate(characters_map);
-        fontcharmap_ptr = ModuleFontAtlas._fontatlas_atlas_build(
-            fonttype.fontatlas, FONTTYPE_GLYPHS_HEIGHT, FONTTYPE_GLYPHS_GAPS, characters_map_ptr
+        fontcharmap = fontatlas_atlas_build(
+            fonttype.fontatlas, FONTTYPE_GLYPHS_HEIGHT, FONTTYPE_GLYPHS_GAPS, characters_map
         );
-        ModuleFontAtlas.kdmyEngine_deallocate(characters_map_ptr);
     } else {
-        fontcharmap_ptr = ModuleFontAtlas._fontatlas_atlas_build_complete(
+        fontcharmap = fontatlas_atlas_build_complete(
             fonttype.fontatlas, FONTTYPE_GLYPHS_HEIGHT, FONTTYPE_GLYPHS_GAPS
         );
     }
 
-    return fontcharmap_ptr;
+    return fontcharmap;
 }
 
 function fonttype_internal_upload_texture(fontcharmap) {
-    if (!fontcharmap) return null;
+    if (!fontcharmap || !fontcharmap.texture) return null;
 
     // C only
     /*
+    pvr_ptr_t vram_ptr = pvr_mem_malloc(fontcharmap->texture_byte_size);
+    if (!vram_ptr) {
+        // logger_error("fonttype_internal_upload_texture() not enough space in the vram for " FMT_I4 " bytes", fontcharmap->char_array_size);
+        return NULL;
+    }
+
+    pvr_txr_load_ex(fontcharmap->texture, vram_ptr, fontcharmap->texture_width, fontcharmap->texture_height, PVR_TXRLOAD_8BPP);
+
     Texture texture = texture_init_from_raw(
-        fontcharmap.texture, fontcharmap->texture_byte_size, false,
+        vram_ptr, fontcharmap->texture_byte_size, true,
         fontcharmap->texture_width, fontcharmap->texture_height,
         fontcharmap->texture_width, fontcharmap->texture_height
     );
 
-    fontcharmap->texture = null;
-    fontcharmap->texture_byte_size = 0;
+    texture->format = PVR_TXRFMT_PAL8BPP | PVR_TXRFMT_TWIDDLED;
+
+    // no longer needed
+    fontatlas_atlas_destroy_texture_only(fontcharmap);
     return texture;
     */
 
@@ -606,15 +609,13 @@ function fonttype_internal_find_unmaped_codepoints_to_secondary(fonttype, text_i
     // step 3: rebuild the secondary char map
     if (fonttype.fontcharmap_secondary) {
         // dispose previous instance
-        ModuleFontAtlas._fontatlas_atlas_destroy_JS(fonttype.fontcharmap_secondary_ptr);
-        fonttype.fontcharmap_secondary.char_array = undefined;
-        fonttype.fontcharmap_secondary = undefined;
+        fontatlas_atlas_destroy(fonttype.fontcharmap_secondary);
+        fonttype.fontcharmap_secondary.char_array = fonttype.fontcharmap_secondary = null;
         texture_destroy(fonttype.fontcharmap_secondary_texture);
     }
 
     // build map and upload texture
-    fonttype.fontcharmap_secondary_ptr = fonttype_internal_retrieve_fontcharmap(fonttype, codepoints);
-    fonttype.fontcharmap_secondary = ModuleFontAtlas.kdmyEngine_parseFontCharMap(fonttype.fontcharmap_secondary_ptr);
+    fonttype.fontcharmap_secondary = fonttype_internal_retrieve_fontcharmap(fonttype, codepoints);
     fonttype.fontcharmap_secondary_texture = fonttype_internal_upload_texture(fonttype.fontcharmap_secondary);
 
     // dispose secondary codepoints array

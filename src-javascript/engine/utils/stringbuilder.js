@@ -1,7 +1,7 @@
 "use strict";
 
 function stringbuilder_init(initial_size) {
-    if (initial_size < 0) initial_size = 16;
+    if (initial_size < 1) initial_size = 16;
     return {
         initial_size,
         buffer: ""
@@ -32,8 +32,9 @@ function stringbuilder_intern(stringbuilder) {
 function stringbuilder_add(stringbuilder, str) {
     if (str != null && str.length > 0) stringbuilder.buffer += str;
 }
-function stringbuilder_add(stringbuilder, str) {
-    if (str != null && str.length > 0) stringbuilder.buffer += str;
+
+function stringbuilder_add_char(stringbuilder, str) {
+    if (str != null) stringbuilder.buffer += str;
 }
 
 function stringbuilder_add_format(stringbuilder, format, ...values) {
@@ -52,6 +53,7 @@ function stringbuilder_add_substring(stringbuilder, source_string, start_index, 
     if (!source_string) return;
     stringbuilder.buffer += source_string.substring(start_index, end_index);
 }
+
 function stringbuilder_add_char_codepoint(stringbuilder, codepoint) {
     if (!codepoint) return;
     stringbuilder.buffer += String.fromCodePoint(codepoint);
@@ -86,14 +88,10 @@ function stringbuilder_lowercase(stringbuilder) {
     stringbuilder.buffer = stringbuilder.buffer.toLowerCase();
 }
 
-function stringbuilder_insert_at(stringbuilder, index, substring) {
-    if (index < 0 || !substring || index > stringbuilder.buffer.length) return;
-    stringbuilder.buffer =
-        stringbuilder.buffer.substring(0, index) +
-        substring +
-        stringbuilder.buffer.substring(index, stringbuilder.buffer.length);
-}
 
+function stringbuilder_helper_create_formatted_string2(format, ...values) {
+    return stringbuilder_helper_create_formatted_string(format, values)
+}
 
 function stringbuilder_helper_create_formatted_string(format, /*va_list*/values) {
     /*
@@ -105,7 +103,7 @@ function stringbuilder_helper_create_formatted_string(format, /*va_list*/values)
             $d       double with dot
             $F       float with comma
             $D       double with comma
-            $c       UTF-8 single char
+            $c       acsii single char
             $l       int64
             $i       int32
             $L       uint64
@@ -203,19 +201,19 @@ function stringbuilder_helper_create_formatted_string(format, /*va_list*/values)
         }
 
         switch (format.charAt(i)) {
-            case 's':// wide-char string
+            case 's':// utf-8 string
                 check_arg(args_index, "string");
                 if (modifier < 0) modifier = 1;
                 if (values[args_index] != null)
                     text += values[args_index].repeat(modifier);
                 break;
-            case 'U':// wide-char string (print as uppercase)
+            case 'U':// utf-8 string (print as uppercase)
                 check_arg(args_index, "string");
                 if (modifier < 0) modifier = 1;
                 if (values[args_index] != null)
                     text += values[args_index].toUpperCase().repeat(modifier);;
                 break;
-            case 'W':// wide-char string (print as lowercase)
+            case 'W':// utf-8 string (print as lowercase)
                 check_arg(args_index, "string");
                 if (modifier < 0) modifier = 1;
                 if (values[args_index] != null)
@@ -233,7 +231,7 @@ function stringbuilder_helper_create_formatted_string(format, /*va_list*/values)
                 if (values[args_index] != null)
                     text += number_str(values[args_index], modifier, 1, 0);
                 break;
-            case 'c':// wide-char
+            case 'c':// ascii char
                 check_arg(args_index, "string");
                 if (modifier < 0) modifier = 1;
                 if (values[args_index] != null)

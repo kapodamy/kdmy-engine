@@ -5,9 +5,7 @@ const NOTE_SUFFIX_HOLD = "hold";
 const NOTE_SUFFIX_TAIL = "tail";
 const NOTE_ALTERNATE_MINE = "mine";
 
-//const NOTE_SUSTAIN_BODY_HEIGHT_USE_INTEGERS = 0;
 const NOTE_SUSTAIN_BODY_OVELAPING_PIXELS = 0.5;
-const NOTE_STRUCT_ELEMENTS_COUNT = 4;// (used in JS) [timestamp, note_id, duration, "reserved"]
 
 
 /**
@@ -38,13 +36,13 @@ function note_init(name, dimmen, invdimmen) {
 
         // assign some default values
         dimmen_alone: dimmen,
-        dimmen_alone_half: dimmen / 2,
+        dimmen_alone_half: dimmen / 2.0,
 
-        height_hold: 44,
-        height_tail: 64,
+        height_hold: 44.0,
+        height_tail: 64.0,
 
-        offset_hold: 15,
-        offset_tail: 15,
+        offset_hold: 15.0,
+        offset_tail: 15.0,
 
         direction: STRUM_UPSCROLL,
 
@@ -58,16 +56,16 @@ function note_init(name, dimmen, invdimmen) {
         internal_states: linkedlist_init(),
         current_state_name: Symbol,// Note: in C use an unique constant value
 
-        has_part_alone: 0,
-        has_part_hold: 0,
-        has_part_tail: 0
+        has_part_alone: false,
+        has_part_hold: false,
+        has_part_tail: false
     };
 
     pvr_context_helper_clear_modifier(note.modifier_sustain);
 
-    statesprite_set_visible(note.sprite_alone, 0);
-    statesprite_set_visible(note.sprite_hold, 0);
-    statesprite_set_visible(note.sprite_tail, 0);
+    statesprite_set_visible(note.sprite_alone, false);
+    statesprite_set_visible(note.sprite_hold, false);
+    statesprite_set_visible(note.sprite_tail, false);
 
     return note;
 }
@@ -81,23 +79,24 @@ function note_destroy(note) {
 
     // note: do not dispose "note.current_state_name" is part of "note.internal_states"
 
-    note.name = null;
-    //free(note);
+    note.name = undefined;
+
+    note = undefined;
 }
 
 function note_set_scoll_direction(note, direction) {
     switch (direction) {
         case STRUM_LEFTSCROLL:
-            note.modifier_sustain.rotate = -90;
+            note.modifier_sustain.rotate = -90.0;
             break;
         case STRUM_RIGHTSCROLL:
-            note.modifier_sustain.rotate = 90;
+            note.modifier_sustain.rotate = 90.0;
             break;
         case STRUM_DOWNSCROLL:
-            note.modifier_sustain.rotate = 180;
+            note.modifier_sustain.rotate = 180.0;
             break;
         case STRUM_UPSCROLL:
-            note.modifier_sustain.rotate = 0;
+            note.modifier_sustain.rotate = 0.0;
             break;
         default:
             return;
@@ -118,12 +117,12 @@ function note_set_scoll_direction(note, direction) {
 
     if (direction != STRUM_UPSCROLL) {
         note.modifier_sustain.rotate *= MATH2D_DEG_TO_RAD;
-        note.modifier_sustain.rotate_pivot_enabled = 1;
-        note.modifier_sustain.rotate_pivot_u = 0;
-        note.modifier_sustain.rotate_pivot_v = 0;
-        note.modifier_sustain.width = 0;
-        note.modifier_sustain.height = 0;
-        note.modifier_sustain.translate_rotation = 1;
+        note.modifier_sustain.rotate_pivot_enabled = true;
+        note.modifier_sustain.rotate_pivot_u = 0.0;
+        note.modifier_sustain.rotate_pivot_v = 0.0;
+        note.modifier_sustain.width = 0.0;
+        note.modifier_sustain.height = 0.0;
+        note.modifier_sustain.translate_rotation = true;
     }
 
     // recalculate all sprite states
@@ -185,7 +184,7 @@ function note_draw(note, pvrctx, scroll_velocity, x, y, duration_ms, only_body) 
     let dimmen_alone_half = note.has_part_alone ? note.dimmen_alone_half : 0.0;
 
     // draw the sustain body (hold & tail)
-    if (sustain_length > 0 && note.has_part_hold && note.has_part_tail) {
+    if (sustain_length > 0.0 && note.has_part_hold && note.has_part_tail) {
         if (note.direction != STRUM_UPSCROLL) {
             switch (note.direction) {
                 case STRUM_DOWNSCROLL:
@@ -209,7 +208,7 @@ function note_draw(note, pvrctx, scroll_velocity, x, y, duration_ms, only_body) 
             case STRUM_RIGHTSCROLL:
             case STRUM_DOWNSCROLL:
                 draw_y -= sustain_length + dimmen_alone_half;
-                tail_correction = 0;
+                tail_correction = 0.0;
                 break;
             default:
                 draw_y += dimmen_alone_half;
@@ -223,8 +222,8 @@ function note_draw(note, pvrctx, scroll_velocity, x, y, duration_ms, only_body) 
             // crop the top part of the sprite
             let offset = height_tail - hold_length;
             height_tail = hold_length;
-            statesprite_crop_enable(note.sprite_tail, 1);
-            statesprite_crop(note.sprite_tail, 0, offset, -1, -1);
+            statesprite_crop_enable(note.sprite_tail, true);
+            statesprite_crop(note.sprite_tail, 0.0, offset, -1.0, -1.0);
         }
 
         // reserve space for the sprite_tail
@@ -246,8 +245,8 @@ function note_draw(note, pvrctx, scroll_velocity, x, y, duration_ms, only_body) 
 
         if (hold_length > 0) {
             // crop the bottom part of sprite_hold and draw it
-            statesprite_crop_enable(note.sprite_hold, 1);
-            statesprite_crop(note.sprite_hold, 0, 0, -1, hold_length);
+            statesprite_crop_enable(note.sprite_hold, true);
+            statesprite_crop(note.sprite_hold, 0.0, 0.0, -1.0, hold_length);
 
             statesprite_set_draw_location(note.sprite_hold, draw_x, draw_y);
             statesprite_draw(note.sprite_hold, pvrctx);
@@ -260,8 +259,8 @@ function note_draw(note, pvrctx, scroll_velocity, x, y, duration_ms, only_body) 
         statesprite_draw(note.sprite_tail, pvrctx);
 
         // disable crop sustain body (hold & tail)
-        statesprite_crop_enable(note.sprite_hold, 0);
-        statesprite_crop_enable(note.sprite_tail, 0);
+        statesprite_crop_enable(note.sprite_hold, false);
+        statesprite_crop_enable(note.sprite_tail, false);
 
         pvr_context_restore(pvrctx);
     }
@@ -303,7 +302,7 @@ function note_state_add(note, modelholder, state_name) {
 
     if (!state_alone && !state_hold && !state_tail) return 0;
 
-    let state_note = { name: null, height_hold: 0, offset_hold: 0, height_tail: 0, offset_tail: 0 };
+    let state_note = { name: null, height_hold: 0.0, offset_hold: 0.0, height_tail: 0.0, offset_tail: 0.0 };
     if (state_name != null) state_note.name = strdup(state_name);
 
     linkedlist_add_item(note.internal_states, state_note);
@@ -331,9 +330,9 @@ function note_state_toggle(note, state_name) {
 
     if (res < 1) return 0;
 
-    res += note.has_part_alone = statesprite_state_toggle(note.sprite_alone, state_name);
-    res += note.has_part_hold = statesprite_state_toggle(note.sprite_hold, state_name);
-    res += note.has_part_tail = statesprite_state_toggle(note.sprite_tail, state_name);
+    res += (note.has_part_alone = statesprite_state_toggle(note.sprite_alone, state_name)) ? 1 : 0;
+    res += (note.has_part_hold = statesprite_state_toggle(note.sprite_hold, state_name)) ? 1 : 0;
+    res += (note.has_part_tail = statesprite_state_toggle(note.sprite_tail, state_name)) ? 1 : 0;
 
     return res;
 }
@@ -346,13 +345,10 @@ function note_peek_alone_statesprite(note) {
 function note_internal_load_part(part, name, suffix, modelholder, state_name) {
     let atlas = modelholder_get_atlas(modelholder);
     let animlist = modelholder_get_animlist(modelholder);
-    let texture = modelholder_get_texture(modelholder, 0);
+    let texture = modelholder_get_texture(modelholder, false);
     let rgb8_color = modelholder_get_vertex_color(modelholder);
 
-    let animation_name = "";
-    if (name) animation_name = strdup(name);
-    if (suffix) animation_name += ` ${suffix}`;
-    if (state_name) animation_name += ` ${state_name}`;
+    let animation_name = string_concat_for_state_name(3, name, suffix, state_name);
 
 
     //
@@ -375,7 +371,7 @@ function note_internal_load_part(part, name, suffix, modelholder, state_name) {
         let framerate = atlas_get_glyph_fps(atlas);
         if (framerate <= 0.0) framerate = FUNKIN_DEFAULT_ANIMATIONS_FRAMERATE;
 
-        animsprite = animsprite_init_from_atlas(framerate, 0, atlas, animation_name, 1);
+        animsprite = animsprite_init_from_atlas(framerate, 0, atlas, animation_name, true);
 
         if (animsprite)
             break L_load;
@@ -383,7 +379,7 @@ function note_internal_load_part(part, name, suffix, modelholder, state_name) {
         // the arrow is not animated, build an static animation
         let atlas_entry = atlas_get_entry(atlas, animation_name);
         if (atlas_entry) {
-            animsprite = animsprite_init_from_atlas_entry(atlas_entry, 1, framerate);
+            animsprite = animsprite_init_from_atlas_entry(atlas_entry, true, framerate);
             break L_load;
         }
 
@@ -429,7 +425,7 @@ function note_internal_resize_sprites(note, state_note, state_alone, state_hold,
     // confuse part, set the desired width and height of the alone sprite
     //
     let ref_width, ref_height, ref_invdimmen;
-    let inverse = 0;
+    let inverse = false;
 
     switch (note.direction) {
         case STRUM_UPSCROLL:
@@ -448,7 +444,7 @@ function note_internal_resize_sprites(note, state_note, state_alone, state_hold,
             return;
     }
 
-    if (note.direction == STRUM_LEFTSCROLL || note.direction == STRUM_DOWNSCROLL) inverse = 1;
+    if (note.direction == STRUM_LEFTSCROLL || note.direction == STRUM_DOWNSCROLL) inverse = true;
 
     let alone_size = [ref_width, ref_height];
 
@@ -477,8 +473,8 @@ function note_internal_resize_sprites(note, state_note, state_alone, state_hold,
         state_alone.draw_width = draw_size[0];
         state_alone.draw_height = draw_size[1];
 
-        state_alone.offset_x = (ref_width - state_alone.draw_width) / 2;
-        state_alone.offset_y = (ref_height - state_alone.draw_height) / 2;
+        state_alone.offset_x = (ref_width - state_alone.draw_width) / 2.0;
+        state_alone.offset_y = (ref_height - state_alone.draw_height) / 2.0;
     }
 
     if (state_hold) {
@@ -486,10 +482,10 @@ function note_internal_resize_sprites(note, state_note, state_alone, state_hold,
         state_note.height_hold = state_hold.draw_height;
         state_note.offset_hold = (ref_invdimmen - state_hold.draw_width) / 2.0;
         if (inverse)
-            state_note.offset_hold = (state_note.offset_hold + state_hold.draw_width) * -1;
+            state_note.offset_hold = (state_note.offset_hold + state_hold.draw_width) * -1.0;
     } else {
-        state_note.height_hold = 0;
-        state_note.offset_hold = 0;
+        state_note.height_hold = 0.0;
+        state_note.offset_hold = 0.0;
     }
 
     if (state_tail) {
@@ -497,15 +493,15 @@ function note_internal_resize_sprites(note, state_note, state_alone, state_hold,
         state_note.height_tail = state_tail.draw_height;
         state_note.offset_tail = (ref_invdimmen - state_tail.draw_width) / 2.0;
         if (inverse)
-            state_note.offset_tail = (state_note.offset_tail + state_tail.draw_width) * -1;
+            state_note.offset_tail = (state_note.offset_tail + state_tail.draw_width) * -1.0;
     } else {
-        state_note.height_tail = 0;
-        state_note.offset_tail = 0;
+        state_note.height_tail = 0.0;
+        state_note.offset_tail = 0.0;
     }
 }
 
 function note_internal_resize_sustain_part(statesprite_state, scale) {
-    const applied_draw_size = [0, 0];
+    const applied_draw_size = [0.0, 0.0];
     // obtain the size of this part of the note
     imgutils_get_statesprite_original_size(statesprite_state, applied_draw_size);
 

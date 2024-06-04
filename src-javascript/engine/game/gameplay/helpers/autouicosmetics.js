@@ -30,7 +30,7 @@ function autouicosmetics_init() {
         drawable_rank: null,
         drawable_accuracy: null
     };
-    autouicosmetics.drawable_self = drawable_init(-1, autouicosmetics, autouicosmetics_draw, autouicosmetics_animate);
+    autouicosmetics.drawable_self = drawable_init(-1.0, autouicosmetics, autouicosmetics_draw, autouicosmetics_animate);
     return autouicosmetics;
 }
 
@@ -57,7 +57,7 @@ function autouicosmetics_prepare_placeholders(autouicosmetics, layout) {
     const ui_autoplace = layout_get_placeholder(layout, "ui_autoplace_cosmetics");
     if (!ui_autoplace) {
         autouicosmetics.layout_group_id = -1;
-        return 0;
+        return false;
     }
 
     drawable_helper_update_from_placeholder(autouicosmetics.drawable_self, ui_autoplace);
@@ -74,14 +74,14 @@ function autouicosmetics_prepare_placeholders(autouicosmetics, layout) {
     AUTOUICOSMETICS_PLACEHOLDER_RANK.group_id = ui_autoplace.group_id;
     AUTOUICOSMETICS_PLACEHOLDER_ACCURACY.group_id = ui_autoplace.group_id;
 
-    AUTOUICOSMETICS_PLACEHOLDER_STREAK.x = ui_autoplace.x + ui_autoplace.width / 4;
-    AUTOUICOSMETICS_PLACEHOLDER_STREAK.y = ui_autoplace.y + ui_autoplace.height / 2;
+    AUTOUICOSMETICS_PLACEHOLDER_STREAK.x = ui_autoplace.x + ui_autoplace.width / 4.0;
+    AUTOUICOSMETICS_PLACEHOLDER_STREAK.y = ui_autoplace.y + ui_autoplace.height / 2.0;
     AUTOUICOSMETICS_PLACEHOLDER_RANK.x = ui_autoplace.x;
     AUTOUICOSMETICS_PLACEHOLDER_RANK.y = ui_autoplace.y;
     AUTOUICOSMETICS_PLACEHOLDER_ACCURACY.x = ui_autoplace.x + ui_autoplace.width;
     AUTOUICOSMETICS_PLACEHOLDER_ACCURACY.y = ui_autoplace.y + ui_autoplace.height;
 
-    return 1;
+    return true;
 }
 
 function autouicosmetics_pick_drawables(autouicosmetics) {

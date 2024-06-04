@@ -87,12 +87,12 @@ async function fs_readxml(src) {
 
 async function fs_file_exists(src) {
     src = await fs_get_full_path_and_override(src);
-    return await io_resource_exists(src, 1, 0);
+    return await io_resource_exists(src, true, false);
 }
 
 async function fs_folder_exists(src) {
     src = await fs_get_full_path_and_override(src);
-    return await io_resource_exists(src, 0, 1);
+    return await io_resource_exists(src, false, true);
 }
 
 async function fs_file_length(src) {
@@ -166,14 +166,14 @@ async function fs_folder_enumerate(src, folder_enumerator) {
 }
 
 function fs_folder_enumerate_next(folder_enumerator) {
-    if (!folder_enumerator.___entries) return 0;
-    if (folder_enumerator.___index >= folder_enumerator.___entries.length) return 0;
+    if (!folder_enumerator.___entries) return false;
+    if (folder_enumerator.___index >= folder_enumerator.___entries.length) return false;
 
     let entry = folder_enumerator.___entries[folder_enumerator.___index++];
     folder_enumerator.name = entry.name;
     folder_enumerator.is_file = entry.is_file;
     folder_enumerator.is_folder = entry.is_folder;
-    return 1;
+    return true;
 }
 
 function fs_folder_enumerate_close(folder_enumerator) {
@@ -188,11 +188,10 @@ function fs_folder_enumerate_close(folder_enumerator) {
 function fs_is_invalid_filename(filename) {
     for (let i = 0; i < FS_FILENAME_INVALID_CHARS.length; i++) {
         for (let j = 0; j < filename.length; j++) {
-            if (filename[j].indexOf(FS_FILENAME_INVALID_CHARS[i]) < 0) continue;
-            return 1;
+            if (filename[j] == FS_FILENAME_INVALID_CHARS[i]) return true;
         }
     }
-    return 0;
+    return false;
 }
 
 function fs_get_parent_folder(filename) {
@@ -221,7 +220,7 @@ function fs_combine_path_old(base_path, filename) {
 function fs_build_path(base_path, filename) {
     if (filename == null) throw new Error("filename is null");
 
-    if (!base_path || filename.startsWith(FS_CHAR_SEPARATOR)) return strdup(filename);
+    if (!base_path || filename[0] == FS_CHAR_SEPARATOR) return strdup(filename);
 
     let base_index = base_path.length;
     if (base_path.charAt(base_index - 1) == FS_CHAR_SEPARATOR) base_index--;
@@ -234,7 +233,7 @@ function fs_build_path2(reference_filename, filename) {
 
     const fs_tls = kthread_getspecific(fs_tls_key);
 
-    if (!reference_filename || filename.startsWith(FS_CHAR_SEPARATOR, 0)) return strdup(filename);
+    if (!reference_filename || filename[0] == FS_CHAR_SEPARATOR) return strdup(filename);
 
     let reference_parent_index = reference_filename.lastIndexOf(FS_CHAR_SEPARATOR);
     if (reference_parent_index < 0) {
@@ -266,7 +265,7 @@ function fs_resolve_path(src) {
     if (src == null) throw new KDMYEngineIOError("fs_resolve_path() failed, the src was null");
 
     let src_length = src.length;
-    if (src.length < 1) return "";
+    if (src_length < 1) return "";
 
     if (src.indexOf(FS_CHAR_SEPARATOR_REJECT, 0) >= 0) {
         throw new KDMYEngineIOError(`fs_resolve_path() path has invalid separator char: ${src}`);
@@ -349,8 +348,7 @@ function fs_resolve_path(src) {
         stringbuilder_add_substring(builder, src, stack[i], index);
     }
 
-    let path = stringbuilder_get_copy(builder);
-    stringbuilder_destroy(builder);
+    let path = stringbuilder_finalize(builder);
 
     stack = undefined;
     return path;
@@ -472,10 +470,10 @@ async function fs_get_full_path_and_override(path) {
         // Note: the resource in origin must match the type in custom
         //       if the file does not exists in origin the behavior is undefined
         //
-        let is_file = 1;
-        let is_folder = 1;
-        if (await io_resource_exists(resolved_path, 1, 0)) is_folder = 0;
-        else if (await io_resource_exists(resolved_path, 0, 1)) is_file = 0;
+        let is_file = true;
+        let is_folder = true;
+        if (await io_resource_exists(resolved_path, true, false)) is_folder = false;
+        else if (await io_resource_exists(resolved_path, false, true)) is_file = false;
 
         if (await io_resource_exists(custom_path, is_file, is_folder)) {
             if (DEBUG && is_file && is_folder) {
@@ -538,7 +536,7 @@ function fs_folder_stack_pop() {
 
     let count = linkedlist_count(fs_tls.fs_stk);
     if (count < 1) {
-        console.warn("fs: fs_folder_stack_pop() failed, folder stack was empty");
+        console.warn("fs_folder_stack_pop() failed, folder stack was empty");
         return;
     }
 

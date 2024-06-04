@@ -26,7 +26,7 @@ class WebGL2Context {
     /**@type {WebGLShader}*/stock_shadervertex;
     /**@type {WebGLShader}*/stock_shaderfragment;
 
-    /**@type {bool}*/has_texture_uploads;
+    /**@type {boolean}*/has_texture_uploads;
 
     /**@type {WEBGL_compressed_texture_s3tc}*/s3tc_ext;
 
@@ -59,14 +59,14 @@ class WebGLContextProgram {
     /**@type {WebGLUniformLocation}*/u_texture;
     /**@type {WebGLUniformLocation}*/u_alpha;
     /**@type {WebGLUniformLocation}*/u_vertex_color;
-    /**@type {WebGLUniformLocation}*/u_offsetcolor_mul_or_diff;
+    /**@type {WebGLUniformLocation}*/u_offsetcolor_mul_or_add;
     /**@type {WebGLUniformLocation}*/u_offsetcolor_enabled;
     /**@type {WebGLUniformLocation}*/u_offsetcolor;
     /**@type {WebGLUniformLocation}*/u_dotted;
 
     /**@type {WebGLUniformLocation}*/u_darken;
 
-    /**@type {bool}*/darken_enabled;
+    /**@type {boolean}*/darken_enabled;
 
 
     constructor(/**@type {WebGL2RenderingContext}*/gl, /**@type {WebGLProgram}*/program) {
@@ -84,7 +84,7 @@ class WebGLContextProgram {
         this.u_matrix_texture = gl.getUniformLocation(program, "u_matrix_texture");
         this.u_texture = gl.getUniformLocation(program, "u_texture");
         this.u_alpha = gl.getUniformLocation(program, "u_alpha");
-        this.u_offsetcolor_mul_or_diff = gl.getUniformLocation(program, "u_offsetcolor_mul_or_diff");
+        this.u_offsetcolor_mul_or_add = gl.getUniformLocation(program, "u_offsetcolor_mul_or_add");
         this.u_offsetcolor_enabled = gl.getUniformLocation(program, "u_offsetcolor_enabled");
         this.u_offsetcolor = gl.getUniformLocation(program, "u_offsetcolor");
         this.u_vertex_color = gl.getUniformLocation(program, "u_vertex_color");
@@ -110,12 +110,12 @@ class WebGLContextProgramGlyphs {
     /**@type {WebGLVertexArrayObject}*/vao;
 
     /**@type {WebGLUniformLocation}*/u_color;
-    /**@type {WebGLUniformLocation}*/u_color_by_diff;
+    /**@type {WebGLUniformLocation}*/u_color_by_add;
     /**@type {WebGLUniformLocation}*/u_grayscale;
     /**@type {WebGLUniformLocation}*/u_matrix_transform;
     /**@type {WebGLUniformLocation}*/u_offsetcolor_enabled;
     /**@type {WebGLUniformLocation}*/u_offsetcolor;
-    /**@type {WebGLUniformLocation}*/u_offsetcolor_mul_or_diff;
+    /**@type {WebGLUniformLocation}*/u_offsetcolor_mul_or_add;
     /**@type {WebGLUniformLocation}*/u_texture0;
     /**@type {WebGLUniformLocation}*/u_texture1;
     /**@type {WebGLUniformLocation}*/u_sdf_smoothing;
@@ -141,12 +141,12 @@ class WebGLContextProgramGlyphs {
         // lookup uniforms
         this.u_color = gl.getUniformLocation(program, "u_color");
         this.u_color_outline = gl.getUniformLocation(program, "u_color_outline");
-        this.u_color_by_diff = gl.getUniformLocation(program, "u_color_by_diff");
+        this.u_color_by_add = gl.getUniformLocation(program, "u_color_by_add");
         this.u_grayscale = gl.getUniformLocation(program, "u_grayscale");
         this.u_matrix_transform = gl.getUniformLocation(program, "u_matrix_transform");
         this.u_offsetcolor_enabled = gl.getUniformLocation(program, "u_offsetcolor_enabled");
         this.u_offsetcolor = gl.getUniformLocation(program, "u_offsetcolor");
-        this.u_offsetcolor_mul_or_diff = gl.getUniformLocation(program, "u_offsetcolor_mul_or_diff");
+        this.u_offsetcolor_mul_or_add = gl.getUniformLocation(program, "u_offsetcolor_mul_or_add");
         this.u_texture0 = gl.getUniformLocation(program, "u_texture0");
         this.u_texture1 = gl.getUniformLocation(program, "u_texture1");
         this.u_dotted = gl.getUniformLocation(program, "u_dotted");
@@ -261,7 +261,7 @@ class PSShader {
         return -1;
     }
 
-    SetUniformInteger(/**@type {number}*/index, /**@type {number}*/components,/**@type {Int32Array}*/values, /**@type {bool}*/variable, /**@type {number}*/offset) {
+    SetUniformInteger(/**@type {number}*/index, /**@type {number}*/components,/**@type {Int32Array}*/values, /**@type {boolean}*/variable, /**@type {number}*/offset) {
         const gl = this.pvrctx.webopengl.gl;
         let handle = null;
 
@@ -321,7 +321,7 @@ class PSShader {
         return error == gl.NONE ? 1 : 0;
     }
 
-    SetUniformFloat(/**@type {number}*/index, /**@type {number}*/components,/**@type {Float32Array}*/values, /**@type {bool}*/variable, /**@type {number}*/offset) {
+    SetUniformFloat(/**@type {number}*/index, /**@type {number}*/components,/**@type {Float32Array}*/values, /**@type {boolean}*/variable, /**@type {number}*/offset) {
         const gl = this.pvrctx.webopengl.gl;
         let handle = null;
 
@@ -770,7 +770,7 @@ class PSFramebuffer {
         //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     }
 
-    Use( /**@type {bool}*/clear_first) {
+    Use( /**@type {boolean}*/clear_first) {
         const gl = this.pvrctx.webopengl.gl;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
@@ -875,7 +875,7 @@ async function webopengl_init(canvas) {
         gl, webopengl_patch_shader(await webopengl_internal_load_shader("stock", false), false), false, true
     );
 
-    wglc.has_texture_uploads = 0;
+    wglc.has_texture_uploads = false;
 
     // required to support compressed textures
     wglc.s3tc_ext = gl.getExtension("WEBGL_compressed_texture_s3tc");
@@ -956,7 +956,7 @@ function webopengl_create_texture(/**@type {WebGL2Context}*/wglc, texture_width,
     //       requeriments to 1.4Gib~2.25GiB of vram.
     //gl.generateMipmap(gl.TEXTURE_2D);
 
-    wglc.has_texture_uploads = 1;
+    wglc.has_texture_uploads = true;
 
     return tex;
 }
@@ -965,7 +965,7 @@ function webopengl_change_texture_filtering(/**@type {PVRContext}*/pvrctx, has_m
     const gl = pvrctx.webopengl.gl;
 
     let filter;
-    if (pvrctx.render_antialiasing == PVR_FLAG_DISABLE)
+    if (pvrctx.render_antialiasing == PVRCTX_FLAG_DISABLE)
         filter = has_mipmaps ? gl.NEAREST_MIPMAP_NEAREST : gl.NEAREST;
     else
         filter = has_mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR;
@@ -1052,13 +1052,13 @@ function webopengl_draw_texture(/**@type {PVRContext}*/pvrctx, tex, sx, sy, sw, 
     gl.uniform1f(wglc.program_textured.u_alpha, pvrctx.render_alpha);
 
     // if the offsetcolor alpha is negative, disable the offsetcolor processing
-    // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_diff" are boolean values
+    // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values
     if (pvrctx.render_offsetcolor[3] < 0) {
         gl.uniform1i(wglc.program_textured.u_offsetcolor_enabled, 0);
     } else {
         gl.uniform1i(wglc.program_textured.u_offsetcolor_enabled, 1);
         gl.uniform4fv(wglc.program_textured.u_offsetcolor, pvrctx.render_offsetcolor);
-        gl.uniform1i(wglc.program_textured.u_offsetcolor_mul_or_diff, pvrctx.render_offsetcolor_multiply ? 1 : 0);
+        gl.uniform1i(wglc.program_textured.u_offsetcolor_mul_or_add, pvrctx.render_offsetcolor_multiply ? 1 : 0);
     }
 
     // enable/disable rgb color components be multiplied by the render alpha
@@ -1113,14 +1113,14 @@ function webopengl_draw_solid(/**@type {PVRContext}*/pvrctx, rgb_color, dx, dy, 
     WEBGL_RGBA[3] = pvrctx.render_alpha;
 
     // if the offsetcolor alpha is negative, disable the offsetcolor processing
-    // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_diff" are boolean values
+    // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values
     if (pvrctx.render_offsetcolor[3] < 0) {
         gl.uniform1i(wglc.program_solid.u_offsetcolor_enabled, 0);
     } else {
         gl.uniform1i(wglc.program_solid.u_offsetcolor_enabled, 1);
         gl.uniform4fv(wglc.program_solid.u_offsetcolor, pvrctx.render_offsetcolor);
         let use_multiply = pvrctx.render_offsetcolor_multiply != PVRCTX_FLAG_DISABLE;
-        gl.uniform1i(wglc.program_solid.u_offsetcolor_mul_or_diff, use_multiply ? 1 : 0);
+        gl.uniform1i(wglc.program_solid.u_offsetcolor_mul_or_add, use_multiply ? 1 : 0);
     }
 
     // build rgba color & upload vertex color

@@ -11,7 +11,7 @@ const EXPANSIONS_SELF_NAME = "/self/";
 
 var expansions_chain_array = null;
 var expansions_chain_array_size = 0;
-var expansions_overrided_weeks_folder;
+var expansions_overrided_weeks_folder = null;
 
 
 async function expansions_load(expansion_name) {
@@ -20,8 +20,8 @@ async function expansions_load(expansion_name) {
         return;
     }
 
-    //for (let i = 0 ; i < chain_array_size ; i++) {
-    //    if (expansions_chain_array[i] != EXPANSIONS_FUNKIN_EXPANSION_PATH) {
+    //for (let i = 0 ; i < expansions_chain_array_size ; i++) {
+    //    if (expansions_chain_array[i] != Symbol(EXPANSIONS_FUNKIN_EXPANSION_PATH)) {
     //        expansions_chain_array[i] = undefined;
     //    }
     //}
@@ -39,6 +39,8 @@ async function expansions_load(expansion_name) {
     }
 
     await expansions_internal_load_dependency(chain, expansion_name);
+
+    if(expansions_overrided_weeks_folder) expansions_overrided_weeks_folder = undefined;
     expansions_overrided_weeks_folder = null;
 
     let expansion_base_path = string_concat(3, EXPANSIONS_SYMBOLIC_PATH, expansion_name, FS_CHAR_SEPARATOR);
@@ -79,12 +81,11 @@ async function expansions_resolve_path(path, is_file, is_folder) {
     if (path == null) return null;
     if (!path.startsWith(FS_ASSETS_FOLDER, 0)) return path;
 
-
     let path_length = path.length;
     let index = FS_ASSETS_FOLDER.length;
     if (index < path_length && path[index] == FS_CHAR_SEPARATOR) index++;
 
-    let relative_path = path.substring(index, path.length);
+    let relative_path = path.substring(index, path_length);
     let last_overrided_path = strdup(path);
 
     for (let i = 0; i < expansions_chain_array_size; i++) {
@@ -120,6 +121,8 @@ async function expansions_get_path_from_expansion(path, expansion_index) {
     let new_path = string_concat(
         3, expansions_chain_array[expansion_index], FS_CHAR_SEPARATOR, relative_path
     );
+
+    relative_path = undefined;
 
     return new_path;
 
@@ -159,13 +162,15 @@ async function expansions_internal_load_dependency(chain, expansion_name) {
         return;
     }
 
-    let uparsed_chain = await io_native_foreground_request(chain_ini_path, IO_REQUEST_TEXT);
+    let unparsed_chain = await io_native_foreground_request(chain_ini_path, IO_REQUEST_TEXT);
     chain_ini_path = undefined;
 
-    let tokenizer = tokenizer_init("\r\n", false, false, uparsed_chain);
+    if (!unparsed_chain) return;
+
+    let tokenizer = tokenizer_init("\r\n", false, false, unparsed_chain);
     if (!tokenizer) {
         expansions_internal_add_to_chain(chain, expansion_path);
-        uparsed_chain = undefined;
+        unparsed_chain = undefined;
         return;
     }
 
@@ -178,7 +183,7 @@ async function expansions_internal_load_dependency(chain, expansion_name) {
 
         if (name == EXPANSIONS_SELF_NAME) {
             expansions_internal_add_to_chain(chain, expansion_path);
-        } else if (await fs_is_invalid_filename(name)) {
+        } else if (fs_is_invalid_filename(name)) {
             console.error(`expansions_internal_load_dependency() '${name}' is not a valid folder name`);
         } else {
             // warning: recursive call
@@ -191,23 +196,28 @@ async function expansions_internal_load_dependency(chain, expansion_name) {
     expansions_internal_add_to_chain(chain, expansion_path);
 
     tokenizer_destroy(tokenizer);
-    uparsed_chain = undefined;
+    unparsed_chain = undefined;
     tokenizer = undefined;
 }
 
 function expansions_internal_add_to_chain(chain, expansion_path) {
+    let lowercase_expansion_name = string_to_lowercase(expansion_path);
+
     for (let expansion of arraylist_iterate4(chain)) {
         if (expansion == expansion_path) return;
 
         let lowercase_expansion = string_to_lowercase(expansion);
-        let lowercase_expansion_name = string_to_lowercase(expansion_path);
         let equals = lowercase_expansion == lowercase_expansion_name;
 
         lowercase_expansion = undefined;
-        lowercase_expansion_name = undefined;
 
-        if (equals) return;
+        if (equals) {
+            lowercase_expansion_name = undefined;
+            return;
+        }
     }
+
+    lowercase_expansion_name = undefined;
     arraylist_add(chain, expansion_path);
 }
 

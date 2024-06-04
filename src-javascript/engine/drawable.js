@@ -20,11 +20,11 @@ function drawable_init(z, private_data, callback_draw, callback_animate) {
         blend_dst_alpha: BLEND_DEFAULT,
 
         z_index: z,
-        z_offset: 0,
+        z_offset: 0.0,
 
         callback_draw, callback_animate, private_data,
 
-        visible: 1,
+        visible: true,
 
         antialiasing: PVRCTX_FLAG_DEFAULT
     };
@@ -43,8 +43,8 @@ function drawable_destroy(drawable) {
     drawable.callback_animate = null;
     drawable.private_data = null;
 
-    ModuleLuaScript.kdmyEngine_drop_shared_object(drawable.modifier);
-    ModuleLuaScript.kdmyEngine_drop_shared_object(drawable);
+    luascript_drop_shared(drawable.modifier);
+    luascript_drop_shared(drawable);
     drawable = undefined;
 }
 
@@ -71,14 +71,14 @@ function drawable_get_alpha(drawable) {
 }
 
 function drawable_set_offsetcolor(drawable, r, g, b, a) {
-    if (r != null) drawable.offsetcolor[0] = r;
-    if (g != null) drawable.offsetcolor[1] = g;
-    if (b != null) drawable.offsetcolor[2] = b;
-    if (a != null) drawable.offsetcolor[3] = a;
+    if (r != null && !isNaN(r)) drawable.offsetcolor[0] = r;
+    if (g != null && !isNaN(g)) drawable.offsetcolor[1] = g;
+    if (b != null && !isNaN(b)) drawable.offsetcolor[2] = b;
+    if (a != null && !isNaN(a)) drawable.offsetcolor[3] = a;
 }
 
 function drawable_set_offsetcolor_to_default(drawable) {
-    pvrctx_helper_clear_offsetcolor(drawable.offsetcolor);
+    pvr_context_helper_clear_offsetcolor(drawable.offsetcolor);
 }
 
 function drawable_set_visible(drawable, visible) {
@@ -225,7 +225,7 @@ function drawable_helper_update_from_placeholder(drawable, layout_placeholder) {
     drawable.z_index = layout_placeholder.z;
     drawable.modifier.width = layout_placeholder.width;
     drawable.modifier.height = layout_placeholder.height;
-    drawable.z_offset = 0;
+    drawable.z_offset = 0.0;
 }
 
 

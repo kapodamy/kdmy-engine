@@ -1,1 +1,0 @@
-void imported_function(const char* str, int number);
