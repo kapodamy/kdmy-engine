@@ -19,7 +19,6 @@ public static class Math2D {
     }
 
     public static float RandomFloat() {
-        //return (float)(random.Next() / (double)Int32.MaxValue);
         return (float)random.NextDouble();
     }
 
@@ -27,16 +26,16 @@ public static class Math2D {
         return random.NextDouble();
     }
 
-    public static float Random(float min, float max) {
-        return (float)(random.NextDouble() * (max - min + 1) + min);
+    public static float RandomFloatRange(float min, float max) {
+        return (float)random.NextDouble() * (max - min) + min;
     }
 
-    public static double Random(double min, double max) {
-        return random.NextDouble() * (max - min + 1) + min;
+    public static double RandomDoubleRange(double min, double max) {
+        return random.NextDouble() * (max - min) + min;
     }
 
     public static int RandomInt(int min, int max) {
-        return random.Next(min, max + 1);
+        return random.Next(min, max);
     }
 
 
@@ -56,10 +55,10 @@ public static class Math2D {
     }
 
     public static float CubicBezier(float offset, float point0, float point1, float point2, float point3) {
-        float neg = 1 - offset;
+        float neg = 1f - offset;
         return (neg * neg * neg) * point0 +
-            3 * offset * (neg * neg) * point1 +
-            3 * (offset * offset) * neg * point2 +
+            3f * offset * (neg * neg) * point1 +
+            3f * (offset * offset) * neg * point2 +
             (offset * offset * offset) * point3;
     }
 
@@ -229,11 +228,16 @@ L_stop_checking_equal:
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool FloatsAreNearEqual(float float1, float float2) {
-        return Math.Abs(float1 - float2) < Single.Epsilon;
+    public static bool FloatsAreNearEqual(float number1, float number2) {
+        return Math.Abs(number1 - number2) < Single.Epsilon;
     }
 
-    public static bool FloatsAreNearZero(float number) {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool DoublesAreNearEqual(double number1, double number2) {
+        return Math.Abs(number1 - number2) < Double.Epsilon;
+    }
+
+    public static bool FloatIsNearZero(float number) {
         return Math.Abs(number) < Single.Epsilon;
     }
 

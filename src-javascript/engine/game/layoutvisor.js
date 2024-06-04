@@ -122,14 +122,14 @@ async function main_layout_visor() {
                 }
             }
         } else if (time > next_hit) {
-            next_hit = time + math2d_random(400, 800);
-            let diff = math2d_random(0, 110);
+            next_hit = time + math2d_random_float_range(400.0, 800.0);
+            let diff = math2d_random_float_range(0.0, 110.0);
             let idle = false;
             let miss = false;
 
             if (diff >= 108) {
                 next_hit += 2000;
-                playerstats_add_penality(playerstats, (math2d_random(0, 100) % 2) == 0);
+                playerstats_add_penality(playerstats, (math2d_random_int(0, 101) % 2) == 0);
             } else if (diff >= 104) {
                 miss = true;
                 playerstats_add_miss(playerstats, 1.0);
@@ -161,7 +161,7 @@ async function main_layout_visor() {
                     let character = obj.layoutvisor_character;
                     if (!character) continue;
 
-                    let direction = directions[math2d_random_int(0, directions.length - 1)];
+                    let direction = directions[math2d_random_int(0, directions.length)];
                     if (miss) {
                         // @ts-ignore
                         let result = character_play_miss(character, direction, false) ||

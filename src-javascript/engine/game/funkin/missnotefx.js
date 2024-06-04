@@ -20,6 +20,8 @@ function missnotefx_destroy(missnotefx) {
 function missnotefx_play_effect(missnotefx) {
     let soundplayer_id = math2d_random_int(0, 2);
     let volume = math2d_lerp(0.1, 0.3, Math.random());
+    let soundplayer_id = math2d_random_int(0, 3);
+    let volume = math2d_lerp(0.1, 0.3, math2d_random_float());
 
     let soundplayer;
     switch (soundplayer_id) {

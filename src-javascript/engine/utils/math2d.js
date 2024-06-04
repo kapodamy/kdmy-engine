@@ -6,20 +6,24 @@ const MATH2D_LOG100 = Math.log(100);
 const MATH2D_HALF_PI = Math.PI / 2.0;
 const MATH2D_PRNG = new Uint32Array(1);
 
-function math2d_random(min, max) {
+function math2d_random_float() {
+    //return Math.random();
+    window.crypto.getRandomValues(MATH2D_PRNG);
+    let pecent = MATH2D_PRNG[0] / 0xffffffff;
+    return pecent;
+}
+
+function math2d_random_float_range(min, max) {
     //return Math.random() * (max - min + 1) + min;
     window.crypto.getRandomValues(MATH2D_PRNG);
     let pecent = MATH2D_PRNG[0] / 0xffffffff;
-    return pecent * (max - min + 1) + min;
+    return pecent * (max - min) + min;
 }
 
 function math2d_random_int(min, max) {
-    let value = math2d_random(min, max);
-    value = Math.trunc(value);
-
-    if (value < min) return min;
-    if (value > max) return max;
-    return value;
+    window.crypto.getRandomValues(MATH2D_PRNG);
+    let range = max - min;
+    return range ? (min + (MATH2D_PRNG[0] % range)) : min;
 }
 
 
@@ -36,20 +40,32 @@ function math2d_nearestdown(value, step) {
 }
 
 function math2d_cubicbezier(offset, point0, point1, point2, point3) {
-    let neg = 1 - offset;
+    let neg = 1.0 - offset;
     return (neg * neg * neg) * point0 +
-        3 * offset * (neg * neg) * point1 +
-        3 * (offset * offset) * neg * point2 +
+        3.0 * offset * (neg * neg) * point1 +
+        3.0 * (offset * offset) * neg * point2 +
         (offset * offset * offset) * point3;
 }
 
-function math2d_clamp(value, min, max) {
+function math2d_clamp_float(value, min, max) {
     if (value < min) return min;
     if (value > max) return max;
     return value;
 }
 
-function math2d_rotate_point(point, radians) {
+function math2d_clamp_double(value, min, max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
+function math2d_clamp_int(value, min, max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
+function math2d_rotate_point(radians, point) {
     let s = Math.sin(radians);
     let c = Math.cos(radians);
     let x = point[0] * c - point[1] * s;
@@ -187,9 +203,9 @@ function math2d_color_float_to_css_color(float_array, has_alpha) {
 }
 
 function math2d_bitcount(value) {
-    value = value - ((value >>> 1) & 0x55555555)
-    value = (value & 0x33333333) + ((value >>> 2) & 0x33333333)
-    return ((value + (value >>> 4) & 0xF0F0F0F) * 0x1010101) >>> 24
+    value = value - ((value >>> 1) & 0x55555555);
+    value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
+    return ((value + (value >>> 4) & 0xF0F0F0F) * 0x1010101) >>> 24;
 }
 
 function math2d_beats_per_minute_to_beat_per_milliseconds(bmp) {
@@ -211,11 +227,15 @@ function math2d_poweroftwo_calc(dimmen) {
     return size;
 }
 
-function math2d_floats_are_near_equal(float1, float2) {
-    return Math.abs(float1 - float2) < Number.EPSILON;
+function math2d_floats_are_near_equal(number1, number2) {
+    return Math.abs(number1 - number2) < Number.EPSILON;
 }
 
-function math2d_float_are_near_zero(number) {
+function math2d_doubles_are_near_equal(number1, number2) {
+    return Math.abs(number1 - number2) < Number.EPSILON;
+}
+
+function math2d_float_is_near_zero(number) {
     return Math.abs(number) < Number.EPSILON;
 }
 
@@ -246,15 +266,15 @@ function math2d_timestamp_to_string(timestamp) {
 }
 
 function math2d_lerp_cubic(percent) {
-    return Math.pow(percent, 3);
+    return Math.pow(percent, 3.0);
 }
 
 function math2d_lerp_quad(percent) {
-    return Math.pow(percent, 2);
+    return Math.pow(percent, 2.0);
 }
 
 function math2d_lerp_expo(percent) {
-    return Math.pow(2.0, 10.0 * (percent - 1));
+    return Math.pow(2.0, 10.0 * (percent - 1.0));
 }
 
 function math2d_lerp_sin(percent) {

@@ -72,6 +72,7 @@ public static class GameMain {
         // choose a random menu style
         bool try_choose_last_played = Math2D.RandomFloat() <= 0.25f;
         bool[] visited = new bool[Funkin.weeks_array.size];
+        bool try_choose_last_played = Math2D.RandomFloat() <= 0.25f;
         int visited_count = 0;
         for (int i = 0 ; i < Funkin.weeks_array.size ; i++) visited[i] = false;
 
@@ -95,7 +96,7 @@ public static class GameMain {
                 }
                 if (weekinfo == null) continue;
             } else {
-                int random_index = Math2D.RandomInt(0, Funkin.weeks_array.size - 1);
+                int random_index = Math2D.RandomInt(0, Funkin.weeks_array.size);
                 if (visited[random_index]) continue;
                 visited[random_index] = true;
                 visited_count++;

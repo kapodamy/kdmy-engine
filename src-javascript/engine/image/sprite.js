@@ -735,7 +735,7 @@ function sprite_set_property(sprite, property_id, value) {
             sprite_matrix_translate(sprite, null, value);
             break;
         case SPRITE_PROP_ALPHA:
-            sprite.alpha = math2d_clamp(value, 0, 1.0);
+            sprite.alpha = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_Z:
             sprite.z_index = value;

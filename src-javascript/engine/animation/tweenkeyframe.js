@@ -84,7 +84,7 @@ function tweenkeyframe_animate_percent(tweenkeyframe, percent) {
     const array = arraylist_peek_array(tweenkeyframe.arraylist_keyframes);
     const size = arraylist_size(tweenkeyframe.arraylist_keyframes);
 
-    percent = math2d_clamp(percent, 0.0, 1.0);
+    let final_percent = math2d_clamp_double(percent, 0.0, 1.0);
 
     for (let i = 0; i < size; i++) {
         let keyframe_entry = array[i];

@@ -84,7 +84,7 @@ function tweenlerp_animate_percent(tweenlerp, percent) {
     const size = arraylist_size(tweenlerp.arraylist);
     let completed = 0;
 
-    percent = math2d_clamp(percent, 0.0, 1.0);
+    percent = math2d_clamp_float(percent, 0.0, 1.0);
 
     for (let i = 0; i < size; i++) {
         if (tweenlerp_internal_animate_entry_absolute(array[i], percent)) completed++;

@@ -191,7 +191,7 @@ public class IntroScreen {
         }
 
         // choose a random line
-        int random_index = Math2D.RandomInt(1, line_count);
+        int random_index = Math2D.RandomInt(0, line_count);
         line_count = 0;
 
         // read the choosen line

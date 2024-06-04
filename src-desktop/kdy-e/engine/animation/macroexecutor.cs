@@ -238,7 +238,7 @@ public class MacroExecutor : IAnimate {
                     this.random_end = ResolveValue(instruction.end);
                     break;
                 case AnimMacroType.RANDOM_CHOOSE:
-                    this.random_value = Math2D.Random(
+                    this.random_value = Math2D.RandomFloatRange(
                         this.random_start,
                         this.random_end
                     );
@@ -420,7 +420,7 @@ public class MacroExecutor : IAnimate {
                     this.random_end = ResolveValue(instruction.end);
                     break;
                 case AnimMacroType.RANDOM_CHOOSE:
-                    this.random_value = Math2D.Random(
+                    this.random_value = Math2D.RandomFloatRange(
                         this.random_start, this.random_end
                     );
                     break;
@@ -566,7 +566,7 @@ public class MacroExecutor : IAnimate {
                 value = Math2D.Clamp(value, 0.0f, 1.0f);
                 break;
             case VertexProps.SPRITE_PROP_FRAMEINDEX:
-                value = (int)Math2D.Clamp(value, 0, this.frame_count - 1);
+                value = (int)Math2D.Clamp(value, 0, this.frame_count);
                 ApplyFrame(null);
                 break;
         }
@@ -849,7 +849,7 @@ public class MacroExecutor : IAnimate {
             return;
         }
 
-        int index = Math2D.RandomInt(0, instruction.values_size - 1);
+        int index = Math2D.RandomInt(0, instruction.values_size);
         MacroExecutorValue item = instruction.values[index];
 
         // resolve the item value

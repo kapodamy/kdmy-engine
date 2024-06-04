@@ -652,19 +652,19 @@ function textsprite_set_property(textsprite, property_id, value) {
             textsprite_matrix_translate(textsprite, null, value);
             break;
         case SPRITE_PROP_ALPHA:
-            textsprite.alpha = math2d_clamp(value, 0, 1.0);
+            textsprite.alpha = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_Z:
             textsprite.z = value;
             break;
         case SPRITE_PROP_VERTEX_COLOR_R:
-            textsprite.color[0] = math2d_clamp(value, 0, 1.0);
+            textsprite.color[0] = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_VERTEX_COLOR_G:
-            textsprite.color[1] = math2d_clamp(value, 0, 1.0);
+            textsprite.color[1] = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_VERTEX_COLOR_B:
-            textsprite.color[2] = math2d_clamp(value, 0, 1.0);
+            textsprite.color[2] = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_ANIMATIONLOOP:
             if (textsprite.animation_selected)

@@ -36,13 +36,13 @@
 
     <AnimationMacro name="streak_number" loop="1">
         <!-- choose random delay -->
-        <RandomSetup start="0" end="10" />
+        <RandomSetup start="0" end="11" />
         <RandomChoose />
         <Pause duration="rnd" />
 
         <Set property="alpha" value="1.0" />
 
-        <RandomSetup start="-10" end="-15" />
+        <RandomSetup start="-10" end="-16" />
         <RandomChoose />
 
         <Interpolator property="translateY" type="linear" duration="200" start="0" end="rnd" />
@@ -51,7 +51,7 @@
         <Yield duration="100" />
 
 
-        <RandomSetup start="20" end="60" />
+        <RandomSetup start="20" end="61" />
         <RandomChoose />
 
         <Interpolator property="alpha" type="linear" duration="250" start="1.0" end="0.00" />
@@ -67,7 +67,7 @@
         <Set property="alpha" value="1.0" />
         <Set property="rotate" value="0.0" />
 
-        <RandomSetup start="-10" end="-30" />
+        <RandomSetup start="-10" end="-31" />
         <RandomChoose />
 
         <Interpolator property="translateY" type="linear" duration="100" start="0" end="rnd" />
@@ -76,7 +76,7 @@
         <Yield duration="300" />
 
         <!-- Select a random value and store in the register N° 0 -->
-        <RandomSetup start="0" end="60" />
+        <RandomSetup start="0" end="61" />
         <RandomChoose />
         <RegisterSet register="reg0" value="rnd" />
 

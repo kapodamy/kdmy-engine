@@ -576,7 +576,7 @@ public class AnimSprite {
         int index;
 
         if (this.alternate_index < 0) {
-            index = Math2D.RandomInt(0, this.alternate_size - 1);
+            index = Math2D.RandomInt(0, this.alternate_size);
         } else {
             this.alternate_index++;
             if (this.alternate_index >= this.alternate_size) this.alternate_index = 0;

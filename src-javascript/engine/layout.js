@@ -1050,13 +1050,13 @@ function layout_set_group_visibility_by_id(layout, group_id, visible) {
 function layout_set_group_alpha(layout, group_name, alpha) {
     if (!Number.isFinite(alpha)) alpha = 0.0;
     let index = layout_helper_get_group_index(layout, group_name);
-    if (index >= 0) layout.group_list[index].alpha = math2d_clamp(alpha, 0.0, 1.0);
+    if (index >= 0) layout.group_list[index].alpha = math2d_clamp_float(alpha, 0.0, 1.0);
 }
 
 function layout_set_group_alpha_by_id(layout, group_id, alpha) {
     if (!Number.isFinite(alpha)) alpha = 0.0;
     if (group_id < 0 || group_id >= layout.group_list_size) return;
-    layout.group_list[group_id].alpha = math2d_clamp(alpha, 0.0, 1.0);
+    layout.group_list[group_id].alpha = math2d_clamp_float(alpha, 0.0, 1.0);
 }
 
 function layout_set_group_antialiasing(layout, group_name, antialiasing) {
@@ -1072,10 +1072,10 @@ function layout_set_group_antialiasing_by_id(layout, group_id, antialiasing) {
 function layout_set_group_offsetcolor(layout, group_name, r, g, b, a) {
     let index = layout_helper_get_group_index(layout, group_name);
     if (index >= 0) {
-        if (Number.isFinite(r)) layout.group_list[index].offsetcolor[0] = math2d_clamp(r, 0.0, 1.0);
-        if (Number.isFinite(g)) layout.group_list[index].offsetcolor[1] = math2d_clamp(g, 0.0, 1.0);
-        if (Number.isFinite(b)) layout.group_list[index].offsetcolor[2] = math2d_clamp(b, 0.0, 1.0);
-        if (Number.isFinite(a)) layout.group_list[index].offsetcolor[3] = math2d_clamp(a, 0.0, 1.0);
+        if (Number.isFinite(r)) layout.group_list[index].offsetcolor[0] = math2d_clamp_float(r, 0.0, 1.0);
+        if (Number.isFinite(g)) layout.group_list[index].offsetcolor[1] = math2d_clamp_float(g, 0.0, 1.0);
+        if (Number.isFinite(b)) layout.group_list[index].offsetcolor[2] = math2d_clamp_float(b, 0.0, 1.0);
+        if (Number.isFinite(a)) layout.group_list[index].offsetcolor[3] = math2d_clamp_float(a, 0.0, 1.0);
     }
 }
 
@@ -1827,7 +1827,7 @@ function layout_helper_group_set_property(group, property_id, value) {
             group.modifier.height = value;
             break;
         case SPRITE_PROP_ALPHA:
-            group.alpha = math2d_clamp(value, 0, 1.0);
+            group.alpha = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_VERTEX_COLOR_OFFSET_R:
             group.offsetcolor[0] = value;

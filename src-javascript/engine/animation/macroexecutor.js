@@ -156,7 +156,7 @@ function macroexecutor_animate(macroexecutor, elapsed) {
                 macroexecutor.random_end = macroexecutor_resolve_value(macroexecutor, instruction.end);
                 break;
             case ANIM_MACRO_RANDOM_CHOOSE:
-                macroexecutor.random_value = math2d_random(
+                macroexecutor.random_value = math2d_random_float_range(
                     macroexecutor.random_start,
                     macroexecutor.random_end
                 );
@@ -335,7 +335,7 @@ function macroexecutor_force_end(macroexecutor, sprite) {
                 macroexecutor.random_end = macroexecutor_resolve_value(macroexecutor, instruction.end);
                 break;
             case ANIM_MACRO_RANDOM_CHOOSE:
-                macroexecutor.random_value = math2d_random(
+                macroexecutor.random_value = math2d_random_float_range(
                     macroexecutor.random_start, macroexecutor.random_end
                 );
                 break;
@@ -443,10 +443,10 @@ function macroexecutor_state_save(macroexecutor, property, value) {
         case SPRITE_PROP_VERTEX_COLOR_R:
         case SPRITE_PROP_VERTEX_COLOR_G:
         case SPRITE_PROP_VERTEX_COLOR_B:
-            value = math2d_clamp(value, 0, 1.0);
+            value = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_FRAMEINDEX:
-            value = Math.trunc(math2d_clamp(value, 0, macroexecutor.frame_count - 1));
+            value = Math.trunc(math2d_clamp_float(value, 0.0, macroexecutor.frame_count));
             macroexecutor_apply_frame(macroexecutor, null);
             break;
     }
@@ -589,7 +589,7 @@ function macroexecutor_interpolators_check(macroexecutor, elapsed) {
 }
 
 function macroexecutor_interpolator_run(macroexecutor, elapsed, interpolator) {
-    let percent = math2d_inverselerp(0, interpolator.duration, interpolator.progress);
+    let percent = math2d_inverselerp(0.0, interpolator.duration, interpolator.progress);
 
     interpolator.progress += elapsed;
     let completed = interpolator.progress >= interpolator.duration;

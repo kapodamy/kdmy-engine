@@ -925,7 +925,7 @@ public class Dialogue : IAnimate, IDraw {
                         int index;
                         if (action.random_from_prefix.Length == 0) {
                             // random choose
-                            index = Math2D.RandomInt(0, this.portraits_size - 1);
+                            portrait_index = Math2D.RandomInt(0, this.portraits_size);
                         } else {
                             index = -1;
                             int count = 0;
@@ -936,7 +936,7 @@ public class Dialogue : IAnimate, IDraw {
                             }
 
                             // random choose
-                            int choosen = Math2D.RandomInt(0, count - 1);
+                            int choosen = Math2D.RandomInt(0, count);
 
                             for (int i = 0 ; i < this.portraits_size ; i++) {
                                 if (this.portraits[i].name.StartsWithKDY(action.name, 0)) {
@@ -1040,7 +1040,7 @@ public class Dialogue : IAnimate, IDraw {
                 case Type.SPEECH_BACKGROUND:
                     if (action.name == null) {
                         //random choose
-                        int index = Math2D.RandomInt(0, this.backgrounds_size - 1);
+                        int index = Math2D.RandomInt(0, this.backgrounds_size);
                         this.current_speechimage = this.speechimages[index];
                         speechimage_changed = true;
                     } else if (action.name == "none") {
@@ -2752,7 +2752,7 @@ L_return:
     private Audio InternalGetAudio(string name) {
         if (String.IsNullOrEmpty(name) && this.audios_size > 0) {
             // random choose
-            int index = Math2D.RandomInt(0, this.audios_size - 1);
+            int index = Math2D.RandomInt(0, this.audios_size);
             return this.audios[index];
         }
 
@@ -2767,7 +2767,7 @@ L_return:
     private FontHolder InternalGetFont(string name) {
         if (String.IsNullOrEmpty(name) && this.fonts_size > 0) {
             // random choose
-            int index = Math2D.RandomInt(0, this.fonts_size - 1);
+            int index = Math2D.RandomInt(0, this.fonts_size);
             return this.fonts[index].fontholder;
         }
 
@@ -2782,7 +2782,7 @@ L_return:
     private int InternalGetBackgroundIndex(string name) {
         if (String.IsNullOrEmpty(name) && this.backgrounds_size > 0) {
             // random choose
-            return Math2D.RandomInt(0, this.backgrounds_size - 1);
+            return Math2D.RandomInt(0, this.backgrounds_size);
         }
 
         for (int i = 0 ; i < this.backgrounds_size ; i++) {
@@ -2796,7 +2796,7 @@ L_return:
     private MultipleChoice InternalGetMultiplechoice(string name) {
         if (String.IsNullOrEmpty(name) && this.multiplechoices_size > 0) {
             // random choose
-            int index = Math2D.RandomInt(0, this.multiplechoices_size - 1);
+            int index = Math2D.RandomInt(0, this.multiplechoices_size);
             return this.multiplechoices[index];
         }
 

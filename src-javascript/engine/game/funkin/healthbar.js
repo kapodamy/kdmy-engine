@@ -615,7 +615,7 @@ function healthbar_set_health_position(healthbar, max_health, health, opponent_r
 }
 
 function healthbar_set_health_position2(healthbar, percent) {
-    percent = math2d_clamp(percent, 0.0, 1.0);
+    percent = math2d_clamp_float(percent, 0.0, 1.0);
     tweenlerp_change_bounds_by_index(healthbar.tweenlerp, 0, -1, percent);
     tweenlerp_end(healthbar.tweenlerp);
     healthbar_internal_calc_health_positions(healthbar, percent);
@@ -778,14 +778,14 @@ function healthbar_internal_calc_health_positions(healthbar, player_health) {
 
     let opponent_health = 1.0 - player_health;
 
-    let health_position_opponent = math2d_clamp(
+    let health_position_opponent = math2d_clamp_float(
         healthbar.health_bar_length * opponent_health,
-        0,
+        0.0,
         healthbar.health_bar_length
     );
-    let health_position_player = math2d_clamp(
+    let health_position_player = math2d_clamp_float(
         healthbar.health_bar_length * player_health,
-        0,
+        0.0,
         healthbar.health_bar_length
     );
 

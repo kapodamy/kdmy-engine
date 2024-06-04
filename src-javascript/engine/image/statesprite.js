@@ -467,7 +467,7 @@ function statesprite_set_property(statesprite, property_id, value) {
             statesprite_matrix_translate(statesprite, null, value);
             break;
         case SPRITE_PROP_ALPHA:
-            statesprite.alpha = math2d_clamp(value, 0, 1.0);
+            statesprite.alpha = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_Z:
             statesprite.z_index = value;

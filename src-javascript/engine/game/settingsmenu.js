@@ -1092,7 +1092,7 @@ async function settingsmenu_show_common(title, gamepad, options, options_count, 
 }
 
 async function settingsmenu_in_common_change_number(layout, gamepad, min, max, value) {
-    value = math2d_clamp(value, min, max);
+    value = math2d_clamp_int(value, min, max);
     let orig_value = value;
 
     layout_set_group_visibility(layout, "holder-numeric", true);
@@ -1133,7 +1133,7 @@ async function settingsmenu_in_common_change_number(layout, gamepad, min, max, v
         else
             continue;
 
-        value = math2d_clamp(value, min, max);
+        value = math2d_clamp_int(value, min, max);
         textsprite_set_text_formated(number, "$i", value);
     }
 

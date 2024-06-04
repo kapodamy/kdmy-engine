@@ -171,7 +171,7 @@ function songprogressbar_manual_set_position(songprogressbar, elapsed, duration,
             songprogressbar.last_elapsed_seconds = elapsed_seconds;
 
             if (!songprogressbar.show_time_elapsed) elapsed_seconds = (duration / 1000.0) - elapsed_seconds;
-            elapsed_seconds = math2d_clamp(elapsed_seconds, 0, duration);
+            elapsed_seconds = math2d_clamp_double(elapsed_seconds, 0.0, duration);
 
             // compute text
             songprogressbar_internal_seconds_to_string(songprogressbar.stringbuilder, elapsed_seconds);
@@ -182,8 +182,8 @@ function songprogressbar_manual_set_position(songprogressbar, elapsed, duration,
     }
 
     // calculate bar cropping
-    let length = songprogressbar.bar_length * math2d_clamp(percent, 0.0, 1.0);
-    let crop_width = -1, crop_height = -1;
+    let length = songprogressbar.bar_length * math2d_clamp_double(percent, 0.0, 1.0);
+    let crop_width = -1.0, crop_height = -1.0;
 
     if (songprogressbar.is_vertical)
         crop_height = length;

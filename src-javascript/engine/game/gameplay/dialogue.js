@@ -896,7 +896,7 @@ async function dialogue_internal_apply_state(dialogue, state) {
                     let index;
                     if (action.random_from_prefix.length == 0) {
                         // random choose
-                        index = math2d_random_int(0, dialogue.portraits_size - 1);
+                        portrait_index = math2d_random_int(0, dialogue.portraits_size);
                     } else {
                         index = -1;
                         let count = 0;
@@ -907,7 +907,7 @@ async function dialogue_internal_apply_state(dialogue, state) {
                         }
 
                         // random choose
-                        let choosen = math2d_random_int(0, count - 1);
+                        let choosen = math2d_random_int(0, count);
 
                         for (let i = 0; i < dialogue.portraits_size; i++) {
                             if (dialogue.portraits[i].name.startsWith(action.name, 0)) {
@@ -1011,7 +1011,7 @@ async function dialogue_internal_apply_state(dialogue, state) {
             case DIALOGUE_TYPE_SPEECH_BACKGROUND:
                 if (action.name == null) {
                     //random choose
-                    let index = math2d_random_int(0, dialogue.backgrounds_size - 1);
+                    let index = math2d_random_int(0, dialogue.backgrounds_size);
                     dialogue.current_speechimage = dialogue.speechimages[index];
                     speechimage_changed = 1;
                 } else if (action.name == "none") {
@@ -2726,7 +2726,7 @@ function dialogue_internal_stop_portrait_animation(portrait) {
 function dialogue_internal_get_audio(dialogue, name) {
     if (!name && dialogue.audios_size > 0) {
         // random choose
-        let index = math2d_random_int(0, dialogue.audios_size - 1);
+        let index = math2d_random_int(0, dialogue.audios_size);
         return dialogue.audios[index];
     }
 
@@ -2741,7 +2741,7 @@ function dialogue_internal_get_audio(dialogue, name) {
 function dialogue_internal_get_font(dialogue, name) {
     if (!name && dialogue.fonts_size > 0) {
         // random choose
-        let index = math2d_random_int(0, dialogue.fonts_size - 1);
+        let index = math2d_random_int(0, dialogue.fonts_size);
         return dialogue.fonts[index].fontholder;
     }
 
@@ -2756,7 +2756,7 @@ function dialogue_internal_get_font(dialogue, name) {
 function dialogue_internal_get_background_index(dialogue, name) {
     if (!name && dialogue.backgrounds_size > 0) {
         // random choose
-        return math2d_random_int(0, dialogue.backgrounds_size - 1);
+        return math2d_random_int(0, dialogue.backgrounds_size);
     }
 
     for (let i = 0; i < dialogue.backgrounds_size; i++) {
@@ -2770,7 +2770,7 @@ function dialogue_internal_get_background_index(dialogue, name) {
 function dialogue_internal_get_multiplechoice(dialogue, name) {
     if (!name && dialogue.multiplechoices_size > 0) {
         // random choose
-        let index = math2d_random_int(0, dialogue.multiplechoices_size - 1);
+        let index = math2d_random_int(0, dialogue.multiplechoices_size);
         return dialogue.multiplechoices[index];
     }
 

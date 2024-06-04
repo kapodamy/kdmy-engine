@@ -161,7 +161,7 @@ function streakcounter_digits_animate(streakcounter_digits, elapsed) {
 function streakcounter_digits_measure(streakcounter_digits, value) {
     const draw_size = [0, 0];
 
-    //value = math2d_clamp(value, 0, STREAKCOUNTER_MAX_VALUE);
+    //value = math2d_clamp_int(value, 0, STREAKCOUNTER_MAX_VALUE);
 
     for (let i = 0; i < STREAKCOUNTER_DIGITS; i++)
         streakcounter_digits.buffer[i] = -1;

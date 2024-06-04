@@ -86,7 +86,7 @@ function streakcounter_peek_streak(streakcounter, playerstats) {
         );
 
         // center the number sprites in the draw location (y axis is already centered)
-        value = math2d_clamp(value, 0, STREAKCOUNTER_MAX_VALUE);
+        value = math2d_clamp_int(value, 0, STREAKCOUNTER_MAX_VALUE);
         let draw_width = streakcounter_digits_measure(unused_item.digits, value);
         let x = streakcounter.modifier.x;
         let y = streakcounter.modifier.y;

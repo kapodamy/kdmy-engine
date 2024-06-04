@@ -91,7 +91,7 @@ public class TweenKeyframe {
         var array = this.arraylist_keyframes.PeekArray();
         var size = this.arraylist_keyframes.Size();
 
-        percent = Math2D.Clamp(percent, 0.0, 1.0);
+        float final_percent = (float)Math2D.Clamp(percent, 0.0, 1.0);
 
         for (int i = 0 ; i < size ; i++) {
             KeyframeEntry keyframe_entry = array[i];

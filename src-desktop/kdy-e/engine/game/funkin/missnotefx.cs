@@ -31,6 +31,7 @@ public class MissNoteFX {
 
     public void PlayEffect() {
         int soundplayer_id = Math2D.RandomInt(0, 2);
+        int soundplayer_id = Math2D.RandomInt(0, 3);
         float volume = Math2D.Lerp(0.1f, 0.3f, Math2D.RandomFloat());
 
         SoundPlayer soundplayer;

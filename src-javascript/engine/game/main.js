@@ -162,6 +162,7 @@ async function main(argc, argv) {
     // choose a random menu style
     let try_choose_last_played = Math.random() <= 0.25;
     let visited = new Array(weeks_array.size);
+    let try_choose_last_played = math2d_random_float() <= 0.25;
     let visited_count = 0;
     for (let i = 0; i < weeks_array.size; i++) visited[i] = 0;
 
@@ -185,7 +186,7 @@ async function main(argc, argv) {
             }
             if (weekinfo == null) continue;
         } else {
-            let random_index = math2d_random_int(0, weeks_array.size - 1);
+            let random_index = math2d_random_int(0, weeks_array.size);
             if (visited[random_index]) continue;
             visited[random_index] = 1;
             visited_count++;
@@ -1280,7 +1281,7 @@ let d = `#pragma header
         time += elapsed;
         if (time > next_hit) {
             next_hit = time + 800;
-            let diff = math2d_random(0, 100);
+            let diff = math2d_random_float_range(0.0, 100.0);
             playerstats_add_hit(playerstats, 1.0, 100, diff);
         }
 

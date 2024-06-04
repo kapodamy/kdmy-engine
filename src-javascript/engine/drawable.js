@@ -141,7 +141,7 @@ function drawable_set_property(drawable, property_id, value) {
             drawable.modifier.translate_y = value;
             break;
         case SPRITE_PROP_ALPHA:
-            drawable.alpha = math2d_clamp(value, 0, 1.0);
+            drawable.alpha = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_Z:
             drawable.z_index = value;

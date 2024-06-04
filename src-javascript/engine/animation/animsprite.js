@@ -506,7 +506,7 @@ function animsprite_internal_alternate_choose(animsprite, loop) {
     let index;
 
     if (animsprite.alternate_index < 0) {
-        index = math2d_random_int(0, animsprite.alternate_size - 1);
+        index = math2d_random_int(0, animsprite.alternate_size);
     } else {
         animsprite.alternate_index++;
         if (animsprite.alternate_index >= animsprite.alternate_size) animsprite.alternate_index = 0;

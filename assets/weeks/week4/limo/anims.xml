@@ -5,12 +5,12 @@
 		<Pause duration="1000" />
 		
 		<!-- Choose random value and use it -->
-		<RandomSetup start="140" end="260" />
+		<RandomSetup start="140" end="261" />
 		<RandomChoose />
 		<Set property="y" value="rnd" />
 		
 		<!-- Choose a random "velocity" and use as interpolator duration -->
-		<RandomSetup start="170" end="280" />
+		<RandomSetup start="170" end="281" />
 		<RandomChoose />
 
 		<Interpolator type="linear" duration="rnd" property="translateX" start="0" end="3250" />

@@ -88,7 +88,7 @@ function mastervolume_volume_step(up_or_down) {
     else
         new_volume -= MASTERVOLUME_STEPS;
 
-    new_volume = math2d_clamp(new_volume, 0, 100);
+    new_volume = math2d_clamp_int(new_volume, 0, 100);
     if (new_volume != mastervolume_volume) {
         mastervolume_current_volume = new_volume / 100;
         for (const [mediaelement, _] of mastervolume_mediaelements) {

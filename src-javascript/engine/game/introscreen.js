@@ -60,7 +60,7 @@ async function introscreen_main() {
     let funky_intro = layout_get_attached_value(layout, "funky", LAYOUT_TYPE_STRING, INTROSCREEN_FUNKY);
 
     // 25% chance of displaying choosen week greetings
-    if (Math.random() <= 0.25) week_greetings = await introscreen_read_week_gretings();
+    if (math2d_random_float() <= 0.25) week_greetings = await introscreen_read_week_gretings();
 
     // if there an camera animation called "camera_animation", use it
     layout_trigger_camera(layout, "camera_animation");
@@ -192,7 +192,7 @@ async function introscreen_read_intro_text(path) {
     }
 
     // choose a random line
-    let random_index = math2d_random(1, line_count);
+    let random_index = math2d_random_int(0, line_count);
     line_count = 0;
 
     // read the choosen line

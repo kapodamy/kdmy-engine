@@ -13,7 +13,7 @@ public static class ExportsMath2D {
         } else {
             double start = L.luaL_checknumber(1);
             double end = L.luaL_checknumber(2);
-            ret = Math2D.Random(start, end);
+            ret = Math2D.RandomDoubleRange(start, end);
         }
 
         L.lua_pushnumber(ret);
@@ -53,11 +53,11 @@ public static class ExportsMath2D {
     }
 
     static int script_math2d_rotate_point_by_degs(LuaState L) {
-        float radians = (float)L.luaL_checknumber(1);
+        float degs = (float)L.luaL_checknumber(1);
         float x = (float)L.luaL_checknumber(2);
         float y = (float)L.luaL_checknumber(3);
 
-        Math2D.RotatePoint(radians, ref x, ref y);
+        Math2D.RotatePoint(degs * Math2D.DEG_TO_RAD, ref x, ref y);
         L.lua_pushnumber(x);
         L.lua_pushnumber(y);
 
