@@ -62,10 +62,10 @@ public class SongProgressbar : IAnimate, IDraw {
         );
 
         // set alphas
-        this.textsprite_time.SetAlpha((color_rgba8_text & 0xFF) / 0xFF);
-        this.statesprite_background.SetAlpha((color_rgba8_background & 0xFF) / 0xFF);
-        this.statesprite_back.SetAlpha((color_rgba8_back & 0xFF) / 0xFF);
-        this.statesprite_progress.SetAlpha((color_rgba8_progress & 0xFF) / 0xFF);
+        this.textsprite_time.SetAlpha((color_rgba8_text & 0xFF) / 255f);
+        this.statesprite_background.SetAlpha((color_rgba8_background & 0xFF) / 255f);
+        this.statesprite_back.SetAlpha((color_rgba8_back & 0xFF) / 255f);
+        this.statesprite_progress.SetAlpha((color_rgba8_progress & 0xFF) / 255f);
 
         // guess border color (invert font color)
         float[] rgba = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -200,7 +200,7 @@ public class SongProgressbar : IAnimate, IDraw {
                 this.last_elapsed_seconds = elapsed_seconds;
 
                 if (!this.show_time_elapsed) elapsed_seconds = (duration / 1000.0) - elapsed_seconds;
-                elapsed_seconds = Math2D.Clamp(elapsed_seconds, 0, duration);
+                elapsed_seconds = Math2D.Clamp(elapsed_seconds, 0.0, duration);
 
                 // compute text
                 InternalSecondsToString(this.stringbuilder, elapsed_seconds);
@@ -212,14 +212,14 @@ public class SongProgressbar : IAnimate, IDraw {
 
         // calculate bar cropping
         float length = (float)(this.bar_length * Math2D.Clamp(percent, 0.0, 1.0));
-        float crop_width = -1, crop_height = -1;
+        float crop_width = -1.0f, crop_height = -1.0f;
 
         if (this.is_vertical)
             crop_height = length;
         else
             crop_width = length;
 
-        this.statesprite_progress.Crop(0, 0, crop_width, crop_height);
+        this.statesprite_progress.Crop(0.0f, 0.0f, crop_width, crop_height);
 
         return (float)percent;
     }
@@ -318,7 +318,12 @@ public class SongProgressbar : IAnimate, IDraw {
         double h = Math.Floor(seconds / 3600.0);
         double m = Math.Floor((seconds - (h * 3600.0)) / 60.0);
         double s = seconds - (h * 3600.0) - (m * 60.0);
+
         stringbuilder.Clear();
+
+        //
+        // The 0x30 codepoint means the number zero "0" character
+        //
 
         if (h > 0.0) {
             if (h < 10) stringbuilder.AddCharCodepointKDY(0x30);

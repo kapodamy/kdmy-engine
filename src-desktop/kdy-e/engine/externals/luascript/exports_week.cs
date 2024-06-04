@@ -372,7 +372,9 @@ public static class ExportsWeek {
 
         string custom_common_path = L.luaL_optstring(1, null);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         Week.OverrideCommonFolder(roundcontext, custom_common_path);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         return 0;
     }
@@ -513,7 +515,6 @@ public static class ExportsWeek {
         return 0;
     }
 
-
     static int script_week_gameover_set_before_anim_duration(LuaState L) {
         RoundContext roundcontext = (RoundContext)L.Context;
 
@@ -564,7 +565,53 @@ public static class ExportsWeek {
         return 0;
     }
 
+    static int script_week_get_accumulated_stats(LuaState L) {
+        RoundContext roundcontext = (RoundContext)L.Context;
 
+        WeekResult_Stats stats = new WeekResult_Stats();
+
+        Week.GetAccumulatedStats(roundcontext, ref stats);
+
+        LuaTableBuilder table = new LuaTableBuilder(11);
+        table.AddInteger("sick", stats.sick);
+        table.AddInteger("good", stats.good);
+        table.AddInteger("bads", stats.bads);
+        table.AddInteger("shits", stats.shits);
+        table.AddInteger("miss", stats.miss);
+        table.AddInteger("penalties", stats.penalties);
+        table.AddInteger("score", stats.score);
+        table.AddNumber("accuracy", stats.accuracy);
+        table.AddInteger("notesPerSeconds", stats.notesperseconds);
+        table.AddInteger("comboBreaks", stats.combobreaks);
+        table.AddInteger("highestStreak", stats.higheststreak);
+
+        table.PushTable(L);
+        return 1;
+    }
+
+    static int script_week_get_gameover_layout(LuaState L) {
+        RoundContext roundcontext = (RoundContext)L.Context;
+
+        Layout ret = Week.GetLayoutOf(roundcontext, 'g');
+
+        return ExportsLayout.script_layout_new(L, ret);
+    }
+
+    static int script_week_get_pause_layout(LuaState L) {
+        RoundContext roundcontext = (RoundContext)L.Context;
+
+        Layout ret = Week.GetLayoutOf(roundcontext, 'p');
+
+        return ExportsLayout.script_layout_new(L, ret);
+    }
+
+    static int script_week_get_results_layout(LuaState L) {
+        RoundContext roundcontext = (RoundContext)L.Context;
+
+        Layout ret = Week.GetLayoutOf(roundcontext, 'r');
+
+        return ExportsLayout.script_layout_new(L, ret);
+    }
 
 
     static readonly LuaTableFunction[] EXPORTS_FUNCTION = {
@@ -624,23 +671,16 @@ public static class ExportsWeek {
         new LuaTableFunction("week_gameover_set_music", script_week_gameover_set_music),
         new LuaTableFunction("week_gameover_set_sfx_die", script_week_gameover_set_sfx_die),
         new LuaTableFunction("week_gameover_set_sfx_confirm", script_week_gameover_set_sfx_confirm),
+        new LuaTableFunction("week_get_accumulated_stats", script_week_get_accumulated_stats),
+        new LuaTableFunction("week_get_gameover_layout", script_week_get_gameover_layout),
+        new LuaTableFunction("week_get_pause_layout", script_week_get_pause_layout),
+        new LuaTableFunction("week_get_results_layout", script_week_get_results_layout),
         new LuaTableFunction(null, null)
-    };
-
-    static readonly LuaIntegerConstant[] EXPORTS_GLOBAL = {
-        new LuaIntegerConstant("NOTE_MISS", 0),
-        new LuaIntegerConstant("NOTE_PENALITY", 1),
-        new LuaIntegerConstant("NOTE_SHIT", 2),
-        new LuaIntegerConstant("NOTE_BAD", 3),
-        new LuaIntegerConstant("NOTE_GOOD", 4),
-        new LuaIntegerConstant("NOTE_SICK", 5),
-        new LuaIntegerConstant(null, -1)
     };
 
 
     internal static void script_week_register(ManagedLuaState lua) {
         lua.RegisterGlobalFunctions(EXPORTS_FUNCTION);
-        lua.RegisterIntegerConstants(EXPORTS_GLOBAL);
     }
 
 }

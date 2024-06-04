@@ -6,6 +6,23 @@ namespace Engine.Externals.LuaScriptInterop;
 public static class ExportsMissNoteFX {
     public const string MISSNOTEFX = "MissNoteFX";
 
+    static int script_missnotefx_stop(LuaState L) {
+        MissNoteFX missnotefx = L.ReadUserdata<MissNoteFX>(MISSNOTEFX);
+
+        missnotefx.Stop();
+
+        return 0;
+    }
+
+
+    static int script_missnotefx_disable(LuaState L) {
+        MissNoteFX missnotefx = L.ReadUserdata<MissNoteFX>(MISSNOTEFX);
+        bool disabled = (bool)L.lua_toboolean(2);
+
+        missnotefx.Disable(disabled);
+
+        return 0;
+    }
 
     static int script_missnotefx_play_effect(LuaState L) {
         MissNoteFX missnotefx = L.ReadUserdata<MissNoteFX>(MISSNOTEFX);
@@ -19,6 +36,8 @@ public static class ExportsMissNoteFX {
 
 
     static readonly LuaTableFunction[] MISSNOTEFX_FUNCTIONS = {
+        new LuaTableFunction("missnotefx_stop", script_missnotefx_stop),
+        new LuaTableFunction("missnotefx_disable", script_missnotefx_disable),
         new LuaTableFunction("missnotefx_play_effect", script_missnotefx_play_effect),
         new LuaTableFunction(null, null)
     };

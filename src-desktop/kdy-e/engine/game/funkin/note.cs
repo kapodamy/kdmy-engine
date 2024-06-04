@@ -19,9 +19,7 @@ public class Note {
     private const string SUFFIX_TAIL = "tail";
     private const string ALTERNATE_MINE = "mine";
 
-    //private const bool SUSTAIN_BODY_HEIGHT_USE_INTEGERS = false;
     private const float SUSTAIN_BODY_OVELAPING_PIXELS = 0.5f;
-    public const int STRUCT_ELEMENTS_COUNT = 4;// [timestamp, note_id, duration, "reserved"]
     private const string INTERNAL_STATE_NAME = "____note-state___";
 
 
@@ -105,7 +103,8 @@ public class Note {
 
         // note: do not dispose "this.current_state_name" is part of "this.internal_states"
 
-        this.name = null;
+        //free(this.name);
+
         //free(note);
     }
 
@@ -375,11 +374,7 @@ public class Note {
         Texture texture = modelholder.GetTexture(false);
         uint rgb8_color = modelholder.GetVertexColor();
 
-        string animation_name = "";
-        if (!String.IsNullOrEmpty(name)) animation_name = name;
-        if (!String.IsNullOrEmpty(suffix)) animation_name += " " + suffix;
-        if (!String.IsNullOrEmpty(state_name)) animation_name += " " + state_name;
-
+        string animation_name = StringUtils.ConcatForStateName(name, suffix, state_name);
 
         //
         // Attempt to load the arrow part (texture, frame & animation)

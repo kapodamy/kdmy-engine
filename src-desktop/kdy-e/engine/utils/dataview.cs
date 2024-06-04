@@ -25,8 +25,16 @@ public class DataView {
         return BitConverter.ToUInt16(this.buffer, offset + this.start_offset);
     }
 
+    public int GetInt32(int offset) {
+        return BitConverter.ToInt32(this.buffer, offset + this.start_offset);
+    }
+
     public long GetInt64(int offset) {
         return BitConverter.ToInt64(this.buffer, offset + this.start_offset);
+    }
+
+    public float GetFloat32(int offset) {
+        return BitConverter.ToSingle(this.buffer, offset + this.start_offset);
     }
 
     public double GetFloat64(int offset) {
@@ -61,6 +69,16 @@ public class DataView {
         this.buffer[offset + 5] = (byte)((value >> 40) & 0xFF);
         this.buffer[offset + 6] = (byte)((value >> 48) & 0xFF);
         this.buffer[offset + 7] = (byte)((value >> 56) & 0xFF);
+
+    }
+
+    public void SetFloat32(int offset, float value) {
+        offset += this.start_offset;
+        byte[] buff = BitConverter.GetBytes(value);
+        this.buffer[offset + 0] = buff[0];
+        this.buffer[offset + 1] = buff[1];
+        this.buffer[offset + 2] = buff[2];
+        this.buffer[offset + 3] = buff[3];
 
     }
 

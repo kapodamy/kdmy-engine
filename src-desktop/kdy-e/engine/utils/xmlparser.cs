@@ -146,7 +146,7 @@ public class XmlParserNode {
         this.Attributes = new XmlParserAttributes(elem.Attributes);
     }
 
-    public string OuterHTML => this.element.OuterXml;
+    public string OuterXML => this.element.OuterXml;
 
     public string GetAttribute(string name) {
         if (this.element is XmlElement) {

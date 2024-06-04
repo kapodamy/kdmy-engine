@@ -124,7 +124,9 @@ public static class ExportsModding {
 
         string music_src = L.luaL_optstring(1, null);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         SoundPlayer ret = modding.ReplaceNativeBackgroundMusic(music_src);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         return ExportsSoundPlayer.script_soundplayer_new(L, ret);
     }
@@ -136,7 +138,9 @@ public static class ExportsModding {
         string script_src = L.luaL_optstring(2, null);
         object arg = LuascriptHelpers.ParseModdingValue(L, 3);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         object ret = modding.SpawnScreen(layout_src, script_src, arg);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         LuascriptHelpers.PushModdingValue(L, ret);
         return 1;
@@ -216,8 +220,8 @@ public static class ExportsModding {
         int weeks_size;
         WeekInfo[] weeks = modding.GetLoadedWeeks(out weeks_size);
 
-        if (weeks == null) {
-            L.lua_pushnil();
+        if (weeks == null || weeks_size < 1) {
+            L.lua_createtable(0, 0);
             return 1;
         }
 

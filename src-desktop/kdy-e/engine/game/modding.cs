@@ -327,8 +327,11 @@ public class Modding {
 
         FunkinSave.SetLastPlayed(gameplay_weekinfo.name, difficult);
 
-        if (String.IsNullOrEmpty(bf)) bf = FreeplayMenu.HelperGetDefaultCharacterManifest(true);
-        if (String.IsNullOrEmpty(gf)) gf = FreeplayMenu.HelperGetDefaultCharacterManifest(false);
+        bool bf_allocated = String.IsNullOrEmpty(bf);
+        bool gf_allocated = String.IsNullOrEmpty(gf);
+
+        if (bf_allocated) bf = FreeplayMenu.HelperGetDefaultCharacterManifest(true);
+        if (gf_allocated) gf = FreeplayMenu.HelperGetDefaultCharacterManifest(false);
 
         /*
         // (C# only) before run check if necessary preload files
@@ -347,6 +350,9 @@ public class Modding {
             song_idx,
             ws_label
         );
+
+        //if (bf_allocated) //free(bf);
+        //if (gf_allocated) //free(gf);
 
         /*
         // forget all preloaded files

@@ -3,6 +3,21 @@ using Engine.Platform;
 
 namespace Engine.Game.Gameplay;
 
+
+public struct WeekResult_Stats {
+    public int sick;
+    public int good;
+    public int bads;
+    public int shits;
+    public int miss;
+    public int penalties;
+    public long score;
+    public double accuracy;
+    public int notesperseconds;
+    public int combobreaks;
+    public int higheststreak;
+}
+
 public class WeekResult {
 
     private const string WEEK_TEXT = "~judgements~\nSicks   $i\nGoods  $i\nBads   $i\n" +
@@ -16,12 +31,13 @@ public class WeekResult {
                                         "\n\n~streak~\nCombo breaks   $i\nHighest combo  $i\nHighest nps    $i";
     private const string SONG_TEXT2 = "~song resume~\nAttempts $i\nScore    $l\nAvg. accuracy $3d%";
 
-    public const string LAYOUT_WIDESCREEN = "/assets/common/image/week-round/results.xml";
-    public const string LAYOUT_DREAMCAST = "/assets/common/image/week-round/results~dreamcast.xml";
-
+    private const string LAYOUT_WIDESCREEN = "/assets/common/image/week-round/results.xml";
+    private const string LAYOUT_DREAMCAST = "/assets/common/image/week-round/results~dreamcast.xml";
+    private const string MODDING_SCRIPT = "/assets/common/data/scripts/weekresult.lua";
 
     private StatsSong stats_song;
     private StatsAccumulated accumulated_stats_week;
+    private Layout active_layout;
 
 
     public WeekResult() {
@@ -56,6 +72,8 @@ public class WeekResult {
     }
 
     public void Destroy() {
+        // Note: do not dispose the "active_layout" field
+
         //free(this);
     }
 
@@ -104,12 +122,29 @@ public class WeekResult {
         Layout layout = Layout.Init(src);
         if (layout == null) return;
 
-        if (reject)
+        this.active_layout = layout;
+
+        if (roundcontext.script != null) {
+            roundcontext.script.NotifyBeforeresults();
+            Week.Halt(roundcontext, true);
+        }
+
+        Modding modding = new Modding(layout, WeekResult.MODDING_SCRIPT);
+        modding.has_exit = false;
+        modding.has_halt = false;
+        modding.native_menu = null;
+        modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
+
+        if (reject) {
             layout.TriggerAny("week_not_cleared");
-        else if (freeplay)
+            modding.HelperNotifyEvent("week_not_cleared");
+        } else if (freeplay) {
             layout.TriggerAny("song_cleared");
-        else
+            modding.HelperNotifyEvent("song_cleared");
+        } else {
             layout.TriggerAny("week_cleared");
+            modding.HelperNotifyEvent("week_cleared");
+        }
 
         TextSprite textsprite1 = layout.GetTextsprite("stats");
         TextSprite textsprite2 = layout.GetTextsprite("stats2");
@@ -188,6 +223,15 @@ public class WeekResult {
             layout.Animate(elapsed);
             layout.Draw(PVRContext.global_context);
 
+            ModdingHelperResult res = modding.HelperHandleCustomMenu(controller, elapsed);
+            if (res != ModdingHelperResult.CONTINUE || modding.has_exit) break;
+            if (modding.has_halt) continue;
+
+            if (roundcontext.script != null && roundcontext.scriptcontext.halt_flag) {
+                controller.ClearButtons();
+                continue;
+            }
+
             if (transition) {
                 if (transition_delay > 0) {
                     transition_delay -= elapsed;
@@ -201,7 +245,32 @@ public class WeekResult {
             }
         }
 
+        modding.HelperNotifyExit2();
+        modding.has_funkinsave_changes = false;// ignore funkinsave changes
+        modding.Destroy();
+
+        this.active_layout = null;
+
+        controller.Destroy();
         layout.Destroy();
+    }
+
+    public Layout GetLayout() {
+        return this.active_layout;
+    }
+
+    public void GetAccumulatedStats(ref WeekResult_Stats stats) {
+        stats.sick = this.accumulated_stats_week.sick;
+        stats.good = this.accumulated_stats_week.good;
+        stats.bads = this.accumulated_stats_week.bads;
+        stats.shits = this.accumulated_stats_week.shits;
+        stats.miss = this.accumulated_stats_week.miss;
+        stats.penalties = this.accumulated_stats_week.penalties;
+        stats.score = this.accumulated_stats_week.score;
+        stats.accuracy = this.accumulated_stats_week.accuracy;
+        stats.notesperseconds = this.accumulated_stats_week.notesperseconds;
+        stats.combobreaks = this.accumulated_stats_week.combobreaks;
+        stats.higheststreak = this.accumulated_stats_week.higheststreak;
     }
 
 
@@ -232,5 +301,6 @@ public class WeekResult {
         public int combobreaks;
         public int higheststreak;
     }
+
 }
 

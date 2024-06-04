@@ -24,7 +24,7 @@ public static class ExportsMenuManifest {
             LuaTableHelpers.AddFieldString(L, "font", mm.parameters.font);
             LuaTableHelpers.AddFieldNumber(L, "font_size", mm.parameters.font_size);
             LuaTableHelpers.AddFieldString(L, "font_glyph_suffix", mm.parameters.font_glyph_suffix);
-            LuaTableHelpers.AddFieldBoolean(L, "font_color_by_difference", mm.parameters.font_color_by_difference);
+            LuaTableHelpers.AddFieldBoolean(L, "font_color_by_addition", mm.parameters.font_color_by_addition);
             LuaTableHelpers.AddFieldInteger(L, "font_border_color", mm.parameters.font_border_color);
             LuaTableHelpers.AddFieldString(L, "anim_discarded", mm.parameters.anim_discarded);
             LuaTableHelpers.AddFieldString(L, "anim_idle", mm.parameters.anim_idle);
@@ -36,7 +36,7 @@ public static class ExportsMenuManifest {
             LuaTableHelpers.AddFieldNumber(L, "anim_transition_in_delay", mm.parameters.anim_transition_in_delay);
             LuaTableHelpers.AddFieldNumber(L, "anim_transition_out_delay", mm.parameters.anim_transition_out_delay);
             LuaTableHelpers.AddFieldBoolean(L, "is_vertical", mm.parameters.is_vertical);
-            LuaTableHelpers.AddFieldString(L, "items_align", LuascriptHelpers.StringifyAlign(mm.parameters.items_align));
+            LuaTableHelpers.AddFieldString(L, "items_align", LuascriptHelpers.EnumsStringify(LuascriptEnums.Align, (int)mm.parameters.items_align));
             LuaTableHelpers.AddFieldNumber(L, "items_gap", mm.parameters.items_gap);
             LuaTableHelpers.AddFieldBoolean(L, "is_sparse", mm.parameters.is_sparse);
             LuaTableHelpers.AddFieldInteger(L, "static_index", mm.parameters.static_index);
@@ -101,7 +101,9 @@ public static class ExportsMenuManifest {
     static int menumanifest_parse_from_file(LuaState L) {
         string src = L.luaL_checkstring(1);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         MenuManifest menumanifest = new MenuManifest(src);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         int ret = menumanifest_to_table(L, menumanifest);
         if (menumanifest != null) menumanifest.Destroy();

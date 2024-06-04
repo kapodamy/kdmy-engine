@@ -63,7 +63,7 @@ public class Drawable : IVertex {
         this.antialiasing = PVRFlag.DEFAULT;
         this.psshader = null;
 
-        this.blend_enabled = true;
+        this.blend_enabled = false;
         this.blend_src_rgb = Blend.DEFAULT;
         this.blend_dst_rgb = Blend.DEFAULT;
         this.blend_src_alpha = Blend.DEFAULT;

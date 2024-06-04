@@ -139,6 +139,7 @@ public static class FS {
                     if (path == null) continue;
 
                     FSFolderEnumerator.EnumerateTo(entries, path, true);
+                    //free(path);
                 }
             }
 

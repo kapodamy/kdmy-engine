@@ -14,7 +14,7 @@ public class MenuManifest {
         public string font;
         public float font_size;
         public string font_glyph_suffix;
-        public bool font_color_by_difference;// false by default
+        public bool font_color_by_addition;// false by default
         public uint font_border_color;
         public string anim_discarded;
         public string anim_idle;
@@ -89,7 +89,6 @@ public class MenuManifest {
 
         string align_value = JSONParser.ReadString(json, "itemsAlign", null);
         Align align = VertexProps.ParseAlign2(align_value);
-        //free(align_value);
         switch (align) {
             case Align.INVALID:
                 align = Align.CENTER;
@@ -136,7 +135,7 @@ public class MenuManifest {
 
             font = JSONParser.ReadString(json_parameters, "fontPath", null),
             font_glyph_suffix = JSONParser.ReadString(json_parameters, "fontSuffix", null),
-            font_color_by_difference = JSONParser.ReadBoolean(json_parameters, "fontColorByDifference", false),
+            font_color_by_addition = JSONParser.ReadBoolean(json_parameters, "fontColorByAddition", false),
             font_size = (float)JSONParser.ReadNumberDouble(json_parameters, "fontSize", 0.0),
             font_color = JSONParser.ReadHex(json_parameters, "fontColor", 0xFFFFFF),
             font_border_color = JSONParser.ReadHex(json_parameters, "fontBorderColor", 0x0),
@@ -242,14 +241,9 @@ public class MenuManifest {
 
     private static string InternalParsePath(JSONToken json, string property_name) {
         string str = JSONParser.ReadString(json, property_name, null);
-        if (str == null) return null;
-        if (str.Length < 1) {
-            //free(str);
-            return null;
-        }
+        if (String.IsNullOrEmpty(str)) return null;
 
         string path = FS.GetFullPath(str);
-        //free(str);
 
         return path;
     }

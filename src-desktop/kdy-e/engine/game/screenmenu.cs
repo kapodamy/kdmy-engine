@@ -132,7 +132,7 @@ L_layout:
             layout.Draw(pvrctx);
         }
 
-        // if there no script ¿exit_value should be null or pick the menu selectd option name?
+        // if there no script ¿exit_value should be null or pick the menu selected option name?
         object exit_value = null;
         if (script != null) exit_value = script.notify_modding_exit();
 

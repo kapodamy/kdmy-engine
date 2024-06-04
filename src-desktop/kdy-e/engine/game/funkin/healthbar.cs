@@ -10,10 +10,6 @@ namespace Engine.Game;
 
 public class HealthBar : IDraw, IAnimate {
 
-    private const string LENGTH_NORMAL = "normal";
-    private const string LENGTH_EXTRA = "extra";
-    private const string LENGTH_LONG = "long";
-
     public const uint DEFAULT_COLOR_BACKGROUND = 0x000000;// black
     public const uint DEFAULT_COLOR_DAD = 0xFF0000;// red
     public const uint DEFAULT_COLOR_BOYFRIEND = 0x00FF00;// green
@@ -25,8 +21,6 @@ public class HealthBar : IDraw, IAnimate {
     public const int DEFAULT_ICON_SIZE = 80;//80px in a 1280x720 screen
 
     private const float SCALE_TO_DIMMEN_ICON = 80f / HealthBar.DEFAULT_DIMMEN;
-    private const float SCALE_TO_DIMMEN_BORDER = 4f / HealthBar.DEFAULT_DIMMEN;
-    private const float SCALE_TO_DIMMEN_BAR = 1.0f;
 
     private const string ICON_PREFIX_WINNER = "winner";
     private const string ICON_PREFIX_WINNING = "winning";
@@ -40,14 +34,11 @@ public class HealthBar : IDraw, IAnimate {
     private const string WARNING_LOCKED = "locked";
     private const string WARNING_OPPONENT_RECOVER = "opponentRecover";
 
-    public const float CHARACTER_WARNING_PERCENT = 0.25f;// warn if less or equal to 25%
-    public const float HEALTH_TRANSITION_RATIO = 8;// the transition duration in BMP/N
+    private const float CHARACTER_WARNING_PERCENT = 0.25f;// warn if less or equal to 25%
+    private const float HEALTH_TRANSITION_RATIO = 8;// the transition duration in BMP/N
 
     public const float RATIO_SIZE_NORMAL = 600;// 600px in a 1280x720 screen
-    public const float RATIO_SIZE_EXTRA = HealthBar.RATIO_SIZE_NORMAL;
-    public const float RATIO_SIZE_LONG = 1180;// 1180px in a 1280x70 screen
-
-    private static readonly ModelHolder STUB_MODELHOLDER = ModelHolder.Init2(0x000000, null, null);
+    //public const float RATIO_SIZE_LONG = 1180;// 1180px in a 1280x70 screen
 
     private static readonly float[] LOW_HEALTH_WARN_COLOR = { 1.0f, 0.0f, 0.0f, 0.5f };// rgba: half-transparent red
     private const float LOW_HEALTH_PERCENT = 0.10f;// warn if less or equal to 10%
@@ -135,7 +126,7 @@ public class HealthBar : IDraw, IAnimate {
         this.extra_enabled = false;
         this.extra_translation = 0f;
 
-        // note= in C replace "Symbol" with an unique constantselected_state_background= Symbol;
+        // note: in C replace "Symbol" with an unique constant
         this.selected_state_player = INTERNAL_STATE_NAME;
         this.selected_state_opponent = INTERNAL_STATE_NAME;
 
@@ -198,7 +189,6 @@ public class HealthBar : IDraw, IAnimate {
         this.sprite_bar_opponent.SetDrawLocation(x, y);
         this.sprite_bar_player.SetDrawLocation(x, y);
 
-        // hide from the PVR backend, draw these sprites manually
         this.sprite_icon_opponent.SetVisible(false);
         this.sprite_icon_player.SetVisible(false);
         this.sprite_background.SetVisible(false);
@@ -225,8 +215,10 @@ public class HealthBar : IDraw, IAnimate {
         this.drawable.Destroy();
         if (this.drawable_animation != null) this.drawable_animation.Destroy();
 
-        //if (this.selected_state_player != HealthBar. INTERNAL_STATE_NAME) free(this.selected_state_player);
-        //if (this.selected_state_opponent != HealthBar.INTERNAL_STATE_NAME) free(this.selected_state_opponent);
+        //if (this.selected_state_player != HealthBar. INTERNAL_STATE_NAME)
+        //    free(this.selected_state_player);
+        //if (this.selected_state_opponent != HealthBar.INTERNAL_STATE_NAME)
+        //    free(this.selected_state_opponent);
 
         this.tweenlerp.Destroy();
 
@@ -290,13 +282,17 @@ public class HealthBar : IDraw, IAnimate {
     }
 
     public int StateOpponentAdd2(ModelHolder icon_mdlhldr, uint bar_color_rgb8, string state_name) {
-        HealthBar.STUB_MODELHOLDER.vertex_color_rgb8 = bar_color_rgb8;
-        return InternalAddChrctrState(
+        ModelHolder mdl = ModelHolder.Init3(bar_color_rgb8, null, null, null);
+
+        int ret = InternalAddChrctrState(
             this.sprite_icon_opponent, this.sprite_bar_opponent,
-            icon_mdlhldr, HealthBar.STUB_MODELHOLDER,
+            icon_mdlhldr, mdl,
             this.resolutions_opponent,
             state_name
         );
+
+        mdl.Destroy();
+        return ret;
     }
 
     public int StatePlayerAdd(ModelHolder icon_mdlhldr, ModelHolder bar_mdlhldr, string state_name) {
@@ -309,13 +305,17 @@ public class HealthBar : IDraw, IAnimate {
     }
 
     public int StatePlayerAdd2(ModelHolder icon_modelholder, uint bar_color_rgb8, string state_name) {
-        HealthBar.STUB_MODELHOLDER.vertex_color_rgb8 = bar_color_rgb8 | 0x00;
-        return InternalAddChrctrState(
+        ModelHolder mdl = ModelHolder.Init3(bar_color_rgb8, null, null, null);
+
+        int ret = InternalAddChrctrState(
             this.sprite_icon_player, this.sprite_bar_player,
-            icon_modelholder, HealthBar.STUB_MODELHOLDER,
+            icon_modelholder, mdl,
             this.resolutions_player,
             state_name
         );
+
+        mdl.Destroy();
+        return ret;
     }
 
 
@@ -506,8 +506,8 @@ public class HealthBar : IDraw, IAnimate {
 
     public int Animate(float elapsed) {
         float since_beat = elapsed;
-        bool has_bump_opponent = this.enable_bump && this.bump_animation_opponent != null;
-        bool has_bump_player = this.enable_bump && this.bump_animation_opponent != null;
+        bool has_bump_opponent = this.enable_bump && (this.bump_animation_opponent != null);
+        bool has_bump_player = this.enable_bump && (this.bump_animation_opponent != null);
         int res = 0;
 
         if (this.beatwatcher.Poll()) {
@@ -769,7 +769,7 @@ public class HealthBar : IDraw, IAnimate {
 
         // resize & center background in the screen
         InternalCenterBar(
-            width, height, 0,
+            width, height, 0.0f,
             -1, -1, this.sprite_background
         );
 
@@ -998,7 +998,7 @@ public class HealthBar : IDraw, IAnimate {
 
         if (resolution_width >= 0 && resolution_height >= 0) {
             // resize using the display resolution
-            float scale = this.layout_width / resolution_width;
+            float scale = this.layout_width / (float)resolution_width;
             state.draw_width = orig_width * scale;
             state.draw_height = orig_height * scale;
         } else {

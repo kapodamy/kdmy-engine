@@ -28,13 +28,15 @@ public class ChartEntry {
     public int notes_size;
 }
 
-public class ChartEventEntry {
+public class ChartEventEntry : ICloneable {
     public double timestamp;
     public ChartEvent command;
     public double parameter;
     public double parameter2;
     public double parameter3;
     public bool is_player_or_opponent;
+
+    public object Clone() => this.MemberwiseClone();
 }
 
 
@@ -101,8 +103,17 @@ public class Chart {
             JSONToken json_section = JSONParser.ReadArrayItemObject(json_notes, i);
 
             // typeOfSection appears to be unused
-            //long type_of_section = JSONParser.ReadNumberLong(json_section, "typeOfSection", 0L);
-            //if (type_of_section != 0L) throw new Exception("Unknown typeOfSection=" + type_of_section);
+            /*if (JSONParser.HasProperty(json, "typeOfSection")) {
+                if (JSONParser.HasPropertyNumberLong(json, "typeOfSection")) {
+                    long type_of_section = JSONParser.ReadArrayItemNumberLong(json_section, "typeOfSection", 0L);
+                    if (type_of_section != 0L) {
+                        Logger.Warn($"Unknown typeOfSection={type_of_section}");
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+            }*/
 
             long length_in_steps = JSONParser.ReadNumberLong(json_section, "lengthInSteps", 16L);
             bool must_hit_section = JSONParser.ReadBoolean(json_section, "mustHitSection", false);
@@ -237,10 +248,14 @@ public class Chart {
         }
 
         chart_events.Destroy2(out this.events_size, ref this.events);
-
+        JSONParser.Destroy(json);
     }
 
     public void Destroy() {
+        //for (int i = 0; i < this.entries_size; i++) {
+        //    free(this.entries[i].notes);
+        //}
+
         //free(this.entries);
         //free(this.events);
         //free(this);

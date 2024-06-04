@@ -265,14 +265,14 @@ public class WebGLContext {
         gl.uniform1f(this.program_textured.u_alpha, pvrctx.render_alpha);
 
         // if the offsetcolor alpha is negative, disable the offsetcolor processing
-        // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_diff" are boolean values
+        // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values
         if (pvrctx.render_offsetcolor[3] < 0) {
             gl.uniform1i(this.program_textured.u_offsetcolor_enabled, 0);
         } else {
             gl.uniform1i(this.program_textured.u_offsetcolor_enabled, 1);
             gl.uniform4fv(this.program_textured.u_offsetcolor, pvrctx.render_offsetcolor);
             bool use_multiply = pvrctx.render_offsetcolor_multiply != PVRFlag.DISABLE;
-            gl.uniform1i(this.program_textured.u_offsetcolor_mul_or_diff, use_multiply ? 1 : 0);
+            gl.uniform1i(this.program_textured.u_offsetcolor_mul_or_add, use_multiply ? 1 : 0);
         }
 
         // enable/disable rgb color components be multiplied by the render alpha
@@ -312,14 +312,14 @@ public class WebGLContext {
         gl.uniformMatrix4fv(this.program_solid.u_matrix_transform, false, pvrctx.CurrentMatrix);
 
         // if the offsetcolor alpha is negative, disable the offsetcolor processing
-        // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_diff" are boolean values
+        // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values
         if (pvrctx.render_offsetcolor[3] < 0) {
             gl.uniform1i(this.program_solid.u_offsetcolor_enabled, 0);
         } else {
             gl.uniform1i(this.program_solid.u_offsetcolor_enabled, 1);
             gl.uniform4fv(this.program_solid.u_offsetcolor, pvrctx.render_offsetcolor);
             bool use_multiply = pvrctx.render_offsetcolor_multiply != PVRFlag.DISABLE;
-            gl.uniform1i(this.program_solid.u_offsetcolor_mul_or_diff, use_multiply ? 1 : 0);
+            gl.uniform1i(this.program_solid.u_offsetcolor_mul_or_add, use_multiply ? 1 : 0);
         }
 
         // build rgba color & upload vertex color 
@@ -622,7 +622,7 @@ public class WebGLContextProgram {
     internal WebGLUniformLocation u_texture;
     internal WebGLUniformLocation u_alpha;
     internal WebGLUniformLocation u_vertex_color;
-    internal WebGLUniformLocation u_offsetcolor_mul_or_diff;
+    internal WebGLUniformLocation u_offsetcolor_mul_or_add;
     internal WebGLUniformLocation u_offsetcolor_enabled;
     internal WebGLUniformLocation u_offsetcolor;
     internal WebGLUniformLocation u_darken;
@@ -645,7 +645,7 @@ public class WebGLContextProgram {
         this.u_matrix_texture = gl.getUniformLocation(program, "u_matrix_texture");
         this.u_texture = gl.getUniformLocation(program, "u_texture");
         this.u_alpha = gl.getUniformLocation(program, "u_alpha");
-        this.u_offsetcolor_mul_or_diff = gl.getUniformLocation(program, "u_offsetcolor_mul_or_diff");
+        this.u_offsetcolor_mul_or_add = gl.getUniformLocation(program, "u_offsetcolor_mul_or_add");
         this.u_offsetcolor_enabled = gl.getUniformLocation(program, "u_offsetcolor_enabled");
         this.u_offsetcolor = gl.getUniformLocation(program, "u_offsetcolor");
         this.u_vertex_color = gl.getUniformLocation(program, "u_vertex_color");
@@ -673,12 +673,12 @@ public class WebGLContextProgramGlyphs {
 
 
     internal WebGLUniformLocation u_color;
-    internal WebGLUniformLocation u_color_by_diff;
+    internal WebGLUniformLocation u_color_by_add;
     internal WebGLUniformLocation u_grayscale;
     internal WebGLUniformLocation u_matrix_transform;
     internal WebGLUniformLocation u_offsetcolor_enabled;
     internal WebGLUniformLocation u_offsetcolor;
-    internal WebGLUniformLocation u_offsetcolor_mul_or_diff;
+    internal WebGLUniformLocation u_offsetcolor_mul_or_add;
     internal WebGLUniformLocation u_texture0;
     internal WebGLUniformLocation u_texture1;
     internal WebGLUniformLocation u_color_outline;
@@ -708,12 +708,12 @@ public class WebGLContextProgramGlyphs {
         // lookup uniforms
         this.u_color = gl.getUniformLocation(program, "u_color");
         this.u_color_outline = gl.getUniformLocation(program, "u_color_outline");
-        this.u_color_by_diff = gl.getUniformLocation(program, "u_color_by_diff");
+        this.u_color_by_add = gl.getUniformLocation(program, "u_color_by_add");
         this.u_grayscale = gl.getUniformLocation(program, "u_grayscale");
         this.u_matrix_transform = gl.getUniformLocation(program, "u_matrix_transform");
         this.u_offsetcolor_enabled = gl.getUniformLocation(program, "u_offsetcolor_enabled");
         this.u_offsetcolor = gl.getUniformLocation(program, "u_offsetcolor");
-        this.u_offsetcolor_mul_or_diff = gl.getUniformLocation(program, "u_offsetcolor_mul_or_diff");
+        this.u_offsetcolor_mul_or_add = gl.getUniformLocation(program, "u_offsetcolor_mul_or_add");
         this.u_texture0 = gl.getUniformLocation(program, "u_texture0");
         this.u_texture1 = gl.getUniformLocation(program, "u_texture1");
 

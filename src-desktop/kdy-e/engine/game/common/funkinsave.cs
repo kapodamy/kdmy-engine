@@ -68,8 +68,8 @@ public static class FunkinSave {
     private const ushort MAX_INDEXED_NAME = 0xFFFF - 1;
 
 
-    public static uint maple_port;
-    public static uint maple_unit;
+    public static sbyte maple_port;
+    public static sbyte maple_unit;
     public static LinkedList<Setting> settings;
     public static LinkedList<Directive> directives;
     public static LinkedList<string> weeks_names;
@@ -114,7 +114,6 @@ public static class FunkinSave {
 
         if (vms_file == -1) {
             Logger.Log($"funkinsave_read_from_vmu() no savedata present in {vmu_path}");
-            //free(vmu_path);
             return 2;
         }
 
@@ -126,7 +125,6 @@ public static class FunkinSave {
         if (total < 0) {
             // something bad happen
             Logger.Error($"funkinsave_read_from_vmu() fs_total() on {vmu_path} failed");
-            //free(vmu_path);
             //free(vmu_data);
             return 3;
         }
@@ -135,7 +133,6 @@ public static class FunkinSave {
             int read = fs.read(vms_file, vms_data, readed, (int)total);
             if (read < 0) {
                 // something bad happen
-                //free(vmu_path);
                 //free(vmu_data);
                 fs.close(vms_file);
                 return 3;
@@ -147,7 +144,6 @@ public static class FunkinSave {
         fs.close(vms_file);
 
         if (readed != total) {
-            //free(vmu_path);
             //free(vmu_data);
             Logger.Error($"funkinsave_read_from_vmu() failed to read the VMS file at {vmu_path}");
             return 3;
@@ -157,9 +153,8 @@ public static class FunkinSave {
         vmu_pkg_t vmu_pkg = new vmu_pkg_t();
 
         if (vmu.pkg_parse(vms_data, ref vmu_pkg) != 0) {
-            Logger.Warn($"funkinsave_read_from_vmu() vmu_pkg_parse() returned failed on: {vmu_path}");
+            Logger.Warn($"funkinsave_read_from_vmu() vmu_pkg_parse() failed on: {vmu_path}");
 
-            //free(vmu_path);
             //free(vmu_data);
             return 4;
         }
@@ -172,13 +167,11 @@ public static class FunkinSave {
 
         // version check
         if (version > FunkinSave.SAVEDATA_VERSION) {
-            //free(vmu_path);
             //free(vmu_data);
             return 5;
         }
 
         // clear in-memory savedata
-        //free(vmu_path);
         FunkinSave.InternalClearSavedata();
 
         ushort settings_count = savedata.GetUint16(offset); offset += 2;
@@ -193,13 +186,13 @@ public static class FunkinSave {
         for (int i = 0 ; i < settings_count ; i++) {
             ushort id = savedata.GetUint16(offset); offset += 2;
             bool is_integer = FunkinSave.InternalIsSettingInteger(id);
-            long value_long = 0; double value_double = 0;
+            int value_int = 0; float value_float = 0;
 
-            if (is_integer) value_long = savedata.GetInt64(offset);
-            else value_double = savedata.GetFloat64(offset);
-            offset += 8;
+            if (is_integer) value_int = savedata.GetInt32(offset);
+            else value_float = savedata.GetFloat32(offset);
+            offset += 4;
 
-            FunkinSave.settings.AddItem(new Setting() { id = id, value_long = value_long, value_double = value_double });
+            FunkinSave.settings.AddItem(new Setting() { id = id, value_int = value_int, value_float = value_float });
         }
 
         for (int i = 0 ; i < directives_count ; i++) {
@@ -276,8 +269,8 @@ public static class FunkinSave {
                 FunkinSave.freeplay_progress.AddItem(new FreeplayProgress() {
                     week_id = week_name_index_in_table,
                     difficulty_id = difficulty_name_index_in_table,
-                    song_name = song_name,
-                    score = score
+                    score = score,
+                    song_name = song_name
                 });
             }
         }
@@ -293,7 +286,7 @@ public static class FunkinSave {
             FunkinSave.last_played_difficulty_index = last_played_difficulty_name_index_in_table;
 
         // done
-        //free(savedata);
+        //free(vms_data);
         return 0;
     }
 
@@ -413,9 +406,9 @@ public static class FunkinSave {
         foreach (Setting setting in FunkinSave.settings) {
             bool is_integer = FunkinSave.InternalIsSettingInteger(setting.id);
             savedata.SetUint16(offset, setting.id); offset += sizeof(ushort);
-            if (is_integer) savedata.SetInt64(offset, setting.value_long);
-            else savedata.SetFloat64(offset, setting.value_double);
-            offset += sizeof(long);
+            if (is_integer) savedata.SetInt32(offset, setting.value_int);
+            else savedata.SetFloat32(offset, setting.value_float);
+            offset += sizeof(int);
         }
 
         // dump directives
@@ -468,7 +461,7 @@ public static class FunkinSave {
         string vmu_path = FunkinSave.InternalGetVMUPath(FunkinSave.maple_port, FunkinSave.maple_unit);
         stat_t vmu_stat = new stat_t() { st_blksize = 0, st_size = 0 };
 
-        if (fs.stat("/vmu", ref vmu_stat, 0x00) == 0) {
+        if (fs.stat("/vmu/", ref vmu_stat, 0x00) == 0) {
             // calculate in bytes the space available
             available_space = vmu_stat.st_blksize * vmu_stat.st_size;
         }
@@ -487,7 +480,6 @@ public static class FunkinSave {
 
         // delete savedata
         if (vms_file != -1 && fs.unlink(vmu_path) != 0) {
-            //free(vmu_path);
             //free(savedata);
             return 5;
         }
@@ -497,7 +489,6 @@ public static class FunkinSave {
 
         if (vms_file == -1) {
             Logger.Error($"funkinsave_flush_to_vmu() failed to write to '{vmu_path}', also the old savedata is lost :(");
-            //free(vmu_path);
             //free(savedata);
             return 3;
         }
@@ -567,7 +558,7 @@ public static class FunkinSave {
     public static void DeleteUnlockDirective(string name) {
         foreach (Directive directive in FunkinSave.directives) {
             if (directive.type == FunkinSave.DIRECTIVE_TYPE_UNLOCK && directive.name == name) {
-                //free(directive.name);
+                //free(directive);
                 FunkinSave.directives.RemoveItem(directive);
                 return;
             }
@@ -623,23 +614,23 @@ public static class FunkinSave {
         FunkinSave.progress.AddItem(new_progress);
     }
 
-    public static void SetSetting(ushort setting_id, long setting_value) {
+    public static void SetSetting(ushort setting_id, int setting_value) {
         foreach (Setting setting in FunkinSave.settings) {
             if (setting.id == setting_id) {
-                setting.value_long = setting_value;
+                setting.value_int = setting_value;
                 return;
             }
         }
-        FunkinSave.settings.AddItem(new Setting() { id = setting_id, value_long = setting_value });
+        FunkinSave.settings.AddItem(new Setting() { id = setting_id, value_int = setting_value });
     }
-    public static void SetSetting(ushort setting_id, double setting_value) {
+    public static void SetSetting(ushort setting_id, float setting_value) {
         foreach (Setting setting in FunkinSave.settings) {
             if (setting.id == setting_id) {
-                setting.value_double = setting_value;
+                setting.value_float = setting_value;
                 return;
             }
         }
-        FunkinSave.settings.AddItem(new Setting() { id = setting_id, value_double = setting_value });
+        FunkinSave.settings.AddItem(new Setting() { id = setting_id, value_float = setting_value });
     }
 
 
@@ -653,36 +644,36 @@ public static class FunkinSave {
             if (week_id < 0) return false;
         }
 
-        Storage storage = null;
-
-        foreach (Storage s in FunkinSave.storages) {
-            if (s.week_id == week_id && s.name == name) {
-                storage = s;
+        foreach (Storage storage in FunkinSave.storages) {
+            if (storage.week_id == week_id && storage.name == name) {
+                FunkinSave.storages.RemoveItem(storage);
+                //free(storage);
                 break;
             }
         }
 
         if (data_size < 1) {
-            if (storage != null) {
-                FunkinSave.storages.RemoveItem(storage);
-                //free(storage.data);
-                //free(storage);
-            }
             return true;
         }
 
-        if (storage == null) storage = new Storage();
+        Storage new_storage = new Storage() {
+            week_id = (ushort)week_id,
+            name = name,
+            data = data.ToArray(),
+            data_size = data_size
+        };
 
-        //free(storage.data);
-        storage.data = data.ToArray();
-        storage.data_size = data_size;
-        storage.week_id = (ushort)week_id;
+        FunkinSave.storages.AddItem(new_storage);
 
         return true;
     }
 
     public static uint StorageGet(string week_name, string name, out byte[] data) {
-        int week_id = week_name == null ? FunkinSave.MAX_INDEXED_NAME : FunkinSave.weeks_names.IndexOf(name);
+        int week_id;
+        if (week_name == null)
+            week_id = FunkinSave.MAX_INDEXED_NAME;
+        else
+            week_id = FunkinSave.weeks_names.IndexOf(name);
 
         foreach (Storage storage in FunkinSave.storages) {
             if (storage.week_id == week_id && storage.name == name) {
@@ -738,7 +729,7 @@ public static class FunkinSave {
     }
 
 
-    public static bool HasSavedataInVMU(uint port, uint unit) {
+    public static bool HasSavedataInVMU(sbyte port, sbyte unit) {
         maple_device_t dev = maple.enum_dev(port, unit);
         if (dev == null) return false;
 
@@ -751,12 +742,11 @@ public static class FunkinSave {
         bool found = vms_file != -1;
         fs.close(vms_file);
 
-        //free(vmu_path);
         return found;
     }
 
 
-    public static void SetVMU(uint port, uint unit) {
+    public static void SetVMU(sbyte port, sbyte unit) {
         FunkinSave.maple_port = port;
         FunkinSave.maple_unit = unit;
     }
@@ -775,19 +765,18 @@ public static class FunkinSave {
 
             if (dev != null && dev.valid) {
                 if (pick_first_device) {
-                    FunkinSave.maple_port = dev.port;
-                    FunkinSave.maple_unit = dev.unit;
+                    FunkinSave.maple_port = (sbyte)dev.port;
+                    FunkinSave.maple_unit = (sbyte)dev.unit;
                     pick_first_device = false;
                 }
                 found++;
             }
         }
 
-        // JS & C# only
         if (found > 1) {
-            // more than 1 virtual saveslots found, dont pick an vmu
-            FunkinSave.maple_port = UInt32.MaxValue;
-            FunkinSave.maple_unit = UInt32.MaxValue;
+            //various saveslots found, dont pick an vmu
+            FunkinSave.maple_port = -1;
+            FunkinSave.maple_unit = -1;
         }
     }
 
@@ -799,10 +788,10 @@ public static class FunkinSave {
 
     private static int InternalDumpString(string str, DataView buffer, int offset) {
         byte[] buf = Encoding.UTF8.GetBytes(str);
-        int length = Math.Min(buf.Length, FunkinSave.MAX_STRING_SIZE);
+        int length = Math.Min(buf.Length, FunkinSave.MAX_STRING_SIZE - 1);
         buffer.Write(buf, offset, length);
-        if (buf.Length < FunkinSave.MAX_STRING_SIZE) buffer.SetUint8(offset + length, 0x00);
-        return length + 1;
+        buffer.SetUint8(offset + length + 1, 0x00);
+        return length;
     }
 
     private static void InternalClearSavedata() {
@@ -827,7 +816,7 @@ public static class FunkinSave {
         FunkinSave.last_played_difficulty_index = -1;
     }
 
-    private static string InternalGetVMUPath(uint port, uint unit) {
+    private static string InternalGetVMUPath(sbyte port, sbyte unit) {
         char port_name = (char)(0x61 + port);
         char slot_name = (char)(0x30 + unit);
 
@@ -839,21 +828,18 @@ public static class FunkinSave {
         int string_offset = buffer.ByteOffset + offset;
         byte[] buf = buffer.buffer;
         int length = 0;
-        bool null_found = false;
 
-        for (int i = 0 ; i < FunkinSave.MAX_STRING_SIZE ; i++) {
+        for (int i = 0, end = FunkinSave.MAX_STRING_SIZE - 1 ; i < end ; i++) {
             if (buf[string_offset + i] == 0x00) {
-                null_found = true;
                 break;
             }
             length++;
         }
 
-        Debug.Assert(null_found || length > 0);
+        Debug.Assert(buf[string_offset + length] == 0x00);
         output_string = Encoding.UTF8.GetString(buf, string_offset, length);
 
-        if (null_found) length++;
-        return length;
+        return length + 1;
     }
 
     private static bool InternalIsSettingInteger(ushort id) {
@@ -897,8 +883,8 @@ public static class FunkinSave {
 
     public class Setting {
         public ushort id;
-        public long value_long;
-        public double value_double;
+        public int value_int;
+        public float value_float;
     }
 
     public class Directive {

@@ -20,7 +20,7 @@ public enum CharacterActionType {
 
 public class Character : IDraw, IAnimate {
 
-    public const float ROLLBACK_SPEED = 8.0f;
+    private const float ROLLBACK_SPEED = 8.0f;
 
     private enum CharacterAnimType {
         BASE,
@@ -94,9 +94,6 @@ public class Character : IDraw, IAnimate {
         Character.InternalGetModelholder(
             import_context.modelholder_arraylist, charactermanifest.model_character, false
         );
-
-        // DEBUG ONLY
-        //name= charactermanifest.model_character;
 
         this.statesprite = StateSprite.InitFromTexture(null);
 
@@ -336,11 +333,11 @@ public class Character : IDraw, IAnimate {
         }
 
         int id_texture = InternalAddTexture(this.textures, modelholder);
-        CharacterState default_state = this.states.Get(0);
+        CharacterState default_state = this.default_state;
+
         CharacterState state = Character.InternalStateCreate(
             state_name, default_state.sing_size, default_state.miss_size, default_state.extras_size
         );
-
 
         for (int i = 0 ; i < default_state.sing_size ; i++) {
             state.sing[i].id_texture = id_texture;
@@ -372,6 +369,7 @@ public class Character : IDraw, IAnimate {
         state.idle.id_texture = id_texture;
         Character.InternalStateOfExtra(state.idle, modelholder, state_name, default_state.idle);
 
+        this.states.Add(state);
         return true;
     }
 
@@ -629,14 +627,14 @@ L_read_state:
         return true;
     }
 
-    public int PlayMiss(string direction, bool keep_in_hold) {
+    public bool PlayMiss(string direction, bool keep_in_hold) {
         Debug.Assert(this.current_state != null, "this.current_state was NULL");
 
         int id_direction = InternalGetDirectionId(direction);
         if (id_direction < 0) {
             // unknown direction
             InternalFallbackIdle();
-            return 0;
+            return false;
         };
 
         CharacterActionMiss miss_info = null;
@@ -657,7 +655,7 @@ L_read_state:
                 goto L_read_state;
             }
             InternalFallbackIdle();
-            return 0;
+            return false;
         }
 
         // end current action
@@ -695,7 +693,7 @@ L_read_state:
         this.played_actions_count++;
         this.commited_animations_count++;
 
-        return 1;
+        return true;
     }
 
     public bool PlayExtra(string extra_animation_name, bool prefer_sustain) {
@@ -802,7 +800,7 @@ L_read_state:
         this.idle_speed = 1.0f;
         this.alt_enabled = false;
 
-        this.drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
+        this.drawable.SetAntialiasing(PVRFlag.DEFAULT);
 
         Modifier modifier = this.drawable.GetModifier();
         modifier.Clear();
@@ -1072,18 +1070,25 @@ L_read_state:
 
         extra_info.stop_after_beats = extra_entry.stop_after_beats;
 
-        if (extra_entry.anim != null && extra_entry.anim.Length < 1)
+        // this originally was:
+        //          extra_entry.ANIM_NAME != null && extra_entry.ANIM_NAME.Length < 1
+        // instead of
+        //          String.IsNullOrEmpty(extra_entry.ANIM_NAME)
+        // revert if something breaks
+        //
+
+        if (String.IsNullOrEmpty(extra_entry.anim))
             extra_info.@base = null;
         else
             extra_info.@base = Character.InternalImportAnimation(modelholder, extra_entry.anim, prefix, suffix, false);
 
-        if (extra_entry.anim_hold != null && extra_entry.anim_hold.Length < 1) {
+        if (String.IsNullOrEmpty(extra_entry.anim_hold)) {
             extra_info.hold = null;
         } else {
             extra_info.hold = Character.InternalImportAnimation(modelholder, extra_entry.anim_hold, prefix, suffix, true);
         }
 
-        if (extra_entry.anim_rollback != null && extra_entry.anim_rollback.Length < 1) {
+        if (String.IsNullOrEmpty(extra_entry.anim_rollback)) {
             extra_info.rollback = null;
         } else {
             extra_info.rollback = Character.InternalImportAnimation(modelholder, extra_entry.anim_rollback, prefix, suffix, false);
@@ -1526,7 +1531,6 @@ L_read_state:
 
     private static CharacterState InternalImportActions(CharacterImportContext context, CharacterManifest.Actions actions, string model_src, string state_name) {
         CharacterState state = Character.InternalStateCreate(state_name, actions.sing_size, actions.miss_size, actions.extras_size);
-        context.states.Add(state);
 
         // import all sing actions
         for (int i = 0 ; i < actions.sing_size ; i++) {
@@ -1634,7 +1638,7 @@ L_read_state:
             );
         }
 
-        return state;
+        return context.states.Add(state);
     }
 
     private int InternalAnimateSing(bool completed, bool should_stop) {

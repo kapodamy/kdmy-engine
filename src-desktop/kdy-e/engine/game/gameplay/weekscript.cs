@@ -5,15 +5,6 @@ using KallistiOS;
 
 namespace Engine.Game.Gameplay;
 
-public enum ScriptNote : uint {
-    PENALITY = 0,
-    MISS = 1,
-    SHIT = 2,
-    BAD = 3,
-    GOOD = 4,
-    SICK = 5
-}
-
 public class WeekScript {
 
     private Luascript luascript;
@@ -24,13 +15,22 @@ public class WeekScript {
         if (lua_sourcecode == null) {
             string path = FS.GetFullPathAndOverride(src);
             Logger.Error($"weekscript_init() missing file '{path}'");
+            //free(path);
             return null;
         }
 
+        string lua_filename = FS.GetFilenameWithoutExtension(src);
+        string tmp_full_path = FS.GetFullPath(src);
+        string working_folder = FS.GetParentFolder(tmp_full_path);
+
+        //free(tmp_full_path);
+    
         // init luascript
-        string filename = FS.GetFilenameWithoutExtension(src);
-        Luascript luascript = Luascript.Init(lua_sourcecode, filename, context, is_week);
-        //free(filename);
+        Luascript luascript = Luascript.Init(lua_sourcecode, lua_filename, working_folder, context, is_week);
+
+        // Note: the "working_folder" is deallocated by luascript_destroy() function
+        //free(lua_sourcecode);
+        //free(lua_filename);
 
         if (luascript == null) {
             Logger.Error($"weekscript_init() call to luascript_init() failed lua={src}");
@@ -77,55 +77,6 @@ public class WeekScript {
         this.luascript.notify_timersong_run(song_timestamp);
     }
 
-    public void NotifyNoteHit(Strum strum, int strum_note_index, PlayerStats playerstats) {
-        /** @type {StrumNote} */
-        Strum.StrumNote strum_note = strum.chart_notes[strum_note_index];
-        double timestamp = strum_note.timestamp;
-        double duration = strum_note.duration;
-        int note_id = strum.chart_notes_id_map[strum_note.id];
-        bool special = strum.attribute_notes[strum_note.id].is_special;
-        double data = strum_note.custom_data;
-        int player_id = strum.player_id;
-
-        ScriptNote state;
-        switch (playerstats.last_ranking) {
-            case Ranking.SICK:
-                state = ScriptNote.SICK;
-                break;
-            case Ranking.GOOD:
-                state = ScriptNote.GOOD;
-                break;
-            case Ranking.BAD:
-                state = ScriptNote.BAD;
-                break;
-            case Ranking.SHIT:
-                state = ScriptNote.SHIT;
-                break;
-            default:
-                return;
-        }
-
-        InternalNotifyNote(timestamp, note_id, duration, data, special, player_id, state);
-    }
-
-    public void NotifyNoteLoss(Strum strum, int strum_note_idx, PlayerStats plyrstts, bool is_penalty) {
-        /** @type {StrumNote} */
-        Strum.StrumNote strum_note = strum.chart_notes[strum_note_idx];
-        bool ignore_miss = strum.attribute_notes[strum_note.id].ignore_miss;
-
-        if (ignore_miss) return;
-
-        double timestamp = strum_note.timestamp;
-        double duration = strum_note.duration;
-        int note_id = strum.chart_notes_id_map[strum_note.id];
-        double data = strum_note.custom_data;
-        bool special = strum.attribute_notes[strum_note.id].is_special;
-        int player_id = strum.player_id;
-        ScriptNote state = is_penalty ? ScriptNote.PENALITY : ScriptNote.MISS;
-
-        InternalNotifyNote(timestamp, note_id, duration, data, special, player_id, state);
-    }
-
     public void NotifyUnknownNote(int player_id, double timestamp, int direction, double duration, double data) {
         this.luascript.notify_unknownnote(player_id, timestamp, direction, duration, data);
     }
@@ -156,6 +107,10 @@ public class WeekScript {
 
     public void NotifyWeekleave() {
         this.luascript.notify_weekleave();
+    }
+
+    public void NotifyBeforeresults() {
+        this.luascript.notify_beforeresults();
     }
 
     public void NotifyAfterresults(int total_attempts, int songs_count, bool reject_completed) {
@@ -194,13 +149,13 @@ public class WeekScript {
         this.luascript.notify_dialogue_builtin_open(dialog_src);
     }
 
+    public void NotifyNote(double timestamp, int id, double duration, double data, bool special, int player_id, Ranking ranking) {
+        this.luascript.notify_note(timestamp, id, duration, data, special, player_id, (uint)ranking);
+    }
+
 
     public Luascript GetLuaScript() {
         return this.luascript;
     }
 
-
-    private void InternalNotifyNote(double timestamp, int id, double duration, double data, bool special, int player_id, ScriptNote state) {
-        this.luascript.notify_note(timestamp, id, duration, data, special, player_id, (uint)state);
-    }
 }

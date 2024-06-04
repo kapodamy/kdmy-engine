@@ -138,9 +138,9 @@ public static class ExportsCharacter {
         string direction = L.luaL_optstring(2, null);
         bool keep_in_hold = L.lua_toboolean(3);
 
-        int ret = character.PlayMiss(direction, keep_in_hold);
+        bool ret = character.PlayMiss(direction, keep_in_hold);
 
-        L.lua_pushinteger(ret);
+        L.lua_pushboolean(ret);
         return 1;
     }
 
@@ -361,9 +361,7 @@ public static class ExportsCharacter {
     static int script_character_get_current_action(LuaState L) {
         Character character = L.ReadUserdata<Character>(CHARACTER);
 
-        string ret = LuascriptHelpers.StringifyActiontype(character.GetCurrentAction());
-
-        L.lua_pushstring(ret);
+        LuascriptHelpers.pushenum(L, LuascriptEnums.CharacterActionType, (int)character.GetCurrentAction());
         return 1;
     }
 

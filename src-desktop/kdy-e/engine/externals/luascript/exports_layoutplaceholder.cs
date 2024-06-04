@@ -8,7 +8,8 @@ public static class ExportsLayoutPlaceholder {
     public const string LAYOUTPLACEHOLDER = "LayoutPlaceholder";
 
 
-    const string TOSTRING = "{ " +
+    // (JS & C# only) internal engine format
+    const string INTERNAL_TOSTRING = "{ " +
     "groupId: $i, " +
     "name: $s, " +
     "alignVertical: $s, " +
@@ -37,10 +38,10 @@ public static class ExportsLayoutPlaceholder {
                 L.lua_pushstring(layoutplaceholder.name);
                 break;
             case "alignVertical":
-                L.lua_pushstring(LuascriptHelpers.StringifyAlign(layoutplaceholder.align_vertical));
+                LuascriptHelpers.pushenum(L, LuascriptEnums.Align, (int)layoutplaceholder.align_vertical);
                 break;
             case "alignHorizontal":
-                L.lua_pushstring(LuascriptHelpers.StringifyAlign(layoutplaceholder.align_horizontal));
+                LuascriptHelpers.pushenum(L, LuascriptEnums.Align, (int)layoutplaceholder.align_horizontal);
                 break;
             case "x":
                 L.lua_pushnumber(layoutplaceholder.x);
@@ -92,10 +93,10 @@ public static class ExportsLayoutPlaceholder {
             case "name":
                 return L.luaL_error("the field 'name' of LayoutPlaceholder is read-only");
             case "alignVertical":
-                layoutplaceholder.align_vertical = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(3, null));
+                layoutplaceholder.align_vertical = (Align)LuascriptHelpers.optenum(L, 3, LuascriptEnums.Align);
                 break;
             case "alignHorizontal":
-                layoutplaceholder.align_horizontal = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(3, null));
+                layoutplaceholder.align_horizontal = (Align)LuascriptHelpers.optenum(L, 3, LuascriptEnums.Align);
                 break;
             case "x":
                 layoutplaceholder.x = (float)L.luaL_checknumber(3);
@@ -148,11 +149,11 @@ public static class ExportsLayoutPlaceholder {
     static int script_layoutplaceholder_tostring(LuaState L) {
         LayoutPlaceholder layoutplaceholder = L.ReadUserdata<LayoutPlaceholder>(LAYOUTPLACEHOLDER);
 
-        L.lua_pushstring(StringUtils.CreateFormattedString(TOSTRING,
+        L.lua_pushstring(StringUtils.CreateFormattedString(INTERNAL_TOSTRING,
             layoutplaceholder.group_id,
             layoutplaceholder.name,
-            LuascriptHelpers.StringifyAlign(layoutplaceholder.align_vertical),
-            LuascriptHelpers.StringifyAlign(layoutplaceholder.align_horizontal),
+            LuascriptHelpers.EnumsStringify(LuascriptEnums.Align, (int)layoutplaceholder.align_vertical),
+            LuascriptHelpers.EnumsStringify(LuascriptEnums.Align, (int)layoutplaceholder.align_horizontal),
             layoutplaceholder.x,
             layoutplaceholder.y,
             layoutplaceholder.z,

@@ -162,10 +162,6 @@ public class SongPlayer {
     }
 
     public void Poll(ref SongPlayerInfo songinfo) {
-        //
-        // IMPORTANT: in the C version poll every stream (similar to animate() ) in
-        // order to send audio samples to the AICA.
-        //
         int ended = 0;
         double timestamp = 0;
 
@@ -183,7 +179,6 @@ public class SongPlayer {
         double duration = 0;
 
         for (int i = 0 ; i < this.playbacks_size ; i++) {
-            /**@type {HTMLAudioElement} */
             double playback_duration = this.playbacks[i].GetDuration();
 
             if (playback_duration < 0) continue;
@@ -202,7 +197,6 @@ public class SongPlayer {
             for (int i = 0 ; i < this.playbacks_size ; i++) {
                 this.playbacks[i].Destroy();
             }
-            //free(this.playbacks);
         }
 
         this.index_instrumental = song.index_instrumental;
@@ -262,7 +256,6 @@ public class SongPlayer {
         path_voices = null;
         path_instrumental = null;
         bool is_not_splitted = false;
-        int parts = src.IndexOf('|');
 
         if (String.IsNullOrWhiteSpace(src)) return is_not_splitted;
 
@@ -333,15 +326,12 @@ public class SongPlayer {
 
         if (separator_index < 0) {
             string path = FS.GetFullPath(src);
-            //free(src);
             return path;
         }
 
         // parse "voices.ogg|inst.ogg" format
         string path_voices = SongPlayer.InternalSeparePaths(0, separator_index, src, false);
         string path_instrumental = SongPlayer.InternalSeparePaths(separator_index + 1, src.Length, src, false);
-
-        //free(src);
 
         if (path_voices != null) {
             string tmp = FS.GetFullPath(path_voices);

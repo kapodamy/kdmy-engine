@@ -94,7 +94,7 @@ public static class maple {
     }
 
 
-    public static maple_device_t enum_dev(uint p, uint u) {
+    public static maple_device_t enum_dev(int p, int u) {
         foreach (maple_device_t device in DEVICES) {
             if (device != null && device.port == p && device.unit == u) {
                 return device.valid ? device : null;
@@ -111,12 +111,12 @@ public static class maple {
         int saveslots = EngineSettings.saveslots;
         for (int i = 0 ; i < saveslots ; i++) {
             if (i < 4) {
-                maple.DEVICES[i, 1] = new maple_device_t(MAPLE_FUNC.MEMCARD, (uint)i, 1U, -1);
+                maple.DEVICES[i, 1] = new maple_device_t(MAPLE_FUNC.MEMCARD, i, 1, -1);
                 continue;
             }
 
-            for (uint port = 0 ; port < MAPLE_PORT_COUNT ; port++) {
-                for (uint unit = 0 ; unit < MAPLE_UNIT_COUNT ; unit++) {
+            for (int port = 0 ; port < MAPLE_PORT_COUNT ; port++) {
+                for (int unit = 0 ; unit < MAPLE_UNIT_COUNT ; unit++) {
                     foreach (var mapping in maple_mappings.GAMEPAD_TO_MAPLE_DEVICE) {
                         if (mapping.port != port && mapping.unit != unit) {
                             // unused space, assign as VMU
@@ -202,10 +202,10 @@ public class maple_device_t {
 
     /** @type {bool} Is this a valid device?*/
     public bool valid;
-    /** @type {uint} Maple bus port connected to*/
-    public uint port;
-    /** @type {uint} Unit number, off of the port*/
-    public uint unit;
+    /** @type {int} Maple bus port connected to*/
+    public int port;
+    /** @type {int} Unit number, off of the port*/
+    public int unit;
     /** @type {maple_devinfo_t} Device info struct*/
     public maple_devinfo_t info;
 
@@ -214,7 +214,7 @@ public class maple_device_t {
     internal cont_state_t _status;
 
 
-    internal maple_device_t(MAPLE_FUNC funcs, uint port, uint unit, int gamepad_index) {
+    internal maple_device_t(MAPLE_FUNC funcs, int port, int unit, int gamepad_index) {
         this.port = port;
         this.unit = unit;
         this.info = new maple_devinfo_t() { functions = funcs };
@@ -556,22 +556,22 @@ internal static class maple_mappings {
     };
 
     public static readonly GamePadToMaple[] GAMEPAD_TO_MAPLE_DEVICE = {
-        new GamePadToMaple(0, 0U, 0U),
-        new GamePadToMaple(1, 1U, 0U),
-        new GamePadToMaple(2, 2U, 0U),
-        new GamePadToMaple(3, 3U, 0U),
-        new GamePadToMaple(4, 0U, 2U),
-        new GamePadToMaple(5, 1U, 2U),
-        new GamePadToMaple(6, 2U, 2U),
-        new GamePadToMaple(7, 3U, 2U),
-        new GamePadToMaple(8,  0U, 3U),
-        new GamePadToMaple(9, 1U, 3U),
-        new GamePadToMaple(10, 2U, 3U),
-        new GamePadToMaple(11, 3U, 3U),
-        new GamePadToMaple(12, 0U, 4U),
-        new GamePadToMaple(13, 1U, 4U),
-        new GamePadToMaple(14, 2U, 4U),
-        new GamePadToMaple(15, 3U, 4U)
+        new GamePadToMaple(0, 0, 0),
+        new GamePadToMaple(1, 1, 0),
+        new GamePadToMaple(2, 2, 0),
+        new GamePadToMaple(3, 3, 0),
+        new GamePadToMaple(4, 0, 2),
+        new GamePadToMaple(5, 1, 2),
+        new GamePadToMaple(6, 2, 2),
+        new GamePadToMaple(7, 3, 2),
+        new GamePadToMaple(8,  0, 3),
+        new GamePadToMaple(9, 1, 3),
+        new GamePadToMaple(10, 2, 3),
+        new GamePadToMaple(11, 3, 3),
+        new GamePadToMaple(12, 0, 4),
+        new GamePadToMaple(13, 1, 4),
+        new GamePadToMaple(14, 2, 4),
+        new GamePadToMaple(15, 3, 4)
    };
 
 
@@ -681,10 +681,10 @@ internal static class maple_mappings {
 
     internal readonly struct GamePadToMaple {
         public readonly int index;
-        public readonly uint port;
-        public readonly uint unit;
+        public readonly int port;
+        public readonly int unit;
 
-        public GamePadToMaple(int index, uint port, uint unit) {
+        public GamePadToMaple(int index, int port, int unit) {
             this.index = index;
             this.port = port;
             this.unit = unit;

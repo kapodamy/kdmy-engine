@@ -162,7 +162,9 @@ public class RankingCounter {
         AnimSprite old_animation = this.textsprite.AnimationSet(null);
         if (old_animation != null) old_animation.Destroy();
 
-        //free(this.selected_state);
+        //if (this.selected_state != RankingCounter.INTERNAL_STATE_NAME)
+        //    free(this.selected_state);
+
         //free(this);
     }
 
@@ -198,7 +200,9 @@ public class RankingCounter {
     }
 
     public void ToggleState(string state_name) {
-        //if (this.selected_state != RankingCounter.INTERNAL_STATE_NAME) free(this.selected_state);
+        //if (this.selected_state != RankingCounter.INTERNAL_STATE_NAME)
+        //    free(this.selected_state);
+
         this.selected_state = state_name;
     }
 
@@ -469,7 +473,7 @@ public class RankingCounter {
         Texture texture = modelholder.GetTexture(false);
         uint vertex_color = modelholder.GetVertexColor();
         AnimSprite animsprite = modelholder.CreateAnimsprite(animation_name, false, false);
-        AtlasEntry atlas_entry = modelholder.GetAtlasEntry2(animation_name, false);
+        AtlasEntry atlas_entry = modelholder.GetAtlasEntry2(animation_name);
 
         StateSpriteState state = statesprite.StateAdd2(
             texture, animsprite, atlas_entry, vertex_color, animation_name

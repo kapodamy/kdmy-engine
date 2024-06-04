@@ -167,134 +167,145 @@ public static class WeekEnumerator {
     private static WeekInfo ParseWeek(string week_name) {
         WeekInfo week_parsed = null;
 
-        try {
-            JSONToken json = JSONParser.LoadFrom(Funkin.WEEK_ABOUT_FILE);
+        JSONToken json = JSONParser.LoadFrom(Funkin.WEEK_ABOUT_FILE);
 
-            if (!JSONParser.HasPropertyArray(json, "songs")) {
-                throw new Exception("missing or invalid songs in week: " + week_name);
-            }
-
-
-            bool has_difficulty_easy = JSONParser.ReadBoolean(json, "hasDifficultyEasy", true);
-            bool has_difficulty_normal = JSONParser.ReadBoolean(json, "hasDifficultyNormal", true);
-            bool has_difficulty_hard = JSONParser.ReadBoolean(json, "hasDifficultyHard", true);
-
-            JSONToken customdifficulties_array = JSONParser.ReadArray(json, "customDifficulties");
-            int customdifficulties_array_size = JSONParser.ReadArrayLength(customdifficulties_array);
-
-            if (!has_difficulty_easy &&
-                !has_difficulty_normal &&
-                !has_difficulty_hard &&
-                customdifficulties_array_size < 1) {
-                throw new Exception("There no difficults in week: " + week_name);
-            }
-
-            string customdifficults_model = ParsePath(json, "customDifficultsModel");
-            if (String.IsNullOrEmpty(customdifficults_model) && customdifficulties_array_size > 0) {
-                throw new Exception("Missing or invalid custom difficult model");
-            }
-
-            // parse all custom difficults
-            WeekInfo.CustomDifficult[] customdifficults = null;
-            if (customdifficulties_array_size > 0) {
-                customdifficults = new WeekInfo.CustomDifficult[customdifficulties_array_size];
-                for (int i = 0 ; i < customdifficulties_array_size ; i++) {
-                    JSONToken customdifficult_obj = JSONParser.ReadArrayItemObject(customdifficulties_array, i);
-
-                    customdifficults[i] = new WeekInfo.CustomDifficult() {
-                        name = JSONParser.ReadString(customdifficult_obj, "name", null),
-                        unlock_directive = JSONParser.ReadString(customdifficult_obj, "unlockDirective", null)
-                    };
-
-                    if (String.IsNullOrEmpty(customdifficults[i].name)) {
-                        Logger.Error($"weekenumerator_parse_week() difficult name in week: {week_name}");
-                    } else if (FS.IsInvalidFilename(customdifficults[i].name)) {
-                        Logger.Error($"weekenumerator_parse_week() forbidden difficult name: {customdifficults[i].name}");
-                        //free(customdifficults[i].name);
-                        customdifficults[i].name = null;
-                    }
-                }
-            } else {
-                customdifficulties_array_size = 0;
-            }
-
-            JSONToken json_songs = JSONParser.ReadArray(json, "songs");
-            int json_songs_size = JSONParser.ReadArrayLength(json_songs);
-            WeekInfo.Song[] songs = new WeekInfo.Song[json_songs_size];
-            for (int i = 0 ; i < json_songs_size ; i++) {
-                JSONToken json_song = JSONParser.ReadArrayItemObject(json_songs, i);
-                songs[i] = new WeekInfo.Song() {
-                    name = JSONParser.ReadString(json_song, "name", null),
-                    freeplay_host_icon_model = ParsePath(json_song, "freeplayHostIconModel"),
-                    freeplay_host_icon_name = JSONParser.ReadString(json_song, "freeplayHostIconName", null),
-                    freeplay_locked_host_icon_model = ParsePath(json_song, "freeplayLockedHostIconModel"),
-                    freeplay_locked_host_icon_name = JSONParser.ReadString(json_song, "freeplayLockedHostIconName", null),
-                    freeplay_background = JSONParser.ReadString(json_song, "freeplayBackground", null),
-                    freeplay_only = JSONParser.ReadBoolean(json_song, "freeplayOnly", false),
-                    freeplay_unlock_directive = JSONParser.ReadString(json_song, "freeplayUnlockDirective", null),
-                    freeplay_hide_if_week_locked = JSONParser.ReadBoolean(json_song, "freeplayHideIfWeekLocked", false),
-                    freeplay_hide_if_locked = JSONParser.ReadBoolean(json_song, "freeplayHideIfLocked", false),
-                    freeplay_gameplaymanifest = JSONParser.ReadString(json_song, "freeplayGameplayManifest", null),
-                    freeplay_song_index_in_gameplaymanifest = (int)JSONParser.ReadNumberLong(json_song, "freeplaySongIndexInGameplayManifest", -1),
-                    freeplay_song_filename = ParsePath(json_song, "freeplaySongFilename"),
-                    freeplay_description = JSONParser.ReadString(json_song, "freeplayDescription", null),
-                    freeplay_seek_time = (float)JSONParser.ReadNumberDouble(json_song, "freeplaySeekTime", Double.NaN)
-                };
-            }
-
-            JSONToken unlockables_json = JSONParser.ReadObject(json, "unlockables");
-            JSONToken boyfriend_array = JSONParser.ReadArray(unlockables_json, "boyfriend");
-            JSONToken girlfriend_array = JSONParser.ReadArray(unlockables_json, "girlfriend");
-
-            week_parsed = new WeekInfo() {
-                name = week_name,
-                display_name = JSONParser.ReadString(json, "displayName", null),
-                description = JSONParser.ReadString(json, "description", null),
-                week_title_model = ParsePath(json, "weekTitleModel"),
-                week_title_model_animation_name = JSONParser.ReadString(json, "weekTitleModelAnimationName", null),
-                host_flip_sprite = JSONParser.ReadBoolean(json, "hostFlipSprite", false),
-                host_enable_beat = JSONParser.ReadBoolean(json, "hostEnableBeat", true),
-                host_hide_if_week_locked = JSONParser.ReadBoolean(json, "hostHideIfWeekLocked", false),
-                week_host_character_manifest = ParsePath(json, "hostCharacterManifest"),
-                week_host_model = ParsePath(json, "hostModel"),
-                week_host_model_idle_animation_name = JSONParser.ReadString(json, "hostModelIdleAnimationName", null),
-                week_host_model_choosen_animation_name = JSONParser.ReadString(json, "hostModelChoosenAnimationName", null),
-                songs = songs,
-                songs_count = json_songs_size,
-                selector_background_color = JSONParser.ReadHex(json, "selectorBackgroundColor", 0x000000),
-                selector_background_color_override = JSONParser.HasPropertyHex(json, "selectorBackgroundColor"),
-                has_difficulty_easy = has_difficulty_easy,
-                has_difficulty_normal = has_difficulty_normal,
-                has_difficulty_hard = has_difficulty_hard,
-                custom_difficults_model = customdifficults_model,
-                custom_difficults = customdifficults,
-                custom_difficults_size = customdifficulties_array_size,
-                default_difficulty = JSONParser.ReadString(json, "customDifficultyDefault", null),
-                unlock_directive = JSONParser.ReadString(json, "unlockDirectiveName", null),
-                emit_directive = JSONParser.ReadString(json, "emitUnlockDirectiveName", null),
-                warning_message = JSONParser.ReadString(json, "warningMessage", null),
-                sensible_content_message = JSONParser.ReadString(json, "sensibleContentMessage", null),
-                disallow_custom_boyfriend = JSONParser.ReadBoolean(json, "disallowCustomBoyfriend", false),
-                disallow_custom_girlfriend = JSONParser.ReadBoolean(json, "disallowCustomGirlfriend", false),
-                unlockables = new WeekInfo.Unlockables() {
-                    boyfriend_models = ParseCharacters(boyfriend_array),
-                    boyfriend_models_size = Math.Max(JSONParser.ReadArrayLength(boyfriend_array), 0),
-                    girlfriend_models = ParseCharacters(girlfriend_array),
-                    girlfriend_models_size = Math.Max(JSONParser.ReadArrayLength(girlfriend_array), 0)
-                },
-                custom_selector_layout = ParsePath(json, "customSelectorLayout"),
-                custom_folder = ParsePath(json, "customFolder"),
-                custom_folder_gameplay = ParsePath(json, "inGameplayCustomFolder"),
-                has_greetings = FS.FileExists(Funkin.WEEK_GREETINGS_FILE),
-                songs_default_freeplay_host_icon_model = ParsePath(json, "songsDefaultFreeplayHostIconModel")
-            };
-
-            JSONParser.Destroy(json);
-        } catch (Exception e) {
-            Logger.Error($"weekenumerator_parse_week() {e.Message}");
+        if (!JSONParser.HasPropertyArray(json, "songs")) {
+            Logger.Error("weekenumerator_parse_week() missing or invalid songs in week: " + week_name);
+            goto L_failed;
         }
 
+        bool has_difficulty_easy = JSONParser.ReadBoolean(json, "hasDifficultyEasy", true);
+        bool has_difficulty_normal = JSONParser.ReadBoolean(json, "hasDifficultyNormal", true);
+        bool has_difficulty_hard = JSONParser.ReadBoolean(json, "hasDifficultyHard", true);
+
+        JSONToken customdifficulties_array = JSONParser.ReadArray(json, "customDifficulties");
+        int customdifficulties_array_size = JSONParser.ReadArrayLength(customdifficulties_array);
+
+        if (!has_difficulty_easy &&
+            !has_difficulty_normal &&
+            !has_difficulty_hard &&
+            customdifficulties_array_size < 1) {
+            Logger.Error("weekenumerator_parse_week() There no difficults in week: " + week_name);
+            goto L_failed;
+        }
+
+        string customdifficults_model = ParsePath(json, "customDifficultsModel");
+        if (String.IsNullOrEmpty(customdifficults_model) && customdifficulties_array_size > 0) {
+            //free(customdifficults_model);
+            Logger.Error("weekenumerator_parse_week() Missing or invalid custom difficult model");
+            goto L_failed;
+        }
+
+        // parse all custom difficults
+        WeekInfo.CustomDifficult[] customdifficults = null;
+        if (customdifficulties_array_size > 0) {
+            customdifficults = new WeekInfo.CustomDifficult[customdifficulties_array_size];
+            for (int i = 0 ; i < customdifficulties_array_size ; i++) {
+                JSONToken customdifficult_obj = JSONParser.ReadArrayItemObject(customdifficulties_array, i);
+
+                customdifficults[i] = new WeekInfo.CustomDifficult() {
+                    name = JSONParser.ReadString(customdifficult_obj, "name", null),
+                    unlock_directive = JSONParser.ReadString(customdifficult_obj, "unlockDirective", null)
+                };
+
+                if (String.IsNullOrEmpty(customdifficults[i].name)) {
+                    Logger.Error($"weekenumerator_parse_week() difficult name in week: {week_name}");
+                } else if (FS.IsInvalidFilename(customdifficults[i].name)) {
+                    Logger.Error($"weekenumerator_parse_week() forbidden difficult name: {customdifficults[i].name}");
+                    //free(customdifficults[i].name);
+                    customdifficults[i].name = null;
+                }
+            }
+        } else {
+            customdifficulties_array_size = 0;
+        }
+
+        JSONToken json_songs = JSONParser.ReadArray(json, "songs");
+        int json_songs_size = JSONParser.ReadArrayLength(json_songs);
+        WeekInfo.Song[] songs = new WeekInfo.Song[json_songs_size];
+        for (int i = 0 ; i < json_songs_size ; i++) {
+            JSONToken json_song = JSONParser.ReadArrayItemObject(json_songs, i);
+            songs[i] = new WeekInfo.Song() {
+                name = JSONParser.ReadString(json_song, "name", null),
+                freeplay_host_icon_model = ParsePath(json_song, "freeplayHostIconModel"),
+                freeplay_host_icon_name = JSONParser.ReadString(json_song, "freeplayHostIconName", null),
+                freeplay_locked_host_icon_model = ParsePath(json_song, "freeplayLockedHostIconModel"),
+                freeplay_locked_host_icon_name = JSONParser.ReadString(json_song, "freeplayLockedHostIconName", null),
+                freeplay_background = JSONParser.ReadString(json_song, "freeplayBackground", null),
+                freeplay_only = JSONParser.ReadBoolean(json_song, "freeplayOnly", false),
+                freeplay_unlock_directive = JSONParser.ReadString(json_song, "freeplayUnlockDirective", null),
+                freeplay_hide_if_week_locked = JSONParser.ReadBoolean(json_song, "freeplayHideIfWeekLocked", false),
+                freeplay_hide_if_locked = JSONParser.ReadBoolean(json_song, "freeplayHideIfLocked", false),
+                freeplay_gameplaymanifest = JSONParser.ReadString(json_song, "freeplayGameplayManifest", null),
+                freeplay_song_index_in_gameplaymanifest = (int)JSONParser.ReadNumberLong(json_song, "freeplaySongIndexInGameplayManifest", -1),
+                freeplay_song_filename = ParsePath(json_song, "freeplaySongFilename"),
+                freeplay_description = JSONParser.ReadString(json_song, "freeplayDescription", null),
+                freeplay_seek_time = (float)JSONParser.ReadNumberDouble(json_song, "freeplaySeekTime", Double.NaN)
+            };
+        }
+
+        JSONToken unlockables_json = JSONParser.ReadObject(json, "unlockables");
+        JSONToken boyfriend_array = JSONParser.ReadArray(unlockables_json, "boyfriend");
+        JSONToken girlfriend_array = JSONParser.ReadArray(unlockables_json, "girlfriend");
+
+        week_parsed = new WeekInfo() {
+            name = week_name,
+            display_name = JSONParser.ReadString(json, "displayName", null),
+            description = JSONParser.ReadString(json, "description", null),
+            week_title_model = ParsePath(json, "weekTitleModel"),
+            week_title_model_animation_name = JSONParser.ReadString(json, "weekTitleModelAnimationName", null),
+            host_flip_sprite = JSONParser.ReadBoolean(json, "hostFlipSprite", false),
+            host_enable_beat = JSONParser.ReadBoolean(json, "hostEnableBeat", true),
+            host_hide_if_week_locked = JSONParser.ReadBoolean(json, "hostHideIfWeekLocked", false),
+            week_host_character_manifest = ParsePath(json, "hostCharacterManifest"),
+            week_host_model = ParsePath(json, "hostModel"),
+            week_host_model_idle_animation_name = JSONParser.ReadString(json, "hostModelIdleAnimationName", null),
+            week_host_model_choosen_animation_name = JSONParser.ReadString(json, "hostModelChoosenAnimationName", null),
+            songs = songs,
+            songs_count = json_songs_size,
+            selector_background_color = JSONParser.ReadHex(json, "selectorBackgroundColor", 0x000000),
+            selector_background_color_override = JSONParser.HasPropertyHex(json, "selectorBackgroundColor"),
+            has_difficulty_easy = has_difficulty_easy,
+            has_difficulty_normal = has_difficulty_normal,
+            has_difficulty_hard = has_difficulty_hard,
+            custom_difficults_model = customdifficults_model,
+            custom_difficults = customdifficults,
+            custom_difficults_size = customdifficulties_array_size,
+            default_difficulty = JSONParser.ReadString(json, "customDifficultyDefault", null),
+            unlock_directive = JSONParser.ReadString(json, "unlockDirectiveName", null),
+            emit_directive = JSONParser.ReadString(json, "emitUnlockDirectiveName", null),
+            warning_message = JSONParser.ReadString(json, "warningMessage", null),
+            sensible_content_message = JSONParser.ReadString(json, "sensibleContentMessage", null),
+            disallow_custom_boyfriend = JSONParser.ReadBoolean(json, "disallowCustomBoyfriend", false),
+            disallow_custom_girlfriend = JSONParser.ReadBoolean(json, "disallowCustomGirlfriend", false),
+            unlockables = new WeekInfo.Unlockables() {
+                boyfriend_models = ParseCharacters(boyfriend_array),
+                boyfriend_models_size = Math.Max(JSONParser.ReadArrayLength(boyfriend_array), 0),
+                girlfriend_models = ParseCharacters(girlfriend_array),
+                girlfriend_models_size = Math.Max(JSONParser.ReadArrayLength(girlfriend_array), 0)
+            },
+            custom_selector_layout = ParsePath(json, "customSelectorLayout"),
+            custom_folder = ParsePath(json, "customFolder"),
+            custom_folder_gameplay = ParsePath(json, "inGameplayCustomFolder"),
+            has_greetings = FS.FileExists(Funkin.WEEK_GREETINGS_FILE),
+            songs_default_freeplay_host_icon_model = ParsePath(json, "songsDefaultFreeplayHostIconModel")
+        };
+
+
+        if (week_parsed.unlockables.boyfriend_models_size > 0 && week_parsed.unlockables.boyfriend_models == null) {
+            week_parsed.unlockables.boyfriend_models_size = 0;
+        }
+
+        if (week_parsed.unlockables.girlfriend_models_size > 0 && week_parsed.unlockables.girlfriend_models == null) {
+            week_parsed.unlockables.girlfriend_models_size = 0;
+        }
+
+        JSONParser.Destroy(json);
         return week_parsed;
+
+L_failed:
+        JSONParser.Destroy(json);
+        return null;
     }
 
     public static string ParsePath(JSONToken json, string json_property_name) {
@@ -338,7 +349,14 @@ public static class WeekEnumerator {
                 name = JSONParser.ReadString(array_item, "name", null),
             };
             if (String.IsNullOrEmpty(array[i].name) && String.IsNullOrEmpty(array[i].manifest)) {
-                throw new Exception("weekenumerator_parse_character() missing 'name' and/or 'manifest'");
+                Logger.Warn("weekenumerator_parse_character() missing 'name' and/or 'manifest'");
+                //for (; i >= 0; i--) {
+                    //free(array[i].unlock_directive);
+                    //free(array[i].name);
+                    //free(array[i].manifest);
+                //}
+                //free(array);
+                return null;
             }
         }
 

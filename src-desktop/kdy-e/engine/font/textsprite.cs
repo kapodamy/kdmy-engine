@@ -138,7 +138,7 @@ public class TextSprite : IVertex {
 
             psshader = null,
 
-            blend_enabled = true,
+            blend_enabled = false,
             blend_src_rgb = Blend.DEFAULT,
             blend_dst_rgb = Blend.DEFAULT,
             blend_src_alpha = Blend.DEFAULT,
@@ -410,7 +410,7 @@ public class TextSprite : IVertex {
 
     public void CalculateParagraphAlignment() {
         Grapheme grapheme = new Grapheme();
-        FontLineInfo lineinfo = new FontLineInfo();
+        FontLineInfo lineinfo = new FontLineInfo() { space_width = -1f };
 
         if (!this.modified_string && !this.modified_coords) return;
 
@@ -764,7 +764,7 @@ public class TextSprite : IVertex {
                 this.wordbreak = (int)value;
                 break;
             case VertexProps.TEXTSPRITE_PROP_BACKGROUND_ENABLED:
-                this.background_enabled = value == 1.0;
+                this.background_enabled = value >= 1.0f;
                 break;
             case VertexProps.TEXTSPRITE_PROP_BACKGROUND_SIZE:
                 this.background_size = value;

@@ -55,7 +55,10 @@ public class StreakCounterDigits : IAnimate, IDraw {
         }
         if (this.animation_pair != null) this.animation_pair.Destroy();
         this.drawable.Destroy();
-        //if (this.selected_state != INTERNAL_STATE_NAME) free(this.selected_state);
+
+        //if (this.selected_state != INTERNAL_STATE_NAME)
+        //    free(this.selected_state);
+
         //free(this);
     }
 
@@ -91,7 +94,9 @@ public class StreakCounterDigits : IAnimate, IDraw {
     }
 
     public void StateToggle(string state_name) {
-        //if (this.selected_state != INTERNAL_STATE_NAME) free(this.selected_state);
+        //if (this.selected_state != INTERNAL_STATE_NAME)
+        //    free(this.selected_state);
+
         this.selected_state = state_name;
     }
 
@@ -178,7 +183,7 @@ public class StreakCounterDigits : IAnimate, IDraw {
         int index = StreakCounterDigits.STREAKCOUNTER_DIGITS - 1;
         while (value > 0) {
             this.buffer[index--] = (sbyte)(value % 10);
-            value = value / 10;
+            value /= 10;
         }
 
         // add leading zero

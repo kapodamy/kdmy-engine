@@ -43,7 +43,7 @@ public class MainMenu {
 
             font = null,// unused
             font_glyph_suffix = null,// unused
-            font_color_by_difference = false,// unused
+            font_color_by_addition = false,// unused
             font_size = 0f,// unused
             font_color = 0x00,// unused
             font_border_color = 0x00,// unused
@@ -223,7 +223,8 @@ public class MainMenu {
 
         ModdingHelper moddinghelper = new ModdingHelper() {
             menumanifest = menumanifest,
-            choosen_name = null
+            choosen_name = null,
+            choosen_name_is_allocated = false
         };
 
         Modding modding = new Modding(layout, MainMenu.MODDING_SCRIPT);
@@ -364,6 +365,8 @@ public class MainMenu {
             }
         }
 
+        //if (moddinghelper.choosen_name_is_allocated) free(moddinghelper.choosen_name);
+
         modding.HelperNotifyExit2();
 
         menu.Destroy();
@@ -474,7 +477,7 @@ public class MainMenu {
                 // from custom menu
                 return true;
             case 0:// storymode
-                while (WeekSelector.Main() > 0) { }
+                while (WeekSelector.Main() > 0) ;
                 return true;// main-menu
             case 1:
                 FreeplayMenu.Main();
@@ -493,6 +496,11 @@ public class MainMenu {
 
     public static bool HandleModdingOption(object obj, string option_name) {
         ModdingHelper moddinghelper = (ModdingHelper)obj;
+
+        if (moddinghelper.choosen_name_is_allocated) {
+            //free(moddinghelper.choosen_name);
+            moddinghelper.choosen_name_is_allocated = false;
+        }
 
         if (option_name == null || option_name == MainMenu.BACK_TO_STARTSCREEN) {
             // assume is going back
@@ -516,6 +524,7 @@ public class MainMenu {
 
         // unknown option
         moddinghelper.choosen_name = option_name;
+        moddinghelper.choosen_name_is_allocated = true;
         return false;
     }
 
@@ -523,5 +532,6 @@ public class MainMenu {
     private class ModdingHelper {
         public MenuManifest menumanifest;
         public string choosen_name;
+        public bool choosen_name_is_allocated;
     }
 }

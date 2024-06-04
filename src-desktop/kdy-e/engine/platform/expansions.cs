@@ -52,6 +52,8 @@ public static class Expansions {
         }
 
         InternalLoadDependency(chain, expansion_name);
+
+        //if (Expansions.overrided_weeks_folder) free(Expansions.overrided_weeks_folder);
         Expansions.overrided_weeks_folder = null;
 
         string expansion_base_path = StringUtils.Concat(Expansions.SYMBOLIC_PATH, expansion_name, FS.CHAR_SEPARATOR.ToString());
@@ -92,12 +94,11 @@ public static class Expansions {
         if (path == null) return null;
         if (!path.StartsWithKDY(FS.ASSETS_FOLDER, 0)) return path;
 
-
         int path_length = path.Length;
         int index = FS.ASSETS_FOLDER.Length;
         if (index < path_length && path[index] == FS.CHAR_SEPARATOR) index++;
 
-        string relative_path = path.SubstringKDY(index, path.Length);
+        string relative_path = path.SubstringKDY(index, path_length);
         string last_overrided_path = path.ToString();
 
         for (int i = 0 ; i < chain_array_size ; i++) {
@@ -133,6 +134,8 @@ public static class Expansions {
         string new_path = StringUtils.Concat(
             chain_array[expansion_index], FS.CHAR_SEPARATOR.ToString(), relative_path
         );
+
+        //free(relative_path);
 
         return new_path;
 
@@ -171,13 +174,15 @@ public static class Expansions {
             return;
         }
 
-        string uparsed_chain = IO.ReadText(chain_ini_path);
+        string unparsed_chain = IO.ReadText(chain_ini_path);
         //free(chain_ini_path);
 
-        Tokenizer tokenizer = Tokenizer.Init("\r\n", false, false, uparsed_chain);
+        if (unparsed_chain == null) return;
+
+        Tokenizer tokenizer = Tokenizer.Init("\r\n", false, false, unparsed_chain);
         if (tokenizer == null) {
             InternalAddToChain(chain, expansion_path);
-            //free(uparsed_chain);
+            //free(unparsed_chain);
             return;
         }
 
@@ -203,24 +208,28 @@ public static class Expansions {
         InternalAddToChain(chain, expansion_path);
 
         tokenizer.Destroy();
-        //free(uparsed_chain);
+        //free(unparsed_chain);
         //free(tokenizer);
     }
 
     private static void InternalAddToChain(ArrayList<string> chain, string expansion_path) {
+        string lowercase_expansion_name = StringUtils.ToLowerCase(expansion_path);
+
         foreach (string expansion in chain) {
             if (expansion == expansion_path) return;
 
             string lowercase_expansion = StringUtils.ToLowerCase(expansion);
-            string lowercase_expansion_name = StringUtils.ToLowerCase(expansion_path);
             bool equals = lowercase_expansion == lowercase_expansion_name;
 
             //free(lowercase_expansion);
-            //free(lowercase_expansion_name);
 
-            if (equals) return;
+            if (equals) goto L_return;
         }
         chain.Add(expansion_path);
+
+L_return:
+//free(lowercase_expansion_name);
+        return;
     }
 
     private static void InternalUpdateWindow(string expansion_base_path, string window_title, string window_icon) {

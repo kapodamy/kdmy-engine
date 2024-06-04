@@ -25,7 +25,7 @@ public static class ExportsStrums {
 
     static int script_strums_set_scroll_direction(LuaState L) {
         Strums strums = L.ReadUserdata<Strums>(STRUMS);
-        ScrollDirection direction = LuascriptHelpers.luascript_parse_scrolldirection(L, L.luaL_optstring(2, null));
+        ScrollDirection direction = (ScrollDirection)LuascriptHelpers.optenum(L, 2, LuascriptEnums.ScrollDirection);
 
         strums.SetScrollDirection(direction);
 

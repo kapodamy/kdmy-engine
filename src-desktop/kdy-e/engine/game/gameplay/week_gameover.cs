@@ -30,31 +30,34 @@ public class WeekGameOver : IDraw, IAnimate {
         "misses      $i\npenalties   $i\ndifficult  $s\n\n\n" +
         "Lost at $s ($2d% completed)";
 
-    public const string HELP_RETRY = "retry";
-    public const string HELP_DIFFICULT = "change difficult";
-    public const string HELP_GIVEUP = "giveup";
+    private const string HELP_RETRY = "retry";
+    private const string HELP_DIFFICULT = "change difficult";
+    private const string HELP_GIVEUP = "giveup";
+    private const string HELP_STATS = "show/hide statistics";
 
-    public const string DURATION_DIE = "gameover_duration_die";
-    public const string DURATION_RETRY = "gameover_duration_retry";
-    public const string DURATION_GIVEUP = "gameover_duration_giveup";
-    public const string DURATION_BEFORE = "gameover_transition_before";
-    public const string DURATION_BEFORE_FORCE_END = "gameover_transition_before_force_end";
+    private const string DURATION_DIE = "gameover_duration_die";
+    private const string DURATION_RETRY = "gameover_duration_retry";
+    private const string DURATION_GIVEUP = "gameover_duration_giveup";
+    private const string DURATION_BEFORE = "gameover_transition_before";
+    private const string DURATION_BEFORE_FORCE_END = "gameover_transition_before_force_end";
 
-    public const float LAYOUT_Z_INDEX = 200.0f;
-    public const string LAYOUT_DREAMCAST = "/assets/common/image/week-round/gameover~dreamcast.xml";
-    public const string LAYOUT_WIDESCREEN = "/assets/common/image/week-round/gameover.xml";
-    public const string LAYOUT_VERSION = "/assets/common/image/week-round/gameover_version.txt";
+    private const float LAYOUT_Z_INDEX = 200.0f;
+    private const string LAYOUT_DREAMCAST = "/assets/common/image/week-round/gameover~dreamcast.xml";
+    private const string LAYOUT_WIDESCREEN = "/assets/common/image/week-round/gameover.xml";
+    private const string LAYOUT_VERSION = "/assets/common/image/week-round/gameover_version.txt";
+    private const string MODDING_SCRIPT = "/assets/common/data/scripts/weekgameover.lua";
 
-    public const GamepadButtons BUTTONS = GamepadButtons.B | GamepadButtons.START | GamepadButtons.T_LR | GamepadButtons.BACK;
-    public const GamepadButtons BUTTONS2 = WeekGameOver.BUTTONS | GamepadButtons.AD_LEFT | GamepadButtons.AD_RIGHT;
-    public const GamepadButtons BUTTONS_LEFT = GamepadButtons.AD_LEFT | GamepadButtons.TRIGGER_LEFT;
-    public const GamepadButtons BUTTONS_SELECTOR = GamepadButtons.AD_LEFT | GamepadButtons.AD_RIGHT | GamepadButtons.T_LR;
+    private const GamepadButtons BUTTONS = GamepadButtons.B | GamepadButtons.START | GamepadButtons.T_LR | GamepadButtons.BACK;
+    private const GamepadButtons BUTTONS2 = WeekGameOver.BUTTONS | GamepadButtons.AD_LEFT | GamepadButtons.AD_RIGHT;
+    private const GamepadButtons BUTTONS_LEFT = GamepadButtons.AD_LEFT | GamepadButtons.TRIGGER_LEFT;
+    private const GamepadButtons BUTTONS_SELECTOR = GamepadButtons.AD_LEFT | GamepadButtons.AD_RIGHT | GamepadButtons.T_LR;
 
 
     private Layout layout;
     private WeekSelectorHelpText help_retry;
     private WeekSelectorHelpText help_difficult;
     private WeekSelectorHelpText help_giveup;
+    private WeekSelectorHelpText help_stats;
     private WeekSelectorDifficult selector;
     private Drawable drawable;
     private bool disabled;
@@ -75,6 +78,8 @@ public class WeekGameOver : IDraw, IAnimate {
     private float duration_giveup;
     private float duration_before;
     private float duration_before_force_end;
+    private Modding modding;
+    private int modding_decision;
 
 
     public WeekGameOver() {
@@ -95,6 +100,9 @@ public class WeekGameOver : IDraw, IAnimate {
         WeekSelectorHelpText help_giveup = new WeekSelectorHelpText(
             button_icons, layout, 1, false, WeekSelector.BUTTON_B, WeekGameOver.HELP_GIVEUP, null
         );
+        WeekSelectorHelpText help_stats = new WeekSelectorHelpText(
+            button_icons, layout, 1, true, WeekSelector.BUTTON_X, WeekGameOver.HELP_STATS, null
+        );
         button_icons.Destroy();
 
         WeekSelectorDifficult selector = new WeekSelectorDifficult(animlist, ui_icons, layout);
@@ -102,7 +110,12 @@ public class WeekGameOver : IDraw, IAnimate {
         ui_icons.Destroy();
 
 
-        this.layout = layout; this.help_retry = help_retry; this.help_difficult = help_difficult; this.help_giveup = help_giveup; this.selector = selector;
+        this.layout = layout;
+        this.help_retry = help_retry;
+        this.help_difficult = help_difficult;
+        this.help_giveup = help_giveup;
+        this.help_stats = help_stats;
+        this.selector = selector;
         this.drawable = null;
         this.disabled = true;
         this.weekinfo = null;
@@ -130,7 +143,7 @@ public class WeekGameOver : IDraw, IAnimate {
             WeekGameOver.LAYOUT_Z_INDEX, this, this
         );
 
-        layout.ExternalVertexCreateEntries(3);
+        layout.ExternalVertexCreateEntries(4);
         layout.ExternalVertexSetEntry(
             0, PVRContextVertex.DRAWABLE, help_retry.GetDrawable(), this.group_id_help
         );
@@ -139,6 +152,9 @@ public class WeekGameOver : IDraw, IAnimate {
         );
         layout.ExternalVertexSetEntry(
             2, PVRContextVertex.DRAWABLE, help_giveup.GetDrawable(), this.group_id_help
+        );
+        layout.ExternalVertexSetEntry(
+            3, PVRContextVertex.DRAWABLE, help_stats.GetDrawable(), this.group_id_help
         );
 
         // load default sounds
@@ -151,6 +167,10 @@ public class WeekGameOver : IDraw, IAnimate {
         this.duration_giveup = this.default_giveup_duration;
         this.duration_before = this.default_before_duration;
         this.duration_before_force_end = this.default_before_force_end_duration;
+
+        this.modding = new Modding(layout, WeekGameOver.MODDING_SCRIPT);
+        this.modding.callback_private_data = this;
+        this.modding.callback_option = WeekGameOver.InternalHandleModdingOption;
     }
 
     public void Destroy() {
@@ -158,6 +178,7 @@ public class WeekGameOver : IDraw, IAnimate {
         this.help_retry.Destroy();
         this.help_difficult.Destroy();
         this.help_giveup.Destroy();
+        this.help_stats.Destroy();
         this.selector.Destroy();
         this.drawable.Destroy();
         this.choosen_difficult.Destroy();
@@ -165,13 +186,20 @@ public class WeekGameOver : IDraw, IAnimate {
         if (this.music_bg != null) this.music_bg.Destroy();
         if (this.sfx_retry != null) this.sfx_retry.Destroy();
 
+        this.modding.has_funkinsave_changes = false;// ignore fukinsave changes
+        this.modding.Destroy();
+
         //free(this);
     }
 
     public static int ReadVersion() {
         Grapheme garapheme = new Grapheme() { code = 0, size = 0 };
         string version = FS.ReadText(WeekGameOver.LAYOUT_VERSION);
-        StringUtils.GetCharacterCodepoint(version, 0, ref garapheme);
+
+        if (!String.IsNullOrEmpty(version)) {
+            StringUtils.GetCharacterCodepoint(version, 0, ref garapheme);
+        }
+
         //free(version);
         return garapheme.code;
     }
@@ -229,15 +257,17 @@ public class WeekGameOver : IDraw, IAnimate {
     public void DisplaySelector() {
         this.selector.Load(
             this.weekinfo, this.difficult
-    );
+        );
         this.selector.Relayout(false);// obligatory
         this.selector.SetVisible(true);
         this.layout.TriggerAny("selector_show");
+        this.modding.HelperNotifyEvent("selector_show");
     }
 
     public void DisplayChoosenDifficult() {
         this.layout.TriggerAny("changed_difficult");
         this.choosen_difficult.MoveDifficult(this.selector);
+        this.modding.HelperNotifyEvent("changed_difficult");
     }
 
     public Drawable GetDrawable() {
@@ -251,6 +281,12 @@ public class WeekGameOver : IDraw, IAnimate {
     public int HelperAskToPlayer(RoundContext roundcontext) {
         GamepadButtons pressed = GamepadButtons.NOTHING;
         Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
+
+        // trigger any initial Action
+        if (roundcontext.settings.layout_rollback)
+            this.layout.TriggerAny(null);
+        else
+            this.layout.TriggerAny("hide_judgement");
 
         // match antialiasing with the stage layout
         this.layout.DisableAntialiasing(layout.IsAntialiasingDisabled());
@@ -289,6 +325,12 @@ public class WeekGameOver : IDraw, IAnimate {
         if (roundcontext.girlfriend != null) {
             roundcontext.girlfriend.PlayExtra("cry", false);
         }
+
+        this.modding_decision = 1;// giveup by default
+        this.modding.has_exit = false;
+        this.modding.has_halt = false;
+        this.modding.native_menu = null;
+        this.modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
 
         if (layout.TriggerAny("camera_gameover") < 1) {
             for (int i = 0 ; i < roundcontext.players_size ; i++) {
@@ -342,9 +384,22 @@ public class WeekGameOver : IDraw, IAnimate {
 
             if (roundcontext.script != null) roundcontext.script.NotifyFrame(elapsed);
 
+            ModdingHelperResult res = this.modding.HelperHandleCustomMenu(controller, elapsed);
+            if (res != ModdingHelperResult.CONTINUE || this.modding.has_exit) {
+                decision = this.modding_decision;
+                break;
+            }
+            if (this.modding.has_halt) continue;
+
             if (roundcontext.scriptcontext.force_end_flag) {
                 controller.Destroy();
                 layout.SetSingleItemToDraw(null);
+
+                this.modding.HelperNotifyEvent(
+                    roundcontext.scriptcontext.force_end_loose_or_win ? "force_loose" : "force_win"
+                );
+                this.modding.HelperNotifyExit2();
+
                 return roundcontext.scriptcontext.force_end_loose_or_win ? 1 : 2;
             }
 
@@ -391,6 +446,9 @@ public class WeekGameOver : IDraw, IAnimate {
                     int offset = ((buttons & WeekGameOver.BUTTONS_LEFT) != GamepadButtons.NOTHING) ? -1 : 1;
                     this.selector.Scroll(offset);
                 }
+            } else if ((buttons & GamepadButtons.X) != GamepadButtons.NOTHING) {
+                bool is_visible = this.layout.GetGroupVisibility("judgement");
+                this.layout.TriggerAny(is_visible ? "hide_judgement" : "show_judgement");
             }
 
             if (wait_animation) {
@@ -412,10 +470,23 @@ public class WeekGameOver : IDraw, IAnimate {
 
                 gameoverloop_notified = true;
                 if (roundcontext.script != null) roundcontext.script.NotifyGameoverloop();
+                this.modding.HelperNotifyEvent("gameover_loop");
             }
         }
 
-        if (roundcontext.script != null && !gameoverloop_notified) roundcontext.script.NotifyGameoverloop();
+        if (!gameoverloop_notified) {
+            if (roundcontext.script != null) roundcontext.script.NotifyGameoverloop();
+            this.modding.HelperNotifyEvent("gameover_loop");
+        }
+
+        switch (decision) {
+            case 1:
+                this.modding.HelperNotifyEvent("giveup");
+                break;
+            case 2:
+                this.modding.HelperNotifyEvent("retry");
+                break;
+        }
 
         if (dead_character != null) {
             string anim = decision == 2 ? Funkin.PLAYER_RETRY : Funkin.PLAYER_GIVEUP;
@@ -507,6 +578,7 @@ public class WeekGameOver : IDraw, IAnimate {
 
         controller.Destroy();
         layout.SetSingleItemToDraw(null);
+        this.modding.HelperNotifyExit2();
 
         return decision;
     }
@@ -576,6 +648,26 @@ public class WeekGameOver : IDraw, IAnimate {
                 this.sfx_retry = SoundPlayer.Init(str ?? "/assets/common/sound/gameOverEnd.ogg");
                 return;
         }
+    }
+
+    public Layout GetLayout() {
+        return this.layout;
+    }
+
+
+    private static bool InternalHandleModdingOption(object obj, string option) {
+        WeekGameOver weekgameover = (WeekGameOver)obj;
+
+        if (option == "giveup") {
+            weekgameover.modding_decision = 1;
+        } else if (option == "retry") {
+            weekgameover.modding_decision = 2;
+        } else {
+            // unknown option
+            return false;
+        }
+
+        return true;
     }
 
 }

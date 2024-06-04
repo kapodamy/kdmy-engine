@@ -37,7 +37,7 @@ public class WeekPause {
 
             font = null,
             font_glyph_suffix = "bold",
-            font_color_by_difference = false,// unused
+            font_color_by_addition = false,// unused
             font_size = 48f,
             font_color = 0xFFFFFF,
             font_border_color = 0x00,// unused
@@ -138,11 +138,11 @@ public class WeekPause {
     private const int ANTIBOUNCE = (int)(WeekPause.DELAY * 1.25f);
 
     // messagebox strings
-    public const string MSGCONTROLLER = "The controller $i was disconnected, \n" +
+    private const string MSGCONTROLLER = "The controller $i was disconnected, \n" +
         "reconnect it or press START on an unused \n" +
         "controller to replace it.";
-    public const string MSGMENU = "The week progress will be lost, ¿return\n to the main menu?";
-    public const string MSGWEEKSELECTOR = "The week progress will be lost, ¿return\n to the week selector?";
+    private const string MSGMENU = "The week progress will be lost, ¿return\n to the main menu?";
+    private const string MSGWEEKSELECTOR = "The week progress will be lost, ¿return\n to the week selector?";
 
 
     private Menu menu;
@@ -211,17 +211,16 @@ public class WeekPause {
     }
 
     public void Destroy() {
+        this.modding.Destroy();
         this.layout.Destroy();
         this.menu.Destroy();
         this.messagebox.Destroy();
         this.sprite_nocontroller.DestroyFull();
-        this.modding.Destroy();
         if (this.menu_external != null) this.menu_external.Destroy();
         if (this.background_menu_music != null) this.background_menu_music.Destroy();
         this.modding_choosen_option_name = null;// do not dispose
         //free(this);
     }
-
 
 
     public void ExternalSetText(int index, string text) {
@@ -254,6 +253,7 @@ public class WeekPause {
         );
         menumanifest.Destroy();
     }
+
 
     public void Prepare() {
         if (this.background_menu_music != null) this.background_menu_music.Destroy();
@@ -478,6 +478,7 @@ public class WeekPause {
         }
 
         this.modding.HelperNotifyExit2();
+        controller.Destroy();
 
         // selected options:
         //      0 -> resume
@@ -486,6 +487,11 @@ public class WeekPause {
         //      3 -> back to mainmenu
         return return_value;
     }
+
+    public Layout GetLayout() {
+        return this.layout;
+    }
+
 
     private float InternalRender(RoundContext roundcontext) {
         float elapsed;
@@ -543,7 +549,7 @@ public class WeekPause {
         }
 
         // unknown option
-        this.modding_choosen_option_name = option_name;
+        this.modding_choosen_option_name = null;
         return false;
     }
 

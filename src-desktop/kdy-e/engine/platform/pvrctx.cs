@@ -113,7 +113,7 @@ public class PVRContext {
         double now = Glfw.GetTime();
         float elapsed;
         if (last_timestamp <= 0)
-            elapsed = 0;
+            elapsed = 0.0f;
         else
             elapsed = (float)((now - last_timestamp) * 1000.0);
 

@@ -19,7 +19,6 @@ public class WeekSelector {
     private const string SONGS_MORE = "...";
     private const string COMPLETED = "WEEKS COMPLETED";
     private const string CHOOSEN = "WEEK CHOOSEN";
-    private const string DIFFICULTY = "DIFFICULTY";
     private const string ALT_WARNING = "TRACKS WARNING";
     private const string SENSIBLE_CONTENT = "SENSIBLE CONTENT";
     private const string HELP_N_ALT = "USE ALTERNATIVE TRACKS";
@@ -28,12 +27,6 @@ public class WeekSelector {
     private const string HELP_SELECT_WEEK = "SELECT ANOTHER WEEK";
     private const string HELP_BACK = "BACK";
     private const string HELP_START = "PLAY THIS WEEK";
-    private const string GIRLFRIEND = "GIRLFRIEND";
-    private const string BOYFRIEND = "BOYFRIEND";
-
-    private const string ANIM_IDLE = "idle";
-    private const string ANIM_CHOOSEN = "choosen";
-    private const float CHARACTER_Z_INDEX = 3;
 
     internal const int BUTTON_DELAY = 200;
     internal const string BUTTON_X = "x";
@@ -41,8 +34,6 @@ public class WeekSelector {
     internal const string BUTTON_LT_RT = "lt_rt";
     internal const string BUTTON_START = "start";
 
-    private const string ARROW_NAME = "arrow_L push";
-    private const string ARROW_NAME2 = "arrow_L";
     internal const string LOCKED = "locked";
 
     internal const string BUTTONS_MODEL = "/assets/common/image/week-selector/dreamcast_buttons.xml";

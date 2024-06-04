@@ -87,6 +87,7 @@ public class GameplayManifestSong {
     public string dialogue_params;
     public string dialog_text;
     public bool dialog_ignore_on_freeplay;
+    public bool disable_resource_cache_between_songs;
 }
 public class GameplayManifestDefault {
     public Distribution[] distributions;
@@ -105,10 +106,10 @@ public class GameplayManifestDefault {
 
 public class GameplayManifest {
 
-    public const string DEFAULT_GIRLFRIEND = "#girlfriend";
-    public const string DEFAULT_BOYFRIEND = "#boyfriend";
+    private const string DEFAULT_GIRLFRIEND = "#girlfriend";
+    private const string DEFAULT_BOYFRIEND = "#boyfriend";
 
-    public static readonly GameplayManifestDefault DEFAULT = new GameplayManifestDefault() {
+    private static readonly GameplayManifestDefault DEFAULT = new GameplayManifestDefault() {
         distributions = new Distribution[] {
             Strums.DEFAULT_DISTRIBUTION
         },
@@ -166,9 +167,9 @@ public class GameplayManifest {
         };
 
         if (JSONParser.HasPropertyObject(json, "default")) {
-            if (JSONParser.IsPropertyNull(json, "default")) {
+            /*if (JSONParser.IsPropertyNull(json, "default")) {
                 throw new Exception("'default' property can not be null. File: " + src);
-            }
+            }*/
 
             manifest.@default = new GameplayManifestDefault() {
                 distributions = GameplayManifest.DEFAULT.distributions,
@@ -376,8 +377,8 @@ public class GameplayManifest {
         //for (int i = 0 ; i < players_size ; i++) {
         //    free(players[i].manifest);
         //    for (int j = 0 ; j < players[i].states_size ; j++) {
-        //        free(players[i].states.name);
-        //        free(players[i].states.model);
+        //        free(players[i].states[j].name);
+        //        free(players[i].states[j].model);
         //    }
         //    free(players[i].states);
         //}
@@ -433,6 +434,8 @@ public class GameplayManifest {
         song.dialogue_params = JSONParser.ReadString(json_song, "dialogueParams", null);
         song.dialog_text = JSONParser.ReadString(json_song, "dialogText", null);
         song.dialog_ignore_on_freeplay = JSONParser.ReadBoolean(json_song, "dialogIgnoreOnFreeplay", true);
+
+        song.disable_resource_cache_between_songs = JSONParser.ReadBoolean(json_song, "disableResourceCacheBetweenSongs", false);
 
         song.selected_state_name_per_player = null;
         song.selected_state_name_per_player_size = 0;

@@ -12,7 +12,9 @@ public static class ExportsModelHolder {
     static int script_modelholder_init(LuaState L) {
         string src = L.luaL_checkstring(2);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         ModelHolder ret = ModelHolder.Init(src);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         return L.CreateAllocatedUserdata(MODELHOLDER, ret);
     }
@@ -59,10 +61,10 @@ public static class ExportsModelHolder {
     static int script_modelholder_create_animsprite(LuaState L) {
         ModelHolder modelholder = L.ReadNullableUserdata<ModelHolder>(2, MODELHOLDER);
         string animation_name = L.luaL_optstring(3, null);
-        bool fallback_ = L.lua_toboolean(4);
+        bool fallback_static = L.lua_toboolean(4);
         bool no_return_null = L.lua_toboolean(5);
 
-        AnimSprite ret = modelholder.CreateAnimsprite(animation_name, fallback_, no_return_null);
+        AnimSprite ret = modelholder.CreateAnimsprite(animation_name, fallback_static, no_return_null);
 
         return L.CreateAllocatedUserdata(ExportsAnimSprite.ANIMSPRITE, ret);
     }
@@ -96,7 +98,7 @@ public static class ExportsModelHolder {
         ModelHolder modelholder = L.ReadUserdata<ModelHolder>(MODELHOLDER);
         string atlas_entry_name = L.luaL_optstring(2, null);
 
-        AtlasEntry ret = modelholder.GetAtlasEntry(atlas_entry_name, false);
+        AtlasEntry ret = modelholder.GetAtlasEntry(atlas_entry_name);
 
         return ExportsAtlas.script_atlas_push_atlas_entry(L, ret);
     }
@@ -105,7 +107,7 @@ public static class ExportsModelHolder {
         ModelHolder modelholder = L.ReadUserdata<ModelHolder>(MODELHOLDER);
         string atlas_entry_name = L.luaL_optstring(2, null);
 
-        AtlasEntry ret = modelholder.GetAtlasEntry2(atlas_entry_name, false);
+        AtlasEntry ret = modelholder.GetAtlasEntry2(atlas_entry_name);
 
         return ExportsAtlas.script_atlas_push_atlas_entry(L, ret);
     }

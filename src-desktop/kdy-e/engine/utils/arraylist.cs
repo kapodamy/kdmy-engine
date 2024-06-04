@@ -44,7 +44,9 @@ public class ArrayList<T> {
     }
 
     public void Destroy3(Action<T> free_function) {
-        for (int i = 0 ; i < this.size ; i++) free_function(this.array[i]);
+        for (int i = 0 ; i < this.size ; i++) {
+            if (this.array[i] != null) free_function(this.array[i]);
+        }
         //free(this.array);
         //free(arraylist);
     }
@@ -62,18 +64,7 @@ public class ArrayList<T> {
         return this.array[index];
     }
 
-    public int InsertOnNullSlot(T item) {
-        for (int i = 0 ; i < this.size ; i++) {
-            if (this.array[i] == null) {
-                this.array[i] = item;
-                return -1;
-            }
-        }
-
-        return Add(item);
-    }
-
-    public int Add(T item) {
+    public T Add(T item) {
         int size = this.size + 1;
 
         if (size > this.length) {
@@ -83,7 +74,14 @@ public class ArrayList<T> {
 
         this.array[this.size] = item;
         this.size = size;
-        return size;
+
+        //
+        // Note:
+        //      if "T" is struct, this should return "ref this.array[this.size]" or make
+        //      an "ArrayList" exclusive for structs allow the same behavior like "class"
+        //
+
+        return item;
     }
 
     public void Set(int index, T item) {
@@ -165,11 +163,19 @@ public class ArrayList<T> {
     }
 
     public ArrayList<T> Clone() {
+        Type type = typeof(T);
+
         ArrayList<T> copy = new ArrayList<T>(this.size);
         copy.size = this.size;
 
-        for (int i = 0 ; i < this.size ; i++) {
-            copy.array[i] = this.array[i];
+        if (typeof(ICloneable).IsAssignableFrom(typeof(T))) {
+            for (int i = 0 ; i < this.size ; i++) {
+                copy.array[i] = (T)CloneUtils.CloneObject((ICloneable)this.array[i]);
+            }
+        } else {
+            for (int i = 0 ; i < this.size ; i++) {
+                copy.array[i] = this.array[i];
+            }
         }
 
         return copy;

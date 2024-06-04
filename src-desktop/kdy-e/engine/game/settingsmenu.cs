@@ -57,7 +57,7 @@ public static class SettingsMenu {
 
             font = "/assets/common/font/Alphabet.xml",
             font_glyph_suffix = "bold",
-            font_color_by_difference = false,// unused
+            font_color_by_addition = false,// unused
             font_size = 46f,
             font_color = 0xFFFFFF,
             font_border_color = 0x00,// unused
@@ -174,7 +174,7 @@ public static class SettingsMenu {
 
             font = "/assets/common/font/pixel.otf",
             font_glyph_suffix = null,// unused
-            font_color_by_difference = false,// unused
+            font_color_by_addition = false,// unused
             font_size = 28f,
             font_color = 0xFFFFFF,
             font_border_color = 0x000000FF,// unused
@@ -208,26 +208,32 @@ public static class SettingsMenu {
 
 
     public static void Main() {
+        string title = "Settings";
         SettingOption[] main_options_help = {
             new SettingOption() {
                 name = "keyboard-bindings-gameplay",
-                description = "Change the assigned key for each strum.\nDirectonial keys are always assigned"
+                description = "Change the assigned key for each strum.\nDirectonial keys are always assigned",
+                hidden = false
             },
             new SettingOption() {
                 name = "keyboard-bindings-menu",
-                description = "Change the keys assigned to navigate between menus.\nDirectonial keys are always assigned"
+                description = "Change the keys assigned to navigate between menus.\nDirectonial keys are always assigned",
+                hidden = false
             },
             new SettingOption() {
                 name = "gameplay-settings",
-                description = "Gameplay settings like ghost-tapping and input offset"
+                description = "Gameplay settings like ghost-tapping and input offset",
+                hidden = false
             },
             new SettingOption() {
                 name = "miscellaneous",
-                description = "Specific engine settings"
+                description = "Specific engine settings",
+                hidden = false
             },
             new SettingOption() {
                 name = "return-main-menu",
-                description = "Returns back to the main menu.\n¡Settings are automatically saved!"
+                description = "Returns back to the main menu.\n¡Settings are automatically saved!",
+                hidden = false,
             }
         };
 
@@ -333,7 +339,10 @@ public static class SettingsMenu {
             bg_music.LoopEnable(true);
             bg_music.Play();
         } else if (GameMain.background_menu_music != null) {
-            GameMain.background_menu_music.SetVolume(0.5f);
+            if (String.IsNullOrEmpty(backgroud_music_filename) && (backgroud_music_volume <= 0.0f || Single.IsNaN(backgroud_music_volume)))
+                GameMain.background_menu_music.Pause();
+            else
+                GameMain.background_menu_music.SetVolume(0.5f);
         }
 
         SettingsMenu.current_menu = null;
@@ -347,7 +356,7 @@ public static class SettingsMenu {
         modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
 
         while (!modding.has_exit) {
-            int selected_index = InCommonMenu("Settings", layout, gamepad, menu, options_help, modding);
+            int selected_index = InCommonMenu(title, layout, gamepad, menu, options_help, modding);
             string selected_name = selected_index < 0 ? null : menumanifest.items[selected_index].name;
             switch (selected_name) {
                 case "keyboard-bindings-gameplay":
@@ -382,6 +391,7 @@ public static class SettingsMenu {
         menu.Destroy();
         layout.Destroy();
         modding.Destroy();
+        SettingsMenu.submenus_font.Destroy();
 
         SettingsMenu.is_running = false;
 
@@ -399,6 +409,7 @@ public static class SettingsMenu {
             if (GameMain.background_menu_music != null) GameMain.background_menu_music.Play();
         } else if (GameMain.background_menu_music != null) {
             GameMain.background_menu_music.SetVolume(1.0f);
+            GameMain.background_menu_music.Play();
         }
     }
 
@@ -809,6 +820,7 @@ public static class SettingsMenu {
     }
 
     private static void InGameplaySettings(Gamepad gamepad, Modding modding) {
+        string title = "GAMEPLAY SETTINGS";
         SettingOption[] options = {
             new SettingOption() {
                 name = "USE FUNKIN MARKER DURATION",
@@ -817,7 +829,8 @@ public static class SettingsMenu {
                               "DISABLED: the engine calculate the duration according to the screen",
                 is_bool = true,
                 value_bool = true,
-                ini_key="use_funkin_marker_duration"
+                ini_key="use_funkin_marker_duration",
+                hidden = false
             },
             new SettingOption() {
                 name = "PENALITY ON EMPTY STRUM",
@@ -825,7 +838,8 @@ public static class SettingsMenu {
                               "ENABLED: the penality is enforced. DISABLED: allows ghost-tapping",
                 is_bool = true,
                 value_bool = true,
-                ini_key="penality_on_empty_strum"
+                ini_key="penality_on_empty_strum",
+                hidden = false
             },
             new SettingOption() {
                 name = "INPUT OFFSET",
@@ -835,7 +849,8 @@ public static class SettingsMenu {
                 value_int = 0,
                 number_min = -1000,
                 number_max = 1000,
-                ini_key = "input_offset"
+                ini_key = "input_offset",
+                hidden = false
             },
             new SettingOption() {
                 name = "INVERSE STRUM SCROLLING",
@@ -843,7 +858,8 @@ public static class SettingsMenu {
                               "In custom UI layouts, reverses the declared direction",
                 is_bool = true,
                 value_bool = false,
-                ini_key = "inverse_strum_scroll"
+                ini_key = "inverse_strum_scroll",
+                hidden = false
             },
             new SettingOption() {
                 name = "SHOW SONG PROGRESS BAR",
@@ -851,14 +867,16 @@ public static class SettingsMenu {
                               "Indicates playback progress of the playing song",
                 is_bool = true,
                 value_bool = true,
-                ini_key = "song_progressbar"
+                ini_key = "song_progressbar",
+                hidden = false
             },
             new SettingOption() {
                 name = "SONG PROGRESS BAR REMAINING",
                 description = "Shows the remaining song duration instead of time elapsed",
                 is_bool = true,
                 value_bool = false,
-                ini_key = "song_progressbar_remaining"
+                ini_key = "song_progressbar_remaining",
+                hidden = false
             },
             new SettingOption() {
                 name = "DISTRACTIONS",
@@ -866,7 +884,8 @@ public static class SettingsMenu {
                               "(Depends on the week if honours this setting)",
                 is_bool = true,
                 value_bool = true,
-                ini_key = "gameplay_enabled_distractions"
+                ini_key = "gameplay_enabled_distractions",
+                hidden = false
             },
             new SettingOption() {
                 name = "FLASHING LIGHTS",
@@ -874,7 +893,8 @@ public static class SettingsMenu {
                               "(Depends on the week if honours this setting)",
                 is_bool = true,
                 value_bool = true,
-                ini_key = "gameplay_enabled_flashinglights"
+                ini_key = "gameplay_enabled_flashinglights",
+                hidden = false
             },
             new SettingOption() {
                 name = "UI COSMETICS",
@@ -882,7 +902,8 @@ public static class SettingsMenu {
                               "These elements normally are shown near or surrounding girlfriend's speakers",
                 is_bool = true,
                 value_bool = true,
-                ini_key = "gameplay_enabled_uicosmetics"
+                ini_key = "gameplay_enabled_uicosmetics",
+                hidden = false
             },
 
         };
@@ -893,7 +914,7 @@ public static class SettingsMenu {
             InternalLoadOption(ref options[i], EngineSettings.INI_GAMEPLAY_SECTION);
         }
 
-        ShowCommon("GAMEPLAY SETTINGS", gamepad, options, options_size, modding);
+        ShowCommon(title, gamepad, options, options_size, modding);
 
         // save settings
         for (int i = 0 ; i < options_size ; i++) {
@@ -908,7 +929,8 @@ public static class SettingsMenu {
                 description = "Displays the current FPS in the top-left corner of the screen.\n",
                 is_bool = true,
                 value_bool = false,
-                ini_key = "show_fps"
+                ini_key = "show_fps",
+                hidden = false
             },
             new SettingOption() {
                 name = "FPS LIMIT",
@@ -923,7 +945,8 @@ public static class SettingsMenu {
                     new SettingOptionListItem() { name="Off", ini_value="off"}
                 },
                 list_size = 3,
-                ini_key = "fps_limit"
+                ini_key = "fps_limit",
+                hidden = false
             },
             new SettingOption() {
                 name = "START IN FULLSCREEN",
@@ -931,7 +954,8 @@ public static class SettingsMenu {
                               "Press F11 to toggle between windowed/fullscreen",
                 is_bool = true,
                 value_bool = false,
-                ini_key = "fullscreen"
+                ini_key = "fullscreen",
+                hidden = false
             },
             new SettingOption() {
                 name = "AVAILABLE SAVESLOTS",
@@ -941,7 +965,8 @@ public static class SettingsMenu {
                 value_int = 1,
                 number_min = 1,
                 number_max = 8,
-                ini_key="saveslots"
+                ini_key="saveslots",
+                hidden = false
             },
             new SettingOption() {
                 name = "AUTOHIDE CURSOR",
@@ -949,7 +974,8 @@ public static class SettingsMenu {
                               "The mouse is never used by the engine, but some weeks can make use of it",
                 is_bool = true,
                 value_bool = true,
-                ini_key = "autohide_cursor"
+                ini_key = "autohide_cursor",
+                hidden = false
             },
             new SettingOption() {
                 name = "SILENCE ON MINIMIZE",
@@ -957,7 +983,8 @@ public static class SettingsMenu {
                               "Freeplay menu is exempt",
                 is_bool = true,
                 value_bool = true,
-                ini_key = "mute_on_minimize"
+                ini_key = "mute_on_minimize",
+                hidden = false
             },
             new SettingOption() {
                 name = "SHOW LOADING SCREEN",
@@ -965,11 +992,12 @@ public static class SettingsMenu {
                               "Only applicable in Freeplay menu and Week selector",
                 is_bool = true,
                 value_bool = false,
-                ini_key = "show_loading_screen"
+                ini_key = "show_loading_screen",
+                hidden = false
             }
 
         };
-        int options_size = 7;
+        int options_size = options.Length;
 
         // load current settings
         for (int i = 0 ; i < options_size ; i++) {
@@ -1373,6 +1401,7 @@ public static class SettingsMenu {
         InternalSetKeyInLabel(labels[index], keycodes[index]);
     }
 
+
     private static void InternalSaveOption(ref SettingOption option, string ini_section) {
         if (option.is_bool) {
             EngineSettings.ini.SetBool(ini_section, option.ini_key, option.value_bool);
@@ -1481,6 +1510,7 @@ public static class SettingsMenu {
         public string name;
         public string description;
         public bool description_changed;
+        public bool hidden;
 
         public bool is_bool;
         public bool is_int;

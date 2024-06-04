@@ -303,11 +303,9 @@ public class Conductor {
     private void InternalDisposedMappedStrum(Mapping mapped_strum) {
         //foreach (MapDirection mapped_sing in mapped_strum.directions) {
         //    free(mapped_sing.name);
-        //    free(mapped_sing);
         //}
         mapped_strum.directions.Destroy(false);
         mapped_strum.strum = null;
-        //free(mapped_strum);
     }
 
     public void IntenalAddMapping(Strum strum, string name, bool is_extra) {
@@ -320,13 +318,12 @@ public class Conductor {
         }
 
         if (mapped_strum == null) {
-            mapped_strum = new Mapping() {
+            mapped_strum = this.mappings.Add(new Mapping() {
                 directions = new ArrayList<MapDirection>(4),
                 is_disabled = false,
                 last_change_count = -1,
                 strum = strum
-            };
-            this.mappings.Add(mapped_strum);
+            });
         }
 
         // check if already is added
@@ -350,9 +347,7 @@ public class Conductor {
             for (int i = 0 ; i < size ; i++) {
                 if (directions[i].name == name && directions[i].is_extra == is_extra) {
                     //free(directions[i].name);
-                    //free(directions[i]);
                     mapped_strum.directions.RemoveAt(i);
-
                     return;
                 }
             }
@@ -377,7 +372,7 @@ public class Conductor {
             if (direction.is_extra) {
                 if (character.PlayExtra(direction.name, keep_in_hold)) done++;
             } else {
-                if (character.PlayMiss(direction.name, keep_in_hold) == 1) done++;
+                if (character.PlayMiss(direction.name, keep_in_hold) == true) done++;
             }
         }
         return done;

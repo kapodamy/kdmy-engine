@@ -13,7 +13,7 @@ public class DDRKey {
     public bool discard;
     public bool strum_invisible;
     public GamepadButtons button;
-    public Gamepad gamepad;
+    //public Gamepad gamepad;
 }
 
 public class DDRKeysFIFO {
@@ -151,11 +151,11 @@ public class DDRKeymon {
     public void Stop() {
         if (this.thd_monitor == null) return;
 
-        Clear();
-
         // JS & C# only
         this.thd_monitor = null;
         this.thd_monitor_active++;
+
+        Clear();
     }
 
     public double PeekTimestamp() {

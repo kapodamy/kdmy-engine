@@ -76,19 +76,19 @@ public class HealthWatcher {
     }
 
     public void Balance(HealthBar healthbar) {
-        double opponents_total = 0;
-        double accumulated = 0;
-        double maximum = 0;
+        double opponents_total = 0.0;
+        double accumulated = 0.0;
+        double maximum = 0.0;
         int players_count = this.players.Size();
 
         foreach (CharacterInfo character in this.opponents) {
             double health = character.playerstats.GetHealth();
-            if (health > 0) opponents_total += health;
+            if (health > 0.0) opponents_total += health;
 
-            if (character.can_die && health < 0)
+            if (character.can_die && health < 0.0)
                 character.playerstats.Kill();
             else if (players_count > 0)
-                character.playerstats.SetHealth(0);
+                character.playerstats.SetHealth(0.0);
 
             if (players_count < 1) maximum += character.playerstats.GetMaximumHealth();
         }
@@ -111,7 +111,9 @@ public class HealthWatcher {
 
         if (healthbar != null) {
             bool opponents_recover = opponents_total > 0;
-            if (players_count < 0) opponents_recover = !opponents_recover;
+
+            // Note: originally was "if (players_count < 0)" change if something breaks
+            if (players_count < 1) opponents_recover = !opponents_recover;
 
             healthbar.SetHealthPosition((float)maximum, (float)accumulated, opponents_recover);
         }

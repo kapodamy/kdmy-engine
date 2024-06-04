@@ -144,7 +144,7 @@ public static class ExportsTweenKeyframe {
         int id = (int)L.luaL_checkinteger(3);
         float value = (float)L.luaL_checknumber(4);
         int steps_count = (int)L.luaL_checkinteger(5);
-        Align steps_method = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(6, null));
+        Align steps_method = (Align)LuascriptHelpers.optenum(L, 6, LuascriptEnums.Align);
 
         int ret = tweenkeyframe.AddSteps(at, id, value, steps_count, steps_method);
 
@@ -229,7 +229,7 @@ public static class ExportsTweenKeyframe {
         float at = (float)L.luaL_checknumber(2);
         int id = (int)L.luaL_checkinteger(3);
         float value = (float)L.luaL_checknumber(4);
-        AnimInterpolator type = LuascriptHelpers.ParseInterpolator(L, L.luaL_optstring(5, null));
+        AnimInterpolator type = (AnimInterpolator)LuascriptHelpers.optenum(L, 5, LuascriptEnums.AnimInterpolator);
 
         int ret = tweenkeyframe.AddInterpolator(at, id, value, type);
 

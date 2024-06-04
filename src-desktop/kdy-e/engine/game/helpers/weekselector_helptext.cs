@@ -66,7 +66,7 @@ public class WeekSelectorHelpText : IDraw {
         if (modelholder != null) {
             this.icon = Sprite.Init(modelholder.GetTexture(true));
 
-            AtlasEntry atlas_entry = modelholder.GetAtlasEntry(icon_name, false);
+            AtlasEntry atlas_entry = modelholder.GetAtlasEntry(icon_name);
             if (atlas_entry != null) Atlas.ApplyFromEntry(this.icon, atlas_entry, true);
 
             this.icon.SetVisible(false);

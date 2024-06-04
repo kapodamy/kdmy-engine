@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 using Engine.Animation;
 using Engine.Font;
 using Engine.Game.Common;
@@ -7,13 +8,14 @@ using Engine.Game.Gameplay.Helpers;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Utils;
+using KallistiOS.THD;
 
 namespace Engine.Game.Helpers;
 
 public class WeekSelectorMdlSelect : IDraw, IAnimate {
 
-    internal const string HEY = "choosen";
-    internal const string IDLE = "idle";
+    public const string HEY = "choosen";
+    public const string IDLE = "idle";
 
     private const string UI_BF_LABEL = "ui_character_selector_player";
     private const string UI_GF_LABEL = "ui_character_selector_girlfriend";
@@ -40,6 +42,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
     private bool is_boyfriend;
     private bool hey_playing;
     private volatile int load_thread_id;
+    private int running_threads;
     private Drawable drawable;
     private Drawable drawable_character;
     private LayoutPlaceholder placeholder_character;
@@ -73,6 +76,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
         this.hey_playing = false;
 
         this.load_thread_id = 0;
+        this.running_threads = 0;
 
         this.drawable = null;
         this.drawable_character = null;
@@ -113,7 +117,6 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
             string unlock_directive = JSONParser.ReadString(json_obj, "unlockDirectiveName", null);
             bool hide_if_locked = JSONParser.ReadBoolean(json_obj, "hideIfLocked", false);
             bool is_locked = !FunkinSave.ContainsUnlockDirective(unlock_directive);
-            //free(unlock_directive);
 
             if (is_locked && hide_if_locked) continue;
             index++;
@@ -147,7 +150,6 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
             bool is_locked = !FunkinSave.ContainsUnlockDirective(unlock_directive);
 
             if (is_locked && hide_if_locked) {
-                //free(unlock_directive);
                 continue;
             }
 
@@ -157,7 +159,6 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
                 throw new Exception("WeekSelectorMdlSelect.init() invalid / missing 'manifest' in " + models);
             }
             string manifest_path = FS.BuildPath2(models, manifest);
-            //free(manifest);
 
             this.list[index] = new CharacterInfo() {
                 name = JSONParser.ReadString(json_obj, "name", null),
@@ -234,7 +235,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
         WeekSelectorMdlSelect.InternalPlaceArrow(this.icon_down, arrows_height, placeholder, true);
 
         this.icon_locked.ResizeDrawSize(
-            placeholder.width, placeholder.height - arrows_height * 1.5f, out draw_width, out draw_height
+            placeholder.width, placeholder.height - (arrows_height * 1.5f), out draw_width, out draw_height
         );
         this.icon_locked.CenterDrawLocation(
             placeholder.x, placeholder.y,
@@ -270,6 +271,15 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
     }
 
     public void Destroy() {
+
+        this.load_thread_id++;
+        thd.pass();
+
+        while (this.running_threads > 0) {
+            // wait until all async operations are done
+            thd.pass();
+        }
+
         this.animsprite.Destroy();
 
         this.drawable.Destroy();
@@ -386,7 +396,8 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
              this.has_down ? 1.0f : WeekSelector.ARROW_DISABLED_ALPHA
         );
 
-        GameMain.THDHelperSpawn(WeekSelectorMdlSelect.InternalLoadAsync, this);
+        Interlocked.Increment(ref this.running_threads);
+        GameMain.THDHelperSpawn(true, WeekSelectorMdlSelect.InternalLoadAsync, this);
 
         return true;
     }
@@ -421,8 +432,6 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
     private static object InternalLoadAsync(object arg) {
         WeekSelectorMdlSelect mdlselect = arg as WeekSelectorMdlSelect;
 
-        // remember the statesprite id to check if "weekselector_mdlselect" was disposed
-        int id = mdlselect.preview.id;
         int load_thread_id = mdlselect.load_thread_id;
         CharacterInfo character_info = mdlselect.list[mdlselect.index];
         bool week_selector_left_facing = character_info.week_selector_left_facing;
@@ -434,8 +443,9 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
 
         ModelHolder modelholder = ModelHolder.Init(character_info.week_selector_model);
 
-        if (!StateSprite.POOL.Has(id) || load_thread_id != mdlselect.load_thread_id) {
+        if (load_thread_id != mdlselect.load_thread_id) {
             modelholder.Destroy();
+            Interlocked.Decrement(ref mdlselect.running_threads);
             return null;
         }
 

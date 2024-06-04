@@ -7,7 +7,10 @@ using Engine.Utils;
 namespace Engine.Image;
 
 [DebuggerDisplay("name={name} x={x} y={y} width={width} height={height} frame=\\{ x={frame_x} y={frame_y} width={frame_width} height={frame_height} \\} pivot=\\{ x={pivot_x} y={pivot_y} \\}")]
-public class AtlasEntry {
+public class AtlasEntry : ICloneable {
+    /// <summary>
+    /// Atlas entry name, this field is only valid during the Atlas lifetime
+    /// </summary>
     public string name;
     public float x;
     public float y;
@@ -20,21 +23,7 @@ public class AtlasEntry {
     public float pivot_x;
     public float pivot_y;
 
-    internal AtlasEntry Clone() {
-        return new AtlasEntry() {
-            name = this.name,
-            x = this.x,
-            y = this.y,
-            width = this.width,
-            height = this.height,
-            frame_x = this.frame_x,
-            frame_y = this.frame_y,
-            frame_width = this.frame_width,
-            frame_height = this.frame_height,
-            pivot_x = this.pivot_x,
-            pivot_y = this.pivot_y
-        };
-    }
+    public object Clone() => this.MemberwiseClone();
 }
 
 public class Atlas {
@@ -83,10 +72,8 @@ public class Atlas {
         if (atlas.texture_filename != null) {
             if (atlas.texture_filename.Length > 0) {
                 string path = FS.BuildPath2(src, atlas.texture_filename);
-                //free(atlas.texture_filename);
                 atlas.texture_filename = path;
             } else {
-                //free(atlas.texture_filename);
                 atlas.texture_filename = null;
             }
         }
@@ -101,7 +88,7 @@ public class Atlas {
                 case "SubTexture":
                     break;
                 default:
-                    Logger.Warn($"atlas_init() unknown TextureAtlas entry: {unparsed_entry.OuterHTML}");
+                    Logger.Warn($"atlas_init() unknown TextureAtlas entry: {unparsed_entry.OuterXML}");
                     continue;
             }
 
@@ -119,7 +106,7 @@ public class Atlas {
                 pivot_y = 0,// VertexProps.ParseFloat(unparsed_entry.getAttribute("pivotY"), 0.0f),
             };
 
-            Debug.Assert(atlas_entry.width != Math2D.MAX_INT32 || atlas_entry.height != Math2D.MAX_INT32, unparsed_entry.OuterHTML);
+            Debug.Assert(atlas_entry.width != Math2D.MAX_INT32 || atlas_entry.height != Math2D.MAX_INT32, unparsed_entry.OuterXML);
 
             if (Single.IsNaN(atlas_entry.frame_x)) atlas_entry.frame_x = 0;
             if (Single.IsNaN(atlas_entry.frame_y)) atlas_entry.frame_y = 0;
@@ -165,15 +152,6 @@ public class Atlas {
         int index = GetIndexOf(name);
 
         return index >= 0 ? this.entries[index] : null;
-    }
-
-    public AtlasEntry GetEntryCopy(string name) {
-        int index = GetIndexOf(name);
-
-        if (index < 0)
-            return null;
-        else
-            return this.entries[index].Clone();
     }
 
     public AtlasEntry GetEntryWithNumberSuffix(string name_prefix) {
@@ -243,7 +221,7 @@ public class Atlas {
                     switch (code) {
                         case 0x09:// tabulation
                         case 0x20:// white space
-                        case 0xff:// hard space
+                                  //case 0xff:// hard space
                                   // case 0x5F:// underscore (used in plain-text atlas)
                             ignore_space = false;
                             continue;
@@ -258,9 +236,10 @@ public class Atlas {
         return true;
     }
 
-    public void GetTextureResolution(out int width, out int height) {
+    public bool GetTextureResolution(out int width, out int height) {
         width = this.resolution_width;
         height = this.resolution_height;
+        return this.has_declared_resolution;
     }
 
     private static bool ParseResolution(Atlas atlas, string resolution_string) {
@@ -389,12 +368,12 @@ public class Atlas {
                 y = (int)y,
                 width = (int)width,
                 height = (int)height,
-                frame_x = 0,
-                frame_y = 0,
-                frame_width = 0,
-                frame_height = 0,
-                pivot_x = 0,
-                pivot_y = 0,
+                frame_x = 0.0f,
+                frame_y = 0.0f,
+                frame_width = 0.0f,
+                frame_height = 0.0f,
+                pivot_x = 0.0f,
+                pivot_y = 0.0f,
             });
 
             continue;
@@ -430,7 +409,7 @@ L_parse_field_failed:
             sub_width == Math2D.MAX_INT32 || sub_height == Math2D.MAX_INT32 ||
             tile_width == Math2D.MAX_INT32 || tile_height == Math2D.MAX_INT32
         ) {
-            Logger.Warn($"atlas_parse_tileset() missing fields in TileSet: {unparsed_tileset.OuterHTML}");
+            Logger.Warn($"atlas_parse_tileset() missing fields in TileSet: {unparsed_tileset.OuterXML}");
             return;
         }
 
@@ -445,10 +424,10 @@ L_parse_field_failed:
 
         foreach (XmlParserNode unparsed_tile in unparsed_tileset.Children) {
             if (unparsed_tile.TagName != "Tile") {
-                Logger.Warn($"atlas_parse_tileset() unknown TileSet entry: {unparsed_tile.OuterHTML}");
+                Logger.Warn($"atlas_parse_tileset() unknown TileSet entry: {unparsed_tile.OuterXML}");
                 continue;
             } else if (!unparsed_tile.HasAttribute("name")) {
-                Logger.Warn($"atlas_parse_tileset() missing tile name: {unparsed_tile.OuterHTML}");
+                Logger.Warn($"atlas_parse_tileset() missing tile name: {unparsed_tile.OuterXML}");
                 index++;
                 continue;
             }

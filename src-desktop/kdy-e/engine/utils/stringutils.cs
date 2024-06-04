@@ -79,27 +79,22 @@ public static partial class StringUtils {
     public static string Trim(string str, bool trim_start, bool trim_end) {
         if (String.IsNullOrEmpty(str) || (!trim_start && !trim_end)) return str;
 
-        Grapheme grapheme = new Grapheme();
-
         int start_index = 0;
         int end_index = str.Length;
-        int index = 0;
         bool start = trim_start;
         bool end = !trim_start && trim_end;
 
-        while (StringUtils.GetCharacterCodepoint(str, index, ref grapheme)) {
+        for (int index = 0; index < str.Length; index++) {
             bool whitespace = false;
-            switch (grapheme.code) {
-                case 0x0A:
-                case 0x0B:
-                case 0x0D:
-                case 0x20:
-                case 0x09:
+            switch (str[index]) {
+                case (char)0x0A:
+                case (char)0x0B:
+                case (char)0x0D:
+                case (char)0x20:
+                case (char)0x09:
                     whitespace = true;
                     break;
             }
-
-            index += grapheme.size;
 
             if (start) {
                 if (whitespace) {

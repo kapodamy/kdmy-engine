@@ -52,7 +52,9 @@ public static class ExportsDialogue {
     static int script_dialogue_show_dialog(LuaState L) {
         Dialogue dialogue = L.ReadUserdata<Dialogue>(DIALOGUE);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         string dialog_src = L.luaL_checkstring(2);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         bool ret = dialogue.ShowDialog(dialog_src);
 
@@ -123,7 +125,7 @@ public static class ExportsDialogue {
     static int script_dialogue_set_set_antialiasing(LuaState L) {
         Dialogue dialogue = L.ReadUserdata<Dialogue>(DIALOGUE);
 
-        PVRContextFlag antialiasing = LuascriptHelpers.ParsePVRFLAG(L, L.luaL_checkstring(2));
+        PVRFlag antialiasing = (PVRFlag)LuascriptHelpers.optenum(L, 2, LuascriptEnums.PVRFlag);
 
         dialogue.SetAntialiasing(antialiasing);
 

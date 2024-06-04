@@ -15,6 +15,7 @@ public static class ExportsAtlas {
         }
 
         LuaTableBuilder table = new LuaTableBuilder(11);
+
         table.AddString("name", entry.name);
         table.AddNumber("x", entry.x);
         table.AddNumber("y", entry.y);
@@ -35,7 +36,10 @@ public static class ExportsAtlas {
     static int script_atlas_init(LuaState L) {
         string src = L.luaL_checkstring(2);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         Atlas ret = Atlas.Init(src);
+        LuascriptHelpers.RestoreWorkingFolder(L);
+
         return L.CreateAllocatedUserdata(ATLAS, ret);
     }
 

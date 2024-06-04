@@ -7,7 +7,9 @@ namespace Engine.Externals.LuaScriptInterop;
 internal static class ExportsModifier {
 
     private const string MODIFIER = "Modifier";
-    private const string TOSTRING_FORMAT = "{ " +
+    
+    // (JS & C# only) internal engine format
+    private const string TOSTRING_INTERNAL_FORMAT = "{ " +
                                             "translateX: $6f, " +
                                             "translateY: $6f, " +
                                             "rotate: $6f, " +
@@ -44,7 +46,7 @@ internal static class ExportsModifier {
         Modifier modifier = L.ReadUserdata<Modifier>(MODIFIER);
 
         L.lua_pushstring(StringUtils.CreateFormattedString(
-            TOSTRING_FORMAT,
+            TOSTRING_INTERNAL_FORMAT,
             modifier.translate_x,
             modifier.translate_y,
             modifier.rotate,
@@ -54,12 +56,12 @@ internal static class ExportsModifier {
             modifier.scale_y,
             modifier.scale_direction_x,
             modifier.scale_direction_y,
-            modifier.rotate_pivot_enabled,
+            modifier.rotate_pivot_enabled == true,
             modifier.rotate_pivot_u,
             modifier.rotate_pivot_v,
-            modifier.translate_rotation,
-            modifier.scale_size,
-            modifier.scale_translation,
+            modifier.translate_rotation == true,
+            modifier.scale_size == true,
+            modifier.scale_translation == true,
             modifier.x,
             modifier.y,
             modifier.width,

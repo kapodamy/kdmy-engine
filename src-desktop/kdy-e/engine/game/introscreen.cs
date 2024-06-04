@@ -1,3 +1,4 @@
+using System.Text;
 using Engine.Font;
 using Engine.Game.Common;
 using Engine.Platform;
@@ -34,7 +35,7 @@ public class IntroScreen {
         if (custom_duration > 0.0) {
             modding.HelperNotifyEvent("custom-intro");
 
-            // custom intro detected wait the requeted time
+            // custom intro detected, wait the desired time
             double progress = 0.0;
             while (progress < custom_duration) {
                 float elapsed = PVRContext.global_context.WaitReady();
@@ -121,7 +122,6 @@ public class IntroScreen {
         modding.HelperNotifyExit2();
 
         // dispose resources used
-        //if (funky != Funkin.FUNKY) free(funky);
         //free(self_text);
         //free(intro_text);
         //free(week_greetings);
@@ -135,8 +135,8 @@ public class IntroScreen {
         TextSprite textsprite = layout.GetTextsprite("greetings");
         if (textsprite == null || text == null || modding.has_exit) return;
 
-        string text_buffer = "";
         int text_length = text.Length;
+        StringBuilder text_buffer = new StringBuilder(text_length);
         int lines = text.OccurrencesOfKDY(IntroScreen.TEXT_SPARSE) + 1;
         double paragraph_duration = duration / (double)lines;
         double progress = paragraph_duration - delay;
@@ -146,15 +146,15 @@ public class IntroScreen {
         while (true) {
             if (progress >= paragraph_duration) {
                 if (last_index >= text_length) break;
-                if (last_index > 0) text_buffer += "\n";
+                if (last_index > 0) text_buffer.Append('\n');
 
                 int index = text.IndexOf(IntroScreen.TEXT_SPARSE, last_index);
                 if (index < 0) index = text_length;
 
-                text_buffer += text.SubstringKDY(last_index, index);
+                text_buffer.AddSubstringKDY(text, last_index, index);
                 last_index = index + sparse_length;
 
-                textsprite.SetTextIntern(true, text_buffer);
+                textsprite.SetTextIntern(true, text_buffer.InternKDY());
                 progress -= paragraph_duration;
             }
 
@@ -172,7 +172,7 @@ public class IntroScreen {
             if (maple_pad.HasPressed(IntroScreen.SKIP_BUTTONS) != GamepadButtons.NOTHING) break;
         }
 
-        //free(text_buffer);
+        //text_buffer.Destroy();
     }
 
     private static string ReadIntroText(string path) {

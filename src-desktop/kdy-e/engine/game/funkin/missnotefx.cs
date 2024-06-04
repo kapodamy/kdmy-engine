@@ -9,6 +9,7 @@ public class MissNoteFX {
     private SoundPlayer missnote1;
     private SoundPlayer missnote2;
     private SoundPlayer missnote3;
+    private bool disabled;
 
 
 
@@ -17,6 +18,7 @@ public class MissNoteFX {
         this.missnote1 = SoundPlayer.Init("/assets/common/sound/missnote1.ogg");
         this.missnote2 = SoundPlayer.Init("/assets/common/sound/missnote2.ogg");
         this.missnote3 = SoundPlayer.Init("/assets/common/sound/missnote3.ogg");
+        this.disabled = false;
 
     }
 
@@ -29,8 +31,19 @@ public class MissNoteFX {
         //free(this);
     }
 
+    public void Stop() {
+        if (this.missnote1 != null) this.missnote1.Stop();
+        if (this.missnote2 != null) this.missnote2.Stop();
+        if (this.missnote3 != null) this.missnote3.Stop();
+    }
+
+    public void Disable(bool disabled) {
+        this.disabled = disabled;
+    }
+
     public void PlayEffect() {
-        int soundplayer_id = Math2D.RandomInt(0, 2);
+        if (this.disabled) return;
+
         int soundplayer_id = Math2D.RandomInt(0, 3);
         float volume = Math2D.Lerp(0.1f, 0.3f, Math2D.RandomFloat());
 

@@ -271,7 +271,7 @@ public static class ExportsTweenLerp {
         float end = (float)L.luaL_checknumber(4);
         float duration = (float)L.luaL_checknumber(5);
         int steps_count = (int)L.luaL_checkinteger(6);
-        Align steps_method = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(7, null));
+        Align steps_method = (Align)LuascriptHelpers.optenum(L, 7, LuascriptEnums.Align);
 
         int ret = tweenlerp.AddSteps(id, start, end, duration, steps_count, steps_method);
 
@@ -337,7 +337,7 @@ public static class ExportsTweenLerp {
         float start = (float)L.luaL_checknumber(3);
         float end = (float)L.luaL_checknumber(4);
         float duration = (float)L.luaL_checknumber(5);
-        AnimInterpolator type = LuascriptHelpers.ParseInterpolator(L, L.luaL_optstring(6, null));
+        AnimInterpolator type = (AnimInterpolator)LuascriptHelpers.optenum(L, 6, LuascriptEnums.AnimInterpolator);
 
         int ret = tweenlerp.AddInterpolator(id, start, end, duration, type);
 

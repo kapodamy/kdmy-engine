@@ -52,7 +52,7 @@ public class FreeplayMenu {
 
             font = null,
             font_glyph_suffix = null,// unused
-            font_color_by_difference = false,// unused
+            font_color_by_addition = false,// unused
             font_size = 28f,
             font_color = 0xFFFFFF,
             font_border_color = 0x000000FF,// unused
@@ -342,8 +342,8 @@ public class FreeplayMenu {
             if ((btns & (GamepadButtons.B | GamepadButtons.BACK)).Bool() && !state.modding.HelperNotifyBack()) {
                 break;
             } else if ((btns & (GamepadButtons.X)).Bool()) {
-                WeekInfo weeinfo = Funkin.weeks_array.array[state.map.week_index];
-                if (!String.IsNullOrEmpty(weeinfo.warning_message)) {
+                WeekInfo weekinfo = Funkin.weeks_array.array[state.map.week_index];
+                if (!String.IsNullOrEmpty(weekinfo.warning_message)) {
                     state.use_alternative = !state.use_alternative;
                     FreeplayMenu.InternalModdingNotifyEvent(state, false, true);
                 } else if (sound_asterik != null) {
@@ -537,7 +537,7 @@ L_return:
             return null;
         }
 
-        if (src.LowercaseEndsWithKDY(".json") || src.LowercaseEndsWithKDY(".xml")) {
+        if (ModelHolder.UtilsIsKnownExtension(src)) {
             modelholder = ModelHolder.Init(src);
         } else {
             // assume is a image file
@@ -585,7 +585,7 @@ L_return:
         string week_name = weekinfo.display_name;
         string song_name = weekinfo.songs[state.map.song_index].name;
 
-        if (String.IsNullOrEmpty(weekinfo.display_name)) week_name = weekinfo.name;
+        if (weekinfo.display_name == null) week_name = weekinfo.name;
 
         string difficult;
         bool is_locked;
@@ -620,7 +620,7 @@ L_return:
         Sprite bg_info = layout.GetSprite(FreeplayMenu.BG_INFO_NAME);
         if (bg_info != null) bg_info.SetDrawSize(bg_info_width, Single.NaN);
 
-        if (desc != null) {
+        if (!String.IsNullOrEmpty(desc)) {
             if (state.description != null)
                 state.description.SetTextIntern(true, desc);
             layout.TriggerAny("description-show");
@@ -630,7 +630,7 @@ L_return:
 
         layout.TriggerAny(is_locked ? "locked" : "not-locked");
 
-        if (!String.IsNullOrEmpty(weekinfo.warning_message))
+        if (weekinfo.warning_message != null)
             layout.TriggerAny(state.use_alternative ? "use-alternative" : "not-use-alternative");
         else
             layout.TriggerAny("hide-alternative");
@@ -745,8 +745,8 @@ L_return:
         mutex.Lock(state.mutex);
 
         state.async_id_operation++;
-        if (with_bg) GameMain.THDHelperSpawn(FreeplayMenu.InternalLoadBackgroundAsync, state);
-        GameMain.THDHelperSpawn(FreeplayMenu.InternalLoadSongAsync, state);
+        if (with_bg) GameMain.THDHelperSpawn(true, FreeplayMenu.InternalLoadBackgroundAsync, state);
+        GameMain.THDHelperSpawn(true, FreeplayMenu.InternalLoadSongAsync, state);
 
         mutex.Unlock(state.mutex);
     }
@@ -757,13 +757,15 @@ L_return:
 
         state.modding.HelperNotifyEvent(what);
 
-        if (duration < 1) return;
+        if (duration < 1f) return;
         if (layout.TriggerAny(what) < 1) return;
 
-        while (duration > 0) {
+        while (duration > 0f) {
             float elapsed = PVRContext.global_context.WaitReady();
             duration -= elapsed;
-            modding.HelperNotifyFrame(elapsed, -1.0);
+
+            modding.HelperNotifyFrame(elapsed, -1f);
+
             layout.Animate(elapsed);
             layout.Draw(PVRContext.global_context);
         }
@@ -839,13 +841,13 @@ L_return:
 
         public volatile int async_id_operation;
 
-        public SoundPlayer soundplayer;
-        public string soundplayer_path;
+        public volatile SoundPlayer soundplayer;
+        public volatile string soundplayer_path;
 
         public mutex_t mutex;
         public volatile int running_threads;
 
-        public Sprite background;
+        public volatile Sprite background;
         public Layout layout;
 
         public TextSprite personal_best;

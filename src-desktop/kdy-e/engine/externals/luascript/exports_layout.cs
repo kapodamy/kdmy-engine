@@ -194,7 +194,7 @@ public static class ExportsLayout {
             case AttachedValueType.STRING:
                 L.lua_pushstring((string)value);
                 break;
-            case AttachedValueType.FLOAT:
+            case AttachedValueType.DOUBLE:
                 L.lua_pushnumber((double)value);
                 break;
             case AttachedValueType.INTEGER:
@@ -248,6 +248,16 @@ public static class ExportsLayout {
         return 0;
     }
 
+    static int script_layout_get_group_visibility(LuaState L) {
+        Layout layout = L.ReadUserdata<Layout>(LAYOUT);
+        string group_name = L.luaL_optstring(2, null);
+
+        bool ret = layout.GetGroupVisibility(group_name);
+
+        L.lua_pushboolean(ret);
+        return 1;
+    }
+
     static int script_layout_suspend(LuaState L) {
         Layout layout = L.ReadUserdata<Layout>(LAYOUT);
         layout.Suspend();
@@ -283,7 +293,7 @@ public static class ExportsLayout {
         Layout layout = L.ReadUserdata<Layout>(LAYOUT);
 
         string group_name = L.luaL_optstring(2, null);
-        PVRContextFlag antialiasing = LuascriptHelpers.ParsePVRFLAG(L, L.luaL_optstring(3, null));
+        PVRFlag antialiasing = (PVRFlag)LuascriptHelpers.optenum(L, 3, LuascriptEnums.PVRFlag);
 
         layout.SetGroupAntialiasing(group_name, antialiasing);
 
@@ -369,6 +379,7 @@ public static class ExportsLayout {
        new LuaTableFunction("set_group_visibility", script_layout_set_group_visibility),
        new LuaTableFunction("set_group_alpha", script_layout_set_group_alpha),
        new LuaTableFunction("set_group_offsetcolor", script_layout_set_group_offsetcolor),
+       new LuaTableFunction("get_group_visibility", script_layout_get_group_visibility),
        new LuaTableFunction("suspend", script_layout_suspend),
        new LuaTableFunction("resume", script_layout_resume),
        new LuaTableFunction("get_placeholder", script_layout_get_placeholder),

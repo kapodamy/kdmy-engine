@@ -81,11 +81,6 @@ public class ModelHolder {
             //free(fallback_texture_filename);
         }
 
-        // JS only
-        if (manifest_texture != null) manifest_texture = FS.BuildPath2(full_path, manifest_texture);
-        if (manifest_atlas != null) manifest_atlas = FS.BuildPath2(full_path, manifest_atlas);
-        if (manifest_animlist != null) manifest_animlist = FS.BuildPath2(full_path, manifest_animlist);
-
         ModelHolder modelholder = new ModelHolder() {
             atlas = ModelHolder.STUB_ATLAS,
             animlist = ModelHolder.STUB_ANIMLIST,
@@ -204,6 +199,21 @@ public class ModelHolder {
         return modelholder;
     }
 
+    public static ModelHolder Init3(uint vertex_color_rgb8, Texture texture, Atlas atlas, AnimList animlist) {
+        ModelHolder modelholder = new ModelHolder() {
+            atlas = atlas ?? ModelHolder.STUB_ATLAS,
+            animlist = animlist ?? ModelHolder.STUB_ANIMLIST,
+            texture = texture,
+            vertex_color_rgb8 = vertex_color_rgb8,
+
+            id = ModelHolder.IDS++,
+            instance_references = 1,
+            instance_src = null
+        };
+
+        ModelHolder.POOL.Set(modelholder.id, modelholder);
+        return modelholder;
+    }
 
     public void Destroy() {
         //if (this == null) return;
@@ -212,14 +222,16 @@ public class ModelHolder {
         this.instance_references--;
         if (this.instance_references > 0) return;
 
-        if (this.atlas != ModelHolder.STUB_ATLAS)
-            this.atlas.Destroy();
+        if (this.instance_src != null) {
+            if (this.atlas != ModelHolder.STUB_ATLAS)
+                this.atlas.Destroy();
 
-        if (this.animlist != ModelHolder.STUB_ANIMLIST)
-            this.animlist.Destroy();
+            if (this.animlist != ModelHolder.STUB_ANIMLIST)
+                this.animlist.Destroy();
 
-        if (this.texture != null)
-            this.texture.Destroy();
+            if (this.texture != null)
+                this.texture.Destroy();
+        }
 
         ModelHolder.POOL.Delete(this.id);
         Luascript.DropShared(this);
@@ -264,7 +276,7 @@ public class ModelHolder {
         Sprite sprite;
         if (this.texture != null) {
             sprite = Sprite.Init(this.texture.ShareReference());
-            AtlasEntry atlas_entry = GetAtlasEntry2(atlas_entry_name, false);
+            AtlasEntry atlas_entry = GetAtlasEntry2(atlas_entry_name);
             if (atlas_entry != null) Atlas.ApplyFromEntry(sprite, atlas_entry, true);
         } else {
             sprite = Sprite.InitFromRGB8(this.vertex_color_rgb8);
@@ -319,13 +331,10 @@ public class ModelHolder {
             return null;
     }
 
-    public AtlasEntry GetAtlasEntry(string atlas_entry_name, bool return_copy) {
+    public AtlasEntry GetAtlasEntry(string atlas_entry_name) {
         if (this.atlas == ModelHolder.STUB_ATLAS) return null;
 
-        if (return_copy)
-            return this.atlas.GetEntryCopy(atlas_entry_name);
-        else
-            return this.atlas.GetEntry(atlas_entry_name);
+        return this.atlas.GetEntry(atlas_entry_name);
     }
 
     /**
@@ -333,18 +342,15 @@ public class ModelHolder {
      * entry with number suffix (example "dance left000"), 
      * @param {Object} modelholder The modelholder instance
      * @param {string} atlas_entry_name Entry name and/or entry name prefix
-     * @param {bool} return_copy 1 to clone entry (must be free() later), otherwise, 0 to obtain an reference
      * @returns {object} the atlas entry or NULL if not found
      */
-    public AtlasEntry GetAtlasEntry2(string atlas_entry_name, bool return_copy) {
+    public AtlasEntry GetAtlasEntry2(string atlas_entry_name) {
         if (this.atlas == ModelHolder.STUB_ATLAS) return null;
 
         AtlasEntry atlas_entry = this.atlas.GetEntry(atlas_entry_name);
 
         if (atlas_entry == null)
             atlas_entry = this.atlas.GetEntryWithNumberSuffix(atlas_entry_name);
-
-        if (atlas_entry != null && return_copy) atlas_entry = atlas_entry.Clone();
 
         return atlas_entry;
     }
@@ -355,7 +361,7 @@ public class ModelHolder {
             resolution_height = Funkin.SCREEN_RESOLUTION_HEIGHT;
             return false;
         }
-        this.atlas.GetTextureResolution(out resolution_width, out resolution_height); return true;
+        return this.atlas.GetTextureResolution(out resolution_width, out resolution_height);
     }
 
     public static bool UtilsIsKnownExtension(string filename) {

@@ -27,7 +27,7 @@ public class Countdown : IDraw, IAnimate {
     private float animation_speed;
     private bool static_ready;
     private bool ready_only;
-    private double progress;
+    private int progress;
     private double timer;
     private SoundPlayer sound_three;
     private SoundPlayer sound_two;
@@ -168,7 +168,6 @@ public class Countdown : IDraw, IAnimate {
             this.statesprite.Animate(0);
         }
 
-
         return this.valid_state;
     }
 
@@ -178,14 +177,14 @@ public class Countdown : IDraw, IAnimate {
         InternalToggle(Countdown.THREE);
         this.ready_only = false;
         this.static_ready = false;
-        this.progress = 0.0;
+        this.progress = 0;
         this.timer = 0.0;
 
         return this.valid_state;
     }
 
     public bool HasEnded() {
-        return this.progress > 3 && !this.ready_only;
+        return (this.progress > 3) && (!this.ready_only);
     }
 
 

@@ -1,5 +1,5 @@
 using System;
-using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Engine.Externals;
 using Engine.Externals.FontAtlasInterop;
 using Engine.Image;
@@ -10,10 +10,10 @@ namespace Engine.Font;
 
 public class FontType : IFontRender {
 
-    private static volatile Map<FontType> POOL = new Map<FontType>();
-    private static volatile int IDS = 0;
+    private static Map<FontType> POOL = new Map<FontType>();
+    private static int IDS = 0;
 
-    public const byte GLYPHS_HEIGHT = 72;// in the dreamcast use 64px, 64px is enough for SDF
+    public const byte GLYPHS_HEIGHT = 72;// in the dreamcast use 32px, 64px is enough for SDF
     public const float GLYPHS_OUTLINE_RATIO = 0.086f;// ~6px of outline @ 72px (used in SDF)
     public const float GLYPHS_SMOOTHING_COEFF = 0.245f;// used in SDF, idk how its works
     public const byte GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
@@ -40,7 +40,7 @@ public class FontType : IFontRender {
     private FontCharMap fontcharmap_secondary;
     private Texture fontcharmap_secondary_texture;
 
-
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public static FontType Init(string src) {
         string full_path = FS.GetFullPathAndOverride(src);
 
@@ -132,12 +132,11 @@ public class FontType : IFontRender {
     }
 
 
-    public float Measure(float height, string text, int text_index, int text_size) {
+    public float Measure(float height, string text, int text_index, int text_length) {
         float scale = height / FontType.GLYPHS_HEIGHT;
-        int text_end_index = text_index + text_size;
-        int text_length = text.Length;
+        int text_end_index = text_index + text_length;
 
-        Debug.Assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
+        //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
         // check for unmapped characters and them to the secondary map
         InternalFindUnmapedCodepointsToSecondary(text_index, text_end_index, text);
@@ -306,8 +305,8 @@ public class FontType : IFontRender {
         this.border_offset_y = y;
     }
 
-    public float DrawText(PVRContext pvrctx, float height, float x, float y, int text_index, int text_size, string text) {
-        if (text == null || text.Length < 1) return 0;
+    public float DrawText(PVRContext pvrctx, float height, float x, float y, int text_index, int text_length, string text) {
+        if (text == null || text_length < 1) return 0;
 
         Grapheme grapheme = new Grapheme();
         FontCharMap primary = this.fontcharmap_primary;
@@ -318,11 +317,10 @@ public class FontType : IFontRender {
         float outline_size = this.border_size * 2;
         float scale = height / FontType.GLYPHS_HEIGHT;
         float ascender = ((primary ?? secondary).ascender / 2f) * scale;// FIXME: ¿why does dividing by 2 works?
-        int text_end_index = text_index + text_size;
-        int text_length = text.Length;
+        int text_end_index = text_index + text_length;
         float border_padding1 = 0f, border_padding2 = 0f;
 
-        Debug.Assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
+        //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
 #if SDF_FONT
         // calculate sdf thickness
@@ -356,7 +354,7 @@ public class FontType : IFontRender {
         pvrctx.Save();
         pvrctx.SetVertexAlpha(this.alpha);
         pvrctx.SetGlobalOffsetColor(PVRContext.DEFAULT_OFFSET_COLOR);
-        pvrctx.SetVertexAntialiasing(PVRContextFlag.DEFAULT);
+        pvrctx.SetVertexAntialiasing(PVRFlag.DEFAULT);
 
 
         // count the amount of glyph required
@@ -366,11 +364,11 @@ public class FontType : IFontRender {
             if (grapheme.code == 0xA0) continue;
 
             if ((fontchardata = InternalGetFontchardata(primary, grapheme.code)) != null) {
-                if (primary_texture != null && fontchardata.has_atlas_entry) total_glyphs++;
+                if (fontchardata.has_atlas_entry) total_glyphs++;
                 continue;
             }
             if ((fontchardata = InternalGetFontchardata(secondary, grapheme.code)) != null) {
-                if (secondary_texture != null && fontchardata.has_atlas_entry) total_glyphs++;
+                if (fontchardata.has_atlas_entry) total_glyphs++;
                 continue;
             }
         }
@@ -379,6 +377,11 @@ public class FontType : IFontRender {
         if (has_border) total_glyphs *= 2;
         int added = 0;
         int maximum = GlyphRenderer.Prepare(total_glyphs, has_border);
+
+#if SDF_FONT
+        float smoothing = FontType.InternalCalcSmoothing(pvrctx, height);
+        GlyphRenderer.SetSDFSmoothing(pvrctx, smoothing);
+#endif
 
         // add glyphs to the vertex buffer
         index = text_index;
@@ -440,7 +443,7 @@ public class FontType : IFontRender {
                 }
             }
 
-            if (texture != null && fontchardata.has_atlas_entry) {
+            if (fontchardata.has_atlas_entry) {
                 // compute draw location and size
                 float dx = x + draw_x + (fontchardata.offset_x * scale);
                 float dy = y + draw_y + (fontchardata.offset_y * scale);
@@ -487,11 +490,6 @@ public class FontType : IFontRender {
             line_chars++;
         }
 
-#if SDF_FONT
-        float smoothing = FontType.InternalCalcSmoothing(pvrctx, height);
-        GlyphRenderer.SetSDFSmoothing(pvrctx, smoothing);
-#endif
-
         // commit draw
         GlyphRenderer.Draw(pvrctx, this.color, this.border_color, false, true, primary_texture, secondary_texture);
 
@@ -512,6 +510,7 @@ public class FontType : IFontRender {
         return this.fontatlas == null;
     }
 
+    [MethodImpl(MethodImplOptions.Synchronized)]
     private FontCharMap InternalRetrieveFontcharmap(uint[] characters_map) {
         FontCharMap fontcharmap = null;
 
@@ -688,7 +687,7 @@ public class FontType : IFontRender {
 
     public int Animate(float elapsed) { return 0; }
 
-    public void EnableColorByDifference(bool enable) { }
+    public void EnableColorByAddition(bool enable) { }
 
 
 }

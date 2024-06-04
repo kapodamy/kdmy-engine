@@ -241,6 +241,23 @@ public class LinkedList<T> {
         return -1;
     }
 
+
+    public void SetItem(int index, T item) {
+        if (index < 0 || index >= this.count) throw new ArgumentOutOfRangeException("index");
+
+        int i = 0;
+        LinkedListNode current = this.head;
+        while (current != null) {
+            if (i == index) {
+                current.item = item;
+                return;
+            }
+            current = current.next;
+            i++;
+        }
+    }
+
+
     public System.Collections.Generic.IEnumerator<T> GetEnumerator() {
         return new LinkedListEnumerator(this.head);
     }

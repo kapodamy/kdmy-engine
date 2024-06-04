@@ -341,7 +341,7 @@ public class Sprite : IVertex {
         sprite.antialiasing = PVRFlag.DEFAULT;
 
         sprite.psshader = null;
-        sprite.blend_enabled = true;
+        sprite.blend_enabled = false;
         sprite.blend_src_rgb = Blend.DEFAULT;
         sprite.blend_dst_rgb = Blend.DEFAULT;
         sprite.blend_src_alpha = Blend.DEFAULT;
@@ -549,7 +549,7 @@ public class Sprite : IVertex {
 
         int i = 0;
         foreach (AnimSprite animsprite in this.animation_list) {
-            if (animsprite.name == animation_name) {
+            if (animsprite.GetName() == animation_name) {
                 this.animation_list.RemoveItemAt(i);
                 return;
             }
@@ -710,7 +710,7 @@ public class Sprite : IVertex {
         }
 
         foreach (AnimSprite animsprite in this.animation_list) {
-            if (animation_name == null || animsprite.name == animation_name)
+            if (animation_name == null || animsprite.GetName() == animation_name)
                 return animsprite;
         }
 

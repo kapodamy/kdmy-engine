@@ -21,7 +21,7 @@ public class SaveManager {
     private const string LAYOUT_DREAMCAST = "/assets/common/image/save-manager/layout~dreamcast.xml";
     private const string MODDING_SCRIPT = "/assets/common/data/scripts/savemanager.lua";
 
-    public static readonly MenuManifest MENU_MANIFEST = new MenuManifest() {
+    private static readonly MenuManifest MENU_MANIFEST = new MenuManifest() {
         parameters = new MenuManifest.Parameters() {
             suffix_selected = null,
             suffix_choosen = null,
@@ -47,7 +47,7 @@ public class SaveManager {
 
             font = null,// unused
             font_glyph_suffix = null,// unused
-            font_color_by_difference = false,// unused
+            font_color_by_addition = false,// unused
             font_size = 0f,// unused
             font_color = 0x00,// unused
             font_border_color = 0x00,// unused
@@ -72,7 +72,7 @@ public class SaveManager {
      * This variable is set to true if the user does not want load and/or save
      * the progress. {@link SaveManager.ShouldShow} will always return -1 if true
      */
-    public static bool game_withoutsavedata = false;
+    private static bool game_withoutsavedata = false;
 
 
     private int error_code;
@@ -136,6 +136,10 @@ public class SaveManager {
         messagebox.ShowButtonsIcons(false);
 
         ModelHolder button_icons = ModelHolder.Init(WeekSelector.BUTTONS_MODEL);
+        if (button_icons == null) {
+            throw new Exception("can not load " + WeekSelector.BUTTONS_MODEL);
+        }
+        
         WeekSelectorHelpText help_cancel = new WeekSelectorHelpText(
             button_icons, layout, 2, false, "b", "Continue without save", null
         );
@@ -240,7 +244,7 @@ public class SaveManager {
                     modding.native_menu = this.menu;
                 }
 
-                if (last_vmu_size > 0 != this.vmu_size > 0) {
+                if ((last_vmu_size > 0) != (this.vmu_size > 0)) {
                     if (this.vmu_size > 0)
                         this.layout.TriggerAny("no-detected-hide");
                     else
@@ -258,7 +262,8 @@ public class SaveManager {
                 this.selected_background.SetDrawSize(size_width, size_height);
                 this.selected_background.SetVisible(true);
 
-                this.selected_label.SetDrawLocation(location_x, location_y - 24.0f);
+                float label_height = this.selected_label.GetFontSize();
+                this.selected_label.SetDrawLocation(location_x, location_y - label_height);
                 this.selected_label.SetVisible(true);
             } else {
                 this.selected_background.SetVisible(false);
@@ -331,7 +336,7 @@ public class SaveManager {
             if (selection_offset_y != 0 && this.menu.SelectVertical(selection_offset_y)) success = true;
 
             selected_index = this.menu.GetSelectedIndex();
-            if (!success || selected_index < 0 && selected_index >= this.vmu_size) continue;
+            if ((!success || selected_index < 0) && selected_index >= this.vmu_size) continue;
 
             VMUInfo vmu = this.vmu_array[selected_index];
 
@@ -351,6 +356,7 @@ public class SaveManager {
         modding.HelperNotifyEvent("outro");
 
         if (save_or_load_success) {
+            PVRContext.global_context.WaitReady();
             modding.has_exit = modding.has_halt = false;
             while (!modding.has_exit) {
                 float elapsed = PVRContext.global_context.WaitReady();
@@ -455,7 +461,7 @@ public class SaveManager {
             maple_device_t dev = maple.enum_type(i, MAPLE_FUNC.MEMCARD);
             if (!dev.valid) continue;
 
-            bool found = FunkinSave.HasSavedataInVMU(dev.port, dev.unit);
+            bool found = FunkinSave.HasSavedataInVMU((sbyte)dev.port, (sbyte)dev.unit);
             new_vmu_array[i] = new VMUInfo() { has_savedata = found, port = dev.port, unit = dev.unit };
         }
 
@@ -474,7 +480,10 @@ public class SaveManager {
             }
         }
 
-        if (changes < 1) return false;
+        if (changes < 1) {
+            //free(new_vmu_array);
+            return false;
+        }
 
         // drop old VMU scan
         //free(this.vmu_array);
@@ -527,7 +536,7 @@ public class SaveManager {
             }
         }
 
-        FunkinSave.SetVMU(vmu.port, vmu.unit);
+        FunkinSave.SetVMU((sbyte)vmu.port, (sbyte)vmu.unit);
 
         if (!this.save_only && !vmu.has_savedata) {
             this.messagebox.SetTitle("Creating new save...");
@@ -645,8 +654,8 @@ public class SaveManager {
 
     private class VMUInfo {
         public bool has_savedata;
-        public uint port;
-        public uint unit;
+        public int port;
+        public int unit;
     };
 
 }

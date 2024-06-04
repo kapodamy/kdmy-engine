@@ -137,7 +137,7 @@ public class WeekSelectorDifficult : IDraw, IAnimate {
         if (this.has_left)
             this.animsprite.UpdateSprite(this.icon_left, false);
         if (this.has_right)
-            this.animsprite.UpdateSprite(this.icon_right, false);
+            this.animsprite.UpdateSprite(this.icon_right, true);
 
         return 0;
     }

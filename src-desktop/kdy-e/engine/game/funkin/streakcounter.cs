@@ -167,7 +167,6 @@ public class StreakCounter : IDraw, IAnimate {
     }
 
 
-
     public int StateAdd(ModelHolder combo_modelholder, ModelHolder number_modelholder, string state_name) {
         float temp_width = 0f, temp_height = 0f;
 

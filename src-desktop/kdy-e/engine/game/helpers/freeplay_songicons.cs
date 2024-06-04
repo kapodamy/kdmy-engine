@@ -15,7 +15,6 @@ public class FreeplaySongIcons {
         this.icons_size = song_map.Size();
         this.icons = new SongIcon[this.icons_size];
 
-
         string last_model = null;
         bool last_model_exists = false;
         float base_offset_y = (font_size - max_dimmen) / 2f;
@@ -63,7 +62,7 @@ public class FreeplaySongIcons {
                 if (anim != null) {
                     sprite.ExternalAnimationSet(anim);
                 } else {
-                    AtlasEntry atlas_entry = modelholder.GetAtlasEntry(icon_name, false);
+                    AtlasEntry atlas_entry = modelholder.GetAtlasEntry(icon_name);
                     if (atlas_entry != null) Atlas.ApplyFromEntry(sprite, atlas_entry, true);
                 }
 
@@ -72,6 +71,7 @@ public class FreeplaySongIcons {
                 Texture texture = Texture.Init(model_src);
                 sprite = Sprite.Init(texture);
             }
+
 L_continue:
             if (sprite != null) {
                 float draw_width, draw_height;
@@ -100,10 +100,11 @@ L_continue:
 
     public bool DrawItemIcon(PVRContext pvrctx, Menu menu, int idx, float x, float y, float w, float h) {
         SongIcon icon = this.icons[idx];
-        if (icon.sprite == null) return true;
 
-        icon.sprite.SetDrawLocation(x + w, y + icon.offset_y);
-        icon.sprite.Draw(pvrctx);
+        if (icon.sprite != null) {
+            icon.sprite.SetDrawLocation(x + w, y + icon.offset_y);
+            icon.sprite.Draw(pvrctx);
+        }
 
         return true;
     }

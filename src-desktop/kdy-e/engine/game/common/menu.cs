@@ -7,7 +7,6 @@ using Engine.Game.Gameplay.Helpers;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Utils;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Engine.Game.Common;
 
@@ -60,7 +59,7 @@ public class Menu : IAnimate, IDraw {
             fontholder = new FontHolder(@params.font, @params.font_size, @params.font_glyph_suffix);
             if (fontholder.font == null) throw new Exception("Missing or invalid font: " + @params.font);
             if (fontholder.font_from_atlas) {
-                fontholder.font.EnableColorByDifference(@params.font_color_by_difference);
+                fontholder.font.EnableColorByAddition(@params.font_color_by_addition);
             }
         }
 
@@ -540,7 +539,7 @@ public class Menu : IAnimate, IDraw {
             uint font_color = @params.font_color;
             if (src_item.has_font_color) font_color = src_item.font_color;
 
-            // do not intern the text
+            // important: do not intern the text
             item.vertex = TextSprite.Init2(fontholder, dimmen, font_color);
             ((TextSprite)item.vertex).SetTextIntern(false, src_item.text);
             if (@params.font_border_size > 0) {
@@ -765,6 +764,7 @@ public class Menu : IAnimate, IDraw {
                 this.render_distance = this.items[lower_index].render_distance;
 
             }
+
 L_stop_checking_static_index:
             if (!has_static_index) {
                 if (this.render_end > 0 && (new_index - old_index) == 1) {

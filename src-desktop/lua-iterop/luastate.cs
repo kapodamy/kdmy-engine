@@ -117,6 +117,11 @@ public struct LuaState {
         }
     }
 
+    public object Tag {
+        set => this.Self.Tag = value;
+        get => this.Self.Tag;
+    }
+
 
     public string luaL_optstring(int arg, string d) {
         unsafe {

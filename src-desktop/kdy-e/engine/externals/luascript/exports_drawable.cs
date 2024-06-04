@@ -84,7 +84,7 @@ public static class ExportsDrawable {
 
     static int script_drawable_set_antialiasing(LuaState L) {
         Drawable drawable = L.ReadUserdata<Drawable>(DRAWABLE);
-        PVRContextFlag antialiasing = LuascriptHelpers.ParsePVRFLAG(L, L.luaL_optstring(2, null));
+        PVRFlag antialiasing = (PVRFlag)LuascriptHelpers.optenum(L, 2, LuascriptEnums.PVRFlag);
 
         drawable.SetAntialiasing(antialiasing);
 
@@ -119,10 +119,10 @@ public static class ExportsDrawable {
 
     static int script_drawable_blend_set(LuaState L) {
         Drawable drawable = L.ReadUserdata<Drawable>(DRAWABLE);
-        Blend src_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(2, null));
-        Blend dst_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(3, null));
-        Blend src_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(4, null));
-        Blend dst_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(5, null));
+        Blend src_rgb = (Blend)LuascriptHelpers.optenum(L, 2, LuascriptEnums.Blend);
+        Blend dst_rgb = (Blend)LuascriptHelpers.optenum(L, 3, LuascriptEnums.Blend);
+        Blend src_alpha = (Blend)LuascriptHelpers.optenum(L, 4, LuascriptEnums.Blend);
+        Blend dst_alpha = (Blend)LuascriptHelpers.optenum(L, 5, LuascriptEnums.Blend);
 
         drawable.BlendSet(src_rgb, dst_rgb, src_alpha, dst_alpha);
 

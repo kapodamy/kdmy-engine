@@ -132,7 +132,9 @@ public static class ExportsMessageBox {
 
         string filename = L.luaL_optstring(2, null);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         messagebox.SetImageFromTexture(filename);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         return 0;
     }
@@ -144,7 +146,9 @@ public static class ExportsMessageBox {
         string entry_name = L.luaL_optstring(3, null);
         bool is_animation = L.lua_toboolean(4);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         messagebox.SetImageFromAtlas(filename, entry_name, is_animation);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         return 0;
     }

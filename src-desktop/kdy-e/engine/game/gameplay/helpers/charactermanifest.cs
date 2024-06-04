@@ -6,8 +6,8 @@ namespace Engine.Game.Gameplay.Helpers;
 
 public class CharacterManifest {
 
-    public static readonly string[] DEFAULT_OPPOSITE_DIR_FROM = { "left", "right" };
-    public static readonly string[] DEFAULT_OPPOSITE_DIR_TO = { "right", "left" };
+    private static readonly string[] DEFAULT_OPPOSITE_DIR_FROM = { "left", "right" };
+    private static readonly string[] DEFAULT_OPPOSITE_DIR_TO = { "right", "left" };
 
     public class Opposite {
         public int sizes;
@@ -55,8 +55,8 @@ public class CharacterManifest {
         public Extra[] extras;
         public Extra idle;
         public Extra hey;
-        internal bool has_idle;
-        internal bool has_hey;
+        public bool has_idle;
+        public bool has_hey;
     }
 
     public class AdditionalState {
@@ -232,7 +232,6 @@ public class CharacterManifest {
         //free(this.sing_suffix);
         //free(this.sing_alternate_suffix);
         //free(this.sing_alternate_prefix);
-        //free(this.allow_alternate_idle);
         //free(this.week_selector_model);
         //free(this.week_selector_idle_anim_name);
         //free(this.week_selector_choosen_anim_name);
@@ -319,8 +318,8 @@ public class CharacterManifest {
     }
 
     private static void InternalReadOffsets(JSONToken json, out double offset_x, out double offset_y) {
-        offset_x = JSONParser.ReadNumberDouble(json, "offsetX", 0);
-        offset_y = JSONParser.ReadNumberDouble(json, "offsetY", 0);
+        offset_x = JSONParser.ReadNumberDouble(json, "offsetX", 0.0);
+        offset_y = JSONParser.ReadNumberDouble(json, "offsetY", 0.0);
     }
 
     private static void InternalParseActions(JSONToken json_actions, Actions actions, string src) {
@@ -365,7 +364,7 @@ public class CharacterManifest {
             };
 
             if (String.IsNullOrEmpty(actions.sing[i].direction)) {
-                throw new Exception($"missing actions.sing[{i}].direction in '{src}'");
+                throw new Exception($"missing 'actions.sing[{i}].direction' in '{src}'");
             }
         }
         for (int i = 0 ; i < actions.miss_size ; i++) {
@@ -382,7 +381,7 @@ public class CharacterManifest {
             };
 
             if (String.IsNullOrEmpty(actions.miss[i].direction)) {
-                throw new Exception("missing actions.miss[" + i + "].direction in '" + src + "'");
+                throw new Exception($"missing 'actions.miss[{i}].direction' in '{src}'");
             }
         }
         for (int i = 0 ; i < actions.extras_size ; i++) {

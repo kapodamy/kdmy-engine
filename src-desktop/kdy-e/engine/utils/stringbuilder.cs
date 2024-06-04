@@ -60,7 +60,7 @@ public static class STRINGBUILDER {
                 $d       double with dot
                 $F       float with comma
                 $D       double with comma
-                $c       UTF-8 single char
+                $c       ASCII/UTF-16 single char
                 $l       int64
                 $i       int32
                 $L       uint64
@@ -175,7 +175,7 @@ public static class STRINGBUILDER {
                         (double)values[args_index], modifier, true
                     ));
                     break;
-                case 'c':// utf-8 char
+                case 'c':// acsii/utf-16 char
                     InternalHelperCreateFormattedStringCheckArg(values, args_index, typeof(char));
                     if (modifier < 0) modifier = 1;
                     text.Append(

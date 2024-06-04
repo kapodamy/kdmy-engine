@@ -24,7 +24,7 @@ public static class ExportsMenu {
             mm.parameters.font = LuaTableHelpers.GetFieldString(L, idx2, "font", null);
             mm.parameters.font_size = (float)LuaTableHelpers.GetFieldNumber(L, idx2, "font_size", 0.0);
             mm.parameters.font_glyph_suffix = LuaTableHelpers.GetFieldString(L, idx2, "font_glyph_suffix", null);
-            mm.parameters.font_color_by_difference = LuaTableHelpers.GetFieldBoolean(L, idx2, "font_color_by_difference", false);
+            mm.parameters.font_color_by_addition = LuaTableHelpers.GetFieldBoolean(L, idx2, "font_color_by_addition", false);
             mm.parameters.font_border_color = (uint)LuaTableHelpers.GetFieldInteger(L, idx2, "font_border_color", 0x000000000);
             mm.parameters.anim_discarded = LuaTableHelpers.GetFieldString(L, idx2, "anim_discarded", null);
             mm.parameters.anim_idle = LuaTableHelpers.GetFieldString(L, idx2, "anim_idle", null);
@@ -286,7 +286,7 @@ public static class ExportsMenu {
 
     static int script_menu_set_text_force_case(LuaState L) {
         Menu menu = L.ReadUserdata<Menu>(MENU);
-        int none_or_lowercase_or_uppercase = LuascriptHelpers.ParseForcecase(L, L.luaL_optstring(2, null));
+        int none_or_lowercase_or_uppercase = LuascriptHelpers.optenum(L, 2, LuascriptEnums.TextSpriteForceCase);
 
         menu.SetTextForceCase(none_or_lowercase_or_uppercase);
 

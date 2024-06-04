@@ -12,7 +12,9 @@ public static class ExportsSongPlayer {
         string src = L.luaL_checkstring(2);
         bool prefer_alternative = L.lua_toboolean(3);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         bool ret = songplayer.ChangeSong(src, prefer_alternative);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         L.lua_pushboolean(ret);
         return 1;

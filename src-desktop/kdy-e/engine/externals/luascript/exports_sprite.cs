@@ -243,7 +243,7 @@ public static class ExportsSprite {
     static int script_sprite_set_antialiasing(LuaState L) {
         Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-        PVRContextFlag antialiasing = LuascriptHelpers.ParsePVRFLAG(L, L.luaL_checkstring(2));
+        PVRFlag antialiasing = (PVRFlag)LuascriptHelpers.optenum(L, 2, LuascriptEnums.PVRFlag);
 
         sprite.SetAntialiasing(antialiasing);
 
@@ -284,10 +284,10 @@ public static class ExportsSprite {
 
     static int script_sprite_blend_set(LuaState L) {
         Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
-        Blend src_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(2, null));
-        Blend dst_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(3, null));
-        Blend src_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(4, null));
-        Blend dst_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(5, null));
+        Blend src_rgb = (Blend)LuascriptHelpers.optenum(L, 2, LuascriptEnums.Blend);
+        Blend dst_rgb = (Blend)LuascriptHelpers.optenum(L, 3, LuascriptEnums.Blend);
+        Blend src_alpha = (Blend)LuascriptHelpers.optenum(L, 4, LuascriptEnums.Blend);
+        Blend dst_alpha = (Blend)LuascriptHelpers.optenum(L, 5, LuascriptEnums.Blend);
 
         sprite.BlendSet(src_rgb, dst_rgb, src_alpha, dst_alpha);
 
@@ -308,12 +308,7 @@ public static class ExportsSprite {
         int length = (int)L.luaL_checkinteger(2);
         float trail_delay = (float)L.luaL_checknumber(3);
         float trail_alpha = (float)L.luaL_checknumber(4);
-
-        bool? darken_colors;
-        if (L.lua_isnil(5))
-            darken_colors = null;
-        else
-            darken_colors = L.lua_toboolean(5);
+        bool? darken_colors = LuascriptHelpers.optnbool(L, 5);
 
         sprite.TrailingSetParams(length, trail_delay, trail_alpha, darken_colors);
 
@@ -335,10 +330,8 @@ public static class ExportsSprite {
     static int script_sprite_flip_rendered_texture(LuaState L) {
         Sprite sprite = L.ReadUserdata<Sprite>(SPRITE);
 
-        bool? flip_x = null, flip_y = null;
-
-        if (!L.lua_isnil(2)) flip_x = L.lua_toboolean(2);
-        if (!L.lua_isnil(3)) flip_y = L.lua_toboolean(3);
+        bool? flip_x = LuascriptHelpers.optnbool(L, 2);
+        bool? flip_y = LuascriptHelpers.optnbool(L, 3);
 
         sprite.FlipRenderedTexture(flip_x, flip_y);
 

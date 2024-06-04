@@ -231,7 +231,7 @@ public static class fs {
         @returns {int}                 0 on success, -1 on failure.
     */
     public static int stat(string path, ref stat_t buf, int flag) {
-        if (path != "/vmu") return -1;
+        if (path != "/vmu/") return -1;
 
         // STUB
         buf.st_size = 800 * 16;

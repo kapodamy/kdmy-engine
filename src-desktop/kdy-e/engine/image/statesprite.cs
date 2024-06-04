@@ -22,7 +22,7 @@ public class StateSpriteState {
 public class StateSprite : IVertex {
 
     private static int IDS = 0;
-    internal static Map<StateSprite> POOL = new Map<StateSprite>();
+    private static Map<StateSprite> POOL = new Map<StateSprite>();
 
 
     private StateSprite() { }
@@ -34,8 +34,8 @@ public class StateSprite : IVertex {
     private float[] vertex_color;
     private float[] offsetcolor;
     private Texture texture;
-    private float src_width = 0;
-    private float src_height = 0;
+    private float src_width;
+    private float src_height;
     private float draw_x;
     private float draw_y;
     private float draw_width;
@@ -51,7 +51,7 @@ public class StateSprite : IVertex {
     private float frame_height;
     private float pivot_x;
     private float pivot_y;
-    internal int id;
+    private int id;
     private float[] vertex;
     private bool vertex_dirty;
     private AnimSprite animation_external;
@@ -66,7 +66,7 @@ public class StateSprite : IVertex {
     private float offset_y;
     private StateSpriteState selected_state;
     private float scale_texture;
-    private PVRContextFlag antialiasing;
+    private PVRFlag antialiasing;
     private bool atlas_to_draw_size_enabled;
     private PSShader psshader;
     private bool blend_enabled;
@@ -372,7 +372,7 @@ public class StateSprite : IVertex {
 
         statesprite.psshader = null;
 
-        statesprite.blend_enabled = true;
+        statesprite.blend_enabled = false;
         statesprite.blend_src_rgb = Blend.DEFAULT;
         statesprite.blend_dst_rgb = Blend.DEFAULT;
         statesprite.blend_src_alpha = Blend.DEFAULT;
@@ -809,7 +809,7 @@ public class StateSprite : IVertex {
 
     public StateSpriteState StateAdd(ModelHolder modelholder, string animation_name, string state_name) {
         if (modelholder == null) return null;
-        AtlasEntry atlas_entry = modelholder.GetAtlasEntry2(animation_name, false);
+        AtlasEntry atlas_entry = modelholder.GetAtlasEntry2(animation_name);
         AnimSprite animsprite = modelholder.CreateAnimsprite(animation_name, false, false);
         Texture texture = modelholder.GetTexture(false);
         uint vertex_color = modelholder.GetVertexColor();
@@ -856,7 +856,7 @@ public class StateSprite : IVertex {
         };
 
         if (atlas_entry != null) {
-            state.frame_info = atlas_entry.Clone();
+            state.frame_info = CloneUtils.CloneObject(atlas_entry);
         }
 
         this.state_list.AddItem(state);
@@ -1092,7 +1092,7 @@ public class StateSprite : IVertex {
         this.atlas_to_draw_size_enabled = enable;
     }
 
-    public void SetAntialiasing(PVRContextFlag antialiasing) {
+    public void SetAntialiasing(PVRFlag antialiasing) {
         this.antialiasing = antialiasing;
     }
 

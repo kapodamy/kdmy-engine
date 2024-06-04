@@ -12,7 +12,9 @@ public static class ExportsAnimList {
     static int script_animlist_init(LuaState L) {
         string src = L.luaL_checkstring(2);
 
+        LuascriptHelpers.ChangeWorkingFolder(L);
         AnimList ret = AnimList.Init(src);
+        LuascriptHelpers.RestoreWorkingFolder(L);
 
         return L.CreateAllocatedUserdata(ANIMLIST, ret);
     }

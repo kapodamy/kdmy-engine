@@ -22,9 +22,9 @@ public enum CharacterType {
 public class ModifiedDirective {
     public string name;
     public double value;
-    internal bool completed_week;
-    internal bool completed_round;
-    internal bool create;
+    public bool completed_week;
+    public bool completed_round;
+    public bool create;
 }
 
 public class ScriptContext {
@@ -289,6 +289,7 @@ public class Week {
     private static void Destroy(RoundContext roundcontext, GameplayManifest gameplaymanifest) {
         InitParams initparams = roundcontext.initparams;
 
+        //(JS & C# only) enable texture deferring
         Texture.DisableDefering(false);
 
         gameplaymanifest.Destroy();
@@ -339,7 +340,6 @@ public class Week {
 
         //free(initparams.layout_strums);
         //free(initparams.layout_characters);
-        //free(initparams.layout_girlfriend);
 
         //if (roundcontext.settings.camera_name_opponent != Week.ROUND_CAMERA_OPONNENT)
         //    free(roundcontext.settings.camera_name_opponent);
@@ -355,77 +355,6 @@ public class Week {
     public static int Main(WeekInfo weekinfo, bool alt_tracks, string difficult, string default_bf, string default_gf, string gameplaymanifest_src, int single_song_index, string exit_to_weekselector_label) {
         Week.ROUND_UI_MATRIX.Clear();
         Week.ROUND_UI_MATRIX_CAMERA.Clear();
-
-        InitParams initparams = new InitParams() {
-            alt_tracks = alt_tracks,
-            difficult = difficult,
-            default_boyfriend = default_bf,
-            default_girlfriend = default_gf,
-            single_song = single_song_index >= 0,
-
-            layout_strums = null,
-            layout_strums_size = 0,
-
-            layout_girlfriend = null,
-            layout_characters = null,
-            layout_characters_size = 0,
-
-            weekinfo = weekinfo,
-            gameplaymanifest = null,
-
-            animlist = null,
-            font = null,
-            ui_layout_height = 0f,
-            ui_layout_width = 0f,
-            ui = new UIParams() {
-                healthbar_x = 0f,
-                healthbar_y = 0f,
-                healthbar_z = 0f,
-                healthbar_length = 0f,
-                healthbar_dimmen = 0f,
-                healthbar_border = 0f,
-                healthbar_iconoverlap = 0f,
-                healthbar_warnheight = 0f,
-                healthbar_lockheight = 0f,
-                healthbar_is_vertical = false,
-                healthbar_nowarns = false,
-                roundstats_x = 0f,
-                roundstats_y = 0f,
-                roundstats_z = 0f,
-                roundstats_size = 0f,
-                roundstats_fontcolor = 0x00,
-                roundstats_hide = false,
-                streakcounter_comboheight = 0f,
-                streakcounter_numbergap = 0f,
-                streakcounter_delay = 0f,
-                rankingcounter_percentonly = false,
-                songinfo_x = 0f,
-                songinfo_y = 0f,
-                songinfo_z = 0f,
-                songinfo_maxwidth = -1f,
-                songinfo_maxheight = -1f,
-                songinfo_alignvertical = Align.START,
-                songinfo_alignhorinzontal = Align.START,
-                songinfo_fontcolor = 0x00,
-                songinfo_fontsize = 0x00,
-                countdown_height = 0f,
-                songprogressbar_x = 0f,
-                songprogressbar_y = 0f,
-                songprogressbar_z = 0f,
-                songprogressbar_width = 0f,
-                songprogressbar_height = 0f,
-                songprogressbar_align = Align.NONE,
-                songprogressbar_bordersize = 0f,
-                songprogressbar_fontsize = 0f,
-                songprogressbar_fontbordersize = 0f,
-                songprogressbar_isvertical = false,
-                songprogressbar_showtime = false,
-                songprogressbar_colorrgba8_text = 0x00,
-                songprogressbar_colorrgba8_background = 0x00,
-                songprogressbar_colorrgba8_barback = 0x00,
-                songprogressbar_colorrgba8_barfront = 0x00
-            }
-        };
 
         RoundContext roundcontext = new RoundContext() {
             rankingcounter = null,
@@ -513,8 +442,79 @@ public class Week {
             ui_layout = null,
             resolution_changes = 0,
 
-            initparams = initparams
+            initparams = new InitParams() {
+                alt_tracks = alt_tracks,
+                difficult = difficult,
+                default_boyfriend = default_bf,
+                default_girlfriend = default_gf,
+                single_song = single_song_index >= 0,
+
+                layout_strums = null,
+                layout_strums_size = 0,
+
+                layout_girlfriend = null,
+
+                layout_characters = null,
+                layout_characters_size = 0,
+
+                weekinfo = weekinfo,
+                gameplaymanifest = null,
+
+                animlist = null,
+                font = null,
+                ui_layout_height = 0f,
+                ui_layout_width = 0f,
+                ui = new UIParams() {
+                    healthbar_x = 0f,
+                    healthbar_y = 0f,
+                    healthbar_z = 0f,
+                    healthbar_length = 0f,
+                    healthbar_dimmen = 0f,
+                    healthbar_border = 0f,
+                    healthbar_iconoverlap = 0f,
+                    healthbar_warnheight = 0f,
+                    healthbar_lockheight = 0f,
+                    healthbar_is_vertical = false,
+                    healthbar_nowarns = false,
+                    roundstats_x = 0f,
+                    roundstats_y = 0f,
+                    roundstats_z = 0f,
+                    roundstats_size = 0f,
+                    roundstats_fontcolor = 0x00,
+                    roundstats_hide = false,
+                    streakcounter_comboheight = 0f,
+                    streakcounter_numbergap = 0f,
+                    streakcounter_delay = 0f,
+                    rankingcounter_percentonly = false,
+                    songinfo_x = 0f,
+                    songinfo_y = 0f,
+                    songinfo_z = 0f,
+                    songinfo_maxwidth = -1f,
+                    songinfo_maxheight = -1f,
+                    songinfo_alignvertical = Align.START,
+                    songinfo_alignhorinzontal = Align.START,
+                    songinfo_fontcolor = 0x00,
+                    songinfo_fontsize = 0x00,
+                    countdown_height = 0f,
+                    songprogressbar_x = 0f,
+                    songprogressbar_y = 0f,
+                    songprogressbar_z = 0f,
+                    songprogressbar_width = 0f,
+                    songprogressbar_height = 0f,
+                    songprogressbar_align = Align.NONE,
+                    songprogressbar_bordersize = 0f,
+                    songprogressbar_fontsize = 0f,
+                    songprogressbar_fontbordersize = 0f,
+                    songprogressbar_isvertical = false,
+                    songprogressbar_showtime = false,
+                    songprogressbar_colorrgba8_text = 0x00,
+                    songprogressbar_colorrgba8_background = 0x00,
+                    songprogressbar_colorrgba8_barback = 0x00,
+                    songprogressbar_colorrgba8_barfront = 0x00
+                }
+            }
         };
+        InitParams initparams = roundcontext.initparams;
 
         // (JS & C# only) disable texture deferring, avoid shuttering when drawing the first frame
         Texture.DisableDefering(true);
@@ -554,6 +554,7 @@ public class Week {
             //free(gameplaymanifest_src);
         }
         if (gameplaymanifest == null) {
+            //(JS & C# only) enable texture deferring
             Texture.DisableDefering(false);
             return 1;
         }
@@ -782,8 +783,13 @@ public class Week {
             Week.Halt(roundcontext, true);
         }
 
+        if (!gameover && roundcontext.settings.show_credits) {
+            // game ending credits
+            Credits.Main();
+        }
+
         // save progress
-        if (roundcontext.has_directive_changes || !gameover && !reject_completed) {
+        if ((roundcontext.has_directive_changes || !gameover) && !reject_completed) {
             long total_score = 0;
             for (int i = 0 ; i < roundcontext.players_size ; i++) {
                 if (roundcontext.players[i].type != CharacterType.PLAYER) continue;
@@ -822,16 +828,9 @@ public class Week {
             }
         }
 
-        bool show_credits = !gameover && roundcontext.settings.show_credits;
-
         // dispose all allocated resources
         //free(songs_attempts);
         Week.Destroy(roundcontext, gameplaymanifest);
-
-        if (show_credits) {
-            // game ending
-            Credits.Main();
-        }
 
         return 1;
     }
@@ -1289,10 +1288,12 @@ public class Week {
         if (!String.IsNullOrEmpty(healthbarparams.opponent_icon_model)) {
             default_icon_model_opponent = ModelHolder.Init(healthbarparams.opponent_icon_model);
             //free(healthbarparams.opponent_icon_model);
+            healthbarparams.opponent_icon_model = null;
         }
         if (!String.IsNullOrEmpty(healthbarparams.player_icon_model)) {
             default_icon_model_player = ModelHolder.Init(healthbarparams.player_icon_model);
             //free(healthbarparams.player_icon_model);
+            healthbarparams.player_icon_model = null;
         }
 
         // import healthbar states
@@ -1435,6 +1436,12 @@ public class Week {
         Layout old_layout = roundcontext.layout;
         LayoutPlaceholder placeholder;
 
+        if (old_layout != null && initparams.gameplaymanifest.songs[roundcontext.song_index].disable_resource_cache_between_songs) {
+            // forget now the old layout for the current song
+            old_layout.Destroy();
+            old_layout = null;
+        }
+
         if (!String.IsNullOrEmpty(stage_src))
             roundcontext.layout = Layout.Init(stage_src);
         else
@@ -1442,12 +1449,8 @@ public class Week {
 
         if (old_layout != null) old_layout.Destroy();
 
-        //free(initparams.layout_girlfriend);
         //free(initparams.layout_characters);
         initparams.layout_characters_size = 0;
-
-        initparams.layout_girlfriend = null;
-        initparams.layout_characters = null;
 
         if (roundcontext.layout == null) return;
 
@@ -1525,6 +1528,8 @@ public class Week {
             initparams.layout_girlfriend.align_horizontal = placeholder.align_horizontal;
             initparams.layout_girlfriend.reference_width = placeholder.width;
             initparams.layout_girlfriend.reference_height = placeholder.height;
+        } else {
+            initparams.layout_girlfriend = null;
         }
 
         Week.InternalPickCountersValuesFromLayout(roundcontext);
@@ -1558,6 +1563,7 @@ public class Week {
     public static bool InitChartAndPlayers(RoundContext roundcontext, GameplayManifest gameplaymanifest, bool new_ui) {
         InitParams initparams = roundcontext.initparams;
         int song_index = roundcontext.song_index;
+        bool disable_resource_cache = initparams.gameplaymanifest.songs[song_index].disable_resource_cache_between_songs;
 
         Chart chart = new Chart(gameplaymanifest.songs[song_index].chart, initparams.difficult);
 
@@ -1567,7 +1573,7 @@ public class Week {
 
         // update events table
         //free(roundcontext.events);
-        roundcontext.events = CloneUtils.CloneArray(chart.events, chart.events_size);
+        roundcontext.events = CloneUtils.CloneClassArray(chart.events, chart.events_size);
         roundcontext.events_size = chart.events_size;
         roundcontext.events_peek_index = 0;
         roundcontext.settings.original_bpm = chart.bpm;
@@ -1655,6 +1661,20 @@ public class Week {
             }
 
             return false;
+        }
+
+        if (disable_resource_cache && old_players_size > 0) {
+            // dispose old players array now
+            for (int i = 0 ; i < old_players_size ; i++) {
+                if (old_players[i].character != null) old_players[i].character.Destroy();
+                if (old_players[i].conductor != null) old_players[i].conductor.Destroy();
+                if (old_players[i].notepool != null) old_players[i].notepool.Destroy();
+                if (old_players[i].strums != null) old_players[i].strums.Destroy();
+                if (old_players[i].ddrkeymon != null) old_players[i].ddrkeymon.Destroy();
+                if (old_players[i].controller != null) old_players[i].controller.Destroy();
+            }
+            //free(old_players);
+            old_players_size = 0;
         }
 
         // remember where players and distributions was picked
@@ -1782,15 +1802,19 @@ public class Week {
                 DistributionStrumState state = distribution.states[j];
                 ModelHolder marker = null, sick_effect = null, background = null, notes = null;
 
-                if (!String.IsNullOrEmpty(state.model_marker)) marker = ModelHolder.Init(state.model_marker);
-                if (!String.IsNullOrEmpty(state.model_sick_effect)) sick_effect = ModelHolder.Init(state.model_sick_effect);
-                if (!String.IsNullOrEmpty(state.model_background) && FS.FileExists(state.model_background)) background = ModelHolder.Init(state.model_background);
-                if (!String.IsNullOrEmpty(state.model_notes)) notes = ModelHolder.Init(state.model_notes);
+                if (!String.IsNullOrEmpty(state.model_marker))
+                    marker = ModelHolder.Init(state.model_marker);
+                if (!String.IsNullOrEmpty(state.model_sick_effect))
+                    sick_effect = ModelHolder.Init(state.model_sick_effect);
+                if (!String.IsNullOrEmpty(state.model_background) && FS.FileExists(state.model_background))
+                    background = ModelHolder.Init(state.model_background);
+                if (!String.IsNullOrEmpty(state.model_notes))
+                    notes = ModelHolder.Init(state.model_notes);
 
                 roundcontext.players[i].strums.StateAdd(
                     marker, sick_effect, background, state.name
                 );
-                if (!String.IsNullOrEmpty(state.model_notes))
+                if (notes != null)
                     roundcontext.players[i].notepool.AddState(notes, state.name);
 
                 if (marker != null) marker.Destroy();
@@ -1896,6 +1920,7 @@ public class Week {
         InitParams initparams = roundcontext.initparams;
         float viewport_width = 0f, viewport_height = 0f;
         Layout layout = roundcontext.layout != null ? roundcontext.layout : roundcontext.ui_layout;
+        bool disable_resource_cache = initparams.gameplaymanifest.songs[roundcontext.song_index].disable_resource_cache_between_songs;
 
         roundcontext.ui_layout.GetViewportSize(out viewport_width, out viewport_height);
         bool has_autoplace = roundcontext.autouicosmetics.PreparePlaceholders(layout);
@@ -1923,6 +1948,14 @@ public class Week {
         SongProgressbar old_songprogressbar = roundcontext.songprogressbar;
         if (roundcontext.roundstats != null) roundcontext.roundstats.Destroy();
         if (roundcontext.songinfo != null) roundcontext.songinfo.Destroy();
+
+        if (disable_resource_cache) {
+            // dispose old ui elements now
+            if (old_rankingcounter != null) old_rankingcounter.Destroy();
+            if (old_streakcounter != null) old_streakcounter.Destroy();
+            if (old_countdown != null) old_countdown.Destroy();
+            if (old_songprogressbar != null) old_songprogressbar.Destroy();
+        }
 
         // step 1: initialize all "cosmetic" components
         ModelHolder modelholder_rankingstreak = ModelHolder.Init(UI_RANKINGCOUNTER_MODEL);
@@ -2041,7 +2074,6 @@ public class Week {
         if (old_countdown != null) old_countdown.Destroy();
         if (old_songprogressbar != null) old_songprogressbar.Destroy();
 
-
         // step 4: drawn away if ui cosmetics are disabled
         if (!EngineSettings.gameplay_enabled_uicosmetics) {
             // drawn away
@@ -2057,8 +2089,14 @@ public class Week {
     public static void InitUIGameover(RoundContext roundcontext) {
         WeekGameOver old_weekgameover = roundcontext.weekgameover;
         int version = WeekGameOver.ReadVersion();
+        bool disable_resource_cache = roundcontext.initparams.gameplaymanifest.songs[roundcontext.song_index].disable_resource_cache_between_songs;
 
         if (old_weekgameover != null && version == roundcontext.weekgameover_from_version) return;
+
+        if (disable_resource_cache && old_weekgameover != null) {
+            old_weekgameover.Destroy();
+            old_weekgameover = null;
+        }
 
         // build the gameover screen and dispose the older one
         roundcontext.weekgameover = new WeekGameOver();
@@ -2725,6 +2763,7 @@ public class Week {
             );
 
             // ask for player decision
+            roundcontext.scriptcontext.force_end_flag = false;
             int decision = roundcontext.weekgameover.HelperAskToPlayer(roundcontext);
             string song_difficult = roundcontext.weekgameover.GetDifficult();
             roundcontext.weekgameover.Hide();
@@ -2903,13 +2942,15 @@ public class Week {
             }
         }
 
-        roundcontext.scriptcontext.directives.AddItem(new ModifiedDirective {
+        ModifiedDirective new_directive = new ModifiedDirective {
             name = name,
             completed_round = !!completed_round,
             completed_week = !!completed_week,
             value = value,
             create = true
-        });
+        };
+
+        roundcontext.scriptcontext.directives.AddItem(new_directive);
     }
 
     public static void UnlockdirectiveRemove(RoundContext roundcontext, string name, bool completed_round, bool completed_week) {
@@ -2920,13 +2961,16 @@ public class Week {
                 directive_info.create = false;
             }
         }
-        roundcontext.scriptcontext.directives.AddItem(new ModifiedDirective() {
+
+        ModifiedDirective delete_directive = new ModifiedDirective() {
             name = name,
             completed_round = !!completed_round,
             completed_week = !!completed_week,
             value = 0x00,
             create = false
-        });
+        };
+
+        roundcontext.scriptcontext.directives.AddItem(delete_directive);
     }
 
     public static double UnlockdirectiveGet(RoundContext roundcontext, string name) {
@@ -3142,6 +3186,27 @@ public class Week {
         roundcontext.weekgameover.SetOption(opt, nro, str);
     }
 
+    public static void GetAccumulatedStats(RoundContext roundcontext, ref WeekResult_Stats stats) {
+        if (roundcontext.weekresult == null) return;
+        roundcontext.weekresult.GetAccumulatedStats(ref stats);
+    }
+
+    public static Layout GetLayoutOf(RoundContext roundcontext, char g_p_r) {
+        switch (g_p_r) {
+            case 'g':
+                if (roundcontext.weekgameover == null) break;
+                return roundcontext.weekgameover.GetLayout();
+            case 'p':
+                if (roundcontext.weekpause == null) break;
+                return roundcontext.weekpause.GetLayout();
+            case 'r':
+                if (roundcontext.weekresult == null) break;
+                return roundcontext.weekresult.GetLayout();
+        }
+
+        return null;
+    }
+
 
     internal static string InternalConcatSuffix(string name, int number_suffix) {
         string digits = number_suffix.ToString();
@@ -3245,6 +3310,8 @@ public class Week {
                 }
             }
         }
+
+        roundcontext.missnotefx.Disable(false);
 
         if (roundcontext.girlfriend != null) roundcontext.girlfriend.Reset();
     }

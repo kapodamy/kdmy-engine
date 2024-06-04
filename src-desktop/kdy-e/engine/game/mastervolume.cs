@@ -139,7 +139,7 @@ public class MasterVolume {
         if (MasterVolume.label_font == null) goto L_check_hide_timestamp;
         float[] label_color = MasterVolume.LABEL_COLOR;
         MasterVolume.label_font.EnableBorder(false);
-        MasterVolume.label_font.EnableColorByDifference(false);
+        MasterVolume.label_font.EnableColorByAddition(false);
         MasterVolume.label_font.SetAlpha(label_color[3]);
         MasterVolume.label_font.SetColor(label_color[0], label_color[1], label_color[2]);
         MasterVolume.label_font.DrawText(

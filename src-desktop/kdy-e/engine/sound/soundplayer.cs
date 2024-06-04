@@ -15,7 +15,7 @@ public enum Fading : int {
 public class SoundPlayer {
 
     private Stream stream;
-    private IFileSource filehandle;
+    private ISourceHandle sourcehandle;
     private bool is_muted;
 
     private SoundPlayer() {
@@ -38,27 +38,27 @@ public class SoundPlayer {
         full_path = IO.GetAbsolutePath(full_path, true, false, true);
 
         byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
-        IFileSource filehandle;
+        ISourceHandle sourcehandle;
 
         if (buffer != null) {
-            filehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
+            sourcehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
         } else {
-            filehandle = FileHandleUtil.Init(full_path, true);
-            if (filehandle == null) {
-                Logger.Error($"soundplayer_init() filehandle_init failed for: {src}");
+            sourcehandle = FileHandleUtil.Init(full_path, true);
+            if (sourcehandle == null) {
+                Logger.Error($"soundplayer_init() filehandle_init1 failed for: {src}");
                 return null;
             }
         }
 
         Stream stream;
-        StreamResult res = SoundBridge.Enqueue(filehandle, out stream);
+        StreamResult res = SoundBridge.Enqueue(sourcehandle, out stream);
         if (res != StreamResult.Success) {
-            filehandle.Dispose();
+            sourcehandle.Dispose();
             Logger.Error($"soundplayer_init() SoundBridge::Enqueue() returned {res} for: {src}");
             return null;
         }
 
-        return new SoundPlayer() { filehandle = filehandle, stream = stream, is_muted = false };
+        return new SoundPlayer() { sourcehandle = sourcehandle, stream = stream, is_muted = false };
     }
 
     public void Destroy() {
@@ -67,10 +67,10 @@ public class SoundPlayer {
         Luascript.DropShared(this);
 
         this.stream.Dispose();
-        this.filehandle.Dispose();
+        this.sourcehandle.Dispose();
 
         this.stream = null;
-        this.filehandle = null;
+        this.sourcehandle = null;
     }
 
 

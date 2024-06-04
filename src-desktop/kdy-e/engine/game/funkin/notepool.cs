@@ -91,8 +91,7 @@ public class NotePool {
                 this.models_custom_sick_effect[i].Destroy();
         }
 
-        //free(this.drawable);
-        //free(this.models);
+        //free(this.drawables);
         //free(this.models_custom_sick_effect);
         //free(this.attributes);
         //free(this);

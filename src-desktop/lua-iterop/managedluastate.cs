@@ -19,10 +19,10 @@ public sealed class ManagedLuaState : IDisposable {
     internal unsafe LuascriptObject* shared_array;
     internal unsafe int shared_size;
 
-
     private unsafe ManagedLuaState(lua_State* L, object context) {
         this.L = L;
         this.context = context;
+        this.Tag = null;
         this.self = GCHandle.Alloc(this, GCHandleType.Normal);
         this.last_pushed_function_name = null;
         this.handle_references = new ReferenceList();
@@ -70,6 +70,8 @@ public sealed class ManagedLuaState : IDisposable {
             return LuaState.FromManagedLuaState(this);
         }
     }
+
+    public object Tag { get; set; }
 
 
     public void RegisterMetaTable(string name, LuaCallback gc, LuaCallback tostring, LuaTableFunction[] fns) {
@@ -308,7 +310,7 @@ public sealed class ManagedLuaState : IDisposable {
         return false;
     }
 
-    public void DropSharedObject(object obj) {
+    public void DropShared(object obj) {
         unsafe {
             void* obj_ptr = this.handle_references.GetReference(obj);
             LuaInteropHelpers.luascript_remove_userdata(this, obj_ptr);

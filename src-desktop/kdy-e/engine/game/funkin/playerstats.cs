@@ -220,7 +220,7 @@ public class PlayerStats {
 
     public void AddMiss(float multiplier) {
         //
-        // FIXME: ¿should decrease the accumulated accuracy? ¿with what criteria? 
+        // ¿should decrease the accumulated accuracy? ¿with what criteria? 
         //
 
         this.health += Funkin.HEALTH_DIFF_OVER_MISS * multiplier;

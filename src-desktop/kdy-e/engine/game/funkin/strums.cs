@@ -114,7 +114,7 @@ public class Strums : IDraw, IAnimate {
     };
 
     static Strums() {
-        for (int i = 0 ; i < Strums.DEFAULT_DISTRIBUTION.notes.Length ; i++) {
+        for (int i = 0 ; i < Strums.DEFAULT_DISTRIBUTION.notes_size ; i++) {
             Strums.DEFAULT_DISTRIBUTION.notes[i].sick_effect_state_name = null;
             Strums.DEFAULT_DISTRIBUTION.notes[i].model_src = Funkin.COMMON_NOTES;
             Strums.DEFAULT_DISTRIBUTION.notes[i].custom_sick_effect_model_src = null;
@@ -127,15 +127,6 @@ public class Strums : IDraw, IAnimate {
         }
     }
 
-
-    //
-    //  the following default values corresponds to a screen resolution of 1280x720
-    //
-    public const float MARKER_DIMMEN = 50f;
-    public const float MARKER_INVDIMMEN = 50f;
-    public const float STRUM_LENGTH = 450f;
-    public const float GAP = 5f;
-    public const ScrollDirection SCROLL_DIRECTION = ScrollDirection.UPSCROLL;
 
 
     private int size;
@@ -480,10 +471,10 @@ public class Strums : IDraw, IAnimate {
     }
 
     public int StateToggleNotes(string state_name) {
-        int res = 0;
+        int toggles = 0;
         for (int i = 0 ; i < this.size ; i++)
-            res += this.lines[i].StateToggleNotes(state_name);
-        return res;
+            toggles += this.lines[i].StateToggleNotes(state_name);
+        return toggles;
     }
 
     public void StateToggleMarkerAndSickEffect(string state_name) {
@@ -613,7 +604,7 @@ public class Strums : IDraw, IAnimate {
 
     public void DecoratorsSetVisible(double decorator_timestamp, bool visible) {
         foreach (Decorator decorator in this.decorators) {
-            if (decorator_timestamp < 0.0 || decorator.timestamp == decorator_timestamp) {
+            if (decorator_timestamp < 0.0 || Math2D.DoublesAreNearEqual(decorator.timestamp, decorator_timestamp)) {
                 decorator.is_visible = visible;
             }
         }

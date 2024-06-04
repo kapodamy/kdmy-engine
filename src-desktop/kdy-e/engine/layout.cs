@@ -32,7 +32,7 @@ public class LayoutPlaceholder {
     public float width;
     public LayoutParallax parallax;
     public bool static_camera;
-    public IVertex vertex;
+    public Drawable vertex;
 }
 
 internal class CameraPlaceholder {
@@ -72,9 +72,6 @@ public enum AttachedValueType : int {
 }
 
 public class Layout : IDraw, IAnimate {
-    //
-    // Public constants
-    //
 
     private const int ACTION_LOCATION = 0;
     private const int ACTION_SIZE = 1;
@@ -109,7 +106,6 @@ public class Layout : IDraw, IAnimate {
     private const int ACTION_SEEK = 31;
 
     public const string GROUP_ROOT = "___root-group___";
-    private const float BPM_STEPS = 32;// 1/32 beats
     public static bool DEBUG_PRINT_TRIGGER_CALLS = false;
 
     private static readonly HelperZbufferSortImpl HelperZbufferSort = new HelperZbufferSortImpl();
@@ -165,6 +161,7 @@ public class Layout : IDraw, IAnimate {
     private bool antialiasing_disabled;
     private int resolution_changes;
     private PSShader psshader;
+    private bool self_print_trigger_calls;
 
 
 
@@ -204,6 +201,7 @@ public class Layout : IDraw, IAnimate {
         float viewport_height = Layout.HelperParseFloat(root, "height", -1f);
         float animation_speed = Layout.HelperParseFloat(root, "animationSpeed", 1.0f);
         bool keep_aspect_ratio = VertexProps.ParseBoolean(root, "keepAspectRatio", true);
+        bool self_print_trigger_calls = VertexProps.ParseBoolean(root, "printTriggerCalls", false);
 
         if (viewport_width < 1) throw new Exception("Invalid/missing layout width");
         if (viewport_height < 1) throw new Exception("Invalid/missing layout height");
@@ -288,6 +286,7 @@ public class Layout : IDraw, IAnimate {
 
             antialiasing_disabled = false,
             resolution_changes = 0,
+            self_print_trigger_calls = self_print_trigger_calls,
             psshader = null
         };
 
@@ -321,7 +320,7 @@ public class Layout : IDraw, IAnimate {
         ResourcePoolEntry[] list = layout_context.resource_pool.textures.PeekArray();
         for (int i = 0 ; i < layout.textures_size ; i++) {
             layout.textures[i] = (Texture)list[i].data;
-            //free(list[i].src);
+            //free(list[i].path);
         }
 
         // step 8: build z-buffer
@@ -332,7 +331,7 @@ public class Layout : IDraw, IAnimate {
         // step 9: cleanup
         foreach (ResourcePoolEntry definition in layout_context.resource_pool.atlas) {
             if (definition.data != null) ((Atlas)definition.data).Destroy();
-            //free(definition.src);
+            //free(definition.path);
         }
 
         layout_context.resource_pool.textures.Destroy(false);
@@ -448,6 +447,8 @@ public class Layout : IDraw, IAnimate {
         // restore previous working folder
         FS.FolderStackPop();
 
+        // free(xml);
+
         return layout;
     }
 
@@ -466,6 +467,7 @@ public class Layout : IDraw, IAnimate {
                     break;
                 case PVRContextVertex.DRAWABLE:
                     this.vertex_list[i].placeholder.vertex = null;// external drawable ¡DO NOT DISPOSE!
+                    //free(this.vertex_list[i].placeholder.name);
                     //free(this.vertex_list[i].placeholder);
                     break;
                 case PVRContextVertex.TEXTSPRITE:
@@ -477,7 +479,7 @@ public class Layout : IDraw, IAnimate {
 
         //for (int i = 0; i < this.values_size; i++)
         //{
-        //    if (this.values[i].type == Layout.ExternalValueType.STRING) //free(this.values[i].misc);
+        //    if (this.values[i].type == Layout.ExternalValueType.STRING) //free((string)this.values[i].value);
         //    free(this.values[i].name);
         //}
         //free(this.values);
@@ -494,10 +496,12 @@ public class Layout : IDraw, IAnimate {
         //free(this.textures);
 
         for (int i = 0 ; i < this.group_list_size ; i++) {
-            //free(this.group_list[i].name);
+            //if (this.group_list[i].name != Layout.GROUP_ROOT) free(this.group_list[i].name);
             //free(this.group_list[i].initial_action_name);
             Layout.HelperDestroyActions(this.group_list[i].actions, this.group_list[i].actions_size);
             if (this.group_list[i].psframebuffer != null) this.group_list[i].psframebuffer.Destroy();
+
+            //free(this.group_id[i]);
         }
         //free(this.group_list);
 
@@ -509,7 +513,6 @@ public class Layout : IDraw, IAnimate {
 
         for (int i = 0 ; i < this.trigger_list_size ; i++) {
             //free(this.trigger_list[i].name);
-            //free(this.trigger_list[i].initial_action_name);
             //free(this.trigger_list[i].action_name);
             //free(this.trigger_list[i].camera_name);
             //free(this.trigger_list[i].trigger_name);
@@ -562,7 +565,7 @@ public class Layout : IDraw, IAnimate {
 
 
     public int TriggerAny(string action_triger_camera_interval_name) {
-        if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+        if (Layout.DEBUG_PRINT_TRIGGER_CALLS || this.self_print_trigger_calls) {
             Logger.Log($"layout_trigger_any() target='{action_triger_camera_interval_name}'");
         }
         int res = 0;
@@ -570,7 +573,7 @@ public class Layout : IDraw, IAnimate {
         res += TriggerCamera(action_triger_camera_interval_name) ? 1 : 0;
         res += TriggerTrigger(action_triger_camera_interval_name);
 
-        if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+        if (Layout.DEBUG_PRINT_TRIGGER_CALLS || this.self_print_trigger_calls) {
             Logger.Log($"layout_trigger_any() target='{action_triger_camera_interval_name}' result={res}");
         }
 
@@ -581,7 +584,7 @@ public class Layout : IDraw, IAnimate {
         int count = 0;
         string initial_action_name;
 
-        if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+        if (Layout.DEBUG_PRINT_TRIGGER_CALLS || this.self_print_trigger_calls) {
             Logger.Log($"layout_trigger_action() target='{target_name}' action='{action_name}'");
         }
 
@@ -662,7 +665,7 @@ public class Layout : IDraw, IAnimate {
             }
         }
 
-        if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+        if (Layout.DEBUG_PRINT_TRIGGER_CALLS || this.self_print_trigger_calls) {
             Logger.Log($"layout_trigger_action() target='{target_name}' action='{action_name}' res={count}");
         }
 
@@ -786,14 +789,14 @@ public class Layout : IDraw, IAnimate {
     }
 
     public bool TriggerCamera(string camera_name) {
-        if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+        if (Layout.DEBUG_PRINT_TRIGGER_CALLS || this.self_print_trigger_calls) {
             Logger.Log($"layout_trigger_camera() target='{camera_name}'");
         }
         return this.camera_helper.FromLayout(this, camera_name);
     }
 
     public int TriggerTrigger(string trigger_name) {
-        if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+        if (Layout.DEBUG_PRINT_TRIGGER_CALLS || this.self_print_trigger_calls) {
             Logger.Log($"layout_trigger_trigger() target='{trigger_name}'");
         }
 
@@ -804,7 +807,7 @@ public class Layout : IDraw, IAnimate {
             }
         }
 
-        if (Layout.DEBUG_PRINT_TRIGGER_CALLS) {
+        if (Layout.DEBUG_PRINT_TRIGGER_CALLS || this.self_print_trigger_calls) {
             Logger.Log($"layout_trigger_trigger() target='{trigger_name}' res={count}");
         }
 
@@ -1055,12 +1058,26 @@ public class Layout : IDraw, IAnimate {
         //if (!this.group_list) throw new Exception("layout_external_create_group() out-of-memory");
 
         this.group_list[group_id] = new Group() {
+            context = new GroupContext() {
+                matrix = new SIMDMatrix(),
+                visible = true,
+                alpha = 1.0f,
+                antialiasing = PVRFlag.DEFAULT,
+                offsetcolor = new float[4],
+                parallax = new LayoutParallax() { x = 1.0f, y = 1.0f, z = 1.0f },
+
+                next_child = null,
+                next_sibling = null,
+                parent_group = null,
+                last_z_index = -1
+            },
+
             name = group_name,
             group_id = parent_group_id,
             actions = null,
             actions_size = 0,
             initial_action_name = null,
-            antialiasing = PVRContextFlag.DEFAULT,
+            antialiasing = PVRFlag.DEFAULT,
 
             visible = true,
             alpha = 1.0f,
@@ -1075,7 +1092,7 @@ public class Layout : IDraw, IAnimate {
             psshader = null,
             psframebuffer = null,
 
-            blend_enabled = true,
+            blend_enabled = false,
             blend_src_rgb = Blend.DEFAULT,
             blend_dst_rgb = Blend.DEFAULT,
             blend_src_alpha = Blend.DEFAULT,
@@ -1084,21 +1101,7 @@ public class Layout : IDraw, IAnimate {
             viewport_x = -1f,
             viewport_y = -1f,
             viewport_width = -1f,
-            viewport_height = -1f,
-
-            context = new GroupContext() {
-                visible = true,
-                alpha = 1.0f,
-                antialiasing = PVRContextFlag.DEFAULT,
-                matrix = new SIMDMatrix(),
-                offsetcolor = new float[4],
-                parallax = new LayoutParallax() { x = 1.0f, y = 1.0f, z = 1.0f },
-
-                next_child = null,
-                next_sibling = null,
-                parent_group = null,
-                last_z_index = -1
-            }
+            viewport_height = -1f
         };
 
         // append to parent group
@@ -1192,6 +1195,17 @@ public class Layout : IDraw, IAnimate {
 
     public int GetGroupId(string group_name) {
         return HelperGetGroupIndex(group_name);
+    }
+
+    public bool GetGroupVisibility(string group_name) {
+        int index = HelperGetGroupIndex(group_name);
+        if (index >= 0) return this.group_list[index].visible;
+        return false;
+    }
+
+    public bool GetGroupVisibilityById(int group_id) {
+        if (group_id < 0 || group_id >= this.group_list_size) return false;
+        return this.group_list[group_id].visible;
     }
 
     internal CameraPlaceholder GetCameraPlaceholder(string camera_name) {
@@ -1402,7 +1416,7 @@ public class Layout : IDraw, IAnimate {
                         this.z_buffer[i].z_index = vertex.GetZIndex();
                         this.z_buffer[i].visible = vertex.IsVisible();
                     } else {
-                        this.z_buffer[i].z_index = Math2D.MAX_INT32;
+                        this.z_buffer[i].z_index = Single.PositiveInfinity;
                         this.z_buffer[i].visible = false;
                     }
                     break;
@@ -1622,28 +1636,30 @@ public class Layout : IDraw, IAnimate {
     }
 
     private static object HelperGetResource(ResourcePool resource_pool, string src, bool is_texture) {
+        string path = FS.GetFullPathAndOverride(src);
         ArrayList<ResourcePoolEntry> pool = is_texture ? resource_pool.textures : resource_pool.atlas;
 
         foreach (ResourcePoolEntry definition in pool) {
-            if (definition.src == src) return definition.data;
+            if (definition.path == path) {
+                //free(path);
+                return definition.data;
+            }
         }
 
         // resource not found in the pool load it
         object data;
 
         if (is_texture)
-            data = Texture.InitDeferred(src, true/* do not upload to the PVR VRAM */);
+            data = Texture.InitDeferred(path, true/* do not upload to the PVR VRAM */);
         else
-            data = Atlas.Init(src);
+            data = Atlas.Init(path);
 
         if (data == null) {
-            string path = FS.GetFullPathAndOverride(src);
-            Logger.Warn($"layout_helper_get_resource() missing resource '{src}' ({path})");
-            //free(path);
+            Logger.Warn($"layout_helper_get_resource() missing resource '{path}' ({src})");
         }
 
         if (data != null) {
-            ResourcePoolEntry new_definition = new ResourcePoolEntry() { data = data, src = src, is_texture = is_texture };
+            ResourcePoolEntry new_definition = new ResourcePoolEntry() { data = data, path = path, is_texture = is_texture };
             pool.Add(new_definition);
         }
 
@@ -1653,16 +1669,14 @@ public class Layout : IDraw, IAnimate {
     private static void HelperLocation(ActionEntry action_entry, float width, float height, float v_width, float v_height, out float location_x, out float location_y) {
         Align align_vertical = action_entry.align_vertical;
         Align align_horizontal = action_entry.align_horizontal;
-        location_x = action_entry.x;
-        location_y = action_entry.y;
 
-        float offset_x = 0, offset_y = 0;
+        float offset_x = 0.0f, offset_y = 0.0f;
         // Note: align center means relative to the viewport
 
         // vertical align
         switch (align_vertical) {
             case Align.START:
-                offset_y = 0;
+                offset_y = 0.0f;
                 break;
             case Align.CENTER:
                 offset_y = (v_height - height) / 2.0f;
@@ -1675,7 +1689,7 @@ public class Layout : IDraw, IAnimate {
         // horizontal align
         switch (align_horizontal) {
             case Align.START:
-                offset_x = 0;
+                offset_x = 0.0f;
                 break;
             case Align.CENTER:
                 offset_x = (v_width - width) / 2.0f;
@@ -1685,17 +1699,14 @@ public class Layout : IDraw, IAnimate {
                 break;
         }
 
-        offset_x += location_x;
-        offset_y += location_y;
-
-        location_x = offset_x;
-        location_y = offset_y;
+        location_x = offset_x + action_entry.x;
+        location_y = offset_y + action_entry.y;
     }
 
     private static uint HelperParseHex(XmlParserNode node, string attr_name, uint def_value) {
         uint value;
         if (!VertexProps.ParseHex(node.GetAttribute(attr_name), out value, false)) {
-            Logger.Error($"layout_helper_parse_hex() invalid value of '{attr_name}': {node.OuterHTML}");
+            Logger.Error($"layout_helper_parse_hex() invalid value of '{attr_name}': {node.OuterXML}");
             return def_value;
         }
 
@@ -1728,7 +1739,7 @@ public class Layout : IDraw, IAnimate {
         Align align = VertexProps.ParseAlign2(node.GetAttribute(attribute));
         if (align == Align.BOTH) {
             align = Align.START;
-            Logger.Error($"layout_helper_parse_align2() invalid align found at: {node.OuterHTML}");
+            Logger.Error($"layout_helper_parse_align2() invalid align found at: {node.OuterXML}");
         }
 
         return align;
@@ -1796,16 +1807,16 @@ public class Layout : IDraw, IAnimate {
         return -1;
     }
 
-    private void HelperExecuteAction(Item vertex, Action action) {
-        switch (vertex.type) {
+    private void HelperExecuteAction(Item item, Action action) {
+        switch (item.type) {
             case PVRContextVertex.SPRITE:
                 Layout.HelperExecuteActionInSprite(
-                      action, vertex, this.viewport_width, this.viewport_height
+                      action, item, this.viewport_width, this.viewport_height
                   );
                 break;
             case PVRContextVertex.TEXTSPRITE:
                 Layout.HelperExecuteActionInTextsprite(
-                    action, vertex, this.viewport_width, this.viewport_height
+                    action, item, this.viewport_width, this.viewport_height
                 );
                 break;
         }
@@ -1937,15 +1948,15 @@ public class Layout : IDraw, IAnimate {
             misc = null,
         };
 
-        action_entries.Add(action_entry);
-
         if (VertexProps.IsPropertyBoolean(property_id)) {
             string str = unparsed_entry.GetAttribute(value_holder);
             if (VertexProps.IsValueBoolean(str)) {
                 action_entry.value = VertexProps.ParseBoolean2(str, false) ? 1f : 0f;
+                action_entries.Add(action_entry);
                 return;
             }
         }
+
         switch (property_id) {
             case VertexProps.TEXTSPRITE_PROP_ALIGN_V:
             case VertexProps.TEXTSPRITE_PROP_ALIGN_H:
@@ -1974,6 +1985,8 @@ public class Layout : IDraw, IAnimate {
                 action_entry.value = Layout.HelperParseFloat(unparsed_entry, value_holder, 0f);
                 break;
         }
+
+        action_entries.Add(action_entry);
     }
 
     private static void HerperParseOffsetmovefromto(XmlParserNode unparsed_offsetmovefromto, out float x, out float y, out float z) {
@@ -2192,7 +2205,7 @@ public class Layout : IDraw, IAnimate {
     private static void ParsePlaceholder(XmlParserNode unparsed_plchdlr, LayoutContext layout_context, int group_id) {
         string name = unparsed_plchdlr.GetAttribute("name");
         if (String.IsNullOrEmpty(name)) {
-            Logger.Warn($"layout_parse_placeholder() missing placeholder name: {unparsed_plchdlr.OuterHTML}");
+            Logger.Warn($"layout_parse_placeholder() missing placeholder name: {unparsed_plchdlr.OuterXML}");
             return;
         }
 
@@ -2292,6 +2305,8 @@ public class Layout : IDraw, IAnimate {
             atlas = null;
         }
 
+        //free(atlas_texture_path);
+
         if (!String.IsNullOrEmpty(texture_filename) || !String.IsNullOrEmpty(atlas_texture_path)) {
             string src = texture_filename ?? atlas_texture_path;
             Texture texture = (Texture)Layout.HelperGetResource(layout_context.resource_pool, src, true);
@@ -2381,6 +2396,20 @@ public class Layout : IDraw, IAnimate {
         ArrayList<Action> actions_arraylist = new ArrayList<Action>(unparsed_group.Children.Length);
 
         Group group = new Group() {
+            context = new GroupContext() {
+                matrix = new SIMDMatrix(),
+                visible = true,
+                alpha = 1.0f,
+                antialiasing = PVRFlag.DEFAULT,
+                offsetcolor = new float[4],
+                parallax = new LayoutParallax() { x = 1.0f, y = 1.0f, z = 1.0f },
+
+                next_child = null,
+                next_sibling = null,
+                parent_group = null,
+                last_z_index = -1
+            },
+
             name = parent_context != null ? unparsed_group.GetAttribute("name") : Layout.GROUP_ROOT,
             group_id = layout_context.group_list.Size(),
             actions = null,
@@ -2401,7 +2430,7 @@ public class Layout : IDraw, IAnimate {
             psshader = null,
             psframebuffer = null,
 
-            blend_enabled = true,
+            blend_enabled = false,
             blend_src_rgb = Blend.DEFAULT,
             blend_dst_rgb = Blend.DEFAULT,
             blend_src_alpha = Blend.DEFAULT,
@@ -2410,22 +2439,10 @@ public class Layout : IDraw, IAnimate {
             viewport_x = -1f,
             viewport_y = -1f,
             viewport_width = -1f,
-            viewport_height = -1f,
-
-            context = new GroupContext() {
-                visible = true,
-                alpha = 1.0f,
-                antialiasing = PVRContextFlag.DEFAULT,
-                matrix = new SIMDMatrix(),
-                offsetcolor = new float[4],
-                parallax = new LayoutParallax() { x = 1.0f, y = 1.0f, z = 1.0f },
-
-                next_child = null,
-                next_sibling = null,
-                parent_group = null,
-                last_z_index = -1
-            }
+            viewport_height = -1f
         };
+
+        layout_context.group_list.Add(group);
 
         //sh4matrix_reset(group.matrix);
         group.modifier.Clear();
@@ -2435,8 +2452,6 @@ public class Layout : IDraw, IAnimate {
             // assume layout as part of the main PVRContext renderer
             group.psframebuffer = new PSFramebuffer(PVRContext.global_context);
         }
-
-        layout_context.group_list.Add(group);
 
         foreach (XmlParserNode item in unparsed_group.Children) {
             switch (item.TagName) {
@@ -2502,14 +2517,14 @@ public class Layout : IDraw, IAnimate {
             string path = item.GetAttribute("path");
             bool glyph_animate = VertexProps.ParseBoolean(item, "glyphAnimate", true);
             string glyph_suffix = item.GetAttribute("glyphSuffix");
-            bool glyph_color_by_difference = VertexProps.ParseBoolean(item, "colorByDifference", false);
+            bool glyph_color_by_addition = VertexProps.ParseBoolean(item, "colorByAddition", false);
 
             if (String.IsNullOrEmpty(name)) {
-                Logger.Error($"layout_parse_fonts() missing font name: {item.OuterHTML}");
+                Logger.Error($"layout_parse_fonts() missing font name: {item.OuterXML}");
                 continue;
             }
             if (String.IsNullOrEmpty(path)) {
-                Logger.Error($"layout_parse_fonts() missing font path: {item.OuterHTML}");
+                Logger.Error($"layout_parse_fonts() missing font path: {item.OuterXML}");
                 continue;
             }
 
@@ -2519,7 +2534,7 @@ public class Layout : IDraw, IAnimate {
 
                 if (is_atlas) {
                     font = FontGlyph.Init(path, glyph_suffix, glyph_animate);
-                    if (glyph_color_by_difference) font.EnableColorByDifference(true);
+                    if (glyph_color_by_addition) font.EnableColorByAddition(true);
                 } else {
                     font = FontType.Init(path);
                 }
@@ -2531,8 +2546,6 @@ public class Layout : IDraw, IAnimate {
             } catch (Exception e) {
                 Logger.Error($"layout_parse_fonts() Unable to read the font {path}: {e.Message}");
                 continue;
-            } finally {
-                //free(path);
             }
         }
 
@@ -2698,11 +2711,11 @@ public class Layout : IDraw, IAnimate {
             string unparsed_value = item.GetAttribute("value");
 
             if (String.IsNullOrEmpty(name)) {
-                Logger.Error($"layout_parse_externalvalues() missing AttachValue name: {item.OuterHTML}");
+                Logger.Error($"layout_parse_externalvalues() missing AttachValue name: {item.OuterXML}");
                 continue;
             }
             if (String.IsNullOrEmpty(unparsed_type)) {
-                Logger.Error($"layout_parseexternal_values() missing AttachValue type: {item.OuterHTML}");
+                Logger.Error($"layout_parseexternal_values() missing AttachValue type: {item.OuterXML}");
                 continue;
             }
 
@@ -2737,12 +2750,12 @@ public class Layout : IDraw, IAnimate {
                     invalid = !VertexProps.IsValueBoolean(unparsed_value);
                     break;
                 default:
-                    Logger.Error($"layout_parse_externalvalues() unknown AttachValue type: {item.OuterHTML}");
+                    Logger.Error($"layout_parse_externalvalues() unknown AttachValue type: {item.OuterXML}");
                     continue;
             }
 
             if (invalid) {
-                Logger.Error($"layout_parse_externalvalues() value in: {item.OuterHTML}");
+                Logger.Error($"layout_parse_externalvalues() value in: {item.OuterXML}");
                 continue;
             }
 
@@ -2803,7 +2816,7 @@ public class Layout : IDraw, IAnimate {
     private static void ParseSound(XmlParserNode unparsed_sound, LayoutContext layout_context) {
         string src = unparsed_sound.GetAttribute("src");
         if (String.IsNullOrEmpty(src)) {
-            Logger.Error($"layout_parse_sound() missing sound '{src}'");
+            Logger.Error($"layout_parse_sound() missing attribute '{src}'");
             return;
         }
 
@@ -2847,7 +2860,7 @@ public class Layout : IDraw, IAnimate {
     private static void ParseVideo(XmlParserNode unparsed_video, LayoutContext layout_context, int group_id) {
         string src = unparsed_video.GetAttribute("src");
         if (String.IsNullOrEmpty(src)) {
-            Logger.Error($"layout_parse_video() missing video '{src}'");
+            Logger.Error($"layout_parse_video() missing attribute '{src}'");
             return;
         }
 
@@ -2913,7 +2926,7 @@ public class Layout : IDraw, IAnimate {
 
         foreach (XmlParserNode unparsed_macro in list) {
             if (!unparsed_macro.HasAttribute("name")) {
-                Logger.Warn($"layout_parse_macro() missing name in: {unparsed_macro.OuterHTML}");
+                Logger.Warn($"layout_parse_macro() missing name in: {unparsed_macro.OuterXML}");
                 continue;
             }
 
@@ -2983,6 +2996,9 @@ public class Layout : IDraw, IAnimate {
                     break;
                 case "AnimationRemove":
                     Layout.HelperAddActionAnimationremove(unparsed_entry, entries);
+                    break;
+                case "AnimationEnd":
+                    Layout.HelperAddActionAnimationend(unparsed_entry, entries);
                     break;
                 case "Parallax":
                     Layout.HelperAddActionParallax(unparsed_entry, entries);
@@ -3079,6 +3095,9 @@ public class Layout : IDraw, IAnimate {
                 case "AnimationRemove":
                     Layout.HelperAddActionAnimationremove(unparsed_entry, entries);
                     break;
+                case "AnimationEnd":
+                    Layout.HelperAddActionAnimationend(unparsed_entry, entries);
+                    break;
                 case "Parallax":
                     Layout.HelperAddActionParallax(unparsed_entry, entries);
                     break;
@@ -3156,6 +3175,9 @@ public class Layout : IDraw, IAnimate {
                 case "AnimationRemove":
                     Layout.HelperAddActionAnimationremove(unparsed_entry, entries);
                     break;
+                case "AnimationEnd":
+                    Layout.HelperAddActionAnimationend(unparsed_entry, entries);
+                    break;
                 case "SetShader":
                     Layout.HelperAddActionSetshader(unparsed_entry, entries);
                     break;
@@ -3206,7 +3228,10 @@ public class Layout : IDraw, IAnimate {
                     Layout.HelperAddActionAnimation(unparsed_entry, animlist, entries);
                     break;
                 case "AnimationRemove":
-                    Layout.HelperAddActionAnimationremove(unparsed_entry, entries);*/
+                    Layout.HelperAddActionAnimationremove(unparsed_entry, entries);
+                case "AnimationEnd":
+                    Layout.HelperAddActionAnimationend(unparsed_entry, entries);
+                    break;*/
                 default:
                     if (Layout.HelperAddActionMedia(unparsed_entry, entries))
                         Logger.Warn($"layout_parse_action() unknown Sound action entry: {unparsed_entry.TagName}");
@@ -3293,12 +3318,7 @@ public class Layout : IDraw, IAnimate {
             }
 
             if (!unparsed_action.HasAttribute("id")) {
-                Logger.Warn($"layout_parse_macroaction() Missing event id in Macro action: {unparsed_action.OuterHTML}");
-                //free(target_name);
-                //free(action_name);
-                //free(trigger_name);
-                //free(stop_trigger_name);
-                //free(camera_name);
+                Logger.Warn($"layout_parse_macroaction() Missing event id in Macro action: {unparsed_action.OuterXML}");
                 continue;
             }
 
@@ -3675,7 +3695,7 @@ public class Layout : IDraw, IAnimate {
     private static void HelperAddActionProperties(XmlParserNode unparsed_entry, bool is_textsprite, ArrayList<ActionEntry> action_entries) {
         if (unparsed_entry.Attributes.Length < 1) {
             Logger.Warn(
-                $"layout_helper_add_action_properties() 'Properties' was empty: {unparsed_entry.OuterHTML}"
+                $"layout_helper_add_action_properties() 'Properties' was empty: {unparsed_entry.OuterXML}"
             );
             return;
         }
@@ -3693,7 +3713,7 @@ public class Layout : IDraw, IAnimate {
 
             if (property_id < 0) {
                 Logger.Warn(
-                    $"layout_helper_add_action_properties() unknown property '{name}' in: {unparsed_entry.OuterHTML}"
+                    $"layout_helper_add_action_properties() unknown property '{name}' in: {unparsed_entry.OuterXML}"
                 );
                 continue;
             }
@@ -3856,13 +3876,13 @@ public class Layout : IDraw, IAnimate {
         float width = Layout.HelperParseFloat(unparsed_entry, "width", Single.NaN);
         float height = Layout.HelperParseFloat(unparsed_entry, "height", Single.NaN);
         if (Single.IsNaN(width) && Single.IsNaN(height)) {
-            Logger.Error($"layout_helper_add_action_size() invalid size: {unparsed_entry.OuterHTML}");
+            Logger.Error($"layout_helper_add_action_size() invalid size: {unparsed_entry.OuterXML}");
             return;
         }
 
         bool has_resize = width < 0f || height < 0f;
         if (has_resize && (Single.IsNaN(width) || Single.IsNaN(height))) {
-            Logger.Warn($"layout_helper_add_action_size() invalid resize: {unparsed_entry.OuterHTML}");
+            Logger.Warn($"layout_helper_add_action_size() invalid resize: {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -3877,15 +3897,15 @@ public class Layout : IDraw, IAnimate {
 
     private static void HelperAddActionAtlasapply(XmlParserNode unparsed_entry, Atlas atlas, ArrayList<ActionEntry> action_entries) {
         if (atlas == null) {
-            Logger.Error($"layout_helper_add_action_atlasapply() missing atlas, can not import: {unparsed_entry.OuterHTML}");
+            Logger.Error($"layout_helper_add_action_atlasapply() missing atlas, can not import: {unparsed_entry.OuterXML}");
             return;
         }
 
         string atlas_entry_name = unparsed_entry.GetAttribute("entry");
-        AtlasEntry atlas_entry = atlas.GetEntryCopy(atlas_entry_name);
+        AtlasEntry atlas_entry = CloneUtils.CloneObject(atlas.GetEntry(atlas_entry_name));
 
         if (atlas_entry == null) {
-            Logger.Warn($"layout_helper_add_action_atlasapply() missing atlas entry name '{atlas_entry_name}': {unparsed_entry.OuterHTML}");
+            Logger.Warn($"layout_helper_add_action_atlasapply() missing atlas entry name '{atlas_entry_name}': {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -3908,7 +3928,7 @@ public class Layout : IDraw, IAnimate {
         AnimSprite animsprite = AnimSprite.InitFromAnimlist(animlist, anim_name);
 
         if (animsprite == null) {
-            Logger.Warn($"layout_helper_add_action_animation() missing animation '{anim_name}': {unparsed_entry.OuterHTML}");
+            Logger.Warn($"layout_helper_add_action_animation() missing animation '{anim_name}': {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -3924,13 +3944,13 @@ public class Layout : IDraw, IAnimate {
 
     private static void HelperAddActionAnimationfromatlas(XmlParserNode unparsed_entry, Atlas atlas, ArrayList<ActionEntry> action_entries) {
         if (atlas == null) {
-            Logger.Error($"layout_helper_add_action_animationfromatlas() failed, sprite has no atlas: {unparsed_entry.OuterHTML}");
+            Logger.Error($"layout_helper_add_action_animationfromatlas() failed, sprite has no atlas: {unparsed_entry.OuterXML}");
             return;
         }
 
         string anim_name = unparsed_entry.GetAttribute("name");
         if (anim_name == null) {
-            Logger.Error($"Missing animation name on: {unparsed_entry.OuterHTML}");
+            Logger.Error($"Missing animation name on: {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -3947,7 +3967,7 @@ public class Layout : IDraw, IAnimate {
         bool override_size = VertexProps.ParseBoolean(unparsed_entry, "overrideSize", false);
 
         if (animsprite == null) {
-            Logger.Warn($"layout_helper_add_action_animationfromatlas() missing animation '{anim_name}': {unparsed_entry.OuterHTML}");
+            Logger.Warn($"layout_helper_add_action_animationfromatlas() missing animation '{anim_name}': {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -3995,7 +4015,7 @@ public class Layout : IDraw, IAnimate {
         float max_height = Layout.HelperParseFloat(unparsed_entry, "maxHeight", Single.NaN);
 
         if (Single.IsNaN(max_width) && Single.IsNaN(max_height)) {
-            Logger.Error($"layout_helper_add_action_resize() invalid resize: {unparsed_entry.OuterHTML}");
+            Logger.Error($"layout_helper_add_action_resize() invalid resize: {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -4069,7 +4089,7 @@ public class Layout : IDraw, IAnimate {
     private static void HelperAddActionMediaproperties(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
         if (unparsed_entry.Attributes.Length < 1) {
             Logger.Warn(
-                $"layout_helper_add_action_properties() 'Properties' was empty: {unparsed_entry.OuterHTML}"
+                $"layout_helper_add_action_properties() 'Properties' was empty: {unparsed_entry.OuterXML}"
              );
             return;
         }
@@ -4082,7 +4102,7 @@ public class Layout : IDraw, IAnimate {
 
             if (property_id < 0) {
                 Logger.Warn(
-                    $"layout_helper_add_action_mediaproperties() unknown property '{name}' in: {unparsed_entry.OuterHTML}"
+                    $"layout_helper_add_action_mediaproperties() unknown property '{name}' in: {unparsed_entry.OuterXML}"
                 );
                 continue;
             }
@@ -4102,7 +4122,6 @@ public class Layout : IDraw, IAnimate {
             Layout.HelperAddActionRemoveshader(unparsed_entry, action_entries);
             return;
         }
-
 
         StringBuilder sourcecode_vertex = new StringBuilder();
         StringBuilder sourcecode_fragment = new StringBuilder();
@@ -4130,7 +4149,7 @@ public class Layout : IDraw, IAnimate {
                     target = sourcecode_fragment;
                     break;
                 default:
-                    Logger.Warn($"layout_helper_add_action_setshader() unknown element: {source.OuterHTML}");
+                    Logger.Warn($"layout_helper_add_action_setshader() unknown element: {source.OuterXML}");
                     continue;
             }
 
@@ -4144,7 +4163,7 @@ public class Layout : IDraw, IAnimate {
         if (String.IsNullOrEmpty(str_vertex) && String.IsNullOrEmpty(str_fragment)) {
             //free(str_vertex);
             //free(str_fragment);
-            Logger.Warn($"layout_helper_add_action_setshader() empty shader: {unparsed_entry.OuterHTML}");
+            Logger.Warn($"layout_helper_add_action_setshader() empty shader: {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -4154,7 +4173,7 @@ public class Layout : IDraw, IAnimate {
         //free(str_fragment);
 
         if (psshader == null) {
-            Logger.Warn($"layout_helper_add_action_setshader() compilation failed: {unparsed_entry.OuterHTML}");
+            Logger.Warn($"layout_helper_add_action_setshader() compilation failed: {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -4168,7 +4187,6 @@ public class Layout : IDraw, IAnimate {
     }
 
     private static void HelperAddActionSetshaderuniform(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
-
         double[] values = new double[16];
         for (int i = 0 ; i < 16 ; i++) values[i] = 0.0;
 
@@ -4177,7 +4195,7 @@ public class Layout : IDraw, IAnimate {
         string unparsed_values = unparsed_entry.GetAttribute("values");
 
         if (String.IsNullOrEmpty(name)) {
-            Logger.Error($"layout_helper_add_action_setshaderuniform() missing name: {unparsed_entry.OuterHTML}");
+            Logger.Error($"layout_helper_add_action_setshaderuniform() missing name: {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -4202,7 +4220,6 @@ public class Layout : IDraw, IAnimate {
         } else if (!Double.IsNaN(value)) {
             values[0] = value;
         }
-
 
         ActionEntry entry = new ActionEntry() { type = Layout.ACTION_SETSHADERUNIFORM, uniform_name = name, misc = values };
         action_entries.Add(entry);
@@ -4250,7 +4267,7 @@ public class Layout : IDraw, IAnimate {
         float offset_x = Layout.HelperParseFloat(unparsed_entry, "offsetX", Single.NaN);
         float offset_y = Layout.HelperParseFloat(unparsed_entry, "offsetY", Single.NaN);
         if (Single.IsNaN(offset_x) && Single.IsNaN(offset_y)) {
-            Logger.Error($"layout_helper_add_action_borderoffser() invalid offset: {unparsed_entry.OuterHTML}");
+            Logger.Error($"layout_helper_add_action_borderoffser() invalid offset: {unparsed_entry.OuterXML}");
             return;
         }
 
@@ -4344,7 +4361,7 @@ public class Layout : IDraw, IAnimate {
         public Item item; public float z_index; public bool visible;
     }
     private class ResourcePoolEntry {
-        public object data; public string src; public bool is_texture;
+        public object data; public string path; public bool is_texture;
     }
     private class ResourcePool {
         public ArrayList<ResourcePoolEntry> textures; public ArrayList<ResourcePoolEntry> atlas;
@@ -4437,6 +4454,7 @@ public class Layout : IDraw, IAnimate {
         public string name;
     }
     private class GroupContext {
+        public SIMDMatrix matrix;
         public bool visible;
         public float alpha;
         public PVRFlag antialiasing;
@@ -4479,6 +4497,7 @@ public class Layout : IDraw, IAnimate {
         public double position;
     }
     private class Group : ISetProperty {
+        public GroupContext context;
         public Action[] actions;
         public int actions_size;
         public Modifier modifier;
@@ -4489,6 +4508,7 @@ public class Layout : IDraw, IAnimate {
         public LayoutParallax parallax;
         public AnimSprite animation;
         public bool static_camera;
+        public SIMDMatrix static_screen;
         public int group_id;
         public string initial_action_name;
         public PVRFlag antialiasing;
@@ -4504,7 +4524,6 @@ public class Layout : IDraw, IAnimate {
         public float viewport_y;
         public float viewport_width;
         public float viewport_height;
-        public GroupContext context;
 
         public void SetProperty(int id, float value) => Layout.HelperGroupSetProperty(this, id, value);
     }

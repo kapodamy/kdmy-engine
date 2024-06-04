@@ -30,7 +30,7 @@ public static class ExportsStrum {
 
     static int script_strum_set_scroll_direction(LuaState L) {
         Strum strum = L.ReadUserdata<Strum>(STRUM);
-        ScrollDirection direction = LuascriptHelpers.luascript_parse_scrolldirection(L, L.luaL_optstring(2, null));
+        ScrollDirection direction = (ScrollDirection)LuascriptHelpers.optenum(L, 2, LuascriptEnums.ScrollDirection);
 
         strum.SetScrollDirection(direction);
 
@@ -238,8 +238,8 @@ public static class ExportsStrum {
 
     static int script_strum_set_extra_animation(LuaState L) {
         Strum strum = L.ReadUserdata<Strum>(STRUM);
-        StrumScriptTarget strum_script_target = LuascriptHelpers.luascript_parse_strumscripttarget(L, L.luaL_optstring(2, null));
-        StrumScriptOn strum_script_on = LuascriptHelpers.luascript_parse_strumscripton(L, L.luaL_optstring(3, null));
+        StrumScriptTarget strum_script_target = (StrumScriptTarget)LuascriptHelpers.optenum(L, 2, LuascriptEnums.StrumScriptTarget);
+        StrumScriptOn strum_script_on = (StrumScriptOn)LuascriptHelpers.optenum(L, 3, LuascriptEnums.StrumScriptOn);
         bool undo = L.lua_toboolean(4);
         AnimSprite animsprite = L.ReadNullableUserdata<AnimSprite>(5, ExportsAnimSprite.ANIMSPRITE);
 
@@ -250,7 +250,7 @@ public static class ExportsStrum {
 
     static int script_strum_set_extra_animation_continuous(LuaState L) {
         Strum strum = L.ReadUserdata<Strum>(STRUM);
-        StrumScriptTarget strum_script_target = LuascriptHelpers.luascript_parse_strumscripttarget(L, L.luaL_optstring(2, null));
+        StrumScriptTarget strum_script_target = (StrumScriptTarget)LuascriptHelpers.optenum(L, 2, LuascriptEnums.StrumScriptTarget);
         AnimSprite animsprite = L.ReadNullableUserdata<AnimSprite>(3, ExportsAnimSprite.ANIMSPRITE);
 
         strum.SetExtraAnimationContinuous(strum_script_target, animsprite);

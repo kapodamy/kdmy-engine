@@ -21,6 +21,9 @@ public class Dialogue : IAnimate, IDraw {
     //private const string LAYOUT_DREAMCAST = "/assets/common/image/dialogue/layout~dreamcast.xml";
     private const string DEFAULTS_DEFINITIONS = "/assets/common/data/dialogue_defaults.xml";
 
+
+    private SIMDMatrix matrix_viewport;
+
     private Audio[] audios;
     private int audios_size;
     private Font[] fonts;
@@ -73,7 +76,6 @@ public class Dialogue : IAnimate, IDraw {
     private Gamepad gamepad;
     private Drawable self_drawable;
     private bool self_hidden;
-    private SIMDMatrix matrix_viewport;
 
 
     private Dialogue() { }
@@ -209,6 +211,8 @@ public class Dialogue : IAnimate, IDraw {
         xml.Destroy();
 
         Dialogue dialogue = new Dialogue() {
+            matrix_viewport = new SIMDMatrix(),
+
             audios = null,
             audios_size = 0,
             fonts = null,
@@ -260,8 +264,7 @@ public class Dialogue : IAnimate, IDraw {
             is_completed = true,
             chars_per_second = 0,
             self_drawable = null,
-            self_hidden = false,
-            matrix_viewport = new SIMDMatrix()
+            self_hidden = false
         };
 
         dialogue.self_drawable = new Drawable(300, dialogue, dialogue);
@@ -922,12 +925,11 @@ public class Dialogue : IAnimate, IDraw {
                 case Type.PORTRAIT_ADD:
                     int portrait_index = -1;
                     if (action.random_from_prefix != null && this.portraits_size > 0) {
-                        int index;
                         if (action.random_from_prefix.Length == 0) {
                             // random choose
                             portrait_index = Math2D.RandomInt(0, this.portraits_size);
                         } else {
-                            index = -1;
+                            portrait_index = -1;
                             int count = 0;
                             int j = 0;
 
@@ -941,20 +943,22 @@ public class Dialogue : IAnimate, IDraw {
                             for (int i = 0 ; i < this.portraits_size ; i++) {
                                 if (this.portraits[i].name.StartsWithKDY(action.name, 0)) {
                                     if (j == choosen) {
-                                        index = i;
+                                        portrait_index = i;
                                         break;
                                     }
                                     j++;
                                 }
                             }
                         }
-                    }
-                    for (int i = 0 ; i < this.portraits_size ; i++) {
-                        if (this.portraits[i].name == action.name) {
-                            portrait_index = i;
-                            break;
+                    } else {
+                        for (int i = 0 ; i < this.portraits_size ; i++) {
+                            if (this.portraits[i].name == action.name) {
+                                portrait_index = i;
+                                break;
+                            }
                         }
                     }
+
                     if (portrait_index < 0 || portrait_index >= this.portraits_size) {
                         break;
                     }
@@ -1270,7 +1274,7 @@ public class Dialogue : IAnimate, IDraw {
 
         if (this.do_instant_print) {
             InternalNotifyScript(true);
-            this.texsprite_speech.SetText(line.text);
+            this.texsprite_speech.SetTextIntern(true, line.text);
             InternalNotifyScript(false);
             InternalToggleIdle();
             this.do_instant_print = false;
@@ -1318,7 +1322,7 @@ public class Dialogue : IAnimate, IDraw {
         if (this.current_dialog_line > 0 && this.click_text != null) this.click_text.Replay();
 
         InternalNotifyScript(true);
-        this.texsprite_speech.SetText(this.current_dialog_mask);
+        this.texsprite_speech.SetTextIntern(true, this.current_dialog_mask);
     }
 
     private void InternalPrintText() {
@@ -1339,12 +1343,12 @@ public class Dialogue : IAnimate, IDraw {
             buffer.AddSubstringKDY(line.text, 0, next_index);
             buffer.AddSubstringKDY(this.current_dialog_mask, next_index, length);
 
-            this.texsprite_speech.SetText(buffer.InternKDY());
+            this.texsprite_speech.SetTextIntern(true, buffer.InternKDY());
             return;
         }
 
         InternalNotifyScript(false);
-        this.texsprite_speech.SetText(line.text);
+        this.texsprite_speech.SetTextIntern(true, line.text);
 
         this.is_speaking = false;
         this.current_dialog_line++;
@@ -1466,8 +1470,8 @@ public class Dialogue : IAnimate, IDraw {
 
         if (!String.IsNullOrEmpty(animation_list)) {
             animlist = AnimList.Init(animation_list);
-            if (String.IsNullOrEmpty(animation_list)) {
-                Logger.Error($"dialogue_internal_parse_animationui() can not initialize: {root_node.OuterHTML}");
+            if (animlist == null) {
+                Logger.Error($"dialogue_internal_parse_animationui() can not initialize: {root_node.OuterXML}");
                 return;
             }
         }
@@ -1572,7 +1576,7 @@ public class Dialogue : IAnimate, IDraw {
                         string tmp = node.GetAttribute("fromCommon");
                         if (tmp != "none") action.name = tmp;
                     }
-                    switch (node.GetAttribute("repeatAnim")) {
+                    switch (node.GetAttribute("repeatAnim").ToLower()) {
                         case "":
                         case null:
                             action.repeat_anim = RepeatAnim.NONE;
@@ -1580,7 +1584,6 @@ public class Dialogue : IAnimate, IDraw {
                         case "once":
                             action.repeat_anim = RepeatAnim.ONCE;
                             break;
-                        case "whileSpeaks":
                         case "whilespeaks":
                             action.repeat_anim = RepeatAnim.WHILESPEAKS;
                             break;
@@ -1589,7 +1592,7 @@ public class Dialogue : IAnimate, IDraw {
                             break;
                         default:
                             action.repeat_anim = RepeatAnim.NONE;
-                            Logger.Error($"dialogue_internal_parse_state() unknown repeatAnim value: {node.OuterHTML}");
+                            Logger.Error($"dialogue_internal_parse_state() unknown repeatAnim value: {node.OuterXML}");
                             break;
                     }
                     break;
@@ -1642,7 +1645,8 @@ public class Dialogue : IAnimate, IDraw {
                     action.type = Type.NOWAIT;
                     break;
                 default:
-                    Logger.Error($"dialogue_internal_parse_state() unknown state action: {node.OuterHTML}");
+                    Logger.Error($"dialogue_internal_parse_state() unknown state action: {node.OuterXML}");
+                    //free(action.name);
                     continue;
             }
 
@@ -1740,7 +1744,7 @@ public class Dialogue : IAnimate, IDraw {
                     Dialogue.InternalParseChoice(node, dialogs, choices);
                     break;
                 default:
-                    Logger.Error($"dialogue_internal_parse_multiplechoice() unknown: {node.OuterHTML}");
+                    Logger.Error($"dialogue_internal_parse_multiplechoice() unknown: {node.TagName}");
                     break;
             }
         }
@@ -1853,7 +1857,7 @@ public class Dialogue : IAnimate, IDraw {
     private static void InternalParseImportPortraitList(XmlParserNode root_node, ArrayList<Portrait> portraits) {
         string dialogue_src = root_node.GetAttribute("dialogueSrc");
         if (String.IsNullOrEmpty(dialogue_src)) {
-            Logger.Error($"dialogue_internal_parse_importportraitlist() missing dialogueSrc: {root_node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_importportraitlist() missing dialogueSrc: {root_node.OuterXML}");
             return;
         }
 
@@ -1898,17 +1902,17 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         if (String.IsNullOrEmpty(name)) {
-            Logger.Error($"dialogue_internal_parse_audio() missing name: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_audio() missing name: {node.OuterXML}");
             return;
         }
         if (String.IsNullOrEmpty(src)) {
-            Logger.Error($"dialogue_internal_parse_audio() missing src: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_audio() missing src: {node.OuterXML}");
             return;
         }
 
         SoundPlayer soundplayer = SoundPlayer.Init(src);
         if (soundplayer == null) {
-            Logger.Error($"dialogue_internal_parse_audio() can not initialize: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_audio() can not initialize: {node.OuterXML}");
             return;
         }
 
@@ -1950,13 +1954,13 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         if (String.IsNullOrEmpty(name)) {
-            Logger.Error($"dialogue_internal_parse_image() missing name: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_image() missing name: {node.OuterXML}");
             return;
         }
 
         if (src == null) src = base_src;
         if (String.IsNullOrEmpty(src)) {
-            Logger.Error($"dialogue_internal_parse_image() missing src: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_image() missing src: {node.OuterXML}");
             return;
         }
 
@@ -1981,7 +1985,7 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         if (init_failed) {
-            Logger.Error($"dialogue_internal_parse_image() can not initialize: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_image() can not initialize: {node.OuterXML}");
             return;
         }
 
@@ -2006,7 +2010,7 @@ public class Dialogue : IAnimate, IDraw {
 
         string name = node.GetAttribute("name");
         if (String.IsNullOrEmpty(name)) {
-            Logger.Error($"dialogue_internal_parse_image() missing name: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_image() missing name: {node.OuterXML}");
             return;
         }
 
@@ -2032,24 +2036,24 @@ public class Dialogue : IAnimate, IDraw {
     }
 
     private static void InternalParseFont(XmlParserNode node, ArrayList<Font> fonts) {
-        //<Font name="vcr" src="vcr.ttf" glyphSuffix="bold" glyphAnimated="false"  colorByDifference="true" />
+        //<Font name="vcr" src="vcr.ttf" glyphSuffix="bold" glyphAnimated="false"  colorByAddition="true" />
 
         string name = node.GetAttribute("name");
         string src = node.GetAttribute("src");
         string glyph_suffix = node.GetAttribute("glyphSuffix");
         bool glyph_animated = VertexProps.ParseBoolean(node, "glyphAnimated", false);
-        bool color_by_difference = VertexProps.ParseBoolean(node, "colorByDifference", false);
+        bool color_by_addition = VertexProps.ParseBoolean(node, "colorByAddition", false);
 
         if (String.IsNullOrEmpty(name)) {
-            Logger.Error($"dialogue_internal_parse_font() missing name: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_font() missing name: {node.OuterXML}");
             return;
         }
         if (String.IsNullOrEmpty(src)) {
-            Logger.Error($"dialogue_internal_parse_font() missing src: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_font() missing src: {node.OuterXML}");
             return;
         }
         if (!FS.FileExists(src)) {
-            Logger.Error($"dialogue_internal_parse_font() font file not found: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_font() font file not found: {node.OuterXML}");
             return;
         }
 
@@ -2063,7 +2067,7 @@ public class Dialogue : IAnimate, IDraw {
 
         if (Atlas.UtilsIsKnownExtension(src)) {
             instance = FontGlyph.Init(src, glyph_suffix, glyph_animated);
-            instance.EnableColorByDifference(color_by_difference);
+            instance.EnableColorByAddition(color_by_addition);
             is_atlas = true;
         } else {
             instance = FontType.Init(src);
@@ -2071,7 +2075,7 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         if (instance == null) {
-            Logger.Error($"dialogue_internal_parse_font() can not initialize: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_font() can not initialize: {node.OuterXML}");
             return;
         }
 
@@ -2133,18 +2137,18 @@ public class Dialogue : IAnimate, IDraw {
             case null:
                 break;
             default:
-                Logger.Warn($"dialogue_internal_parse_portrait() unknown position: {node.OuterHTML}");
+                Logger.Warn($"dialogue_internal_parse_portrait() unknown position: {node.OuterXML}");
                 break;
         }
 
         if (String.IsNullOrEmpty(name)) {
-            Logger.Error($"dialogue_internal_parse_portrait() missing name: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_portrait() missing name: {node.OuterXML}");
             return;
         }
 
         if (src == null) src = base_model;
         if (String.IsNullOrEmpty(src)) {
-            Logger.Error($"dialogue_internal_parse_portrait() missing src: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_portrait() missing src: {node.OuterXML}");
             return;
         }
 
@@ -2177,7 +2181,7 @@ public class Dialogue : IAnimate, IDraw {
 
 L_check_failed:
         if (statesprite == null) {
-            Logger.Error($"dialogue_internal_parse_portrait() can not initialize: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_portrait() can not initialize: {node.OuterXML}");
             return;
         }
 
@@ -2218,19 +2222,19 @@ L_check_failed:
         string anim = node.GetAttribute("anim");
 
         if (String.IsNullOrEmpty(name)) {
-            Logger.Error($"dialogue_internal_parse_animation_ui_set() missing name: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_animation_ui_set() missing name: {node.OuterXML}");
             return;
         }
 
         AnimSprite animsprite = null;
         if (!String.IsNullOrEmpty(anim)) {
             if (animlist == null) {
-                Logger.Error($"dialogue_internal_parse_animation_ui_set() can not initialize without animlist: {node.OuterHTML}");
+                Logger.Error($"dialogue_internal_parse_animation_ui_set() can not initialize without animlist: {node.OuterXML}");
                 return;
             }
             animsprite = AnimSprite.InitFromAnimlist(animlist, anim);
             if (animsprite == null) {
-                Logger.Error($"dialogue_internal_parse_animation_ui_set() can not initialize: {node.OuterHTML}");
+                Logger.Error($"dialogue_internal_parse_animation_ui_set() can not initialize: {node.OuterXML}");
                 return;
             }
         }
@@ -2297,7 +2301,7 @@ L_check_failed:
                 anims_ui.close = animsprite;
                 break;
             default:
-                Logger.Error($"dialogue_internal_parse_animation_ui_set() unknown name: {node.OuterHTML}");
+                Logger.Error($"dialogue_internal_parse_animation_ui_set() unknown name: {node.OuterXML}");
                 if (animsprite != null) animsprite.Destroy();
                 break;
         }
@@ -2323,7 +2327,7 @@ L_check_failed:
         string lua_eval = node.GetAttribute("luaEval");
 
         if (text == null) {
-            Logger.Error($"dialogue_internal_parse_choice() missing text in: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_choice() missing text in: {node.OuterXML}");
             return;
         }
 
@@ -2365,7 +2369,7 @@ L_check_failed:
         string src = node.GetAttribute("src");
 
         if (String.IsNullOrEmpty(name)) {
-            Logger.Error($"dialogue_internal_parse_speechimage() missing name: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_speechimage() missing name: {node.OuterXML}");
             return null;
         }
 
@@ -2376,7 +2380,7 @@ L_check_failed:
 
         if (src == null) src = base_src;
         if (String.IsNullOrEmpty(src)) {
-            Logger.Error($"dialogue_internal_parse_speechimage() missing src: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_speechimage() missing src: {node.OuterXML}");
             return null;
         }
 
@@ -2425,19 +2429,18 @@ L_check_failed:
 
 L_check_failed:
         if (statesprite == null) {
-            Logger.Error($"dialogue_internal_parse_speechimage() can not initialize: {node.OuterHTML}");
+            Logger.Error($"dialogue_internal_parse_speechimage() can not initialize: {node.OuterXML}");
             return null;
         }
 
         if (has_mirror) statesprite.FlipTexture(mirror, null);
         if (scale > 0f) statesprite.ChangeDrawSizeInAtlasApply(true, scale);
 
-        SpeechImage speechimage = new SpeechImage() {
+        SpeechImage speechimage = speechimages.Add(new SpeechImage() {
             name = name,
             statesprite = statesprite
-        };
+        });
 
-        speechimages.Add(speechimage);
         return speechimage;
     }
 
@@ -2484,7 +2487,6 @@ L_check_failed:
         } else if (image.IndexOf('.', 0) >= 0) {
             // append atlas extension
             string tmp = StringUtils.Concat(image, ".xml");
-            //free(image);
             image = tmp;
         }
 
@@ -2566,7 +2568,10 @@ L_return:
         // check if is already loaded
         int id = 0;
         foreach (Dialog existing_dialog in dialogs) {
-            if (existing_dialog.full_path != null && existing_dialog.full_path == full_path) return id;
+            if (existing_dialog.full_path != null && existing_dialog.full_path == full_path) {
+                //free(full_path);
+                return id;
+            }
             id++;
         }
 
@@ -2640,15 +2645,14 @@ L_return:
         }
 
         if (buffered_line != null) {
-            DialogLine dialog_line;
             if (lines.Size() < 1) {
-                dialog_line = new DialogLine() {
+                DialogLine dialog_line = new DialogLine() {
                     target_state_name = null,
                     text = buffered_line
                 };
                 lines.Add(dialog_line);
             } else {
-                dialog_line = lines.Get(lines.Size() - 1);
+                DialogLine dialog_line = lines.Get(lines.Size() - 1);
                 string tmp = StringUtils.Concat(dialog_line.text, buffered_line);
                 //free(dialog_line.text);
                 //free(buffered_line);

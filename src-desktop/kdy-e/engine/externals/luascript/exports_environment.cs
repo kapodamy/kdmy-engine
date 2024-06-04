@@ -13,7 +13,7 @@ public static class ExportsEnvironment {
 
 
     static int script_environment_get_language(LuaState L) {
-        L.lua_pushstring(CultureInfo.InstalledUICulture.DisplayName);
+        L.lua_pushstring(CultureInfo.InstalledUICulture.TwoLetterISOLanguageName);
         return 1;
     }
 
@@ -23,7 +23,14 @@ public static class ExportsEnvironment {
     }
 
     static int script_environment_get_cmdargs(LuaState L) {
-        L.lua_pushstring(Environment.CommandLine);
+        string[] args = Environment.GetCommandLineArgs();
+
+        L.lua_createtable(args.Length, 0);
+        for (int i = 0 ; i < args.Length ; i++) {
+            L.lua_pushstring(args[i]);
+            L.lua_rawseti(-2, i + 1);
+        }
+
         return 1;
     }
 

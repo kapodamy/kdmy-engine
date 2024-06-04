@@ -11,7 +11,7 @@ public static class ExportsCamera {
     static int script_camera_set_interpolator_type(LuaState L) {
         Camera camera = L.ReadUserdata<Camera>(CAMERA);
 
-        AnimInterpolator type = LuascriptHelpers.ParseInterpolator(L, L.luaL_optstring(2, null));
+        AnimInterpolator type = (AnimInterpolator)LuascriptHelpers.optenum(L, 2, LuascriptEnums.AnimInterpolator);
 
         camera.SetInterpolatorType(type);
 

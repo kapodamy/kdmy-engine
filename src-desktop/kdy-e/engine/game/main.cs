@@ -42,7 +42,7 @@ public static class GameMain {
         utsname osinfo;
         UTSNAME.uname(out osinfo);
 
-        Logger.Info("AICA:" + SoundBridge.GetRuntimeInfo());
+        Logger.Info("SoundBridge:" + SoundBridge.GetRuntimeInfo());
         Logger.Info("FontAtlas: FreeType V" + FontAtlas.GetVersion());
         Logger.Info("LuaScript: " + ManagedLuaState.GetVersion());
         Logger.Info("FFGraph: " + FFGraph.GetRuntimeInfo() ?? "<not loaded>");
@@ -70,7 +70,6 @@ public static class GameMain {
         }
 
         // choose a random menu style
-        bool try_choose_last_played = Math2D.RandomFloat() <= 0.25f;
         bool[] visited = new bool[Funkin.weeks_array.size];
         bool try_choose_last_played = Math2D.RandomFloat() <= 0.25f;
         int visited_count = 0;
@@ -203,7 +202,7 @@ public static class GameMain {
     }
 
     public static object SpawnCoroutine(Layout background_layout, Func<object, object> function_routine, object argument_routine) {
-        kthread_t thread = THDHelperSpawn(function_routine, argument_routine);
+        kthread_t thread = THDHelperSpawn(false, function_routine, argument_routine);
         object ret;
 
         if (background_layout != null) {
@@ -233,14 +232,21 @@ public static class GameMain {
      * This function creates a new kernel thread with default parameters to run the given routine.
      * The thread will terminate and clean up resources when the routine completes
      * This function warps {@link thd_create} to allow multi-thread filesystem support (fs_* engine functions)
+     * @param {boolean} detached true to make the thread joinable, otherwise, false
      * @param {function} routine The function to call in the new thread.
      * @param {object} param A parameter to pass to the function called.
-     * @returns The new thread on success, NULL on failure.
+     * @returns {kthread_t} the created thread
      */
-    public static kthread_t THDHelperSpawn(Func<object, object> routine, object param) {
+    public static kthread_t THDHelperSpawn(bool detached, Func<object, object> routine, object param) {
         // in C, "init_data" this an allocated struct
         InitData init_data = new InitData() { routine = routine, @params = param };
-        return thd.create(true, GameMain.THDHelperSpawnWrapper, init_data);
+        kthread_t thread = thd.create(detached, GameMain.THDHelperSpawnWrapper, init_data);
+
+        if (thread == null) {
+            throw new Exception("THDHelperSpawn() call failed to thd_create()");
+        }
+
+        return thread;
     }
 
     private static object THDHelperSpawnWrapper(object arg) {
@@ -248,7 +254,7 @@ public static class GameMain {
         Func<object, object> routine = init_data.routine;
         object @params = init_data.@params;
 
-        // dispose "init_data" because was allocated in thd_helper_spawn
+        // dispose "init_data" because was allocated in main_thd_helper_spawn
         //free(init_data);
 
         //

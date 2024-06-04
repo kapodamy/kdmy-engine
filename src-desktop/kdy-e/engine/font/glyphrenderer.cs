@@ -107,7 +107,7 @@ public static class GlyphRenderer {
         glyphrenderer_glyphs_added++;
     }
 
-    public static void Draw(PVRContext pvrctx, float[] color, float[] color_outline, bool by_diff, bool is_gryscl, Texture tex0, Texture tex1) {
+    public static void Draw(PVRContext pvrctx, float[] color, float[] color_outline, bool by_add, bool is_gryscl, Texture tex0, Texture tex1) {
         WebGL2RenderingContext gl = pvrctx.webopengl.gl;
         WebGLContextProgramGlyphs program_glyphs = pvrctx.webopengl.program_glyphs;
 
@@ -185,20 +185,20 @@ public static class GlyphRenderer {
         gl.uniform4fv(program_glyphs.u_color_outline, WebGLContext.RGBA);
 
         // if the offsetcolor alpha is negative, disable the offsetcolor processing
-        // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_diff" are boolean values
+        // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values
         if (pvrctx.render_offsetcolor[3] < 0) {
             gl.uniform1i(program_glyphs.u_offsetcolor_enabled, 0);
         } else {
             gl.uniform1i(program_glyphs.u_offsetcolor_enabled, 1);
             gl.uniform4fv(program_glyphs.u_offsetcolor, pvrctx.render_offsetcolor);
-            gl.uniform1i(program_glyphs.u_offsetcolor_mul_or_diff, pvrctx.render_offsetcolor_multiply != PVRContextFlag.DISABLE ? 1 : 0);
+            gl.uniform1i(program_glyphs.u_offsetcolor_mul_or_add, pvrctx.render_offsetcolor_multiply != PVRFlag.DISABLE ? 1 : 0);
         }
 
         // grayscale textures used by fonttype_draw() or rgba textures used by fontglyph_draw()
         gl.uniform1i(program_glyphs.u_grayscale, is_gryscl ? 1 : 0);
 
         // used only by fontglyph_draw() function
-        gl.uniform1i(program_glyphs.u_color_by_diff, by_diff ? 1 : 0);
+        gl.uniform1i(program_glyphs.u_color_by_add, by_add ? 1 : 0);
 
         // send vertex indices
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, program_glyphs.buffer_indices);

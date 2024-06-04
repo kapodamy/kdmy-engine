@@ -34,7 +34,7 @@ public static class ExportsTextSprite {
     static int script_textsprite_force_case(LuaState L) {
         TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-        int uppercase_or_lowecase_or_none = LuascriptHelpers.ParseForcecase(L, L.luaL_optstring(2, null));
+        int uppercase_or_lowecase_or_none = LuascriptHelpers.optenum(L, 2, LuascriptEnums.TextSpriteForceCase);
 
         textsprite.ForceCase(uppercase_or_lowecase_or_none);
 
@@ -44,7 +44,7 @@ public static class ExportsTextSprite {
     static int script_textsprite_set_paragraph_align(LuaState L) {
         TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-        Align align = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(2, null));
+        Align align = (Align)LuascriptHelpers.optenum(L, 2, LuascriptEnums.Align);
 
         textsprite.SetParagraphAlign(align);
 
@@ -159,8 +159,8 @@ public static class ExportsTextSprite {
     static int script_textsprite_matrix_flip(LuaState L) {
         TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-        bool flip_x = L.lua_toboolean(2);
-        bool flip_y = L.lua_toboolean(3);
+        bool? flip_x = LuascriptHelpers.optnbool(L, 2);
+        bool? flip_y = LuascriptHelpers.optnbool(L, 3);
 
         textsprite.MatrixFlip(flip_x, flip_y);
 
@@ -170,8 +170,8 @@ public static class ExportsTextSprite {
     static int script_textsprite_set_align(LuaState L) {
         TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-        Align align_vertical = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(2, null));
-        Align align_horizontal = LuascriptHelpers.ParseAlign(L, L.luaL_optstring(3, null));
+        Align align_vertical = (Align)LuascriptHelpers.optenum(L, 2, LuascriptEnums.Align);
+        Align align_horizontal = (Align)LuascriptHelpers.optenum(L, 3, LuascriptEnums.Align);
 
         textsprite.SetAlign(align_vertical, align_horizontal);
 
@@ -261,7 +261,7 @@ public static class ExportsTextSprite {
     static int script_textsprite_set_antialiasing(LuaState L) {
         TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-        PVRContextFlag antialiasing = LuascriptHelpers.ParsePVRFLAG(L, L.luaL_checkstring(2));
+        PVRFlag antialiasing = (PVRFlag)LuascriptHelpers.optenum(L, 2, LuascriptEnums.PVRFlag);
 
         textsprite.SetAntialiasing(antialiasing);
 
@@ -271,7 +271,7 @@ public static class ExportsTextSprite {
     static int script_textsprite_set_wordbreak(LuaState L) {
         TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
 
-        int wordbreak = LuascriptHelpers.ParseWordbreak(L, L.luaL_optstring(2, null));
+        int wordbreak = LuascriptHelpers.optenum(L, 2, LuascriptEnums.FontWordBreak);
 
         textsprite.SetWordbreak(wordbreak);
 
@@ -300,7 +300,7 @@ public static class ExportsTextSprite {
 
         return ExportsPSShader.script_psshader_new(L, psshader);
     }
-    
+
     static int script_textsprite_blend_enable(LuaState L) {
         TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
         bool enabled = L.lua_toboolean(2);
@@ -312,10 +312,10 @@ public static class ExportsTextSprite {
 
     static int script_textsprite_blend_set(LuaState L) {
         TextSprite textsprite = L.ReadUserdata<TextSprite>(TEXTSPRITE);
-        Blend src_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(2, null));
-        Blend dst_rgb = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(3, null));
-        Blend src_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(4, null));
-        Blend dst_alpha = LuascriptHelpers.ParseBlend(L, L.luaL_optstring(5, null));
+        Blend src_rgb = (Blend)LuascriptHelpers.optenum(L, 2, LuascriptEnums.Blend);
+        Blend dst_rgb = (Blend)LuascriptHelpers.optenum(L, 3, LuascriptEnums.Blend);
+        Blend src_alpha = (Blend)LuascriptHelpers.optenum(L, 4, LuascriptEnums.Blend);
+        Blend dst_alpha = (Blend)LuascriptHelpers.optenum(L, 5, LuascriptEnums.Blend);
 
         textsprite.BlendSet(src_rgb, dst_rgb, src_alpha, dst_alpha);
 

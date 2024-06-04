@@ -12,6 +12,7 @@ using Engine.Utils;
 // it took over four months to create this, the most expensive part of the project
 //
 namespace Engine.Game;
+
 public enum StrumPressState : int {
     NONE = 0,
     HIT,
@@ -71,7 +72,7 @@ public class Strum {
             this.previous_quarter = 0;
         }
 
-        public bool IsSustain { get => this.duration > 0; }
+        public bool IsSustain { get => this.duration > 0.0; }
 
         public double EndTimestamp { get => this.timestamp + this.duration; }
 
@@ -678,7 +679,7 @@ public class Strum {
                 }
 
                 if (note_attributes.can_kill_on_hit) playerstats.KillIfNegativeHealth();
-                if (weekscript != null) weekscript.NotifyNoteHit(this, hit_index, playerstats);
+                if (weekscript != null) InternalNotifyNoteHit(weekscript, hit_index, playerstats);
 
                 //Logger.Info($"strum: [hold] note hit!  ts={key_timestamp} diff={lowest_diff} rank={rank}");
 
@@ -802,7 +803,7 @@ L_discard_key_event:
 
                     if (compute_miss) {
                         playerstats.AddMiss(this.attribute_notes[note.id].hurt_ratio);
-                        if (weekscript != null) weekscript.NotifyNoteLoss(this, i, playerstats, false);
+                        if (weekscript != null) InternalNotifyNoteLoss(weekscript, i, false);
                         this.extra_animations_have_misses = true;
                         press_state = StrumPressState.MISS;
                     }
@@ -818,7 +819,7 @@ L_discard_key_event:
 
             if (compute_miss) {
                 if (note.state == NoteState.PENDING && weekscript != null)
-                    weekscript.NotifyNoteLoss(this, i, playerstats, false);
+                    InternalNotifyNoteLoss(weekscript, i, false);
                 if (note.state != NoteState.RELEASE)
                     this.extra_animations_have_misses = true;
             }
@@ -928,9 +929,9 @@ L_discard_key_event:
 
                     if (weekscript != null) {
                         if (attribute_notes[note.id].can_kill_on_hit)
-                            weekscript.NotifyNoteLoss(this, notes_peek_index, playerstats, false);
+                            InternalNotifyNoteLoss(weekscript, notes_peek_index, false);
                         else
-                            weekscript.NotifyNoteHit(this, notes_peek_index, playerstats);
+                            InternalNotifyNoteHit(weekscript, notes_peek_index, playerstats);
                     }
 
                     if (is_sustain) this.sustain_queue.Add(note);
@@ -1052,7 +1053,7 @@ L_discard_key_event:
                         note.release_time = Double.NegativeInfinity;
                         playerstats.AddPenality(false);
                     }
-                    if (weekscript != null) weekscript.NotifyNoteLoss(this, i, playerstats, true);
+                    if (weekscript != null) InternalNotifyNoteLoss(weekscript, i, true);
                 } else {
                     // ignore key event
                     continue;
@@ -1471,7 +1472,6 @@ L_discard_key_event:
             Strum.BACKGROUND_SUFFIX, state_name
         );
         if (state != null) InternalCalcStateBackground(state);
-
     }
 
     public int StateToggle(string state_name) {
@@ -1590,6 +1590,11 @@ L_discard_key_event:
 
         // obligatory, make a copy of animsprite
         anim = animsprite == null ? null : animsprite.Clone();
+
+        if (undo)
+            action_undo_anims.undo = anim;
+        else
+            action_undo_anims.action = anim;
     }
 
     public void SetExtraAnimationContinuous(StrumScriptTarget strum_script_target, AnimSprite animsprite) {
@@ -1691,7 +1696,6 @@ L_discard_key_event:
         Strum.InternalExtraBatch(this.animation_marker, true);
         Strum.InternalExtraBatch(this.animation_sick_effect, true);
         Strum.InternalExtraBatch(this.animation_background, true);
-
     }
 
     public void AnimationEnd() {
@@ -1758,14 +1762,11 @@ L_discard_key_event:
         if (statesprite.StateHas(state_name)) return null;
         if (modelholder == null) return null;
 
-        string animation_name = strum_name + " " + target;
-
-        if (state_name != null) animation_name = animation_name + " " + state_name;
-
+        string animation_name = StringUtils.ConcatForStateName(strum_name, target, state_name);
         StateSpriteState state = statesprite.StateAdd(modelholder, animation_name, state_name);
         //free(animation_name);
 
-        // reset the draw location offsets beacuase is picked from last state applied
+        // reset the draw location offsets becuase is picked from last state applied
         if (state != null) {
             state.offset_x = 0;
             state.offset_y = 0;
@@ -2088,7 +2089,7 @@ L_discard_key_event:
                 continue;
             }
 
-            if (is_released && !note_attributes.ignore_miss || !is_released && !note_attributes.ignore_hit) {
+            if ((is_released && !note_attributes.ignore_miss) || (!is_released && !note_attributes.ignore_hit)) {
                 int quarters = quarter - note.previous_quarter;
                 playerstats.AddSustain(quarters, is_released);
 
@@ -2222,6 +2223,36 @@ L_discard_key_event:
             this.animation_sick_effect.continuous.action.Restart();
         if (this.animation_background.continuous.action != null)
             this.animation_background.continuous.action.Restart();
+    }
+
+    private void InternalNotifyNoteHit(WeekScript script, int strum_note_index, PlayerStats playerstats) {
+        StrumNote strum_note = this.chart_notes[strum_note_index];
+        double timestamp = strum_note.timestamp;
+        double duration = strum_note.duration;
+        int note_id = this.chart_notes_id_map[strum_note.id];
+        bool special = this.attribute_notes[strum_note.id].is_special;
+        double data = strum_note.custom_data;
+        int player_id = this.player_id;
+        Ranking ranking = playerstats.last_ranking;
+
+        script.NotifyNote(timestamp, note_id, duration, data, special, player_id, ranking);
+    }
+
+    private void InternalNotifyNoteLoss(WeekScript script, int strum_note_idx, bool is_penalty) {
+        StrumNote strum_note = this.chart_notes[strum_note_idx];
+        bool ignore_miss = this.attribute_notes[strum_note.id].ignore_miss;
+
+        if (ignore_miss) return;
+
+        double timestamp = strum_note.timestamp;
+        double duration = strum_note.duration;
+        int note_id = this.chart_notes_id_map[strum_note.id];
+        double data = strum_note.custom_data;
+        bool special = this.attribute_notes[strum_note.id].is_special;
+        int player_id = this.player_id;
+        Ranking state = is_penalty ? Ranking.PENALITY : Ranking.MISS;
+
+        script.NotifyNote(timestamp, note_id, duration, data, special, player_id, state);
     }
 
 

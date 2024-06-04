@@ -1,10 +1,12 @@
 using System;
+using System.Threading;
 using Engine.Animation;
 using Engine.Game.Common;
 using Engine.Game.Gameplay.Helpers;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Utils;
+using KallistiOS.THD;
 
 namespace Engine.Game.Helpers;
 
@@ -12,7 +14,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
 
     public const string TITLE_ANIM_NAME = "weektitle";
     private const int VISIBLE_SIZE = 4;
-    private const float TWEEN_DURATION = 120;
+    private const float TWEEN_DURATION = 120.0f;
 
 
     private Item[] list_visible;
@@ -26,7 +28,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
     private Drawable drawable_host;
     private Drawable drawable_list;
     private StateSprite host_statesprite;
-    private volatile bool host_loading;
+    private int host_loading_count;
     private LayoutPlaceholder host_placeholder;
     private volatile int host_load_id;
     private TexturePool texturepool;
@@ -62,7 +64,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
         this.drawable_list = null;
 
         this.host_statesprite = StateSprite.InitFromTexture(null);
-        this.host_loading = false;
+        this.host_loading_count = 0;
         this.host_placeholder = placeholder_host;
         this.host_load_id = 0;
 
@@ -129,13 +131,22 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
     }
 
     public void Destroy() {
+
+        this.host_load_id = -1;
+        thd.pass();
+
+        while (this.host_loading_count > 0) {
+            // wait until all async operations are done
+            thd.pass();
+        }
+
         for (int i = 0 ; i < WeekSelectorWeekList.VISIBLE_SIZE ; i++) {
             this.list_visible[i].icon_locked.DestroyFull();
             this.list_visible[i].sprite_title.DestroyFull();
             this.list_visible[i].tweenlerp_title.Destroy();
             this.list_visible[i].tweenlerp_locked.Destroy();
         }
-        //free(this.list_visible);
+
         this.host_statesprite.Destroy();
         if (this.anim_selected != null) this.anim_selected.Destroy();
         this.drawable_host.Destroy();
@@ -154,7 +165,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             }
         }
 
-        if (!this.host_loading) this.host_statesprite.Animate(since_beat);
+        if (this.host_loading_count < 1) this.host_statesprite.Animate(since_beat);
 
         for (int i = 0 ; i < WeekSelectorWeekList.VISIBLE_SIZE ; i++) {
             Item visible_item = this.list_visible[i];
@@ -224,7 +235,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
 
     public void ToggleChoosen() {
         this.week_choosen = true;
-        if (this.host_loading) return;
+        if (this.host_loading_count > 0) return;
         if (this.host_statesprite.StateToggle(WeekSelectorMdlSelect.HEY)) {
             this.hey_playing = true;
         }
@@ -305,8 +316,8 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
         }
 
         this.host_load_id++;
-        this.host_loading = true;
-        GameMain.THDHelperSpawn(InternalLoadHostAsync, this);
+        Interlocked.Increment(ref this.host_loading_count);
+        GameMain.THDHelperSpawn(true, InternalLoadHostAsync, this);
 
         this.progress = 0.0;
         InternalPrepareTitleTweens();
@@ -503,7 +514,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
     }
 
     private void InternalHostDraw(PVRContext pvrctx) {
-        if (this.host_loading || !this.host_statesprite.IsVisible()) return;
+        if (this.host_loading_count > 0 || !this.host_statesprite.IsVisible()) return;
         pvrctx.Save();
         this.host_statesprite.Draw(pvrctx);
         pvrctx.Restore();
@@ -513,7 +524,6 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
         WeekSelectorWeekList weeklist = arg as WeekSelectorWeekList;
 
         int host_load_id = weeklist.host_load_id;
-        int host_statesprite_id = weeklist.host_statesprite.id;
         WeekInfo weekinfo = Funkin.weeks_array.array[weeklist.index];
         bool host_flip, host_beat; ModelHolder modelholder;
         string anim_name_hey = WeekSelectorMdlSelect.HEY;
@@ -558,8 +568,8 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             //free(week_host_model);
         }
 
-        if (!StateSprite.POOL.Has(host_statesprite_id)) {
-            // weeklist was disposed
+        if (weeklist.host_load_id < 0) {
+            // weeklist is begin disposed
             if (modelholder != null) modelholder.Destroy();
             if (charactermanifest != null) charactermanifest.Destroy();
             return null;
@@ -573,7 +583,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             }
             weeklist.host_statesprite.SetTexture(null, false);
             weeklist.host_statesprite.SetVisible(false);
-            weeklist.host_loading = false;
+            Interlocked.Decrement(ref weeklist.host_loading_count);
 
             if (charactermanifest != null) charactermanifest.Destroy();
             return null;
@@ -618,7 +628,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             weeklist.host_statesprite.FlipTexture(host_flip, false);
             weeklist.host_statesprite.StateApply(null);
             weeklist.host_statesprite.Animate(weeklist.beatwatcher.RemainingUntilNext());
-            weeklist.host_loading = false;
+            Interlocked.Decrement(ref weeklist.host_loading_count);
         }
 
         modelholder.Destroy();
