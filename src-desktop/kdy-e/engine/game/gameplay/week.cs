@@ -873,10 +873,10 @@ public class Week {
             if (placeholder == null) placeholder = UI_STRUMS_LAYOUT_PLACEHOLDER;
 
             initparams.layout_strums[i] = new LayoutStrum() {
-                marker_dimmen = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_markerDimmen", i, AttachedValueType.FLOAT, 50.0)),
-                invdimmen = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_markerInvdimmen", i, AttachedValueType.FLOAT, 50.0)),
-                sustain_alpha = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_sustainAlpha", i, AttachedValueType.FLOAT, 1.0)),
-                gap = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_gap", i, AttachedValueType.FLOAT, 0.0)),
+                marker_dimmen = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_markerDimmen", i, AttachedValueType.DOUBLE, 50.0)),
+                invdimmen = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_markerInvdimmen", i, AttachedValueType.DOUBLE, 50.0)),
+                sustain_alpha = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_sustainAlpha", i, AttachedValueType.DOUBLE, 1.0)),
+                gap = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_gap", i, AttachedValueType.DOUBLE, 0.0)),
                 keep_marker_scale = (bool)Week.InternalReadValuePrefix(layout, "ui_strums_keepMarkerScale", i, AttachedValueType.BOOLEAN, true),
                 is_vertical = (bool)Week.InternalReadValuePrefix(layout, "ui_strums_verticalScroll", i, AttachedValueType.BOOLEAN, true),
                 length = 0f,
@@ -894,10 +894,10 @@ public class Week {
         }
         ui.healthbar_is_vertical = (bool)layout.GetAttachedValue("ui_healthbar_isVertical", AttachedValueType.BOOLEAN, false);
         ui.healthbar_nowarns = !(bool)layout.GetAttachedValue("ui_healthbar_showWarnings", AttachedValueType.BOOLEAN, true);
-        ui.healthbar_border = (float)((double)layout.GetAttachedValue("ui_healthbar_borderSize", AttachedValueType.FLOAT, 0.0));
-        ui.healthbar_iconoverlap = (float)((double)layout.GetAttachedValue("ui_healthbar_iconOverlap", AttachedValueType.FLOAT, 0.0));
-        ui.healthbar_warnheight = (float)((double)layout.GetAttachedValue("ui_healthbar_warningHeight", AttachedValueType.FLOAT, 0.0));
-        ui.healthbar_lockheight = (float)((double)layout.GetAttachedValue("ui_healthbar_lockedHeight", AttachedValueType.FLOAT, 0.0));
+        ui.healthbar_border = (float)((double)layout.GetAttachedValue("ui_healthbar_borderSize", AttachedValueType.DOUBLE, 0.0));
+        ui.healthbar_iconoverlap = (float)((double)layout.GetAttachedValue("ui_healthbar_iconOverlap", AttachedValueType.DOUBLE, 0.0));
+        ui.healthbar_warnheight = (float)((double)layout.GetAttachedValue("ui_healthbar_warningHeight", AttachedValueType.DOUBLE, 0.0));
+        ui.healthbar_lockheight = (float)((double)layout.GetAttachedValue("ui_healthbar_lockedHeight", AttachedValueType.DOUBLE, 0.0));
         ui.healthbar_x = placeholder.x;
         ui.healthbar_y = placeholder.y;
         ui.healthbar_z = placeholder.z;
@@ -918,7 +918,7 @@ public class Week {
         ui.roundstats_y = placeholder.y;
         ui.roundstats_z = placeholder.z;
         ui.roundstats_hide = (bool)layout.GetAttachedValue("ui_roundstats_hidden", AttachedValueType.BOOLEAN, false);
-        ui.roundstats_size = (float)((double)layout.GetAttachedValue("ui_roundstats_fontSize", AttachedValueType.FLOAT, 12.0));
+        ui.roundstats_size = (float)((double)layout.GetAttachedValue("ui_roundstats_fontSize", AttachedValueType.DOUBLE, 12.0));
         ui.roundstats_fontcolor = (uint)layout.GetAttachedValue("ui_roundstats_fontColor", AttachedValueType.HEX, 0xFFFFFFU);
 
         placeholder = layout.GetPlaceholder("ui_songprogressbar");
@@ -926,9 +926,9 @@ public class Week {
             Logger.Error("week_init_ui_layout() missing layout ui_songprogressbar placeholder");
             placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
         }
-        ui.songprogressbar_bordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_borderSize", AttachedValueType.FLOAT, 2.0);
-        ui.songprogressbar_fontsize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontSize", AttachedValueType.FLOAT, 11.0);
-        ui.songprogressbar_fontbordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontBorderSize", AttachedValueType.FLOAT, 1.4);
+        ui.songprogressbar_bordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_borderSize", AttachedValueType.DOUBLE, 2.0);
+        ui.songprogressbar_fontsize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontSize", AttachedValueType.DOUBLE, 11.0);
+        ui.songprogressbar_fontbordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontBorderSize", AttachedValueType.DOUBLE, 1.4);
         ui.songprogressbar_isvertical = (bool)layout.GetAttachedValue("ui_songprogressbar_isVertical", AttachedValueType.BOOLEAN, false);
         ui.songprogressbar_showtime = (bool)layout.GetAttachedValue("ui_songprogressbar_showTime", AttachedValueType.BOOLEAN, true);
         ui.songprogressbar_colorrgba8_text = (uint)layout.GetAttachedValue("ui_songprogressbar_colorRGBA8_text", AttachedValueType.HEX, 0xFFFFFFFFU);
@@ -957,7 +957,7 @@ public class Week {
         ui.songinfo_maxheight = placeholder.height;
         ui.songinfo_alignvertical = placeholder.align_vertical;
         ui.songinfo_alignhorinzontal = placeholder.align_horizontal;
-        ui.songinfo_fontsize = (float)((double)layout.GetAttachedValue("ui_song_info_fontSize", AttachedValueType.FLOAT, 10.0));
+        ui.songinfo_fontsize = (float)((double)layout.GetAttachedValue("ui_song_info_fontSize", AttachedValueType.DOUBLE, 10.0));
         ui.songinfo_fontcolor = (uint)layout.GetAttachedValue("ui_song_info_fontColor", AttachedValueType.HEX, 0xFFFFFFU);
 
         // initialize adaptation of the UI elements in the stage layout
@@ -1484,7 +1484,7 @@ public class Week {
                 placeholder.name
             );
             initparams.layout_characters[i].scale = (float)((double)Week.InternalReadValuePrefix(
-                roundcontext.layout, "character_scale_", i, AttachedValueType.FLOAT, 1.0
+                roundcontext.layout, "character_scale_", i, AttachedValueType.DOUBLE, 1.0
             ));
 
             initparams.layout_characters[i].x = placeholder.x;
@@ -1515,7 +1515,7 @@ public class Week {
                 placeholder.name
             );
             initparams.layout_girlfriend.scale = (float)((double)roundcontext.layout.GetAttachedValue(
-                "character_girlfriend_scale", AttachedValueType.FLOAT, 1.0
+                "character_girlfriend_scale", AttachedValueType.DOUBLE, 1.0
             ));
 
             initparams.layout_girlfriend.x = placeholder.x;

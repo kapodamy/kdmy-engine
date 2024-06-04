@@ -388,11 +388,11 @@ public class AnimList {
     }
 
 
-    private static AnimInterpolator ParseInterpolator(XmlParserNode node, string name) {
+    private static AnimInterpolator ParseInterpolator(XmlParserNode node, string name, AnimInterpolator default_interpolator) {
         string type = node.GetAttribute(name);
 
         if (type == null)
-            return AnimInterpolator.LINEAR;
+            return default_interpolator;
 
         type = type.ToLowerInvariant();
 
@@ -420,7 +420,7 @@ public class AnimList {
         }
 
         Logger.Warn($"animlist_parse_interpolator() unknown interpolator type: {type}");
-        return AnimInterpolator.LINEAR;
+        return default_interpolator;
     }
 
     private static int ParseRegister(XmlParserNode node) {
@@ -503,7 +503,7 @@ public class AnimList {
         }
 
         // check if the value is a property value enum
-        int as_enum = (int)VertexProps.ParseFlag2(unparsed_value, PVRContextFlag.INVALID_VALUE);
+        int as_enum = (int)VertexProps.ParseFlag2(unparsed_value, PVRFlag.INVALID_VALUE);
         if (as_enum < 0) as_enum = VertexProps.ParseTextSpriteForceCase2(unparsed_value);
         if (as_enum < 0) as_enum = VertexProps.ParseWordbreak2(unparsed_value);
         if (as_enum < 0) as_enum = VertexProps.ParsePlayback2(unparsed_value);
@@ -559,7 +559,7 @@ public class AnimList {
 
                     instruction = new MacroExecutorInstruction() {
                         type = AnimMacroType.INTERPOLATOR,
-                        interpolator = AnimList.ParseInterpolator(unparsed_list[i], "type"),
+                        interpolator = AnimList.ParseInterpolator(unparsed_list[i], "type", AnimInterpolator.LINEAR),
                         property = property_id,
                         start = new MacroExecutorValue(),
                         end = new MacroExecutorValue(),
@@ -780,6 +780,11 @@ public class AnimList {
             }
         }
 
+        AnimInterpolator default_interpolator = AnimInterpolator.LINEAR;
+        if (entry.HasAttribute("defaultInterpolator")) {
+            default_interpolator = AnimList.ParseInterpolator(entry, "defaultInterpolator", default_interpolator);
+        }
+
         foreach (XmlParserNode node in nodes) {
             // <Keyframe at="80%" id="alpha" interpolator="steps" stepsMethod="both" stepsCount="34" value="1.0" />
             // <Keyframe at="1000" id="translateX" interpolator="ease" value="123" />
@@ -824,7 +829,7 @@ public class AnimList {
 
             int id = AnimList.ParseProperty(node, "id", false);
 
-            AnimInterpolator keyframe_interpolator = AnimList.ParseInterpolator(node, "type");
+            AnimInterpolator keyframe_interpolator = AnimList.ParseInterpolator(node, "type", default_interpolator);
 
             int steps_count = VertexProps.ParseInteger(node, "stepsCount", -1);
             if (keyframe_interpolator == AnimInterpolator.STEPS && steps_count < 0) {

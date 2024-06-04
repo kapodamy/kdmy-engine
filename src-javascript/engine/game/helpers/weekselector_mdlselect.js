@@ -175,10 +175,10 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
     }
 
     let arrows_height = layout_get_attached_value(
-        layout, "ui_character_selector_arrowsHeight", LAYOUT_TYPE_FLOAT, 0
+        layout, "ui_character_selector_arrowsHeight", LAYOUT_TYPE_DOUBLE, 0.0
     );
     let font_size = layout_get_attached_value(
-        layout, "ui_character_selector_fontSize", LAYOUT_TYPE_FLOAT, 18
+        layout, "ui_character_selector_fontSize", LAYOUT_TYPE_DOUBLE, 18.0
     );
     let font_name = layout_get_attached_value(
         layout, "ui_character_selector_fontName", LAYOUT_TYPE_STRING, null

@@ -12,21 +12,21 @@ const ANIM_MACRO_RANDOM_EXACT = 7;
 const ANIM_MACRO_REGISTER_PROP = 8;
 const ANIM_MACRO_REGISTER_SET = 9;
 
-const ANIM_MACRO_INTERPOLATOR_EASE = 0;
-const ANIM_MACRO_INTERPOLATOR_EASE_IN = 1;
-const ANIM_MACRO_INTERPOLATOR_EASE_OUT = 2;
-const ANIM_MACRO_INTERPOLATOR_EASE_IN_OUT = 3;
-const ANIM_MACRO_INTERPOLATOR_LINEAR = 4;
-const ANIM_MACRO_INTERPOLATOR_STEPS = 5;
-const ANIM_MACRO_INTERPOLATOR_CUBIC = 6;
-const ANIM_MACRO_INTERPOLATOR_QUAD = 7;
-const ANIM_MACRO_INTERPOLATOR_EXPO = 8;
-const ANIM_MACRO_INTERPOLATOR_SIN = 9;
+const ANIM_INTERPOLATOR_EASE = 0;
+const ANIM_INTERPOLATOR_EASE_IN = 1;
+const ANIM_INTERPOLATOR_EASE_OUT = 2;
+const ANIM_INTERPOLATOR_EASE_IN_OUT = 3;
+const ANIM_INTERPOLATOR_LINEAR = 4;
+const ANIM_INTERPOLATOR_STEPS = 5;
+const ANIM_INTERPOLATOR_CUBIC = 6;
+const ANIM_INTERPOLATOR_QUAD = 7;
+const ANIM_INTERPOLATOR_EXPO = 8;
+const ANIM_INTERPOLATOR_SIN = 9;
 
-const ANIM_MACRO_INTERPOLATOR_MODIFIER_SINE = 0;
-const ANIM_MACRO_INTERPOLATOR_MODIFIER_COSINE = 1;
-const ANIM_MACRO_INTERPOLATOR_MODIFIER_LOG = 2;
-const ANIM_MACRO_INTERPOLATOR_MODIFIER_EXP = 3;
+const ANIM_INTERPOLATOR_MODIFIER_SINE = 0;
+const ANIM_INTERPOLATOR_MODIFIER_COSINE = 1;
+const ANIM_INTERPOLATOR_MODIFIER_LOG = 2;
+const ANIM_INTERPOLATOR_MODIFIER_EXP = 3;
 
 const ANIMLIST_POOL = new Map();
 var ANIMLIST_IDS = 0;
@@ -399,29 +399,29 @@ function animlist_parse_interpolator(node, name) {
 
     switch (type) {
         case "ease":
-            return ANIM_MACRO_INTERPOLATOR_EASE;
+            return ANIM_INTERPOLATOR_EASE;
         case "ease-in":
-            return ANIM_MACRO_INTERPOLATOR_EASE_IN;
+            return ANIM_INTERPOLATOR_EASE_IN;
         case "ease-out":
-            return ANIM_MACRO_INTERPOLATOR_EASE_OUT;
+            return ANIM_INTERPOLATOR_EASE_OUT;
         case "ease-in-out":
-            return ANIM_MACRO_INTERPOLATOR_EASE_IN_OUT;
+            return ANIM_INTERPOLATOR_EASE_IN_OUT;
         case "linear":
-            return ANIM_MACRO_INTERPOLATOR_LINEAR;
+            return ANIM_INTERPOLATOR_LINEAR;
         case "steps":
-            return ANIM_MACRO_INTERPOLATOR_STEPS;
+            return ANIM_INTERPOLATOR_STEPS;
         case "cubic":
-            return ANIM_MACRO_INTERPOLATOR_CUBIC;
+            return ANIM_INTERPOLATOR_CUBIC;
         case "quad":
-            return ANIM_MACRO_INTERPOLATOR_QUAD;
+            return ANIM_INTERPOLATOR_QUAD;
         case "expo":
-            return ANIM_MACRO_INTERPOLATOR_EXPO;
+            return ANIM_INTERPOLATOR_EXPO;
         case "sin":
-            return ANIM_MACRO_INTERPOLATOR_SIN;
+            return ANIM_INTERPOLATOR_SIN;
     }
 
     console.warn("animlist_parse_interpolator() unknown interpolator type " + type);
-    return ANIM_MACRO_INTERPOLATOR_LINEAR;
+    return default_interpolator;
 }
 
 function animlist_parse_register(node) {
@@ -573,7 +573,7 @@ function animlist_read_macro_animation(entry, atlas) {
 
                 instruction = {
                     type: ANIM_MACRO_INTERPOLATOR,
-                    interpolator: animlist_parse_interpolator(unparsed_list[i], "type"),
+                    interpolator: animlist_parse_interpolator(unparsed_list[i], "type", ANIM_INTERPOLATOR_LINEAR),
                     property: property_id,
                     start: { reference: -1, literal: NaN, kind: ANIM_MACRO_VALUE_KIND_LITERAL },
                     end: { reference: -1, literal: NaN, kind: ANIM_MACRO_VALUE_KIND_LITERAL },
@@ -796,6 +796,10 @@ function animlist_read_tweenkeyframe_animation(entry) {
             console.warn("animlist_read_tweenkeyframe_animation() invalid tweenkeyframe 'referenceDuration' value: " + entry.outerHTML);
             reference_duration = 1;
         }
+
+    let default_interpolator = ANIM_INTERPOLATOR_LINEAR;
+    if (entry.hasAttribute("defaultInterpolator")) {
+        default_interpolator = animlist_parse_interpolator(entry, "defaultInterpolator", default_interpolator);
     }
 
     for (let node of nodes) {
@@ -845,13 +849,13 @@ function animlist_read_tweenkeyframe_animation(entry) {
         let keyframe_interpolator = animlist_parse_interpolator(node, "type");
 
         let steps_count = vertexprops_parse_integer(node, "stepsCount", -1);
-        if (keyframe_interpolator == ANIM_MACRO_INTERPOLATOR_STEPS && steps_count < 0) {
+        if (keyframe_interpolator == ANIM_INTERPOLATOR_STEPS && steps_count < 0) {
             console.warn("animlist_read_tweenkeyframe_animation() invalid o missing 'stepsCount' value: " + node.outerHTML);
             continue;
         }
 
         let steps_dir = vertexprops_parse_align2(node.getAttribute("stepsMethod"));
-        if (keyframe_interpolator == ANIM_MACRO_INTERPOLATOR_STEPS && (steps_dir == ALIGN_CENTER || steps_dir < 0)) {
+        if (keyframe_interpolator == ANIM_INTERPOLATOR_STEPS && (steps_dir == ALIGN_CENTER || steps_dir < 0)) {
             console.warn("animlist_read_tweenkeyframe_animation() invalid o missing 'stepsMethod' value: " + node.outerHTML);
             continue;
         }

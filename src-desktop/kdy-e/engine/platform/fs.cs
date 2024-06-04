@@ -57,6 +57,7 @@ public static class FS {
     public const char CHAR_SEPARATOR_REJECT = '\\';
     private const string FILENAME_INVALID_CHARS = "<>:\"/\\|?*";
     public const string ASSETS_FOLDER = "/assets";
+    public const string ASSETS_FOLDER_NO_OVERRIDE = "/~assets/";
     public const string EXPANSIONS_FOLDER = "/expansions";
     public const string ASSETS_COMMON_FOLDER = "/assets/common/";
     public const string NO_OVERRIDE_COMMON = "/~assets/common/";
@@ -132,7 +133,7 @@ public static class FS {
             ArrayList<FSFolderEnumerator.Entry> entries = new ArrayList<FSFolderEnumerator.Entry>();
 
             // this is a disaster, enumerate src under "/expansions" too
-            if (!src.StartsWith("/~assets/")) {
+            if (!src.StartsWith(ASSETS_FOLDER_NO_OVERRIDE)) {
                 for (int i = Expansions.chain_array_size - 1 ; i >= 0 ; i--) {
                     string path = Expansions.GetPathFromExpansion(src, i);
                     if (path == null) continue;

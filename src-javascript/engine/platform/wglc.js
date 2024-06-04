@@ -1119,7 +1119,7 @@ function webopengl_draw_solid(/**@type {PVRContext}*/pvrctx, rgb_color, dx, dy, 
     } else {
         gl.uniform1i(wglc.program_solid.u_offsetcolor_enabled, 1);
         gl.uniform4fv(wglc.program_solid.u_offsetcolor, pvrctx.render_offsetcolor);
-        let use_multiply = pvrctx.render_offsetcolor_multiply != PVR_FLAG_DISABLE;
+        let use_multiply = pvrctx.render_offsetcolor_multiply != PVRCTX_FLAG_DISABLE;
         gl.uniform1i(wglc.program_solid.u_offsetcolor_mul_or_diff, use_multiply ? 1 : 0);
     }
 

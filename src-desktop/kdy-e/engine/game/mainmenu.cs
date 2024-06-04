@@ -175,17 +175,17 @@ public class MainMenu {
             }
 
             MainMenu.MENU_MANIFEST.parameters.items_dimmen = (float)(double)layout.GetAttachedValue(
-                "menu_itemDimmen", AttachedValueType.FLOAT,
+                "menu_itemDimmen", AttachedValueType.DOUBLE,
                 (double)MainMenu.MENU_MANIFEST.parameters.items_dimmen
             );
 
             MainMenu.MENU_MANIFEST.parameters.texture_scale = (float)(double)layout.GetAttachedValue(
-                "menu_itemScale", AttachedValueType.FLOAT,
+                "menu_itemScale", AttachedValueType.DOUBLE,
                 (double)MainMenu.MENU_MANIFEST.parameters.texture_scale
             );
 
             MainMenu.MENU_MANIFEST.parameters.items_gap = (float)(double)layout.GetAttachedValue(
-                "menu_itemGap", AttachedValueType.FLOAT,
+                "menu_itemGap", AttachedValueType.DOUBLE,
                 (double)MainMenu.MENU_MANIFEST.parameters.items_gap
             );
         }
@@ -392,7 +392,7 @@ public class MainMenu {
              "pause_background_menu_music", AttachedValueType.BOOLEAN, false
         );
         double timeout = (double)layout.GetAttachedValue(
-             "timeout", AttachedValueType.FLOAT, -1.0
+             "timeout", AttachedValueType.DOUBLE, -1.0
         );
         string donate_url = (string)layout.GetAttachedValue(
             "donate_url", AttachedValueType.STRING, null

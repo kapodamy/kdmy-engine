@@ -8,6 +8,16 @@ const JSON_VALUE_TYPE_NULL = 5;
 const JSON_VALUE_TYPE_OBJECT = 6;
 const JSON_VALUE_TYPE_UNKNOWN = 7;
 
+const JSON_VALUE_TYPE_UNKNOWN = 0;
+const JSON_VALUE_TYPE_NULL = 1;
+const JSON_VALUE_TYPE_NUMBER_DOUBLE = 2;
+const JSON_VALUE_TYPE_NUMBER_LONG = 3;
+const JSON_VALUE_TYPE_STRING = 4;
+const JSON_VALUE_TYPE_BOOLEAN = 5;
+const JSON_VALUE_TYPE_ARRAY = 6;
+const JSON_VALUE_TYPE_OBJECT = 7;
+
+
 async function json_load_from(src) {
     try {
         src = await fs_get_full_path_and_override(src);
@@ -235,12 +245,16 @@ function json_get_array_item_type(json_array, index) {
     let value = json_array[index];
     if (value === undefined) return JSON_VALUE_TYPE_UNKNOWN;
 
+        if (value === null) return JSON_VALUE_TYPE_NULL;
     switch (typeof value) {
         case "boolean":
             return JSON_VALUE_TYPE_BOOLEAN;
         case "number":
-            return JSON_VALUE_TYPE_NUMBER;
+                return Number.isInteger(value) ? JSON_VALUE_TYPE_NUMBER_LONG: JSON_VALUE_TYPE_NUMBER_DOUBLE;
         case "object":
+                if (value instanceof Array)
+                    return JSON_VALUE_TYPE_ARRAY;
+                else
             return JSON_VALUE_TYPE_OBJECT;
         case "string":
             return JSON_VALUE_TYPE_STRING;

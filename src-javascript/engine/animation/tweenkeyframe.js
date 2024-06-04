@@ -147,26 +147,25 @@ function tweenkeyframe_add_easeinout(tweenkeyframe, at, id, value) {
 
 function tweenkeyframe_add_linear(tweenkeyframe, at, id, value) {
     return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_LINEAR, -1, -1
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_EASE_OUT, -1, -1
     );
 }
 
 function tweenkeyframe_add_steps(tweenkeyframe, at, id, value, steps_count, steps_method) {
     return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_STEPS,
-        steps_method, steps_count
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_EASE_IN_OUT, -1, -1
     );
 }
 
 function tweenkeyframe_add_ease(tweenkeyframe, at, id, value) {
     return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_EASE, -1, -1
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_LINEAR, -1, -1
     );
 }
 
 function tweenkeyframe_add_easein(tweenkeyframe, at, id, value) {
     return tweenkeyframe_internal_add(
-        tweenkeyframe, at, id, value, ANIM_MACRO_INTERPOLATOR_EASE_IN, -1, -1
+        tweenkeyframe, at, id, value, ANIM_INTERPOLATOR_STEPS,
     );
 }
 

@@ -291,7 +291,7 @@ public class Strums : IDraw, IAnimate {
         for (int i = 0 ; i < this.size ; i++) {
             this.lines[i].Reset(scroll_speed, state_name);
         }
-        this.drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
+        this.drawable.SetAntialiasing(PVRFlag.DEFAULT);
         this.DecoratorsSetScrollSpeed(scroll_speed);
         this.DecoratorsSetVisible(-1.0, true);
         this.decorators_last_song_timestamp = 0.0;

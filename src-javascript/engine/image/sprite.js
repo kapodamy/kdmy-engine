@@ -123,7 +123,7 @@ function sprite_draw(sprite, pvrctx) {
         sprite.blend_dst_alpha
     );
 
-    if (sprite.antialiasing != PVR_FLAG_DEFAULT) {
+    if (sprite.antialiasing != PVRCTX_FLAG_DEFAULT) {
         pvr_context_set_vertex_antialiasing(pvrctx, sprite.antialiasing);
     }
 
@@ -227,7 +227,7 @@ function sprite_init(src_texture) {
     let sprite = {};
 
     sprite.matrix_source = {};
-    pvrctx_helper_clear_modifier(sprite.matrix_source);
+    pvr_context_helper_clear_modifier(sprite.matrix_source);
 
     sprite.flip_x = 0;
     sprite.flip_y = 0;
@@ -240,7 +240,7 @@ function sprite_init(src_texture) {
     sprite.vertex_color = [1.0, 1.0, 1.0];
 
     sprite.offsetcolor = [];
-    pvrctx_helper_clear_offsetcolor(sprite.offsetcolor);
+    pvr_context_helper_clear_offsetcolor(sprite.offsetcolor);
 
     sprite.texture = src_texture;
     if (src_texture) {
@@ -283,7 +283,7 @@ function sprite_init(src_texture) {
     sprite.crop = { x: 0, y: 0, width: -1, height: -1 };
     sprite.crop_enabled = 0;
 
-    sprite.antialiasing = PVR_FLAG_DEFAULT;
+    sprite.antialiasing = PVRCTX_FLAG_DEFAULT;
 
     sprite.psshader = null;
 
@@ -433,10 +433,10 @@ function sprite_flip_rendered_texture_enable_correction(sprite, enabled) {
 }
 
 function sprite_matrix_reset(sprite) {
-    pvrctx_helper_clear_modifier(sprite.matrix_source);
-    sprite.flip_x = 0;
-    sprite.flip_y = 0;
-    sprite.matrix_corner = { x: 0, y: 0, angle: 0 };
+    pvr_context_helper_clear_modifier(sprite.matrix_source);
+    sprite.flip_x = false;
+    sprite.flip_y = false;
+    sprite.matrix_corner = { x: 0.0, y: 0.0, angle: 0.0 };
 }
 
 function sprite_set_draw_location(sprite, x, y) {

@@ -394,7 +394,7 @@ function animsprite_update_modifier(animsprite, modifier, stack_changes) {
         tweenlerp_vertex_set_properties(
             animsprite.tweenlerp,
             modifier,
-            pvrctx_helper_set_modifier_property
+            pvr_context_helper_set_modifier_property
         );
 }
 

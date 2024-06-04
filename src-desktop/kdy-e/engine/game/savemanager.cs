@@ -98,7 +98,7 @@ public class SaveManager {
         Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? LAYOUT : LAYOUT_DREAMCAST);
         if (layout == null) throw new Exception("missing savemanager layout");
 
-        float label_height = (float)((double)layout.GetAttachedValue("label_height", AttachedValueType.FLOAT, 24.0));
+        float label_height = (float)((double)layout.GetAttachedValue("label_height", AttachedValueType.DOUBLE, 24.0));
         uint selected_bg_color = (uint)layout.GetAttachedValue("selected_background_color", AttachedValueType.HEX, 0x000000U);
         uint selected_lbl_color = (uint)layout.GetAttachedValue("selected_label_color", AttachedValueType.HEX, 0xFFFFFFU);
 
@@ -107,9 +107,9 @@ public class SaveManager {
         TextSprite selected_label = TextSprite.Init2(font, label_height, selected_lbl_color);
         Gamepad maple_pad = new Gamepad(-1);
 
-        float dimmen = (float)((double)layout.GetAttachedValue("menu_itemDimmen", AttachedValueType.FLOAT, 80.0));
-        float gap = (float)((double)layout.GetAttachedValue("menu_itemGap", AttachedValueType.FLOAT, 40.0));
-        float scale = (float)((double)layout.GetAttachedValue("menu_itemScale", AttachedValueType.FLOAT, 0.0));
+        float dimmen = (float)((double)layout.GetAttachedValue("menu_itemDimmen", AttachedValueType.DOUBLE, 80.0));
+        float gap = (float)((double)layout.GetAttachedValue("menu_itemGap", AttachedValueType.DOUBLE, 40.0));
+        float scale = (float)((double)layout.GetAttachedValue("menu_itemScale", AttachedValueType.DOUBLE, 0.0));
         float padding = dimmen * 0.1f;
 
         maple_pad.SetButtonsDelay(200);
@@ -544,6 +544,7 @@ public class SaveManager {
         PVRContext.global_context.Reset();
         this.layout.Draw(PVRContext.global_context);
         this.messagebox.Draw(PVRContext.global_context);
+        PVRContext.global_context.WaitReady();
 
         this.messagebox.UseFullTitle(false);
 

@@ -46,13 +46,13 @@ const FUNKIN_HEALTH_DIFF_OVER_SUSTAIN = 0.01;// applies to hold (gain), release 
 //
 // Rank enumerations (used in playerstats->last_ranking)
 //
-const PLAYERSTATS_RANK_NONE = 0;
-const PLAYERSTATS_RANK_SICK = 1;
-const PLAYERSTATS_RANK_GOOD = 2;
-const PLAYERSTATS_RANK_BAD = 3;
-const PLAYERSTATS_RANK_SHIT = 4;
-const PLAYERSTATS_RANK_MISS = 5;
-const PLAYERSTATS_RANK_PENALITY = 6;
+const RANKING_NONE = 0;
+const RANKING_SICK = 1;
+const RANKING_GOOD = 2;
+const RANKING_BAD = 3;
+const RANKING_SHIT = 4;
+const RANKING_MISS = 5;
+const RANKING_PENALITY = 6;
 
 
 function playerstats_init() {
@@ -82,7 +82,7 @@ function playerstats_init() {
         nps_current: 0,// notes per second
         nps_highest: 0,// notes per seconds (highest value)
 
-        last_ranking: PLAYERSTATS_RANK_NONE,// last ranking added and/or calculated
+        last_ranking: RANKING_NONE,// last ranking added and/or calculated
         last_diff: NaN,// last note hit diference (signed value in milliseconds)
         last_accuracy: NaN,// last note hit accuracy
 
@@ -122,22 +122,22 @@ function playerstats_add_hit(playerstats, multiplier, base_note_duration, hit_ti
         playerstats.ranking_sick++;
         playerstats.score += FUNKIN_SCORE_SICK;
         health_gain = FUNKIN_HEALTH_DIFF_OVER_SICK;
-        playerstats.last_ranking = PLAYERSTATS_RANK_SICK;
+        playerstats.last_ranking = RANKING_SICK;
     } else if (hit_accuracy >= FUNKIN_RANKING_GOOD) {
         playerstats.ranking_good++;
         playerstats.score += FUNKIN_SCORE_GOOD;
         health_gain = FUNKIN_HEALTH_DIFF_OVER_GOOD;
-        playerstats.last_ranking = PLAYERSTATS_RANK_GOOD;
+        playerstats.last_ranking = RANKING_GOOD;
     } else if (hit_accuracy >= FUNKIN_RANKING_BAD) {
         playerstats.ranking_bad++;
         playerstats.score += FUNKIN_SCORE_BAD;
         health_gain = FUNKIN_HEALTH_DIFF_OVER_BAD;
-        playerstats.last_ranking = PLAYERSTATS_RANK_BAD;
+        playerstats.last_ranking = RANKING_BAD;
     } else if (hit_accuracy >= FUNKIN_RANKING_SHIT) {
         playerstats.ranking_shit++;
         playerstats.score += FUNKIN_SCORE_SHIT;
         health_gain = FUNKIN_HEALTH_DIFF_OVER_SHIT;
-        playerstats.last_ranking = PLAYERSTATS_RANK_SHIT;
+        playerstats.last_ranking = RANKING_SHIT;
     } else {
         // this never should happen (hit_accuracy < zero)
         return playerstats.last_ranking;
@@ -160,14 +160,14 @@ function playerstats_add_sustain(playerstats, quarters, is_released) {
     if (Number.isNaN(quarters)) throw new NaNArgumentError();
 
     if (is_released) {
-        playerstats.last_ranking = PLAYERSTATS_RANK_MISS;
+        playerstats.last_ranking = RANKING_MISS;
         quarters = -quarters;
-        if (playerstats.last_ranking != PLAYERSTATS_RANK_MISS) playerstats.iterations++;
+        if (playerstats.last_ranking != RANKING_MISS) playerstats.iterations++;
     } else {
         switch (playerstats.last_ranking) {
-            case PLAYERSTATS_RANK_MISS:
-            case PLAYERSTATS_RANK_PENALITY:
-                playerstats.last_ranking = PLAYERSTATS_RANK_GOOD;
+            case RANKING_MISS:
+            case RANKING_PENALITY:
+                playerstats.last_ranking = RANKING_GOOD;
                 playerstats.iterations++;
                 break;
         }
@@ -215,7 +215,7 @@ function playerstats_add_penality(playerstats, on_empty_strum) {
     if (playerstats.health < 0) playerstats.deads_by_fault++;
 
     playerstats.score += FUNKIN_SCORE_PENALITY;
-    playerstats.last_ranking = PLAYERSTATS_RANK_PENALITY;
+    playerstats.last_ranking = RANKING_PENALITY;
     playerstats.iterations++;
     playerstats.penalties++;
 
@@ -243,7 +243,7 @@ function playerstats_add_miss(playerstats, multiplier) {
 
     playerstats.miss++;
     playerstats.score += FUNKIN_SCORE_MISS;
-    playerstats.last_ranking = PLAYERSTATS_RANK_MISS;
+    playerstats.last_ranking = RANKING_MISS;
     playerstats.iterations++;
 }
 
@@ -272,7 +272,7 @@ function playerstats_reset(playerstats) {
     //
     // Non-zero fields
     //
-    playerstats.last_ranking = PLAYERSTATS_RANK_NONE;
+    playerstats.last_ranking = RANKING_NONE;
     playerstats.last_diff = NaN;
     playerstats.last_accuracy = NaN;
 

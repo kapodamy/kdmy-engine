@@ -6,7 +6,7 @@ const STARTSCREEN_MODDING_SCRIPT = "/assets/common/data/scripts/startscreen.lua"
 
 
 async function startscreen_main() {
-    let layout = await layout_init(pvrctx_is_widescreen() ? STARTSCREEN_LAYOUT : STARTSCREEN_LAYOUT_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? STARTSCREEN_LAYOUT : STARTSCREEN_LAYOUT_DREAMCAST);
     if (!layout) {
         console.warn("startscreen_main() can not load mainmenu layout");
         return 0;

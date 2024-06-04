@@ -1,8 +1,8 @@
 "use strict";
 
-const FADDING_NONE = 0;
-const FADDING_IN = 1;
-const FADDING_OUT = 2;
+const FADING_NONE = 0;
+const FADING_IN = 1;
+const FADING_OUT = 2;
 
 async function soundplayer_init(src) {
     // TODO: C version
@@ -33,7 +33,7 @@ async function soundplayer_init2(src, arraybuffer) {
     let soundplayer = {
         handler: new Audio(src),
         fade_id: 0,
-        fade_status: FADDING_NONE,
+        fade_status: FADING_NONE,
         blob_url,
         sample_rate: Infinity,
         loop_start: -1,
@@ -81,14 +81,14 @@ function soundplayer_destroy(soundplayer) {
 
     if (soundplayer.blob_url) URL.revokeObjectURL(soundplayer.blob_url);
 
-    ModuleLuaScript.kdmyEngine_drop_shared_object(soundplayer);
+    luascript_drop_shared(soundplayer);
     soundplayer = undefined;
 }
 
 
 function soundplayer_replay(soundplayer) {
     soundplayer.fade_id++;
-    soundplayer.fade_status = FADDING_NONE;
+    soundplayer.fade_status = FADING_NONE;
     soundplayer.handler.currentTime = 0;
     soundplayer.seek_request = true;
     if (soundplayer.handler.paused)
@@ -97,21 +97,21 @@ function soundplayer_replay(soundplayer) {
 
 function soundplayer_play(soundplayer) {
     soundplayer.fade_id++;
-    soundplayer.fade_status = FADDING_NONE;
+    soundplayer.fade_status = FADING_NONE;
     if (!soundplayer.handler.paused) return;
     soundplayer_internal_handle_play(soundplayer);
 }
 
 function soundplayer_pause(soundplayer) {
     soundplayer.fade_id++;
-    soundplayer.fade_status = FADDING_NONE;
+    soundplayer.fade_status = FADING_NONE;
     if (soundplayer.handler.paused) return;
     soundplayer.handler.pause();
 }
 
 function soundplayer_stop(soundplayer) {
     soundplayer.fade_id++;
-    soundplayer.fade_status = FADDING_NONE;
+    soundplayer.fade_status = FADING_NONE;
     soundplayer.seek_request = true;
     soundplayer.handler.pause();
     soundplayer.handler.currentTime = 0;
@@ -125,7 +125,7 @@ function soundplayer_fade(soundplayer, in_or_out, duration) {
     let initial_volume = in_or_out ? 0.0 : 1.0;
     soundplayer.handler["volume__original"] = initial_volume;
     soundplayer.handler.volume = initial_volume * mastervolume_current_volume;
-    soundplayer.fade_status = in_or_out ? FADDING_IN : FADDING_OUT;
+    soundplayer.fade_status = in_or_out ? FADING_IN : FADING_OUT;
 
     let last_timestamp = -1;
     const fade_out = !in_or_out;
@@ -140,7 +140,7 @@ function soundplayer_fade(soundplayer, in_or_out, duration) {
         if (fade_out) percent = 1.0 - percent;
 
         if (elapsed > duration) {
-            soundplayer.fade_status = FADDING_NONE;
+            soundplayer.fade_status = FADING_NONE;
             return;
         }
 

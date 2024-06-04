@@ -5,7 +5,7 @@
 //
 const LAYOUT_TYPE_NOTFOUND = 0x00;
 const LAYOUT_TYPE_STRING = 0x01;
-const LAYOUT_TYPE_FLOAT = 0x02;
+const LAYOUT_TYPE_DOUBLE = 0x02;
 const LAYOUT_TYPE_INTEGER = 0x04;
 const LAYOUT_TYPE_HEX = 0x08;// unsigned integer
 const LAYOUT_TYPE_BOOLEAN = 0x10;
@@ -171,9 +171,9 @@ async function layout_init(src) {
     };
 
     // step 5: build modifiers
-    pvrctx_helper_clear_modifier(layout.modifier_camera);
-    pvrctx_helper_clear_modifier(layout.modifier_camera_secondary);
-    pvrctx_helper_clear_modifier(layout.modifier_viewport);
+    pvr_context_helper_clear_modifier(layout.modifier_camera);
+    pvr_context_helper_clear_modifier(layout.modifier_camera_secondary);
+    pvr_context_helper_clear_modifier(layout.modifier_viewport);
 
     layout.modifier_camera.width = viewport_width;
     layout.modifier_camera.height = viewport_height;
@@ -372,7 +372,7 @@ function layout_destroy(layout) {
     layout.textures = undefined;
 
     for (let i = 0; i < layout.group_list_size; i++) {
-        layout.group_list[i].name = undefined;
+        if (layout.group_list[i].name !== LAYOUT_GROUP_ROOT) layout.group_list[i].name = undefined;
         layout.group_list[i].initial_action_name = undefined;
         layout_helper_destroy_actions(layout.group_list[i].actions, layout.group_list[i].actions_size);
         if (layout.group_list[i].psframebuffer) layout.group_list[i].psframebuffer.Destroy();
@@ -829,7 +829,7 @@ function layout_get_attached_value(layout, name, expected_type, default_value) {
         if ((layout.values[i].type & expected_type) == 0x00) {
             console.warn("layout_get_attached_value() type missmatch of: " + name);
 
-            if (expected_type == LAYOUT_TYPE_FLOAT && layout.values[i].type == LAYOUT_TYPE_INTEGER)
+            if (expected_type == LAYOUT_TYPE_DOUBLE && layout.values[i].type == LAYOUT_TYPE_INTEGER)
                 return layout.values[i].value;
 
             break;// type missmatch
@@ -852,7 +852,7 @@ function layout_get_attached_value2(layout, name, result_ptr) {
 }
 
 function layout_get_attached_value_as_float(layout, name, default_value) {
-    const LIKE_NUMBER = LAYOUT_TYPE_INTEGER | LAYOUT_TYPE_FLOAT | LAYOUT_TYPE_HEX;
+    const LIKE_NUMBER = LAYOUT_TYPE_INTEGER | LAYOUT_TYPE_DOUBLE | LAYOUT_TYPE_HEX;
 
     for (let i = 0; i < layout.values_size; i++) {
         if (layout.values[i].name != name) continue;
@@ -863,7 +863,7 @@ function layout_get_attached_value_as_float(layout, name, default_value) {
         switch (layout.values[i].type) {
             case LAYOUT_TYPE_INTEGER:
                 return parseFloat(layout.values[i].value);// JS only
-            case LAYOUT_TYPE_FLOAT:
+            case LAYOUT_TYPE_DOUBLE:
                 return layout.values[i].value;
             case LAYOUT_TYPE_HEX:
                 return parseFloat(layout.values[i].value);// JS only
@@ -957,7 +957,7 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
         actions: null,
         actions_size: 0,
         initial_action_name: null,
-        antialiasing: PVR_FLAG_DEFAULT,
+        antialiasing: PVRCTX_FLAG_DEFAULT,
 
         visible: 1,
         alpha: 1.0,
@@ -1004,8 +1004,8 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
     );
 
     //sh4matrix_reset(layout.group_list[group_id].matrix);
-    pvrctx_helper_clear_modifier(layout.group_list[group_id].modifier);
-    pvrctx_helper_clear_offsetcolor(layout.group_list[group_id].offsetcolor);
+    pvr_context_helper_clear_modifier(layout.group_list[group_id].modifier);
+    pvr_context_helper_clear_offsetcolor(layout.group_list[group_id].offsetcolor);
 
     return group_id;
 }
@@ -1126,7 +1126,7 @@ function layout_suspend(layout) {
         layout.sound_list[i].was_playing = soundplayer_is_playing(soundplayer);
         if (layout.sound_list[i].was_playing) {
             soundplayer_pause(soundplayer);
-            if (soundplayer_has_fading(soundplayer) == FADDING_OUT) soundplayer_set_volume(soundplayer, 0);
+            if (soundplayer_has_fading(soundplayer) == FADING_OUT) soundplayer_set_volume(soundplayer, 0.0);
         }
     }
     for (let i = 0; i < layout.video_list_size; i++) {
@@ -1134,7 +1134,7 @@ function layout_suspend(layout) {
         layout.video_list[i].was_playing = videoplayer_is_playing(videoplayer);
         if (layout.video_list[i].was_playing) {
             videoplayer_pause(videoplayer);
-            if (videoplayer_has_fading_audio(videoplayer) == FADDING_OUT) videoplayer_set_volume(videoplayer, 0);
+            if (videoplayer_has_fading_audio(videoplayer) == FADING_OUT) videoplayer_set_volume(videoplayer, 0.0);
         }
     }
     layout.suspended = 1;
@@ -1257,7 +1257,7 @@ function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
     pvr_context_save(pvrctx);
     if (layout.psshader) pvr_context_add_shader(pvrctx, layout.psshader);
 
-    if (layout.antialiasing_disabled) pvr_context_set_global_antialiasing(pvrctx, PVR_FLAG_DISABLE);
+    if (layout.antialiasing_disabled) pvr_context_set_global_antialiasing(pvrctx, PVRCTX_FLAG_DISABLE);
 
     if (layout.resolution_changes != pvrctx.resolution_changes) {
         layout_update_render_size(layout, pvrctx.screen_width, pvrctx.screen_height);
@@ -1774,7 +1774,7 @@ function layout_helper_stack_groups(parent_group) {
 
             group.context.alpha = group_alpha * parent_group.context.alpha;
 
-            if (group.antialiasing == PVR_FLAG_DEFAULT)
+            if (group.antialiasing == PVRCTX_FLAG_DEFAULT)
                 group.context.antialiasing = parent_group.context.antialiasing;
             else
                 group.context.antialiasing = group.antialiasing;
@@ -1848,7 +1848,7 @@ function layout_helper_group_set_property(group, property_id, value) {
             group.alpha2 = value;
             break;
         default:
-            pvrctx_helper_set_modifier_property(group.modifier, property_id, value);
+            pvr_context_helper_set_modifier_property(group.modifier, property_id, value);
             break;
     }
 }
@@ -1890,7 +1890,7 @@ function layout_helper_parse_property(unparsed_entry, property_id, value_holder,
             action_entry.value = vertexprops_parse_playback(unparsed_entry, value_holder, 1);
             break;
         case SPRITE_PROP_ANTIALIASING:
-            action_entry.value = vertexprops_parse_flag(unparsed_entry, value_holder, 1);
+            action_entry.value = vertexprops_parse_flag(unparsed_entry, value_holder, PVRCTX_FLAG_DEFAULT);
             break;
         case FONT_PROP_WORDBREAK:
             action_entry.value = vertexprops_parse_wordbreak(unparsed_entry, value_holder, 1);
@@ -2314,7 +2314,7 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
         visible: vertexprops_parse_boolean(unparsed_group, "visible", 1),
         alpha: layout_helper_parse_float(unparsed_group, "alpha", 1.0),
         alpha2: 1.0,
-        antialiasing: vertexprops_parse_flag(unparsed_group, "antialiasing", PVR_FLAG_DEFAULT),
+        antialiasing: vertexprops_parse_flag(unparsed_group, "antialiasing", PVRCTX_FLAG_DEFAULT),
         offsetcolor: [],
         modifier: {},
         parallax: { x: 1.0, y: 1.0, z: 1.0 },
@@ -2352,8 +2352,8 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
     };
 
     //sh4matrix_reset(group.matrix);
-    pvrctx_helper_clear_modifier(group.modifier);
-    pvrctx_helper_clear_offsetcolor(group.offsetcolor);
+    pvr_context_helper_clear_modifier(group.modifier);
+    pvr_context_helper_clear_offsetcolor(group.offsetcolor);
 
     if (vertexprops_parse_boolean(unparsed_group, "framebuffer", 0)) {
         // assume layout as part of the main PVRContext renderer
@@ -2638,7 +2638,7 @@ function layout_parse_externalvalues(unparsed_root, layout_context) {
                 break;
             case "float":
                 value = Number.parseFloat(unparsed_value);
-                type = LAYOUT_TYPE_FLOAT;
+                type = LAYOUT_TYPE_DOUBLE;
                 invalid = !Number.isFinite(value);
                 break;
             case "integer":
@@ -2657,6 +2657,7 @@ function layout_parse_externalvalues(unparsed_root, layout_context) {
                 invalid = false;
                 break;
             default:
+                type = LAYOUT_TYPE_NOTFOUND;
                 console.error("layout_parse_externalvalues() unknown AttachValue type: " + item.outerHTML);
                 continue;
         }
@@ -3316,7 +3317,7 @@ function layout_helper_execute_action_in_sprite(action, item, viewport_width, vi
                 layout_helper_set_parallax_info(item.parallax, entry);
                 break;
             case LAYOUT_ACTION_MODIFIER:
-                pvrctx_helper_copy_modifier(entry.misc, sprite_matrix_get_modifier(sprite));
+                pvr_context_helper_copy_modifier(entry.misc, sprite_matrix_get_modifier(sprite));
                 break;
             case LAYOUT_ACTION_STATIC:
                 item.static_camera = entry.enable;
@@ -3402,7 +3403,7 @@ function layout_helper_execute_action_in_textsprite(action, item, viewport_width
                 if (entry.stop_in_loop) animsprite_disable_loop(item.animation);
 
                 textsprite_animation_set(textsprite, entry.misc);
-                animsprite_animate(textsprite, 0);
+                textsprite_animate(textsprite, 0.0);
                 break;
             case LAYOUT_ACTION_ANIMATIONREMOVE:
                 textsprite_animation_set(textsprite, null);
@@ -3417,7 +3418,7 @@ function layout_helper_execute_action_in_textsprite(action, item, viewport_width
                 layout_helper_set_parallax_info(item.parallax, entry);
                 break;
             case LAYOUT_ACTION_MODIFIER:
-                pvrctx_helper_copy_modifier(entry.misc, textsprite_matrix_get_modifier(textsprite));
+                pvr_context_helper_copy_modifier(entry.misc, textsprite_matrix_get_modifier(textsprite));
                 break;
             case LAYOUT_ACTION_STATIC:
                 item.static_camera = entry.enable;
@@ -3445,11 +3446,11 @@ function layout_helper_execute_action_in_group(action, group) {
         let entry = action.entries[i];
         switch (entry.type) {
             case LAYOUT_ACTION_RESETMATRIX:
-                pvrctx_helper_clear_modifier(group.modifier);
+                pvr_context_helper_clear_modifier(group.modifier);
                 //sh4matrix_reset(group.matrix);
                 break;
             case LAYOUT_ACTION_MODIFIER:
-                pvrctx_helper_copy_modifier(entry.misc, group.modifier);
+                pvr_context_helper_copy_modifier(entry.misc, group.modifier);
                 //sh4matrix_apply_modifier(group.matrix, entry.misc);
                 break;
             case LAYOUT_ACTION_PROPERTY:
@@ -3500,10 +3501,10 @@ function layout_helper_execute_action_in_group(action, group) {
                 break;
             case LAYOUT_ACTION_SETBLENDING:
                 if (entry.has_enable) group.blend_enabled = entry.enable;
-                group.blend_src_rgb = entry.src_rgb;
-                group.blend_dst_rgb = entry.dst_rgb;
-                group.blend_src_alpha = entry.src_alpha;
-                group.blend_dst_alpha = entry.dst_alpha;
+                group.blend_src_rgb = entry.blend_src_rgb;
+                group.blend_dst_rgb = entry.blend_dst_rgb;
+                group.blend_src_alpha = entry.blend_src_alpha;
+                group.blend_dst_alpha = entry.blend_dst_alpha;
                 break;
             case LAYOUT_ACTION_VIEWPORT:
                 if (!Number.isNaN(entry.x)) group.viewport_x = entry.x;
@@ -3644,7 +3645,7 @@ function layout_helper_add_action_modifier(unparsed_entry, action_entries) {
     const modifier_mask = {};
     let action_entry = { type: LAYOUT_ACTION_MODIFIER, misc: modifier_mask };
 
-    pvrctx_helper_clear_modifier(modifier_mask);
+    pvr_context_helper_clear_modifier(modifier_mask);
     for (let field in modifier_mask) modifier_mask[field] = NaN;
 
     for (let i = 0; i < unparsed_entry.attributes.length; i++) {

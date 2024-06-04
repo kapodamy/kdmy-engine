@@ -62,10 +62,10 @@ const SAVEMANAGER_MENU_MANIFEST = {
 var savemanager_game_withoutsavedata = false;
 
 async function savemanager_init(save_only, error_code) {
-    let layout = await layout_init(pvrctx_is_widescreen() ? SAVEMANAGER_LAYOUT : SAVEMANAGER_LAYOUT_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? SAVEMANAGER_LAYOUT : SAVEMANAGER_LAYOUT_DREAMCAST);
     if (!layout) throw new Error("missing savemanager layout");
 
-    let label_height = layout_get_attached_value(layout, "label_height", LAYOUT_TYPE_FLOAT, 24);
+    let label_height = layout_get_attached_value(layout, "label_height", LAYOUT_TYPE_DOUBLE, 24.0);
     let selected_bg_color = layout_get_attached_value(layout, "selected_background_color", LAYOUT_TYPE_HEX, 0x000000);
     let selected_lbl_color = layout_get_attached_value(layout, "selected_label_color", LAYOUT_TYPE_HEX, 0xFFFFFF);
 
@@ -74,9 +74,9 @@ async function savemanager_init(save_only, error_code) {
     let selected_label = textsprite_init2(font, label_height, selected_lbl_color);
     let maple_pad = gamepad_init(-1);
 
-    let dimmen = layout_get_attached_value(layout, "menu_itemDimmen", LAYOUT_TYPE_FLOAT, 80);
-    let gap = layout_get_attached_value(layout, "menu_itemGap", LAYOUT_TYPE_FLOAT, 40);
-    let scale = layout_get_attached_value(layout, "menu_itemScale", LAYOUT_TYPE_FLOAT, 0);
+    let dimmen = layout_get_attached_value(layout, "menu_itemDimmen", LAYOUT_TYPE_DOUBLE, 80.0);
+    let gap = layout_get_attached_value(layout, "menu_itemGap", LAYOUT_TYPE_DOUBLE, 40.0);
+    let scale = layout_get_attached_value(layout, "menu_itemScale", LAYOUT_TYPE_DOUBLE, 0.0);
     let padding = dimmen * 0.1;
 
     gamepad_set_buttons_delay(maple_pad, 200);
@@ -326,7 +326,8 @@ async function savemanager_show(savemanager) {
     await modding_helper_notify_event(modding, "outro");
 
     if (save_or_load_success) {
-        modding.has_exit = modding.has_halt = 0;
+        await pvrctx_wait_ready();
+        modding.has_exit = modding.has_halt = false;
         while (!modding.has_exit) {
             let elapsed = await pvrctx_wait_ready();
             pvr_context_reset(pvr_context);

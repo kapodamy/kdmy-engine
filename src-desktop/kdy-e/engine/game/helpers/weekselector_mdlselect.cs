@@ -213,10 +213,10 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
         }
 
         float arrows_height = (float)((double)layout.GetAttachedValue(
-             "ui_character_selector_arrowsHeight", AttachedValueType.FLOAT, 0.0
+             "ui_character_selector_arrowsHeight", AttachedValueType.DOUBLE, 0.0
         ));
         float font_size = (float)((double)layout.GetAttachedValue(
-            "ui_character_selector_fontSize", AttachedValueType.FLOAT, 18.0
+            "ui_character_selector_fontSize", AttachedValueType.DOUBLE, 18.0
         ));
         string font_name = (string)layout.GetAttachedValue(
             "ui_character_selector_fontName", AttachedValueType.STRING, null

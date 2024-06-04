@@ -868,13 +868,13 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
         if (!placeholder) placeholder = UI_STRUMS_LAYOUT_PLACEHOLDER;
 
         initparams.layout_strums[i] = {
-            marker_dimmen: week_internal_read_value_prefix(layout, "ui_strums_markerDimmen", i, LAYOUT_TYPE_FLOAT, 50),
-            invdimmen: week_internal_read_value_prefix(layout, "ui_strums_markerInvdimmen", i, LAYOUT_TYPE_FLOAT, 50),
-            sustain_alpha: week_internal_read_value_prefix(layout, "ui_strums_sustainAlpha", i, LAYOUT_TYPE_FLOAT, 1.0),
-            gap: week_internal_read_value_prefix(layout, "ui_strums_gap", i, LAYOUT_TYPE_FLOAT, 0),
-            keep_marker_scale: week_internal_read_value_prefix(layout, "ui_strums_keepMarkerScale", i, LAYOUT_TYPE_BOOLEAN, 1),
-            is_vertical: week_internal_read_value_prefix(layout, "ui_strums_verticalScroll", i, LAYOUT_TYPE_BOOLEAN, 1),
-            length: 0,
+            marker_dimmen: week_internal_read_value_prefix(layout, "ui_strums_markerDimmen", i, LAYOUT_TYPE_DOUBLE, 50.0),
+            invdimmen: week_internal_read_value_prefix(layout, "ui_strums_markerInvdimmen", i, LAYOUT_TYPE_DOUBLE, 50.0),
+            sustain_alpha: week_internal_read_value_prefix(layout, "ui_strums_sustainAlpha", i, LAYOUT_TYPE_DOUBLE, 1.0),
+            gap: week_internal_read_value_prefix(layout, "ui_strums_gap", i, LAYOUT_TYPE_DOUBLE, 0.0),
+            keep_marker_scale: week_internal_read_value_prefix(layout, "ui_strums_keepMarkerScale", i, LAYOUT_TYPE_BOOLEAN, true),
+            is_vertical: week_internal_read_value_prefix(layout, "ui_strums_verticalScroll", i, LAYOUT_TYPE_BOOLEAN, true),
+            length: 0.0,
             x: placeholder.x,
             y: placeholder.y,
             z: placeholder.z
@@ -887,12 +887,12 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
         console.error("week_init_ui_layout() missing layout ui_healthbar placeholder");
         placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
     }
-    ui.healthbar_is_vertical = layout_get_attached_value(layout, "ui_healthbar_isVertical", LAYOUT_TYPE_BOOLEAN, 0);
-    ui.healthbar_nowarns = !layout_get_attached_value(layout, "ui_healthbar_showWarnings", LAYOUT_TYPE_BOOLEAN, 1);
-    ui.healthbar_border = layout_get_attached_value(layout, "ui_healthbar_borderSize", LAYOUT_TYPE_FLOAT, 0);
-    ui.healthbar_iconoverlap = layout_get_attached_value(layout, "ui_healthbar_iconOverlap", LAYOUT_TYPE_FLOAT, 0);
-    ui.healthbar_warnheight = layout_get_attached_value(layout, "ui_healthbar_warningHeight", LAYOUT_TYPE_FLOAT, 0);
-    ui.healthbar_lockheight = layout_get_attached_value(layout, "ui_healthbar_lockedHeight", LAYOUT_TYPE_FLOAT, 0);
+    ui.healthbar_is_vertical = layout_get_attached_value(layout, "ui_healthbar_isVertical", LAYOUT_TYPE_BOOLEAN, false);
+    ui.healthbar_nowarns = !layout_get_attached_value(layout, "ui_healthbar_showWarnings", LAYOUT_TYPE_BOOLEAN, true);
+    ui.healthbar_border = layout_get_attached_value(layout, "ui_healthbar_borderSize", LAYOUT_TYPE_DOUBLE, 0.0);
+    ui.healthbar_iconoverlap = layout_get_attached_value(layout, "ui_healthbar_iconOverlap", LAYOUT_TYPE_DOUBLE, 0.0);
+    ui.healthbar_warnheight = layout_get_attached_value(layout, "ui_healthbar_warningHeight", LAYOUT_TYPE_DOUBLE, 0.0);
+    ui.healthbar_lockheight = layout_get_attached_value(layout, "ui_healthbar_lockedHeight", LAYOUT_TYPE_DOUBLE, 0.0);
     ui.healthbar_x = placeholder.x;
     ui.healthbar_y = placeholder.y;
     ui.healthbar_z = placeholder.z;
@@ -912,8 +912,8 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     ui.roundstats_x = placeholder.x;
     ui.roundstats_y = placeholder.y;
     ui.roundstats_z = placeholder.z;
-    ui.roundstats_hide = layout_get_attached_value(layout, "ui_roundstats_hidden", LAYOUT_TYPE_BOOLEAN, 0);
-    ui.roundstats_size = layout_get_attached_value(layout, "ui_roundstats_fontSize", LAYOUT_TYPE_FLOAT, 12);
+    ui.roundstats_hide = layout_get_attached_value(layout, "ui_roundstats_hidden", LAYOUT_TYPE_BOOLEAN, false);
+    ui.roundstats_size = layout_get_attached_value(layout, "ui_roundstats_fontSize", LAYOUT_TYPE_DOUBLE, 12.0);
     ui.roundstats_fontcolor = layout_get_attached_value(layout, "ui_roundstats_fontColor", LAYOUT_TYPE_HEX, 0xFFFFFF);
 
 
@@ -922,11 +922,11 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
         console.error("week_init_ui_layout() missing layout ui_songprogressbar placeholder");
         placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
     }
-    ui.songprogressbar_bordersize = layout_get_attached_value(layout, "ui_songprogressbar_borderSize", LAYOUT_TYPE_FLOAT, 2);
-    ui.songprogressbar_fontsize = layout_get_attached_value(layout, "ui_songprogressbar_fontSize", LAYOUT_TYPE_FLOAT, 11);
-    ui.songprogressbar_fontbordersize = layout_get_attached_value(layout, "ui_songprogressbar_fontBorderSize", LAYOUT_TYPE_FLOAT, 1.4);
-    ui.songprogressbar_isvertical = layout_get_attached_value(layout, "ui_songprogressbar_isVertical", LAYOUT_TYPE_BOOLEAN, 0);
-    ui.songprogressbar_showtime = layout_get_attached_value(layout, "ui_songprogressbar_showTime", LAYOUT_TYPE_BOOLEAN, 1);
+    ui.songprogressbar_bordersize = layout_get_attached_value(layout, "ui_songprogressbar_borderSize", LAYOUT_TYPE_DOUBLE, 2.0);
+    ui.songprogressbar_fontsize = layout_get_attached_value(layout, "ui_songprogressbar_fontSize", LAYOUT_TYPE_DOUBLE, 11.0);
+    ui.songprogressbar_fontbordersize = layout_get_attached_value(layout, "ui_songprogressbar_fontBorderSize", LAYOUT_TYPE_DOUBLE, 1.4);
+    ui.songprogressbar_isvertical = layout_get_attached_value(layout, "ui_songprogressbar_isVertical", LAYOUT_TYPE_BOOLEAN, false);
+    ui.songprogressbar_showtime = layout_get_attached_value(layout, "ui_songprogressbar_showTime", LAYOUT_TYPE_BOOLEAN, true);
     ui.songprogressbar_colorrgba8_text = layout_get_attached_value(layout, "ui_songprogressbar_colorRGBA8_text", LAYOUT_TYPE_HEX, 0xFFFFFFFF);
     ui.songprogressbar_colorrgba8_background = layout_get_attached_value(layout, "ui_songprogressbar_colorRGBA8_background", LAYOUT_TYPE_HEX, 0x000000FF);
     ui.songprogressbar_colorrgba8_barback = layout_get_attached_value(layout, "ui_songprogressbar_colorRGBA8_barBack", LAYOUT_TYPE_HEX, 0x808080FF);
@@ -954,7 +954,7 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     ui.songinfo_maxheight = placeholder.height;
     ui.songinfo_alignvertical = placeholder.align_vertical;
     ui.songinfo_alignhorinzontal = placeholder.align_horizontal;
-    ui.songinfo_fontsize = layout_get_attached_value(layout, "ui_song_info_fontSize", LAYOUT_TYPE_FLOAT, 10);
+    ui.songinfo_fontsize = layout_get_attached_value(layout, "ui_song_info_fontSize", LAYOUT_TYPE_DOUBLE, 10.0);
     ui.songinfo_fontcolor = layout_get_attached_value(layout, "ui_song_info_fontColor", LAYOUT_TYPE_HEX, 0xFFFFFF);
 
     // initialize adaptation of the UI elements in the stage layout
@@ -1462,7 +1462,7 @@ async function week_init_stage(roundcontext, stage_src) {
             roundcontext.layout, placeholder.name
         );
         initparams.layout_characters[i].scale = week_internal_read_value_prefix(
-            roundcontext.layout, "character_scale_", i, LAYOUT_TYPE_FLOAT, 1.0
+            roundcontext.layout, "character_scale_", i, LAYOUT_TYPE_DOUBLE, 1.0
         );
 
         initparams.layout_characters[i].x = placeholder.x;
@@ -1493,7 +1493,7 @@ async function week_init_stage(roundcontext, stage_src) {
             roundcontext.layout, placeholder.name
         );
         initparams.layout_girlfriend.scale = layout_get_attached_value(
-            roundcontext.layout, "character_girlfriend_scale", LAYOUT_TYPE_FLOAT, 1.0
+            roundcontext.layout, "character_girlfriend_scale", LAYOUT_TYPE_DOUBLE, 1.0
         );
 
         initparams.layout_girlfriend.x = placeholder.x;

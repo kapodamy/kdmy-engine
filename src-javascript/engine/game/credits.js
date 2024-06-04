@@ -7,7 +7,7 @@ const CREDITS_LAYOUT_DREAMCAST = "/assets/common/credits/layout~dreamcast.xml";
 async function credits_main() {
     const buttons = [0x0000];
     let src;
-    if (!pvrctx_is_widescreen() && await fs_file_exists(CREDITS_LAYOUT_DREAMCAST))
+    if (!pvr_context_is_widescreen() && await fs_file_exists(CREDITS_LAYOUT_DREAMCAST))
         src = CREDITS_LAYOUT_DREAMCAST;
     else
         src = CREDITS_LAYOUT_WIDESCREEN;

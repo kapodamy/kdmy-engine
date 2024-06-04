@@ -223,7 +223,7 @@ function strums_reset(strums, scroll_speed, state_name) {
     for (let i = 0; i < strums.size; i++) {
         strum_reset(strums.lines[i], scroll_speed, state_name);
     }
-    drawable_set_antialiasing(strums.drawable, PVR_FLAG_DEFAULT);
+    drawable_set_antialiasing(strums.drawable, PVRCTX_FLAG_DEFAULT);
     strums_decorators_set_scroll_speed(strums, scroll_speed);
     strums_decorators_set_visible(strums, -1.0, 1);
     strums.decorators_last_song_timestamp = 0.0;
@@ -534,7 +534,7 @@ function strums_decorators_set_scroll_speed(strums, speed) {
     strums.decorators_scroll_velocity = FNF_CHART_SCROLL_VELOCITY * speed;
 
     // Use half of the scolling speed if the screen aspect ratio is 4:3 (dreamcast)
-    if (!pvrctx_is_widescreen()) strums.decorators_scroll_velocity *= 0.5;
+    if (!pvr_context_is_widescreen()) strums.decorators_scroll_velocity *= 0.5;
 }
 
 function strums_decorators_set_alpha(strums, alpha) {
@@ -543,7 +543,7 @@ function strums_decorators_set_alpha(strums, alpha) {
 
 function strums_decorators_set_visible(strums, decorator_timestamp, visible) {
     for (let decorator of arraylist_iterate4(strums.decorators)) {
-        if (decorator_timestamp < 0.0 || decorator.timestamp == decorator_timestamp) {
+        if (decorator_timestamp < 0.0 || math2d_doubles_are_near_equal(decorator.timestamp, decorator_timestamp)) {
             decorator.is_visible = visible;
         }
     }

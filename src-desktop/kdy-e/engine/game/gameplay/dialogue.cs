@@ -757,7 +757,7 @@ public class Dialogue : IAnimate, IDraw {
             this.audios[i].was_playing = this.audios[i].soundplayer.IsPlaying();
             if (this.audios[i].was_playing) {
                 this.audios[i].soundplayer.Pause();
-                if (this.audios[i].soundplayer.HasFadding() == Fading.OUT) this.audios[i].soundplayer.SetVolume(0f);
+                if (this.audios[i].soundplayer.HasFading() == Fading.OUT) this.audios[i].soundplayer.SetVolume(0f);
             }
         }
     }
@@ -782,7 +782,7 @@ public class Dialogue : IAnimate, IDraw {
         this.self_drawable.SetOffsetColor(r, g, b, a);
     }
 
-    public void SetAntialiasing(PVRContextFlag pvrflag) {
+    public void SetAntialiasing(PVRFlag pvrflag) {
         this.self_drawable.SetAntialiasing(pvrflag);
     }
 
@@ -806,7 +806,7 @@ public class Dialogue : IAnimate, IDraw {
         this.current_dialog_line = 0;
         this.self_hidden = false;
         this.is_completed = false;
-        this.self_drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
+        this.self_drawable.SetAntialiasing(PVRFlag.DEFAULT);
         this.self_drawable.SetAlpha(1.0f);
         this.self_drawable.SetProperty(VertexProps.SPRITE_PROP_ALPHA2, 1.0f);
         this.self_drawable.SetOffsetColorToDefault();

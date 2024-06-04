@@ -14,7 +14,7 @@ using KallistiOS.MAPLE;
 
 namespace Engine.Platform;
 
-public enum PVRContextFlag : int {
+public enum PVRFlag : int {
     /// <summary>
     /// private, do not use
     /// </summary>
@@ -177,8 +177,8 @@ public class PVRContext {
         public readonly SIMDMatrix matrix = new SIMDMatrix();
         public float global_alpha = 1.0f;
         public readonly float[] offsetcolor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
-        public PVRContextFlag global_antialiasing = PVRContextFlag.DEFAULT;
-        public PVRContextFlag global_offsetcolor_multiply = PVRContextFlag.DEFAULT;
+        public PVRFlag global_antialiasing = PVRFlag.DEFAULT;
+        public PVRFlag global_offsetcolor_multiply = PVRFlag.DEFAULT;
         public int added_shaders = 0;
 
         public PVRContextState() {
@@ -231,16 +231,16 @@ public class PVRContext {
     internal float global_alpha = 1.0f;
     internal float[] global_offsetcolor = null;
 
-    private PVRContextFlag global_antialiasing = PVRContextFlag.DEFAULT;
-    private PVRContextFlag vertex_antialiasing = PVRContextFlag.DEFAULT;
+    private PVRFlag global_antialiasing = PVRFlag.DEFAULT;
+    private PVRFlag vertex_antialiasing = PVRFlag.DEFAULT;
 
-    private PVRContextFlag global_offsetcolor_multiply = PVRContextFlag.DEFAULT;
-    private PVRContextFlag vertex_offsetcolor_multiply = PVRContextFlag.DEFAULT;
+    private PVRFlag global_offsetcolor_multiply = PVRFlag.DEFAULT;
+    private PVRFlag vertex_offsetcolor_multiply = PVRFlag.DEFAULT;
 
     internal float render_alpha = 1.0f;
     internal readonly float[] render_offsetcolor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
-    internal PVRContextFlag render_offsetcolor_multiply = PVRContextFlag.DEFAULT;
-    internal PVRContextFlag render_antialiasing = PVRContextFlag.DEFAULT;
+    internal PVRFlag render_offsetcolor_multiply = PVRFlag.DEFAULT;
+    internal PVRFlag render_antialiasing = PVRFlag.DEFAULT;
 
     public SIMDMatrix CurrentMatrix { get => this.stack[this.stack_index].matrix; }
 
@@ -513,13 +513,13 @@ public class PVRContext {
         PVRContext.HelperClearOffsetColor(this.global_offsetcolor);
         PVRContext.HelperClearOffsetColor(this.vertex_offsetcolor);
 
-        this.global_antialiasing = PVRContextFlag.ENABLE;
-        this.vertex_antialiasing = PVRContextFlag.DEFAULT;
-        this.render_antialiasing = PVRContextFlag.DEFAULT;
+        this.global_antialiasing = PVRFlag.ENABLE;
+        this.vertex_antialiasing = PVRFlag.DEFAULT;
+        this.render_antialiasing = PVRFlag.DEFAULT;
 
-        this.global_offsetcolor_multiply = PVRContextFlag.ENABLE;
-        this.vertex_offsetcolor_multiply = PVRContextFlag.DEFAULT;
-        this.render_offsetcolor_multiply = PVRContextFlag.DEFAULT;
+        this.global_offsetcolor_multiply = PVRFlag.ENABLE;
+        this.vertex_offsetcolor_multiply = PVRFlag.DEFAULT;
+        this.render_offsetcolor_multiply = PVRFlag.DEFAULT;
 
         this.webopengl.ClearScreen(PVRContext.CLEAR_COLOR);
 
@@ -576,7 +576,7 @@ public class PVRContext {
         this.vertex_alpha = this.global_alpha;
         this.render_alpha = this.global_alpha;
 
-        this.vertex_antialiasing = PVRContextFlag.DEFAULT;
+        this.vertex_antialiasing = PVRFlag.DEFAULT;
         this.render_antialiasing = previous_state.global_antialiasing;
 
         this.vertex_offsetcolor_multiply = this.global_offsetcolor_multiply;
@@ -614,7 +614,7 @@ public class PVRContext {
         PVRContextState previous_state = this.stack[this.stack_index];
 
         this.global_antialiasing = previous_state.global_antialiasing;
-        this.vertex_antialiasing = PVRContextFlag.DEFAULT;
+        this.vertex_antialiasing = PVRFlag.DEFAULT;
         this.render_antialiasing = previous_state.global_antialiasing;
 
         this.global_offsetcolor_multiply = previous_state.global_offsetcolor_multiply;
@@ -650,9 +650,9 @@ public class PVRContext {
     }
 
 
-    public void SetVertexAntialiasing(PVRContextFlag flag) {
+    public void SetVertexAntialiasing(PVRFlag flag) {
         this.vertex_antialiasing = flag;
-        this.render_antialiasing = flag == PVRContextFlag.DEFAULT ? this.global_antialiasing : flag;
+        this.render_antialiasing = flag == PVRFlag.DEFAULT ? this.global_antialiasing : flag;
     }
 
 
@@ -662,9 +662,9 @@ public class PVRContext {
     }
 
 
-    public void SetVertexOffsetColorMultiply(PVRContextFlag flag) {
+    public void SetVertexOffsetColorMultiply(PVRFlag flag) {
         this.vertex_offsetcolor_multiply = flag;
-        this.render_offsetcolor_multiply = flag == PVRContextFlag.DEFAULT ? this.global_offsetcolor_multiply : flag;
+        this.render_offsetcolor_multiply = flag == PVRFlag.DEFAULT ? this.global_offsetcolor_multiply : flag;
     }
 
     public void SetVertexBlend(bool enabled, Blend src_rgb, Blend dst_rgb, Blend src_alpha, Blend dst_alpha) {
@@ -687,10 +687,10 @@ public class PVRContext {
     }
 
 
-    public void SetGlobalAntialiasing(PVRContextFlag flag) {
+    public void SetGlobalAntialiasing(PVRFlag flag) {
         PVRContextState last_state = this.PreviousState;
 
-        if (last_state != null && flag == PVRContextFlag.DEFAULT) flag = last_state.global_antialiasing;
+        if (last_state != null && flag == PVRFlag.DEFAULT) flag = last_state.global_antialiasing;
 
         this.global_antialiasing = flag;
         this.SetVertexAntialiasing(this.vertex_antialiasing);
@@ -710,10 +710,10 @@ public class PVRContext {
     }
 
 
-    public void SetGlobalOffsetColorMultiply(PVRContextFlag flag) {
+    public void SetGlobalOffsetColorMultiply(PVRFlag flag) {
         PVRContextState last_state = this.PreviousState;
 
-        if (last_state != null && flag == PVRContextFlag.DEFAULT) flag = last_state.global_offsetcolor_multiply;
+        if (last_state != null && flag == PVRFlag.DEFAULT) flag = last_state.global_offsetcolor_multiply;
 
         this.global_offsetcolor_multiply = flag;
         this.SetVertexOffsetColorMultiply(this.vertex_offsetcolor_multiply);

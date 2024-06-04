@@ -109,7 +109,7 @@ public class RoundStats : IDraw, IAnimate {
 
         this.beatwatcher.Reset(true, 100);
 
-        this.drawable.SetAntialiasing(PVRContextFlag.DEFAULT);
+        this.drawable.SetAntialiasing(PVRFlag.DEFAULT);
 
         RoundStats.InternalTweenkeyframeSetup(this.tweenkeyframe_beat, false);
         RoundStats.InternalTweenkeyframeSetup(this.tweenkeyframe_hit, false);

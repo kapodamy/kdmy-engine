@@ -189,50 +189,50 @@ function tweenlerp_swap_bounds_by_index(tweenlerp, index) {
 
 function tweenlerp_add_ease(tweenlerp, id, start, end, duration) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_EASE, -1, -1
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_EASE, -1, -1
     );
 }
 
 function tweenlerp_add_easein(tweenlerp, id, start, end, duration) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_EASE_IN, -1, -1
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_EASE_IN, -1, -1
     );
 }
 
 function tweenlerp_add_easeout(tweenlerp, id, start, end, duration) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_EASE_OUT, -1, -1
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_EASE_OUT, -1, -1
     );
 }
 
 function tweenlerp_add_easeinout(tweenlerp, id, start, end, duration) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_EASE_IN_OUT, -1, -1
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_EASE_IN_OUT, -1, -1
     );
 }
 
 function tweenlerp_add_linear(tweenlerp, id, start, end, duration) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_LINEAR, -1, -1
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_LINEAR, -1, -1
     );
 }
 
 function tweenlerp_add_steps(tweenlerp, id, start, end, duration, steps_count, steps_method) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_STEPS,
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_STEPS,
         steps_method, steps_count
     );
 }
 
 function tweenlerp_add_cubic(tweenlerp, id, start, end, duration) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_CUBIC, -1, -1
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_CUBIC, -1, -1
     );
 }
 
 function tweenlerp_add_quad(tweenlerp, id, start, end, duration) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_QUAD, -1, -1
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_QUAD, -1, -1
     );
 }
 
@@ -244,7 +244,7 @@ function tweenlerp_add_expo(tweenlerp, id, start, end, duration) {
 
 function tweenlerp_add_sin(tweenlerp, id, start, end, duration) {
     return tweenlerp_internal_add(
-        tweenlerp, id, start, end, duration, ANIM_MACRO_INTERPOLATOR_SIN, -1, -1
+        tweenlerp, id, start, end, duration, ANIM_INTERPOLATOR_SIN, -1, -1
     );
 }
 
@@ -326,38 +326,38 @@ function tweenlerp_internal_add(tweenlerp, id, start, end, duration, interp, ste
     };
 
     switch (interp) {
-        case ANIM_MACRO_INTERPOLATOR_EASE:
+        case ANIM_INTERPOLATOR_EASE:
             tweenlerp_entry.callback = tweenlerp_internal_by_brezier;
             tweenlerp_entry.brezier_points = CUBIC_BREZIER_EASE;
             break;
-        case ANIM_MACRO_INTERPOLATOR_EASE_IN:
+        case ANIM_INTERPOLATOR_EASE_IN:
             tweenlerp_entry.callback = tweenlerp_internal_by_brezier;
             tweenlerp_entry.brezier_points = CUBIC_BREZIER_EASE_IN;
             break;
-        case ANIM_MACRO_INTERPOLATOR_EASE_OUT:
+        case ANIM_INTERPOLATOR_EASE_OUT:
             tweenlerp_entry.callback = tweenlerp_internal_by_brezier;
             tweenlerp_entry.brezier_points = CUBIC_BREZIER_EASE_OUT;
             break;
-        case ANIM_MACRO_INTERPOLATOR_EASE_IN_OUT:
+        case ANIM_INTERPOLATOR_EASE_IN_OUT:
             tweenlerp_entry.callback = tweenlerp_internal_by_brezier;
             tweenlerp_entry.brezier_points = CUBIC_BREZIER_EASE_IN_OUT;
             break;
-        case ANIM_MACRO_INTERPOLATOR_STEPS:
+        case ANIM_INTERPOLATOR_STEPS:
             tweenlerp_entry.callback = tweenlerp_internal_by_steps;
             break;
-        case ANIM_MACRO_INTERPOLATOR_LINEAR:
+        case ANIM_INTERPOLATOR_LINEAR:
             tweenlerp_entry.callback = tweenlerp_internal_by_linear;
             break;
-        case ANIM_MACRO_INTERPOLATOR_CUBIC:
+        case ANIM_INTERPOLATOR_CUBIC:
             tweenlerp_entry.callback = tweenlerp_internal_by_cubic;
             break;
-        case ANIM_MACRO_INTERPOLATOR_QUAD:
+        case ANIM_INTERPOLATOR_QUAD:
             tweenlerp_entry.callback = tweenlerp_internal_by_quad;
             break;
-        case ANIM_MACRO_INTERPOLATOR_EXPO:
+        case ANIM_INTERPOLATOR_EXPO:
             tweenlerp_entry.callback = tweenlerp_internal_by_expo;
             break;
-        case ANIM_MACRO_INTERPOLATOR_SIN:
+        case ANIM_INTERPOLATOR_SIN:
             tweenlerp_entry.callback = tweenlerp_internal_by_sin;
             break;
         default:

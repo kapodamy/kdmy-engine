@@ -67,7 +67,7 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
 
         font_paragraph_separation: 0,
 
-        antialiasing: PVR_FLAG_DEFAULT,
+        antialiasing: PVRCTX_FLAG_DEFAULT,
 
         wordbreak: FONT_WORDBREAK_LOOSE,
 
@@ -90,7 +90,7 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
 
     math2d_color_bytes_to_floats(rbg8_color, 0, textsprite.color);
 
-    pvrctx_helper_clear_modifier(textsprite.matrix_source);
+    pvr_context_helper_clear_modifier(textsprite.matrix_source);
 
     TEXTSPRITE_POOL.set(textsprite.id, textsprite);
     return textsprite;
@@ -829,7 +829,7 @@ function textsprite_draw_internal(textsprite, pvrctx) {
         textsprite.blend_dst_alpha
     );
 
-    if (textsprite.antialiasing != PVR_FLAG_DEFAULT) {
+    if (textsprite.antialiasing != PVRCTX_FLAG_DEFAULT) {
         pvr_context_set_global_antialiasing(pvrctx, textsprite.antialiasing);
     }
 

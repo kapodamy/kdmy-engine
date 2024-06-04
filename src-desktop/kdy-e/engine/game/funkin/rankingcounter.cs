@@ -292,8 +292,8 @@ public class RankingCounter {
         this.show_accuracy = false;
         this.last_iterations = 0;
 
-        this.drawable_accuracy.SetAntialiasing(PVRContextFlag.DEFAULT);
-        this.drawable_rank.SetAntialiasing(PVRContextFlag.DEFAULT);
+        this.drawable_accuracy.SetAntialiasing(PVRFlag.DEFAULT);
+        this.drawable_rank.SetAntialiasing(PVRFlag.DEFAULT);
 
         SetOffsetcolorToDefault();
 

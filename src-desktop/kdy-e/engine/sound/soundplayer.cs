@@ -152,7 +152,7 @@ public class SoundPlayer {
         return this.stream.IsActive;
     }
 
-    public Fading HasFadding() {
+    public Fading HasFading() {
         return (Fading)this.stream.ActiveFade;
     }
 

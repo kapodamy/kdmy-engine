@@ -755,10 +755,10 @@ function character_reset(character) {
     character.idle_speed = 1.0;
     character.alt_enabled = 0;
 
-    drawable_set_antialiasing(character.drawable, PVR_FLAG_DEFAULT);
+    drawable_set_antialiasing(character.drawable, PVRCTX_FLAG_DEFAULT);
 
     let modifier = drawable_get_modifier(character.drawable);
-    pvrctx_helper_clear_modifier(modifier);
+    pvr_context_helper_clear_modifier(modifier);
     modifier.x = character.draw_x;
     modifier.y = character.draw_y;
 

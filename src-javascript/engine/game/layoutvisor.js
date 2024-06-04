@@ -93,7 +93,7 @@ async function main_layout_visor() {
     while (1) {
         let elapsed = await pvrctx_wait_ready();
         pvr_context_reset(pvr_context);
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
 
         layoutvisor_update_itemvisiblecheckbox();
         beatwatcher_global_set_timestamp_from_kos_timer();
@@ -800,15 +800,15 @@ async function layoutvisor_load(e) {
     );
     // @ts-ignore
     document.getElementById("bind-ui_streakcounter_comboHeight").value = layout_get_attached_value(
-        layoutvisor_layout, "ui_streakcounter_comboHeight", LAYOUT_TYPE_FLOAT, 0
+        layoutvisor_layout, "ui_streakcounter_comboHeight", LAYOUT_TYPE_DOUBLE, 0
     );
     // @ts-ignore
     document.getElementById("bind-ui_streakcounter_numberGap").value = layout_get_attached_value(
-        layoutvisor_layout, "ui_streakcounter_numberGap", LAYOUT_TYPE_FLOAT, 0
+        layoutvisor_layout, "ui_streakcounter_numberGap", LAYOUT_TYPE_DOUBLE, 0
     );
     // @ts-ignore
     document.getElementById("bind-ui_streakcounter_delay").value = layout_get_attached_value(
-        layoutvisor_layout, "ui_streakcounter_delay", LAYOUT_TYPE_FLOAT, 0
+        layoutvisor_layout, "ui_streakcounter_delay", LAYOUT_TYPE_DOUBLE, 0
     );
 }
 
@@ -1065,7 +1065,7 @@ function layoutvisor_set_placeholder(layout_placeholder, reference_index) {
         }
     };
 
-    pvrctx_helper_clear_offsetcolor(layout_placeholder.vertex.offsetcolor);
+    pvr_context_helper_clear_offsetcolor(layout_placeholder.vertex.offsetcolor);
     drawable_helper_update_from_placeholder(layout_placeholder.vertex, layout_placeholder);
 }
 

@@ -233,7 +233,7 @@ async function weekselector_trigger_event(ui, state, name) {
 
 
 async function weekselector_main() {
-    let layout = await layout_init(pvrctx_is_widescreen() ? WEEKSELECTOR_LAYOUT : WEEKSELECTOR_LAYOUT_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? WEEKSELECTOR_LAYOUT : WEEKSELECTOR_LAYOUT_DREAMCAST);
     let animlist_ui = await animlist_init(WEEKSELECTOR_UI_ANIMS);
     let modelholder_ui = await modelholder_init(WEEKSELECTOR_UI_ICONS_MODEL);
     let modelholder_buttons_ui = await modelholder_init(WEEKSELECTOR_BUTTONS_MODEL);

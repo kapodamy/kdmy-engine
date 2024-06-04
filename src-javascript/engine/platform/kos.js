@@ -810,16 +810,16 @@ const CONT_DPAD2_DOWN = (1 << 13);
 const CONT_DPAD2_LEFT = (1 << 14);
 const CONT_DPAD2_RIGHT = (1 << 15);
 // extra keys (not available in the dreamcast)
-const CONT_BACK_OR_SELECT = (1 << 16);
+const CONT_EX_BACK_OR_SELECT = (1 << 16);
 const CONT_HOME_OR_GUIDE = (1 << 17);
-const CONT_DPAD3_UP = (1 << 18);
-const CONT_DPAD3_DOWN = (1 << 19);
-const CONT_DPAD3_LEFT = (1 << 20);
-const CONT_DPAD3_RIGHT = (1 << 21);
-const CONT_DPAD4_UP = (1 << 22);
-const CONT_DPAD4_DOWN = (1 << 23);
-const CONT_DPAD4_LEFT = (1 << 24);
-const CONT_DPAD4_RIGHT = (1 << 25);
+const CONT_EX_DPAD3_UP = (1 << 18);
+const CONT_EX_DPAD3_DOWN = (1 << 19);
+const CONT_EX_DPAD3_LEFT = (1 << 20);
+const CONT_EX_DPAD3_RIGHT = (1 << 21);
+const CONT_EX_DPAD4_UP = (1 << 22);
+const CONT_EX_DPAD4_DOWN = (1 << 23);
+const CONT_EX_DPAD4_LEFT = (1 << 24);
+const CONT_EX_DPAD4_RIGHT = (1 << 25);
 // axis placeholders
 const CONT_EX_NONE = 0x00000000;
 const CONT_EX_TRIGGER_L = (1 << 26);
@@ -833,10 +833,10 @@ const CONT_EX_AXIS_RY = (1 << 31);
 const /**@type {maple_device_t[][]}*/KOS_MAPLE_DEVS = new Array(MAPLE_PORT_COUNT);
 const KOS_MAPLE_KEYBOARD = new maple_keyboard_device_t();// -1 is the keyboard (JS & C# only)
 const KOS_JSGAMEPAD_BUTTONS_MAPPING = [
-    CONT_A | CONT_DPAD3_DOWN, CONT_B | CONT_DPAD3_RIGHT, CONT_X | CONT_DPAD3_LEFT, CONT_Y | CONT_DPAD3_UP,
+    CONT_A | CONT_EX_DPAD3_DOWN, CONT_B | CONT_EX_DPAD3_RIGHT, CONT_X | CONT_EX_DPAD3_LEFT, CONT_Y | CONT_EX_DPAD3_UP,
     CONT_C, CONT_Z,
     CONT_EX_TRIGGER_L, CONT_EX_TRIGGER_R,
-    CONT_BACK_OR_SELECT, CONT_START,
+    CONT_EX_BACK_OR_SELECT, CONT_START,
     CONT_EX_NONE, CONT_EX_NONE,
     CONT_DPAD_UP, CONT_DPAD_DOWN, CONT_DPAD_LEFT, CONT_DPAD_RIGHT,
     CONT_HOME_OR_GUIDE
@@ -861,16 +861,16 @@ const KOS_KEYBOARD_MAPPING_BUTTONS = [
     { code: "KeyG", button: CONT_DPAD2_DOWN },
     { code: "KeyJ", button: CONT_DPAD2_UP },
     { code: "KeyK", button: CONT_DPAD2_RIGHT },
-    { code: null, button: CONT_DPAD3_LEFT },
-    { code: null, button: CONT_DPAD3_DOWN },
-    { code: null, button: CONT_DPAD3_UP },
-    { code: null, button: CONT_DPAD3_RIGHT },
-    { code: null, button: CONT_DPAD4_LEFT },
-    { code: null, button: CONT_DPAD4_DOWN },
-    { code: null, button: CONT_DPAD4_UP },
-    { code: null, button: CONT_DPAD4_RIGHT },
+    { code: null, button: CONT_EX_DPAD3_LEFT },
+    { code: null, button: CONT_EX_DPAD3_DOWN },
+    { code: null, button: CONT_EX_DPAD3_UP },
+    { code: null, button: CONT_EX_DPAD3_RIGHT },
+    { code: null, button: CONT_EX_DPAD4_LEFT },
+    { code: null, button: CONT_EX_DPAD4_DOWN },
+    { code: null, button: CONT_EX_DPAD4_UP },
+    { code: null, button: CONT_EX_DPAD4_RIGHT },
     { code: "Space", button: CONT_D },
-    { code: "Escape", button: CONT_BACK_OR_SELECT },
+    { code: "Escape", button: CONT_EX_BACK_OR_SELECT },
     { code: "Home", button: CONT_HOME_OR_GUIDE }
 ];
 const KOS_KEYBOARD_MAPPING_AXES = [

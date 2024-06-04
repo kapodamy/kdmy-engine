@@ -102,8 +102,8 @@ async function texture_cache(texture, adquire) {
     if (texture->cache_references > 0 && texture->data_ram) return;
 
     // download the texture from the PVR VRAM, this in other platforms is nearly impossible
-    texture->data_ram = malloc(texture->size);
-    memcpy(texture->data_ram, texture->data_vram, texture->size);
+    texture->data_ram = pvr_txr_unload(texture->data_vram, texture->size);
+    if (texture->data_ram) return;
 
     // now remove from the PVR VRAM
     pvr_mem_free(texture->data_vram);

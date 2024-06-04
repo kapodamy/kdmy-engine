@@ -118,7 +118,7 @@ const MAINMENU_GAMEPAD_SHOW_CREDITS = GAMEPAD_DPAD_DOWN | GAMEPAD_DPAD_UP | GAME
 
 
 async function mainmenu_main() {
-    let layout = await layout_init(pvrctx_is_widescreen() ? MAINMENU_LAYOUT : MAINMENU_LAYOUT_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? MAINMENU_LAYOUT : MAINMENU_LAYOUT_DREAMCAST);
     if (!layout) {
         console.warn("mainmenu_main() can not load mainmenu layout");
         return await mainmenu_handle_selected_option(0);
@@ -162,17 +162,17 @@ async function mainmenu_main() {
         }
 
         MAINMENU_MENU_MANIFEST.parameters.items_dimmen = layout_get_attached_value(
-            layout, "menu_itemDimmen", LAYOUT_TYPE_FLOAT,
+            layout, "menu_itemDimmen", LAYOUT_TYPE_DOUBLE,
             MAINMENU_MENU_MANIFEST.parameters.items_dimmen
         );
 
         MAINMENU_MENU_MANIFEST.parameters.texture_scale = layout_get_attached_value(
-            layout, "menu_itemScale", LAYOUT_TYPE_FLOAT,
+            layout, "menu_itemScale", LAYOUT_TYPE_DOUBLE,
             MAINMENU_MENU_MANIFEST.parameters.texture_scale
         );
 
         MAINMENU_MENU_MANIFEST.parameters.items_gap = layout_get_attached_value(
-            layout, "menu_itemGap", LAYOUT_TYPE_FLOAT,
+            layout, "menu_itemGap", LAYOUT_TYPE_DOUBLE,
             MAINMENU_MENU_MANIFEST.parameters.items_gap
         );
     }
@@ -380,7 +380,7 @@ async function mainmenu_show_donate() {
         layout, "pause_background_menu_music", LAYOUT_TYPE_BOOLEAN, false
     );
     let timeout = layout_get_attached_value(
-        layout, "timeout", LAYOUT_TYPE_FLOAT, -1
+        layout, "timeout", LAYOUT_TYPE_DOUBLE, -1.0
     );
     let donate_url = layout_get_attached_value(
         layout, "donate_url", LAYOUT_TYPE_STRING, null

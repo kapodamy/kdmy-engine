@@ -26,11 +26,11 @@ function drawable_init(z, private_data, callback_draw, callback_animate) {
 
         visible: 1,
 
-        antialiasing: PVR_FLAG_DEFAULT
+        antialiasing: PVRCTX_FLAG_DEFAULT
     };
 
-    pvrctx_helper_clear_offsetcolor(drawable.offsetcolor);
-    pvrctx_helper_clear_modifier(drawable.modifier);
+    pvr_context_helper_clear_offsetcolor(drawable.offsetcolor);
+    pvr_context_helper_clear_modifier(drawable.modifier);
 
     DRAWABLE_POOL.set(drawable.id, drawable);
     return drawable;
@@ -204,7 +204,7 @@ function drawable_helper_apply_in_context(drawable, pvrctx) {
     pvr_context_apply_modifier(pvrctx, drawable.modifier);
     pvr_context_set_global_alpha(pvrctx, drawable.alpha * drawable.alpha2);
     pvr_context_set_global_offsetcolor(pvrctx, drawable.offsetcolor);
-    if (drawable.antialiasing != PVR_FLAG_DEFAULT) {
+    if (drawable.antialiasing != PVRCTX_FLAG_DEFAULT) {
         pvr_context_set_global_antialiasing(pvrctx, drawable.antialiasing);
     }
     if (drawable.psshader) pvr_context_add_shader(pvrctx, drawable.psshader);

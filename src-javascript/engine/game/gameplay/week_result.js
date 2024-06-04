@@ -94,7 +94,7 @@ function week_result_add_stats(weekresult, roundcontext) {
 }
 
 async function week_result_helper_show_summary(weekresult, roundcontext, attempts, songs_count, freeplay, reject) {
-    let src = pvrctx_is_widescreen() ? WEEKRESULT_LAYOUT_WIDESCREEN : WEEKRESULT_LAYOUT_DREAMCAST;
+    let src = pvr_context_is_widescreen() ? WEEKRESULT_LAYOUT_WIDESCREEN : WEEKRESULT_LAYOUT_DREAMCAST;
     let layout = await layout_init(src);
     if (!layout) return;
 

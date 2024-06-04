@@ -190,7 +190,7 @@ public class WebGLContext {
         WebGL2RenderingContext gl = pvrctx.webopengl.gl;
 
         GLenum filter;
-        if (pvrctx.render_antialiasing == PVRContextFlag.DISABLE)
+        if (pvrctx.render_antialiasing == PVRFlag.DISABLE)
             filter = has_mipmaps ? gl.NEAREST_MIPMAP_NEAREST : gl.NEAREST;
         else
             filter = has_mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR;
@@ -271,7 +271,7 @@ public class WebGLContext {
         } else {
             gl.uniform1i(this.program_textured.u_offsetcolor_enabled, 1);
             gl.uniform4fv(this.program_textured.u_offsetcolor, pvrctx.render_offsetcolor);
-            bool use_multiply = pvrctx.render_offsetcolor_multiply != PVRContextFlag.DISABLE;
+            bool use_multiply = pvrctx.render_offsetcolor_multiply != PVRFlag.DISABLE;
             gl.uniform1i(this.program_textured.u_offsetcolor_mul_or_diff, use_multiply ? 1 : 0);
         }
 
@@ -318,7 +318,7 @@ public class WebGLContext {
         } else {
             gl.uniform1i(this.program_solid.u_offsetcolor_enabled, 1);
             gl.uniform4fv(this.program_solid.u_offsetcolor, pvrctx.render_offsetcolor);
-            bool use_multiply = pvrctx.render_offsetcolor_multiply != PVRContextFlag.DISABLE;
+            bool use_multiply = pvrctx.render_offsetcolor_multiply != PVRFlag.DISABLE;
             gl.uniform1i(this.program_solid.u_offsetcolor_mul_or_diff, use_multiply ? 1 : 0);
         }
 

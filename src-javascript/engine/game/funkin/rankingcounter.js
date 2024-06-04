@@ -186,29 +186,29 @@ function rankingcounter_peek_ranking(rankingcounter, playerstats) {
     let rank = playerstats_get_last_ranking(playerstats);
 
     switch (rank) {
-        case PLAYERSTATS_RANK_NONE:
+        case RANKING_NONE:
             return;
-        case PLAYERSTATS_RANK_SICK:
+        case RANKING_SICK:
             ranking = RANKINGCOUNTER_PREFIX_SICK;
             color = RANKINGCOUNTER_TEXT_COLOR_SICK;
             break;
-        case PLAYERSTATS_RANK_GOOD:
+        case RANKING_GOOD:
             ranking = RANKINGCOUNTER_PREFIX_GOOD;
             color = RANKINGCOUNTER_TEXT_COLOR_GOOD;
             break;
-        case PLAYERSTATS_RANK_BAD:
+        case RANKING_BAD:
             ranking = RANKINGCOUNTER_PREFIX_BAD;
             color = RANKINGCOUNTER_TEXT_COLOR_BAD;
             break;
-        case PLAYERSTATS_RANK_SHIT:
+        case RANKING_SHIT:
             ranking = RANKINGCOUNTER_PREFIX_SHIT;
             color = RANKINGCOUNTER_TEXT_COLOR_SHIT;
             break;
-        case PLAYERSTATS_RANK_MISS:
+        case RANKING_MISS:
             ranking = RANKINGCOUNTER_PREFIX_MISS;
             color = RANKINGCOUNTER_TEXT_COLOR_MISS;
             break;
-        case PLAYERSTATS_RANK_PENALITY:
+        case RANKING_PENALITY:
             ranking = RANKINGCOUNTER_PREFIX_PENALITY;
             color = RANKINGCOUNTER_TEXT_COLOR_PENALITY;
             break;
@@ -239,7 +239,7 @@ function rankingcounter_peek_ranking(rankingcounter, playerstats) {
     }
     state_name = undefined;
 
-    if (!rankingcounter.enable_accuracy || rank == PLAYERSTATS_RANK_PENALITY) return;
+    if (!rankingcounter.enable_accuracy || rank == RANKING_PENALITY) return;
 
     if (rankingcounter.enable_accuracy_percent) {
         value = playerstats_get_last_accuracy(playerstats);
@@ -255,7 +255,7 @@ function rankingcounter_peek_ranking(rankingcounter, playerstats) {
     textsprite_animation_restart(rankingcounter.textsprite);
     textsprite_set_color_rgba8(rankingcounter.textsprite, color);
 
-    if (rank == PLAYERSTATS_RANK_MISS)
+    if (rank == RANKING_MISS)
         textsprite_set_text_intern(rankingcounter.textsprite, 1, RANKINGCOUNTER_TEXT_MISS);
     else
         textsprite_set_text_formated(rankingcounter.textsprite, format, value);
@@ -265,13 +265,13 @@ function rankingcounter_reset(rankingcounter) {
     rankingcounter.show_accuracy = 0;
     rankingcounter.last_iterations = 0;
 
-    drawable_set_antialiasing(rankingcounter.drawable_accuracy, PVR_FLAG_DEFAULT);
-    drawable_set_antialiasing(rankingcounter.drawable_rank, PVR_FLAG_DEFAULT);
+    drawable_set_antialiasing(rankingcounter.drawable_accuracy, PVRCTX_FLAG_DEFAULT);
+    drawable_set_antialiasing(rankingcounter.drawable_rank, PVRCTX_FLAG_DEFAULT);
 
     rankingcounter_set_offsetcolor_to_default(rankingcounter);
 
-    pvrctx_helper_clear_modifier(drawable_get_modifier(rankingcounter.drawable_accuracy));
-    pvrctx_helper_clear_modifier(drawable_get_modifier(rankingcounter.drawable_rank));
+    pvr_context_helper_clear_modifier(drawable_get_modifier(rankingcounter.drawable_accuracy));
+    pvr_context_helper_clear_modifier(drawable_get_modifier(rankingcounter.drawable_rank));
 
     // hide all visible ranking items
     for (let i = 0; i < RANKINGCOUNTER_RANKING_BUFFER_SIZE; i++)

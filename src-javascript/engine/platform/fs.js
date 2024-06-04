@@ -5,6 +5,7 @@ const FS_CHAR_SEPARATOR_REJECT = '\\';
 const FS_FILENAME_INVALID_CHARS = `<>:"/\\|?*`;
 const FS_TEMP_MAX_LENGTH = 192;
 const FS_ASSETS_FOLDER = "/assets";
+const FS_ASSETS_FOLDER_NO_OVERRIDE = "/~assets/";
 const FS_EXPANSIONS_FOLDER = "/expansions";
 const FS_ASSETS_COMMON_FOLDER = "/assets/common/";
 const FS_NO_OVERRIDE_COMMON = "/~assets/common/";
@@ -129,7 +130,7 @@ async function fs_folder_enumerate(src, folder_enumerator) {
         let entries = new Array();
 
         // this is a disaster, enumerate src under "/expansions" too
-        if (!src.startsWith("/~assets/")) {
+        if (!src.startsWith(FS_ASSETS_FOLDER_NO_OVERRIDE)) {
             for (let i = expansions_chain_array_size - 1; i >= 0; i--) {
                 let path = await expansions_get_path_from_expansion(src, i);
                 if (path == null) continue;

@@ -4,11 +4,11 @@
 "use strict";
 
 const PVR_FPS_WIDTH = 25;
-/**@type {RGBA}*/ const PVR_CLEAR_COLOR = [0.5, 0.5, 0.5, 1.0];
+/**@type {RGBA}*/ const PVRCTX_CLEAR_COLOR = [0.5, 0.5, 0.5, 1.0];
 
 const PVR_AUTORUN = 1;
 const PVR_DREAMCAST_VRAM_SIZE = 1024 * 1024 * 8;
-/**@type {RGBA}*/ const PVR_DEFAULT_OFFSET_COLOR = [0.0, 0.0, 0.0, -1.0];
+/**@type {RGBA}*/ const PVRCTX_DEFAULT_OFFSET_COLOR = [0.0, 0.0, 0.0, -1.0];
 
 const PVR_FRAME_TIME = 0;//1000.0 / 60;
 const PVR_AUTOHIDE_CURSOR_MILLISECONDS = 3000;
@@ -132,7 +132,7 @@ var pvr_draw_callback = function (elapsed) { };
 /**@type {PVRContext}*/ var pvr_context;
 
 
-function pvrctx_helper_draw_vertex(vertex_type, vertex_holder) {
+function pvr_context_helper_draw_vertex(vertex_type, vertex_holder) {
     switch (vertex_type) {
         case VERTEX_SPRITE:
             sprite_draw(vertex_holder, pvr_context);
@@ -188,7 +188,7 @@ function pvr_draw_scene() {
     buffer.sort((a, b) => a.z - b.z);
 
     for (let j = 0; j < i; j++) {
-        pvrctx_helper_draw_vertex(buffer[j].type, buffer[j].holder);
+        pvr_context_helper_draw_vertex(buffer[j].type, buffer[j].holder);
     }
 }
 
@@ -318,7 +318,7 @@ function pvr_cursor_hidder() {
     });
 }
 
-function pvrctx_helper_clear_modifier(modifier) {
+function pvr_context_helper_clear_modifier(modifier) {
     const BASE_MODIFIER = {
         translate_x: 0.0,
         translate_y: 0.0,
@@ -351,14 +351,14 @@ function pvrctx_helper_clear_modifier(modifier) {
     for (const field in BASE_MODIFIER) modifier[field] = BASE_MODIFIER[field];
 }
 
-function pvrctx_helper_clear_offsetcolor(offsetcolor) {
+function pvr_context_helper_clear_offsetcolor(offsetcolor) {
     offsetcolor[0] = 0.0;
     offsetcolor[1] = 0.0;
     offsetcolor[2] = 0.0;
     offsetcolor[3] = -1.0;
 }
 
-function pvrctx_helper_set_modifier_property(modifier, property, value) {
+function pvr_context_helper_set_modifier_property(modifier, property, value) {
     switch (property) {
         case SPRITE_PROP_ROTATE:
             modifier.rotate = value * MATH2D_DEG_TO_RAD;
@@ -408,14 +408,14 @@ function pvrctx_helper_set_modifier_property(modifier, property, value) {
     }
 }
 
-function pvrctx_helper_copy_modifier(modifier_source, modifier_dest) {
+function pvr_context_helper_copy_modifier(modifier_source, modifier_dest) {
     for (const field in modifier_source) {
         if (Number.isNaN(modifier_source[field])) continue;
         modifier_dest[field] = modifier_source[field];
     }
 }
 
-function pvrctx_is_widescreen() {
+function pvr_context_is_widescreen() {
     return !math2d_floats_are_near_equal(640 / 480, pvr_context.screen_stride / pvr_context.screen_height);
 }
 

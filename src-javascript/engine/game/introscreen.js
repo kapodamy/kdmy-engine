@@ -11,7 +11,7 @@ const INTROSCREEN_MODDING_SCRIPT = "/assets/common/data/scripts/introscreen.lua"
 
 
 async function introscreen_main() {
-    let layout = await layout_init(pvrctx_is_widescreen() ? INTROSCREEN_LAYOUT : INTROSCREEN_LAYOUT_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? INTROSCREEN_LAYOUT : INTROSCREEN_LAYOUT_DREAMCAST);
     if (!layout) return;
 
     let modding = await modding_init(layout, INTROSCREEN_MODDING_SCRIPT);

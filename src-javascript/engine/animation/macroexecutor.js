@@ -597,22 +597,22 @@ function macroexecutor_interpolator_run(macroexecutor, elapsed, interpolator) {
 
     let value = 0;
     switch (interpolator.definition.interpolator) {
-        case ANIM_MACRO_INTERPOLATOR_EASE:
+        case ANIM_INTERPOLATOR_EASE:
             value = macroexecutor_calc_cubicbezier(percent, CUBIC_BREZIER_EASE);
             break;
-        case ANIM_MACRO_INTERPOLATOR_EASE_IN:
+        case ANIM_INTERPOLATOR_EASE_IN:
             value = macroexecutor_calc_cubicbezier(percent, CUBIC_BREZIER_EASE_IN);
             break;
-        case ANIM_MACRO_INTERPOLATOR_EASE_OUT:
+        case ANIM_INTERPOLATOR_EASE_OUT:
             value = macroexecutor_calc_cubicbezier(percent, CUBIC_BREZIER_EASE_OUT);
             break;
-        case ANIM_MACRO_INTERPOLATOR_EASE_IN_OUT:
+        case ANIM_INTERPOLATOR_EASE_IN_OUT:
             value = macroexecutor_calc_cubicbezier(percent, CUBIC_BREZIER_EASE_IN_OUT);
             break;
-        case ANIM_MACRO_INTERPOLATOR_LINEAR:
+        case ANIM_INTERPOLATOR_LINEAR:
             value = percent;
             break;
-        case ANIM_MACRO_INTERPOLATOR_STEPS:
+        case ANIM_INTERPOLATOR_STEPS:
             value = macroexecutor_calc_steps(
                 percent,
                 interpolator.steps_bounds,
@@ -620,16 +620,16 @@ function macroexecutor_interpolator_run(macroexecutor, elapsed, interpolator) {
                 interpolator.steps_method
             );
             break;
-        case ANIM_MACRO_INTERPOLATOR_CUBIC:
+        case ANIM_INTERPOLATOR_CUBIC:
             value = math2d_lerp_cubic(percent);
             break;
-        case ANIM_MACRO_INTERPOLATOR_QUAD:
+        case ANIM_INTERPOLATOR_QUAD:
             value = math2d_lerp_quad(percent);
             break;
-        case ANIM_MACRO_INTERPOLATOR_EXPO:
+        case ANIM_INTERPOLATOR_EXPO:
             value = math2d_lerp_expo(percent);
             break;
-        case ANIM_MACRO_INTERPOLATOR_SIN:
+        case ANIM_INTERPOLATOR_SIN:
             value = math2d_lerp_sin(percent);
             break;
     }
@@ -685,7 +685,7 @@ function macroexecutor_calc_steps(elapsed_time, bounds, count, direction) {
         if (direction == ALIGN_BOTH) res += bounds[1];
     }
 
-    return math2d_clamp(res, 0.0, 1.0);
+    return math2d_clamp_float(res, 0.0, 1.0);
 }
 
 function macroexecutor_calc_swing(percent) {
@@ -729,7 +729,7 @@ function macroexecutor_random_exact(macroexecutor, instruction) {
         return;
     }
 
-    let index = math2d_random_int(0, instruction.values_size - 1);
+    let index = math2d_random_int(0, instruction.values_size);
     let item = instruction.values[index];
 
     // resolve the item value

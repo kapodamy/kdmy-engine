@@ -57,7 +57,7 @@ public class Sprite : IVertex {
     private SpriteCropInfo crop;
     private bool crop_enabled;
 
-    private PVRContextFlag antialiasing;
+    private PVRFlag antialiasing;
     private PSShader psshader;
     private bool blend_enabled;
     private Blend blend_src_rgb;
@@ -194,7 +194,7 @@ public class Sprite : IVertex {
             this.blend_dst_alpha
         );
 
-        if (this.antialiasing != PVRContextFlag.DEFAULT) {
+        if (this.antialiasing != PVRFlag.DEFAULT) {
             pvrctx.SetVertexAntialiasing(this.antialiasing);
         }
 
@@ -338,7 +338,7 @@ public class Sprite : IVertex {
         sprite.crop = new SpriteCropInfo();
         sprite.crop_enabled = false;
 
-        sprite.antialiasing = PVRContextFlag.DEFAULT;
+        sprite.antialiasing = PVRFlag.DEFAULT;
 
         sprite.psshader = null;
         sprite.blend_enabled = true;
@@ -844,7 +844,7 @@ public class Sprite : IVertex {
                 this.vertex_dirty = true;
                 break;
             case VertexProps.SPRITE_PROP_ANTIALIASING:
-                this.antialiasing = (PVRContextFlag)(int)Math.Truncate(value);
+                this.antialiasing = (PVRFlag)(int)Math.Truncate(value);
                 break;
             case VertexProps.SPRITE_PROP_ALPHA2:
                 this.alpha2 = value;
@@ -1071,7 +1071,7 @@ public class Sprite : IVertex {
         return this.texture;
     }
 
-    public void SetAntialiasing(PVRContextFlag antialiasing) {
+    public void SetAntialiasing(PVRFlag antialiasing) {
         this.antialiasing = antialiasing;
     }
 

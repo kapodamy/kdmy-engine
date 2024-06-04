@@ -57,7 +57,7 @@ public class TextSprite : IVertex {
     private float border_offset_x;
     private float border_offset_y;
     private float font_paragraph_separation;
-    private PVRContextFlag antialiasing;
+    private PVRFlag antialiasing;
     private int wordbreak;
     private PSShader psshader;
     private bool blend_enabled;
@@ -132,7 +132,7 @@ public class TextSprite : IVertex {
 
             font_paragraph_separation = 0,
 
-            antialiasing = PVRContextFlag.DEFAULT,
+            antialiasing = PVRFlag.DEFAULT,
 
             wordbreak = VertexProps.FONT_WORDBREAK_LOOSE,
 
@@ -758,7 +758,7 @@ public class TextSprite : IVertex {
                 this.font_paragraph_separation = value;
                 break;
             case VertexProps.SPRITE_PROP_ANTIALIASING:
-                this.antialiasing = (PVRContextFlag)((int)value);
+                this.antialiasing = (PVRFlag)((int)value);
                 break;
             case VertexProps.FONT_PROP_WORDBREAK:
                 this.wordbreak = (int)value;
@@ -860,7 +860,7 @@ public class TextSprite : IVertex {
             this.blend_dst_alpha
         );
 
-        if (this.antialiasing != PVRContextFlag.DEFAULT) {
+        if (this.antialiasing != PVRFlag.DEFAULT) {
             pvrctx.SetGlobalAntialiasing(this.antialiasing);
         }
 
@@ -1016,7 +1016,7 @@ public class TextSprite : IVertex {
         return this.visible;
     }
 
-    public void SetAntialiasing(PVRContextFlag antialiasing) {
+    public void SetAntialiasing(PVRFlag antialiasing) {
         this.antialiasing = antialiasing;
     }
 

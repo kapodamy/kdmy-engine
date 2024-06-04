@@ -1,21 +1,21 @@
 "use strict";
 
-const PVR_FLAG_DISABLE = 0;
-const PVR_FLAG_ENABLE = 1;
-const PVR_FLAG_DEFAULT = 2;
+const PVRCTX_FLAG_DISABLE = 0;
+const PVRCTX_FLAG_ENABLE = 1;
+const PVRCTX_FLAG_DEFAULT = 2;
 
 const PVRCTX_SHADER_STACK_LENGTH = 64;
 
 /**@typedef {[number,number,number,number]} RGBA */
-/**@typedef {number} PVRFLAG */
+/**@typedef {number} PVRFlag */
 
 
 class PVRContextState {
     matrix = sh4matrix_init();
     /**@type {number}*/  global_alpha = 1.0;
     /**@type {RGBA}*/    offsetcolor = [0.0, 0.0, 0.0, 0.0];
-    /**@type {PVRFLAG}*/ global_antialiasing = PVR_FLAG_DEFAULT;
-    /**@type {PVRFLAG}*/ global_offsetcolor_multiply = PVR_FLAG_DEFAULT;
+    /**@type {PVRFlag}*/ global_antialiasing = PVRCTX_FLAG_DEFAULT;
+    /**@type {PVRFlag}*/ global_offsetcolor_multiply = PVRCTX_FLAG_DEFAULT;
     /**@type {number}*/  added_shaders = 0;
 
     constructor() {
@@ -50,16 +50,16 @@ class PVRContext {
     /**@type {number}*/ global_alpha = 1.0;
     /**@type {RGBA}  */ global_offsetcolor = null;
 
-    /**@type {PVRFLAG}*/ global_antialiasing = PVR_FLAG_DEFAULT;
-    /**@type {PVRFLAG}*/ vertex_antialiasing = PVR_FLAG_DEFAULT;
+    /**@type {PVRFlag}*/ global_antialiasing = PVRCTX_FLAG_DEFAULT;
+    /**@type {PVRFlag}*/ vertex_antialiasing = PVRCTX_FLAG_DEFAULT;
 
-    /**@type {PVRFLAG}*/ global_offsetcolor_multiply = PVR_FLAG_DEFAULT;
-    /**@type {PVRFLAG}*/ vertex_offsetcolor_multiply = PVR_FLAG_DEFAULT;
+    /**@type {PVRFlag}*/ global_offsetcolor_multiply = PVRCTX_FLAG_DEFAULT;
+    /**@type {PVRFlag}*/ vertex_offsetcolor_multiply = PVRCTX_FLAG_DEFAULT;
 
     /**@type {number}*/  render_alpha = 1.0;
     /**@type {RGBA}*/    render_offsetcolor = [0.0, .0, 0.0, 0.0];
-    /**@type {PVRFLAG}*/ render_offsetcolor_multiply = PVR_FLAG_DEFAULT;
-    /**@type {PVRFLAG}*/ render_antialiasing = PVR_FLAG_DEFAULT;
+    /**@type {PVRFlag}*/ render_offsetcolor_multiply = PVRCTX_FLAG_DEFAULT;
+    /**@type {PVRFlag}*/ render_antialiasing = PVRCTX_FLAG_DEFAULT;
 
     get current_matrix() { return this.stack[this.stack_index].matrix; }
     get current_state() { return this.stack[this.stack_index]; }
@@ -96,8 +96,8 @@ class PVRContext {
 
         for (let i = 0; i < this.stack_length; i++) this.stack[i] = new PVRContextState();
         this.global_offsetcolor = this.stack[0].offsetcolor;
-        pvrctx_helper_clear_offsetcolor(this.vertex_offsetcolor);
-        pvrctx_helper_clear_offsetcolor(this.render_offsetcolor);
+        pvr_context_helper_clear_offsetcolor(this.vertex_offsetcolor);
+        pvr_context_helper_clear_offsetcolor(this.render_offsetcolor);
 
         this.screen_stride = this.screen_width;
         this.native_window_title = document.title;
@@ -197,7 +197,7 @@ async function pvr_context_init() {
     pvr_context = new PVRContext(canvas);
     await pvr_context._initWebGL();
 
-    pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+    pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
 }
 
 /** @param {PVRContext} pvrctx */
@@ -212,16 +212,16 @@ function pvr_context_reset(pvrctx) {
     pvrctx.vertex_alpha = 1.0;
     pvrctx.render_alpha = 1.0;
 
-    pvrctx_helper_clear_offsetcolor(pvrctx.global_offsetcolor);
-    pvrctx_helper_clear_offsetcolor(pvrctx.vertex_offsetcolor);
+    pvr_context_helper_clear_offsetcolor(pvrctx.global_offsetcolor);
+    pvr_context_helper_clear_offsetcolor(pvrctx.vertex_offsetcolor);
 
-    pvrctx.global_antialiasing = PVR_FLAG_ENABLE;
-    pvrctx.vertex_antialiasing = PVR_FLAG_DEFAULT;
-    pvrctx.render_antialiasing = PVR_FLAG_DEFAULT;
+    pvrctx.global_antialiasing = PVRCTX_FLAG_ENABLE;
+    pvrctx.vertex_antialiasing = PVRCTX_FLAG_DEFAULT;
+    pvrctx.render_antialiasing = PVRCTX_FLAG_DEFAULT;
 
-    pvrctx.global_offsetcolor_multiply = PVR_FLAG_ENABLE;
-    pvrctx.vertex_offsetcolor_multiply = PVR_FLAG_DEFAULT;
-    pvrctx.render_offsetcolor_multiply = PVR_FLAG_DEFAULT;
+    pvrctx.global_offsetcolor_multiply = PVRCTX_FLAG_ENABLE;
+    pvrctx.vertex_offsetcolor_multiply = PVRCTX_FLAG_DEFAULT;
+    pvrctx.render_offsetcolor_multiply = PVRCTX_FLAG_DEFAULT;
 
     pvrctx.FlushFramebuffer();
     pvrctx.shader_stack = new Array();
@@ -277,7 +277,7 @@ function pvr_context_save(pvrctx) {
     pvrctx.vertex_alpha = pvrctx.global_alpha;
     pvrctx.render_alpha = pvrctx.global_alpha;
 
-    pvrctx.vertex_antialiasing = PVR_FLAG_DEFAULT;
+    pvrctx.vertex_antialiasing = PVRCTX_FLAG_DEFAULT;
     pvrctx.render_antialiasing = previous_state.global_antialiasing;
 
     pvrctx.vertex_offsetcolor_multiply = pvrctx.global_offsetcolor_multiply;
@@ -316,7 +316,7 @@ function pvr_context_restore(pvrctx) {
     let previous_state = pvrctx.stack[pvrctx.stack_index];
 
     pvrctx.global_antialiasing = previous_state.global_antialiasing;
-    pvrctx.vertex_antialiasing = PVR_FLAG_DEFAULT;
+    pvrctx.vertex_antialiasing = PVRCTX_FLAG_DEFAULT;
     pvrctx.render_antialiasing = previous_state.global_antialiasing;
 
     pvrctx.global_offsetcolor_multiply = previous_state.global_offsetcolor_multiply;
@@ -353,10 +353,10 @@ function pvr_context_set_vertex_alpha(pvrctx, alpha) {
     pvrctx.render_alpha = alpha * pvrctx.global_alpha;
 }
 
-/** @param {PVRContext} pvrctx @param {PVRFLAG} flag */
+/** @param {PVRContext} pvrctx @param {PVRFlag} flag */
 function pvr_context_set_vertex_antialiasing(pvrctx, flag) {
     pvrctx.vertex_antialiasing = flag;
-    pvrctx.render_antialiasing = flag == PVR_FLAG_DEFAULT ? pvrctx.global_antialiasing : flag;
+    pvrctx.render_antialiasing = flag == PVRCTX_FLAG_DEFAULT ? pvrctx.global_antialiasing : flag;
 }
 
 /** @param {PVRContext} pvrctx @param {RGBA} offsetcolor */
@@ -365,10 +365,10 @@ function pvr_context_set_vertex_offsetcolor(pvrctx, offsetcolor) {
     math2d_color_blend_normal(offsetcolor, pvrctx.global_offsetcolor, pvrctx.render_offsetcolor);
 }
 
-/** @param {PVRContext} pvrctx @param {PVRFLAG} flag */
+/** @param {PVRContext} pvrctx @param {PVRFlag} flag */
 function pvr_context_vertex_offsetcolor_multiply(pvrctx, flag) {
     pvrctx.vertex_offsetcolor_multiply = flag;
-    pvrctx.render_offsetcolor_multiply = flag == PVR_FLAG_DEFAULT ? pvrctx.global_offsetcolor_multiply : flag;
+    pvrctx.render_offsetcolor_multiply = flag == PVRCTX_FLAG_DEFAULT ? pvrctx.global_offsetcolor_multiply : flag;
 }
 
 /** @param {PVRContext} pvrctx*/
@@ -393,11 +393,11 @@ function pvr_context_set_global_alpha(pvrctx, alpha) {
     pvr_context_set_vertex_alpha(pvrctx, pvrctx.vertex_alpha);
 }
 
-/** @param {PVRContext} pvrctx @param {PVRFLAG} flag */
+/** @param {PVRContext} pvrctx @param {PVRFlag} flag */
 function pvr_context_set_global_antialiasing(pvrctx, flag) {
     let last_state = pvrctx._previous_state();
 
-    if (last_state && flag == PVR_FLAG_DEFAULT) flag = last_state.global_antialiasing;
+    if (last_state && flag == PVRCTX_FLAG_DEFAULT) flag = last_state.global_antialiasing;
 
     pvrctx.global_antialiasing = flag;
     pvr_context_set_vertex_antialiasing(pvrctx, pvrctx.vertex_antialiasing);
@@ -416,16 +416,21 @@ function pvr_context_set_global_offsetcolor(pvrctx, offsetcolor) {
     pvr_context_set_vertex_offsetcolor(pvrctx, pvrctx.vertex_offsetcolor);
 }
 
-/** @param {PVRContext} pvrctx @param {PVRFLAG} flag */
+/** @param {PVRContext} pvrctx @param {PVRFlag} flag */
 function pvr_context_global_offsetcolor_multiply(pvrctx, flag) {
     let last_state = pvrctx._previous_state();
 
-    if (last_state && flag == PVR_FLAG_DEFAULT) flag = last_state.global_offsetcolor_multiply;
+    if (last_state && flag == PVRCTX_FLAG_DEFAULT) flag = last_state.global_offsetcolor_multiply;
 
     pvrctx.global_offsetcolor_multiply = flag;
     pvr_context_vertex_offsetcolor_multiply(pvrctx, pvrctx.vertex_offsetcolor_multiply);
 }
 
+
+/** @param {PVRContext} pvrctx */
+function pvr_context_is_offscreen(pvrctx) {
+    return document.hidden;
+}
 
 /** @param {PVRContext} pvrctx */
 function pvr_context_draw_texture(pvrctx, texture, sx, sy, sw, sh, dx, dy, dw, dh) {

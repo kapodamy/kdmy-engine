@@ -1,6 +1,6 @@
 "use strict";
 
-const CAMERA_DEFAULT_INTERPOLATOR = ANIM_MACRO_INTERPOLATOR_LINEAR;
+const CAMERA_DEFAULT_INTERPOLATOR = ANIM_INTERPOLATOR_LINEAR;
 const CAMERA_PX = 0;
 const CAMERA_PY = 1;
 const CAMERA_PZ = 2;
@@ -33,7 +33,7 @@ function camera_init(modifier, viewport_width, viewport_height) {
     if (camera.internal_modifier) {
         // no modifier provided used the internal one
         camera.modifier = {};
-        pvrctx_helper_clear_modifier(camera.modifier);
+        pvr_context_helper_clear_modifier(camera.modifier);
         camera.modifier.width = viewport_width;
         camera.modifier.width = viewport_height;
         camera.modifier.scale_direction_x = -0.5

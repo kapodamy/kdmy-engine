@@ -130,7 +130,7 @@ function statesprite_draw(statesprite, pvrctx) {
         draw_x, draw_y, statesprite.draw_width, statesprite.draw_height
     );
 
-    if (statesprite.antialiasing != PVR_FLAG_DEFAULT) {
+    if (statesprite.antialiasing != PVRCTX_FLAG_DEFAULT) {
         pvr_context_set_vertex_antialiasing(pvrctx, statesprite.antialiasing);
     }
 
@@ -284,7 +284,7 @@ function statesprite_init_from_texture(texture) {
     statesprite.selected_state = null;
 
     statesprite.scale_texture = 1.0;
-    statesprite.antialiasing = PVR_FLAG_DEFAULT;
+    statesprite.antialiasing = PVRCTX_FLAG_DEFAULT;
     statesprite.atlas_to_draw_size_enabled = 0;
 
     statesprite.psshader = null;
@@ -685,7 +685,7 @@ function statesprite_is_visible(statesprite) {
 
 
 function statesprite_matrix_reset(statesprite) {
-    pvrctx_helper_clear_modifier(statesprite.matrix_source);
+    pvr_context_helper_clear_modifier(statesprite.matrix_source);
     statesprite.flip_x = statesprite.flip_y = 0;
     statesprite.matrix_corner = { x: 0, y: 0, angle: 0 };
 }

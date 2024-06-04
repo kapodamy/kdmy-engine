@@ -578,17 +578,17 @@ function vertexprops_parse_flag2(value, def_value) {
             case "enable":
                 //case "true":
                 //case "1":
-                return PVR_FLAG_ENABLE;
+                return PVRCTX_FLAG_ENABLE;
             case "disabled":
             case "disable":
                 //case "false":
                 //case "0":
-                return PVR_FLAG_DISABLE;
+                return PVRCTX_FLAG_DISABLE;
             case "default":
                 //case "inherit":
                 //case "unset":
                 //case "2":
-                return PVR_FLAG_DEFAULT;
+                return PVRCTX_FLAG_DEFAULT;
         }
     }
     return def_value;

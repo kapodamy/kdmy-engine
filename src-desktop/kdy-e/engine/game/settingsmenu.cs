@@ -315,7 +315,7 @@ public static class SettingsMenu {
             "backgroud_music_filename", AttachedValueType.STRING, null
         );
         float backgroud_music_volume = (float)(double)layout.GetAttachedValue(
-            "backgroud_music_volume", AttachedValueType.STRING, 0.5
+            "backgroud_music_volume", AttachedValueType.DOUBLE, 0.5
         );
 
         SoundPlayer bg_music = null;

@@ -420,7 +420,7 @@ function strum_set_scroll_speed(strum, speed) {
     strum.scroll_velocity = strum.scroll_velocity_base * speed;
 
     // Use half of the scolling speed if the screen aspect ratio is 4:3 (dreamcast)
-    if (!pvrctx_is_widescreen()) strum.scroll_velocity *= 0.5;//480.0 / 720.0;
+    if (!pvr_context_is_widescreen()) strum.scroll_velocity *= 0.5;//480.0 / 720.0;
 
     strum_internal_calc_marker_duration(strum, strum.scroll_velocity);
     strum_internal_calc_scroll_window(strum);
@@ -615,7 +615,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
             lowest_diff = note.timestamp - key_timestamp;// hit difference (for stats)
 
             // calculate rank
-            let rank = PLAYERSTATS_RANK_NONE;
+            let rank = RANKING_NONE;
             if (!note_attributes.ignore_hit) {
                 rank = playerstats_add_hit(
                     playerstats, note_attributes.heal_ratio, marker_duration, lowest_diff
@@ -628,7 +628,7 @@ function strum_scroll(strum, song_timestamp, ddrkeys_fifo, playerstats, weekscri
             //console.info(`strum: [hold] note hit!  ts=${key_timestamp} diff=${lowest_diff} rank=${rank}`);
 
             // check if necessary display the sick effect
-            if (rank == PLAYERSTATS_RANK_SICK && sick_effect_ready) {
+            if (rank == RANKING_SICK && sick_effect_ready) {
                 strum.marker_sick_state = STRUM_MARKER_STATE_PRESS;
 
                 // if the note has a custom sick effect choose from the state list

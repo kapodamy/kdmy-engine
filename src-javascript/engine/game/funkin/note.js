@@ -63,7 +63,7 @@ function note_init(name, dimmen, invdimmen) {
         has_part_tail: 0
     };
 
-    pvrctx_helper_clear_modifier(note.modifier_sustain);
+    pvr_context_helper_clear_modifier(note.modifier_sustain);
 
     statesprite_set_visible(note.sprite_alone, 0);
     statesprite_set_visible(note.sprite_hold, 0);

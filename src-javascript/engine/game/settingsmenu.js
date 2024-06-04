@@ -236,7 +236,7 @@ async function settingsmenu_main() {
         anim_binding = anim_binding_rollback = null;
     }
 
-    let layout = await layout_init(pvrctx_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_MAIN : SETTINGSMENU_LAYOUT_BINDS_MAIN_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_MAIN : SETTINGSMENU_LAYOUT_BINDS_MAIN_DREAMCAST);
     if (!layout) {
         console.error("settingsmenu_main() can not load the layout");
         return;
@@ -299,7 +299,7 @@ async function settingsmenu_main() {
         layout, "backgroud_music_filename", LAYOUT_TYPE_STRING, null
     );
     let backgroud_music_volume = layout_get_attached_value(
-        layout, "backgroud_music_volume", LAYOUT_TYPE_STRING, 0.5
+        layout, "backgroud_music_volume", LAYOUT_TYPE_DOUBLE, 0.5
     );
 
     let bg_music = null;
@@ -387,7 +387,7 @@ async function settingsmenu_main() {
 
 
 async function settingsmenu_in_gameplay_binding(anim_binding, anim_binding_rollback) {
-    let layout = await layout_init(pvrctx_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY : SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY : SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY_DREAMCAST);
 
     if (!layout) {
         console.error("settingsmenu_in_gameplay_binding() can not load the layout");
@@ -572,7 +572,7 @@ async function settingsmenu_in_gameplay_binding(anim_binding, anim_binding_rollb
 }
 
 async function settingsmenu_in_menus_binding(anim_binding, anim_binding_rollback) {
-    let layout = await layout_init(pvrctx_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_MENUS : SETTINGSMENU_LAYOUT_BINDS_MENUS_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_MENUS : SETTINGSMENU_LAYOUT_BINDS_MENUS_DREAMCAST);
 
     if (!layout) {
         console.error("settingsmenu_in_menus_binding() can not load the layout");
@@ -984,7 +984,7 @@ async function settingsmenu_in_misc_settings(gamepad, modding) {
 }
 
 async function settingsmenu_show_common(title, gamepad, options, options_count, modding) {
-    let layout = await layout_init(pvrctx_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_COMMON : SETTINGSMENU_LAYOUT_BINDS_COMMON_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_COMMON : SETTINGSMENU_LAYOUT_BINDS_COMMON_DREAMCAST);
 
     if (!layout) {
         console.error("settingsmenu_show_common() can not load the layout");

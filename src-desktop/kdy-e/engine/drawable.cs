@@ -24,7 +24,7 @@ public class Drawable : IVertex {
     private DelegateDraw callback_draw;
     private DelegateAnimate callback_animate;
     private bool visible;
-    private PVRContextFlag antialiasing;
+    private PVRFlag antialiasing;
     private PSShader psshader;
     private bool blend_enabled;
     private Blend blend_src_rgb;
@@ -60,7 +60,7 @@ public class Drawable : IVertex {
 
         this.visible = true;
 
-        this.antialiasing = PVRContextFlag.DEFAULT;
+        this.antialiasing = PVRFlag.DEFAULT;
         this.psshader = null;
 
         this.blend_enabled = true;
@@ -226,7 +226,7 @@ public class Drawable : IVertex {
                 this.z_offset = value;
                 break;
             case VertexProps.SPRITE_PROP_ANTIALIASING:
-                this.antialiasing = (PVRContextFlag)((int)Math.Truncate(value));
+                this.antialiasing = (PVRFlag)((int)Math.Truncate(value));
                 break;
             case VertexProps.SPRITE_PROP_ALPHA2:
                 this.alpha2 = value;
@@ -238,7 +238,7 @@ public class Drawable : IVertex {
         pvrctx.ApplyModifier(this.modifier);
         pvrctx.SetGlobalAlpha(this.alpha * this.alpha2);
         pvrctx.SetGlobalOffsetColor(this.offsetcolor);
-        if (this.antialiasing != PVRContextFlag.DEFAULT) {
+        if (this.antialiasing != PVRFlag.DEFAULT) {
             pvrctx.SetGlobalAntialiasing(this.antialiasing);
         }
         if (this.psshader != null) pvrctx.AddShader(this.psshader);
@@ -270,7 +270,7 @@ public class Drawable : IVertex {
         draw_y = this.modifier.y;
     }
 
-    public void SetAntialiasing(PVRContextFlag antialiasing) {
+    public void SetAntialiasing(PVRFlag antialiasing) {
         this.antialiasing = antialiasing;
     }
 

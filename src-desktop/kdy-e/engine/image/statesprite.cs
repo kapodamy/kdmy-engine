@@ -216,7 +216,7 @@ public class StateSprite : IVertex {
             draw_x, draw_y, this.draw_width, this.draw_height
         );
 
-        if (this.antialiasing != PVRContextFlag.DEFAULT) {
+        if (this.antialiasing != PVRFlag.DEFAULT) {
             pvrctx.SetVertexAntialiasing(this.antialiasing);
         }
 
@@ -367,7 +367,7 @@ public class StateSprite : IVertex {
         statesprite.selected_state = null;
 
         statesprite.scale_texture = 1.0f;
-        statesprite.antialiasing = PVRContextFlag.DEFAULT;
+        statesprite.antialiasing = PVRFlag.DEFAULT;
         statesprite.atlas_to_draw_size_enabled = false;
 
         statesprite.psshader = null;
@@ -602,7 +602,7 @@ public class StateSprite : IVertex {
                 this.z_offset = value;
                 break;
             case VertexProps.SPRITE_PROP_ANTIALIASING:
-                this.antialiasing = (PVRContextFlag)(int)Math.Truncate(value);
+                this.antialiasing = (PVRFlag)(int)Math.Truncate(value);
                 break;
             case VertexProps.SPRITE_PROP_FLIP_X:
                 this.flip_x = value >= 1.0f;

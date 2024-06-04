@@ -58,7 +58,7 @@ async function videoplayer_init(src) {
         texture: texture,
         sprite: sprite,
         fade_id: 0,
-        fade_status: FADDING_NONE,
+        fade_status: FADING_NONE,
         last_time: -1
     };
 }

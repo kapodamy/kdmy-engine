@@ -317,8 +317,8 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_siz
 
     pvr_context_save(pvrctx);
     pvr_context_set_vertex_alpha(pvrctx, fonttype.alpha);
-    pvr_context_set_vertex_offsetcolor(pvrctx, PVR_DEFAULT_OFFSET_COLOR);
-    pvr_context_set_vertex_antialiasing(pvrctx, PVR_FLAG_DEFAULT);
+    pvr_context_set_vertex_offsetcolor(pvrctx, PVRCTX_DEFAULT_OFFSET_COLOR);
+    pvr_context_set_vertex_antialiasing(pvrctx, PVRCTX_FLAG_DEFAULT);
 
 
     // count the amount of glyph required

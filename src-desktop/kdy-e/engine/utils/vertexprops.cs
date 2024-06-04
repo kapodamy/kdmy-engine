@@ -571,31 +571,31 @@ public static class VertexProps {
     }
 
 
-    public static PVRContextFlag ParseFlag(XmlParserNode node, string attr_name, PVRContextFlag def_value) {
+    public static PVRFlag ParseFlag(XmlParserNode node, string attr_name, PVRFlag def_value) {
         string value = node.GetAttribute(attr_name);
         if (value == null) return def_value;
 
         return ParseFlag2(value, def_value);
     }
 
-    public static PVRContextFlag ParseFlag2(string value, PVRContextFlag def_value) {
+    public static PVRFlag ParseFlag2(string value, PVRFlag def_value) {
         if (value != null) {
             switch (value.ToLower()) {
                 case "enabled":
                 case "enable":
                     //case "true":
                     //case "1":
-                    return PVRContextFlag.ENABLE;
+                    return PVRFlag.ENABLE;
                 case "disabled":
                 case "disable":
                     //case "false":
                     //case "0":
-                    return PVRContextFlag.DISABLE;
+                    return PVRFlag.DISABLE;
                 case "default":
                     //case "inherit":
                     //case "unset":
                     //case "2":
-                    return PVRContextFlag.DEFAULT;
+                    return PVRFlag.DEFAULT;
             }
         }
         return def_value;

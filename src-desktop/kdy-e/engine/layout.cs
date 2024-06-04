@@ -65,7 +65,7 @@ internal class CameraPlaceholder {
 public enum AttachedValueType : int {
     NOTFOUND = 0x00,
     STRING = 0x01,
-    FLOAT = 0x02,
+    DOUBLE = 0x02,
     INTEGER = 0x04,
     HEX = 0x08,// unsigned integer
     BOOLEAN = 0x10
@@ -932,7 +932,7 @@ public class Layout : IDraw, IAnimate {
             if ((this.values[i].type & expected_type) == 0x00) {
                 Logger.Warn($"layout_get_attached_value() type missmatch of: {name}");
 
-                if (expected_type == AttachedValueType.FLOAT && this.values[i].type == AttachedValueType.INTEGER)
+                if (expected_type == AttachedValueType.DOUBLE && this.values[i].type == AttachedValueType.INTEGER)
                     return this.values[i].value;
 
                 break;// type missmatch
@@ -956,7 +956,7 @@ public class Layout : IDraw, IAnimate {
     }
 
     public float GetAttachedValueAsFloat(string name, float default_value) {
-        const AttachedValueType LIKE_NUMBER = AttachedValueType.INTEGER | AttachedValueType.FLOAT | AttachedValueType.HEX;
+        const AttachedValueType LIKE_NUMBER = AttachedValueType.INTEGER | AttachedValueType.DOUBLE | AttachedValueType.HEX;
 
         for (int i = 0 ; i < this.values_size ; i++) {
             if (this.values[i].name != name) continue;
@@ -967,7 +967,7 @@ public class Layout : IDraw, IAnimate {
             switch (this.values[i].type) {
                 case AttachedValueType.INTEGER:
                     return (float)((long)this.values[i].value);
-                case AttachedValueType.FLOAT:
+                case AttachedValueType.DOUBLE:
                     return (float)((double)this.values[i].value);
                 case AttachedValueType.HEX:
                     return (float)((uint)this.values[i].value);
@@ -1160,12 +1160,12 @@ public class Layout : IDraw, IAnimate {
         this.group_list[group_id].alpha = Math2D.Clamp(alpha, 0.0f, 1.0f);
     }
 
-    public void SetGroupAntialiasing(string group_name, PVRContextFlag antialiasing) {
+    public void SetGroupAntialiasing(string group_name, PVRFlag antialiasing) {
         int index = HelperGetGroupIndex(group_name);
         if (index >= 0) this.group_list[index].antialiasing = antialiasing;
     }
 
-    public void SetGroupAntialiasingById(int group_id, PVRContextFlag antialiasing) {
+    public void SetGroupAntialiasingById(int group_id, PVRFlag antialiasing) {
         if (group_id < 0 || group_id >= this.group_list_size) return;
         this.group_list[group_id].antialiasing = antialiasing;
     }
@@ -1227,7 +1227,7 @@ public class Layout : IDraw, IAnimate {
             this.sound_list[i].was_playing = soundplayer.IsPlaying();
             if (this.sound_list[i].was_playing) {
                 soundplayer.Pause();
-                if (soundplayer.HasFadding() == Fading.OUT) soundplayer.SetVolume(0f);
+                if (soundplayer.HasFading() == Fading.OUT) soundplayer.SetVolume(0f);
             }
         }
         for (int i = 0 ; i < this.video_list_size ; i++) {
@@ -1235,7 +1235,7 @@ public class Layout : IDraw, IAnimate {
             this.video_list[i].was_playing = videoplayer.IsPlaying();
             if (this.video_list[i].was_playing) {
                 videoplayer.Pause();
-                if (videoplayer.HasFaddingAudio() == Fading.OUT) videoplayer.SetVolume(0f);
+                if (videoplayer.HasFadingAudio() == Fading.OUT) videoplayer.SetVolume(0f);
             }
         }
         this.suspended = true;
@@ -1261,11 +1261,11 @@ public class Layout : IDraw, IAnimate {
         return this.antialiasing_disabled;
     }
 
-    public PVRContextFlag GetLayoutAntialiasing() {
+    public PVRFlag GetLayoutAntialiasing() {
         return this.group_list[0].antialiasing;
     }
 
-    public void SetLayoutAntialiasing(PVRContextFlag flag) {
+    public void SetLayoutAntialiasing(PVRFlag flag) {
         this.group_list[0].antialiasing = flag;
     }
 
@@ -1355,7 +1355,7 @@ public class Layout : IDraw, IAnimate {
         pvrctx.Save();
         if (this.psshader != null) pvrctx.AddShader(this.psshader);
 
-        if (this.antialiasing_disabled) pvrctx.SetGlobalAntialiasing(PVRContextFlag.DISABLE);
+        if (this.antialiasing_disabled) pvrctx.SetGlobalAntialiasing(PVRFlag.DISABLE);
 
         if (this.resolution_changes != pvrctx.resolution_changes) {
             UpdateRenderSize(pvrctx.ScreenWidth, pvrctx.ScreenHeight);
@@ -1849,7 +1849,7 @@ public class Layout : IDraw, IAnimate {
 
                 group.context.alpha = group_alpha * parent_group.context.alpha;
 
-                if (group.antialiasing == PVRContextFlag.DEFAULT)
+                if (group.antialiasing == PVRFlag.DEFAULT)
                     group.context.antialiasing = parent_group.context.antialiasing;
                 else
                     group.context.antialiasing = group.antialiasing;
@@ -1917,7 +1917,7 @@ public class Layout : IDraw, IAnimate {
                 group.offsetcolor[3] = value;
                 break;
             case VertexProps.SPRITE_PROP_ANTIALIASING:
-                group.antialiasing = (PVRContextFlag)(int)value;
+                group.antialiasing = (PVRFlag)(int)value;
                 break;
             case VertexProps.SPRITE_PROP_ALPHA2:
                 group.alpha2 = value;
@@ -1965,7 +1965,7 @@ public class Layout : IDraw, IAnimate {
                 action_entry.value = VertexProps.ParsePlayback(unparsed_entry, value_holder, true);
                 break;
             case VertexProps.SPRITE_PROP_ANTIALIASING:
-                action_entry.value = (int)VertexProps.ParseFlag(unparsed_entry, value_holder, PVRContextFlag.ENABLE);
+                action_entry.value = (int)VertexProps.ParseFlag(unparsed_entry, value_holder, PVRFlag.ENABLE);
                 break;
             case VertexProps.FONT_PROP_WORDBREAK:
                 action_entry.value = VertexProps.ParseWordbreak(unparsed_entry, value_holder, true);
@@ -2390,7 +2390,7 @@ public class Layout : IDraw, IAnimate {
             visible = VertexProps.ParseBoolean(unparsed_group, "visible", true),
             alpha = Layout.HelperParseFloat(unparsed_group, "alpha", 1.0f),
             alpha2 = 1.0f,
-            antialiasing = VertexProps.ParseFlag(unparsed_group, "antialiasing", PVRContextFlag.DEFAULT),
+            antialiasing = VertexProps.ParseFlag(unparsed_group, "antialiasing", PVRFlag.DEFAULT),
             offsetcolor = new float[4],
             modifier = new Modifier(),
             parallax = new LayoutParallax() { x = 1.0f, y = 1.0f, z = 1.0f },
@@ -2717,7 +2717,7 @@ public class Layout : IDraw, IAnimate {
                 case "float":
                     double val = VertexProps.ParseDouble2(unparsed_value, Double.NaN);
                     value = val;
-                    type = AttachedValueType.FLOAT;
+                    type = AttachedValueType.DOUBLE;
                     invalid = Double.IsNaN(val);
                     break;
                 case "integer":
@@ -4439,8 +4439,7 @@ public class Layout : IDraw, IAnimate {
     private class GroupContext {
         public bool visible;
         public float alpha;
-        public PVRContextFlag antialiasing;
-        public SIMDMatrix matrix;
+        public PVRFlag antialiasing;
         public float[] offsetcolor;
         public LayoutParallax parallax;
         public Group next_child;
@@ -4492,8 +4491,7 @@ public class Layout : IDraw, IAnimate {
         public bool static_camera;
         public int group_id;
         public string initial_action_name;
-        public SIMDMatrix static_screen;
-        public PVRContextFlag antialiasing;
+        public PVRFlag antialiasing;
         public float alpha2;
         public PSShader psshader;
         public PSFramebuffer psframebuffer;

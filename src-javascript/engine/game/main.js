@@ -340,7 +340,7 @@ async function main_tests(argc, argv) {
     while (1) {
         let elapsed = await pvrctx_wait_ready();
         pvr_context_reset(pvr_context);
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
 
         layout_animate(layout, elapsed);
         layout_draw(layout, pvr_context);
@@ -401,7 +401,7 @@ let d = `#pragma header
     while (1) {
         let elapsed = await pvrctx_wait_ready();
         pvr_context_reset(pvr_context);
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
         sprite_animate(sprite, elapsed);
 
         
@@ -412,7 +412,7 @@ let d = `#pragma header
         //pvr_context_add_shader(pvr_context, ps_c);
 
         //pvr_context_draw_solid_color(pvr_context, [1, 0, 0], 0, 0, pvr_context.screen_width, pvr_context.screen_height);
-        //pvr_context_draw_solid_color(pvr_context, PVR_CLEAR_COLOR, 1, 1, 638, 478);
+        //pvr_context_draw_solid_color(pvr_context, PVRCTX_CLEAR_COLOR, 1, 1, 638, 478);
         sprite_draw(sprite, pvr_context);
 
         pvr_context_restore(pvr_context);
@@ -426,12 +426,12 @@ let d = `#pragma header
     while (1) {
         let elapsed = await pvrctx_wait_ready();
         pvr_context_reset(pvr_context);
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
         sprite_animate(sprite, elapsed);
 
         framebuffer1.Use();
         pvr_context_draw_solid_color(pvr_context, [1, 0, 0], 0, 0, pvr_context.screen_width, pvr_context.screen_height);
-        pvr_context_draw_solid_color(pvr_context, PVR_CLEAR_COLOR, 1, 1, 638, 478);
+        pvr_context_draw_solid_color(pvr_context, PVRCTX_CLEAR_COLOR, 1, 1, 638, 478);
         sprite_draw(sprite, pvr_context);
 
         framebuffer2.Use();
@@ -506,7 +506,7 @@ let d = `#pragma header
     
         while (1) {
             let elapsed = await pvr_wait_ready();
-            pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+            pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
     
             if (test_sing_case_index < test_sing_case.length) {
                 let sing = test_sing_case[test_sing_case_index];
@@ -620,7 +620,7 @@ let d = `#pragma header
         let test_string = "ABC EFHGJIK\nRTYUIOPVBNM";
         let test_height = 48;
         let fontglyph = await fontglyph_init("/assets/common/font/alphabet.xml", "bold", 1);
-        fontglyph_enable_color_by_difference(fontglyph, 0);
+        fontglyph_enable_color_by_addition(fontglyph, 0);
         fontglyph_enable_border(fontglyph, 0);
         fontglyph_set_border_size(fontglyph, 4);
         fontglyph_set_border_color(fontglyph, 1.0, 0.0, 0.0, 1.0);
@@ -676,7 +676,7 @@ let d = `#pragma header
     while (1) {
         let elapsed = await pvrctx_wait_ready();
         pvr_context_reset(pvr_context);
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
 
         messagebox_animate(messagebox, elapsed);
         messagebox_draw(messagebox, pvr_context);
@@ -823,7 +823,7 @@ let d = `#pragma header
     while (1) {
         let elapsed = await pvr_wait_ready();
         pvr_context_reset(pvr_context);
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
         pvr_context_draw_solid_color(pvr_context, "#AAAAAAAA", 10, 100, pvr_context.screen_width, 300);
 
         menu_animate(menu, elapsed);
@@ -839,7 +839,7 @@ let d = `#pragma header
     while (1) {
         let elapsed = await pvr_wait_ready();
         pvr_context_reset(pvr_context);
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
 
         week_gameover_animate(gameover, elapsed);
         week_gameover_draw(gameover, pvr_context);
@@ -908,7 +908,7 @@ let d = `#pragma header
     while (1) {
         let elapsed = await pvr_wait_ready();
         pvr_context_reset(pvr_context);
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
 
         window["camera"].modifier.translate_x += keys.translate_x;
         window["camera"].modifier.translate_y += keys.translate_y;
@@ -1148,8 +1148,8 @@ let d = `#pragma header
     
         }, false);
     
-        pvr_context_set_global_antialiasing(pvr_context, PVR_FLAG_DISABLE);
-        //pvr_context_set_global_offsetcolor_multiply(pvr_context, PVR_FLAG_DISABLE);
+        pvr_context_set_global_antialiasing(pvr_context, PVRCTX_FLAG_DISABLE);
+        //pvr_context_set_global_offsetcolor_multiply(pvr_context, PVRCTX_FLAG_DISABLE);
         layout.modifier_camera.width = pvr_context.screen_width;
         layout.modifier_camera.height = pvr_context.screen_height;
         layout.modifier_camera.scale_direction_x = -0.5;
@@ -1276,7 +1276,7 @@ let d = `#pragma header
 
     while (window.run) {
         let elapsed = await pvr_wait_ready();
-        pvr_context_clear_screen(pvr_context, PVR_CLEAR_COLOR);
+        pvr_context_clear_screen(pvr_context, PVRCTX_CLEAR_COLOR);
 
         time += elapsed;
         if (time > next_hit) {

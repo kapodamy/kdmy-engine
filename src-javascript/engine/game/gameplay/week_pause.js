@@ -135,7 +135,7 @@ const WEEKPAUSE_MSGWEEKSELECTOR = "The week progress will be lost, ¿return\n to
 
 
 async function week_pause_init(exit_to_weekselector_label) {
-    let src = pvrctx_is_widescreen() ? WEEKPAUSE_LAYOUT_WIDESCREEN : WEEKPAUSE_LAYOUT_DREAMCAST;
+    let src = pvr_context_is_widescreen() ? WEEKPAUSE_LAYOUT_WIDESCREEN : WEEKPAUSE_LAYOUT_DREAMCAST;
     let layout = await layout_init(src);
     if (!layout) throw new Error("can not load: " + src);
 
