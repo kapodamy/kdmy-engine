@@ -1105,7 +1105,7 @@ async function fs_close(hnd) {
  *   This function writes the specfied buffer into the file at the current file
  *   pointer.
  *   @param {number} hnd             The file descriptor to write into.
- *   @param {DataView|ArrayBuffer|Uint8Array} buffer          The data to write into the file.
+ *   @param {DataView|DataViewEx|ArrayBuffer|Uint8Array} buffer          The data to write into the file.
  *   @param {number} cnt             The size of the buffer, in bytes.
  *   @return {number}                 The number of bytes written, or -1 on failure. Note
  *                           that the number of bytes written may be less than
@@ -1124,6 +1124,8 @@ function fs_write(hnd, buffer, cnt) {
         data = buffer.buffer.slice(buffer.byteOffset, cnt);
     else if (buffer instanceof Uint8Array)
         data = buffer.buffer.slice(buffer.byteOffset, cnt);
+    else if (buffer instanceof DataViewEx)
+        data = buffer.Buffer.slice(buffer.Offset, cnt);
     else
         return -1;
 

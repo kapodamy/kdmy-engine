@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using Engine.Utils;
 using KallistiOS.MAPLE;
@@ -68,18 +69,19 @@ public static class FunkinSave {
     private const ushort MAX_INDEXED_NAME = 0xFFFF - 1;
 
 
-    public static sbyte maple_port;
-    public static sbyte maple_unit;
-    public static LinkedList<Setting> settings;
-    public static LinkedList<Directive> directives;
-    public static LinkedList<string> weeks_names;
-    public static LinkedList<string> difficulty_names;
-    public static LinkedList<Progress> progress;
-    public static LinkedList<Storage> storages;
-    public static LinkedList<FreeplayProgress> freeplay_progress;
+    private static sbyte maple_port;
+    private static sbyte maple_unit;
+    private static LinkedList<Setting> settings;
+    private static LinkedList<Directive> directives;
+    private static LinkedList<string> weeks_names;
+    private static LinkedList<string> difficulty_names;
+    private static LinkedList<Progress> progress;
+    private static LinkedList<Storage> storages;
+    private static LinkedList<FreeplayProgress> freeplay_progress;
 
-    public static int last_played_week_index;
-    public static int last_played_difficulty_index;
+    private static int last_played_week_index;
+    private static int last_played_difficulty_index;
+    public static bool has_changes;
 
 
     /**
@@ -160,10 +162,9 @@ public static class FunkinSave {
         }
 
         // step 5: parse savedata
-        int offset = 0;
         DataView savedata = new DataView(vmu_pkg.data, 0/*, vmu_pkg.data_len*/);
-        int version = savedata.GetUint8(0); offset += 1;
-        offset++;// reserved space
+        int version = savedata.GetUint8();
+        savedata.GetUint8();// reserved space
 
         // version check
         if (version > FunkinSave.SAVEDATA_VERSION) {
@@ -174,54 +175,49 @@ public static class FunkinSave {
         // clear in-memory savedata
         FunkinSave.InternalClearSavedata();
 
-        ushort settings_count = savedata.GetUint16(offset); offset += 2;
-        ushort directives_count = savedata.GetUint16(offset); offset += 2;
-        ushort week_names_table_size = savedata.GetUint16(offset); offset += 2;
-        ushort difficulty_names_table_size = savedata.GetUint16(offset); offset += 2;
-        ushort progress_count = savedata.GetUint16(offset); offset += 2;
-        ushort storages_count = savedata.GetUint16(offset); offset += 2;
-        ushort last_played_week_name_index_in_table = savedata.GetUint16(offset); offset += 2;
-        ushort last_played_difficulty_name_index_in_table = savedata.GetUint16(offset); offset += 2;
+        ushort settings_count = savedata.GetUint16();
+        ushort directives_count = savedata.GetUint16();
+        ushort week_names_table_size = savedata.GetUint16();
+        ushort difficulty_names_table_size = savedata.GetUint16();
+        ushort progress_count = savedata.GetUint16();
+        ushort storages_count = savedata.GetUint16();
+        ushort last_played_week_name_index_in_table = savedata.GetUint16();
+        ushort last_played_difficulty_name_index_in_table = savedata.GetUint16();
 
         for (int i = 0 ; i < settings_count ; i++) {
-            ushort id = savedata.GetUint16(offset); offset += 2;
-            bool is_integer = FunkinSave.InternalIsSettingInteger(id);
-            int value_int = 0; float value_float = 0;
+            ushort id = savedata.GetUint16();
+            Packed4bytes value = savedata.GetPack4();
 
-            if (is_integer) value_int = savedata.GetInt32(offset);
-            else value_float = savedata.GetFloat32(offset);
-            offset += 4;
-
-            FunkinSave.settings.AddItem(new Setting() { id = id, value_int = value_int, value_float = value_float });
+            FunkinSave.settings.AddItem(new Setting() { id = id, value = value });
         }
 
         for (int i = 0 ; i < directives_count ; i++) {
-            byte type = savedata.GetUint8(offset); offset++;
-            string name; offset += FunkinSave.InternalReadString(savedata, offset, out name);
-            double value = savedata.GetFloat64(offset); offset += 8;
+            byte type = savedata.GetUint8();
+            string name = FunkinSave.InternalReadString(savedata);
+            double value = savedata.GetFloat64();
 
             Debug.Assert(name != null && name.Length > 0);
             FunkinSave.directives.AddItem(new Directive() { type = type, value = value, name = name });
         }
 
         for (int i = 0 ; i < week_names_table_size ; i++) {
-            string name; offset += FunkinSave.InternalReadString(savedata, offset, out name);
+            string name = FunkinSave.InternalReadString(savedata);
 
             Debug.Assert(name != null && name.Length > 0);
             FunkinSave.weeks_names.AddItem(name);
         }
 
         for (int i = 0 ; i < difficulty_names_table_size ; i++) {
-            string name; offset += FunkinSave.InternalReadString(savedata, offset, out name);
+            string name = FunkinSave.InternalReadString(savedata);
 
             Debug.Assert(name != null && name.Length > 0);
             FunkinSave.difficulty_names.AddItem(name);
         }
 
         for (int i = 0 ; i < progress_count ; i++) {
-            ushort week_name_index_in_table = savedata.GetUint16(offset); offset += 2;
-            ushort difficulty_name_index_in_table = savedata.GetUint16(offset); offset += 2;
-            long score = savedata.GetInt64(offset); offset += 8;
+            ushort week_name_index_in_table = savedata.GetUint16();
+            ushort difficulty_name_index_in_table = savedata.GetUint16();
+            long score = savedata.GetInt64();
 
             Debug.Assert(week_name_index_in_table < week_names_table_size);
             Debug.Assert(difficulty_name_index_in_table < difficulty_names_table_size);
@@ -234,17 +230,15 @@ public static class FunkinSave {
         }
 
         for (int i = 0 ; i < storages_count ; i++) {
-            ushort week_name_index_in_table = savedata.GetUint16(offset); offset += 2;
-            string name; offset += FunkinSave.InternalReadString(savedata, offset, out name);
-            uint data_size = savedata.GetUint32(offset); offset += 4;
+            ushort week_name_index_in_table = savedata.GetUint16();
+            string name = FunkinSave.InternalReadString(savedata);
+            uint data_size = savedata.GetUint32();
 
             Debug.Assert(week_name_index_in_table < week_names_table_size);
             Debug.Assert(data_size > 0);
-            Debug.Assert((offset + data_size) <= total);
 
             byte[] data = new byte[data_size];
-            savedata.Read(data, offset, (int)data_size);
-            offset += (int)data_size;
+            savedata.Read(data, (int)data_size);
 
             FunkinSave.storages.AddItem(new Storage() {
                 week_id = week_name_index_in_table,
@@ -255,13 +249,13 @@ public static class FunkinSave {
         }
 
         if (version >= 2) {
-            uint freeplay_progress_count = savedata.GetUint32(offset); offset += 4;
+            uint freeplay_progress_count = savedata.GetUint32();
 
             for (int i = 0 ; i < freeplay_progress_count ; i++) {
-                ushort week_name_index_in_table = savedata.GetUint16(offset); offset += 2;
-                ushort difficulty_name_index_in_table = savedata.GetUint16(offset); offset += 2;
-                long score = savedata.GetInt64(offset); offset += 8;
-                string song_name; offset += FunkinSave.InternalReadString(savedata, offset, out song_name);
+                ushort week_name_index_in_table = savedata.GetUint16();
+                ushort difficulty_name_index_in_table = savedata.GetUint16();
+                long score = savedata.GetInt64();
+                string song_name = FunkinSave.InternalReadString(savedata);
 
                 Debug.Assert(week_name_index_in_table < week_names_table_size);
                 Debug.Assert(difficulty_name_index_in_table < difficulty_names_table_size);
@@ -336,8 +330,7 @@ public static class FunkinSave {
                     }
         */
 
-        int offset = 0;
-        long length = 0;
+        long savedata_length = 0;
         int week_names_table_size = 0;
         int difficulty_names_table_size = 0;
 
@@ -353,107 +346,104 @@ public static class FunkinSave {
         if (FunkinSave.IsVMUMissing()) return 1;
 
         // step 1: count amount bytes needed
-        length += FunkinSave.settings.Count() * (sizeof(ushort) + sizeof(double));
-        length += FunkinSave.progress.Count() * (sizeof(ushort) + sizeof(ushort) + sizeof(long));
+        savedata_length += FunkinSave.settings.Count() * (sizeof(ushort) + sizeof(double));
+        savedata_length += FunkinSave.progress.Count() * (sizeof(ushort) + sizeof(ushort) + sizeof(long));
 
         foreach (Directive directive in FunkinSave.directives) {
             int string_length = FunkinSave.InternalStringByteLength(directive.name);
-            length += string_length + sizeof(long) + sizeof(byte);
+            savedata_length += string_length + sizeof(long) + sizeof(byte);
         }
 
         foreach (string week_name in FunkinSave.weeks_names) {
-            length += FunkinSave.InternalStringByteLength(week_name);
+            savedata_length += FunkinSave.InternalStringByteLength(week_name);
             week_names_table_size++;
         }
 
         foreach (string difficulty_name in FunkinSave.difficulty_names) {
-            length += FunkinSave.InternalStringByteLength(difficulty_name);
+            savedata_length += FunkinSave.InternalStringByteLength(difficulty_name);
             difficulty_names_table_size++;
         }
 
         foreach (Storage week_storage in FunkinSave.storages) {
-            length += FunkinSave.InternalStringByteLength(week_storage.name);
-            length += week_storage.data_size + sizeof(int) + sizeof(short);
+            savedata_length += FunkinSave.InternalStringByteLength(week_storage.name);
+            savedata_length += week_storage.data_size + sizeof(int) + sizeof(short);
         }
 
         foreach (FreeplayProgress freeplay_progress in FunkinSave.freeplay_progress) {
-            length += FunkinSave.InternalStringByteLength(freeplay_progress.song_name);
-            length += sizeof(ushort) + sizeof(ushort) + sizeof(long);
+            savedata_length += FunkinSave.InternalStringByteLength(freeplay_progress.song_name);
+            savedata_length += sizeof(ushort) + sizeof(ushort) + sizeof(long);
         }
 
-        length += 10;//version + reserved + settings_count + directives_count + progress_count + storages_count
-        length += 4;// last_played_week_name_index_in_table + last_played_difficulty_name_index_in_table
-        length += 4;// week_names_table_size + difficulty_names_table_size
-        length += 4;// freeplay_progress_count (in funkinsave v2 or newer)
+        savedata_length += 10;//version + reserved + settings_count + directives_count + progress_count + storages_count
+        savedata_length += 4;// last_played_week_name_index_in_table + last_played_difficulty_name_index_in_table
+        savedata_length += 4;// week_names_table_size + difficulty_names_table_size
+        savedata_length += 4;// freeplay_progress_count (in funkinsave v2 or newer)
 
         // step 2: prepare buffer
-        Debug.Assert(length < Math2D.MAX_INT32);
-        DataView savedata = new DataView(new byte[length]);
+        Debug.Assert(savedata_length < Math2D.MAX_INT32);
+        DataView savedata = new DataView(new byte[savedata_length]);
 
         // step 3: build funkinsave header
-        savedata.SetUint8(offset, FunkinSave.SAVEDATA_VERSION); offset++;
-        savedata.SetUint8(offset, 0x00); offset++;
-        savedata.SetUint16(offset, (ushort)FunkinSave.settings.Count()); offset += sizeof(ushort);
-        savedata.SetUint16(offset, (ushort)FunkinSave.directives.Count()); offset += sizeof(ushort);
-        savedata.SetUint16(offset, (ushort)week_names_table_size); offset += sizeof(ushort);
-        savedata.SetUint16(offset, (ushort)difficulty_names_table_size); offset += sizeof(ushort);
-        savedata.SetUint16(offset, (ushort)FunkinSave.progress.Count()); offset += sizeof(ushort);
-        savedata.SetUint16(offset, (ushort)FunkinSave.storages.Count()); offset += sizeof(ushort);
-        savedata.SetUint16(offset, last_played_week_index); offset += sizeof(ushort);
-        savedata.SetUint16(offset, last_played_difficulty_index); offset += sizeof(ushort);
+        savedata.SetUint8(FunkinSave.SAVEDATA_VERSION);
+        savedata.SetUint8(0x00);
+        savedata.SetUint16((ushort)FunkinSave.settings.Count());
+        savedata.SetUint16((ushort)FunkinSave.directives.Count());
+        savedata.SetUint16((ushort)week_names_table_size);
+        savedata.SetUint16((ushort)difficulty_names_table_size);
+        savedata.SetUint16((ushort)FunkinSave.progress.Count());
+        savedata.SetUint16((ushort)FunkinSave.storages.Count());
+        savedata.SetUint16(last_played_week_index);
+        savedata.SetUint16(last_played_difficulty_index);
 
         // dump settings
         foreach (Setting setting in FunkinSave.settings) {
-            bool is_integer = FunkinSave.InternalIsSettingInteger(setting.id);
-            savedata.SetUint16(offset, setting.id); offset += sizeof(ushort);
-            if (is_integer) savedata.SetInt32(offset, setting.value_int);
-            else savedata.SetFloat32(offset, setting.value_float);
-            offset += sizeof(int);
+            savedata.SetUint16(setting.id);
+            savedata.SetPack4(setting.value);
         }
 
         // dump directives
         foreach (Directive directive in FunkinSave.directives) {
-            savedata.SetUint8(offset, directive.type); offset++;
-            offset += FunkinSave.InternalDumpString(directive.name, savedata, offset);
-            savedata.SetFloat64(offset, directive.value); offset += sizeof(long);
+            savedata.SetUint8(directive.type);
+            FunkinSave.InternalWriteString(directive.name, savedata);
+            savedata.SetFloat64(directive.value);
         }
 
         // dump week names
         foreach (string week_name in FunkinSave.weeks_names) {
-            offset += FunkinSave.InternalDumpString(week_name, savedata, offset);
+            FunkinSave.InternalWriteString(week_name, savedata);
         }
 
         // dump difficulty names
         foreach (string difficulty_name in FunkinSave.difficulty_names) {
-            offset += FunkinSave.InternalDumpString(difficulty_name, savedata, offset);
+            FunkinSave.InternalWriteString(difficulty_name, savedata);
         }
 
         // dump week progress
         foreach (Progress week_progress in FunkinSave.progress) {
-            savedata.SetUint16(offset, week_progress.week_id); offset += sizeof(ushort);
-            savedata.SetUint16(offset, week_progress.difficulty_id); offset += sizeof(ushort);
-            savedata.SetInt64(offset, week_progress.score); offset += sizeof(long);
+            savedata.SetUint16(week_progress.week_id);
+            savedata.SetUint16(week_progress.difficulty_id);
+            savedata.SetInt64(week_progress.score);
         }
 
         // dump week storages
         foreach (Storage week_storage in FunkinSave.storages) {
-            savedata.SetUint16(offset, week_storage.week_id); offset += sizeof(ushort);
-            offset += FunkinSave.InternalDumpString(week_storage.name, savedata, offset);
-            savedata.SetUint32(offset, week_storage.data_size); offset += sizeof(uint);
-            savedata.Write(week_storage.data, offset, (int)week_storage.data_size); offset += (int)week_storage.data_size;
+            savedata.SetUint16(week_storage.week_id);
+            FunkinSave.InternalWriteString(week_storage.name, savedata);
+            savedata.SetUint32(week_storage.data_size);
+            savedata.Write(week_storage.data, (int)week_storage.data_size);
         }
 
         // dump freeplay progress
-        savedata.SetUint32(offset, (uint)FunkinSave.freeplay_progress.Count()); offset += sizeof(uint);
+        savedata.SetUint32((uint)FunkinSave.freeplay_progress.Count());
         foreach (FreeplayProgress freeplay_progress in FunkinSave.freeplay_progress) {
-            savedata.SetUint16(offset, freeplay_progress.week_id); offset += sizeof(ushort);
-            savedata.SetUint16(offset, freeplay_progress.difficulty_id); offset += sizeof(ushort);
-            savedata.SetInt64(offset, freeplay_progress.score); offset += sizeof(long);
-            offset += FunkinSave.InternalDumpString(freeplay_progress.song_name, savedata, offset);
+            savedata.SetUint16(freeplay_progress.week_id);
+            savedata.SetUint16(freeplay_progress.difficulty_id);
+            savedata.SetInt64(freeplay_progress.score);
+            FunkinSave.InternalWriteString(freeplay_progress.song_name, savedata);
         }
 
         // step 4: check overflows
-        Debug.Assert(offset == length, "offset != length");
+        savedata.Assert();
 
         // step 5: check available space and delete previous savedata
         int vms_file;
@@ -475,7 +465,7 @@ public static class FunkinSave {
         }
 
         // the VMU stores data in blocks in 512 bytes, calculates how many blocks is required
-        int required_size = (int)(Math.Ceiling((FunkinSave.VMS_HEADER.Length + length) / 512f) * 512f);
+        int required_size = (int)(Math.Ceiling((FunkinSave.VMS_HEADER.Length + savedata_length) / 512f) * 512f);
         if (required_size > available_space) return 2;// no space left
 
         // delete savedata
@@ -495,21 +485,25 @@ public static class FunkinSave {
 
         // step 6: write funkinsave in the VMU
         DataView headerView = new DataView(FunkinSave.VMS_HEADER);
-        headerView.SetInt32(FunkinSave.VMS_HEADER_OFFSET_LENGTH, (int)length);
+        headerView.SetInt32(FunkinSave.VMS_HEADER_OFFSET_LENGTH, (int)savedata_length);
         headerView.SetUint16(FunkinSave.VMS_HEADER_OFFSET_CRC16, 0x00);
 
         // step 7: calculate checksum
-        uint crc16 = FunkinSave.InternalCalcCRC16(headerView.buffer, headerView.ByteLength, 0x0000);
-        crc16 = FunkinSave.InternalCalcCRC16(savedata.buffer, savedata.ByteLength, crc16);
+        uint crc16 = FunkinSave.InternalCalcCRC16(FunkinSave.VMS_HEADER, FunkinSave.VMS_HEADER.Length, 0x0000);
+        crc16 = FunkinSave.InternalCalcCRC16(savedata.Buffer, (int)savedata_length, crc16);
         headerView.SetUint16(FunkinSave.VMS_HEADER_OFFSET_CRC16, (ushort)(crc16 & 0xFFFF));
 
         // step 9: write in the VMU
         if (fs.write(vms_file, FunkinSave.VMS_HEADER, FunkinSave.VMS_HEADER.Length) == -1) return 4;
-        if (fs.write(vms_file, savedata.buffer, (int)length) == -1) return 4;
+        if (fs.write(vms_file, savedata.Buffer, (int)savedata_length) == -1) return 4;
 
         // done
         //free(savedata);
-        return fs.close(vms_file) == 0 ? 0 : 4;
+
+        int ret = fs.close(vms_file);
+        if (ret == 0) FunkinSave.has_changes = false;
+
+        return ret == 0 ? 0 : 4;
     }
 
 
@@ -543,6 +537,8 @@ public static class FunkinSave {
 
 
     public static void CreateUnlockDirective(string name, double value) {
+        FunkinSave.has_changes = true;
+
         foreach (Directive directive in FunkinSave.directives) {
             if (directive.type == FunkinSave.DIRECTIVE_TYPE_UNLOCK && directive.name == name) {
                 directive.value = value;
@@ -558,8 +554,9 @@ public static class FunkinSave {
     public static void DeleteUnlockDirective(string name) {
         foreach (Directive directive in FunkinSave.directives) {
             if (directive.type == FunkinSave.DIRECTIVE_TYPE_UNLOCK && directive.name == name) {
-                //free(directive);
                 FunkinSave.directives.RemoveItem(directive);
+                //free(directive);
+                FunkinSave.has_changes = true;
                 return;
             }
         }
@@ -593,6 +590,7 @@ public static class FunkinSave {
         int difficulty_id = FunkinSave.InternalNameIndex(FunkinSave.difficulty_names, difficulty_name);
         if (week_id >= 0) FunkinSave.last_played_week_index = week_id;
         if (difficulty_id >= 0) FunkinSave.last_played_difficulty_index = difficulty_id;
+        FunkinSave.has_changes = true;
     }
 
     public static void SetWeekScore(string week_name, string difficulty_name, bool only_if_best, long score) {
@@ -605,6 +603,7 @@ public static class FunkinSave {
             if (progress.week_id == week_id && progress.difficulty_id == difficulty_id) {
                 if (!only_if_best || score > progress.score) {
                     progress.score = score;
+                    FunkinSave.has_changes = true;
                 }
                 return;
             }
@@ -612,27 +611,20 @@ public static class FunkinSave {
 
         Progress new_progress = new Progress() { week_id = (ushort)week_id, difficulty_id = (ushort)difficulty_id, score = score };
         FunkinSave.progress.AddItem(new_progress);
+        FunkinSave.has_changes = true;
     }
 
-    public static void SetSetting(ushort setting_id, int setting_value) {
+    public static void SetSetting(ushort setting_id, Packed4bytes setting_value) {
+        FunkinSave.has_changes = true;
+
         foreach (Setting setting in FunkinSave.settings) {
             if (setting.id == setting_id) {
-                setting.value_int = setting_value;
+                setting.value = setting_value;
                 return;
             }
         }
-        FunkinSave.settings.AddItem(new Setting() { id = setting_id, value_int = setting_value });
+        FunkinSave.settings.AddItem(new Setting() { id = setting_id, value = setting_value });
     }
-    public static void SetSetting(ushort setting_id, float setting_value) {
-        foreach (Setting setting in FunkinSave.settings) {
-            if (setting.id == setting_id) {
-                setting.value_float = setting_value;
-                return;
-            }
-        }
-        FunkinSave.settings.AddItem(new Setting() { id = setting_id, value_float = setting_value });
-    }
-
 
     public static bool StorageSet(string week_name, string name, ReadOnlySpan<byte> data, uint data_size) {
         int week_id;
@@ -651,6 +643,8 @@ public static class FunkinSave {
                 break;
             }
         }
+
+        FunkinSave.has_changes = true;
 
         if (data_size < 1) {
             return true;
@@ -698,6 +692,7 @@ public static class FunkinSave {
             if (progress.week_id == week_id && progress.difficulty_id == difficulty_id && progress.song_name == song_name) {
                 if (!only_if_best || score > progress.score) {
                     progress.score = score;
+                    FunkinSave.has_changes = true;
                 }
                 return;
             }
@@ -710,6 +705,7 @@ public static class FunkinSave {
             score = score
         };
         FunkinSave.freeplay_progress.AddItem(new_progress);
+        FunkinSave.has_changes = true;
     }
 
     public static long GetFreeplayScore(string week_name, string difficulty_name, string song_name) {
@@ -786,13 +782,32 @@ public static class FunkinSave {
         return Math.Min(string_length, FunkinSave.MAX_STRING_SIZE);
     }
 
-    private static int InternalDumpString(string str, DataView buffer, int offset) {
+    private static string InternalReadString(DataView buffer) {
+        int string_offset = buffer.Offset;
+        byte[] buf = buffer.Buffer;
+        int length = 0;
+
+        for (int i = 0, end = FunkinSave.MAX_STRING_SIZE - 1 ; i < end ; i++) {
+            if (buf[string_offset + i] == 0x00) {
+                break;
+            }
+            length++;
+        }
+
+        Debug.Assert(buf[string_offset + length] == 0x00);
+
+        buffer.Skip(length + 1);
+        return Encoding.UTF8.GetString(buf, string_offset, length);
+    }
+
+    private static void InternalWriteString(string str, DataView buffer) {
         byte[] buf = Encoding.UTF8.GetBytes(str);
         int length = Math.Min(buf.Length, FunkinSave.MAX_STRING_SIZE - 1);
-        buffer.Write(buf, offset, length);
-        buffer.SetUint8(offset + length + 1, 0x00);
-        return length;
+
+        buffer.Write(buf, length);
+        buffer.SetUint8(0x00);
     }
+
 
     private static void InternalClearSavedata() {
         FunkinSave.settings.Clear(/*free*/);
@@ -822,29 +837,6 @@ public static class FunkinSave {
 
         // Important: the vms filename can not be longer than 12 bytes
         return "/vmu/" + port_name + "" + slot_name + "/FNF_KDY_SAVE";
-    }
-
-    private static int InternalReadString(DataView buffer, int offset, out string output_string) {
-        int string_offset = buffer.ByteOffset + offset;
-        byte[] buf = buffer.buffer;
-        int length = 0;
-
-        for (int i = 0, end = FunkinSave.MAX_STRING_SIZE - 1 ; i < end ; i++) {
-            if (buf[string_offset + i] == 0x00) {
-                break;
-            }
-            length++;
-        }
-
-        Debug.Assert(buf[string_offset + length] == 0x00);
-        output_string = Encoding.UTF8.GetString(buf, string_offset, length);
-
-        return length + 1;
-    }
-
-    private static bool InternalIsSettingInteger(ushort id) {
-        if (id == 0xabcd) return false;// debug only
-        return true;
     }
 
     private static uint InternalCalcCRC16(byte[] buffer, int size, uint crc) {
@@ -881,10 +873,11 @@ public static class FunkinSave {
     }
 
 
+
+
     public class Setting {
         public ushort id;
-        public int value_int;
-        public float value_float;
+        public Packed4bytes value;
     }
 
     public class Directive {
