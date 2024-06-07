@@ -147,7 +147,6 @@ function week_gameover_destroy(weekgameover) {
     if (weekgameover.music_bg) soundplayer_destroy(weekgameover.music_bg);
     if (weekgameover.sfx_retry) soundplayer_destroy(weekgameover.sfx_retry);
 
-    weekgameover.modding.has_funkinsave_changes = false;// ignore fukinsave changes
     modding_destroy(weekgameover.modding);
 
     weekgameover = undefined;

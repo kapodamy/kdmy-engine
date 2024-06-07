@@ -225,8 +225,7 @@ async function week_result_helper_show_summary(weekresult, roundcontext, attempt
     }
 
     await modding_helper_notify_exit2(modding);
-    modding.has_funkinsave_changes = false;// ignore funkinsave changes
-    await modding_destroy(modding);
+    modding_destroy(modding);
 
     weekresult.active_layout = null;
 

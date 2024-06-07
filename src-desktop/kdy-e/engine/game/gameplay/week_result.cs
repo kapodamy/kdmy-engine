@@ -246,7 +246,6 @@ public class WeekResult {
         }
 
         modding.HelperNotifyExit2();
-        modding.has_funkinsave_changes = false;// ignore funkinsave changes
         modding.Destroy();
 
         this.active_layout = null;

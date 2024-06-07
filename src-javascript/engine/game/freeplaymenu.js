@@ -274,6 +274,8 @@ async function freeplaymenu_main() {
     layout_destroy(layout);
     await modding_destroy(modding);
 
+    await savemanager_check_and_save_changes();
+
     if (background_menu_music) {
         soundplayer_play(background_menu_music);
     }

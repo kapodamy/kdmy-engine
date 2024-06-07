@@ -212,8 +212,8 @@ function weekselector_set_text(layout, name, format, text_or_integer) {
 function weekselector_trigger_menu_action(ui, state, name, selected, choosen) {
     if (!state.weekinfo) return;
     main_helper_trigger_action_menu(
-        ui.layout, 
-        state.weekinfo.display_name ?? state.weekinfo.name, 
+        ui.layout,
+        state.weekinfo.display_name ?? state.weekinfo.name,
         name, selected, choosen
     );
 }
@@ -526,7 +526,10 @@ async function weekselector_main() {
     texturepool_destroy(texpool);
     await modding_destroy(modding);
 
-    if (state.back_to_main_menu) return 0;
+    if (state.back_to_main_menu) {
+        await savemanager_check_and_save_changes();
+        return 0;
+    }
 
     if (background_menu_music) {
         soundplayer_destroy(background_menu_music);

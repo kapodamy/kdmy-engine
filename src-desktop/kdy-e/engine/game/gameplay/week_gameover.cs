@@ -186,7 +186,6 @@ public class WeekGameOver : IDraw, IAnimate {
         if (this.music_bg != null) this.music_bg.Destroy();
         if (this.sfx_retry != null) this.sfx_retry.Destroy();
 
-        this.modding.has_funkinsave_changes = false;// ignore fukinsave changes
         this.modding.Destroy();
 
         //free(this);

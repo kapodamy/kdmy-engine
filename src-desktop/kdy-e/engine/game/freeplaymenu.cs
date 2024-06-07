@@ -284,6 +284,7 @@ public class FreeplayMenu {
         layout.Destroy();
         modding.Destroy();
 
+        SaveManager.CheckAndSaveChanges();
 
         PVRContext.MuteAudioOutputOnMinimized(EngineSettings.mute_on_minimize);
 

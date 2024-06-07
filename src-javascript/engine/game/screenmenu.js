@@ -141,6 +141,12 @@ async function screenmenu_display(screenmenu, pvrctx, script_arg) {
     // flush framebuffer again with last fade frame
     await pvrctx_wait_ready();
 
+    // do antibounce before return (just in case)
+    gamepad_clear_all_gamepads();
     gamepad_destroy(gamepad);
+
+    // write any unsaved changes back to the VMU
+    await savemanager_check_and_save_changes();
+
     return exit_value;
 }

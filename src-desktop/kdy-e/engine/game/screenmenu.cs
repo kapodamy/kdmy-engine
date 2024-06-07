@@ -158,8 +158,11 @@ L_layout:
 
         // do antibounce before return (just in case)
         Gamepad.ClearAllGamepads();
-
         gamepad.Destroy();
+
+        // write any unsaved changes back to the VMU
+        SaveManager.CheckAndSaveChanges();
+
         return exit_value;
     }
 

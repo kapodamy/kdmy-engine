@@ -24,7 +24,6 @@ public class Modding {
     public readonly Layout layout;
     public bool has_exit;
     public bool has_halt;
-    public bool has_funkinsave_changes;
     public Menu native_menu;
     public Menu active_menu;
     public ModdingCallbackOption callback_option;
@@ -41,7 +40,6 @@ public class Modding {
         this.layout = layout;
         this.has_exit = false;
         this.has_halt = false;
-        this.has_funkinsave_changes = false;
 
         this.native_menu = null;
         this.active_menu = null;
@@ -59,7 +57,6 @@ public class Modding {
     }
 
     public void Destroy() {
-        if (this.has_funkinsave_changes) FunkinSave.WriteToVMU();
         if (this.script != null) this.script.Destroy();
         if (this.messagebox != null) this.messagebox.Destroy();
         //free(this);
@@ -79,7 +76,6 @@ public class Modding {
 
 
     public void UnlockdirectiveCreate(string name, double value) {
-        this.has_funkinsave_changes = true;
         FunkinSave.CreateUnlockDirective(name, value);
     }
 
@@ -94,14 +90,11 @@ public class Modding {
     }
 
     public void UnlockdirectiveRemove(string name) {
-        this.has_funkinsave_changes = true;
         FunkinSave.DeleteUnlockDirective(name);
     }
 
     public bool StorageSet(string week_name, string name, ReadOnlySpan<byte> data, uint data_size) {
-        bool ret = FunkinSave.StorageSet(week_name, name, data, data_size);
-        if (ret) this.has_funkinsave_changes = true;
-        return ret;
+        return FunkinSave.StorageSet(week_name, name, data, data_size);
     }
 
     public uint StorageGet(string week_name, string name, out byte[] data) {

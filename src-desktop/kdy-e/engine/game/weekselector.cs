@@ -528,7 +528,10 @@ public class WeekSelector {
         texpool.Destroy();
         modding.Destroy();
 
-        if (state.back_to_main_menu) return 0;
+        if (state.back_to_main_menu) {
+            SaveManager.CheckAndSaveChanges();
+            return 0;
+        }
 
         if (GameMain.background_menu_music != null) {
             GameMain.background_menu_music.Destroy();

@@ -17,7 +17,6 @@ async function modding_init(layout, src_script) {
         layout,
         has_exit: false,
         has_halt: false,
-        has_funkinsave_changes: false,
 
         native_menu: null,
         active_menu: null,
@@ -36,8 +35,7 @@ async function modding_init(layout, src_script) {
     return modding;
 }
 
-async function modding_destroy(modding) {
-    if (modding.has_funkinsave_changes) await funkinsave_write_to_vmu();
+function modding_destroy(modding) {
     if (modding.script != null) weekscript_destroy(modding.script);
     if (modding.messagebox) messagebox_destroy(modding.messagebox);
     modding = undefined;
@@ -57,7 +55,6 @@ function modding_set_halt(modding, halt) {
 
 
 function modding_unlockdirective_create(modding, name, value) {
-    modding.has_funkinsave_changes = true;
     funkinsave_create_unlock_directive(name, value);
 }
 
@@ -72,15 +69,12 @@ function modding_unlockdirective_get(modding, name) {
 }
 
 function modding_unlockdirective_remove(modding, name) {
-    modding.has_funkinsave_changes = true;
     funkinsave_delete_unlock_directive(name);
 }
 
 
 function modding_storage_set(modding, week_name, name, data, data_size) {
-    let ret = funkinsave_storage_set(week_name, name, data, data_size);
-    if (ret) modding.has_funkinsave_changes = true;
-    return ret;
+    return funkinsave_storage_set(week_name, name, data, data_size);
 }
 
 function modding_storage_get(modding, week_name, name, out_data) {

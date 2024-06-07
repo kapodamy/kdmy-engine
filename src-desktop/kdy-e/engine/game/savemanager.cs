@@ -139,7 +139,7 @@ public class SaveManager {
         if (button_icons == null) {
             throw new Exception("can not load " + WeekSelector.BUTTONS_MODEL);
         }
-        
+
         WeekSelectorHelpText help_cancel = new WeekSelectorHelpText(
             button_icons, layout, 2, false, "b", "Continue without save", null
         );
@@ -306,7 +306,6 @@ public class SaveManager {
 
                     save_or_load_success = InternalCommit(selected_index);
                     SaveManager.game_withoutsavedata = !save_or_load_success;
-                    if (save_or_load_success && this.save_only) modding.has_funkinsave_changes = false;
                     if (save_or_load_success) break;
                 }
             } else if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool() && !modding.HelperNotifyBack()) {
@@ -397,6 +396,17 @@ public class SaveManager {
         SaveManager.game_withoutsavedata = result != 0;
 
         return result;
+    }
+
+    public static void CheckAndSaveChanges() {
+        if (!FunkinSave.has_changes) return;
+
+        int ret = SaveManager.ShouldShow(true);
+        if (ret == 0) return;
+
+        SaveManager savemanager = new SaveManager(true, ret);
+        savemanager.Show();
+        savemanager.Destroy();
     }
 
 

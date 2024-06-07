@@ -380,6 +380,8 @@ public class MainMenu {
 
         if (menumanifest != MainMenu.MENU_MANIFEST) menumanifest.Destroy();
 
+        SaveManager.CheckAndSaveChanges();
+
         // if no option was selected, jump to the start screen
         if (!has_choosen_option) return false;
 

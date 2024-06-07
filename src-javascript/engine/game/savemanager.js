@@ -268,7 +268,6 @@ async function savemanager_show(savemanager) {
             if (selected_index >= 0 && selected_index < menu_get_items_count(savemanager.menu)) {
                 save_or_load_success = await savemanager_internal_commit(savemanager, selected_index);
                 savemanager_game_withoutsavedata = !save_or_load_success;
-                if (save_or_load_success && savemanager.save_only) modding.has_funkinsave_changes = false;
                 if (save_or_load_success) break;
             }
         } else if (buttons & MAINMENU_GAMEPAD_CANCEL && !await modding_helper_notify_back(modding)) {
@@ -368,6 +367,17 @@ async function savemanager_should_show(attempt_to_save_or_load) {
     savemanager_game_withoutsavedata = result != 0;
 
     return result;
+}
+
+async function savemanager_check_and_save_changes() {
+    if (!funkinsave_has_changes) return;
+
+    let ret = await savemanager_should_show(true);
+    if (ret == 0) return;
+
+    let savemanager = await savemanager_init(true, ret);
+    savemanager_show(savemanager);
+    savemanager_destroy(savemanager);
 }
 
 

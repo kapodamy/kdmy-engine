@@ -366,6 +366,8 @@ async function mainmenu_main() {
 
     if (menumanifest != MAINMENU_MENU_MANIFEST) menumanifest_destroy(menumanifest);
 
+    await savemanager_check_and_save_changes();
+
     // if no option was selected, jump to the start screen
     if (!has_choosen_option) return false;
 
