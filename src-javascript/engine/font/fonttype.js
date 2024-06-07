@@ -467,7 +467,8 @@ async function fonttype_internal_init_freetype(fonttype, src) {
     if (SDF_FONT) fontatlas_enable_sdf(true);
 
     // Important: keep the font data allocated, required for FreeType library
-    fonttype.fontatlas = fontatlas_init(fonttype.font, font.byteLength);
+    fonttype.font = font;
+    fonttype.fontatlas = fontatlas_init(font, font.byteLength);
 
     return !fonttype.fontatlas;
 }

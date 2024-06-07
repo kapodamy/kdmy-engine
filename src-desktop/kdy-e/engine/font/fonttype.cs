@@ -34,6 +34,7 @@ public class FontType : IFontRender {
     private int instance_references;
     private string instance_path;
     private FontAtlas fontatlas;
+    private byte[] font;
     private float space_width;
     private FontCharMap fontcharmap_primary;
     private Texture fontcharmap_primary_texture;
@@ -84,6 +85,7 @@ public class FontType : IFontRender {
         // initialize FreeType library
         if (fonttype.InternalInitFreetype(src)) {
             //free(full_path);
+            //free(fonttype.font);
             //free(fonttype);
             return null;
         }
@@ -127,8 +129,10 @@ public class FontType : IFontRender {
 
         if (this.fontatlas != null) this.fontatlas.Destroy();
 
+
+        //free(this.font);
         //free(this.instance_path);
-        //free(fonttype);
+        //free(this);
     }
 
 
@@ -505,6 +509,7 @@ public class FontType : IFontRender {
         if (font == null) return false;
 
         // Important: keep the font data allocated, required for FreeType library
+        this.font = font;
         this.fontatlas = FontAtlas.Init(font, font.Length);
 
         return this.fontatlas == null;
