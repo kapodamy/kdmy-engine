@@ -1,5 +1,6 @@
 using System;
 using Engine.Externals.LuaScriptInterop;
+using Engine.Font;
 using Engine.Game.Common;
 using Engine.Game.Gameplay.Helpers;
 using Engine.Platform;
@@ -207,6 +208,26 @@ public class MainMenu {
             int index = layout.ExternalCreateGroup(null, 0);
             layout.ExternalVertexCreateEntries(1);
             layout.ExternalVertexSetEntry(0, PVRContextVertex.DRAWABLE, menu.GetDrawable(), index);
+        }
+
+        TextSprite info_textsprite;
+        info_textsprite = layout.GetTextsprite("info-engine");
+        if (info_textsprite != null) {
+            info_textsprite.SetTextFormated("$s $s", GameMain.ENGINE_NAME, GameMain.ENGINE_VERSION);
+        }
+
+        info_textsprite = layout.GetTextsprite("info-vmu");
+        if (info_textsprite != null) {
+            sbyte port, unit;
+            if (FunkinSave.GetVMU(out port, out unit)) {
+                char port_name = (char)(0x41 + port);
+                char slot_name = (char)(0x30 + unit);
+                string state = FunkinSave.IsVMUMissing() ? " (disconnected)" : "";
+                string loaded = SaveManager.IsRunningWithoutSavedata() ? " (without savedata)" : "";
+                info_textsprite.SetTextFormated("VMU $c$c$s$s ", port_name, slot_name, state, loaded);
+            } else {
+                info_textsprite.SetText("No VMU available");
+            }
         }
 
         // attach camera animation (if was defined)

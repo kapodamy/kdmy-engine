@@ -409,6 +409,10 @@ public class SaveManager {
         savemanager.Destroy();
     }
 
+    public static bool IsRunningWithoutSavedata() {
+        return SaveManager.game_withoutsavedata;
+    }
+
 
     private void InternalBuildList() {
         if (this.menu != null) this.menu.Destroy();

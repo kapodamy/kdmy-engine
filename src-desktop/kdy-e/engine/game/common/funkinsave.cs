@@ -776,6 +776,13 @@ public static class FunkinSave {
         }
     }
 
+    public static bool GetVMU(out sbyte port, out sbyte unit) {
+        port = FunkinSave.maple_port;
+        unit = FunkinSave.maple_unit;
+
+        return FunkinSave.maple_port >= 0 && FunkinSave.maple_unit >= 0;
+    }
+
 
     private static int InternalStringByteLength(string str) {
         int string_length = StringUtils.ByteLength(str);

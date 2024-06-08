@@ -698,6 +698,13 @@ function funkinsave_get_freeplay_score(week_name, difficulty_name, song_name) {
     return 0;
 }
 
+function funkinsave_get_vmu(output_port_unit) {
+    output_port_unit[0] = funkinsave.maple_port;
+    output_port_unit[1] = funkinsave.maple_unit;
+
+    return funkinsave.maple_port >= 0 && funkinsave.maple_unit >= 0;
+}
+
 
 async function funkinsave_has_savedata_in_vmu(port, unit) {
     /*

@@ -380,6 +380,10 @@ async function savemanager_check_and_save_changes() {
     savemanager_destroy(savemanager);
 }
 
+function savemanager_is_running_without_savedata() {
+    return savemanager_game_withoutsavedata;
+}
+
 
 async function savemanager_internal_build_list(savemanager) {
     if (savemanager.menu) menu_destroy(savemanager.menu);

@@ -59,8 +59,8 @@ public enum MAPLE_FUNC : uint {
 
 public static class maple {
 
-    private const int MAPLE_PORT_COUNT = 4;
-    private const int MAPLE_UNIT_COUNT = 6;
+    public const int MAPLE_PORT_COUNT = 4;
+    public const int MAPLE_UNIT_COUNT = 6;
     private static readonly JoystickCallback joystickCallback;
 
     private static maple_device_t[,] DEVICES;

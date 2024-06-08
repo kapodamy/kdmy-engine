@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Layout width="640" height="480" animationSpeed="1.0" animationList="animations.xml">
 
+    <Font name="font" path="/assets/common/font/vcr.ttf" />
+
+    <Text name="info-engine" fontName="font" fontSize="12" color="0xFFFFFF">
+        <Action>
+            <Location x="2" y="2" z="2.1" />
+            <!-- <String>KDMY Engine version 0.0-r0000</String> -->
+            <Background enable="true" size="2" offsetX="-2" offsetY="-2" />
+            <BackgroundColor r="0" g="0" b="0" a="0.40" />
+        </Action>
+    </Text>
+    <Text name="info-vmu" fontName="font" fontSize="12" color="0xFFFFFF">
+        <Action>
+            <Location x="2" y="16" z="2.0" />
+            <!-- <String>VMU A1 (savedata loaded)</String> -->
+            <Background enable="true" size="2" offsetX="-2" offsetY="0" />
+            <BackgroundColor r="0" g="0" b="0" a="0.40" />
+        </Action>
+    </Text>
+
     <!-- This background color should match the color of the background image -->
     <Sprite rgb="0xFDE871">
         <Action>
