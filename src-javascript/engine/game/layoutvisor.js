@@ -60,6 +60,7 @@ var layoutvisor_tempdatalistadded = null;
 
 
 async function main_layout_visor() {
+    await main_initialize_wasm_modules();
     fs_init();
     console.log("running layoutvisor");
     main_layout_add_listeners();

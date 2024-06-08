@@ -2674,7 +2674,7 @@ function layout_parse_externalvalues(unparsed_root, layout_context) {
             case "boolean":
                 value = vertexprops_parse_boolean2(unparsed_value, null);
                 type = LAYOUT_TYPE_BOOLEAN;
-                invalid = value != null;
+                invalid = value == null;
                 break;
             default:
                 invalid = true;

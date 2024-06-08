@@ -75,7 +75,7 @@ function macroexecutor_init(animlist_item) {
             definition: null,
             end: NaN,
             duration: NaN,
-            steps_bounds: null,
+            steps_bounds: [NaN, NaN, NaN],
             progress: NaN,
             start: NaN,
             steps_count: -1,
