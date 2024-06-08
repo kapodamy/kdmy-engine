@@ -372,7 +372,7 @@ public class StateSprite : IVertex {
 
         statesprite.psshader = null;
 
-        statesprite.blend_enabled = false;
+        statesprite.blend_enabled = true;// obligatory
         statesprite.blend_src_rgb = Blend.DEFAULT;
         statesprite.blend_dst_rgb = Blend.DEFAULT;
         statesprite.blend_src_alpha = Blend.DEFAULT;

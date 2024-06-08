@@ -90,6 +90,8 @@ class WebGLContextProgram {
         this.u_vertex_color = gl.getUniformLocation(program, "u_vertex_color");
         this.u_darken = gl.getUniformLocation(program, "u_darken");
         this.u_dotted = gl.getUniformLocation(program, "u_dotted");
+
+        this.darken_enabled = false;
     }
 
     resizeProyection(/**@type {WebGL2RenderingContext}*/gl, /**@type {Float32Array}*/proyection_matrix) {
@@ -1105,12 +1107,6 @@ function webopengl_draw_solid(/**@type {PVRContext}*/pvrctx, rgb_color, dx, dy, 
 
     // copy transformation matrix (with all modifiers applied)
     gl.uniformMatrix4fv(wglc.program_solid.u_matrix_transform, false, pvr_context.current_matrix);
-
-    // build rgba color
-    WEBGL_RGBA[0] = rgb_color[0];
-    WEBGL_RGBA[1] = rgb_color[1];
-    WEBGL_RGBA[2] = rgb_color[2];
-    WEBGL_RGBA[3] = pvrctx.render_alpha;
 
     // if the offsetcolor alpha is negative, disable the offsetcolor processing
     // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values

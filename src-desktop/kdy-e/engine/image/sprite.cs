@@ -341,7 +341,7 @@ public class Sprite : IVertex {
         sprite.antialiasing = PVRFlag.DEFAULT;
 
         sprite.psshader = null;
-        sprite.blend_enabled = false;
+        sprite.blend_enabled = true;// obligatory
         sprite.blend_src_rgb = Blend.DEFAULT;
         sprite.blend_dst_rgb = Blend.DEFAULT;
         sprite.blend_src_alpha = Blend.DEFAULT;

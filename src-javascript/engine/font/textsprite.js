@@ -73,7 +73,7 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
 
         psshader: null,
 
-        blend_enabled: false,
+        blend_enabled: true,// obligatory
         blend_src_rgb: BLEND_DEFAULT,
         blend_dst_rgb: BLEND_DEFAULT,
         blend_src_alpha: BLEND_DEFAULT,

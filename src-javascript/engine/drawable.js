@@ -13,7 +13,7 @@ function drawable_init(z, private_data, callback_draw, callback_animate) {
         modifier: {},
         psshader: null,
 
-        blend_enabled: true,
+        blend_enabled: true,// obligatory
         blend_src_rgb: BLEND_DEFAULT,
         blend_dst_rgb: BLEND_DEFAULT,
         blend_src_alpha: BLEND_DEFAULT,

@@ -505,7 +505,7 @@
         <xs:attribute name="values" type="double-list" use="optional" />
     </xs:complexType>
     <xs:complexType name="SetBlending">
-        <xs:attribute name="enabled" type="xs:boolean" use="optional" />
+        <xs:attribute name="enabled" type="xs:boolean" use="optional" default="true" />
         <xs:attribute name="srcRGB" type="blending" use="optional" default="DEFAULT" />
         <xs:attribute name="dstRGB" type="blending" use="optional" default="DEFAULT" />
         <xs:attribute name="srcAlpha" type="blending" use="optional" default="DEFAULT" />

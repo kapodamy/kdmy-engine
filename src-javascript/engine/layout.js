@@ -991,7 +991,7 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
         psshader: null,
         psframebuffer: null,
 
-        blend_enabled: false,
+        blend_enabled: true,// obligatory
         blend_src_rgb: BLEND_DEFAULT,
         blend_dst_rgb: BLEND_DEFAULT,
         blend_src_alpha: BLEND_DEFAULT,
@@ -2356,7 +2356,7 @@ async function layout_parse_group(unparsed_group, layout_context, parent_context
         psshader: null,
         psframebuffer: null,
 
-        blend_enabled: false,
+        blend_enabled: true,// obligatory
         blend_src_rgb: BLEND_DEFAULT,
         blend_dst_rgb: BLEND_DEFAULT,
         blend_src_alpha: BLEND_DEFAULT,
@@ -4158,7 +4158,7 @@ function layout_helper_add_action_setshaderuniform(unparsed_entry, action_entrie
 
 function layout_helper_add_action_setblending(unparsed_entry, action_entries) {
     let has_enable = unparsed_entry.hasAttribute("enabled");
-    let enabled = vertexprops_parse_boolean(unparsed_entry, "enabled", true);
+    let enabled = vertexprops_parse_boolean(unparsed_entry, "enabled", true);// must be true by default
 
     let blend_src_rgb = vertexprops_parse_blending(unparsed_entry.getAttribute("srcRGB"));
     let blend_dst_rgb = vertexprops_parse_blending(unparsed_entry.getAttribute("dstRGB"));

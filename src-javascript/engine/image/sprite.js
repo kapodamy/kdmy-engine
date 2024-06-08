@@ -285,7 +285,7 @@ function sprite_init(src_texture) {
 
     sprite.psshader = null;
 
-    sprite.blend_enabled = false;
+    sprite.blend_enabled = true;// obligatory
     sprite.blend_src_rgb = BLEND_DEFAULT;
     sprite.blend_dst_rgb = BLEND_DEFAULT;
     sprite.blend_src_alpha = BLEND_DEFAULT;

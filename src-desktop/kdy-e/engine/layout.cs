@@ -1092,7 +1092,7 @@ public class Layout : IDraw, IAnimate {
             psshader = null,
             psframebuffer = null,
 
-            blend_enabled = false,
+            blend_enabled = true,// obligatory
             blend_src_rgb = Blend.DEFAULT,
             blend_dst_rgb = Blend.DEFAULT,
             blend_src_alpha = Blend.DEFAULT,
@@ -2430,7 +2430,7 @@ public class Layout : IDraw, IAnimate {
             psshader = null,
             psframebuffer = null,
 
-            blend_enabled = false,
+            blend_enabled = true,// obligatory
             blend_src_rgb = Blend.DEFAULT,
             blend_dst_rgb = Blend.DEFAULT,
             blend_src_alpha = Blend.DEFAULT,
@@ -4227,7 +4227,7 @@ public class Layout : IDraw, IAnimate {
 
     private static void HelperAddActionSetblending(XmlParserNode unparsed_entry, ArrayList<ActionEntry> action_entries) {
         bool has_enabled = unparsed_entry.HasAttribute("enabled");
-        bool enabled = VertexProps.ParseBoolean(unparsed_entry, "enabled", true);
+        bool enabled = VertexProps.ParseBoolean(unparsed_entry, "enabled", true);// must be true by default
 
         Blend blend_src_rgb = VertexProps.ParseBlending(unparsed_entry.GetAttribute("srcRGB"));
         Blend blend_dst_rgb = VertexProps.ParseBlending(unparsed_entry.GetAttribute("dstRGB"));

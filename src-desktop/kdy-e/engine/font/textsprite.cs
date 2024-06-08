@@ -138,7 +138,7 @@ public class TextSprite : IVertex {
 
             psshader = null,
 
-            blend_enabled = false,
+            blend_enabled = true,// obligatory
             blend_src_rgb = Blend.DEFAULT,
             blend_dst_rgb = Blend.DEFAULT,
             blend_src_alpha = Blend.DEFAULT,

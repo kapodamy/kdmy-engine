@@ -289,7 +289,7 @@ function statesprite_init_from_texture(texture) {
 
     statesprite.psshader = null;
 
-    statesprite.blend_enabled = false;
+    statesprite.blend_enabled = true;// obligatory
     statesprite.blend_src_rgb = BLEND_DEFAULT;
     statesprite.blend_dst_rgb = BLEND_DEFAULT;
     statesprite.blend_src_alpha = BLEND_DEFAULT;
