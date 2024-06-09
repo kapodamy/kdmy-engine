@@ -169,7 +169,7 @@ public class IntroScreen {
             if (modding.has_halt) continue;
 
             progress += elapsed;
-            if (maple_pad.HasPressed(IntroScreen.SKIP_BUTTONS) != GamepadButtons.NOTHING) break;
+            if (maple_pad.HasPressed(IntroScreen.SKIP_BUTTONS).Bool()) break;
         }
 
         //text_buffer.Destroy();

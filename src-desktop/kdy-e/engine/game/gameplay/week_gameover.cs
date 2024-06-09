@@ -410,11 +410,11 @@ public class WeekGameOver : IDraw, IAnimate {
 
             GamepadButtons buttons = controller.HasPressedDelayed(ui_buttons);
 
-            if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+            if ((buttons & (GamepadButtons.B | GamepadButtons.BACK)).Bool()) {
                 // giveup
                 decision = 1;
                 break;
-            } else if ((buttons & GamepadButtons.START) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.START).Bool()) {
                 // retry
                 decision = 2;
                 this.disabled = false;
@@ -431,7 +431,7 @@ public class WeekGameOver : IDraw, IAnimate {
 
                 decision = 2;
                 break;
-            } else if ((buttons & selector_buttons) != GamepadButtons.NOTHING) {
+            } else if ((buttons & selector_buttons).Bool()) {
                 // change difficult
                 if (selector_unloaded) {
                     // show the selector and wait until the custom difficulties are readed from disk
@@ -442,10 +442,10 @@ public class WeekGameOver : IDraw, IAnimate {
                     ui_buttons = WeekGameOver.BUTTONS2;
                 } else {
                     // switch difficult
-                    int offset = ((buttons & WeekGameOver.BUTTONS_LEFT) != GamepadButtons.NOTHING) ? -1 : 1;
+                    int offset = ((buttons & WeekGameOver.BUTTONS_LEFT).Bool()) ? -1 : 1;
                     this.selector.Scroll(offset);
                 }
-            } else if ((buttons & GamepadButtons.X) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.X).Bool()) {
                 bool is_visible = this.layout.GetGroupVisibility("judgement");
                 this.layout.TriggerAny(is_visible ? "hide_judgement" : "show_judgement");
             }
@@ -541,7 +541,7 @@ public class WeekGameOver : IDraw, IAnimate {
 
             Draw2(roundcontext, PVRContext.global_context);
 
-            if (controller.HasPressedDelayed(GamepadButtons.START | GamepadButtons.A | GamepadButtons.X) != GamepadButtons.NOTHING) {
+            if (controller.HasPressedDelayed(GamepadButtons.START | GamepadButtons.A | GamepadButtons.X).Bool()) {
                 this.layout.TriggerAny("transition_force_end");
                 break;
             }

@@ -182,17 +182,17 @@ public class Modding {
         bool has_selected = false;
         bool has_choosen = false;
 
-        if ((pressed & MainMenu.GAMEPAD_CANCEL) != GamepadButtons.NOTHING)
+        if ((pressed & MainMenu.GAMEPAD_CANCEL).Bool())
             go_back = true;
-        else if ((pressed & GamepadButtons.DALL_LEFT) != GamepadButtons.NOTHING)
+        else if ((pressed & GamepadButtons.DALL_LEFT).Bool())
             has_selected = menu.SelectHorizontal(-1);
-        else if ((pressed & GamepadButtons.DALL_RIGHT) != GamepadButtons.NOTHING)
+        else if ((pressed & GamepadButtons.DALL_RIGHT).Bool())
             has_selected = menu.SelectHorizontal(1);
-        else if ((pressed & GamepadButtons.DALL_UP) != GamepadButtons.NOTHING)
+        else if ((pressed & GamepadButtons.DALL_UP).Bool())
             has_selected = menu.SelectVertical(-1);
-        else if ((pressed & GamepadButtons.DALL_DOWN) != GamepadButtons.NOTHING)
+        else if ((pressed & GamepadButtons.DALL_DOWN).Bool())
             has_selected = menu.SelectVertical(1);
-        else if ((pressed & MainMenu.GAMEPAD_OK) != GamepadButtons.NOTHING)
+        else if ((pressed & MainMenu.GAMEPAD_OK).Bool())
             has_choosen = menu.GetSelectedIndex() >= 0;
 
 

@@ -60,7 +60,7 @@ public class Credits {
 
             double timestamp = timer.ms_gettime64();
 
-            if (state != 3 && gamepad.HasPressed(Credits.BUTTONS) != GamepadButtons.NOTHING) {
+            if (state != 3 && gamepad.HasPressed(Credits.BUTTONS).Bool()) {
                 if (state < 3) {
                     timestamp = Math2D.MAX_INT32;
                     state = 3;

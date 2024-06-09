@@ -230,7 +230,7 @@ public class DDRKeymon {
 
                 if (button_state_old == button_state_new) continue;
 
-                InternalAppendKey(timestamp, i, button_flag, button_state_new != GamepadButtons.NOTHING);
+                InternalAppendKey(timestamp, i, button_flag, button_state_new.Bool());
             }
         }
     }

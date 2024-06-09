@@ -641,15 +641,15 @@ public class Dialogue : IAnimate, IDraw {
             GamepadButtons buttons = this.gamepad.HasPressedDelayed(
                 GamepadButtons.A | GamepadButtons.X | GamepadButtons.START | GamepadButtons.BACK
             );
-            if ((buttons & GamepadButtons.A) != GamepadButtons.NOTHING) {
+            if ((buttons & GamepadButtons.A).Bool()) {
                 this.current_dialog_elapsed = this.current_dialog_duration;
                 preapare_next_line = true;
-            } else if ((buttons & GamepadButtons.X) != GamepadButtons.NOTHING) {
+            } else if ((buttons & GamepadButtons.X).Bool()) {
                 if (this.is_speaking)
                     this.do_no_wait = true;
                 else
                     preapare_next_line = true;
-            } else if ((buttons & (GamepadButtons.START | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+            } else if ((buttons & (GamepadButtons.START | GamepadButtons.BACK)).Bool()) {
                 this.do_exit = true;
                 Close();
             }

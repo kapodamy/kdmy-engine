@@ -2433,11 +2433,11 @@ public class Week {
                         dettached_controller_index = controller.GetControllerIndex();
                         break;
                     }
-                    if (controller.HasPressed(Week.ROUND_READY_BUTTONS) != GamepadButtons.NOTHING) {
+                    if (controller.HasPressed(Week.ROUND_READY_BUTTONS).Bool()) {
                         controller.ClearButtons();// antibouce
                         is_ready++;
                     }
-                    if (controller.HasPressed(GamepadButtons.BACK) != GamepadButtons.NOTHING) {
+                    if (controller.HasPressed(GamepadButtons.BACK).Bool()) {
                         is_ready = 0;
                         back_pressed = true;
                         break;
@@ -2530,7 +2530,7 @@ public class Week {
                 }
 
                 // important: use .GetLastPressed() to avoid mess up the maple pad or keyboard inputs
-                if ((roundcontext.players[i].controller.GetLastPressed() & (GamepadButtons.START | GamepadButtons.BACK)) != GamepadButtons.NOTHING) {
+                if ((roundcontext.players[i].controller.GetLastPressed() & (GamepadButtons.START | GamepadButtons.BACK)).Bool()) {
                     paused = true;
                     break;
                 }

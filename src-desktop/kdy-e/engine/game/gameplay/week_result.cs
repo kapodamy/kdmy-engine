@@ -239,7 +239,7 @@ public class WeekResult {
                     continue;
                 }
                 if (layout.AnimationIsCompleted("transition_effect") > 0) break;
-            } else if (controller.GetPressed() != GamepadButtons.NOTHING) {
+            } else if (controller.GetPressed().Bool()) {
                 transition = true;
                 layout.SetGroupVisibility("allstats", false);
             }
