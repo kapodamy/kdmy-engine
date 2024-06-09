@@ -506,6 +506,41 @@ public static class FunkinSave {
         return ret == 0 ? 0 : 4;
     }
 
+    public static int DeleteFromVMU(sbyte port, sbyte unit) {
+        if (port < 0 || port >= maple.MAPLE_PORT_COUNT) return 1;
+        if (unit < 0 || unit >= maple.MAPLE_UNIT_COUNT) return 1;
+
+        // step 1: check if the VMU is inserted at the given port+slot
+        maple_device_t device = maple.enum_dev(port, unit);
+        if (device == null || (device.info.functions & MAPLE_FUNC.MEMCARD) == 0x00) {
+            return 2;
+        }
+
+        // step 2: delete savedata file
+        string vmu_path = FunkinSave.InternalGetVMUPath(port, unit);
+        int ret = fs.unlink(vmu_path);
+
+        //
+        // Possible return values:
+        //   0 success
+        //  -1 invalid vmu path
+        //  -1 vms file not found
+        //  -2 failed to initialize the vmu filesystem (issued by hardware or driver)
+        //  -2 fat rewrite failed or already was damaged (the whole vmu is corrupted)
+        //
+        if (ret == 0)
+            return 0;
+        if (ret == -1)
+            return 3;
+        else if (ret == -2)
+            return 4;
+
+        // unknown error code found
+        Logger.Error($"funkinsave_delete_from_vmu() failed on {vmu_path} with unknown error {ret}");
+
+        return 5;
+    }
+
 
     public static long GetWeekScore(string week_name, string week_difficult) {
         int week_id = FunkinSave.weeks_names.IndexOf(week_name);

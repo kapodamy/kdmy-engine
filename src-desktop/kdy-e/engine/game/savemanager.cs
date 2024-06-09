@@ -77,6 +77,7 @@ public class SaveManager {
 
     private int error_code;
     private bool save_only;
+    private bool allow_delete;
     private Drawable drawable_wrapper;
     private VMUInfo[] vmu_array;
     private int vmu_size;
@@ -92,6 +93,7 @@ public class SaveManager {
     private float padding;
     private WeekSelectorHelpText help_cancel;
     private WeekSelectorHelpText help_ok;
+    private WeekSelectorHelpText help_delete;
 
 
     public SaveManager(bool save_only, int error_code) {
@@ -146,11 +148,15 @@ public class SaveManager {
         WeekSelectorHelpText help_ok = new WeekSelectorHelpText(
             button_icons, layout, 4, false, "a", "Choose VMU", null
         );
+        WeekSelectorHelpText help_delete = new WeekSelectorHelpText(
+            button_icons, layout, 6, false, "y", "Delete stored savedata", null
+        );
         button_icons.Destroy();
 
 
         this.error_code = error_code < 1 ? 0 : error_code;
         this.save_only = save_only;
+        this.allow_delete = false;
         this.drawable_wrapper = null;
         this.vmu_array = null;
         this.vmu_size = 0;
@@ -168,20 +174,23 @@ public class SaveManager {
 
         this.help_cancel = help_cancel;
         this.help_ok = help_ok;
+        this.help_delete = help_delete;
 
+        help_delete.SetVisible(false);
 
         placeholder.vertex = this.drawable_wrapper = new Drawable(
             placeholder.z, this.InternalDraw, this.InternalAnimate
         );
 
-        layout.TriggerAny(save_only ? "save-to" : "load-from");
-
-        layout.ExternalVertexCreateEntries(2);
+        layout.ExternalVertexCreateEntries(3);
         layout.ExternalVertexSetEntry(
             0, PVRContextVertex.DRAWABLE, help_ok.GetDrawable(), 0
         );
         layout.ExternalVertexSetEntry(
             1, PVRContextVertex.DRAWABLE, help_cancel.GetDrawable(), 0
+        );
+        layout.ExternalVertexSetEntry(
+            2, PVRContextVertex.DRAWABLE, help_delete.GetDrawable(), 0
         );
     }
 
@@ -198,6 +207,7 @@ public class SaveManager {
         this.animlist.Destroy();
         this.help_ok.Destroy();
         this.help_cancel.Destroy();
+        this.help_delete.Destroy();
 
         //free(this);
     }
@@ -210,7 +220,10 @@ public class SaveManager {
         bool save_or_load_success = false;
         float next_scan = 0.0f;
         bool last_saved_selected = false;
-        bool confirm_leave = false;
+        bool confirm_leave = false, confirm_delete = false;
+
+        this.layout.TriggerAny(this.save_only ? "save-to" : "load-from");
+        this.layout.TriggerAny(this.allow_delete ? "delete-allowed" : "delete-not-allowed");
 
         Modding modding = new Modding(this.layout, SaveManager.MODDING_SCRIPT);
         modding.native_menu = modding.active_menu = this.menu;
@@ -218,6 +231,7 @@ public class SaveManager {
         modding.callback_option = null;
         modding.HelperNotifyInit(Modding.NATIVE_MENU_SCREEN);
         modding.HelperNotifyEvent(this.save_only ? "do-save" : "do-load");
+        modding.HelperNotifyEvent(this.allow_delete ? "delete-enabled" : "delete-disabled");
 
         while (!modding.has_exit) {
             int selection_offset_x = 0;
@@ -238,6 +252,7 @@ public class SaveManager {
                     if (last_saved_selected) {
                         this.layout.TriggerAny("save-not-selected");
                         last_saved_selected = false;
+                        confirm_delete = false;
                     }
 
                     if (modding.active_menu == modding.native_menu) modding.active_menu = this.menu;
@@ -278,11 +293,17 @@ public class SaveManager {
             this.layout.Animate(elapsed);
             this.layout.Draw(PVRContext.global_context);
 
-            if (confirm_leave) {
+            if (confirm_leave || confirm_delete) {
                 this.messagebox.Animate(elapsed);
                 this.messagebox.Draw(PVRContext.global_context);
 
                 if ((buttons & MainMenu.GAMEPAD_OK).Bool()) {
+                    if (confirm_delete) {
+                        InternalCommitDelete();
+                        confirm_delete = false;
+                        next_scan = -1f;// rebuild list
+                        continue;
+                    }
                     SaveManager.game_withoutsavedata = true;
                     break;
                 }
@@ -303,18 +324,41 @@ public class SaveManager {
             if ((buttons & MainMenu.GAMEPAD_OK).Bool()) {
                 selected_index = this.menu.GetSelectedIndex();
                 if (selected_index >= 0 && selected_index < this.menu.GetItemsCount()) {
-
                     save_or_load_success = InternalCommit(selected_index);
                     SaveManager.game_withoutsavedata = !save_or_load_success;
                     if (save_or_load_success) break;
                 }
             } else if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool() && !modding.HelperNotifyBack()) {
+                if (this.allow_delete) {
+                    // lauched from settings menu, do not confirm leave
+                    break;
+                }
+
                 confirm_leave = true;
                 this.messagebox.SetButtonsIcons("a", "b");
                 this.messagebox.SetButtonsText("Yes", "No");
                 this.messagebox.SetTitle("Confirm");
                 this.messagebox.SetMessage(
                     this.save_only ? "¿Leave without saving?" : "¿Continue without load?"
+                );
+                this.messagebox.Show(true);
+                continue;
+            } else if (this.allow_delete && (buttons & GamepadButtons.Y).Bool()) {
+                selected_index = this.menu.GetSelectedIndex();
+                if (selected_index < 0 || selected_index >= this.menu.GetItemsCount()) {
+                    continue;
+                }
+                if (!this.vmu_array[selected_index].has_savedata) {
+                    continue;
+                }
+
+                confirm_delete = true;
+                this.messagebox.SetButtonsIcons("a", "b");
+                this.messagebox.SetButtonsText("Yes", "No");
+                this.messagebox.SetTitle("Confirm Deletion");
+                this.messagebox.SetMessageFormated(
+                    "¿Delete savedata on $s?\nThis operation can not be undone.",
+                    this.selected_label.GetString()
                 );
                 this.messagebox.Show(true);
                 continue;
@@ -349,6 +393,8 @@ public class SaveManager {
                 last_saved_selected = vmu.has_savedata;
                 this.layout.TriggerAny(vmu.has_savedata ? "save-selected" : "save-not-selected");
             }
+
+            this.help_delete.SetVisible(this.allow_delete && vmu.has_savedata);
         }
 
         this.layout.TriggerAny("outro");
@@ -411,6 +457,17 @@ public class SaveManager {
 
     public static bool IsRunningWithoutSavedata() {
         return SaveManager.game_withoutsavedata;
+    }
+
+    public void ChangeActions(bool save_only, bool allow_delete) {
+        this.error_code = -1;
+        this.save_only = save_only;
+        this.allow_delete = allow_delete;
+
+        this.help_delete.SetVisible(allow_delete);
+
+        // trigger all default actions
+        this.layout.TriggerAny(null);
     }
 
 
@@ -663,6 +720,59 @@ public class SaveManager {
         }
 
         return false;
+    }
+
+    private void InternalCommitDelete() {
+        int selected_index = this.menu.GetSelectedIndex();
+        if (selected_index < 0 || selected_index >= this.menu.GetItemsCount()) {
+            // this never should happen
+            this.messagebox.SetMessage("The VMU was changed or removed, nothing to do");
+            InternalShowError(-1);
+            return;
+        }
+
+        VMUInfo vmu = this.vmu_array[selected_index];
+        if (!vmu.has_savedata) {
+            // this never should happen
+            this.messagebox.SetMessage("The VMU was changed, nothing to do");
+            InternalShowError(-1);
+            return;
+        }
+
+        int error_code = FunkinSave.DeleteFromVMU((sbyte)vmu.port, (sbyte)vmu.unit);
+
+        switch (error_code) {
+            case 1:
+                this.messagebox.SetMessageFormated(
+                    "There nothing connected on $s", this.selected_label.GetString()
+                );
+                break;
+            case 2:
+                this.messagebox.SetMessage(
+                    "The VMU was removed"
+                );
+                break;
+            case 3:
+                this.messagebox.SetMessage(
+                    "The VMU has changed and the save is missing"
+                );
+                break;
+            case 4:
+                this.messagebox.SetMessage(
+                    "Failed to delete, the VMU may be corrupted"
+                );
+                break;
+            case 5:
+                this.messagebox.SetMessage(
+                    "Operation failed with an unknown error"
+                );
+                break;
+            default:
+                // success
+                return;
+        }
+
+        InternalShowError(-1);
     }
 
 

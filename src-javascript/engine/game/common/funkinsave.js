@@ -742,6 +742,41 @@ async function funkinsave_has_savedata_in_vmu(port, unit) {
     return found;
 }
 
+async function funkinsave_delete_from_vmu(port, unit) {
+    if (port < 0 || port >= MAPLE_PORT_COUNT) return 1;
+    if (unit < 0 || unit >= MAPLE_UNIT_COUNT) return 1;
+
+    // step 1: check if the VMU is inserted at the given port+slot
+    let device = maple_enum_dev(port, unit);
+    if (!device || (device.info.functions & MAPLE_FUNC_MEMCARD) == 0x00) {
+        return 2;
+    }
+
+    // step 2: delete savedata file
+    let vmu_path = funkinsave_internal_get_vmu_path(port, unit);
+    let ret = await fs_unlink(vmu_path);
+
+    //
+    // Possible return values:
+    //   0 success
+    //  -1 invalid vmu path
+    //  -1 vms file not found
+    //  -2 failed to initialize the vmu filesystem (issued by hardware or driver)
+    //  -2 fat rewrite failed or already was damaged (the whole vmu is corrupted)
+    //
+    if (ret == 0)
+        return 0;
+    if (ret == -1)
+        return 3;
+    else if (ret == -2)
+        return 4;
+
+    // unknown error code found
+    console.error(`funkinsave_delete_from_vmu() failed on ${vmu_path} with unknown error ${ret}`);
+
+    return 5;
+}
+
 
 function funkinsave_set_vmu(port, unit) {
     funkinsave.maple_port = port;

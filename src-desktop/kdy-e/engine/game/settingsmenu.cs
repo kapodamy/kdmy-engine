@@ -23,12 +23,12 @@ public static class SettingsMenu {
 
     private const string LAYOUT_BINDS_GAMEPLAY = "/assets/common/image/settings-menu/binds_gameplay.xml";
     private const string LAYOUT_BINDS_MENUS = "/assets/common/image/settings-menu/binds_menus.xml";
-    private const string LAYOUT_BINDS_MAIN = "/assets/common/image/settings-menu/main.xml";
-    private const string LAYOUT_BINDS_COMMON = "/assets/common/image/settings-menu/common.xml";
+    private const string LAYOUT_MAIN = "/assets/common/image/settings-menu/main.xml";
+    private const string LAYOUT_COMMON = "/assets/common/image/settings-menu/common.xml";
     private const string LAYOUT_BINDS_GAMEPLAY_DREAMCAST = "/assets/common/image/settings-menu/binds_gameplay~dreamcast.xml";
     private const string LAYOUT_BINDS_MENUS_DREAMCAST = "/assets/common/image/settings-menu/binds_menus~dreamcast.xml";
-    private const string LAYOUT_BINDS_MAIN_DREAMCAST = "/assets/common/image/settings-menu/main~dreamcast.xml";
-    private const string LAYOUT_BINDS_COMMON_DREAMCAST = "/assets/common/image/settings-menu/common~dreamcast.xml";
+    private const string LAYOUT_MAIN_DREAMCAST = "/assets/common/image/settings-menu/main~dreamcast.xml";
+    private const string LAYOUT_COMMON_DREAMCAST = "/assets/common/image/settings-menu/common~dreamcast.xml";
 
 
     private static readonly MenuManifest MENU = new MenuManifest() {
@@ -131,6 +131,20 @@ public static class SettingsMenu {
                 hidden= false,
                 description= null// unused
            },
+           new MenuManifest.Item()  {
+                name= "savedata",
+                text= "SAVEDATA",// unused
+                placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
+                anim_selected= null,// unused
+                anim_choosen= null,// unused
+                anim_discarded= null,// unused
+                anim_idle= null,// unused
+                anim_rollback= null,// unused
+                anim_in= null,// unused
+                anim_out= null,// unused
+                hidden= false,
+                description= null// unused
+           },
            new MenuManifest.Item() {
                 name= "return-main-menu",
                 text= "RETURN TO THE MAIN MENU",// unused
@@ -146,7 +160,96 @@ public static class SettingsMenu {
                 description= null// unused
            }
         },
-        items_size = 5
+        items_size = 6
+    };
+    private static readonly MenuManifest MENU_SAVEDATA = new MenuManifest() {
+        parameters = new MenuManifest.Parameters() {
+            suffix_selected = null,// unused
+            suffix_idle = null,// unused
+            suffix_choosen = null,// unused
+            suffix_discarded = null,// unused
+            suffix_rollback = null,// unused
+            suffix_in = null,// unused
+            suffix_out = null,// unused
+
+            atlas = null,
+            animlist = "/assets/common/anims/settings-menu.xml",
+
+            anim_selected = "menu_item_selected",
+            anim_idle = "menu_item_idle",
+            anim_choosen = null,// unused
+            anim_discarded = null,// unused
+            anim_rollback = null,// unused
+            anim_in = null,// unused
+            anim_out = null,// unused
+
+            anim_transition_in_delay = 0,// unused
+            anim_transition_out_delay = 0,// unused
+
+            font = "/assets/common/font/Alphabet.xml",
+            font_glyph_suffix = "bold",
+            font_color_by_addition = false,// unused
+            font_size = 46f,
+            font_color = 0xFFFFFF,
+            font_border_color = 0x00,// unused
+            font_border_size = Single.NaN,// unused
+
+            is_sparse = false,// unused
+            is_vertical = true,
+            is_per_page = false,
+            static_index = 1,
+
+            items_align = Align.START,
+            items_gap = 38f,
+            items_dimmen = 0f,// unused
+            texture_scale = Single.NaN,// unused
+            enable_horizontal_text_correction = true// unused
+        },
+        items = new MenuManifest.Item[] {
+           new MenuManifest.Item()  {
+                name= "load-only",
+                text= "LOAD SAVEDATA",// unused
+                placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
+                anim_selected= null,// unused
+                anim_choosen= null,// unused
+                anim_discarded= null,// unused
+                anim_idle= null,// unused
+                anim_rollback= null,// unused
+                anim_in= null,// unused
+                anim_out= null,// unused
+                hidden= false,
+                description= null// unused
+           },
+           new MenuManifest.Item()  {
+                name= "save-or-delete",
+                text= "SAVE OR DELETE FROM VMU",// unused
+                placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
+                anim_selected= null,// unused
+                anim_choosen= null,// unused
+                anim_discarded= null,// unused
+                anim_idle= null,// unused
+                anim_rollback= null,// unused
+                anim_in= null,// unused
+                anim_out= null,// unused
+                hidden= false,
+                description= null// unused
+           },
+           new MenuManifest.Item() {
+                name= "return",
+                text= "RETURN TO THE SETTINGS MENU",// unused
+                placement= { x= 0f, y= 0f, dimmen= 0f, gap= 0f },// unused
+                anim_selected= null,// unused
+                anim_choosen= null,// unused
+                anim_discarded= null,// unused
+                anim_idle= null,// unused
+                anim_rollback= null,// unused
+                anim_in= null,// unused
+                anim_out= null,// unused
+                hidden= false,
+                description= null// unused
+           }
+        },
+        items_size = 3
     };
     private static readonly MenuManifest MENU_COMMON = new MenuManifest() {
         parameters = new MenuManifest.Parameters() {
@@ -231,6 +334,11 @@ public static class SettingsMenu {
                 hidden = false
             },
             new SettingOption() {
+                name = "savedata",
+                description = "Load, save or delete savedata.\nAlso sets what VMU should be used",
+                hidden = false
+            },
+            new SettingOption() {
                 name = "return-main-menu",
                 description = "Returns back to the main menu.\n¡Settings are automatically saved!",
                 hidden = false,
@@ -258,7 +366,7 @@ public static class SettingsMenu {
             anim_binding = anim_binding_rollback = null;
         }
 
-        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_BINDS_MAIN : SettingsMenu.LAYOUT_BINDS_MAIN_DREAMCAST);
+        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_MAIN : SettingsMenu.LAYOUT_MAIN_DREAMCAST);
         if (layout == null) {
             Logger.Error("settingsmenu_main() can not load the layout");
             return;
@@ -370,6 +478,9 @@ public static class SettingsMenu {
                     continue;
                 case "miscellaneous":
                     InMiscSettings(gamepad, modding);
+                    continue;
+                case "savedata":
+                    InSaveSettings(gamepad, modding);
                     continue;
                 case "return-main-menu":
                     break;
@@ -1012,8 +1123,101 @@ public static class SettingsMenu {
         }
     }
 
+    private static void InSaveSettings(Gamepad gamepad, Modding modding) {
+        string title = "Savedata";
+        SettingOption[] options_help = {
+            new SettingOption() {
+                name = "load-only",
+                description = "Load savedata from another VMU, this replaces the current loaded savedata.\n" +
+                "Any future saves will be stored in the selected VMU",
+                hidden = false
+            },
+            new SettingOption() {
+                name = "save-or-delete",
+                description = "Save the current loaded savedata in another VMU.\n" +
+                "Allows override or delete any other savedata.\n" +
+                "Any future saves will be stored in the lastest used VMU for save",
+                hidden = false
+            },
+            new SettingOption() {
+                name = "return",
+                description = "Go back to settings menu",
+                hidden = false
+            },
+        };
+
+        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_COMMON : SettingsMenu.LAYOUT_COMMON_DREAMCAST);
+        if (layout == null) {
+            Logger.Error("settingsmenu_in_save_settings() can not load the layout");
+            return;
+        }
+
+        SettingsMenu.MENU_SAVEDATA.parameters.is_vertical = (bool)layout.GetAttachedValue(
+            "menu_isVertical", AttachedValueType.BOOLEAN, SettingsMenu.MENU_SAVEDATA.parameters.is_vertical
+        );
+        SettingsMenu.MENU_SAVEDATA.parameters.font_size = layout.GetAttachedValueAsFloat(
+            "menu_fontSize", SettingsMenu.MENU_SAVEDATA.parameters.font_size
+        );
+        SettingsMenu.MENU_SAVEDATA.parameters.items_dimmen = layout.GetAttachedValueAsFloat(
+            "menu_itemDimmen", SettingsMenu.MENU_SAVEDATA.parameters.items_dimmen
+        );
+        SettingsMenu.MENU_SAVEDATA.parameters.items_dimmen = layout.GetAttachedValueAsFloat(
+            "menu_itemScale", SettingsMenu.MENU_SAVEDATA.parameters.texture_scale
+        );
+        SettingsMenu.MENU_SAVEDATA.parameters.items_gap = layout.GetAttachedValueAsFloat(
+            "menu_itemGap", SettingsMenu.MENU_SAVEDATA.parameters.items_gap
+        );
+
+        LayoutPlaceholder menu_placeholder = layout.GetPlaceholder("menu");
+        if (menu_placeholder == null) throw new Exception("Missing menu placeholder");
+
+        MenuManifest menumanifest = SettingsMenu.MENU_SAVEDATA;
+        Menu menu = new Menu(
+            menumanifest,
+            menu_placeholder.x, menu_placeholder.y, menu_placeholder.z,
+            menu_placeholder.width, menu_placeholder.height
+        );
+        menu_placeholder.vertex = menu.GetDrawable();
+
+        // initialize with default values
+        SaveManager savemanager = new SaveManager(false, -1);
+
+        while (!modding.has_exit) {
+            int selected_index = InCommonMenu(title, layout, gamepad, menu, options_help, modding);
+            string selected_name = selected_index < 0 ? null : menumanifest.items[selected_index].name;
+            bool save_only = false;
+
+            switch (selected_name) {
+                case "load-only":
+                    //save_only = false;
+                    break;
+                case "save-or-delete":
+                    save_only = true;
+                    break;
+                case "return":
+                    goto L_prepare_return;
+                default:
+                    // custom option selected
+                    if (SettingsMenu.current_menu_choosen_custom == null) goto L_prepare_return;
+                    modding.HelperNotifyHandleCustomOption(SettingsMenu.current_menu_choosen_custom);
+                    //free(SettingsMenu.current_menu_choosen_custom);
+                    SettingsMenu.current_menu_choosen_custom = null;
+                    continue;
+            }
+
+            // only allow delete when saving
+            savemanager.ChangeActions(save_only, save_only);
+            savemanager.Show();
+        }
+
+L_prepare_return:
+        menu.Destroy();
+        layout.Destroy();
+        savemanager.Destroy();
+    }
+
     private static void ShowCommon(string title, Gamepad gamepad, SettingOption[] options, int options_count, Modding modding) {
-        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_BINDS_COMMON : SettingsMenu.LAYOUT_BINDS_COMMON_DREAMCAST);
+        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_COMMON : SettingsMenu.LAYOUT_COMMON_DREAMCAST);
 
         if (layout == null) {
             Logger.Error("settingsmenu_show_common() can not load the layout");

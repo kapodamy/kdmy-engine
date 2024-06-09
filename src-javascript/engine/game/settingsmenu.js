@@ -8,12 +8,12 @@ const SETTINGSMENU_MODDING_MENU = "/assets/common/data/menus/settigsmenu-main.js
 
 const SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY = "/assets/common/image/settings-menu/binds_gameplay.xml";
 const SETTINGSMENU_LAYOUT_BINDS_MENUS = "/assets/common/image/settings-menu/binds_menus.xml";
-const SETTINGSMENU_LAYOUT_BINDS_MAIN = "/assets/common/image/settings-menu/main.xml";
-const SETTINGSMENU_LAYOUT_BINDS_COMMON = "/assets/common/image/settings-menu/common.xml";
+const SETTINGSMENU_LAYOUT_MAIN = "/assets/common/image/settings-menu/main.xml";
+const SETTINGSMENU_LAYOUT_COMMON = "/assets/common/image/settings-menu/common.xml";
 const SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY_DREAMCAST = "/assets/common/image/settings-menu/binds_gameplay~dreamcast.xml";
 const SETTINGSMENU_LAYOUT_BINDS_MENUS_DREAMCAST = "/assets/common/image/settings-menu/binds_menus~dreamcast.xml";
-const SETTINGSMENU_LAYOUT_BINDS_MAIN_DREAMCAST = "/assets/common/image/settings-menu/main~dreamcast.xml";
-const SETTINGSMENU_LAYOUT_BINDS_COMMON_DREAMCAST = "/assets/common/image/settings-menu/common~dreamcast.xml";
+const SETTINGSMENU_LAYOUT_MAIN_DREAMCAST = "/assets/common/image/settings-menu/main~dreamcast.xml";
+const SETTINGSMENU_LAYOUT_COMMON_DREAMCAST = "/assets/common/image/settings-menu/common~dreamcast.xml";
 
 const SETTINGSMENU_MENU = {
     parameters: {
@@ -116,6 +116,20 @@ const SETTINGSMENU_MENU = {
             description: null// unused
         },
         {
+            name: "savedata",
+            text: "SAVEDATA",// unused
+            placement: { x: 0.0, y: 0.0, dimmen: 0.0, gap: 0.0 },// unused
+            anim_selected: null,// unused
+            anim_choosen: null,// unused
+            anim_discarded: null,// unused
+            anim_idle: null,// unused
+            anim_rollback: null,// unused
+            anim_in: null,// unused
+            anim_out: null,// unused
+            hidden: false,
+            description: null // unused
+        },
+        {
             name: "return-main-menu",
             text: "RETURN TO THE MAIN MENU",// unused
             placement: { x: 0.0, y: 0.0, dimmen: 0.0, gap: 0.0 },// unused
@@ -130,7 +144,96 @@ const SETTINGSMENU_MENU = {
             description: null// unused
         }
     ],
-    items_size: 5
+    items_size: 6
+};
+const SETTINGSMENU_SAVEDATA = {
+    parameters: {
+        suffix_selected: null,// unused
+        suffix_idle: null,// unused
+        suffix_choosen: null,// unused
+        suffix_discarded: null,// unused
+        suffix_rollback: null,// unused
+        suffix_in: null,// unused
+        suffix_out: null,// unused
+
+        atlas: null,
+        animlist: "/assets/common/anims/settings-menu.xml",
+
+        anim_selected: "menu_item_selected",
+        anim_idle: "menu_item_idle",
+        anim_choosen: null,// unused
+        anim_discarded: null,// unused
+        anim_rollback: null,// unused
+        anim_in: null,// unused
+        anim_out: null,// unused
+
+        anim_transition_in_delay: 0,// unused
+        anim_transition_out_delay: 0,// unused
+
+        font: "/assets/common/font/Alphabet.xml",
+        font_glyph_suffix: "bold",
+        font_color_by_addition: false,// unused
+        font_size: 46.0,
+        font_color: 0xFFFFFF,
+        font_border_color: 0x00,// unused
+        font_border_size: NaN,// unused
+
+        is_sparse: false,// unused
+        is_vertical: true,
+        is_per_page: false,
+        static_index: 1,
+
+        items_align: ALIGN_START,
+        items_gap: 38.0,
+        items_dimmen: 0.0,// unused
+        texture_scale: NaN,// unused
+        enable_horizontal_text_correction: true// unused
+    },
+    items: [
+        {
+            name: "load-only",
+            text: "LOAD SAVEDATA",// unused
+            placement: { x: 0.0, y: 0.0, dimmen: 0.0, gap: 0.0 },// unused
+            anim_selected: null,// unused
+            anim_choosen: null,// unused
+            anim_discarded: null,// unused
+            anim_idle: null,// unused
+            anim_rollback: null,// unused
+            anim_in: null,// unused
+            anim_out: null,// unused
+            hidden: false,
+            description: null// unused
+        },
+        {
+            name: "save-or-delete",
+            text: "SAVE OR DELETE FROM VMU",// unused
+            placement: { x: 0.0, y: 0.0, dimmen: 0.0, gap: 0.0 },// unused
+            anim_selected: null,// unused
+            anim_choosen: null,// unused
+            anim_discarded: null,// unused
+            anim_idle: null,// unused
+            anim_rollback: null,// unused
+            anim_in: null,// unused
+            anim_out: null,// unused
+            hidden: false,
+            description: null// unused
+        },
+        {
+            name: "return",
+            text: "RETURN TO THE SETTINGS MENU",// unused
+            placement: { x: 0.0, y: 0.0, dimmen: 0.0, gap: 0.0 },// unused
+            anim_selected: null,// unused
+            anim_choosen: null,// unused
+            anim_discarded: null,// unused
+            anim_idle: null,// unused
+            anim_rollback: null,// unused
+            anim_in: null,// unused
+            anim_out: null,// unused
+            hidden: false,
+            description: null// unused
+        },
+    ],
+    items_size: 3
 };
 const SETTINGSMENU_MENU_COMMON = {
     parameters: {
@@ -213,6 +316,11 @@ async function settingsmenu_main() {
         {
             name: "return-main-menu",
             description: "Returns back to the main menu.\n¡Settings are automatically saved!"
+        },
+        {
+            name: "savedata",
+            description: "Load, save or delete savedata.\nAlso sets what VMU should be used",
+            hidden: false,
         }
     ];
 
@@ -237,7 +345,7 @@ async function settingsmenu_main() {
         anim_binding = anim_binding_rollback = null;
     }
 
-    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_MAIN : SETTINGSMENU_LAYOUT_BINDS_MAIN_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_MAIN : SETTINGSMENU_LAYOUT_MAIN_DREAMCAST);
     if (!layout) {
         console.error("settingsmenu_main() can not load the layout");
         return;
@@ -350,6 +458,9 @@ async function settingsmenu_main() {
             case "miscellaneous":
                 await settingsmenu_in_misc_settings(gamepad, modding);
                 continue;
+            case "savedata":
+                await settingsmenu_in_save_settings(gamepad, modding);
+                continue;
             case "return-main-menu":
                 break;
             default:
@@ -391,6 +502,98 @@ async function settingsmenu_main() {
     }
 }
 
+async function settingsmenu_in_save_settings(gamepad, modding) {
+    const title = "Savedata";
+    const options_help = [
+        {
+            name: "load-only",
+            description: "Load savedata from another VMU, this replaces the current loaded savedata.\n" +
+                "Any future saves will be stored in the selected VMU",
+            hidden: false,
+        },
+        {
+            name: "save-or-delete",
+            description: "Save the current loaded savedata in another VMU.\n" +
+                "Allows override or delete any other savedata.\n" +
+                "Any future saves will be stored in the lastest used VMU for save",
+            hidden: false,
+        },
+        {
+            name: "return",
+            description: "Go back to settings menu",
+            hidden: false,
+        },
+    ];
+
+    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_COMMON : SETTINGSMENU_LAYOUT_COMMON_DREAMCAST);
+    if (!layout) {
+        console.error("settingsmenu_in_save_settings() can not load the layout");
+        return;
+    }
+
+    SETTINGSMENU_SAVEDATA.parameters.is_vertical = layout_get_attached_value(
+        layout, "menu_isVertical", LAYOUT_TYPE_BOOLEAN, SETTINGSMENU_SAVEDATA.parameters.is_vertical
+    );
+    SETTINGSMENU_SAVEDATA.parameters.font_size = layout_get_attached_value_as_float(
+        layout, "menu_fontSize", SETTINGSMENU_SAVEDATA.parameters.font_size
+    );
+    SETTINGSMENU_SAVEDATA.parameters.items_dimmen = layout_get_attached_value_as_float(
+        layout, "menu_itemDimmen", SETTINGSMENU_SAVEDATA.parameters.items_dimmen
+    );
+    SETTINGSMENU_SAVEDATA.parameters.items_dimmen = layout_get_attached_value_as_float(
+        layout, "menu_itemScale", SETTINGSMENU_SAVEDATA.parameters.texture_scale
+    );
+    SETTINGSMENU_SAVEDATA.parameters.items_gap = layout_get_attached_value_as_float(
+        layout, "menu_itemGap", SETTINGSMENU_SAVEDATA.parameters.items_gap
+    );
+
+    let menu_placeholder = layout_get_placeholder(layout, "menu");
+    if (menu_placeholder) throw new Error("Missing menu placeholder");
+
+    const menumanifest = SETTINGSMENU_SAVEDATA;
+    let menu = await menu_init(
+        menumanifest,
+        menu_placeholder.x, menu_placeholder.y, menu_placeholder.z,
+        menu_placeholder.width, menu_placeholder.height
+    );
+    menu_placeholder.vertex = menu_get_drawable(menu);
+
+    // initialize with default values
+    let savemanager = await savemanager_init(false, -1);
+
+    L_menu:
+    while (!modding.has_exit) {
+        let selected_index = await settingsmenu_in_common_menu(title, layout, gamepad, menu, options_help, modding);
+        let selected_name = selected_index < 0 ? null : menumanifest.items[selected_index].name;
+        let save_only;
+
+        switch (selected_name) {
+            case "load-only":
+                save_only = false;
+                break;
+            case "save-or-delete":
+                save_only = true;
+                break;
+            case "return":
+                break L_menu;
+            default:
+                // custom option selected
+                if (settingsmenu_current_menu_choosen_custom == null) break L_menu;
+                await modding_helper_notify_handle_custom_option(modding, settingsmenu_current_menu_choosen_custom);
+                settingsmenu_current_menu_choosen_custom = undefined;
+                settingsmenu_current_menu_choosen_custom = null;
+                continue;
+        }
+
+        // only allow delete when saving
+        savemanager_change_actions(savemanager, save_only, save_only);
+        await savemanager_show(savemanager);
+    }
+
+    menu_destroy(menu);
+    layout_destroy(layout);
+    savemanager_destroy(savemanager);
+}
 
 async function settingsmenu_in_gameplay_binding(anim_binding, anim_binding_rollback) {
     let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY : SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY_DREAMCAST);
@@ -991,7 +1194,7 @@ async function settingsmenu_in_misc_settings(gamepad, modding) {
 }
 
 async function settingsmenu_show_common(title, gamepad, options, options_count, modding) {
-    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_BINDS_COMMON : SETTINGSMENU_LAYOUT_BINDS_COMMON_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_COMMON : SETTINGSMENU_LAYOUT_COMMON_DREAMCAST);
 
     if (!layout) {
         console.error("settingsmenu_show_common() can not load the layout");
