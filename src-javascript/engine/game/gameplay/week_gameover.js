@@ -358,11 +358,11 @@ async function week_gameover_helper_ask_to_player(weekgameover, roundcontext) {
             gamepad_destroy(controller);
             layout_set_single_item_to_draw(layout, null);
 
-            modding_helper_notify_event(
+            await modding_helper_notify_event(
                 weekgameover.modding,
                 roundcontext.scriptcontext.force_end_loose_or_win ? "force_loose" : "force_win"
             );
-            modding_helper_notify_exit2(weekgameover.modding);
+            await modding_helper_notify_exit2(weekgameover.modding);
 
             return roundcontext.scriptcontext.force_end_loose_or_win ? 1 : 2;
         }

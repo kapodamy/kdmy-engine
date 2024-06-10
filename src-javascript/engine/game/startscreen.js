@@ -86,7 +86,7 @@ async function startscreen_main() {
 
     await modding_helper_notify_exit2(modding);
 
-    await modding_destroy(modding);
+    modding_destroy(modding);
     layout_destroy(layout);
     gamepad_destroy(maple_pad);
     if (soundplayer_confirm) soundplayer_destroy(soundplayer_confirm);

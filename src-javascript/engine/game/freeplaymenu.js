@@ -272,7 +272,7 @@ async function freeplaymenu_main() {
     menu_destroy(menu_songs);
     arraylist_destroy(songs, false);
     layout_destroy(layout);
-    await modding_destroy(modding);
+    modding_destroy(modding);
 
     await savemanager_check_and_save_changes();
 

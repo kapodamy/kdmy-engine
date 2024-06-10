@@ -395,7 +395,7 @@ async function savemanager_show(savemanager) {
     }
 
     await modding_helper_notify_exit2(modding);
-    await modding_destroy(modding);
+    modding_destroy(modding);
 }
 
 async function savemanager_should_show(attempt_to_save_or_load) {

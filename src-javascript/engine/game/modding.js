@@ -252,7 +252,7 @@ async function modding_helper_notify_exit(modding) {
 }
 
 async function modding_helper_notify_exit2(modding) {
-    let ret = modding_helper_notify_exit(modding);
+    let ret = await modding_helper_notify_exit(modding);
     if (ret) ret = undefined;
 }
 

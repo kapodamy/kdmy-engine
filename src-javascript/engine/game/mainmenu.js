@@ -382,7 +382,7 @@ async function mainmenu_main() {
     if (sound_cancel) soundplayer_destroy(sound_cancel);
     if (sound_asterik) soundplayer_destroy(sound_asterik);
     layout_destroy(layout);
-    await modding_destroy(modding);
+    modding_destroy(modding);
 
     if (menumanifest != MAINMENU_MENU_MANIFEST) menumanifest_destroy(menumanifest);
 

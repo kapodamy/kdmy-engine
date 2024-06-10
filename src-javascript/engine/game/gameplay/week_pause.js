@@ -193,7 +193,7 @@ async function week_pause_init(exit_to_weekselector_label) {
 }
 
 async function week_pause_destroy(weekpause) {
-    await modding_destroy(weekpause.modding);
+    modding_destroy(weekpause.modding);
     layout_destroy(weekpause.layout);
     menu_destroy(weekpause.menu);
     messagebox_destroy(weekpause.messagebox);

@@ -48,7 +48,7 @@ async function introscreen_main() {
 
         await modding_helper_notify_exit2(modding);
 
-        await modding_destroy(modding);
+        modding_destroy(modding);
         layout_destroy(layout);
         gamepad_destroy(maple_pad);
         return;
@@ -94,7 +94,7 @@ async function introscreen_main() {
     await modding_helper_notify_event(modding, "transition-out");
     while (true) {
         let elapsed = await pvrctx_wait_ready();
-        modding_helper_notify_frame(modding, elapsed, -1.0);
+        await modding_helper_notify_frame(modding, elapsed, -1.0);
 
         pvr_context_reset(pvr_context);
         layout_animate(layout, elapsed);
@@ -113,7 +113,7 @@ async function introscreen_main() {
     self_text = undefined;
     intro_text = undefined;
     week_greetings = undefined;
-    await modding_destroy(modding);
+    modding_destroy(modding);
     layout_destroy(layout);
     gamepad_destroy(maple_pad);
 }

@@ -524,7 +524,7 @@ async function weekselector_main() {
 
     layout_destroy(layout);
     texturepool_destroy(texpool);
-    await modding_destroy(modding);
+    modding_destroy(modding);
 
     if (state.back_to_main_menu) {
         await savemanager_check_and_save_changes();

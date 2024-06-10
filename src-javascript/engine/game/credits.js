@@ -103,7 +103,7 @@ async function credits_main() {
         }
     }
 
-    await modding_destroy(moddingcontext);
+    modding_destroy(moddingcontext);
     gamepad_destroy(gamepad);
     layout_destroy(layout);
 }
