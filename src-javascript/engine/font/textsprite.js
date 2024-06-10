@@ -197,8 +197,8 @@ function textsprite_set_visible(textsprite, visible) {
 
 function textsprite_set_draw_location(textsprite, x, y) {
     textsprite.modified_coords = true;
-    if (Number.isFinite(x)) textsprite.x = x;
-    if (Number.isFinite(y)) textsprite.y = y;
+    if (!Number.isNaN(x)) textsprite.x = x;
+    if (!Number.isNaN(y)) textsprite.y = y;
 }
 
 function textsprite_get_draw_location(textsprite, output_location) {
@@ -221,8 +221,8 @@ function textsprite_get_z_index(textsprite) {
 
 function textsprite_set_max_draw_size(textsprite, max_width, max_height) {
     textsprite.modified_coords = true;
-    if (Number.isFinite(max_width)) textsprite.max_width = max_width;
-    if (Number.isFinite(max_height)) textsprite.max_height = max_height;
+    if (!Number.isNaN(max_width)) textsprite.max_width = max_width;
+    if (!Number.isNaN(max_height)) textsprite.max_height = max_height;
 }
 
 function textsprite_matrix_flip(textsprite, flip_x, flip_y) {
@@ -266,23 +266,23 @@ function textsprite_matrix_reset(textsprite) {
 }
 
 function textsprite_matrix_translate(textsprite, translate_x, translate_y) {
-    if (Number.isFinite(translate_x))
+    if (!Number.isNaN(translate_x))
         textsprite.matrix_source.translate_x = translate_x;
-    if (Number.isFinite(translate_y))
+    if (!Number.isNaN(translate_y))
         textsprite.matrix_source.translate_y = translate_y;
 }
 
 function textsprite_matrix_skew(textsprite, skew_x, skew_y) {
-    if (Number.isFinite(skew_x))
+    if (!Number.isNaN(skew_x))
         textsprite.matrix_source.skew_x = skew_x;
-    if (Number.isFinite(skew_y))
+    if (!Number.isNaN(skew_y))
         textsprite.matrix_source.skew_y = skew_y;
 }
 
 function textsprite_matrix_scale(textsprite, scale_x, scale_y) {
-    if (Number.isFinite(scale_x))
+    if (!Number.isNaN(scale_x))
         textsprite.matrix_source.scale_x = scale_x;
-    if (Number.isFinite(scale_y))
+    if (!Number.isNaN(scale_y))
         textsprite.matrix_source.scale_y = scale_y;
 }
 
@@ -296,14 +296,14 @@ function textsprite_matrix_rotate_pivot_enable(textsprite, enable) {
 }
 
 function textsprite_matrix_rotate_pivot(textsprite, u, v) {
-    if (Number.isFinite(u)) textsprite.matrix_source.rotate_pivot_u = u;
-    if (Number.isFinite(v)) textsprite.matrix_source.rotate_pivot_v = v;
+    if (!Number.isNaN(u)) textsprite.matrix_source.rotate_pivot_u = u;
+    if (!Number.isNaN(v)) textsprite.matrix_source.rotate_pivot_v = v;
 }
 
 
 function textsprite_matrix_scale_offset(textsprite, direction_x, direction_y) {
-    if (Number.isFinite(direction_x)) textsprite.matrix_source.scale_direction_x = direction_x;
-    if (Number.isFinite(direction_y)) textsprite.matrix_source.scale_direction_y = direction_y;
+    if (!Number.isNaN(direction_x)) textsprite.matrix_source.scale_direction_x = direction_x;
+    if (!Number.isNaN(direction_y)) textsprite.matrix_source.scale_direction_y = direction_y;
 }
 
 
@@ -963,7 +963,7 @@ function textsprite_border_enable(textsprite, enable) {
 }
 
 function textsprite_border_set_size(textsprite, border_size) {
-    textsprite.border_size = Number.isFinite(border_size) ? border_size : 0.0;
+    textsprite.border_size = Number.isNaN(border_size) ? 0.0 : border_size;
 }
 
 function textsprite_border_set_color(textsprite, r, g, b, a) {

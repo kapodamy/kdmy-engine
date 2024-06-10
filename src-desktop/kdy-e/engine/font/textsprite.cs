@@ -992,7 +992,7 @@ public class TextSprite : IVertex {
     }
 
     public void BorderSetSize(float border_size) {
-        this.border_size = !Single.IsNaN(border_size) ? border_size : 0.0f;
+        this.border_size = Single.IsNaN(border_size) ? 0.0f : border_size;
     }
 
     public void BorderSetColor(float r, float g, float b, float a) {
@@ -1064,15 +1064,15 @@ public class TextSprite : IVertex {
     }
 
     public void BackgroundSetOffets(float offset_x, float offset_y) {
-        if (!Double.IsNaN(offset_x)) this.background_offset_x = offset_x;
-        if (!Double.IsNaN(offset_y)) this.background_offset_y = offset_y;
+        if (!Single.IsNaN(offset_x)) this.background_offset_x = offset_x;
+        if (!Single.IsNaN(offset_y)) this.background_offset_y = offset_y;
     }
 
     public void BackgroundSetColor(float r, float g, float b, float a) {
-        if (!Double.IsNaN(r)) this.background_rgba[0] = r;
-        if (!Double.IsNaN(g)) this.background_rgba[1] = g;
-        if (!Double.IsNaN(b)) this.background_rgba[2] = b;
-        if (!Double.IsNaN(a)) this.background_rgba[3] = a;
+        if (!Single.IsNaN(r)) this.background_rgba[0] = r;
+        if (!Single.IsNaN(g)) this.background_rgba[1] = g;
+        if (!Single.IsNaN(b)) this.background_rgba[2] = b;
+        if (!Single.IsNaN(a)) this.background_rgba[3] = a;
     }
 
     public string GetString() {

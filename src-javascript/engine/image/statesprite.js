@@ -585,7 +585,7 @@ function statesprite_animation_completed(statesprite) {
 }
 
 function statesprite_animate(statesprite, elapsed) {
-    //if (!Number.isFinite(elapsed)) throw new Error("Invalid elapsed value:" + elapsed);
+    //if (Number.isNaN(elapsed)) throw new Error("Invalid elapsed value:" + elapsed);
 
     let result = 1;
 

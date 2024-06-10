@@ -106,14 +106,14 @@ function camera_set_transition_duration(camera, expresed_in_beats, value) {
 }
 
 function camera_set_absolute_zoom(camera, z) {
-    if (Number.isFinite(z)) camera_internal_tweenlerp_absolute(camera, CAMERA_PZ, z);
+    if (!Number.isNaN(z)) camera_internal_tweenlerp_absolute(camera, CAMERA_PZ, z);
     camera.force_update = true;
     camera_end(camera);
 }
 
 function camera_set_absolute_position(camera, x, y) {
-    if (Number.isFinite(x)) camera_internal_tweenlerp_absolute(camera, CAMERA_PX, x);
-    if (Number.isFinite(y)) camera_internal_tweenlerp_absolute(camera, CAMERA_PY, y);
+    if (!Number.isNaN(x)) camera_internal_tweenlerp_absolute(camera, CAMERA_PX, x);
+    if (!Number.isNaN(y)) camera_internal_tweenlerp_absolute(camera, CAMERA_PY, y);
     camera.force_update = true;
     camera_end(camera);
 }
@@ -125,15 +125,15 @@ function camera_set_absolute(camera, x, y, z) {
 
 
 function camera_set_offset(camera, x, y, z) {
-    if (Number.isFinite(x)) {
+    if (!Number.isNaN(x)) {
         camera_internal_tweenlerp_absolute(camera, CAMERA_OX, x);
         camera.offset_x = x;
     }
-    if (Number.isFinite(y)) {
+    if (!Number.isNaN(y)) {
         camera_internal_tweenlerp_absolute(camera, CAMERA_OY, y);
         camera.offset_y = y;
     }
-    if (Number.isFinite(z)) {
+    if (!Number.isNaN(z)) {
         camera_internal_tweenlerp_absolute(camera, CAMERA_OZ, z);
         camera.offset_z = z;
     }
@@ -269,9 +269,9 @@ function camera_slide_to(camera, x, y, z) {
     let start_y = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_PY);
     let start_z = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_PZ);
 
-    if (!Number.isFinite(x)) x = start_x;
-    if (!Number.isFinite(y)) y = start_y;
-    if (!Number.isFinite(z)) z = start_z;
+    if (Number.isNaN(x)) x = start_x;
+    if (Number.isNaN(y)) y = start_y;
+    if (Number.isNaN(z)) z = start_z;
 
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_PX, start_x, x);
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_PY, start_y, y);
@@ -287,9 +287,9 @@ function camera_slide_to_offset(camera, x, y, z) {
     let start_y = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_OY);
     let start_z = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_OZ);
 
-    if (!Number.isFinite(x)) x = start_x;
-    if (!Number.isFinite(y)) y = start_y;
-    if (!Number.isFinite(z)) z = start_z;
+    if (Number.isNaN(x)) x = start_x;
+    if (Number.isNaN(y)) y = start_y;
+    if (Number.isNaN(z)) z = start_z;
 
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OX, start_x, x);
     tweenlerp_change_bounds_by_index(camera.tweenlerp, CAMERA_OY, start_y, y);
@@ -509,9 +509,9 @@ function camera_apply(camera, pvrctx) {
         let y = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_PY);
         let z = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_PZ);
 
-        if (Number.isFinite(x)) camera.modifier.translate_x = x;
-        if (Number.isFinite(y)) camera.modifier.translate_y = y;
-        if (Number.isFinite(z)) camera.modifier.scale_x = camera.modifier.scale_y = z;
+        if (!Number.isNaN(x)) camera.modifier.translate_x = x;
+        if (!Number.isNaN(y)) camera.modifier.translate_y = y;
+        if (!Number.isNaN(z)) camera.modifier.scale_x = camera.modifier.scale_y = z;
     }
 
     if (pvrctx) {
@@ -529,9 +529,9 @@ function camera_apply_offset(camera, destination_matrix) {
         let y = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_OY);
         let z = tweenlerp_peek_value_by_index(camera.tweenlerp, CAMERA_OZ);
 
-        if (Number.isFinite(x)) camera.offset_x = x;
-        if (Number.isFinite(y)) camera.offset_y = y;
-        if (Number.isFinite(z)) camera.offset_z = z;
+        if (!Number.isNaN(x)) camera.offset_x = x;
+        if (!Number.isNaN(y)) camera.offset_y = y;
+        if (!Number.isNaN(z)) camera.offset_z = z;
     }
 
     sh4matrix_translate(destination_matrix, camera.offset_x, camera.offset_y);

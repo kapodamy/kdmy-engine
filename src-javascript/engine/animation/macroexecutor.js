@@ -650,7 +650,7 @@ function macroexecutor_interpolator_run(macroexecutor, elapsed, interpolator) {
     }
 
 
-    if (!Number.isFinite(value))
+    if (!!Number.isNaN(value))
         throw new Error("macroexecutor_interpolator_run() infinite/NaN value found");
 
     // commit interpolation in the specific range

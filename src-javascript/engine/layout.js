@@ -1053,13 +1053,13 @@ function layout_set_group_visibility_by_id(layout, group_id, visible) {
 }
 
 function layout_set_group_alpha(layout, group_name, alpha) {
-    if (!Number.isFinite(alpha)) alpha = 0.0;
+    if (Number.isNaN(alpha)) alpha = 0.0;
     let index = layout_helper_get_group_index(layout, group_name);
     if (index >= 0) layout.group_list[index].alpha = math2d_clamp_float(alpha, 0.0, 1.0);
 }
 
 function layout_set_group_alpha_by_id(layout, group_id, alpha) {
-    if (!Number.isFinite(alpha)) alpha = 0.0;
+    if (Number.isNaN(alpha)) alpha = 0.0;
     if (group_id < 0 || group_id >= layout.group_list_size) return;
     layout.group_list[group_id].alpha = math2d_clamp_float(alpha, 0.0, 1.0);
 }
@@ -1077,10 +1077,10 @@ function layout_set_group_antialiasing_by_id(layout, group_id, antialiasing) {
 function layout_set_group_offsetcolor(layout, group_name, r, g, b, a) {
     let index = layout_helper_get_group_index(layout, group_name);
     if (index >= 0) {
-        if (Number.isFinite(r)) layout.group_list[index].offsetcolor[0] = math2d_clamp_float(r, 0.0, 1.0);
-        if (Number.isFinite(g)) layout.group_list[index].offsetcolor[1] = math2d_clamp_float(g, 0.0, 1.0);
-        if (Number.isFinite(b)) layout.group_list[index].offsetcolor[2] = math2d_clamp_float(b, 0.0, 1.0);
-        if (Number.isFinite(a)) layout.group_list[index].offsetcolor[3] = math2d_clamp_float(a, 0.0, 1.0);
+        if (!Number.isNaN(r)) layout.group_list[index].offsetcolor[0] = math2d_clamp_float(r, 0.0, 1.0);
+        if (!Number.isNaN(g)) layout.group_list[index].offsetcolor[1] = math2d_clamp_float(g, 0.0, 1.0);
+        if (!Number.isNaN(b)) layout.group_list[index].offsetcolor[2] = math2d_clamp_float(b, 0.0, 1.0);
+        if (!Number.isNaN(a)) layout.group_list[index].offsetcolor[3] = math2d_clamp_float(a, 0.0, 1.0);
     }
 }
 
@@ -2161,17 +2161,17 @@ function layout_parse_placeholder(unparsed_plchdlr, layout_context, group_id) {
     let unparsed_parallax = unparsed_plchdlr.querySelector("Parallax");
     if (unparsed_parallax) {
         layout_herper_parse_offsetmovefromto(unparsed_parallax, xyz);
-        if (Number.isFinite(xyz[0])) placeholder.parallax.x = xyz[0];
-        if (Number.isFinite(xyz[1])) placeholder.parallax.y = xyz[1];
-        if (Number.isFinite(xyz[2])) placeholder.parallax.z = xyz[2];
+        if (!Number.isNaN(xyz[0])) placeholder.parallax.x = xyz[0];
+        if (!Number.isNaN(xyz[1])) placeholder.parallax.y = xyz[1];
+        if (!Number.isNaN(xyz[2])) placeholder.parallax.z = xyz[2];
     }
 
     let unparsed_location = unparsed_plchdlr.querySelector("Location");
     if (unparsed_location) {
         layout_herper_parse_offsetmovefromto(unparsed_location, xyz);
-        if (Number.isFinite(xyz[0])) placeholder.x = xyz[0];
-        if (Number.isFinite(xyz[1])) placeholder.y = xyz[1];
-        if (Number.isFinite(xyz[2])) placeholder.z = xyz[2];
+        if (!Number.isNaN(xyz[0])) placeholder.x = xyz[0];
+        if (!Number.isNaN(xyz[1])) placeholder.y = xyz[1];
+        if (!Number.isNaN(xyz[2])) placeholder.z = xyz[2];
         placeholder.align_vertical = layout_helper_parse_align2(
             unparsed_location, true, placeholder.align_vertical
         );
@@ -2659,17 +2659,17 @@ function layout_parse_externalvalues(unparsed_root, layout_context) {
             case "float":
                 value = Number.parseFloat(unparsed_value);
                 type = LAYOUT_TYPE_DOUBLE;
-                invalid = !Number.isFinite(value);
+                invalid = Number.isNaN(value);
                 break;
             case "integer":
                 value = vertexprops_parse_integer2(unparsed_value, NaN);
                 type = LAYOUT_TYPE_INTEGER;
-                invalid = !Number.isFinite(value);
+                invalid = Number.isNaN(value);
                 break;
             case "hex":
                 value = vertexprops_parse_hex2(unparsed_value, NaN, false);
                 type = LAYOUT_TYPE_HEX;
-                invalid = !Number.isFinite(value);
+                invalid = Number.isNaN(value);
                 break;
             case "boolean":
                 value = vertexprops_parse_boolean2(unparsed_value, null);
@@ -3291,8 +3291,8 @@ function layout_helper_execute_action_in_sprite(action, item, viewport_width, vi
                     );
                 } else {
                     sprite_get_draw_location(sprite, location);
-                    if (Number.isFinite(entry.x)) location[0] = entry.x;
-                    if (Number.isFinite(entry.y)) location[1] = entry.y;
+                    if (!Number.isNaN(entry.x)) location[0] = entry.x;
+                    if (!Number.isNaN(entry.y)) location[1] = entry.y;
                 }
                 sprite_set_draw_location(sprite, location[0], location[1]);
                 if (!Number.isNaN(entry.z)) sprite_set_z_index(sprite, entry.z);
@@ -3936,7 +3936,7 @@ function layout_helper_add_action_textborder(unparsed_entry, action_entries) {
     let alpha = layout_helper_parse_float(unparsed_entry, "alpha", NaN);
     layout_helper_parse_color(unparsed_entry, entry.rgba);
 
-    if (Number.isFinite(alpha)) entry.rgba[3] = alpha;
+    if (!Number.isNaN(alpha)) entry.rgba[3] = alpha;
 
     arraylist_add(action_entries, entry);
 }

@@ -560,7 +560,7 @@ function vertexprops_parse_integer2(value, def_value) {
     let regex = /^-?[0-9]+$/;
     if (!regex.test(value)) return def_value;
     let result = parseInt(value);
-    return Number.isFinite(result) ? result : def_value;
+    return Number.isNaN(result) ? def_value : result;
 }
 
 
@@ -614,7 +614,7 @@ function vertexprops_parse_hex(string, output_value, only_if_prefixed) {
 
     let val = Number.parseInt(matches[1], 16);
 
-    if (!Number.isFinite(val)) return false;
+    if (Number.isNaN(val)) return false;
 
     // add alpha component
     /*let string_length = matches[1].length;

@@ -28,7 +28,7 @@ async function atlas_init(src) {
     //atlas.name = src;
 
     atlas.glyph_fps = parseFloat(xml_atlas.getAttribute("glyphFps"));
-    if (!Number.isFinite(atlas.glyph_fps)) atlas.glyph_fps = 0.0;
+    if (Number.isNaN(atlas.glyph_fps)) atlas.glyph_fps = 0.0;
 
     atlas.texture_filename = xml_atlas.getAttribute("imagePath");
     atlas.resolution_width = FUNKIN_SCREEN_RESOLUTION_WIDTH;
@@ -233,7 +233,7 @@ function atlas_parse_resolution(atlas, resolution_string) {
         resolution_string.substring(index + 1, resolution_string.length), NaN
     );
 
-    if (!Number.isFinite(width) || !Number.isFinite(height)) {
+    if (Number.isNaN(width) || Number.isNaN(height)) {
         console.error("atlas_parse_resolution() invalid resolution", resolution_string);
         return false;
     }
@@ -360,15 +360,15 @@ function atlas_parse_tileset(arraylist, unparsed_tileset) {
     let tile_height = Number.parseInt(unparsed_tileset.getAttribute("tileHeight"));
 
     if (
-        !Number.isFinite(sub_width) || !Number.isFinite(sub_height) ||
-        !Number.isFinite(tile_width) || !Number.isFinite(tile_height)
+        Number.isNaN(sub_width) || Number.isNaN(sub_height) ||
+        Number.isNaN(tile_width) || Number.isNaN(tile_height)
     ) {
         console.warn("atlas_parse_tileset() missing fields in TileSet: " + unparsed_tileset.outerHTML);
         return;
     }
 
-    if (!Number.isFinite(sub_x)) sub_x = 0;
-    if (!Number.isFinite(sub_y)) sub_y = 0;
+    if (Number.isNaN(sub_x)) sub_x = 0;
+    if (Number.isNaN(sub_y)) sub_y = 0;
 
     // (JS Only) results must be truncated
     let rows = Math.trunc(sub_width / tile_width);

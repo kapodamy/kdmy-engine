@@ -175,7 +175,7 @@ function songplayer_get_duration(songplayer) {
         let playback = songplayer.playbacks[i];
         let playback_duration = playback.duration;
 
-        if (!Number.isFinite(playback_duration)) continue;
+        if (Number.isNaN(playback_duration)) continue;
         if (playback_duration > duration) duration = playback_duration * 1000;
     }
 

@@ -575,7 +575,7 @@ async function menu_internal_build_item(item, src_item, params, modelholder, fon
     }
 
     item.cell_dimmen = dimmen;
-    item.cell_gap = Number.isFinite(src_item.placement.gap) ? src_item.placement.gap : 0.0;
+    item.cell_gap = Number.isNaN(src_item.placement.gap) ? 0.0 : src_item.placement.gap;
 }
 
 function menu_internal_load_anim(modelholder, absolute_name, prefix, suffix) {

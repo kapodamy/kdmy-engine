@@ -226,8 +226,8 @@ function character_use_alternate_sing_animations(character, enable) {
 
 function character_set_draw_location(character, x, y) {
     let modifier = drawable_get_modifier(character.drawable);
-    if (Number.isFinite(x)) character.draw_x = modifier.x = x;
-    if (Number.isFinite(y)) character.draw_y = modifier.y = y;
+    if (!Number.isNaN(x)) character.draw_x = modifier.x = x;
+    if (!Number.isNaN(y)) character.draw_y = modifier.y = y;
     character_internal_calculate_location(character);
 }
 

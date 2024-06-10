@@ -25,10 +25,10 @@ async function notepool_init(notes, notes_size, dimmen, invdimmen, scroll_direct
             custom_sick_effect_name: strdup(note_definition.sick_effect_state_name)
         };
 
-        if (Number.isFinite(note_definition.damage_ratio))
+        if (!Number.isNaN(note_definition.damage_ratio))
             notepool.attributes[i].hurt_ratio = note_definition.damage_ratio;
 
-        if (Number.isFinite(note_definition.heal_ratio))
+        if (!Number.isNaN(note_definition.heal_ratio))
             notepool.attributes[i].heal_ratio = note_definition.heal_ratio;
 
 

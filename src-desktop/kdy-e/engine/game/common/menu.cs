@@ -606,7 +606,7 @@ public class Menu : IAnimate, IDraw {
         }
 
         item.cell_dimmen = dimmen;
-        item.cell_gap = !Single.IsNaN(src_item.placement.gap) ? src_item.placement.gap : 0;
+        item.cell_gap = Single.IsNaN(src_item.placement.gap) ? 0f : src_item.placement.gap;
     }
 
     private AnimSprite InternalLoadAnim(ModelHolder modelholder, string absolute_name, string prefix, string suffix) {

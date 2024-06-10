@@ -192,7 +192,7 @@ function stringbuilder_helper_create_formatted_string(format, /*va_list*/values)
         let modifier = -1;
         if (i > modifier_start) {
             modifier = vertexprops_parse_unsigned_integer(format.substring(modifier_start, i), NaN);
-            if (!Number.isFinite(modifier)) continue;
+            if (Number.isNaN(modifier)) continue;
         }
 
         if (i >= format_length) {

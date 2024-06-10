@@ -320,7 +320,7 @@ async function soundplayer_internal_read_looping_points(src) {
         }
 
         if (packet_type == PACKET_TYPE2) {
-            if (!Number.isFinite(sample_rate)) {
+            if (Number.isNaN(sample_rate)) {
                 // pick sample rate
                 sample_rate = dataview.getUint32(offset + 5, true);
             }
@@ -380,7 +380,7 @@ function soundplayer_internal_loop_listener(soundplayer) {
     /**@type {number}*/let loop_start_ms = soundplayer.loop_start;
     /**@type {number}*/let loop_end_ms = soundplayer.loop_length;
 
-    if (soundplayer.sample_rate < 0 || !Number.isFinite(soundplayer.sample_rate)) {
+    if (soundplayer.sample_rate < 0 || Number.isNaN(soundplayer.sample_rate)) {
         return;
     }
     if (loop_start_ms < 0 || loop_start_ms == loop_end_ms) {

@@ -154,22 +154,22 @@ public class SongProgressbar : IAnimate, IDraw {
 
     public void SetBackgroundColor(float r, float g, float b, float a) {
         this.statesprite_background.SetVertexColor(r, g, b);
-        if (!Double.IsNaN(a)) this.statesprite_background.SetAlpha(a);
+        if (!Single.IsNaN(a)) this.statesprite_background.SetAlpha(a);
     }
 
     public void SetBarBackColor(float r, float g, float b, float a) {
         this.statesprite_back.SetVertexColor(r, g, b);
-        if (!Double.IsNaN(a)) this.statesprite_back.SetAlpha(a);
+        if (!Single.IsNaN(a)) this.statesprite_back.SetAlpha(a);
     }
 
     public void SetBarProgressColor(float r, float g, float b, float a) {
         this.statesprite_progress.SetVertexColor(r, g, b);
-        if (!Double.IsNaN(a)) this.statesprite_progress.SetAlpha(a);
+        if (!Single.IsNaN(a)) this.statesprite_progress.SetAlpha(a);
     }
 
     public void SetTextColor(float r, float g, float b, float a) {
         this.textsprite_time.SetColor(r, g, b);
-        if (!Double.IsNaN(a)) this.textsprite_time.SetAlpha(a);
+        if (!Single.IsNaN(a)) this.textsprite_time.SetAlpha(a);
     }
 
     public void HideTime(bool hidden) {
