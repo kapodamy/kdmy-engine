@@ -68,6 +68,7 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
     // calculate the amount of required frames
     // needs C implementation
     for (let i = 0; i < atlas.size; i++) {
+        fontglyph.table[i] = { actual_frame: 0, code: 0x00, frames: null, frames_size: 0 };
         let result = fontglyph_internal_parse(
             atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
         );

@@ -102,6 +102,7 @@ public class FontGlyph : IFontRender {
         // calculate the amount of required frames
         // needs C implementation
         for (int i = 0 ; i < atlas.size ; i++) {
+            fontglyph.table[i] = new GlyphInfo() { actual_frame = 0, code = 0x00, frames = null, frames_size = 0 };
             int result = FontGlyph.InternalParse(
                 atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
             );
@@ -116,7 +117,7 @@ public class FontGlyph : IFontRender {
 
         // allocate frames array
         // needs C implementation
-        for (int i = 0; i < fontglyph.table_size; i++) {
+        for (int i = 0 ; i < fontglyph.table_size ; i++) {
             GlyphInfo glyph_info = fontglyph.table[i];
             if (glyph_info.frames_size > 0) {
                 glyph_info.frames = new GlyphFrame[glyph_info.frames_size];
@@ -126,8 +127,7 @@ public class FontGlyph : IFontRender {
 
         // add glyph frames
         // needs C implementation
-        table_index = 0;
-        for (int i = 0; i < atlas.size; i++) {
+        for (int i = 0 ; i < atlas.size ; i++) {
             int result = FontGlyph.InternalParse(
                 atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
             );
@@ -475,7 +475,7 @@ public class FontGlyph : IFontRender {
 
         // check if this atlas entry is an animation frame
         if (index < atlas_entry_name_length) {
-            if (!Atlas.NameHasNumberSuffix(atlas_entry_name, index)) return 0;// suffix found
+            if (!Atlas.NameHasNumberSuffix(atlas_entry_name, index)) return 0;// suffix not present
 
             // check if already exists an entry with this unicode code point
             int code_index = -1;
@@ -488,9 +488,9 @@ public class FontGlyph : IFontRender {
 
             if (code_index >= 0) {
                 // reject, animation is disabled
-                if (!allow_animation || table[table_index].frames_size > 0) return 0;
+                if (!allow_animation || table[code_index].frames_size > 0) return 0;// suffix not present
                 // add another frame
-                FontGlyph.InternalAddFrame(atlas_entry, table[table_index]);
+                FontGlyph.InternalAddFrame(atlas_entry, table[code_index]);
                 return 2;
             }
         }
