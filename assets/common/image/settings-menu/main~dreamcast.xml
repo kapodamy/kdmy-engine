@@ -2,10 +2,6 @@
 <Layout width="960" height="720" keepAspectRatio="true">
     <Font name="title" path="/assets/common/font/Alphabet.xml" glyphSuffix="bold" />
     <Font name="labels" path="/assets/common/font/vcr.ttf" />
-
-    <AttachValue name="color_bg_key" type="hex" value="0x000000BF"/>
-    <AttachValue name="color_bg_key_selected" type="hex" value="0x007F7FBF"/>
-    <AttachValue name="color_bg_key_active" type="hex" value="0xFF7F7FBF"/>
 	
     <!-- <AttachValue name="backgroud_music_filename" type="string" value="/assets/common/music/gameOver.ogg"/> -->
     <!-- <AttachValue name="backgroud_music_volume" type="float" value="0.5"/> -->

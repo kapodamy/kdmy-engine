@@ -1,43 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Layout width="1280" height="720" keepAspectRatio="true">
+<Layout width="960" height="720" keepAspectRatio="true">
     <Font name="title" path="/assets/common/font/Alphabet.xml" glyphSuffix="bold" />
     <Font name="labels" path="/assets/common/font/vcr.ttf" />
-	
-    <!-- <AttachValue name="backgroud_music_filename" type="string" value="/assets/common/music/gameOver.ogg"/> -->
-    <!-- <AttachValue name="backgroud_music_volume" type="float" value="0.5"/> -->
 
+    <Sprite rgb="0x000000">
+        <Action>
+            <Location x="0" y="0" z="0" />
+            <Size width="960" height="720"/>
+        </Action>
+    </Sprite>
     <Sprite texture="menuDesat.png">
         <Action>
             <Location x="0" y="0" z="1" />
-            <Resize maxWidth="1280" maxHeight="720" center="true" cover="true" />
+            <Resize maxWidth="960" maxHeight="720" center="true" cover="true" />
             <Property name="alpha" value="0.4" />
         </Action>
     </Sprite>
 
     <Text fontName="title" fontSize="60" color="0xFFFFFF">
         <Action>
-            <String>OPTIONS</String>
-            <Location x="80" y="60" z="2" />
+            <String>SAVEDATA</String>
+            <Location x="60" y="60" z="2" />
         </Action>
     </Text>
 
 	<AttachValue name="menu_isVertical" type="boolean"  value="true" />
     <AttachValue name="menu_fontSize" type="float"  value="46" />
     <AttachValue name="menu_itemGap" type="float"  value="38" />
-	<Placeholder name="menu" x="100" y="180" z="2" width="1090" height="480" />
+	<Placeholder name="menu" x="75" y="180" z="2" width="817" height="480" />
 
 	<!-- Options Hint -->
 	<Group>
 		<Sprite rgba="0x0000007F">
 			<Action>
 				<Location x="0" y="652" z="1" />
-				<Size width="1280" height="72"/>
+				<Size width="960" height="72"/>
 			</Action>
 		</Sprite>
 		<Text name="hint" fontName="labels" fontSize="24" rgb="0xFFFFFF">
 			<Action>
-				<Location x="20" y="660" z="2" />
-				<MaxSize width="1280" />
+				<Location x="15" y="660" z="2" />
+				<MaxSize width="960" />
 				<!-- <String>Select an option</String> -->
 			</Action>
 		</Text>

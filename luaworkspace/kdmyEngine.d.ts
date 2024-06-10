@@ -1240,6 +1240,7 @@ declare global {
         set_text_force_case(none_or_lowercase_or_uppercase: TextSpriteForceCase): void;
         has_item(name: string): boolean;
         index_of_item(name: string): boolean;
+        set_item_image(index: number, modelholder: ModelHolder, atlas_or_animlist_entry_name: string): void;
     }
     /** Provides a JSON parser */
     interface JSON {

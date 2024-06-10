@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Engine.Animation;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
@@ -143,6 +144,25 @@ public class ModelHolder {
     }
 
     public static ModelHolder Init2(uint vertex_color_rgb8, string atlas_src, string animlist_src) {
+        string full_atlas_src = FS.GetFullPathAndOverride(atlas_src);
+        string full_animlist_src = FS.GetFullPathAndOverride(animlist_src);
+
+        StringBuilder stringbuilder = new StringBuilder(128);
+        stringbuilder.AddFormatKDY("$s|$s|0x$I", full_atlas_src, full_animlist_src, vertex_color_rgb8);
+        string fake_src = stringbuilder.ToString();
+
+        //free(full_atlas_src);
+        //free(full_animlist_src);
+
+        // find an instance of this
+        foreach (ModelHolder instance in ModelHolder.POOL) {
+            if (instance.instance_src != fake_src) continue;
+
+            instance.instance_references++;
+            //free(fake_src);
+            return instance;
+        }
+
         ModelHolder modelholder = new ModelHolder() {
             atlas = ModelHolder.STUB_ATLAS,
             animlist = ModelHolder.STUB_ANIMLIST,
@@ -151,7 +171,7 @@ public class ModelHolder {
 
             id = ModelHolder.IDS++,
             instance_references = 1,
-            instance_src = null
+            instance_src = fake_src
         };
         ModelHolder.POOL.Set(modelholder.id, modelholder);
 

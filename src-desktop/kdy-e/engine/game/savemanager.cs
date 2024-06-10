@@ -84,7 +84,6 @@ public class SaveManager {
     private Menu menu;
     private MessageBox messagebox;
     private ModelHolder modelholder;
-    private AnimList animlist;
     private Layout layout;
     private LayoutPlaceholder placeholder;
     private Sprite selected_background;
@@ -128,9 +127,11 @@ public class SaveManager {
         LayoutPlaceholder placeholder = layout.GetPlaceholder("menu");
         Debug.Assert(placeholder != null, "missing 'menu' placeholder");
 
-        // for caching only
-        ModelHolder modelholder = ModelHolder.Init(SaveManager.MENU_MANIFEST.parameters.atlas);
-        AnimList animlist = AnimList.Init(SaveManager.MENU_MANIFEST.parameters.animlist);
+        ModelHolder modelholder = ModelHolder.Init2(
+            0x00,
+            SaveManager.MENU_MANIFEST.parameters.atlas,
+            SaveManager.MENU_MANIFEST.parameters.animlist
+        );
 
         MessageBox messagebox = new MessageBox();
         messagebox.HideImage(true);
@@ -149,7 +150,7 @@ public class SaveManager {
             button_icons, layout, 4, false, "a", "Choose VMU", null
         );
         WeekSelectorHelpText help_delete = new WeekSelectorHelpText(
-            button_icons, layout, 6, false, "y", "Delete stored savedata", null
+            button_icons, layout, 6, false, "x", "Delete savedata", null
         );
         button_icons.Destroy();
 
@@ -164,7 +165,6 @@ public class SaveManager {
         this.messagebox = messagebox;
 
         this.modelholder = modelholder;
-        this.animlist = animlist;
         this.layout = layout;
         this.placeholder = placeholder;
         this.selected_background = selected_background;
@@ -195,7 +195,7 @@ public class SaveManager {
     }
 
     public void Destroy() {
-        this.menu.Destroy();
+        if (this.menu != null) this.menu.Destroy();
         this.drawable_wrapper.Destroy();
         //free(this.vmu_array);
         this.layout.Destroy();
@@ -204,7 +204,6 @@ public class SaveManager {
         this.maple_pad.Destroy();
         this.messagebox.Destroy();
         this.modelholder.Destroy();
-        this.animlist.Destroy();
         this.help_ok.Destroy();
         this.help_cancel.Destroy();
         this.help_delete.Destroy();
@@ -233,6 +232,8 @@ public class SaveManager {
         modding.HelperNotifyEvent(this.save_only ? "do-save" : "do-load");
         modding.HelperNotifyEvent(this.allow_delete ? "delete-enabled" : "delete-disabled");
 
+        this.maple_pad.ClearButtons();
+
         while (!modding.has_exit) {
             int selection_offset_x = 0;
             int selection_offset_y = 0;
@@ -246,9 +247,10 @@ public class SaveManager {
                 next_scan = SaveManager.SCAN_INTERVAL;
 
                 if (InternalFindChanges()) {
-
                     InternalBuildList();
                     this.menu.SelectIndex(-1);
+
+                    selected_index = -1;
                     if (last_saved_selected) {
                         this.layout.TriggerAny("save-not-selected");
                         last_saved_selected = false;
@@ -301,13 +303,20 @@ public class SaveManager {
                     if (confirm_delete) {
                         InternalCommitDelete();
                         confirm_delete = false;
-                        next_scan = -1f;// rebuild list
+
+                        this.menu.SetItemImage(selected_index, this.modelholder, SaveManager.EMPTY);
+                        this.layout.TriggerAny("save-not-selected");
+                        this.maple_pad.EnforceButtonsDelay();
+                        this.maple_pad.ClearButtons();
                         continue;
                     }
                     SaveManager.game_withoutsavedata = true;
                     break;
                 }
-                if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool()) confirm_leave = false;
+                if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool()) {
+                    confirm_leave = confirm_delete = false;
+                    this.maple_pad.ClearButtons();
+                }
                 continue;
             }
 
@@ -321,7 +330,7 @@ public class SaveManager {
                 continue;
             }
 
-            if ((buttons & MainMenu.GAMEPAD_OK).Bool()) {
+            if ((buttons & (GamepadButtons.A | GamepadButtons.START)).Bool()) {
                 selected_index = this.menu.GetSelectedIndex();
                 if (selected_index >= 0 && selected_index < this.menu.GetItemsCount()) {
                     save_or_load_success = InternalCommit(selected_index);
@@ -341,9 +350,10 @@ public class SaveManager {
                 this.messagebox.SetMessage(
                     this.save_only ? "¿Leave without saving?" : "¿Continue without load?"
                 );
-                this.messagebox.Show(true);
+                this.messagebox.Show(false);
+                this.maple_pad.ClearButtons();
                 continue;
-            } else if (this.allow_delete && (buttons & GamepadButtons.Y).Bool()) {
+            } else if (this.allow_delete && (buttons & GamepadButtons.X).Bool()) {
                 selected_index = this.menu.GetSelectedIndex();
                 if (selected_index < 0 || selected_index >= this.menu.GetItemsCount()) {
                     continue;
@@ -360,7 +370,8 @@ public class SaveManager {
                     "¿Delete savedata on $s?\nThis operation can not be undone.",
                     this.selected_label.GetString()
                 );
-                this.messagebox.Show(true);
+                this.messagebox.Show(false);
+                this.maple_pad.ClearButtons();
                 continue;
             } else if ((buttons & GamepadButtons.AD_DOWN).Bool())
                 selection_offset_y++;
@@ -379,7 +390,7 @@ public class SaveManager {
             if (selection_offset_y != 0 && this.menu.SelectVertical(selection_offset_y)) success = true;
 
             selected_index = this.menu.GetSelectedIndex();
-            if ((!success || selected_index < 0) && selected_index >= this.vmu_size) continue;
+            if (!success || selected_index < 0 || selected_index >= this.vmu_size) continue;
 
             VMUInfo vmu = this.vmu_array[selected_index];
 
@@ -460,7 +471,7 @@ public class SaveManager {
     }
 
     public void ChangeActions(bool save_only, bool allow_delete) {
-        this.error_code = -1;
+        this.error_code = 0;
         this.save_only = save_only;
         this.allow_delete = allow_delete;
 
@@ -472,7 +483,11 @@ public class SaveManager {
 
 
     private void InternalBuildList() {
-        if (this.menu != null) this.menu.Destroy();
+        int selected_index = -1;
+        if (this.menu != null) {
+            selected_index = this.menu.GetSelectedIndex();
+            this.menu.Destroy();
+        }
 
         SaveManager.MENU_MANIFEST.items = new MenuManifest.Item[this.vmu_size];
         SaveManager.MENU_MANIFEST.items_size = this.vmu_size;
@@ -509,6 +524,10 @@ public class SaveManager {
             this.placeholder.width,
             this.placeholder.height
         );
+
+        if (selected_index >= 0 && selected_index < this.vmu_size) {
+            this.menu.SelectIndex(selected_index);
+        }
 
         // note: nothing is allocated inside of items[]
         //free(SaveManager.MENU_MANIFEST.items);
@@ -588,7 +607,7 @@ public class SaveManager {
             this.messagebox.SetMessage("This vmu is empty ¿Create a new save?");
             this.messagebox.SetButtonsIcons("a", "b");
             this.messagebox.SetButtonsText("Yes", "Pick another");
-            this.messagebox.Show(true);
+            this.messagebox.Show(false);
 
             this.maple_pad.ClearButtons();
 
@@ -609,7 +628,9 @@ public class SaveManager {
 
         FunkinSave.SetVMU((sbyte)vmu.port, (sbyte)vmu.unit);
 
-        if (!this.save_only && !vmu.has_savedata) {
+        bool create_new = !this.save_only && !vmu.has_savedata;
+
+        if (create_new) {
             this.messagebox.SetTitle("Creating new save...");
             this.save_only = true;
         } else {
@@ -634,7 +655,11 @@ public class SaveManager {
         else
             result = FunkinSave.ReadFromVMU();
 
-        return InternalShowError(result);
+        bool ret = InternalShowError(result);
+
+        if (create_new) this.save_only = false;
+
+        return ret;
     }
 
     private bool InternalShowError(int error_code) {
@@ -739,6 +764,19 @@ public class SaveManager {
             return;
         }
 
+        this.messagebox.SetTitle("Deleting savedata...");
+        this.messagebox.HideButtons();
+        this.messagebox.UseFullTitle(true);
+        this.messagebox.SetMessage(null);
+        this.messagebox.Show(false);
+
+        PVRContext.global_context.Reset();
+        this.layout.Draw(PVRContext.global_context);
+        this.messagebox.Draw(PVRContext.global_context);
+        PVRContext.global_context.WaitReady();
+
+        this.messagebox.UseFullTitle(false);
+
         int error_code = FunkinSave.DeleteFromVMU((sbyte)vmu.port, (sbyte)vmu.unit);
 
         switch (error_code) {
@@ -769,6 +807,7 @@ public class SaveManager {
                 break;
             default:
                 // success
+                vmu.has_savedata = false;
                 return;
         }
 

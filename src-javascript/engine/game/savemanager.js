@@ -90,9 +90,11 @@ async function savemanager_init(save_only, error_code) {
     let placeholder = layout_get_placeholder(layout, "menu");
     console.assert(placeholder, "missing 'menu' placeholder");
 
-    // for caching only
-    let modelholder = await modelholder_init(SAVEMANAGER_MENU_MANIFEST.parameters.atlas);
-    let animlist = await animlist_init(SAVEMANAGER_MENU_MANIFEST.parameters.animlist);
+    let modelholder = await modelholder_init2(
+        0x00,
+        SAVEMANAGER_MENU_MANIFEST.parameters.atlas,
+        SAVEMANAGER_MENU_MANIFEST.parameters.animlist
+    );
 
     let messagebox = await messagebox_init();
     messagebox_hide_image(messagebox, true);
@@ -109,7 +111,7 @@ async function savemanager_init(save_only, error_code) {
         button_icons, layout, 4, false, "a", "Choose VMU", null
     );
     let help_delete = weekselector_helptext_init(
-        button_icons, layout, 6, false, "y", "Delete stored savedata", null
+        button_icons, layout, 6, false, "x", "Delete savedata", null
     );
     modelholder_destroy(button_icons);
 
@@ -124,7 +126,6 @@ async function savemanager_init(save_only, error_code) {
         messagebox,
 
         modelholder,
-        animlist,
         layout,
         placeholder,
         selected_background,
@@ -158,7 +159,7 @@ async function savemanager_init(save_only, error_code) {
 }
 
 function savemanager_destroy(savemanager) {
-    menu_destroy(savemanager.menu);
+    if (savemanager.menu) menu_destroy(savemanager.menu);
     drawable_destroy(savemanager.drawable_wrapper);
     savemanager.vmu_array = undefined;
     layout_destroy(savemanager.layout);
@@ -167,7 +168,6 @@ function savemanager_destroy(savemanager) {
     gamepad_destroy(savemanager.maple_pad);
     messagebox_destroy(savemanager.messagebox);
     modelholder_destroy(savemanager.modelholder);
-    animlist_destroy(savemanager.animlist);
     weekselector_helptext_destroy(savemanager.help_ok);
     weekselector_helptext_destroy(savemanager.help_cancel);
     weekselector_helptext_destroy(savemanager.help_delete);
@@ -187,6 +187,8 @@ async function savemanager_show(savemanager) {
 
     layout_trigger_any(savemanager.layout, savemanager.save_only ? "save-to" : "load-from");
     layout_trigger_any(savemanager.layout, savemanager.allow_delete ? "delete-allowed" : "delete-not-allowed");
+
+    gamepad_clear_buttons(savemanager.maple_pad);
 
     let modding = await modding_init(savemanager.layout, SAVEMANAGER_MODDING_SCRIPT);
     modding.native_menu = modding.active_menu = savemanager.menu;
@@ -211,6 +213,8 @@ async function savemanager_show(savemanager) {
             if (await savemanager_internal_find_changes(savemanager)) {
                 await savemanager_internal_build_list(savemanager);
                 menu_select_index(savemanager.menu, -1);
+
+                selected_index = -1;
                 if (last_saved_selected) {
                     layout_trigger_any(savemanager.layout, "save-not-selected");
                     last_saved_selected = false;
@@ -263,13 +267,20 @@ async function savemanager_show(savemanager) {
                 if (confirm_delete) {
                     await savemanager_internal_commit_delete(savemanager);
                     confirm_delete = false;
-                    next_scan = -1.0; // rebuild list
+
+                    menu_set_item_image(savemanager.menu, selected_index, savemanager.modelholder, SAVEMANAGER_EMPTY);
+                    layout_trigger_any(savemanager.layout, "save-not-selected");
+                    gamepad_enforce_buttons_delay(savemanager.maple_pad);
+                    gamepad_clear_buttons(savemanager.maple_pad);
                     continue;
                 }
                 savemanager_game_withoutsavedata = true;
                 break;
             }
-            if (buttons & MAINMENU_GAMEPAD_CANCEL) confirm_leave = false;
+            if (buttons & MAINMENU_GAMEPAD_CANCEL) {
+                confirm_leave = false;
+                gamepad_clear_buttons(savemanager.maple_pad);
+            }
             continue;
         }
 
@@ -283,7 +294,7 @@ async function savemanager_show(savemanager) {
             continue;
         }
 
-        if (buttons & MAINMENU_GAMEPAD_OK) {
+        if (buttons & (GAMEPAD_A | GAMEPAD_START)) {
             selected_index = menu_get_selected_index(savemanager.menu);
             if (selected_index >= 0 && selected_index < menu_get_items_count(savemanager.menu)) {
                 save_or_load_success = await savemanager_internal_commit(savemanager, selected_index);
@@ -303,9 +314,10 @@ async function savemanager_show(savemanager) {
             messagebox_set_message(
                 savemanager.messagebox, savemanager.save_only ? "¿Leave without saving?" : "¿Continue without load?"
             );
-            messagebox_show(savemanager.messagebox, true);
+            messagebox_show(savemanager.messagebox, false);
+            gamepad_clear_buttons(savemanager.maple_pad);
             continue;
-        } else if (savemanager.allow_delete && (buttons & GAMEPAD_Y)) {
+        } else if (savemanager.allow_delete && (buttons & GAMEPAD_X)) {
             selected_index = menu_get_selected_index(savemanager.menu);
             if (selected_index < 0 || selected_index >= menu_get_items_count(savemanager.menu)) {
                 continue;
@@ -323,7 +335,8 @@ async function savemanager_show(savemanager) {
                 "¿Delete savedata on $s?\nThis operation can not be undone.",
                 textsprite_get_string(savemanager.selected_label)
             );
-            messagebox_show(savemanager.messagebox, true);
+            messagebox_show(savemanager.messagebox, false);
+            gamepad_clear_buttons(savemanager.maple_pad);
             continue;
         }
         else if (buttons & GAMEPAD_AD_DOWN)
@@ -343,7 +356,7 @@ async function savemanager_show(savemanager) {
         if (selection_offset_y != 0 && menu_select_vertical(savemanager.menu, selection_offset_y)) success = true;
 
         selected_index = menu_get_selected_index(savemanager.menu);
-        if ((!success || selected_index < 0) && selected_index >= savemanager.vmu_size) continue;
+        if (!success || selected_index < 0 || selected_index >= savemanager.vmu_size) continue;
 
         const vmu = savemanager.vmu_array[selected_index];
 
@@ -432,7 +445,7 @@ function savemanager_is_running_without_savedata() {
 }
 
 function savemanager_change_actions(savemanager, save_only, allow_delete) {
-    savemanager.error_code = -1;
+    savemanager.error_code = 0;
     savemanager.save_only = save_only;
     savemanager.allow_delete = allow_delete;
 
@@ -444,7 +457,11 @@ function savemanager_change_actions(savemanager, save_only, allow_delete) {
 
 
 async function savemanager_internal_build_list(savemanager) {
-    if (savemanager.menu) menu_destroy(savemanager.menu);
+    let selected_index = -1;
+    if (savemanager.menu) {
+        selected_index = menu_get_selected_index(savemanager.menu);
+        menu_destroy(savemanager.menu);
+    }
 
     SAVEMANAGER_MENU_MANIFEST.items = new Array(savemanager.vmu_size);
     SAVEMANAGER_MENU_MANIFEST.items_size = savemanager.vmu_size;
@@ -481,69 +498,13 @@ async function savemanager_internal_build_list(savemanager) {
         savemanager.placeholder.height
     );
 
+    if (selected_index >= 0 && selected_index < savemanager.vmu_size) {
+        menu_select_index(savemanager.menu, selected_index);
+    }
+
     // note: nothing is allocated inside of items[]
     SAVEMANAGER_MENU_MANIFEST.items = undefined;
     SAVEMANAGER_MENU_MANIFEST.items_size = 0;
-}
-
-async function savemanager_internal_commit_delete(savemanager) {
-    let selected_index = menu_get_selected_index(savemanager.menu);
-    if (selected_index < 0 || selected_index >= menu_get_items_count(savemanager.menu)) {
-        // this never should happen
-        messagebox_set_message(
-            savemanager.messagebox, "The VMU was changed or removed, nothing to do"
-        );
-        await savemanager_internal_show_error(savemanager, -1);
-        return;
-    }
-
-    let vmu = savemanager.vmu_array[selected_index];
-    if (!vmu.has_savedata) {
-        // this never should happen
-        messagebox_set_message(savemanager.messagebox, "The VMU was changed, nothing to do");
-        await savemanager_internal_show_error(savemanager, -1);
-        return;
-    }
-
-    let error_code = await funkinsave_delete_from_vmu(vmu.port, vmu.unit);
-
-    switch (error_code) {
-        case 1:
-            messagebox_set_message_formated(
-                savemanager.messagebox,
-                "There nothing connected on $s", textsprite_get_string(savemanager.selected_label)
-            );
-            break;
-        case 2:
-            messagebox_set_message(
-                savemanager.messagebox,
-                "The VMU was removed"
-            );
-            break;
-        case 3:
-            messagebox_set_message(
-                savemanager.messagebox,
-                "The VMU has changed and the save is missing"
-            );
-            break;
-        case 4:
-            messagebox_set_message(
-                savemanager.messagebox,
-                "Failed to delete, the VMU may be corrupted"
-            );
-            break;
-        case 5:
-            messagebox_set_message(
-                savemanager.messagebox,
-                "Operation failed with an unknown error"
-            );
-            break;
-        default:
-            // success
-            return;
-    }
-
-    await savemanager_internal_show_error(savemanager, -1);
 }
 
 async function savemanager_internal_find_changes(savemanager) {
@@ -619,7 +580,7 @@ async function savemanager_internal_commit(savemanager, selected_index) {
         messagebox_set_message(savemanager.messagebox, "This vmu is empty ¿Create a new save?");
         messagebox_set_buttons_icons(savemanager.messagebox, "a", "b");
         messagebox_set_buttons_text(savemanager.messagebox, "Yes", "Pick another");
-        messagebox_show(savemanager.messagebox, true);
+        messagebox_show(savemanager.messagebox, false);
 
         gamepad_clear_buttons(savemanager.maple_pad);
 
@@ -639,7 +600,10 @@ async function savemanager_internal_commit(savemanager, selected_index) {
     }
 
     funkinsave_set_vmu(vmu.port, vmu.unit);
-    if (!savemanager.save_only && !vmu.has_savedata) {
+
+    let create_new = !savemanager.save_only && !vmu.has_savedata;
+
+    if (create_new) {
         messagebox_set_title(savemanager.messagebox, "Creating new save...");
         savemanager.save_only = true;
     } else {
@@ -664,7 +628,11 @@ async function savemanager_internal_commit(savemanager, selected_index) {
     else
         result = await funkinsave_read_from_vmu();
 
-    return await savemanager_internal_show_error(savemanager, result);
+    let ret = await savemanager_internal_show_error(savemanager, result);
+
+    if (create_new) savemanager.save_only = false;
+
+    return ret;
 }
 
 async function savemanager_internal_show_error(savemanager, error_code) {
@@ -750,5 +718,79 @@ async function savemanager_internal_show_error(savemanager, error_code) {
     }
 
     return false;
+}
+
+async function savemanager_internal_commit_delete(savemanager) {
+    let selected_index = menu_get_selected_index(savemanager.menu);
+    if (selected_index < 0 || selected_index >= menu_get_items_count(savemanager.menu)) {
+        // this never should happen
+        messagebox_set_message(
+            savemanager.messagebox, "The VMU was changed or removed, nothing to do"
+        );
+        await savemanager_internal_show_error(savemanager, -1);
+        return;
+    }
+
+    let vmu = savemanager.vmu_array[selected_index];
+    if (!vmu.has_savedata) {
+        // this never should happen
+        messagebox_set_message(savemanager.messagebox, "The VMU was changed, nothing to do");
+        await savemanager_internal_show_error(savemanager, -1);
+        return;
+    }
+
+    messagebox_set_title(savemanager.messagebox, "Deleting savedata...");
+    messagebox_hide_buttons(savemanager.messagebox);
+    messagebox_use_full_title(savemanager.messagebox, true);
+    messagebox_set_message(savemanager.messagebox, null);
+    messagebox_show(savemanager.messagebox, false);
+
+    pvr_context_reset(pvr_context);
+    layout_draw(savemanager.layout, pvr_context);
+    messagebox_draw(savemanager.messagebox, pvr_context);
+    await pvrctx_wait_ready();
+
+    messagebox_use_full_title(savemanager.messagebox, false);
+
+    let error_code = await funkinsave_delete_from_vmu(vmu.port, vmu.unit);
+
+    switch (error_code) {
+        case 1:
+            messagebox_set_message_formated(
+                savemanager.messagebox,
+                "There nothing connected on $s", textsprite_get_string(savemanager.selected_label)
+            );
+            break;
+        case 2:
+            messagebox_set_message(
+                savemanager.messagebox,
+                "The VMU was removed"
+            );
+            break;
+        case 3:
+            messagebox_set_message(
+                savemanager.messagebox,
+                "The VMU has changed and the save is missing"
+            );
+            break;
+        case 4:
+            messagebox_set_message(
+                savemanager.messagebox,
+                "Failed to delete, the VMU may be corrupted"
+            );
+            break;
+        case 5:
+            messagebox_set_message(
+                savemanager.messagebox,
+                "Operation failed with an unknown error"
+            );
+            break;
+        default:
+            // success
+            vmu.has_savedata = false;
+            return;
+    }
+
+    await savemanager_internal_show_error(savemanager, -1);
 }
 

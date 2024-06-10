@@ -2,10 +2,13 @@
 <Layout width="1280" height="720" keepAspectRatio="true">
     <Font name="title" path="/assets/common/font/Alphabet.xml" glyphSuffix="bold" />
     <Font name="labels" path="/assets/common/font/vcr.ttf" />
-	
-    <!-- <AttachValue name="backgroud_music_filename" type="string" value="/assets/common/music/gameOver.ogg"/> -->
-    <!-- <AttachValue name="backgroud_music_volume" type="float" value="0.5"/> -->
 
+    <Sprite rgb="0x000000">
+        <Action>
+            <Location x="0" y="0" z="0" />
+            <Size width="1280" height="720"/>
+        </Action>
+    </Sprite>
     <Sprite texture="menuDesat.png">
         <Action>
             <Location x="0" y="0" z="1" />
@@ -16,7 +19,7 @@
 
     <Text fontName="title" fontSize="60" color="0xFFFFFF">
         <Action>
-            <String>OPTIONS</String>
+            <String>SAVEDATA</String>
             <Location x="80" y="60" z="2" />
         </Action>
     </Text>

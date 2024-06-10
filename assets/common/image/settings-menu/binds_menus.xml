@@ -109,7 +109,7 @@
         </Text>
         <Text fontName="labels" fontSize="30" color="0xFFFFFF">
             <Action>
-                <String>Alternative tracks</String>
+                <String>Alt. tracks/Delete</String>
                 <Location x="80" y="460" z="2" />
             </Action>
         </Text>

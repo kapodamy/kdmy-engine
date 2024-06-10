@@ -489,6 +489,24 @@ function menu_index_of_item(menu, name) {
     return -1;
 }
 
+function menu_set_item_image(menu, index, modelholder, atlas_or_animlist_entry_name) {
+    if (index < 0 || index > menu.items_size) return;
+
+    let item = menu.items[index];
+    if (item.is_text) return;
+
+    if (item.anim_self) animsprite_destroy(item.anim_self);
+
+    item.anim_self = menu_internal_load_anim(
+        modelholder, atlas_or_animlist_entry_name, null, null
+    );
+
+    if (item.anim_self) {
+        animsprite_update_statesprite(item.anim_self, item.vertex, false);
+    }
+}
+
+
 
 async function menu_internal_build_item(item, src_item, params, modelholder, fontholder, border) {
     let custom_modelholder = false;

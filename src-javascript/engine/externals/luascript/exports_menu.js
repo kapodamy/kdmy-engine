@@ -310,6 +310,17 @@ function script_menu_index_of_item(L) {
     return 1;
 }
 
+function script_menu_set_item_image(L) {
+    let menu = luascript_read_userdata(L, MENU);
+    let index = LUA.luaL_checkinteger(L, 2);
+    let modelholder = luascript_read_nullable_userdata(L, 3, MODELHOLDER);
+    let atlas_or_animlist_entry_name = LUA.luaL_optstring(L, 4, null);
+
+    menu_set_item_image(menu, index, modelholder, atlas_or_animlist_entry_name);
+
+    return 0;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -334,6 +345,7 @@ function script_menu_index_of_item(L) {
     ["set_text_force_case", script_menu_set_text_force_case],
     ["has_item", script_menu_has_item],
     ["index_of_item", script_menu_index_of_item],
+    ["set_item_image", script_menu_set_item_image],
     [null, null]
 ];
 

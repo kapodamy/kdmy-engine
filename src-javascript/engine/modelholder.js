@@ -132,6 +132,25 @@ async function modelholder_init(src) {
 }
 
 async function modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
+    let full_atlas_src = await fs_get_full_path_and_override(atlas_src);
+    let full_animlist_src = await fs_get_full_path_and_override(animlist_src);
+
+    let stringbuilder = stringbuilder_init(128);
+    stringbuilder_add_format(stringbuilder, "$s|$s|0x$I", full_atlas_src, full_animlist_src, vertex_color_rgb8);
+    let fake_src = stringbuilder_finalize(stringbuilder);
+
+    full_atlas_src = undefined;
+    full_animlist_src = undefined;
+
+    // find an instance of this
+    for (let [id, instance] of MODELHOLDER_POOL) {
+        if (instance.instance_src != fake_src) continue;
+
+        instance.instance_references++;
+        fake_src = undefined;
+        return instance;
+    }
+
     let modelholder = {
         atlas: MODELHOLDER_STUB_ATLAS,
         animlist: MODELHOLDER_STUB_ANIMLIST,

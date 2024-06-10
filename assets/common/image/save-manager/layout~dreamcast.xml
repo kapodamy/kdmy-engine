@@ -3,6 +3,10 @@
 
     <Font name="font" path="/assets/common/font/vcr.ttf" />
 
+    <Camera offsetZoom="false" duration="0">
+        <Move z="1" />
+    </Camera>
+
     <Camera offsetZoom="false" name="outro" duration="1000">
         <To z="5" />
     </Camera>

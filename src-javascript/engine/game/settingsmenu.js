@@ -10,10 +10,12 @@ const SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY = "/assets/common/image/settings-menu/b
 const SETTINGSMENU_LAYOUT_BINDS_MENUS = "/assets/common/image/settings-menu/binds_menus.xml";
 const SETTINGSMENU_LAYOUT_MAIN = "/assets/common/image/settings-menu/main.xml";
 const SETTINGSMENU_LAYOUT_COMMON = "/assets/common/image/settings-menu/common.xml";
+const SETTINGSMENU_LAYOUT_SAVEDATA = "/assets/common/image/settings-menu/savedata.xml";
 const SETTINGSMENU_LAYOUT_BINDS_GAMEPLAY_DREAMCAST = "/assets/common/image/settings-menu/binds_gameplay~dreamcast.xml";
 const SETTINGSMENU_LAYOUT_BINDS_MENUS_DREAMCAST = "/assets/common/image/settings-menu/binds_menus~dreamcast.xml";
 const SETTINGSMENU_LAYOUT_MAIN_DREAMCAST = "/assets/common/image/settings-menu/main~dreamcast.xml";
 const SETTINGSMENU_LAYOUT_COMMON_DREAMCAST = "/assets/common/image/settings-menu/common~dreamcast.xml";
+const SETTINGSMENU_LAYOUT_SAVEDATA_DREAMCAST = "/assets/common/image/settings-menu/savedata~dreamcast.xml";
 
 const SETTINGSMENU_MENU = {
     parameters: {
@@ -525,7 +527,7 @@ async function settingsmenu_in_save_settings(gamepad, modding) {
         },
     ];
 
-    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_COMMON : SETTINGSMENU_LAYOUT_COMMON_DREAMCAST);
+    let layout = await layout_init(pvr_context_is_widescreen() ? SETTINGSMENU_LAYOUT_SAVEDATA : SETTINGSMENU_LAYOUT_SAVEDATA_DREAMCAST);
     if (!layout) {
         console.error("settingsmenu_in_save_settings() can not load the layout");
         return;
@@ -559,7 +561,7 @@ async function settingsmenu_in_save_settings(gamepad, modding) {
     menu_placeholder.vertex = menu_get_drawable(menu);
 
     // initialize with default values
-    let savemanager = await savemanager_init(false, -1);
+    let savemanager = await savemanager_init(false, 0);
 
     L_menu:
     while (!modding.has_exit) {

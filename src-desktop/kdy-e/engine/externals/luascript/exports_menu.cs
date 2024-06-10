@@ -313,6 +313,16 @@ public static class ExportsMenu {
         return 1;
     }
 
+    static int script_menu_set_item_image(LuaState L) {
+        Menu menu = L.ReadUserdata<Menu>(MENU);
+        int index = (int)L.luaL_checkinteger(2);
+        ModelHolder modelholder = L.ReadNullableUserdata<ModelHolder>(3, ExportsModelHolder.MODELHOLDER);
+        string atlas_or_animlist_entry_name = L.luaL_optstring(4, null);
+
+        menu.SetItemImage(index, modelholder, atlas_or_animlist_entry_name);
+
+        return 0;
+    }
 
 
     static readonly LuaTableFunction[] MENU_FUNCTIONS = {
@@ -335,6 +345,7 @@ public static class ExportsMenu {
         new LuaTableFunction("set_text_force_case", script_menu_set_text_force_case),
         new LuaTableFunction("has_item", script_menu_has_item),
         new LuaTableFunction("index_of_item", script_menu_index_of_item),
+        new LuaTableFunction("set_item_image", script_menu_set_item_image),
         new LuaTableFunction(null, null)
     };
 

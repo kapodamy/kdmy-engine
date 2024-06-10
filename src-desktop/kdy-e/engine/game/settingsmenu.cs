@@ -25,10 +25,12 @@ public static class SettingsMenu {
     private const string LAYOUT_BINDS_MENUS = "/assets/common/image/settings-menu/binds_menus.xml";
     private const string LAYOUT_MAIN = "/assets/common/image/settings-menu/main.xml";
     private const string LAYOUT_COMMON = "/assets/common/image/settings-menu/common.xml";
+    private const string LAYOUT_SAVEDATA = "/assets/common/image/settings-menu/savedata.xml";
     private const string LAYOUT_BINDS_GAMEPLAY_DREAMCAST = "/assets/common/image/settings-menu/binds_gameplay~dreamcast.xml";
     private const string LAYOUT_BINDS_MENUS_DREAMCAST = "/assets/common/image/settings-menu/binds_menus~dreamcast.xml";
     private const string LAYOUT_MAIN_DREAMCAST = "/assets/common/image/settings-menu/main~dreamcast.xml";
     private const string LAYOUT_COMMON_DREAMCAST = "/assets/common/image/settings-menu/common~dreamcast.xml";
+    private const string LAYOUT_SAVEDATA_DREAMCAST = "/assets/common/image/settings-menu/savedata~dreamcast.xml";
 
 
     private static readonly MenuManifest MENU = new MenuManifest() {
@@ -1146,7 +1148,7 @@ public static class SettingsMenu {
             },
         };
 
-        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_COMMON : SettingsMenu.LAYOUT_COMMON_DREAMCAST);
+        Layout layout = Layout.Init(PVRContext.global_context.IsWidescreen() ? SettingsMenu.LAYOUT_SAVEDATA : SettingsMenu.LAYOUT_SAVEDATA_DREAMCAST);
         if (layout == null) {
             Logger.Error("settingsmenu_in_save_settings() can not load the layout");
             return;
@@ -1180,7 +1182,7 @@ public static class SettingsMenu {
         menu_placeholder.vertex = menu.GetDrawable();
 
         // initialize with default values
-        SaveManager savemanager = new SaveManager(false, -1);
+        SaveManager savemanager = new SaveManager(false, 0);
 
         while (!modding.has_exit) {
             int selected_index = InCommonMenu(title, layout, gamepad, menu, options_help, modding);

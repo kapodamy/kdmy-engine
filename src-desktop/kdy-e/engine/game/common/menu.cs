@@ -525,6 +525,23 @@ public class Menu : IAnimate, IDraw {
         return -1;
     }
 
+    public void SetItemImage(int index, ModelHolder modelholder, string atlas_or_animlist_entry_name) {
+        if (index < 0 || index > this.items_size) return;
+
+        MenuItem item = this.items[index];
+        if (item.is_text) return;
+
+        if (item.anim_self != null) item.anim_self.Destroy();
+
+        item.anim_self = InternalLoadAnim(
+            modelholder, atlas_or_animlist_entry_name, null, null
+        );
+
+        if (item.anim_self != null) {
+            item.anim_self.UpdateStatesprite((StateSprite)item.vertex, false);
+        }
+    }
+
 
     private void InternalBuildItem(MenuItem item, MenuManifest.Item src_item, MenuManifest.Parameters @params, ModelHolder modelholder, FontHolder fontholder, float[] border) {
         bool custom_modelholder = false;
