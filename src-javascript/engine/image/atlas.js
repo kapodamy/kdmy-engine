@@ -299,7 +299,7 @@ async function atlas_parse_from_plain_text(src_txt) {
             continue;
         }
 
-        let tokenizer_coords = tokenizer_init("\xA0\x20\x09", true, false, unparsed_coords);
+        let tokenizer_coords = tokenizer_init("\u00A0\x20\x09", true, false, unparsed_coords);
 
         temp = tokenizer_read_next(tokenizer_coords);
         x = vertexprops_parse_integer2(temp, MATH2D_MAX_INT32);

@@ -4132,7 +4132,7 @@ function layout_helper_add_action_setshaderuniform(unparsed_entry, action_entrie
 
     if (unparsed_values != null) {
         // separator: white-space, hard-space, tabulation, carrier-return, new-line
-        let tokenizer = tokenizer_init("\x20\xA0\t\r\n", true, false, unparsed_values);
+        let tokenizer = tokenizer_init("\x20\u00A0\t\r\n", true, false, unparsed_values);
         let index = 0;
         let str;
 

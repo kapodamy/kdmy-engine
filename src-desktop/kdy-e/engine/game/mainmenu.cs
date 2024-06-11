@@ -213,7 +213,7 @@ public class MainMenu {
         TextSprite info_textsprite;
         info_textsprite = layout.GetTextsprite("info-engine");
         if (info_textsprite != null) {
-            info_textsprite.SetTextFormated("$s $s", GameMain.ENGINE_NAME, GameMain.ENGINE_VERSION);
+            info_textsprite.SetTextFormated("$s $s\u00A0", GameMain.ENGINE_NAME, GameMain.ENGINE_VERSION);
         }
 
         info_textsprite = layout.GetTextsprite("info-vmu");
@@ -224,9 +224,9 @@ public class MainMenu {
                 char slot_name = (char)(0x30 + unit);
                 string state = FunkinSave.IsVMUMissing() ? " (disconnected)" : "";
                 string loaded = SaveManager.IsRunningWithoutSavedata() ? " (without savedata)" : "";
-                info_textsprite.SetTextFormated("VMU $c$c$s$s ", port_name, slot_name, state, loaded);
+                info_textsprite.SetTextFormated("VMU $c$c$s$s\u00A0", port_name, slot_name, state, loaded);
             } else {
-                info_textsprite.SetText("No VMU available");
+                info_textsprite.SetText("No VMU available\u00A0");
             }
         }
 

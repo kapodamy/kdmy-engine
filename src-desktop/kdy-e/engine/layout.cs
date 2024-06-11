@@ -4201,7 +4201,7 @@ public class Layout : IDraw, IAnimate {
 
         if (unparsed_values != null) {
             // separator: white-space, hard-space, tabulation, carrier-return, new-line
-            Tokenizer tokenizer = Tokenizer.Init("\x20\xA0\t\r\n", true, false, unparsed_values);
+            Tokenizer tokenizer = Tokenizer.Init("\x20\u00A0\t\r\n", true, false, unparsed_values);
             int index = 0;
             String str;
 

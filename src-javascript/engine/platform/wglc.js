@@ -1326,8 +1326,8 @@ function webopengl_patch_shader(sourcecode, is_vertex_shader) {
 
     const common = "uniform float u_kdy_time, u_kdy_delta;\nuniform int u_kdy_frame;\nuniform vec3 u_kdy_screen, u_kdy_texsize;\n";
 
-    const rx_header = /#pragma header[\s\t\xA0]*\r?\n/g;
-    const rx_shadertoy = /#pragma shadertoy_mainImage[\s\t\xA0]*\r?\n/g;
+    const rx_header = /#pragma header[\s\t\u00A0]*\r?\n/g;
+    const rx_shadertoy = /#pragma shadertoy_mainImage[\s\t\u00A0]*\r?\n/g;
 
     const shadertoy_stubs = `
 #define iResolution vec3(1.0)

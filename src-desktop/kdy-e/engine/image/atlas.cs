@@ -335,7 +335,7 @@ public class Atlas {
                 continue;
             }
 
-            Tokenizer tokenizer_coords = Tokenizer.Init("\xA0\x20\x09", true, false, unparsed_coords);
+            Tokenizer tokenizer_coords = Tokenizer.Init("\u00A0\x20\x09", true, false, unparsed_coords);
 
             temp = tokenizer_coords.ReadNext();
             x = VertexProps.ParseUnsignedInteger(temp, Math2D.MAX_INT32);

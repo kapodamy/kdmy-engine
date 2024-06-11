@@ -322,7 +322,7 @@ async function mainmenu_main() {
     let info_textsprite;
     info_textsprite = layout_get_textsprite(layout, "info-engine");
     if (info_textsprite) {
-        textsprite_set_text_formated(info_textsprite, "$s $s", ENGINE_NAME, ENGINE_VERSION);
+        textsprite_set_text_formated(info_textsprite, "$s $s\u00A0", ENGINE_NAME, ENGINE_VERSION);
     }
 
     info_textsprite = layout_get_textsprite(layout, "info-vmu");
@@ -333,9 +333,9 @@ async function mainmenu_main() {
             let slot_name = String.fromCharCode(0x30 + values_port_unit[1]);
             let state = funkinsave_is_vmu_missing() ? " (disconnected)" : "";
             let loaded = savemanager_is_running_without_savedata() ? " (without savedata)" : "";
-            textsprite_set_text_formated(info_textsprite, "VMU $c$c$s$s ", port_name, slot_name, state, loaded);
+            textsprite_set_text_formated(info_textsprite, "VMU $c$c$s$s\u00A0", port_name, slot_name, state, loaded);
         } else {
-            textsprite_set_text(info_textsprite, "No VMU available");
+            textsprite_set_text(info_textsprite, "No VMU available\u00A0");
         }
     }
 

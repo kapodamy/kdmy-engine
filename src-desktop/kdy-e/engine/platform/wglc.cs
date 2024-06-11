@@ -17,8 +17,8 @@ public class WebGLContext {
         -1f, 1f, 0f, 1f, -1f, -1, 0f, 0f, 1f, -1f, 1f, 0f, -1f, 1f, 0f, 1f, 1f, -1f, 1f, 0f, 1f, 1f, 1f, 1f
     };
 
-    private static readonly Regex rx_header = new Regex(@"#pragma header[\s\t\xA0]*\r?\n", RegexOptions.Compiled);
-    private static readonly Regex rx_shadertoy = new Regex(@"#pragma shadertoy_mainImage[\s\t\xA0]*\r?\n", RegexOptions.Compiled);
+    private static readonly Regex rx_header = new Regex(@"#pragma header[\s\t\u00A0]*\r?\n", RegexOptions.Compiled);
+    private static readonly Regex rx_shadertoy = new Regex(@"#pragma shadertoy_mainImage[\s\t\u00A0]*\r?\n", RegexOptions.Compiled);
 
     public WebGLContextProgram program_solid;
     public WebGLContextProgram program_textured;
