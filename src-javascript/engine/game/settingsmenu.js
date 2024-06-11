@@ -333,7 +333,7 @@ async function settingsmenu_main() {
 
     if (!settingsmenu_submenus_font && await fs_file_exists(SETTINGSMENU_MENU_COMMON.parameters.font)) {
         // little improvement, keep loaded the "pixel.otf" font to improve loading times
-        settingsmenu_submenus_font = await fontholder_init(SETTINGSMENU_MENU_COMMON.parameters.font, -1.0, null);
+        settingsmenu_submenus_font = await fontholder_init(SETTINGSMENU_MENU_COMMON.parameters.font, -1.0, null, false);
     }
 
     let animlist = await animlist_init("/assets/common/anims/settings-menu.xml");

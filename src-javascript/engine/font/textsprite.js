@@ -9,12 +9,9 @@ const TEXTSPRITE_POOL = new Map();
 var TEXTSPRITE_IDS = 0;
 
 
-function textsprite_init(font, font_is_truetype, size, rbg8_color) {
+function textsprite_init(font, font_is_truetype, size, rbg8_color, color_by_addition) {  
     let textsprite = {
         font,
-        font_from_atlas: font_is_truetype,
-        font_size: size,
-        color: [1.0, 1.0, 1.0],
 
         text: null,
         intern: false,
@@ -27,7 +24,6 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
         x: 0.0,
         y: 0.0,
         z: 0.0,
-        alpha: 1.0,
         alpha2: 1.0,
         z_offset: 0.0,
 
@@ -59,14 +55,6 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
         animation_selected: null,
         animation_list: linkedlist_init(),
 
-        border_enable: false,
-        border_size: 0.0,
-        border_color: [1.0, 1.0, 1.0, 1.0],
-        border_offset_x: 0.0,
-        border_offset_y: 0.0,
-
-        font_paragraph_separation: 0,
-
         antialiasing: PVRCTX_FLAG_DEFAULT,
 
         wordbreak: FONT_WORDBREAK_LOOSE,
@@ -85,19 +73,56 @@ function textsprite_init(font, font_is_truetype, size, rbg8_color) {
         background_offset_y: 0.0,
         background_rgba: [0.0, 0.0, 0.0, 0.5],
 
+        fontparams: {
+            height: size,
+            paragraph_space: 0.0,
+            color_by_addition: false,
+
+            tint_color: [1.0, 1.0, 1.0, 1.0],
+
+            border_enable: color_by_addition,
+            border_size: 0.0,
+
+            border_color: [0.0, 0.0, 0.0, 1.0],
+            border_offset_x: 0.0,
+            border_offset_y: 0.0
+        },
+
+        fontfunctions: {
+            measure: null,
+            measure_char: null,
+            draw_text: null,
+            animate: null,
+            map_codepoints: null
+        },
+
         id: TEXTSPRITE_IDS++
     };
 
-    math2d_color_bytes_to_floats(rbg8_color, false, textsprite.color);
+    math2d_color_bytes_to_floats(rbg8_color, false, textsprite.fontparams.tint_color);
 
     pvr_context_helper_clear_modifier(textsprite.matrix_source);
+
+    if (font_is_truetype) {
+        textsprite.fontfunctions.measure = fonttype_measure;
+        textsprite.fontfunctions.measure_char = fonttype_measure_char;
+        textsprite.fontfunctions.draw_text = fonttype_draw_text;
+        textsprite.fontfunctions.animate = fonttype_animate;
+        textsprite.fontfunctions.map_codepoints = fonttype_map_codepoints;
+    } else {
+        textsprite.fontfunctions.measure = fontglyph_measure;
+        textsprite.fontfunctions.measure_char = fontglyph_measure_char;
+        textsprite.fontfunctions.draw_text = fontglyph_draw_text;
+        textsprite.fontfunctions.animate = fontglyph_animate;
+        textsprite.fontfunctions.map_codepoints = fontglyph_map_codepoints;
+    }
 
     TEXTSPRITE_POOL.set(textsprite.id, textsprite);
     return textsprite;
 }
 
 function textsprite_init2(fontholder, font_size, rbg8_color) {
-    return textsprite_init(fontholder.font, fontholder.font_from_atlas, font_size, rbg8_color);
+    return textsprite_init(fontholder.font, !fontholder.font_from_atlas, fontholder.color_by_addition, font_size, rbg8_color);
 }
 
 function textsprite_destroy(textsprite) {
@@ -132,7 +157,6 @@ function textsprite_set_text_intern(textsprite, intern, text) {
         textsprite.text = strdup(text);
 
     textsprite.modified_string = true;
-    textsprite.modified_coords = true;
 }
 
 function textsprite_set_text_formated(textsprite, format, ...values) {
@@ -144,17 +168,22 @@ function textsprite_set_text_formated(textsprite, format, ...values) {
     textsprite.text = text;
 
     textsprite.modified_string = true;
-    textsprite.modified_coords = true;
 }
 
 function textsprite_set_text_formated2(textsprite, format, va_args) {
     let text = stringbuilder_helper_create_formatted_string(format, va_args);
-    textsprite_set_text_intern(textsprite, false, text);
+
+    if (!textsprite.intern) textsprite.text = undefined;
+
+    textsprite.intern = false;
+    textsprite.text = text;
+
+    textsprite.modified_string = true;
 }
 
 function textsprite_set_font_size(textsprite, font_size) {
-    textsprite.modified_string = true;
-    textsprite.font_size = font_size;
+    textsprite.modified_coords = true;
+    textsprite.fontparams.height = font_size;
 }
 
 function textsprite_force_case(textsprite, none_or_lowercase_or_uppercase) {
@@ -168,27 +197,27 @@ function textsprite_set_paragraph_align(textsprite, align) {
 }
 
 function textsprite_set_paragraph_space(textsprite, space) {
-    textsprite.font_paragraph_separation = space;
+    textsprite.fontparams.paragraph_space = space;
 }
 
 function textsprite_set_maxlines(textsprite, max_lines) {
-    textsprite.modified_string = true;
+    textsprite.modified_coords = true;
     textsprite.max_lines = max_lines;
 }
 
 function textsprite_set_color_rgba8(textsprite, rbg8_color) {
-    math2d_color_bytes_to_floats(rbg8_color, false, textsprite.color);
+    math2d_color_bytes_to_floats(rbg8_color, false, textsprite.fontparams.tint_color);
 }
 
 function textsprite_set_color(textsprite, r, g, b) {
-    if (r >= 0.0) textsprite.color[0] = r;
-    if (g >= 0.0) textsprite.color[1] = g;
-    if (b >= 0.0) textsprite.color[2] = b;
+    if (r >= 0.0) textsprite.fontparams.tint_color[0] = r;
+    if (g >= 0.0) textsprite.fontparams.tint_color[1] = g;
+    if (b >= 0.0) textsprite.fontparams.tint_color[2] = b;
 }
 
 
 function textsprite_set_alpha(textsprite, alpha) {
-    textsprite.alpha = alpha;
+    textsprite.fontparams.tint_color[3] = alpha;
 }
 
 function textsprite_set_visible(textsprite, visible) {
@@ -381,7 +410,10 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
         return;
     }
 
-    let measure_char_fn = textsprite.font_from_atlas ? fontglyph_measure_char : fonttype_measure_char;
+    let text_length = text.length;
+    if (textsprite.modified_string) {
+        textsprite.fontfunctions.measure(textsprite.font, textsprite.fontparams, text, 0, text_length);
+    }
 
     // step 1: count the paragraphs
     let line_count = MATH2D_MAX_INT32;
@@ -424,7 +456,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             index_last_detected_break = index_current_line = new_index;
             last_break_was_dotcommatab = true;
 
-            calculated_text_height += textsprite.font_size + textsprite.font_paragraph_separation;
+            calculated_text_height += textsprite.fontparams.height + textsprite.fontparams.paragraph_space;
             if (calculated_text_height >= max_height) break;
 
             lineinfo.line_char_count = 0;
@@ -440,9 +472,9 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
         }
 
         // measure char width
-        measure_char_fn(textsprite.font, grapheme.code, textsprite.font_size, lineinfo);
+        textsprite.fontfunctions.measure_char(textsprite.font, grapheme.code, textsprite.fontparams.height, lineinfo);
 
-        // check if the current codepoit is breakable
+        // check if the current codepoint is breakable
         let current_is_break = false;
         let break_in_index = -1;
         let break_char_count = 1;
@@ -511,7 +543,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
                 offset: accumulated_width// temporal
             });
 
-            calculated_text_height += textsprite.font_size + textsprite.font_paragraph_separation;
+            calculated_text_height += textsprite.fontparams.height + textsprite.fontparams.paragraph_space;
             if (calculated_text_height >= max_height) break;
 
             index_last_detected_break = index_current_line = break_in_index;
@@ -592,28 +624,28 @@ function textsprite_set_property(textsprite, property_id, value) {
             textsprite_set_paragraph_align(textsprite, value);
             break;
         case TEXTSPRITE_PROP_BORDER_ENABLE:
-            textsprite.border_enable = value >= 1.0;
+            textsprite.fontparams.border_enable = value >= 1.0;
             break;
         case TEXTSPRITE_PROP_BORDER_SIZE:
-            textsprite.border_size = value;
+            textsprite.fontparams.border_size = value;
             break;
         case TEXTSPRITE_PROP_BORDER_COLOR_R:
-            textsprite.border_color[0] = value;
+            textsprite.fontparams.border_color[0] = value;
             break;
         case TEXTSPRITE_PROP_BORDER_COLOR_G:
-            textsprite.border_color[1] = value;
+            textsprite.fontparams.border_color[1] = value;
             break;
         case TEXTSPRITE_PROP_BORDER_COLOR_B:
-            textsprite.border_color[2] = value;
+            textsprite.fontparams.border_color[2] = value;
             break;
         case TEXTSPRITE_PROP_BORDER_COLOR_A:
-            textsprite.border_color[3] = value;
+            textsprite.fontparams.border_color[3] = value;
             break;
         case TEXTSPRITE_PROP_BORDER_OFFSET_X:
-            textsprite.border_offset_x = value;
+            textsprite.fontparams.border_offset_x = value;
             break;
         case TEXTSPRITE_PROP_BORDER_OFFSET_Y:
-            textsprite.border_offset_y = value;
+            textsprite.fontparams.border_offset_y = value;
             break;
         /////////////////////////////////////////////////////////////////////////////////////////////////
         case SPRITE_PROP_X:
@@ -652,19 +684,19 @@ function textsprite_set_property(textsprite, property_id, value) {
             textsprite_matrix_translate(textsprite, null, value);
             break;
         case SPRITE_PROP_ALPHA:
-            textsprite.alpha = math2d_clamp_float(value, 0.0, 1.0);
+            textsprite.fontparams.tint_color[3] = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_Z:
             textsprite.z = value;
             break;
         case SPRITE_PROP_VERTEX_COLOR_R:
-            textsprite.color[0] = math2d_clamp_float(value, 0.0, 1.0);
+            textsprite.fontparams.tint_color[0] = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_VERTEX_COLOR_G:
-            textsprite.color[1] = math2d_clamp_float(value, 0.0, 1.0);
+            textsprite.fontparams.tint_color[1] = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_VERTEX_COLOR_B:
-            textsprite.color[2] = math2d_clamp_float(value, 0.0, 1.0);
+            textsprite.fontparams.tint_color[2] = math2d_clamp_float(value, 0.0, 1.0);
             break;
         case SPRITE_PROP_ANIMATIONLOOP:
             if (textsprite.animation_selected)
@@ -698,7 +730,7 @@ function textsprite_set_property(textsprite, property_id, value) {
             textsprite.z_offset = value;
             break;
         case TEXTSPRITE_PROP_PARAGRAPH_SEPARATION:
-            textsprite.font_paragraph_separation = value;
+            textsprite.fontparams.paragraph_space = value;
             break;
         case SPRITE_PROP_ANTIALIASING:
             textsprite.antialiasing = Math.trunc(value);
@@ -744,11 +776,9 @@ function textsprite_set_property(textsprite, property_id, value) {
         case TEXTSPRITE_PROP_MAX_WIDTH:
         case TEXTSPRITE_PROP_MAX_HEIGHT:
         case TEXTSPRITE_PROP_PARAGRAPH_SEPARATION:
-            textsprite.modified_coords = true;
-            break;
         case FONT_PROP_WORDBREAK:
         case TEXTSPRITE_PROP_FONT_SIZE:
-            textsprite.modified_string = true;
+            textsprite.modified_coords = true;
             break;
     }
 
@@ -763,7 +793,7 @@ function textsprite_get_draw_size(textsprite, draw_size) {
 }
 
 function textsprite_get_font_size(textsprite) {
-    return textsprite.font_size;
+    return textsprite.fontparams.height;
 }
 
 function textsprite_get_max_draw_size(textsprite, max_draw_size) {
@@ -773,7 +803,7 @@ function textsprite_get_max_draw_size(textsprite, max_draw_size) {
 }
 
 function textsprite_draw(textsprite, pvrctx) {
-    if (textsprite.alpha <= 0.0) return;
+    if (textsprite.fontparams.tint_color[3] <= 0.0) return;
     if (!textsprite.text_forced_case && !textsprite.text) return;
 
     // check if all calculations are up-to-date
@@ -784,37 +814,6 @@ function textsprite_draw(textsprite, pvrctx) {
 
 
 function textsprite_draw_internal(textsprite, pvrctx) {
-    let alpha_fn;
-    let color_fn;
-    let draw_fn;
-    let borderset_fn;
-    let borderoffsetset_fn;
-    let separation_fn;
-
-    if (textsprite.font_from_atlas) {
-        alpha_fn = fontglyph_set_alpha;
-        color_fn = fontglyph_set_color;
-        draw_fn = fontglyph_draw_text;
-        borderset_fn = fontglyph_set_border;
-        borderoffsetset_fn = fontglyph_set_border_offset;
-        separation_fn = fontglyph_set_lines_separation;
-    } else {
-        alpha_fn = fonttype_set_alpha;
-        color_fn = fonttype_set_color;
-        draw_fn = fonttype_draw_text;
-        borderset_fn = fonttype_set_border;
-        borderoffsetset_fn = fonttype_set_border_offset;
-        separation_fn = fonttype_set_lines_separation;
-    }
-    alpha_fn(textsprite.font, textsprite.alpha);
-    color_fn(textsprite.font, textsprite.color[0], textsprite.color[1], textsprite.color[2]);
-    borderset_fn(
-        textsprite.font, textsprite.border_enable, textsprite.border_size, textsprite.border_color
-    );
-    borderoffsetset_fn(textsprite.font, textsprite.border_offset_x, textsprite.border_offset_y);
-    separation_fn(textsprite.font, textsprite.font_paragraph_separation);
-
-
     pvr_context_save(pvrctx);
     pvr_context_set_global_alpha(pvrctx, textsprite.alpha2);
 
@@ -851,22 +850,22 @@ function textsprite_draw_internal(textsprite, pvrctx) {
 
     if (arraylist_size(textsprite.paragraph_array) < 2.0) {
         // let the font handle the draw
-        draw_fn(
+        textsprite.fontfunctions.draw_text(
             textsprite.font,
             pvrctx,
-            textsprite.font_size,
+            textsprite.fontparams,
             textsprite.last_draw_x, textsprite.last_draw_y,
             0, text.length, text
         );
     } else {
         // paragraph by paragraph draw
         let y = textsprite.last_draw_y;
-        let line_height = textsprite.font_size + textsprite.font_paragraph_separation;
+        let line_height = textsprite.fontparams.height + textsprite.fontparams.paragraph_space;
 
         for (let paragraphinfo of arraylist_iterate4(textsprite.paragraph_array)) {
             if (paragraphinfo.length > 0) {
-                draw_fn(
-                    textsprite.font, pvrctx, textsprite.font_size,
+                textsprite.fontfunctions.draw_text(
+                    textsprite.font, pvrctx, textsprite.fontparams,
                     textsprite.last_draw_x + paragraphinfo.offset, y,
                     paragraphinfo.index, paragraphinfo.length, text
                 );
@@ -959,27 +958,27 @@ function textsprite_animate(textsprite, elapsed) {
 
 
 function textsprite_border_enable(textsprite, enable) {
-    textsprite.border_enable = !!enable;
+    textsprite.fontparams.border_enable = !!enable;
 }
 
 function textsprite_border_set_size(textsprite, border_size) {
-    textsprite.border_size = Number.isNaN(border_size) ? 0.0 : border_size;
+    textsprite.fontparams.border_size = Number.isNaN(border_size) ? 0.0 : border_size;
 }
 
 function textsprite_border_set_color(textsprite, r, g, b, a) {
-    if (r >= 0) textsprite.border_color[0] = r;
-    if (g >= 0) textsprite.border_color[1] = g;
-    if (b >= 0) textsprite.border_color[2] = b;
-    if (a >= 0) textsprite.border_color[3] = a;
+    if (r >= 0) textsprite.fontparams.border_color[0] = r;
+    if (g >= 0) textsprite.fontparams.border_color[1] = g;
+    if (b >= 0) textsprite.fontparams.border_color[2] = b;
+    if (a >= 0) textsprite.fontparams.border_color[3] = a;
 }
 
 function textsprite_border_set_color_rgba8(textsprite, rbga8_color) {
-    math2d_color_bytes_to_floats(rbga8_color, 1, textsprite.border_color);
+    math2d_color_bytes_to_floats(rbga8_color, 1, textsprite.fontparams.border_color);
 }
 
 function textsprite_border_set_offset(textsprite, x, y) {
-    if (!Number.isNaN(x)) textsprite.border_offset_x = x;
-    if (!Number.isNaN(y)) textsprite.border_offset_y = y;
+    if (!Number.isNaN(x)) textsprite.fontparams.border_offset_x = x;
+    if (!Number.isNaN(y)) textsprite.fontparams.border_offset_y = y;
 }
 
 
@@ -1002,8 +1001,25 @@ function textsprite_has_font(textsprite) {
 
 function textsprite_change_font(textsprite, fontholder) {
     if (fontholder == null) throw new Error("fontholder can not be null");
+
     textsprite.font = fontholder.font;
-    textsprite.font_from_atlas = fontholder.font_from_atlas;
+    textsprite.fontparams.color_by_addition = fontholder.font_color_by_addition;
+
+    let font_is_truetype = !fontholder.font_from_atlas;
+
+    if (font_is_truetype) {
+        textsprite.fontfunctions.measure = fonttype_measure;
+        textsprite.fontfunctions.measure_char = fonttype_measure_char;
+        textsprite.fontfunctions.draw_text = fonttype_draw_text;
+        textsprite.fontfunctions.animate = fonttype_animate;
+        textsprite.fontfunctions.map_codepoints = fonttype_map_codepoints;
+    } else {
+        textsprite.fontfunctions.measure = fontglyph_measure;
+        textsprite.fontfunctions.measure_char = fontglyph_measure_char;
+        textsprite.fontfunctions.draw_text = fontglyph_draw_text;
+        textsprite.fontfunctions.animate = fontglyph_animate;
+        textsprite.fontfunctions.map_codepoints = fontglyph_map_codepoints;
+    }
 }
 
 function textsprite_set_shader(textsprite, psshader) {
@@ -1047,5 +1063,9 @@ function textsprite_background_set_color(textsprite, r, g, b, a) {
 
 function textsprite_get_string(textsprite) {
     return textsprite.text_forced_case ?? textsprite.text;
+}
+
+function textsprite_enable_color_by_addition(textsprite, enabled) {
+    textsprite.fontparams.color_by_addition = enabled;
 }
 

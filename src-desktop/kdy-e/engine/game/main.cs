@@ -52,9 +52,9 @@ public static class GameMain {
         Logger.Log($"OS: {osinfo.version}\r\n");
 
         // (JS & CS only) preload fonts
-        //new FontHolder("/assets/common/font/vcr.ttf", -1, null);
-        //new FontHolder("/assets/common/font/pixel.otf", -1, null);
-        new FontHolder("/assets/common/font/alphabet.xml", -1, null);
+        new FontHolder("/assets/common/font/vcr.ttf", -1, null, false);
+        //new FontHolder("/assets/common/font/pixel.otf", -1, null, false);
+        new FontHolder("/assets/common/font/alphabet.xml", -1, null, false);
 
         WeekEnumerator.Enumerate();
 

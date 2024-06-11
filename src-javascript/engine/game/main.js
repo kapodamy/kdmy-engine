@@ -134,9 +134,9 @@ async function main(argc, argv) {
 
     // (JS & CS only) preload fonts
     await Promise.all([
-        fontholder_init("/assets/common/font/vcr.ttf", -1.0, null),
-        //fontholder_init("/assets/common/font/pixel.otf", -1.0, null),
-        fontholder_init("/assets/common/font/alphabet.xml", -1.0, null)
+        fontholder_init("/assets/common/font/vcr.ttf", -1.0, null, false),
+        //fontholder_init("/assets/common/font/pixel.otf", -1.0, null, false),
+        fontholder_init("/assets/common/font/alphabet.xml", -1.0, null, false)
     ]);
 
     await weekenumerator_enumerate();
@@ -315,7 +315,7 @@ function main_thd_helper_spawn_wrapper(init_data) {
  * @param {boolean} detached true to make the thread joinable, otherwise, false
  * @param {function} routine The function to call in the new thread.
  * @param {object} param A parameter to pass to the function called.
- * @returns {kthread_t} the created thread.
+ * @returns {object} the created thread.
  */
 function main_thd_helper_spawn(detached, routine, param) {
     // in C, "init_data" this an allocated struct
@@ -328,7 +328,7 @@ async function main_spawn_coroutine(background_layout, function_routine, argumen
     // Important: In JS, all calls to fs_* engine functions will fail, because there no
     // TLS support.
     //
-    let thd = thd_helper_spawn(false, function_routine, argument_routine);
+    let thd = main_thd_helper_spawn(false, function_routine, argument_routine);
     let ret;
 
     if (background_layout) {

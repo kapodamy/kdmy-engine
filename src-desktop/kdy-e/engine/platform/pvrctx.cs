@@ -326,7 +326,7 @@ public class PVRContext {
 
     private void DrawFPS() {
         if (this.fps_text == null) {
-            FontHolder font = new FontHolder("/assets/common/font/vcr.ttf", -1, null);
+            FontHolder font = new FontHolder("/assets/common/font/vcr.ttf", -1, null, false);
             this.fps_text = TextSprite.Init2(font, 64f, 0xAAFFAA);
             this.fps_text.SetDrawLocation(2f, 0f);
         }

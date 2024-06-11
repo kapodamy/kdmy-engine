@@ -48,13 +48,26 @@ var mastervolume_hide_timestamp;
 //var mastervolume_antibounce_timestamp;
 var mastervolume_beep;
 var mastervolume_volume = 100;
+var mastervolume_fontparams;
 
 async function mastervolume_init() {
     mastervolume_label_font = await fonttype_init("/assets/common/font/vcr.ttf");
 
+    mastervolume_fontparams = {
+        height: MASTERVOLUME_LABEL_HEIGHT,
+        paragraph_space: 0.0,
+        color_by_addition: false,
+        tint_color: MASTERVOLUME_LABEL_COLOR,
+        border_enable: false,
+        border_size: 0.0,
+        border_color: [0.0, 0.0, 0.0, 0.0],
+        border_offset_x: 0.0,
+        border_offset_y: 0.0
+    };
+
     let width = fonttype_measure(
         mastervolume_label_font,
-        MASTERVOLUME_LABEL_HEIGHT, MASTERVOLUME_LABEL_STRING, 0, MASTERVOLUME_LABEL_STRING.length
+        mastervolume_fontparams, MASTERVOLUME_LABEL_STRING, 0, MASTERVOLUME_LABEL_STRING.length
     );
 
     mastervolume_is_visible = false;
@@ -154,14 +167,9 @@ function mastervolume_draw(/**@type {PVRContext}*/pvrctx) {
 
     // render text
     if (mastervolume_label_font) {
-        let label_color = MASTERVOLUME_LABEL_COLOR;
-        fonttype_enable_border(mastervolume_label_font, false);
-        //fonttype_enable_color_by_addition(mastervolume_label_font, false);
-        fonttype_set_alpha(mastervolume_label_font, label_color[3]);
-        fonttype_set_color(mastervolume_label_font, label_color[0], label_color[1], label_color[2]);
         fonttype_draw_text(mastervolume_label_font,
             pvrctx,
-            MASTERVOLUME_LABEL_HEIGHT,
+            mastervolume_fontparams,
             mastervolume_label_x_offset, MASTERVOLUME_LABEL_Y_OFFSET,
             0, MASTERVOLUME_LABEL_STRING.length, MASTERVOLUME_LABEL_STRING
         );

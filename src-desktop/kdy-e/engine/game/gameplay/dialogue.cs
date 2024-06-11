@@ -311,7 +311,7 @@ public class Dialogue : IAnimate, IDraw {
         }
 
         // create textsprite speech if not customized
-        dialogue.texsprite_speech = TextSprite.Init(null, false, 34f, 0x00000);
+        dialogue.texsprite_speech = TextSprite.Init(null, false, false, 34f, 0x00000);
         dialogue.texsprite_speech.SetParagraphSpace(8f);
         dialogue.texsprite_speech.SetWordbreak(VertexProps.FONT_WORDBREAK_LOOSE);
 
@@ -320,7 +320,7 @@ public class Dialogue : IAnimate, IDraw {
 
 
         // create textsprite title
-        dialogue.texsprite_title = TextSprite.Init(null, false, 24f, 0x00000);
+        dialogue.texsprite_title = TextSprite.Init(null, false, false, 24f, 0x00000);
         dialogue.texsprite_title.SetParagraphSpace(8f);
         dialogue.texsprite_title.SetWordbreak(VertexProps.FONT_WORDBREAK_LOOSE);
 
@@ -2062,12 +2062,11 @@ public class Dialogue : IAnimate, IDraw {
             if (fonts.Get(i).name == name) return;
         }
 
-        IFontRender instance;
+        IFont instance;
         bool is_atlas;
 
         if (Atlas.UtilsIsKnownExtension(src)) {
             instance = FontGlyph.Init(src, glyph_suffix, glyph_animated);
-            instance.EnableColorByAddition(color_by_addition);
             is_atlas = true;
         } else {
             instance = FontType.Init(src);
@@ -2081,7 +2080,7 @@ public class Dialogue : IAnimate, IDraw {
 
         Font font = new Font() {
             name = name,
-            fontholder = new FontHolder(instance, is_atlas, 18f)
+            fontholder = new FontHolder(instance, is_atlas, 18f, color_by_addition)
         };
 
         fonts.Add(font);

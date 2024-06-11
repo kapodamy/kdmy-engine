@@ -2529,18 +2529,18 @@ public class Layout : IDraw, IAnimate {
             }
 
             try {
-                IFontRender font;
+                IFont font;
                 bool is_atlas = Atlas.UtilsIsKnownExtension(path);
 
                 if (is_atlas) {
                     font = FontGlyph.Init(path, glyph_suffix, glyph_animate);
-                    if (glyph_color_by_addition) font.EnableColorByAddition(true);
                 } else {
                     font = FontType.Init(path);
+                    glyph_color_by_addition = false;
                 }
 
                 if (font == null) throw new Exception("missing or invalid font: " + path);
-                FontHolder fontholder = new FontHolder(font, is_atlas, -1);
+                FontHolder fontholder = new FontHolder(font, is_atlas, -1, glyph_color_by_addition);
 
                 fonts_arraylist.Add(new Font() { name = name, fontholder = fontholder });
             } catch (Exception e) {
@@ -3505,7 +3505,7 @@ public class Layout : IDraw, IAnimate {
                     if (entry.stop_in_loop) item.animation.DisableLoop();
 
                     textsprite.AnimationSet((AnimSprite)entry.misc);
-                    textsprite.Animate(0);
+                    textsprite.CalculateParagraphAlignment();
                     break;
                 case Layout.ACTION_ANIMATIONREMOVE:
                     textsprite.AnimationSet(null);

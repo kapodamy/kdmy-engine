@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using Engine.Externals;
 using Engine.Externals.FontAtlasInterop;
@@ -8,7 +9,7 @@ using Engine.Utils;
 
 namespace Engine.Font;
 
-public class FontType : IFontRender {
+public class FontType : IFont {
 
     private static Map<FontType> POOL = new Map<FontType>();
     private static int IDS = 0;
@@ -22,14 +23,6 @@ public class FontType : IFontRender {
 
     private FontType() { }
 
-    private float lines_separation;
-    private float[] color;
-    private float alpha;
-    private float[] border_color;
-    private float border_size;
-    private bool border_enable;
-    private float border_offset_x;
-    private float border_offset_y;
     private int instance_id;
     private int instance_references;
     private string instance_path;
@@ -57,17 +50,6 @@ public class FontType : IFontRender {
         }
 
         FontType fonttype = new FontType() {
-            lines_separation = 0,
-
-            color = new float[] { 0.0f, 0.0f, 0.0f },
-            alpha = 1.0f,
-
-            border_color = new float[] { 1.0f, 1.0f, 1.0f, 1.0f },
-            border_size = 0f,
-            border_enable = false,
-            border_offset_x = 0f,
-            border_offset_y = 0f,
-
             instance_id = FontType.IDS++,
             instance_references = 1,
             instance_path = full_path,
@@ -136,14 +118,11 @@ public class FontType : IFontRender {
     }
 
 
-    public float Measure(float height, string text, int text_index, int text_length) {
-        float scale = height / FontType.GLYPHS_HEIGHT;
+    public float Measure(ref FontParams @params, string text, int text_index, int text_length) {
+        float scale = @params.height / FontType.GLYPHS_HEIGHT;
         int text_end_index = text_index + text_length;
 
         //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
-
-        // check for unmapped characters and them to the secondary map
-        InternalFindUnmapedCodepointsToSecondary(text_index, text_end_index, text);
 
         float max_width = 0;
         float width = 0;
@@ -210,7 +189,7 @@ public class FontType : IFontRender {
         return Math.Max(width, max_width);
     }
 
-    public void MeasureChar(int codepoint, float height, FontLineInfo lineinfo) {
+    public void MeasureChar(int codepoint, float height, ref FontLineInfo lineinfo) {
         float scale = height / FontType.GLYPHS_HEIGHT;
 
         //override hard-spaces with white-spaces
@@ -250,66 +229,7 @@ public class FontType : IFontRender {
         lineinfo.line_char_count++;
     }
 
-    public void SetLinesSeparation(float height) {
-        this.lines_separation = height;
-    }
-
-    public void SetColor(float r, float g, float b) {
-        this.color[0] = r;
-        this.color[1] = g;
-        this.color[2] = b;
-    }
-
-    public void SetRGB8Color(uint rbg8_color) {
-        Math2D.ColorBytesToFloats(rbg8_color, false, this.color);
-    }
-
-    public void SetAlpha(float alpha) {
-        this.alpha = alpha;
-    }
-
-    public void SetBorderSize(float border_size) {
-        /*#if SDF_FONT
-                    // for SDF rendering use half of the border
-                    border_size /= 2f;
-        #endif*/
-
-        this.border_size = border_size;
-    }
-
-    public void SetBorderColor(float r, float g, float b, float a) {
-        if (r >= 0) this.border_color[0] = r;
-        if (g >= 0) this.border_color[1] = g;
-        if (b >= 0) this.border_color[2] = b;
-        if (a >= 0) this.border_color[3] = a;
-    }
-
-    public void SetBorderColorRGBA8(uint rbga8_color) {
-        Math2D.ColorBytesToFloats(rbga8_color, true, this.border_color);
-    }
-
-    public void EnableBorder(bool enable) {
-        this.border_enable = enable;
-    }
-
-    public void SetBorder(bool enable, float size, float[] rgba) {
-        this.border_enable = enable;
-
-        /*#if SDF_FONT
-                    // for SDF rendering use half of the border
-                    size /= 2f;
-        #endif*/
-
-        this.border_size = size;
-        SetBorderColor(rgba[0], rgba[1], rgba[2], rgba[3]);
-    }
-
-    public void SetBorderOffset(float x, float y) {
-        this.border_offset_x = x;
-        this.border_offset_y = y;
-    }
-
-    public float DrawText(PVRContext pvrctx, float height, float x, float y, int text_index, int text_length, string text) {
+    public float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text) {
         if (text == null || text_length < 1) return 0;
 
         Grapheme grapheme = new Grapheme();
@@ -317,9 +237,9 @@ public class FontType : IFontRender {
         Texture primary_texture = this.fontcharmap_primary_texture;
         FontCharMap secondary = this.fontcharmap_secondary;
         Texture secondary_texture = this.fontcharmap_secondary_texture;
-        bool has_border = this.border_enable && this.border_color[3] > 0 && this.border_size >= 0f;
-        float outline_size = this.border_size * 2;
-        float scale = height / FontType.GLYPHS_HEIGHT;
+        bool has_border = @params.border_enable && @params.border_color[3] > 0f && @params.border_size >= 0f;
+        float outline_size = @params.border_size * 2;
+        float scale = @params.height / FontType.GLYPHS_HEIGHT;
         float ascender = ((primary ?? secondary).ascender / 2f) * scale;// FIXME: ¿why does dividing by 2 works?
         int text_end_index = text_index + text_length;
         float border_padding1 = 0f, border_padding2 = 0f;
@@ -329,15 +249,15 @@ public class FontType : IFontRender {
 #if SDF_FONT
         // calculate sdf thickness
         if (has_border) {
-            if (this.border_size > 0f) {
-                float max_border_size = height * FontType.GLYPHS_OUTLINE_RATIO;
-                float border_size = Math.Min(this.border_size, max_border_size);
+            if (@params.border_size > 0f) {
+                float max_border_size = @params.height * FontType.GLYPHS_OUTLINE_RATIO;
+                float border_size = Math.Min(@params.border_size, max_border_size);
                 float thickness = (1f - (border_size / max_border_size)) / 2f;
                 GlyphRenderer.SetSDFThickness(pvrctx, thickness);
 
-                /*if (border_size < this.border_size && height > 8f) {
+                /*if (border_size < @params.border_size && height > 8f) {
                     // add some padding
-                    border_padding1 = this.border_size - border_size;
+                    border_padding1 = @params.border_size - border_size;
                     border_padding2 = border_padding1 * 2f;
                 }*/
             } else {
@@ -356,7 +276,7 @@ public class FontType : IFontRender {
         FontCharData fontchardata;
 
         pvrctx.Save();
-        pvrctx.SetVertexAlpha(this.alpha);
+        pvrctx.SetVertexAlpha(@params.tint_color[3]);
         pvrctx.SetGlobalOffsetColor(PVRContext.DEFAULT_OFFSET_COLOR);
         pvrctx.SetVertexAntialiasing(PVRFlag.DEFAULT);
 
@@ -383,7 +303,7 @@ public class FontType : IFontRender {
         int maximum = GlyphRenderer.Prepare(total_glyphs, has_border);
 
 #if SDF_FONT
-        float smoothing = FontType.InternalCalcSmoothing(pvrctx, height);
+        float smoothing = FontType.InternalCalcSmoothing(pvrctx, @params.height);
         GlyphRenderer.SetSDFSmoothing(pvrctx, smoothing);
 #endif
 
@@ -403,7 +323,7 @@ public class FontType : IFontRender {
 
             if (grapheme.code == FontGlyph.LINEFEED) {
                 draw_x = 0;
-                draw_y += height + this.lines_separation - ascender;
+                draw_y += @params.height + @params.paragraph_space - ascender;
                 previous_codepoint = grapheme.code;
                 line_chars = 0;
                 continue;
@@ -469,8 +389,8 @@ public class FontType : IFontRender {
                     sdh = dh + outline_size;
 #endif
 
-                    sdx += this.border_offset_x;
-                    sdy += this.border_offset_y;
+                    sdx += @params.border_offset_x;
+                    sdy += @params.border_offset_y;
 
                     // queue outlined glyph for batch rendering
                     GlyphRenderer.AppendGlyph(
@@ -495,10 +415,79 @@ public class FontType : IFontRender {
         }
 
         // commit draw
-        GlyphRenderer.Draw(pvrctx, this.color, this.border_color, false, true, primary_texture, secondary_texture);
+        GlyphRenderer.Draw(pvrctx, @params.tint_color, @params.border_color, false, true, primary_texture, secondary_texture);
 
         pvrctx.Restore();
-        return draw_y + height;
+        return draw_y + @params.height;
+    }
+
+    public void MapCodepoints(int text_index, int text_length, string text) {
+        int actual = this.fontcharmap_secondary != null ? this.fontcharmap_secondary.char_array_size : 0;
+        int new_codepoints = 0;
+        Grapheme grapheme = new Grapheme();
+        int index = text_index;
+
+        // step 1: count all unmapped codepoints
+        while (index < text_length && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
+            index += grapheme.size;
+
+            switch (grapheme.code) {
+                case FontGlyph.LINEFEED:
+                case FontGlyph.CARRIAGERETURN:
+                    continue;
+            }
+
+            if (FontType.InternalGetFontchardata(this.fontcharmap_primary, grapheme.code) != null) continue;
+            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null) continue;
+
+            // not present, count it
+            new_codepoints++;
+        }
+
+        if (new_codepoints < 1) return;// nothing to do
+
+        // step 2: allocate codepoints array
+        uint[] codepoints = new uint[actual + new_codepoints + 1];
+        codepoints[actual + new_codepoints] = 0x00000000;
+
+        if (this.fontcharmap_secondary != null) {
+            // add existing secondary codepoints
+            for (int i = 0 ; i < this.fontcharmap_secondary.char_array_size ; i++) {
+                codepoints[i] = this.fontcharmap_secondary.char_array[i].codepoint;
+            }
+        }
+
+        index = text_index;
+        new_codepoints = actual;
+        while (index < text_length && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
+            index += grapheme.size;
+
+            if (FontType.InternalGetFontchardata(this.fontcharmap_primary, grapheme.code) != null) continue;
+            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null) continue;
+
+            codepoints[new_codepoints++] = (uint)grapheme.code;
+        }
+
+        // step 3: rebuild the secondary char map
+        if (this.fontcharmap_secondary != null) {
+            // dispose previous instance
+            this.fontcharmap_secondary.Destroy();
+            //free(this.fontcharmap_secondary.char_array);
+            //free(this.fontcharmap_secondary);
+            if (this.fontcharmap_secondary_texture != null) this.fontcharmap_secondary_texture.Destroy();
+        }
+
+        // build map and upload texture
+        this.fontcharmap_secondary = InternalRetrieveFontcharmap(codepoints);
+        this.fontcharmap_secondary_texture = FontType.InternalUploadTexture(this.fontcharmap_secondary);
+
+        // dispose secondary codepoints array
+        //free(codepoints);
+    }
+
+    public int Animate(float elapsed) {
+        // not used
+        return 1;
     }
 
 
@@ -585,70 +574,6 @@ public class FontType : IFontRender {
         return tex;
     }
 
-    private void InternalFindUnmapedCodepointsToSecondary(int text_index, int text_end_index, string text) {
-        int actual = this.fontcharmap_secondary != null ? this.fontcharmap_secondary.char_array_size : 0;
-        int new_codepoints = 0;
-        Grapheme grapheme = new Grapheme();
-        int index = text_index;
-
-        // step 1: count all unmapped codepoints
-        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
-            index += grapheme.size;
-
-            switch (grapheme.code) {
-                case FontGlyph.LINEFEED:
-                case FontGlyph.CARRIAGERETURN:
-                    continue;
-            }
-
-            if (FontType.InternalGetFontchardata(this.fontcharmap_primary, grapheme.code) != null) continue;
-            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null) continue;
-
-            // not present, count it
-            new_codepoints++;
-        }
-
-        if (new_codepoints < 1) return;// nothing to do
-
-        // step 2: allocate codepoints array
-        uint[] codepoints = new uint[actual + new_codepoints + 1];
-        codepoints[actual + new_codepoints] = 0x00000000;
-
-        if (this.fontcharmap_secondary != null) {
-            // add existing secondary codepoints
-            for (int i = 0 ; i < this.fontcharmap_secondary.char_array_size ; i++) {
-                codepoints[i] = this.fontcharmap_secondary.char_array[i].codepoint;
-            }
-        }
-
-        index = text_index;
-        new_codepoints = actual;
-        while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
-            index += grapheme.size;
-
-            if (FontType.InternalGetFontchardata(this.fontcharmap_primary, grapheme.code) != null) continue;
-            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null) continue;
-
-            codepoints[new_codepoints++] = (uint)grapheme.code;
-        }
-
-        // step 3: rebuild the secondary char map
-        if (this.fontcharmap_secondary != null) {
-            // dispose previous instance
-            this.fontcharmap_secondary.Destroy();
-            //free(this.fontcharmap_secondary.char_array);
-            //free(this.fontcharmap_secondary);
-            if (this.fontcharmap_secondary_texture != null) this.fontcharmap_secondary_texture.Destroy();
-        }
-
-        // build map and upload texture
-        this.fontcharmap_secondary = InternalRetrieveFontcharmap(codepoints);
-        this.fontcharmap_secondary_texture = FontType.InternalUploadTexture(this.fontcharmap_secondary);
-
-        // dispose secondary codepoints array
-        //free(codepoints);
-    }
-
     private static FontCharData InternalGetFontchardata(FontCharMap fontcharmap, int codepoint) {
         if (fontcharmap != null) {
             for (int i = 0 ; i < fontcharmap.char_array_size ; i++) {
@@ -688,11 +613,5 @@ public class FontType : IFontRender {
         return smoothness;
 #endif
     }
-
-
-    public int Animate(float elapsed) { return 0; }
-
-    public void EnableColorByAddition(bool enable) { }
-
 
 }

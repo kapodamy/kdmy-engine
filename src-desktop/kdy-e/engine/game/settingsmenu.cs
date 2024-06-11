@@ -354,7 +354,7 @@ public static class SettingsMenu {
 
         if (SettingsMenu.submenus_font == null && FS.FileExists(SettingsMenu.MENU_COMMON.parameters.font)) {
             // little improvement, keep loaded the "pixel.otf" font to improve loading times
-            submenus_font = new FontHolder(SettingsMenu.MENU_COMMON.parameters.font, -1f, null);
+            submenus_font = new FontHolder(SettingsMenu.MENU_COMMON.parameters.font, -1f, null, false);
         }
 
         AnimList animlist = AnimList.Init("/assets/common/anims/settings-menu.xml");

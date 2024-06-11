@@ -40,12 +40,25 @@ public class MasterVolume {
     public static double hide_timestamp;
     //public static double antibounce_timestamp;
     public static SoundPlayer beep;
+    public static FontParams fontparams;
 
     public static void Init() {
         MasterVolume.label_font = FontType.Init("/assets/common/font/vcr.ttf");
 
+        MasterVolume.fontparams = new FontParams() {
+            height = MasterVolume.LABEL_HEIGHT,
+            paragraph_space = 0f,
+            color_by_addition = false,
+            tint_color = MasterVolume.LABEL_COLOR,
+            border_enable = false,
+            border_size = 0f,
+            border_color = new float[] { 0f, 0f, 0f, 0f },
+            border_offset_x = 0f,
+            border_offset_y = 0f
+        };
+
         float width = MasterVolume.label_font.Measure(
-            MasterVolume.LABEL_HEIGHT, MasterVolume.LABEL_STRING, 0, MasterVolume.LABEL_STRING.Length
+            ref MasterVolume.fontparams, MasterVolume.LABEL_STRING, 0, MasterVolume.LABEL_STRING.Length
         );
 
         MasterVolume.is_visible = false;
@@ -137,14 +150,10 @@ public class MasterVolume {
 
         // render text
         if (MasterVolume.label_font == null) goto L_check_hide_timestamp;
-        float[] label_color = MasterVolume.LABEL_COLOR;
-        MasterVolume.label_font.EnableBorder(false);
-        MasterVolume.label_font.EnableColorByAddition(false);
-        MasterVolume.label_font.SetAlpha(label_color[3]);
-        MasterVolume.label_font.SetColor(label_color[0], label_color[1], label_color[2]);
+
         MasterVolume.label_font.DrawText(
             pvrctx,
-            MasterVolume.LABEL_HEIGHT,
+            ref MasterVolume.fontparams,
             MasterVolume.label_x_offset, MasterVolume.LABEL_Y_OFFSET,
             0, MasterVolume.LABEL_STRING.Length, MasterVolume.LABEL_STRING
         );

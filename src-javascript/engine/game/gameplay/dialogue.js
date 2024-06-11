@@ -278,7 +278,7 @@ async function dialogue_init(src, viewport_width, viewport_height) {
     }
 
     // create textsprite speech if not customized
-    dialogue.texsprite_speech = textsprite_init(null, false, 34.0, 0x00000);
+    dialogue.texsprite_speech = textsprite_init(null, false, false, 34.0, 0x00000);
     textsprite_set_paragraph_space(dialogue.texsprite_speech, 8.0);
     textsprite_set_wordbreak(dialogue.texsprite_speech, FONT_WORDBREAK_LOOSE);
 
@@ -287,7 +287,7 @@ async function dialogue_init(src, viewport_width, viewport_height) {
 
 
     // create textsprite title
-    dialogue.texsprite_title = textsprite_init(null, false, 24.0, 0x00000);
+    dialogue.texsprite_title = textsprite_init(null, false, false, 24.0, 0x00000);
     textsprite_set_paragraph_space(dialogue.texsprite_title, 8.0);
     textsprite_set_wordbreak(dialogue.texsprite_title, FONT_WORDBREAK_LOOSE);
 
@@ -2037,7 +2037,6 @@ async function dialogue_internal_parse_font(node, fonts) {
 
     if (atlas_utils_is_known_extension(src)) {
         instance = await fontglyph_init(src, glyph_suffix, glyph_animated);
-        fontglyph_enable_color_by_addition(instance, color_by_addition);
         is_atlas = true;
     } else {
         instance = await fonttype_init(src);
@@ -2051,7 +2050,7 @@ async function dialogue_internal_parse_font(node, fonts) {
 
     let font = {
         name: name,
-        fontholder: fontholder_init2(instance, is_atlas, 18.0)
+        fontholder: fontholder_init2(instance, is_atlas, 18.0, color_by_addition)
     };
 
     arraylist_add(fonts, font);

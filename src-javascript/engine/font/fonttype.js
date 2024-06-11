@@ -25,17 +25,6 @@ async function fonttype_init(src) {
     }
 
     let fonttype = {
-        lines_separation: 0.0,
-
-        color: [0.0, 0.0, 0.0],
-        alpha: 1.0,
-
-        border_color: [1.0, 1.0, 1.0, 1.0],
-        border_size: 0.0,
-        border_enable: false,
-        border_offset_x: 0.0,
-        border_offset_y: 0.0,
-
         instance_id: FONTTYPE_IDS++,
         instance_references: 1,
         instance_path: full_path,
@@ -101,14 +90,11 @@ function fonttype_destroy(fonttype) {
 }
 
 
-function fonttype_measure(fonttype, height, text, text_index, text_length) {
-    const scale = height / FONTTYPE_GLYPHS_HEIGHT;
+function fonttype_measure(fonttype, params, text, text_index, text_length) {
+    const scale = params.height / FONTTYPE_GLYPHS_HEIGHT;
     const text_end_index = text_index + text_length;
 
     //console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
-
-    // check for unmapped characters and them to the secondary map
-    fonttype_internal_find_unmaped_codepoints_to_secondary(fonttype, text_index, text_end_index, text);
 
     let max_width = 0.0;
     let width = 0.0;
@@ -215,57 +201,7 @@ function fonttype_measure_char(fonttype, codepoint, height, lineinfo) {
     lineinfo.line_char_count++;
 }
 
-function fonttype_set_lines_separation(fonttype, height) {
-    fonttype.lines_separation = height;
-}
-
-function fonttype_set_color(fonttype, r, g, b) {
-    fonttype.color[0] = r;
-    fonttype.color[1] = g;
-    fonttype.color[2] = b;
-}
-
-function fonttype_set_rgb8_color(fonttype, rbg8_color) {
-    math2d_color_bytes_to_floats(rbg8_color, false, fonttype.color);
-}
-
-function fonttype_set_alpha(fonttype, alpha) {
-    fonttype.alpha = alpha;
-}
-
-function fonttype_set_border_size(fonttype, border_size) {
-    //if (SDF_FONT) border_size /= 2;
-    fonttype.border_size = border_size;
-}
-
-function fonttype_set_border_color(fonttype, r, g, b, a) {
-    if (r >= 0) fonttype.border_color[0] = r;
-    if (g >= 0) fonttype.border_color[1] = g;
-    if (b >= 0) fonttype.border_color[2] = b;
-    if (a >= 0) fonttype.border_color[3] = a;
-}
-
-function fonttype_set_border_color_rgba8(fonttype, rbga8_color) {
-    math2d_color_bytes_to_floats(rbga8_color, 1, fonttype.border_color);
-}
-
-function fonttype_set_border_offset(fonttype, x, y) {
-    fonttype.border_offset_x = x;
-    fonttype.border_offset_y = y;
-}
-
-function fonttype_enable_border(fonttype, enable) {
-    fonttype.border_enable = enable;
-}
-
-function fonttype_set_border(fonttype, enable, size, rgba) {
-    //if (SDF_FONT) size /= 2;
-    fonttype.border_enable = enable;
-    fonttype.border_size = size;
-    fonttype_set_border_color(fonttype, rgba[0], rgba[1], rgba[2], rgba[3]);
-}
-
-function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_length, text) {
+function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_length, text) {
     if (text == null || text_length < 1) return 0.0;
 
     const grapheme = { code: 0, size: 0 };
@@ -273,9 +209,9 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_len
     const primary_texture = fonttype.fontcharmap_primary_texture;
     const secondary = fonttype.fontcharmap_secondary;
     const secondary_texture = fonttype.fontcharmap_secondary_texture;
-    const has_border = fonttype.border_enable && fonttype.border_color[3] > 0.0 && fonttype.border_size >= 0.0;
-    const outline_size = fonttype.border_size * 2.0;
-    const scale = height / FONTTYPE_GLYPHS_HEIGHT;
+    const has_border = params.border_enable && params.border_color[3] > 0.0 && params.border_size >= 0.0;
+    const outline_size = params.border_size * 2.0;
+    const scale = params.height / FONTTYPE_GLYPHS_HEIGHT;
     const ascender = ((primary ?? secondary).ascender / 2.0) * scale;// FIXME: ¿why does dividing by 2 works?
     const text_end_index = text_index + text_length;
     let border_padding1 = 0.0, border_padding2 = 0.0;
@@ -285,15 +221,15 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_len
     if (SDF_FONT) {
         // calculate sdf thickness
         if (has_border) {
-            if (fonttype.border_size > 0.0) {
-                let max_border_size = height * FONTTYPE_GLYPHS_OUTLINE_RATIO;
-                let border_size = Math.min(fonttype.border_size, max_border_size);
+            if (params.border_size > 0.0) {
+                let max_border_size = params.height * FONTTYPE_GLYPHS_OUTLINE_RATIO;
+                let border_size = Math.min(params.border_size, max_border_size);
                 let thickness = (1.0 - (border_size / max_border_size)) / 2.0;
                 glyphrenderer_set_sdf_thickness(pvrctx, thickness);
 
-                /*if (border_size < fonttype.border_size && height > 8.0) {
+                /*if (border_size < params.border_size && params.height > 8.0) {
                     // add some padding
-                    border_padding1 = fonttype.border_size - border_size;
+                    border_padding1 = params.border_size - border_size;
                     border_padding2 = border_padding1 * 2.0;
                 }*/
             } else {
@@ -312,7 +248,7 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_len
     /**@type {FontCharData}*/let fontchardata;
 
     pvr_context_save(pvrctx);
-    pvr_context_set_vertex_alpha(pvrctx, fonttype.alpha);
+    pvr_context_set_vertex_alpha(pvrctx, params.tint_color[3]);
     pvr_context_set_vertex_offsetcolor(pvrctx, PVRCTX_DEFAULT_OFFSET_COLOR);
     pvr_context_set_vertex_antialiasing(pvrctx, PVRCTX_FLAG_DEFAULT);
 
@@ -339,7 +275,7 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_len
     let maximum = glyphrenderer_prepare(total_glyphs, has_border);
 
     if (SDF_FONT) {
-        let smoothing = fonttype_internal_calc_smoothing(pvrctx, height);
+        let smoothing = fonttype_internal_calc_smoothing(pvrctx, params.height);
         glyphrenderer_set_sdf_smoothing(pvrctx, smoothing);
     }
 
@@ -359,7 +295,7 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_len
 
         if (grapheme.code == FONTGLYPH_LINEFEED) {
             draw_x = 0.0;
-            draw_y += height + fonttype.lines_separation - ascender;
+            draw_y += params.height + fonttype.paragraph_space - ascender;
             previous_codepoint = grapheme.code;
             line_chars = 0;
             continue;
@@ -419,14 +355,14 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_len
                     sdh = dh + border_padding2;
                 } else {
                     // compute border location and outline size
-                    sdx = dx - fonttype.border_size;
-                    sdy = dy - fonttype.border_size;
+                    sdx = dx - params.border_size;
+                    sdy = dy - params.border_size;
                     sdw = dw + outline_size;
                     sdh = dh + outline_size;
                 }
 
-                sdx += fonttype.border_offset_x;
-                sdy += fonttype.border_offset_y;
+                sdx += params.border_offset_x;
+                sdy += params.border_offset_y;
 
                 // queue outlined glyph for batch rendering
                 glyphrenderer_append_glyph(
@@ -451,10 +387,81 @@ function fonttype_draw_text(fonttype, pvrctx, height, x, y, text_index, text_len
     }
 
     // commit draw
-    glyphrenderer_draw(pvrctx, fonttype.color, fonttype.border_color, 0, 1, primary_texture, secondary_texture);
+    glyphrenderer_draw(pvrctx, params.tint_color, params.border_color, 0, 1, primary_texture, secondary_texture);
 
     pvr_context_restore(pvrctx);
-    return draw_y + height;
+    return draw_y + params.height;
+}
+
+function fonttype_map_codepoints(fonttype, text_index, text_end_index, text) {
+    let actual = fonttype.fontcharmap_secondary ? fonttype.fontcharmap_secondary.char_array_size : 0;
+    let new_codepoints = 0;
+    let grapheme = { code: 0, size: 0 };
+    let index = text_index;
+
+    // step 1: count all unmapped codepoints
+    while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
+        index += grapheme.size;
+
+        switch (grapheme.code) {
+            case FONTGLYPH_LINEFEED:
+            case FONTGLYPH_CARRIAGERETURN:
+                continue;
+        }
+
+        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_primary, grapheme.code)) continue;
+        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, grapheme.code)) continue;
+
+        // not present, count it
+        new_codepoints++;
+    }
+
+    if (new_codepoints < 1) return;// nothing to do
+
+    // step 2: allocate codepoints array
+    let codepoints = new Uint32Array(actual + new_codepoints + 1);
+    codepoints[actual + new_codepoints] = 0x00000000;
+
+    if (fonttype.fontcharmap_secondary) {
+        // add existing secondary codepoints
+        for (let i = 0; i < fonttype.fontcharmap_secondary.char_array_size; i++) {
+            codepoints[i] = fonttype.fontcharmap_secondary.char_array[i].codepoint;
+        }
+    }
+
+    index = text_index;
+    new_codepoints = actual;
+    while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
+        index += grapheme.size;
+
+        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_primary, grapheme.code)) continue;
+        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, grapheme.code)) continue;
+
+        codepoints[new_codepoints++] = grapheme.code;
+    }
+
+    // step 3: rebuild the secondary char map
+    if (fonttype.fontcharmap_secondary) {
+        // dispose previous instance
+        fontatlas_atlas_destroy(fonttype.fontcharmap_secondary);
+        fonttype.fontcharmap_secondary.char_array = fonttype.fontcharmap_secondary = null;
+        texture_destroy(fonttype.fontcharmap_secondary_texture);
+    }
+
+    // build map and upload texture
+    fonttype.fontcharmap_secondary = fonttype_internal_retrieve_fontcharmap(fonttype, codepoints);
+    fonttype.fontcharmap_secondary_texture = fonttype_internal_upload_texture(fonttype.fontcharmap_secondary);
+
+    // dispose secondary codepoints array
+    codepoints = undefined;
+}
+
+function fonttype_animate(fonttype, elapsed) {
+    void fonttype;
+    void elapsed;
+
+    // not used
+    return 1;
 }
 
 
@@ -558,69 +565,6 @@ function fonttype_internal_upload_texture(fontcharmap) {
     }
 
     return tex;
-}
-
-function fonttype_internal_find_unmaped_codepoints_to_secondary(fonttype, text_index, text_end_index, text) {
-    let actual = fonttype.fontcharmap_secondary ? fonttype.fontcharmap_secondary.char_array_size : 0;
-    let new_codepoints = 0;
-    let grapheme = { code: 0, size: 0 };
-    let index = text_index;
-
-    // step 1: count all unmapped codepoints
-    while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
-        index += grapheme.size;
-
-        switch (grapheme.code) {
-            case FONTGLYPH_LINEFEED:
-            case FONTGLYPH_CARRIAGERETURN:
-                continue;
-        }
-
-        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_primary, grapheme.code)) continue;
-        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, grapheme.code)) continue;
-
-        // not present, count it
-        new_codepoints++;
-    }
-
-    if (new_codepoints < 1) return;// nothing to do
-
-    // step 2: allocate codepoints array
-    let codepoints = new Uint32Array(actual + new_codepoints + 1);
-    codepoints[actual + new_codepoints] = 0x00000000;
-
-    if (fonttype.fontcharmap_secondary) {
-        // add existing secondary codepoints
-        for (let i = 0; i < fonttype.fontcharmap_secondary.char_array_size; i++) {
-            codepoints[i] = fonttype.fontcharmap_secondary.char_array[i].codepoint;
-        }
-    }
-
-    index = text_index;
-    new_codepoints = actual;
-    while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
-        index += grapheme.size;
-
-        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_primary, grapheme.code)) continue;
-        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, grapheme.code)) continue;
-
-        codepoints[new_codepoints++] = grapheme.code;
-    }
-
-    // step 3: rebuild the secondary char map
-    if (fonttype.fontcharmap_secondary) {
-        // dispose previous instance
-        fontatlas_atlas_destroy(fonttype.fontcharmap_secondary);
-        fonttype.fontcharmap_secondary.char_array = fonttype.fontcharmap_secondary = null;
-        texture_destroy(fonttype.fontcharmap_secondary_texture);
-    }
-
-    // build map and upload texture
-    fonttype.fontcharmap_secondary = fonttype_internal_retrieve_fontcharmap(fonttype, codepoints);
-    fonttype.fontcharmap_secondary_texture = fonttype_internal_upload_texture(fonttype.fontcharmap_secondary);
-
-    // dispose secondary codepoints array
-    codepoints = undefined;
 }
 
 function fonttype_internal_get_fontchardata(/**@type {FontCharMap}*/ fontcharmap, codepoint) {

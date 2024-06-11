@@ -56,11 +56,8 @@ public class Menu : IAnimate, IDraw {
 
         FontHolder fontholder = null;
         if (@params.font != null) {
-            fontholder = new FontHolder(@params.font, @params.font_size, @params.font_glyph_suffix);
+            fontholder = new FontHolder(@params.font, @params.font_size, @params.font_glyph_suffix, @params.font_color_by_addition);
             if (fontholder.font == null) throw new Exception("Missing or invalid font: " + @params.font);
-            if (fontholder.font_from_atlas) {
-                fontholder.font.EnableColorByAddition(@params.font_color_by_addition);
-            }
         }
 
         float[] border = new float[] { 0f, 0f, 0f, 0f };

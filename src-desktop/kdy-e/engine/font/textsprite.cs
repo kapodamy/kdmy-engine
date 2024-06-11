@@ -15,10 +15,7 @@ public class TextSprite : IVertex {
     private TextSprite() { }
 
 
-    private IFontRender font;
-    //private bool font_from_atlas;
-    private float font_size;
-    private float[] color;
+    private IFont font;
     private string text;
     private bool intern;
     private int force_case;
@@ -28,7 +25,6 @@ public class TextSprite : IVertex {
     private float x;
     private float y;
     private float z;
-    private float alpha;
     private float alpha2;
     private float z_offset;
     private Align align_vertical;
@@ -51,12 +47,6 @@ public class TextSprite : IVertex {
     private AnimSprite animation_external;
     private AnimSprite animation_selected;
     private LinkedList<AnimSprite> animation_list;
-    private bool border_enable;
-    private float border_size;
-    private float[] border_color;
-    private float border_offset_x;
-    private float border_offset_y;
-    private float font_paragraph_separation;
     private PVRFlag antialiasing;
     private int wordbreak;
     private PSShader psshader;
@@ -70,16 +60,14 @@ public class TextSprite : IVertex {
     private float background_offset_x;
     private float background_offset_y;
     private float[] background_rgba;
+    private FontParams fontparams;
     private int id;
 
 
-    public static TextSprite Init(IFontRender font, bool font_is_truetype, float size, uint rbg8_color) {
+    public static TextSprite Init(IFont font, bool font_is_truetype, bool color_by_addition, float size, uint rbg8_color) {
 
         TextSprite textsprite = new TextSprite() {
             font = font,
-            //font_from_atlas = font_is_truetype,
-            font_size = size,
-            color = new float[] { 1f, 1f, 1f },
 
             text = null,
             intern = false,
@@ -92,7 +80,6 @@ public class TextSprite : IVertex {
             x = 0.0f,
             y = 0.0f,
             z = 0.0f,
-            alpha = 1.0f,
             alpha2 = 1.0f,
             z_offset = 0.0f,
 
@@ -124,13 +111,6 @@ public class TextSprite : IVertex {
             animation_selected = null,
             animation_list = new LinkedList<AnimSprite>(),
 
-            border_enable = false,
-            border_size = 0.0f,
-            border_color = new float[] { 1.0f, 1.0f, 1.0f, 1.0f },
-            border_offset_x = 0.0f,
-            border_offset_y = 0.0f,
-
-            font_paragraph_separation = 0,
 
             antialiasing = PVRFlag.DEFAULT,
 
@@ -150,10 +130,25 @@ public class TextSprite : IVertex {
             background_offset_y = 0,
             background_rgba = new float[] { 0.0f, 0.0f, 0.0f, 0.5f },
 
+            fontparams = {
+                height = size,
+                paragraph_space = 0f,
+                color_by_addition = false,
+
+                tint_color = new float[] { 1f, 1f, 1f, 1f },
+
+                border_enable = color_by_addition,
+                border_size = 0f,
+
+                border_color = new float[] { 0f, 0f, 0f, 1f },
+                border_offset_x = 0f,
+                border_offset_y = 0f
+            },
+
             id = TextSprite.IDS++
         };
 
-        Math2D.ColorBytesToFloats(rbg8_color, false, textsprite.color);
+        Math2D.ColorBytesToFloats(rbg8_color, false, textsprite.fontparams.tint_color);
 
         textsprite.matrix_source.Clear();
 
@@ -162,7 +157,7 @@ public class TextSprite : IVertex {
     }
 
     public static TextSprite Init2(FontHolder fontholder, float font_size, uint rbg8_color) {
-        return TextSprite.Init(fontholder.font, fontholder.font_from_atlas, font_size, rbg8_color);
+        return TextSprite.Init(fontholder.font, !fontholder.font_from_atlas, fontholder.font_color_by_addition, font_size, rbg8_color);
     }
 
     public void Destroy() {
@@ -198,7 +193,6 @@ public class TextSprite : IVertex {
         //    this.text = textstrdup(text);
 
         this.modified_string = true;
-        this.modified_coords = true;
     }
 
     public void SetTextFormated(string format, params object[] values) {
@@ -210,21 +204,26 @@ public class TextSprite : IVertex {
         this.text = text;
 
         this.modified_string = true;
-        this.modified_coords = true;
     }
 
     public void SetTextFormated2(string format, object[] va_args) {
         string text = StringUtils.CreateFormattedString(format, va_args);
-        SetTextIntern(false, text);
+
+        //if (!this.intern) free(this.text);
+
+        this.intern = false;
+        this.text = text;
+
+        this.modified_string = true;
     }
 
     public void SetFontSize(float font_size) {
-        this.modified_string = true;
-        this.font_size = font_size;
+        this.modified_coords = true;
+        this.fontparams.height = font_size;
     }
 
     public void ForceCase(int none_or_lowercase_or_uppercase) {
-        this.modified_string = true;
+        this.modified_coords = true;
         this.force_case = none_or_lowercase_or_uppercase;
     }
 
@@ -234,27 +233,27 @@ public class TextSprite : IVertex {
     }
 
     public void SetParagraphSpace(float space) {
-        this.font_paragraph_separation = space;
+        this.fontparams.paragraph_space = space;
     }
 
     public void SetMaxlines(int max_lines) {
-        this.modified_string = true;
+        this.modified_coords = true;
         this.max_lines = max_lines;
     }
 
     public void SetColorRGBA8(uint rbg8_color) {
-        Math2D.ColorBytesToFloats(rbg8_color, false, this.color);
+        Math2D.ColorBytesToFloats(rbg8_color, false, this.fontparams.tint_color);
     }
 
     public void SetColor(float r, float g, float b) {
-        if (r >= 0) this.color[0] = r;
-        if (g >= 0) this.color[1] = g;
-        if (b >= 0) this.color[2] = b;
+        if (r >= 0) this.fontparams.tint_color[0] = r;
+        if (g >= 0) this.fontparams.tint_color[1] = g;
+        if (b >= 0) this.fontparams.tint_color[2] = b;
     }
 
 
     public void SetAlpha(float alpha) {
-        this.alpha = alpha;
+        this.fontparams.tint_color[3] = alpha;
     }
 
     public void SetVisible(bool visible) {
@@ -444,6 +443,10 @@ public class TextSprite : IVertex {
             return;
         }
 
+        int text_length = text.Length;
+        if (this.modified_string) {
+            this.font.Measure(ref this.fontparams, text, 0, text_length);
+        }
 
 
         // step 1: count the paragraphs
@@ -487,7 +490,7 @@ public class TextSprite : IVertex {
                 index_last_detected_break = index_current_line = new_index;
                 last_break_was_dotcommatab = true;
 
-                calculated_text_height += this.font_size + this.font_paragraph_separation;
+                calculated_text_height += this.fontparams.height + this.fontparams.paragraph_space;
                 if (calculated_text_height >= max_height) break;
 
                 lineinfo.line_char_count = 0;
@@ -503,9 +506,9 @@ public class TextSprite : IVertex {
             }
 
             // measure char width
-            this.font.MeasureChar(grapheme.code, this.font_size, lineinfo);
+            this.font.MeasureChar(grapheme.code, this.fontparams.height, ref lineinfo);
 
-            // check if the current codepoit is breakable
+            // check if the current codepoint is breakable
             bool current_is_break = false;
             int break_in_index = -1;
             int break_char_count = 1;
@@ -575,7 +578,7 @@ public class TextSprite : IVertex {
                     offset = accumulated_width// temporal
                 });
 
-                calculated_text_height += this.font_size + this.font_paragraph_separation;
+                calculated_text_height += this.fontparams.height + this.fontparams.paragraph_space;
                 if (calculated_text_height >= max_height) break;
 
                 index_last_detected_break = index_current_line = break_in_index;
@@ -649,28 +652,28 @@ public class TextSprite : IVertex {
                 SetParagraphAlign((Align)((int)value));
                 break;
             case VertexProps.TEXTSPRITE_PROP_BORDER_ENABLE:
-                this.border_enable = value >= 1.0f;
+                this.fontparams.border_enable = value >= 1.0f;
                 break;
             case VertexProps.TEXTSPRITE_PROP_BORDER_SIZE:
-                this.border_size = value;
+                this.fontparams.border_size = value;
                 break;
             case VertexProps.TEXTSPRITE_PROP_BORDER_COLOR_R:
-                this.border_color[0] = value;
+                this.fontparams.border_color[0] = value;
                 break;
             case VertexProps.TEXTSPRITE_PROP_BORDER_COLOR_G:
-                this.border_color[1] = value;
+                this.fontparams.border_color[1] = value;
                 break;
             case VertexProps.TEXTSPRITE_PROP_BORDER_COLOR_B:
-                this.border_color[2] = value;
+                this.fontparams.border_color[2] = value;
                 break;
             case VertexProps.TEXTSPRITE_PROP_BORDER_COLOR_A:
-                this.border_color[3] = value;
+                this.fontparams.border_color[3] = value;
                 break;
             case VertexProps.TEXTSPRITE_PROP_BORDER_OFFSET_X:
-                this.border_offset_x = value;
+                this.fontparams.border_offset_x = value;
                 break;
             case VertexProps.TEXTSPRITE_PROP_BORDER_OFFSET_Y:
-                this.border_offset_y = value;
+                this.fontparams.border_offset_y = value;
                 break;
             /////////////////////////////////////////////////////////////////////////////////////////////////
             case VertexProps.SPRITE_PROP_X:
@@ -709,19 +712,19 @@ public class TextSprite : IVertex {
                 MatrixTranslate(Single.NaN, value);
                 break;
             case VertexProps.SPRITE_PROP_ALPHA:
-                this.alpha = Math2D.Clamp(value, 0.0f, 1.0f);
+                this.fontparams.tint_color[3] = Math2D.Clamp(value, 0.0f, 1.0f);
                 break;
             case VertexProps.SPRITE_PROP_Z:
                 this.z = value;
                 break;
             case VertexProps.SPRITE_PROP_VERTEX_COLOR_R:
-                this.color[0] = Math2D.Clamp(value, 0.0f, 1.0f);
+                this.fontparams.tint_color[0] = Math2D.Clamp(value, 0.0f, 1.0f);
                 break;
             case VertexProps.SPRITE_PROP_VERTEX_COLOR_G:
-                this.color[1] = Math2D.Clamp(value, 0.0f, 1.0f);
+                this.fontparams.tint_color[1] = Math2D.Clamp(value, 0.0f, 1.0f);
                 break;
             case VertexProps.SPRITE_PROP_VERTEX_COLOR_B:
-                this.color[2] = Math2D.Clamp(value, 0.0f, 1.0f);
+                this.fontparams.tint_color[2] = Math2D.Clamp(value, 0.0f, 1.0f);
                 break;
             case VertexProps.SPRITE_PROP_ANIMATIONLOOP:
                 if (this.animation_selected != null)
@@ -755,7 +758,7 @@ public class TextSprite : IVertex {
                 this.z_offset = value;
                 break;
             case VertexProps.TEXTSPRITE_PROP_PARAGRAPH_SEPARATION:
-                this.font_paragraph_separation = value;
+                this.fontparams.paragraph_space = value;
                 break;
             case VertexProps.SPRITE_PROP_ANTIALIASING:
                 this.antialiasing = (PVRFlag)((int)value);
@@ -801,11 +804,9 @@ public class TextSprite : IVertex {
             case VertexProps.TEXTSPRITE_PROP_MAX_WIDTH:
             case VertexProps.TEXTSPRITE_PROP_MAX_HEIGHT:
             case VertexProps.TEXTSPRITE_PROP_PARAGRAPH_SEPARATION:
-                this.modified_coords = true;
-                break;
             case VertexProps.FONT_PROP_WORDBREAK:
             case VertexProps.TEXTSPRITE_PROP_FONT_SIZE:
-                this.modified_string = true;
+                this.modified_coords = true;
                 break;
         }
 
@@ -819,7 +820,7 @@ public class TextSprite : IVertex {
     }
 
     public float GetFontSize() {
-        return this.font_size;
+        return this.fontparams.height;
     }
 
     public void GetMaxDrawSize(out float draw_width_max, out float draw_height_max) {
@@ -828,7 +829,7 @@ public class TextSprite : IVertex {
     }
 
     public void Draw(PVRContext pvrctx) {
-        if (this.alpha <= 0) return;
+        if (this.fontparams.tint_color[3] <= 0f) return;
         if (String.IsNullOrEmpty(this.text_forced_case) && String.IsNullOrEmpty(this.text)) return;
 
         // check if all calculations are up-to-date
@@ -839,15 +840,6 @@ public class TextSprite : IVertex {
 
 
     private void DrawInternal(PVRContext pvrctx) {
-        this.font.SetAlpha(this.alpha);
-        this.font.SetColor(this.color[0], this.color[1], this.color[2]);
-        this.font.SetBorder(
-             this.border_enable, this.border_size, this.border_color
-        );
-        this.font.SetBorderOffset(this.border_offset_x, this.border_offset_y);
-        this.font.SetLinesSeparation(this.font_paragraph_separation);
-
-
         pvrctx.Save();
         pvrctx.SetGlobalAlpha(this.alpha2);
         if (this.psshader != null) pvrctx.AddShader(this.psshader);
@@ -883,19 +875,19 @@ public class TextSprite : IVertex {
             // let the font handle the draw
             this.font.DrawText(
                 pvrctx,
-                this.font_size,
+                ref this.fontparams,
                 this.last_draw_x, this.last_draw_y,
                 0, text.Length, text
             );
         } else {
             // paragraph by paragraph draw
             float y = this.last_draw_y;
-            float line_height = this.font_size + this.font_paragraph_separation;
+            float line_height = this.fontparams.height + this.fontparams.paragraph_space;
 
             foreach (ParagraphInfo paragraphinfo in this.paragraph_array) {
                 if (paragraphinfo.length > 0) {
                     this.font.DrawText(
-                         pvrctx, this.font_size,
+                         pvrctx, ref this.fontparams,
                         this.last_draw_x + paragraphinfo.offset, y,
                         paragraphinfo.index, paragraphinfo.length, text
                     );
@@ -988,27 +980,27 @@ public class TextSprite : IVertex {
 
 
     public void BorderEnable(bool enable) {
-        this.border_enable = enable;
+        this.fontparams.border_enable = enable;
     }
 
     public void BorderSetSize(float border_size) {
-        this.border_size = Single.IsNaN(border_size) ? 0.0f : border_size;
+        this.fontparams.border_size = Single.IsNaN(border_size) ? 0.0f : border_size;
     }
 
     public void BorderSetColor(float r, float g, float b, float a) {
-        if (r >= 0) this.border_color[0] = r;
-        if (g >= 0) this.border_color[1] = g;
-        if (b >= 0) this.border_color[2] = b;
-        if (a >= 0) this.border_color[3] = a;
+        if (r >= 0) this.fontparams.border_color[0] = r;
+        if (g >= 0) this.fontparams.border_color[1] = g;
+        if (b >= 0) this.fontparams.border_color[2] = b;
+        if (a >= 0) this.fontparams.border_color[3] = a;
     }
 
     public void BorderSetColorRGBA8(uint rbga8_color) {
-        Math2D.ColorBytesToFloats(rbga8_color, true, this.border_color);
+        Math2D.ColorBytesToFloats(rbga8_color, true, this.fontparams.border_color);
     }
 
     public void BorderSetOffset(float x, float y) {
-        if (!Single.IsNaN(x)) this.border_offset_x = x;
-        if (!Single.IsNaN(y)) this.border_offset_y = y;
+        if (!Single.IsNaN(x)) this.fontparams.border_offset_x = x;
+        if (!Single.IsNaN(y)) this.fontparams.border_offset_y = y;
     }
 
 
@@ -1032,7 +1024,7 @@ public class TextSprite : IVertex {
     public void ChangeFont(FontHolder fontholder) {
         if (fontholder == null) throw new ArgumentNullException("fontholder can not be null");
         this.font = fontholder.font;
-        //this.font_from_atlas = fontholder.font_from_atlas;
+        this.fontparams.color_by_addition = fontholder.font_color_by_addition;
     }
 
     public void SetShader(PSShader psshader) {
@@ -1079,6 +1071,9 @@ public class TextSprite : IVertex {
         return this.text_forced_case ?? this.text;
     }
 
+    public void EnableColorByAddition(bool enabled) {
+        this.fontparams.color_by_addition = enabled;
+    }
 
 
     private class ParagraphInfo {

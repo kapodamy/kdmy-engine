@@ -6,13 +6,14 @@ public class FontHolder {
 
     public static float DEFAULT_SIZE_PIXELS = 8;// in pixels
 
-    public IFontRender font;
+    public IFont font;
     public bool font_from_atlas;
     public float font_size;
+    public bool font_color_by_addition;
 
 
-    public FontHolder(string src, float default_size_px, string glyph_suffix) {
-        IFontRender font_instance;
+    public FontHolder(string src, float default_size_px, string glyph_suffix, bool color_by_addition) {
+        IFont font_instance;
         bool is_altas_type = src.LowercaseEndsWithKDY(".xml");
 
         if (is_altas_type)
@@ -24,12 +25,14 @@ public class FontHolder {
         this.font = font_instance;
         this.font_from_atlas = is_altas_type;
         this.font_size = default_size_px > 0 ? default_size_px : FontHolder.DEFAULT_SIZE_PIXELS;
+        this.font_color_by_addition = color_by_addition;
     }
 
-    public FontHolder(IFontRender font_instance, bool is_altas_type, float default_size_px) {
+    public FontHolder(IFont font_instance, bool is_altas_type, float default_size_px, bool color_by_addition) {
         this.font = font_instance;
         this.font_from_atlas = is_altas_type;
         this.font_size = default_size_px > 0 ? default_size_px : FontHolder.DEFAULT_SIZE_PIXELS;
+        this.font_color_by_addition = color_by_addition;
     }
 
     public void Destroy() {

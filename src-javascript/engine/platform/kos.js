@@ -16,7 +16,7 @@ const STATE_FINISHED = 0x0004;
     given routine. The thread will terminate and clean up resources when the
     routine completes if the thread is created detached, otherwise you must
     join the thread with thd_join() to clean up after it.
-    @param {number} detach    Set to 1 to create a detached thread. Set to 0 to create a joinable thread.
+    @param {number|boolean} detach    Set to 1 to create a detached thread. Set to 0 to create a joinable thread.
     @param {function(any):any} routine     The function to call in the new thread.
     @param {any} param      A parameter to pass to the function called.
     @returns {object}       The new thread on success, NULL on failure.

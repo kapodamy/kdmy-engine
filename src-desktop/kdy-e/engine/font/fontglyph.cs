@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using Engine.Game.Common;
 using Engine.Image;
 using Engine.Platform;
@@ -7,14 +6,7 @@ using Engine.Utils;
 
 namespace Engine.Font;
 
-public class FontLineInfo {
-    public float space_width;
-    public float last_char_width;
-    public int line_char_count;
-    public int previous_codepoint;
-}
-
-public class FontGlyph : IFontRender {
+public class FontGlyph : IFont {
 
     public const byte SPACE = 0x20;
     public const byte HARDSPACE = 0xA0;
@@ -29,15 +21,6 @@ public class FontGlyph : IFontRender {
     private Texture texture;
     private GlyphInfo[] table;
     private int table_size;
-    private float paragraph_separation;
-    private float[] tintcolor;
-    private float alpha;
-    private bool color_by_addition;
-    private float[] border_tintcolor;
-    private float border_size;
-    private bool border_enable;
-    private float border_offset_x;
-    private float border_offset_y;
     private double frame_time;
     private double frame_progress;
 
@@ -70,17 +53,6 @@ public class FontGlyph : IFontRender {
             texture = texture,
             table = new GlyphInfo[atlas.size],
             table_size = atlas.size,// temporal value
-            paragraph_separation = 0.0f,
-            tintcolor = new float[] { 1.0f, 1.0f, 1.0f },
-            alpha = 1.0f,
-
-            color_by_addition = false,
-
-            border_tintcolor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f },
-            border_size = 0f,
-            border_enable = false,
-            border_offset_x = 0f,
-            border_offset_y = 0f,
 
             frame_time = 0f,
             frame_progress = 0f,
@@ -94,8 +66,6 @@ public class FontGlyph : IFontRender {
 
             fontglyph.frame_time = 1000 / fontglyph.frame_time;
         }
-
-        PVRContext.HelperClearOffsetColor(fontglyph.border_tintcolor);
 
         int table_index = 0;
 
@@ -128,11 +98,9 @@ public class FontGlyph : IFontRender {
         // add glyph frames
         // needs C implementation
         for (int i = 0 ; i < atlas.size ; i++) {
-            int result = FontGlyph.InternalParse(
+            FontGlyph.InternalParse(
                 atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
             );
-
-            if (result == 1) table_index++;
         }
         return fontglyph;
     }
@@ -150,17 +118,16 @@ public class FontGlyph : IFontRender {
     }
 
 
-    public float Measure(float height, string text, int text_index, int text_size) {
+    public float Measure(ref FontParams @params, string text, int text_index, int text_length) {
         Grapheme grapheme = new Grapheme();
-        int text_length = text.Length;
-        int text_end_index = text_index + text_size;
+        int text_end_index = text_index + text_length;
 
         //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
 
         float width = 0;
         float max_width = 0;
         int line_chars = 0;
-        float space_width = InternalFindSpaceWidth(height);
+        float space_width = InternalFindSpaceWidth(@params.height);
 
         for (int i = text_index ; i < text_end_index ; i++) {
             if (!StringUtils.GetCharacterCodepoint(text, i, ref grapheme)) continue;
@@ -178,7 +145,7 @@ public class FontGlyph : IFontRender {
             for (int j = 0 ; j < this.table_size ; j++) {
                 if (this.table[j].code == grapheme.code) {
                     GlyphFrame frame = this.table[j].frames[this.table[j].actual_frame];
-                    width += frame.glyph_width_ratio * height;
+                    width += frame.glyph_width_ratio * @params.height;
                     line_chars++;
                     found = true;
                     break;
@@ -195,7 +162,7 @@ public class FontGlyph : IFontRender {
                 }
             } else {
                 // space, hard space or unknown character
-                width += height * FontGlyph.SPACE_WIDTH_RATIO;
+                width += @params.height * FontGlyph.SPACE_WIDTH_RATIO;
                 line_chars++;
             }
         }
@@ -203,7 +170,7 @@ public class FontGlyph : IFontRender {
         return Math.Max(width, max_width);
     }
 
-    public void MeasureChar(int codepoint, float height, FontLineInfo lineinfo) {
+    public void MeasureChar(int codepoint, float height, ref FontLineInfo lineinfo) {
         if (lineinfo.space_width < 0) {
             lineinfo.space_width = InternalFindSpaceWidth(height);
         }
@@ -230,66 +197,12 @@ public class FontGlyph : IFontRender {
         }
     }
 
-    public void SetLinesSeparation(float height) {
-        this.paragraph_separation = height;
-    }
-
-    public void SetColor(float r, float g, float b) {
-        this.tintcolor[0] = r;
-        this.tintcolor[1] = g;
-        this.tintcolor[2] = b;
-    }
-
-    public void SetRGB8Color(uint rbg8_color) {
-        Math2D.ColorBytesToFloats(rbg8_color, false, this.tintcolor);
-    }
-
-    public void SetAlpha(float alpha) {
-        this.alpha = alpha;
-    }
-
-    public void SetBorderColorRGBA8(uint rbga8_color) {
-        Math2D.ColorBytesToFloats(rbga8_color, true, this.border_tintcolor);
-    }
-
-    public void SetBorderColor(float r, float g, float b, float a) {
-        if (r >= 0) this.border_tintcolor[0] = r;
-        if (g >= 0) this.border_tintcolor[1] = g;
-        if (b >= 0) this.border_tintcolor[2] = b;
-        if (a >= 0) this.border_tintcolor[3] = a;
-    }
-
-    public void SetBorderSize(float size) {
-        this.border_size = size;
-    }
-
-    public void SetBorderOffset(float x, float y) {
-        this.border_offset_x = x;
-        this.border_offset_y = y;
-    }
-
-    public void EnableBorder(bool enable) {
-        this.border_enable = enable;
-    }
-
-    public void SetBorder(bool enable, float size, float[] rgba) {
-        this.border_enable = enable;
-        this.border_size = size;
-        SetBorderColor(rgba[0], rgba[1], rgba[2], rgba[3]);
-    }
-
-    public void EnableColorByAddition(bool enable) {
-        this.color_by_addition = enable;
-    }
-
-
-    public float DrawText(PVRContext pvrctx, float height, float x, float y, int text_index, int text_size, string text) {
+    public float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text) {
         Grapheme grapheme = new Grapheme();
-        bool by_add = this.color_by_addition;
-        bool has_border = this.border_enable && this.border_tintcolor[3] > 0 && this.border_size >= 0;
-        float outline_size = this.border_size * 2;
-        int text_end_index = text_index + text_size;
-        int text_length = text.Length;
+        bool by_add = @params.color_by_addition;
+        bool has_border = @params.border_enable && @params.border_color[3] > 0 && @params.border_size >= 0;
+        float outline_size = @params.border_size * 2;
+        int text_end_index = text_index + text_length;
 
         //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
 
@@ -300,11 +213,11 @@ public class FontGlyph : IFontRender {
         int line_chars = 0;
 
         // get space glyph width (if present)
-        float space_width = InternalFindSpaceWidth(height);
+        float space_width = InternalFindSpaceWidth(@params.height);
 
         this.texture.UploadToPVR();
         pvrctx.Save();
-        pvrctx.SetVertexAlpha(this.alpha);
+        pvrctx.SetVertexAlpha(@params.tint_color[3]);
 
         // count required glyphs
         while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
@@ -342,7 +255,7 @@ public class FontGlyph : IFontRender {
             if (grapheme.code == FontGlyph.CARRIAGERETURN) continue;
 
             if (grapheme.code == FontGlyph.LINEFEED) {
-                draw_y += height + this.paragraph_separation;
+                draw_y += @params.height + @params.paragraph_space;
                 draw_x = 0;
                 line_chars = 0;
                 continue;
@@ -365,7 +278,7 @@ public class FontGlyph : IFontRender {
                     }
                 } else {
                     // space, hard space or unknown characters
-                    draw_x += height * FontGlyph.SPACE_WIDTH_RATIO;
+                    draw_x += @params.height * FontGlyph.SPACE_WIDTH_RATIO;
                     line_chars++;
                 }
                 continue;
@@ -375,7 +288,7 @@ public class FontGlyph : IFontRender {
             float ratio_width, ratio_height;
             float dx = x + draw_x;
             float dy = y + draw_y;
-            float dh = height;
+            float dh = @params.height;
             float dw = dh * frame.glyph_width_ratio;
 
             if (frame.frame_width > 0) {
@@ -396,13 +309,13 @@ public class FontGlyph : IFontRender {
             dy += (frame.pivot_y + frame.frame_y) * ratio_height;
 
             if (has_border) {
-                float sdx = dx - this.border_size;
-                float sdy = dy - this.border_size;
+                float sdx = dx - @params.border_size;
+                float sdy = dy - @params.border_size;
                 float sdw = dw + outline_size;
                 float sdh = dh + outline_size;
 
-                sdx += this.border_offset_x;
-                sdy += this.border_offset_y;
+                sdx += @params.border_offset_x;
+                sdy += @params.border_offset_y;
 
                 GlyphRenderer.AppendGlyph(
                     this.texture, false, true,
@@ -421,10 +334,10 @@ public class FontGlyph : IFontRender {
             line_chars++;
         }
 
-        GlyphRenderer.Draw(pvrctx, this.tintcolor, this.border_tintcolor, by_add, false, this.texture, null);
+        GlyphRenderer.Draw(pvrctx, @params.tint_color, @params.border_color, by_add, false, this.texture, null);
 
         pvrctx.Restore();
-        return draw_y + height;
+        return draw_y + @params.height;
     }
 
     public int Animate(float elapsed) {
@@ -439,6 +352,10 @@ public class FontGlyph : IFontRender {
 
         this.frame_progress += elapsed;
         return 0;
+    }
+
+    public void MapCodepoints(int text_index, int text_length, string text) {
+        // unused
     }
 
 
@@ -488,7 +405,7 @@ public class FontGlyph : IFontRender {
 
             if (code_index >= 0) {
                 // reject, animation is disabled
-                if (!allow_animation || table[code_index].frames_size > 0) return 0;// suffix not present
+                if (!allow_animation && table[code_index].frames_size > 0) return 0;// suffix not present
                 // add another frame
                 FontGlyph.InternalAddFrame(atlas_entry, table[code_index]);
                 return 2;
@@ -537,6 +454,7 @@ public class FontGlyph : IFontRender {
 
             glyph_width_ratio = glyph_width_ratio
         };
+        glyph_info.frames_size++;
     }
 
     internal static int InternalCalcTabstop(int characters_in_the_line) {

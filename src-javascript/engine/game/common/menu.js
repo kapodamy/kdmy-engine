@@ -10,11 +10,8 @@ async function menu_init(menumanifest, x, y, z, width, height) {
 
     let fontholder = null;
     if (params.font) {
-        fontholder = await fontholder_init(params.font, params.font_size, params.font_glyph_suffix);
+        fontholder = await fontholder_init(params.font, params.font_size, params.font_glyph_suffix, params.font_color_by_addition);
         if (!fontholder) throw new Error("Missing or invalid font: " + params.font);
-        if (fontholder.font_from_atlas) {
-            fontglyph_enable_color_by_addition(fontholder.font, params.font_color_by_addition);
-        }
     }
 
     let border = [0.0, 0.0, 0.0, 0.0];

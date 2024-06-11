@@ -2468,13 +2468,13 @@ async function layout_parse_fonts(unparsed_root, layout_context) {
 
             if (is_atlas) {
                 font = await fontglyph_init(path, glyph_suffix, glyph_animate);
-                if (glyph_color_by_addition) fontglyph_enable_color_by_addition(font, true);
             } else {
                 font = await fonttype_init(path);
+                glyph_color_by_addition = false;
             }
 
             if (!font) throw new Error("missing or invalid font: " + path);
-            let fontholder = fontholder_init2(font, is_atlas, -1);
+            let fontholder = fontholder_init2(font, is_atlas, -1, glyph_color_by_addition);
 
             arraylist_add(fonts_arraylist, { name: strdup(name), fontholder: fontholder });
         } catch (e) {
@@ -3431,7 +3431,7 @@ function layout_helper_execute_action_in_textsprite(action, item, viewport_width
                 if (entry.stop_in_loop) animsprite_disable_loop(item.animation);
 
                 textsprite_animation_set(textsprite, entry.misc);
-                textsprite_animate(textsprite, 0.0);
+                textsprite_calculate_paragraph_alignment(textsprite);
                 break;
             case LAYOUT_ACTION_ANIMATIONREMOVE:
                 textsprite_animation_set(textsprite, null);

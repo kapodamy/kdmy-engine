@@ -3,7 +3,7 @@
 const FONTHOLDER_DEFAULT_SIZE_PIXELS = 8;// in pixels
 
 
-async function fontholder_init(src, default_size_px, glyph_suffix) {
+async function fontholder_init(src, default_size_px, glyph_suffix, color_by_addition) {
     let font_instance;
     let is_altas_type = string_lowercase_ends_with(src, ".xml");
 
@@ -12,14 +12,15 @@ async function fontholder_init(src, default_size_px, glyph_suffix) {
     else
         font_instance = await fonttype_init(src);
 
-    return fontholder_init2(font_instance, is_altas_type, default_size_px);
+    return fontholder_init2(font_instance, is_altas_type, default_size_px, color_by_addition);
 }
 
-function fontholder_init2(font_instance, is_altas_type, default_size_px) {
+function fontholder_init2(font_instance, is_altas_type, default_size_px, color_by_addition) {
     return {
         font: font_instance,
         font_from_atlas: is_altas_type,
-        font_size: default_size_px > 0.0 ? default_size_px : FONTHOLDER_DEFAULT_SIZE_PIXELS
+        font_size: default_size_px > 0.0 ? default_size_px : FONTHOLDER_DEFAULT_SIZE_PIXELS,
+        font_color_by_addition: color_by_addition
     };
 }
 
