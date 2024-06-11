@@ -407,7 +407,7 @@ public class Note {
             goto L_build_state;
         }
 
-        /*if (!String.IsNullOrEmpty(state_name)) {
+        /*if (StringUtils.IsNotEmpty(state_name)) {
             //free(animation_name);
 
             // try again but without the state name, can fail if the texture supplied is custom

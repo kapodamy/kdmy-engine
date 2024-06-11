@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using CsharpWrapper;
 using Engine.Externals.LuaInterop;
 using Engine.Game;
 using Engine.Platform;
 using Engine.Sound;
+using Engine.Utils;
 
 namespace Engine.Externals.LuaScriptInterop;
 
@@ -352,7 +351,7 @@ public partial class Luascript {
 
     public void Destroy() {
         this.lua.Dispose();
-        Luascript.instances.Remove(this);
+        Luascript.instances.RemoveItem(this);
     }
 
     public static void DropShared(object obj) {
@@ -362,7 +361,7 @@ public partial class Luascript {
     }
 
     public bool Eval(string eval_string) {
-        if (String.IsNullOrEmpty(eval_string)) return true;
+        if (StringUtils.IsEmpty(eval_string)) return true;
         return this.lua.EvaluateString(eval_string);
     }
 

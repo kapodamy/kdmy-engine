@@ -194,7 +194,7 @@ public class WeekPause {
         modding.callback_private_data = this;
         modding.callback_option = this.InternalHandleModdingOption;
 
-        if (!String.IsNullOrEmpty(exit_to_weekselector_label)) {
+        if (StringUtils.IsNotEmpty(exit_to_weekselector_label)) {
             int index = menu.IndexOfItem("exit-week-selector");
             if (index >= 0) menu.SetItemText(index, exit_to_weekselector_label);
         }
@@ -237,7 +237,7 @@ public class WeekPause {
             this.menu_external = null;
         }
 
-        if (String.IsNullOrEmpty(menumanifest_src) || !FS.FileExists(menumanifest_src)) {
+        if (StringUtils.IsEmpty(menumanifest_src) || !FS.FileExists(menumanifest_src)) {
             this.menu.SetItemVisibility(1, false);
             return;
         }

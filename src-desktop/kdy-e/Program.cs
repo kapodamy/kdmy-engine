@@ -8,6 +8,7 @@ using Engine;
 using Engine.Externals.GLFW;
 using Engine.Game;
 using Engine.Platform;
+using Engine.Utils;
 
 namespace CsharpWrapper;
 
@@ -96,7 +97,7 @@ class Program {
                 case "-expansion":
                     if (is_last_argument) continue;
                     EngineSettings.expansion_directory = args[next_argument];
-                    if (String.IsNullOrEmpty(EngineSettings.expansion_directory)) {
+                    if (StringUtils.IsEmpty(EngineSettings.expansion_directory)) {
                         EngineSettings.expansion_directory = null;
                         break;
                     }
@@ -106,7 +107,7 @@ class Program {
                     }
                     break;
                 case "-style":
-                    if (is_last_argument || String.IsNullOrEmpty(args[next_argument])) continue;
+                    if (is_last_argument || StringUtils.IsEmpty(args[next_argument])) continue;
                     EngineSettings.style_from_week_name = args[next_argument].ToString();
                     break;
                 case "-fullscreen":

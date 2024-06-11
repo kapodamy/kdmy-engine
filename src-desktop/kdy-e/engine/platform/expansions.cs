@@ -149,7 +149,7 @@ public static class Expansions {
 
 
     private static void InternalLoadDependency(ArrayList<string> chain, string expansion_name) {
-        if (String.IsNullOrEmpty(expansion_name)) return;
+        if (StringUtils.IsEmpty(expansion_name)) return;
 
         string expansion_path = StringUtils.Concat(Expansions.SYMBOLIC_PATH, expansion_name);
         if (!IO.ResourceExists(expansion_path, false, true)) {
@@ -188,7 +188,7 @@ public static class Expansions {
 
         string name;
         while ((name = tokenizer.ReadNext()) != null) {
-            if (String.IsNullOrEmpty(name) || name[0] == Expansions.COMMENT_CHAR) {
+            if (StringUtils.IsEmpty(name) || name[0] == Expansions.COMMENT_CHAR) {
                 //free(name);
                 continue;
             }

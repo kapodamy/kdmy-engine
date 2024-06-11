@@ -15,7 +15,7 @@ public class Tokenizer {
 
     public static Tokenizer Init(string token_chars, bool ignore_empty_tokens, bool duplicate_string_before_init, string str) {
         if (str == null) return null;
-        if (String.IsNullOrEmpty(token_chars)) throw new ArgumentException("token_chars");
+        if (StringUtils.IsEmpty(token_chars)) throw new ArgumentException("token_chars");
 
         //if (!duplicate_string_before_init) str = String.Intern(str);
 

@@ -243,7 +243,7 @@ public class Atlas {
     }
 
     private static bool ParseResolution(Atlas atlas, string resolution_string) {
-        if (String.IsNullOrEmpty(resolution_string)) return false;
+        if (StringUtils.IsEmpty(resolution_string)) return false;
 
         int index = -1;
         int length = resolution_string.Length;

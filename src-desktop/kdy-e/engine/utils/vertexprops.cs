@@ -147,7 +147,7 @@ public static class VertexProps {
     public static int ParseSpriteProperty(XmlParserNode node, string name, bool warn) {
         string property = node.GetAttribute(name);
 
-        if (String.IsNullOrEmpty(property)) {
+        if (StringUtils.IsEmpty(property)) {
             Logger.Warn($"vertexprops_parse_sprite_property() missing '{name}' attribute: {node.OuterXML}");
             return -2;
         }
@@ -242,7 +242,7 @@ public static class VertexProps {
     public static int ParseTextSpriteProperty(XmlParserNode node, string name, bool warn) {
         string property = node.GetAttribute(name);
 
-        if (String.IsNullOrEmpty(property)) {
+        if (StringUtils.IsEmpty(property)) {
             Logger.Warn($"vertexprops_parse_textsprite_property: missing '{name}' attribute: {node.OuterXML}");
             return -2;
         }
@@ -321,7 +321,7 @@ public static class VertexProps {
 
     public static int ParseTextSpriteForceCase(XmlParserNode node, string name, bool warn) {
         string value = node.GetAttribute(name);
-        if (String.IsNullOrEmpty(value)) return VertexProps.TEXTSPRITE_FORCE_NONE;
+        if (StringUtils.IsEmpty(value)) return VertexProps.TEXTSPRITE_FORCE_NONE;
 
         int id = ParseTextSpriteForceCase2(value);
         if (id < 0) {
@@ -353,7 +353,7 @@ public static class VertexProps {
     public static int ParseMediaProperty(XmlParserNode node, string name, bool warn) {
         string property = node.GetAttribute(name);
 
-        if (String.IsNullOrEmpty(property)) {
+        if (StringUtils.IsEmpty(property)) {
             Logger.Warn($"vertexprops_parse_media_property: missing '{name}' attribute: {node.OuterXML}");
             return -2;
         }
@@ -384,7 +384,7 @@ public static class VertexProps {
     public static int ParseLayoutProperty(XmlParserNode node, string name, bool warn) {
         string property = node.GetAttribute(name);
 
-        if (String.IsNullOrEmpty(property)) {
+        if (StringUtils.IsEmpty(property)) {
             Logger.Warn($"vertexprops_parse_layout_property: missing '{name}' attribute: {node.OuterXML}");
             return -2;
         }
@@ -417,7 +417,7 @@ public static class VertexProps {
     public static int ParseCameraProperty(XmlParserNode node, string name, bool warn) {
         string property = node.GetAttribute(name);
 
-        if (String.IsNullOrEmpty(property)) {
+        if (StringUtils.IsEmpty(property)) {
             Logger.Warn($"vertexprops_parse_camera_property: missing '{name}' attribute: {node.OuterXML}");
             return -2;
         }
@@ -450,7 +450,7 @@ public static class VertexProps {
     public static Align ParseAlign(XmlParserNode node, string name, bool warn_missing, bool reject_bothnone) {
         string value = node.GetAttribute(name);
 
-        if (String.IsNullOrEmpty(value)) {
+        if (StringUtils.IsEmpty(value)) {
             if (warn_missing) {
                 Logger.Warn($"vertexprops_parse_align() missing '{name}' attribute: {node.OuterXML}");
             }
@@ -473,7 +473,7 @@ public static class VertexProps {
     }
 
     public static Align ParseAlign2(string value) {
-        if (!String.IsNullOrEmpty(value)) {
+        if (StringUtils.IsNotEmpty(value)) {
             switch (value.ToLower()) {
                 case "none":
                     return Align.NONE;
@@ -494,7 +494,7 @@ public static class VertexProps {
     public static int ParsePlayback(XmlParserNode node, string name, bool warn_missing) {
         string value = node.GetAttribute(name);
 
-        if (String.IsNullOrEmpty(value)) {
+        if (StringUtils.IsEmpty(value)) {
             if (warn_missing) {
                 Logger.Warn($"vertexprops_parse_playback() missing '{name}' attribute: {node.OuterXML}");
             }
@@ -512,7 +512,7 @@ public static class VertexProps {
     }
 
     public static int ParsePlayback2(string value) {
-        if (!String.IsNullOrEmpty(value)) {
+        if (StringUtils.IsNotEmpty(value)) {
             switch (value.ToLower()) {
                 case "play":
                     return PLAYBACK_PLAY;
@@ -555,7 +555,7 @@ public static class VertexProps {
 
     public static int ParseInteger(XmlParserNode node, string attr_name, int def_value) {
         string value = node.GetAttribute(attr_name);
-        if (String.IsNullOrEmpty(value)) return def_value;
+        if (StringUtils.IsEmpty(value)) return def_value;
 
         return ParseInteger2(value, def_value);
     }
@@ -656,7 +656,7 @@ L_invalid:
     public static int ParseWordbreak(XmlParserNode node, string name, bool warn_missing) {
         string value = node.GetAttribute(name);
 
-        if (String.IsNullOrEmpty(value)) {
+        if (StringUtils.IsEmpty(value)) {
             if (warn_missing) {
                 Logger.Warn($"vertexprops_parse_wordbreak() missing {name} attribute: {node.OuterXML}");
             }
@@ -821,7 +821,7 @@ L_invalid:
     }
 
     public static long ParseLongInteger2(string value, long def_value) {
-        if (String.IsNullOrEmpty(value)) return def_value;
+        if (StringUtils.IsEmpty(value)) return def_value;
 
         long val;
         if (Int64.TryParse(value, FLAGS_INT, CultureInfo.InvariantCulture, out val)) return val;

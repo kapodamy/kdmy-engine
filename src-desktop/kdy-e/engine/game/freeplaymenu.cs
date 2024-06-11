@@ -344,7 +344,7 @@ public class FreeplayMenu {
                 break;
             } else if ((btns & (GamepadButtons.X)).Bool()) {
                 WeekInfo weekinfo = Funkin.weeks_array.array[state.map.week_index];
-                if (!String.IsNullOrEmpty(weekinfo.warning_message)) {
+                if (StringUtils.IsNotEmpty(weekinfo.warning_message)) {
                     state.use_alternative = !state.use_alternative;
                     FreeplayMenu.InternalModdingNotifyEvent(state, false, true);
                 } else if (sound_asterik != null) {
@@ -531,7 +531,7 @@ L_return:
         Texture texture = null;
 
         // check if the selected song has a custom background
-        if (String.IsNullOrEmpty(src)) {
+        if (StringUtils.IsEmpty(src)) {
             FreeplayMenu.InternalDropCustomBackground(state);
             state.running_threads--;
             mutex.Unlock(state.mutex);
@@ -621,7 +621,7 @@ L_return:
         Sprite bg_info = layout.GetSprite(FreeplayMenu.BG_INFO_NAME);
         if (bg_info != null) bg_info.SetDrawSize(bg_info_width, Single.NaN);
 
-        if (!String.IsNullOrEmpty(desc)) {
+        if (StringUtils.IsNotEmpty(desc)) {
             if (state.description != null)
                 state.description.SetTextIntern(true, desc);
             layout.TriggerAny("description-show");
@@ -732,7 +732,7 @@ L_return:
             if (!FunkinSave.ContainsUnlockDirective(unlock_directive)) continue;
 
             string model = JSONParser.ReadString(item, "manifest", null);
-            if (String.IsNullOrEmpty(model)) continue;
+            if (StringUtils.IsEmpty(model)) continue;
 
             manifest_src = FS.BuildPath2(src, model);
             break;

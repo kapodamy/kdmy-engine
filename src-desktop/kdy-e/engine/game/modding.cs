@@ -4,6 +4,7 @@ using Engine.Game.Common;
 using Engine.Game.Gameplay;
 using Engine.Platform;
 using Engine.Sound;
+using Engine.Utils;
 using KallistiOS;
 
 namespace Engine.Game;
@@ -51,7 +52,7 @@ public class Modding {
         this.last_pressed = GamepadButtons.NOTHING;
         this.messagebox = null;
 
-        if (!String.IsNullOrEmpty(src_script) && FS.FileExists(src_script))
+        if (StringUtils.IsNotEmpty(src_script) && FS.FileExists(src_script))
             this.script = WeekScript.Init(src_script, this, false);
 
     }
@@ -140,7 +141,7 @@ public class Modding {
             GameMain.background_menu_music = null;
         }
 
-        if (!String.IsNullOrEmpty(music_src)) {
+        if (StringUtils.IsNotEmpty(music_src)) {
             GameMain.background_menu_music = SoundPlayer.Init(music_src);
         }
 
@@ -320,8 +321,8 @@ public class Modding {
 
         FunkinSave.SetLastPlayed(gameplay_weekinfo.name, difficult);
 
-        bool bf_allocated = String.IsNullOrEmpty(bf);
-        bool gf_allocated = String.IsNullOrEmpty(gf);
+        bool bf_allocated = StringUtils.IsEmpty(bf);
+        bool gf_allocated = StringUtils.IsEmpty(gf);
 
         if (bf_allocated) bf = FreeplayMenu.HelperGetDefaultCharacterManifest(true);
         if (gf_allocated) gf = FreeplayMenu.HelperGetDefaultCharacterManifest(false);

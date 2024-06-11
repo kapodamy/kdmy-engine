@@ -436,7 +436,7 @@ public class TextSprite : IVertex {
         string text = this.text_forced_case ?? this.text;
         this.paragraph_array.Clear();
 
-        if (String.IsNullOrEmpty(text)) {
+        if (StringUtils.IsEmpty(text)) {
             this.modified_string = false;
             this.last_draw_width = 0.0f;
             this.last_draw_height = 0.0f;
@@ -830,7 +830,7 @@ public class TextSprite : IVertex {
 
     public void Draw(PVRContext pvrctx) {
         if (this.fontparams.tint_color[3] <= 0f) return;
-        if (String.IsNullOrEmpty(this.text_forced_case) && String.IsNullOrEmpty(this.text)) return;
+        if (StringUtils.IsEmpty(this.text_forced_case) && StringUtils.IsEmpty(this.text)) return;
 
         // check if all calculations are up-to-date
         if (this.modified_string || this.modified_coords) DrawCalc();

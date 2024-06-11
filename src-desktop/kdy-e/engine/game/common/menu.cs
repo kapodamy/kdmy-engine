@@ -71,19 +71,19 @@ public class Menu : IAnimate, IDraw {
         AnimSprite anim_in = null;
         AnimSprite anim_out = null;
 
-        if (!String.IsNullOrEmpty(@params.anim_discarded))
+        if (StringUtils.IsNotEmpty(@params.anim_discarded))
             anim_discarded = modelholder.CreateAnimsprite(@params.anim_discarded, false, false);
-        if (!String.IsNullOrEmpty(@params.anim_idle))
+        if (StringUtils.IsNotEmpty(@params.anim_idle))
             anim_idle = modelholder.CreateAnimsprite(@params.anim_idle, false, false);
-        if (!String.IsNullOrEmpty(@params.anim_rollback))
+        if (StringUtils.IsNotEmpty(@params.anim_rollback))
             anim_rollback = modelholder.CreateAnimsprite(@params.anim_rollback, false, false);
-        if (!String.IsNullOrEmpty(@params.anim_selected))
+        if (StringUtils.IsNotEmpty(@params.anim_selected))
             anim_selected = modelholder.CreateAnimsprite(@params.anim_selected, false, false);
-        if (!String.IsNullOrEmpty(@params.anim_choosen))
+        if (StringUtils.IsNotEmpty(@params.anim_choosen))
             anim_choosen = modelholder.CreateAnimsprite(@params.anim_choosen, false, false);
-        if (!String.IsNullOrEmpty(@params.anim_in))
+        if (StringUtils.IsNotEmpty(@params.anim_in))
             anim_in = modelholder.CreateAnimsprite(@params.anim_in, false, false);
-        if (!String.IsNullOrEmpty(@params.anim_out))
+        if (StringUtils.IsNotEmpty(@params.anim_out))
             anim_out = modelholder.CreateAnimsprite(@params.anim_out, false, false);
 
         for (int i = 0 ; i < menumanifest.items_size ; i++) {
@@ -542,7 +542,7 @@ public class Menu : IAnimate, IDraw {
 
     private void InternalBuildItem(MenuItem item, MenuManifest.Item src_item, MenuManifest.Parameters @params, ModelHolder modelholder, FontHolder fontholder, float[] border) {
         bool custom_modelholder = false;
-        item.is_text = !String.IsNullOrEmpty(src_item.text);
+        item.is_text = StringUtils.IsNotEmpty(src_item.text);
         item.name = src_item.name;
         item.hidden = src_item.hidden;
 
@@ -625,17 +625,17 @@ public class Menu : IAnimate, IDraw {
 
     private AnimSprite InternalLoadAnim(ModelHolder modelholder, string absolute_name, string prefix, string suffix) {
         string temp;
-        if (!String.IsNullOrEmpty(absolute_name))
+        if (StringUtils.IsNotEmpty(absolute_name))
             temp = absolute_name;
-        else if (!String.IsNullOrEmpty(prefix) && !String.IsNullOrEmpty(suffix))
+        else if (StringUtils.IsNotEmpty(prefix) && StringUtils.IsNotEmpty(suffix))
             temp = StringUtils.ConcatForStateName(prefix, suffix);
         else
             return null;
 
         if (temp == null) return null;
 
-        AnimSprite animsprite = modelholder.CreateAnimsprite(temp, true, String.IsNullOrEmpty(prefix) && String.IsNullOrEmpty(suffix));
-        //if (!String.IsNullOrEmpty(absolute_name)) free(temp);
+        AnimSprite animsprite = modelholder.CreateAnimsprite(temp, true, StringUtils.IsEmpty(prefix) && StringUtils.IsEmpty(suffix));
+        //if (StringUtils.IsNotEmpty(absolute_name)) free(temp);
 
         return animsprite;
     }

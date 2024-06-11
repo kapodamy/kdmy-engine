@@ -1,5 +1,5 @@
-using System;
 using Engine.Font;
+using Engine.Utils;
 
 namespace Engine.Game.Helpers;
 
@@ -28,7 +28,7 @@ public class WeekSelectorWeekMSG {
     }
 
     public void SetMessage(string message) {
-        this.no_message = String.IsNullOrEmpty(message);
+        this.no_message = StringUtils.IsEmpty(message);
 
         if (this.title != null) this.title.SetAlpha(1.0f);
 

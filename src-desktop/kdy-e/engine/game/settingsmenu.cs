@@ -449,7 +449,7 @@ public static class SettingsMenu {
             bg_music.LoopEnable(true);
             bg_music.Play();
         } else if (GameMain.background_menu_music != null) {
-            if (String.IsNullOrEmpty(backgroud_music_filename) && (backgroud_music_volume <= 0.0f || Single.IsNaN(backgroud_music_volume)))
+            if (StringUtils.IsEmpty(backgroud_music_filename) && (backgroud_music_volume <= 0.0f || Single.IsNaN(backgroud_music_volume)))
                 GameMain.background_menu_music.Pause();
             else
                 GameMain.background_menu_music.SetVolume(0.5f);
@@ -1551,13 +1551,13 @@ L_prepare_return:
             key_name = KEY_NONE;
         } else if (keycode.scancode != -1 && keycode.key != Keys.SPACE && keycode.key != Keys.TAB) {
             key_name = Glfw.GetKeyName(Keys.UNKNOWN, keycode.scancode);
-            if (String.IsNullOrEmpty(key_name) && keycode.key != Keys.UNKNOWN)
+            if (StringUtils.IsEmpty(key_name) && keycode.key != Keys.UNKNOWN)
                 key_name = keycode.key.ToString();
         } else {
             key_name = keycode.key.ToString();
         }
 
-        if (String.IsNullOrEmpty(key_name)) key_name = KEY_NONE;
+        if (StringUtils.IsEmpty(key_name)) key_name = KEY_NONE;
 
         label.SetTextIntern(true, key_name);
     }

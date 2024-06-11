@@ -288,7 +288,7 @@ public class CharacterManifest {
 
     private static string InternalPathOf(JSONToken json, string property_name, string optional_src) {
         string str = JSONParser.ReadString(json, property_name, null);
-        if (String.IsNullOrEmpty(str)) {
+        if (StringUtils.IsEmpty(str)) {
             if (optional_src == null) return null;
             throw new Exception("missing '" + property_name + "' in the '" + optional_src + "' file");
         }
@@ -363,7 +363,7 @@ public class CharacterManifest {
                 offset_y = (float)offset_y
             };
 
-            if (String.IsNullOrEmpty(actions.sing[i].direction)) {
+            if (StringUtils.IsEmpty(actions.sing[i].direction)) {
                 throw new Exception($"missing 'actions.sing[{i}].direction' in '{src}'");
             }
         }
@@ -380,7 +380,7 @@ public class CharacterManifest {
                 offset_y = (float)offset_y
             };
 
-            if (String.IsNullOrEmpty(actions.miss[i].direction)) {
+            if (StringUtils.IsEmpty(actions.miss[i].direction)) {
                 throw new Exception($"missing 'actions.miss[{i}].direction' in '{src}'");
             }
         }
@@ -469,7 +469,7 @@ public class CharacterManifest {
                 }
             };
 
-            if (String.IsNullOrEmpty(state.model)) state.model = default_model;
+            if (StringUtils.IsEmpty(state.model)) state.model = default_model;
 
             JSONToken json_actions = JSONParser.ReadObject(item, "actions");
             if (!JSONParser.IsPropertyNull(item, "actions")) {

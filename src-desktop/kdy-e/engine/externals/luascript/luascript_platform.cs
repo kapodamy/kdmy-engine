@@ -83,7 +83,7 @@ public class LuascriptPlatform {
 
 
     public static void OpenWWWLink(string url) {
-        if (String.IsNullOrEmpty(url)) return;
+        if (StringUtils.IsEmpty(url)) return;
         Process.Start(new ProcessStartInfo() {
             //Verb = "open",
             FileName = url,

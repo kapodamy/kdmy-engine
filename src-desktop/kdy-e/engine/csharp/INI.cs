@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using Engine.Utils;
 
 namespace Settings;
 
@@ -228,7 +229,7 @@ internal class INI {
     internal void DeleteAllSections(string prefixName) {
         if (sections == null || sections.Count < 1) return;
 
-        if (String.IsNullOrEmpty(prefixName))
+        if (StringUtils.IsEmpty(prefixName))
             throw new ArgumentException("invalid prefix", "prefixName");
 
         for (int i = sections.Count - 1 ; i >= 0 ; i--)

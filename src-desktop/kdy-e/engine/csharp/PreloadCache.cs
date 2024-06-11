@@ -28,7 +28,7 @@ internal static class PreloadCache {
         if (!File.Exists(filelist_absolute_path)) return -1;
 
         string filelist = File.ReadAllText(filelist_absolute_path);
-        if (String.IsNullOrEmpty(filelist)) return -1;
+        if (StringUtils.IsEmpty(filelist)) return -1;
 
         Logger.Info($"PreloadCache::AddFileList() reading {src_filelist}");
 

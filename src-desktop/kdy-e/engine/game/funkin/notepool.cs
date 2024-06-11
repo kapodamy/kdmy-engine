@@ -1,4 +1,5 @@
 using System;
+using Engine.Utils;
 
 
 namespace Engine.Game;
@@ -140,7 +141,7 @@ public class NotePool {
 
 
     private static ModelHolder InternalLoad(string model_src) {
-        if (String.IsNullOrEmpty(model_src)) return null;
+        if (StringUtils.IsEmpty(model_src)) return null;
         return ModelHolder.Init(model_src);
     }
 

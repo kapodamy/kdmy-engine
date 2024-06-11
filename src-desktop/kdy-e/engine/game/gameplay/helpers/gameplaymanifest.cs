@@ -392,7 +392,7 @@ public class GameplayManifest {
         song.file = JSONParser.ReadString(json_song, "file", null);
         song.chart = JSONParser.ReadString(json_song, "chart", null);
 
-        if (song.name == null && String.IsNullOrEmpty(song.file)) {
+        if (song.name == null && StringUtils.IsEmpty(song.file)) {
             throw new Exception("gameplaymanifest_parse_song() song without 'name' and 'song'");
         } else if (song.name != null && song.file == null && song.chart == null) {
             if (FS.IsInvalidFilename(song.name)) {

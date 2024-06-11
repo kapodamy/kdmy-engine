@@ -1,6 +1,6 @@
-﻿using System;
-using Engine.Externals.LuaInterop;
+﻿using Engine.Externals.LuaInterop;
 using Engine.Platform;
+using Engine.Utils;
 
 namespace Engine.Externals.LuaScriptInterop;
 
@@ -76,7 +76,7 @@ public static class LuascriptHelpers {
     public static int optenum(LuaState L, int idx, LuascriptEnums source) {
         string unparsed_value = L.luaL_optstring(idx, null);
 
-        if (String.IsNullOrEmpty(unparsed_value)) {
+        if (StringUtils.IsEmpty(unparsed_value)) {
             if (source.reject_on_null_or_empty)
                 return L.luaL_error($"the {source.enum_name} enum must have a value");
             else

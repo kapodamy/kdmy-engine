@@ -155,7 +155,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
 
             // get path of the manifest file
             string manifest = JSONParser.ReadString(json_obj, "manifest", null);
-            if (String.IsNullOrEmpty(manifest)) {
+            if (StringUtils.IsEmpty(manifest)) {
                 throw new Exception("WeekSelectorMdlSelect.init() invalid / missing 'manifest' in " + models);
             }
             string manifest_path = FS.BuildPath2(models, manifest);
@@ -481,7 +481,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
     }
 
     public static void HelperImport(StateSprite statesprite, ModelHolder mdlhldr, LayoutPlaceholder placeholder, bool enable_beat, string anim_name, string name) {
-        if (String.IsNullOrEmpty(anim_name)) return;
+        if (StringUtils.IsEmpty(anim_name)) return;
         StateSpriteState statesprite_state = statesprite.StateAdd(mdlhldr, anim_name, name);
         if (statesprite_state == null) return;
 

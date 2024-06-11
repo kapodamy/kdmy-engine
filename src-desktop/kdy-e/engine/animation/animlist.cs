@@ -234,7 +234,7 @@ public class AnimList {
     }
 
     private static Atlas LoadAtlas(string src) {
-        return !String.IsNullOrEmpty(src) ? Atlas.Init(src) : null;
+        return StringUtils.IsNotEmpty(src) ? Atlas.Init(src) : null;
     }
 
     private static AnimListItem ReadFrameAnimation(XmlParserNode entry, Atlas atlas, float default_fps) {
@@ -272,8 +272,8 @@ public class AnimList {
                     int index_start = VertexProps.ParseInteger(frames[i], "indexStart", 0);
                     int index_end = VertexProps.ParseInteger(frames[i], "indexEnd", -1);
 
-                    string frame_name = !String.IsNullOrEmpty(name_prefix) ? name_prefix : name;
-                    if (!String.IsNullOrEmpty(name_suffix)) frame_name += $" {name_suffix}";// add space before suffix         
+                    string frame_name = StringUtils.IsNotEmpty(name_prefix) ? name_prefix : name;
+                    if (StringUtils.IsNotEmpty(name_suffix)) frame_name += $" {name_suffix}";// add space before suffix         
 
                     AnimList.ReadEntriesToFramesArray(
                         parsed_frames, frame_name, has_number_suffix, atlas, index_start, index_end
@@ -281,7 +281,7 @@ public class AnimList {
                     break;
                 case "Frame":
                     string entry_name = frames[i].GetAttribute("entryName");
-                    if (String.IsNullOrEmpty(entry_name)) entry_name = name;
+                    if (StringUtils.IsEmpty(entry_name)) entry_name = name;
 
                     AnimList.AddEntryFromAtlas(parsed_frames, entry_name, atlas);
                     break;
@@ -435,7 +435,7 @@ public class AnimList {
     }
 
     private static void ParseComplexValue(string unparsed_value, float def_value, ref MacroExecutorValue value) {
-        if (String.IsNullOrEmpty(unparsed_value)) {
+        if (StringUtils.IsEmpty(unparsed_value)) {
             // returnd default value (as literal)
             value.kind = MacroExecutorValueKind.LITERAL;
             value.literal = def_value;
@@ -677,7 +677,7 @@ public class AnimList {
         anim.instructions = parsed_instructions.ToSolidArray();
         parsed_instructions.Destroy2(/*free*/);// note: keep "instruction[].values" allocated
 
-        if (!String.IsNullOrEmpty(atlasPrefixEntryName)) {
+        if (StringUtils.IsNotEmpty(atlasPrefixEntryName)) {
             LinkedList<AtlasEntry> parsed_frames = new LinkedList<AtlasEntry>();
 
             AnimList.CopyEntriesToFramesArray(
@@ -785,7 +785,7 @@ public class AnimList {
             // <Keyframe at="1000" id="translateX" interpolator="ease" value="123" />
 
             string unparsed_at = node.GetAttribute("at");
-            if (String.IsNullOrEmpty(unparsed_at)) {
+            if (StringUtils.IsEmpty(unparsed_at)) {
                 Logger.Warn($"animlist_read_tweenkeyframe_animation() missing Keyframe 'at' attribute: {node.OuterXML}");
                 continue;
             }

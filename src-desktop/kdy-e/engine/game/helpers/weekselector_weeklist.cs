@@ -278,7 +278,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             Texture texture = null;
             AnimSprite animsprite = null;
 
-            if (!String.IsNullOrEmpty(weekinfo.week_title_model)) {
+            if (StringUtils.IsNotEmpty(weekinfo.week_title_model)) {
                 if (ModelHolder.UtilsIsKnownExtension(weekinfo.week_title_model)) {
                     ModelHolder modelholder = ModelHolder.Init(weekinfo.week_title_model);
                     if (modelholder != null) {
@@ -534,7 +534,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
         if (weekinfo.host_hide_if_week_locked)
             hidden = weeklist.list_visible[weeklist.index].is_locked && weekinfo.host_hide_if_week_locked;
 
-        if (!String.IsNullOrEmpty(weekinfo.week_host_character_manifest)) {
+        if (StringUtils.IsNotEmpty(weekinfo.week_host_character_manifest)) {
             charactermanifest = new CharacterManifest(weekinfo.week_host_character_manifest, false);
             host_flip = charactermanifest.left_facing;// face to the right
             host_beat = charactermanifest.week_selector_enable_beat;
@@ -547,14 +547,14 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             }
 
             modelholder = ModelHolder.Init(charactermanifest.week_selector_model);
-        } else if (!String.IsNullOrEmpty(weekinfo.week_host_model)) {
+        } else if (StringUtils.IsNotEmpty(weekinfo.week_host_model)) {
             host_flip = weekinfo.host_flip_sprite;
             host_beat = weekinfo.host_enable_beat;
 
-            if (!String.IsNullOrEmpty(weekinfo.week_host_model_idle_animation_name)) {
+            if (StringUtils.IsNotEmpty(weekinfo.week_host_model_idle_animation_name)) {
                 anim_name_idle = weekinfo.week_host_model_idle_animation_name;
             }
-            if (!String.IsNullOrEmpty(weekinfo.week_host_model_choosen_animation_name)) {
+            if (StringUtils.IsNotEmpty(weekinfo.week_host_model_choosen_animation_name)) {
                 anim_name_hey = weekinfo.week_host_model_choosen_animation_name;
             }
 

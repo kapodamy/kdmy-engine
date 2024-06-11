@@ -598,7 +598,7 @@ public static class FunkinSave {
     }
 
     public static bool ContainsUnlockDirective(string name) {
-        if (String.IsNullOrEmpty(name)) return true;
+        if (StringUtils.IsEmpty(name)) return true;
 
         foreach (Directive directive in FunkinSave.directives) {
             if (directive.type == FunkinSave.DIRECTIVE_TYPE_UNLOCK && directive.name == name) {
@@ -716,7 +716,7 @@ public static class FunkinSave {
     }
 
     public static void SetFreeplayScore(string week_name, string difficulty_name, string song_name, bool only_if_best, long score) {
-        if (String.IsNullOrEmpty(song_name)) return;
+        if (StringUtils.IsEmpty(song_name)) return;
 
         int week_id = FunkinSave.InternalNameIndex(FunkinSave.weeks_names, week_name);
         int difficulty_id = FunkinSave.InternalNameIndex(FunkinSave.difficulty_names, difficulty_name);
@@ -744,7 +744,7 @@ public static class FunkinSave {
     }
 
     public static long GetFreeplayScore(string week_name, string difficulty_name, string song_name) {
-        if (String.IsNullOrEmpty(song_name)) return 0;
+        if (StringUtils.IsEmpty(song_name)) return 0;
 
         int week_id = FunkinSave.weeks_names.IndexOf(week_name);
         int difficulty_id = FunkinSave.difficulty_names.IndexOf(difficulty_name);

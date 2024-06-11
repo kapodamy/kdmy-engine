@@ -538,9 +538,9 @@ public class Week {
         //free(week_folder);
         GameMain.custom_style_from_week = weekinfo;
 
-        if (!String.IsNullOrEmpty(weekinfo.custom_folder_gameplay)) {
+        if (StringUtils.IsNotEmpty(weekinfo.custom_folder_gameplay)) {
             FS.OverrideCommonFolder(weekinfo.custom_folder_gameplay);
-        } else if (!String.IsNullOrEmpty(weekinfo.custom_folder)) {
+        } else if (StringUtils.IsNotEmpty(weekinfo.custom_folder)) {
             FS.OverrideCommonFolder(weekinfo.custom_folder);
         }
 
@@ -647,7 +647,7 @@ public class Week {
             bool dialog_on_freeplay = !gameplaymanifest.songs[roundcontext.song_index].dialog_ignore_on_freeplay;
             if (!retry && (!single_song || (single_song && dialog_on_freeplay))) {
                 string dialog_text = gameplaymanifest.songs[roundcontext.song_index].dialog_text;
-                if (String.IsNullOrEmpty(dialog_text)) {
+                if (StringUtils.IsEmpty(dialog_text)) {
                     // nothing to do
                 } else if (roundcontext.dialogue == null) {
                     Logger.Error($"week_main() can not load '{dialog_text}' there no dialogue instance");
@@ -760,7 +760,7 @@ public class Week {
 
         // TODO: check unlockeables
         Week.CheckDirectivesWeek(roundcontext, !gameover);
-        if (!gameover && !reject_completed && !String.IsNullOrEmpty(weekinfo.emit_directive)) {
+        if (!gameover && !reject_completed && StringUtils.IsNotEmpty(weekinfo.emit_directive)) {
             // if the week was completed successfully emit the directive
             FunkinSave.CreateUnlockDirective(weekinfo.emit_directive, 0x00);
         }
@@ -841,7 +841,7 @@ public class Week {
         string src;
         LayoutPlaceholder placeholder;
 
-        if (!String.IsNullOrEmpty(src_layout)) src = src_layout;
+        if (StringUtils.IsNotEmpty(src_layout)) src = src_layout;
         else src = PVRContext.global_context.IsWidescreen() ? UI_LAYOUT_WIDESCREEN : UI_LAYOUT_DREAMCAST;
 
         Layout layout = Layout.Init(src);
@@ -862,7 +862,7 @@ public class Week {
 
         string src_animlist = (string)layout.GetAttachedValue("ui_animlist", AttachedValueType.STRING, UI_ANIMLIST);
         AnimList old_animlist = initparams.animlist;
-        initparams.animlist = !String.IsNullOrEmpty(src_animlist) ? AnimList.Init(src_animlist) : null;
+        initparams.animlist = StringUtils.IsNotEmpty(src_animlist) ? AnimList.Init(src_animlist) : null;
         if (old_animlist != null) old_animlist.Destroy();
 
         initparams.layout_strums_size = (int)((long)layout.GetAttachedValue("ui_strums_count", AttachedValueType.INTEGER, 0));
@@ -1071,7 +1071,7 @@ public class Week {
         // initialize ui
         if (songmanifest.has_ui_layout) {
             string src = songmanifest.ui_layout;
-            if (String.IsNullOrEmpty(src)) src = gameplaymanifest.@default.ui_layout;
+            if (StringUtils.IsEmpty(src)) src = gameplaymanifest.@default.ui_layout;
 
             Week.InitUILayout(src, initparams, roundcontext);
             roundcontext.ui_from_default = true;
@@ -1196,7 +1196,7 @@ public class Week {
         );
 
         // initialize dialogue
-        if (!String.IsNullOrEmpty(songmanifest.dialogue_params)) {
+        if (StringUtils.IsNotEmpty(songmanifest.dialogue_params)) {
             roundcontext.dialogue_from_default = false;
             Week.InitDialogue(
                 roundcontext,
@@ -1285,12 +1285,12 @@ public class Week {
         ModelHolder default_icon_model_opponent = null;
         ModelHolder default_icon_model_player = null;
 
-        if (!String.IsNullOrEmpty(healthbarparams.opponent_icon_model)) {
+        if (StringUtils.IsNotEmpty(healthbarparams.opponent_icon_model)) {
             default_icon_model_opponent = ModelHolder.Init(healthbarparams.opponent_icon_model);
             //free(healthbarparams.opponent_icon_model);
             healthbarparams.opponent_icon_model = null;
         }
-        if (!String.IsNullOrEmpty(healthbarparams.player_icon_model)) {
+        if (StringUtils.IsNotEmpty(healthbarparams.player_icon_model)) {
             default_icon_model_player = ModelHolder.Init(healthbarparams.player_icon_model);
             //free(healthbarparams.player_icon_model);
             healthbarparams.player_icon_model = null;
@@ -1305,14 +1305,14 @@ public class Week {
             uint bar_color = state.opponent.bar_color;
             string bar_model = state.opponent.bar_model;
 
-            if (String.IsNullOrEmpty(state.opponent.icon_model) && default_icon_model_opponent != null) {
+            if (StringUtils.IsEmpty(state.opponent.icon_model) && default_icon_model_opponent != null) {
                 // pick from the player manifest, player 0 shold be always the opponent
                 icon_modelholder = default_icon_model_opponent;
-            } else if (!String.IsNullOrEmpty(state.opponent.icon_model)) {
+            } else if (StringUtils.IsNotEmpty(state.opponent.icon_model)) {
                 icon_modelholder = ModelHolder.Init(state.opponent.icon_model);
             }
 
-            if (!String.IsNullOrEmpty(bar_model)) {
+            if (StringUtils.IsNotEmpty(bar_model)) {
                 ModelHolder modelholder_bar = ModelHolder.Init(bar_model);
                 if (modelholder_bar != null) {
                     roundcontext.healthbar.StateOpponentAdd(
@@ -1330,14 +1330,14 @@ public class Week {
             icon_modelholder = null;
             bar_color = state.player.bar_color;
             bar_model = state.player.bar_model;
-            if (String.IsNullOrEmpty(state.player.icon_model) && default_icon_model_player != null) {
+            if (StringUtils.IsEmpty(state.player.icon_model) && default_icon_model_player != null) {
                 // pick from the player manifest, player 0 shold be always the player
                 icon_modelholder = default_icon_model_player;
-            } else if (!String.IsNullOrEmpty(state.player.icon_model)) {
+            } else if (StringUtils.IsNotEmpty(state.player.icon_model)) {
                 icon_modelholder = ModelHolder.Init(state.player.icon_model);
             }
 
-            if (!String.IsNullOrEmpty(bar_model)) {
+            if (StringUtils.IsNotEmpty(bar_model)) {
                 ModelHolder modelholder_bar = ModelHolder.Init(bar_model);
                 roundcontext.healthbar.StatePlayerAdd(
                     icon_modelholder, modelholder_bar, state.name
@@ -1350,7 +1350,7 @@ public class Week {
             }
             if (icon_modelholder != default_icon_model_player) icon_modelholder.Destroy();
 
-            if (!String.IsNullOrEmpty(state.background.bar_model)) {
+            if (StringUtils.IsNotEmpty(state.background.bar_model)) {
                 ModelHolder modelholder_bar = ModelHolder.Init(state.background.bar_model);
                 if (modelholder_bar != null) {
                     roundcontext.healthbar.StateBackgroundAdd(
@@ -1419,7 +1419,7 @@ public class Week {
                 manifest = initparams.@default_girlfriend;
                 break;
             default:
-                if (String.IsNullOrEmpty(girlfriend_manifest.manifest)) return;
+                if (StringUtils.IsEmpty(girlfriend_manifest.manifest)) return;
                 manifest = girlfriend_manifest.manifest;
                 break;
         }
@@ -1442,7 +1442,7 @@ public class Week {
             old_layout = null;
         }
 
-        if (!String.IsNullOrEmpty(stage_src))
+        if (StringUtils.IsNotEmpty(stage_src))
             roundcontext.layout = Layout.Init(stage_src);
         else
             roundcontext.layout = null;
@@ -1543,7 +1543,7 @@ public class Week {
 
         roundcontext.script = null;
 
-        if (!String.IsNullOrEmpty(script_src)) {
+        if (StringUtils.IsNotEmpty(script_src)) {
             roundcontext.script = WeekScript.Init(script_src, roundcontext, true);
         }
 
@@ -1802,13 +1802,13 @@ public class Week {
                 DistributionStrumState state = distribution.states[j];
                 ModelHolder marker = null, sick_effect = null, background = null, notes = null;
 
-                if (!String.IsNullOrEmpty(state.model_marker))
+                if (StringUtils.IsNotEmpty(state.model_marker))
                     marker = ModelHolder.Init(state.model_marker);
-                if (!String.IsNullOrEmpty(state.model_sick_effect))
+                if (StringUtils.IsNotEmpty(state.model_sick_effect))
                     sick_effect = ModelHolder.Init(state.model_sick_effect);
-                if (!String.IsNullOrEmpty(state.model_background) && FS.FileExists(state.model_background))
+                if (StringUtils.IsNotEmpty(state.model_background) && FS.FileExists(state.model_background))
                     background = ModelHolder.Init(state.model_background);
-                if (!String.IsNullOrEmpty(state.model_notes))
+                if (StringUtils.IsNotEmpty(state.model_notes))
                     notes = ModelHolder.Init(state.model_notes);
 
                 roundcontext.players[i].strums.StateAdd(
@@ -2105,7 +2105,7 @@ public class Week {
     }
 
     private static void InitDialogue(RoundContext roundcontext, string dialogue_params, bool dialog_ignore_on_freeplay) {
-        if (String.IsNullOrEmpty(dialogue_params)) return;
+        if (StringUtils.IsEmpty(dialogue_params)) return;
 
         // dettach from the layout
         Layout layout = roundcontext.layout ?? roundcontext.ui_layout;

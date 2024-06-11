@@ -190,7 +190,7 @@ public static class WeekEnumerator {
         }
 
         string customdifficults_model = ParsePath(json, "customDifficultsModel");
-        if (String.IsNullOrEmpty(customdifficults_model) && customdifficulties_array_size > 0) {
+        if (StringUtils.IsEmpty(customdifficults_model) && customdifficulties_array_size > 0) {
             //free(customdifficults_model);
             Logger.Error("weekenumerator_parse_week() Missing or invalid custom difficult model");
             goto L_failed;
@@ -208,7 +208,7 @@ public static class WeekEnumerator {
                     unlock_directive = JSONParser.ReadString(customdifficult_obj, "unlockDirective", null)
                 };
 
-                if (String.IsNullOrEmpty(customdifficults[i].name)) {
+                if (StringUtils.IsEmpty(customdifficults[i].name)) {
                     Logger.Error($"weekenumerator_parse_week() difficult name in week: {week_name}");
                 } else if (FS.IsInvalidFilename(customdifficults[i].name)) {
                     Logger.Error($"weekenumerator_parse_week() forbidden difficult name: {customdifficults[i].name}");
@@ -348,7 +348,7 @@ L_failed:
                 manifest = ParsePath(array_item, "manifest"),
                 name = JSONParser.ReadString(array_item, "name", null),
             };
-            if (String.IsNullOrEmpty(array[i].name) && String.IsNullOrEmpty(array[i].manifest)) {
+            if (StringUtils.IsEmpty(array[i].name) && StringUtils.IsEmpty(array[i].manifest)) {
                 Logger.Warn("weekenumerator_parse_character() missing 'name' and/or 'manifest'");
                 //for (; i >= 0; i--) {
                     //free(array[i].unlock_directive);

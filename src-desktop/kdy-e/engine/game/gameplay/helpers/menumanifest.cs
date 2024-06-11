@@ -241,7 +241,7 @@ public class MenuManifest {
 
     private static string InternalParsePath(JSONToken json, string property_name) {
         string str = JSONParser.ReadString(json, property_name, null);
-        if (String.IsNullOrEmpty(str)) return null;
+        if (StringUtils.IsEmpty(str)) return null;
 
         string path = FS.GetFullPath(str);
 

@@ -26,7 +26,7 @@ public class FontGlyph : IFont {
 
     public static FontGlyph Init(string src_atlas, string suffix, bool allow_animation) {
         Atlas atlas = Atlas.Init(src_atlas);
-        if (atlas == null || String.IsNullOrEmpty(atlas.texture_filename)) {
+        if (atlas == null || StringUtils.IsEmpty(atlas.texture_filename)) {
             if (atlas != null) atlas.Destroy();
             Logger.Warn("fontglyph_init() missing atlas file or texture filename not specified on " + src_atlas);
             return null;
@@ -369,7 +369,7 @@ public class FontGlyph : IFont {
 
         int index = grapheme.size;
 
-        if (!String.IsNullOrEmpty(match_suffix)) {
+        if (StringUtils.IsNotEmpty(match_suffix)) {
             int match_suffix_length = match_suffix.Length;
             int number_suffix_start = index + match_suffix_length + 1;
 

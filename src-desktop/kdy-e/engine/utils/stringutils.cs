@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Engine.Utils;
@@ -47,7 +47,7 @@ public static partial class StringUtils {
 
 
     public static string CopyAndInsert(string str, int index, string substring) {
-        if (String.IsNullOrEmpty(str) || String.IsNullOrEmpty(substring) || index > str.Length) return str;
+        if (StringUtils.IsEmpty(str) || StringUtils.IsEmpty(substring) || index > str.Length) return str;
         if (index < 0) throw new ArgumentOutOfRangeException("index", "index was negative");
 
         ReadOnlySpan<char> part_a = str.SubstringKDY(0, index);
@@ -68,7 +68,7 @@ public static partial class StringUtils {
         string str = "";
         for (int i = 0 ; i < strings.Length ; i++) {
             string src = strings[i];
-            if (String.IsNullOrEmpty(src)) continue;
+            if (StringUtils.IsEmpty(src)) continue;
             if (str.Length > 0) str += "\x20";
             str += src;
         }
@@ -77,14 +77,14 @@ public static partial class StringUtils {
 
 
     public static string Trim(string str, bool trim_start, bool trim_end) {
-        if (String.IsNullOrEmpty(str) || (!trim_start && !trim_end)) return str;
+        if (StringUtils.IsEmpty(str) || (!trim_start && !trim_end)) return str;
 
         int start_index = 0;
         int end_index = str.Length;
         bool start = trim_start;
         bool end = !trim_start && trim_end;
 
-        for (int index = 0; index < str.Length; index++) {
+        for (int index = 0 ; index < str.Length ; index++) {
             bool whitespace = false;
             switch (str[index]) {
                 case (char)0x0A:
@@ -164,6 +164,16 @@ public static partial class StringUtils {
         for (int i = 0 ; i < amount ; i++) builder.Append(str);
 
         return builder.ToString();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsEmpty(string str) {
+        return str == null || str.Length == 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNotEmpty(string str) {
+        return str != null && str.Length > 0;
     }
 
 }

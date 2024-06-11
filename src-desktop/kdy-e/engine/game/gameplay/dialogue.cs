@@ -689,7 +689,7 @@ public class Dialogue : IAnimate, IDraw {
     }
 
     public bool ShowDialog(string src_dialog) {
-        if (String.IsNullOrEmpty(src_dialog)) return false;
+        if (StringUtils.IsEmpty(src_dialog)) return false;
 
         string full_path = FS.GetFullPathAndOverride(src_dialog);
         this.current_dialog = null;
@@ -728,7 +728,7 @@ public class Dialogue : IAnimate, IDraw {
     }
 
     public bool ShowDialog2(string text_dialog_content) {
-        if (String.IsNullOrEmpty(text_dialog_content)) return false;
+        if (StringUtils.IsEmpty(text_dialog_content)) return false;
 
         InternalParseExternalDialog(text_dialog_content);
         return InternalPrepareDialog();
@@ -914,9 +914,9 @@ public class Dialogue : IAnimate, IDraw {
                         Logger.Error($"dialogue_internal_apply_state() no lua script attached");
                         break;
                     }
-                    if (!String.IsNullOrEmpty(action.lua_function))
+                    if (StringUtils.IsNotEmpty(action.lua_function))
                         this.script.CallFunction(action.lua_function);
-                    if (!String.IsNullOrEmpty(action.lua_eval))
+                    if (StringUtils.IsNotEmpty(action.lua_eval))
                         this.script.Eval(action.lua_eval);
                     break;
                 case Type.EXIT:
@@ -1468,7 +1468,7 @@ public class Dialogue : IAnimate, IDraw {
         string animation_list = root_node.GetAttribute("animationList");
         AnimList animlist = null;
 
-        if (!String.IsNullOrEmpty(animation_list)) {
+        if (StringUtils.IsNotEmpty(animation_list)) {
             animlist = AnimList.Init(animation_list);
             if (animlist == null) {
                 Logger.Error($"dialogue_internal_parse_animationui() can not initialize: {root_node.OuterXML}");
@@ -1697,7 +1697,7 @@ public class Dialogue : IAnimate, IDraw {
         Texture texture = null;
         AnimSprite anim = null;
 
-        if (!String.IsNullOrEmpty(icon_model)) {
+        if (StringUtils.IsNotEmpty(icon_model)) {
             if (ModelHolder.UtilsIsKnownExtension(icon_model)) {
                 ModelHolder modeholder = ModelHolder.Init(icon_model);
                 if (modeholder == null) {
@@ -1856,7 +1856,7 @@ public class Dialogue : IAnimate, IDraw {
 
     private static void InternalParseImportPortraitList(XmlParserNode root_node, ArrayList<Portrait> portraits) {
         string dialogue_src = root_node.GetAttribute("dialogueSrc");
-        if (String.IsNullOrEmpty(dialogue_src)) {
+        if (StringUtils.IsEmpty(dialogue_src)) {
             Logger.Error($"dialogue_internal_parse_importportraitlist() missing dialogueSrc: {root_node.OuterXML}");
             return;
         }
@@ -1901,11 +1901,11 @@ public class Dialogue : IAnimate, IDraw {
             if (audios.Get(i).name == name) return;
         }
 
-        if (String.IsNullOrEmpty(name)) {
+        if (StringUtils.IsEmpty(name)) {
             Logger.Error($"dialogue_internal_parse_audio() missing name: {node.OuterXML}");
             return;
         }
-        if (String.IsNullOrEmpty(src)) {
+        if (StringUtils.IsEmpty(src)) {
             Logger.Error($"dialogue_internal_parse_audio() missing src: {node.OuterXML}");
             return;
         }
@@ -1953,13 +1953,13 @@ public class Dialogue : IAnimate, IDraw {
             if (backgrounds.Get(i).name == name) return;
         }
 
-        if (String.IsNullOrEmpty(name)) {
+        if (StringUtils.IsEmpty(name)) {
             Logger.Error($"dialogue_internal_parse_image() missing name: {node.OuterXML}");
             return;
         }
 
         if (src == null) src = base_src;
-        if (String.IsNullOrEmpty(src)) {
+        if (StringUtils.IsEmpty(src)) {
             Logger.Error($"dialogue_internal_parse_image() missing src: {node.OuterXML}");
             return;
         }
@@ -2009,7 +2009,7 @@ public class Dialogue : IAnimate, IDraw {
         //<Color name="faded_red" r="1.0" g="0.0" g="0.0" a="0.7" />
 
         string name = node.GetAttribute("name");
-        if (String.IsNullOrEmpty(name)) {
+        if (StringUtils.IsEmpty(name)) {
             Logger.Error($"dialogue_internal_parse_image() missing name: {node.OuterXML}");
             return;
         }
@@ -2044,11 +2044,11 @@ public class Dialogue : IAnimate, IDraw {
         bool glyph_animated = VertexProps.ParseBoolean(node, "glyphAnimated", false);
         bool color_by_addition = VertexProps.ParseBoolean(node, "colorByAddition", false);
 
-        if (String.IsNullOrEmpty(name)) {
+        if (StringUtils.IsEmpty(name)) {
             Logger.Error($"dialogue_internal_parse_font() missing name: {node.OuterXML}");
             return;
         }
-        if (String.IsNullOrEmpty(src)) {
+        if (StringUtils.IsEmpty(src)) {
             Logger.Error($"dialogue_internal_parse_font() missing src: {node.OuterXML}");
             return;
         }
@@ -2140,13 +2140,13 @@ public class Dialogue : IAnimate, IDraw {
                 break;
         }
 
-        if (String.IsNullOrEmpty(name)) {
+        if (StringUtils.IsEmpty(name)) {
             Logger.Error($"dialogue_internal_parse_portrait() missing name: {node.OuterXML}");
             return;
         }
 
         if (src == null) src = base_model;
-        if (String.IsNullOrEmpty(src)) {
+        if (StringUtils.IsEmpty(src)) {
             Logger.Error($"dialogue_internal_parse_portrait() missing src: {node.OuterXML}");
             return;
         }
@@ -2220,13 +2220,13 @@ L_check_failed:
         string name = node.GetAttribute("name");
         string anim = node.GetAttribute("anim");
 
-        if (String.IsNullOrEmpty(name)) {
+        if (StringUtils.IsEmpty(name)) {
             Logger.Error($"dialogue_internal_parse_animation_ui_set() missing name: {node.OuterXML}");
             return;
         }
 
         AnimSprite animsprite = null;
-        if (!String.IsNullOrEmpty(anim)) {
+        if (StringUtils.IsNotEmpty(anim)) {
             if (animlist == null) {
                 Logger.Error($"dialogue_internal_parse_animation_ui_set() can not initialize without animlist: {node.OuterXML}");
                 return;
@@ -2332,7 +2332,7 @@ L_check_failed:
 
         int dialog_id = -1;
 
-        if (!String.IsNullOrEmpty(dialogs_file))
+        if (StringUtils.IsNotEmpty(dialogs_file))
             dialog_id = Dialogue.InternalParseDialogFromFile(dialogs_file, dialogs);
 
         Choice choice = new Choice() {
@@ -2367,7 +2367,7 @@ L_check_failed:
         bool has_mirror = node.HasAttribute("mirror");
         string src = node.GetAttribute("src");
 
-        if (String.IsNullOrEmpty(name)) {
+        if (StringUtils.IsEmpty(name)) {
             Logger.Error($"dialogue_internal_parse_speechimage() missing name: {node.OuterXML}");
             return null;
         }
@@ -2378,7 +2378,7 @@ L_check_failed:
         }
 
         if (src == null) src = base_src;
-        if (String.IsNullOrEmpty(src)) {
+        if (StringUtils.IsEmpty(src)) {
             Logger.Error($"dialogue_internal_parse_speechimage() missing src: {node.OuterXML}");
             return null;
         }
@@ -2480,7 +2480,7 @@ L_check_failed:
         }
 
         string image = JSONParser.ReadString(json, "image", null);
-        if (String.IsNullOrEmpty(image)) {
+        if (StringUtils.IsEmpty(image)) {
             Logger.Error($"dialogue_internal_load_psych_character_json() missing 'image' in json: {src}");
             goto L_return;
         } else if (image.IndexOf('.', 0) >= 0) {
@@ -2577,7 +2577,7 @@ L_return:
         // load and parse txt file
         string source = FS.ReadText(full_path);
 
-        if (String.IsNullOrEmpty(source)) {
+        if (StringUtils.IsEmpty(source)) {
             Logger.Error($"dialogue_internal_parse_dialog() can not read: {src}");
             //free(full_path);
             return -1;
@@ -2686,7 +2686,7 @@ L_return:
 
     private static Align InternalReadAlign(XmlParserNode node, string attribute) {
         string unparsed_align = node.GetAttribute(attribute);
-        if (String.IsNullOrEmpty(unparsed_align) || unparsed_align == "none") {
+        if (StringUtils.IsEmpty(unparsed_align) || unparsed_align == "none") {
             return Align.NONE;
         }
 
@@ -2724,7 +2724,7 @@ L_return:
     }
 
     private static void InternalAddState(StateSprite statesprite, ModelHolder modelholder, string anim_name, string state_name, float scale, bool looped) {
-        if (String.IsNullOrEmpty(anim_name)) return;
+        if (StringUtils.IsEmpty(anim_name)) return;
 
         StateSpriteState state = statesprite.StateAdd(modelholder, anim_name, state_name);
         if (state == null) return;
@@ -2753,7 +2753,7 @@ L_return:
     }
 
     private Audio InternalGetAudio(string name) {
-        if (String.IsNullOrEmpty(name) && this.audios_size > 0) {
+        if (StringUtils.IsEmpty(name) && this.audios_size > 0) {
             // random choose
             int index = Math2D.RandomInt(0, this.audios_size);
             return this.audios[index];
@@ -2768,7 +2768,7 @@ L_return:
     }
 
     private FontHolder InternalGetFont(string name) {
-        if (String.IsNullOrEmpty(name) && this.fonts_size > 0) {
+        if (StringUtils.IsEmpty(name) && this.fonts_size > 0) {
             // random choose
             int index = Math2D.RandomInt(0, this.fonts_size);
             return this.fonts[index].fontholder;
@@ -2783,7 +2783,7 @@ L_return:
     }
 
     private int InternalGetBackgroundIndex(string name) {
-        if (String.IsNullOrEmpty(name) && this.backgrounds_size > 0) {
+        if (StringUtils.IsEmpty(name) && this.backgrounds_size > 0) {
             // random choose
             return Math2D.RandomInt(0, this.backgrounds_size);
         }
@@ -2797,7 +2797,7 @@ L_return:
     }
 
     private MultipleChoice InternalGetMultiplechoice(string name) {
-        if (String.IsNullOrEmpty(name) && this.multiplechoices_size > 0) {
+        if (StringUtils.IsEmpty(name) && this.multiplechoices_size > 0) {
             // random choose
             int index = Math2D.RandomInt(0, this.multiplechoices_size);
             return this.multiplechoices[index];

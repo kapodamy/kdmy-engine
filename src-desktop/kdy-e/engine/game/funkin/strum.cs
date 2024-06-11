@@ -688,7 +688,7 @@ public class Strum {
                     this.marker_sick_state = StrumMarkerState.PRESS;
 
                     // if the note has a custom sick effect choose from the state list
-                    if (!String.IsNullOrEmpty(note_attributes.custom_sick_effect_name))
+                    if (StringUtils.IsNotEmpty(note_attributes.custom_sick_effect_name))
                         this.marker_sick_state_name = note_attributes.custom_sick_effect_name;
                     else
                         this.marker_sick_state_name = this.selected_sick_effect_state;
@@ -1139,7 +1139,7 @@ L_discard_key_event:
 
 
     public int Animate(float elapsed) {
-        if (String.IsNullOrEmpty(this.strum_name)) return 1;
+        if (StringUtils.IsEmpty(this.strum_name)) return 1;
 
         if (this.beatwatcher.Poll() && this.use_beat_synced_idle_and_continous) {
             this.sprite_marker_nothing.AnimationRestart();
@@ -1260,7 +1260,7 @@ L_discard_key_event:
     }
 
     public void Draw(PVRContext pvrctx) {
-        if (String.IsNullOrEmpty(this.strum_name)) return;
+        if (StringUtils.IsEmpty(this.strum_name)) return;
 
         pvrctx.Save();
         this.drawable.HelperApplyInContext(pvrctx);
@@ -2136,7 +2136,7 @@ L_discard_key_event:
             this.drawable_notes[i] = notepool.drawables[id];
             this.attribute_notes[i] = notepool.attributes[id];
 
-            if (notepool.models_custom_sick_effect[id] != null && !String.IsNullOrEmpty(notepool.attributes[id].custom_sick_effect_name)) {
+            if (notepool.models_custom_sick_effect[id] != null && StringUtils.IsNotEmpty(notepool.attributes[id].custom_sick_effect_name)) {
                 InternalLoadSickEffectState(
                      notepool.models_custom_sick_effect[id],
                      notepool.attributes[id].custom_sick_effect_name

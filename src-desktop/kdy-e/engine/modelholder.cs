@@ -93,20 +93,20 @@ public class ModelHolder {
             instance_src = full_path
         };
 
-        if (!String.IsNullOrEmpty(manifest_atlas) && FS.FileExists(manifest_atlas)) {
+        if (StringUtils.IsNotEmpty(manifest_atlas) && FS.FileExists(manifest_atlas)) {
             Atlas atlas = Atlas.Init(manifest_atlas);
             if (atlas != null) modelholder.atlas = atlas;
         }
 
-        if (!String.IsNullOrEmpty(manifest_animlist) && FS.FileExists(manifest_animlist)) {
+        if (StringUtils.IsNotEmpty(manifest_animlist) && FS.FileExists(manifest_animlist)) {
             AnimList animlist = AnimList.Init(manifest_animlist);
             if (animlist != null) modelholder.animlist = animlist;
         }
 
 
-        if (modelholder.atlas != null && modelholder.atlas != ModelHolder.STUB_ATLAS && String.IsNullOrEmpty(manifest_texture)) {
+        if (modelholder.atlas != null && modelholder.atlas != ModelHolder.STUB_ATLAS && StringUtils.IsEmpty(manifest_texture)) {
             string altas_texture = modelholder.atlas.GetTexturePath();
-            if (!String.IsNullOrEmpty(altas_texture) && FS.FileExists(altas_texture)) {
+            if (StringUtils.IsNotEmpty(altas_texture) && FS.FileExists(altas_texture)) {
                 modelholder.texture = Texture.Init(altas_texture);
                 if (modelholder.texture == null) {
                     Logger.Error($"modelholder_init() atlas texture not found: atlas={manifest_atlas} texture={altas_texture}");
@@ -175,14 +175,14 @@ public class ModelHolder {
         };
         ModelHolder.POOL.Set(modelholder.id, modelholder);
 
-        if (!String.IsNullOrEmpty(animlist_src) && FS.FileExists(animlist_src)) {
+        if (StringUtils.IsNotEmpty(animlist_src) && FS.FileExists(animlist_src)) {
             modelholder.animlist = AnimList.Init(animlist_src);
             if (modelholder.animlist == null) modelholder.animlist = ModelHolder.STUB_ANIMLIST;
         }
 
         string atlas_texture = null;
 
-        if (!String.IsNullOrEmpty(atlas_src) && FS.FileExists(atlas_src)) {
+        if (StringUtils.IsNotEmpty(atlas_src) && FS.FileExists(atlas_src)) {
             modelholder.atlas = Atlas.Init(atlas_src);
 
             if (modelholder.atlas != null)
@@ -191,9 +191,9 @@ public class ModelHolder {
                 modelholder.atlas = ModelHolder.STUB_ATLAS;
         }
 
-        if (!String.IsNullOrEmpty(atlas_texture) && FS.FileExists(atlas_texture)) {
+        if (StringUtils.IsNotEmpty(atlas_texture) && FS.FileExists(atlas_texture)) {
             modelholder.texture = Texture.Init(atlas_texture);
-        } else if (!String.IsNullOrEmpty(atlas_src)) {
+        } else if (StringUtils.IsNotEmpty(atlas_src)) {
             // try use atlas name instead
             FS.FolderStackPush();
             FS.SetWorkingFolder(atlas_src, true);
@@ -385,7 +385,7 @@ public class ModelHolder {
     }
 
     public static bool UtilsIsKnownExtension(string filename) {
-        if (String.IsNullOrEmpty(filename)) return false;
+        if (StringUtils.IsEmpty(filename)) return false;
         return Atlas.UtilsIsKnownExtension(filename) || filename.LowercaseEndsWithKDY(".json");
     }
 }

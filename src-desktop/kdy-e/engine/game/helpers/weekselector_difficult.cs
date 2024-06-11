@@ -267,7 +267,7 @@ public class WeekSelectorDifficult : IDraw, IAnimate {
         if (weekinfo == null) return;
 
         this.list_size = 3;
-        if (!String.IsNullOrEmpty(weekinfo.custom_difficults_model)) this.list_size += weekinfo.custom_difficults_size;
+        if (StringUtils.IsNotEmpty(weekinfo.custom_difficults_model)) this.list_size += weekinfo.custom_difficults_size;
 
         int index = 0;
         this.list = new Item[this.list_size];
@@ -279,7 +279,7 @@ public class WeekSelectorDifficult : IDraw, IAnimate {
         if (weekinfo.has_difficulty_hard)
             this.list[index++] = new Item() { name = Funkin.DIFFICULT_HARD, is_locked = false, is_common = true };
 
-        if (!String.IsNullOrEmpty(weekinfo.custom_difficults_model)) {
+        if (StringUtils.IsNotEmpty(weekinfo.custom_difficults_model)) {
             ModelHolder modelholder = ModelHolder.Init(weekinfo.custom_difficults_model);
 
             if (modelholder != null) {
@@ -306,7 +306,7 @@ public class WeekSelectorDifficult : IDraw, IAnimate {
         // select default difficult
         string selected = default_difficult == null ? Funkin.DIFFICULT_NORMAL : default_difficult;
         string last_difficult_played = FunkinSave.GetLastPlayedDifficult();// read-only string
-        if (String.IsNullOrEmpty(default_difficult) && !String.IsNullOrEmpty(last_difficult_played)) selected = last_difficult_played;
+        if (StringUtils.IsEmpty(default_difficult) && StringUtils.IsNotEmpty(last_difficult_played)) selected = last_difficult_played;
 
         // select normal difficult
         for (int i = 0 ; i < this.list_size ; i++) {

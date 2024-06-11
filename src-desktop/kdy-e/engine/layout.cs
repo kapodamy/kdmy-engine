@@ -207,7 +207,7 @@ public class Layout : IDraw, IAnimate {
         if (viewport_height < 1) throw new Exception("Invalid/missing layout height");
 
         string animlist_filename = root.GetAttribute("animationList");
-        if (!String.IsNullOrEmpty(animlist_filename)) {
+        if (StringUtils.IsNotEmpty(animlist_filename)) {
             layout_context.animlist = AnimList.Init(animlist_filename);
         }
 
@@ -1715,7 +1715,7 @@ public class Layout : IDraw, IAnimate {
 
     private static float HelperParseFloat(XmlParserNode node, string attr_name, float def_value) {
         string str = node.GetAttribute(attr_name);
-        if (String.IsNullOrEmpty(str)) return def_value;
+        if (StringUtils.IsEmpty(str)) return def_value;
 
         float value = VertexProps.ParseFloat2(str, Single.NaN);
 
@@ -2204,7 +2204,7 @@ public class Layout : IDraw, IAnimate {
 
     private static void ParsePlaceholder(XmlParserNode unparsed_plchdlr, LayoutContext layout_context, int group_id) {
         string name = unparsed_plchdlr.GetAttribute("name");
-        if (String.IsNullOrEmpty(name)) {
+        if (StringUtils.IsEmpty(name)) {
             Logger.Warn($"layout_parse_placeholder() missing placeholder name: {unparsed_plchdlr.OuterXML}");
             return;
         }
@@ -2287,9 +2287,9 @@ public class Layout : IDraw, IAnimate {
 
         Atlas atlas;
         string atlas_texture_path = null;
-        if (!String.IsNullOrEmpty(atlas_filename)) {
+        if (StringUtils.IsNotEmpty(atlas_filename)) {
             atlas = (Atlas)Layout.HelperGetResource(layout_context.resource_pool, atlas_filename, false);
-            if (atlas != null && String.IsNullOrEmpty(texture_filename)) {
+            if (atlas != null && StringUtils.IsEmpty(texture_filename)) {
                 atlas_texture_path = atlas.GetTexturePath();
                 if (!FS.FileExists(atlas_texture_path)) {
                     // the imagePath attribute has an invalid filename
@@ -2307,7 +2307,7 @@ public class Layout : IDraw, IAnimate {
 
         //free(atlas_texture_path);
 
-        if (!String.IsNullOrEmpty(texture_filename) || !String.IsNullOrEmpty(atlas_texture_path)) {
+        if (StringUtils.IsNotEmpty(texture_filename) || StringUtils.IsNotEmpty(atlas_texture_path)) {
             string src = texture_filename ?? atlas_texture_path;
             Texture texture = (Texture)Layout.HelperGetResource(layout_context.resource_pool, src, true);
             sprite = Sprite.Init(texture);
@@ -2519,11 +2519,11 @@ public class Layout : IDraw, IAnimate {
             string glyph_suffix = item.GetAttribute("glyphSuffix");
             bool glyph_color_by_addition = VertexProps.ParseBoolean(item, "colorByAddition", false);
 
-            if (String.IsNullOrEmpty(name)) {
+            if (StringUtils.IsEmpty(name)) {
                 Logger.Error($"layout_parse_fonts() missing font name: {item.OuterXML}");
                 continue;
             }
-            if (String.IsNullOrEmpty(path)) {
+            if (StringUtils.IsEmpty(path)) {
                 Logger.Error($"layout_parse_fonts() missing font path: {item.OuterXML}");
                 continue;
             }
@@ -2687,7 +2687,7 @@ public class Layout : IDraw, IAnimate {
             }
         }
 
-        if (!String.IsNullOrEmpty(anim_name)) {
+        if (StringUtils.IsNotEmpty(anim_name)) {
             if (layout_context.animlist != null) {
                 camera_placeholder.animation = AnimSprite.InitFromAnimlist(
                     layout_context.animlist, anim_name
@@ -2710,11 +2710,11 @@ public class Layout : IDraw, IAnimate {
             string unparsed_type = item.GetAttribute("type");
             string unparsed_value = item.GetAttribute("value");
 
-            if (String.IsNullOrEmpty(name)) {
+            if (StringUtils.IsEmpty(name)) {
                 Logger.Error($"layout_parse_externalvalues() missing AttachValue name: {item.OuterXML}");
                 continue;
             }
-            if (String.IsNullOrEmpty(unparsed_type)) {
+            if (StringUtils.IsEmpty(unparsed_type)) {
                 Logger.Error($"layout_parseexternal_values() missing AttachValue type: {item.OuterXML}");
                 continue;
             }
@@ -2815,7 +2815,7 @@ public class Layout : IDraw, IAnimate {
 
     private static void ParseSound(XmlParserNode unparsed_sound, LayoutContext layout_context) {
         string src = unparsed_sound.GetAttribute("src");
-        if (String.IsNullOrEmpty(src)) {
+        if (StringUtils.IsEmpty(src)) {
             Logger.Error($"layout_parse_sound() missing attribute '{src}'");
             return;
         }
@@ -2859,7 +2859,7 @@ public class Layout : IDraw, IAnimate {
 
     private static void ParseVideo(XmlParserNode unparsed_video, LayoutContext layout_context, int group_id) {
         string src = unparsed_video.GetAttribute("src");
-        if (String.IsNullOrEmpty(src)) {
+        if (StringUtils.IsEmpty(src)) {
             Logger.Error($"layout_parse_video() missing attribute '{src}'");
             return;
         }
@@ -4118,7 +4118,7 @@ public class Layout : IDraw, IAnimate {
         string shader_fragment_src = unparsed_entry.GetAttribute("fragmentSrc");
         XmlParserNodeList shader_sources = unparsed_entry.Children;
 
-        if (String.IsNullOrEmpty(shader_fragment_src) && String.IsNullOrEmpty(shader_vertex_src) && shader_sources.Length < 1) {
+        if (StringUtils.IsEmpty(shader_fragment_src) && StringUtils.IsEmpty(shader_vertex_src) && shader_sources.Length < 1) {
             Layout.HelperAddActionRemoveshader(unparsed_entry, action_entries);
             return;
         }
@@ -4126,15 +4126,15 @@ public class Layout : IDraw, IAnimate {
         StringBuilder sourcecode_vertex = new StringBuilder();
         StringBuilder sourcecode_fragment = new StringBuilder();
 
-        if (!String.IsNullOrEmpty(shader_vertex_src)) {
+        if (StringUtils.IsNotEmpty(shader_vertex_src)) {
             string tmp = FS.ReadText(shader_vertex_src);
-            if (!String.IsNullOrEmpty(tmp)) sourcecode_vertex.AddKDY(tmp);
+            if (StringUtils.IsNotEmpty(tmp)) sourcecode_vertex.AddKDY(tmp);
             //free(tmp);
         }
 
-        if (!String.IsNullOrEmpty(shader_fragment_src)) {
+        if (StringUtils.IsNotEmpty(shader_fragment_src)) {
             string tmp = FS.ReadText(shader_fragment_src);
-            if (!String.IsNullOrEmpty(tmp)) sourcecode_fragment.AddKDY(tmp);
+            if (StringUtils.IsNotEmpty(tmp)) sourcecode_fragment.AddKDY(tmp);
             //free(tmp);
         }
 
@@ -4160,7 +4160,7 @@ public class Layout : IDraw, IAnimate {
         string str_vertex = sourcecode_vertex.ToString();
         string str_fragment = sourcecode_fragment.ToString();
 
-        if (String.IsNullOrEmpty(str_vertex) && String.IsNullOrEmpty(str_fragment)) {
+        if (StringUtils.IsEmpty(str_vertex) && StringUtils.IsEmpty(str_fragment)) {
             //free(str_vertex);
             //free(str_fragment);
             Logger.Warn($"layout_helper_add_action_setshader() empty shader: {unparsed_entry.OuterXML}");
@@ -4194,7 +4194,7 @@ public class Layout : IDraw, IAnimate {
         double value = VertexProps.ParseDouble(unparsed_entry, "value", Double.NaN);
         string unparsed_values = unparsed_entry.GetAttribute("values");
 
-        if (String.IsNullOrEmpty(name)) {
+        if (StringUtils.IsEmpty(name)) {
             Logger.Error($"layout_helper_add_action_setshaderuniform() missing name: {unparsed_entry.OuterXML}");
             return;
         }

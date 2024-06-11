@@ -195,7 +195,7 @@ public class WeekGameOver : IDraw, IAnimate {
         Grapheme garapheme = new Grapheme() { code = 0, size = 0 };
         string version = FS.ReadText(WeekGameOver.LAYOUT_VERSION);
 
-        if (!String.IsNullOrEmpty(version)) {
+        if (StringUtils.IsNotEmpty(version)) {
             StringUtils.GetCharacterCodepoint(version, 0, ref garapheme);
         }
 
@@ -223,7 +223,7 @@ public class WeekGameOver : IDraw, IAnimate {
 
         TextSprite title = this.layout.GetTextsprite("title");
         if (title != null) {
-            string display_name = !String.IsNullOrEmpty(weekinfo.display_name) ? weekinfo.display_name : weekinfo.name;
+            string display_name = StringUtils.IsNotEmpty(weekinfo.display_name) ? weekinfo.display_name : weekinfo.name;
             title.SetTextIntern(true, display_name);
         }
 

@@ -52,7 +52,7 @@ public static class JSONParser {
     }
 
     public static JSONToken LoadFromString(string json_sourcecode) {
-        if (String.IsNullOrEmpty(json_sourcecode)) return null;
+        if (StringUtils.IsEmpty(json_sourcecode)) return null;
 
         try {
             byte[] buffer = Encoding.UTF8.GetBytes(json_sourcecode);

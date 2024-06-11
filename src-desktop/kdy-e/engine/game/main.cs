@@ -102,13 +102,13 @@ public static class GameMain {
                 weekinfo = Funkin.weeks_array.array[random_index];
             }
 
-            if (String.IsNullOrEmpty(weekinfo.custom_folder) && !weekinfo.has_greetings) continue;
+            if (StringUtils.IsEmpty(weekinfo.custom_folder) && !weekinfo.has_greetings) continue;
 
             if (FunkinSave.ContainsUnlockDirective(weekinfo.unlock_directive)) {
                 custom_style_from_week = weekinfo;
 
                 // override commons files (if possible)
-                if (!String.IsNullOrEmpty(weekinfo.custom_folder)) {
+                if (StringUtils.IsNotEmpty(weekinfo.custom_folder)) {
                     FS.OverrideCommonFolder(weekinfo.custom_folder);
                 }
                 break;
@@ -173,7 +173,7 @@ public static class GameMain {
     }
 
     public static void HelperTriggerActionMenu(Layout layout, string prefix, string name, bool selected, bool choosen) {
-        if (layout == null || String.IsNullOrEmpty(name)) return;
+        if (layout == null || StringUtils.IsEmpty(name)) return;
 
         string suffix;
 
@@ -186,7 +186,7 @@ public static class GameMain {
 
         string target;
 
-        if (!String.IsNullOrEmpty(prefix))
+        if (StringUtils.IsNotEmpty(prefix))
             target = String.Concat(prefix, "-", name, "-", suffix);
         else
             target = String.Concat(name, "-", suffix);

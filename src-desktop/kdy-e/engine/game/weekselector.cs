@@ -181,7 +181,7 @@ public class WeekSelector {
             state.custom_layout = null;
         }
 
-        if (String.IsNullOrEmpty(state.weekinfo.custom_selector_layout)) {
+        if (StringUtils.IsEmpty(state.weekinfo.custom_selector_layout)) {
             if (state.bg_music_paused && state.bg_music != null) state.bg_music.Play();
             return;
         }
@@ -655,8 +655,8 @@ public class WeekSelector {
 
         if (state.update_ui) {
             WeekInfo weekinfo = state.weekinfo;
-            bool has_alternate = !String.IsNullOrEmpty(weekinfo.warning_message);
-            bool has_warnings = has_alternate && !String.IsNullOrEmpty(weekinfo.sensible_content_message);
+            bool has_alternate = StringUtils.IsNotEmpty(weekinfo.warning_message);
+            bool has_warnings = has_alternate && StringUtils.IsNotEmpty(weekinfo.sensible_content_message);
 
             ui.helptext_bfgf.SetVisible(
                 !(weekinfo.disallow_custom_boyfriend && weekinfo.disallow_custom_girlfriend)
@@ -686,7 +686,7 @@ public class WeekSelector {
         } else if ((buttons & GamepadButtons.AD_RIGHT).Bool()) {
             seek_offset = 1;
         } else if ((buttons & GamepadButtons.X).Bool()) {
-            if (!String.IsNullOrEmpty(state.weekinfo.warning_message)) {
+            if (StringUtils.IsNotEmpty(state.weekinfo.warning_message)) {
                 state.has_choosen_alternate = !state.has_choosen_alternate;
                 ui.helptext_alternate.UseAlt(state.has_choosen_alternate);
                 ui.weekmsg_alternate.Disabled(state.has_choosen_alternate);

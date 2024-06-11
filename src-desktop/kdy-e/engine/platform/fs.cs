@@ -489,7 +489,7 @@ L_exit:
 
         FSTLS fs_tls = kthread.getspecific<FSTLS>(fs_tls_key);
 
-        if (String.IsNullOrEmpty(base_path)) {
+        if (StringUtils.IsEmpty(base_path)) {
             fs_cod = null;
             return;
         } else if (base_path.StartsWith(FS.ASSETS_FOLDER)) {

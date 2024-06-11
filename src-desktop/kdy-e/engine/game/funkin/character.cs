@@ -1073,22 +1073,22 @@ L_read_state:
         // this originally was:
         //          extra_entry.ANIM_NAME != null && extra_entry.ANIM_NAME.Length < 1
         // instead of
-        //          String.IsNullOrEmpty(extra_entry.ANIM_NAME)
+        //          StringUtils.IsEmpty(extra_entry.ANIM_NAME)
         // revert if something breaks
         //
 
-        if (String.IsNullOrEmpty(extra_entry.anim))
+        if (StringUtils.IsEmpty(extra_entry.anim))
             extra_info.@base = null;
         else
             extra_info.@base = Character.InternalImportAnimation(modelholder, extra_entry.anim, prefix, suffix, false);
 
-        if (String.IsNullOrEmpty(extra_entry.anim_hold)) {
+        if (StringUtils.IsEmpty(extra_entry.anim_hold)) {
             extra_info.hold = null;
         } else {
             extra_info.hold = Character.InternalImportAnimation(modelholder, extra_entry.anim_hold, prefix, suffix, true);
         }
 
-        if (String.IsNullOrEmpty(extra_entry.anim_rollback)) {
+        if (StringUtils.IsEmpty(extra_entry.anim_rollback)) {
             extra_info.rollback = null;
         } else {
             extra_info.rollback = Character.InternalImportAnimation(modelholder, extra_entry.anim_rollback, prefix, suffix, false);
@@ -1103,12 +1103,12 @@ L_read_state:
 
 
     private static AnimSprite InternalImportAnimation(ModelHolder mdlhldr, string anim_name, string prefix, string suffix, bool is_sustain) {
-        if (String.IsNullOrEmpty(anim_name)) return null;
+        if (StringUtils.IsEmpty(anim_name)) return null;
 
         anim_name = StringUtils.Concat(prefix, anim_name, suffix);
         AnimSprite animsprite = InternalImportAnimation2(mdlhldr, anim_name, is_sustain);
 
-        //if (!String.IsNullOrEmpty(anim_name)) free(anim_name);
+        //if (StringUtils.IsNotEmpty(anim_name)) free(anim_name);
 
         return animsprite;
     }
@@ -1503,7 +1503,7 @@ L_read_state:
     }
 
     private static ModelHolder InternalGetModelholder(ArrayList<CharacterModelInfo> modelholder_arraylist, string model_src, bool is_optional) {
-        if (String.IsNullOrEmpty(model_src)) {
+        if (StringUtils.IsEmpty(model_src)) {
             if (is_optional)
                 return modelholder_arraylist.Get(0).modelholder;
             else

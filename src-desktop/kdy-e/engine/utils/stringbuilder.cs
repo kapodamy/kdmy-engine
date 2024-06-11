@@ -43,7 +43,7 @@ public static class STRINGBUILDER {
     }
 
     public static StringBuilder AddFormatKDY(this StringBuilder builder, string format, params object[] values) {
-        if (String.IsNullOrEmpty(format)) return builder;
+        if (StringUtils.IsEmpty(format)) return builder;
         builder.Append(InternalHelperCreateFormattedString(format, values));
         return builder;
     }

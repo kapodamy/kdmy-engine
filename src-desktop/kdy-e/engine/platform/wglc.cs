@@ -467,7 +467,7 @@ public class WebGLContext {
         // Check the compile status
         GLenum status = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
         string infolog = gl.getShaderInfoLog(shader);
-        if (!String.IsNullOrEmpty(infolog)) Console.Error.WriteLine(infolog + "\n");
+        if (StringUtils.IsNotEmpty(infolog)) Console.Error.WriteLine(infolog + "\n");
         if (status == gl.TRUE) return shader;
 
         string msg = gl.getShaderInfoLog(shader);
@@ -500,7 +500,7 @@ public class WebGLContext {
 
         GLenum status = (GLenum)gl.getProgramParameter(program, gl.LINK_STATUS);
         string infolog = gl.getProgramInfoLog(program);
-        if (!String.IsNullOrEmpty(infolog)) Console.Error.WriteLine(infolog + "\n");
+        if (StringUtils.IsNotEmpty(infolog)) Console.Error.WriteLine(infolog + "\n");
         if (status == gl.TRUE) return program;
 
         // something went wrong with the link
@@ -528,7 +528,7 @@ public class WebGLContext {
         string path = "/assets/shaders/" + shader_prefix + "_" + shader_suffix + ".glsl";
         string text = IO.ReadText(path);
 
-        if (shader_prefix != "stock" && !String.IsNullOrEmpty(text)) text = WebGLContext.SetShaderVersion(text);
+        if (shader_prefix != "stock" && StringUtils.IsNotEmpty(text)) text = WebGLContext.SetShaderVersion(text);
 
         return text;
     }
@@ -998,13 +998,13 @@ public class PSShader {
 
         //if (!vertex_shader_sourcecode && !fragment_shader_sourcecode) return null;
 
-        if (!String.IsNullOrEmpty(vertex_shader_sourcecode)) {
+        if (StringUtils.IsNotEmpty(vertex_shader_sourcecode)) {
             vertex_shader_sourcecode = WebGLContext.InternalPatchShader(vertex_shader_sourcecode, true);
             vertex_shader = wglc.InternalCreateShader(gl, vertex_shader_sourcecode, true, false);
             if (vertex_shader.IsNull) return null;
         }
 
-        if (!String.IsNullOrEmpty(fragment_shader_sourcecode)) {
+        if (StringUtils.IsNotEmpty(fragment_shader_sourcecode)) {
             fragment_shader_sourcecode = WebGLContext.InternalPatchShader(fragment_shader_sourcecode, false);
             fragment_shader = wglc.InternalCreateShader(gl, fragment_shader_sourcecode, false, false);
             if (fragment_shader.IsNull) return null;
@@ -1031,8 +1031,8 @@ public class PSShader {
     public static PSShader BuildFromFiles(PVRContext pvrctx, string vertex_shader_path, string fragment_shader_path) {
         string vertex_shader_sourcecode = null, fragment_shader_sourcecode = null;
 
-        if (!String.IsNullOrEmpty(vertex_shader_path)) vertex_shader_sourcecode = FS.ReadText(vertex_shader_path);
-        if (!String.IsNullOrEmpty(fragment_shader_path)) fragment_shader_sourcecode = FS.ReadText(fragment_shader_path);
+        if (StringUtils.IsNotEmpty(vertex_shader_path)) vertex_shader_sourcecode = FS.ReadText(vertex_shader_path);
+        if (StringUtils.IsNotEmpty(fragment_shader_path)) fragment_shader_sourcecode = FS.ReadText(fragment_shader_path);
 
         return PSShader.BuildFromSource(pvrctx, vertex_shader_sourcecode, fragment_shader_sourcecode);
     }
