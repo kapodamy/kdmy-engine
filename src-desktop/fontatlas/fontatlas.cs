@@ -340,8 +340,12 @@ L_failed:
             rects_index[i] = i;
         }
 
-        Array.Sort(rects_index, delegate (int idx_a, int idx_b) {
-            return (int)(array[idx_a].height - array[idx_b].height);
+        Span<int> rects_index_span = new Span<int>(rects_index, 0, array_size);
+        rects_index_span.Sort(delegate (int idx_a, int idx_b) {
+            uint height_a = array[idx_a].height;
+            uint height_b = array[idx_b].height;
+
+            return height_a.CompareTo(height_b);
         });
 
         int x = 0;

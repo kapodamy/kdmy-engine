@@ -127,9 +127,9 @@ public class StreakCounter : IDraw, IAnimate {
             // set the draw location
             unused_item.digits.SetDrawLocation(x, y, this.number_gap);
 
-            Array.Sort(
+            ArrayUtils.Sort(
                 this.numbers_items, 0, StreakCounter.STREAK_BUFFER_SIZE,
-                InternalSort
+                StreakCounter.InternalSort
             );
 
             if (this.combo_enabled) {
@@ -346,18 +346,14 @@ public class StreakCounter : IDraw, IAnimate {
         return oldest_item;
     }
 
-    private static Comparer InternalSort = new Comparer();
+    private static int InternalSort(NumberItem item1, NumberItem item2) {
+        return item1.id - item2.id;
+    }
 
 
     private class NumberItem {
         public int id;
         public StreakCounterDigits digits;
-    }
-    private class Comparer : System.Collections.Generic.IComparer<NumberItem> {
-        public int Compare(NumberItem item1, NumberItem item2) {
-            return item1.id - item2.id;
-        }
-
     }
 
 }

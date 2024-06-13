@@ -108,8 +108,6 @@ public class Layout : IDraw, IAnimate {
     public const string GROUP_ROOT = "___root-group___";
     public static bool DEBUG_PRINT_TRIGGER_CALLS = false;
 
-    private static readonly HelperZbufferSortImpl HelperZbufferSort = new HelperZbufferSortImpl();
-
 
     private Layout() {
         this.MATRIX_VIEWPORT = new SIMDMatrix();
@@ -1422,7 +1420,7 @@ public class Layout : IDraw, IAnimate {
                     break;
             }
         }
-        Array.Sort(this.z_buffer, 0, this.z_buffer_size, Layout.HelperZbufferSort);
+        ArrayUtils.Sort(this.z_buffer, 0, this.z_buffer_size, Layout.HelperZbufferSort);
 
         // step 2: find top-most item of each group
         for (int i = 0 ; i < this.z_buffer_size ; i++) {
@@ -4357,6 +4355,12 @@ public class Layout : IDraw, IAnimate {
         action_entries.Add(entry);
     }
 
+
+    private static int HelperZbufferSort(ZBufferEntry entry1, ZBufferEntry entry2) {
+        return entry1.z_index.CompareTo(entry2.z_index);
+    }
+
+
     private class ZBufferEntry {
         public Item item; public float z_index; public bool visible;
     }
@@ -4526,11 +4530,6 @@ public class Layout : IDraw, IAnimate {
         public float viewport_height;
 
         public void SetProperty(int id, float value) => Layout.HelperGroupSetProperty(this, id, value);
-    }
-    private sealed class HelperZbufferSortImpl : IComparer<ZBufferEntry> {
-        public int Compare(ZBufferEntry entry1, ZBufferEntry entry2) {
-            return entry1.z_index.CompareTo(entry2.z_index);
-        }
     }
 
 }

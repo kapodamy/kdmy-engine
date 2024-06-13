@@ -1,4 +1,8 @@
 using System;
+using System.Collections;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Engine.Utils;
 
@@ -37,6 +41,16 @@ public static class CloneUtils {
 
 
         return array;
+    }
+
+}
+
+public static class ArrayUtils {
+
+    public static void Sort<T>(T[] array, int index, int length, Comparison<T> comparison) {
+        if (length < 1) return;
+        Span<T> span = new Span<T>(array, index, length);
+        span.Sort(comparison);
     }
 
 }

@@ -76,13 +76,9 @@ public class Strum {
 
         public double EndTimestamp { get => this.timestamp + this.duration; }
 
-        public static readonly Comparer SortCallback = new Comparer();
 
-
-        public class Comparer : System.Collections.Generic.IComparer<StrumNote> {
-            public int Compare(StrumNote note1, StrumNote note2) {
-                return note1.timestamp.CompareTo(note2.timestamp);
-            }
+        public static int SortCallback(StrumNote note1, StrumNote note2) {
+            return note1.timestamp.CompareTo(note2.timestamp);
         }
     }
 
@@ -405,7 +401,7 @@ public class Strum {
 
         if (count > 0) {
             // Important: sort the notes by timestamp
-            Array.Sort(this.chart_notes, 0, this.chart_notes_size, StrumNote.SortCallback);
+            ArrayUtils.Sort(this.chart_notes, 0, this.chart_notes_size, StrumNote.SortCallback);
 
             // calculate the key test time limit
             this.key_test_limit = Math.Max(this.chart_notes[0].timestamp - this.marker_duration, 0.0);

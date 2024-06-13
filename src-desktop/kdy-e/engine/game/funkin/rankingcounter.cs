@@ -259,7 +259,7 @@ public class RankingCounter {
             if (item.animsprite != null) item.animsprite.Restart();
 
             // sort visible items (old items first)
-            Array.Sort(
+            ArrayUtils.Sort(
                 this.ranking_items, 0,
                 RankingCounter.RANKING_BUFFER_SIZE,
                 RankingCounter.InternalSort
@@ -522,17 +522,15 @@ public class RankingCounter {
         return oldest_item;
     }
 
-    private readonly static Comparer InternalSort = new Comparer();
+    private static int InternalSort(RankingItem item1, RankingItem item2) {
+        return item1.id - item2.id;
+    }
+
 
     private class RankingItem {
         public StateSprite statesprite;
         public AnimSprite animsprite;
         public int id;
-    }
-    private class Comparer : IComparer<RankingItem> {
-        public int Compare(RankingItem item1, RankingItem item2) {
-            return item1.id - item2.id;
-        }
     }
 
 }

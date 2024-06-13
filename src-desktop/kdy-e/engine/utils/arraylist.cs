@@ -11,7 +11,6 @@ public class ArrayList<T> {
     private int length;
     private int size;
     private T[] array;
-    private ArrayListComparer comparer;
 
     public ArrayList() : this(ArrayList<T>.DEFAULT_CAPACITY) { }
 
@@ -21,7 +20,6 @@ public class ArrayList<T> {
         this.array = new T[initial_capacity];
         this.length = initial_capacity;
         this.size = 0;
-        this.comparer = new ArrayListComparer();
     }
 
     public void Destroy(bool keep_array_alive) {
@@ -181,10 +179,8 @@ public class ArrayList<T> {
         return copy;
     }
 
-    public void Sort(SortDelegate sort_fn) {
-        this.comparer.sort_fn = sort_fn;
-        Array.Sort(this.array, 0, this.size, this.comparer);
-        this.comparer.sort_fn = null;
+    public void Sort(Comparison<T> sort_fn) {
+        ArrayUtils.Sort(this.array, 0, this.size, sort_fn);
     }
 
 
@@ -222,17 +218,5 @@ public class ArrayList<T> {
         public T Current => this.arraylist.array[this.index];
 
     }
-
-    private struct ArrayListComparer : System.Collections.Generic.IComparer<T> {
-
-        public SortDelegate sort_fn;
-
-        public int Compare(T x, T y) {
-            return sort_fn(x, y);
-        }
-    }
-
-
-    public delegate int SortDelegate(T obj_a, T obj_b);
 
 }
