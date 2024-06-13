@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using Engine.Externals;
 using Engine.Externals.FontAtlasInterop;
@@ -14,11 +13,11 @@ public class FontType : IFont {
     private static Map<FontType> POOL = new Map<FontType>();
     private static int IDS = 0;
 
-    public const byte GLYPHS_HEIGHT = 72;// in the dreamcast use 32px, 64px is enough for SDF
-    public const float GLYPHS_OUTLINE_RATIO = 0.086f;// ~6px of outline @ 72px (used in SDF)
-    public const float GLYPHS_SMOOTHING_COEFF = 0.245f;// used in SDF, idk how its works
-    public const byte GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
-    public const float FAKE_SPACE = 0.75f;// 75% of the height
+    private const byte GLYPHS_HEIGHT = 72;// in the dreamcast use 32px, 64px is enough for SDF
+    private const float GLYPHS_OUTLINE_RATIO = 0.086f;// ~6px of outline @ 72px (used in SDF)
+    private const float GLYPHS_SMOOTHING_COEFF = 0.245f;// used in SDF, idk how its works
+    private const byte GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
+    private const float FAKE_SPACE = 0.75f;// 75% of the height
 
 
     private FontType() { }
@@ -33,19 +32,18 @@ public class FontType : IFont {
     private Texture fontcharmap_primary_texture;
     private FontCharMap fontcharmap_secondary;
     private Texture fontcharmap_secondary_texture;
+    private byte[] lookup_table;
+
 
     [MethodImpl(MethodImplOptions.Synchronized)]
     public static FontType Init(string src) {
         string full_path = FS.GetFullPathAndOverride(src);
 
-        // C# only, lock the pool
-        lock (FontType.POOL) {
-            foreach (FontType instance in FontType.POOL) {
-                if (instance.instance_path == full_path) {
-                    //free(full_path);
-                    instance.instance_references++;
-                    return instance;
-                }
+        foreach (FontType instance in FontType.POOL) {
+            if (instance.instance_path == full_path) {
+                //free(full_path);
+                instance.instance_references++;
+                return instance;
             }
         }
 
@@ -62,7 +60,11 @@ public class FontType : IFont {
 
             fontcharmap_secondary = null,
             fontcharmap_secondary_texture = null,
+
+            lookup_table = new byte[FontGlyph.LOOKUP_TABLE_LENGTH]
         };
+
+        Array.Fill(fonttype.lookup_table, FontGlyph.LOOKUP_TABLE_LENGTH, 0, FontGlyph.LOOKUP_TABLE_LENGTH);
 
         // initialize FreeType library
         if (fonttype.InternalInitFreetype(src)) {
@@ -77,18 +79,25 @@ public class FontType : IFont {
         fonttype.fontcharmap_primary_texture = FontType.InternalUploadTexture(fonttype.fontcharmap_primary);
 
         if (fonttype.fontcharmap_primary != null) {
-            for (int i = 0 ; i < fonttype.fontcharmap_primary.char_array_size ; i++) {
-                if (fonttype.fontcharmap_primary.char_array[i].codepoint == FontGlyph.SPACE) {
-                    fonttype.space_width = fonttype.fontcharmap_primary.char_array[i].advancex;
+            FontCharData[] char_array = fonttype.fontcharmap_primary.char_array;
+            int char_array_size = fonttype.fontcharmap_primary.char_array_size;
+
+            for (int i = 0 ; i < char_array_size ; i++) {
+                if (char_array[i].codepoint == FontGlyph.SPACE) {
+                    fonttype.space_width = char_array[i].advancex;
                     break;
+                }
+            }
+
+            for (byte i = 0 ; i < char_array_size && i <= FontGlyph.LOOKUP_TABLE_LENGTH ; i++) {
+                uint codepoint = char_array[i].codepoint;
+                if (codepoint < FontGlyph.LOOKUP_TABLE_LENGTH) {
+                    fonttype.lookup_table[codepoint] = i;
                 }
             }
         }
 
-        //C# only, lock the pool
-        lock (FontType.POOL) {
-            FontType.POOL.Set(fonttype.instance_id, fonttype);
-        }
+        FontType.POOL.Set(fonttype.instance_id, fonttype);
         return fonttype;
     }
 
@@ -151,7 +160,7 @@ public class FontType : IFont {
                 continue;
             }
 
-            FontCharData fontchardata = InternalGetFontchardata(this.fontcharmap_primary, grapheme.code);
+            FontCharData fontchardata = InternalGetFontchardata2(this.lookup_table, this.fontcharmap_primary, grapheme.code);
             if (fontchardata == null) {
                 fontchardata = InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code);
                 if (fontchardata == null) {
@@ -195,7 +204,7 @@ public class FontType : IFont {
         //override hard-spaces with white-spaces
         if (codepoint == 0xA0) codepoint = 0x20;
 
-        FontCharData fontchardata = FontType.InternalGetFontchardata(this.fontcharmap_primary, codepoint);
+        FontCharData fontchardata = FontType.InternalGetFontchardata2(this.lookup_table, this.fontcharmap_primary, codepoint);
         if (fontchardata == null) {
             fontchardata = FontType.InternalGetFontchardata(this.fontcharmap_secondary, codepoint);
             if (fontchardata == null) {
@@ -287,7 +296,7 @@ public class FontType : IFont {
 
             if (grapheme.code == 0xA0) continue;
 
-            if ((fontchardata = InternalGetFontchardata(primary, grapheme.code)) != null) {
+            if ((fontchardata = InternalGetFontchardata2(this.lookup_table, primary, grapheme.code)) != null) {
                 if (fontchardata.has_atlas_entry) total_glyphs++;
                 continue;
             }
@@ -329,7 +338,7 @@ public class FontType : IFont {
                 continue;
             }
 
-            fontchardata = FontType.InternalGetFontchardata(primary, grapheme.code);
+            fontchardata = FontType.InternalGetFontchardata2(this.lookup_table, primary, grapheme.code);
             bool is_secondary = false;
             Texture texture = primary_texture;
 
@@ -437,8 +446,10 @@ public class FontType : IFont {
                     continue;
             }
 
-            if (FontType.InternalGetFontchardata(this.fontcharmap_primary, grapheme.code) != null) continue;
-            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null) continue;
+            if (FontType.InternalGetFontchardata2(this.lookup_table, this.fontcharmap_primary, grapheme.code) != null)
+                continue;
+            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null)
+                continue;
 
             // not present, count it
             new_codepoints++;
@@ -462,8 +473,10 @@ public class FontType : IFont {
         while (index < text_length && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
             index += grapheme.size;
 
-            if (FontType.InternalGetFontchardata(this.fontcharmap_primary, grapheme.code) != null) continue;
-            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null) continue;
+            if (FontType.InternalGetFontchardata2(this.lookup_table, this.fontcharmap_primary, grapheme.code) != null)
+                continue;
+            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null)
+                continue;
 
             codepoints[new_codepoints++] = (uint)grapheme.code;
         }
@@ -581,6 +594,16 @@ public class FontType : IFont {
             }
         }
         return null;
+    }
+
+    private static FontCharData InternalGetFontchardata2(byte[] lookup_table, FontCharMap fontcharmap, int codepoint) {
+        if (codepoint < FontGlyph.LOOKUP_TABLE_LENGTH) {
+            byte index = lookup_table[codepoint];
+            if (index < FontGlyph.LOOKUP_TABLE_LENGTH) {
+                return fontcharmap.char_array[index];
+            }
+        }
+        return InternalGetFontchardata(fontcharmap, codepoint);
     }
 
     private static float InternalCalcSmoothing(PVRContext pvrctx, float height) {

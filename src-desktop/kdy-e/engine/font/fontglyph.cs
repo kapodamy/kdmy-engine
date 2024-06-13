@@ -15,6 +15,7 @@ public class FontGlyph : IFont {
     public const byte CARRIAGERETURN = 0x0D;
     public const float SPACE_WIDTH_RATIO = 0.8f;
     public const byte TABSTOP = 8;
+    public const byte LOOKUP_TABLE_LENGTH = 128;// this covers all ascii characters
 
     private FontGlyph() { }
 
@@ -23,6 +24,7 @@ public class FontGlyph : IFont {
     private int table_size;
     private double frame_time;
     private double frame_progress;
+    private byte[] lookup_table;
 
     public static FontGlyph Init(string src_atlas, string suffix, bool allow_animation) {
         Atlas atlas = Atlas.Init(src_atlas);
@@ -56,7 +58,10 @@ public class FontGlyph : IFont {
 
             frame_time = 0f,
             frame_progress = 0f,
+            lookup_table = new byte[FontGlyph.LOOKUP_TABLE_LENGTH]
         };
+
+        Array.Fill(fontglyph.lookup_table, FontGlyph.LOOKUP_TABLE_LENGTH, 0, FontGlyph.LOOKUP_TABLE_LENGTH);
 
         if (allow_animation) {
             if (atlas.glyph_fps > 0)
@@ -102,6 +107,18 @@ public class FontGlyph : IFont {
                 atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
             );
         }
+
+        // sort table, place ascii characters first
+        ArrayUtils.Sort(fontglyph.table, 0, fontglyph.table_size, FontGlyph.InternalTableSort);
+
+        // populate lookup table
+        for (byte i = 0 ; i < fontglyph.table_size && i <= FontGlyph.LOOKUP_TABLE_LENGTH ; i++) {
+            int code = fontglyph.table[i].code;
+            if (code < FontGlyph.LOOKUP_TABLE_LENGTH) {
+                fontglyph.lookup_table[code] = i;
+            }
+        }
+
         return fontglyph;
     }
 
@@ -140,19 +157,22 @@ public class FontGlyph : IFont {
                 continue;
             }
 
-            bool found = false;
+            GlyphInfo info = null;
 
-            for (int j = 0 ; j < this.table_size ; j++) {
-                if (this.table[j].code == grapheme.code) {
-                    GlyphFrame frame = this.table[j].frames[this.table[j].actual_frame];
-                    width += frame.glyph_width_ratio * @params.height;
-                    line_chars++;
-                    found = true;
-                    break;
+            if (grapheme.code < FontGlyph.LOOKUP_TABLE_LENGTH) {
+                if (this.lookup_table[grapheme.code] != FontGlyph.LOOKUP_TABLE_LENGTH) {
+                    byte index = this.lookup_table[grapheme.code];
+                    info = this.table[index];
+                    goto L_measure;
                 }
             }
 
-            if (found) continue;
+            for (int j = 0 ; j < this.table_size ; j++) {
+                if (this.table[j].code == grapheme.code) {
+                    info = this.table[j];
+                    goto L_measure;
+                }
+            }
 
             if (grapheme.code == FontGlyph.TAB) {
                 int filler = FontGlyph.InternalCalcTabstop(line_chars);
@@ -165,6 +185,13 @@ public class FontGlyph : IFont {
                 width += @params.height * FontGlyph.SPACE_WIDTH_RATIO;
                 line_chars++;
             }
+
+            continue;
+
+L_measure:
+            GlyphFrame frame = info.frames[info.actual_frame];
+            width += frame.glyph_width_ratio * @params.height;
+            line_chars++;
         }
 
         return Math.Max(width, max_width);
@@ -175,12 +202,20 @@ public class FontGlyph : IFont {
             lineinfo.space_width = InternalFindSpaceWidth(height);
         }
 
-        for (int j = 0 ; j < this.table_size ; j++) {
-            if (this.table[j].code == codepoint) {
-                GlyphFrame frame = this.table[j].frames[this.table[j].actual_frame];
-                lineinfo.last_char_width = frame.glyph_width_ratio * height;
-                lineinfo.line_char_count++;
-                return;
+        GlyphInfo info = null;
+
+        if (codepoint < FontGlyph.LOOKUP_TABLE_LENGTH) {
+            if (this.lookup_table[codepoint] != FontGlyph.LOOKUP_TABLE_LENGTH) {
+                byte index = this.lookup_table[codepoint];
+                info = this.table[index];
+                goto L_measure;
+            }
+        }
+
+        for (int i = 0 ; i < this.table_size ; i++) {
+            if (this.table[i].code == codepoint) {
+                info = this.table[i];
+                goto L_measure;
             }
         }
 
@@ -195,6 +230,13 @@ public class FontGlyph : IFont {
             lineinfo.last_char_width = height * FontGlyph.SPACE_WIDTH_RATIO;
             lineinfo.line_char_count++;
         }
+
+        return;
+
+L_measure:
+        GlyphFrame frame = info.frames[info.actual_frame];
+        lineinfo.last_char_width = frame.glyph_width_ratio * height;
+        lineinfo.line_char_count++;
     }
 
     public float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text) {
@@ -229,13 +271,13 @@ public class FontGlyph : IFont {
                     continue;
             }
 
+            if (grapheme.code < FontGlyph.LOOKUP_TABLE_LENGTH && this.lookup_table[grapheme.code] != FontGlyph.LOOKUP_TABLE_LENGTH) {
+                total_glyphs++;
+                continue;
+            }
+
             for (int i = 0 ; i < this.table_size ; i++) {
                 if (this.table[i].code == grapheme.code) {
-                    switch (grapheme.code) {
-                        case FontGlyph.CARRIAGERETURN:
-                        case FontGlyph.LINEFEED:
-                            continue;
-                    }
                     total_glyphs++;
                     break;
                 }
@@ -262,10 +304,16 @@ public class FontGlyph : IFont {
             }
 
             GlyphFrame frame = null;
-            for (int i = 0 ; i < this.table_size ; i++) {
-                if (this.table[i].code == grapheme.code) {
-                    frame = this.table[i].frames[this.table[i].actual_frame];
-                    break;
+
+            if (grapheme.code < FontGlyph.LOOKUP_TABLE_LENGTH && this.lookup_table[grapheme.code] != FontGlyph.LOOKUP_TABLE_LENGTH) {
+                byte in_table_index = this.lookup_table[grapheme.code];
+                frame = this.table[in_table_index].frames[this.table[in_table_index].actual_frame];
+            } else {
+                for (int i = 0 ; i < this.table_size ; i++) {
+                    if (this.table[i].code == grapheme.code) {
+                        frame = this.table[i].frames[this.table[i].actual_frame];
+                        break;
+                    }
                 }
             }
 
@@ -471,6 +519,10 @@ public class FontGlyph : IFont {
             }
         }
         return height * FontGlyph.SPACE_WIDTH_RATIO; ;
+    }
+
+    private static int InternalTableSort(GlyphInfo x, GlyphInfo y) {
+        return x.code.CompareTo(y.code);
     }
 
 

@@ -68,6 +68,21 @@ static int sort(const void* a, const void* b) {
     return (*a_ptr)->height - (*b_ptr)->height;
 }
 
+static int sort_codepoints(const void* a, const void* b) {
+    const uint32_t* a_ptr = (const uint32_t*)a;
+    const uint32_t* b_ptr = (const uint32_t*)b;
+
+    const uint32_t value_a = *a_ptr;
+    const uint32_t value_b = *b_ptr;
+
+    if (value_a < value_b)
+        return -1;
+    if (value_a > value_b)
+        return 1;
+    else
+        return 0;
+}
+
 
 FontAtlas fontatlas_init(uint8_t* font_data, int32_t font_data_size) {
     if (font_data_size < 1 || !font_data) return NULL;
@@ -527,8 +542,9 @@ void fontatlas_atlas_destroy(FontCharMap** fontcharmap_ptr) {
 FontCharMap* fontatlas_atlas_build_complete(FontAtlas fontatlas, uint8_t font_height, int8_t gaps) {
     size_t size_common = wcslen(FONTATLAS_BASE_LIST_COMMON);
     size_t size_extended = wcslen(FONTATLAS_BASE_LIST_EXTENDED);
+    size_t size_total = size_common + size_extended;
 
-    uint32_t* list_complete = malloc_for_array(uint32_t, size_extended + size_common + 1);
+    uint32_t* list_complete = malloc_for_array(uint32_t, size_total + 1);
     malloc_assert(list_complete, uint32_t[]);
 
     uint32_t* list_ptr = list_complete;
@@ -538,6 +554,8 @@ FontCharMap* fontatlas_atlas_build_complete(FontAtlas fontatlas, uint8_t font_he
     for (; size_common > 0; size_common--) *list_ptr++ = (uint32_t)*common_ptr++;
     for (; size_extended > 0; size_extended--) *list_ptr++ = (uint32_t)*extended_ptr++;
     *list_ptr = 0;
+
+    qsort(list_complete, size_total, sizeof(uint32_t), sort_codepoints);
 
     FontCharMap* charmap = fontatlas_atlas_build(fontatlas, font_height, gaps, list_complete);
     free_chk(list_complete);
@@ -560,4 +578,3 @@ const char* fontatlas_get_version() {
 
     return version;
 }
-

@@ -516,6 +516,10 @@ L_build_map:
         for (int i = 0 ; i < size_extended ; i++) list_complete[j++] = (uint)Char.ConvertToUtf32(FONTATLAS_BASE_LIST_EXTENDED, i);
         list_complete[size_total] = 0;
 
+        // place ascii characters first
+        Span<uint> span = new Span<uint>(list_complete, 0, size_total);
+        span.Sort((x, y) => x.CompareTo(y));
+
         FontCharMap charmap = this.AtlasBuild(font_height, gaps, list_complete);
         //free(list_complete);
 

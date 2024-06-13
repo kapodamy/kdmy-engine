@@ -37,8 +37,11 @@ async function fonttype_init(src) {
         fontcharmap_primary_texture: null,
 
         fontcharmap_secondary: null,
-        fontcharmap_secondary_texture: null
+        fontcharmap_secondary_texture: null,
+        lookup_table: new Array(FONTGLYPH_LOOKUP_TABLE_LENGTH)
     };
+
+    fonttype.lookup_table.fill(FONTGLYPH_LOOKUP_TABLE_LENGTH, 0, FONTGLYPH_LOOKUP_TABLE_LENGTH);
 
     // initialize FreeType library
     if (await fonttype_internal_init_freetype(fonttype, src)) {
@@ -53,10 +56,20 @@ async function fonttype_init(src) {
     fonttype.fontcharmap_primary_texture = fonttype_internal_upload_texture(fonttype.fontcharmap_primary);
 
     if (fonttype.fontcharmap_primary) {
-        for (let i = 0; i < fonttype.fontcharmap_primary.char_array_size; i++) {
-            if (fonttype.fontcharmap_primary.char_array[i].codepoint == FONTGLYPH_SPACE) {
-                fonttype.space_width = fonttype.fontcharmap_primary.char_array[i].advancex;
+        let char_array = fonttype.fontcharmap_primary.char_array;
+        let char_array_size = fonttype.fontcharmap_primary.char_array_size;
+
+        for (let i = 0; i < char_array_size; i++) {
+            if (char_array[i].codepoint == FONTGLYPH_SPACE) {
+                fonttype.space_width = char_array[i].advancex;
                 break;
+            }
+        }
+
+        for (let i = 0; i < char_array_size && i <= FONTGLYPH_LOOKUP_TABLE_LENGTH; i++) {
+            let codepoint = char_array[i].codepoint;
+            if (codepoint < FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+                fonttype.lookup_table[codepoint] = i;
             }
         }
     }
@@ -123,7 +136,7 @@ function fonttype_measure(fonttype, params, text, text_index, text_length) {
             continue;
         }
 
-        let fontchardata = fonttype_internal_get_fontchardata(fonttype.fontcharmap_primary, grapheme.code);
+        let fontchardata = fonttype_internal_get_fontchardata2(fonttype.lookup_table, fonttype.fontcharmap_primary, grapheme.code);
         if (!fontchardata) {
             fontchardata = fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, grapheme.code);
             if (!fontchardata) {
@@ -167,7 +180,7 @@ function fonttype_measure_char(fonttype, codepoint, height, lineinfo) {
     //override hard-spaces with white-spaces
     if (codepoint == 0xA0) codepoint = 0x20;
 
-    let fontchardata = fonttype_internal_get_fontchardata(fonttype.fontcharmap_primary, codepoint);
+    let fontchardata = fonttype_internal_get_fontchardata2(fonttype.lookup_table, fonttype.fontcharmap_primary, codepoint);
     if (!fontchardata) {
         fontchardata = fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, codepoint);
         if (!fontchardata) {
@@ -259,7 +272,7 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
 
         if (grapheme.code == 0xA0) continue;
 
-        if (fontchardata = fonttype_internal_get_fontchardata(primary, grapheme.code)) {
+        if (fontchardata = fonttype_internal_get_fontchardata2(fonttype.lookup_table, primary, grapheme.code)) {
             if (fontchardata.has_entry) total_glyphs++;
             continue;
         }
@@ -301,7 +314,7 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
             continue;
         }
 
-        fontchardata = fonttype_internal_get_fontchardata(primary, grapheme.code);
+        fontchardata = fonttype_internal_get_fontchardata2(fonttype.lookup_table, primary, grapheme.code);
         let is_secondary = false;
         let texture = primary_texture;
 
@@ -409,8 +422,10 @@ function fonttype_map_codepoints(fonttype, text_index, text_end_index, text) {
                 continue;
         }
 
-        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_primary, grapheme.code)) continue;
-        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, grapheme.code)) continue;
+        if (fonttype_internal_get_fontchardata2(fonttype.lookup_table, fonttype.fontcharmap_primary, grapheme.code))
+            continue;
+        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, grapheme.code))
+            continue;
 
         // not present, count it
         new_codepoints++;
@@ -434,8 +449,10 @@ function fonttype_map_codepoints(fonttype, text_index, text_end_index, text) {
     while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
         index += grapheme.size;
 
-        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_primary, grapheme.code)) continue;
-        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, grapheme.code)) continue;
+        if (fonttype_internal_get_fontchardata2(fonttype.lookup_table, fonttype.fontcharmap_primary, grapheme.code))
+            continue;
+        if (fonttype_internal_get_fontchardata(fonttype.fontcharmap_secondary, grapheme.code))
+            continue;
 
         codepoints[new_codepoints++] = grapheme.code;
     }
@@ -574,6 +591,16 @@ function fonttype_internal_get_fontchardata(/**@type {FontCharMap}*/ fontcharmap
         }
     }
     return null;
+}
+
+function fonttype_internal_get_fontchardata2(lookup_table, fontcharmap, codepoint) {
+    if (codepoint < FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+        let index = lookup_table[codepoint];
+        if (index < FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+            return fontcharmap.char_array[index];
+        }
+    }
+    return fonttype_internal_get_fontchardata(fontcharmap, codepoint);
 }
 
 function fonttype_internal_calc_smoothing(pvrctx, height) {

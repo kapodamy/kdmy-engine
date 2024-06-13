@@ -6,6 +6,7 @@ const FONTGLYPH_TAB = 0x09;
 const FONTGLYPH_CARRIAGERETURN = 0x0D;
 const FONTGLYPH_SPACE_WIDTH_RATIO = 0.8;
 const FONTGLYPH_TABSTOP = 8;
+const FONTGLYPH_LOOKUP_TABLE_LENGTH = 128; // this covers all ascii characters
 
 
 async function fontglyph_init(src_atlas, suffix, allow_animation) {
@@ -40,7 +41,10 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
 
         frame_time: 0.0,
         frame_progress: 0.0,
+        lookup_table: new Array(FONTGLYPH_LOOKUP_TABLE_LENGTH)
     };
+
+    fontglyph.lookup_table.fill(FONTGLYPH_LOOKUP_TABLE_LENGTH, 0, FONTGLYPH_LOOKUP_TABLE_LENGTH);
 
     if (allow_animation) {
         if (atlas.glyph_fps > 0.0)
@@ -88,6 +92,17 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
         );
     }
 
+    // sort table, place ascii characters first
+    qsort(fontglyph.table, fontglyph.table_size, 16/*sizeof(GlyphInfo)*/, fontglyph_internal_table_sort);
+
+    // populate lookup table
+    for (let i = 0; i < fontglyph.table_size && i <= FONTGLYPH_LOOKUP_TABLE_LENGTH; i++) {
+        let code = fontglyph.table[i].code;
+        if (code < FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+            fontglyph.lookup_table[code] = i;
+        }
+    }
+
     return fontglyph;
 }
 
@@ -123,31 +138,42 @@ function fontglyph_measure(fontglyph, params, text, text_index, text_length) {
             continue;
         }
 
-        let found = false;
+        let info = null;
 
-        for (let j = 0; j < fontglyph.table_size; j++) {
-            if (fontglyph.table[j].code == grapheme.code) {
-                let frame = fontglyph.table[j].frames[fontglyph.table[j].actual_frame];
-                width += frame.glyph_width_ratio * params.height;
+        L_find_glyph_info: {
+            if (grapheme.code < FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+                if (fontglyph.lookup_table[grapheme.code] != FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+                    let index = fontglyph.lookup_table[grapheme.code];
+                    info = fontglyph.table[index];
+                    break L_find_glyph_info;
+                }
+            }
+
+            for (let j = 0; j < fontglyph.table_size; j++) {
+                if (fontglyph.table[j].code == grapheme.code) {
+                    info = fontglyph.table[j];
+                    break L_find_glyph_info;
+                }
+            }
+
+            if (grapheme.code == FONTGLYPH_TAB) {
+                let filler = fontglyph_internal_calc_tabstop(line_chars);
+                if (filler > 0) {
+                    width += space_width * filler;
+                    line_chars += filler;
+                }
+            } else {
+                // space, hard space or unknown character
+                width += params.height * FONTGLYPH_SPACE_WIDTH_RATIO;
                 line_chars++;
-                found = true;
-                break;
             }
+
+            continue;
         }
 
-        if (found) continue;
-
-        if (grapheme.code == FONTGLYPH_TAB) {
-            let filler = fontglyph_internal_calc_tabstop(line_chars);
-            if (filler > 0) {
-                width += space_width * filler;
-                line_chars += filler;
-            }
-        } else {
-            // space, hard space or unknown character
-            width += params.height * FONTGLYPH_SPACE_WIDTH_RATIO;
-            line_chars++;
-        }
+        let frame = info.frames[info.actual_frame];
+        width += frame.glyph_width_ratio * params.height;
+        line_chars++;
     }
 
     return Math.max(width, max_width);
@@ -158,26 +184,42 @@ function fontglyph_measure_char(fontglyph, codepoint, height, lineinfo) {
         lineinfo.space_width = fontglyph_internal_find_space_width(fontglyph, height);
     }
 
-    for (let j = 0; j < fontglyph.table_size; j++) {
-        if (fontglyph.table[j].code == codepoint) {
-            let frame = fontglyph.table[j].frames[fontglyph.table[j].actual_frame];
-            lineinfo.last_char_width = frame.glyph_width_ratio * height;
-            lineinfo.line_char_count++;
-            return;
+    let info = null;
+
+    L_find_glyph_info: {
+        if (codepoint < FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+            if (fontglyph.lookup_table[codepoint] != FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+                let index = fontglyph.lookup_table[codepoint];
+                info = fontglyph.table[index];
+                break L_find_glyph_info;
+            }
         }
+
+        for (let i = 0; i < fontglyph.table_size; i++) {
+            if (fontglyph.table[i].code == codepoint) {
+                info = fontglyph.table[i];
+                break L_find_glyph_info;
+            }
+        }
+
+        if (codepoint == FONTGLYPH_TAB) {
+            let filler = fontglyph_internal_calc_tabstop(lineinfo.line_char_count);
+            if (filler > 0) {
+                lineinfo.last_char_width = lineinfo.space_width * filler;
+                lineinfo.line_char_count += filler;
+            }
+        } else {
+            // space, hard space or unknown character
+            lineinfo.last_char_width = height * FONTGLYPH_SPACE_WIDTH_RATIO;
+            lineinfo.line_char_count++;
+        }
+
+        return;
     }
 
-    if (codepoint == FONTGLYPH_TAB) {
-        let filler = fontglyph_internal_calc_tabstop(lineinfo.line_char_count);
-        if (filler > 0) {
-            lineinfo.last_char_width = lineinfo.space_width * filler;
-            lineinfo.line_char_count += filler;
-        }
-    } else {
-        // space, hard space or unknown character
-        lineinfo.last_char_width = height * FONTGLYPH_SPACE_WIDTH_RATIO;
-        lineinfo.line_char_count++;
-    }
+    let frame = info.frames[info.actual_frame];
+    lineinfo.last_char_width = frame.glyph_width_ratio * height;
+    lineinfo.line_char_count++;
 }
 
 function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_length, text) {
@@ -212,13 +254,13 @@ function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_l
                 continue;
         }
 
+        if (grapheme.code < FONTGLYPH_LOOKUP_TABLE_LENGTH && fontglyph.lookup_table[grapheme.code] != FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+            total_glyphs++;
+            continue;
+        }
+
         for (let i = 0; i < fontglyph.table_size; i++) {
             if (fontglyph.table[i].code == grapheme.code) {
-                switch (grapheme.code) {
-                    case FONTGLYPH_CARRIAGERETURN:
-                    case FONTGLYPH_LINEFEED:
-                        continue;
-                }
                 total_glyphs++;
                 break;
             }
@@ -245,10 +287,16 @@ function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_l
         }
 
         let frame = null;
-        for (let i = 0; i < fontglyph.table_size; i++) {
-            if (fontglyph.table[i].code == grapheme.code) {
-                frame = fontglyph.table[i].frames[fontglyph.table[i].actual_frame];
-                break;
+
+        if (grapheme.code < FONTGLYPH_LOOKUP_TABLE_LENGTH && fontglyph.lookup_table[grapheme.code] != FONTGLYPH_LOOKUP_TABLE_LENGTH) {
+            let in_table_index = fontglyph.lookup_table[grapheme.code];
+            frame = fontglyph.table[in_table_index].frames[fontglyph.table[in_table_index].actual_frame];
+        } else {
+            for (let i = 0; i < fontglyph.table_size; i++) {
+                if (fontglyph.table[i].code == grapheme.code) {
+                    frame = fontglyph.table[i].frames[fontglyph.table[i].actual_frame];
+                    break;
+                }
             }
         }
 
@@ -454,6 +502,18 @@ function fontglyph_internal_find_space_width(fontglyph, height) {
             return height * frame.glyph_width_ratio;
         }
     }
-    return height * FONTGLYPH_SPACE_WIDTH_RATIO;;
+    return height * FONTGLYPH_SPACE_WIDTH_RATIO;
+}
+
+function fontglyph_internal_table_sort(x, y) {
+    let value_x = x.code;
+    let value_y = y.code;
+
+    if (value_x < value_y)
+        return -1;
+    if (value_x > value_y)
+        return 1;
+    else
+        return 0;
 }
 
