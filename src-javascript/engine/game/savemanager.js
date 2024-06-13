@@ -119,6 +119,7 @@ async function savemanager_init(save_only, error_code) {
         error_code: error_code < 1 ? 0 : error_code,
         save_only,
         allow_delete: false,
+        no_leave_confirm: false,
         drawable_wrapper: null,
         vmu_array: null,
         vmu_size: 0,
@@ -302,7 +303,7 @@ async function savemanager_show(savemanager) {
                 if (save_or_load_success) break;
             }
         } else if (buttons & MAINMENU_GAMEPAD_CANCEL && !await modding_helper_notify_back(modding)) {
-            if (savemanager.allow_delete) {
+            if (savemanager.no_leave_confirm) {
                 // lauched from settings menu, do not confirm leave
                 break;
             }
@@ -444,15 +445,25 @@ function savemanager_is_running_without_savedata() {
     return savemanager_game_withoutsavedata;
 }
 
-function savemanager_change_actions(savemanager, save_only, allow_delete) {
+function savemanager_change_actions(savemanager, save_only, allow_delete, no_leave_confirm) {
     savemanager.error_code = 0;
     savemanager.save_only = save_only;
     savemanager.allow_delete = allow_delete;
+    savemanager.no_leave_confirm = no_leave_confirm;
 
     weekselector_helptext_set_visible(savemanager.help_delete, allow_delete);
 
     // trigger all default actions
     layout_trigger_any(savemanager.layout, null);
+
+    let selected_index = savemanager.menu ? menu_get_selected_index(savemanager.menu) : -1;
+
+    if (selected_index >= 0 && selected_index < savemanager.vmu_size) {
+        if (savemanager.vmu_array[selected_index].has_savedata)
+            layout_trigger_any(savemanager.layout, "save-selected");
+        else
+            layout_trigger_any(savemanager.layout, "save-not-selected");
+    }
 }
 
 

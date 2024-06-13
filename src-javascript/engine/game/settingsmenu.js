@@ -588,7 +588,7 @@ async function settingsmenu_in_save_settings(gamepad, modding) {
         }
 
         // only allow delete when saving
-        savemanager_change_actions(savemanager, save_only, save_only);
+        savemanager_change_actions(savemanager, save_only, save_only, true);
         await savemanager_show(savemanager);
     }
 

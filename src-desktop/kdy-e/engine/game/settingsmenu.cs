@@ -1208,7 +1208,7 @@ public static class SettingsMenu {
             }
 
             // only allow delete when saving
-            savemanager.ChangeActions(save_only, save_only);
+            savemanager.ChangeActions(save_only, save_only, true);
             savemanager.Show();
         }
 

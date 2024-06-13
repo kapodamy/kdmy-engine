@@ -78,6 +78,7 @@ public class SaveManager {
     private int error_code;
     private bool save_only;
     private bool allow_delete;
+    private bool no_leave_confirm;
     private Drawable drawable_wrapper;
     private VMUInfo[] vmu_array;
     private int vmu_size;
@@ -158,6 +159,7 @@ public class SaveManager {
         this.error_code = error_code < 1 ? 0 : error_code;
         this.save_only = save_only;
         this.allow_delete = false;
+        this.no_leave_confirm = false;
         this.drawable_wrapper = null;
         this.vmu_array = null;
         this.vmu_size = 0;
@@ -338,8 +340,8 @@ public class SaveManager {
                     if (save_or_load_success) break;
                 }
             } else if ((buttons & MainMenu.GAMEPAD_CANCEL).Bool() && !modding.HelperNotifyBack()) {
-                if (this.allow_delete) {
-                    // lauched from settings menu, do not confirm leave
+                if (this.no_leave_confirm) {
+                    // launched from settings menu, do not confirm leave
                     break;
                 }
 
@@ -470,15 +472,25 @@ public class SaveManager {
         return SaveManager.game_withoutsavedata;
     }
 
-    public void ChangeActions(bool save_only, bool allow_delete) {
+    public void ChangeActions(bool save_only, bool allow_delete, bool no_leave_confirm) {
         this.error_code = 0;
         this.save_only = save_only;
         this.allow_delete = allow_delete;
+        this.no_leave_confirm = no_leave_confirm;
 
         this.help_delete.SetVisible(allow_delete);
 
         // trigger all default actions
         this.layout.TriggerAny(null);
+
+        int selected_index = this.menu != null ? this.menu.GetSelectedIndex() : -1;
+
+        if (selected_index >= 0 && selected_index < this.vmu_size) {
+            if (this.vmu_array[selected_index].has_savedata)
+                this.layout.TriggerAny("save-selected");
+            else
+                this.layout.TriggerAny("save-not-selected");
+        }
     }
 
 
