@@ -40,7 +40,7 @@ class WebGL2Context {
             desynchronized: true,
             premultipliedAlpha: false
         });
-        this.draw_dotted = 0;
+        this.draw_dotted = 0.0;
     }
 
 
@@ -120,8 +120,8 @@ class WebGLContextProgramGlyphs {
     /**@type {WebGLUniformLocation}*/u_offsetcolor_mul_or_add;
     /**@type {WebGLUniformLocation}*/u_texture0;
     /**@type {WebGLUniformLocation}*/u_texture1;
-    /**@type {WebGLUniformLocation}*/u_sdf_smoothing;
-    /**@type {WebGLUniformLocation}*/u_sdf_thickness;
+    /**@type {WebGLUniformLocation}*/u_sdf_size;
+    /**@type {WebGLUniformLocation}*/u_sdf_padding;
 
     /**@type {WebGLBuffer}*/buffer_indices;
     /**@type {WebGLBuffer}*/buffer_vertex;
@@ -155,8 +155,8 @@ class WebGLContextProgramGlyphs {
 
         if (SDF_FONT) {
             // sdf specific uniforms
-            this.u_sdf_smoothing = gl.getUniformLocation(program, "u_sdf_smoothing");
-            this.u_sdf_thickness = gl.getUniformLocation(program, "u_sdf_thickness");
+            this.u_sdf_size = gl.getUniformLocation(program, "u_sdf_size");
+            this.u_sdf_padding = gl.getUniformLocation(program, "u_sdf_padding");
         }
 
         // glyphs buffer
@@ -641,12 +641,18 @@ class PSShader {
         //if (!vertex_shader_sourcecode && !fragment_shader_sourcecode) return null;
 
         if (vertex_shader_sourcecode) {
+            // keep the original line numbers
+            vertex_shader_sourcecode = "#line 1\n" + vertex_shader_sourcecode;
+
             vertex_shader_sourcecode = webopengl_patch_shader(vertex_shader_sourcecode, true);
             vertex_shader = webopengl_internal_create_shader(gl, vertex_shader_sourcecode, true, false);
             if (!vertex_shader) return null;
         }
 
         if (fragment_shader_sourcecode) {
+            // keep the original line numbers
+            fragment_shader_sourcecode = "#line 1\n" + fragment_shader_sourcecode;
+
             fragment_shader_sourcecode = webopengl_patch_shader(fragment_shader_sourcecode, false);
             fragment_shader = webopengl_internal_create_shader(gl, fragment_shader_sourcecode, false, false);
             if (!fragment_shader) return null;
@@ -1067,7 +1073,7 @@ function webopengl_draw_texture(/**@type {PVRContext}*/pvrctx, tex, sx, sy, sw, 
     gl.uniform1i(wglc.program_textured.u_darken, wglc.program_textured.darken_enabled ? 1 : 0);
 
     // @ts-ignore
-    if (window.ENABLE_DOTTED) wglc.gl.uniform1i(wglc.program_textured.u_dotted, wglc.draw_dotted);
+    if (window.ENABLE_DOTTED) wglc.gl.uniform1f(wglc.program_textured.u_dotted, wglc.draw_dotted);
 
     // draw the quad (2 triangles, 6 vertices)
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -1130,7 +1136,7 @@ function webopengl_draw_solid(/**@type {PVRContext}*/pvrctx, rgb_color, dx, dy, 
     gl.uniform1i(wglc.program_solid.u_darken, wglc.program_solid.darken_enabled ? 1 : 0);
 
     // @ts-ignore
-    if (window.ENABLE_DOTTED) wglc.gl.uniform1i(wglc.program_solid.u_dotted, wglc.draw_dotted);
+    if (window.ENABLE_DOTTED) wglc.gl.uniform1f(wglc.program_solid.u_dotted, wglc.draw_dotted);
 
     // draw the quad (2 triangles, 6 vertices)
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -1298,7 +1304,7 @@ function webopengl_internal_identity(matrix, stride) {
 }
 
 function webopengl_internal_enable_dotted(/**@type {WebGL2Context}*/wglc, enable) {
-    wglc.draw_dotted = enable ? 1 : 0;
+    wglc.draw_dotted = enable ? 1.0 : 0.0;
 }
 
 function webopengl_set_shader_version(sourcecode) {
@@ -1314,6 +1320,9 @@ async function webopengl_internal_load_shader(shader_prefix, vertexshader_or_fra
     const shader_suffix = vertexshader_or_fragmentshader ? "vertexshader" : "fragmentshader";
     let src = `assets/shaders/${shader_prefix}_${shader_suffix}.glsl`;
     let text = await io_request_file(src, IO_REQUEST_TEXT);
+
+    // keep the original line numbers
+    text = "#line 1\n" + text;
 
     if (shader_prefix != "stock" && text) text = webopengl_set_shader_version(text);
 

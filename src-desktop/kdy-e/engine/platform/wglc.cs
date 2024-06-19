@@ -528,6 +528,9 @@ public class WebGLContext {
         string path = "/assets/shaders/" + shader_prefix + "_" + shader_suffix + ".glsl";
         string text = IO.ReadText(path);
 
+        // keep the original line numbers
+        text = "#line 1\n" + text;
+
         if (shader_prefix != "stock" && StringUtils.IsNotEmpty(text)) text = WebGLContext.SetShaderVersion(text);
 
         return text;
@@ -684,8 +687,8 @@ public class WebGLContextProgramGlyphs {
     internal WebGLUniformLocation u_color_outline;
 
 #if SDF_FONT
-    internal WebGLUniformLocation u_sdf_smoothing;
-    internal WebGLUniformLocation u_sdf_thickness;
+    internal WebGLUniformLocation u_sdf_size;
+    internal WebGLUniformLocation u_sdf_padding;
 #endif
 
     internal WebGLBuffer buffer_indices;
@@ -719,8 +722,8 @@ public class WebGLContextProgramGlyphs {
 
 #if SDF_FONT
         // sdf specific uniforms
-        this.u_sdf_smoothing = gl.getUniformLocation(program, "u_sdf_smoothing");
-        this.u_sdf_thickness = gl.getUniformLocation(program, "u_sdf_thickness");
+        this.u_sdf_size = gl.getUniformLocation(program, "u_sdf_size");
+        this.u_sdf_padding = gl.getUniformLocation(program, "u_sdf_padding");
 #endif
 
         // glyphs buffer
@@ -999,12 +1002,18 @@ public class PSShader {
         //if (!vertex_shader_sourcecode && !fragment_shader_sourcecode) return null;
 
         if (StringUtils.IsNotEmpty(vertex_shader_sourcecode)) {
+            // keep the original line numbers
+            vertex_shader_sourcecode = "#line 1\n" + vertex_shader_sourcecode;
+
             vertex_shader_sourcecode = WebGLContext.InternalPatchShader(vertex_shader_sourcecode, true);
             vertex_shader = wglc.InternalCreateShader(gl, vertex_shader_sourcecode, true, false);
             if (vertex_shader.IsNull) return null;
         }
 
         if (StringUtils.IsNotEmpty(fragment_shader_sourcecode)) {
+            // keep the original line numbers
+            fragment_shader_sourcecode = "#line 1\n" + fragment_shader_sourcecode;
+
             fragment_shader_sourcecode = WebGLContext.InternalPatchShader(fragment_shader_sourcecode, false);
             fragment_shader = wglc.InternalCreateShader(gl, fragment_shader_sourcecode, false, false);
             if (fragment_shader.IsNull) return null;

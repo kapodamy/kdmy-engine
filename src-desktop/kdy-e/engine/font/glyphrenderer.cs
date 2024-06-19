@@ -187,18 +187,18 @@ public static class GlyphRenderer {
         // if the offsetcolor alpha is negative, disable the offsetcolor processing
         // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values
         if (pvrctx.render_offsetcolor[3] < 0) {
-            gl.uniform1i(program_glyphs.u_offsetcolor_enabled, 0);
+            gl.uniform1f(program_glyphs.u_offsetcolor_enabled, 0f);
         } else {
-            gl.uniform1i(program_glyphs.u_offsetcolor_enabled, 1);
+            gl.uniform1f(program_glyphs.u_offsetcolor_enabled, 1f);
             gl.uniform4fv(program_glyphs.u_offsetcolor, pvrctx.render_offsetcolor);
-            gl.uniform1i(program_glyphs.u_offsetcolor_mul_or_add, pvrctx.render_offsetcolor_multiply != PVRFlag.DISABLE ? 1 : 0);
+            gl.uniform1f(program_glyphs.u_offsetcolor_mul_or_add, pvrctx.render_offsetcolor_multiply != PVRFlag.DISABLE ? 1 : 0);
         }
 
         // grayscale textures used by fonttype_draw() or rgba textures used by fontglyph_draw()
-        gl.uniform1i(program_glyphs.u_grayscale, is_gryscl ? 1 : 0);
+        gl.uniform1f(program_glyphs.u_grayscale, is_gryscl ? 1f : 0f);
 
         // used only by fontglyph_draw() function
-        gl.uniform1i(program_glyphs.u_color_by_add, by_add ? 1 : 0);
+        gl.uniform1f(program_glyphs.u_color_by_add, by_add ? 1f : 0f);
 
         // send vertex indices
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, program_glyphs.buffer_indices);
@@ -227,20 +227,13 @@ public static class GlyphRenderer {
     }
 
 #if SDF_FONT
-    public static void SetSDFSmoothing(PVRContext pvrctx, float smoothing) {
+    public static void SetParamsSDF(PVRContext pvrctx, byte size, float padding) {
         WebGL2RenderingContext gl = pvrctx.webopengl.gl;
         WebGLContextProgramGlyphs program_glyphs = pvrctx.webopengl.program_glyphs;
 
         gl.useProgram(program_glyphs.program);
-        gl.uniform1f(program_glyphs.u_sdf_smoothing, smoothing);
-    }
-
-    public static void SetSDFThickness(PVRContext pvrctx, float thickness) {
-        WebGL2RenderingContext gl = pvrctx.webopengl.gl;
-        WebGLContextProgramGlyphs program_glyphs = pvrctx.webopengl.program_glyphs;
-
-        gl.useProgram(program_glyphs.program);
-        gl.uniform1f(program_glyphs.u_sdf_thickness, thickness);
+        gl.uniform1f(program_glyphs.u_sdf_size, size);
+        gl.uniform1f(program_glyphs.u_sdf_padding, padding);
     }
 #endif
 

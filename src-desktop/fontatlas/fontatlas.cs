@@ -264,7 +264,7 @@ L_failed:
 
         chardata.width = glyph->bitmap.width;// glyph->metrics.width >> 6;
         chardata.height = glyph->bitmap.rows;// glyph->metrics.height >> 6;
-        chardata.offset_x = glyph->bitmap_left;
+        chardata.offset_x = glyph->bitmap_left + (glyph->metrics.horiBearingX >> 6);
         chardata.offset_y = font_height - (glyph->metrics.horiBearingY >> 6);
         chardata.advancex = glyph->metrics.horiAdvance >> 6;
         chardata.kernings = null;
@@ -478,7 +478,7 @@ L_build_map:
             obj.texture = (nint)atlas.texture;
             obj.texture_width = (ushort)atlas.width;
             obj.texture_height = (ushort)atlas.height;
-            obj.ascender = (short)(this.face->ascender / 64);
+            obj.ascender = (short)(this.face->ascender >> 6);
 
             //if (codepoints_parsed > 0) Debug.Assert(obj.char_array != null);
 

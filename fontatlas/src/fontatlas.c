@@ -233,7 +233,7 @@ static inline void pick_metrics(FT_GlyphSlot glyph, FontCharData* chardata, int3
 
     *chardata = (FontCharData){
         .codepoint = chardata->codepoint,
-        .offset_x = glyph->bitmap_left,
+        .offset_x = glyph->bitmap_left + (glyph->metrics.horiBearingX >> 6),
         .offset_y = font_height - (glyph->metrics.horiBearingY >> 6),
         .advancex = glyph->metrics.horiAdvance >> 6,
         .width = glyph->bitmap.width, // glyph->metrics.width >> 6,
@@ -450,7 +450,6 @@ FontCharMap* fontatlas_atlas_build(FontAtlas fontatlas, uint8_t font_height, int
 
 #ifndef _arch_dreamcast
         if (sdf_enabled) {
-            // render the glyph and later pick the metrics because can change after rendering ¿but why?
             render_glyph_bitmap(glyph);
         }
 #endif
@@ -510,7 +509,7 @@ L_build_map:
         .texture = atlas.texture,
         .texture_width = atlas.width,
         .texture_height = atlas.height,
-        .ascender = fontatlas->face->ascender / 64,
+        .ascender = (int16_t)(fontatlas->face->ascender >> 6),
         .kernings_array = kernings_array,
     };
 

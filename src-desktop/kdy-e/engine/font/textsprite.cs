@@ -133,11 +133,11 @@ public class TextSprite : IVertex {
             fontparams = {
                 height = size,
                 paragraph_space = 0f,
-                color_by_addition = false,
+                color_by_addition = color_by_addition,
 
                 tint_color = new float[] { 1f, 1f, 1f, 1f },
 
-                border_enable = color_by_addition,
+                border_enable = false,
                 border_size = 0f,
 
                 border_color = new float[] { 0f, 0f, 0f, 1f },

@@ -179,21 +179,21 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
     // if the offsetcolor alpha is negative, disable the offsetcolor processing
     // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values
     if (pvrctx.render_offsetcolor[3] < 0) {
-        gl.uniform1i(program_glyphs.u_offsetcolor_enabled, 0);
+        gl.uniform1f(program_glyphs.u_offsetcolor_enabled, 0.0);
     } else {
-        gl.uniform1i(program_glyphs.u_offsetcolor_enabled, 1);
+        gl.uniform1f(program_glyphs.u_offsetcolor_enabled, 1.0);
         gl.uniform4fv(program_glyphs.u_offsetcolor, pvrctx.render_offsetcolor);
-        gl.uniform1i(program_glyphs.u_offsetcolor_mul_or_add, pvrctx.render_offsetcolor_multiply ? 1 : 0);
+        gl.uniform1f(program_glyphs.u_offsetcolor_mul_or_add, pvrctx.render_offsetcolor_multiply ? 1.0 : 0.0);
     }
 
     // grayscale textures used by fonttype_draw() or rgba textures used by fontglyph_draw()
-    gl.uniform1i(program_glyphs.u_grayscale, is_gryscl ? 1 : 0);
+    gl.uniform1f(program_glyphs.u_grayscale, is_gryscl ? 1.0 : 0.0);
 
     // used only by fontglyph_draw() function
-    gl.uniform1i(program_glyphs.u_color_by_add, by_add ? 1 : 0);
+    gl.uniform1f(program_glyphs.u_color_by_add, by_add ? 1.0 : 0.0);
 
     // @ts-ignore
-    if (window.ENABLE_DOTTED) gl.uniform1i(program_glyphs.u_dotted, pvrctx.webopengl.draw_dotted);
+    if (window.ENABLE_DOTTED) gl.uniform1f(program_glyphs.u_dotted, pvrctx.webopengl.draw_dotted);
 
     // send vertex indices
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, program_glyphs.buffer_indices);
@@ -218,19 +218,12 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
 
-function glyphrenderer_set_sdf_smoothing(pvrctx, smoothing) {
+function glyphrenderer_set_params_sdf(pvrctx, size, padding) {
     const gl = pvrctx.webopengl.gl;
     let program_glyphs = pvrctx.webopengl.program_glyphs;
 
     gl.useProgram(program_glyphs.program);
-    gl.uniform1f(program_glyphs.u_sdf_smoothing, smoothing);
-}
-
-function glyphrenderer_set_sdf_thickness(pvrctx, thickness) {
-    const gl = pvrctx.webopengl.gl;
-    let program_glyphs = pvrctx.webopengl.program_glyphs;
-
-    gl.useProgram(program_glyphs.program);
-    gl.uniform1f(program_glyphs.u_sdf_thickness, thickness);
+    gl.uniform1f(program_glyphs.u_sdf_size, size);
+    gl.uniform1f(program_glyphs.u_sdf_padding, padding);
 }
 

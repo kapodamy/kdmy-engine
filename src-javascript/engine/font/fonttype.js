@@ -6,10 +6,9 @@ const SDF_MIPMAPS = false;
 
 const FONTTYPE_POOL = new Map();
 var FONTTYPE_IDS = 0;
-const FONTTYPE_GLYPHS_HEIGHT = 72;// in the dreamcast use 32px
-const FONTTYPE_GLYPHS_OUTLINE_RATIO = 0.086;// ~6px of outline @ 72px (used in SDF)
-const FONTTYPE_GLYPHS_SMOOTHING_COEFF = 0.245;// used in SDF, idk how its works
-const FONTTYPE_GLYPHS_GAPS = 4;// space between glyph in pixels
+const FONTTYPE_GLYPHS_HEIGHT = 72;// in the dreamcast use 32px, 64px is enough for SDF
+const FONTTYPE_GLYPHS_SDF_SIZE = FONTTYPE_GLYPHS_HEIGHT >> 2;// 25% of FONTTYPE_GLYPHS_HEIGHT
+const FONTTYPE_GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
 const FONTTYPE_FAKE_SPACE = 0.75;// 75% of the height
 
 
@@ -227,27 +226,19 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
     const scale = params.height / FONTTYPE_GLYPHS_HEIGHT;
     const ascender = ((primary ?? secondary).ascender / 2.0) * scale;// FIXME: ¿why does dividing by 2 works?
     const text_end_index = text_index + text_length;
-    let border_padding1 = 0.0, border_padding2 = 0.0;
 
     //console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
     if (SDF_FONT) {
-        // calculate sdf thickness
         if (has_border) {
-            if (params.border_size > 0.0) {
-                let max_border_size = params.height * FONTTYPE_GLYPHS_OUTLINE_RATIO;
-                let border_size = Math.min(params.border_size, max_border_size);
-                let thickness = (1.0 - (border_size / max_border_size)) / 2.0;
-                glyphrenderer_set_sdf_thickness(pvrctx, thickness);
+            // calculate sdf padding
+            let padding;
+            padding = params.border_size / FONTTYPE_GLYPHS_SDF_SIZE;
+            padding /= params.height / FONTTYPE_GLYPHS_HEIGHT;
 
-                /*if (border_size < params.border_size && params.height > 8.0) {
-                    // add some padding
-                    border_padding1 = params.border_size - border_size;
-                    border_padding2 = border_padding1 * 2.0;
-                }*/
-            } else {
-                glyphrenderer_set_sdf_thickness(pvrctx, -1.0);
-            }
+            glyphrenderer_set_params_sdf(pvrctx, FONTTYPE_GLYPHS_SDF_SIZE, padding);
+        } else {
+            glyphrenderer_set_params_sdf(pvrctx, FONTTYPE_GLYPHS_SDF_SIZE, -1.0);
         }
     }
 
@@ -286,11 +277,6 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
     if (has_border) total_glyphs *= 2;
     let added = 0;
     let maximum = glyphrenderer_prepare(total_glyphs, has_border);
-
-    if (SDF_FONT) {
-        let smoothing = fonttype_internal_calc_smoothing(pvrctx, params.height);
-        glyphrenderer_set_sdf_smoothing(pvrctx, smoothing);
-    }
 
     // add glyphs to the vertex buffer
     index = text_index;
@@ -362,10 +348,10 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
             if (has_border) {
                 let sdx, sdy, sdw, sdh;
                 if (SDF_FONT) {
-                    sdx = dx - border_padding1;
-                    sdy = dy - border_padding1;
-                    sdw = dw + border_padding2;
-                    sdh = dh + border_padding2;
+                    sdx = dx;
+                    sdy = dy;
+                    sdw = dw;
+                    sdh = dh;
                 } else {
                     // compute border location and outline size
                     sdx = dx - params.border_size;
@@ -601,35 +587,5 @@ function fonttype_internal_get_fontchardata2(lookup_table, fontcharmap, codepoin
         }
     }
     return fonttype_internal_get_fontchardata(fontcharmap, codepoint);
-}
-
-function fonttype_internal_calc_smoothing(pvrctx, height) {
-    const matrix = pvrctx.current_matrix;
-
-    if (SDF_SMOOTHNESS_BY_MATRIX_SCALE_DECOMPOSITION) {
-        let x = matrix[15] * Math.sqrt(
-            (matrix[0] * matrix[0]) +
-            (matrix[1] * matrix[1]) +
-            (matrix[2] * matrix[2])
-        );
-        let y = matrix[15] * Math.sqrt(
-            (matrix[4] * matrix[4]) +
-            (matrix[5] * matrix[5]) +
-            (matrix[6] * matrix[6])
-        );
-
-        let scale = (Math.abs((x + y) / 2.0) * height) / FONTTYPE_GLYPHS_HEIGHT;
-        let smoothing = FONTTYPE_GLYPHS_SMOOTHING_COEFF / (FONTTYPE_GLYPHS_HEIGHT * scale);
-
-        return smoothing;
-    } else {
-        let coord = [1.0, 1.0];
-        sh4matrix_multiply_point(matrix, coord);
-
-        let scale = (Math.abs((coord[0] + coord[1]) / 2.0) * height) / FONTTYPE_GLYPHS_HEIGHT;
-        let smoothness = FONTTYPE_GLYPHS_SMOOTHING_COEFF / (FONTTYPE_GLYPHS_HEIGHT * scale);
-
-        return smoothness;
-    }
 }
 

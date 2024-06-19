@@ -14,8 +14,7 @@ public class FontType : IFont {
     private static int IDS = 0;
 
     private const byte GLYPHS_HEIGHT = 72;// in the dreamcast use 32px, 64px is enough for SDF
-    private const float GLYPHS_OUTLINE_RATIO = 0.086f;// ~6px of outline @ 72px (used in SDF)
-    private const float GLYPHS_SMOOTHING_COEFF = 0.245f;// used in SDF, idk how its works
+    private const byte GLYPHS_SDF_SIZE = GLYPHS_HEIGHT >> 2;// 25% of FONTTYPE_GLYPHS_HEIGHT
     private const byte GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
     private const float FAKE_SPACE = 0.75f;// 75% of the height
 
@@ -251,27 +250,19 @@ public class FontType : IFont {
         float scale = @params.height / FontType.GLYPHS_HEIGHT;
         float ascender = ((primary ?? secondary).ascender / 2f) * scale;// FIXME: ¿why does dividing by 2 works?
         int text_end_index = text_index + text_length;
-        float border_padding1 = 0f, border_padding2 = 0f;
 
         //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
 #if SDF_FONT
-        // calculate sdf thickness
         if (has_border) {
-            if (@params.border_size > 0f) {
-                float max_border_size = @params.height * FontType.GLYPHS_OUTLINE_RATIO;
-                float border_size = Math.Min(@params.border_size, max_border_size);
-                float thickness = (1f - (border_size / max_border_size)) / 2f;
-                GlyphRenderer.SetSDFThickness(pvrctx, thickness);
+            // calculate sdf padding
+            float padding;
+            padding = @params.border_size / FontType.GLYPHS_SDF_SIZE;
+            padding /= @params.height / FontType.GLYPHS_HEIGHT;
 
-                /*if (border_size < @params.border_size && height > 8f) {
-                    // add some padding
-                    border_padding1 = @params.border_size - border_size;
-                    border_padding2 = border_padding1 * 2f;
-                }*/
-            } else {
-                GlyphRenderer.SetSDFThickness(pvrctx, -1f);
-            }
+            GlyphRenderer.SetParamsSDF(pvrctx, FontType.GLYPHS_SDF_SIZE, padding);
+        } else {
+            GlyphRenderer.SetParamsSDF(pvrctx, FontType.GLYPHS_SDF_SIZE, -1f);
         }
 #endif
 
@@ -310,11 +301,6 @@ public class FontType : IFont {
         if (has_border) total_glyphs *= 2;
         int added = 0;
         int maximum = GlyphRenderer.Prepare(total_glyphs, has_border);
-
-#if SDF_FONT
-        float smoothing = FontType.InternalCalcSmoothing(pvrctx, @params.height);
-        GlyphRenderer.SetSDFSmoothing(pvrctx, smoothing);
-#endif
 
         // add glyphs to the vertex buffer
         index = text_index;
@@ -386,10 +372,10 @@ public class FontType : IFont {
                 if (has_border) {
                     float sdx, sdy, sdw, sdh;
 #if SDF_FONT
-                    sdx = dx - border_padding1;
-                    sdy = dy - border_padding1;
-                    sdw = dw + border_padding2;
-                    sdh = dh + border_padding2;
+                    sdx = dx;
+                    sdy = dy;
+                    sdw = dw;
+                    sdh = dh;
 #else
                     // compute border location and outline size
                     sdx = dx - this.border_size;
@@ -604,37 +590,6 @@ public class FontType : IFont {
             }
         }
         return InternalGetFontchardata(fontcharmap, codepoint);
-    }
-
-    private static float InternalCalcSmoothing(PVRContext pvrctx, float height) {
-        SIMDMatrix matrix = pvrctx.CurrentMatrix;
-
-#if SDF_SMOOTHNESS_BY_MATRIX_SCALE_DECOMPOSITION
-        double x = matrix[15] * Math.Sqrt(
-            (matrix[0] * matrix[0]) +
-            (matrix[1] * matrix[1]) +
-            (matrix[2] * matrix[2])
-        );
-        double y = matrix[15] * Math.Sqrt(
-            (matrix[4] * matrix[4]) +
-            (matrix[5] * matrix[5]) +
-            (matrix[6] * matrix[6])
-        );
-
-        double scale = (Math.Abs((x + y) / 2.0) * height) / FontType.GLYPHS_HEIGHT;
-        double smoothness = FontType.GLYPHS_SMOOTHING_COEFF / (FontType.GLYPHS_HEIGHT * scale);
-
-        return (float)smoothness;
-
-#else
-        float x = 1f, y = 1f;
-        matrix.MultiplyPoint(ref x, ref y);
-
-        float scale = (MathF.Abs((x + y) / 2f) * height) / FontType.GLYPHS_HEIGHT;
-        float smoothness = FontType.GLYPHS_SMOOTHING_COEFF / (FontType.GLYPHS_HEIGHT * scale);
-
-        return smoothness;
-#endif
     }
 
 }

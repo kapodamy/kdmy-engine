@@ -26,52 +26,123 @@ const float MOD_B = MOD_A / 2.0;
 #endif
 
 #ifdef SDF_FONT
-uniform float u_sdf_smoothing;
-uniform float u_sdf_thickness;
+uniform float u_sdf_size;// this is the 25% of FONTTYPE_GLYPHS_HEIGHT
+uniform float u_sdf_padding;// padding percent
 
-const float THICKNESS = 0.20;
+float calculate_sdf_pixel_alpha(float lumma, vec2 tex_size) {
+    //
+    // SDF antialiasing, credits to:
+    //      drewcassidy
+    //      mortoray
+    //
+
+    float dist = (0.0 - lumma) * u_sdf_size;
+    vec2 duv = fwidth(v_texcoord); 
+    float dtex = length(duv * tex_size); 
+    float pixelDist = (dist * 2.0) / dtex;
+
+    return clamp(0.5 - pixelDist, 0.0, 1.0);
+}
+
+vec4 calculate_sdf() {
+    float luminance;
+    vec2 tex_size;
+    vec4 color;
+
+    if(bool(v_texalt)) {
+        luminance = texture(u_texture1, v_texcoord).r;
+        tex_size = textureSize(u_texture1, 0);
+    } else {
+        luminance = texture(u_texture0, v_texcoord).r;
+        tex_size = textureSize(u_texture0, 0);
+    }
+
+    if(luminance <= 0.0) {
+        // avoid tranparent pixels become visible with outlines
+        return vec4(0.0);
+    }
+
+    // change range from [0.0, 1.0] to [-0.5, 0.5]
+    float lumma = luminance - 0.5;
+
+    float alpha = calculate_sdf_pixel_alpha(lumma, tex_size);
+
+    if(bool(v_coloralt)) {
+        // u_sdf_padding is calculated as (border_size / FONTTYPE_GLYPHS_HEIGHT)
+        float lumma_outline = luminance - mix(0.5, 0.0, u_sdf_padding);
+
+        float alpha_outline = calculate_sdf_pixel_alpha(lumma_outline, tex_size);
+
+        if(alpha != 0.0) {
+            // do not draw the outline behind the glyph
+            return vec4(0.0);
+        }
+
+        alpha = alpha_outline;
+        color = u_color_outline;
+    } else {
+        color = u_color;
+    }
+
+    // apply alpha
+    color.a *= alpha;
+
+    return color;
+}
 #endif
 
-void main() {
-    bool is_outline = v_coloralt != 0.0;
-    vec4 source_color = is_outline ? u_color_outline : u_color;
-    vec4 texture_color;
+vec4 calculate_lumma() {
+    float luminance;
     vec4 color;
 
     if(bool(v_texalt))
-        texture_color = texture(u_texture1, v_texcoord);
+        luminance = texture(u_texture1, v_texcoord).r;
     else
-        texture_color = texture(u_texture0, v_texcoord);
+        luminance = texture(u_texture0, v_texcoord).r;
+
+    if(bool(v_coloralt))
+        color = vec4(u_color_outline.rgb, u_color_outline.a * luminance);
+    else
+        color = vec4(u_color.rgb, u_color.a * luminance);
+
+    return color;
+}
+
+vec4 calculate_rgb() {
+    vec4 color;
+    vec4 tint;
+
+    if(bool(v_texalt))
+        color = texture(u_texture1, v_texcoord);
+    else
+        color = texture(u_texture0, v_texcoord);
+
+    if(bool(v_coloralt))
+        tint = u_color_outline;
+    else
+        tint = u_color;
+
+    if(u_color_by_add) {
+        color.rgb += tint.rgb;
+        color.a *= tint.a;
+    } else {
+        color *= tint;
+    }
+
+    return color;
+}
+
+void main() {
+    vec4 color;
 
     if(u_grayscale) {
-        float luminance = texture_color.r;
-
-        if(luminance <= 0.0) {
-            discard;
-            return;
-        }
-
 #ifdef SDF_FONT
-        float distance = smoothstep(0.5 - u_sdf_smoothing, 0.5 + u_sdf_smoothing, luminance);
-
-        if(is_outline && u_sdf_thickness >= 0.0) {
-            float alpha = smoothstep(u_sdf_thickness - u_sdf_smoothing, u_sdf_thickness + u_sdf_smoothing, luminance);
-            color = vec4(u_color_outline.rgb, u_color_outline.a * alpha * (1.0 - distance));
-        } else {
-            color = vec4(source_color.rgb, source_color.a * distance);
-        }
+        color = calculate_sdf();
 #else
-        color = vec4(source_color.rgb, source_color.a * distance);
+        color = calculate_lumma();
 #endif
     } else {
-        if(u_color_by_add) {
-            color.r = texture_color.r + source_color.r;
-            color.g = texture_color.g + source_color.g;
-            color.b = texture_color.b + source_color.b;
-            color.a = texture_color.a * source_color.a;// do not add to keep transparent pixels
-        } else {
-            color = texture_color * source_color;
-        }
+        color = calculate_rgb();
     }
 
     if(u_offsetcolor_enabled) {
