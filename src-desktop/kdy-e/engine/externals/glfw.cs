@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text;
-using Engine.Game;
 
 namespace Engine.Externals.GLFW;
 
 internal static class Glfw {
-    private const string GLFW = "glfw";
+    private const string GLFW = "glfw3";
 
     public const int JOYSTICK_LAST = 15;
     public const int CLIENT_API_OPENGL = 0x30001;
