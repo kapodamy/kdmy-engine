@@ -1,5 +1,3 @@
-#define SDF_FONT
-
 out vec4 FragColor;
 
 in vec2 v_texcoord;
@@ -18,18 +16,11 @@ uniform bool u_offsetcolor_mul_or_add;
 uniform bool u_offsetcolor_enabled;
 uniform vec4 u_offsetcolor;
 
-#ifdef DOTTED
-uniform bool u_dotted;
-
-const float MOD_A = 0.0016;
-const float MOD_B = MOD_A / 2.0;
-#endif
-
 #ifdef SDF_FONT
 uniform float u_sdf_size;// this is the 25% of FONTTYPE_GLYPHS_HEIGHT
 uniform float u_sdf_padding;// padding percent
 
-float calculate_sdf_pixel_alpha(float lumma, vec2 tex_size) {
+float calculate_sdf_pixel_alpha(float lumma, ivec2 tex_size) {
     //
     // SDF antialiasing, credits to:
     //      drewcassidy
@@ -37,8 +28,8 @@ float calculate_sdf_pixel_alpha(float lumma, vec2 tex_size) {
     //
 
     float dist = (0.0 - lumma) * u_sdf_size;
-    vec2 duv = fwidth(v_texcoord); 
-    float dtex = length(duv * tex_size); 
+    vec2 duv = fwidth(v_texcoord);
+    float dtex = length(duv * vec2(tex_size));
     float pixelDist = (dist * 2.0) / dtex;
 
     return clamp(0.5 - pixelDist, 0.0, 1.0);
@@ -46,7 +37,7 @@ float calculate_sdf_pixel_alpha(float lumma, vec2 tex_size) {
 
 vec4 calculate_sdf() {
     float luminance;
-    vec2 tex_size;
+    ivec2 tex_size;
     vec4 color;
 
     if(bool(v_texalt)) {
@@ -152,14 +143,10 @@ void main() {
             color += u_offsetcolor;
     }
 
-    if(color.a <= 0.0)
+    if(color.a <= 0.0) {
         discard;
-
-#ifdef DOTTED
-    if(u_dotted && mod(v_texcoord.x, MOD_A) < MOD_B && mod(v_texcoord.y, MOD_A) < MOD_B) {
-        color.a *= 0.25;
+        return;
     }
-#endif
 
     FragColor = color;
 }

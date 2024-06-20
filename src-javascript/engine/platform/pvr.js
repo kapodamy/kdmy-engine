@@ -300,6 +300,7 @@ function pvr_update_devicePixelRatio() {
         canvas.style.height = '';
     }
 
+    pvr_context.screen_stride = pvr_context.screen_width;
     pvr_context.resolution_changes++;
 }
 

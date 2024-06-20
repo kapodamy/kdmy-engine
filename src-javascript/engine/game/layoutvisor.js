@@ -57,6 +57,7 @@ var layoutvisor_autouicosmetics = null;
 var layoutvisor_itemvisiblecheckbox = null;
 var layoutvisor_tempdatalist = null;
 var layoutvisor_tempdatalistadded = null;
+var layoutvisor_dotted_psshader = null;
 
 
 async function main_layout_visor() {
@@ -90,6 +91,21 @@ async function main_layout_visor() {
     layoutvisor_streakmodelholder = await modelholder_init("/assets/common/font/numbers");
     layoutvisor_uifont = await fontholder_init("/assets/common/font/vcr.ttf", -1);
     layoutvisor_autouicosmetics = autouicosmetics_init();
+
+    layoutvisor_dotted_psshader = PSShader.BuildFromSource(pvr_context, null,
+        `#pragma header
+
+uniform int u_dotted_mask;
+
+void main() {
+    ivec2 dotted_coords = ivec2(u_kdy_texsize.xy * TexCoord);
+
+    if(bool((dotted_coords.x ^ dotted_coords.y) & u_dotted_mask))
+        FragColor = vec4(0.0);
+    else
+        FragColor = texture(Texture, TexCoord);
+}
+`);
 
     while (1) {
         let elapsed = await pvrctx_wait_ready();
@@ -970,8 +986,13 @@ function layoutvisor_draw_hook(vertex, /**@type {PVRContext}*/pvrctx) {
     if (vertex != null && layoutvisor_hookedvertex == vertex) {
         let internal_placeholder = vertex.layoutvisor == layoutvisor_symbol;
 
-        webopengl_internal_enable_dotted(pvrctx.webopengl, true);
+        layoutvisor_dotted_psshader.SetUniform1I(
+            "u_dotted_mask",
+            layoutvisor_hookedfndrawname == "textsprite_draw" ? 1 : 2
+        );
+
         pvr_context_save(pvrctx);
+        pvr_context_add_shader(pvrctx, layoutvisor_dotted_psshader);
 
         if (internal_placeholder && (vertex.modifier.width < 1 || vertex.modifier.height < 1)) {
             let x = vertex.modifier.x;
@@ -988,7 +1009,6 @@ function layoutvisor_draw_hook(vertex, /**@type {PVRContext}*/pvrctx) {
 
         layoutvisor_hookedfndraw(vertex, pvrctx);
         pvr_context_restore(pvrctx);
-        webopengl_internal_enable_dotted(pvrctx.webopengl, false);
     } else {
         layoutvisor_hookedfndraw(vertex, pvrctx);
     }

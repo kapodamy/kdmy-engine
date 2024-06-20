@@ -21,8 +21,6 @@ class WebGL2Context {
 
     /**@type {WebGLBuffer}*/position_buffer;
 
-    /**@type {number}*/ draw_dotted;
-
     /**@type {WebGLShader}*/stock_shadervertex;
     /**@type {WebGLShader}*/stock_shaderfragment;
 
@@ -40,7 +38,6 @@ class WebGL2Context {
             desynchronized: true,
             premultipliedAlpha: false
         });
-        this.draw_dotted = 0.0;
     }
 
 
@@ -62,8 +59,6 @@ class WebGLContextProgram {
     /**@type {WebGLUniformLocation}*/u_offsetcolor_mul_or_add;
     /**@type {WebGLUniformLocation}*/u_offsetcolor_enabled;
     /**@type {WebGLUniformLocation}*/u_offsetcolor;
-    /**@type {WebGLUniformLocation}*/u_dotted;
-
     /**@type {WebGLUniformLocation}*/u_darken;
 
     /**@type {boolean}*/darken_enabled;
@@ -89,7 +84,6 @@ class WebGLContextProgram {
         this.u_offsetcolor = gl.getUniformLocation(program, "u_offsetcolor");
         this.u_vertex_color = gl.getUniformLocation(program, "u_vertex_color");
         this.u_darken = gl.getUniformLocation(program, "u_darken");
-        this.u_dotted = gl.getUniformLocation(program, "u_dotted");
 
         this.darken_enabled = false;
     }
@@ -151,7 +145,6 @@ class WebGLContextProgramGlyphs {
         this.u_offsetcolor_mul_or_add = gl.getUniformLocation(program, "u_offsetcolor_mul_or_add");
         this.u_texture0 = gl.getUniformLocation(program, "u_texture0");
         this.u_texture1 = gl.getUniformLocation(program, "u_texture1");
-        this.u_dotted = gl.getUniformLocation(program, "u_dotted");
 
         if (SDF_FONT) {
             // sdf specific uniforms
@@ -285,6 +278,8 @@ class PSShader {
         // clear error
         gl.getError();
 
+        gl.useProgram(this.program);
+
         switch (components) {
             case 1:
                 if (size < 1) return -2;
@@ -344,6 +339,8 @@ class PSShader {
 
         // clear error
         gl.getError();
+
+        gl.useProgram(this.program);
 
         switch (components) {
             case 1:
@@ -405,6 +402,8 @@ class PSShader {
         // clear error
         gl.getError();
 
+        gl.useProgram(this.program);
+
         switch (components) {
             case 2:
                 if (size < 4) return -2;
@@ -447,6 +446,8 @@ class PSShader {
 
         // ignore any unchecked error
         gl.getError();
+
+        gl.useProgram(this.program);
 
         const buffer = PSShader.#buffer_floats;
         switch (type) {
@@ -562,6 +563,8 @@ class PSShader {
         // forget last error
         gl.getError();
 
+        gl.useProgram(this.program);
+
         gl.uniform1i(location, value);
         return gl.getError() == gl.NONE ? true : false;
     }
@@ -574,6 +577,8 @@ class PSShader {
 
         // forget last error
         gl.getError();
+
+        gl.useProgram(this.program);
 
         gl.uniform1f(location, value);
         return gl.getError() == gl.NONE ? true : false;
@@ -1072,9 +1077,6 @@ function webopengl_draw_texture(/**@type {PVRContext}*/pvrctx, tex, sx, sy, sw, 
     // enable/disable rgb color components be multiplied by the render alpha
     gl.uniform1i(wglc.program_textured.u_darken, wglc.program_textured.darken_enabled ? 1 : 0);
 
-    // @ts-ignore
-    if (window.ENABLE_DOTTED) wglc.gl.uniform1f(wglc.program_textured.u_dotted, wglc.draw_dotted);
-
     // draw the quad (2 triangles, 6 vertices)
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
@@ -1134,9 +1136,6 @@ function webopengl_draw_solid(/**@type {PVRContext}*/pvrctx, rgb_color, dx, dy, 
 
     // enable/disable rgb color components be multiplied by the render alpha
     gl.uniform1i(wglc.program_solid.u_darken, wglc.program_solid.darken_enabled ? 1 : 0);
-
-    // @ts-ignore
-    if (window.ENABLE_DOTTED) wglc.gl.uniform1f(wglc.program_solid.u_dotted, wglc.draw_dotted);
 
     // draw the quad (2 triangles, 6 vertices)
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -1303,14 +1302,9 @@ function webopengl_internal_identity(matrix, stride) {
 
 }
 
-function webopengl_internal_enable_dotted(/**@type {WebGL2Context}*/wglc, enable) {
-    wglc.draw_dotted = enable ? 1.0 : 0.0;
-}
-
 function webopengl_set_shader_version(sourcecode) {
-    if (window["ENABLE_DOTTED"]) {
-        const DOTTED = "#define DOTTED\n";
-        sourcecode = DOTTED + sourcecode;
+    if (SDF_FONT) {
+        sourcecode = "#define SDF_FONT\n" + sourcecode;
     }
     return "#version 300 es\nprecision highp float;\n\n" + sourcecode;
 
@@ -1359,7 +1353,7 @@ void main() { mainImage(FragColor, TexCoord); }
     sourcecode = webopengl_set_shader_version(sourcecode);
 
     if (is_vertex_shader) {
-        sourcecode = sourcecode.replace(rx_header, `${header_vertex}\n\n${common}`);
+        sourcecode = sourcecode.replace(rx_header, `${header_vertex}\n`);
     } else {
         sourcecode = sourcecode.replace(rx_header, `${header_fragment}\n\n${common}`);
         sourcecode = sourcecode.replace(rx_shadertoy, shadertoy_stubs);

@@ -520,6 +520,10 @@ public class WebGLContext {
     }
 
     private static string SetShaderVersion(string sourcecode) {
+#if SDF_FONT
+        sourcecode = "#define SDF_FONT\n" + sourcecode;
+#endif
+
         return "#version 330 core\nprecision highp float;\n\n" + sourcecode;
     }
 
@@ -564,7 +568,7 @@ void main() { mainImage(FragColor, TexCoord); }
         sourcecode = WebGLContext.SetShaderVersion(sourcecode);
 
         if (is_vertex_shader) {
-            sourcecode = rx_header.Replace(sourcecode, $"{header_vertex}\n\n{common}");
+            sourcecode = rx_header.Replace(sourcecode, $"{header_vertex}\n");
         } else {
             sourcecode = rx_header.Replace(sourcecode, $"{header_fragment}\n\n{common}");
             sourcecode = rx_shadertoy.Replace(sourcecode, shadertoy_stubs);
