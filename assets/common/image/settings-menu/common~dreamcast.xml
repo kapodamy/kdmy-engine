@@ -28,8 +28,8 @@
 	<AttachValue name="menu_isVertical" type="boolean"  value="true" />
     <AttachValue name="menu_fontSize" type="float"  value="34" />
     <AttachValue name="menu_itemGap" type="float"  value="38" />
-    <AttachValue name="menu_fontBorderSize" type="float"  value="4" />
-	<Placeholder name="menu" x="75" y="180" z="2" width="817" height="480" />
+    <AttachValue name="menu_fontBorderSize" type="float"  value="6" />
+	<Placeholder name="menu" x="75" y="180" z="2" width="817" height="440" />
 	
 	<AttachValue name="menu-selector_isVertical" type="boolean"  value="false" />
 	<AttachValue name="menu-selector_fontSize" type="float"  value="28" />
