@@ -12,6 +12,10 @@ class mutex {
 
     public const int TYPE_NORMAL = 1;
 
+    public static mutex_t INITIALIZER() {
+        return new mutex_t() { _mutex = new Mutex() };
+    }
+
     public static int Init(out mutex_t m, int mtype) {
         if (mtype != TYPE_NORMAL) {
             m = null;

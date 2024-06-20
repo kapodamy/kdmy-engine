@@ -1367,3 +1367,8 @@ function mutex_lock(m) {
 function mutex_unlock(m) {
     return 0;
 }
+
+function MUTEX_INITIALIZER() {
+    // STUB
+    return 0;
+}

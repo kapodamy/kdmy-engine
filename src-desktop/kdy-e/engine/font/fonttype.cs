@@ -5,19 +5,20 @@ using Engine.Externals.FontAtlasInterop;
 using Engine.Image;
 using Engine.Platform;
 using Engine.Utils;
+using KallistiOS.MUTEX;
 
 namespace Engine.Font;
 
 public class FontType : IFont {
-
-    private static Map<FontType> POOL = new Map<FontType>();
-    private static int IDS = 0;
 
     private const byte GLYPHS_HEIGHT = 72;// in the dreamcast use 32px, 64px is enough for SDF
     private const byte GLYPHS_SDF_SIZE = GLYPHS_HEIGHT >> 2;// 25% of FONTTYPE_GLYPHS_HEIGHT
     private const byte GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
     private const float FAKE_SPACE = 0.75f;// 75% of the height
 
+    private static Map<FontType> POOL = new Map<FontType>();
+    private static int IDS = 0;
+    private static mutex_t fontatlas_mutex = mutex.INITIALIZER();
 
     private FontType() { }
 
@@ -34,7 +35,6 @@ public class FontType : IFont {
     private byte[] lookup_table;
 
 
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public static FontType Init(string src) {
         string full_path = FS.GetFullPathAndOverride(src);
 
@@ -496,20 +496,25 @@ public class FontType : IFont {
         byte[] font = FS.ReadArrayBuffer(src);
         if (font == null) return false;
 
+        mutex.Lock(FontType.fontatlas_mutex);
+
         // Important: keep the font data allocated, required for FreeType library
         this.font = font;
         this.fontatlas = FontAtlas.Init(font, font.Length);
 
+        mutex.Unlock(FontType.fontatlas_mutex);
+
         return this.fontatlas == null;
     }
 
-    [MethodImpl(MethodImplOptions.Synchronized)]
     private FontCharMap InternalRetrieveFontcharmap(uint[] characters_map) {
         FontCharMap fontcharmap = null;
 
 #if SDF_FONT
         FontAtlas.EnableSDF(true);
 #endif
+
+        mutex.Lock(FontType.fontatlas_mutex);
 
         if (characters_map != null) {
             fontcharmap = this.fontatlas.AtlasBuild(
@@ -520,6 +525,8 @@ public class FontType : IFont {
                 FontType.GLYPHS_HEIGHT, FontType.GLYPHS_GAPS
             );
         }
+
+        mutex.Unlock(FontType.fontatlas_mutex);
 
         return fontcharmap;
     }

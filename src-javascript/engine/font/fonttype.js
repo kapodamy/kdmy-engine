@@ -1,15 +1,17 @@
 "use strict";
 
 const SDF_FONT = true;
-const SDF_SMOOTHNESS_BY_MATRIX_SCALE_DECOMPOSITION = false;
 const SDF_MIPMAPS = false;
 
-const FONTTYPE_POOL = new Map();
-var FONTTYPE_IDS = 0;
 const FONTTYPE_GLYPHS_HEIGHT = 72;// in the dreamcast use 32px, 64px is enough for SDF
 const FONTTYPE_GLYPHS_SDF_SIZE = FONTTYPE_GLYPHS_HEIGHT >> 2;// 25% of FONTTYPE_GLYPHS_HEIGHT
 const FONTTYPE_GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
 const FONTTYPE_FAKE_SPACE = 0.75;// 75% of the height
+
+
+var FONTTYPE_POOL = new Map();
+var FONTTYPE_IDS = 0;
+var fonttype_fontatlas_mutex = MUTEX_INITIALIZER();
 
 
 async function fonttype_init(src) {
@@ -474,17 +476,25 @@ async function fonttype_internal_init_freetype(fonttype, src) {
     let font = await fs_readarraybuffer(src);
     if (!font) return 0;
 
-    if (SDF_FONT) fontatlas_enable_sdf(true);
+    if (SDF_FONT) {
+        fontatlas_enable_sdf(true);
+    }
+
+    mutex_lock(fonttype_fontatlas_mutex);
 
     // Important: keep the font data allocated, required for FreeType library
     fonttype.font = font;
     fonttype.fontatlas = fontatlas_init(font, font.byteLength);
+
+    mutex_unlock(fonttype_fontatlas_mutex);
 
     return !fonttype.fontatlas;
 }
 
 function fonttype_internal_retrieve_fontcharmap(fonttype, characters_map) {
     let fontcharmap = null;
+
+    mutex_lock(fonttype_fontatlas_mutex);
 
     if (characters_map) {
         fontcharmap = fontatlas_atlas_build(
@@ -495,6 +505,8 @@ function fonttype_internal_retrieve_fontcharmap(fonttype, characters_map) {
             fonttype.fontatlas, FONTTYPE_GLYPHS_HEIGHT, FONTTYPE_GLYPHS_GAPS
         );
     }
+
+    mutex_unlock(fonttype_fontatlas_mutex);
 
     return fontcharmap;
 }

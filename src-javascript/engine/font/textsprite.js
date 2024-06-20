@@ -9,7 +9,7 @@ const TEXTSPRITE_POOL = new Map();
 var TEXTSPRITE_IDS = 0;
 
 
-function textsprite_init(font, font_is_truetype, size, rbg8_color, color_by_addition) {  
+function textsprite_init(font, font_is_truetype, color_by_addition, size, rbg8_color) {  
     let textsprite = {
         font,
 
