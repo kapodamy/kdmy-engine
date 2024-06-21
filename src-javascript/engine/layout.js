@@ -2231,8 +2231,6 @@ async function layout_parse_sprite(unparsed_sprite, layout_context, group_id) {
         atlas = null;
     }
 
-    atlas_texture_path = undefined;
-
     if (texture_filename || atlas_texture_path) {
         let src = texture_filename ?? atlas_texture_path;
         let texture = await layout_helper_get_resource(layout_context.resource_pool, src, 1);
@@ -2247,6 +2245,8 @@ async function layout_parse_sprite(unparsed_sprite, layout_context, group_id) {
         sprite_set_vertex_color(sprite, rgba[0], rgba[1], rgba[2]);
         if (!Number.isNaN(rgba[3])) sprite_set_alpha(sprite, rgba[3]);
     }
+
+    atlas_texture_path = undefined;
 
     let item = {
         type: VERTEX_SPRITE,

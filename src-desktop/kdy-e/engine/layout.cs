@@ -2303,8 +2303,6 @@ public class Layout : IDraw, IAnimate {
             atlas = null;
         }
 
-        //free(atlas_texture_path);
-
         if (StringUtils.IsNotEmpty(texture_filename) || StringUtils.IsNotEmpty(atlas_texture_path)) {
             string src = texture_filename ?? atlas_texture_path;
             Texture texture = (Texture)Layout.HelperGetResource(layout_context.resource_pool, src, true);
@@ -2319,6 +2317,8 @@ public class Layout : IDraw, IAnimate {
             sprite.SetVertexColor(rgba[0], rgba[1], rgba[2]);
             if (!Single.IsNaN(rgba[3])) sprite.SetAlpha(rgba[3]);
         }
+
+        //free(atlas_texture_path);
 
         Item vertex = new Item() {
             type = PVRContextVertex.SPRITE,

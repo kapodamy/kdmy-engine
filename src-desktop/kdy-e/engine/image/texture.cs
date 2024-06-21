@@ -177,7 +177,7 @@ public class Texture {
     public static Texture GetFromGlobalPool(string src) {
         Texture texture = null;
         if (src != null) {
-            string filename = FS.GetFullPath(src);
+            string filename = FS.GetFullPathAndOverride(src);
             foreach (Texture loaded_texture in TEXTURE_POOL) {
                 if (loaded_texture.src_filename == filename) {
                     texture = loaded_texture;

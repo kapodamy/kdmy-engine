@@ -28,7 +28,7 @@ async function texture_init_deferred(src, deffered) {
     let texture = texture_init_from_raw(tex.data, tex.size, false, tex.data.width, tex.data.height, 0, 0);
 
     // remember the filename to avoid duplicated textures
-    texture.src_filename = fs_get_full_path(src);
+    texture.src_filename = await fs_get_full_path_and_override(src);
 
     // original size if was readed from an standard image file (png, jpg, bmp)
     texture.original_width = tex.original_width;
