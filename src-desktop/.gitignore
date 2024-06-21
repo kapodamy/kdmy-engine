@@ -1,10 +1,6 @@
-# ahora que arme un respitorio git ya no es necesario
 **/.vshistory/
-
 /.vs/
 /obj/
 /*/bin/
 /*/obj/
-
-# Aqui esta la libreria "Newtonsoft.Json" (https://www.nuget.org/packages/Newtonsoft.Json)
-/packages/
+/kdy-e/kdy-e.csproj.user

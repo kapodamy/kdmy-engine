@@ -12,9 +12,6 @@
 /luaworkspace/node_modules/
 /luaworkspace/package-lock.json
 
-/luascript/.vscode/*.log
-/luascript/output/
-
 /sndbridge/.vscode/*.log
 /sndbridge/output/
 
@@ -23,6 +20,5 @@
 !/expansions/example-expansion/
 
 Thumbs.db
-/src-desktop/kdy-e/kdy-e.csproj.user
 
 /work-in-progress/
