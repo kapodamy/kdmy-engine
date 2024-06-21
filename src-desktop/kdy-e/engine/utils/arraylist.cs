@@ -27,7 +27,7 @@ public class ArrayList<T> {
         //free(arraylist);
     }
 
-    public void Destroy2(out int size_ptr, ref T[] array_ptr) {
+    public void Destroy2(out int size_ptr, out T[] array_ptr) {
         size_ptr = this.size;
 
         if (this.size < 1) {

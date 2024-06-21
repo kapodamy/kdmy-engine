@@ -6,9 +6,10 @@ using Engine.Utils;
 namespace Engine.Platform;
 
 public static class Expansions {
+    public const string FOLDER_NAME = "expansions";
     public const string PATH = "/expansions";
     private const string SYMBOLIC_PATH = "/~expansions/";
-    private const string FUNKIN_EXPANSION_NAME = "funkin";
+    public const string FUNKIN_EXPANSION_NAME = "funkin";
     private const string FUNKIN_EXPANSION_PATH = SYMBOLIC_PATH + FUNKIN_EXPANSION_NAME;
     private const string CHAIN_FILENAME = "chain.ini";
     public const string ABOUT_FILENAME = "expansion.json";

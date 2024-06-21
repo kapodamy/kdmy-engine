@@ -219,7 +219,7 @@ public class CharacterManifest {
         ArrayList<AdditionalState> additional_states = CharacterManifest.InternalReadAdditionalStates(
             json_additional_states, this.model_character, src
         );
-        additional_states.Destroy2(out this.additional_states_size, ref this.additional_states);
+        additional_states.Destroy2(out this.additional_states_size, out this.additional_states);
 
         JSONParser.Destroy(json);
         FS.FolderStackPop();

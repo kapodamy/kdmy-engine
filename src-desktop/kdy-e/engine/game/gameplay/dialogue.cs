@@ -271,14 +271,14 @@ public class Dialogue : IAnimate, IDraw {
         dialogue.matrix_viewport.Clear();
         dialogue.gamepad.SetButtonsDelay(200);
 
-        audios.Destroy2(out dialogue.audios_size, ref dialogue.audios);
-        fonts.Destroy2(out dialogue.fonts_size, ref dialogue.fonts);
-        backgrounds.Destroy2(out dialogue.backgrounds_size, ref dialogue.backgrounds);
-        portraits.Destroy2(out dialogue.portraits_size, ref dialogue.portraits);
-        dialogs.Destroy2(out dialogue.dialogs_size, ref dialogue.dialogs);
-        states.Destroy2(out dialogue.states_size, ref dialogue.states);
-        multiplechoices.Destroy2(out dialogue.multiplechoices_size, ref dialogue.multiplechoices);
-        speechimages.Destroy2(out dialogue.speechimages_size, ref dialogue.speechimages);
+        audios.Destroy2(out dialogue.audios_size, out dialogue.audios);
+        fonts.Destroy2(out dialogue.fonts_size, out dialogue.fonts);
+        backgrounds.Destroy2(out dialogue.backgrounds_size, out dialogue.backgrounds);
+        portraits.Destroy2(out dialogue.portraits_size, out dialogue.portraits);
+        dialogs.Destroy2(out dialogue.dialogs_size, out dialogue.dialogs);
+        states.Destroy2(out dialogue.states_size, out dialogue.states);
+        multiplechoices.Destroy2(out dialogue.multiplechoices_size, out dialogue.multiplechoices);
+        speechimages.Destroy2(out dialogue.speechimages_size, out dialogue.speechimages);
 
         // set defaults
         Audio tmp_audio;
@@ -1661,7 +1661,7 @@ public class Dialogue : IAnimate, IDraw {
             actions_size = 0
         };
 
-        actions.Destroy2(out state.actions_size, ref state.actions);
+        actions.Destroy2(out state.actions_size, out state.actions);
         states.Add(state);
     }
 
@@ -1749,7 +1749,7 @@ public class Dialogue : IAnimate, IDraw {
             }
         }
 
-        choices.Destroy2(out multiplechoice.choices_size, ref multiplechoice.choices);
+        choices.Destroy2(out multiplechoice.choices_size, out multiplechoice.choices);
         multiplechoices.Add(multiplechoice);
     }
 
@@ -2665,7 +2665,7 @@ L_return:
         dialog_ref.lines = null;
         dialog_ref.lines_size = 0;
 
-        lines.Destroy2(out dialog_ref.lines_size, ref dialog_ref.lines);
+        lines.Destroy2(out dialog_ref.lines_size, out dialog_ref.lines);
     }
 
     private static void InternalReadColor(XmlParserNode node, float[] rgba) {

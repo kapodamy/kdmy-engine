@@ -152,7 +152,7 @@ public static class FS {
             }
 
             folder_enumerator.___index = 0;
-            entries.Destroy2(out _, ref folder_enumerator.___entries);
+            entries.Destroy2(out _, out folder_enumerator.___entries);
 
             // sort filenames if one or more expansions was enumerated
             ArrayUtils.Sort(

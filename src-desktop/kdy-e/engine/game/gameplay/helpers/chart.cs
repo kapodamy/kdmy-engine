@@ -239,15 +239,15 @@ public class Chart {
         this.entries = new ChartEntry[this.entries_size];
         if (opponent_notes.Size() > 0) {
             this.entries[entry_index] = new ChartEntry() { notes = null, notes_size = 0 };
-            opponent_notes.Destroy2(out this.entries[entry_index].notes_size, ref this.entries[entry_index].notes);
+            opponent_notes.Destroy2(out this.entries[entry_index].notes_size, out this.entries[entry_index].notes);
             entry_index++;
         }
         if (player_notes.Size() > 0) {
             this.entries[entry_index] = new ChartEntry() { notes = null, notes_size = 0 };
-            player_notes.Destroy2(out this.entries[entry_index].notes_size, ref this.entries[entry_index].notes);
+            player_notes.Destroy2(out this.entries[entry_index].notes_size, out this.entries[entry_index].notes);
         }
 
-        chart_events.Destroy2(out this.events_size, ref this.events);
+        chart_events.Destroy2(out this.events_size, out this.events);
         JSONParser.Destroy(json);
     }
 

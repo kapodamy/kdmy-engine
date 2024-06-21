@@ -304,12 +304,12 @@ public class Layout : IDraw, IAnimate {
         layout.modifier_viewport.height = layout.viewport_height;
 
         // step 6: build vertex and group arrays
-        layout_context.vertex_list.Destroy2(out layout.vertex_list_size, ref layout.vertex_list);
-        layout_context.group_list.Destroy2(out layout.group_list_size, ref layout.group_list);
-        layout_context.camera_list.Destroy2(out layout.camera_list_size, ref layout.camera_list);
-        layout_context.trigger_list.Destroy2(out layout.trigger_list_size, ref layout.trigger_list);
-        layout_context.sound_list.Destroy2(out layout.sound_list_size, ref layout.sound_list);
-        layout_context.video_list.Destroy2(out layout.video_list_size, ref layout.video_list);
+        layout_context.vertex_list.Destroy2(out layout.vertex_list_size, out layout.vertex_list);
+        layout_context.group_list.Destroy2(out layout.group_list_size, out layout.group_list);
+        layout_context.camera_list.Destroy2(out layout.camera_list_size, out layout.camera_list);
+        layout_context.trigger_list.Destroy2(out layout.trigger_list_size, out layout.trigger_list);
+        layout_context.sound_list.Destroy2(out layout.sound_list_size, out layout.sound_list);
+        layout_context.video_list.Destroy2(out layout.video_list_size, out layout.video_list);
 
         // step 7: build textures array
         layout.textures_size = layout_context.resource_pool.textures.Size();
@@ -2338,7 +2338,7 @@ public class Layout : IDraw, IAnimate {
         foreach (XmlParserNode action in actions) {
             ParseSpriteAction(action, layout_context.animlist, atlas, actions_arraylist, false);
         }
-        actions_arraylist.Destroy2(out vertex.actions_size, ref vertex.actions);
+        actions_arraylist.Destroy2(out vertex.actions_size, out vertex.actions);
 
         layout_context.vertex_list.Add(vertex);
     }
@@ -2385,7 +2385,7 @@ public class Layout : IDraw, IAnimate {
         foreach (XmlParserNode action in actions) {
             ParseTextAction(action, layout_context.animlist, actions_arraylist);
         }
-        actions_arraylist.Destroy2(out vertex.actions_size, ref vertex.actions);
+        actions_arraylist.Destroy2(out vertex.actions_size, out vertex.actions);
 
         layout_context.vertex_list.Add(vertex);
     }
@@ -2497,7 +2497,7 @@ public class Layout : IDraw, IAnimate {
             }
         }
 
-        actions_arraylist.Destroy2(out group.actions_size, ref group.actions);
+        actions_arraylist.Destroy2(out group.actions_size, out group.actions);
 
         // add to group tree
         if (parent_context != null) {
@@ -2547,7 +2547,7 @@ public class Layout : IDraw, IAnimate {
             }
         }
 
-        fonts_arraylist.Destroy2(out layout_context.fonts_size, ref layout_context.fonts);
+        fonts_arraylist.Destroy2(out layout_context.fonts_size, out layout_context.fonts);
     }
 
     private static void ParseCamera(XmlParserNode unparsed_camera, LayoutContext layout_context) {
@@ -2761,7 +2761,7 @@ public class Layout : IDraw, IAnimate {
             values_arraylist.Add(entry);
         }
 
-        values_arraylist.Destroy2(out layout_context.values_size, ref layout_context.values);
+        values_arraylist.Destroy2(out layout_context.values_size, out layout_context.values);
     }
 
     private static void ParseTriggers(XmlParserNode unparsed_trigger, LayoutContext layout_context) {
@@ -2850,7 +2850,7 @@ public class Layout : IDraw, IAnimate {
         foreach (XmlParserNode action in actions) {
             ParseSoundAction(action, layout_context.animlist, actions_arraylist);
         }
-        actions_arraylist.Destroy2(out sound.actions_size, ref sound.actions);
+        actions_arraylist.Destroy2(out sound.actions_size, out sound.actions);
 
         layout_context.sound_list.Add(sound);
     }
@@ -2895,7 +2895,7 @@ public class Layout : IDraw, IAnimate {
         foreach (XmlParserNode action in actions) {
             ParseVideoAction(action, layout_context.animlist, actions_arraylist);
         }
-        actions_arraylist.Destroy2(out video.actions_size, ref video.actions);
+        actions_arraylist.Destroy2(out video.actions_size, out video.actions);
 
         Item sprite = new Item() {
             actions = null,
@@ -2949,7 +2949,7 @@ public class Layout : IDraw, IAnimate {
             macro_arraylist.Add(macro);
         }
 
-        macro_arraylist.Destroy2(out layout_context.macro_list_size, ref layout_context.macro_list);
+        macro_arraylist.Destroy2(out layout_context.macro_list_size, out layout_context.macro_list);
     }
 
 
@@ -3043,7 +3043,7 @@ public class Layout : IDraw, IAnimate {
             entries_size = -1
         };
 
-        entries.Destroy2(out action.entries_size, ref action.entries);
+        entries.Destroy2(out action.entries_size, out action.entries);
         action_entries.Add(action);
     }
 
@@ -3133,7 +3133,7 @@ public class Layout : IDraw, IAnimate {
             entries_size = -1
         };
 
-        entries.Destroy2(out action.entries_size, ref action.entries);
+        entries.Destroy2(out action.entries_size, out action.entries);
         action_entries.Add(action);
     }
 
@@ -3200,7 +3200,7 @@ public class Layout : IDraw, IAnimate {
             entries_size = -1
         };
 
-        entries.Destroy2(out action.entries_size, ref action.entries);
+        entries.Destroy2(out action.entries_size, out action.entries);
         action_entries.Add(action);
     }
 
@@ -3243,7 +3243,7 @@ public class Layout : IDraw, IAnimate {
             entries_size = -1
         };
 
-        entries.Destroy2(out action.entries_size, ref action.entries);
+        entries.Destroy2(out action.entries_size, out action.entries);
         action_entries.Add(action);
     }
 
@@ -3278,7 +3278,7 @@ public class Layout : IDraw, IAnimate {
             entries_size = -1
         };
 
-        entries.Destroy2(out action.entries_size, ref action.entries);
+        entries.Destroy2(out action.entries_size, out action.entries);
         action_entries.Add(action);
     }
 
@@ -3334,7 +3334,7 @@ public class Layout : IDraw, IAnimate {
             actions_arraylist.Add(action);
         }
 
-        actions_arraylist.Destroy2(out macro.actions_size, ref macro.actions);
+        actions_arraylist.Destroy2(out macro.actions_size, out macro.actions);
     }
 
 

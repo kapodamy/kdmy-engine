@@ -736,10 +736,10 @@ public class AnimList {
         }
         tokenizer.Destroy();
 
-        MacroExecutorValue[] values_array = null;
+        MacroExecutorValue[] values_array;
         size = parsed_values.Size();
 
-        parsed_values.Destroy2(out _, ref values_array);
+        parsed_values.Destroy2(out _, out values_array);
         return values_array;
     }
 
@@ -863,7 +863,7 @@ public class AnimList {
             tweenkeyframe_entries_count = 0
         };
 
-        arraylist.Destroy2(out item.tweenkeyframe_entries_count, ref item.tweenkeyframe_entries);
+        arraylist.Destroy2(out item.tweenkeyframe_entries_count, out item.tweenkeyframe_entries);
 
         return item;
     }

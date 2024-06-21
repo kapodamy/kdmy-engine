@@ -181,8 +181,8 @@ public class Character : IDraw, IAnimate {
         this.drawable = new Drawable(0, this, this);
 
         import_context.modelholder_arraylist.Destroy3(Character.InternalDestroyModelholder);
-        import_context.all_directions_names.Destroy2(out this.all_directions_names_size, ref this.all_directions_names);
-        import_context.all_extras_names.Destroy2(out this.all_extras_names_size, ref this.all_extras_names);
+        import_context.all_directions_names.Destroy2(out this.all_directions_names_size, out this.all_directions_names);
+        import_context.all_extras_names.Destroy2(out this.all_extras_names_size, out this.all_extras_names);
 
         this.inverted_size = charactermanifest.opposite_directions.sizes;
         if (this.inverted_size > 0 && charactermanifest.actions.sing_size > 0) {

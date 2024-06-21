@@ -119,7 +119,7 @@ public class Atlas {
         }
 
         xml.Destroy();
-        arraylist.Destroy2(out atlas.size, ref atlas.entries);
+        arraylist.Destroy2(out atlas.size, out atlas.entries);
 
         return atlas;
     }
@@ -386,7 +386,7 @@ L_parse_field_failed:
         //free(text);
         tokenizer_entries.Destroy();
 
-        arraylist.Destroy2(out atlas.size, ref atlas.entries);
+        arraylist.Destroy2(out atlas.size, out atlas.entries);
 
         temp = FS.GetFilenameWithoutExtension(src_txt);
         if (temp != null) {
