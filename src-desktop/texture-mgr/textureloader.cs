@@ -1,5 +1,4 @@
-﻿#define PARALLEL
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -128,7 +127,7 @@ public static class TextureLoader {
         // shift all pixels but exclude the filler part
         //
         unsafe {
-#if PARALLEL
+#if PARALLEL_PROCESSING
             if (BitConverter.IsLittleEndian)
                 Parallel_For(image_data.Addr, total_pixels_pow2, ToRGBA_FromLittleEndian);
             else

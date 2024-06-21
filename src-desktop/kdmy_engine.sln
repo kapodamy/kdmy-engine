@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "soundbridge", "soundbridge\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ffgraph", "ffgraph\ffgraph.csproj", "{25F3A0A7-82F8-4862-A744-54D0B4BB7263}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "expansionsloader", "expansionsloader\expansionsloader.csproj", "{B29B621F-9777-4359-A241-C6E01F68B8A6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -50,6 +52,8 @@ Global
 		{25F3A0A7-82F8-4862-A744-54D0B4BB7263}.Debug|x64.Build.0 = Debug|x64
 		{25F3A0A7-82F8-4862-A744-54D0B4BB7263}.Release|x64.ActiveCfg = Release|x64
 		{25F3A0A7-82F8-4862-A744-54D0B4BB7263}.Release|x64.Build.0 = Release|x64
+		{B29B621F-9777-4359-A241-C6E01F68B8A6}.Debug|x64.ActiveCfg = Debug|x64
+		{B29B621F-9777-4359-A241-C6E01F68B8A6}.Release|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,7 +3,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using Engine;
 using Engine.Externals.GLFW;
 using Engine.Game;
@@ -26,12 +25,7 @@ class Program {
     private static extern nint GetConsoleWindow();
 
 
-    [STAThread]
     static int Main() {
-        Application.SetHighDpiMode(HighDpiMode.SystemAware);
-        Application.SetCompatibleTextRenderingDefault(false);
-        Application.EnableVisualStyles();
-
         // adquire the executable name and arguments
         string[] args = Environment.GetCommandLineArgs();
 
@@ -88,7 +82,11 @@ class Program {
 
             switch (args[i].ToLowerInvariant()) {
                 case "-expansionsloader":
-                    expansion_directory = ExpansionsLoader.Main();
+                    expansion_directory = ExpansionsLoader.Main(
+                        Engine.Properties.Resources.icon,
+                        Program.QueryExpansions,
+                        Path.Combine(EngineSettings.EngineDir, Expansions.PATH)
+                    );
                     if (expansion_directory == null) return 0;
                     if (expansion_directory != null) {
                         Logger.Info($"Selected expansion: {expansion_directory}\n");
@@ -171,6 +169,104 @@ class Program {
 
         // now run the engine
         return GameMain.Main(args.Length, args);
+    }
+
+    private static ExpansionInfo[] QueryExpansions(out int loaded_count) {
+        string expansions_dir = Path.Combine(EngineSettings.EngineDir, Expansions.FOLDER_NAME);
+        if (!Directory.Exists(expansions_dir)) {
+            loaded_count = 0;
+            return Array.Empty<ExpansionInfo>();
+        }
+
+        ArrayList<ExpansionInfo> expansions = new ArrayList<ExpansionInfo>();
+        DirectoryInfo directory = new DirectoryInfo(expansions_dir);
+
+        expansions.Add(new ExpansionInfo(null) {
+            name = "(Launch without any expansion)",
+            version = ""
+        });
+
+        foreach (DirectoryInfo dir in directory.EnumerateDirectories()) {
+            string dir_relative_path = $"{Expansions.PATH}{FS.CHAR_SEPARATOR}{dir.Name}{FS.CHAR_SEPARATOR}";
+
+            if (dir.Name.ToLowerInvariant() == Expansions.FUNKIN_EXPANSION_NAME) continue;
+
+            ExpansionInfo expansion = new ExpansionInfo(dir.Name);
+
+            string about_src = Path.Combine(dir.FullName, Expansions.ABOUT_FILENAME);
+            if (!File.Exists(about_src)) {
+                Logger.Error($"ExpansionsLoader::LoadExpansions() missing file {about_src}");
+                expansions.Add(expansion);
+                continue;
+            }
+
+            JSONToken json = JSONParser.LoadDirectFrom(about_src);
+            if (json == null) {
+                Logger.Warn($"ExpansionsLoader::LoadExpansions() can not open: {about_src}");
+                continue;
+            }
+
+            expansion.name = JSONParser.ReadString(json, "name", dir.Name);
+            expansion.version = JSONParser.ReadString(json, "version", null);
+            expansion.submiter = JSONParser.ReadString(json, "submiter", null);
+            expansion.description = JSONParser.ReadString(json, "description", null);
+            string screenshoot_path = JSONParser.ReadString(json, "screenshoot", null);
+            string icon_path = JSONParser.ReadString(json, "icon", null);
+            string window_icon_path = JSONParser.ReadString(json, "windowIcon", null);
+            expansion.window_title = JSONParser.ReadString(json, "windowTitle", null);
+            JSONParser.Destroy(json);
+
+            if (screenshoot_path != null) {
+                screenshoot_path = IO.GetAbsolutePath(
+                    FS.ResolvePath($"{dir_relative_path}{screenshoot_path}"), true, false, false
+                );
+
+                if (File.Exists(screenshoot_path)) {
+                    expansion.screenshoot_native_path = screenshoot_path;
+                }
+            }
+            if (icon_path != null) {
+                icon_path = IO.GetAbsolutePath(
+                    FS.ResolvePath($"{dir_relative_path}{icon_path}"), true, false, false
+                );
+
+                if (File.Exists(icon_path)) {
+                    expansion.icon_native_path = icon_path;
+                }
+            }
+            if (window_icon_path != null) {
+                window_icon_path = IO.GetAbsolutePath(
+                    FS.ResolvePath($"{dir_relative_path}{window_icon_path}"), true, false, false
+                );
+
+                if (File.Exists(window_icon_path)) {
+                    expansion.window_icon_native_path = window_icon_path;
+                } else {
+                    Logger.Warn($"ExpansionsLoader::LoadExpansions() file '{window_icon_path}' not found");
+                }
+            }
+
+            // TODO: markdown to RTF (https://es.wikipedia.org/wiki/Rich_Text_Format)
+            if (expansion.submiter != null) {
+                expansion.submiter = expansion.submiter.Replace("\r", "").Replace("\n", "\r\n");
+            }
+            if (expansion.description != null) {
+                expansion.description = expansion.description.Replace("\r", "").Replace("\n", "\r\n");
+            }
+            if (expansion.version != null) {
+                expansion.version = expansion.version.Replace("\r", "").Replace("\n", "\r\n");
+            }
+            if (expansion.name != null) {
+                expansion.name = expansion.name.Replace("\r", "").Replace("\n", "\r\n");
+            }
+
+            expansions.Add(expansion);
+        }
+
+        ExpansionInfo[] array;
+        expansions.Destroy2(out loaded_count, out array);
+
+        return array;
     }
 
     private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e) {

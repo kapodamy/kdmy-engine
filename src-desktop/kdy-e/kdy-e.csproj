@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows7.0</TargetFramework>
     <OutputType>WinExe</OutputType>
     <Platforms>x64</Platforms>
     <RootNamespace>Engine</RootNamespace>
@@ -46,6 +46,7 @@
     <Content Include="Properties\icon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\expansionsloader\expansionsloader.csproj" />
     <ProjectReference Include="..\ffgraph\ffgraph.csproj" />
     <ProjectReference Include="..\fontatlas\fontatlas.csproj" />
     <ProjectReference Include="..\lua-iterop\lua-iterop.csproj" />
