@@ -19,6 +19,7 @@ var /**@type {Expansion[]} */ expansionsloader_expansions = null;
 var /**@type {function(string):void} */expansionsloader_resolve = null;
 
 /* __attribute__((constructor)) void expansionsloader_init_defaults() */ {
+    document.getElementById("exl-ignore").addEventListener("click", expansionsloader_internal_ignore_and_continue, false);
     document.getElementById("exl-launch").addEventListener("click", expansionsloader_internal_launch, false);
     document.getElementById("exl-refresh").addEventListener("click", expansionsloader_internal_refresh, false);
     let exl_list = document.getElementById("exl-list");
@@ -68,7 +69,6 @@ async function expansionsloader_internal_load_expansions() {
         let about_src = `${dir_path}${EXPANSIONS_ABOUT_FILENAME}`;
         if (!await io_native_resource_exists(about_src, true, false)) {
             console.error(`expansionsloader_load_expansions() missing file ${about_src}`);
-            expansions.push(expansion);
             continue;
         }
 
@@ -176,6 +176,18 @@ function expansionsloader_internal_launch(e) {
 
     // resolve Promise returned of expansionsloader_internal_main() later
     setTimeout(expansionsloader_resolve, 0, expansionsloader_expansions[index].directory);
+
+    // dispose resources
+    for (let expansion of expansionsloader_expansions) expansion.li_element.remove();
+    expansionsloader_expansions = null;
+    expansionsloader_resolve = null;
+    expansionsloader_internal_show_info(null);
+    expansionsloader_internal_toggle_visibility(false);
+}
+
+function expansionsloader_internal_ignore_and_continue(e) {
+    // resolve Promise returned of expansionsloader_internal_main() later
+    setTimeout(expansionsloader_resolve, 0, null);
 
     // dispose resources
     for (let expansion of expansionsloader_expansions) expansion.li_element.remove();
