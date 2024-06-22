@@ -21,6 +21,17 @@ A Cheatset list of all the functions that the engine will call from your script.
 * Open the *luaworkspace* project in [VSCode](https://code.visualstudio.com/ "VSCode"), optional.
 * Go to the terminal window.
 * Write `npm install -D typescript-to-lua`. This will install **TypescriptToLua** inside *luaworkspace* only.
+* Write `npm install -D lua-types`. This will install **Lua Types** inside *luaworkspace* only.
+* Close and reopen VSCode if changes are not detected.
+* Alternatively it is possible to do it with cmd or powershell inside the luaworkspace folder.
+
+## Updating TypescriptToLua
+
+* Open the *luaworkspace* project in [VSCode](https://code.visualstudio.com/ "VSCode"), optional.
+* Go to the terminal window.
+* Write `npm outdated -D` to check for updates, if exits continue:
+  * Write `npm update -D typescript-to-lua`. This will update **TypescriptToLua** inside *luaworkspace* only.
+  * Write `npm update -D lua-types`. This will update **Lua Types** inside *luaworkspace* only.
 * Close and reopen VSCode if changes are not detected.
 * Alternatively it is possible to do it with cmd or powershell inside the luaworkspace folder.
 
