@@ -819,9 +819,9 @@ async function settingsmenu_in_menus_binding(anim_binding, anim_binding_rollback
     // key + scancodes
     let keycodes = [
         "KeyA",
-        "KeyQ",
-        "KeyW",
-        "KeyS"
+        "Digit1",
+        "Digit2",
+        "KeyX"
     ];
 
     // load gameplay bindings

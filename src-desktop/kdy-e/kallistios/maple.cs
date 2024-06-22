@@ -497,81 +497,81 @@ public class cont_state_t {
 internal static class maple_mappings {
 
     public static readonly GamePadButtonToCONT[] GAMEPAD_BUTTONS_MAPPING = {
-        new GamePadButtonToCONT(GamepadButton.A, CONT.A | CONT.DPAD3_DOWN),
-        new GamePadButtonToCONT(GamepadButton.B, CONT.B | CONT.DPAD3_RIGHT),
-        new GamePadButtonToCONT(GamepadButton.X, CONT.X | CONT.DPAD3_LEFT),
-        new GamePadButtonToCONT(GamepadButton.Y, CONT.Y | CONT.DPAD3_UP),
-        new GamePadButtonToCONT(GamepadButton.LeftBumper, CONT.C),
-        new GamePadButtonToCONT(GamepadButton.RightBumper, CONT.Z),
-        new GamePadButtonToCONT(GamepadButton.Start, CONT.START),
-        new GamePadButtonToCONT(GamepadButton.DpadUp, CONT.DPAD_UP ),
-        new GamePadButtonToCONT(GamepadButton.DpadDown, CONT.DPAD_DOWN ),
-        new GamePadButtonToCONT(GamepadButton.DpadLeft, CONT.DPAD_LEFT ),
-        new GamePadButtonToCONT(GamepadButton.DpadRight, CONT.DPAD_RIGHT),
-        new GamePadButtonToCONT(GamepadButton.Back, CONT.BACK_OR_SELECT ),
-        new GamePadButtonToCONT(GamepadButton.Guide, CONT.HOME_OR_GUIDE )
+        new (GamepadButton.A, CONT.A | CONT.DPAD3_DOWN),
+        new (GamepadButton.B, CONT.B | CONT.DPAD3_RIGHT),
+        new (GamepadButton.X, CONT.X | CONT.DPAD3_LEFT),
+        new (GamepadButton.Y, CONT.Y | CONT.DPAD3_UP),
+        new (GamepadButton.LeftBumper, CONT.C),
+        new (GamepadButton.RightBumper, CONT.Z),
+        new (GamepadButton.Start, CONT.START),
+        new (GamepadButton.DpadUp, CONT.DPAD_UP ),
+        new (GamepadButton.DpadDown, CONT.DPAD_DOWN ),
+        new (GamepadButton.DpadLeft, CONT.DPAD_LEFT ),
+        new (GamepadButton.DpadRight, CONT.DPAD_RIGHT),
+        new (GamepadButton.Back, CONT.BACK_OR_SELECT ),
+        new (GamepadButton.Guide, CONT.HOME_OR_GUIDE )
     };
     public static readonly GamePadAxisToAxis[] GAMEPAD_AXES_MAPPING = {
-        new GamePadAxisToAxis(GamepadAxis.LeftX, CONTEx.AXIS_LX),
-        new GamePadAxisToAxis(GamepadAxis.LeftY, CONTEx.AXIS_LY),
-        new GamePadAxisToAxis(GamepadAxis.RightX, CONTEx.AXIS_RX),
-        new GamePadAxisToAxis(GamepadAxis.RightY, CONTEx.AXIS_RY),
-        new GamePadAxisToAxis(GamepadAxis.LeftTrigger, CONTEx.TRIGGER_L),
-        new GamePadAxisToAxis(GamepadAxis.RightTrigger, CONTEx.TRIGGER_R),
+        new (GamepadAxis.LeftX, CONTEx.AXIS_LX),
+        new (GamepadAxis.LeftY, CONTEx.AXIS_LY),
+        new (GamepadAxis.RightX, CONTEx.AXIS_RX),
+        new (GamepadAxis.RightY, CONTEx.AXIS_RY),
+        new (GamepadAxis.LeftTrigger, CONTEx.TRIGGER_L),
+        new (GamepadAxis.RightTrigger, CONTEx.TRIGGER_R),
     };
 
     public static readonly KeyboardToCONT[] KEYBOARD_MAPPING_BUTTONS = {
-        new KeyboardToCONT(Keys.ENTER, CONT.START),
-        new KeyboardToCONT(Keys.A , CONT.A),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.B),
-        new KeyboardToCONT(Keys.S, CONT.X),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.Y),
-        new KeyboardToCONT(Keys.UP, CONT.DPAD_UP),
-        new KeyboardToCONT(Keys.DOWN, CONT.DPAD_DOWN),
-        new KeyboardToCONT(Keys.RIGHT, CONT.DPAD_RIGHT),
-        new KeyboardToCONT(Keys.LEFT, CONT.DPAD_LEFT),
-        new KeyboardToCONT(Keys.F, CONT.DPAD2_LEFT),
-        new KeyboardToCONT(Keys.G, CONT.DPAD2_DOWN),
-        new KeyboardToCONT(Keys.J, CONT.DPAD2_UP),
-        new KeyboardToCONT(Keys.K, CONT.DPAD2_RIGHT),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.DPAD3_LEFT),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.DPAD3_DOWN),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.DPAD3_UP),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.DPAD3_RIGHT),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.DPAD4_LEFT),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.DPAD4_DOWN),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.DPAD4_UP),
-        new KeyboardToCONT(Keys.UNKNOWN, CONT.DPAD4_RIGHT),
-        new KeyboardToCONT(Keys.SPACE, CONT.D),
-        new KeyboardToCONT(Keys.ESCAPE, CONT.BACK_OR_SELECT),
-        new KeyboardToCONT(Keys.HOME, CONT.HOME_OR_GUIDE)
+        new (Keys.ENTER, CONT.START),
+        new (Keys.A , CONT.A),
+        new (Keys.UNKNOWN, CONT.B),
+        new (Keys.X, CONT.X),
+        new (Keys.UNKNOWN, CONT.Y),
+        new (Keys.UP, CONT.DPAD_UP),
+        new (Keys.DOWN, CONT.DPAD_DOWN),
+        new (Keys.RIGHT, CONT.DPAD_RIGHT),
+        new (Keys.LEFT, CONT.DPAD_LEFT),
+        new (Keys.F, CONT.DPAD2_LEFT),
+        new (Keys.G, CONT.DPAD2_DOWN),
+        new (Keys.J, CONT.DPAD2_UP),
+        new (Keys.K, CONT.DPAD2_RIGHT),
+        new (Keys.UNKNOWN, CONT.DPAD3_LEFT),
+        new (Keys.UNKNOWN, CONT.DPAD3_DOWN),
+        new (Keys.UNKNOWN, CONT.DPAD3_UP),
+        new (Keys.UNKNOWN, CONT.DPAD3_RIGHT),
+        new (Keys.UNKNOWN, CONT.DPAD4_LEFT),
+        new (Keys.UNKNOWN, CONT.DPAD4_DOWN),
+        new (Keys.UNKNOWN, CONT.DPAD4_UP),
+        new (Keys.UNKNOWN, CONT.DPAD4_RIGHT),
+        new (Keys.SPACE, CONT.D),
+        new (Keys.ESCAPE, CONT.BACK_OR_SELECT),
+        new (Keys.HOME, CONT.HOME_OR_GUIDE)
     };
     public static readonly KeyboardToAxis[] KEYBOARD_MAPPING_AXES = {
-        new KeyboardToAxis(Keys.KP_2, Keys.KP_8, CONTEx.AXIS_LY),
-        new KeyboardToAxis(Keys.KP_4, Keys.KP_6, CONTEx.AXIS_LX)
+        new (Keys.UNKNOWN, Keys.UNKNOWN, CONTEx.AXIS_LY),
+        new (Keys.UNKNOWN, Keys.UNKNOWN, CONTEx.AXIS_LX)
     };
     public static readonly KeyboardToTrigger[] KEYBOARD_MAPPING_TRIGGERS = {
-        new KeyboardToTrigger(Keys.Q, CONTEx.TRIGGER_L),
-        new KeyboardToTrigger(Keys.W, CONTEx.TRIGGER_R)
+        new (Keys.NUMPAD1, CONTEx.TRIGGER_L),
+        new (Keys.NUMPAD2, CONTEx.TRIGGER_R)
     };
 
     public static readonly GamePadToMaple[] GAMEPAD_TO_MAPLE_DEVICE = {
-        new GamePadToMaple(0, 0, 0),
-        new GamePadToMaple(1, 1, 0),
-        new GamePadToMaple(2, 2, 0),
-        new GamePadToMaple(3, 3, 0),
-        new GamePadToMaple(4, 0, 2),
-        new GamePadToMaple(5, 1, 2),
-        new GamePadToMaple(6, 2, 2),
-        new GamePadToMaple(7, 3, 2),
-        new GamePadToMaple(8,  0, 3),
-        new GamePadToMaple(9, 1, 3),
-        new GamePadToMaple(10, 2, 3),
-        new GamePadToMaple(11, 3, 3),
-        new GamePadToMaple(12, 0, 4),
-        new GamePadToMaple(13, 1, 4),
-        new GamePadToMaple(14, 2, 4),
-        new GamePadToMaple(15, 3, 4)
+        new (0, 0, 0),
+        new (1, 1, 0),
+        new (2, 2, 0),
+        new (3, 3, 0),
+        new (4, 0, 2),
+        new (5, 1, 2),
+        new (6, 2, 2),
+        new (7, 3, 2),
+        new (8,  0, 3),
+        new (9, 1, 3),
+        new (10, 2, 3),
+        new (11, 3, 3),
+        new (12, 0, 4),
+        new (13, 1, 4),
+        new (14, 2, 4),
+        new (15, 3, 4)
    };
 
 

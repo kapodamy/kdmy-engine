@@ -33,29 +33,28 @@
     <Group>
         <Sprite atlas="/assets/common/image/week-selector/dreamcast_buttons.xml">
             <Action>
-                <Location x="395" y="180" z="2" />
+                <Location x="520" y="180" z="2" />
                 <AtlasApply entry="a" />
                 <Resize maxWidth="52" maxHeight="60" center="false" />
             </Action>
         </Sprite>
-        <Sprite atlas="/assets/common/image/week-selector/week_selector_UI.xml">
+        <Sprite atlas="/assets/common/image/week-selector/dreamcast_buttons.xml">
             <Action>
-                <Location x="395" y="270" z="2" />
-                <AtlasApply entry="arrow_L" />
-                <Resize maxWidth="52" maxHeight="60" center="false" />
-            </Action>
-        </Sprite>
-        <Sprite atlas="/assets/common/image/week-selector/week_selector_UI.xml">
-            <Action>
-                <Location x="395" y="360" z="2" />
-                <AtlasApply entry="arrow_L" />
-                <Resize maxWidth="52" maxHeight="60" center="false" />
-				<Property name="flipX" value="true" />
+                <Location x="520" y="270" z="2" />
+                <AtlasApply entry="lt" />
+                <Resize maxWidth="52" maxHeight="60" center="true" />
             </Action>
         </Sprite>
         <Sprite atlas="/assets/common/image/week-selector/dreamcast_buttons.xml">
             <Action>
-                <Location x="395" y="450" z="2" />
+                <Location x="520" y="360" z="2" />
+                <AtlasApply entry="rt" />
+                <Resize maxWidth="52" maxHeight="60" center="true" />
+            </Action>
+        </Sprite>
+        <Sprite atlas="/assets/common/image/week-selector/dreamcast_buttons.xml">
+            <Action>
+                <Location x="520" y="450" z="2" />
                 <AtlasApply entry="x" />
                 <Resize maxWidth="52" maxHeight="60" center="false" />
             </Action>
@@ -63,25 +62,25 @@
 
         <Sprite rgba="0x000000BF" name="back-accept">
             <Action>
-                <Location x="454" y="180" z="2" />
+                <Location x="580" y="180" z="2" />
                 <Size width="157" height="60" />
             </Action>
         </Sprite>
         <Sprite rgba="0x000000BF" name="back-selectorLeft">
             <Action>
-                <Location x="454" y="270" z="2" />
+                <Location x="580" y="270" z="2" />
                 <Size width="157" height="60" />
             </Action>
         </Sprite>
         <Sprite rgba="0x000000BF" name="back-selectorRight">
             <Action>
-                <Location x="454" y="360" z="2" />
+                <Location x="580" y="360" z="2" />
                 <Size width="157" height="60" />
             </Action>
         </Sprite>
         <Sprite rgba="0x000000BF" name="back-alternativeTracks">
             <Action>
-                <Location x="454" y="450" z="2" />
+                <Location x="580" y="450" z="2" />
                 <Size width="157" height="60" />
             </Action>
         </Sprite>
@@ -92,24 +91,24 @@
         <Text fontName="labels" fontSize="30" color="0xFFFFFF">
             <Action>
                 <String>Accept/OK/Confirm</String>
-                <Location x="60" y="180" z="2" />
+                <Location x="60" y="190" z="2" />
             </Action>
         </Text>
         <Text fontName="labels" fontSize="30" color="0xFFFFFF">
             <Action>
-                <String>Selector left</String>
+                <String>Selector/Trigger Left</String>
                 <Location x="60" y="280" z="2" />
             </Action>
         </Text>
         <Text fontName="labels" fontSize="30" color="0xFFFFFF">
             <Action>
-                <String>Selector right</String>
+                <String>Selector/Trigger Right</String>
                 <Location x="60" y="370" z="2" />
             </Action>
         </Text>
         <Text fontName="labels" fontSize="30" color="0xFFFFFF">
             <Action>
-                <String>Alt. tracks/Delete</String>
+                <String>Delete/Alternative</String>
                 <Location x="60" y="460" z="2" />
             </Action>
         </Text>
@@ -119,28 +118,28 @@
     <Group>
         <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-accept">
             <Action>
-                <Location x="454" y="180" z="3" />
+                <Location x="580" y="180" z="3" />
                 <MaxSize width="157" height="60" />
                 <Properties alignVertical="center" alignHorizontal="center" />
             </Action>
         </Text>
         <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-selectorLeft">
             <Action>
-                <Location x="454" y="270" z="3" />
+                <Location x="580" y="270" z="3" />
                 <MaxSize width="157" height="60" />
                 <Properties alignVertical="center" alignHorizontal="center" />
             </Action>
         </Text>
         <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-selectorRight">
             <Action>
-                <Location x="454" y="360" z="3" />
+                <Location x="580" y="360" z="3" />
                 <MaxSize width="157" height="60" />
                 <Properties alignVertical="center" alignHorizontal="center" />
             </Action>
         </Text>
         <Text fontName="labels" fontSize="23" rgb="0xFFFFFF" name="label-alternativeTracks">
             <Action>
-                <Location x="454" y="450" z="3" />
+                <Location x="580" y="450" z="3" />
                 <MaxSize width="157" height="60" />
                 <Properties alignVertical="center" alignHorizontal="center" />
             </Action>

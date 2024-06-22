@@ -749,9 +749,9 @@ public static class SettingsMenu {
         // key + scancodes
         Keycode[] keycodes = {
             new Keycode(Keys.A),
-            new Keycode(Keys.Q),
-            new Keycode(Keys.W),
-            new Keycode(Keys.S)
+            new Keycode(Keys.NUMPAD1),
+            new Keycode(Keys.NUMPAD2),
+            new Keycode(Keys.X)
         };
 
         // load gameplay bindings

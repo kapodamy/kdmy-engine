@@ -816,7 +816,7 @@ const KOS_KEYBOARD_MAPPING_BUTTONS = [
     { code: "Enter", button: CONT_START },
     { code: "KeyA", button: CONT_A },
     { code: null, button: CONT_B },
-    { code: "KeyS", button: CONT_X },
+    { code: "KeyX", button: CONT_X },
     { code: null, button: CONT_Y },
     { code: "ArrowUp", button: CONT_DPAD_UP },
     { code: "ArrowDown", button: CONT_DPAD_DOWN },
@@ -839,12 +839,12 @@ const KOS_KEYBOARD_MAPPING_BUTTONS = [
     { code: "Home", button: CONT_HOME_OR_GUIDE }
 ];
 const KOS_KEYBOARD_MAPPING_AXES = [
-    { key_low: "Numpad2", key_high: "Numpad8", axes: CONT_EX_TRIGGER_L },
-    { key_low: "Numpad4", key_high: "Numpad6", axes: CONT_EX_TRIGGER_R }
+    { key_low: null, key_high: null, axes: CONT_EX_TRIGGER_L },
+    { key_low: null, key_high: null, axes: CONT_EX_TRIGGER_R }
 ];
 const KOS_KEYBOARD_MAPPING_TRIGGERS = [
-    { code: "KeyQ", trigger: CONT_EX_TRIGGER_L },
-    { code: "KeyW", trigger: CONT_EX_TRIGGER_R }
+    { code: "Digit1", trigger: CONT_EX_TRIGGER_L },
+    { code: "Digit2", trigger: CONT_EX_TRIGGER_R }
 ];
 const KOS_GAMEPAD_TO_MAPLE_DEVICE = [
     { index: 0, port: 0, unit: 0 },
