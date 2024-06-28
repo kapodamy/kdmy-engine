@@ -192,9 +192,6 @@ internal enum AVPixelFormat {
     AV_PIX_FMT_BAYER_GRBG16LE,
     AV_PIX_FMT_BAYER_GRBG16BE,
 
-#if FF_API_XVMC
-    AV_PIX_FMT_XVMC,
-#endif
 
     AV_PIX_FMT_YUV440P10LE,
     AV_PIX_FMT_YUV440P10BE,
@@ -298,6 +295,17 @@ internal enum AVPixelFormat {
     AV_PIX_FMT_RGBAF32BE,
     AV_PIX_FMT_RGBAF32LE,
 
+    AV_PIX_FMT_P212BE,
+    AV_PIX_FMT_P212LE,
+
+    AV_PIX_FMT_P412BE,
+    AV_PIX_FMT_P412LE,
+
+    AV_PIX_FMT_GBRAP14BE,
+    AV_PIX_FMT_GBRAP14LE,
+
+    AV_PIX_FMT_D3D12,
+
     AV_PIX_FMT_NB
 }
 
@@ -310,61 +318,67 @@ internal enum AVMediaType {
     AVMEDIA_TYPE_ATTACHMENT,
     AVMEDIA_TYPE_NB
 }
+internal enum AVSampleFormat {
+    AV_SAMPLE_FMT_NONE = -1,
+    AV_SAMPLE_FMT_U8,
+    AV_SAMPLE_FMT_S16,
+    AV_SAMPLE_FMT_S32,
+    AV_SAMPLE_FMT_FLT,
+    AV_SAMPLE_FMT_DBL,
 
-[StructLayout(LayoutKind.Sequential)]
-internal unsafe readonly struct AVFrameIntPtrArray8 {
-    //
-    // the amount of fields must be equal to AVFrame.AV_NUM_DATA_POINTERS
-    //
-    private readonly nint i0, i1, i2, i3, i4, i5, i6, i7;
+    AV_SAMPLE_FMT_U8P,
+    AV_SAMPLE_FMT_S16P,
+    AV_SAMPLE_FMT_S32P,
+    AV_SAMPLE_FMT_FLTP,
+    AV_SAMPLE_FMT_DBLP,
+    AV_SAMPLE_FMT_S64,
+    AV_SAMPLE_FMT_S64P,
 
+    AV_SAMPLE_FMT_NB
 }
 
+internal enum AVChannelOrder {
+    AV_CHANNEL_ORDER_UNSPEC,
+    AV_CHANNEL_ORDER_NATIVE,
+    AV_CHANNEL_ORDER_CUSTOM,
+    AV_CHANNEL_ORDER_AMBISONIC,
+    FF_CHANNEL_ORDER_NB
+};
+
+
+[InlineArray(FFmpeg.AV_NUM_DATA_POINTERS)]
+internal unsafe struct AVFrameIntPtrArray {
+    private nint _element;
+}
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct AVFrame {
-    public const int AV_NUM_DATA_POINTERS = 8;
-
-    public readonly AVFrameIntPtrArray8 data;
-    public fixed int linesize[AV_NUM_DATA_POINTERS];
+    public AVFrameIntPtrArray data;
+    public fixed int linesize[FFmpeg.AV_NUM_DATA_POINTERS];
     public readonly byte** extended_data;
-    readonly int width, height;
+    public int width, height;
     public readonly int nb_samples;
-    readonly int format;
+    public int format;
+#if FF_API_FRAME_KEY
     readonly int key_frame;
+#endif
     readonly AVPictureType pict_type;
     readonly AVRational sample_aspect_ratio;
     public readonly long pts;
-    readonly long pkt_dts;
+    public readonly long pkt_dts;
     readonly AVRational time_base;
-
-#if FF_API_FRAME_PICTURE_NUMBER
-    [Obsolete]
-    readonly int coded_picture_number;
-    [Obsolete]
-    readonly int display_picture_number;
-#endif
-
     readonly int quality;
     readonly void* opaque;
     readonly int repeat_pict;
+#if FF_API_INTERLACED_FRAME
     readonly int interlaced_frame;
     readonly int top_field_first;
+#endif
+#if FF_API_PALETTE_HAS_CHANGED
     readonly int palette_has_changed;
-
-#if FF_API_REORDERED_OPAQUE
-    [Obsolete]
-    readonly long reordered_opaque;
 #endif
-
     readonly int sample_rate;
-
-#if FF_API_OLD_CHANNEL_LAYOUT
-    [Obsolete]
-    readonly ulong channel_layout;
-#endif
-
-    readonly AVFrameIntPtrArray8 buf;
+    readonly AVFrameIntPtrArray buf;
     readonly void* extended_buf;
     readonly int nb_extended_buf;
     readonly void* side_data;
@@ -376,30 +390,8 @@ internal unsafe struct AVFrame {
     readonly AVColorSpace colorspace;
     readonly AVChromaLocation chroma_location;
     readonly long best_effort_timestamp;
-
-#if FF_API_FRAME_PKT
-    [Obsolete]
-    readonly long pkt_pos;
-#endif
-
-#if FF_API_PKT_DURATION
-    [Obsolete]
-    readonly long pkt_duration;
-#endif
-
     readonly nint metadata;
     readonly int decode_error_flags;
-
-#if FF_API_OLD_CHANNEL_LAYOUT
-    [Obsolete]
-    readonly int channels;
-#endif
-
-#if FF_API_FRAME_PKT
-    [Obsolete]
-    readonly int pkt_size;
-#endif
-
     readonly nint hw_frames_ctx;
     readonly nint opaque_ref;
     readonly nint crop_top;
@@ -417,9 +409,25 @@ internal readonly struct AVRational {
     public readonly int den;
 }
 
+[StructLayout(LayoutKind.Sequential)]
+internal struct AVChannelLayout {
+    public readonly AVChannelOrder order;
+    public readonly int nb_channels;
+    readonly U u;
+    public nint opaque;
+
+    [StructLayout(LayoutKind.Explicit)]
+    readonly struct U {
+        [FieldOffset(0)]
+        readonly ulong mask;
+        [FieldOffset(0)]
+        readonly nint map;
+    }
+}
+
 internal static unsafe partial class FFmpeg {
 
-    private const string AVUTIL_DLL = "avutil-58";
+    private const string AVUTIL_DLL = "avutil-59";
 
     public const int AVERROR_UNKNOWN = unchecked((int)0xb1b4b1ab);
     public const int AVERROR_EOF = -0x20464F45;
@@ -427,7 +435,11 @@ internal static unsafe partial class FFmpeg {
     public const int AV_TIME_BASE = 1000000;
     public const long AV_NOPTS_VALUE = unchecked((long)0x8000000000000000);
     public const int EAGAIN = 11;
+    public const int AV_NUM_DATA_POINTERS = 8;
 
+
+    [DllImport(AVUTIL_DLL, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int av_frame_copy(AVFrame* dst, AVFrame* src);
 
     [DllImport(AVUTIL_DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern void av_frame_free(AVFrame** frame);
@@ -446,6 +458,9 @@ internal static unsafe partial class FFmpeg {
 
     [DllImport(AVUTIL_DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern int av_image_get_buffer_size(AVPixelFormat pix_fmt, int width, int height, int align);
+
+    [DllImport(AVUTIL_DLL, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int av_frame_get_buffer(AVFrame* frame, int align);
 
     [DllImport(AVUTIL_DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern int av_image_fill_arrays(byte** dst_data, int* dst_linesize, byte* src, AVPixelFormat pix_fmt, int width, int height, int align);

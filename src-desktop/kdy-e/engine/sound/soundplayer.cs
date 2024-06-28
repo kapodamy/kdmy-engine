@@ -122,7 +122,7 @@ public class SoundPlayer {
                 this.Seek(value);
                 break;
             case VertexProps.MEDIA_PROP_PLAYBACK:
-                switch (value) {
+                switch ((int)value) {
                     case VertexProps.PLAYBACK_PLAY:
                         this.Play();
                         break;

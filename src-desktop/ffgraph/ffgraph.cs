@@ -19,9 +19,11 @@ public struct FFGraphInfo {
 
     public double video_seconds_duration;
     public double audio_seconds_duration;
+
+    public bool video_is_yuv420p_or_rgb24;
 }
 
-public unsafe class FFGraph {
+public class FFGraph {
 
     internal FFGraphFormat video_fmt;
     internal FFGraphFormat audio_fmt;
@@ -30,7 +32,7 @@ public unsafe class FFGraph {
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static double CalculateSeconds(AVStream* av_stream, AVFrame* av_frame) {
+    internal static unsafe double CalculateSeconds(AVStream* av_stream, AVFrame* av_frame) {
         long start_pts = av_stream->start_time;
         if (start_pts == FFmpeg.AV_NOPTS_VALUE) start_pts = 0;
 
@@ -83,19 +85,38 @@ public unsafe class FFGraph {
 
         output_info.video_has_stream = this.video_fmt != null;
         if (output_info.video_has_stream) {
-            uint video_width, video_height;
+            this.video_converter.GetStreamInfo(ref output_info);
             output_info.video_seconds_duration = this.video_fmt.GetStreamDuration();
-            this.video_converter.GetStreamInfo(
-                out video_width, out video_height
-            );
-            output_info.video_width = (int)video_width;
-            output_info.video_height = (int)video_height;
         }
 
         return output_info;
     }
 
-    public int ReadAudioSamples(void* out_samples, uint max_samples_per_channel) {
+    public int ReadAudioSamples(byte[] out_samples, uint max_samples_per_channel) {
+        unsafe {
+            fixed (byte* ptr = out_samples) {
+                return ReadAudioSamples(ptr, max_samples_per_channel);
+            }
+        }
+    }
+
+    public int ReadAudioSamples(short[] out_samples, uint max_samples_per_channel) {
+        unsafe {
+            fixed (short* ptr = out_samples) {
+                return ReadAudioSamples(ptr, max_samples_per_channel);
+            }
+        }
+    }
+
+    public int ReadAudioSamples(float[] out_samples, uint max_samples_per_channel) {
+        unsafe {
+            fixed (float* ptr = out_samples) {
+                return ReadAudioSamples(ptr, max_samples_per_channel);
+            }
+        }
+    }
+
+    public unsafe int ReadAudioSamples(void* out_samples, uint max_samples_per_channel) {
         if (this.audio_fmt == null) {
             return -1;
         }
@@ -117,32 +138,18 @@ public unsafe class FFGraph {
         return (int)this.audio_converter.Read(out_samples, max_samples_per_channel);
     }
 
-    public double ReadVideoFrame(void** out_frame, int* out_frame_size) {
+    public double ReadVideoFrame(out FFGraphFrame frame) {
         if (this.video_fmt == null || this.video_fmt.has_ended) {
+            frame = default;
             return -2.0;
         }
 
         if (!this.video_fmt.Read()) {
+            frame = default;
             return -1.0;
         }
 
-        // do not care, required for non-monotonous timetamp
-        const double seconds = -1.0;
-
-        return this.video_converter.Read(seconds, out_frame, out_frame_size);
-    }
-
-    public double ReadVideoFrame2(nint buffer, int buffer_size) {
-        void* frame;
-        int frame_size;
-
-        double ret = ReadVideoFrame(&frame, &frame_size);
-        if (ret < 0) return ret;
-
-        int to_copy = frame_size < buffer_size ? frame_size : buffer_size;
-        NativeMemory.Copy(frame, (void*)buffer, (nuint)to_copy);
-
-        return ret;
+        return this.video_converter.Read(out frame);
     }
 
     public void Seek(double time_in_seconds) {
@@ -153,11 +160,16 @@ public unsafe class FFGraph {
             this.audio_fmt.Seek(time_in_seconds);
     }
 
-    public void Seek2(double time_in_seconds, bool audio_or_video) {
-        FFGraphFormat ffgraphfmt = audio_or_video ? this.audio_fmt : this.video_fmt;
-        if (ffgraphfmt == null) return;
-        ffgraphfmt.Seek(time_in_seconds);
+    public void SeekAudio(double time_in_seconds) {
+        if (this.audio_fmt == null) return;
+        this.audio_fmt.Seek(time_in_seconds);
     }
+
+    public void SeekVideo(double time_in_seconds) {
+        if (this.video_fmt == null) return;
+        this.video_fmt.Seek(time_in_seconds);
+    }
+
 
     public static string GetRuntimeInfo() {
         try {
@@ -168,22 +180,12 @@ public unsafe class FFGraph {
             uint version_avutil = FFmpeg.avutil_version();
 
             return String.Format(
-                "avf={0}.{1}.{2} avc={3}.{4}.{5} swr={6}.{7}.{8} sws={9}.{10}.{11} avu={12}.{13}.{14}",
-                (version_avformat >> 16) & 0xFFFF,
-                (version_avformat >> 8) & 0x00FF,
-                version_avformat & 0x00FF,
-                (version_avcodec >> 16) & 0xFFFF,
-                (version_avcodec >> 8) & 0x00FF,
-                version_avcodec & 0x00FF,
-                (version_swresample >> 16) & 0xFFFF,
-                (version_swresample >> 8) & 0x00FF,
-                version_swresample & 0x00FF,
-                (version_swscale >> 16) & 0xFFFF,
-                (version_swscale >> 8) & 0x00FF,
-                version_swscale & 0x00FF,
-                (version_avutil >> 16) & 0xFFFF,
-                (version_avutil >> 8) & 0x00FF,
-                version_avutil & 0x00FF
+                "avf={0} avc={1} swr={2} sws={3} avu={4}",
+                FFGraph.InternalVersionToString(version_avformat),
+                FFGraph.InternalVersionToString(version_avcodec),
+                FFGraph.InternalVersionToString(version_swresample),
+                FFGraph.InternalVersionToString(version_swscale),
+                FFGraph.InternalVersionToString(version_avutil)
             );
         } catch {
             // one or more FFmpeg dll files are missing
@@ -191,9 +193,18 @@ public unsafe class FFGraph {
         }
     }
 
+
+    private static string InternalVersionToString(uint version) {
+        return String.Format(
+            "{0}.{1}.{2}",
+            (version >> 16) & 0xFFFF, (version >> 8) & 0x00FF, version & 0x00FF
+         );
+    }
+
+
 #if DEBUG
 
-    public static int Main() {
+    public static unsafe int Main() {
         Logger.Info("version: " + Marshal.PtrToStringUTF8((nint)FFmpeg.av_version_info()));
         Logger.Info("runtime: " + GetRuntimeInfo());
 
@@ -205,6 +216,7 @@ public unsafe class FFGraph {
         ISourceHandle audio_sourcehandle = FileHandleUtil.Init("./a.webm", false);
         ISourceHandle video_sourcehandle = FileHandleUtil.Init("./a.webm", false);
 
+        VideoConverter.force_rgb24 = true;
         FFGraph ffgraph = FFGraph.Init(video_sourcehandle, audio_sourcehandle);
 
         FFGraphInfo info = ffgraph.GetStreamsInfo();
@@ -213,12 +225,13 @@ public unsafe class FFGraph {
         int samples_audio_stop = 106;
         int iters = 0;
         bool test_seek = true;
+        int video_buffer_size = info.video_width * info.video_height * 3;
+
 L_read_streams:
 
         while (!ffgraph.video_fmt.has_ended) {
-            void* frame;
-            int frame_size;
-            double seconds = ffgraph.ReadVideoFrame(&frame, &frame_size);
+            FFGraphFrame frame;
+            double seconds = ffgraph.ReadVideoFrame(out frame);
             if (seconds < 0 || iters++ >= frame_video_stop) {
                 Logger.Log("break: seconds < 0");
                 break;
@@ -227,7 +240,7 @@ L_read_streams:
             // dump video frame
             string name = $"_frame_{video_frame_index++}.data";
             using (FileStream video_raw = new FileStream(name, FileMode.Create, FileAccess.Write)) {
-                video_raw.Write(new Span<byte>(frame, frame_size));
+                video_raw.Write(new((void*)frame.rgb24, video_buffer_size));
             }
         }
 
@@ -262,6 +275,7 @@ L_read_streams:
 
         return 0;
     }
+
 #endif
 
 }

@@ -1,24 +1,24 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using Engine.Platform;
 
 namespace Engine.Externals;
 
-public class PixelUnPackBufferBuilder : IPixelDataBufferBuilder {
+public class WGLUnPackBufferBuilder : IPixelDataBufferBuilder {
 
     private readonly WebGL2RenderingContext gl;
+    private readonly Thread renderer;
 
-    public PixelUnPackBufferBuilder(WebGL2RenderingContext gl) {
+    public WGLUnPackBufferBuilder(WebGL2RenderingContext gl) {
         this.gl = gl;
+        this.renderer = Thread.CurrentThread;
     }
 
     public IPixelDataBuffer CreatePixelDataBuffer(int byte_size) {
         WebGLBuffer pbo = gl.createBuffer();
         if (pbo.IsNull) {
-            Logger.Error("PixelUnPackBufferBuilder::CreatePixelDataBuffer() buffer creation failed");
+            Logger.Error("WGLUnPackBufferBuilder::CreatePixelDataBuffer() buffer creation failed");
             return null;
         }
-
 
         // forget last error
         gl.getError();
@@ -27,21 +27,12 @@ public class PixelUnPackBufferBuilder : IPixelDataBufferBuilder {
         gl.bufferData(gl.PIXEL_UNPACK_BUFFER, byte_size, (byte[])null, gl.STREAM_DRAW);
         nint mapped_buffer = gl.mapBuffer(gl.PIXEL_UNPACK_BUFFER, gl.WRITE_ONLY);
 
-        PixelUnPackBuffer buffer = new PixelUnPackBuffer(gl, byte_size, pbo, mapped_buffer);
+        WGLUnPackBuffer buffer = new WGLUnPackBuffer(gl, byte_size, pbo, mapped_buffer);
 
         GLenum error = gl.getError();
         if (error != GLenum.GL_NONE) {
             string e = ((int)error).ToString("X");
-            Logger.Error($"PixelUnPackBufferBuilder::CreatePixelDataBuffer() gl error 0x{e}");
-            buffer.Dispose();
-            return null;
-        }
-
-
-        error = gl.getError();
-        if (error != GLenum.GL_NONE) {
-            string e = ((int)error).ToString("X");
-            Logger.Error($"PixelUnPackBufferBuilder::CreatePixelDataBuffer() gl error 0x{e}");
+            Logger.Error($"WGLUnPackBufferBuilder::CreatePixelDataBuffer() gl error 0x{e}");
             buffer.Dispose();
             return null;
         }
@@ -51,18 +42,18 @@ public class PixelUnPackBufferBuilder : IPixelDataBufferBuilder {
     }
 
     public bool CanCreatePixelDataBuffer() {
-        return Thread.CurrentThread.Name == "MainThread";
+        return Thread.CurrentThread == renderer;
     }
 }
 
 
-public class PixelUnPackBuffer : IPixelDataBuffer {
+public class WGLUnPackBuffer : IPixelDataBuffer {
     private readonly WebGL2RenderingContext gl;
     private readonly int length;
     internal WebGLBuffer pbo;
     internal nint mapped_buffer;
 
-    public PixelUnPackBuffer(WebGL2RenderingContext gl, int length, WebGLBuffer pbo, nint mapped_buffer) {
+    public WGLUnPackBuffer(WebGL2RenderingContext gl, int length, WebGLBuffer pbo, nint mapped_buffer) {
         this.gl = gl;
         this.length = length;
         this.pbo = pbo;

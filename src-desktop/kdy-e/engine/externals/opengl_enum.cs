@@ -63,9 +63,9 @@ public enum GLenum : uint {
     GL_DEPTH_BUFFER_BIT = 0x00000100,
     GL_PROJECTION = 0x1701,
     GL_MODELVIEW = 0x1700,
-    GL_LUMINANCE = 0x1909,
     GL_TEXTURE0 = 0x84C0,
     GL_TEXTURE1 = 0x84C1,
+    GL_TEXTURE2 = 0x84C2,
     GL_ELEMENT_ARRAY_BUFFER = 0x8893,
     GL_DYNAMIC_DRAW = 0x88E8,
     GL_UNSIGNED_INT = 0x1405,
@@ -74,6 +74,7 @@ public enum GLenum : uint {
     GL_INVALID_ENUM = 0x0500,
     GL_INVALID_VALUE = 0x0501,
     GL_RED = 0x1903,
+    GL_R8 = 0x8229,
     GL_OUT_OF_MEMORY = 0x0505,
     GL_VIEWPORT = 0x0BA2,
     GL_PACK_ALIGNMENT = 0x0D05,
@@ -125,7 +126,8 @@ public enum GLenum : uint {
     GL_STREAM_DRAW = 0x88E0,
     GL_WRITE_ONLY = 0x88B9,
     GL_NUM_EXTENSIONS = 0x821D,
-    GL_EXTENSIONS = 0x1F03
+    GL_EXTENSIONS = 0x1F03,
+    GL_UNPACK_ROW_LENGTH = 0x0CF2
 }
 
 public partial class WebGL2RenderingContext {
@@ -164,15 +166,16 @@ public partial class WebGL2RenderingContext {
     public readonly GLenum BLEND = GLenum.GL_BLEND;
     public readonly GLenum INFO_LOG_LENGTH = GLenum.GL_INFO_LOG_LENGTH;
     public readonly GLenum TEXTURE_2D = GLenum.GL_TEXTURE_2D;
-    public readonly GLenum LUMINANCE = GLenum.GL_LUMINANCE;
     public readonly GLenum TEXTURE0 = GLenum.GL_TEXTURE0;
     public readonly GLenum TEXTURE1 = GLenum.GL_TEXTURE1;
+    public readonly GLenum TEXTURE2 = GLenum.GL_TEXTURE2;
     public readonly GLenum ELEMENT_ARRAY_BUFFER = GLenum.GL_ELEMENT_ARRAY_BUFFER;
     public readonly GLenum DYNAMIC_DRAW = GLenum.GL_DYNAMIC_DRAW;
     public readonly GLenum UNSIGNED_INT = GLenum.GL_UNSIGNED_INT;
     public readonly GLenum UNSIGNED_SHORT = GLenum.GL_UNSIGNED_SHORT;
     public readonly GLenum UNPACK_ALIGNMENT = GLenum.GL_UNPACK_ALIGNMENT;
     public readonly GLenum RED = GLenum.GL_RED;
+    public readonly GLenum R8 = GLenum.GL_R8;
     public readonly GLenum OUT_OF_MEMORY = GLenum.GL_OUT_OF_MEMORY;
     public readonly GLenum NONE = GLenum.GL_NONE;
     public readonly GLenum VIEWPORT = GLenum.GL_VIEWPORT;
@@ -224,4 +227,5 @@ public partial class WebGL2RenderingContext {
     public readonly GLenum PIXEL_UNPACK_BUFFER = GLenum.GL_PIXEL_UNPACK_BUFFER;
     public readonly GLenum STREAM_DRAW = GLenum.GL_STREAM_DRAW;
     public readonly GLenum WRITE_ONLY = GLenum.GL_WRITE_ONLY;
+    public readonly GLenum UNPACK_ROW_LENGTH = GLenum.GL_UNPACK_ROW_LENGTH;
 }

@@ -87,6 +87,7 @@ public partial class WebGL2RenderingContext {
         internal delegate void DglReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, nint data);
         internal delegate void DglDrawElements(GLenum mode, GLsizei count, GLenum type, nint indices);
         internal delegate void DglUniform3fv(GLint location, GLsizei count, GLfloat[] value);
+        internal delegate void DglUniform1iv(GLint location, GLsizei count, GLint[] value);
         internal delegate void DglDeleteBuffers(GLsizei n, GLuint[] buffers);
         internal delegate void DglGenFramebuffers(GLsizei n, [In, Out] GLuint[] ids);
         internal delegate void DglBindFramebuffer(GLenum target, GLuint framebuffer);
@@ -171,6 +172,7 @@ public partial class WebGL2RenderingContext {
         internal static readonly DglReadPixels glReadPixels;
         internal static readonly DglDrawElements glDrawElements;
         internal static readonly DglUniform3fv glUniform3fv;
+        internal static readonly DglUniform1iv glUniform1iv;
         internal static readonly DglDeleteBuffers glDeleteBuffers;
         internal static readonly DglGenFramebuffers glGenFramebuffers;
         internal static readonly DglBindFramebuffer glBindFramebuffer;

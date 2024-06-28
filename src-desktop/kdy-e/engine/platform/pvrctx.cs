@@ -7,7 +7,6 @@ using Engine.Externals.GLFW;
 using Engine.Externals.LuaScriptInterop;
 using Engine.Externals.SoundBridge;
 using Engine.Font;
-using Engine.Game.Common;
 using Engine.Image;
 using Engine.Utils;
 using KallistiOS.MAPLE;
@@ -459,7 +458,7 @@ public class PVRContext {
 
         if (EngineSettings.pixelbufferobjects) {
             // partial implementation, needs async texture loading
-            TextureLoader.SetPixelBufferBuilder(new PixelUnPackBufferBuilder(this.webopengl.gl));
+            TextureLoader.SetPixelBufferBuilder(new WGLUnPackBufferBuilder(this.webopengl.gl));
         }
 
         this.cursor_is_hidden = false;
@@ -528,6 +527,8 @@ public class PVRContext {
         PSFramebuffer.UseScreenFramebuffer(this);
         this.webopengl.SetBlend(this, true, Blend.DEFAULT, Blend.DEFAULT, Blend.DEFAULT, Blend.DEFAULT);
         this.webopengl.program_textured.darken_enabled = false;
+        this.webopengl.program_solid.darken_enabled = false;
+        this.webopengl.program_yuv.darken_enabled = false;
     }
 
     public void ApplyModifier(Modifier modifier) {
@@ -674,6 +675,7 @@ public class PVRContext {
     public void SetVertexTexturedDarken(bool enabled) {
         this.webopengl.program_textured.darken_enabled = enabled;
         this.webopengl.program_solid.darken_enabled = enabled;
+        this.webopengl.program_yuv.darken_enabled = enabled;
     }
 
 
@@ -724,7 +726,11 @@ public class PVRContext {
     public void DrawTexture(Texture texture, float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh) {
         if (texture.data_vram.IsNull) return;
         if (this.shader_stack.Length > 0) this.shader_needs_flush = true;
-        this.webopengl.DrawTexture(this, texture, sx, sy, sw, sh, dx, dy, dw, dh);
+
+        if (texture.data_vram_crhoma_planes == null)
+            this.webopengl.DrawTexture(this, texture, sx, sy, sw, sh, dx, dy, dw, dh);
+        else
+            this.webopengl.DrawTextureYUV(this, texture, sx, sy, sw, sh, dx, dy, dw, dh);
     }
 
     public void DrawSolidColor(float[] rgb_color, float dx, float dy, float dw, float dh) {

@@ -15,7 +15,19 @@ internal readonly struct SwsFilter { }
 
 internal static unsafe partial class FFmpeg {
 
-    private const string SWSCALE_DLL = "swscale-7";
+    private const string SWSCALE_DLL = "swscale-8";
+
+    public const int SWS_FAST_BILINEAR = 1;
+    public const int SWS_BILINEAR = 2;
+    public const int SWS_BICUBIC = 4;
+    public const int SWS_X = 8;
+    public const int SWS_POINT = 0x10;
+    public const int SWS_AREA = 0x20;
+    public const int SWS_BICUBLIN = 0x40;
+    public const int SWS_GAUSS = 0x80;
+    public const int SWS_SINC = 0x100;
+    public const int SWS_LANCZOS = 0x200;
+    public const int SWS_SPLINE = 0x400;
 
 
     [DllImport(SWSCALE_DLL, CallingConvention = CallingConvention.Cdecl)]

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Formats.Asn1;
 using System.Runtime.InteropServices;
 
 ///
@@ -12,52 +13,8 @@ internal enum AVAudioServiceType { }
 internal enum AVDiscard { }
 
 
-internal enum AVSampleFormat {
-    AV_SAMPLE_FMT_NONE = -1,
-    AV_SAMPLE_FMT_U8,
-    AV_SAMPLE_FMT_S16,
-    AV_SAMPLE_FMT_S32,
-    AV_SAMPLE_FMT_FLT,
-    AV_SAMPLE_FMT_DBL,
-
-    AV_SAMPLE_FMT_U8P,
-    AV_SAMPLE_FMT_S16P,
-    AV_SAMPLE_FMT_S32P,
-    AV_SAMPLE_FMT_FLTP,
-    AV_SAMPLE_FMT_DBLP,
-    AV_SAMPLE_FMT_S64,
-    AV_SAMPLE_FMT_S64P,
-
-    AV_SAMPLE_FMT_NB
-}
-
-internal enum AVChannelOrder {
-    AV_CHANNEL_ORDER_UNSPEC,
-    AV_CHANNEL_ORDER_NATIVE,
-    AV_CHANNEL_ORDER_CUSTOM,
-    AV_CHANNEL_ORDER_AMBISONIC
-};
-
-[StructLayout(LayoutKind.Sequential)]
-internal struct AVChannelLayout {
-    public readonly AVChannelOrder order;
-    public readonly int nb_channels;
-    public readonly U u;
-    public nint opaque;
-
-    [StructLayout(LayoutKind.Explicit)]
-    public readonly struct U {
-        [FieldOffset(0)]
-        private readonly ulong mask;
-        [FieldOffset(0)]
-        private readonly nint map;
-    }
-}
-
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct AVCodecContext {
-    private const int AV_NUM_DATA_POINTERS = 8;
-
     readonly void* av_class;
     readonly int log_level_offset;
     readonly AVMediaType codec_type;
@@ -68,26 +25,36 @@ internal unsafe struct AVCodecContext {
     readonly void* @internal;
     readonly void* opaque;
     readonly long bit_rate;
-    readonly int bit_rate_tolerance;
-    readonly int global_quality;
-    readonly int compression_level;
     readonly int flags;
     readonly int flags2;
     readonly byte* extradata;
     readonly int extradata_size;
     readonly AVRational time_base;
+    public AVRational pkt_timebase;
+    public AVRational framerate;
+#if FF_API_TICKS_PER_FRAME
     readonly int ticks_per_frame;
+#endif
     readonly int delay;
     public readonly int width, height;
     readonly int coded_width, coded_height;
-    readonly int gop_size;
+    readonly AVRational sample_aspect_ratio;
     public readonly AVPixelFormat pix_fmt;
+    readonly AVPixelFormat sw_pix_fmt;
+    readonly AVColorPrimaries color_primaries;
+    readonly AVColorTransferCharacteristic color_trc;
+    readonly AVColorSpace colorspace;
+    readonly AVColorRange color_range;
+    readonly AVChromaLocation chroma_sample_location;
+    readonly AVFieldOrder field_order;
+    readonly int refs;
+    readonly int has_b_frames;
+    readonly int slice_flags;
     readonly void* draw_horiz_band;
     readonly void* get_format;
     readonly int max_b_frames;
     readonly float b_quant_factor;
     readonly float b_quant_offset;
-    readonly int has_b_frames;
     readonly float i_quant_factor;
     readonly float i_quant_offset;
     readonly float lumi_masking;
@@ -95,15 +62,7 @@ internal unsafe struct AVCodecContext {
     readonly float spatial_cplx_masking;
     readonly float p_masking;
     readonly float dark_masking;
-
-#if FF_API_SLICE_OFFSET
-    [Obsolete]
-    readonly int slice_count;
-    [Obsolete]
-    readonly int* slice_offset;
-#endif
-
-    readonly AVRational sample_aspect_ratio;
+    readonly int nsse_weight;
     readonly int me_cmp;
     readonly int me_sub_cmp;
     readonly int mb_cmp;
@@ -114,54 +73,33 @@ internal unsafe struct AVCodecContext {
     readonly int pre_dia_size;
     readonly int me_subpel_quality;
     readonly int me_range;
-    readonly int slice_flags;
     readonly int mb_decision;
     readonly ushort* intra_matrix;
     readonly ushort* inter_matrix;
+    readonly ushort* chroma_intra_matrix;
     readonly int intra_dc_precision;
-    readonly int skip_top;
-    readonly int skip_bottom;
     readonly int mb_lmin;
     readonly int mb_lmax;
     readonly int bidir_refine;
     readonly int keyint_min;
-    readonly int refs;
+    readonly int gop_size;
     readonly int mv0_threshold;
-    readonly AVColorPrimaries color_primaries;
-    readonly AVColorTransferCharacteristic color_trc;
-    readonly AVColorSpace colorspace;
-    readonly AVColorRange color_range;
-    readonly AVChromaLocation chroma_sample_location;
     readonly int slices;
-    readonly AVFieldOrder field_order;
     public readonly int sample_rate;
-
-#if FF_API_OLD_CHANNEL_LAYOUT
-    [Obsolete]
-    readonly int channels;
-#endif
-
     public readonly AVSampleFormat sample_fmt;
+    public readonly AVChannelLayout ch_layout;
     readonly int frame_size;
-
-#if FF_API_AVCTX_FRAME_NUMBER
-    [Obsolete]
-    readonly int frame_number;
-#endif
-
     readonly int block_align;
     readonly int cutoff;
-
-#if FF_API_OLD_CHANNEL_LAYOUT
-    [Obsolete]
-    readonly ulong channel_layout;
-    [Obsolete]
-    readonly ulong request_channel_layout;
-#endif
-
     readonly AVAudioServiceType audio_service_type;
     readonly AVSampleFormat request_sample_fmt;
+    readonly int initial_padding;
+    readonly int trailing_padding;
+    readonly int seek_preroll;
     readonly void* get_buffer2;
+    readonly int bit_rate_tolerance;
+    readonly int global_quality;
+    readonly int compression_level;
     readonly float qcompress;
     readonly float qblur;
     readonly int qmin;
@@ -183,64 +121,52 @@ internal unsafe struct AVCodecContext {
     readonly int error_concealment;
     readonly int debug;
     readonly int err_recognition;
-
-#if FF_API_REORDERED_OPAQUE
-    [Obsolete]
-    readonly long reordered_opaque;
-#endif
     readonly void* hwaccel;
     readonly void* hwaccel_context;
-    fixed ulong error[AV_NUM_DATA_POINTERS];
+    readonly void* hw_frames_ctx;
+    readonly void* hw_device_ctx;
+    readonly int hwaccel_flags;
+    readonly int extra_hw_frames;
+    fixed ulong error[FFmpeg.AV_NUM_DATA_POINTERS];
     readonly int dct_algo;
     readonly int idct_algo;
     readonly int bits_per_coded_sample;
     readonly int bits_per_raw_sample;
-    readonly int lowres;
     readonly int thread_count;
     readonly int thread_type;
     readonly int active_thread_type;
     readonly void* execute;
     readonly void* execute2;
-    readonly int nsse_weight;
     readonly int profile;
     readonly int level;
+    readonly uint properties;
     readonly AVDiscard skip_loop_filter;
     readonly AVDiscard skip_idct;
     readonly AVDiscard skip_frame;
-    readonly byte* subtitle_header;
-    readonly int subtitle_header_size;
-    readonly int initial_padding;
-    public readonly AVRational framerate;
-    readonly AVPixelFormat sw_pix_fmt;
-    public AVRational pkt_timebase;
+    readonly int skip_alpha;
+    readonly int skip_top;
+    readonly int skip_bottom;
+    readonly int lowres;
     readonly nint codec_descriptor;
-    readonly long pts_correction_num_faulty_pts;
-    readonly long pts_correction_num_faulty_dts;
-    readonly long pts_correction_last_pts;
-    readonly long pts_correction_last_dts;
     readonly char* sub_charenc;
     readonly int sub_charenc_mode;
-    readonly int skip_alpha;
-    readonly int seek_preroll;
-    readonly ushort* chroma_intra_matrix;
+    readonly int subtitle_header_size;
+    readonly byte* subtitle_header;
     readonly byte* dump_separator;
     readonly char* codec_whitelist;
-    readonly uint properties;
     readonly nint coded_side_data;
     readonly int nb_coded_side_data;
-    readonly nint hw_frames_ctx;
-    readonly int trailing_padding;
+    readonly int export_side_data;
     readonly long max_pixels;
-    readonly nint hw_device_ctx;
-    readonly int hwaccel_flags;
     readonly int apply_cropping;
-    readonly int extra_hw_frames;
     readonly int discard_damaged_percentage;
     readonly long max_samples;
-    readonly int export_side_data;
     readonly nint get_encode_buffer;
-    public readonly AVChannelLayout ch_layout;
     readonly long frame_num;
+    readonly int* side_data_prefer_packet;
+    readonly uint nb_side_data_prefer_packet;
+    readonly nint decoded_side_data;
+    readonly int nb_decoded_side_data;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -266,7 +192,7 @@ internal unsafe readonly struct AVCodec { }
 
 internal static unsafe partial class FFmpeg {
 
-    private const string AVCODEC_DLL = "avcodec-60";
+    private const string AVCODEC_DLL = "avcodec-61";
 
 
     [DllImport(AVCODEC_DLL, CallingConvention = CallingConvention.Cdecl)]

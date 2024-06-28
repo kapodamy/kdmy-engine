@@ -16,6 +16,7 @@ public class WebGLContext {
     public static readonly float[] QUAD_SCREEN = new float[] {
         -1f, 1f, 0f, 1f, -1f, -1, 0f, 0f, 1f, -1f, 1f, 0f, -1f, 1f, 0f, 1f, 1f, -1f, 1f, 0f, 1f, 1f, 1f, 1f
     };
+    private static readonly int[] YUV_UNITS = new int[] { 0, 1, 2 };
 
     private static readonly Regex rx_header = new Regex(@"#pragma header[\s\t\u00A0]*\r?\n", RegexOptions.Compiled);
     private static readonly Regex rx_shadertoy = new Regex(@"#pragma shadertoy_mainImage[\s\t\u00A0]*\r?\n", RegexOptions.Compiled);
@@ -24,6 +25,7 @@ public class WebGLContext {
     public WebGLContextProgram program_textured;
     public WebGLContextProgram program_framebuffer;
     public WebGLContextProgramGlyphs program_glyphs;
+    public WebGLContextProgram program_yuv;
 
     public WebGL2RenderingContext gl;
 
@@ -45,11 +47,13 @@ public class WebGLContext {
         WebGLProgram program_textured = InternalCreateProgram(gl, "textured");
         WebGLProgram program_framebuffer = InternalCreateProgram(gl, "framebuffer");
         WebGLProgram program_glyphs = InternalCreateProgram(gl, "glyphs");
+        WebGLProgram program_yuv = InternalCreateProgram(gl, "yuv");
 
         this.program_solid = new WebGLContextProgram(gl, program_solid);
         this.program_textured = new WebGLContextProgram(gl, program_textured);
         this.program_glyphs = new WebGLContextProgramGlyphs(gl, program_glyphs);
         this.program_framebuffer = new WebGLContextProgram(gl, program_framebuffer);
+        this.program_yuv = new WebGLContextProgram(gl, program_yuv);
 
         // quads buffer
         this.position_buffer = gl.createBuffer();
@@ -95,7 +99,7 @@ public class WebGLContext {
 
         WebGLTexture tex = gl.createTexture();
 
-        //gl.activeTexture(gl.TEXTURE0);
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, tex);
 
         if (pixelDataBuffer is DDSPixelDataBuffer dds) {
@@ -142,19 +146,22 @@ public class WebGLContext {
                     new WebGL2RenderingContext.DataView(dds.Mipmaps[i].ptr, 0, (int)dds.Mipmaps[i].length)
                 );
             }
-        } else if (pixelDataBuffer is PixelUnPackBuffer pb) {
+        } else if (pixelDataBuffer is WGLUnPackBuffer pb) {
             gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pb.pbo);
+
+            // when PBO is binded the texImage2D() function takes an offset
+            nint offset_in_pbo = 0;
+
+            gl.texImage2D(
+                gl.TEXTURE_2D, 0, gl.RGBA,
+                bitmap_data.pow2_width, bitmap_data.pow2_height, 0,
+                gl.RGBA, gl.UNSIGNED_BYTE, offset_in_pbo
+            );
 
             if (pb.mapped_buffer != 0x00) {
                 gl.unmapBuffer(gl.PIXEL_UNPACK_BUFFER);
                 pb.mapped_buffer = 0x00;
             }
-
-            gl.texImage2D(
-                gl.TEXTURE_2D, 0, gl.RGBA,
-                bitmap_data.pow2_width, bitmap_data.pow2_height, 0,
-                gl.RGBA, gl.UNSIGNED_BYTE, 0x00
-            );
 
             gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, WebGLBuffer.Null);
         } else {
@@ -219,6 +226,7 @@ public class WebGLContext {
         this.program_solid.ResizeProyection(this.gl, WebGLContext.MAT4);
         this.program_textured.ResizeProyection(this.gl, WebGLContext.MAT4);
         this.program_glyphs.ResizeProyection(this.gl, WebGLContext.MAT4);
+        this.program_yuv.ResizeProyection(this.gl, WebGLContext.MAT4);
 
         WebGLContext.MAT4[5] = -WebGLContext.MAT4[5];
         this.program_framebuffer.ResizeProyection(this.gl, WebGLContext.MAT4);
@@ -234,6 +242,7 @@ public class WebGLContext {
         gl.bindVertexArray(this.program_textured.vao);
 
         // bind texture and update antialiasing
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, tex.data_vram);
         ChangeTextureFiltering(pvrctx, tex.has_mipmaps);
 
@@ -284,6 +293,78 @@ public class WebGLContext {
         // unbind buffers and texture
         gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
+        gl.bindVertexArray(WebGLVertexArrayObject.Null);
+
+        // required to avoid GL_OUT_OF_MEMORY
+        //gl.flush();
+    }
+
+    public void DrawTextureYUV(PVRContext pvrctx, Texture tex, float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh) {
+        WebGL2RenderingContext gl = this.gl;
+        int tex_width = tex.width;
+        int tex_height = tex.height;
+
+        gl.useProgram(this.program_yuv.program);
+        gl.bindVertexArray(this.program_yuv.vao);
+
+        // bind textures and update antialiasing
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, tex.data_vram);
+        this.ChangeTextureFiltering(pvrctx, tex.has_mipmaps);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, tex.data_vram_crhoma_planes[0]);
+        this.ChangeTextureFiltering(pvrctx, tex.has_mipmaps);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, tex.data_vram_crhoma_planes[1]);
+        this.ChangeTextureFiltering(pvrctx, tex.has_mipmaps);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.position_buffer);
+        gl.enableVertexAttribArray(this.program_yuv.a_position);
+        gl.vertexAttribPointer(this.program_yuv.a_position, 2, gl.FLOAT, false, 0, 0);
+
+        // optimized matrix model, contains the draw size and location
+        WebGLContext.InternalIdentity(WebGLContext.MAT4, 4);
+        WebGLContext.MAT4[0] = dw;
+        WebGLContext.MAT4[5] = dh;
+        WebGLContext.MAT4[12] = dx;
+        WebGLContext.MAT4[13] = dy;
+        gl.uniformMatrix4fv(this.program_yuv.u_matrix_model, false, WebGLContext.MAT4);
+
+        // copy transformation matrix (with all modifiers applied)
+        gl.uniformMatrix4fv(this.program_yuv.u_matrix_transform, false, pvrctx.CurrentMatrix);
+
+        // optimized sub-texture matrix, contains the source size and location
+        WebGLContext.InternalIdentity(WebGLContext.MAT4, 4);
+        WebGLContext.MAT4[12] = sx / tex_width;
+        WebGLContext.MAT4[13] = sy / tex_height;
+        if (sw != tex_width) WebGLContext.MAT4[0] = sw / tex_width;
+        if (sh != tex_height) WebGLContext.MAT4[5] = sh / tex_height;
+        gl.uniformMatrix4fv(this.program_yuv.u_matrix_texture, false, WebGLContext.MAT4);
+
+        gl.uniform1iv(this.program_yuv.u_texture, WebGLContext.YUV_UNITS);
+        gl.uniform1f(this.program_yuv.u_alpha, pvrctx.render_alpha);
+
+        // if the offsetcolor alpha is negative, disable the offsetcolor processing
+        // "u_offsetcolor_enabled" and "u_offsetcolor_mul_or_add" are boolean values
+        if (pvrctx.render_offsetcolor[3] < 0) {
+            gl.uniform1i(this.program_yuv.u_offsetcolor_enabled, 0);
+        } else {
+            gl.uniform1i(this.program_yuv.u_offsetcolor_enabled, 1);
+            gl.uniform4fv(this.program_yuv.u_offsetcolor, pvrctx.render_offsetcolor);
+            bool use_multiply = pvrctx.render_offsetcolor_multiply != PVRFlag.DISABLE;
+            gl.uniform1i(this.program_yuv.u_offsetcolor_mul_or_add, use_multiply ? 1 : 0);
+        }
+
+        // enable/disable rgb color components be multiplied by the render alpha
+        gl.uniform1i(this.program_yuv.u_darken, this.program_yuv.darken_enabled ? 1 : 0);
+
+        // draw the quad (2 triangles, 6 vertices)
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        // unbind buffers and texture
+        gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
         gl.bindVertexArray(WebGLVertexArrayObject.Null);
 
         // required to avoid GL_OUT_OF_MEMORY
@@ -351,6 +432,7 @@ public class WebGLContext {
         gl.bindVertexArray(wglc.program_framebuffer.vao);
 
         // bind texture and update antialiasing
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, frmbffr.texture);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, wglc.position_buffer);
@@ -397,6 +479,7 @@ public class WebGLContext {
 
         // unbind buffers and texture
         gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         gl.bindVertexArray(WebGLVertexArrayObject.Null);
     }
@@ -980,6 +1063,7 @@ public class PSShader {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         gl.bindVertexArray(WebGLVertexArrayObject.Null);
         //gl.useProgram(WebGLProgram.NULL);
@@ -1110,6 +1194,7 @@ public class PSFramebuffer {
         }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, WebGLFramebuffer.Null);
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         //gl.bindRenderbuffer(gl.RENDERBUFFER, WebGLRenderbuffer.Null);
     }
@@ -1132,6 +1217,7 @@ public class PSFramebuffer {
         this.texture_dimmens[2] = (float)this.pow2_width / (float)this.pow2_height;
 
         // resize color attachment
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.pow2_width, this.pow2_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, 0x00);
 
@@ -1144,6 +1230,7 @@ public class PSFramebuffer {
         gl.invalidateFramebuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, WebGLFramebuffer.Null);
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     }

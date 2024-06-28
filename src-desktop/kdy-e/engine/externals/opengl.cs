@@ -486,6 +486,10 @@ public partial class WebGL2RenderingContext {
         NativeMethods.glUniform3fv(location.value, value.Length, value);
     }
 
+    internal void uniform1iv(WebGLUniformLocation location, int[] value) {
+        NativeMethods.glUniform1iv(location.value, value.Length, value);
+    }
+
     internal void deleteBuffer(WebGLBuffer buffer) {
         uint[] value = new uint[] { buffer.value };
         NativeMethods.glDeleteBuffers(1, value);

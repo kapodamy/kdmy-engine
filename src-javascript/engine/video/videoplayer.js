@@ -104,7 +104,7 @@ function videoplayer_seek(videoplayer, timestamp) {
 }
 
 function videoplayer_set_property(videoplayer, property_id, value) {
-    switch (property_id) {
+    switch (parseInt(property_id)) {
         case MEDIA_PROP_VOLUME:
         case MEDIA_PROP_SEEK:
         case MEDIA_PROP_PLAYBACK:

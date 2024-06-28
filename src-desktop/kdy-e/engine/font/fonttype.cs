@@ -541,6 +541,7 @@ public class FontType : IFont {
 
 
         WebGLTexture texture = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
 #if SDF_MIPMAPS

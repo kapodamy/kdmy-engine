@@ -21,9 +21,9 @@
 	  <ProjectReference Include="..\soundbridge\soundbridge.csproj" />
 	</ItemGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DefineConstants>$(DefineConstants);FF_API_SLICE_OFFSET;FF_API_OLD_CHANNEL_LAYOUT;FF_API_AVCTX_FRAME_NUMBER;FF_API_REORDERED_OPAQUE</DefineConstants>
+    <DefineConstants>$(DefineConstants);FF_API_TICKS_PER_FRAME</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <DefineConstants>$(DefineConstants);FF_API_SLICE_OFFSET;FF_API_OLD_CHANNEL_LAYOUT;FF_API_AVCTX_FRAME_NUMBER;FF_API_REORDERED_OPAQUE</DefineConstants>
+    <DefineConstants>$(DefineConstants);FF_API_TICKS_PER_FRAME</DefineConstants>
   </PropertyGroup>
 </Project>

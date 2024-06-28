@@ -4,7 +4,7 @@ using Engine.Externals;
 using Engine.Platform;
 using Engine.Utils;
 
-namespace Engine.Image; 
+namespace Engine.Image;
 
 public class Texture {
     private static int TEXTURE_IDS = 0;
@@ -25,6 +25,7 @@ public class Texture {
     private int references;
     private int cache_references;
     internal bool has_mipmaps;
+    internal WebGLTexture[] data_vram_crhoma_planes;
 
 
     public static Texture Init(string src) {
@@ -74,6 +75,7 @@ public class Texture {
         texture.references = 1;
         texture.cache_references = 0;
         texture.has_mipmaps = false;
+        texture.data_vram_crhoma_planes = null;
 
         if (in_vram)
             texture.data_vram = (WebGLTexture)ptr;
@@ -163,7 +165,11 @@ public class Texture {
             this.data_ram.Dispose();
         }
         if (!this.data_vram.IsNull) {
-            PVRContext.global_context.webopengl.DestroyTexture((WebGLTexture)this.data_vram);
+            PVRContext.global_context.webopengl.DestroyTexture(this.data_vram);
+        }
+        if (this.data_vram_crhoma_planes != null) {
+            PVRContext.global_context.webopengl.DestroyTexture(this.data_vram_crhoma_planes[0]);
+            PVRContext.global_context.webopengl.DestroyTexture(this.data_vram_crhoma_planes[1]);
         }
 
         this.data_ram = null;

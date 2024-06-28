@@ -173,7 +173,7 @@ function soundplayer_set_property(soundplayer, property_id, value) {
             soundplayer.handler.currentTime = value / 1000.0;
             break;
         case MEDIA_PROP_PLAYBACK:
-            switch (value) {
+            switch (parseInt(value)) {
                 case PLAYBACK_PLAY:
                     soundplayer_play(soundplayer);
                     break;

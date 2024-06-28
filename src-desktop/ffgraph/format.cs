@@ -20,10 +20,10 @@ internal unsafe class FFGraphFormat : IDisposable {
     private AVCodec* av_codec;
     private AVFrame* av_frame;
     private AVStream* av_stream;
-    public bool has_ended;
-    public bool has_decoded;
     public IFFGraphFormatConverter ffgraphconv;
     private int stream_idx;
+    public bool has_ended;
+    public bool has_decoded;
 
 
     public static FFGraphFormat Init(ISourceHandle sourcehandle, AVMediaType required_type) {
@@ -172,9 +172,8 @@ internal unsafe class FFGraphFormat : IDisposable {
         int ret;
         AVPacket* av_packet = this.packet;
 
-L_process:
         while (running) {
-            ret = FFmpeg.av_read_frame(this.fmt_ctx, this.packet);
+            ret = FFmpeg.av_read_frame(this.fmt_ctx, av_packet);
 
             if (ret == FFmpeg.AVERROR_EOF) {
                 av_packet = null;
@@ -199,15 +198,13 @@ L_process:
                 goto L_drop_packet;
             }
 
-L_receive_frame:
             if (ret >= 0 && av_packet != null) av_packet->size = 0;
             ret = FFmpeg.avcodec_receive_frame(this.codec_ctx, this.av_frame);
 
             if (seek_to_pts >= 0 && av_packet != null) {
                 long next_pts = av_packet->pts + av_packet->duration;
                 if (next_pts < seek_to_pts) {
-                    FFmpeg.av_packet_unref(av_packet);
-                    goto L_process;
+                    goto L_drop_packet;
                 }
 
                 seek_to_pts = -1;
@@ -215,19 +212,17 @@ L_receive_frame:
 
             if (ret >= 0) {
                 data_readed = true;
+                running = false;
+
                 bool failed = this.ffgraphconv.Process(this.codec_ctx, this.av_frame, this.av_stream);
 
                 if (failed) {
-                    FFmpeg.av_packet_unref(this.packet);
+                    FFmpeg.av_packet_unref(av_packet);
                     return false;
                 }
-
                 if (seek_request) {
                     this.has_decoded = true;
                 }
-
-                // call again avcodec_receive_frame() which is required for audio samples
-                goto L_receive_frame;
             } else if (ret == FFmpeg.AVERROR(FFmpeg.EAGAIN)) {
                 // try adquire another packet (if possible)
                 if (data_readed) running = false;
@@ -241,7 +236,7 @@ L_receive_frame:
             }
 
 L_drop_packet:
-            FFmpeg.av_packet_unref(this.packet);
+            if (av_packet != null) FFmpeg.av_packet_unref(av_packet);
         }
 
         if (this.has_ended) {
