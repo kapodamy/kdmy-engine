@@ -1,0 +1,17 @@
+1. download and build libogg
+3. download and build libvorbis
+2. copy the files from "libogg" to "libvorbis/lib/.libs": framing.lo bitwise.lo framing.o bitwise.o
+3. open msys2 mingw64 bash and "cd libvorbis/lib"
+4. paste and execute the following command:
+
+/bin/sh ../libtool --silent --tag=CC   --mode=link gcc  -O3 -Wall -Wextra -D__NO_MATH_INLINES -fsigned-char -Wdeclaration-after-statement  -DUSE_MEMORY_H -no-undefined -version-info 6:8:3  -o libvorbisfile.la -rpath /mingw64/lib \
+	vorbisfile.lo \
+	mdct.lo smallft.lo block.lo envelope.lo \
+	window.lo lsp.lo lpc.lo analysis.lo synthesis.lo psy.lo \
+	info.lo floor1.lo floor0.lo res0.lo mapping0.lo registry.lo \
+	codebook.lo sharedbook.lo lookup.lo bitrate.lo \
+    	framing.lo bitwise.lo
+
+5. grab the "libvorbisfile-3.dll"
+
+done

@@ -1,20 +1,12 @@
-ffmpeg (needs libvpl to enble qsv decoders and CUDA sdk):
-./configure --enable-shared --disable-debug --enable-libvorbis --enable-opencl --enable-libopus --enable-libvpx --enable-libopenh264 --enable-libopenjpeg --enable-vulkan --enable-libshaderc --disable-encoders --disable-decoders --enable-decoder=qsv --enable-decoder=qsvdec --enable-decoder=h264_qsv_decoder --enable-decoder=h264 --enable-decoder=h264_qsv --enable-decoder=libopenh264 --enable-decoder=h264_cuvid --enable-decoder=mjpeg --enable-decoder=mjpeg_cuvid --enable-decoder=mjpeg_qsv --enable-decoder=mpeg4 --enable-decoder=mpeg4_cuvid --enable-decoder=msmpeg4v1 --enable-decoder=msmpeg4v2 --enable-decoder=msmpeg4v3 --enable-decoder=msmpeg4 --enable-decoder=vp8 --enable-decoder=libvpx --enable-decoder=vp8_cuvid --enable-decoder=vp8_qsv --enable-decoder=vp9 --enable-decoder=libvpx-vp9 --enable-decoder=vp9_cuvid --enable-decoder=vp9_qsv --enable-decoder=aac --enable-decoder=aac_fixed --enable-decoder=aac_latm --enable-decoder=opus --enable-decoder=libopus --enable-decoder=vorbis --enable-decoder=libvorbis --disable-muxers --enable-demuxer=aac --enable-demuxer=avi --enable-demuxer=TTP --enable-demuxer=data --enable-demuxer=h264 --enable-demuxer=m4v --enable-demuxer=matroska,webm --enable-demuxer=mjpeg --enable-demuxer=mjpeg_2000 --enable-demuxer=mov,mp4,m4a,3gp,3g2,mj2 --enable-demuxer=ogg --disable-bsfs --enable-bsf=h264_mp4toannexb_bsf --enable-bsf=aac_adtstoasc --enable-bsf=h264_metadata --enable-bsf=h264_mp4toannexb --enable-bsf=h264_redundant_pps --enable-bsf=mpeg4_unpack_bframes --enable-bsf=opus_metadata --enable-bsf=vp9_metadata --enable-bsf=vp9_raw_reorder --enable-bsf=vp9_superframe --enable-bsf=vp9_superframe_split --disable-protocols --enable-protocol=data --enable-protocol=file --enable-protocol=pipe --disable-indevs --disable-outdevs --disable-devices --disable-filters --enable-filter=acopy --enable-filter=anull --enable-filter=aresample --enable-filter=aselect --enable-filter=asetpts --enable-filter=astreamselect --enable-filter=replaygain --enable-filter=anullsrc --enable-filter=anullsink --enable-filter=colormatrix --enable-filter=colorspace --enable-filter=colorspace_cuda --enable-filter=copy --enable-filter=deband --enable-filter=deblock --enable-filter=deinterlace_qsv --enable-filter=format --enable-filter=fps --enable-filter=framerate --enable-filter=hwdownload --enable-filter=hwmap --enable-filter=hwupload --enable-filter=hwupload_cuda --enable-filter=normalize --enable-filter=null --enable-filter=remap --enable-filter=remap_opencl --enable-filter=scale --enable-filter=scale_cuda --enable-filter=scale_qsv --enable-filter=scale_vulkan --enable-filter=scale2ref --enable-filter=setpts --enable-filter=streamselect --enable-filter=yadif --enable-filter=yadif_cuda --enable-filter=nullsink --enable-filter=afifo --enable-filter=fifo --enable-filter=abuffer --enable-filter=buffer --enable-filter=abuffersink --enable-filter=buffersink --enable-libvpl
-(optional) --enable-hardcoded-tables
+./configure --disable-everything --disable-network --disable-autodetect --enable-decoder=aac*,ac3*,opus,vorbis,h264,vp8,vp9,mp3* --enable-demuxer=mov,m4v,matroska,avi --enable-bsf=eac3_core,h264_metadata,h264_mp4toannexb,h264_redundant_pps,mpeg4_unpack_bframes,opus_metadata,vp9_metadata,vp9_raw_reorder,vp9_superframe,vp9_superframe_split --enable-protocol=file --enable-shared --disable-debug  --disable-avdevice --disable-postproc --disable-avfilter --disable-pthreads
 make
 
-libvpl (disasters ahead):
-git clone https://github.com/oneapi-src/oneVPL.git
-mkdir build
-cd build
-cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_BINDIR=result_files/bin -DCMAKE_INSTALL_LIBDIR=result_files/lib -DBUILD_DISPATCHER=ON -DBUILD_DEV=ON -DBUILD_PREVIEW=OFF -DBUILD_TOOLS=OFF -DBUILD_TOOLS_ONEVPL_EXPERIMENTAL=OFF -DINSTALL_EXAMPLE_CODE=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF ..
+optional:
+--enable-hardcoded-tables				increase dll size of libavcodec ~15%
+--enable-small						create smaller dlls, but decreases decoding performance
 
-ninja -j$(nproc)
-ninja install
+if links to MINGW64 dlls:
+--extra-cflags="-static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic"
+--extra-ldflags=="-static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive -lpthread -Wl,-Bdynamic -Wl,--no-whole-archive"
 
-copy "build/result_files/lib" files to "C:\msys64\mingw64\lib"
-copy "build/result_files/include" files to "C:\msys64\include"
-
-
-reference https://trac.ffmpeg.org/wiki/CompilationGuide https://trac.ffmpeg.org/wiki/CompilationGuide/MinGW
-
+or download the shared libraries from https://www.gyan.dev/ffmpeg/builds/ or https://github.com/BtbN/FFmpeg-Build and replace avutil-NN.dll

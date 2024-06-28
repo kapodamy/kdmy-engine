@@ -14,4 +14,4 @@ $(CC) -o $@ $(LDFLAGS) $(LUA_O) $(LUA_A) $(LIBS) -s "ALLOW_MEMORY_GROWTH=1"
 notes:
 * msys2 and emscripten must be installed first
 * example of modified Makefile of lua 4.6 added for reference
-* updating emscript can make obsolete "liblua.a", to solve recompile again
+* updating emscripten can make obsolete "liblua.a", to solve recompile again
