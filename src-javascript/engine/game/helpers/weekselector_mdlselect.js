@@ -36,7 +36,7 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
         is_boyfriend: is_boyfriend,
         hey_playing: false,
 
-        load_thread_id: 0,
+        load_character_id: 0,
         running_threads: 0,
 
         drawable: null,
@@ -235,7 +235,7 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
 function weekselector_mdlselect_destroy(mdlselect) {
     if (mdlselect.animsprite) animsprite_destroy(mdlselect.animsprite);
 
-    mdlselect.load_thread_id++;
+    mdlselect.load_character_id++;
 
     /*
     // C/C# only
@@ -346,7 +346,6 @@ function weekselector_mdlselect_select(mdlselect, new_index) {
     mdlselect.index = new_index;
     mdlselect.has_up = new_index > 0;
     mdlselect.has_down = new_index < (mdlselect.list_size - 1);
-    mdlselect.load_thread_id++;
 
     statesprite_state_toggle(mdlselect.preview, null);
     statesprite_state_remove(mdlselect.preview, WEEKSELECTOR_MDLSELECT_IDLE);
@@ -361,6 +360,8 @@ function weekselector_mdlselect_select(mdlselect, new_index) {
         mdlselect.icon_down, mdlselect.has_down ? 1.0 : WEEKSELECTOR_ARROW_DISABLED_ALPHA
     );
 
+    mdlselect.load_character_id++;
+    mdlselect.running_threads++;
     main_thd_helper_spawn(true, weekselector_mdlselect_internal_load_async, mdlselect);
 
     return true;
@@ -394,7 +395,7 @@ function weekselector_mdlselect_internal_place_arrow(sprite, arrow_size, placeho
 }
 
 async function weekselector_mdlselect_internal_load_async(mdlselect) {
-    let load_thread_id = mdlselect.load_thread_id;
+    let load_character_id = mdlselect.load_character_id;
     let character_info = mdlselect.list[mdlselect.index];
     let week_selector_left_facing = character_info.week_selector_left_facing;
     let week_selector_enable_beat = character_info.week_selector_enable_beat;
@@ -403,42 +404,44 @@ async function weekselector_mdlselect_internal_load_async(mdlselect) {
     if (mdlselect.is_boyfriend && !week_selector_left_facing) flip_x = true;
     //else if (!mdlselect.is_boyfriend && week_selector_left_facing) flip_x = true;
 
-    let modelholder = await modelholder_init(character_info.week_selector_model);
+    L_load: {
+        let modelholder = await modelholder_init(character_info.week_selector_model);
 
-    if (load_thread_id != mdlselect.load_thread_id) {
-        if (modelholder) modelholder_destroy(modelholder);
-        mdlselect.running_threads--;
-        return null;
+        if (mdlselect.load_character_id != load_character_id) {
+            if (modelholder) modelholder_destroy(modelholder);
+            break L_load;
+        }
+
+        if (!modelholder) {
+            console.error("weekselector_mdlselect_internal_load_async() modelholder_init failed");
+            break L_load;
+        }
+
+        weekselector_mdlselect_helper_import(
+            mdlselect.preview, modelholder,
+            mdlselect.placeholder_character,
+            week_selector_enable_beat,
+            character_info.week_selector_idle_anim_name ?? WEEKSELECTOR_MDLSELECT_IDLE,
+            WEEKSELECTOR_MDLSELECT_IDLE
+        );
+        weekselector_mdlselect_helper_import(
+            mdlselect.preview, modelholder,
+            mdlselect.placeholder_character,
+            false,
+            character_info.week_selector_choosen_anim_name ?? WEEKSELECTOR_MDLSELECT_HEY,
+            WEEKSELECTOR_MDLSELECT_HEY
+        );
+        modelholder_destroy(modelholder);
+
+        texturepool_add(mdlselect.texturepool, modelholder_get_texture(modelholder, false));
+
+        statesprite_state_toggle(mdlselect.preview, WEEKSELECTOR_MDLSELECT_IDLE);
+        statesprite_animate(mdlselect.preview, beatwatcher_remaining_until_next(mdlselect.beatwatcher));
+        statesprite_flip_texture(mdlselect.preview, flip_x, false);
+        drawable_set_visible(mdlselect.drawable_character, true);
     }
 
-    if (!modelholder) {
-        console.error("weekselector_mdlselect_internal_load_async() modelholder_init failed");
-        return null;
-    }
-
-    weekselector_mdlselect_helper_import(
-        mdlselect.preview, modelholder,
-        mdlselect.placeholder_character,
-        week_selector_enable_beat,
-        character_info.week_selector_idle_anim_name ?? WEEKSELECTOR_MDLSELECT_IDLE,
-        WEEKSELECTOR_MDLSELECT_IDLE
-    );
-    weekselector_mdlselect_helper_import(
-        mdlselect.preview, modelholder,
-        mdlselect.placeholder_character,
-        false,
-        character_info.week_selector_choosen_anim_name ?? WEEKSELECTOR_MDLSELECT_HEY,
-        WEEKSELECTOR_MDLSELECT_HEY
-    );
-    modelholder_destroy(modelholder);
-
-    texturepool_add(mdlselect.texturepool, modelholder_get_texture(modelholder, false));
-
-    statesprite_state_toggle(mdlselect.preview, WEEKSELECTOR_MDLSELECT_IDLE);
-    statesprite_animate(mdlselect.preview, beatwatcher_remaining_until_next(mdlselect.beatwatcher));
-    statesprite_flip_texture(mdlselect.preview, flip_x, false);
-    drawable_set_visible(mdlselect.drawable_character, true);
-
+    mdlselect.running_threads--;
     return null;
 }
 

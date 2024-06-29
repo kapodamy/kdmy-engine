@@ -320,7 +320,14 @@ function main_thd_helper_spawn_wrapper(init_data) {
 function main_thd_helper_spawn(detached, routine, param) {
     // in C, "init_data" this an allocated struct
     let init_data = { routine, param };
-    return thd_create(detached, main_thd_helper_spawn_wrapper, init_data);
+    let thread = thd_create(detached, main_thd_helper_spawn_wrapper, init_data);
+
+    console.assert(thread);
+
+    // C only
+    //thd_pass();
+
+    return thread;
 }
 
 async function main_spawn_coroutine(background_layout, function_routine, argument_routine) {

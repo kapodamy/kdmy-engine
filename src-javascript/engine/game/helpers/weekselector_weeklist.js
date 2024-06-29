@@ -31,9 +31,9 @@ async function weekselector_weeklist_init(animlist, modelholder, layout, texture
         drawable_list: null,
 
         host_statesprite: statesprite_init_from_texture(null),
-        host_loading_count: 0,
         host_placeholder: placeholder_host,
-        host_load_id: 0,
+        running_threads: 0,
+        load_host_id: 0,
 
         texturepool: texturepool,
         anim_selected: anim_selected,
@@ -105,13 +105,13 @@ async function weekselector_weeklist_init(animlist, modelholder, layout, texture
 
 function weekselector_weeklist_destroy(weeklist) {
 
-    weeklist.host_load_id = -1;
+    weeklist.load_host_id = -1;
 
     /*
     // C/C# only
     thd_pass();
 
-    while (weeklist.host_loading_count > 0) {
+    while (weeklist->running_threads > 0) {
         // wait until all async operations are done
         thd_pass();
     }
@@ -142,7 +142,7 @@ function weekselector_weeklist_animate(weeklist, elapsed) {
         }
     }
 
-    if (weeklist.host_loading_count < 1) statesprite_animate(weeklist.host_statesprite, since_beat);
+    if (weeklist.running_threads < 1) statesprite_animate(weeklist.host_statesprite, since_beat);
 
     for (let i = 0; i < WEEKSELECTOR_WEEKLIST_VISIBLE_SIZE; i++) {
         let visible_item = weeklist.list_visible[i];
@@ -212,7 +212,7 @@ function weekselector_weeklist_draw(weeklist, pvrctx) {
 
 function weekselector_weeklist_toggle_choosen(weeklist) {
     weeklist.week_choosen = true;
-    if (weeklist.host_loading_count > 0) return;
+    if (weeklist.running_threads > 0) return;
     if (statesprite_state_toggle(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_HEY)) {
         weeklist.hey_playing = true;
     }
@@ -293,8 +293,8 @@ async function weekselector_weeklist_select(weeklist, index) {
         sprite_set_draw_size_from_source_size(weeklist.list_visible[i].sprite_title);
     }
 
-    weeklist.host_load_id++;
-    weeklist.host_loading_count++;
+    weeklist.load_host_id++;
+    weeklist.running_threads++;
     main_thd_helper_spawn(true, weekselector_weeklist_internal_load_host_async, weeklist);
 
     weeklist.progress = 0.0;
@@ -492,14 +492,14 @@ function weekselector_weeklist_internal_calc_row_sizes(weeklist, vertex, row1, r
 }
 
 function weekselector_weeklist_internal_host_draw(weeklist, pvrctx) {
-    if (weeklist.host_loading_count > 0 || !statesprite_is_visible(weeklist.host_statesprite)) return;
+    if (weeklist.running_threads > 0 || !statesprite_is_visible(weeklist.host_statesprite)) return;
     pvr_context_save(pvrctx);
     statesprite_draw(weeklist.host_statesprite, pvrctx);
     pvr_context_restore(pvrctx);
 }
 
 async function weekselector_weeklist_internal_load_host_async(weeklist) {
-    let host_load_id = weeklist.host_load_id;
+    let load_host_id = weeklist.load_host_id;
     let weekinfo = weeks_array.array[weeklist.index];
     let host_flip, host_beat, modelholder;
     let anim_name_hey = WEEKSELECTOR_MDLSELECT_HEY;
@@ -544,70 +544,70 @@ async function weekselector_weeklist_internal_load_host_async(weeklist) {
         week_host_model = undefined;
     }
 
-    if (weeklist.host_load_id < 0) {
-        // weeklist is begin disposed
-        if (modelholder) modelholder_destroy(modelholder);
-        if (charactermanifest) charactermanifest_destroy(charactermanifest);
-        return;
-    }
+    L_load: {
+        if (weeklist.load_host_id != load_host_id) {
+            // weeklist is loading another host or begin disposed
+            break L_load;
+        }
 
-    if (!modelholder) {
-        console.error("weekselector_weeklist_internal_load_host_async() modelholder_init failed");
-        if (host_load_id == weeklist.host_load_id) {
+        if (!modelholder) {
+            console.error("weekselector_weeklist_internal_load_host_async() modelholder_init failed");
+            if (weeklist.load_host_id == load_host_id) {
+                statesprite_state_remove(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_HEY);
+                statesprite_state_remove(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_IDLE);
+            }
+            statesprite_set_texture(weeklist.host_statesprite, null, false);
+            statesprite_set_visible(weeklist.host_statesprite, false);
+
+            break L_load;
+        }
+
+        let texture = modelholder_get_texture(modelholder, false);
+        if (texture) texturepool_add(weeklist.texturepool, texture);
+
+        if (weeklist.load_host_id == load_host_id) {
             statesprite_state_remove(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_HEY);
             statesprite_state_remove(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_IDLE);
+
+            weekselector_mdlselect_helper_import(
+                weeklist.host_statesprite,
+                modelholder,
+                weeklist.host_placeholder,
+                host_beat,
+                anim_name_idle,
+                WEEKSELECTOR_MDLSELECT_IDLE
+            );
+            weekselector_mdlselect_helper_import(
+                weeklist.host_statesprite,
+                modelholder,
+                weeklist.host_placeholder,
+                false,
+                anim_name_hey,
+                WEEKSELECTOR_MDLSELECT_HEY
+            );
+
+            if (weeklist.week_choosen)
+                statesprite_state_toggle(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_HEY);
+            else
+                statesprite_state_toggle(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_IDLE);
+
+            // set defaults
+            statesprite_set_alpha(weeklist.host_statesprite, 1.0);
+            statesprite_set_property(weeklist.host_statesprite, SPRITE_PROP_ALPHA2, 1.0);
+            statesprite_set_offsetcolor(weeklist.host_statesprite, 1.0, 1.0, 1.0, -1.0);
+            statesprite_matrix_reset(weeklist.host_statesprite);
+
+            statesprite_set_visible(weeklist.host_statesprite, !hidden && texture);
+            statesprite_flip_texture(weeklist.host_statesprite, host_flip, 0);
+            statesprite_state_apply(weeklist.host_statesprite, null);
+            statesprite_animate(weeklist.host_statesprite, beatwatcher_remaining_until_next(weeklist.beatwatcher));
         }
-        statesprite_set_texture(weeklist.host_statesprite, null, false);
-        statesprite_set_visible(weeklist.host_statesprite, false);
-        weeklist.host_loading_count--;
-
-        if (charactermanifest) charactermanifest_destroy(charactermanifest);
-        return null;
     }
 
-    let texture = modelholder_get_texture(modelholder, false);
-    if (texture) texturepool_add(weeklist.texturepool, texture);
-
-    if (host_load_id == weeklist.host_load_id) {
-        statesprite_state_remove(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_HEY);
-        statesprite_state_remove(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_IDLE);
-
-        weekselector_mdlselect_helper_import(
-            weeklist.host_statesprite,
-            modelholder,
-            weeklist.host_placeholder,
-            host_beat,
-            anim_name_idle,
-            WEEKSELECTOR_MDLSELECT_IDLE
-        );
-        weekselector_mdlselect_helper_import(
-            weeklist.host_statesprite,
-            modelholder,
-            weeklist.host_placeholder,
-            false,
-            anim_name_hey,
-            WEEKSELECTOR_MDLSELECT_HEY
-        );
-
-        if (weeklist.week_choosen)
-            statesprite_state_toggle(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_HEY);
-        else
-            statesprite_state_toggle(weeklist.host_statesprite, WEEKSELECTOR_MDLSELECT_IDLE);
-
-        // set defaults
-        statesprite_set_alpha(weeklist.host_statesprite, 1.0);
-        statesprite_set_property(weeklist.host_statesprite, SPRITE_PROP_ALPHA2, 1.0);
-        statesprite_set_offsetcolor(weeklist.host_statesprite, 1.0, 1.0, 1.0, -1.0);
-        statesprite_matrix_reset(weeklist.host_statesprite);
-
-        statesprite_set_visible(weeklist.host_statesprite, !hidden && texture);
-        statesprite_flip_texture(weeklist.host_statesprite, host_flip, 0);
-        statesprite_state_apply(weeklist.host_statesprite, null);
-        statesprite_animate(weeklist.host_statesprite, beatwatcher_remaining_until_next(weeklist.beatwatcher));
-        weeklist.weeklist.host_loading_count--;
-    }
-
-    modelholder_destroy(modelholder);
+    if (modelholder) modelholder_destroy(modelholder);
     if (charactermanifest) charactermanifest_destroy(charactermanifest);
+
+    weeklist.running_threads--;
+    return null;
 }
 

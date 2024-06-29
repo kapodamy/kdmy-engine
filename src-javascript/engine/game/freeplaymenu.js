@@ -55,6 +55,7 @@ const FREEPLAYMENU_MENU_SONGS = {
     items_size: 0
 };
 
+
 async function freeplaymenu_main() {
     let src_layout = pvr_context_is_widescreen() ? FREEPLAYMENU_LAYOUT : FREEPLAYMENU_LAYOUT_DREAMCAST;
     let layout = await layout_init(src_layout);
@@ -248,15 +249,11 @@ async function freeplaymenu_main() {
         freeplaymenu_internal_show_info(state);
     }
 
-    // wait for running threads
-    while (true) {
-        await pvrctx_wait_ready();
-        mutex_lock(state.mutex);
-        let exit = state.running_threads < 1;
-        mutex_unlock(state.mutex);
-        if (exit) break;
+    state.async_id_operation++;
+    while (state.running_threads > 0) {
+        // wait until all async operations are done
+        await thd_pass();
     }
-    thd_pass();
 
     await freeplaymenu_internal_wait_transition(state, "transition-out", dt_screenout);
     freeplaymenu_internal_drop_custom_background(state);
@@ -415,104 +412,103 @@ async function freeplaymenu_show(menu, state, songs) {
     return map_index;
 }
 
-async function freeplaymenu_internal_load_song_async(state) {
-    // adquire mutex and declare this thread
-    mutex_lock(state.mutex);
-    state.running_threads++;
-
-    let weekinfo = weeks_array.array[state.map.week_index];
-    let songinfo = weekinfo.songs[state.map.song_index];
+async function freeplaymenu_internal_load_soundplayer_async(state) {
     let async_id_operation = state.async_id_operation;
-    let path_base = songinfo.freeplay_song_filename;
-    let src_is_null = songinfo.freeplay_song_filename == null;
+
+    // adquire mutex and adquire shared variables
+    mutex_lock(state.mutex);
+
+    let map = state.map;
+    let weekinfo = weeks_array.array[map.week_index];
+    let songinfo = weekinfo.songs[map.song_index];
     let seek = songinfo.freeplay_seek_time * 1000.0;
 
-    if (state.map.is_locked || songinfo.name == null) {
+    if (map.is_locked || songinfo.name == null) {
+        // nothing to load
         await freeplaymenu_internal_drop_soundplayer(state, false);
-
-        state.running_threads--;
         mutex_unlock(state.mutex);
+        state.running_threads--;
         return null;
     }
 
     // shared variables adquired, release mutex
     mutex_unlock(state.mutex);
 
-    // guess the filename
-    if (src_is_null) {
-        let temp_nospaces = string_replace(songinfo.name, '\x20', '-');
-        let temp_lowercase = string_to_lowercase(temp_nospaces);
-        temp_nospaces = undefined;
-        let temp_relativepath = string_concat(3, FUNKIN_WEEK_SONGS_FOLDER, temp_lowercase, ".ogg");
-        temp_lowercase = undefined;
-        path_base = weekenumerator_get_asset(weekinfo, temp_relativepath);
-        temp_relativepath = undefined;
-    }
-
-    // get the path of instrumetal track of the song
-    const output_paths = [null, null];
-    let is_not_splitted = await songplayer_helper_get_tracks(
-        path_base, state.use_alternative, output_paths
+    let song_path = await freeplaymenu_internal_get_song_path(
+        weekinfo, state.use_alternative, map.song_index
     );
-    let final_path = is_not_splitted ? path_base : (output_paths[1] ?? output_paths[0]);
 
-    L_load_soundplayer: {
-        if (async_id_operation != state.async_id_operation) {
-            break L_load_soundplayer;
-        }
-
-        if (final_path == state.soundplayer_path) {
-            break L_load_soundplayer;
-        }
-        if (final_path == null) {
-            await freeplaymenu_internal_drop_soundplayer(state, false);
-            break L_load_soundplayer;
-        }
-
-        // instance a soundplayer
-        let soundplayer = await soundplayer_init(final_path);
-        if (!soundplayer) final_path = null;
-
-        // check if the user selected another song
-        if (async_id_operation != state.async_id_operation) {
-            if (soundplayer) soundplayer_destroy(soundplayer);
-            break L_load_soundplayer;
-        }
-
-        // adquire mutex and swap the soundplayer
-        mutex_lock(state.mutex);
-
-        await freeplaymenu_internal_drop_soundplayer(state, false);
-        state.soundplayer_path = strdup(final_path);
-        state.soundplayer = soundplayer;
-
-        soundplayer_set_volume(soundplayer, state.song_preview_volume);
-        if (!Number.isNaN(seek)) soundplayer_seek(soundplayer, seek);
-        soundplayer_play(soundplayer);
-        soundplayer_fade(soundplayer, true, 500.0);
-
-        mutex_unlock(state.mutex);
+    if (async_id_operation != state.async_id_operation) {
+        // another song was selected
+        song_path = undefined;
+        state.running_threads--;
+        return null;
     }
 
-    mutex_lock(state.mutex);
-    if (src_is_null) path_base = undefined;
-    output_paths[0] = undefined;
-    output_paths[1] = undefined;
+    if (song_path == null) {
+        // song not available
+        mutex_lock(state.mutex);
+        await freeplaymenu_internal_drop_soundplayer(state, false);
+        mutex_unlock(state.mutex);
+        state.running_threads--;
+        return null;
+    }
+
+    if (song_path == state.soundplayer_path) {
+        // the same song is used, seek and fade previous song
+        if (state.soundplayer != null) {
+            mutex_lock(state.mutex);
+            if (!Number.isNaN(seek)) soundplayer_seek(state.soundplayer, seek);
+            soundplayer_play(state.soundplayer);
+            soundplayer_fade(state.soundplayer, true, 500.0);
+            mutex_unlock(state.mutex);
+        }
+
+        song_path = undefined;
+        state.running_threads--;
+        return null;
+    }
+
+    // instance a new soundplayer
+    let soundplayer = await soundplayer_init(song_path);
+
+    if (async_id_operation == state.async_id_operation) {
+        // swap soundplayer
+        mutex_lock(state.mutex);
+        await freeplaymenu_internal_drop_soundplayer(state, false);
+
+        if (soundplayer) {
+            state.soundplayer_path = song_path;
+            state.soundplayer = soundplayer;
+
+            soundplayer_set_volume(soundplayer, state.song_preview_volume);
+            if (!Number.isNaN(seek)) soundplayer_seek(soundplayer, seek);
+            soundplayer_play(soundplayer);
+            soundplayer_fade(soundplayer, true, 500.0);
+        } else {
+            song_path = undefined;
+        }
+        mutex_unlock(state.mutex);
+    } else {
+        // another song was selected
+        if (soundplayer) soundplayer_destroy(soundplayer);
+        song_path = undefined;
+    }
+
     state.running_threads--;
-    mutex_unlock(state.mutex);
     return null;
 }
 
 async function freeplaymenu_internal_load_background_async(state) {
+    let async_id_operation = state.async_id_operation;
+
     if (state.background == null) return null;
 
-    // adquire mutex and declare this thread
+    // adquire mutex and get shared variables
     mutex_lock(state.mutex);
-    state.running_threads++;
 
     let weekinfo = weeks_array.array[state.map.week_index];
     let src = weekinfo.songs[state.map.song_index].freeplay_background;
-    let async_id_operation = state.async_id_operation;
     let modelholder = null;
     let texture = null;
 
@@ -730,8 +726,14 @@ function freeplaymenu_internal_song_load(state, with_bg) {
     mutex_lock(state.mutex);
 
     state.async_id_operation++;
-    if (with_bg) main_thd_helper_spawn(true, freeplaymenu_internal_load_background_async, state);
-    main_thd_helper_spawn(true, freeplaymenu_internal_load_song_async, state);
+
+    if (with_bg) {
+        state.running_threads++;
+        main_thd_helper_spawn(true, freeplaymenu_internal_load_background_async, state);
+    }
+
+    state.running_threads++;
+    main_thd_helper_spawn(true, freeplaymenu_internal_load_soundplayer_async, state);
 
     mutex_unlock(state.mutex);
 }
@@ -802,5 +804,45 @@ async function freeplaymenu_internal_modding_notify_event(state, difficult, alt_
     if (alt_tracks) {
         await modding_helper_notify_event(state.modding, state.use_alternative ? "tracks-alt" : "tracks-not-alt");
     }
+}
+
+async function freeplaymenu_internal_get_song_path(weekinfo, use_alternative, mapped_song_index) {
+    let songinfo = weekinfo.songs[mapped_song_index];
+
+    // guess the song filename or voice/instrumental part
+    let tmp_song_path;
+
+    if (songinfo.freeplay_song_filename) {
+        tmp_song_path = strdup(songinfo.freeplay_song_filename);
+    } else {
+        let temp_nospaces = songinfo.name.replaceAll('\x20', '-');
+        let temp_lowercase = string_to_lowercase(temp_nospaces);
+        temp_nospaces = undefined;
+        let temp_relativepath = string_concat(3, FUNKIN_WEEK_SONGS_FOLDER, temp_lowercase, ".ogg");
+        temp_lowercase = undefined;
+        tmp_song_path = weekenumerator_get_asset(weekinfo, temp_relativepath);
+        temp_relativepath = undefined;
+    }
+
+    // get voice and instrumental tracks
+    const output_paths = [null, null];
+    let is_not_splitted = await songplayer_helper_get_tracks(
+        tmp_song_path, use_alternative, output_paths
+    );
+
+    // get the path of instrumetal track of the song (if applicable)
+    if (output_paths[1] != null) {
+        output_paths[0] = undefined;
+        return output_paths[1];
+    } else if (output_paths[0] != null) {
+        output_paths[1] = undefined;
+        return output_paths[0];
+    } else if (is_not_splitted) {
+        return tmp_song_path;
+    }
+
+    // missing file
+    tmp_song_path = undefined;
+    return null;
 }
 

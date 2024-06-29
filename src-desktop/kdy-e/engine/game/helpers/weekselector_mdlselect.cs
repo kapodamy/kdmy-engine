@@ -41,8 +41,8 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
     private bool is_enabled;
     private bool is_boyfriend;
     private bool hey_playing;
-    private volatile int load_thread_id;
-    private int running_threads;
+    private volatile int load_character_id;
+    private volatile int running_threads;
     private Drawable drawable;
     private Drawable drawable_character;
     private LayoutPlaceholder placeholder_character;
@@ -75,7 +75,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
         this.is_boyfriend = is_boyfriend;
         this.hey_playing = false;
 
-        this.load_thread_id = 0;
+        this.load_character_id = 0;
         this.running_threads = 0;
 
         this.drawable = null;
@@ -272,9 +272,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
 
     public void Destroy() {
 
-        this.load_thread_id++;
-        thd.pass();
-
+        Interlocked.Increment(ref this.load_character_id);
         while (this.running_threads > 0) {
             // wait until all async operations are done
             thd.pass();
@@ -381,7 +379,6 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
         this.index = new_index;
         this.has_up = new_index > 0;
         this.has_down = new_index < (this.list_size - 1);
-        this.load_thread_id++;
 
         this.preview.StateToggle(null);
         this.preview.StateRemove(WeekSelectorMdlSelect.IDLE);
@@ -396,6 +393,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
              this.has_down ? 1.0f : WeekSelector.ARROW_DISABLED_ALPHA
         );
 
+        Interlocked.Increment(ref this.load_character_id);
         Interlocked.Increment(ref this.running_threads);
         GameMain.THDHelperSpawn(true, WeekSelectorMdlSelect.InternalLoadAsync, this);
 
@@ -432,7 +430,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
     private static object InternalLoadAsync(object arg) {
         WeekSelectorMdlSelect mdlselect = arg as WeekSelectorMdlSelect;
 
-        int load_thread_id = mdlselect.load_thread_id;
+        int load_character_id = mdlselect.load_character_id;
         CharacterInfo character_info = mdlselect.list[mdlselect.index];
         bool week_selector_left_facing = character_info.week_selector_left_facing;
         bool week_selector_enable_beat = character_info.week_selector_enable_beat;
@@ -443,15 +441,14 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
 
         ModelHolder modelholder = ModelHolder.Init(character_info.week_selector_model);
 
-        if (load_thread_id != mdlselect.load_thread_id) {
-            modelholder.Destroy();
-            Interlocked.Decrement(ref mdlselect.running_threads);
-            return null;
+        if (mdlselect.load_character_id != load_character_id) {
+            if (modelholder != null) modelholder.Destroy();
+            goto L_return;
         }
 
         if (modelholder == null) {
             Logger.Error("weekselector_mdlselect_internal_load_async() modelholder_init failed");
-            return null;
+            goto L_return;
         }
 
         WeekSelectorMdlSelect.HelperImport(
@@ -477,6 +474,8 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
         mdlselect.preview.FlipTexture(flip_x, false);
         mdlselect.drawable_character.SetVisible(true);
 
+L_return:
+        Interlocked.Decrement(ref mdlselect.running_threads);
         return null;
     }
 

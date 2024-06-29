@@ -121,7 +121,7 @@ public static class GameMain {
         // the following code is for quick debugging only
         /*
         FreeplayMenu.Main();
-			Credits.Main();
+		Credits.Main();
         SettingsMenu.Main();
         WeekSelector.Main();
         Engine.Game.Gameplay.Week.Main(
@@ -201,9 +201,9 @@ public static class GameMain {
         GameMain.HelperTriggerActionMenu(layout, prefix, name, selected, choosen);
     }
 
-    public static object SpawnCoroutine(Layout background_layout, Func<object, object> function_routine, object argument_routine) {
-        kthread_t thread = THDHelperSpawn(false, function_routine, argument_routine);
-        object ret;
+    public static R SpawnCoroutine<R, T>(Layout background_layout, AsyncFunctionWithReturn<R, T> function_routine, T argument_routine) {
+        kthread_t thread = THDHelperSpawn(false, (object arg) => function_routine((T)arg), argument_routine);
+        R ret;
 
         if (background_layout != null) {
             while (thread.state != STATE.FINISHED) {
@@ -215,17 +215,20 @@ public static class GameMain {
             }
 
             // aquire the return value and destroy the thread struct
-            ret = thread.rv;
+            ret = (R)thread.rv;
             thd.destroy(thread);
         } else {
             // no layout specified, wait for thread end
             object tmp = null;
             thd.join(thread, ref tmp);
-            ret = tmp;
+            ret = (R)tmp;
         }
 
         return ret;
     }
+
+    public delegate object AsyncFunction<T>(T param) where T : class;
+    public delegate R AsyncFunctionWithReturn<R, T>(T param);
 
     /**
      * Create a new thread.
@@ -237,22 +240,23 @@ public static class GameMain {
      * @param {object} param A parameter to pass to the function called.
      * @returns {kthread_t} the created thread
      */
-    public static kthread_t THDHelperSpawn(bool detached, Func<object, object> routine, object param) {
+    public static kthread_t THDHelperSpawn<T>(bool detached, AsyncFunction<T> routine, T param) where T : class {
         // in C, "init_data" this an allocated struct
-        InitData init_data = new InitData() { routine = routine, @params = param };
-        kthread_t thread = thd.create(detached, GameMain.THDHelperSpawnWrapper, init_data);
+        InitData<T> init_data = new InitData<T>() { routine = routine, @params = param };
+        kthread_t thread = thd.create(detached, arg => GameMain.THDHelperSpawnWrapper<T>(init_data), init_data);
 
         if (thread == null) {
             throw new Exception("THDHelperSpawn() call failed to thd_create()");
         }
 
+        thd.pass();
         return thread;
     }
 
-    private static object THDHelperSpawnWrapper(object arg) {
-        InitData init_data = arg as InitData;
-        Func<object, object> routine = init_data.routine;
-        object @params = init_data.@params;
+    private static object THDHelperSpawnWrapper<T>(object arg) where T : class {
+        InitData<T> init_data = arg as InitData<T>;
+        AsyncFunction<T> routine = init_data.routine;
+        T @params = init_data.@params;
 
         // dispose "init_data" because was allocated in main_thd_helper_spawn
         //free(init_data);
@@ -270,9 +274,9 @@ public static class GameMain {
     }
 
 
-    private class InitData {
-        public Func<object, object> routine;
-        public object @params;
+    private class InitData<T> where T : class {
+        public AsyncFunction<T> routine;
+        public T @params;
     }
 
 }

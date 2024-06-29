@@ -815,9 +815,7 @@ public class Week {
 
             // do save
             Layout layout = roundcontext.layout ?? roundcontext.ui_layout;
-            int save_error = (int)GameMain.SpawnCoroutine(layout, delegate (object arg) {
-                return (object)SaveManager.ShouldShow((bool)arg);
-            }, true);
+            int save_error = GameMain.SpawnCoroutine(layout, SaveManager.ShouldShow, true);
 
             if (save_error != 0) {
                 layout.Suspend();

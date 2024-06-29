@@ -28,9 +28,9 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
     private Drawable drawable_host;
     private Drawable drawable_list;
     private StateSprite host_statesprite;
-    private int host_loading_count;
     private LayoutPlaceholder host_placeholder;
-    private volatile int host_load_id;
+    private volatile int running_threads;
+    private volatile int load_host_id;
     private TexturePool texturepool;
     private AnimSprite anim_selected;
     private bool week_choosen;
@@ -64,9 +64,9 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
         this.drawable_list = null;
 
         this.host_statesprite = StateSprite.InitFromTexture(null);
-        this.host_loading_count = 0;
         this.host_placeholder = placeholder_host;
-        this.host_load_id = 0;
+        this.running_threads = 0;
+        this.load_host_id = 0;
 
         this.texturepool = texturepool;
         this.anim_selected = anim_selected;
@@ -131,11 +131,8 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
     }
 
     public void Destroy() {
-
-        this.host_load_id = -1;
-        thd.pass();
-
-        while (this.host_loading_count > 0) {
+        Interlocked.Increment(ref this.load_host_id);
+        while (this.running_threads > 0) {
             // wait until all async operations are done
             thd.pass();
         }
@@ -165,7 +162,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             }
         }
 
-        if (this.host_loading_count < 1) this.host_statesprite.Animate(since_beat);
+        if (this.running_threads < 1) this.host_statesprite.Animate(since_beat);
 
         for (int i = 0 ; i < WeekSelectorWeekList.VISIBLE_SIZE ; i++) {
             Item visible_item = this.list_visible[i];
@@ -235,7 +232,7 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
 
     public void ToggleChoosen() {
         this.week_choosen = true;
-        if (this.host_loading_count > 0) return;
+        if (this.running_threads > 0) return;
         if (this.host_statesprite.StateToggle(WeekSelectorMdlSelect.HEY)) {
             this.hey_playing = true;
         }
@@ -315,9 +312,9 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             this.list_visible[i].sprite_title.SetDrawSizeFromSourceSize();
         }
 
-        this.host_load_id++;
-        Interlocked.Increment(ref this.host_loading_count);
-        GameMain.THDHelperSpawn(true, InternalLoadHostAsync, this);
+        Interlocked.Increment(ref this.load_host_id);
+        Interlocked.Increment(ref this.running_threads);
+        GameMain.THDHelperSpawn(true, WeekSelectorWeekList.InternalLoadHostAsync, this);
 
         this.progress = 0.0;
         InternalPrepareTitleTweens();
@@ -514,18 +511,18 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
     }
 
     private void InternalHostDraw(PVRContext pvrctx) {
-        if (this.host_loading_count > 0 || !this.host_statesprite.IsVisible()) return;
+        if (this.running_threads > 0 || !this.host_statesprite.IsVisible()) return;
         pvrctx.Save();
         this.host_statesprite.Draw(pvrctx);
         pvrctx.Restore();
     }
 
-    private static object InternalLoadHostAsync(object arg) {
-        WeekSelectorWeekList weeklist = arg as WeekSelectorWeekList;
+    private static object InternalLoadHostAsync(WeekSelectorWeekList weeklist) {
 
-        int host_load_id = weeklist.host_load_id;
+        int load_host_id = weeklist.load_host_id;
         WeekInfo weekinfo = Funkin.weeks_array.array[weeklist.index];
-        bool host_flip, host_beat; ModelHolder modelholder;
+        bool host_flip, host_beat;
+        ModelHolder modelholder;
         string anim_name_hey = WeekSelectorMdlSelect.HEY;
         string anim_name_idle = WeekSelectorMdlSelect.IDLE;
         bool hidden = false;
@@ -568,31 +565,27 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             //free(week_host_model);
         }
 
-        if (weeklist.host_load_id < 0) {
-            // weeklist is begin disposed
-            if (modelholder != null) modelholder.Destroy();
-            if (charactermanifest != null) charactermanifest.Destroy();
-            return null;
+        if (weeklist.load_host_id != load_host_id) {
+            // weeklist is loading another host or begin disposed 
+            goto L_return;
         }
 
         if (modelholder == null) {
             Logger.Error("weekselector_weeklist_internal_load_host_async() modelholder_init failed");
-            if (host_load_id == weeklist.host_load_id) {
+            if (load_host_id == weeklist.load_host_id) {
                 weeklist.host_statesprite.StateRemove(WeekSelectorMdlSelect.HEY);
                 weeklist.host_statesprite.StateRemove(WeekSelectorMdlSelect.IDLE);
             }
             weeklist.host_statesprite.SetTexture(null, false);
             weeklist.host_statesprite.SetVisible(false);
-            Interlocked.Decrement(ref weeklist.host_loading_count);
 
-            if (charactermanifest != null) charactermanifest.Destroy();
-            return null;
+            goto L_return;
         }
 
         Texture texture = modelholder.GetTexture(false);
         if (texture != null) weeklist.texturepool.Add(texture);
 
-        if (host_load_id == weeklist.host_load_id) {
+        if (load_host_id == weeklist.load_host_id) {
             weeklist.host_statesprite.StateRemove(WeekSelectorMdlSelect.HEY);
             weeklist.host_statesprite.StateRemove(WeekSelectorMdlSelect.IDLE);
 
@@ -628,12 +621,13 @@ public class WeekSelectorWeekList : IDraw, IAnimate {
             weeklist.host_statesprite.FlipTexture(host_flip, false);
             weeklist.host_statesprite.StateApply(null);
             weeklist.host_statesprite.Animate(weeklist.beatwatcher.RemainingUntilNext());
-            Interlocked.Decrement(ref weeklist.host_loading_count);
         }
 
-        modelholder.Destroy();
+L_return:
+        if (modelholder != null) modelholder.Destroy();
         if (charactermanifest != null) charactermanifest.Destroy();
 
+        Interlocked.Decrement(ref weeklist.running_threads);
         return null;
     }
 

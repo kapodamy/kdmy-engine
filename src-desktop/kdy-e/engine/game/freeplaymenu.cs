@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using CsharpWrapper;
 using Engine.Animation;
 using Engine.Font;
@@ -258,15 +259,11 @@ public class FreeplayMenu {
             FreeplayMenu.InternalShowInfo(state);
         }
 
-        // wait for running threads
-        while (true) {
-            PVRContext.global_context.WaitReady();
-            mutex.Lock(state.mutex);
-            bool exit = state.running_threads < 1;
-            mutex.Unlock(state.mutex);
-            if (exit) break;
+        Interlocked.Increment(ref state.async_id_operation);
+        while (state.running_threads > 0) {
+            // wait until all async operations are done
+            thd.pass();
         }
-        thd.pass();
 
         FreeplayMenu.InternalWaitTransition(state, "transition-out", dt_screenout);
         FreeplayMenu.InternalDropCustomBackground(state);
@@ -426,114 +423,110 @@ public class FreeplayMenu {
         return map_index;
     }
 
-    private static object InternalLoadSongAsync(object param) {
-        State state = (State)param;
+    private static object InternalLoadSoundPlayerAsync(State state) {
+        int async_id_operation = state.async_id_operation;
 
-        // adquire mutex and declare this thread
+        // adquire mutex and adquire shared variables
         mutex.Lock(state.mutex);
-        state.running_threads++;
 
-        WeekInfo weekinfo = Funkin.weeks_array.array[state.map.week_index];
-        WeekInfo.Song songinfo = weekinfo.songs[state.map.song_index];
-        int async_id_song = state.async_id_operation;
-        string path_base = songinfo.freeplay_song_filename;
-        bool src_is_null = songinfo.freeplay_song_filename == null;
+        MappedSong map = state.map;
+        WeekInfo weekinfo = Funkin.weeks_array.array[map.week_index];
+        WeekInfo.Song songinfo = weekinfo.songs[map.song_index];
         float seek = songinfo.freeplay_seek_time * 1000f;
 
-        if (state.map.is_locked || songinfo.name == null) {
+        if (map.is_locked || songinfo.name == null) {
+            // nothing to load
             InternalDropSoundplayer(state, false);
-
-            state.running_threads--;
             mutex.Unlock(state.mutex);
+            Interlocked.Decrement(ref state.running_threads);
             return null;
         }
 
         // shared variables adquired, release mutex
         mutex.Unlock(state.mutex);
 
-        // guess the filename
-        if (src_is_null) {
-            string temp_nospaces = songinfo.name.Replace('\x20', '-');
-            string temp_lowercase = StringUtils.ToLowerCase(temp_nospaces);
-            //free(temp_nospaces);
-            string temp_relativepath = StringUtils.Concat(Funkin.WEEK_SONGS_FOLDER, temp_lowercase, ".ogg");
-            //free(temp_lowercase);
-            path_base = WeekEnumerator.GetAsset(weekinfo, temp_relativepath);
-            //free(temp_relativepath);
-        }
-
-        // get the path of instrumetal track of the song
-        string path_voices, path_instrumental;
-        bool is_not_splitted = SongPlayer.HelperGetTracks(
-            path_base, state.use_alternative, out path_voices, out path_instrumental
+        string song_path = FreeplayMenu.InternalGetSongPath(
+            weekinfo, state.use_alternative, map.song_index
         );
-        string final_path = is_not_splitted ? path_base : (path_instrumental ?? path_voices);
 
-        if (async_id_song != state.async_id_operation) {
-            goto L_return;
+        if (async_id_operation != state.async_id_operation) {
+            // another song was selected
+            //free(song_path);
+            Interlocked.Decrement(ref state.running_threads);
+            return null;
         }
 
-        if (final_path == state.soundplayer_path) {
-            goto L_return;
-        }
-        if (final_path == null) {
+        if (song_path == null) {
+            // song not available
+            mutex.Lock(state.mutex);
             InternalDropSoundplayer(state, false);
-            goto L_return;
+            mutex.Unlock(state.mutex);
+            Interlocked.Decrement(ref state.running_threads);
+            return null;
         }
 
-        // instance a soundplayer
-        SoundPlayer soundplayer = SoundPlayer.Init(final_path);
-        if (soundplayer == null) final_path = null;
+        if (song_path == state.soundplayer_path) {
+            // the same song is used, seek and fade previous song
+            if (state.soundplayer != null) {
+                mutex.Lock(state.mutex);
+                if (!Single.IsNaN(seek)) state.soundplayer.Seek(seek);
+                state.soundplayer.Play();
+                state.soundplayer.Fade(true, 500.0f);
+                mutex.Unlock(state.mutex);
+            }
 
-        // check if the user selected another song
-        if (async_id_song != state.async_id_operation) {
+            //free(song_path);
+            Interlocked.Decrement(ref state.running_threads);
+            return null;
+        }
+
+        // instance a new soundplayer
+        SoundPlayer soundplayer = SoundPlayer.Init(song_path);
+
+        if (async_id_operation == state.async_id_operation) {
+            // swap soundplayer
+            mutex.Lock(state.mutex);
+            InternalDropSoundplayer(state, false);
+
+            if (soundplayer != null) {
+                state.soundplayer_path = song_path;
+                state.soundplayer = soundplayer;
+
+                soundplayer.SetVolume(state.song_preview_volume);
+                if (!Single.IsNaN(seek)) soundplayer.Seek(seek);
+                soundplayer.Play();
+                soundplayer.Fade(true, 500.0f);
+            } else {
+                //free(song_path);
+            }
+            mutex.Unlock(state.mutex);
+        } else {
+            // another song was selected
             if (soundplayer != null) soundplayer.Destroy();
-            goto L_return;
+            //free(song_path);
         }
 
-        // adquire mutex and swap the soundplayesr
-        mutex.Lock(state.mutex);
-
-        InternalDropSoundplayer(state, false);
-        state.soundplayer_path = final_path;// strdup(final_path)
-        state.soundplayer = soundplayer;
-
-        soundplayer.SetVolume(state.song_preview_volume);
-        if (!Single.IsNaN(seek)) soundplayer.Seek(seek);
-        soundplayer.Play();
-        soundplayer.Fade(true, 500);
-
-        mutex.Unlock(state.mutex);
-
-L_return:
-        mutex.Lock(state.mutex);
-        //if (src_is_null) free(path_base);
-        //free(path_voices);
-        //free(path_instrumental);
-        state.running_threads--;
-        mutex.Unlock(state.mutex);
+        Interlocked.Decrement(ref state.running_threads);
         return null;
     }
 
-    private static object InternalLoadBackgroundAsync(object param) {
-        State state = (State)param;
+    private static object InternalLoadBackgroundAsync(State state) {
+        int async_id_operation = state.async_id_operation;
 
         if (state.background == null) return null;
 
-        // adquire mutex and declare this thread
+        // adquire mutex and get shared variables
         mutex.Lock(state.mutex);
-        state.running_threads++;
 
         WeekInfo weekinfo = Funkin.weeks_array.array[state.map.week_index];
         string src = weekinfo.songs[state.map.song_index].freeplay_background;
-        int async_id_background = state.async_id_operation;
         ModelHolder modelholder = null;
         Texture texture = null;
 
         // check if the selected song has a custom background
         if (StringUtils.IsEmpty(src)) {
             FreeplayMenu.InternalDropCustomBackground(state);
-            state.running_threads--;
+            Interlocked.Decrement(ref state.running_threads);
             mutex.Unlock(state.mutex);
             return null;
         }
@@ -548,7 +541,7 @@ L_return:
         mutex.Lock(state.mutex);
 
         // if the user has no changed the song, set the background
-        if (async_id_background == state.async_id_operation) {
+        if (async_id_operation == state.async_id_operation) {
             AnimSprite sprite_anim = null;
             Texture sprite_tex = null;
 
@@ -574,7 +567,7 @@ L_return:
         if (modelholder != null) modelholder.Destroy();
         if (texture != null) texture.Destroy();
 
-        state.running_threads--;
+        Interlocked.Decrement(ref state.running_threads);
         mutex.Unlock(state.mutex);
         return null;
     }
@@ -745,9 +738,15 @@ L_return:
     private static void InternalSongLoad(State state, bool with_bg) {
         mutex.Lock(state.mutex);
 
-        state.async_id_operation++;
-        if (with_bg) GameMain.THDHelperSpawn(true, FreeplayMenu.InternalLoadBackgroundAsync, state);
-        GameMain.THDHelperSpawn(true, FreeplayMenu.InternalLoadSongAsync, state);
+        Interlocked.Increment(ref state.async_id_operation);
+
+        if (with_bg) {
+            Interlocked.Increment(ref state.running_threads);
+            GameMain.THDHelperSpawn(true, FreeplayMenu.InternalLoadBackgroundAsync, state);
+        }
+
+        Interlocked.Increment(ref state.running_threads);
+        GameMain.THDHelperSpawn(true, FreeplayMenu.InternalLoadSoundPlayerAsync, state);
 
         mutex.Unlock(state.mutex);
     }
@@ -818,6 +817,46 @@ L_return:
         if (alt_tracks) {
             state.modding.HelperNotifyEvent(state.use_alternative ? "tracks-alt" : "tracks-not-alt");
         }
+    }
+
+    private static string InternalGetSongPath(WeekInfo weekinfo, bool use_alternative, int mapped_song_index) {
+        WeekInfo.Song songinfo = weekinfo.songs[mapped_song_index];
+
+        // guess the song filename or voice/instrumental part
+        string tmp_song_path;
+
+        if (StringUtils.IsNotEmpty(songinfo.freeplay_song_filename)) {
+            tmp_song_path = songinfo.freeplay_song_filename;//strdup(songinfo.freeplay_song_filename);
+        } else {
+            string temp_nospaces = songinfo.name.Replace('\x20', '-');
+            string temp_lowercase = StringUtils.ToLowerCase(temp_nospaces);
+            //free(temp_nospaces);
+            string temp_relativepath = StringUtils.Concat(Funkin.WEEK_SONGS_FOLDER, temp_lowercase, ".ogg");
+            //free(temp_lowercase);
+            tmp_song_path = WeekEnumerator.GetAsset(weekinfo, temp_relativepath);
+            //free(temp_relativepath);
+        }
+
+        // get voice and instrumental tracks
+        string path_voices, path_instrumental;
+        bool is_not_splitted = SongPlayer.HelperGetTracks(
+            tmp_song_path, use_alternative, out path_voices, out path_instrumental
+        );
+
+        // get the path of instrumetal track of the song (if applicable)
+        if (path_instrumental != null) {
+            //free(path_voices);
+            return path_instrumental;
+        } else if (path_voices != null) {
+            //free(path_instrumental);
+            return path_voices;
+        } else if (is_not_splitted) {
+            return tmp_song_path;
+        }
+
+        // missing file
+        //free(tmp_song_path);
+        return null;
     }
 
 
