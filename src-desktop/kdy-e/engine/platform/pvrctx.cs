@@ -802,17 +802,14 @@ public class PVRContext {
 
     public static void TakeScreenshot() {
         int width, height;
-        nint ptr = PVRContext.global_context.webopengl.ReadFrameBuffer(out width, out height);
+        nint ptr = PVRContext.global_context.webopengl.ReadFrameBufferBGRA(out width, out height);
         if (ptr == 0x00) return;
 
         string filename = DateTime.Now.ToString("yyyy-MM-ddTHHmmss.fff") + ".png";
         filename = $"{EngineSettings.EngineDir}screenshots{Path.DirectorySeparatorChar}{filename}";
 
         // async file writting to avoid suttering
-        Engine.Game.GameMain.SpawnCoroutine(null, delegate (object param) {
-            ImageWritter.WritePNGImageAndFree(ptr, width, height, true, filename);
-            return null;
-        }, null);
+        ImageWritter.WritePNGFromBGRAAndFreeAsync(ptr, width, height, true, filename);
     }
 
     public static void Init() {

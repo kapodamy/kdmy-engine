@@ -43,6 +43,7 @@ public enum GLenum : uint {
     GL_NEAREST_MIPMAP_LINEAR = 0x2702,
     GL_NEAREST_MIPMAP_NEAREST = 0x2700,
     GL_RGBA = 0x1908,
+    GL_BGRA = 0x80E1,
     GL_UNSIGNED_BYTE = 0x1401,
     GL_CLAMP_TO_EDGE = 0x812F,
     GL_SRC_ALPHA = 0x0302,
@@ -155,6 +156,7 @@ public partial class WebGL2RenderingContext {
     public readonly GLenum NEAREST_MIPMAP_LINEAR = GLenum.GL_NEAREST_MIPMAP_LINEAR;
     public readonly GLenum NEAREST_MIPMAP_NEAREST = GLenum.GL_NEAREST_MIPMAP_NEAREST;
     public readonly GLenum RGBA = GLenum.GL_RGBA;
+    public readonly GLenum BGRA = GLenum.GL_BGRA;
     public readonly GLenum UNSIGNED_BYTE = GLenum.GL_UNSIGNED_BYTE;
     public readonly GLenum CLAMP_TO_EDGE = GLenum.GL_CLAMP_TO_EDGE;
     public readonly GLenum SRC_ALPHA = GLenum.GL_SRC_ALPHA;

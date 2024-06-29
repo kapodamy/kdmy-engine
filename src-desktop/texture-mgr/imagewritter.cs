@@ -1,14 +1,49 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 #pragma warning disable CA1416
 
 namespace Engine.Platform;
 
 public class ImageWritter {
+
+    public static void WritePNGFromBGRAAndFreeAsync(nint bgra_pixels, int width, int height, bool flip_y, string filename) {
+        ThreadPool.QueueUserWorkItem(delegate (object _) {
+            int stride = width * sizeof(uint);
+            int length = width * height;
+            string dir = Path.GetDirectoryName(filename);
+
+            unsafe {
+                if (BitConverter.IsLittleEndian)
+                    TextureLoader.Parallel_For(bgra_pixels, length, BGRA_To_RGBA_FromLittleEndian);
+                else
+                    TextureLoader.Parallel_For(bgra_pixels, length, BGRA_To_RGBA_FromBigEndian);
+            }
+
+            try {
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            } catch (Exception e) {
+                Logger.Error($"screenshot: failed to create folder {dir}: {e.Message}");
+                Marshal.FreeHGlobal(bgra_pixels);
+            }
+
+            try {
+                using (Bitmap bitmap = new Bitmap(width, height, stride, PixelFormat.Format32bppArgb, bgra_pixels)) {
+                    if (flip_y) bitmap.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                    bitmap.Save(filename, ImageFormat.Png);
+                }
+            } catch (Exception e) {
+                Logger.Error($"screenshot: failed to write {filename}: {e.Message}");
+            } finally {
+                Marshal.FreeHGlobal(bgra_pixels);
+            }
+        }, null);
+    }
 
     public static void WritePNGImageAndFree(nint rgba_pixels, int width, int height, bool flip_y, string filename) {
         int stride = width * sizeof(uint);
@@ -19,7 +54,7 @@ public class ImageWritter {
             if (BitConverter.IsLittleEndian)
                 TextureLoader.Parallel_For(rgba_pixels, length, ToARGB_FromLittleEndian);
             else
-                TextureLoader.Parallel_For(rgba_pixels, length, ToARGBA_FromBigEndian);
+                TextureLoader.Parallel_For(rgba_pixels, length, ToRGBA_FromBigEndian);
         }
 
         try {
@@ -42,7 +77,7 @@ public class ImageWritter {
     }
 
 
-    internal static unsafe void ToARGB_FromLittleEndian(int length, uint* texture_data) {
+    private static unsafe void ToARGB_FromLittleEndian(int length, uint* texture_data) {
         // abgr --> rgba
         for (int i = 0 ; i < length ; i++) {
             uint a = /*texture_data[i] & */0xFF000000;
@@ -53,12 +88,30 @@ public class ImageWritter {
         }
     }
 
-    internal static unsafe void ToARGBA_FromBigEndian(int length, uint* texture_data) {
+    private static unsafe void ToRGBA_FromBigEndian(int length, uint* texture_data) {
         // argb --> rgba
         for (int i = 0 ; i < length ; i++) {
             uint a = /*(texture_data[i] & */0x000000FF/*) << 24*/;
             uint rgb = (texture_data[i] & 0xFFFFFF00) >> 8;
             texture_data[i] = rgb | a;
+        }
+    }
+
+
+    private static unsafe void BGRA_To_RGBA_FromLittleEndian(int length, uint* texture_data) {
+        for (int i = 0 ; i < length ; i++) {
+            uint value = *texture_data;
+            uint argb = BinaryPrimitives.ReverseEndianness(value);
+
+            *texture_data = (argb << 8) | (value & 0xFF);
+        }
+    }
+
+    private static unsafe void BGRA_To_RGBA_FromBigEndian(int length, uint* texture_data) {
+        for (int i = 0 ; i < length ; i++) {
+            uint argb = *texture_data;
+            uint a = argb >> 24;
+            *texture_data = (argb << 8) | (a & 0xFF);
         }
     }
 

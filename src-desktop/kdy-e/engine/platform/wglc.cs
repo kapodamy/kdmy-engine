@@ -488,7 +488,7 @@ public class WebGLContext {
         //this.gl.flush();
     }
 
-    public nint ReadFrameBuffer(out int width, out int height) {
+    public nint ReadFrameBufferBGRA(out int width, out int height) {
         int[] viewport = new int[4];
         this.gl.getIntegerv(this.gl.VIEWPORT, viewport);
 
@@ -500,7 +500,7 @@ public class WebGLContext {
         nint data = Marshal.AllocHGlobal(width * height * sizeof(uint));
 
         //this.gl.pixelStorei(this.gl.PACK_ALIGNMENT, 1);
-        this.gl.readPixels(x, y, width, height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, data);
+        this.gl.readPixels(x, y, width, height, this.gl.BGRA, this.gl.UNSIGNED_BYTE, data);
 
         GLenum error = this.gl.getError();
         if (error != this.gl.NONE) {
