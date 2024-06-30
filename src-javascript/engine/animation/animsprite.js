@@ -140,13 +140,15 @@ function animsprite_clone(animsprite) {
     copy.id = ANIMSPRITE_IDS++;
     ANIMSPRITE_POOL.set(copy.id, copy);
 
+    copy.name = strdup(animsprite.name);
+
     copy.alternate_set = clone_object(animsprite.alternate_set/*, animsprite.alternate_size*/);
     copy.frames = clone_object(animsprite.frames/*, animsprite.frame_count*/);
 
-    if (copy.macroexecutor) 
+    if (copy.macroexecutor)
         copy.macroexecutor = macroexecutor_clone(animsprite.macroexecutor);
 
-    if (copy.tweenlerp) 
+    if (copy.tweenlerp)
         copy.tweenlerp = tweenlerp_clone(animsprite.tweenlerp);
 
     return copy;

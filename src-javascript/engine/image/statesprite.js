@@ -313,8 +313,10 @@ function statesprite_init_from_texture(texture) {
 function statesprite_destroy_texture_if_stateless(statesprite) {
     if (!statesprite.texture) return false;
 
-    // if the texture belongs to any state, return
-    // it will fail in case of duplicated refereces (is a caller problem)
+    //
+    // If the texture belongs to any state, return.
+    // Note: can fail in case of duplicated references (caller problem)
+    //
     for (let state of linkedlist_iterate4(statesprite.state_list)) {
         if (state.texture && state.texture == statesprite.texture) return false;
     }

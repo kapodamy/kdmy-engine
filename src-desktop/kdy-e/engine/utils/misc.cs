@@ -1,8 +1,4 @@
 using System;
-using System.Collections;
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace Engine.Utils;
 
@@ -23,10 +19,9 @@ public static class CloneUtils {
         if (array.Length < elements) throw new ArgumentOutOfRangeException("array");
 
         T[] copy = new T[elements];
+        Array.Copy(array, 0, copy, 0, elements);
 
-        Array.Copy(array, copy, elements);
-
-        return array;
+        return copy;
     }
 
     public static T[] CloneClassArray<T>(T[] array, int elements) where T : class, ICloneable {
@@ -39,8 +34,7 @@ public static class CloneUtils {
             copy[i] = (T)array[i].Clone();
         }
 
-
-        return array;
+        return copy;
     }
 
 }

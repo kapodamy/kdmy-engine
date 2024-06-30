@@ -528,7 +528,14 @@ public class Menu : IAnimate, IDraw {
         MenuItem item = this.items[index];
         if (item.is_text) return;
 
+        StateSprite statesprite = (StateSprite)item.vertex;
+        Texture new_texture = modelholder.GetTexture(true);
+        Texture old_texture = statesprite.SetTexture(new_texture, false);
+
+        if (new_texture == null) statesprite.SetVertexColorRGB8(modelholder.GetVertexColor());
+
         if (item.anim_self != null) item.anim_self.Destroy();
+        if (old_texture != null) old_texture.Destroy();
 
         item.anim_self = InternalLoadAnim(
             modelholder, atlas_or_animlist_entry_name, null, null
@@ -577,7 +584,7 @@ public class Menu : IAnimate, IDraw {
             float scale = src_item.texture_scale > 0 ? src_item.texture_scale : @params.texture_scale;
             if (scale > 0) {
                 item.has_scale = true;
-                ((StateSprite)item.vertex).ChangeDrawSizeInAtlasApply(true, scale);
+                statesprite.ChangeDrawSizeInAtlasApply(true, scale);
             }
         }
 

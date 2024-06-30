@@ -403,6 +403,13 @@ function macroexecutor_clone(macroexecutor) {
             }
         }
     }
+
+    // (JS & C# only) clone fixed arrays
+    copy.state = clone_array(macroexecutor.state, macroexecutor.state.length);
+    copy.state_flags = clone_array(macroexecutor.state_flags, macroexecutor.state_flags.length);
+    copy.registers = clone_array(macroexecutor.registers, macroexecutor.registers.length);
+
+    return copy;
 }
 
 function macroexecutor_get_frame_count(macroexecutor) {

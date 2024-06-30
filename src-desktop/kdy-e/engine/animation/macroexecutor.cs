@@ -475,6 +475,11 @@ public class MacroExecutor : IAnimate {
             }
         }
 
+        // (JS & C# only) clone fixed arrays
+        copy.state = (float[])CloneUtils.CloneStructArray(this.state, this.state.Length);
+        copy.state_flags = (bool[])CloneUtils.CloneStructArray(this.state_flags, this.state_flags.Length);
+        copy.registers = (float[])CloneUtils.CloneStructArray(this.registers, this.registers.Length);
+
         return copy;
     }
 

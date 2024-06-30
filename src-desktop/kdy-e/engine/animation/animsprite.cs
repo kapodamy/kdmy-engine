@@ -178,8 +178,8 @@ public class AnimSprite {
         copy.id = AnimSprite.IDS++;
         AnimSprite.POOL.Set(copy.id, copy);
 
-        copy.alternate_set = CloneUtils.CloneStructArray(this.alternate_set, this.alternate_size);
-        copy.frames = CloneUtils.CloneClassArray(this.frames, this.frame_count);
+        copy.name = this.name;//strdup(animsprite.name);
+
 
         if (copy.macroexecutor != null) {
             copy.macroexecutor = this.macroexecutor.Clone();

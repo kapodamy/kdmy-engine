@@ -492,7 +492,14 @@ function menu_set_item_image(menu, index, modelholder, atlas_or_animlist_entry_n
     let item = menu.items[index];
     if (item.is_text) return;
 
+    let statesprite = item.vertex;
+    let new_texture = modelholder_get_texture(modelholder, true);
+    let old_texture = statesprite_set_texture(statesprite, new_texture, false);
+
+    if (!new_texture) statesprite_set_vertex_color_rgb8(statesprite, modelholder_get_vertex_color(modelholder));
+
     if (item.anim_self) animsprite_destroy(item.anim_self);
+    if (old_texture) texture_destroy(old_texture);
 
     item.anim_self = menu_internal_load_anim(
         modelholder, atlas_or_animlist_entry_name, null, null

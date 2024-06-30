@@ -394,8 +394,10 @@ public class StateSprite : IVertex {
     public bool DestroyTextureIfStateless() {
         if (this.texture == null) return false;
 
-        // if the texture belongs to any state, return
-        // it will fail in case of duplicated refereces (is a caller problem)
+        //
+        // If the texture belongs to any state, return.
+        // Note: can fail in case of duplicated references (caller problem)
+        //
         foreach (StateSpriteState state in this.state_list) {
             if (state.texture != null && state.texture == this.texture) return false;
         }
