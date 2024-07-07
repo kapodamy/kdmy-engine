@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This example file loads an xsd file from "docs" folder -->
+<!-- This allow auto-completion in the same way as "intellisense" does it -->
+<!-- VScode does not include an xml schema validator, must be installed from "Extensions" tab -->
+<!-- You can try with "XML" from "Red Hat" which works out-of-the-box -->
+<!-- link here: https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml -->
+<!-- To avoid paths like "./../../" copy-paste the xsd file in your xml folder -->
+
+<!-- the schema "Layout.xsd" is used to create only layout files -->
+<?xml-model href="../docs/Layout.xsd" type="application/xml" schematypens="http://www.w3.org/2001/XMLSchema"?>
+
+<Layout width="1280" height="720">
+    <AttachValue name="test_string" type="string" value="123abc" />
+
+    <!-- If the schema validator works -->
+    <!-- the following line should show this error:   Attribute 'path' is missing from element 'Font'   -->
+    <Font name="vcr" />
+
+</Layout>
