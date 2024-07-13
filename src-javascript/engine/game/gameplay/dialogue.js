@@ -1668,7 +1668,7 @@ async function dialogue_internal_parse_multiplechoice(root_node, animlist, dialo
     let texture = null;
     let anim = null;
 
-    if (!icon_model) {
+    if (icon_model) {
         if (modelholder_utils_is_known_extension(icon_model)) {
             let modeholder = await modelholder_init(icon_model);
             if (!modeholder) {
@@ -2303,7 +2303,7 @@ async function dialogue_internal_parse_choice(node, dialogs, choices) {
 
     let dialog_id = -1;
 
-    if (!dialogs_file)
+    if (dialogs_file)
         dialog_id = await dialogue_internal_parse_dialog_from_file(dialogs_file, dialogs);
 
     let choice = {
