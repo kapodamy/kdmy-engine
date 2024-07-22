@@ -201,8 +201,8 @@ public class CharacterManifest {
                 this.opposite_directions.to = null;
             } else if (to_array_size > 0) {
                 this.opposite_directions.sizes = from_array_size;
-                this.opposite_directions.from = new string[from_array_size];
-                this.opposite_directions.to = new string[to_array_size];
+                this.opposite_directions.from = EngineUtils.CreateArray<string>(from_array_size);
+                this.opposite_directions.to = EngineUtils.CreateArray<string>(to_array_size);
 
                 CharacterManifest.InternalParseOppositeDir(
                     from_array, from_array_size, this.opposite_directions.from
@@ -333,15 +333,15 @@ public class CharacterManifest {
         int extras_array_size = JSONParser.ReadArrayLength(extras_array);
 
         if (sing_array_size > 0) {
-            actions.sing = new Sing[sing_array_size];
+            actions.sing = EngineUtils.CreateArray<Sing>(sing_array_size);
             actions.sing_size = sing_array_size;
         }
         if (miss_array_size > 0) {
-            actions.miss = new Miss[miss_array_size];
+            actions.miss = EngineUtils.CreateArray<Miss>(miss_array_size);
             actions.miss_size = miss_array_size;
         }
         if (extras_array_size > 0) {
-            actions.extras = new Extra[extras_array_size];
+            actions.extras = EngineUtils.CreateArray<Extra>(extras_array_size);
             actions.extras_size = extras_array_size;
         }
 

@@ -3,7 +3,7 @@
 async function freeplaymenu_songicons_init(song_map, max_dimmen, font_size) {
     let songicons = { icons: null, icons_size: 0 };
     songicons.icons_size = arraylist_size(song_map);
-    songicons.icons = new Array(songicons.icons_size);
+    songicons.icons = malloc_for_array(songicons.icons_size);
 
     let last_model = null;
     let last_model_exists = false;

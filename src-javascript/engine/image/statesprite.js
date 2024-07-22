@@ -1064,8 +1064,7 @@ function statesprite_trailing_enabled(statesprite, enabled) {
 
 function statesprite_trailing_set_params(statesprite, length, trail_delay, trail_alpha, darken_colors) {
     if (length > 0) {
-        statesprite.trailing_buffer = realloc(statesprite.trailing_buffer, length);
-        console.assert(statesprite.trailing_buffer, "cannot reallocate the sprite trailing buffer");
+        statesprite.trailing_buffer = realloc_for_array(statesprite.trailing_buffer, length);
 
         sprite_internal_JS_init_trail_array(statesprite, statesprite.trailing_length, length);
         statesprite.trailing_length = length;

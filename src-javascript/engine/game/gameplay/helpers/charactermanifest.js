@@ -115,8 +115,8 @@ async function charactermanifest_init(src, gameplay_required_models_only) {
             character_manifest.opposite_directions.to = null;
         } else if (to_array_size > 0) {
             character_manifest.opposite_directions.sizes = from_array_size;
-            character_manifest.opposite_directions.from = new Array(from_array_size);
-            character_manifest.opposite_directions.to = new Array(to_array_size);
+            character_manifest.opposite_directions.from = malloc_for_array(from_array_size);
+            character_manifest.opposite_directions.to = malloc_for_array(to_array_size);
 
             charactermanifest_internal_parse_opposite_dir(
                 from_array, from_array_size, character_manifest.opposite_directions.from
@@ -247,15 +247,15 @@ function character_manifest_internal_parse_actions(json_actions, actions, src) {
     let extras_array_size = json_read_array_length(extras_array);
 
     if (sing_array_size > 0) {
-        actions.sing = new Array(sing_array_size);
+        actions.sing = malloc_for_array(sing_array_size);
         actions.sing_size = sing_array_size;
     }
     if (miss_array_size > 0) {
-        actions.miss = new Array(miss_array_size);
+        actions.miss = malloc_for_array(miss_array_size);
         actions.miss_size = miss_array_size;
     }
     if (extras_array_size > 0) {
-        actions.extras = new Array(extras_array_size);
+        actions.extras = malloc_for_array(extras_array_size);
         actions.extras_size = extras_array_size;
     }
 

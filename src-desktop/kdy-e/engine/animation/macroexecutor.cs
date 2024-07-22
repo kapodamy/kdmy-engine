@@ -105,10 +105,10 @@ public class MacroExecutor : IAnimate {
 
     public MacroExecutor(AnimListItem animlist_item) {
         this.interpolators_stack_size = 0;
-        this.instructions = CloneUtils.CloneClassArray(animlist_item.instructions, animlist_item.instructions_count);
+        this.instructions = EngineUtils.CloneClassArray(animlist_item.instructions, animlist_item.instructions_count);
         this.instructions_size = animlist_item.instructions_count;
 
-        this.frames = CloneUtils.CloneClassArray(animlist_item.frames, animlist_item.frame_count);
+        this.frames = EngineUtils.CloneClassArray(animlist_item.frames, animlist_item.frame_count);
         this.frame_count = animlist_item.frame_count;
 
         this.random_start = 0f;
@@ -124,7 +124,7 @@ public class MacroExecutor : IAnimate {
             if (instruction == null) throw new NullReferenceException();
 
             // clone values array
-            instruction.values = CloneUtils.CloneStructArray(instruction.values, instruction.values_size);
+            instruction.values = EngineUtils.CloneStructArray(instruction.values, instruction.values_size);
 
             if (instruction.type == AnimMacroType.INTERPOLATOR)
                 this.interpolators_stack_size++;
@@ -132,10 +132,7 @@ public class MacroExecutor : IAnimate {
 
         ClearRegisters();
 
-        if (this.interpolators_stack_size > 0)
-            this.interpolators_stack = new InStackInstruction[this.interpolators_stack_size];
-        else
-            this.interpolators_stack = null;
+        this.interpolators_stack = EngineUtils.CreateArray<InStackInstruction>(this.interpolators_stack_size);
 
         this.index = 0;
         this.on_yield = false;
@@ -454,13 +451,13 @@ public class MacroExecutor : IAnimate {
     public MacroExecutor Clone() {
         MacroExecutor copy = (MacroExecutor)this.MemberwiseClone();
 
-        copy.interpolators_stack = CloneUtils.CloneClassArray(this.interpolators_stack, this.interpolators_stack_size);
-        copy.frames = CloneUtils.CloneClassArray(this.frames, this.frame_count);
-        copy.instructions = CloneUtils.CloneClassArray(this.instructions, this.instructions_size);
+        copy.interpolators_stack = EngineUtils.CloneClassArray(this.interpolators_stack, this.interpolators_stack_size);
+        copy.frames = EngineUtils.CloneClassArray(this.frames, this.frame_count);
+        copy.instructions = EngineUtils.CloneClassArray(this.instructions, this.instructions_size);
 
         for (int i = 0 ; i < copy.instructions_size ; i++) {
             MacroExecutorInstruction instruction = copy.instructions[i];
-            instruction.values = CloneUtils.CloneStructArray(instruction.values, instruction.values_size);
+            instruction.values = EngineUtils.CloneStructArray(instruction.values, instruction.values_size);
         }
 
         for (int i = 0 ; i < copy.interpolators_stack_size ; i++) {
@@ -476,9 +473,9 @@ public class MacroExecutor : IAnimate {
         }
 
         // (JS & C# only) clone fixed arrays
-        copy.state = (float[])CloneUtils.CloneStructArray(this.state, this.state.Length);
-        copy.state_flags = (bool[])CloneUtils.CloneStructArray(this.state_flags, this.state_flags.Length);
-        copy.registers = (float[])CloneUtils.CloneStructArray(this.registers, this.registers.Length);
+        copy.state = EngineUtils.CloneStructArray(this.state, this.state.Length);
+        copy.state_flags = EngineUtils.CloneStructArray(this.state_flags, this.state_flags.Length);
+        copy.registers = EngineUtils.CloneStructArray(this.registers, this.registers.Length);
 
         return copy;
     }
@@ -847,7 +844,7 @@ public class MacroExecutor : IAnimate {
 
         public object Clone() {
             InStackInstruction copy = (InStackInstruction)this.MemberwiseClone();
-            copy.steps_bounds = CloneUtils.CloneStructArray(this.steps_bounds, this.steps_bounds.Length);
+            copy.steps_bounds = EngineUtils.CloneStructArray(this.steps_bounds, this.steps_bounds.Length);
             return copy;
         }
     }

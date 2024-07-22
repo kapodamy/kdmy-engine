@@ -474,7 +474,7 @@ async function savemanager_internal_build_list(savemanager) {
         menu_destroy(savemanager.menu);
     }
 
-    SAVEMANAGER_MENU_MANIFEST.items = new Array(savemanager.vmu_size);
+    SAVEMANAGER_MENU_MANIFEST.items = malloc_for_array(savemanager.vmu_size);
     SAVEMANAGER_MENU_MANIFEST.items_size = savemanager.vmu_size;
 
     for (let i = 0; i < savemanager.vmu_size; i++) {
@@ -530,7 +530,7 @@ async function savemanager_internal_find_changes(savemanager) {
     }
 
     // build new scan
-    let new_vmu_array = new Array(count);
+    let new_vmu_array = malloc_for_array(count);
     for (let i = 0; i < count; i++) {
         let dev = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
         if (!dev.valid) continue;

@@ -107,13 +107,13 @@ async function gameplaymanifest_init(src) {
     let songs_array = json_read_array(json, "songs");
     let songs_array_size = json_read_array_length(songs_array);
 
-    if (songs_array_size < 0) {
+    if (songs_array_size < 1) {
         json_destroy(json);
         return manifest;
     }
 
     manifest.songs_size = songs_array_size;
-    manifest.songs = new Array(songs_array_size);
+    manifest.songs = malloc_for_array(songs_array_size);
 
     let players_count = manifest.default ? manifest.default.players_size : -1;
 
@@ -370,7 +370,7 @@ function gameplaymanifest_parse_song(song, json_song, players_count) {
                 "gameplaymanifest_parse_song() 'selectedStateNamePerPlayer.length' != 'players.length'"
             );
         } else {
-            song.selected_state_name_per_player = new Array(selected_states_array_size);
+            song.selected_state_name_per_player = malloc_for_array(selected_states_array_size);
             song.selected_state_name_per_player_size = selected_states_array_size;
         }
     }
@@ -392,7 +392,7 @@ function gameplaymanifest_parse_notes(json, distribution) {
         return;
     }
 
-    let notes = new Array(notes_array_size);
+    let notes = malloc_for_array(notes_array_size);
     let notes_size = notes_array_size;
 
     for (let i = 0; i < notes_array_size; i++) {
@@ -441,7 +441,7 @@ function gameplaymanifest_parse_distributions(json, obj, ptr_distributions, ptr_
         return;
     }
 
-    let distributions_new = new Array(json_distributions_size);
+    let distributions_new = malloc_for_array(json_distributions_size);
     let distributions_size_new = json_distributions_size;
 
     for (let i = 0; i < json_distributions_size; i++) {
@@ -504,7 +504,7 @@ function gameplaymanifest_parse_distribution(json_distribution, distribution) {
             throw new Error("'buttonBinds.length' != 'strums.length'");
         }
         if (strum_binds_array_size > 0) {
-            distribution.strum_binds = new Array(strums_array_size);
+            distribution.strum_binds = malloc_for_array(strums_array_size);
             distribution.strum_binds_is_custom = true;
             for (let i = 0; i < strums_array_size; i++) {
                 distribution.strum_binds[i] = json_read_array_item_hex(strum_binds_array, i, 0x00);
@@ -515,7 +515,7 @@ function gameplaymanifest_parse_distribution(json_distribution, distribution) {
     gameplaymanifest_parse_notes(json_distribution, distribution);
 
     if (strums_array_size > 0) {
-        distribution.strums = new Array(strums_array_size);
+        distribution.strums = malloc_for_array(strums_array_size);
         distribution.strums_size = strums_array_size;
     }
 
@@ -533,7 +533,7 @@ function gameplaymanifest_parse_distribution(json_distribution, distribution) {
 
         if (notes_ids_array_size > 0) {
             distribution.strums[i].notes_ids_size = notes_ids_array_size;
-            distribution.strums[i].notes_ids = new Array(notes_ids_array_size);
+            distribution.strums[i].notes_ids = malloc_for_array(notes_ids_array_size);
         }
 
         for (let j = 0; j < notes_ids_array_size; j++) {
@@ -554,7 +554,7 @@ function gameplaymanifest_parse_distribution(json_distribution, distribution) {
     let states_array_size = json_read_array_length(states_array);
 
     if (states_array_size > 0) {
-        distribution.states = new Array(states_array_size);
+        distribution.states = malloc_for_array(states_array_size);
         distribution.states_size = states_array_size;
     }
 
@@ -581,7 +581,7 @@ function gameplaymanifest_parse_distributions_minimal(json, obj, ptr_distributio
         return;
     }
 
-    let dists_minimal = new Array(json_dists_minimal_array_length);
+    let dists_minimal = malloc_for_array(json_dists_minimal_array_length);
 
     for (let i = 0; i < json_dists_minimal_array_length; i++) {
         let json_dist = json_read_array_item_object(json_dists_minimal_array, i);
@@ -601,7 +601,7 @@ function gameplaymanifest_parse_distributions_minimal(json, obj, ptr_distributio
         let dist_states_array_size = json_read_array_length(dist_states_array);
 
         if (dist_states_array_size > 0) dists_minimal[i].states_size += dist_states_array_size;
-        dists_minimal[i].states = new Array(dists_minimal[i].states_size);
+        dists_minimal[i].states = malloc_for_array(dists_minimal[i].states_size);
 
         // build default state
         let default_state = dists_minimal[i].states[0] = {
@@ -726,7 +726,7 @@ function gameplaymanifest_parse_healthbar(json) {
 
     if (states_array_size < 1) return healthbar;
 
-    healthbar.states = new Array(states_array_size);
+    healthbar.states = malloc_for_array(states_array_size);
     healthbar.states_size = states_array_size;
 
     for (let i = 0; i < states_array_size; i++) {
@@ -770,7 +770,7 @@ function gameplaymanifest_parse_players(json, obj, ptr_players, ptr_players_size
         return;
     }
 
-    let players = new Array(players_array_size);
+    let players = malloc_for_array(players_array_size);
     let players_size = players_array_size;
 
     for (let i = 0; i < players_array_size; i++) {
@@ -825,7 +825,7 @@ function gameplaymanifest_parse_players(json, obj, ptr_players, ptr_players_size
 
         if (states_array_size < 1) continue;
 
-        players[i].states = new Array(states_array_size);
+        players[i].states = malloc_for_array(states_array_size);
         players[i].states_size = states_array_size;
 
         for (let j = 0; j < states_array_size; j++) {
@@ -866,7 +866,7 @@ function gameplaymanifest_parse_girlfriend(json) {
 
     if (states_array_size < 1) return girlfriend;
 
-    girlfriend.states = new Array(states_array_size);
+    girlfriend.states = malloc_for_array(states_array_size);
     girlfriend.states_size = states_array_size;
 
     for (let i = 0; i < states_array_size; i++) {

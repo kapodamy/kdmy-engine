@@ -398,7 +398,7 @@ public class TweenKeyframe {
 
         public object Clone() {
             Step copy = (Step)this.MemberwiseClone();
-            copy.steps_bounds = CloneUtils.CloneStructArray(this.steps_bounds, this.steps_bounds.Length);
+            copy.steps_bounds = EngineUtils.CloneStructArray(this.steps_bounds, this.steps_bounds.Length);
             return copy;
         }
     }

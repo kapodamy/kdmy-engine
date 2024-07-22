@@ -6,12 +6,12 @@ async function notepool_init(notes, notes_size, dimmen, invdimmen, scroll_direct
 
     let notepool = {
         size: notes_size,
-        drawables: new Array(notes_size),
-        models_custom_sick_effect: new Array(notes_size),
-        attributes: new Array(notes_size)
+        drawables: malloc_for_array(notes_size),
+        models_custom_sick_effect: malloc_for_array(notes_size),
+        attributes: malloc_for_array(notes_size)
     };
 
-    let modelholders = new Array(notes_size);
+    let modelholders = malloc_for_array(notes_size);
 
     for (let i = 0; i < notepool.size; i++) {
         let note_definition = notes[i];

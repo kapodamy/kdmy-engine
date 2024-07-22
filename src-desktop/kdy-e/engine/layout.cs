@@ -313,7 +313,7 @@ public class Layout : IDraw, IAnimate {
 
         // step 7: build textures array
         layout.textures_size = layout_context.resource_pool.textures.Size();
-        layout.textures = new Texture[layout.textures_size];
+        layout.textures = EngineUtils.CreateArray<Texture>(layout.textures_size);
 
         ResourcePoolEntry[] list = layout_context.resource_pool.textures.PeekArray();
         for (int i = 0 ; i < layout.textures_size ; i++) {
@@ -322,7 +322,7 @@ public class Layout : IDraw, IAnimate {
         }
 
         // step 8: build z-buffer
-        layout.z_buffer = new ZBufferEntry[layout.vertex_list_size];
+        layout.z_buffer = EngineUtils.CreateArray<ZBufferEntry>(layout.vertex_list_size);
         layout.z_buffer_size = layout.vertex_list_size;
         layout.HelperZbufferBuild();
 
@@ -1000,12 +1000,7 @@ public class Layout : IDraw, IAnimate {
     public void ExternalVertexCreateEntries(int amount) {
         if (amount < 0) amount = 0;
 
-        if (this.external_vertex_list != null) {
-            Array.Resize(ref this.external_vertex_list, amount);
-            //if (this.external_vertex_list == null) throw new Exception("layout_external_vertex_create_entries() not enough system memory");
-        } else {
-            this.external_vertex_list = new Item[amount];
-        }
+        EngineUtils.ResizeArray(ref this.external_vertex_list, amount);
 
         for (int i = this.external_vertex_list_size ; i < amount ; i++) {
             this.external_vertex_list[i] = new Item() {
@@ -1020,8 +1015,7 @@ public class Layout : IDraw, IAnimate {
         this.external_vertex_list_size = amount;
 
         this.z_buffer_size = this.vertex_list_size + this.external_vertex_list_size;
-        Array.Resize(ref this.z_buffer, this.z_buffer_size);
-        //if (!this.z_buffer) throw new Exception("not enough system memory");
+        EngineUtils.ResizeArray(ref this.z_buffer, this.z_buffer_size);
 
         // re-build z-buffer
         HelperZbufferBuild();
@@ -1052,8 +1046,7 @@ public class Layout : IDraw, IAnimate {
 
         // increase group_list size
         int group_id = this.group_list_size++;
-        Array.Resize(ref this.group_list, this.group_list_size);
-        //if (!this.group_list) throw new Exception("layout_external_create_group() out-of-memory");
+        EngineUtils.ResizeArray(ref this.group_list, this.group_list_size);
 
         this.group_list[group_id] = new Group() {
             context = new GroupContext() {
@@ -1420,7 +1413,7 @@ public class Layout : IDraw, IAnimate {
                     break;
             }
         }
-        ArrayUtils.Sort(this.z_buffer, 0, this.z_buffer_size, Layout.HelperZbufferSort);
+        EngineUtils.Sort(this.z_buffer, 0, this.z_buffer_size, Layout.HelperZbufferSort);
 
         // step 2: find top-most item of each group
         for (int i = 0 ; i < this.z_buffer_size ; i++) {
@@ -3900,7 +3893,7 @@ public class Layout : IDraw, IAnimate {
         }
 
         string atlas_entry_name = unparsed_entry.GetAttribute("entry");
-        AtlasEntry atlas_entry = CloneUtils.CloneObject(atlas.GetEntry(atlas_entry_name));
+        AtlasEntry atlas_entry = EngineUtils.CloneObject(atlas.GetEntry(atlas_entry_name));
 
         if (atlas_entry == null) {
             Logger.Warn($"layout_helper_add_action_atlasapply() missing atlas entry name '{atlas_entry_name}': {unparsed_entry.OuterXML}");

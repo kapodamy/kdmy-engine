@@ -64,7 +64,7 @@ var ModuleFontAtlas = (() => {//@ts-ignore
             let fontcharmap_ascender = dataReader.getInt16();
             dataReader.getPointer();
             let texture = HEAPU8.subarray(fontcharmap_texture, fontcharmap_texture + fontcharmap_texture_byte_size);
-            let char_array = fontcharmap_char_array_size > 0 ? new Array(fontcharmap_char_array_size) : null;
+            let char_array = malloc_for_array(fontcharmap_char_array_size);
             for (let i = 0; i < fontcharmap_char_array_size; i++) {
                 let field_codepoint = fontcharmap_char_array.getUint32();
                 let field_offset_x = fontcharmap_char_array.getInt16();
@@ -84,7 +84,7 @@ var ModuleFontAtlas = (() => {//@ts-ignore
                     advancex: field_advancex,
                     width: field_width,
                     height: field_height,
-                    kernings: field_kernings_size > 0 ? new Array(field_kernings_size) : null,
+                    kernings: malloc_for_array(field_kernings_size),
                     kernings_size: field_kernings_size,
                     atlas_entry: {
                         x: atlas_entry_x,

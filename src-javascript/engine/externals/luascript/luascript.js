@@ -404,7 +404,7 @@ async function luascript_init(lua_sourcecode, filename, working_folder, context,
         id: LUASCRIPT_IDS++,
         L: L,
         shared_size: LUASCRIPT_SHARED_ARRAY_CHUNK_SIZE,
-        shared_array: new Array(LUASCRIPT_SHARED_ARRAY_CHUNK_SIZE),
+        shared_array: malloc_for_array(LUASCRIPT_SHARED_ARRAY_CHUNK_SIZE),
         context: context,
         is_week: is_week,
         working_folder: working_folder

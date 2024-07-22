@@ -67,7 +67,7 @@ function kdmyEngine_parseFontCharMap(ptr) {
     let texture = HEAPU8.subarray(fontcharmap_texture, fontcharmap_texture + fontcharmap_texture_byte_size);
 
     /**@type {FontCharData[]} */
-    let char_array = fontcharmap_char_array_size > 0 ? new Array(fontcharmap_char_array_size) : null;
+    let char_array = malloc_for_array(fontcharmap_char_array_size);
 
     for (let i = 0; i < fontcharmap_char_array_size; i++) {
         let field_codepoint = fontcharmap_char_array.getUint32();
@@ -89,7 +89,7 @@ function kdmyEngine_parseFontCharMap(ptr) {
             advancex: field_advancex,
             width: field_width,
             height: field_height,
-            kernings: field_kernings_size > 0 ? new Array(field_kernings_size) : null,
+            kernings: malloc_for_array(field_kernings_size),
             kernings_size: field_kernings_size,
             atlas_entry: {
                 x: atlas_entry_x,

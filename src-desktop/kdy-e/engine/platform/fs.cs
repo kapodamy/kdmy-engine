@@ -155,7 +155,7 @@ public static class FS {
             entries.Destroy2(out _, out folder_enumerator.___entries);
 
             // sort filenames if one or more expansions was enumerated
-            ArrayUtils.Sort(
+            EngineUtils.Sort(
                 folder_enumerator.___entries, 0, folder_enumerator.___entries.Length,
                 FSFolderEnumerator.Compare
             );

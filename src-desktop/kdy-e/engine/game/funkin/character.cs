@@ -1157,10 +1157,10 @@ L_read_state:
             sing_size = sing_size,
             miss_size = miss_size,
             extras_size = extras_size,
-            sing = new CharacterActionSing[sing_size],
-            sing_alt = new CharacterActionSing[sing_size],
-            miss = new CharacterActionMiss[miss_size],
-            extras = new CharacterActionExtra[extras_size],
+            sing = EngineUtils.CreateArray<CharacterActionSing>(sing_size),
+            sing_alt = EngineUtils.CreateArray<CharacterActionSing>(sing_size),
+            miss = EngineUtils.CreateArray<CharacterActionMiss>(miss_size),
+            extras = EngineUtils.CreateArray<CharacterActionExtra>(extras_size),
             hey = new CharacterActionExtra() {
                 @base = null,
                 hold = null,
@@ -1337,7 +1337,7 @@ L_read_state:
     }
 
     private void InternalImportOppositeDir(ref int[] array, string[] ltr_array) {
-        array = new int[this.inverted_size];
+        array = EngineUtils.CreateArray<int>(this.inverted_size);
 
         for (int i = 0 ; i < this.inverted_size ; i++) {
             array[i] = -1;

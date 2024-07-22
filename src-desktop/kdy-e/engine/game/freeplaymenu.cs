@@ -153,7 +153,7 @@ public class FreeplayMenu {
         // step 4: prepare menu
         int songs_size = songs.Size();
         FreeplayMenu.MENU_SONGS.items_size = songs_size;
-        FreeplayMenu.MENU_SONGS.items = new MenuManifest.Item[songs_size];
+        FreeplayMenu.MENU_SONGS.items = EngineUtils.CreateArray<MenuManifest.Item>(songs_size);
 
         for (int i = 0 ; i < songs_size ; i++) {
             MappedSong song = songs.Get(i);
@@ -666,7 +666,7 @@ public class FreeplayMenu {
         WeekInfo weekinfo = Funkin.weeks_array.array[state.map.week_index];
         int count = 3 + weekinfo.custom_difficults_size;
 
-        state.difficulties = new Difficult[count];
+        state.difficulties = EngineUtils.CreateArray<Difficult>(count);
         state.difficulties_size = 0;
 
         if (weekinfo.has_difficulty_easy) {

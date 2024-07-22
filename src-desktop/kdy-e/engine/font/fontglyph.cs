@@ -40,9 +40,10 @@ public class FontGlyph : IFont {
         Texture texture = Texture.Init(texture_path);
         if (texture != null) {
             fontglyph = FontGlyph.Init2(texture, atlas, suffix, allow_animation);
+            if (fontglyph == null) Logger.Warn($"fontglyph_init() failed for {src_atlas}");
         } else {
             fontglyph = null;
-            Logger.Warn($"fontglyph_init() texture specified by atlas not found: {texture_path}");
+            Logger.Error($"fontglyph_init() texture specified by atlas not found: {texture_path}");
         }
 
         atlas.Destroy();
@@ -53,7 +54,7 @@ public class FontGlyph : IFont {
     public static FontGlyph Init2(Texture texture, Atlas atlas, string suffix, bool allow_animation) {
         FontGlyph fontglyph = new FontGlyph() {
             texture = texture,
-            table = new GlyphInfo[atlas.size],
+            table = EngineUtils.CreateArray<GlyphInfo>(atlas.size),
             table_size = atlas.size,// temporal value
 
             frame_time = 0f,
@@ -84,10 +85,17 @@ public class FontGlyph : IFont {
             if (result == 1) table_index++;
         }
 
+        if (table_index < 1) {
+            Logger.Warn($"fontglyph_init2() failed, there no usable glyphs in the atlas suffix={suffix}");
+            //free(fontglyph.table);
+            //free(fontglyph);
+            return null;
+        }
+
         // shrink the table if necessary
         if (table_index < fontglyph.table_size) {
             fontglyph.table_size = table_index;
-            Array.Resize(ref fontglyph.table, table_index);
+            EngineUtils.ResizeArray(ref fontglyph.table, table_index);
         }
 
         // allocate frames array
@@ -95,7 +103,7 @@ public class FontGlyph : IFont {
         for (int i = 0 ; i < fontglyph.table_size ; i++) {
             GlyphInfo glyph_info = fontglyph.table[i];
             if (glyph_info.frames_size > 0) {
-                glyph_info.frames = new GlyphFrame[glyph_info.frames_size];
+                glyph_info.frames = EngineUtils.CreateArray<GlyphFrame>(glyph_info.frames_size);
                 glyph_info.frames_size = 0;
             }
         }
@@ -109,7 +117,7 @@ public class FontGlyph : IFont {
         }
 
         // sort table, place ascii characters first
-        ArrayUtils.Sort(fontglyph.table, 0, fontglyph.table_size, FontGlyph.InternalTableSort);
+        EngineUtils.Sort(fontglyph.table, 0, fontglyph.table_size, FontGlyph.InternalTableSort);
 
         // populate lookup table
         for (byte i = 0 ; i < fontglyph.table_size && i <= FontGlyph.LOOKUP_TABLE_LENGTH ; i++) {

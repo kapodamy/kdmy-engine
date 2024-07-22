@@ -412,3 +412,4 @@ function atlas_parse_tileset(arraylist, unparsed_tileset) {
     }
 
 }
+

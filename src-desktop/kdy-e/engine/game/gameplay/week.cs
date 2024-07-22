@@ -567,7 +567,7 @@ public class Week {
         bool retry = false;
         bool mainmenu = false;
         bool weekselector = false;
-        int[] songs_attempts = new int[gameplaymanifest.songs_size];
+        int[] songs_attempts = EngineUtils.CreateArray<int>(gameplaymanifest.songs_size);
         bool first_init = true;
         bool reject_completed = false;
         int last_song = gameplaymanifest.songs_size - 1;
@@ -864,7 +864,7 @@ public class Week {
         if (old_animlist != null) old_animlist.Destroy();
 
         initparams.layout_strums_size = (int)((long)layout.GetAttachedValue("ui_strums_count", AttachedValueType.INTEGER, 0));
-        initparams.layout_strums = initparams.layout_strums_size > 0 ? new LayoutStrum[initparams.layout_strums_size] : null;
+        initparams.layout_strums = EngineUtils.CreateArray<LayoutStrum>(initparams.layout_strums_size);
         for (int i = 0 ; i < initparams.layout_strums_size ; i++) {
             placeholder = Week.InternalReadPlaceholder(layout, "ui_strums", i);
             if (placeholder == null) placeholder = UI_STRUMS_LAYOUT_PLACEHOLDER;
@@ -1460,7 +1460,7 @@ public class Week {
             "character_count", AttachedValueType.INTEGER, 0L
         ));
 
-        initparams.layout_characters = count > 0 ? new LayoutCharacter[count] : null;
+        initparams.layout_characters = EngineUtils.CreateArray<LayoutCharacter>(count);
         initparams.layout_characters_size = count;
 
         for (int i = 0 ; i < count ; i++) {
@@ -1571,7 +1571,7 @@ public class Week {
 
         // update events table
         //free(roundcontext.events);
-        roundcontext.events = CloneUtils.CloneClassArray(chart.events, chart.events_size);
+        roundcontext.events = EngineUtils.CloneClassArray(chart.events, chart.events_size);
         roundcontext.events_size = chart.events_size;
         roundcontext.events_peek_index = 0;
         roundcontext.settings.original_bpm = chart.bpm;
@@ -1679,11 +1679,11 @@ public class Week {
         roundcontext.players_from_default = players_from_default;
         roundcontext.distributions_from_default = distributions_from_default;
 
-        CharacterManifest[] charactermanifests = new CharacterManifest[players_size];
+        CharacterManifest[] charactermanifests = EngineUtils.CreateArray<CharacterManifest>(players_size);
         CharacterManifest manifest_player = null;
         CharacterManifest manifest_opponent = null;
 
-        roundcontext.players = new PlayerStruct[players_size];
+        roundcontext.players = EngineUtils.CreateArray<PlayerStruct>(players_size);
         roundcontext.players_size = players_size;
 
         for (int i = 0 ; i < roundcontext.players_size ; i++) {

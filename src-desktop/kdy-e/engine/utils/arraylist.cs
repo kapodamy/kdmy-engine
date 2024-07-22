@@ -168,7 +168,7 @@ public class ArrayList<T> {
 
         if (typeof(ICloneable).IsAssignableFrom(typeof(T))) {
             for (int i = 0 ; i < this.size ; i++) {
-                copy.array[i] = (T)CloneUtils.CloneObject((ICloneable)this.array[i]);
+                copy.array[i] = (T)EngineUtils.CloneObject((ICloneable)this.array[i]);
             }
         } else {
             for (int i = 0 ; i < this.size ; i++) {
@@ -180,7 +180,7 @@ public class ArrayList<T> {
     }
 
     public void Sort(Comparison<T> sort_fn) {
-        ArrayUtils.Sort(this.array, 0, this.size, sort_fn);
+        EngineUtils.Sort(this.array, 0, this.size, sort_fn);
     }
 
 

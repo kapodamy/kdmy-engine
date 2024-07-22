@@ -88,7 +88,7 @@ public class SongPlayer {
             }
 
             int index = 0;
-            songplayer.playbacks = new SoundPlayer[songplayer.playbacks_size];
+            songplayer.playbacks = EngineUtils.CreateArray<SoundPlayer>(songplayer.playbacks_size);
 
             if (player_voices != null) songplayer.playbacks[index++] = player_voices;
             if (player_instrumentals != null) songplayer.playbacks[index++] = player_instrumentals;

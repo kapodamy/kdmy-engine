@@ -199,7 +199,7 @@ public static class WeekEnumerator {
         // parse all custom difficults
         WeekInfo.CustomDifficult[] customdifficults = null;
         if (customdifficulties_array_size > 0) {
-            customdifficults = new WeekInfo.CustomDifficult[customdifficulties_array_size];
+            customdifficults = EngineUtils.CreateArray<WeekInfo.CustomDifficult>(customdifficulties_array_size);
             for (int i = 0 ; i < customdifficulties_array_size ; i++) {
                 JSONToken customdifficult_obj = JSONParser.ReadArrayItemObject(customdifficulties_array, i);
 
@@ -222,7 +222,7 @@ public static class WeekEnumerator {
 
         JSONToken json_songs = JSONParser.ReadArray(json, "songs");
         int json_songs_size = JSONParser.ReadArrayLength(json_songs);
-        WeekInfo.Song[] songs = new WeekInfo.Song[json_songs_size];
+        WeekInfo.Song[] songs = EngineUtils.CreateArray<WeekInfo.Song>(json_songs_size);
         for (int i = 0 ; i < json_songs_size ; i++) {
             JSONToken json_song = JSONParser.ReadArrayItemObject(json_songs, i);
             songs[i] = new WeekInfo.Song() {
@@ -338,7 +338,7 @@ L_failed:
         int array_json_length = JSONParser.ReadArrayLength(array_json);
         if (array_json_length < 1) return null;
 
-        WeekInfo.UnlockableCharacter[] array = new WeekInfo.UnlockableCharacter[array_json_length];
+        WeekInfo.UnlockableCharacter[] array = EngineUtils.CreateArray<WeekInfo.UnlockableCharacter>(array_json_length);
 
         for (int i = 0 ; i < array_json_length ; i++) {
             JSONToken array_item = JSONParser.ReadArrayItemObject(array_json, i);
@@ -351,9 +351,9 @@ L_failed:
             if (StringUtils.IsEmpty(array[i].name) && StringUtils.IsEmpty(array[i].manifest)) {
                 Logger.Warn("weekenumerator_parse_character() missing 'name' and/or 'manifest'");
                 //for (; i >= 0; i--) {
-                    //free(array[i].unlock_directive);
-                    //free(array[i].name);
-                    //free(array[i].manifest);
+                //free(array[i].unlock_directive);
+                //free(array[i].name);
+                //free(array[i].manifest);
                 //}
                 //free(array);
                 return null;

@@ -501,7 +501,7 @@ public class SaveManager {
             this.menu.Destroy();
         }
 
-        SaveManager.MENU_MANIFEST.items = new MenuManifest.Item[this.vmu_size];
+        SaveManager.MENU_MANIFEST.items = EngineUtils.CreateArray<MenuManifest.Item>(this.vmu_size);
         SaveManager.MENU_MANIFEST.items_size = this.vmu_size;
 
         for (int i = 0 ; i < this.vmu_size ; i++) {
@@ -558,7 +558,7 @@ public class SaveManager {
         }
 
         // build new scan
-        VMUInfo[] new_vmu_array = new VMUInfo[count];
+        VMUInfo[] new_vmu_array = EngineUtils.CreateArray<VMUInfo>(count);
         for (int i = 0 ; i < count ; i++) {
             maple_device_t dev = maple.enum_type(i, MAPLE_FUNC.MEMCARD);
             if (!dev.valid) continue;

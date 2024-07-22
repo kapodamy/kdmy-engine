@@ -81,7 +81,7 @@ public class AnimSprite {
         AnimSprite animsprite = AnimSprite.InternalInit(atlas_entry.name, loop, frame_rate);
         animsprite.frame_count = 1;
         animsprite.frames = new AtlasEntry[1];
-        animsprite.frames[0] = CloneUtils.CloneObject(atlas_entry);
+        animsprite.frames[0] = EngineUtils.CloneObject(atlas_entry);
         return animsprite;
     }
 
@@ -141,11 +141,11 @@ public class AnimSprite {
 
         animsprite.alternate_per_loop = animlist_item.alternate_per_loop;
         animsprite.alternate_size = animlist_item.alternate_set_size;
-        animsprite.alternate_set = CloneUtils.CloneStructArray(animlist_item.alternate_set, animlist_item.alternate_set_size);
+        animsprite.alternate_set = EngineUtils.CloneStructArray(animlist_item.alternate_set, animlist_item.alternate_set_size);
         if (animlist_item.alternate_no_random) animsprite.alternate_index = 0;
 
         animsprite.frame_count = animlist_item.frame_count;
-        animsprite.frames = CloneUtils.CloneClassArray(animlist_item.frames, animlist_item.frame_count);
+        animsprite.frames = EngineUtils.CloneClassArray(animlist_item.frames, animlist_item.frame_count);
         animsprite.loop_from_index = animlist_item.loop_from_index;
 
         return animsprite;

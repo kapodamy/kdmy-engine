@@ -42,7 +42,7 @@ function ddrkeymon_init(/**@type {GamepadKDY}*/gamepad, strum_binds, strum_binds
 
         start_timestamp: 0,
 
-        strum_binds: new Array(strum_binds_size),
+        strum_binds: malloc_for_array(strum_binds_size),
         strum_binds_size: strum_binds_size,
 
         thd_monitor: null,
@@ -56,7 +56,7 @@ function ddrkeymon_init(/**@type {GamepadKDY}*/gamepad, strum_binds, strum_binds
             is_visible: true,
             button_flags: strum_binds[i],
             button_count: count,
-            button_array: new Array(count)
+            button_array: malloc_for_array(count)
         };
 
         for (let j = 0, k = 0; k < count; j++) {

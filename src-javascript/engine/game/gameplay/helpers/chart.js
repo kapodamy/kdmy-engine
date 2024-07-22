@@ -230,7 +230,7 @@ async function chart_init(src, difficult) {
     if (arraylist_size(player_notes) > 0) chart.entries_size++;
 
     let entry_index = 0;
-    chart.entries = new Array(chart.entries_size);
+    chart.entries = malloc_for_array(chart.entries_size);
     if (arraylist_size(opponent_notes) > 0) {
         chart.entries[entry_index] = { notes: null, notes_size: 0 };
         arraylist_destroy2(opponent_notes, chart.entries[entry_index], "notes_size", "notes");

@@ -70,7 +70,7 @@ public static class GameMain {
         }
 
         // choose a random menu style
-        bool[] visited = new bool[Funkin.weeks_array.size];
+        bool[] visited = EngineUtils.CreateArray<bool>(Funkin.weeks_array.size);
         bool try_choose_last_played = Math2D.RandomFloat() <= 0.25f;
         int visited_count = 0;
         for (int i = 0 ; i < Funkin.weeks_array.size ; i++) visited[i] = false;

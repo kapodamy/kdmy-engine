@@ -135,7 +135,7 @@ async function freeplaymenu_main() {
     // step 4: prepare menu
     let songs_size = arraylist_size(songs);
     FREEPLAYMENU_MENU_SONGS.items_size = songs_size;
-    FREEPLAYMENU_MENU_SONGS.items = new Array(songs_size);
+    FREEPLAYMENU_MENU_SONGS.items = malloc_for_array(songs_size);
 
     for (let i = 0; i < songs_size; i++) {
         let song = arraylist_get(songs, i);
@@ -653,7 +653,7 @@ function freeplaymenu_internal_build_difficulties(state) {
     let weekinfo = weeks_array.array[state.map.week_index];
     let count = 3 + weekinfo.custom_difficults_size;
 
-    state.difficulties = new Array(count);
+    state.difficulties = malloc_for_array(count);
     state.difficulties_size = 0;
 
     if (weekinfo.has_difficulty_easy) {

@@ -1232,7 +1232,7 @@ async function settingsmenu_show_common(title, gamepad, options, options_count, 
     SETTINGSMENU_MENU_COMMON.parameters.anim_idle = "menu_common_item_idle";
     SETTINGSMENU_MENU_COMMON.parameters.font_border_size = font_border_size;
     SETTINGSMENU_MENU_COMMON.items_size = options_count;
-    SETTINGSMENU_MENU_COMMON.items = new Array(options_count);
+    SETTINGSMENU_MENU_COMMON.items = malloc_for_array(options_count);
 
     for (let i = 0; i < options_count; i++) {
         SETTINGSMENU_MENU_COMMON.items[i] = {
@@ -1417,7 +1417,7 @@ async function settingsmenu_in_common_change_list(layout, gamepad, list, list_si
     SETTINGSMENU_MENU_COMMON.parameters.anim_selected = "menu_selector_item_selected";
     SETTINGSMENU_MENU_COMMON.parameters.anim_idle = "menu_selector_item_idle";
     SETTINGSMENU_MENU_COMMON.items_size = list_size;
-    SETTINGSMENU_MENU_COMMON.items = new Array(list_size);
+    SETTINGSMENU_MENU_COMMON.items = malloc_for_array(list_size);
 
     for (let i = 0; i < list_size; i++) {
         SETTINGSMENU_MENU_COMMON.items[i] = {

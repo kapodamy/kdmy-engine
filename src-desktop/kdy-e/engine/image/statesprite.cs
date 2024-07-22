@@ -858,7 +858,7 @@ public class StateSprite : IVertex {
         };
 
         if (atlas_entry != null) {
-            state.frame_info = CloneUtils.CloneObject(atlas_entry);
+            state.frame_info = EngineUtils.CloneObject(atlas_entry);
         }
 
         this.state_list.AddItem(state);
@@ -1123,7 +1123,7 @@ public class StateSprite : IVertex {
 
     public void TrailingSetParams(int length, float trail_delay, float trail_alpha, bool? darken_colors) {
         if (length > 0) {
-            Array.Resize(ref this.trailing_buffer, length);
+            EngineUtils.ResizeArray(ref this.trailing_buffer, length);
             this.trailing_length = length;
             if (this.trailing_used > length) this.trailing_used = length;
         }

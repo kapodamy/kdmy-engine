@@ -57,14 +57,14 @@ function clone_array(array_ptr, elements, struct_size = NaN) {
  * @returns {boolean} returns false if the array was null
  */
 function clone_struct_as_array_items(array_ptr, elements, struct_ptr, struct_size = NaN) {
-    if (array_ptr == null) return 0;
+    if (array_ptr == null) return false;
     if (!(array_ptr instanceof Array))
         new TypeError("(javacript) clone_struct_as_array_items expected array");
 
     for (let i = 0; i < elements; i++)
         array_ptr[i] = clone_struct(struct_ptr, struct_size);
 
-    return 1;
+    return true;
 }
 
 /**
@@ -83,14 +83,43 @@ function clone_struct_to(struct_src, struct_dest, struct_size = NaN) {
 
     if (struct_src === struct_dest) {
         console.warn('clone_struct_to() "struct_src" and "struct_dest" are the same');
-        return 0;
+        return false;
     }
 
-    if (struct_src == null || struct_dest == null) return 0;
+    if (struct_src == null || struct_dest == null) return false;
 
     for (const prop in struct_src) {
         struct_dest[prop] = struct_src[prop];
     }
 
-    return 1;
+    return true;
+}
+
+/**
+ * @param {T[]} array 
+ * @param {number} size 
+ * @template T
+ * @returns T[]
+ */
+function realloc_for_array(array, size) {
+    if (array == null)
+        return new Array(size);
+    else if (size > 0)
+        return realloc(array, size);
+    else if (size < 0)
+        throw new Error("size was negative");
+    else
+        return null;
+}
+
+/**
+ * @param {number} size
+ */
+function malloc_for_array(size) {
+    if (size > 0)
+        return new Array(size);
+    else if (size < 0)
+        throw new Error("size was negative");
+    else
+        return null;
 }

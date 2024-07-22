@@ -400,7 +400,7 @@ public static class SettingsMenu {
             if (menumanifest == null) throw new Exception("failed to load " + SettingsMenu.MODDING_MENU);
 
             // since a custom menu was provided, remap option descriptions
-            options_help = new SettingOption[menumanifest.items_size];
+            options_help = EngineUtils.CreateArray<SettingOption>(menumanifest.items_size);
 
             for (int i = 0 ; i < menumanifest.items_size ; i++) {
                 options_help[i].description = menumanifest.items[i].description;
@@ -1255,7 +1255,7 @@ L_prepare_return:
         SettingsMenu.MENU_COMMON.parameters.anim_idle = "menu_common_item_idle";
         SettingsMenu.MENU_COMMON.parameters.font_border_size = font_border_size;
         SettingsMenu.MENU_COMMON.items_size = options_count;
-        SettingsMenu.MENU_COMMON.items = new MenuManifest.Item[options_count];
+        SettingsMenu.MENU_COMMON.items = EngineUtils.CreateArray<MenuManifest.Item>(options_count);
 
         for (int i = 0 ; i < options_count ; i++) {
             SettingsMenu.MENU_COMMON.items[i] = new MenuManifest.Item() {
@@ -1438,7 +1438,7 @@ L_prepare_return:
         SettingsMenu.MENU_COMMON.parameters.anim_selected = "menu_selector_item_selected";
         SettingsMenu.MENU_COMMON.parameters.anim_idle = "menu_selector_item_idle";
         SettingsMenu.MENU_COMMON.items_size = list_size;
-        SettingsMenu.MENU_COMMON.items = new MenuManifest.Item[list_size];
+        SettingsMenu.MENU_COMMON.items = EngineUtils.CreateArray<MenuManifest.Item>(list_size);
 
         for (int i = 0 ; i < list_size ; i++) {
             SettingsMenu.MENU_COMMON.items[i] = new MenuManifest.Item() {

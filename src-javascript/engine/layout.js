@@ -196,7 +196,7 @@ async function layout_init(src) {
 
     // step 7: build textures array
     layout.textures_size = arraylist_size(layout_context.resource_pool.textures);
-    layout.textures = new Array(layout.textures_size);
+    layout.textures = malloc_for_array(layout.textures_size);
 
     let list = arraylist_peek_array(layout_context.resource_pool.textures);
     for (let i = 0; i < layout.textures_size; i++) {
@@ -205,7 +205,7 @@ async function layout_init(src) {
     }
 
     // step 8: build z-buffer
-    layout.z_buffer = new Array(layout.vertex_list_size);
+    layout.z_buffer = malloc_for_array(layout.vertex_list_size);
     layout.z_buffer_size = layout.vertex_list_size;
     layout_helper_zbuffer_build(layout);
 
@@ -901,12 +901,7 @@ function layout_get_viewport_size(layout, size) {
 function layout_external_vertex_create_entries(layout, amount) {
     if (amount < 0) amount = 0;
 
-    if (layout.external_vertex_list) {
-        layout.external_vertex_list = realloc(layout.external_vertex_list, amount);
-        if (!layout.external_vertex_list) throw new Error("not enough system memory");
-    } else {
-        layout.external_vertex_list = new Array(amount);
-    }
+    layout.external_vertex_list = realloc_for_array(layout.external_vertex_list, amount);
 
     for (let i = layout.external_vertex_list_size; i < amount; i++) {
         layout.external_vertex_list[i] = {
@@ -921,8 +916,7 @@ function layout_external_vertex_create_entries(layout, amount) {
     layout.external_vertex_list_size = amount;
 
     layout.z_buffer_size = layout.vertex_list_size + layout.external_vertex_list_size;
-    layout.z_buffer = realloc(layout.z_buffer, layout.z_buffer_size);
-    if (!layout.z_buffer) throw new Error("layout_external_vertex_create_entries() not enough system memory");
+    layout.z_buffer = realloc_for_array(layout.z_buffer, layout.z_buffer_size);
 
     // re-build z-buffer
     layout_helper_zbuffer_build(layout);
@@ -953,8 +947,7 @@ function layout_external_create_group(layout, group_name, parent_group_id) {
 
     // increase group_list size
     let group_id = layout.group_list_size++;
-    layout.group_list = realloc(layout.group_list, layout.group_list_size);
-    if (!layout.group_list) throw new Error("layout_external_create_group() out-of-memory");
+    layout.group_list = realloc_for_array(layout.group_list, layout.group_list_size);
 
     layout.group_list[group_id] = {
         context: {

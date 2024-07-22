@@ -270,7 +270,7 @@ public class WeekSelectorDifficult : IDraw, IAnimate {
         if (StringUtils.IsNotEmpty(weekinfo.custom_difficults_model)) this.list_size += weekinfo.custom_difficults_size;
 
         int index = 0;
-        this.list = new Item[this.list_size];
+        this.list = EngineUtils.CreateArray<Item>(this.list_size);
 
         if (weekinfo.has_difficulty_easy)
             this.list[index++] = new Item() { name = Funkin.DIFFICULT_EASY, is_locked = false, is_common = true };

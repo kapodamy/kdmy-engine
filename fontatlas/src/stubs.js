@@ -108,3 +108,5 @@ function _fontatlas_atlas_destroy(stub) { }
 /** @returns {number} */
 function _fontatlas_get_version() { return 0; }
 
+/** @param {number} stub */
+function malloc_for_array(stub) { return new Array(stub); }

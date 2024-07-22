@@ -5,7 +5,7 @@ async function menu_init(menumanifest, x, y, z, width, height) {
     const params = menumanifest.parameters;
     console.assert(menumanifest.items.length == menumanifest.items_size);
 
-    let items = new Array(menumanifest.items_size);
+    let items = malloc_for_array(menumanifest.items_size);
     let modelholder = await modelholder_init2(params.font_color, params.atlas, params.animlist);
 
     let fontholder = null;
@@ -922,7 +922,7 @@ function menu_internal_build_map(menu) {
 
     if (menu.per_page && pages > 0) {
         menu.map_size = Math.ceil(pages);
-        menu.map = new Array(menu.map_size);
+        menu.map = malloc_for_array(menu.map_size);
     }
 
     let j = 0;

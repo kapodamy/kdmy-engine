@@ -153,7 +153,7 @@ public class MenuManifest {
             enable_horizontal_text_correction = JSONParser.ReadBoolean(json_parameters, "enableHorizontalTextCorrection", false),
         };
 
-        this.items = new Item[array_items_length];
+        this.items = EngineUtils.CreateArray<Item>(array_items_length);
         this.items_size = array_items_length;
 
         for (int i = 0 ; i < array_items_length ; i++) {

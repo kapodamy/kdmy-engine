@@ -51,7 +51,7 @@ public class Menu : IAnimate, IDraw {
         MenuManifest.Parameters @params = menumanifest.parameters;
         Debug.Assert(menumanifest.items.Length == menumanifest.items_size);
 
-        MenuItem[] items = new MenuItem[menumanifest.items_size];
+        MenuItem[] items = EngineUtils.CreateArray<MenuItem>(menumanifest.items_size);
         ModelHolder modelholder = ModelHolder.Init2(@params.font_color, @params.atlas, @params.animlist);
 
         FontHolder fontholder = null;
@@ -952,7 +952,7 @@ L_stop_checking_static_index:
 
         if (this.per_page && pages > 0) {
             this.map_size = (int)Math.Ceiling(pages);
-            this.map = new int[this.map_size];
+            this.map = EngineUtils.CreateArray<int>(this.map_size);
         }
 
         int j = 0;

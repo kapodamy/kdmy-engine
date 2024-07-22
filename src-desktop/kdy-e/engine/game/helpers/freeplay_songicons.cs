@@ -13,7 +13,7 @@ public class FreeplaySongIcons {
 
     public FreeplaySongIcons(ArrayList<FreeplayMenu.MappedSong> song_map, float max_dimmen, float font_size) {
         this.icons_size = song_map.Size();
-        this.icons = new SongIcon[this.icons_size];
+        this.icons = EngineUtils.CreateArray<SongIcon>(this.icons_size);
 
         string last_model = null;
         bool last_model_exists = false;

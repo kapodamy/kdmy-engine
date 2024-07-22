@@ -564,7 +564,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     let retry = false;
     let mainmenu = false;
     let weekselector = false;
-    let songs_attempts = new Array(gameplaymanifest.songs_size);
+    let songs_attempts = malloc_for_array(gameplaymanifest.songs_size);
     let first_init = true;
     let reject_completed = false;
     let last_song = gameplaymanifest.songs_size - 1;
@@ -860,7 +860,7 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     if (old_animlist) animlist_destroy(old_animlist);
 
     initparams.layout_strums_size = layout_get_attached_value(layout, "ui_strums_count", LAYOUT_TYPE_INTEGER, 0);
-    initparams.layout_strums = initparams.layout_strums_size > 0 ? new Array(initparams.layout_strums_size) : null;
+    initparams.layout_strums = malloc_for_array(initparams.layout_strums_size);
     for (let i = 0; i < initparams.layout_strums_size; i++) {
         placeholder = week_internal_read_placeholder(layout, "ui_strums", i);
         if (!placeholder) placeholder = UI_STRUMS_LAYOUT_PLACEHOLDER;
@@ -1442,7 +1442,7 @@ async function week_init_stage(roundcontext, stage_src) {
         roundcontext.layout, "character_count", LAYOUT_TYPE_INTEGER, 0
     );
 
-    initparams.layout_characters = count > 0 ? new Array(count) : null;
+    initparams.layout_characters = malloc_for_array(count);
     initparams.layout_characters_size = count;
 
     for (let i = 0; i < count; i++) {
@@ -1664,11 +1664,11 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
     roundcontext.players_from_default = players_from_default;
     roundcontext.distributions_from_default = distributions_from_default;
 
-    let charactermanifests = new Array(players_size);
+    let charactermanifests = malloc_for_array(players_size);
     let manifest_player = null;
     let manifest_opponent = null;
 
-    roundcontext.players = new Array(players_size);
+    roundcontext.players = malloc_for_array(players_size);
     roundcontext.players_size = players_size;
 
     for (let i = 0; i < roundcontext.players_size; i++) {

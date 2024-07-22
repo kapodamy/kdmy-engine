@@ -141,7 +141,7 @@ public class WeekSelectorMdlSelect : IDraw, IAnimate {
 
         // build list
         this.list_size = index;
-        this.list = new CharacterInfo[this.list_size];
+        this.list = EngineUtils.CreateArray<CharacterInfo>(this.list_size);
         index = 0;
         for (int i = 0 ; i < models_array_size ; i++) {
             JSONToken json_obj = JSONParser.ReadArrayItemObject(models_array, i);

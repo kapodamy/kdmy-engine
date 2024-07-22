@@ -321,15 +321,27 @@ function strum_set_notes(strum, chart, strumsdefs, strumsdefs_size, player_id, n
         }
     }
 
+    if (count < 1) {
+        strum.chart_notes = null;
+        strum.chart_notes_id_map = null;
+        strum.chart_notes_id_map_size = 0;
+        strum.key_test_limit = -Infinity;
+
+        if (strum.strum_name != null)
+            strum_internal_set_note_drawables(strum, notepool);
+
+        return 0;
+    }
+
     // step 2: map all note IDs
-    strum.chart_notes_id_map = new Array(note_ids_size);
+    strum.chart_notes_id_map = malloc_for_array(note_ids_size);
     strum.chart_notes_id_map_size = note_ids_size;
 
     for (let i = 0; i < note_ids_size; i++)
         strum.chart_notes_id_map[i] = notes_ids[i];
 
     // step 3: grab notes from the chart
-    strum.chart_notes = new Array(count);
+    strum.chart_notes = malloc_for_array(count);
     strum.chart_notes_size = count;
 
     let k = 0;
@@ -346,42 +358,37 @@ function strum_set_notes(strum, chart, strumsdefs, strumsdefs_size, player_id, n
         strum.chart_notes[k++] = new StrumNote(player_notes[i], notes_ids, note_ids_size);
     }
 
-    if (count > 0) {
-        // Important: sort the notes by timestamp
-        qsort(strum.chart_notes, strum.chart_notes_size, NaN, StrumNote.sort_callback);
+    // Important: sort the notes by timestamp
+    qsort(strum.chart_notes, strum.chart_notes_size, NaN, StrumNote.sort_callback);
 
-        // calculate the key test time limit
-        strum.key_test_limit = Math.max(strum.chart_notes[0].timestamp - strum.marker_duration, 0.0);
+    // calculate the key test time limit
+    strum.key_test_limit = Math.max(strum.chart_notes[0].timestamp - strum.marker_duration, 0.0);
 
-        // remove duplicated notes (filtered by timestamp and id)
-        let j = 0;
-        let last_timestamp = NaN;
-        let last_id = -1;
-        for (let i = 0; i < strum.chart_notes_size; i++) {
-            let id = strum.chart_notes[i].id;
-            let timestamp = strum.chart_notes[i].timestamp;
-            if (timestamp == last_timestamp && id == last_id) {
-                console.error(`strum_set_notes() duplicated note found: ts=${timestamp} id=${id}`);
-            } else {
-                last_timestamp = timestamp;
-                last_id = id;
-                strum.chart_notes[j++] = strum.chart_notes[i];// in C clone as struct
-            }
+    // remove duplicated notes (filtered by timestamp and id)
+    let index = 0;
+    let last_timestamp = NaN;
+    let last_id = -1;
+
+    for (let i = 0; i < strum.chart_notes_size; i++) {
+        let id = strum.chart_notes[i].id;
+        let timestamp = strum.chart_notes[i].timestamp;
+        if (timestamp == last_timestamp && id == last_id) {
+            console.error(`strum_set_notes() duplicated note found: ts=${timestamp} id=${id}`);
+        } else {
+            last_timestamp = timestamp;
+            last_id = id;
+            strum.chart_notes[index++] = strum.chart_notes[i];// in C clone as struct
         }
-        if (j != strum.chart_notes_size) {
-            // trim array
-            strum.chart_notes_size = j;
-            strum.chart_notes = realloc(strum.chart_notes, strum.chart_notes_size /* * sizeof(StrumNote) */);
-        }
-
-    } else {
-        strum.key_test_limit = -Infinity;
     }
 
+    if (index != strum.chart_notes_size) {
+        // trim array
+        strum.chart_notes_size = index;
+        strum.chart_notes = realloc_for_array(strum.chart_notes, strum.chart_notes_size);
+    }
 
     if (strum.strum_name != null)
         strum_internal_set_note_drawables(strum, notepool);
-
 
     return count;
 }
@@ -2060,8 +2067,8 @@ function strum_internal_set_note_drawables(strum, notepool) {
     if (strum.drawable_notes) strum.drawable_notes = undefined;
     if (strum.attribute_notes) strum.attribute_notes = undefined;
 
-    strum.drawable_notes = new Array(strum.chart_notes_id_map_size);
-    strum.attribute_notes = new Array(strum.chart_notes_id_map_size);
+    strum.drawable_notes = malloc_for_array(strum.chart_notes_id_map_size);
+    strum.attribute_notes = malloc_for_array(strum.chart_notes_id_map_size);
 
     for (let i = 0; i < strum.chart_notes_id_map_size; i++) {
         let id = strum.chart_notes_id_map[i];

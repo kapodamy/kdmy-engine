@@ -374,15 +374,27 @@ public class Strum {
             }
         }
 
+        if (count < 1) {
+            this.chart_notes = null;
+            this.chart_notes_id_map = null;
+            this.chart_notes_id_map_size = 0;
+            this.key_test_limit = Double.NegativeInfinity;
+
+            if (this.strum_name != null)
+                InternalSetNoteDrawables(notepool);
+
+            return 0;
+        }
+
         // step 2: map all note IDs
-        this.chart_notes_id_map = new int[note_ids_size];
+        this.chart_notes_id_map = EngineUtils.CreateArray<int>(note_ids_size);
         this.chart_notes_id_map_size = note_ids_size;
 
         for (int i = 0 ; i < note_ids_size ; i++)
             this.chart_notes_id_map[i] = notes_ids[i];
 
         // step 3: grab notes from the chart
-        this.chart_notes = new StrumNote[count];
+        this.chart_notes = EngineUtils.CreateArray<StrumNote>(count);
         this.chart_notes_size = count;
 
         int k = 0;
@@ -399,42 +411,37 @@ public class Strum {
             this.chart_notes[k++] = new StrumNote(player_notes[i], notes_ids, note_ids_size);
         }
 
-        if (count > 0) {
-            // Important: sort the notes by timestamp
-            ArrayUtils.Sort(this.chart_notes, 0, this.chart_notes_size, StrumNote.SortCallback);
+        // Important: sort the notes by timestamp
+        EngineUtils.Sort(this.chart_notes, 0, this.chart_notes_size, StrumNote.SortCallback);
 
-            // calculate the key test time limit
-            this.key_test_limit = Math.Max(this.chart_notes[0].timestamp - this.marker_duration, 0.0);
+        // calculate the key test time limit
+        this.key_test_limit = Math.Max(this.chart_notes[0].timestamp - this.marker_duration, 0.0);
 
-            // remove duplicated notes (filtered by timestamp and id)
-            int j = 0;
-            double last_timestamp = Double.NaN;
-            int last_id = -1;
-            for (int i = 0 ; i < this.chart_notes_size ; i++) {
-                int id = this.chart_notes[i].id;
-                double timestamp = this.chart_notes[i].timestamp;
-                if (timestamp == last_timestamp && id == last_id) {
-                    Logger.Warn($"strum_set_notes() duplicated note found: ts={timestamp} id={id}");
-                } else {
-                    last_timestamp = timestamp;
-                    last_id = id;
-                    this.chart_notes[j++] = this.chart_notes[i];
-                }
+        // remove duplicated notes (filtered by timestamp and id)
+        int index = 0;
+        double last_timestamp = Double.NaN;
+        int last_id = -1;
+
+        for (int i = 0 ; i < this.chart_notes_size ; i++) {
+            int id = this.chart_notes[i].id;
+            double timestamp = this.chart_notes[i].timestamp;
+            if (timestamp == last_timestamp && id == last_id) {
+                Logger.Warn($"strum_set_notes() duplicated note found: ts={timestamp} id={id}");
+            } else {
+                last_timestamp = timestamp;
+                last_id = id;
+                this.chart_notes[index++] = this.chart_notes[i];
             }
-            if (j != this.chart_notes_size) {
-                // trim array
-                this.chart_notes_size = j;
-                Array.Resize(ref this.chart_notes, this.chart_notes_size);
-            }
-
-        } else {
-            this.key_test_limit = -Double.PositiveInfinity;
         }
 
+        if (index != this.chart_notes_size) {
+            // trim array
+            this.chart_notes_size = index;
+            EngineUtils.ResizeArray(ref this.chart_notes, this.chart_notes_size);
+        }
 
         if (this.strum_name != null)
             InternalSetNoteDrawables(notepool);
-
 
         return count;
     }
@@ -2116,8 +2123,8 @@ L_discard_key_event:
         //if (this.drawable_notes) free(this.drawable_notes);
         //if (this.attribute_notes) free(this.attribute_notes);
 
-        this.drawable_notes = new Note[this.chart_notes_id_map_size];
-        this.attribute_notes = new NoteAttribute[this.chart_notes_id_map_size];
+        this.drawable_notes = EngineUtils.CreateArray<Note>(this.chart_notes_id_map_size);
+        this.attribute_notes = EngineUtils.CreateArray<NoteAttribute>(this.chart_notes_id_map_size);
 
         for (int i = 0 ; i < this.chart_notes_id_map_size ; i++) {
             int id = this.chart_notes_id_map[i];

@@ -61,7 +61,7 @@ public static class ExportsMenu {
             int length = (int)L.lua_rawlen(idx2);
 
             mm.items_size = length;
-            mm.items = new MenuManifest.Item[length];
+            mm.items = EngineUtils.CreateArray<MenuManifest.Item>(length);
 
             for (int i = 0 ; i < length ; i++) {
                 if (LuaTableHelpers.GetArrayItemAsTable(L, idx2, i + 1)) {

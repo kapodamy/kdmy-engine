@@ -398,7 +398,7 @@ public class TweenLerp : IAnimate {
 
         public object Clone() {
             TweenLerpEntry copy = (TweenLerpEntry)this.MemberwiseClone();
-            copy.steps_bounds = CloneUtils.CloneStructArray(steps_bounds, steps_bounds.Length);
+            copy.steps_bounds = EngineUtils.CloneStructArray(steps_bounds, steps_bounds.Length);
             return copy;
         }
     }

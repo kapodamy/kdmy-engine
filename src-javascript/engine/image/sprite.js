@@ -1043,8 +1043,7 @@ function sprite_trailing_enabled(sprite, enabled) {
 
 function sprite_trailing_set_params(sprite, length, trail_delay, trail_alpha, darken_colors) {
     if (length > 0) {
-        sprite.trailing_buffer = realloc(sprite.trailing_buffer, length);
-        console.assert(sprite.trailing_buffer, "cannot reallocate the sprite trailing buffer");
+        sprite.trailing_buffer = realloc_for_array(sprite.trailing_buffer, length);
 
         sprite_internal_JS_init_trail_array(sprite, sprite.trailing_length, length);
 

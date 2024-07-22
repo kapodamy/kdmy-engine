@@ -102,7 +102,7 @@ async function weekselector_mdlselect_init(animlist, modelholder, layout, textur
 
     // build list
     mdlselect.list_size = index;
-    mdlselect.list = new Array(mdlselect.list_size);
+    mdlselect.list = malloc_for_array(mdlselect.list_size);
     index = 0;
     for (let i = 0; i < models_array_size; i++) {
         let json_obj = json_read_array_item_object(models_array, i);

@@ -259,7 +259,7 @@ public class RankingCounter {
             if (item.animsprite != null) item.animsprite.Restart();
 
             // sort visible items (old items first)
-            ArrayUtils.Sort(
+            EngineUtils.Sort(
                 this.ranking_items, 0,
                 RankingCounter.RANKING_BUFFER_SIZE,
                 RankingCounter.InternalSort

@@ -51,10 +51,7 @@ function macroexecutor_init(animlist_item) {
 
     macroexecutor_clear_registers(macroexecutor);
 
-    if (macroexecutor.interpolators_stack_size > 0)
-        macroexecutor.interpolators_stack = new Array(macroexecutor.interpolators_stack_size);
-    else
-        macroexecutor.interpolators_stack = null;
+    macroexecutor.interpolators_stack = malloc_for_array(macroexecutor.interpolators_stack_size);
 
     macroexecutor.index = 0;
     macroexecutor.on_yield = false;

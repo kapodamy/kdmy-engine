@@ -140,7 +140,7 @@ async function weekenumerator_parse_week(week_name) {
         // parse all custom difficults
         let customdifficults = null;
         if (customdifficulties_array_size > 0) {
-            customdifficults = new Array(customdifficulties_array_size);
+            customdifficults = malloc_for_array(customdifficulties_array_size);
             for (let i = 0; i < customdifficulties_array_size; i++) {
                 let customdifficult_obj = json_read_array_item_object(customdifficulties_array, i);
 
@@ -165,7 +165,7 @@ async function weekenumerator_parse_week(week_name) {
 
         let json_songs = json_read_array(json, "songs");
         let json_songs_size = json_read_array_length(json_songs);
-        let songs = new Array(json_songs_size);
+        let songs = malloc_for_array(json_songs_size);
         for (let i = 0; i < json_songs_size; i++) {
             let json_song = json_read_array_item_object(json_songs, i);
             songs[i] = {
@@ -278,7 +278,7 @@ async function weekenumerator_parse_characters(array_json) {
     let array_json_length = json_read_array_length(array_json);
     if (array_json_length < 1) return null;
 
-    let array = new Array(array_json_length);
+    let array = malloc_for_array(array_json_length);
 
     for (let i = 0; i < array_json_length; i++) {
         let array_item = json_read_array_item_object(array_json, i);

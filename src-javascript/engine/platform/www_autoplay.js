@@ -39,3 +39,4 @@ async function www_autoplay() {
         document.body.prepend(button);
     }));
 }
+

@@ -467,3 +467,4 @@ function io_native_parse_webkit_indexDirectory(/**@type {string}*/html) {
 
     return parsed_entries;
 }
+

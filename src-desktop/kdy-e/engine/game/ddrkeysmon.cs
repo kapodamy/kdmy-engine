@@ -85,7 +85,7 @@ public class DDRKeymon {
 
         this.start_timestamp = 0;
 
-        this.strum_binds = new Bind[strum_binds_size];
+        this.strum_binds = EngineUtils.CreateArray<Bind>(strum_binds_size);
         this.strum_binds_size = strum_binds_size;
 
         this.thd_monitor = null;
@@ -99,7 +99,7 @@ public class DDRKeymon {
                 is_visible = true,
                 button_flags = strum_binds[i],
                 button_count = count,
-                button_array = new GamepadButtons[count]
+                button_array = EngineUtils.CreateArray<GamepadButtons>(count)
             };
 
             for (int j = 0, k = 0 ; k < count ; j++) {

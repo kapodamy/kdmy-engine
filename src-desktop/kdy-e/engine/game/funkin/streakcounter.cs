@@ -127,7 +127,7 @@ public class StreakCounter : IDraw, IAnimate {
             // set the draw location
             unused_item.digits.SetDrawLocation(x, y, this.number_gap);
 
-            ArrayUtils.Sort(
+            EngineUtils.Sort(
                 this.numbers_items, 0, StreakCounter.STREAK_BUFFER_SIZE,
                 StreakCounter.InternalSort
             );

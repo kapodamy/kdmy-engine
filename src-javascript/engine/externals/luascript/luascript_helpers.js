@@ -48,10 +48,7 @@ function luascript_internal_add_lua_reference(luascript, obj, ref, allocated) {
         // no empty slots, grow the array and add it
         index = luascript.shared_size;
         luascript.shared_size += LUASCRIPT_SHARED_ARRAY_CHUNK_SIZE;
-
-        let new_size = luascript.shared_size;// luascript->shared_size * sizeof(struct LuascriptObject_s)
-        luascript.shared_array = realloc(luascript.shared_array, new_size);
-        console.assert(luascript.shared_array, "reallocation failed");
+        luascript.shared_array = realloc_for_array(luascript.shared_array, luascript.shared_size);
 
         for (let i = 0; i < LUASCRIPT_SHARED_ARRAY_CHUNK_SIZE; i++) {
             let entry = luascript.shared_array[i + index];

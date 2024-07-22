@@ -23,6 +23,7 @@ async function fontglyph_init(src_atlas, suffix, allow_animation) {
     let texture = await texture_init(texture_path);
     if (texture) {
         fontglyph = fontglyph_init2(texture, atlas, suffix, allow_animation);
+        if (!fontglyph) console.warn(`fontglyph_init() failed for ${src_atlas}`);
     } else {
         fontglyph = null;
         console.error("fontglyph_init() texture specified by atlas not found: " + texture_path);
@@ -36,7 +37,7 @@ async function fontglyph_init(src_atlas, suffix, allow_animation) {
 function fontglyph_init2(texture, atlas, suffix, allow_animation) {
     let fontglyph = {
         texture: texture,
-        table: new Array(atlas.size),
+        table: malloc_for_array(atlas.size),
         table_size: atlas.size,// temporal value
 
         frame_time: 0.0,
@@ -68,10 +69,17 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
         if (result == 1) table_index++;
     }
 
+    if (table_index < 1) {
+        console.warn(`fontglyph_init2() failed, there no usable glyphs in the atlas suffix=${suffix}`);
+        fontglyph.table = undefined;
+        fontglyph = undefined;
+        return null;
+    }
+
     // shrink the table if necessary
     if (table_index < fontglyph.table_size) {
         fontglyph.table_size = table_index;
-        fontglyph.table = realloc(fontglyph.table, table_index);
+        fontglyph.table = realloc_for_array(fontglyph.table, table_index);
     }
 
     // allocate frames array
@@ -79,7 +87,7 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
     for (let i = 0; i < fontglyph.table_size; i++) {
         let glyph_info = fontglyph.table[i];
         if (glyph_info.frames_size > 0) {
-            glyph_info.frames = new Array(glyph_info.frames_size);
+            glyph_info.frames = malloc_for_array(glyph_info.frames_size);
             glyph_info.frames_size = 0;
         }
     }

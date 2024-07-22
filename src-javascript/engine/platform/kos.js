@@ -1372,3 +1372,4 @@ function MUTEX_INITIALIZER() {
     // STUB
     return 0;
 }
+

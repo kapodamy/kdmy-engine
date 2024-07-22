@@ -245,7 +245,7 @@ async function weekselector_difficult_load(weekdifficult, weekinfo, default_diff
     if (weekinfo.custom_difficults_model) weekdifficult.list_size += weekinfo.custom_difficults_size;
 
     let index = 0;
-    weekdifficult.list = new Array(weekdifficult.list_size);
+    weekdifficult.list = malloc_for_array(weekdifficult.list_size);
 
     if (weekinfo.has_difficulty_easy)
         weekdifficult.list[index++] = { name: FUNKIN_DIFFICULT_EASY, is_locked: false, is_common: true };

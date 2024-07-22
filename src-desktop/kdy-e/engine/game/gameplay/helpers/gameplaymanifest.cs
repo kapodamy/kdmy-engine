@@ -222,7 +222,7 @@ public class GameplayManifest {
         }
 
         manifest.songs_size = songs_array_size;
-        manifest.songs = new GameplayManifestSong[songs_array_size];
+        manifest.songs = EngineUtils.CreateArray<GameplayManifestSong>(songs_array_size);
 
         int players_count = manifest.@default != null ? manifest.@default.players_size : -1;
 
@@ -476,7 +476,7 @@ public class GameplayManifest {
             if (players_count != selected_states_array_size) {
                 Logger.Warn("gameplaymanifest_parse_song() 'selectedStateNamePerPlayer.length' != 'players.length'");
             } else {
-                song.selected_state_name_per_player = new string[selected_states_array_size];
+                song.selected_state_name_per_player = EngineUtils.CreateArray<string>(selected_states_array_size);
                 song.selected_state_name_per_player_size = selected_states_array_size;
             }
         }
@@ -498,7 +498,7 @@ public class GameplayManifest {
             return;
         }
 
-        DistributionNote[] notes = new DistributionNote[notes_array_size];
+        DistributionNote[] notes = EngineUtils.CreateArray<DistributionNote>(notes_array_size);
         int notes_size = notes_array_size;
 
         for (int i = 0 ; i < notes_array_size ; i++) {
@@ -547,7 +547,7 @@ public class GameplayManifest {
             return;
         }
 
-        Distribution[] distributions_new = new Distribution[json_distributions_size];
+        Distribution[] distributions_new = EngineUtils.CreateArray<Distribution>(json_distributions_size);
         int distributions_size_new = json_distributions_size;
 
         for (int i = 0 ; i < json_distributions_size ; i++) {
@@ -610,7 +610,7 @@ public class GameplayManifest {
                 throw new Exception("'buttonBinds.length' != 'strums.length'");
             }
             if (strums_binds_array_size > 0) {
-                distribution.strum_binds = new GamepadButtons[strums_array_size];
+                distribution.strum_binds = EngineUtils.CreateArray<GamepadButtons>(strums_array_size);
                 distribution.strum_binds_is_custom = true;
                 for (int i = 0 ; i < strums_array_size ; i++) {
                     distribution.strum_binds[i] = (GamepadButtons)JSONParser.ReadArrayItemHex(strums_binds_array, i, (uint)GamepadButtons.NOTHING);
@@ -621,7 +621,7 @@ public class GameplayManifest {
         GameplayManifest.ParseNotes(json_distribution, distribution);
 
         if (strums_array_size > 0) {
-            distribution.strums = new DistributionStrum[strums_array_size];
+            distribution.strums = EngineUtils.CreateArray<DistributionStrum>(strums_array_size);
             distribution.strums_size = strums_array_size;
         }
 
@@ -639,7 +639,7 @@ public class GameplayManifest {
 
             if (note_ids_array_size > 0) {
                 distribution.strums[i].notes_ids_size = note_ids_array_size;
-                distribution.strums[i].notes_ids = new int[note_ids_array_size];
+                distribution.strums[i].notes_ids = EngineUtils.CreateArray<int>(note_ids_array_size);
             }
 
             for (int j = 0 ; j < note_ids_array_size ; j++) {
@@ -660,7 +660,7 @@ public class GameplayManifest {
         int states_array_size = JSONParser.ReadArrayLength(states_array);
 
         if (states_array_size > 0) {
-            distribution.states = new DistributionStrumState[states_array_size];
+            distribution.states = EngineUtils.CreateArray<DistributionStrumState>(states_array_size);
             distribution.states_size = states_array_size;
         }
 
@@ -687,7 +687,7 @@ public class GameplayManifest {
             return;
         }
 
-        Distribution[] dists_minimal = new Distribution[json_dists_minimal_array_length];
+        Distribution[] dists_minimal = EngineUtils.CreateArray<Distribution>(json_dists_minimal_array_length);
 
         for (int i = 0 ; i < json_dists_minimal_array_length ; i++) {
             JSONToken json_dist = JSONParser.ReadArrayItemObject(json_dists_minimal_array, i);
@@ -707,7 +707,7 @@ public class GameplayManifest {
             int dist_states_array_size = JSONParser.ReadArrayLength(dist_states_array);
 
             if (dist_states_array_size > 0) dists_minimal[i].states_size += dist_states_array_size;
-            dists_minimal[i].states = new DistributionStrumState[dists_minimal[i].states_size];
+            dists_minimal[i].states = EngineUtils.CreateArray<DistributionStrumState>(dists_minimal[i].states_size);
 
             // build default state
             DistributionStrumState default_state = dists_minimal[i].states[0] = new DistributionStrumState() {
@@ -832,7 +832,7 @@ public class GameplayManifest {
 
         if (states_array_size < 1) return healthbar;
 
-        healthbar.states = new GameplayManifestHealthBarState[states_array_size];
+        healthbar.states = EngineUtils.CreateArray<GameplayManifestHealthBarState>(states_array_size);
         healthbar.states_size = states_array_size;
 
         for (int i = 0 ; i < states_array_size ; i++) {
@@ -876,7 +876,7 @@ public class GameplayManifest {
             return;
         }
 
-        GameplayManifestPlayer[] players = new GameplayManifestPlayer[players_array_size];
+        GameplayManifestPlayer[] players = EngineUtils.CreateArray<GameplayManifestPlayer>(players_array_size);
         int players_size = players_array_size;
 
         for (int i = 0 ; i < players_array_size ; i++) {
@@ -932,7 +932,7 @@ public class GameplayManifest {
 
             if (states_array_size < 1) continue;
 
-            players[i].states = new GameplayManifestCharacterState[states_array_size];
+            players[i].states = EngineUtils.CreateArray<GameplayManifestCharacterState>(states_array_size);
             players[i].states_size = states_array_size;
 
             for (int j = 0 ; j < states_array_size ; j++) {
@@ -973,7 +973,7 @@ public class GameplayManifest {
 
         if (states_array_size < 1) return girlfriend;
 
-        girlfriend.states = new GameplayManifestCharacterState[states_array_size];
+        girlfriend.states = EngineUtils.CreateArray<GameplayManifestCharacterState>(states_array_size);
         girlfriend.states_size = states_array_size;
 
         for (int i = 0 ; i < states_array_size ; i++) {

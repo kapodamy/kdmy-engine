@@ -156,8 +156,8 @@ public class Strums : IDraw, IAnimate {
     public Strums(float x, float y, float z, float dimmen, float invdimmen, float length, float gap, int player_id, bool is_vertical, bool keep_marker_scale, DistributionStrum[] strumsdefs, int strumsdefs_size) {
 
         this.size = strumsdefs_size;
-        this.lines = new Strum[strumsdefs_size];
-        this.sick_effects = new StateSprite[strumsdefs_size];
+        this.lines = EngineUtils.CreateArray<Strum>(strumsdefs_size);
+        this.sick_effects = EngineUtils.CreateArray<StateSprite>(strumsdefs_size);
 
         this.player_id = player_id; this.x = x; this.y = y; this.gap = gap; this.invdimmen = invdimmen; this.is_vertical = is_vertical;
 

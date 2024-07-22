@@ -1112,10 +1112,10 @@ function character_internal_state_create(name, sing_size, miss_size, extras_size
         sing_size: sing_size,
         miss_size: miss_size,
         extras_size: extras_size,
-        sing: new Array(sing_size),
-        sing_alt: new Array(sing_size),
-        miss: new Array(miss_size),
-        extras: new Array(extras_size),
+        sing: malloc_for_array(sing_size),
+        sing_alt: malloc_for_array(sing_size),
+        miss: malloc_for_array(miss_size),
+        extras: malloc_for_array(extras_size),
         hey: {
             base: null, hold: null, rollback: null,
             stop_after_beats: 0.0, id_extra: -1, id_texture: -1, is_valid: false,
@@ -1276,12 +1276,12 @@ function character_internal_update_texture(character) {
 
 function character_internal_import_opposite_dir(character, array_ptr, ltr_array) {
     // JS only
-    let array = new Array(character.inverted_size);
+    let array = malloc_for_array(character.inverted_size);
     character[array_ptr] = array;
 
     /*
     // C only
-    int32_t* array = malloc_for_array(sizeof(int32_t), character->inverted_size);
+    int32_t* array = malloc_for_array(character->inverted_size, int32_t);
     *array_ptr = array;
 
     malloc_assert(array, int32_t[]);

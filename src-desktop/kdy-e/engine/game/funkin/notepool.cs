@@ -27,12 +27,11 @@ public class NotePool {
 
 
         this.size = notes_size;
-        this.drawables = new Note[notes_size];
-        this.models_custom_sick_effect = new ModelHolder[notes_size];
-        this.attributes = new NoteAttribute[notes_size];
+        this.drawables = EngineUtils.CreateArray<Note>(notes_size);
+        this.models_custom_sick_effect = EngineUtils.CreateArray<ModelHolder>(notes_size);
+        this.attributes = EngineUtils.CreateArray<NoteAttribute>(notes_size);
 
-
-        ModelHolder[] modelholders = new ModelHolder[notes_size];
+        ModelHolder[] modelholders = EngineUtils.CreateArray<ModelHolder>(notes_size);
 
         for (int i = 0 ; i < this.size ; i++) {
             DistributionNote note_definition = notes[i];

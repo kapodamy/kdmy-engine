@@ -236,7 +236,7 @@ public class Chart {
         if (player_notes.Size() > 0) this.entries_size++;
 
         int entry_index = 0;
-        this.entries = new ChartEntry[this.entries_size];
+        this.entries = EngineUtils.CreateArray<ChartEntry>(this.entries_size);
         if (opponent_notes.Size() > 0) {
             this.entries[entry_index] = new ChartEntry() { notes = null, notes_size = 0 };
             opponent_notes.Destroy2(out this.entries[entry_index].notes_size, out this.entries[entry_index].notes);

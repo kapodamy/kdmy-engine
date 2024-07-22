@@ -444,7 +444,8 @@ public class FontType : IFont {
         if (new_codepoints < 1) return;// nothing to do
 
         // step 2: allocate codepoints array
-        uint[] codepoints = new uint[actual + new_codepoints + 1];
+        int codepoints_size = actual + new_codepoints + 1;
+        uint[] codepoints = EngineUtils.CreateArray<uint>(codepoints_size);
         codepoints[actual + new_codepoints] = 0x00000000;
 
         if (this.fontcharmap_secondary != null) {

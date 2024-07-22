@@ -86,8 +86,8 @@ const STRUMS_DEFAULT_DISTRIBUTION = {
 async function strums_init(x, y, z, dimmen, invdimmen, length, gap, player_id, is_vertical, keep_marker_scale, strumsdefs, strumsdefs_size) {
     let strums = {
         size: strumsdefs_size,
-        lines: new Array(strumsdefs_size),
-        sick_effects: new Array(strumsdefs_size),
+        lines: malloc_for_array(strumsdefs_size),
+        sick_effects: malloc_for_array(strumsdefs_size),
 
         player_id, x, y, gap, invdimmen, is_vertical,
 

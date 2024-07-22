@@ -78,7 +78,7 @@ async function menumanifest_init(src) {
             enable_horizontal_text_correction: json_read_boolean(json_parameters, "enableHorizontalTextCorrection", false)
         },
 
-        items: new Array(array_items_length),
+        items: malloc_for_array(array_items_length),
         items_size: array_items_length
     };
 

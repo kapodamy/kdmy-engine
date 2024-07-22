@@ -50,7 +50,7 @@ function luascript_helper_table_to_menumanifest(L, idx) {
         let length = LUA.lua_rawlen(L, idx2);
 
         mm.items_size = length;
-        mm.items = new Array(length);
+        mm.items = malloc_for_array(length);
 
         for (let i = 0; i < length; i++) {
             if (luascript_helper_get_array_item_as_table(L, idx2, i + 1)) {
