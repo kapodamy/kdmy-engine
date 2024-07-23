@@ -412,6 +412,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
 
     let text_length = text.length;
     if (textsprite.modified_string) {
+        textsprite.fontfunctions.map_codepoints(textsprite.font, text, 0, text_length);
         textsprite.fontfunctions.measure(textsprite.font, textsprite.fontparams, text, 0, text_length);
     }
 
@@ -848,7 +849,7 @@ function textsprite_draw_internal(textsprite, pvrctx) {
         pvr_context_draw_solid_color(pvrctx, textsprite.background_rgba, x, y, width, height);
     }
 
-    if (arraylist_size(textsprite.paragraph_array) < 2.0) {
+    if (arraylist_size(textsprite.paragraph_array) < 2) {
         // let the font handle the draw
         textsprite.fontfunctions.draw_text(
             textsprite.font,

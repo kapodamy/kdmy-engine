@@ -75,18 +75,16 @@ public class FontGlyph : IFont {
 
         int table_index = 0;
 
-        // calculate the amount of required frames
-        // needs C implementation
+        // calculate the amount of matching glyphs in the atlas
         for (int i = 0 ; i < atlas.size ; i++) {
-            fontglyph.table[i] = new GlyphInfo() { actual_frame = 0, code = 0x00, frames = null, frames_size = 0 };
-            int result = FontGlyph.InternalParse(
+            bool result = FontGlyph.InternalParse(
                 atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
             );
-            if (result == 1) table_index++;
+            if (result) table_index++;
         }
 
         if (table_index < 1) {
-            Logger.Warn($"fontglyph_init2() failed, there no usable glyphs in the atlas suffix={suffix}");
+            Logger.Warn($"fontglyph_init2() failed, there no usable glyphs in the atlas suffix=${suffix}");
             //free(fontglyph.table);
             //free(fontglyph);
             return null;
@@ -98,18 +96,23 @@ public class FontGlyph : IFont {
             EngineUtils.ResizeArray(ref fontglyph.table, table_index);
         }
 
-        // allocate frames array
-        // needs C implementation
+        // count frames of every added glpyh
+        int frame_total = 0;
         for (int i = 0 ; i < fontglyph.table_size ; i++) {
-            GlyphInfo glyph_info = fontglyph.table[i];
-            if (glyph_info.frames_size > 0) {
-                glyph_info.frames = EngineUtils.CreateArray<GlyphFrame>(glyph_info.frames_size);
-                glyph_info.frames_size = 0;
+            frame_total += fontglyph.table[i].frames_size;
+        }
+
+        // allocate frames array and set to zero each glyph frame count
+        for (int i = 0, j = 0 ; i < fontglyph.table_size ; i++) {
+            int frames_size = fontglyph.table[i].frames_size;
+            if (frames_size > 0) {
+                fontglyph.table[i].frames = EngineUtils.CreateArray<GlyphFrame>(frames_size);
+                fontglyph.table[i].frames_size = 0;
+                j += frames_size;
             }
         }
 
-        // add glyph frames
-        // needs C implementation
+        // add frames to each glyph
         for (int i = 0 ; i < atlas.size ; i++) {
             FontGlyph.InternalParse(
                 atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
@@ -410,18 +413,21 @@ L_measure:
         return 0;
     }
 
-    public void MapCodepoints(int text_index, int text_length, string text) {
+    public void MapCodepoints(string text, int text_index, int text_length) {
         // unused
     }
 
 
-    private static int InternalParse(AtlasEntry atlas_entry, string match_suffix, bool allow_animation, GlyphInfo[] table, int table_index) {
+    private static bool InternalParse(AtlasEntry atlas_entry, string match_suffix, bool allow_animation, GlyphInfo[] table, int table_index) {
         string atlas_entry_name = atlas_entry.name;
         int atlas_entry_name_length = atlas_entry_name.Length;
         Grapheme grapheme = new Grapheme();
 
         // read character info
-        if (!StringUtils.GetCharacterCodepoint(atlas_entry_name, 0, ref grapheme)) return -1;
+        if (!StringUtils.GetCharacterCodepoint(atlas_entry_name, 0, ref grapheme)) {
+            // eof reached
+            return false;
+        }
 
         int index = grapheme.size;
 
@@ -429,7 +435,10 @@ L_measure:
             int match_suffix_length = match_suffix.Length;
             int number_suffix_start = index + match_suffix_length + 1;
 
-            if (number_suffix_start > atlas_entry_name_length) return 0;// suffix not present
+            if (number_suffix_start > atlas_entry_name_length) {
+                // suffix not present
+                return false;
+            }
 
             switch (atlas_entry_name.CodePointAtKDY(index)) {
                 //case FontGlyph.HARDSPACE:
@@ -437,56 +446,59 @@ L_measure:
                     index++;
                     break;
                 default:
-                    return 0;// suffix not present
+                    // suffix not present
+                    return false;
             }
 
             // check if the suffix matchs
-            if (!atlas_entry_name.StartsWithKDY(match_suffix, index)) return 0;
+            if (!atlas_entry_name.StartsWithKDY(match_suffix, index)) {
+                // suffix not present
+                return false;
+            }
 
             index += match_suffix_length;
         }
 
         // check if this atlas entry is an animation frame
-        if (index < atlas_entry_name_length) {
-            if (!Atlas.NameHasNumberSuffix(atlas_entry_name, index)) return 0;// suffix not present
+        if (index < atlas_entry_name_length && !Atlas.NameHasNumberSuffix(atlas_entry_name, index)) {
+            // missing number suffix
+            return false;
+        }
 
-            // check if already exists an entry with this unicode code point
-            int code_index = -1;
-            for (int i = 0 ; i < table_index ; i++) {
-                if (table[i].code == grapheme.code) {
-                    code_index = i;
-                    break;
+        // check if already exists an entry with this unicode code point
+        int codepoint_index = -1;
+        for (int i = 0 ; i < table_index ; i++) {
+            if (table[i].code == grapheme.code) {
+                if (!allow_animation && table[i].frames_size > 0) {
+                    // glyph animation is disabled, do not add more frames
+                    return false;
                 }
-            }
-
-            if (code_index >= 0) {
-                // reject, animation is disabled
-                if (!allow_animation && table[code_index].frames_size > 0) return 0;// suffix not present
-                // add another frame
-                FontGlyph.InternalAddFrame(atlas_entry, table[code_index]);
-                return 2;
+                codepoint_index = i;
+                break;
             }
         }
 
-        // create entry for this unicode code point
-        table[table_index] = new GlyphInfo() {
-            code = grapheme.code,
-            actual_frame = 0,
-            frames = null,
-            frames_size = 0
-        };
+        if (codepoint_index < 0) {
+            // create entry for this unicode code point
+            table[table_index] = new GlyphInfo() {
+                code = grapheme.code,
+                actual_frame = 0,
+                frames = null,
+                frames_size = 0
+            };
+        } else {
+            table_index = codepoint_index;
+        }
 
         FontGlyph.InternalAddFrame(atlas_entry, table[table_index]);
+        table[table_index].frames_size++;
 
-        return 1;
+        // returns true if an entry was added to the table
+        return codepoint_index < 0;
     }
 
     private static void InternalAddFrame(AtlasEntry atlas_entry, GlyphInfo glyph_info) {
-        // needs C implementation
-        if (glyph_info.frames == null) {
-            glyph_info.frames_size++;
-            return;
-        }
+        if (glyph_info.frames == null) return;
 
         float height = atlas_entry.frame_height > 0 ? atlas_entry.frame_height : atlas_entry.height;
         float glyph_width_ratio = 0.0f;
@@ -510,7 +522,6 @@ L_measure:
 
             glyph_width_ratio = glyph_width_ratio
         };
-        glyph_info.frames_size++;
     }
 
     internal static int InternalCalcTabstop(int characters_in_the_line) {

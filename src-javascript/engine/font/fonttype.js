@@ -394,7 +394,7 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
     return draw_y + params.height;
 }
 
-function fonttype_map_codepoints(fonttype, text_index, text_end_index, text) {
+function fonttype_map_codepoints(fonttype, text, text_index, text_end_index) {
     let actual = fonttype.fontcharmap_secondary ? fonttype.fontcharmap_secondary.char_array_size : 0;
     let new_codepoints = 0;
     let grapheme = { code: 0, size: 0 };

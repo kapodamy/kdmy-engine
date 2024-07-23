@@ -416,7 +416,7 @@ public class FontType : IFont {
         return draw_y + @params.height;
     }
 
-    public void MapCodepoints(int text_index, int text_length, string text) {
+    public void MapCodepoints(string text, int text_index, int text_length) {
         int actual = this.fontcharmap_secondary != null ? this.fontcharmap_secondary.char_array_size : 0;
         int new_codepoints = 0;
         Grapheme grapheme = new Grapheme();

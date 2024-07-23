@@ -58,15 +58,12 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
 
     let table_index = 0;
 
-    // calculate the amount of required frames
-    // needs C implementation
+    // calculate the amount of matching glyphs in the atlas
     for (let i = 0; i < atlas.size; i++) {
-        fontglyph.table[i] = { actual_frame: 0, code: 0x00, frames: null, frames_size: 0 };
         let result = fontglyph_internal_parse(
             atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
         );
-
-        if (result == 1) table_index++;
+        if (result) table_index++;
     }
 
     if (table_index < 1) {
@@ -82,18 +79,28 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
         fontglyph.table = realloc_for_array(fontglyph.table, table_index);
     }
 
-    // allocate frames array
-    // needs C implementation
+    // count frames of every added glpyh
+    let frame_total = 0;
     for (let i = 0; i < fontglyph.table_size; i++) {
-        let glyph_info = fontglyph.table[i];
-        if (glyph_info.frames_size > 0) {
-            glyph_info.frames = malloc_for_array(glyph_info.frames_size);
-            glyph_info.frames_size = 0;
+        frame_total += fontglyph.table[i].frames_size;
+    }
+
+    // allocate frames array and set to zero each glyph frame count
+    // C only
+    //fontglyph->frames_array = malloc_for_array(GlyphFrame, frame_total);
+    for (let i = 0, j = 0; i < fontglyph.table_size; i++) {
+        let frames_size = fontglyph.table[i].frames_size;
+        if (frames_size > 0) {
+            // C only
+            //fontglyph->table[i].frames = &fontglyph->frames_array[j];
+            // JS & C# only
+            fontglyph.table[i].frames = malloc_for_array(frames_size);
+            fontglyph.table[i].frames_size = 0;
+            j += frames_size;
         }
     }
 
-    // add glyph frames
-    // needs C implementation
+    // add frames to each glyph
     for (let i = 0; i < atlas.size; i++) {
         fontglyph_internal_parse(
             atlas.entries[i], suffix, allow_animation, fontglyph.table, table_index
@@ -393,7 +400,8 @@ function fontglyph_animate(fontglyph, elapsed) {
     return 0;
 }
 
-function fontglyph_map_codepoints(fontglyph, text_index, text_length, text) {
+function fontglyph_map_codepoints(fontglyph, text, text_index, text_length) {
+    void fontglyph;
     void text_index;
     void text_length;
     void text;
@@ -407,7 +415,10 @@ function fontglyph_internal_parse(atlas_entry, match_suffix, allow_animation, ta
     let grapheme = { code: 0, size: 0 };
 
     // read character info
-    if (!string_get_character_codepoint(atlas_entry_name, 0, grapheme)) return -1;
+    if (!string_get_character_codepoint(atlas_entry_name, 0, grapheme)) {
+        // eof reached
+        return false;
+    }
 
     let index = grapheme.size;
 
@@ -415,7 +426,10 @@ function fontglyph_internal_parse(atlas_entry, match_suffix, allow_animation, ta
         let match_suffix_length = match_suffix.length;
         let number_suffix_start = index + match_suffix_length + 1;
 
-        if (number_suffix_start > atlas_entry_name_length) return 0;// suffix not present
+        if (number_suffix_start > atlas_entry_name_length) {
+            // suffix not present
+            return false;
+        }
 
         switch (atlas_entry_name.codePointAt(index)) {
             //case FONTGLYPH_HARDSPACE:
@@ -423,7 +437,8 @@ function fontglyph_internal_parse(atlas_entry, match_suffix, allow_animation, ta
                 index++;
                 break;
             default:
-                return 0;// suffix not present
+                // suffix not present
+                return 0;
         }
 
         // check if the suffix matchs
@@ -433,44 +448,42 @@ function fontglyph_internal_parse(atlas_entry, match_suffix, allow_animation, ta
     }
 
     // check if this atlas entry is an animation frame
-    if (index < atlas_entry_name_length) {
-        if (!atlas_name_has_number_suffix(atlas_entry_name, index)) return 0;// suffix not present
+    if (index < atlas_entry_name_length && !atlas_name_has_number_suffix(atlas_entry_name, index)) {
+        // missing number suffix
+        return false;
+    }
 
-        // check if already exists an entry with this unicode code point
-        let code_index = -1;
-        for (let i = 0; i < table_index; i++) {
-            if (table[i].code == grapheme.code) {
-                code_index = i;
-                break;
+    // check if already exists an entry with this unicode code point
+    let codepoint_index = -1;
+    for (let i = 0; i < table_index; i++) {
+        if (table[i].code == grapheme.code) {
+            if (!allow_animation && table[i].frames_size > 0) {
+                // glyph animation is disabled, do not add more frames
+                return false;
             }
-        }
-
-        if (code_index >= 0) {
-            // reject, animation is disabled
-            if (!allow_animation || table[code_index].frames_size > 0) return 0;
-            // add another frame
-            fontglyph_internal_add_frame(atlas_entry, table[code_index]);
-            return 2;
+            codepoint_index = i;
+            break;
         }
     }
 
-    // create entry for this unicode code point
-    // needs C implementation instead of "new Array()"
-    table[table_index] = {
-        code: grapheme.code, actual_frame: 0, frames: null, frames_size: 0
-    };
+    if (codepoint_index < 0) {
+        // create entry for this unicode code point
+        table[table_index] = {
+            code: grapheme.code, actual_frame: 0, frames: null, frames_size: 0
+        };
+    } else {
+        table_index = codepoint_index;
+    }
 
     fontglyph_internal_add_frame(atlas_entry, table[table_index]);
+    table[table_index].frames_size++;
 
-    return 1;
+    // returns true if an entry was added to the table
+    return codepoint_index < 0;
 }
 
 function fontglyph_internal_add_frame(atlas_entry, glyph_info) {
-    // needs C implementation
-    if (!glyph_info.frames) {
-        glyph_info.frames_size++;
-        return;
-    }
+    if (!glyph_info.frames) return;
 
     let height = atlas_entry.frame_height > 0.0 ? atlas_entry.frame_height : atlas_entry.height;
     let glyph_width_ratio = 0.0;
@@ -494,7 +507,6 @@ function fontglyph_internal_add_frame(atlas_entry, glyph_info) {
 
         glyph_width_ratio: glyph_width_ratio
     };
-    glyph_info.frames_size++;
 }
 
 function fontglyph_internal_calc_tabstop(characters_in_the_line) {

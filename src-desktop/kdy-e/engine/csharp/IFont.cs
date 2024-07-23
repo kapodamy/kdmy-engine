@@ -13,7 +13,7 @@ public struct FontParams {
 
     public bool border_enable;
     public float border_size;
-    
+
     /// <summary>RGBA color</summary>
     public float[] border_color;
 
@@ -39,5 +39,5 @@ public interface IFont : IAnimate {
     float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text);
     void MeasureChar(int codepoint, float height, ref FontLineInfo lineinfo);
     float Measure(ref FontParams @params, string text, int text_index, int text_length);
-    void MapCodepoints(int text_index, int text_length, string text);
+    void MapCodepoints(string text, int text_index, int text_length);
 }

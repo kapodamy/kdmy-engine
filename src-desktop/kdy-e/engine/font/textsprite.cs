@@ -445,9 +445,9 @@ public class TextSprite : IVertex {
 
         int text_length = text.Length;
         if (this.modified_string) {
+            this.font.MapCodepoints(text, 0, text_length);
             this.font.Measure(ref this.fontparams, text, 0, text_length);
         }
-
 
         // step 1: count the paragraphs
         int line_count = Math2D.MAX_INT32;
