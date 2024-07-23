@@ -202,7 +202,11 @@ public class IntroScreen {
         }
 
         int next_index = lines.IndexOf('\n', index++);
-        if (next_index < 0) next_index = lines.Length;
+
+        if (next_index > 1 && lines[next_index - 1] == '\r')
+            next_index--;
+        else if (next_index < 0)
+            next_index = lines.Length;
 
         return lines.SubstringKDY(index - 1, next_index);
     }

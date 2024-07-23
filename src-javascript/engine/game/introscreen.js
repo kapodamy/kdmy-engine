@@ -202,7 +202,11 @@ async function introscreen_read_intro_text(path) {
     }
 
     let next_index = lines.indexOf("\n", index++);
-    if (next_index < 0) next_index = lines.length;
+
+    if (next_index > 1 && lines[next_index - 1] == '\r')
+        next_index--;
+    else if (next_index < 0)
+        next_index = lines.length;
 
     return lines.substring(index - 1, next_index);
 }
