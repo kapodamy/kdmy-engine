@@ -258,7 +258,7 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
 
     let frames = entry.children;
     let parsed_frames = linkedlist_init();
-    let parsed_alternates = linkedlist_init();
+    let parsed_alternates = arraylist_init();
     let last_alternate_index = 0;
 
     for (let i = 0; i < frames.length; i++) {
@@ -270,12 +270,18 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
                 let index_start = vertexprops_parse_integer(frames[i], "indexStart", 0);
                 let index_end = vertexprops_parse_integer(frames[i], "indexEnd", -1);
 
-                let frame_name = name_prefix ? name_prefix : name;
-                if (name_suffix) frame_name += ` ${name_suffix}`;// add space before suffix         
+                const const_frame_name = name_prefix ? name_prefix : name;
+
+                let frame_name;
+                if (name_suffix)
+                    frame_name = string_concat(3, const_frame_name, " ", name_suffix); // add space before suffix
+                else
+                    frame_name = strdup(const_frame_name);
 
                 animlist_read_entries_to_frames_array(
                     parsed_frames, frame_name, has_number_suffix, atlas, index_start, index_end
                 );
+                frame_name = undefined;
                 break;
             case "Frame":
                 let entry_name = frames[i].getAttribute("entryName");
@@ -313,13 +319,12 @@ function animlist_read_frame_animation(entry, atlas, default_fps) {
     anim.instructions = null;
     anim.instructions_count = 0;
 
-    if (linkedlist_count(parsed_alternates) > 0) {
+    if (arraylist_size(parsed_alternates) > 0) {
         // add the last frames set
         let frames_count = linkedlist_count(parsed_frames);
         animlist_add_alternate_entry(parsed_alternates, frames_count, last_alternate_index);
     }
-    anim.alternate_set = linkedlist_to_solid_array(parsed_alternates);
-    anim.alternate_set_size = linkedlist_count(parsed_alternates);
+    arraylist_destroy2(parsed_alternates, anim, "alternate_set_size", "alternate_set");
 
     if (anim.loop_from_index >= anim.frame_count || anim.loop_from_index < 0) {
         anim.loop_from_index = 0;
@@ -520,10 +525,10 @@ function animlist_parse_complex_value2(node, name, def_value, value) {
 
 
 
-function animlist_add_alternate_entry(list, frame_count, index) {
+function animlist_add_alternate_entry(array, frame_count, index) {
     let length = frame_count - index;
     if (length < 1) return true;
-    linkedlist_add_item(list, { index, length });
+    arraylist_add(array, { index, length });
     return false;
 }
 
@@ -679,7 +684,7 @@ function animlist_read_macro_animation(entry, atlas) {
     }
 
     // note: keep "instruction[].values" allocated
-    arraylist_destroy2(parsed_instructions, anim , "instructions_count", "instructions");
+    arraylist_destroy2(parsed_instructions, anim, "instructions_count", "instructions");
 
     if (atlasPrefixEntryName) {
         let parsed_frames = linkedlist_init();

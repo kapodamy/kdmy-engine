@@ -260,7 +260,7 @@ public class AnimList {
 
         XmlParserNodeList frames = entry.Children;
         LinkedList<AtlasEntry> parsed_frames = new LinkedList<AtlasEntry>();
-        LinkedList<AlternateEntry> parsed_alternates = new LinkedList<AlternateEntry>();
+        ArrayList<AlternateEntry> parsed_alternates = new ArrayList<AlternateEntry>();
         int last_alternate_index = 0;
 
         for (int i = 0 ; i < frames.Length ; i++) {
@@ -272,12 +272,18 @@ public class AnimList {
                     int index_start = VertexProps.ParseInteger(frames[i], "indexStart", 0);
                     int index_end = VertexProps.ParseInteger(frames[i], "indexEnd", -1);
 
-                    string frame_name = StringUtils.IsNotEmpty(name_prefix) ? name_prefix : name;
-                    if (StringUtils.IsNotEmpty(name_suffix)) frame_name += $" {name_suffix}";// add space before suffix         
+                    string const_frame_name = StringUtils.IsNotEmpty(name_prefix) ? name_prefix : name;
+
+                    string frame_name;
+                    if (StringUtils.IsNotEmpty(name_suffix))
+                        frame_name = StringUtils.ConcatForStateName(const_frame_name, " ", name_suffix); // add space before suffix
+                    else
+                        frame_name = const_frame_name;
 
                     AnimList.ReadEntriesToFramesArray(
                         parsed_frames, frame_name, has_number_suffix, atlas, index_start, index_end
                     );
+                    //free(frame_name);
                     break;
                 case "Frame":
                     string entry_name = frames[i].GetAttribute("entryName");
@@ -315,13 +321,12 @@ public class AnimList {
         anim.instructions = null;
         anim.instructions_count = 0;
 
-        if (parsed_alternates.Count() > 0) {
+        if (parsed_alternates.Size() > 0) {
             // add the last frames set
             int frames_count = parsed_frames.Count();
             AnimList.AddAlternateEntry(parsed_alternates, frames_count, last_alternate_index);
         }
-        anim.alternate_set = parsed_alternates.ToSolidArray();
-        anim.alternate_set_size = parsed_alternates.Count();
+        parsed_alternates.Destroy2(out anim.alternate_set_size, out anim.alternate_set);
 
         if (anim.loop_from_index >= anim.frame_count || anim.loop_from_index < 0) {
             anim.loop_from_index = 0;
@@ -515,10 +520,10 @@ public class AnimList {
     }
 
 
-    private static bool AddAlternateEntry(LinkedList<AlternateEntry> list, int frame_count, int index) {
+    private static bool AddAlternateEntry(ArrayList<AlternateEntry> list, int frame_count, int index) {
         int length = frame_count - index;
         if (length < 1) return true;
-        list.AddItem(new AlternateEntry() { index = index, length = length });
+        list.Add(new AlternateEntry() { index = index, length = length });
         return false;
     }
 
