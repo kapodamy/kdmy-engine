@@ -845,9 +845,11 @@ public class FreeplayMenu {
 
         // get the path of instrumetal track of the song (if applicable)
         if (path_instrumental != null) {
+            //free(tmp_song_path);
             //free(path_voices);
             return path_instrumental;
         } else if (path_voices != null) {
+            //free(tmp_song_path);
             //free(path_instrumental);
             return path_voices;
         } else if (is_not_splitted) {

@@ -490,8 +490,8 @@ async function weekselector_main() {
     let gameplay_weekinfo = state.weekinfo;
     let gameplay_difficult = weekselector_difficult_get_selected(ui.weekdifficult);
     let gameplay_alternative_tracks = state.has_choosen_alternate;
-    let gameplay_model_boyfriend = weekselector_mdlselect_get_manifest(ui.mdl_boyfriend);
-    let gameplay_model_girlfriend = weekselector_mdlselect_get_manifest(ui.mdl_girlfriend);
+    let gameplay_model_boyfriend = state.back_to_main_menu ? null : weekselector_mdlselect_get_manifest(ui.mdl_boyfriend);
+    let gameplay_model_girlfriend = state.back_to_main_menu ? null : weekselector_mdlselect_get_manifest(ui.mdl_girlfriend);
 
     await modding_helper_notify_exit2(modding);
 

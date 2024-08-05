@@ -416,7 +416,7 @@ public class StateSprite : IVertex {
             //free(state);
         }
 
-        this.state_list.Destroy2(null/*free*/);
+        this.state_list.Destroy();
 
         StateSprite.POOL.Delete(this.id);
         //free(this.trailing_buffer);

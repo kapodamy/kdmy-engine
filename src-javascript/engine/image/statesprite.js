@@ -335,7 +335,7 @@ function statesprite_destroy(statesprite) {
         state = undefined;
     }
 
-    linkedlist_destroy2(statesprite.state_list, free);
+    linkedlist_destroy(statesprite.state_list);
 
     STATESPRITE_POOL.delete(statesprite.id);
     statesprite.trailing_buffer = undefined;

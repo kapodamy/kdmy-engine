@@ -309,7 +309,6 @@ public static class SettingsMenu {
     private static bool current_menu_choosen = false;
     private static string current_menu_choosen_custom = null;
     public static bool is_running = false;
-    private static FontHolder submenus_font = null;
 
 
     public static void Main() {
@@ -352,7 +351,8 @@ public static class SettingsMenu {
             return;
         }
 
-        if (SettingsMenu.submenus_font == null && FS.FileExists(SettingsMenu.MENU_COMMON.parameters.font)) {
+        FontHolder submenus_font = null;
+        if (FS.FileExists(SettingsMenu.MENU_COMMON.parameters.font)) {
             // little improvement, keep loaded the "pixel.otf" font to improve loading times
             submenus_font = new FontHolder(SettingsMenu.MENU_COMMON.parameters.font, -1f, null, false);
         }
@@ -504,7 +504,8 @@ public static class SettingsMenu {
         menu.Destroy();
         layout.Destroy();
         modding.Destroy();
-        SettingsMenu.submenus_font.Destroy();
+        gamepad.Destroy();
+        if (submenus_font != null) submenus_font.Destroy();
 
         SettingsMenu.is_running = false;
 
@@ -1323,6 +1324,7 @@ L_prepare_return:
         //free(SettingsMenu.current_menu_choosen_custom);
         SettingsMenu.current_menu_choosen_custom = null;
 
+        menu.Destroy();
         layout.Destroy();
     }
 

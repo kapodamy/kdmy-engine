@@ -832,9 +832,11 @@ async function freeplaymenu_internal_get_song_path(weekinfo, use_alternative, ma
 
     // get the path of instrumetal track of the song (if applicable)
     if (output_paths[1] != null) {
+        tmp_song_path = undefined;
         output_paths[0] = undefined;
         return output_paths[1];
     } else if (output_paths[0] != null) {
+        tmp_song_path = undefined;
         output_paths[1] = undefined;
         return output_paths[0];
     } else if (is_not_splitted) {

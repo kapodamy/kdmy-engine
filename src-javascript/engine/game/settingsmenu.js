@@ -293,7 +293,6 @@ var settingsmenu_current_setting_options = null;
 var settingsmenu_current_menu_choosen = false;
 var settingsmenu_current_menu_choosen_custom = null;
 var settingsmenu_is_running = false;
-var settingsmenu_submenus_font = null;
 
 
 async function settingsmenu_main() {
@@ -331,9 +330,10 @@ async function settingsmenu_main() {
         return;
     }
 
-    if (!settingsmenu_submenus_font && await fs_file_exists(SETTINGSMENU_MENU_COMMON.parameters.font)) {
+    let submenus_font = null;
+    if (await fs_file_exists(SETTINGSMENU_MENU_COMMON.parameters.font)) {
         // little improvement, keep loaded the "pixel.otf" font to improve loading times
-        settingsmenu_submenus_font = await fontholder_init(SETTINGSMENU_MENU_COMMON.parameters.font, -1.0, null, false);
+        submenus_font = await fontholder_init(SETTINGSMENU_MENU_COMMON.parameters.font, -1.0, null, false);
     }
 
     let animlist = await animlist_init("/assets/common/anims/settings-menu.xml");
@@ -483,7 +483,8 @@ async function settingsmenu_main() {
     menu_destroy(menu);
     layout_destroy(layout);
     modding_destroy(modding);
-    fontholder_destroy(settingsmenu_submenus_font);
+    gamepad_destroy(gamepad);
+    if (submenus_font) fontholder_destroy(submenus_font);
 
     settingsmenu_is_running = false;
 
@@ -1300,6 +1301,7 @@ async function settingsmenu_show_common(title, gamepad, options, options_count, 
     settingsmenu_current_menu_choosen_custom = undefined;
     settingsmenu_current_menu_choosen_custom = null;
 
+    menu_destroy(menu);
     layout_destroy(layout);
 }
 

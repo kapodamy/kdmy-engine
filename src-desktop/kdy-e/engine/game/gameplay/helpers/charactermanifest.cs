@@ -412,12 +412,14 @@ public class CharacterManifest {
         //    free(actions.sing[i].anim_rollback);
         //    free(actions.sing[i].model_src);
         //}
+        //free(actions.sing);
 
         //for (int i = 0 ; i < actions.miss_size ; i++) {
         //    free(actions.miss[i].direction);
         //    free(actions.miss[i].anim);
         //    free(actions.miss[i].model_src);
         //}
+        //free(actions.miss);
 
         //for (int i = 0 ; i < actions.extra_size ; i++) {
         //    free(actions.extras[i].name);
@@ -426,6 +428,7 @@ public class CharacterManifest {
         //    free(actions.extras[i].anim_rollback);
         //    free(actions.extras[i].model_src);
         //}
+        //free(actions.extras);
 
         //if (actions.has_hey) {
         //    free(actions.hey.name);

@@ -492,8 +492,8 @@ public class WeekSelector {
         WeekInfo gameplay_weekinfo = state.weekinfo;
         string gameplay_difficult = ui.weekdifficult.GetSelected();
         bool gameplay_alternative_songs = state.has_choosen_alternate;
-        string gameplay_model_boyfriend = ui.mdl_boyfriend.GetManifest();
-        string gameplay_model_girlfriend = ui.mdl_girlfriend.GetManifest();
+        string gameplay_model_boyfriend = state.back_to_main_menu ? null : ui.mdl_boyfriend.GetManifest();
+        string gameplay_model_girlfriend = state.back_to_main_menu ? null : ui.mdl_girlfriend.GetManifest();
 
         modding.HelperNotifyExit2();
 

@@ -327,12 +327,14 @@ function character_manifest_internal_destroy_actions(actions) {
         actions.sing[i].anim_rollback = undefined;
         actions.sing[i].model_src = undefined;
     }
+    actions.sing = undefined;
 
     for (let i = 0; i < actions.miss_size; i++) {
         actions.miss[i].direction = undefined;
         actions.miss[i].anim = undefined;
         actions.miss[i].model_src = undefined;
     }
+    actions.miss = undefined;
 
     for (let i = 0; i < actions.extras_size; i++) {
         actions.extras[i].name = undefined;
@@ -341,6 +343,7 @@ function character_manifest_internal_destroy_actions(actions) {
         actions.extras[i].anim_rollback = undefined;
         actions.extras[i].model_src = undefined;
     }
+    actions.extras = undefined;
 
     if (actions.has_hey) {
         actions.hey.name = undefined;
