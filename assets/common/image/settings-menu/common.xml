@@ -45,7 +45,7 @@
 		</Sprite>
 		<Text name="hint" fontName="labels" fontSize="24" rgb="0xFFFFFF">
 			<Action>
-				<Location x="20" y="636" z="2" />
+				<Location x="20" y="636" z="3" />
 				<MaxSize width="1280" />
 				<!-- <String>Select an option</String> -->
 			</Action>

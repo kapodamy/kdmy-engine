@@ -279,7 +279,7 @@ async function savemanager_show(savemanager) {
                 break;
             }
             if (buttons & MAINMENU_GAMEPAD_CANCEL) {
-                confirm_leave = false;
+                confirm_leave = confirm_delete = false;
                 gamepad_clear_buttons(savemanager.maple_pad);
             }
             continue;

@@ -45,7 +45,7 @@
 		</Sprite>
 		<Text name="hint" fontName="labels" fontSize="24" rgb="0xFFFFFF">
 			<Action>
-				<Location x="15" y="636" z="2" />
+				<Location x="15" y="636" z="3" />
 				<MaxSize width="960" />
 				<!-- <String>Select an option</String> -->
 			</Action>
@@ -72,8 +72,8 @@
 		<Group name="holder-boolean" visible="false">
 			<Sprite rgb="0xECBE23">
 				<Action>
-					<Location x="240" y="350" z="101" />
-					<Size width="240" height="80" />
+					<Location x="230" y="350" z="101" />
+					<Size width="250" height="80" />
 				</Action>
 				<Action name="bool-true">
 					<Show />
@@ -82,7 +82,7 @@
 					<Hide />
 				</Action>
 			</Sprite>
-			<Text fontName="values" fontSize="48">
+			<Text fontName="values" fontSize="36">
 				<Action>
 					<Location x="240" y="364" z="102" />
 					<Property name="alignHorizontal" value="center" />
@@ -108,7 +108,7 @@
 					<Show />
 				</Action>
 			</Sprite>
-			<Text fontName="values" fontSize="48">
+			<Text fontName="values" fontSize="36">
 				<Action>
 					<Location x="480" y="364" z="102" />
 					<Property name="alignHorizontal" value="center" />

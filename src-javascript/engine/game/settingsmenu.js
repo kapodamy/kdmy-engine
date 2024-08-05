@@ -498,7 +498,7 @@ async function settingsmenu_main() {
 
     if (bg_music) {
         soundplayer_destroy(bg_music);
-        if (background_menu_music) soundplayer_destroy(background_menu_music);
+        if (background_menu_music) soundplayer_play(background_menu_music);
     } else if (background_menu_music) {
         soundplayer_set_volume(background_menu_music, 1.0);
         soundplayer_play(background_menu_music);
