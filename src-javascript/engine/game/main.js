@@ -154,7 +154,7 @@ async function main(argc, argv) {
 
     // choose a random menu style
     let visited = malloc_for_array(weeks_array.size);
-    let try_choose_last_played = math2d_random_float() <= 0.25;
+    let try_choose_last_played = math2d_random_float() <= 0.15;
     let visited_count = 0;
     for (let i = 0; i < weeks_array.size; i++) visited[i] = 0;
 
