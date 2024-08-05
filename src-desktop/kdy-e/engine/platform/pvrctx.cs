@@ -118,11 +118,16 @@ public class PVRContext {
 
         last_timestamp = now;
 
-
         //
-        // Note: the engine should not run below 15fps, or the beat synchronization will be lost
+        // Notes:
+        //          * the engine should not run below 15fps, or the beat synchronization will be lost.
+        //          * set elapsed to zero is bigger than 200ms, this happen between load screens,
+        //          * do not fire threshold twice, check if last elapsed value was zero.
         //
-        elapsed = elapsed > MIN_FRAME_TIME ? MIN_FRAME_TIME : elapsed;
+        if (elapsed >= 200.0f && this.last_elapsed != 0.0f)
+            elapsed = 0.0f;
+        else if (elapsed > MIN_FRAME_TIME)
+            elapsed = MIN_FRAME_TIME;
 
         this.last_elapsed = elapsed;
         this.frame_rendered++;

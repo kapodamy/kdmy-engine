@@ -85,9 +85,15 @@ function pvrctx_wait_ready() {
             pvr_show_fps(elapsed);
 
             //
-            // Note: the engine should not run below 15fps, or the beat synchronization will be lost
+            // Notes:
+            //          * the engine should not run below 15fps, or the beat synchronization will be lost.
+            //          * set elapsed to zero is bigger than 200ms, this happen between load screens,
+            //          * do not fire threshold twice, check if last elapsed value was zero.
             //
-            elapsed = Math.min(elapsed, 66.66666666666667);
+            if (elapsed >= 200.0 && pvr_context.last_elapsed != 0.0)
+                elapsed = 0.0;
+            else if (elapsed > 66.66666666666667)
+                elapsed = 66.66666666666667;
 
             pvr_context.last_elapsed = elapsed;
             pvr_context.frame_rendered++;
