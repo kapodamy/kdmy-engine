@@ -2,7 +2,7 @@
 
 var TEXTURE_IDS = 0;
 const TEXTURE_POOL = new Map();
-var texture_defer_enabled = 0;
+var texture_defer_enabled = false;
 
 
 async function texture_init(src) {
