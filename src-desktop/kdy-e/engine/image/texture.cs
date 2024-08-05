@@ -23,7 +23,6 @@ public class Texture {
     private int id;
     internal string src_filename;
     private int references;
-    private int cache_references;
     internal bool has_mipmaps;
     internal WebGLTexture[] data_vram_crhoma_planes;
 
@@ -73,7 +72,6 @@ public class Texture {
         texture.id = TEXTURE_IDS++;
         texture.src_filename = null;
         texture.references = 1;
-        texture.cache_references = 0;
         texture.has_mipmaps = false;
         texture.data_vram_crhoma_planes = null;
 
@@ -98,18 +96,6 @@ public class Texture {
         return this;
     }
 
-    public void Cache(bool adquire) {
-        if (adquire)
-            this.cache_references++;
-        else if (this.cache_references > 0)
-            this.cache_references--;
-
-        //
-        // This functionality is only available in the Dreamcast
-        // OpenGL and WebGL has lot of limitations
-        //
-    }
-
     public void UploadToPVR() {
         if (!this.data_vram.IsNull) return;
 
@@ -123,8 +109,6 @@ public class Texture {
         if (this.data_vram.IsNull) {
             Logger.Error($"texture_upload_to_pvr() failed, id={this.id} src={this.src_filename}");
         }
-
-        if (this.cache_references > 0) return;
 
         this.data_ram.Dispose();
         this.data_ram = null;
@@ -148,7 +132,6 @@ public class Texture {
 
     public void DestroyForce() {
         this.references = 0;
-        this.cache_references = 0;
         Destroy();
     }
 

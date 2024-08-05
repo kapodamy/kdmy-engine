@@ -53,7 +53,6 @@ function texture_init_from_raw(ptr, size, in_vram, width, height, orig_width, or
         id: TEXTURE_IDS++,
         src_filename: null,
         references: 1,
-        cache_references: 0,
         has_mipmaps: false
     };
 
@@ -77,41 +76,6 @@ function texture_share_reference(texture) {
     return texture;
 }
 
-async function texture_cache(texture, adquire) {
-    if (adquire)
-        texture.cache_references++;
-    else if (texture.cache_references > 0)
-        texture.cache_references--;
-
-    //
-    // This functionality is only available in the Dreamcast
-    // OpenGL and WebGL has lot of limitations
-    //
-
-    // C only
-    /*
-    
-    // if there not cached references, remove from the SH-4 RAM
-    if (texture->cache_references < 1 && texture->data_ram && texture->data_vram) {
-         free(texture->data_ram);
-         texture->data_ram = null;
-        return;
-    }
-
-    // there cache references and the texture still exists on SH-4 side
-    if (texture->cache_references > 0 && texture->data_ram) return;
-
-    // download the texture from the PVR VRAM, this in other platforms is nearly impossible
-    texture->data_ram = pvr_txr_unload(texture->data_vram, texture->size);
-    if (texture->data_ram) return;
-
-    // now remove from the PVR VRAM
-    pvr_mem_free(texture->data_vram);
-    texture->data_vram = null;
-
-    */
-}
-
 function texture_upload_to_pvr(texture) {
     if (texture.data_vram) return;
 
@@ -130,16 +94,12 @@ function texture_upload_to_pvr(texture) {
 
     pvr_txr_load(texture->data_ram, texture->data_vram, texture->size);
 
-    if (texture.cache_references > 0) return;
-
     free(texture->data_ram);
     texture->data_ram = null;
     return;
     */
 
     texture.data_vram = webopengl_create_texture(pvr_context.webopengl, texture.width, texture.height, texture.data_ram);
-
-    if (texture.cache_references > 0) return;
 
     texture.data_ram.close();
     texture.data_ram = null;
@@ -166,7 +126,6 @@ function texture_get_dimmensions(texture, output_dimmensions) {
 function texture_destroy_force(texture) {
     if (!texture) return;
     texture.references = 0;
-    texture.cache_references = 0;
     texture_destroy(texture);
 }
 
@@ -177,16 +136,6 @@ function texture_destroy(texture) {
 
     // check if the texture is shared somewhere
     if (texture.references > 0) {
-        // C only
-        /*
-
-        // if still in use and cached, release from the PVR
-        if (texture->data_ram && texture->references == texture->cache_references) {
-            pvr_mem_free(texture->data_vram);
-            texture->data_vram = null;
-        }
-
-        */
         return false;
     }
 
@@ -241,5 +190,5 @@ async function texture_get_from_global_pool(src) {
 }
 
 function texture_disable_defering(disable) {
-    texture_defer_enabled = disable ? 0 : 1;
+    texture_defer_enabled = !!disable;
 }

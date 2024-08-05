@@ -234,7 +234,8 @@ async function weekselector_main() {
     if (!modelholder_ui) throw new Error("Failed to load: " + WEEKSELECTOR_UI_ICONS_MODEL);
     if (!modelholder_buttons_ui) throw new Error("Failed to load: " + WEEKSELECTOR_BUTTONS_MODEL);
 
-    let texpool = texturepool_init(8 * 1024 * 1024);// 8MiB
+    // JS and C# only, in C only preload cache is used
+    let texpool = texturepool_init(16 * 1024 * 1024);// 16MiB
 
     let sound_confirm = await soundplayer_init("/assets/common/sound/confirmMenu.ogg");
     let sound_scroll = await soundplayer_init("/assets/common/sound/scrollMenu.ogg");

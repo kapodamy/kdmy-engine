@@ -237,6 +237,7 @@ public class WeekSelector {
         ModelHolder modelholder_ui = ModelHolder.Init(WeekSelector.UI_ICONS_MODEL);
         ModelHolder modelholder_buttons_ui = ModelHolder.Init(WeekSelector.BUTTONS_MODEL);
 
+        // JS and C# only, in C only preload cache is used
         TexturePool texpool = new TexturePool(256 * 1024 * 1024);// 256MiB
 
         SoundPlayer sound_confirm = SoundPlayer.Init("/assets/common/sound/confirmMenu.ogg");
