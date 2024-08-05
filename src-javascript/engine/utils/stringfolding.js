@@ -8,7 +8,7 @@
 
 
 const STRING_UPPERCASES = [
-    0x41,
+    /*0x41,
     0x42,
     0x43,
     0x44,
@@ -33,7 +33,7 @@ const STRING_UPPERCASES = [
     0x57,
     0x58,
     0x59,
-    0x5A,
+    0x5A,*/
     0xB5,
     0xC0,
     0xC1,
@@ -1465,7 +1465,7 @@ const STRING_UPPERCASES = [
     0x00000
 ];
 const STRING_LOWERCASES = [
-    0x61,
+    /*0x61,
     0x62,
     0x63,
     0x64,
@@ -1490,7 +1490,7 @@ const STRING_LOWERCASES = [
     0x77,
     0x78,
     0x79,
-    0x7a,
+    0x7a,*/
     0x3bc,
     0xe0,
     0xe1,
@@ -3043,6 +3043,12 @@ function string_to_uppercase(str) {
     while (string_get_character_codepoint(str, index, grapheme)) {
         index += grapheme.size;
 
+        let ascii_codepoint = string_internal_ascii_to_uppercase(grapheme.code);
+        if (ascii_codepoint != 0x00) {
+            stringbuilder_add_char_codepoint(stringbuilder, ascii_codepoint);
+            continue;
+        }
+
         L_find_lowercase_components: {
             for (let i = 0; STRING_LOWERCASE_TO_COMPONENTS[i][0]; i++) {
                 const lowercase_components = STRING_LOWERCASE_TO_COMPONENTS[i];
@@ -3075,6 +3081,12 @@ function string_to_lowercase(str) {
     while (string_get_character_codepoint(str, index, grapheme)) {
         index += grapheme.size;
 
+        let ascii_codepoint = string_internal_ascii_to_lowercase(grapheme.code);
+        if (ascii_codepoint != 0x00) {
+            stringbuilder_add_char_codepoint(stringbuilder, ascii_codepoint);
+            continue;
+        }
+
         L_find_in_uppercase_list: {
             for (let i = 0; STRING_UPPERCASES[i]; i++) {
                 if (STRING_UPPERCASES[i] == grapheme.code) {
@@ -3093,6 +3105,12 @@ function string_to_lowercase(str) {
 
 
 function string_internal_direct_uppercase_conversion(codepoint, stringbuilder) {
+    let ascii_codepoint = string_internal_ascii_to_uppercase(codepoint);
+    if (ascii_codepoint != 0x00) {
+        stringbuilder_add_char_codepoint(stringbuilder, codepoint);
+        return;
+    }
+
     for (let i = 0; STRING_LOWERCASES[i]; i++) {
         if (STRING_LOWERCASES[i] == codepoint) {
             codepoint = STRING_UPPERCASES[i];
@@ -3104,3 +3122,32 @@ function string_internal_direct_uppercase_conversion(codepoint, stringbuilder) {
     stringbuilder_add_char_codepoint(stringbuilder, codepoint);
 }
 
+
+
+function string_internal_ascii_to_lowercase(codepoint) {
+    // if the codepoint is ASCII, do a quick lookup
+    if (codepoint >= 0x41 && codepoint <= 0x5A) {
+        // A to Z uppercase letters
+        return codepoint + 0x20;
+    } else if (codepoint <= 0x7F) {
+        // symbol, number or control code
+        return codepoint;
+    } else {
+        // unicode codepoint
+        return 0x00;
+    }
+}
+
+function string_internal_ascii_to_uppercase(codepoint) {
+    // if the codepoint is ASCII, do a quick lookup
+    if (codepoint >= 0x61 && codepoint <= 0x7A) {
+        // a to z lowercase letters
+        return codepoint - 0x20;
+    } else if (codepoint <= 0x7F) {
+        // symbol, number or control code
+        return codepoint;
+    } else {
+        // unicode codepoint
+        return 0x00;
+    }
+}
