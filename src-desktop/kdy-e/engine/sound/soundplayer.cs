@@ -23,27 +23,32 @@ public class SoundPlayer {
     }
 
     public static SoundPlayer Init(string src) {
-        string full_path = FS.GetFullPathAndOverride(src);
-
-        if (!FS.FileExists(full_path)) { return null; }
-
-        if (
-            !full_path.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) &&
-            !full_path.EndsWith(".logg", StringComparison.OrdinalIgnoreCase)
-            ) {
-            Logger.Error($"songplayer_init() format not supported: {src}");
+        if (!FS.FileExists(src)) {
+            Logger.Error($"songplayer_init() file not found: {src}");
             return null;
         }
 
-        full_path = IO.GetAbsolutePath(full_path, true, false, true);
+        if (
+            !src.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) &&
+            !src.EndsWith(".logg", StringComparison.OrdinalIgnoreCase)
+            ) {
+            Logger.Error($"songplayer_init() unknown filename extension: {src}");
+            return null;
+        }
 
-        byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
+        string absolute_path = FS.GetFullPathAndOverride(src);
+        string native_path = IO.GetNativePath(absolute_path, true, false, true);
+        //free(absolute_path);
+
+        byte[] buffer = PreloadCache.RetrieveBuffer(native_path);
         ISourceHandle sourcehandle;
 
         if (buffer != null) {
             sourcehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
+            //free(native_path);
         } else {
-            sourcehandle = FileHandleUtil.Init(full_path, true);
+            sourcehandle = FileHandleUtil.Init(native_path, true);
+            //free(native_path);
             if (sourcehandle == null) {
                 Logger.Error($"soundplayer_init() filehandle_init1 failed for: {src}");
                 return null;

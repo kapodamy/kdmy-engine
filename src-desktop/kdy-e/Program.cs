@@ -217,7 +217,7 @@ class Program {
             JSONParser.Destroy(json);
 
             if (screenshoot_path != null) {
-                screenshoot_path = IO.GetAbsolutePath(
+                screenshoot_path = IO.GetNativePath(
                     FS.ResolvePath($"{dir_relative_path}{screenshoot_path}"), true, false, false
                 );
 
@@ -226,7 +226,7 @@ class Program {
                 }
             }
             if (icon_path != null) {
-                icon_path = IO.GetAbsolutePath(
+                icon_path = IO.GetNativePath(
                     FS.ResolvePath($"{dir_relative_path}{icon_path}"), true, false, false
                 );
 
@@ -235,7 +235,7 @@ class Program {
                 }
             }
             if (window_icon_path != null) {
-                window_icon_path = IO.GetAbsolutePath(
+                window_icon_path = IO.GetNativePath(
                     FS.ResolvePath($"{dir_relative_path}{window_icon_path}"), true, false, false
                 );
 

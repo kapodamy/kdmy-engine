@@ -12,8 +12,9 @@ public class kthread_key_t<T> {
 
 
 internal static class kthread {
-    public static bool key_create<T>(kthread_key_t<T> key, kthread_destructor<T> destructor) {
-        if (key.data != null) return false;
+    public static bool key_create<T>(ref kthread_key_t<T> key, kthread_destructor<T> destructor) {
+        if (key != null) return false;
+        key = new kthread_key_t<T>();
         key.data = new ThreadLocal<T>();
         return true;
     }

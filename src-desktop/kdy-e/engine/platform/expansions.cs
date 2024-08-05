@@ -43,7 +43,7 @@ public static class Expansions {
         //free(chain_array);
         chain_array_size = 0;
 
-        // force clear preload cache
+        // clear preload cache
         PreloadCache.ClearCache();
 
         ArrayList<string> chain = new ArrayList<string>();
@@ -65,7 +65,7 @@ public static class Expansions {
             string about_json_path = StringUtils.Concat(expansion_base_path, Expansions.ABOUT_FILENAME);
 
             //free(about_path);
-            about_path = IO.GetAbsolutePath(about_json_path, true, false, false);
+            about_path = IO.GetNativePath(about_json_path, true, false, false);
 
             JSONToken json = JSONParser.LoadDirectFrom(about_path);
             bool override_weeks_folder = JSONParser.ReadBoolean(json, "overrideWeeksFolder", false);
@@ -180,7 +180,7 @@ public static class Expansions {
 
         if (unparsed_chain == null) return;
 
-        Tokenizer tokenizer = Tokenizer.Init("\r\n", false, false, unparsed_chain);
+        Tokenizer tokenizer = Tokenizer.Init("\r\n", true, false, unparsed_chain);
         if (tokenizer == null) {
             InternalAddToChain(chain, expansion_path);
             //free(unparsed_chain);
@@ -235,7 +235,7 @@ L_return:
 
     private static void InternalUpdateWindow(string expansion_base_path, string window_title, string window_icon) {
         window_icon = FS.ResolvePath(expansion_base_path + window_icon);
-        window_icon = IO.GetAbsolutePath(window_icon, true, false, false);
+        window_icon = IO.GetNativePath(window_icon, true, false, false);
 
         PVRContext pvr_context = PVRContext.global_context;
         byte[] icon = null;

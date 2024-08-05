@@ -10,15 +10,17 @@ const FS_EXPANSIONS_FOLDER = "/expansions";
 const FS_ASSETS_COMMON_FOLDER = "/assets/common/";
 const FS_NO_OVERRIDE_COMMON = "/~assets/common/";
 
-var fs_tls_key = {};
+var fs_tls_key = null;
 var fs_cod = null;
 
 function fs_init() {
+    if (fs_tls_key == null) {
+        // first run, initialize the thread local storage key
+        kthread_key_create(fs_tls_key = {}, fs_destroy);
+    }
+
     if (kthread_getspecific(fs_tls_key)) {
         throw new Error("Duplicate call to fs_init()");
-    } else {
-        // first run, initialize the thread local storage key
-        kthread_key_create(fs_tls_key, fs_destroy);
     }
 
     let fs_tls = {
@@ -107,7 +109,7 @@ async function fs_folder_enumerate(src, folder_enumerator) {
     const collator_insensitive = new Intl.Collator(undefined, { sensitivity: 'accent' });
 
     async function __enumerate_to(entries, target_folder, resolve_expansion) {
-        let path = await io_native_get_absolute_path(target_folder, false, true, resolve_expansion);
+        let path = await io_native_get_path(target_folder, false, true, resolve_expansion);
         if (!await io_native_resource_exists(path, false, true)) return;
 
         let info = await io_native_enumerate_folder(path);

@@ -47,10 +47,10 @@ function filesystemdialog_main(/**@type {boolean}*/folder_or_file_chooser, /**@t
             return;
         }
 
-        let absolute_start_folder;
+        let native_start_folder;
         try {
-            absolute_start_folder = await io_native_get_absolute_path(start_folder, false, true, false);
-            if (!await io_native_resource_exists(absolute_start_folder, false, true)) {
+            native_start_folder = await io_native_get_path(start_folder, false, true, false);
+            if (!await io_native_resource_exists(native_start_folder, false, true)) {
                 reject(new KDMYEngineIOError(`The path "${start_folder}" is not a valid folder`, start_folder));
                 return;
             }
@@ -117,7 +117,7 @@ function filesystemdialog_internal_keyDown(/**@type {KeyboardEvent}*/e) {
 }
 
 async function filesystemdialog_internal_enumerate(path) {
-    let absolute_path = await io_native_get_absolute_path(path, true, true, false);
+    let absolute_path = await io_native_get_path(path, true, true, false);
     let entries = await io_native_enumerate_folder(absolute_path);
 
     if (!entries) {
@@ -356,7 +356,7 @@ async function filesystemdialog_internal_path_change(e) {
         }
 
         path = fs_resolve_path(path);
-        let absolute_path = await io_native_get_absolute_path(path, false, true, false);
+        let absolute_path = await io_native_get_path(path, false, true, false);
 
         if (!await io_native_resource_exists(absolute_path, false, true)) {
             alert(`Can not find "${path}"`);
@@ -382,7 +382,7 @@ async function filesystemdialog_internal_enumerate_root() {
     let root_paths = [FS_ASSETS_FOLDER, EXPANSIONS_PATH];
 
     for (let root_path of root_paths) {
-        let path = await io_native_get_absolute_path(root_path, false, true, false);
+        let path = await io_native_get_path(root_path, false, true, false);
         if (await io_native_resource_exists(path, false, true)) {
             filesystemdialog_current_entries.push({
                 name: root_path.substring(1), size: -1, li_element: null

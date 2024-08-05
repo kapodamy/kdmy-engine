@@ -24,10 +24,10 @@ internal static class PreloadCache {
 
         src_filelist = FS.ResolvePath(src_filelist);
 
-        string filelist_absolute_path = IO.GetAbsolutePath(src_filelist, true, false, false);
-        if (!File.Exists(filelist_absolute_path)) return -1;
+        string filelist_native_path = IO.GetNativePath(src_filelist, true, false, false);
+        if (!File.Exists(filelist_native_path)) return -1;
 
-        string filelist = File.ReadAllText(filelist_absolute_path);
+        string filelist = File.ReadAllText(filelist_native_path);
         if (StringUtils.IsEmpty(filelist)) return -1;
 
         Logger.Info($"PreloadCache::AddFileList() reading {src_filelist}");
@@ -45,9 +45,9 @@ internal static class PreloadCache {
             string path = FS.BuildPath2(src_filelist, line);
             if (path.StartsWith(FS.ASSETS_FOLDER)) path = FS.GetFullPathAndOverride(path);
 
-            string absolute_path = IO.GetAbsolutePath(path, false, true, true);
-            if (Directory.Exists(absolute_path)) {
-                foreach (string file in ListFilesOfFolder(absolute_path)) {
+            string native_path = IO.GetNativePath(path, false, true, true);
+            if (Directory.Exists(native_path)) {
+                foreach (string file in ListFilesOfFolder(native_path)) {
                     if (!AddFileToCache(line, path, file, id, ref added)) {
                         goto L_return;
                     }
@@ -55,13 +55,13 @@ internal static class PreloadCache {
                 continue;
             }
 
-            absolute_path = IO.GetAbsolutePath(path, true, false, true);
-            if (!File.Exists(absolute_path)) {
+            native_path = IO.GetNativePath(path, true, false, true);
+            if (!File.Exists(native_path)) {
                 Logger.Warn($"PreCache::AddFileList() file not found {line} (resolved as {path})");
                 continue;
             }
 
-            if (!AddFileToCache(line, path, absolute_path, id, ref added)) break;
+            if (!AddFileToCache(line, path, native_path, id, ref added)) break;
         }
 
         double elapsed = stopwatch.ElapsedMilliseconds / 1000.0;
@@ -110,7 +110,7 @@ L_return:
     public static Stream RetrieveStream(string absolute_path) {
         // Note: this can fail because the comparision is case sensitive
         for (int i = 0 ; i < entries_count ; i++) {
-            if (cache[i].absolute_path == absolute_path) {
+            if (cache[i].native_path == absolute_path) {
                 cache[i].data.Seek(0, SeekOrigin.Begin);
                 return cache[i].data;
             }
@@ -121,7 +121,7 @@ L_return:
     public static byte[] RetrieveBuffer(string absolute_path) {
         // Note: this can fail because the comparision is case sensitive
         for (int i = 0 ; i < entries_count ; i++) {
-            if (cache[i].absolute_path == absolute_path) {
+            if (cache[i].native_path == absolute_path) {
                 return cache[i].buffer;
             }
         }
@@ -133,18 +133,18 @@ L_return:
         return Directory.GetFiles(folder_absolute_path, "*.*", SearchOption.AllDirectories);
     }
 
-    private static bool AddFileToCache(string src, string path, string absolute_path, int id, ref int added) {
+    private static bool AddFileToCache(string src, string path, string native_path, int id, ref int added) {
         for (int i = 0 ; i < entries_count ; i++) {
-            if (cache[i].absolute_path == absolute_path) {
+            if (cache[i].native_path == native_path) {
                 // already added
                 return true;
             }
         }
 
         try {
-            byte[] buffer = File.ReadAllBytes(absolute_path);
+            byte[] buffer = File.ReadAllBytes(native_path);
 
-            cache[entries_count].absolute_path = absolute_path;
+            cache[entries_count].native_path = native_path;
             cache[entries_count].data = new MemoryStream(buffer, 0, buffer.Length, false, true);
             cache[entries_count].id = id;
 
@@ -166,7 +166,7 @@ L_return:
     [DebuggerDisplay("id={id} absolute_path={absolute_path} data={data}")]
     private struct CacheEntry {
         public int id;
-        public string absolute_path;
+        public string native_path;
         public MemoryStream data;
         public byte[] buffer { get => data?.GetBuffer(); }
 
@@ -174,7 +174,7 @@ L_return:
             if (data != null) data.Dispose();
             data = null;
             id = -1;
-            absolute_path = null;
+            native_path = null;
         }
     }
 

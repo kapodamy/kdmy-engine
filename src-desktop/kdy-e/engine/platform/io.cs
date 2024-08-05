@@ -13,54 +13,54 @@ public static class IO {
         engine_directory = AppDomain.CurrentDomain.BaseDirectory;
     }
 
-    public static ImageData ReadTexture(string src) {
-        string absolute_path = IO.GetAbsolutePath(src, true, false, true);
-        byte[] buffer = PreloadCache.RetrieveBuffer(absolute_path);
+    public static ImageData ReadTexture(string absolute_path) {
+        string native_path = IO.GetNativePath(absolute_path, true, false, true);
+        byte[] buffer = PreloadCache.RetrieveBuffer(native_path);
 
         if (buffer != null)
             return TextureLoader.ReadTexture(buffer);
         else
-            return TextureLoader.ReadTexture(absolute_path);
+            return TextureLoader.ReadTexture(native_path);
     }
 
-    internal static string ReadText(string src) {
+    internal static string ReadText(string absolute_path) {
         try {
-            string absolute_path = IO.GetAbsolutePath(src, true, false, true);
-            byte[] buffer = PreloadCache.RetrieveBuffer(absolute_path);
+            string native_path = IO.GetNativePath(absolute_path, true, false, true);
+            byte[] buffer = PreloadCache.RetrieveBuffer(native_path);
 
             if (buffer != null)
                 return Encoding.UTF8.GetString(buffer);
             else
-                return File.ReadAllText(absolute_path, Encoding.UTF8);
+                return File.ReadAllText(native_path, Encoding.UTF8);
         } catch (Exception e) {
-            Logger.Error($"read_text() src={src}\n{e.Message}");
+            Logger.Error($"read_text() src={absolute_path}\n{e.Message}");
             return null;
         }
     }
 
-    internal static byte[] ReadArrayBuffer(string src) {
+    internal static byte[] ReadArrayBuffer(string absolute_path) {
         try {
-            string absolute_path = IO.GetAbsolutePath(src, true, false, true);
-            byte[] buffer = PreloadCache.RetrieveBuffer(absolute_path);
+            string native_path = IO.GetNativePath(absolute_path, true, false, true);
+            byte[] buffer = PreloadCache.RetrieveBuffer(native_path);
 
             if (buffer != null)
                 return buffer;
             else
-                return File.ReadAllBytes(absolute_path);
+                return File.ReadAllBytes(native_path);
         } catch (Exception e) {
-            Logger.Error($"read_arraybuffer() src={src}\n{e.Message}");
+            Logger.Error($"read_arraybuffer() src={absolute_path}\n{e.Message}");
             return null;
         }
     }
 
-    internal static bool ResourceExists(string src, bool expect_file, bool expect_folder) {
+    internal static bool ResourceExists(string absolute_path, bool expect_file, bool expect_folder) {
         try {
-            src = IO.GetAbsolutePath(src, expect_file, expect_folder, true);
+            string native_path = IO.GetNativePath(absolute_path, expect_file, expect_folder, true);
 
             if (expect_file)
-                return File.Exists(src);
+                return File.Exists(native_path);
             else if (expect_folder)
-                return Directory.Exists(src);
+                return Directory.Exists(native_path);
             else
                 return false;
         } catch {
@@ -68,20 +68,20 @@ public static class IO {
         }
     }
 
-    internal static long FileSize(string src) {
+    internal static long FileSize(string absolute_path) {
         try {
-            return new FileInfo(GetAbsolutePath(src, true, false, true)).Length;
+            return new FileInfo(GetNativePath(absolute_path, true, false, true)).Length;
         } catch {
             return -1L;
         }
     }
 
-    internal static string GetAbsolutePath(string src, bool is_file, bool is_folder, bool resolve_expansion) {
+    internal static string GetNativePath(string absolute_path, bool is_file, bool is_folder, bool resolve_expansion) {
         string base_path = IO.engine_directory;
-        string path = src;
+        string path = absolute_path;
         int index = 0;
 
-        if (resolve_expansion && src.StartsWithKDY("/assets", 0)) {
+        if (resolve_expansion && absolute_path.StartsWithKDY("/assets", 0)) {
             path = Expansions.ResolvePath(path, is_file, is_folder);
         }
 

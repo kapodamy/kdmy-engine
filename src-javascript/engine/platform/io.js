@@ -237,32 +237,27 @@ function io_chromium_workaround(url, options) {
 }
 
 
-async function io_request_file(relative_url, request_type) {
-    let absolute_url = await io_native_get_absolute_path(relative_url, true, false, true);
-    return io_native_foreground_request(absolute_url, request_type);
+async function io_request_file(absolute_url, request_type) {
+    let native_url = await io_native_get_path(absolute_url, true, false, true);
+    return io_native_foreground_request(native_url, request_type);
 }
 
-async function io_file_size(relative_url) {
-    let absolute_url = await io_native_get_absolute_path(relative_url, true, false, true);
-    return await io_native_file_size(absolute_url);
+async function io_file_size(absolute_url) {
+    let native_url = await io_native_get_path(absolute_url, true, false, true);
+    return await io_native_file_size(native_url);
 }
 
-async function io_resource_exists(relative_url, expect_file, expect_folder) {
-    let absolute_url = await io_native_get_absolute_path(
-        relative_url, expect_file, expect_folder, expect_file || expect_folder
+async function io_resource_exists(absolute_url, expect_file, expect_folder) {
+    let native_url = await io_native_get_path(
+        absolute_url, expect_file, expect_folder, expect_file || expect_folder
     );
-    return await io_native_resource_exists(absolute_url, expect_file, expect_folder);
+    return await io_native_resource_exists(native_url, expect_file, expect_folder);
 }
 
-async function io_enumerate_folder(relative_url) {
-    let absolute_url = await io_native_get_absolute_path(relative_url, false, true, true);
-    return await io_native_enumerate_folder(absolute_url);
+async function io_enumerate_folder(absolute_url) {
+    let native_url = await io_native_get_path(absolute_url, false, true, true);
+    return await io_native_enumerate_folder(native_url);
 }
-
-async function io_get_absolute_path(relative_url) {
-    return await io_native_get_absolute_path(relative_url, true, true, true);
-}
-
 
 
 async function io_native_foreground_request(absolute_url, request_type) {
@@ -328,12 +323,12 @@ async function io_native_enumerate_folder(absolute_url) {
     throw new KDMYEngineIOError("Unknown web browser, newio_enumerate_folder() can not continue");
 }
 
-async function io_native_get_absolute_path(src, is_file, is_folder, resolve_expansion) {
+async function io_native_get_path(absolute_url, is_file, is_folder, resolve_expansion) {
     let base_path = IO_BASE_URL;
-    let path = src;
+    let path = absolute_url;
     let index = 0;
 
-    if (resolve_expansion && src.startsWith("/assets", 0)) {
+    if (resolve_expansion && absolute_url.startsWith("/assets", 0)) {
         path = await expansions_resolve_path(path, is_file, is_folder);
     }
 

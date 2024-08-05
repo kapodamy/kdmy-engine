@@ -51,7 +51,7 @@ async function expansions_load(expansion_name) {
         let about_json_path = string_concat(2, expansion_base_path, EXPANSIONS_ABOUT_FILENAME);
 
         about_path = undefined;
-        about_path = await io_native_get_absolute_path(about_json_path, true, false, false);
+        about_path = await io_native_get_path(about_json_path, true, false, false);
 
         let json = await json_load_direct(about_path);
         let override_weeks_folder = json_read_boolean(json, "overrideWeeksFolder", false);
@@ -167,7 +167,7 @@ async function expansions_internal_load_dependency(chain, expansion_name) {
 
     if (!unparsed_chain) return;
 
-    let tokenizer = tokenizer_init("\r\n", false, false, unparsed_chain);
+    let tokenizer = tokenizer_init("\r\n", true, false, unparsed_chain);
     if (!tokenizer) {
         expansions_internal_add_to_chain(chain, expansion_path);
         unparsed_chain = undefined;
@@ -240,6 +240,6 @@ async function expansions_internal_update_window(expansion_path, window_title, w
     }
 
     window_icon = fs_resolve_path(expansion_path + FS_CHAR_SEPARATOR + window_icon);
-    link.href = await io_native_get_absolute_path(window_icon, true, false, false);
+    link.href = await io_native_get_path(window_icon, true, false, false);
 }
 

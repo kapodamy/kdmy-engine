@@ -46,19 +46,23 @@ public class VideoPlayer : ISetProperty {
     private VideoPlayer() { }
 
     public static VideoPlayer Init(string src) {
-        string full_path = FS.GetFullPathAndOverride(src);
+        string absolute_path = FS.GetFullPathAndOverride(src);
 
-        if (!FS.FileExists(full_path)) { return null; }
+        if (!FS.FileExists(absolute_path)) {
+            //free(absolute_path);
+            return null;
+        }
 
         if (!runtime_available) {
-            //free(full_path);
+            //free(absolute_path);
             Logger.Error($"videoplayer_init() can not load '{src}'. FFgraph or FFmpeg libraries are not available");
             return null;
         }
 
-        full_path = IO.GetAbsolutePath(full_path, true, false, true);
+        string native_path = IO.GetNativePath(absolute_path, true, false, true);
+        //free(absolute_path);
 
-        byte[] buffer = PreloadCache.RetrieveBuffer(full_path);
+        byte[] buffer = PreloadCache.RetrieveBuffer(native_path);
         ISourceHandle audio_sourcehandle;
         ISourceHandle video_sourcehandle;
 
@@ -67,8 +71,8 @@ public class VideoPlayer : ISetProperty {
             video_sourcehandle = FileHandleUtil.Init(buffer, 0, buffer.Length);
         } else {
             if (FS.FileLength(src) < FileHandleUtil.MAX_SIZE_IN_MEMORY) {
-                audio_sourcehandle = FileHandleUtil.Init(full_path, true);
-                video_sourcehandle = FileHandleUtil.Init(full_path, true);
+                audio_sourcehandle = FileHandleUtil.Init(native_path, true);
+                video_sourcehandle = FileHandleUtil.Init(native_path, true);
             } else {
                 // load file contents in RAM
                 buffer = FS.ReadArrayBuffer(src);

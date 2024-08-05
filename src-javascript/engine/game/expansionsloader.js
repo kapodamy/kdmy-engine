@@ -39,7 +39,7 @@ function expansionsloader_main() {
 
 
 async function expansionsloader_internal_load_expansions() {
-    let expansions_path = await io_native_get_absolute_path(EXPANSIONS_PATH, false, true, false);
+    let expansions_path = await io_native_get_path(EXPANSIONS_PATH, false, true, false);
     let expansions = new Array();
 
     if (!await io_native_resource_exists(expansions_path, false, true)) return expansions;
@@ -89,17 +89,17 @@ async function expansionsloader_internal_load_expansions() {
         json_destroy(json);
 
         if (expansion.screenshoot) {
-            expansion.screenshoot = await io_native_get_absolute_path(
+            expansion.screenshoot = await io_native_get_path(
                 fs_resolve_path(`${dir_relative_path}${expansion.screenshoot}`), true, false, false
             );
         }
         if (expansion.icon) {
-            expansion.icon = await io_native_get_absolute_path(
+            expansion.icon = await io_native_get_path(
                 fs_resolve_path(`${dir_relative_path}${expansion.icon}`), true, false, false
             );
         }
         if (expansion.window_icon) {
-            expansion.window_icon = await io_native_get_absolute_path(
+            expansion.window_icon = await io_native_get_path(
                 fs_resolve_path(`${dir_relative_path}${expansion.window_icon}`), true, false, false
             );
         }

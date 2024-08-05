@@ -12,7 +12,7 @@ async function videoplayer_init(src) {
     let video = document.createElement("video");
     video.playsInline = true;
     video.preload = "metadata";
-    video.src = await io_get_absolute_path(full_path);
+    video.src = await io_native_get_path(full_path);
 
     try {
         await new Promise(function (resolve, reject) {

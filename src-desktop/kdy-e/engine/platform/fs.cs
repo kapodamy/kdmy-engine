@@ -21,8 +21,8 @@ public struct FSFolderEnumerator {
     public long length;
 
     internal static void EnumerateTo(ArrayList<Entry> entries, string target_folder, bool resolve_expansion) {
-        string path = IO.GetAbsolutePath(target_folder, false, true, resolve_expansion);
-        DirectoryInfo directoryInfo = new DirectoryInfo(path);
+        string native_path = IO.GetNativePath(target_folder, false, true, resolve_expansion);
+        DirectoryInfo directoryInfo = new DirectoryInfo(native_path);
         if (!directoryInfo.Exists) return;
 
         DirectoryInfo[] di_array = directoryInfo.GetDirectories();
@@ -62,8 +62,7 @@ public static class FS {
     public const string ASSETS_COMMON_FOLDER = "/assets/common/";
     public const string NO_OVERRIDE_COMMON = "/~assets/common/";
 
-    private static bool fs_tls_init = true;
-    private static kthread_key_t<FSTLS> fs_tls_key = new kthread_key_t<FSTLS>();
+    private static kthread_key_t<FSTLS> fs_tls_key = null;
     private static string fs_cod = null;
 
     private class FSTLS {
@@ -72,10 +71,9 @@ public static class FS {
     }
 
     public static void Init() {
-        if (fs_tls_init) {
+        if (fs_tls_key == null) {
             // first run, initialize the thread local storage key
-            kthread.key_create<FSTLS>(fs_tls_key, Destroy);
-            fs_tls_init = false;
+            kthread.key_create<FSTLS>(ref fs_tls_key, Destroy);
         }
 
         if (kthread.getspecific<FSTLS>(fs_tls_key) != null) {
