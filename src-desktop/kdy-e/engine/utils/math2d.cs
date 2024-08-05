@@ -15,7 +15,10 @@ public static class Math2D {
     private static readonly Random random;
 
     static Math2D() {
-        random = new Random(Guid.NewGuid().GetHashCode());
+        DateTime now = DateTime.Now;
+        int seed = (now.Day << 4) + ((now.Hour << 16) | (now.Minute << 2)) + now.Second;
+        seed += now.Millisecond;
+        random = new Random(seed);
     }
 
     public static float RandomFloat() {
