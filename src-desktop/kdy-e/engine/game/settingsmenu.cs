@@ -1131,15 +1131,15 @@ public static class SettingsMenu {
         SettingOption[] options_help = {
             new SettingOption() {
                 name = "load-only",
-                description = "Load savedata from another VMU, this replaces the current loaded savedata.\n" +
-                "Any future saves will be stored in the selected VMU",
+                description = "Load savedata from another VMU.\n" +
+                "Any future saves will be stored in the selected VMU.",
                 hidden = false
             },
             new SettingOption() {
                 name = "save-or-delete",
                 description = "Save the current loaded savedata in another VMU.\n" +
                 "Allows override or delete any other savedata.\n" +
-                "Any future saves will be stored in the lastest used VMU for save",
+                "Any future saves will be stored in the lastest used VMU for save.",
                 hidden = false
             },
             new SettingOption() {
