@@ -38,6 +38,15 @@
             "runtimeArgs": ["--remote-debugging-port=9222", "--allow-file-access-from-files"],
             "cleanUp": "onlyTab",
             "timeout": 20000
+        },
+        {
+            "type": "chrome",
+            "request": "attach",
+            "name": "Attach to Opera",
+            "disableNetworkCache": true,
+            "address": "localhost",
+            "port": 9222,
+            "timeout": 20000
         }
     ]
 }

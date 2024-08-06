@@ -148,6 +148,8 @@ async function main(argc, argv) {
     let load_result = await savemanager_should_show(false);
     if (load_result) {
         let savemanager = await savemanager_init(false, load_result);
+        // (JS only) allow delete damaged saves
+        savemanager_change_actions(savemanager, true, true, false);
         await savemanager_show(savemanager);
         savemanager_destroy(savemanager);
     }
