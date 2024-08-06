@@ -3,23 +3,6 @@
 
     <Font name="font" path="/assets/common/font/vcr.ttf" />
 
-    <Text name="info-engine" fontName="font" fontSize="20" color="0xFFFFFF">
-        <Action>
-            <!-- <String>KDMY Engine version 0.0-r0000 </String> -->
-            <Background enable="true" size="2" offsetX="-2" offsetY="-2" />
-            <BackgroundColor r="0" g="0" b="0" a="0.40" />
-            <Location x="2" y="-44" z="2.1" alignVertical="end" />
-        </Action>
-    </Text>
-    <Text name="info-vmu" fontName="font" fontSize="20" color="0xFFFFFF">
-        <Action>
-            <!-- <String>VMU A1 (savedata loaded) </String> -->
-            <Background enable="true" size="2" offsetX="-2" offsetY="0" />
-            <BackgroundColor r="0" g="0" b="0" a="0.40" />
-            <Location x="2" y="-22" z="2.0" alignVertical="end" />
-        </Action>
-    </Text>
-
     <!-- This background color should match the color of the background image -->
     <Sprite rgb="0xFDE871">
         <Action>
@@ -36,19 +19,22 @@
         </Action>
     </Sprite>
 
-    <Sprite rgb="0x000000" name="transition_effect" initialAction="intro">
+    <Text name="info-vmu" fontName="font" fontSize="20" color="0xFFFFFF">
         <Action>
-            <Size width="1280" height="720" />
-            <Location x="0" y="0" />
-            <Property name="z" value="3" />
+            <!-- <String>VMU A1 (savedata loaded) </String> -->
+            <Background enable="true" size="2" offsetX="-2" offsetY="0" />
+            <BackgroundColor r="0" g="0" b="0" a="0.40" />
+            <Location x="2" y="-22" z="2" alignVertical="end" />
         </Action>
-        <Action name="intro">
-            <Animation name="transition_intro" />
+    </Text>
+    <Text name="info-engine" fontName="font" fontSize="20" color="0xFFFFFF">
+        <Action>
+            <!-- <String>KDMY Engine version 0.0-r0000 </String> -->
+            <Background enable="true" size="2" offsetX="-2" offsetY="-2" />
+            <BackgroundColor r="0" g="0" b="0" a="0.40" />
+            <Location x="2" y="-44" z="3" alignVertical="end" />
         </Action>
-        <Action name="outro">
-            <Animation name="transition_outro" />
-        </Action>
-    </Sprite>
+    </Text>
 
     <!-- (false) uses a horizontal list (true) uses a vertical list like Kade Engine -->
     <AttachValue name="menu_isVertical" type="boolean"  value="true" />
@@ -60,7 +46,21 @@
     <AttachValue name="menu_itemGap" type="float"  value="36" />
     <!-- Add 48px of padding for a title, something like "Friday Night Funkin: main menu" or similar -->
     <!-- Use "alignVertical" for horizontal lists or "alignHorizontal" for vertical lists -->
-    <Placeholder name="menu" x="0" y="72" z="2" width="1280" height="648" alignHorizontal="center" />
+    <Placeholder name="menu" x="0" y="72" z="4" width="1280" height="648" alignHorizontal="center" />
+
+    <Sprite rgb="0x000000" name="transition_effect" initialAction="intro">
+        <Action>
+            <Size width="1280" height="720" />
+            <Location x="0" y="0" />
+            <Property name="z" value="5" />
+        </Action>
+        <Action name="intro">
+            <Animation name="transition_intro" />
+        </Action>
+        <Action name="outro">
+            <Animation name="transition_outro" />
+        </Action>
+    </Sprite>
 
 </Layout>
 

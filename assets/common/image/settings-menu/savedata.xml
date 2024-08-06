@@ -33,13 +33,13 @@
 	<Group>
 		<Sprite rgba="0x0000007F">
 			<Action>
-				<Location x="0" y="652" z="1" />
-				<Size width="1280" height="72"/>
+				<Location x="0" y="632" z="1" />
+				<Size width="1280" height="92"/>
 			</Action>
 		</Sprite>
 		<Text name="hint" fontName="labels" fontSize="24" rgb="0xFFFFFF">
 			<Action>
-				<Location x="20" y="660" z="2" />
+				<Location x="20" y="640" z="2" />
 				<MaxSize width="1280" />
 				<!-- <String>Select an option</String> -->
 			</Action>

@@ -43,7 +43,7 @@
 				<Size width="960" height="96"/>
 			</Action>
 		</Sprite>
-		<Text name="hint" fontName="labels" fontSize="24" rgb="0xFFFFFF">
+		<Text name="hint" fontName="labels" fontSize="22" rgb="0xFFFFFF">
 			<Action>
 				<Location x="15" y="636" z="3" />
 				<MaxSize width="960" />

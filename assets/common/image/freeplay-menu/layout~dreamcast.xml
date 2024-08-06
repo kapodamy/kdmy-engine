@@ -100,20 +100,20 @@
 
         <Sprite rgba="0x0000007F">
             <Action>
-                <Location x="808" y="41" z="2" />
-                <Size width="159" height="41" />
+                <Location x="776" y="41" z="2" />
+                <Size width="178" height="41" />
             </Action>
         </Sprite>
         <Sprite atlas="/assets/common/image/week-selector/week_selector_UI.xml">
             <Action>
-                <Location x="814" y="41" z="2.1" />
+                <Location x="780" y="41" z="2.1" />
                 <AtlasApply entry="locked" />
                 <Resize maxWidth="31" maxHeight="41" center="true" />
             </Action>
         </Sprite>
         <Text fontName="vcr" fontSize="38" rgb="0xFFFFFF">
             <Action>
-                <Location x="842" y="41" z="2.2" />
+                <Location x="814" y="41" z="2.2" />
                 <String>LOCKED</String>
             </Action>
         </Text>
