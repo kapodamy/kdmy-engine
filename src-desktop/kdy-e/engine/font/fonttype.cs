@@ -130,8 +130,6 @@ public class FontType : IFont {
         float scale = @params.height / FontType.GLYPHS_HEIGHT;
         int text_end_index = text_index + text_length;
 
-        //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
-
         float max_width = 0;
         float width = 0;
         int index = text_index;
@@ -250,8 +248,6 @@ public class FontType : IFont {
         float scale = @params.height / FontType.GLYPHS_HEIGHT;
         float ascender = ((primary ?? secondary).ascender / 2f) * scale;// FIXME: ¿why does dividing by 2 works?
         int text_end_index = text_index + text_length;
-
-        //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
 #if SDF_FONT
         if (has_border) {

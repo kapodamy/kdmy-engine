@@ -150,8 +150,6 @@ public class FontGlyph : IFont {
         Grapheme grapheme = new Grapheme();
         int text_end_index = text_index + text_length;
 
-        //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
-
         float width = 0;
         float max_width = 0;
         int line_chars = 0;
@@ -256,8 +254,6 @@ L_measure:
         bool has_border = @params.border_enable && @params.border_color[3] > 0 && @params.border_size >= 0;
         float outline_size = @params.border_size * 2;
         int text_end_index = text_index + text_length;
-
-        //Debug.Assert(text_end_index <= text_length, "invalid text_index/text_size (overflow)");
 
         float draw_x = 0;
         float draw_y = 0;
