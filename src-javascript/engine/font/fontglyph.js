@@ -135,8 +135,6 @@ function fontglyph_measure(fontglyph, params, text, text_index, text_length) {
     const grapheme = { code: 0, size: 0 };
     const text_end_index = text_index + text_length;
 
-    console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
-
     let width = 0.0;
     let max_width = 0.0;
     let line_chars = 0;
@@ -243,8 +241,6 @@ function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_l
     const has_border = params.border_enable && params.border_color[3] > 0.0 && params.border_size >= 0.0;
     const outline_size = params.border_size * 2.0;
     const text_end_index = text_index + text_length;
-
-    console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
     let draw_x = 0.0;
     let draw_y = 0.0;

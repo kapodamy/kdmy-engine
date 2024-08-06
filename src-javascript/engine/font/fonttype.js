@@ -108,8 +108,6 @@ function fonttype_measure(fonttype, params, text, text_index, text_length) {
     const scale = params.height / FONTTYPE_GLYPHS_HEIGHT;
     const text_end_index = text_index + text_length;
 
-    //console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
-
     let max_width = 0.0;
     let width = 0.0;
     let index = text_index;
@@ -228,8 +226,6 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
     const scale = params.height / FONTTYPE_GLYPHS_HEIGHT;
     const ascender = ((primary ?? secondary).ascender / 2.0) * scale;// FIXME: ¿why does dividing by 2 works?
     const text_end_index = text_index + text_length;
-
-    //console.assert(text_end_index <= text_length, "invalid text_index/text_length (overflow)");
 
     if (SDF_FONT) {
         if (has_border) {

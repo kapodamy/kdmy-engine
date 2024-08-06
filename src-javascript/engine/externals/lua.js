@@ -49,16 +49,16 @@ var ModuleLua = (() => {//@ts-ignore
                 return index;
             let new_index = -1;
             for (let i = 0; i < kdmyEngine_MAX_INDEXES; i++) {
-                let index = i + L.objectIndexes;
-                if (HEAPU8[index] == 0) {
-                    new_index = index;
+                let idx = i + L.objectIndexes;
+                if (HEAPU8[idx] == 0) {
+                    new_index = idx;
                     break
                 }
             }
             if (new_index < 0) {
                 throw new Error("the objectMap is full")
             }
-            HEAPU8[index] = 1;
+            HEAPU8[new_index] = 1;
             L.objectMap.set(key, new_index);
             return new_index
         }
@@ -169,6 +169,31 @@ var ModuleLua = (() => {//@ts-ignore
             strbuf2 = kdmyEngine_stringBuffer_alloc(256);
             strbuf_large = kdmyEngine_stringBuffer_alloc(8192)
         }
+        function kdmyEngine_obtainFunction(L, f, sig, wrapper) {
+            let f_ptr = L.functionMap.get(f);
+            if (f_ptr === undefined) {
+                let f_wrapper = wrapper.bind({
+                    f: f,
+                    L: L
+                });
+                f_ptr = addFunction(f_wrapper, sig);
+                L.functionMap.set(f, f_ptr)
+            }
+            return f_ptr
+        }
+        function kdmyEngine_is_obtained(L, ptr) {
+            let start = L.objectIndexes;
+            let end = L.objectIndexes + kdmyEngine_MAX_INDEXES;
+            return ptr >= start && ptr < end
+        }
+        function kdmyEngine_func_cclosure() {
+            return this.f(this.L)
+        }
+        function kdmyEngine_func_warnf(ud_ptr, msg_ptr, cont) {
+            let ud = kdmyEngine_obtain(this.L, ud_ptr);
+            let msg = kdmyEngine_ptrToString(msg_ptr);
+            this.f(ud, msg, cont)
+        }
         const LUA_EXPORTS = {
             kdmyEngine_obtain: kdmyEngine_obtain,
             kdmyEngine_forget: kdmyEngine_forget,
@@ -178,7 +203,7 @@ var ModuleLua = (() => {//@ts-ignore
                 _lua_pushstring(L.ptr, s_ptr)
             },
             lua_pushcfunction: function (L, f) {
-                let f_ptr = addFunction(f, "ip");
+                let f_ptr = kdmyEngine_obtainFunction(L, f, "ip", kdmyEngine_func_cclosure);
                 _lua_pushcclosure(L.ptr, f_ptr, 0)
             },
             lua_setfield: function (L, idx, k) {
@@ -228,11 +253,19 @@ var ModuleLua = (() => {//@ts-ignore
             luaL_checkudata: function (L, ud, tname) {
                 let tname_ptr = kdmyEngine_stringToBuffer(tname, strbuf1);
                 let ret = _luaL_checkudata(L.ptr, ud | 0, tname_ptr);
+                if (ret == 0)
+                    return null;
+                if (!kdmyEngine_is_obtained(L, ret))
+                    ret = kdmyEngine_get_uint32(ret);
                 return kdmyEngine_obtain(L, ret)
             },
             luaL_testudata: function (L, ud, tname) {
                 let tname_ptr = kdmyEngine_stringToBuffer(tname, strbuf1);
                 let ret = _luaL_testudata(L.ptr, ud | 0, tname_ptr);
+                if (ret == 0)
+                    return null;
+                if (!kdmyEngine_is_obtained(L, ret))
+                    ret = kdmyEngine_get_uint32(ret);
                 return kdmyEngine_obtain(L, ret)
             },
             luaL_getmetatable: function (L, n) {
@@ -257,6 +290,7 @@ var ModuleLua = (() => {//@ts-ignore
                 let L = {
                     ptr: ret,
                     objectMap: new Map,
+                    functionMap: new Map,
                     objectIndexes: _malloc(kdmyEngine_MAX_INDEXES * Int8Array.BYTES_PER_ELEMENT)
                 };
                 if (L.objectIndexes == 0)
@@ -275,7 +309,7 @@ var ModuleLua = (() => {//@ts-ignore
                     if (item[1] == null) {
                         throw new Error("(not supported) the function can not be null")
                     }
-                    let func_ptr = addFunction(item[1], "ip");
+                    let func_ptr = kdmyEngine_obtainFunction(L, item[1], "ip", kdmyEngine_func_cclosure);
                     let name_ptr = kdmyEngine_stringToBuffer(item[0], strbuf1);
                     _lua_pushcclosure(L.ptr, func_ptr, 0);
                     _lua_setfield(L.ptr, -2, name_ptr)
@@ -315,6 +349,10 @@ var ModuleLua = (() => {//@ts-ignore
             },
             lua_touserdata: function (L, idx) {
                 let ret = _lua_touserdata(L.ptr, idx | 0);
+                if (ret == 0)
+                    return null;
+                if (!kdmyEngine_is_obtained(L, ret))
+                    ret = kdmyEngine_get_uint32(ret);
                 return kdmyEngine_obtain(L, ret)
             },
             lua_createtable: function (L, narr, nrec) {
@@ -359,7 +397,7 @@ var ModuleLua = (() => {//@ts-ignore
                 _lua_pushlightuserdata(L.ptr, p_ptr)
             },
             lua_pushliteral: function (L, s) {
-                let s_ptr = kdmyEngine_stringToBuffer(s);
+                let s_ptr = kdmyEngine_stringToBuffer(s, strbuf1);
                 _lua_pushstring(L.ptr, s_ptr)
             },
             lua_isnil: function (L, n) {
@@ -372,7 +410,7 @@ var ModuleLua = (() => {//@ts-ignore
                 _lua_rawseti(L.ptr, idx | 0, n | 0)
             },
             lua_setglobal: function (L, name) {
-                let name_ptr = kdmyEngine_stringToBuffer(name);
+                let name_ptr = kdmyEngine_stringToBuffer(name, strbuf1);
                 _lua_setglobal(L.ptr, name_ptr)
             },
             lua_settable: function (L, idx) {
@@ -382,7 +420,7 @@ var ModuleLua = (() => {//@ts-ignore
                 return _lua_gettop(L.ptr)
             },
             lua_getfield: function (L, idx, k) {
-                let k_ptr = kdmyEngine_stringToBuffer(k);
+                let k_ptr = kdmyEngine_stringToBuffer(k, strbuf1);
                 return _lua_getfield(L.ptr, idx | 0, k_ptr)
             },
             lua_gettable: function (L, idx) {
@@ -430,19 +468,20 @@ var ModuleLua = (() => {//@ts-ignore
                 return _lua_pcallk(L.ptr, nargs | 0, nresults | 0, errfunc, 0, 0)
             },
             lua_getglobal: function (L, name) {
-                let name_ptr = kdmyEngine_stringToBuffer(name);
+                let name_ptr = kdmyEngine_stringToBuffer(name, strbuf1);
                 return _lua_getglobal(L.ptr, name_ptr)
             },
             lua_setwarnf: function (L, f, ud) {
-                if (ud != null)
-                    throw new Error("(not supported) the 'ud' parameter must be null.");
-                let f_ptr = addFunction(f, "vppi");
-                _lua_setwarnf(L.ptr, f_ptr, 0)
+                let f_ptr = kdmyEngine_obtainFunction(L, f, "vppi", kdmyEngine_func_warnf);
+                _lua_setwarnf(L.ptr, f_ptr, kdmyEngine_obtain(L, ud))
             },
             lua_close: function (L) {
                 _lua_close(L.ptr);
                 _free(L.objectIndexes);
                 L.objectMap.clear();
+                for (const [f, f_ptr] of L.functionMap)
+                    removeFunction(f_ptr);
+                L.functionMap.clear();
                 L.ptr = NaN;
                 L.objectIndexes = NaN;
                 L.objectMap = null

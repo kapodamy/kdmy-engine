@@ -34,10 +34,10 @@ function kdmyEngine_obtain(/**@type {lua_State}*/L, /**@type {number|object}*/ke
 
     // find an available index
     for (let i = 0; i < kdmyEngine_MAX_INDEXES; i++) {
-        let index = i + L.objectIndexes;
+        let idx = i + L.objectIndexes;
 
-        if (HEAPU8[index] == 0) {
-            new_index = index;
+        if (HEAPU8[idx] == 0) {
+            new_index = idx;
             break;
         }
     }
@@ -46,7 +46,7 @@ function kdmyEngine_obtain(/**@type {lua_State}*/L, /**@type {number|object}*/ke
         throw new Error("the objectMap is full");
     }
 
-    HEAPU8[index] = 1;
+    HEAPU8[new_index] = 1;
     L.objectMap.set(key, new_index);
 
     return new_index;
@@ -175,6 +175,31 @@ function kdmyEngine_doLuaExport(/**@type {number}*/LUA_REGISTRYINDEX_value) {
     strbuf2 = kdmyEngine_stringBuffer_alloc(256);
     strbuf_large = kdmyEngine_stringBuffer_alloc(8192);
 }
+function kdmyEngine_obtainFunction(/**@type {lua_State}*/L, /**@type {Function}*/f, /**@type {string}*/sig, /**@type {Function}*/wrapper) {
+    let f_ptr = L.functionMap.get(f);
+    if (f_ptr === undefined) {
+        let f_wrapper = wrapper.bind({ f, L });
+        f_ptr = addFunction(f_wrapper, sig);
+        L.functionMap.set(f, f_ptr);
+    }
+    return f_ptr;
+}
+function kdmyEngine_is_obtained(/**@type {lua_State}*/L, /**@type {number}*/ptr) {
+    let start = L.objectIndexes;
+    let end = L.objectIndexes + kdmyEngine_MAX_INDEXES;
+    return ptr >= start && ptr < end;
+}
+
+
+function kdmyEngine_func_cclosure() {
+    return this.f(this.L);
+}
+function kdmyEngine_func_warnf(/**@type {number}*/ud_ptr,/**@type {number}*/msg_ptr, /**@type {number}*/cont) {
+    let ud = kdmyEngine_obtain(this.L, ud_ptr);
+    let msg = kdmyEngine_ptrToString(msg_ptr);
+
+    this.f(ud, msg, cont);
+}
 
 
 /**@type {LUA} */
@@ -182,26 +207,26 @@ const LUA_EXPORTS = {
     kdmyEngine_obtain: kdmyEngine_obtain,
     kdmyEngine_forget: kdmyEngine_forget,
     kdmyEngine_yieldAsync: kdmyEngine_yieldAsync,
-    lua_pushstring: function (L, s) {
+    lua_pushstring: function (/**@type {lua_State}*/L, s) {
         let s_ptr = kdmyEngine_stringToBuffer(s, strbuf1);
         _lua_pushstring(L.ptr, s_ptr);
     },
-    lua_pushcfunction: function (L, f) {
-        let f_ptr = addFunction(f, "ip");
+    lua_pushcfunction: function (/**@type {lua_State}*/L, f) {
+        let f_ptr = kdmyEngine_obtainFunction(L, f, "ip", kdmyEngine_func_cclosure);
         _lua_pushcclosure(L.ptr, f_ptr, 0);
     },
-    lua_setfield: function (L, idx, k) {
+    lua_setfield: function (/**@type {lua_State}*/L, idx, k) {
         let k_ptr = kdmyEngine_stringToBuffer(k, strbuf1);
         _lua_setfield(L.ptr, idx | 0, k_ptr);
     },
-    lua_pushboolean: function (L, b) {
+    lua_pushboolean: function (/**@type {lua_State}*/L, b) {
         return _lua_pushboolean(L.ptr, b ? 1 : 0) != 0;
     },
-    luaL_checkstring: function (L, n) {
+    luaL_checkstring: function (/**@type {lua_State}*/L, n) {
         let ret = _luaL_checklstring(L.ptr, n | 0, 0x00);
         return kdmyEngine_ptrToString(ret);
     },
-    luaL_optstring: function (L, n, d) {
+    luaL_optstring: function (/**@type {lua_State}*/L, n, d) {
         // use "0x01" as string placeholder
         let ret = _luaL_optlstring(L.ptr, n | 0, 0x01, 0x00);
 
@@ -210,28 +235,28 @@ const LUA_EXPORTS = {
 
         return kdmyEngine_ptrToString(ret);
     },
-    luaL_checknumber: function (L, arg) {
+    luaL_checknumber: function (/**@type {lua_State}*/L, arg) {
         return _luaL_checknumber(L.ptr, arg | 0);
     },
-    luaL_optnumber: function (L, arg, def) {
+    luaL_optnumber: function (/**@type {lua_State}*/L, arg, def) {
         return _luaL_optnumber(L.ptr, arg | 0, def);
     },
-    luaL_checkinteger: function (L, arg) {
+    luaL_checkinteger: function (/**@type {lua_State}*/L, arg) {
         return _luaL_checkinteger(L.ptr, arg | 0);
     },
-    luaL_optinteger: function (L, arg, def) {
+    luaL_optinteger: function (/**@type {lua_State}*/L, arg, def) {
         return _luaL_optinteger(L.ptr, arg | 0, def | 0);
     },
-    luaL_newmetatable: function (L, tname) {
+    luaL_newmetatable: function (/**@type {lua_State}*/L, tname) {
         let tmpname_ptr = kdmyEngine_stringToBuffer(tname, strbuf1);
         let ret = _luaL_newmetatable(L.ptr, tmpname_ptr);
         return ret;
     },
-    luaL_error: function (L, fmt) {
+    luaL_error: function (/**@type {lua_State}*/L, fmt) {
         let fmt_ptr = kdmyEngine_stringToBuffer(fmt, strbuf2);
         return _luaL_error(L.ptr, fmt_ptr);
     },
-    luaL_checklstring: function (L, arg, l) {
+    luaL_checklstring: function (/**@type {lua_State}*/L, arg, l) {
         let ret = _luaL_checklstring(L.ptr, arg | 0, sizet_buffer_ptr);
 
         let ret_length = kdmyEngine_get_uint32(sizet_buffer_ptr);
@@ -239,29 +264,37 @@ const LUA_EXPORTS = {
         l[0] = ret_length;
         return wasmMemory.buffer.slice(ret, ret + ret_length);
     },
-    luaL_checkudata: function (L, ud, tname) {
+    luaL_checkudata: function (/**@type {lua_State}*/L, ud, tname) {
         let tname_ptr = kdmyEngine_stringToBuffer(tname, strbuf1);
 
         let ret = _luaL_checkudata(L.ptr, ud | 0, tname_ptr);
+
+        if (ret == 0) return null;
+        if (!kdmyEngine_is_obtained(L, ret)) ret = kdmyEngine_get_uint32(ret);
+
         return kdmyEngine_obtain(L, ret);
     },
-    luaL_testudata: function (L, ud, tname) {
+    luaL_testudata: function (/**@type {lua_State}*/L, ud, tname) {
         let tname_ptr = kdmyEngine_stringToBuffer(tname, strbuf1);
 
         let ret = _luaL_testudata(L.ptr, ud | 0, tname_ptr);
+
+        if (ret == 0) return null;
+        if (!kdmyEngine_is_obtained(L, ret)) ret = kdmyEngine_get_uint32(ret);
+
         return kdmyEngine_obtain(L, ret);
     },
-    luaL_getmetatable: function (L, n) {
+    luaL_getmetatable: function (/**@type {lua_State}*/L, n) {
         let n_ptr = kdmyEngine_stringToBuffer(n, strbuf1);
         return _lua_getfield(L.ptr, this.LUA_REGISTRYINDEX, n_ptr);
     },
-    luaL_ref: function (L, t) {
+    luaL_ref: function (/**@type {lua_State}*/L, t) {
         return _luaL_ref(L.ptr, t | 0);
     },
-    luaL_unref: function (L, t, ref) {
+    luaL_unref: function (/**@type {lua_State}*/L, t, ref) {
         return _luaL_unref(L.ptr, t | 0, ref | 0);
     },
-    luaL_traceback: function (L, L1, msg, level) {
+    luaL_traceback: function (/**@type {lua_State}*/L, L1, msg, level) {
         let msg_ptr = kdmyEngine_stringToBuffer(msg, strbuf1);
         _luaL_traceback(L.ptr, L1.ptr, msg_ptr, level | 0);
     },
@@ -275,6 +308,7 @@ const LUA_EXPORTS = {
         let L = {
             ptr: ret,
             objectMap: new Map(),
+            functionMap: new Map(),
             objectIndexes: _malloc(kdmyEngine_MAX_INDEXES * Int8Array.BYTES_PER_ELEMENT)
         };
 
@@ -283,7 +317,7 @@ const LUA_EXPORTS = {
 
         return L;
     },
-    luaL_setfuncs: function (L, l, nup) {
+    luaL_setfuncs: function (/**@type {lua_State}*/L, l, nup) {
         if (nup != 0) {
             throw new Error("(not supported) the number upvalues must be 0.");
         }
@@ -296,17 +330,17 @@ const LUA_EXPORTS = {
                 throw new Error("(not supported) the function can not be null");
             }
 
-            let func_ptr = addFunction(item[1], "ip");
+            let func_ptr = kdmyEngine_obtainFunction(L, item[1], "ip", kdmyEngine_func_cclosure);
             let name_ptr = kdmyEngine_stringToBuffer(item[0], strbuf1);
 
             _lua_pushcclosure(L.ptr, func_ptr, 0);
             _lua_setfield(L.ptr, -2, name_ptr);
         }
     },
-    luaL_openlibs: function (L) {
+    luaL_openlibs: function (/**@type {lua_State}*/L) {
         _luaL_openlibs(L.ptr);
     },
-    luaL_dostring: function (L, s) {
+    luaL_dostring: function (/**@type {lua_State}*/L, s) {
         let s_ptr = kdmyEngine_stringToBuffer(s, strbuf_large);
 
         let ret = _luaL_loadstring(L.ptr, s_ptr);
@@ -317,7 +351,7 @@ const LUA_EXPORTS = {
 
         return ret;
     },
-    luaL_loadbufferx: function (L, buff, sz, name, mode) {
+    luaL_loadbufferx: function (/**@type {lua_State}*/L, buff, sz, name, mode) {
         let buff_ptr = kdmyEngine_stringToBuffer(buff, strbuf_large, sz | 0);
         let name_ptr = kdmyEngine_stringToBuffer(name, strbuf1);
         let mode_ptr = kdmyEngine_stringToBuffer(mode, strbuf2);
@@ -326,41 +360,45 @@ const LUA_EXPORTS = {
 
         return _luaL_loadbufferx(L.ptr, buff_ptr, sz, name_ptr, mode_ptr);
     },
-    luaL_loadstring: function (L, s) {
+    luaL_loadstring: function (/**@type {lua_State}*/L, s) {
         let s_ptr = kdmyEngine_stringToBuffer(s, strbuf_large);
         return _luaL_loadstring(L.ptr, s_ptr);
     },
-    lua_tonumber: function (L, i) {
+    lua_tonumber: function (/**@type {lua_State}*/L, i) {
         return _lua_tonumberx(L.ptr, i | 0, 0x00);
     },
-    lua_toboolean: function (L, idx) {
+    lua_toboolean: function (/**@type {lua_State}*/L, idx) {
         return _lua_toboolean(L.ptr, idx | 0) != 0;
     },
-    lua_tostring: function (L, idx) {
+    lua_tostring: function (/**@type {lua_State}*/L, idx) {
         let ret = _lua_tolstring(L.ptr, idx | 0, 0x00);
         return kdmyEngine_ptrToString(ret);
     },
-    lua_touserdata: function (L, idx) {
+    lua_touserdata: function (/**@type {lua_State}*/L, idx) {
         let ret = _lua_touserdata(L.ptr, idx | 0);
+
+        if (ret == 0) return null;
+        if (!kdmyEngine_is_obtained(L, ret)) ret = kdmyEngine_get_uint32(ret);
+
         return kdmyEngine_obtain(L, ret);
     },
-    lua_createtable: function (L, narr, nrec) {
+    lua_createtable: function (/**@type {lua_State}*/L, narr, nrec) {
         _lua_createtable(L.ptr, narr | 0, nrec | 0);
     },
-    lua_pushnumber: function (L, n) {
+    lua_pushnumber: function (/**@type {lua_State}*/L, n) {
         _lua_pushnumber(L.ptr, n);
     },
-    lua_pushnil: function (L) {
+    lua_pushnil: function (/**@type {lua_State}*/L) {
         _lua_pushnil(L.ptr);
     },
-    lua_pushinteger: function (L, n) {
+    lua_pushinteger: function (/**@type {lua_State}*/L, n) {
         _lua_pushinteger(L.ptr, n | 0);
     },
-    lua_pushfstring: function (L, fmt) {
+    lua_pushfstring: function (/**@type {lua_State}*/L, fmt) {
         let fmt_ptr = kdmyEngine_stringToBuffer(fmt, strbuf_large);
         _lua_pushfstring(L.ptr, fmt_ptr);
     },
-    lua_pushlstring: function (L, s, len) {
+    lua_pushlstring: function (/**@type {lua_State}*/L, s, len) {
         if (s == null) throw new Error("The parameter 's' can not be null");
 
         len = len | 0;
@@ -381,47 +419,47 @@ const LUA_EXPORTS = {
 
         _free(s_ptr);
     },
-    lua_pushvalue: function (L, idx) {
+    lua_pushvalue: function (/**@type {lua_State}*/L, idx) {
         _lua_pushvalue(L.ptr, idx | 0);
     },
-    lua_pushlightuserdata: function (L, p) {
+    lua_pushlightuserdata: function (/**@type {lua_State}*/L, p) {
         let p_ptr = kdmyEngine_obtain(L, p);
         _lua_pushlightuserdata(L.ptr, p_ptr);
     },
-    lua_pushliteral: function (L, s) {
-        let s_ptr = kdmyEngine_stringToBuffer(s);
+    lua_pushliteral: function (/**@type {lua_State}*/L, s) {
+        let s_ptr = kdmyEngine_stringToBuffer(s, strbuf1);
         _lua_pushstring(L.ptr, s_ptr);
     },
-    lua_isnil: function (L, n) {
+    lua_isnil: function (/**@type {lua_State}*/L, n) {
         return _lua_type(L.ptr, n | 0) == this.LUA_TNIL;
     },
-    lua_pop: function (L, n) {
+    lua_pop: function (/**@type {lua_State}*/L, n) {
         _lua_settop(L.ptr, -(n | 0) - 1);
     },
-    lua_rawseti: function (L, idx, n) {
+    lua_rawseti: function (/**@type {lua_State}*/L, idx, n) {
         _lua_rawseti(L.ptr, idx | 0, n | 0);
     },
-    lua_setglobal: function (L, name) {
-        let name_ptr = kdmyEngine_stringToBuffer(name);
+    lua_setglobal: function (/**@type {lua_State}*/L, name) {
+        let name_ptr = kdmyEngine_stringToBuffer(name, strbuf1);
         _lua_setglobal(L.ptr, name_ptr);
     },
-    lua_settable: function (L, idx) {
+    lua_settable: function (/**@type {lua_State}*/L, idx) {
         _lua_settable(L.ptr, idx | 0);
     },
-    lua_gettop: function (L) {
+    lua_gettop: function (/**@type {lua_State}*/L) {
         return _lua_gettop(L.ptr);
     },
-    lua_getfield: function (L, idx, k) {
-        let k_ptr = kdmyEngine_stringToBuffer(k);
+    lua_getfield: function (/**@type {lua_State}*/L, idx, k) {
+        let k_ptr = kdmyEngine_stringToBuffer(k, strbuf1);
         return _lua_getfield(L.ptr, idx | 0, k_ptr);
     },
-    lua_gettable: function (L, idx) {
+    lua_gettable: function (/**@type {lua_State}*/L, idx) {
         return _lua_gettable(L.ptr, idx | 0);
     },
-    lua_rawlen: function (L, idx) {
+    lua_rawlen: function (/**@type {lua_State}*/L, idx) {
         return _lua_rawlen(L.ptr, idx | 0);
     },
-    lua_newuserdata: function (L, s) {
+    lua_newuserdata: function (/**@type {lua_State}*/L, s) {
         if (s < 4) throw new Error("(not supported) the parameter 's' must be at least 4");
 
         let ptr = _lua_newuserdatauv(L.ptr, s | 0, 1);
@@ -436,47 +474,47 @@ const LUA_EXPORTS = {
         kdmyEngine_set_uint32(ptr, obj_ptr);
         return obj;
     },
-    lua_setmetatable: function (L, objindex) {
+    lua_setmetatable: function (/**@type {lua_State}*/L, objindex) {
         _lua_setmetatable(L.ptr, objindex);
     },
-    lua_newtable: function (L) {
+    lua_newtable: function (/**@type {lua_State}*/L) {
         _lua_createtable(L.ptr, 0, 0);
     },
-    lua_rawset: function (L, idx) {
+    lua_rawset: function (/**@type {lua_State}*/L, idx) {
         _lua_rawset(L.ptr, idx | 0);
     },
-    lua_type: function (L, idx) {
+    lua_type: function (/**@type {lua_State}*/L, idx) {
         return _lua_type(L.ptr, idx | 0);
     },
-    lua_remove: function (L, idx) {
+    lua_remove: function (/**@type {lua_State}*/L, idx) {
         _lua_rotate(L.ptr, idx | 0, -1);
         _lua_settop(L.ptr, -2);
     },
-    lua_insert: function (L, idx) {
+    lua_insert: function (/**@type {lua_State}*/L, idx) {
         _lua_rotate(L.ptr, idx | 0, 1);
     },
-    lua_pcallk: function (L, nargs, nresults, errfunc, ctx, k) {
+    lua_pcallk: function (/**@type {lua_State}*/L, nargs, nresults, errfunc, ctx, k) {
         if (ctx != 0) throw new Error("(not supported) the 'ctx' parameter must be zero.");
         if (k != null) throw new Error("(not supported) the 'k' parameter must be null.");
 
         return _lua_pcallk(L.ptr, nargs | 0, nresults | 0, errfunc, 0x00, 0x00);
     },
-    lua_getglobal: function (L, name) {
-        let name_ptr = kdmyEngine_stringToBuffer(name);
+    lua_getglobal: function (/**@type {lua_State}*/L, name) {
+        let name_ptr = kdmyEngine_stringToBuffer(name, strbuf1);
         return _lua_getglobal(L.ptr, name_ptr);
     },
-    lua_setwarnf: function (L, f, ud) {
-        if (ud != null) throw new Error("(not supported) the 'ud' parameter must be null.");
-
-        let f_ptr = addFunction(f, "vppi");
-
-        _lua_setwarnf(L.ptr, f_ptr, 0x00);
+    lua_setwarnf: function (/**@type {lua_State}*/L, f, ud) {
+        let f_ptr = kdmyEngine_obtainFunction(L, f, "vppi", kdmyEngine_func_warnf);
+        _lua_setwarnf(L.ptr, f_ptr, kdmyEngine_obtain(L, ud));
     },
-    lua_close: function (L) {
+    lua_close: function (/**@type {lua_State}*/L) {
         _lua_close(L.ptr);
 
         _free(L.objectIndexes);
         L.objectMap.clear();
+
+        for (const [f, f_ptr] of L.functionMap) removeFunction(f_ptr);
+        L.functionMap.clear();
 
         L.ptr = NaN;
         L.objectIndexes = NaN;

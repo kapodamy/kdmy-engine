@@ -51,10 +51,11 @@ function luascript_internal_add_lua_reference(luascript, obj, ref, allocated) {
         luascript.shared_array = realloc_for_array(luascript.shared_array, luascript.shared_size);
 
         for (let i = 0; i < LUASCRIPT_SHARED_ARRAY_CHUNK_SIZE; i++) {
-            let entry = luascript.shared_array[i + index];
-            entry.lua_ref = LUA.LUA_NOREF;
-            entry.obj_ptr = null;
-            entry.was_allocated_by_lua = false;
+            luascript.shared_array[i + index] = {
+                lua_ref: LUA.LUA_NOREF,
+                obj_ptr: null,
+                was_allocated_by_lua: false,
+            };
         }
     }
 

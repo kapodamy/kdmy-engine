@@ -148,7 +148,7 @@ async function script_modding_spawn_screen(L) {
     let ret = await modding_spawn_screen(modding, layout_src, script_src, arg_value);
     luascript_restore_working_folder(L);
 
-    return luascript_push_and_deallocate_modding_value(L, ret);
+    return luascript_push_modding_value(L, true, ret);
 }
 
 function script_modding_set_exit_delay(L) {

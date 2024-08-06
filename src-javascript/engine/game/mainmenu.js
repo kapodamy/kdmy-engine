@@ -196,6 +196,26 @@ async function mainmenu_main() {
         layout_external_vertex_set_entry(layout, 0, VERTEX_DRAWABLE, menu_get_drawable(menu), index);
     }
 
+    let info_textsprite;
+    info_textsprite = layout_get_textsprite(layout, "info-engine");
+    if (info_textsprite) {
+        textsprite_set_text_formated(info_textsprite, "$s $s\u00A0", ENGINE_NAME, ENGINE_VERSION);
+    }
+
+    info_textsprite = layout_get_textsprite(layout, "info-vmu");
+    if (info_textsprite) {
+        const values_port_unit = [-1, -1];
+        if (funkinsave_get_vmu(values_port_unit)) {
+            let port_name = String.fromCharCode(0x41 + values_port_unit[0]);
+            let slot_name = String.fromCharCode(0x30 + values_port_unit[1]);
+            let state = funkinsave_is_vmu_missing() ? " (disconnected)" : "";
+            let loaded = savemanager_is_running_without_savedata() ? " (without savedata)" : "";
+            textsprite_set_text_formated(info_textsprite, "VMU $c$c$s$s\u00A0", port_name, slot_name, state, loaded);
+        } else {
+            textsprite_set_text(info_textsprite, "No VMU available\u00A0");
+        }
+    }
+
     // attach camera animation (if was defined)
     layout_trigger_camera(layout, "camera_animation");
 
@@ -316,26 +336,6 @@ async function mainmenu_main() {
 
             layout_animate(layout, elapsed);
             layout_draw(layout, pvr_context);
-        }
-    }
-
-    let info_textsprite;
-    info_textsprite = layout_get_textsprite(layout, "info-engine");
-    if (info_textsprite) {
-        textsprite_set_text_formated(info_textsprite, "$s $s\u00A0", ENGINE_NAME, ENGINE_VERSION);
-    }
-
-    info_textsprite = layout_get_textsprite(layout, "info-vmu");
-    if (info_textsprite) {
-        const values_port_unit = [-1, -1];
-        if (funkinsave_get_vmu(values_port_unit)) {
-            let port_name = String.fromCharCode(0x41 + values_port_unit[0]);
-            let slot_name = String.fromCharCode(0x30 + values_port_unit[1]);
-            let state = funkinsave_is_vmu_missing() ? " (disconnected)" : "";
-            let loaded = savemanager_is_running_without_savedata() ? " (without savedata)" : "";
-            textsprite_set_text_formated(info_textsprite, "VMU $c$c$s$s\u00A0", port_name, slot_name, state, loaded);
-        } else {
-            textsprite_set_text(info_textsprite, "No VMU available\u00A0");
         }
     }
 

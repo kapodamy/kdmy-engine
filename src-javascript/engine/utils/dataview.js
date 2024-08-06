@@ -19,7 +19,7 @@ class DataViewEx {
         this.#buffer_u8 = new Uint8Array(buffer, offset, length)
         this.#dataview = new DataView(buffer, offset, length);
         this.#little_endian = new Uint16Array(new Uint8Array([255, 0]).buffer)[0] == 255;
-        this._offset = 0;
+        this.#offset = 0;
     }
 
     get Buffer() { return this.#buffer_u8; };

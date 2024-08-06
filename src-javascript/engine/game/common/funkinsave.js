@@ -715,6 +715,10 @@ async function funkinsave_has_savedata_in_vmu(port, unit) {
     funkinsave_internal_get_vmu_path(FUNKINSAVE_VMU_PATH, port, unit);
     file_t dir_hnd = fs_open(FUNKINSAVE_VMU_PATH, O_RDONLY | O_DIR);
 
+    if (dir_hnd == FILEHND_INVALID) {
+        return false;
+    }
+
     bool found = false;
     dirent_t* entry;
     while ((entry = fs_readdir(dir_hnd)) != NULL) {
@@ -835,7 +839,7 @@ function funkinsave_internal_read_string(/**@type {DataViewEx}*/dataview) {
 
     dataview.Skip(length + 1);
 
-    buf = buf.subarray(string_offset, length);
+    buf = buf.subarray(string_offset, string_offset + length);
     return textDecoder.decode(buf, { stream: false });
 }
 
@@ -860,10 +864,13 @@ function funkinsave_internal_write_string(/**@typedef {string}*/str, /**@type {D
         temp = temp.subarray(0, FUNKINSAVE_MAX_STRING_SIZE - 1);
     }
 
-    let buf = dataview.Buffer.subarray(dataview.Offset, length);
+    let off = dataview.Offset;
+    let buf = dataview.Buffer.subarray(off, off + length);
 
     buf.set(temp, 0);
     buf[temp.length] = 0x00;
+
+    dataview.Skip(length);
 }
 
 

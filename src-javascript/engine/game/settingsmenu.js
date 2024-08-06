@@ -551,7 +551,7 @@ async function settingsmenu_in_save_settings(gamepad, modding) {
     );
 
     let menu_placeholder = layout_get_placeholder(layout, "menu");
-    if (menu_placeholder) throw new Error("Missing menu placeholder");
+    if (!menu_placeholder) throw new Error("Missing menu placeholder");
 
     const menumanifest = SETTINGSMENU_SAVEDATA;
     let menu = await menu_init(

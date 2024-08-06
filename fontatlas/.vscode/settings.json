@@ -6,7 +6,8 @@
       "arch.h": "c",
       "float64.h": "c",
       "stdint.h": "c",
-      "stddef.h": "c"
+      "stddef.h": "c",
+      "fontatlas.h": "c"
     },
     "C_Cpp.clang_format_style": "file",
     "C_Cpp.formatting": "clangFormat",

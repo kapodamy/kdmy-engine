@@ -1056,6 +1056,8 @@ async function fs_unlink(fn) {
 async function fs_open(fn, mode) {
     try {
         let data = await kos_localforaje.get(fn);
+        if (data === undefined && mode == O_RDONLY) return -1;
+
         let hnd = kos_file_handles_id++;
         let obj = { fn, mode, mmap: new Array(), offset: 0, has_writes: false };
 
@@ -1076,6 +1078,8 @@ async function fs_open(fn, mode) {
  *   @return {Promise<number>}                0 for success, -1 for error
 */
 async function fs_close(hnd) {
+    if (hnd < 0) return -1;
+
     let obj = kos_file_handles.get(hnd);
 
     if (obj.has_writes && obj.mode == O_WRONLY) {
@@ -1112,11 +1116,14 @@ async function fs_close(hnd) {
  *                           what was requested.
 */
 function fs_write(hnd, buffer, cnt) {
+    if (hnd < 0) return -1;
+
     let obj = kos_file_handles.get(hnd);
 
     if (obj.mode != O_WRONLY) throw new Error("opened for read-only");
 
-    let data;
+    /**@type {ArrayBuffer} */
+    let data = null;
 
     if (buffer instanceof ArrayBuffer)
         data = buffer.slice(0, cnt);
@@ -1125,7 +1132,7 @@ function fs_write(hnd, buffer, cnt) {
     else if (buffer instanceof Uint8Array)
         data = buffer.buffer.slice(buffer.byteOffset, cnt);
     else if (buffer instanceof DataViewEx)
-        data = buffer.Buffer.slice(buffer.Offset, cnt);
+        data = buffer.Buffer.buffer.slice(buffer.Buffer.byteOffset, cnt);
     else
         return -1;
 
@@ -1144,6 +1151,8 @@ function fs_write(hnd, buffer, cnt) {
     @return  {number}                The length of the file on success, -1 on failure.
 */
 function fs_total(hnd) {
+    if (hnd < 0) return -1;
+
     let obj = kos_file_handles.get(hnd);
     if (!obj) return -1;
 
@@ -1167,6 +1176,8 @@ function fs_total(hnd) {
  *  @return {number}                The new position of the file pointer.
 */
 function fs_seek(hnd, offset, whence) {
+    if (hnd < 0) return -1;
+
     let obj = kos_file_handles.get(hnd);
     if (!obj) return -1;
 
@@ -1190,7 +1201,9 @@ function fs_seek(hnd, offset, whence) {
  *                           this may not be the full number of bytes requested.
 */
 function fs_read(hnd, buffer, cnt) {
+    if (hnd < 0) return -1;
     if (!buffer) return -1;
+
     let obj = kos_file_handles.get(hnd);
     if (!obj) return -1;
 
@@ -1299,13 +1312,12 @@ class vmu_pkg_t {
  *   @returns {number} -1 On invalid CRC in the data. 0 On success.
 */
 function vmu_pkg_parse(data, pkg) {
-    const ENDIANESS = true;
-    let dataView = new DataView(data);
+    let dataView = new DataViewEx(data);
     if (data.byteLength < 128) return -1;
 
-    let icon_count = dataView.getUint16(0x40, ENDIANESS);
-    let eyecatch_type = dataView.getUint16(0x44, ENDIANESS);
-    let payload_size = dataView.getUint16(0x48, ENDIANESS);
+    let icon_count = dataView.getUint16At(0x40);
+    let eyecatch_type = dataView.getUint16At(0x44);
+    let payload_size = dataView.getUint16At(0x48);
     let eyecatch_size = -1;
 
     switch (eyecatch_type) {

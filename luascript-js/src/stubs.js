@@ -34,6 +34,7 @@
  * @typedef {object} lua_State
  * @property {number} ptr
  * @property {Map<!object, number>} objectMap
+ * @property {Map<!Function, number>} functionMap
  * @property {number} objectIndexes
  */
 
@@ -41,7 +42,7 @@
  * @typedef {object} LUA
  * 
  * 
- * @property {@property {(function(lua_State,number):!object) | (function(lua_State,!object):number)} kdmyEngine_obtain} kdmyEngine_obtain
+ * @property {(function(lua_State,number):!object) | (function(lua_State,!object):number)} kdmyEngine_obtain
  * @property {function(!lua_State, number): void} kdmyEngine_forget
  * @property {function():undefined|Promise} kdmyEngine_yieldAsync
  * 
@@ -137,6 +138,11 @@ var Module = {};
  * @returns {number}
  */
 function addFunction(fn, sig) { return 0; }
+
+/**
+ * @param {number} fn_ptr
+ */
+function removeFunction(fn_ptr) { }
 
 /**
  * @param {number} sz 

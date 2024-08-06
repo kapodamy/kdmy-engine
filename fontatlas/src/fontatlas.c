@@ -116,15 +116,13 @@ L_failed:
     return NULL;
 }
 
-void fontatlas_destroy(FontAtlas* fontatlas_ptr) {
-    FontAtlas fontatlas = *fontatlas_ptr;
+void fontatlas_destroy(FontAtlas fontatlas) {
     if (!fontatlas) return;
 
     FT_Done_Face(fontatlas->face);
     FT_Done_FreeType(fontatlas->lib);
 
     free_chk(fontatlas);
-    *fontatlas_ptr = NULL;
 }
 
 #ifdef _arch_dreamcast
@@ -526,8 +524,7 @@ void fontatlas_atlas_destroy_texture_only(FontCharMap* fontcharmap) {
     fontcharmap->texture_height = 0;
 }
 
-void fontatlas_atlas_destroy(FontCharMap** fontcharmap_ptr) {
-    FontCharMap* fontcharmap = *fontcharmap_ptr;
+void fontatlas_atlas_destroy(FontCharMap* fontcharmap) {
     if (!fontcharmap) return;
 
     free_chk(fontcharmap->texture);
@@ -535,7 +532,6 @@ void fontatlas_atlas_destroy(FontCharMap** fontcharmap_ptr) {
     free_chk(fontcharmap->kernings_array);
 
     free_chk(fontcharmap);
-    *fontcharmap_ptr = NULL;
 }
 
 FontCharMap* fontatlas_atlas_build_complete(FontAtlas fontatlas, uint8_t font_height, int8_t gaps) {

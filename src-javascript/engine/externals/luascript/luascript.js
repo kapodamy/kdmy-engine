@@ -410,6 +410,11 @@ async function luascript_init(lua_sourcecode, filename, working_folder, context,
         working_folder: working_folder
     };
 
+    // (JS only) fill array
+    for (let i = 0; i < luascript.shared_size; i++) {
+        luascript.shared_array[i] = { lua_ref: LUA.LUA_NOREF, obj_ptr: null, was_allocated_by_lua: false };
+    }
+
     luascript_set_instance(luascript);
     luascript_internal_register_objects(L, is_week);
     luascript_internal_register_sandbox(L);

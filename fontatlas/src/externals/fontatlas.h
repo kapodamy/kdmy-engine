@@ -56,11 +56,11 @@ void fontatlas_enable_sdf(bool enable);
 #endif
 
 FontAtlas fontatlas_init(uint8_t* font_data, int32_t font_data_size);
-void fontatlas_destroy(FontAtlas* fontatlas);
+void fontatlas_destroy(FontAtlas fontatlas);
 FontCharMap* fontatlas_atlas_build(FontAtlas fontatlas, uint8_t font_height, int8_t gaps, uint32_t* characters_to_add);
 FontCharMap* fontatlas_atlas_build_complete(FontAtlas fontatlas, uint8_t font_height, int8_t gaps);
 void fontatlas_atlas_destroy_texture_only(FontCharMap* fontcharmap);
-void fontatlas_atlas_destroy(FontCharMap** fontcharmap);
+void fontatlas_atlas_destroy(FontCharMap* fontcharmap);
 const char* fontatlas_get_version();
 
 #endif
