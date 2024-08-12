@@ -224,6 +224,9 @@ function soundplayer_get_position(soundplayer) {
     return soundplayer.handler.currentTime * 1000.0;
 }
 
+function soundplayer_set_queueing(soundplayer, enabled) {
+    // STUB, needs C implementation
+}
 
 function soundplayer_internal_handle_play(soundplayer) {
     soundplayer.handler.play().catch(function (e) {
@@ -441,4 +444,3 @@ function soundplayer_internal_loop_listener(soundplayer) {
 
     looper();
 }
-

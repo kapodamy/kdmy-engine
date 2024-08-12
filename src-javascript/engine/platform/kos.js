@@ -1385,3 +1385,9 @@ function MUTEX_INITIALIZER() {
     return 0;
 }
 
+
+// sound interface stuff
+
+function snd_sh4_to_aica_start() {
+    // STUB
+}

@@ -118,19 +118,36 @@ async function songplayer_play(songplayer, songinfo) {
         }
     }
 
+    // just in case, allow any I/O background operation to run/complete
+    await thd_pass();
+
+    //
+    // Before playing enable queuing (from KallistiOS snd_stream api) this
+    // halts the AICA commands queue which is necessary to start both
+    // sound streams in sync. Later call snd_sh4_to_aica_start() function
+    // to resume the queue processing which has the same effect as
+    // snd_stream_queue_go() function (at least internally).
+    //
+
     let completed = 0;
     let playback_success = true;
     for (let i = 0; i < songplayer.playbacks_size; i++) {
         if (songplayer.playbacks[i].currentTime >= songplayer.playbacks[i].duration) completed++;
+        soundplayer_set_queueing(songplayer.playbacks[i], true);
         songplayer.playbacks[i].play().catch(function () { playback_success = false; });
+        soundplayer_set_queueing(songplayer.playbacks[i], false);
     }
 
-    // wait until the first audio samples are played
+    // resume AICA queue processing
+    snd_sh4_to_aica_start();
 
+    // wait until the first audio samples are played
     let reference = songplayer.playbacks[reference_index];
     timestamp = 0;
 
-    while (playback_success && timestamp == reference.currentTime) await thd_pass();
+    while (playback_success && timestamp == soundplayer_get_position(reference)) {
+        await thd_pass();
+    }
 
     songplayer.paused = false;
     let seconds = reference.currentTime;

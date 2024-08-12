@@ -134,11 +134,12 @@ public class SongPlayer {
         }
 
         // wait until the first audio samples are played
-
         SoundPlayer reference = this.playbacks[reference_index];
         timestamp = 0.0;
 
-        while (playback_success && timestamp == reference.GetDuration()) thd.pass();
+        while (playback_success && timestamp == reference.GetPosition()) {
+            thd.pass();
+        }
 
         this.paused = false;
         double current_timestamp = reference.GetPosition();
