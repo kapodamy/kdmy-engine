@@ -303,6 +303,7 @@ async function modding_launch_week(modding, week_name, difficult, alt_tracks, bf
     if (bf_allocated) bf = freeplaymenu_helper_get_default_character_manifest(true);
     if (gf_allocated) gf = freeplaymenu_helper_get_default_character_manifest(false);
 
+    main_helper_draw_loading_screen();
 
     /*
     // (C & C# only) before run check if necessary preload files
