@@ -303,6 +303,14 @@ async function modding_launch_week(modding, week_name, difficult, alt_tracks, bf
     if (bf_allocated) bf = freeplaymenu_helper_get_default_character_manifest(true);
     if (gf_allocated) gf = freeplaymenu_helper_get_default_character_manifest(false);
 
+
+    /*
+    // (C & C# only) before run check if necessary preload files
+    char* preload_filelist = weekenumerator_get_asset(gameplay_weekinfo, PRELOADCACHE_PRELOAD_FILENAME);
+    preloadcache_add_file_list(preload_filelist);
+    free_chk(preload_filelist);
+    */
+
     let week_result = await week_main(
         gameplay_weekinfo,
         alt_tracks,

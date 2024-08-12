@@ -1381,7 +1381,7 @@ declare global {
 
 
     //
-    // Global functions
+    // Global week functions
     //
     /**
      * Changes the UI visibility, this includes: strums lines, healthbar, song progressbar, roundstats and song info.  
@@ -1882,6 +1882,24 @@ declare global {
     //
     function fs_readfile(src: string): string;
     function fs_get_full_path(path: string): string;
+    
+    
+    //
+    // PreloadCache global functions
+    //
+    /**
+     * Removes all entries in the preload cache releasing used memory. Cache entries in use
+     * will be freed once they are no longer referenced
+     */
+    function preloadcache_clear(): voice;
+    /**
+     * Removes entries in the preload cache until the desired amount of memory is released.
+     * Note: this function normally releases slightly more than the desired amount
+     * @param bytes_amount The amount of bytes to be released, must be a positive integer
+     * @returns true if the desired amount was released or the cache was empty, otherwise, false
+     */
+    function preloadcache_flush(bytes_amount: number): boolean;
+    
 
     //
     // Modding UI (engine screens/menus only)

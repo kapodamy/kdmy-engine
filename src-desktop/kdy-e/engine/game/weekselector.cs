@@ -543,7 +543,7 @@ public class WeekSelector {
 
         GameMain.HelperDrawLoadingScreen();
 
-        // (C# only) before run check if necessary preload files
+        // before run check if necessary preload files
         int preload_id = PreloadCache.AddFileList(
             WeekEnumerator.GetAsset(gameplay_weekinfo, PreloadCache.PRELOAD_FILENAME)
         );

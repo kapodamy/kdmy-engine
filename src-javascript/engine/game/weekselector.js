@@ -541,6 +541,13 @@ async function weekselector_main() {
 
     await main_helper_draw_loading_screen();
 
+    /*
+    // (C & C# only) before run check if necessary preload files
+    char* preload_filelist = weekenumerator_get_asset(gameplay_weekinfo, PRELOADCACHE_PRELOAD_FILENAME);
+    preloadcache_add_file_list(preload_filelist);
+    free_chk(preload_filelist);
+    */
+
     let week_result = await week_main(
         gameplay_weekinfo,
         gameplay_alternative_tracks,

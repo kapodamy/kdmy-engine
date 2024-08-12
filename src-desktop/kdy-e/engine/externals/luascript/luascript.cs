@@ -279,6 +279,7 @@ public partial class Luascript {
         ExportsEngineSettings.script_enginesettings_register(lua);
         ExportsEnvironment.script_environment_register(lua);
         ExportsJson.script_json_register(lua);
+        ExportsPreloadCache.script_preloadcache_register(lua);
 
         // set engine settings
         lua.RegisterConstantUserdata<object>("Settings", ExportsEngineSettings.script_enginesettings_new, EngineSettings.ini);

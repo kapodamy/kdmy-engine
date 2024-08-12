@@ -44,7 +44,7 @@ public static class Expansions {
         chain_array_size = 0;
 
         // clear preload cache
-        PreloadCache.ClearCache();
+        PreloadCache.Clear();
 
         ArrayList<string> chain = new ArrayList<string>();
 

@@ -22,9 +22,8 @@ internal static class PreloadCache {
             return -1;
         }
 
-        src_filelist = FS.ResolvePath(src_filelist);
-
-        string filelist_native_path = IO.GetNativePath(src_filelist, true, false, false);
+        string absolute_src_filelist = FS.ResolvePath(src_filelist);
+        string filelist_native_path = IO.GetNativePath(absolute_src_filelist, true, false, false);
         if (!File.Exists(filelist_native_path)) return -1;
 
         string filelist = File.ReadAllText(filelist_native_path);
@@ -40,7 +39,9 @@ internal static class PreloadCache {
 
         stopwatch.Start();
         while ((line = tokenizer.ReadNext()) != null) {
-            if (line[0] == COMMENT_CHAR) continue;
+            if (line[0] == COMMENT_CHAR) {
+                continue;
+            }
 
             string path = FS.BuildPath2(src_filelist, line);
             if (path.StartsWith(FS.ASSETS_FOLDER)) path = FS.GetFullPathAndOverride(path);
@@ -53,15 +54,15 @@ internal static class PreloadCache {
                     }
                 }
                 continue;
-            }
+            } else {
+                native_path = IO.GetNativePath(path, true, false, true);
+                if (!File.Exists(native_path)) {
+                    Logger.Warn($"PreloadCache::AddFileList() file not found {line} (resolved as {path})");
+                    continue;
+                }
 
-            native_path = IO.GetNativePath(path, true, false, true);
-            if (!File.Exists(native_path)) {
-                Logger.Warn($"PreCache::AddFileList() file not found {line} (resolved as {path})");
-                continue;
+                if (!AddFileToCache(line, path, native_path, id, ref added)) break;
             }
-
-            if (!AddFileToCache(line, path, native_path, id, ref added)) break;
         }
 
         double elapsed = stopwatch.ElapsedMilliseconds / 1000.0;
@@ -75,7 +76,7 @@ L_return:
         return added < 1 ? -1 : id;
     }
 
-    public static void ClearCache() {
+    public static void Clear() {
         if (entries_count < 1) return;
 
         for (int i = 0 ; i < entries_count ; i++) {
@@ -128,6 +129,21 @@ L_return:
         return null;
     }
 
+    public static bool Flush(long bytes_amount) {
+        long released_space = 0;
+        int entries_total = 0;
+
+        foreach (CacheEntry entry in cache) {
+            if (entry.data == null) continue;
+            entries_total++;
+            released_space += entry.data.Length;
+
+            if (released_space >= bytes_amount) break;
+        }
+
+        return entries_total < 1 || released_space >= bytes_amount;
+    }
+
 
     private static string[] ListFilesOfFolder(string folder_absolute_path) {
         return Directory.GetFiles(folder_absolute_path, "*.*", SearchOption.AllDirectories);
@@ -152,10 +168,10 @@ L_return:
             memory_used += buffer.Length;
             added++;
         } catch (OutOfMemoryException) {
-            Logger.Warn($"PreCache::AddFileList() out of memory for {src} (resolved as {path})");
+            Logger.Warn($"PreloadCache::AddFileList() out of memory for {src} (resolved as {path})");
             return false;
         } catch (Exception e) {
-            Logger.Warn($"PreCache::AddFileList() exception for {src} (resolved as {path}):\n{e.Message}");
+            Logger.Warn($"PreloadCache::AddFileList() exception for {src} (resolved as {path}):\n{e.Message}");
             return true;
         }
 

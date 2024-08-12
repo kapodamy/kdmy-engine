@@ -319,6 +319,7 @@ function luascript_internal_register_objects(L, is_week) {
     script_enginesettings_register(L);
     script_environment_register(L);
     script_json_register(L);
+    script_preloadcache_register(L);
 
     // set engine settings
     script_enginesettings_new(L, SETTINGS);
