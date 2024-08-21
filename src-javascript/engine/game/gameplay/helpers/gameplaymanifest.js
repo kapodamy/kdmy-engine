@@ -322,6 +322,12 @@ function gameplaymanifest_parse_song(song, json_song, players_count) {
     song.dialog_text = json_read_string(json_song, "dialogText", null);
     song.dialog_ignore_on_freeplay = json_read_boolean(json_song, "dialogIgnoreOnFreeplay", true);
 
+    //
+    // Note: disableResourceCacheBetweenSongs default value depends on the platform
+    //          C:  true by default on dreamcast (with preloadcache is enough)
+    //          C#: false by default on desktop (due slow PNG decoding)
+    //          JS: false by default on web (due slow PNG decoding and network load)
+    //
     song.disable_resource_cache_between_songs = json_read_boolean(json_song, "disableResourceCacheBetweenSongs", false);
 
     song.pause_menu = json_read_string(json_song, "pauseMenu", null);

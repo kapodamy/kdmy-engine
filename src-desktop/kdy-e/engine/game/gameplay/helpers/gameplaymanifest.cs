@@ -435,6 +435,12 @@ public class GameplayManifest {
         song.dialog_text = JSONParser.ReadString(json_song, "dialogText", null);
         song.dialog_ignore_on_freeplay = JSONParser.ReadBoolean(json_song, "dialogIgnoreOnFreeplay", true);
 
+        //
+        // Note: disableResourceCacheBetweenSongs default value depends on the platform
+        //          C:  true by default on dreamcast (with preloadcache is enough)
+        //          C#: false by default on desktop (due slow PNG decoding)
+        //          JS: false by default on web (due slow PNG decoding and network load)
+        //
         song.disable_resource_cache_between_songs = JSONParser.ReadBoolean(json_song, "disableResourceCacheBetweenSongs", false);
 
         song.selected_state_name_per_player = null;
