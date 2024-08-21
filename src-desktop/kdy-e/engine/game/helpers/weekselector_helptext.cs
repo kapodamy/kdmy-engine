@@ -8,7 +8,7 @@ namespace Engine.Game.Helpers;
 public class WeekSelectorHelpText : IDraw {
 
     private const uint TEXTCOLOR = 0xFFFFFF;// white
-    private const float Z_INDEX = 15f;// draw on top of anything
+    private const float Z_INDEX = 210f;// draw on top of anything
     private const float ROW_PADDING_RATIO = 0.5f;
 
 

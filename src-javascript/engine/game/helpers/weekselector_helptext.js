@@ -1,7 +1,7 @@
 "use strict";
 
 const WEEKSELECTOR_HELPTEXT_TEXTCOLOR = 0xFFFFFF;// white
-const WEEKSELECTOR_HELPTEXT_Z_INDEX = 15.0;// draw on top of anything
+const WEEKSELECTOR_HELPTEXT_Z_INDEX = 210.0;// draw on top of anything
 const WEEKSELECTOR_HELPTEXT_ROW_PADDING_RATIO = 0.5;
 
 function weekselector_helptext_init(modelholder, layout, row, start, icon_name, string1, string2) {

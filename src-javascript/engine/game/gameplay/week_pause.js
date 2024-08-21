@@ -131,7 +131,7 @@ const WEEKPAUSE_MSGCONTROLLER = "The controller $i was disconnected, \n" +
     "reconnect it or press START on an unused \n" +
     "controller to replace it.";
 const WEEKPAUSE_MSGMENU = "The week progress will be lost, ¿return\n to the main menu?";
-const WEEKPAUSE_MSGWEEKSELECTOR = "The week progress will be lost, ¿return\n to the week selector?";
+const WEEKPAUSE_MSGWEEKSELECTOR = "The week progress will be lost, ¿return?";
 
 
 async function week_pause_init(exit_to_weekselector_label) {
@@ -251,7 +251,7 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
     messagebox_hide(weekpause.messagebox, false);
     if (weekpause.background_menu_music) {
         soundplayer_set_volume(weekpause.background_menu_music, 0.5);
-        soundplayer_replay(weekpause.background_menu_music);
+        soundplayer_play(weekpause.background_menu_music);
     }
     gamepad_clear_buttons(controller);
 

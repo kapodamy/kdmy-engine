@@ -142,7 +142,7 @@ public class WeekPause {
         "reconnect it or press START on an unused \n" +
         "controller to replace it.";
     private const string MSGMENU = "The week progress will be lost, ¿return\n to the main menu?";
-    private const string MSGWEEKSELECTOR = "The week progress will be lost, ¿return\n to the week selector?";
+    private const string MSGWEEKSELECTOR = "The week progress will be lost, ¿return?";
 
 
     private Menu menu;
@@ -269,7 +269,7 @@ public class WeekPause {
         this.messagebox.Hide(false);
         if (this.background_menu_music != null) {
             this.background_menu_music.SetVolume(0.5f);
-            this.background_menu_music.Replay();
+            this.background_menu_music.Play();
         }
         controller.ClearButtons();
 
