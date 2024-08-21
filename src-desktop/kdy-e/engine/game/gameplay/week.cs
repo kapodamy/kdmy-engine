@@ -533,6 +533,7 @@ public class Week {
         roundcontext.weekresult = new WeekResult();
         // messagebox
         roundcontext.messagebox = new MessageBox();
+        roundcontext.messagebox.SetZIndex(205);
 
         // setup custom folder (if exists) and the week folder as current directory
         string week_folder = WeekEnumerator.GetWeekFolder(weekinfo);
@@ -2140,7 +2141,7 @@ public class Week {
 
     public static void PlaceInLayout(RoundContext roundcontext) {
         InitParams initparams = roundcontext.initparams;
-        const byte UI_SIZE = 9;// all UI "cosmetics" elements + screen background + dialogue
+        const byte UI_SIZE = 10;// all UI "cosmetics" elements + screen background + dialogue + messagebox
 
         Layout layout; bool is_ui;
         if (roundcontext.layout != null) {
@@ -2202,6 +2203,9 @@ public class Week {
         layout.ExternalVertexSetEntry(
             8, PVRContextVertex.DRAWABLE,
             roundcontext.autouicosmetics.drawable_self, roundcontext.autouicosmetics.layout_group_id
+        );
+        layout.ExternalVertexSetEntry(
+            9, PVRContextVertex.DRAWABLE, roundcontext.messagebox != null ? roundcontext.messagebox.GetDrawable() : null, ui2
         );
 
         // step 3: initialize the ui camera

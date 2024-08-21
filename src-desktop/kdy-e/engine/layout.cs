@@ -1394,24 +1394,32 @@ public class Layout : IDraw, IAnimate {
 
             switch (vertex_type) {
                 case PVRContextVertex.SPRITE:
-                    this.z_buffer[i].z_index = vertex.GetZIndex();
-                    this.z_buffer[i].visible = vertex.IsVisible();
+                    if (vertex != null) {
+                        this.z_buffer[i].z_index = vertex.GetZIndex();
+                        this.z_buffer[i].visible = vertex.IsVisible();
+                        continue;
+                    }
                     break;
                 case PVRContextVertex.TEXTSPRITE:
-                    this.z_buffer[i].z_index = vertex.GetZIndex();
-                    this.z_buffer[i].visible = vertex.IsVisible();
+                    if (vertex != null) {
+                        this.z_buffer[i].z_index = vertex.GetZIndex();
+                        this.z_buffer[i].visible = vertex.IsVisible();
+                        continue;
+                    }
                     break;
                 case PVRContextVertex.DRAWABLE:
                     if (item.placeholder != null) vertex = item.placeholder.vertex;
                     if (vertex != null) {
                         this.z_buffer[i].z_index = vertex.GetZIndex();
                         this.z_buffer[i].visible = vertex.IsVisible();
-                    } else {
-                        this.z_buffer[i].z_index = Single.PositiveInfinity;
-                        this.z_buffer[i].visible = false;
+                        continue;
                     }
                     break;
             }
+
+            // ignore
+            this.z_buffer[i].z_index = Single.PositiveInfinity;
+            this.z_buffer[i].visible = false;
         }
         EngineUtils.Sort(this.z_buffer, 0, this.z_buffer_size, Layout.HelperZbufferSort);
 

@@ -530,6 +530,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     roundcontext.weekresult = week_result_init();
     // messagebox
     roundcontext.messagebox = await messagebox_init();
+    messagebox_set_z_index(roundcontext.messagebox, 205);
 
     // setup custom folder (if exists) and the week folder as current directory
     let week_folder = weekenumerator_get_week_folder(weekinfo);
@@ -2133,7 +2134,7 @@ async function week_init_dialogue(/**@type {RoundContext}*/roundcontext, dialogu
 
 function week_place_in_layout(roundcontext) {
     const initparams = roundcontext.initparams;
-    const UI_SIZE = 9;// all UI "cosmetics" elements + screen background + dialogue
+    const UI_SIZE = 10;// all UI "cosmetics" elements + screen background + dialogue + messagebox
 
     let layout, is_ui;
     if (roundcontext.layout) {
@@ -2195,6 +2196,9 @@ function week_place_in_layout(roundcontext) {
     layout_external_vertex_set_entry(
         layout, 8, VERTEX_DRAWABLE,
         roundcontext.autouicosmetics.drawable_self, roundcontext.autouicosmetics.layout_group_id
+    );
+    layout_external_vertex_set_entry(
+        layout, 9, VERTEX_DRAWABLE, roundcontext.messagebox ? messagebox_get_drawable(roundcontext.messagebox) : null, ui2
     );
 
     // step 3: initialize the ui camera

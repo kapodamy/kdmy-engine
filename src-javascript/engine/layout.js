@@ -1301,24 +1301,32 @@ function layout_draw(layout,/**@type {PVRContext} */ pvrctx) {
 
         switch (vertex_type) {
             case VERTEX_SPRITE:
-                layout.z_buffer[i].z_index = sprite_get_z_index(vertex);
-                layout.z_buffer[i].visible = sprite_is_visible(vertex);
+                if (vertex) {
+                    layout.z_buffer[i].z_index = sprite_get_z_index(vertex);
+                    layout.z_buffer[i].visible = sprite_is_visible(vertex);
+                    continue;
+                }
                 break;
             case VERTEX_TEXTSPRITE:
-                layout.z_buffer[i].z_index = textsprite_get_z_index(vertex);
-                layout.z_buffer[i].visible = textsprite_is_visible(vertex);
+                if (vertex) {
+                    layout.z_buffer[i].z_index = textsprite_get_z_index(vertex);
+                    layout.z_buffer[i].visible = textsprite_is_visible(vertex);
+                    continue;
+                }
                 break;
             case VERTEX_DRAWABLE:
                 if (item.placeholder) vertex = item.placeholder.vertex;
                 if (vertex) {
                     layout.z_buffer[i].z_index = drawable_get_z_index(vertex);
                     layout.z_buffer[i].visible = drawable_is_visible(vertex);
-                } else {
-                    layout.z_buffer[i].z_index = Infinity;
-                    layout.z_buffer[i].visible = false;
+                    continue;
                 }
                 break;
         }
+
+        // ignore
+        layout.z_buffer[i].z_index = Infinity;
+        layout.z_buffer[i].visible = false;
     }
     qsort(layout.z_buffer, layout.z_buffer_size, NaN, layout_helper_zbuffer_sort);
 
