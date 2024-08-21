@@ -121,6 +121,7 @@ async function savemanager_init(save_only, error_code) {
         allow_delete: false,
         no_leave_confirm: false,
         drawable_wrapper: null,
+        warn_if_no_vmu: true,
         vmu_array: null,
         vmu_size: 0,
         menu: null,
@@ -226,7 +227,8 @@ async function savemanager_show(savemanager) {
                 modding.native_menu = savemanager.menu;
             }
 
-            if ((last_vmu_size > 0) != (savemanager.vmu_size > 0)) {
+            if (((last_vmu_size > 0) != (savemanager.vmu_size > 0)) || (savemanager.warn_if_no_vmu && last_vmu_size < 1)) {
+                savemanager.warn_if_no_vmu = false;
                 if (savemanager.vmu_size > 0)
                     layout_trigger_any(savemanager.layout, "no-detected-hide");
                 else
@@ -234,7 +236,7 @@ async function savemanager_show(savemanager) {
             }
         }
 
-        if (menu_get_selected_item_rect(savemanager.menu, location, size)) {
+        if (savemanager.menu && menu_get_selected_item_rect(savemanager.menu, location, size)) {
             location[0] -= savemanager.padding;
             location[1] -= savemanager.padding;
             size[0] += savemanager.padding * 2.0;
@@ -285,7 +287,7 @@ async function savemanager_show(savemanager) {
             continue;
         }
 
-        if (savemanager.error_code) {
+        if (savemanager.error_code != 0) {
             messagebox_hide_buttons(savemanager.messagebox);
             messagebox_show(savemanager.messagebox, false);
 

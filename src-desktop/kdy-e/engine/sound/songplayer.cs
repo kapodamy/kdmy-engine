@@ -54,7 +54,6 @@ public class SongPlayer {
     }
 
     public static SongPlayer Init2(bool is_not_splitted, string path_voices, string path_instrumental) {
-
         SongPlayer songplayer = new SongPlayer();
 
         if (is_not_splitted) {
@@ -62,6 +61,7 @@ public class SongPlayer {
             if (player != null) {
                 songplayer.playbacks = new SoundPlayer[1];
                 songplayer.playbacks_size = 1;
+                songplayer.paused = true;
                 songplayer.playbacks[0] = player;
                 songplayer.index_instrumental = 0;
                 songplayer.index_voices = 0;
@@ -101,11 +101,8 @@ public class SongPlayer {
     public void Destroy() {
         Luascript.DropShared(this);
 
-        if (this.playbacks != null) {
-            for (int i = 0 ; i < this.playbacks_size ; i++) {
-                this.playbacks[i].Destroy();
-            }
-            //free(this.playbacks);
+        for (int i = 0 ; i < this.playbacks_size ; i++) {
+            this.playbacks[i].Destroy();
         }
 
         //free(songplayer);
@@ -146,20 +143,22 @@ public class SongPlayer {
     }
 
     public void Pause() {
-        if (this.playbacks_size < 1 || this.paused) return;
-        for (int i = 0 ; i < this.playbacks_size ; i++) this.playbacks[i].Pause();
+        if (this.paused) return;
+        for (int i = 0 ; i < this.playbacks_size ; i++) {
+            this.playbacks[i].Pause();
+        }
         this.paused = true;
     }
 
     public void Seek(double timestamp) {
-
-        for (int i = 0 ; i < this.playbacks_size ; i++)
+        for (int i = 0 ; i < this.playbacks_size ; i++) {
             this.playbacks[i].Seek(timestamp);
+        }
     }
 
     public void Poll(ref SongPlayerInfo songinfo) {
         int ended = 0;
-        double timestamp = 0;
+        double timestamp = 0.0;
 
         for (int i = 0 ; i < this.playbacks_size ; i++) {
             double position = this.playbacks[i].GetPosition();
@@ -172,12 +171,12 @@ public class SongPlayer {
     }
 
     public double GetDuration() {
-        double duration = 0;
+        double duration = 0.0;
 
         for (int i = 0 ; i < this.playbacks_size ; i++) {
             double playback_duration = this.playbacks[i].GetDuration();
 
-            if (playback_duration < 0) continue;
+            if (playback_duration < 0.0) continue;
             if (playback_duration > duration) duration = playback_duration;
         }
 
@@ -189,15 +188,13 @@ public class SongPlayer {
 
         if (song == null) return false;
 
-        if (this.playbacks != null) {
-            for (int i = 0 ; i < this.playbacks_size ; i++) {
-                this.playbacks[i].Destroy();
-            }
+        for (int i = 0 ; i < this.playbacks_size ; i++) {
+            this.playbacks[i].Destroy();
         }
 
         this.index_instrumental = song.index_instrumental;
         this.index_voices = song.index_voices;
-        this.paused = song.paused;
+        this.paused = true;
         this.playbacks = song.playbacks;
         this.playbacks_size = song.playbacks_size;
         //free(song);
@@ -210,7 +207,6 @@ public class SongPlayer {
         for (int i = 0 ; i < this.playbacks_size ; i++) {
             if (this.playbacks[i].HasEnded()) completed++;
         }
-
         return completed >= this.playbacks_size;
     }
 
@@ -224,24 +220,24 @@ public class SongPlayer {
     }
 
     public void MuteTrack(bool vocals_or_instrumental, bool muted) {
-        if (this.playbacks_size < 1) return;
         int target = vocals_or_instrumental ? this.index_voices : this.index_instrumental;
         if (target < 0) return;
         this.playbacks[target].SetMute(muted);
     }
 
     public void Mute(bool muted) {
-        if (this.playbacks_size < 1) return;
-        for (int i = 0 ; i < this.playbacks_size ; i++) this.playbacks[i].SetMute(muted);
+        for (int i = 0 ; i < this.playbacks_size ; i++) {
+            this.playbacks[i].SetMute(muted);
+        }
     }
 
     public void SetVolume(float volume) {
-        if (this.playbacks_size < 1) return;
-        for (int i = 0 ; i < this.playbacks_size ; i++) this.playbacks[i].SetVolume(volume);
+        for (int i = 0 ; i < this.playbacks_size ; i++) {
+            this.playbacks[i].SetVolume(volume);
+        }
     }
 
     public void SetVolumeTrack(bool vocals_or_instrumental, float volume) {
-        if (this.playbacks_size < 1) return;
         int target = vocals_or_instrumental ? this.index_voices : this.index_instrumental;
         if (target < 0) return;
         this.playbacks[target].SetVolume(volume);

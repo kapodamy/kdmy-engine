@@ -79,6 +79,7 @@ public class SaveManager {
     private bool save_only;
     private bool allow_delete;
     private bool no_leave_confirm;
+    private bool warn_if_no_vmu;
     private Drawable drawable_wrapper;
     private VMUInfo[] vmu_array;
     private int vmu_size;
@@ -160,6 +161,7 @@ public class SaveManager {
         this.save_only = save_only;
         this.allow_delete = false;
         this.no_leave_confirm = false;
+        this.warn_if_no_vmu = true;
         this.drawable_wrapper = null;
         this.vmu_array = null;
         this.vmu_size = 0;
@@ -263,7 +265,8 @@ public class SaveManager {
                     modding.native_menu = this.menu;
                 }
 
-                if ((last_vmu_size > 0) != (this.vmu_size > 0)) {
+                if (((last_vmu_size > 0) != (this.vmu_size > 0)) || (this.warn_if_no_vmu && last_vmu_size < 1)) {
+                    this.warn_if_no_vmu = false;
                     if (this.vmu_size > 0)
                         this.layout.TriggerAny("no-detected-hide");
                     else
@@ -271,7 +274,7 @@ public class SaveManager {
                 }
             }
 
-            if (this.menu.GetSelectedItemRect(out location_x, out location_y, out size_width, out size_height)) {
+            if (this.menu != null && this.menu.GetSelectedItemRect(out location_x, out location_y, out size_width, out size_height)) {
                 location_x -= this.padding;
                 location_y -= this.padding;
                 size_width += this.padding * 2.0f;

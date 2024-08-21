@@ -45,7 +45,7 @@ async function songplayer_init2(is_not_splitted, path_voices, path_instrumental)
     };
 
     if (is_not_splitted) {
-        let player = await songplayer_internal_init_player(path_voices ?? path_instrumental);
+        let player = await soundplayer_init(path_voices ?? path_instrumental);
         if (player) {
             songplayer.playbacks = new Array(1);
             songplayer.playbacks_size = 1;
@@ -58,11 +58,11 @@ async function songplayer_init2(is_not_splitted, path_voices, path_instrumental)
         let player_instrumentals = null;
 
         if (path_voices) {
-            player_voices = await songplayer_internal_init_player(path_voices);
+            player_voices = await soundplayer_init(path_voices);
         }
 
         if (path_instrumental) {
-            player_instrumentals = await songplayer_internal_init_player(path_instrumental);
+            player_instrumentals = await soundplayer_init(path_instrumental);
         }
 
         if (player_voices) {
@@ -86,20 +86,13 @@ async function songplayer_init2(is_not_splitted, path_voices, path_instrumental)
 }
 
 function songplayer_destroy(songplayer) {
-    if (songplayer.playbacks) {
-        // javacript only (needs the C counterpart)
-        for (let i = 0; i < songplayer.playbacks_size; i++) {
-            if (IO_WEBKIT_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
-            mastervolume_remove_mediaelement(songplayer.playbacks[i]);
-            songplayer.playbacks[i].pause();
-            songplayer.playbacks[i].srcObject = null;
-            songplayer.playbacks[i].remove();
-        }
+    luascript_drop_shared(songplayer);
 
-        songplayer.playbacks = undefined;
+    for (let i = 0; i < songplayer.playbacks_size; i++) {
+        soundplayer_destroy(songplayer.playbacks[i]);
     }
+    songplayer.playbacks = undefined;
 
-    luascript_drop_shared
     songplayer = undefined;
 }
 
@@ -165,41 +158,40 @@ async function songplayer_play(songplayer, songinfo) {
 }
 
 function songplayer_pause(songplayer) {
-    if (songplayer.playbacks_size < 1 || songplayer.paused) return;
-    for (let i = 0; i < songplayer.playbacks_size; i++) songplayer.playbacks[i].pause();
+    if (songplayer.paused) return;
+    for (let i = 0; i < songplayer.playbacks_size; i++) {
+        soundplayer_pause(songplayer.playbacks[i]);
+    }
     songplayer.paused = true;
 }
 
 function songplayer_seek(songplayer, timestamp) {
-    timestamp /= 1000.0;
-
-    for (let i = 0; i < songplayer.playbacks_size; i++)
-        songplayer.playbacks[i].currentTime = timestamp;
+    for (let i = 0; i < songplayer.playbacks_size; i++) {
+        soundplayer_seek(songplayer.playbacks[i], timestamp);
+    }
 }
 
 function songplayer_poll(songplayer, songinfo) {
     let ended = 0;
-    let seconds = 0.0;
+    let timestamp = 0.0;
 
     for (let i = 0; i < songplayer.playbacks_size; i++) {
-        if (songplayer.playbacks[i].ended) ended++;
-        seconds += songplayer.playbacks[i].currentTime;
+        if (soundplayer_has_ended(songplayer.playbacks[i])) ended++;
+        timestamp += soundplayer_get_position(songplayer.playbacks[i]);
     }
 
-    songinfo.timestamp = (seconds / songplayer.playbacks_size) * 1000;
+    songinfo.timestamp = timestamp / songplayer.playbacks_size;
     songinfo.completed = ended >= songplayer.playbacks_size;
 }
 
 function songplayer_get_duration(songplayer) {
-    let duration = 0;
+    let duration = 0.0;
 
     for (let i = 0; i < songplayer.playbacks_size; i++) {
-        /**@type {HTMLAudioElement} */
-        let playback = songplayer.playbacks[i];
-        let playback_duration = playback.duration;
+        let playback_duration = soundplayer_get_duration(songplayer.playbacks[i]);
 
-        if (Number.isNaN(playback_duration)) continue;
-        if (playback_duration > duration) duration = playback_duration * 1000;
+        if (!Number.isFinite(playback_duration)) continue;
+        if (playback_duration > duration) duration = playback_duration;
     }
 
     return duration;
@@ -207,24 +199,15 @@ function songplayer_get_duration(songplayer) {
 
 async function songplayer_changesong(songplayer, src, prefer_alternative) {
     let song = await songplayer_init(src, prefer_alternative);
-
     if (!song) return false;
 
-    if (songplayer.playbacks) {
-        // javacript only (needs the C counterpart)
-        for (let i = 0; i < songplayer.playbacks_size; i++) {
-            if (IO_WEBKIT_DETECTED) URL.revokeObjectURL(songplayer.playbacks[i].src);
-            mastervolume_remove_mediaelement(songplayer.playbacks[i]);
-            songplayer.playbacks[i].pause();
-            songplayer.playbacks[i].srcObject = null;
-            songplayer.playbacks[i].remove();
-        }
-        songplayer.playbacks = undefined;
+    for (let i = 0; i < songplayer.playbacks_size; i++) {
+        soundplayer_destroy(songplayer.playbacks[i]);
     }
 
     songplayer.index_instrumental = song.index_instrumental;
     songplayer.index_voices = song.index_voices;
-    songplayer.paused = song.paused;
+    songplayer.paused = true;
     songplayer.playbacks = song.playbacks;
     songplayer.playbacks_size = song.playbacks_size;
     song = undefined;
@@ -235,49 +218,40 @@ async function songplayer_changesong(songplayer, src, prefer_alternative) {
 function songplayer_is_completed(songplayer) {
     let completed = 0;
     for (let i = 0; i < songplayer.playbacks_size; i++) {
-        if (songplayer.playbacks[i].currentTime >= songplayer.playbacks[i].duration) completed++;
+        if (soundplayer_has_ended(songplayer.playbacks[i])) completed++;
     }
-
     return completed >= songplayer.playbacks_size;
 }
 
 function songplayer_get_timestamp(songplayer) {
-    let timestamp = 0;
+    let timestamp = 0.0;
     for (let i = 0; i < songplayer.playbacks_size; i++) {
-        timestamp += songplayer.playbacks[i].currentTime;
+        timestamp += soundplayer_get_position(songplayer.playbacks[i]);
     }
-
-    return (timestamp / songplayer.playbacks_size) * 1000;
+    return timestamp / songplayer.playbacks_size;
 }
 
 function songplayer_mute_track(songplayer, vocals_or_instrumental, muted) {
-    if (songplayer.playbacks_size < 1) return;
     let target = vocals_or_instrumental ? songplayer.index_voices : songplayer.index_instrumental;
     if (target < 0) return;
-    songplayer.playbacks[target].muted = muted;
+    soundplayer_set_mute(songplayer.playbacks[target], muted);
 }
 
 function songplayer_mute(songplayer, muted) {
-    if (songplayer.playbacks_size < 1) return;
     muted = !!muted;
-    for (let i = 0; i < songplayer.playbacks_size; i++) songplayer.playbacks[i].muted = muted;
+    for (let i = 0; i < songplayer.playbacks_size; i++) soundplayer_set_mute(songplayer.playbacks[i], muted);
 }
 
 function songplayer_set_volume(songplayer, volume) {
-    if (songplayer.playbacks_size < 1) return;
     for (let i = 0; i < songplayer.playbacks_size; i++) {
-        songplayer.playbacks[i].volume = volume * mastervolume_current_volume;
-        songplayer.playbacks[i]["volume__original"] = volume;
+        soundplayer_set_volume(songplayer.playbacks[i], volume);
     }
 }
 
 function songplayer_set_volume_track(songplayer, vocals_or_instrumental, volume) {
-    if (songplayer.playbacks_size < 1) return;
     let target = vocals_or_instrumental ? songplayer.index_voices : songplayer.index_instrumental;
     if (target < 0) return;
-
-    songplayer.playbacks[target].volume = volume * mastervolume_current_volume;
-    songplayer.playbacks[target]["volume__original"] = volume;
+    soundplayer_set_volume(songplayer.playbacks[target], volume);
 }
 
 
@@ -397,65 +371,5 @@ async function songplayer_internal_separe_paths(start, end, src, check_if_exists
 
     path = undefined;
     return null;
-}
-
-
-
-
-// JS only
-async function songplayer_internal_chrome_url(path) {
-    let arraybuffer = await fs_readarraybuffer(path);
-    let type = "";
-
-    if (path.endsWith(".ogg") || path.endsWith(".logg")) type = "audio/ogg";
-    else if (path.endsWith(".wav")) type = "audio/wav";
-    else if (path.endsWith(".mp3")) type = "audio/mp3";
-
-    let blob = new Blob([arraybuffer], { type: type });
-
-    let obj_src = URL.createObjectURL(blob);
-
-    if (obj_src == null) throw new Error("URL.createObjectURL() failed");
-
-    return obj_src;
-}
-
-async function songplayer_internal_init_player(path) {
-    if (IO_WEBKIT_DETECTED) {
-        try {
-            path = await songplayer_internal_chrome_url(path);
-        } catch (e) {
-            console.error("songplayer_internal_init_player() failed to load the file: " + path, e);
-            return null;
-        }
-    }
-
-    try {
-        return await (new Promise(function (resolve, reject) {
-            let player = new Audio(path);
-            player.preload = "metadata";
-
-            player.oncanplay = function () {
-                mastervolume_add_mediaelement(player);
-
-                player.oncanplay = player.onerror = null;
-                if (!IO_WEBKIT_DETECTED) player.currentTime = 0;
-                player.onerror = function () {
-                    console.error(
-                        `songplayer_internal_init_player() playback error: code=${player.error.code} message=${player.error.message}`
-                    );
-                };
-                resolve(player);
-            };
-            player.onerror = function () {
-                player.oncanplay = player.onerror = null;
-                reject(this.error);
-            }
-        }));
-    } catch (e) {
-        if (IO_WEBKIT_DETECTED) URL.revokeObjectURL(path);
-        console.error("songplayer_internal_init_player() failed to initialize the audio: " + path, e);
-        return null;
-    }
 }
 

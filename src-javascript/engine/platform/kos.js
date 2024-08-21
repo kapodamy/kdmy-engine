@@ -421,8 +421,8 @@ function kthread_key_delete(key) {
 */
 
 /**
- * @typedef {Object} cont_state_t
  * @sumary Controller status structure.
+ * @typedef {object} cont_state_t
  * @property {number} buttons Buttons bitfield.
  * @property {number} ltrig Left trigger value.
  * @property {number} rtrig Right trigger value.
@@ -460,6 +460,7 @@ class maple_device_t {
         this.info = {
             functions: functions
         };
+        this.valid = (functions & (MAPLE_FUNC_MEMCARD | MAPLE_FUNC_KEYBOARD)) != 0;
         this.status = {
             buttons: 0,
             ltrig: 0,
@@ -542,7 +543,7 @@ const KOS_MAPLE_DEVICE_LIST = [
 
 /**@type {KeyboardEventCallback}*/
 var KOS_delegate_callback = null;
-const KOS_STUB_KEYBOARD = new maple_device_t(MAPLE_FUNC_CONTROLLER, -1, -1);
+const KOS_STUB_KEYBOARD = new maple_device_t(MAPLE_FUNC_KEYBOARD, -1, -1);
 
 const KOS_JSGAMEPAD_BUTTONS_MAPPING = [
     CONT_A | CONT_EX_DPAD3_DOWN, CONT_B | CONT_EX_DPAD3_RIGHT, CONT_X | CONT_EX_DPAD3_LEFT, CONT_Y | CONT_EX_DPAD3_UP,

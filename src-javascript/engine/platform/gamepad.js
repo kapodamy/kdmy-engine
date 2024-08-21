@@ -263,7 +263,7 @@ function gamepad_direct_state_update(/**@type {GamepadKDY}*/gamepad) {
 
     // (JS & C# only) read the keyboard keys pressed (if required)
     if (gamepad.mix_keyboard) {
-        gamepad_internal_read_device(gamepad, KOS_STUB_KEYBOARD);
+        gamepad_internal_read_device(gamepad, KOS_STUB_KEYBOARD.status);
     }
 
     return {
@@ -339,7 +339,7 @@ function gamepad_internal_update_state(/**@type {GamepadKDY}*/gamepad) {
 
     // (JS & C# only) read the keyboard keys pressed (if required)
     if (gamepad.mix_keyboard) {
-        gamepad_internal_read_device(gamepad, KOS_STUB_KEYBOARD);
+        gamepad_internal_read_device(gamepad, KOS_STUB_KEYBOARD.status);
     }
 
     // apply clear mask if necessary

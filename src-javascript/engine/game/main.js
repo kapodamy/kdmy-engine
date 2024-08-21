@@ -10,7 +10,7 @@ const ENGINE_VERSION = "0.60";
  */
 var background_menu_music = null;
 
-var DEBUG = 0;
+var DEBUG = false;
 var SETTINGS = {
     input_offset: 0, inverse_strum_scroll: false, penality_on_empty_strum: true, use_funkin_marker_duration: true,
     song_progressbar: true, song_progressbar_remaining: false,

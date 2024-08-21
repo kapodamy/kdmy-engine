@@ -2768,7 +2768,7 @@ async function layout_parse_sound(unparsed_sound, layout_context) {
         name: unparsed_sound.getAttribute("name"),
         initial_action_name: unparsed_sound.getAttribute("initialAction"),
         soundplayer: soundplayer,
-        type = VERTEX_NONE,
+        type: VERTEX_NONE,
 
         actions_size: 0,
         actions: null,

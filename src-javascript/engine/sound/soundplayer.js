@@ -5,7 +5,7 @@ const FADING_IN = 1;
 const FADING_OUT = 2;
 
 async function soundplayer_init(src) {
-    // TODO: C version
+    // needs C version
     let full_path = await fs_get_full_path_and_override(src);
 
     if (!await fs_file_exists(full_path)) { return null; }
