@@ -1,5 +1,5 @@
 using Engine.Utils;
-using KallistiOS;
+using KallistiOS.TIMER;
 
 namespace Engine; 
 

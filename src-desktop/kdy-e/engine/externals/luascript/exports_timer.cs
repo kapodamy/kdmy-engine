@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Engine.Externals.LuaInterop;
-using KallistiOS;
+using KallistiOS.TIMER;
 
 namespace Engine.Externals.LuaScriptInterop;
 

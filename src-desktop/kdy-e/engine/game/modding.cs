@@ -5,7 +5,7 @@ using Engine.Game.Gameplay;
 using Engine.Platform;
 using Engine.Sound;
 using Engine.Utils;
-using KallistiOS;
+using KallistiOS.TIMER;
 
 namespace Engine.Game;
 

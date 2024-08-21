@@ -1,8 +1,7 @@
-﻿using System;
-using Engine.Externals.LuaScriptInterop;
+﻿using Engine.Externals.LuaScriptInterop;
 using Engine.Game.Common;
 using Engine.Platform;
-using KallistiOS;
+using KallistiOS.TIMER;
 
 namespace Engine.Game;
 

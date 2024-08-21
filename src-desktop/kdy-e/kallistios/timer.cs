@@ -2,7 +2,7 @@
 
 #pragma warning disable CS8981
 
-namespace KallistiOS;
+namespace KallistiOS.TIMER;
 
 public static class timer {
     public static double ms_gettime64() {
