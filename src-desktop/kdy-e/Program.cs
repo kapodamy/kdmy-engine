@@ -165,7 +165,7 @@ class Program {
         PVRContext.Init();
 
         // load keyboard mappings (GLFW must be already initialized)
-        KallistiOS.MAPLE.maple_mappings.LoadKeyboardMappings();
+        KallistiOS.MAPLE.maple.LoadKeyboardMappings();
 
         // now run the engine
         return GameMain.Main(args.Length, args);

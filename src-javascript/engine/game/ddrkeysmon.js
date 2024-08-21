@@ -23,8 +23,7 @@
  * @property {number} start_timestamp
  * @property {object[]} strum_binds
  * @property {number} strum_binds_size
- * @property {object} thd_monitor
- * @property {number} thd_monitor_active
+ * @property {number} vbl_hnd
  * @property {GamepadKDY} gamepad
  */
 
@@ -45,8 +44,7 @@ function ddrkeymon_init(/**@type {GamepadKDY}*/gamepad, strum_binds, strum_binds
         strum_binds: malloc_for_array(strum_binds_size),
         strum_binds_size: strum_binds_size,
 
-        thd_monitor: null,
-        thd_monitor_active: 0,// in C, use false instead
+        vbl_hnd: -1,
         gamepad: gamepad
     }
 
@@ -66,7 +64,7 @@ function ddrkeymon_init(/**@type {GamepadKDY}*/gamepad, strum_binds, strum_binds
         }
     }
 
-	// (JS & C# only) populate queue
+    // (JS & C# only) populate queue
     clone_struct_as_array_items(
         ddrkeymon.ddrkeys_fifo.queue, DDRKEYMON_FIFO_LENGTH,
         { in_song_timestamp: -1, strum_id: -1, holding: 0, discard: 0, button: 0x00 }
@@ -101,12 +99,6 @@ function ddrkeymon_purge(/**@type {DDRKeysFIFO}*/ddrkeys_fifo) {
 function ddrkeymon_purge2(/**@type {DDRKeysFIFO}*/ddrkeys_fifo, /**@type {boolean}*/force_drop_first) {
     if (ddrkeys_fifo.available < 1) return;
 
-    //
-    // important: disable SH4 interrupts first, this is a critical part
-    //
-
-    // let old_irq = irq_disable();
-
     let available = 0;
 
     for (let i = force_drop_first ? 1 : 0; i < ddrkeys_fifo.available; i++) {
@@ -127,9 +119,6 @@ function ddrkeymon_purge2(/**@type {DDRKeysFIFO}*/ddrkeys_fifo, /**@type {boolea
     }
 
     ddrkeys_fifo.available = available;
-
-    // now restore the CPU interrupts
-    // irq_restore(old_irq);
 }
 
 function ddrkeymon_clear(/**@type {DDRKeymon}*/ddrkeymon) {
@@ -139,32 +128,21 @@ function ddrkeymon_clear(/**@type {DDRKeymon}*/ddrkeymon) {
 }
 
 function ddrkeymon_start(/**@type {DDRKeymon}*/ddrkeymon, /**@type {number}*/offset_timestamp) {
-    if (ddrkeymon.thd_monitor) return;
+    if (ddrkeymon.vbl_hnd >= 0) return;
 
     ddrkeymon.start_timestamp = timer_ms_gettime64() + offset_timestamp;
+    ddrkeymon.vbl_hnd = vblank_handler_add(ddrkeymon_internal_vbl, ddrkeymon);
 
-    // JS & C# only
-    ddrkeymon.thd_monitor = new Object();
-
-    /*
-    // C only
-    ddrkeymon->thd_monitor_active = true;
-    ddrkeymon->thd_monitor = thd_create(0, ddrkeymon_internal_thd, ddrkeymon);
-    */
+    if (DEBUG) {
+        console.assert(ddrkeymon.vbl_hnd >= 0);
+    }
 }
 
 function ddrkeymon_stop(/**@type {DDRKeymon}*/ddrkeymon) {
-    if (!ddrkeymon.thd_monitor) return;
+    if (ddrkeymon.vbl_hnd < 0) return;
 
-    // JS & C# only
-    ddrkeymon.thd_monitor = null;
-    ddrkeymon.thd_monitor_active++;
-
-    /*
-    // C only
-    ddrkeymon->thd_monitor_active = false;
-    thd_join(ddrkeymon->thd_monitor, NULL);
-    */
+    vblank_handler_remove(ddrkeymon.vbl_hnd);
+    ddrkeymon.vbl_hnd = -1;
 
     ddrkeymon_clear(ddrkeymon);
 }
@@ -175,13 +153,6 @@ function ddrkeymon_peek_timestamp(/**@type {DDRKeymon}*/ddrkeymon) {
 
 function ddrkeymon_resync(/**@type {DDRKeymon}*/ddrkeymon, /**@type {number}*/offset_timestamp) {
     ddrkeymon.start_timestamp = timer_ms_gettime64() + offset_timestamp;
-}
-
-function ddrkeymon_poll_CSJS(/**@type {DDRKeymon}*/ddrkeymon) {
-    //
-    // This function only needs to be called in JS and C# version of the engine
-    //
-    ddrkeymon_internal_read_gamepad(ddrkeymon);
 }
 
 function ddrkeymon_internal_append_key(ddrkeymon, timestamp, strum_id, button_id, holding) {
@@ -246,26 +217,17 @@ function ddrkeymon_internal_process_key(ddrkeymon, timestamp, old_buttons, new_b
     }
 }
 
-async function ddrkeymon_internal_thd(/**@type {DDRKeymon}*/ddrkeymon) {
-	while (ddrkeymon.thd_monitor_active) {
-        const old_buttons = gamepad_get_last_pressed(ddrkeymon.gamepad);
-        const new_buttons = gamepad_get_pressed(ddrkeymon.gamepad);
-        const timestamp = timer_ms_gettime64();
+function ddrkeymon_internal_vbl(code, /**@type {DDRKeymon}*/ddrkeymon) {
+    void code;
 
-        ddrkeymon_internal_process_key(ddrkeymon, timestamp, old_buttons, new_buttons);
-        await thd_sleep(5);//await thd_pass();
+    let timestamp = timer_ms_gettime64();
+    let ret = gamepad_direct_state_update(ddrkeymon.gamepad);
+
+    if (ret.previous == UINT32_MAX || ret.current == UINT32_MAX) {
+        // invalid state or dettached controller
+        return;
     }
 
-    return null;
-}
-
-function ddrkeymon_internal_read_gamepad(ddrkeymon) {
-    let old_buttons = gamepad_get_last_pressed(ddrkeymon.gamepad);
-    for (let new_buttons of gamepad_internal_update_state_JSCSHARP(ddrkeymon.gamepad)) {
-        if (old_buttons == new_buttons) continue;
-        const timestamp = gamepad_internal_get_update_timestamp_JSCSHARP(ddrkeymon.gamepad);
-        ddrkeymon_internal_process_key(ddrkeymon, timestamp, old_buttons, new_buttons);
-        old_buttons = new_buttons;
-    }
+    ddrkeymon_internal_process_key(ddrkeymon, timestamp, ret.previous, ret.current);
 }
 

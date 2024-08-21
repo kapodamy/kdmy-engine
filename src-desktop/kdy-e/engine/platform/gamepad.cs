@@ -63,7 +63,16 @@ public enum GamepadButtons : uint {
     DALL_DOWN = DPAD_DOWN | DPAD2_DOWN | DPAD3_DOWN | DPAD4_DOWN,
     DALL_RIGHT = DPAD_RIGHT | DPAD2_RIGHT | DPAD3_RIGHT | DPAD4_RIGHT,
     DALL_LEFT = DPAD_LEFT | DPAD2_LEFT | DPAD3_LEFT | DPAD4_LEFT,
+
+    // invalid value
+    INVALID = UInt32.MaxValue
 }
+
+public struct GamepadButtonsChanges {
+    public GamepadButtons previous;
+    public GamepadButtons current;
+}
+
 
 public class Gamepad {
 
@@ -253,6 +262,38 @@ public class Gamepad {
         return pressed;
     }
 
+    public GamepadButtonsChanges DirectStateUpdate() {
+        if (this.device == null || this.device.valid) {
+            if (this.mix_keyboard) {
+                return new GamepadButtonsChanges() {
+                    previous = this.GetLastPressed(),
+                    current = this.GetPressed()
+                };
+            }
+
+            return new GamepadButtonsChanges() {
+                previous = GamepadButtons.INVALID,
+                current = GamepadButtons.INVALID
+            };
+        }
+
+        GamepadButtons old = this.buttons;
+        this.buttons = GamepadButtons.NOTHING;
+
+        cont_state_t controller_status = maple.dev_status(this.device);
+        InternalReadDevice(controller_status);
+
+        // (JS & C# only) read the keyboard keys pressed (if required)
+        if (this.mix_keyboard) {
+            InternalReadDevice(maple.STUB_KEYBOARD.status);
+        }
+
+        return new GamepadButtonsChanges() {
+            previous = old,
+            current = this.buttons
+        };
+    }
+
 
     private bool InternalPickMapleDevice() {
         int index = 0;
@@ -283,19 +324,19 @@ public class Gamepad {
         }
 
         // analog left trigger
-        if (controller_status.ltrig >= ANALOG_DEAD_ZONE) this.buttons |= GamepadButtons.TRIGGER_LEFT;
+        if (controller_status.ltrig >= Gamepad.ANALOG_DEAD_ZONE) this.buttons |= GamepadButtons.TRIGGER_LEFT;
         // analog right trigger
-        if (controller_status.rtrig >= ANALOG_DEAD_ZONE) this.buttons |= GamepadButtons.TRIGGER_RIGHT;
+        if (controller_status.rtrig >= Gamepad.ANALOG_DEAD_ZONE) this.buttons |= GamepadButtons.TRIGGER_RIGHT;
 
         // analog left stick
-        if (controller_status.joyx <= -ANALOG_DEAD_ZONE)
+        if (controller_status.joyx <= -Gamepad.ANALOG_DEAD_ZONE)
             this.buttons |= GamepadButtons.APAD_LEFT;
-        else if (controller_status.joyx >= ANALOG_DEAD_ZONE)
+        else if (controller_status.joyx >= Gamepad.ANALOG_DEAD_ZONE)
             this.buttons |= GamepadButtons.APAD_RIGHT;
         // analog right stick
-        if (controller_status.joyy <= -ANALOG_DEAD_ZONE)
+        if (controller_status.joyy <= -Gamepad.ANALOG_DEAD_ZONE)
             this.buttons |= GamepadButtons.APAD_DOWN;
-        else if (controller_status.joyy >= ANALOG_DEAD_ZONE)
+        else if (controller_status.joyy >= Gamepad.ANALOG_DEAD_ZONE)
             this.buttons |= GamepadButtons.APAD_UP;
     }
 
@@ -318,36 +359,9 @@ public class Gamepad {
             }
         }
 
-        // JS C# only
+        // (JS & C# only) read the keyboard keys pressed (if required)
         if (this.mix_keyboard) {
-            cont_state_t keyboard_status = maple.KEYBOARD.dequeque_all();
-            InternalReadDevice(keyboard_status);
-        }
-
-        // apply clear mask if necessary
-        InternalApplyClearMask();
-    }
-
-    internal IEnumerable<GamepadButtons> InternalUpdateState_JSCSHARP() {
-        this.buttons = 0x00;
-
-        if (this.device != null) {
-            // read controller status
-            cont_state_t controller_status = maple.dev_status(this.device);
-            // map the buttons in a form the engine can understand
-            InternalReadDevice(controller_status);
-        }/* else if (this.controller_index < 0) {
-            throw new Exception("InternalUpdateState_JSCSHARP() controller_index < 0");
-        }*/
-
-        if (this.mix_keyboard && maple.KEYBOARD.has_queued) {
-            foreach (bool _ in maple.KEYBOARD.poll_queue()) {
-                InternalReadDevice(maple.KEYBOARD.status);
-                yield return this.buttons & this.clear_mask;
-            }
-        } else {
-            InternalReadDevice(maple.KEYBOARD.status);
-            yield return this.buttons & this.clear_mask;
+            InternalReadDevice(maple.STUB_KEYBOARD.status);
         }
 
         // apply clear mask if necessary
@@ -362,21 +376,6 @@ public class Gamepad {
 
             // clear pressed buttons
             this.buttons &= this.clear_mask;
-        }
-    }
-
-    public double InternalGetUpdateTimestamp_JSCSHARP() {
-        if (this.mix_keyboard) {
-            if (this.device != null) {
-                return Math.Max(maple.KEYBOARD.timestamp, this.device.timestamp);
-            } else {
-                return maple.KEYBOARD.timestamp;
-            }
-        } else if (this.device != null) {
-            return this.device.timestamp;
-        } else {
-            // this never should happen
-            return timer.ms_gettime64();
         }
     }
 

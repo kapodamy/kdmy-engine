@@ -111,43 +111,38 @@ public class SongPlayer {
         //free(songplayer);
     }
 
-    public double Play(ref SongPlayerInfo songinfo) {
-        if (this.playbacks_size < 1 || !this.paused) return 0.0;
+    public void Play(ref SongPlayerInfo songinfo) {
+        if (this.playbacks_size < 1 || !this.paused) return;
 
-        double lowest_timestamp = double.PositiveInfinity;
+        double lowest_duration = double.PositiveInfinity;
         int reference_index = 0;
-        double timestamp;
 
         for (int i = 0 ; i < this.playbacks_size ; i++) {
-            timestamp = this.playbacks[i].GetDuration();
-            if (timestamp < lowest_timestamp) {
-                lowest_timestamp = timestamp;
+            double duration = this.playbacks[i].GetDuration();
+            if (duration < lowest_duration) {
+                lowest_duration = duration;
                 reference_index = i;
             }
         }
 
+        SoundPlayer reference = this.playbacks[reference_index];
+        double start_timestamp = reference.GetPosition();
+
         int completed = 0;
-        bool playback_success = false;
         for (int i = 0 ; i < this.playbacks_size ; i++) {
             if (this.playbacks[i].HasEnded()) completed++;
             this.playbacks[i].Play();
         }
 
         // wait until the first audio samples are played
-        SoundPlayer reference = this.playbacks[reference_index];
-        timestamp = 0.0;
-
-        while (playback_success && timestamp == reference.GetPosition()) {
+        while (reference.IsPlaying() && start_timestamp == reference.GetPosition()) {
             thd.pass();
         }
 
         this.paused = false;
-        double current_timestamp = reference.GetPosition();
 
-        songinfo.timestamp = current_timestamp * this.playbacks_size;
+        songinfo.timestamp = reference.GetPosition();
         songinfo.completed = completed >= this.playbacks_size;
-
-        return current_timestamp - timestamp;
     }
 
     public void Pause() {

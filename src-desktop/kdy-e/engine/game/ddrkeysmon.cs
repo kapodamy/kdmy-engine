@@ -1,8 +1,9 @@
 using System;
+using System.Diagnostics;
 using Engine.Platform;
 using Engine.Utils;
-using KallistiOS;
-using KallistiOS.THD;
+using KallistiOS.VBLANK;
+using KallistiOS.TIMER;
 
 namespace Engine.Game;
 
@@ -28,12 +29,6 @@ public class DDRKeysFIFO {
     public void Purge2(bool force_drop_first) {
         if (this.available < 1) return;
 
-        //
-        // important: disable SH4 interrupts first, this is a critical part
-        //
-
-        // int old_irq = irqdisable();
-
         int available = 0;
 
         for (int i = force_drop_first ? 1 : 0 ; i < this.available ; i++) {
@@ -47,16 +42,15 @@ public class DDRKeysFIFO {
             this.queue[i] = this.queue[available];
             available++;
 
+#if DEBUG
             // debugging only
             this.queue[i].in_song_timestamp = -2;
             this.queue[i].strum_id = -2;
             this.queue[i].button = 0;
+#endif
         }
 
         this.available = available;
-
-        // now restore the CPU interrupts
-        // irqrestore(old_irq);
     }
 
 }
@@ -71,8 +65,7 @@ public class DDRKeymon {
     private double start_timestamp;
     private Bind[] strum_binds;
     private int strum_binds_size;
-    private kthread_t thd_monitor;
-    private volatile int thd_monitor_active;
+    private int vbl_hnd;
     private Gamepad gamepad;
 
 
@@ -88,8 +81,7 @@ public class DDRKeymon {
         this.strum_binds = EngineUtils.CreateArray<Bind>(strum_binds_size);
         this.strum_binds_size = strum_binds_size;
 
-        this.thd_monitor = null;
-        this.thd_monitor_active = 0;
+        this.vbl_hnd = -1;
         this.gamepad = gamepad;
 
 
@@ -140,20 +132,21 @@ public class DDRKeymon {
     }
 
     public void Start(double offset_timestamp) {
-        if (this.thd_monitor != null) return;
+        if (this.vbl_hnd >= 0) return;
 
         this.start_timestamp = timer.ms_gettime64() + offset_timestamp;
+        this.vbl_hnd = vblank.handler_add(this.InternalVBL);
 
-        // JS & C# only
-        this.thd_monitor = new kthread_t();
+#if DEBUG
+        Debug.Assert(this.vbl_hnd >= 0);
+#endif
     }
 
     public void Stop() {
-        if (this.thd_monitor == null) return;
+        if (this.vbl_hnd < 0) return;
 
-        // JS & C# only
-        this.thd_monitor = null;
-        this.thd_monitor_active++;
+        vblank.handler_remove(this.vbl_hnd);
+        this.vbl_hnd = -1;
 
         Clear();
     }
@@ -166,12 +159,6 @@ public class DDRKeymon {
         this.start_timestamp = timer.ms_gettime64() + offset_timestamp;
     }
 
-    public void PollCSJS() {
-        //
-        // This function only needs to be called in C# and JS version of the engine
-        //
-        InternalReadGamepad();
-    }
 
     private void InternalAppendKey(double timestamp, int strum_id, GamepadButtons button_id, bool holding) {
         DDRKey[] queue = this.ddrkeys_fifo.queue;
@@ -235,15 +222,18 @@ public class DDRKeymon {
         }
     }
 
-    private void InternalReadGamepad() {
-        GamepadButtons old_buttons = this.gamepad.GetLastPressed();
-        foreach (GamepadButtons new_buttons in this.gamepad.InternalUpdateState_JSCSHARP()) {
-            if (old_buttons == new_buttons) continue;
-            double timestamp = this.gamepad.InternalGetUpdateTimestamp_JSCSHARP();
-            InternalProcessKey(timestamp, old_buttons, new_buttons);
-            old_buttons = new_buttons;
+    private void InternalVBL(uint code) {
+        double timestamp = timer.ms_gettime64();
+        GamepadButtonsChanges ret = this.gamepad.DirectStateUpdate();
+
+        if (ret.previous == GamepadButtons.INVALID || ret.current == GamepadButtons.INVALID) {
+            // invalid state or dettached controller
+            return;
         }
+
+        InternalProcessKey(timestamp, ret.previous, ret.current);
     }
+
 
     private class Bind {
         public bool is_visible;

@@ -417,7 +417,7 @@ async function settingsmenu_main() {
     if (backgroud_music_filename) bg_music = await soundplayer_init(backgroud_music_filename);
     if (bg_music) soundplayer_set_volume(bg_music, backgroud_music_volume);
 
-    KOS_MAPLE_KEYBOARD.delegate_callback = settingsmenu_internal_key_callback;
+    KOS_delegate_callback = settingsmenu_internal_key_callback;
 
     let gamepad = gamepad_init(-1);
     gamepad_set_buttons_delay(gamepad, 75);
@@ -494,7 +494,7 @@ async function settingsmenu_main() {
     // reload settings
     SETTINGS.reload();
 
-    KOS_MAPLE_KEYBOARD.delegate_callback = null;
+    KOS_delegate_callback = null;
 
     if (bg_music) {
         soundplayer_destroy(bg_music);
@@ -780,7 +780,7 @@ async function settingsmenu_in_gameplay_binding(anim_binding, anim_binding_rollb
     }
 
     layout_destroy(layout);
-    KOS_MAPLE_KEYBOARD.reloadMappings();
+    KOS_keyboard_reload_mappings();
 }
 
 async function settingsmenu_in_menus_binding(anim_binding, anim_binding_rollback) {
@@ -920,7 +920,7 @@ async function settingsmenu_in_menus_binding(anim_binding, anim_binding_rollback
     }
     layout_destroy(layout);
 
-    KOS_MAPLE_KEYBOARD.reloadMappings();
+    KOS_keyboard_reload_mappings();
 }
 
 async function settingsmenu_in_common_menu(title, layout, gamepad, menu, options, modding) {

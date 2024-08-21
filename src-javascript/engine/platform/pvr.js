@@ -72,6 +72,17 @@ function pvrctx_wait_ready() {
                 return;
             }
 
+            for (let i = 0; i < KOS_VBLANK_HANDLERS.length; i++) {
+                let handler = KOS_VBLANK_HANDLERS[i];
+                if (handler) {
+                    try {
+                        handler.hnd(ASIC_EVT_PVR_VBLANK_BEGIN, handler.data);
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+            }
+
             let elapsed;
             if (pvr_last_timestamp < 0)
                 elapsed = 0.0;
@@ -529,7 +540,7 @@ async function pvr_call_entry_point() {
             case "--help":
             case "/help":
             case "/h":
-               let help =
+                let help =
                     `${ENGINE_NAME} ${ENGINE_VERSION}` +
                     "\r\n" +
                     `    ${args[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionsloader] [-layoutdebugtriggercalls]\r\n` +

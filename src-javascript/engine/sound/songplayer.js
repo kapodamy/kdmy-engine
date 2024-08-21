@@ -104,16 +104,15 @@ function songplayer_destroy(songplayer) {
 }
 
 async function songplayer_play(songplayer, songinfo) {
-    if (songplayer.playbacks_size < 1 || !songplayer.paused) return 0;
+    if (songplayer.playbacks_size < 1 || !songplayer.paused) return;
 
-    let lowest_timestamp = Infinity;
+    let lowest_duration = Infinity;
     let reference_index = 0;
-    let timestamp;
 
     for (let i = 0; i < songplayer.playbacks_size; i++) {
-        timestamp = songplayer.playbacks[i].currentTime
-        if (timestamp < lowest_timestamp) {
-            lowest_timestamp = timestamp;
+        let duration = soundplayer_get_duration(songplayer.playbacks[i]);
+        if (duration < lowest_duration) {
+            lowest_duration = duration;
             reference_index = i;
         }
     }
@@ -130,32 +129,39 @@ async function songplayer_play(songplayer, songinfo) {
     //
 
     let completed = 0;
-    let playback_success = true;
     for (let i = 0; i < songplayer.playbacks_size; i++) {
-        if (songplayer.playbacks[i].currentTime >= songplayer.playbacks[i].duration) completed++;
+        if (soundplayer_has_ended(songplayer.playbacks[i])) completed++;
         soundplayer_set_queueing(songplayer.playbacks[i], true);
-        songplayer.playbacks[i].play().catch(function () { playback_success = false; });
+        soundplayer_play(songplayer.playbacks[i]);
         soundplayer_set_queueing(songplayer.playbacks[i], false);
     }
 
+    /*
+    // dreamcast only
+
     // resume AICA queue processing
     snd_sh4_to_aica_start();
+    timer_spin_sleep(1);
+
+    //disable interrupts to ensure the same start timestamp of each track
+    int irq = irq_disable();
+
+    // resync all tracks start timestamps
+    for (let i = 0; i < songplayer.playbacks_size; i++) {
+        soundplayer_force_resync(songplayer.playbacks[i]);
+    }
+    */
+
+    songplayer.paused = false;
 
     // wait until the first audio samples are played
     let reference = songplayer.playbacks[reference_index];
-    timestamp = 0;
 
-    while (playback_success && timestamp == soundplayer_get_position(reference)) {
-        await thd_pass();
-    }
-
-    songplayer.paused = false;
-    let seconds = reference.currentTime;
-
-    songinfo.timestamp = (seconds * songplayer.playbacks_size) / 1000.0;
+    songinfo.timestamp = soundplayer_get_position(reference);
     songinfo.completed = completed >= songplayer.playbacks_size;
 
-    return (seconds - timestamp) / 1000.0;
+    // (dreamcast only) now restore interrupts
+    //irq_restore(irq);
 }
 
 function songplayer_pause(songplayer) {

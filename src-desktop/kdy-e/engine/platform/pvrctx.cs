@@ -10,6 +10,7 @@ using Engine.Font;
 using Engine.Image;
 using Engine.Utils;
 using KallistiOS.MAPLE;
+using KallistiOS.VBLANK;
 
 namespace Engine.Platform;
 
@@ -133,11 +134,14 @@ public class PVRContext {
         this.last_elapsed = elapsed;
         this.frame_rendered++;
 
-        // resize framebuffers if the screen size has changed
-        this.CheckFrameBufferSize();
+        // run all registered vblank handlers
+        vblank.handlers_poll();
 
         // notify all lua scripts about keyboard/mouse/window changes
         Engine.Externals.LuaScriptInterop.LuascriptPlatform.PollWindowState();
+
+        // resize framebuffers if the screen size has changed
+        this.CheckFrameBufferSize();
 
         // check if necessary hide the cursor
         if (now > this.cursor_hide_timestamp) {

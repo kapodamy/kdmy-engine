@@ -2493,10 +2493,16 @@ public class Week {
 
         // start this round!!!!!
         dettached_controller_index = -1;
-        double elapsed_play = roundcontext.songplayer != null ? roundcontext.songplayer.Play(ref songinfo) : 0.0;
+
+        if (roundcontext.songplayer != null) {
+            roundcontext.songplayer.Play(ref songinfo);
+        } else {
+            songinfo.timestamp = 0.0;
+            songinfo.completed = true;
+        }
 
         // prepare beatwatchers
-        BeatWatcher.GlobalSetTimestamp(elapsed_play);
+        BeatWatcher.GlobalSetTimestamp(songinfo.timestamp);
         Week.BEAT_WATCHER.Reset(true, roundcontext.settings.bpm);
         Week.QUARTER_WATCHER.Reset(false, roundcontext.settings.bpm);
 
@@ -2505,8 +2511,6 @@ public class Week {
         DDRKeymon has_reference_ddrkeymon = null;
         double song_timestamp = 0.0;
 
-        round_end_timestamp = timer.ms_gettime64() + round_duration;
-
         for (int i = 0 ; i < roundcontext.players_size ; i++) {
             if (roundcontext.players[i].ddrkeymon != null) {
                 roundcontext.players[i].controller.ClearButtons();
@@ -2514,6 +2518,8 @@ public class Week {
                 roundcontext.players[i].ddrkeymon.Start(songinfo.timestamp);
             }
         }
+
+        round_end_timestamp = timer.ms_gettime64() + round_duration;
 
         // gameplay logic
         while (timer.ms_gettime64() < round_end_timestamp && !songinfo.completed) {
@@ -2617,7 +2623,6 @@ public class Week {
                         if (roundcontext.players[i].conductor.HasHits()) has_hits = true;
                         break;
                     case CharacterType.PLAYER:
-                        roundcontext.players[i].ddrkeymon.PollCSJS();
                         roundcontext.players[i].strums.ScrollFull(song_timestamp2);
                         roundcontext.players[i].conductor.Poll();
                         if (roundcontext.players[i].controller.GetManagedPresses(false, ref pressed_buttons)) {

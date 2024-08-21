@@ -710,7 +710,7 @@ public static class SettingsMenu {
         }
 
         layout.Destroy();
-        KallistiOS.MAPLE.maple_mappings.LoadKeyboardMappings();
+        KallistiOS.MAPLE.maple.LoadKeyboardMappings();
     }
 
     private static void InMenusBinding(AnimSprite anim_binding, AnimSprite anim_binding_rollback) {
@@ -850,7 +850,7 @@ public static class SettingsMenu {
         }
         layout.Destroy();
 
-        KallistiOS.MAPLE.maple_mappings.LoadKeyboardMappings();
+        KallistiOS.MAPLE.maple.LoadKeyboardMappings();
     }
 
     private static int InCommonMenu(string title, Layout layout, Gamepad gamepad, Menu menu, SettingOption[] options, Modding modding) {

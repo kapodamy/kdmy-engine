@@ -2486,10 +2486,16 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
     // start this round!!!!!
     dettached_controller_index = -1;
-    elapsed = roundcontext.songplayer ? (await songplayer_play(roundcontext.songplayer, songinfo)) : 0.0;
+
+    if (roundcontext.songplayer) {
+        await songplayer_play(roundcontext.songplayer, songinfo);
+    } else {
+        songinfo.timestamp = 0.0;
+        songinfo.completed = true;
+    }
 
     // prepare beatwatchers
-    beatwatcher_global_set_timestamp(elapsed);
+    beatwatcher_global_set_timestamp(songinfo.timestamp);
     beatwatcher_reset(WEEK_BEAT_WATCHER, true, roundcontext.settings.bpm);
     beatwatcher_reset(WEEK_QUARTER_WATCHER, false, roundcontext.settings.bpm);
 
@@ -2498,8 +2504,6 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
     let has_reference_ddrkeymon = null;
     let song_timestamp = 0.0;
 
-    round_end_timestamp = timer_ms_gettime64() + round_duration;
-
     for (let i = 0; i < roundcontext.players_size; i++) {
         if (roundcontext.players[i].ddrkeymon) {
             gamepad_clear_buttons(roundcontext.players[i].controller);
@@ -2507,6 +2511,8 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
             ddrkeymon_start(roundcontext.players[i].ddrkeymon, songinfo.timestamp);
         }
     }
+
+    round_end_timestamp = timer_ms_gettime64() + round_duration;
 
     // gameplay logic
     while (timer_ms_gettime64() < round_end_timestamp && !songinfo.completed) {
@@ -2612,7 +2618,6 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
                     if (conductor_has_hits(roundcontext.players[i].conductor)) has_hits = true;
                     break;
                 case CHARACTERTYPE.PLAYER:
-                    ddrkeymon_poll_CSJS(roundcontext.players[i].ddrkeymon);
                     strums_scroll_full(roundcontext.players[i].strums, song_timestamp2);
                     conductor_poll(roundcontext.players[i].conductor);
                     if (gamepad_get_managed_presses(roundcontext.players[i].controller, false, pressed_buttons)) {

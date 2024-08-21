@@ -4,6 +4,8 @@
 // JS STUB for KallistiOS
 //
 
+const UINT32_MAX = 0xFFFFFFFF;
+
 const STATE_ZOMBIE = 0x0000;
 const STATE_RUNNING = 0x0001;
 const STATE_READY = 0x0002;
@@ -406,15 +408,29 @@ function kthread_key_delete(key) {
 // Maple related stuff
 //
 
+/**
+ * @callback KeyboardEventCallback
+ * @param {KeyboardEvent} evt
+ * @returns {void}
+ */
+
 /** 
- * @summary  Maple device info structure.
-    This structure is used by the hardware to deliver the response to the device
-    info request.
+ * @typedef {Object} maple_devinfo_t
+ * @property {number} functions
+ * @summary  Maple device info structure
 */
-class maple_devinfo_t {
-    /** @type {number} Function codes supported */
-    functions;
-}
+
+/**
+ * @typedef {Object} cont_state_t
+ * @sumary Controller status structure.
+ * @property {number} buttons Buttons bitfield.
+ * @property {number} ltrig Left trigger value.
+ * @property {number} rtrig Right trigger value.
+ * @property {number} joyx Main joystick x-axis value.
+ * @property {number} joyy Main joystick y-axis value.
+ * @property {number} joy2x Secondary joystick x-axis value (if applicable).
+ * @property {number} joy2y Secondary joystick y-axis value (if applicable).
+*/
 
 /**
  * One maple device.
@@ -435,322 +451,42 @@ class maple_device_t {
     /** @type {maple_devinfo_t} Device info struct*/
     info;
 
+    /** @type {cont_state_t} Device status struct (forced to cont_state_t) */
+    status;
 
     constructor(functions, port, unit) {
-        if (KOS_MAPLE_DEVS.length >= KOS_MAX_DEVICES) throw new Error("Maximum of number of devices reached");
-
-        this.valid = functions == MAPLE_FUNC_MEMCARD;
         this.port = port;
         this.unit = unit;
-        this.info = new maple_devinfo_t();
-        this.info.functions = functions;
-        this._gamepad_index = -1;
-    }
-
-
-    /** @type {Gamepad} */
-    _gamepad = null;
-    _gamepad_index = -1;
-    _status = new cont_state_t();
-    timestamp = 0;
-
-    _peek_gamepad_data() {
-        //
-        // Notes:
-        //    * The dreamcast controller does not have enough buttons/axes like modern controllers.
-        //    * If the controller has additional buttons and/or axes, they are reported
-        //      by KallistiOS using CONT_CAPABILITY_* in maple_enum_type*() functions.
-        //
-        const gamepad = navigator.getGamepads()[this._gamepad_index];
-
-        if (!gamepad || !gamepad.connected) return;
-
-        let new_timestamp = gamepad.timestamp;
-        if (new_timestamp == this.timestamp) return;
-
-        this.timestamp = new_timestamp;
-
-        // read the gamepad buttons using the standard layout
-        let length = gamepad.buttons.length;
-        for (let i = 0; i < KOS_JSGAMEPAD_BUTTONS_MAPPING.length && i < length; i++) {
-            const button_flag = KOS_JSGAMEPAD_BUTTONS_MAPPING[i];
-            const button = gamepad.buttons[i];
-
-            switch (button_flag) {
-                case CONT_EX_TRIGGER_L:
-                    this._status.ltrig = button.value * 255;
-                    continue;
-                case CONT_EX_TRIGGER_R:
-                    this._status.rtrig = button.value * 255;
-                    continue;
-            }
-
-            if (button.pressed)
-                this._status.buttons |= button_flag;
-            else
-                this._status.buttons &= ~button_flag;
-        }
-
-        // read the gamepad axes using the standard layout
-        length = gamepad.axes.length;
-        for (let i = 0; i < KOS_JSGAMEPAD_AXES_MAPPING.length && i < length; i++) {
-            const axis_flag = KOS_JSGAMEPAD_AXES_MAPPING[i];
-            const axis = gamepad.axes[i];
-            let value = axis * 0x7F;
-
-            switch (axis_flag) {
-                case CONT_EX_AXIS_LX:
-                    this._status.joyx = value;
-                    break;
-                case CONT_EX_AXIS_LY:
-                    this._status.joyy = value;
-                    break;
-                case CONT_EX_AXIS_RX:
-                    this._status.joy2x = value;
-                    break;
-                case CONT_EX_AXIS_RY:
-                    this._status.joy2y = value;
-                    break;
-                case CONT_EX_TRIGGER_L:
-                    this._status.ltrig = axis * 255;
-                    break;
-                case CONT_EX_TRIGGER_R:
-                    this._status.rtrig = axis * 255;
-                    break;
-            }
-        }
-    }
-
-}
-
-class maple_keyboard_device_t {
-    /** 
-     * @typedef {object} maple_device_keyboard_t
-     * @property {number} timestamp
-     * @property {number} target_button
-     * @property {number} target_axis
-     * @property {boolean} hold
-     * @property {boolean} negative
-     */
-    /**
-     * @callback KeyboardEventDelegate
-     * @param {KeyboardEvent} evt
-     * @returns {void}
-     */
-
-    status = new cont_state_t();
-    timestamp = 0;
-    /** @type {maple_device_keyboard_t[]} */ #queue = null;
-
-    /**@type {KeyboardEventDelegate} */ delegate_callback = null;
-
-
-    constructor() {
-        document.addEventListener("keydown", evt => this._keyboard_enqueue_data(evt), false);
-        document.addEventListener("keyup", evt => this._keyboard_enqueue_data(evt), false);
-        this.#queue = new Array();
-    }
-
-
-    _keyboard_enqueue_data(/**@type {KeyboardEvent} */ evt) {
-        if (evt.isComposing) return;
-        if (evt.repeat) return;
-
-        if (this.delegate_callback) this.delegate_callback(evt);
-
-        //
-        // just like "window.performance.now()", "evt.timeStamp" returns the milliseconds since
-        // the page was loaded. But here since the event was created. This should give
-        // better precission
-        //
-        let timestamp = evt.timeStamp;
-        let hold = evt.type == "keydown";
-
-        // special keys      
-        switch (evt.code) {
-            case "F11":
-                if (hold) pvr_fullscreen(null);
-                return;
-            case "F12":
-                //if (hold) PVRContext.TakeScreenshot();
-                return;
-            case "NumpadSubtract":
-                if (hold) mastervolume_volume_step(false);
-                return;
-            case "NumpadAdd":
-                if (hold) mastervolume_volume_step(true);
-                return;
-        }
-
-        for (let i = 0; i < KOS_KEYBOARD_MAPPING_BUTTONS.length; i++) {
-            const map = KOS_KEYBOARD_MAPPING_BUTTONS[i];
-            if (map.code == evt.code) {
-                this.#queue_key_event(timestamp, map.button, CONT_EX_NONE, false, hold);
-            }
-        }
-
-        for (let i = 0; i < KOS_KEYBOARD_MAPPING_AXES.length; i++) {
-            const map = KOS_KEYBOARD_MAPPING_AXES[i];
-            if (map.key_low == evt.code) {
-                this.#queue_key_event(timestamp, 0x00, map.axes, true, hold);
-            }
-            if (map.key_high == evt.code) {
-                this.#queue_key_event(timestamp, 0x00, map.axes, false, hold);
-            }
-        }
-
-        for (let i = 0; i < KOS_KEYBOARD_MAPPING_TRIGGERS.length; i++) {
-            const map = KOS_KEYBOARD_MAPPING_TRIGGERS[i];
-            if (map.code == evt.code) {
-                this.#queue_key_event(timestamp, 0x00, map.trigger, false, hold);
-            }
-        }
-
-        // reached if the key is not mapped
-        return;
-    }
-
-    dequeque_all() {
-        if (this.#queue.length > 0) {
-            for (let i = 0; i < this.#queue.length; i++) {
-                this.parse_key_event(this.#queue[i]);
-            }
-            this.#queue = new Array();
-        }
-        return this.status;
-    }
-
-    #queue_key_event(timestamp, target_button, target_axis, negative, hold) {
-        if (this.#queue.length > 16) {
-            // parse and update the current state
-            this.parse_key_event(this.#queue.shift());
-        }
-
-        // before continue check is the key state is the same but with different modifier key
-        for (let i = this.#queue.length - 1; i >= 0; i--) {
-            let addedKeyInfo = this.#queue[i];
-            if (addedKeyInfo.target_button != target_button) continue;
-            if (addedKeyInfo.hold == hold) return;
-
-            // the hold state is different, so... add it
-            break;
-        }
-
-        this.#queue.push({
-            timestamp: timestamp,
-            target_button: target_button,
-            target_axis: target_axis,
-            hold: hold,
-            negative: negative
-        });
-    }
-
-    parse_key_event(/**@type {maple_device_keyboard_t} */ item) {
-        this.timestamp = item.timestamp;
-
-        if (item.target_button != 0) {
-            if (item.hold)
-                this.status.buttons |= item.target_button;
-            else
-                this.status.buttons &= ~item.target_button;
-            return;
-        }
-
-        switch (item.target_axis) {
-            case CONT_EX_TRIGGER_L:
-                this.status.ltrig = item.hold ? 255 : 0;
-                return;
-            case CONT_EX_TRIGGER_R:
-                this.status.rtrig = item.hold ? 255 : 0;
-                return;
-        }
-
-        let value = 0;
-        if (item.hold) value = item.negative ? -127 : 127;
-
-        switch (item.target_axis) {
-            case CONT_EX_AXIS_LX:
-                this.status.joyx = value;
-                break;
-            case CONT_EX_AXIS_LY:
-                this.status.joyy = value;
-                break;
-            case CONT_EX_AXIS_RX:
-                this.status.joy2x = value;
-                break;
-            case CONT_EX_AXIS_RY:
-                this.status.joy2x = value;
-                break;
-        }
-    }
-
-    *poll_queue() {
-        for (let i = 0; i < this.#queue.length; i++) {
-            this.parse_key_event(this.#queue[i]);
-            yield true;
-        }
-        this.#queue = new Array();
-    }
-
-    get has_queued() {
-        return this.#queue.length;
-    }
-
-    reloadMappings() {
-        SETTINGS.get_bind("menuAccept", KOS_KEYBOARD_MAPPING_BUTTONS[1]);
-        SETTINGS.get_bind("menuAlternativeTracks", KOS_KEYBOARD_MAPPING_BUTTONS[3]);
-
-        SETTINGS.get_bind("menuSelectorLeft", KOS_KEYBOARD_MAPPING_TRIGGERS[0]);
-        SETTINGS.get_bind("menuSelectorRight", KOS_KEYBOARD_MAPPING_TRIGGERS[1]);
-
-        //SETTINGS.get_bind("left0", KOS_KEYBOARD_MAPPING_BUTTONS[5]);
-        //SETTINGS.get_bind("down0", KOS_KEYBOARD_MAPPING_BUTTONS[6]);
-        //SETTINGS.get_bind("up0", KOS_KEYBOARD_MAPPING_BUTTONS[7]);
-        //SETTINGS.get_bind("right0", KOS_KEYBOARD_MAPPING_BUTTONS[8]);
-        SETTINGS.get_bind("left1", KOS_KEYBOARD_MAPPING_BUTTONS[9]);
-        SETTINGS.get_bind("down1", KOS_KEYBOARD_MAPPING_BUTTONS[10]);
-        SETTINGS.get_bind("up1", KOS_KEYBOARD_MAPPING_BUTTONS[11]);
-        SETTINGS.get_bind("right1", KOS_KEYBOARD_MAPPING_BUTTONS[12]);
-        SETTINGS.get_bind("left2", KOS_KEYBOARD_MAPPING_BUTTONS[13]);
-        SETTINGS.get_bind("down2", KOS_KEYBOARD_MAPPING_BUTTONS[14]);
-        SETTINGS.get_bind("up2", KOS_KEYBOARD_MAPPING_BUTTONS[15]);
-        SETTINGS.get_bind("right2", KOS_KEYBOARD_MAPPING_BUTTONS[16]);
-        SETTINGS.get_bind("left3", KOS_KEYBOARD_MAPPING_BUTTONS[17]);
-        SETTINGS.get_bind("down3", KOS_KEYBOARD_MAPPING_BUTTONS[18]);
-        SETTINGS.get_bind("up3", KOS_KEYBOARD_MAPPING_BUTTONS[19]);
-        SETTINGS.get_bind("right3", KOS_KEYBOARD_MAPPING_BUTTONS[20]);
-
-        SETTINGS.get_bind("diamond", KOS_KEYBOARD_MAPPING_BUTTONS[21]);
+        this.info = {
+            functions: functions
+        };
+        this.status = {
+            buttons: 0,
+            ltrig: 0,
+            rtrig: 0,
+            joyx: 0,
+            joyy: 0,
+            joy2x: 0,
+            joy2y: 0
+        };
     }
 }
 
-/**
- * Controller status structure.
- * 
- * This structure contains information about the status of the controller
- * device and can be fetched with maple_dev_status().
- * 
- * A 1 bit in the buttons bitfield indicates that a button is pressed, and the
- * joyx, joyy, joy2x, joy2 values are all 0 based (0 is centered).
- */
-class cont_state_t {
-    /**@type{number} Buttons bitfield.*/
-    buttons = 0;
+class maple_device_HTML5Gamepad_t extends maple_device_t {
+    /**@type {number}*/
+    timestamp;
 
-    /**@type{number} Left trigger value. */
-    ltrig = 0;
-    /**@type{number} Right trigger value. */
-    rtrig = 0;
+    /**@type {number}*/
+    gamepad_index;
 
-    /**@type{number} Main joystick x-axis value. */
-    joyx = 0;
-    /**@type{number} Main joystick y-axis value. */
-    joyy = 0;
+    constructor(/**@type {Gamepad}*/html5_gamepad) {
+        const mapping = KOS_GAMEPAD_TO_MAPLE_DEVICE[html5_gamepad.index];
 
-    /**@type{number} Secondary joystick x-axis value (if applicable). */
-    joy2x = 0;
-    /**@type{number} Secondary joystick y-axis value (if applicable). */
-    joy2y = 0;
+        super(MAPLE_FUNC_CONTROLLER, mapping.port, mapping.unit);
+
+        this.timestamp = html5_gamepad.timestamp;
+        this.gamepad_index = html5_gamepad.index;
+    }
 }
 
 
@@ -758,6 +494,7 @@ const MAPLE_PORT_COUNT = 4;
 const MAPLE_UNIT_COUNT = 6;
 const MAPLE_FUNC_CONTROLLER = 0x01000000;
 const MAPLE_FUNC_MEMCARD = 0x02000000;
+const MAPLE_FUNC_KEYBOARD = 0x40000000;
 const CONT_C = (1 << 0);
 const CONT_B = (1 << 1);
 const CONT_A = (1 << 2);
@@ -795,8 +532,18 @@ const CONT_EX_AXIS_RX = (1 << 30);
 const CONT_EX_AXIS_RY = (1 << 31);
 
 
-const /**@type {maple_device_t[][]}*/KOS_MAPLE_DEVS = new Array(MAPLE_PORT_COUNT);
-const KOS_MAPLE_KEYBOARD = new maple_keyboard_device_t();// -1 is the keyboard (JS & C# only)
+/**@type {maple_device_t[][]}*/
+const KOS_MAPLE_DEVICE_LIST = [
+    [null, null, null, null, null, null],
+    [null, null, null, null, null, null],
+    [null, null, null, null, null, null],
+    [null, null, null, null, null, null],
+];
+
+/**@type {KeyboardEventCallback}*/
+var KOS_delegate_callback = null;
+const KOS_STUB_KEYBOARD = new maple_device_t(MAPLE_FUNC_CONTROLLER, -1, -1);
+
 const KOS_JSGAMEPAD_BUTTONS_MAPPING = [
     CONT_A | CONT_EX_DPAD3_DOWN, CONT_B | CONT_EX_DPAD3_RIGHT, CONT_X | CONT_EX_DPAD3_LEFT, CONT_Y | CONT_EX_DPAD3_UP,
     CONT_C, CONT_Z,
@@ -847,24 +594,23 @@ const KOS_KEYBOARD_MAPPING_TRIGGERS = [
     { code: "Digit2", trigger: CONT_EX_TRIGGER_R }
 ];
 const KOS_GAMEPAD_TO_MAPLE_DEVICE = [
-    { index: 0, port: 0, unit: 0 },
-    { index: 1, port: 1, unit: 0 },
-    { index: 2, port: 2, unit: 0 },
-    { index: 3, port: 3, unit: 0 },
-    { index: 4, port: 0, unit: 2 },
-    { index: 5, port: 1, unit: 2 },
-    { index: 6, port: 2, unit: 2 },
-    { index: 7, port: 3, unit: 2 },
-    { index: 8, port: 0, unit: 3 },
-    { index: 9, port: 1, unit: 3 },
-    { index: 10, port: 2, unit: 3 },
-    { index: 11, port: 3, unit: 3 },
-    { index: 12, port: 0, unit: 4 },
-    { index: 13, port: 1, unit: 4 },
-    { index: 14, port: 2, unit: 4 },
-    { index: 15, port: 3, unit: 4 }
+    { port: 0, unit: 0 },
+    { port: 1, unit: 0 },
+    { port: 2, unit: 0 },
+    { port: 3, unit: 0 },
+    { port: 0, unit: 2 },
+    { port: 1, unit: 2 },
+    { port: 2, unit: 2 },
+    { port: 3, unit: 2 },
+    { port: 0, unit: 3 },
+    { port: 1, unit: 3 },
+    { port: 2, unit: 3 },
+    { port: 3, unit: 3 },
+    { port: 0, unit: 4 },
+    { port: 1, unit: 4 },
+    { port: 2, unit: 4 },
+    { port: 3, unit: 4 }
 ];
-var KOS_MAPLE_slots_allocated = false;
 
 
 /**
@@ -873,9 +619,9 @@ var KOS_MAPLE_slots_allocated = false;
  */
 function maple_enum_count() {
     let count = 0;
-    for (let port of KOS_MAPLE_DEVS) {
-        for (let device of port) {
-            if (device != null) count++;
+    for (let port of KOS_MAPLE_DEVICE_LIST) {
+        for (let unit of port) {
+            if (unit) count++;
         }
     }
     return count;
@@ -889,10 +635,10 @@ function maple_enum_count() {
  */
 function maple_enum_type(n, func) {
     let i = 0;
-    for (let port of KOS_MAPLE_DEVS) {
-        for (let device of port) {
-            if (device && device.info.functions & func) {
-                if (i == n) return device;
+    for (let port of KOS_MAPLE_DEVICE_LIST) {
+        for (let unit of port) {
+            if (unit && (unit.info.functions & func)) {
+                if (i == n) return unit;
                 i++;
             }
         }
@@ -908,8 +654,8 @@ function maple_enum_type(n, func) {
  * @returns {cont_state_t} The device's status data.
  */
 function maple_dev_status(dev) {
-    dev._peek_gamepad_data();
-    return dev._status;
+    if (dev instanceof maple_device_HTML5Gamepad_t) KOS_gamepad_poll(dev);
+    return dev.status;
 }
 
 /** 
@@ -919,10 +665,10 @@ function maple_dev_status(dev) {
  *  @return  {maple_device_t}       The device at that address, or NULL if no device is there.
 */
 function maple_enum_dev(p, u) {
-    for (let port of KOS_MAPLE_DEVS) {
-        for (let device of port) {
-            if (device && device.port == p && device.unit == u) {
-                return device.valid ? device : null;
+    for (let port of KOS_MAPLE_DEVICE_LIST) {
+        for (let unit of port) {
+            if (unit && unit.port == p && unit.unit == u) {
+                return unit.valid ? unit : null;
             }
         }
     }
@@ -932,20 +678,17 @@ function maple_enum_dev(p, u) {
 
 window.addEventListener("gamepadconnected", KOS_handle_gamepad_connection, false);
 window.addEventListener("gamepaddisconnected", KOS_handle_gamepad_connection, false);
+window.addEventListener("keydown", KOS_keyboard_handle_key, false);
+window.addEventListener("keyup", KOS_keyboard_handle_key, false);
 window.addEventListener("DOMContentLoaded", function () {
-    // create virtual slots
-    for (let p = 0; p < MAPLE_PORT_COUNT; p++) {
-        KOS_MAPLE_DEVS[p] = new Array(MAPLE_UNIT_COUNT);
-        for (let u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            KOS_MAPLE_DEVS[p][u] = null;
-        }
-    }
+    console.assert(KOS_MAPLE_DEVICE_LIST.length == MAPLE_PORT_COUNT);
+    for (const unit of KOS_MAPLE_DEVICE_LIST) console.assert(unit.length == MAPLE_UNIT_COUNT);
 
     // allocate VMUs
     let saveslots = SETTINGS.saveslots;
     for (let i = 0; i < saveslots; i++) {
         if (i < 4) {
-            KOS_MAPLE_DEVS[i][1] = new maple_device_t(MAPLE_FUNC_MEMCARD, i, 1);
+            KOS_MAPLE_DEVICE_LIST[i][1] = new maple_device_t(MAPLE_FUNC_MEMCARD, i, 1);
             continue;
         }
 
@@ -955,7 +698,7 @@ window.addEventListener("DOMContentLoaded", function () {
                 for (let mapping of KOS_GAMEPAD_TO_MAPLE_DEVICE) {
                     if (mapping.port != port && mapping.unit != unit) {
                         // unused space, assign as VMU
-                        KOS_MAPLE_DEVS[port][unit] = new maple_device_t(
+                        KOS_MAPLE_DEVICE_LIST[port][unit] = new maple_device_t(
                             MAPLE_FUNC_MEMCARD, port, unit
                         );
                         break L_find_upper_available_slot;
@@ -964,8 +707,6 @@ window.addEventListener("DOMContentLoaded", function () {
             }
         }
     }
-
-    KOS_MAPLE_slots_allocated = true;
 
     // allocate existing gamepads
     let gamepads = window.navigator.getGamepads();
@@ -979,35 +720,223 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 
     // load keyboard mappings
-    KOS_MAPLE_KEYBOARD.reloadMappings();
+    KOS_keyboard_reload_mappings();
 }, false);
 
 function KOS_handle_gamepad_connection(/**@type {GamepadEvent}*/ evt) {
-    if (!KOS_MAPLE_slots_allocated) return;
+    if (evt.gamepad.index >= KOS_GAMEPAD_TO_MAPLE_DEVICE.length) {
+        console.error("Maximum of number of devices reached");
+        return;
+    }
 
-    for (let mapping of KOS_GAMEPAD_TO_MAPLE_DEVICE) {
-        if (mapping.index != evt.gamepad.index) continue;
+    /**@type {maple_device_HTML5Gamepad_t} */
+    let dev = null;
 
-        let device = KOS_MAPLE_DEVS[mapping.port][mapping.unit];
-
-        if (!device) {
-            device = new maple_device_t(MAPLE_FUNC_CONTROLLER, mapping.port, mapping.unit);
-            device._gamepad_index = evt.gamepad.index;
-            KOS_MAPLE_DEVS[mapping.port][mapping.unit] = device;
+    const mapping = KOS_GAMEPAD_TO_MAPLE_DEVICE[evt.gamepad.index];
+    if (!KOS_MAPLE_DEVICE_LIST[mapping.port][mapping.unit]) {
+        KOS_MAPLE_DEVICE_LIST[mapping.port][mapping.unit] = dev = new maple_device_HTML5Gamepad_t(evt.gamepad);
+    } else {
+        const tmp = KOS_MAPLE_DEVICE_LIST[mapping.port][mapping.unit];
+        if (tmp instanceof maple_device_HTML5Gamepad_t) {
+            dev = tmp;
         }
+    }
 
-        device.valid = evt.type == "gamepadconnected";
-        device._status.buttons = 0x00;
-        device._status.joyx = device._status.joyy = 0;
-        device._status.joy2x = device._status.joy2y = 0;
-        device._status.ltrig = device._status.rtrig = 0;
+    console.assert(dev, "expected maple_device_HTML5Gamepad_t object");
 
-        console.log(
-            `gamepad id=${evt.gamepad.id} timestamp=${evt.gamepad.timestamp} status=${evt.type}`
-        );
+    dev.valid = evt.type == "gamepadconnected";
+    dev.status.buttons = 0x00;
+    dev.status.joyx = dev.status.joyy = 0;
+    dev.status.joy2x = dev.status.joy2y = 0;
+    dev.status.ltrig = dev.status.rtrig = 0;
+
+    console.log(`gamepad id=${evt.gamepad.id} timestamp=${evt.gamepad.timestamp} status=${evt.type}`);
+}
+
+function KOS_keyboard_reload_mappings() {
+    SETTINGS.get_bind("menuAccept", KOS_KEYBOARD_MAPPING_BUTTONS[1]);
+    SETTINGS.get_bind("menuAlternativeTracks", KOS_KEYBOARD_MAPPING_BUTTONS[3]);
+
+    SETTINGS.get_bind("menuSelectorLeft", KOS_KEYBOARD_MAPPING_TRIGGERS[0]);
+    SETTINGS.get_bind("menuSelectorRight", KOS_KEYBOARD_MAPPING_TRIGGERS[1]);
+
+    //SETTINGS.get_bind("left0", KOS_KEYBOARD_MAPPING_BUTTONS[5]);
+    //SETTINGS.get_bind("down0", KOS_KEYBOARD_MAPPING_BUTTONS[6]);
+    //SETTINGS.get_bind("up0", KOS_KEYBOARD_MAPPING_BUTTONS[7]);
+    //SETTINGS.get_bind("right0", KOS_KEYBOARD_MAPPING_BUTTONS[8]);
+    SETTINGS.get_bind("left1", KOS_KEYBOARD_MAPPING_BUTTONS[9]);
+    SETTINGS.get_bind("down1", KOS_KEYBOARD_MAPPING_BUTTONS[10]);
+    SETTINGS.get_bind("up1", KOS_KEYBOARD_MAPPING_BUTTONS[11]);
+    SETTINGS.get_bind("right1", KOS_KEYBOARD_MAPPING_BUTTONS[12]);
+    SETTINGS.get_bind("left2", KOS_KEYBOARD_MAPPING_BUTTONS[13]);
+    SETTINGS.get_bind("down2", KOS_KEYBOARD_MAPPING_BUTTONS[14]);
+    SETTINGS.get_bind("up2", KOS_KEYBOARD_MAPPING_BUTTONS[15]);
+    SETTINGS.get_bind("right2", KOS_KEYBOARD_MAPPING_BUTTONS[16]);
+    SETTINGS.get_bind("left3", KOS_KEYBOARD_MAPPING_BUTTONS[17]);
+    SETTINGS.get_bind("down3", KOS_KEYBOARD_MAPPING_BUTTONS[18]);
+    SETTINGS.get_bind("up3", KOS_KEYBOARD_MAPPING_BUTTONS[19]);
+    SETTINGS.get_bind("right3", KOS_KEYBOARD_MAPPING_BUTTONS[20]);
+
+    SETTINGS.get_bind("diamond", KOS_KEYBOARD_MAPPING_BUTTONS[21]);
+}
+
+function KOS_keyboard_handle_key(/**@type {KeyboardEvent} */ evt) {
+    if (evt.isComposing) return;
+    if (evt.repeat) return;
+
+    if (KOS_delegate_callback) KOS_delegate_callback(evt);
+
+    //
+    // just like "window.performance.now()", "evt.timeStamp" returns the milliseconds since
+    // the page was loaded. But here since the event was created. This should give
+    // better precission
+    //
+    let hold = evt.type == "keydown";
+
+    // special keys      
+    switch (evt.code) {
+        case "F11":
+            if (hold) pvr_fullscreen(null);
+            return;
+        case "F12":
+            //if (hold) PVRContext.TakeScreenshot();
+            return;
+        case "NumpadSubtract":
+            if (hold) mastervolume_volume_step(false);
+            return;
+        case "NumpadAdd":
+            if (hold) mastervolume_volume_step(true);
+            return;
+    }
+
+    for (let i = 0; i < KOS_KEYBOARD_MAPPING_BUTTONS.length; i++) {
+        const map = KOS_KEYBOARD_MAPPING_BUTTONS[i];
+        if (map.code == evt.code) {
+            KOS_keyboard_process_key(map.button, CONT_EX_NONE, false, hold);
+        }
+    }
+
+    for (let i = 0; i < KOS_KEYBOARD_MAPPING_AXES.length; i++) {
+        const map = KOS_KEYBOARD_MAPPING_AXES[i];
+        if (map.key_low == evt.code) {
+            KOS_keyboard_process_key(0x00, map.axes, true, hold);
+        }
+        if (map.key_high == evt.code) {
+            KOS_keyboard_process_key(0x00, map.axes, false, hold);
+        }
+    }
+
+    for (let i = 0; i < KOS_KEYBOARD_MAPPING_TRIGGERS.length; i++) {
+        const map = KOS_KEYBOARD_MAPPING_TRIGGERS[i];
+        if (map.code == evt.code) {
+            KOS_keyboard_process_key(0x00, map.trigger, false, hold);
+        }
     }
 }
 
+function KOS_keyboard_process_key(target_button, target_axis, negative, hold) {
+    if (target_button != 0) {
+        if (hold)
+            KOS_STUB_KEYBOARD.status.buttons |= target_button;
+        else
+            KOS_STUB_KEYBOARD.status.buttons &= ~target_button;
+        return;
+    }
+
+    switch (target_axis) {
+        case CONT_EX_TRIGGER_L:
+            KOS_STUB_KEYBOARD.status.ltrig = hold ? 255 : 0;
+            return;
+        case CONT_EX_TRIGGER_R:
+            KOS_STUB_KEYBOARD.status.rtrig = hold ? 255 : 0;
+            return;
+    }
+
+    let value = 0;
+    if (hold) value = negative ? -127 : 127;
+
+    switch (target_axis) {
+        case CONT_EX_AXIS_LX:
+            KOS_STUB_KEYBOARD.status.joyx = value;
+            break;
+        case CONT_EX_AXIS_LY:
+            KOS_STUB_KEYBOARD.status.joyy = value;
+            break;
+        case CONT_EX_AXIS_RX:
+            KOS_STUB_KEYBOARD.status.joy2x = value;
+            break;
+        case CONT_EX_AXIS_RY:
+            KOS_STUB_KEYBOARD.status.joy2x = value;
+            break;
+    }
+}
+
+function KOS_gamepad_poll(/**@type {maple_device_HTML5Gamepad_t}*/dev) {
+    //
+    // Notes:
+    //    * The dreamcast controller does not have enough buttons/axes like modern controllers.
+    //    * If the controller has additional buttons and/or axes, they are reported
+    //      by KallistiOS using CONT_CAPABILITY_* in maple_enum_type*() functions.
+    //
+    const gamepad = navigator.getGamepads()[dev.gamepad_index];
+
+    if (!gamepad || !gamepad.connected) return;
+
+    let new_timestamp = gamepad.timestamp;
+    if (new_timestamp == dev.timestamp) return;
+
+    dev.timestamp = new_timestamp;
+
+    // read the gamepad buttons using the standard layout
+    let length = gamepad.buttons.length;
+    for (let i = 0; i < KOS_JSGAMEPAD_BUTTONS_MAPPING.length && i < length; i++) {
+        const button_flag = KOS_JSGAMEPAD_BUTTONS_MAPPING[i];
+        const button = gamepad.buttons[i];
+
+        switch (button_flag) {
+            case CONT_EX_TRIGGER_L:
+                dev.status.ltrig = button.value * 255;
+                continue;
+            case CONT_EX_TRIGGER_R:
+                dev.status.rtrig = button.value * 255;
+                continue;
+        }
+
+        if (button.pressed)
+            dev.status.buttons |= button_flag;
+        else
+            dev.status.buttons &= ~button_flag;
+    }
+
+    // read the gamepad axes using the standard layout
+    length = gamepad.axes.length;
+    for (let i = 0; i < KOS_JSGAMEPAD_AXES_MAPPING.length && i < length; i++) {
+        const axis_flag = KOS_JSGAMEPAD_AXES_MAPPING[i];
+        const axis = gamepad.axes[i];
+        let value = axis * 0x7F;
+
+        switch (axis_flag) {
+            case CONT_EX_AXIS_LX:
+                dev.status.joyx = value;
+                break;
+            case CONT_EX_AXIS_LY:
+                dev.status.joyy = value;
+                break;
+            case CONT_EX_AXIS_RX:
+                dev.status.joy2x = value;
+                break;
+            case CONT_EX_AXIS_RY:
+                dev.status.joy2y = value;
+                break;
+            case CONT_EX_TRIGGER_L:
+                dev.status.ltrig = axis * 255;
+                break;
+            case CONT_EX_TRIGGER_R:
+                dev.status.rtrig = axis * 255;
+                break;
+        }
+    }
+}
 
 
 //
@@ -1386,8 +1315,42 @@ function MUTEX_INITIALIZER() {
 }
 
 
-// sound interface stuff
+//
+// asic stuff
+//
+const ASIC_EVT_PVR_VBLANK_BEGIN = 0x0003;
 
-function snd_sh4_to_aica_start() {
-    // STUB
+//
+// vblank stuff
+//
+
+/**
+ * @callback asic_evt_handler
+ * @param {number} code
+ * @param {object} data
+ * @returns {void}
+ */
+
+/**@type {{hnd:asic_evt_handler, data:object}[]} */
+const KOS_VBLANK_HANDLERS = new Array(16);
+
+function vblank_handler_add(/**@type {asic_evt_handler}*/ hnd, /**@type {object}*/ data) {
+    for (let i = 0; i < KOS_VBLANK_HANDLERS.length; i++) {
+        if (!KOS_VBLANK_HANDLERS[i]) {
+            KOS_VBLANK_HANDLERS[i] = { hnd, data };
+            return i;
+        }
+    }
+    return -1;
 }
+
+function vblank_handler_remove(/**@type {number}*/handle) {
+    if (handle >= 0 && handle < KOS_VBLANK_HANDLERS.length) {
+        if (KOS_VBLANK_HANDLERS[handle]) {
+            KOS_VBLANK_HANDLERS[handle] = null;
+            return 0;
+        }
+    }
+    return -1;
+}
+

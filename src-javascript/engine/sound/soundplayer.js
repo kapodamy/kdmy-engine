@@ -226,7 +226,15 @@ function soundplayer_get_position(soundplayer) {
 
 function soundplayer_set_queueing(soundplayer, enabled) {
     // STUB, needs C implementation
+    void soundplayer;
+    void enabled;
 }
+
+function soundplayer_force_resync(soundplayer) {
+    // STUB, needs C implementation
+    void soundplayer;
+}
+
 
 function soundplayer_internal_handle_play(soundplayer) {
     soundplayer.handler.play().catch(function (e) {
