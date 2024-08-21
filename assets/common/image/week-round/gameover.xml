@@ -86,7 +86,7 @@
             </Text>
         </Group>
 
-        <Text fontName="vcr" fontSize="96" color="0xFF0000">
+        <Text fontName="vcr" fontSize="90" color="0xFF0000">
             <Action>
                 <Location x="20" y="600" z="201.2" />
                 <Property name="alpha" value="0.9" />

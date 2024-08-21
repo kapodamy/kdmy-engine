@@ -42,10 +42,14 @@
         </Sprite>
 
         <!-- gameplay stats -->
-        <Group>
-            <Action>
+        <Group name="judgement" initialAction="hide_judgement">
+            <Action name="show_judgement">
                 <Static />
+                <Show />
                 <Animation name="gameover_judgement" restart="true" />
+            </Action>
+            <Action name="hide_judgement">
+                <Hide />
             </Action>
 
             <!-- stats background -->
@@ -82,7 +86,7 @@
             </Text>
         </Group>
 
-        <Text fontName="vcr" fontSize="64" color="0xFF0000">
+        <Text fontName="vcr" fontSize="58" color="0xFF0000">
             <Action>
                 <Location x="10" y="400" z="201.2" />
                 <Property name="alpha" value="0.9" />
