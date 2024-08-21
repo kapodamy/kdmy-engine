@@ -282,8 +282,9 @@ function songprogressbar_internal_seconds_to_string(stringbuilder, seconds) {
     const TIME_MINUTES = "$im";
     const TIME_HOURS = "$ih";
 
+    stringbuilder_clear(stringbuilder);
+
     if (Number.isNaN(seconds)) {
-        stringbuilder_clear(stringbuilder);
         stringbuilder_add(stringbuilder, "--m--s");
         return;
     }
@@ -291,8 +292,6 @@ function songprogressbar_internal_seconds_to_string(stringbuilder, seconds) {
     let h = Math.floor(seconds / 3600.0);
     let m = Math.floor((seconds - (h * 3600.0)) / 60.0);
     let s = seconds - (h * 3600.0) - (m * 60.0);
-
-    stringbuilder_clear(stringbuilder);
 
     //
     // The 0x30 codepoint means the number zero "0" character

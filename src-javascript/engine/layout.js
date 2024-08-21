@@ -352,6 +352,7 @@ function layout_destroy(layout) {
                 layout.vertex_list[i].placeholder = undefined;
                 break;
             case VERTEX_TEXTSPRITE:
+                textsprite_animation_set(layout.vertex_list[i].vertex, null);// avoid dispose action animation
                 textsprite_destroy(layout.vertex_list[i].vertex);
                 break;
         }
@@ -1248,11 +1249,11 @@ function layout_animate(layout, elapsed) {
         if (fontholder.font_from_atlas) completed += fontglyph_animate(fontholder.font, elapsed);
     }
 
-    if (!camera_animate(layout.camera_helper, elapsed)) {
+    if (camera_animate(layout.camera_helper, elapsed) < 1) {
         camera_apply(layout.camera_helper, null);
     }
 
-    if (!camera_animate(layout.camera_secondary_helper, elapsed)) {
+    if (camera_animate(layout.camera_secondary_helper, elapsed) < 1) {
         camera_apply(layout.camera_secondary_helper, null);
     }
 
@@ -2759,6 +2760,7 @@ async function layout_parse_sound(unparsed_sound, layout_context) {
         name: unparsed_sound.getAttribute("name"),
         initial_action_name: unparsed_sound.getAttribute("initialAction"),
         soundplayer: soundplayer,
+        type = VERTEX_NONE,
 
         actions_size: 0,
         actions: null,
@@ -3824,16 +3826,19 @@ function layout_helper_add_action_atlasapply(unparsed_entry, atlas, action_entri
     }
 
     let atlas_entry_name = unparsed_entry.getAttribute("entry");
-    let atlas_entry = clone_object(atlas_get_entry(atlas, atlas_entry_name));
+    let atlas_entry = atlas_get_entry(atlas, atlas_entry_name);
 
     if (!atlas_entry) {
         console.warn(`layout_helper_add_action_atlasapply() missing atlas entry name '${atlas_entry_name}': ${unparsed_entry.outerHTML}`);
         return;
     }
 
+    let atlas_entry_copy = clone_object(atlas_entry);
+    atlas_entry_copy.name = null;// unused
+
     let entry = {
         type: LAYOUT_ACTION_ATLASAPPLY,
-        misc: atlas_entry,
+        misc: atlas_entry_copy,
         override_size: vertexprops_parse_boolean(unparsed_entry, "overrideSize", false)
     };
 

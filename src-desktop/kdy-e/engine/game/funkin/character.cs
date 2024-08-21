@@ -139,7 +139,7 @@ public class Character : IDraw, IAnimate {
         this.manifest_align_vertical = charactermanifest.align_vertical;
         this.manifest_align_horizontal = charactermanifest.align_horizontal;
 
-        this.reference_width = 0f; this.reference_height = 0f;
+        this.reference_width = -1f; this.reference_height = -1f;
         this.enable_reference_size = false;
 
         this.offset_x = charactermanifest.offset_x; this.offset_y = charactermanifest.offset_y;
@@ -247,7 +247,6 @@ public class Character : IDraw, IAnimate {
             //free(state.sing_alt);
             //free(state.miss);
             //free(state.extras);
-            //free(state);
         }
 
         this.states.Destroy(false);
@@ -1104,11 +1103,10 @@ L_read_state:
 
     private static AnimSprite InternalImportAnimation(ModelHolder mdlhldr, string anim_name, string prefix, string suffix, bool is_sustain) {
         if (StringUtils.IsEmpty(anim_name)) return null;
+        string tmp = StringUtils.Concat(prefix, anim_name, suffix);
 
-        anim_name = StringUtils.Concat(prefix, anim_name, suffix);
-        AnimSprite animsprite = InternalImportAnimation2(mdlhldr, anim_name, is_sustain);
-
-        //if (StringUtils.IsNotEmpty(anim_name)) free(anim_name);
+        AnimSprite animsprite = InternalImportAnimation2(mdlhldr, tmp, is_sustain);
+        //free(tmp);
 
         return animsprite;
     }
@@ -1364,8 +1362,8 @@ L_read_state:
 
         this.statesprite.GetDrawSize(out draw_width, out draw_height);
         if (this.enable_reference_size) {
-            if (this.reference_width >= 0) draw_width = (this.reference_width - draw_width) / 2.0f;
-            if (this.reference_height >= 0) draw_height = (this.reference_height - draw_height) / 2.0f;
+            if (this.reference_width >= 0f) draw_width = (this.reference_width - draw_width) / 2f;
+            if (this.reference_height >= 0f) draw_height = (this.reference_height - draw_height) / 2f;
         }
 
         float action_offset_x, action_offset_y;

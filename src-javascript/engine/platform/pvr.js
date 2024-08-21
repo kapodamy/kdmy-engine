@@ -25,6 +25,7 @@ var /**@type {string[]}*/ pvr_launch_args = new Array();
 var /** @type {HTMLInputElement} */PVR_STATUS = null;
 
 
+const VERTEX_NONE = -1;
 const VERTEX_SPRITE = 0;
 const VERTEX_TEXTSPRITE = 1;
 const VERTEX_STATESPRITE = 2;

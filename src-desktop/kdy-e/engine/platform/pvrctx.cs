@@ -24,6 +24,7 @@ public enum PVRFlag : int {
 }
 
 public enum PVRContextVertex {
+    NONE,
     SPRITE,
     TEXTSPRITE,
     STATESPRITE,

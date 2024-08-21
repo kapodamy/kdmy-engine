@@ -108,6 +108,7 @@ public class WeekGameOver : IDraw, IAnimate {
         WeekSelectorDifficult selector = new WeekSelectorDifficult(animlist, ui_icons, layout);
         selector.SetVisible(false);
         ui_icons.Destroy();
+        if (animlist != null) animlist.Destroy();
 
 
         this.layout = layout;

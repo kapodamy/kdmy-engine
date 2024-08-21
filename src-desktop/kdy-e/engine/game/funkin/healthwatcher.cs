@@ -97,7 +97,8 @@ public class HealthWatcher {
             double amount = (-opponents_total) / players_count;
 
             foreach (CharacterInfo character in this.players) {
-                character.playerstats.AddHealth(amount, character.can_die);
+                if (amount != 0.0)
+                    character.playerstats.AddHealth(amount, character.can_die);
 
                 if (character.can_die)
                     character.playerstats.KillIfNegativeHealth();

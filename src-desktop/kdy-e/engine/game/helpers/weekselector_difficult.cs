@@ -264,7 +264,10 @@ public class WeekSelectorDifficult : IDraw, IAnimate {
         this.sprite_customs = StateSprite.InitFromTexture(null);
         this.sprite_customs.SetVisible(false);
 
-        if (weekinfo == null) return;
+        if (weekinfo == null){
+            this.list = null;
+            return;
+        }
 
         this.list_size = 3;
         if (StringUtils.IsNotEmpty(weekinfo.custom_difficults_model)) this.list_size += weekinfo.custom_difficults_size;

@@ -403,7 +403,7 @@ public class GameplayManifest {
             // example: "Dad Battle" --> "dadbattle"
             int song_name_length = song.name.Length;
             StringBuilder stringbuilder = new StringBuilder(song_name_length);
-            stringbuilder.AddWithReplaceKDY(song.name, "\x20", null);
+            stringbuilder.AddWithReplaceKDY(song.name, "\x20", "");
             stringbuilder.LowerCaseKDY();
             string lowercase_name = stringbuilder.GetCopyKDY();
             //stringbuilder.Destroy();
@@ -458,6 +458,8 @@ public class GameplayManifest {
         } else if (JSONParser.HasPropertyArray(json_song, "distributionsModels")) {
             song.has_distributions = true;
             GameplayManifest.ParseDistributionsModels(json_song, out song.distributions, out song.distributions_size);
+        } else {
+            song.has_distributions = false;
         }
 
         song.healthbar = GameplayManifest.ParseHealthbar(json_song);

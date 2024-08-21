@@ -34,6 +34,7 @@ const HEALTHBAR_RATIO_SIZE_NORMAL = 600.0;// 600px in a 1280x720 screen
 const HEALTHBAR_LOW_HEALTH_PERCENT = 0.10;// warn if less or equal to 10%
 const HEALTHBAR_LOW_HEALTH_FLASH_RATIO = 8;// active flash duration in BMP/N
 const HEALTHBAR_UI_ICON_BUMP = "healthbar_icon_bump";// picked from UI animlist
+const HEALTHBAR_INTERNAL_STATE_NAME = Symbol("healthbar-state");
 const HEALTHBAR_WARNING_MODEL = "/assets/common/image/week-round/healthbar_warns.xml";
 
 
@@ -59,9 +60,8 @@ function healthbar_init(x, y, z, length, dimmen, border, icon_overlap, warn_heig
         extra_enabled: false,
         extra_translation: 0.0,
 
-        // note: in C replace "Symbol" with an unique constant
-        selected_state_player: Symbol,
-        selected_state_opponent: Symbol,
+        selected_state_player: HEALTHBAR_INTERNAL_STATE_NAME,
+        selected_state_opponent: HEALTHBAR_INTERNAL_STATE_NAME,
 
         bump_animation_opponent: null,
         bump_animation_player: null,
@@ -149,9 +149,9 @@ function healthbar_destroy(healthbar) {
     drawable_destroy(healthbar.drawable);
     if (healthbar.drawable_animation) animsprite_destroy(healthbar.drawable_animation);
 
-    if (healthbar.selected_state_player != Symbol)
+    if (healthbar.selected_state_player != HEALTHBAR_INTERNAL_STATE_NAME)
         healthbar.selected_state_player = undefined;
-    if (healthbar.selected_state_opponent != Symbol)
+    if (healthbar.selected_state_opponent != HEALTHBAR_INTERNAL_STATE_NAME)
         healthbar.selected_state_opponent = undefined;
 
     tweenlerp_destroy(healthbar.tweenlerp);
@@ -969,14 +969,12 @@ function healthbar_internal_icon_flip(statesprite, is_vertical, do_flip) {
 }
 
 function healthbar_internal_toggle_chrctr_state(healthbar, slctd_ptr, prefix, state_name, bar, icon) {
-    if (state_name == Symbol) return 0;
-
     // JS only
-    if (healthbar[slctd_ptr]) healthbar[slctd_ptr] = undefined;
+    if (healthbar[slctd_ptr] != HEALTHBAR_INTERNAL_STATE_NAME && healthbar[slctd_ptr]) healthbar[slctd_ptr] = undefined;
     healthbar[slctd_ptr] = strdup(state_name);
 
     // C version
-    //if (*slctd_ptr) free_chk(*slctd_ptr);
+    //if (*slctd_ptr != HEALTHBAR_INTERNAL_STATE_NAME) free_chk(*slctd_ptr);
     //*slctd_ptr = strdup(state_name);
 
     return healthbar_internal_toggle_chrctr_state2(prefix, state_name, bar, icon);
@@ -1089,7 +1087,7 @@ function healthbar_internal_add_warning(sprite, modelholder, use_alt, height, st
     statesprite_state_remove(sprite, state_name);
     let state = statesprite_state_add(sprite, modelholder, anim_name, state_name);
 
-    if (use_alt) anim_name = undefined;
+    anim_name = undefined;
 
     if (!state) return false;
 

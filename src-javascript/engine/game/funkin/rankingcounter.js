@@ -119,6 +119,10 @@ function rankingcounter_init(plchldr_rank, plchldr_accuracy, fnthldr) {
 function rankingcounter_destroy(rankingcounter) {
     luascript_drop_shared(rankingcounter);
 
+    // destroy the attached animation of textsprite
+    let old_animation = textsprite_animation_set(rankingcounter.textsprite, null);
+    if (old_animation) animsprite_destroy(old_animation);
+
     textsprite_destroy(rankingcounter.textsprite);
     drawable_destroy(rankingcounter.drawable_rank);
     drawable_destroy(rankingcounter.drawable_accuracy);
@@ -130,10 +134,6 @@ function rankingcounter_destroy(rankingcounter) {
         if (rankingcounter.ranking_items[i].statesprite)
             statesprite_destroy(rankingcounter.ranking_items[i].statesprite);
     }
-
-    // destroy the attached animation of textsprite
-    let old_animation = textsprite_animation_set(rankingcounter.textsprite, null);
-    if (old_animation) animsprite_destroy(old_animation);
 
     if (rankingcounter.selected_state != Symbol) 
         rankingcounter.selected_state = undefined;
@@ -317,8 +317,8 @@ function rankingcounter_set_default_ranking_text_animation(rankingcounter, animl
     if (!animlist_item) return;
     let animsprite = animsprite_init(animlist_item);
 
-    rankingcounter_set_default_ranking_text_animation2(rankingcounter, animsprite);
-    if (animsprite) animsprite_destroy(animsprite);
+    let old_animation = textsprite_animation_set(rankingcounter.textsprite, animsprite);
+    if (old_animation) animsprite_destroy(old_animation);
 }
 
 function rankingcounter_set_default_ranking_text_animation2(rankingcounter, animsprite) {

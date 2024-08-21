@@ -315,12 +315,14 @@ public class Week {
         if (roundcontext.dialogue != null) roundcontext.dialogue.Destroy();
         if (roundcontext.songprogressbar != null) roundcontext.songprogressbar.Destroy();
         if (roundcontext.autouicosmetics != null) roundcontext.autouicosmetics.Destroy();
+        if (roundcontext.initparams.animlist != null) roundcontext.initparams.animlist.Destroy();
 
         //free(roundcontext.events);
         //free(roundcontext.healthbarparams.player_icon_model);
         //free(roundcontext.healthbarparams.opponent_icon_model);
 
         for (int i = 0 ; i < roundcontext.players_size ; i++) {
+            if (roundcontext.players[i].playerstats != null) roundcontext.players[i].playerstats.Destroy();
             if (roundcontext.players[i].character != null) roundcontext.players[i].character.Destroy();
             if (roundcontext.players[i].conductor != null) roundcontext.players[i].conductor.Destroy();
             if (roundcontext.players[i].notepool != null) roundcontext.players[i].notepool.Destroy();
@@ -393,8 +395,8 @@ public class Week {
                 bpm = 100f,
                 speed = 1.0,
 
-                camera_name_opponent = Week.ROUND_CAMERA_PLAYER,
-                camera_name_player = Week.ROUND_CAMERA_OPONNENT,
+                camera_name_opponent = Week.ROUND_CAMERA_OPONNENT,
+                camera_name_player = Week.ROUND_CAMERA_PLAYER,
 
                 layout_rollback = true
             },
@@ -534,6 +536,7 @@ public class Week {
 
         // setup custom folder (if exists) and the week folder as current directory
         string week_folder = WeekEnumerator.GetWeekFolder(weekinfo);
+        FS.FolderStackPush();
         FS.SetWorkingFolder(week_folder, false);
         //free(week_folder);
         GameMain.custom_style_from_week = weekinfo;
@@ -556,6 +559,7 @@ public class Week {
         if (gameplaymanifest == null) {
             //(JS & C# only) enable texture deferring
             Texture.DisableDefering(false);
+            FS.FolderStackPop();
             return 1;
         }
 
@@ -580,6 +584,7 @@ public class Week {
                 Logger.Error("week_main() is out of bounds, check your gameplay manifest");
                 gameplaymanifest.Destroy();
                 //free(songs_attempts);
+                FS.FolderStackPop();
                 return 1;
             }
             roundcontext.song_index = single_song_index;
@@ -748,6 +753,7 @@ public class Week {
             // dispose all allocated resources
             //free(songs_attempts);
             Week.Destroy(roundcontext, gameplaymanifest);
+            FS.FolderStackPop();
 
             // if false, goto weekselector
             return mainmenu ? 0 : 1;
@@ -829,6 +835,7 @@ public class Week {
         // dispose all allocated resources
         //free(songs_attempts);
         Week.Destroy(roundcontext, gameplaymanifest);
+        FS.FolderStackPop();
 
         return 1;
     }
@@ -938,9 +945,6 @@ public class Week {
         ui.songprogressbar_width = placeholder.width;
         ui.songprogressbar_height = placeholder.height;
         ui.songprogressbar_align = ui.songprogressbar_isvertical ? placeholder.align_vertical : placeholder.align_horizontal;
-
-        // pick streakcounter and rankingcounter values
-        Week.InternalPickCountersValuesFromLayout(roundcontext);
 
         placeholder = layout.GetPlaceholder("ui_song_info");
         if (placeholder == null) {
@@ -1664,6 +1668,7 @@ public class Week {
         if (disable_resource_cache && old_players_size > 0) {
             // dispose old players array now
             for (int i = 0 ; i < old_players_size ; i++) {
+                if (old_players[i].playerstats != null) old_players[i].playerstats.Destroy();
                 if (old_players[i].character != null) old_players[i].character.Destroy();
                 if (old_players[i].conductor != null) old_players[i].conductor.Destroy();
                 if (old_players[i].notepool != null) old_players[i].notepool.Destroy();
@@ -1902,6 +1907,7 @@ public class Week {
 
         // dispose old players array
         for (int i = 0 ; i < old_players_size ; i++) {
+            if (old_players[i].playerstats != null) old_players[i].playerstats.Destroy();
             if (old_players[i].character != null) old_players[i].character.Destroy();
             if (old_players[i].conductor != null) old_players[i].conductor.Destroy();
             if (old_players[i].notepool != null) old_players[i].notepool.Destroy();

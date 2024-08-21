@@ -239,7 +239,10 @@ async function weekselector_difficult_load(weekdifficult, weekinfo, default_diff
     weekdifficult.sprite_customs = statesprite_init_from_texture(null);
     statesprite_set_visible(weekdifficult.sprite_customs, false);
 
-    if (!weekinfo) return;
+    if (!weekinfo) {
+        weekdifficult.list = null;
+        return;
+    }
 
     weekdifficult.list_size = 3;
     if (weekinfo.custom_difficults_model) weekdifficult.list_size += weekinfo.custom_difficults_size;

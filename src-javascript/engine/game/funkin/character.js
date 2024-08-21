@@ -79,7 +79,7 @@ async function character_init(charactermanifest) {
         manifest_align_vertical: charactermanifest.align_vertical,
         manifest_align_horizontal: charactermanifest.align_horizontal,
 
-        reference_width: 0.0, reference_height: 0.0,
+        reference_width: -1.0, reference_height: -1.0,
         enable_reference_size: false,
 
         offset_x: charactermanifest.offset_x, offset_y: charactermanifest.offset_y,
@@ -189,7 +189,6 @@ function character_destroy(character) {
         state.sing_alt = undefined;
         state.miss = undefined;
         state.extras = undefined;
-        state = undefined;
     }
 
     arraylist_destroy(character.states, false);
@@ -1060,10 +1059,10 @@ async function character_internal_import_extra(extra_info, mdlhldr_rrlst, txtr_r
 
 function character_internal_import_animation(mdlhldr, anim_name, prefix, suffix, is_sustain) {
     if (!anim_name) return null;
-    anim_name = string_concat(3, prefix, anim_name, suffix);
+    let tmp = string_concat(3, prefix, anim_name, suffix);
 
-    let animsprite = character_internal_import_animation2(mdlhldr, anim_name, is_sustain);
-    if (!anim_name) anim_name = undefined;
+    let animsprite = character_internal_import_animation2(mdlhldr, tmp, is_sustain);
+    tmp = undefined;
 
     return animsprite;
 }

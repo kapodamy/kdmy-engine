@@ -294,7 +294,7 @@ function gameplaymanifest_parse_song(song, json_song, players_count) {
         // example: "Dad Battle" --> "dadbattle"
         let song_name_length = song.name.length;
         let stringbuilder = stringbuilder_init(song_name_length);
-        stringbuilder_add_with_replace(stringbuilder, song.name, "\x20", null);
+        stringbuilder_add_with_replace(stringbuilder, song.name, "\x20", "");
         stringbuilder_lowercase(stringbuilder);
         let lowercase_name = stringbuilder_finalize(stringbuilder);
 
@@ -348,6 +348,8 @@ function gameplaymanifest_parse_song(song, json_song, players_count) {
     } else if (json_has_property_array(json_song, "distributionsModels")) {
         song.has_distributions = true;
         gameplaymanifest_parse_distributions_models(json_song, song, "distributions", "distributions_size");
+    } else {
+        song.has_distributions = false;
     }
 
     song.healthbar = gameplaymanifest_parse_healthbar(json_song);

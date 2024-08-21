@@ -66,6 +66,7 @@ async function week_gameover_init() {
     let selector = await weekselector_difficult_init(animlist, ui_icons, layout);
     weekselector_difficult_visible(selector, false);
     modelholder_destroy(ui_icons);
+    if (animlist) animlist_destroy(animlist);
 
     let weekgameover = {
         layout,

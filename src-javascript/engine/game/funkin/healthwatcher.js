@@ -91,7 +91,8 @@ function healthwatcher_balance(healthwatcher, healthbar) {
         let amount = (-opponents_total) / players_count;
 
         for (let character of arraylist_iterate4(healthwatcher.players)) {
-            playerstats_add_health(character.playerstats, amount, character.can_die);
+            if (amount != 0.0)
+                playerstats_add_health(character.playerstats, amount, character.can_die);
 
             if (character.can_die)
                 playerstats_kill_if_negative_health(character.playerstats);

@@ -308,12 +308,14 @@ async function week_destroy(/** @type {RoundContext} */ roundcontext, gameplayma
     if (roundcontext.dialogue) dialogue_destroy(roundcontext.dialogue);
     if (roundcontext.songprogressbar) songprogressbar_destroy(roundcontext.songprogressbar);
     if (roundcontext.autouicosmetics) autouicosmetics_destroy(roundcontext.autouicosmetics);
+    if (roundcontext.initparams.animlist) animlist_destroy(roundcontext.initparams.animlist);
 
     roundcontext.events = undefined;
     roundcontext.healthbarparams.player_icon_model = undefined;
     roundcontext.healthbarparams.opponent_icon_model = undefined;
 
     for (let i = 0; i < roundcontext.players_size; i++) {
+        if (roundcontext.players[i].playerstats) playerstats_destroy(roundcontext.players[i].playerstats);
         if (roundcontext.players[i].character) character_destroy(roundcontext.players[i].character);
         if (roundcontext.players[i].conductor) conductor_destroy(roundcontext.players[i].conductor);
         if (roundcontext.players[i].notepool) notepool_destroy(roundcontext.players[i].notepool);
@@ -389,8 +391,8 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             bpm: 100.0,
             speed: 1.0,
 
-            camera_name_opponent: WEEKROUND_CAMERA_PLAYER,
-            camera_name_player: WEEKROUND_CAMERA_OPONNENT,
+            camera_name_opponent: WEEKROUND_CAMERA_OPONNENT,
+            camera_name_player: WEEKROUND_CAMERA_PLAYER,
 
             layout_rollback: true
         },
@@ -531,6 +533,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
 
     // setup custom folder (if exists) and the week folder as current directory
     let week_folder = weekenumerator_get_week_folder(weekinfo);
+    fs_folder_stack_push();
     fs_set_working_folder(week_folder, false);
     week_folder = undefined;
     custom_style_from_week = weekinfo;
@@ -553,6 +556,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     if (!gameplaymanifest) {
         //(JS & C# only) enable texture deferring
         texture_disable_defering(false);
+        fs_folder_stack_pop();
         return 1;
     }
 
@@ -577,6 +581,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
             console.error("week_main() single_song_index is out of bounds, check your gameplay manifest");
             gameplaymanifest_destroy(gameplaymanifest);
             songs_attempts = undefined;
+            fs_folder_stack_pop();
             return 1;
         }
         roundcontext.song_index = single_song_index;
@@ -745,6 +750,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         // dispose all allocated resources
         songs_attempts = undefined;
         await week_destroy(roundcontext, gameplaymanifest);
+        fs_folder_stack_pop();
 
         // if false, goto weekselector
         return mainmenu ? 0 : 1;
@@ -825,6 +831,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
     // dispose all allocated resources
     songs_attempts = undefined;
     await week_destroy(roundcontext, gameplaymanifest);
+    fs_folder_stack_pop();
 
     return 1;
 }
@@ -935,10 +942,6 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     ui.songprogressbar_width = placeholder.width;
     ui.songprogressbar_height = placeholder.height;
     ui.songprogressbar_align = ui.songprogressbar_isvertical ? placeholder.align_vertical : placeholder.align_horizontal;
-
-
-    // pick streakcounter and rankingcounter values
-    week_internal_pick_counters_values_from_layout(roundcontext);
 
     placeholder = layout_get_placeholder(layout, "ui_song_info");
     if (!placeholder) {
@@ -1650,6 +1653,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
     if (disable_resource_cache && old_players_size > 0) {
         // dispose old players array now
         for (let i = 0; i < old_players_size; i++) {
+            if (old_players[i].playerstats) playerstats_destroy(old_players[i].playerstats);
             if (old_players[i].character) character_destroy(old_players[i].character);
             if (old_players[i].conductor) conductor_destroy(old_players[i].conductor);
             if (old_players[i].notepool) notepool_destroy(old_players[i].notepool);
@@ -1893,6 +1897,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
 
     // dispose old players array
     for (let i = 0; i < old_players_size; i++) {
+        if (old_players[i].playerstats) playerstats_destroy(old_players[i].playerstats);
         if (old_players[i].character) character_destroy(old_players[i].character);
         if (old_players[i].conductor) conductor_destroy(old_players[i].conductor);
         if (old_players[i].notepool) notepool_destroy(old_players[i].notepool);
@@ -2646,7 +2651,7 @@ async function week_round(/** @type {RoundContext} */roundcontext, from_retry, s
 
         healthwatcher_balance(roundcontext.healthwatcher, roundcontext.healthbar);
 
-        if (healthwatcher_has_deads(roundcontext.healthwatcher, true)) {
+        if (healthwatcher_has_deads(roundcontext.healthwatcher, true) > 0) {
             gameover = true;
             break;
         }

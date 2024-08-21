@@ -850,7 +850,6 @@ function funkinsave_internal_write_string(/**@typedef {string}*/str, /**@type {D
     size_t str_len = funkinsave_internal_string_bytelength(str);
 
     memcpy(buffer, str, str_len);
-    buffer[str_len] = 0x00;
 
     dataview->buffer_u8 += str_len;
     return;

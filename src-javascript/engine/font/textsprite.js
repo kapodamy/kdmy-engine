@@ -53,7 +53,6 @@ function textsprite_init(font, font_is_truetype, color_by_addition, size, rbg8_c
 
         animation_external: null,
         animation_selected: null,
-        animation_list: linkedlist_init(),
 
         antialiasing: PVRCTX_FLAG_DEFAULT,
 
@@ -134,7 +133,7 @@ function textsprite_destroy(textsprite) {
 
     arraylist_destroy(textsprite.paragraph_array, 0);
 
-    linkedlist_destroy(textsprite.animation_list);
+    if (textsprite.animation_selected) animsprite_destroy(textsprite.animation_selected);
 
     TEXTSPRITE_POOL.delete(textsprite.id);
     luascript_drop_shared(textsprite.matrix_source);

@@ -203,13 +203,14 @@ async function main(argc, argv) {
     if (background_menu_music) soundplayer_loop_enable(background_menu_music, true);
 
     /*await week_main(
-        weeks_array.array[7],
-        0,
+        weeks_array.array[7]
+        false,
         "NORMAL",
         "/assets/common/data/BOYFRIEND.json",
         "/assets/common/data/GIRLFRIEND.json",
         null,
-        -1
+        -1,
+        "RETURN TO THE BIOS"
     );
     console.info("week_main() execution done, engine is terminated");
     return 0;*/
@@ -341,13 +342,13 @@ async function main_spawn_coroutine(background_layout, function_routine, argumen
     let ret;
 
     if (background_layout) {
-        while (thd.state != STATE_FINISHED) {
+        do {
             let elapsed = await pvrctx_wait_ready();
             pvr_context_reset(pvr_context);
 
             layout_animate(background_layout, elapsed);
             layout_draw(background_layout, pvr_context);
-        }
+        } while (thd.state != STATE_FINISHED);
 
         // aquire the return value and destroy the thread struct
         ret = thd.rv;

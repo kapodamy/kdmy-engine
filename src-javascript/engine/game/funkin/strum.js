@@ -312,7 +312,7 @@ function strum_set_notes(strum, chart, strumsdefs, strumsdefs_size, player_id, n
     // step 1: count the notes required for this strum
     let count = 0;
     for (let i = 0; i < player_notes_size; i++) {
-        let note_direction = player_notes[i].direction;
+        let note_direction = Number.parseInt(player_notes[i].direction);
         for (let j = 0; j < note_ids_size; j++) {
             if (note_direction == notes_ids[j]) {
                 count++;

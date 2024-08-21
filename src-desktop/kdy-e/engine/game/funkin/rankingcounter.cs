@@ -147,6 +147,10 @@ public class RankingCounter {
     public void Destroy() {
         Luascript.DropShared(this);
 
+        // destroy the attached animation of textsprite
+        AnimSprite old_animation = this.textsprite.AnimationSet(null);
+        if (old_animation != null) old_animation.Destroy();
+
         this.textsprite.Destroy();
         this.drawable_rank.Destroy();
         this.drawable_accuracy.Destroy();
@@ -157,10 +161,6 @@ public class RankingCounter {
             if (this.ranking_items[i].statesprite != null)
                 this.ranking_items[i].statesprite.Destroy();
         }
-
-        // destroy the attached animation of textsprite
-        AnimSprite old_animation = this.textsprite.AnimationSet(null);
-        if (old_animation != null) old_animation.Destroy();
 
         //if (this.selected_state != RankingCounter.INTERNAL_STATE_NAME)
         //    free(this.selected_state);
@@ -343,12 +343,12 @@ public class RankingCounter {
         if (animlist_item == null) return;
         AnimSprite animsprite = AnimSprite.Init(animlist_item);
 
-        SetDefaultRankingTextAnimation2(animsprite);
-        animsprite.Destroy();
+        AnimSprite old_animation = this.textsprite.AnimationSet(animsprite);
+        if (old_animation != null) old_animation.Destroy();
     }
 
     public void SetDefaultRankingTextAnimation2(AnimSprite animsprite) {
-        AnimSprite old_animation = this.textsprite.AnimationSet(animsprite.Clone());
+        AnimSprite old_animation = this.textsprite.AnimationSet(animsprite != null ? animsprite.Clone() : null);
         if (old_animation != null) old_animation.Destroy();
     }
 

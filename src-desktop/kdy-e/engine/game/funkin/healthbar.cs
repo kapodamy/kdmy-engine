@@ -1144,7 +1144,7 @@ public class HealthBar : IDraw, IAnimate {
         sprite.StateRemove(state_name);
         StateSpriteState state = sprite.StateAdd(modelholder, anim_name, state_name);
 
-        //if (use_alt) free(anim_name);
+        //free(anim_name);
 
         if (state == null) return 0;
 

@@ -206,13 +206,13 @@ public static class GameMain {
         R ret;
 
         if (background_layout != null) {
-            while (thread.state != STATE.FINISHED) {
+            do {
                 float elapsed = PVRContext.global_context.WaitReady();
                 PVRContext.global_context.Reset();
 
                 background_layout.Animate(elapsed);
                 background_layout.Draw(PVRContext.global_context);
-            }
+            } while (thread.state != STATE.FINISHED);
 
             // aquire the return value and destroy the thread struct
             ret = (R)thread.rv;

@@ -46,7 +46,6 @@ public class TextSprite : IVertex {
     private float last_draw_height;
     private AnimSprite animation_external;
     private AnimSprite animation_selected;
-    private LinkedList<AnimSprite> animation_list;
     private PVRFlag antialiasing;
     private int wordbreak;
     private PSShader psshader;
@@ -109,7 +108,6 @@ public class TextSprite : IVertex {
 
             animation_external = null,
             animation_selected = null,
-            animation_list = new LinkedList<AnimSprite>(),
 
 
             antialiasing = PVRFlag.DEFAULT,
@@ -169,7 +167,7 @@ public class TextSprite : IVertex {
 
         this.paragraph_array.Destroy(false);
 
-        this.animation_list.Destroy();
+        if (this.animation_selected != null) this.animation_selected.Destroy();
 
         TextSprite.POOL.Delete(this.id);
         Luascript.DropShared(this.matrix_source);

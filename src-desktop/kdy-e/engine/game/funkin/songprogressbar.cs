@@ -309,8 +309,9 @@ public class SongProgressbar : IAnimate, IDraw {
         const string TIME_MINUTES = "$im";
         const string TIME_HOURS = "$ih";
 
+        stringbuilder.Clear();
+
         if (Double.IsNaN(seconds)) {
-            stringbuilder.Clear();
             stringbuilder.AddKDY("--m--s");
             return;
         }
@@ -318,8 +319,6 @@ public class SongProgressbar : IAnimate, IDraw {
         double h = Math.Floor(seconds / 3600.0);
         double m = Math.Floor((seconds - (h * 3600.0)) / 60.0);
         double s = seconds - (h * 3600.0) - (m * 60.0);
-
-        stringbuilder.Clear();
 
         //
         // The 0x30 codepoint means the number zero "0" character

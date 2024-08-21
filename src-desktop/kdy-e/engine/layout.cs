@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Engine.Animation;
 using Engine.Externals.LuaScriptInterop;
@@ -469,6 +468,7 @@ public class Layout : IDraw, IAnimate {
                     //free(this.vertex_list[i].placeholder);
                     break;
                 case PVRContextVertex.TEXTSPRITE:
+                    ((TextSprite)this.vertex_list[i].vertex).AnimationSet(null);// avoid dispose action animation
                     this.vertex_list[i].vertex.Destroy();
                     break;
             }
@@ -2554,7 +2554,7 @@ public class Layout : IDraw, IAnimate {
 
         if (Single.IsNaN(duration_beats) && Single.IsNaN(duration_milliseconds)) {
             duration_in_beats = true;
-            duration = 1;
+            duration = 1f;
             has_duration = false;
         } else {
             duration_in_beats = Single.IsNaN(duration_milliseconds);
@@ -2828,6 +2828,7 @@ public class Layout : IDraw, IAnimate {
             name = unparsed_sound.GetAttribute("name"),
             initial_action_name = unparsed_sound.GetAttribute("initialAction"),
             soundplayer = soundplayer,
+            type = PVRContextVertex.NONE,
 
             actions_size = 0,
             actions = null,
@@ -3893,16 +3894,19 @@ public class Layout : IDraw, IAnimate {
         }
 
         string atlas_entry_name = unparsed_entry.GetAttribute("entry");
-        AtlasEntry atlas_entry = EngineUtils.CloneObject(atlas.GetEntry(atlas_entry_name));
+        AtlasEntry atlas_entry = atlas.GetEntry(atlas_entry_name);
 
         if (atlas_entry == null) {
             Logger.Warn($"layout_helper_add_action_atlasapply() missing atlas entry name '{atlas_entry_name}': {unparsed_entry.OuterXML}");
             return;
         }
 
+        AtlasEntry atlas_entry_copy = EngineUtils.CloneObject(atlas_entry);
+        atlas_entry_copy.name = null;// unused
+
         ActionEntry entry = new ActionEntry() {
             type = Layout.ACTION_ATLASAPPLY,
-            misc = atlas_entry,
+            misc = atlas_entry_copy,
             override_size = VertexProps.ParseBoolean(unparsed_entry, "overrideSize", false)
         };
 
