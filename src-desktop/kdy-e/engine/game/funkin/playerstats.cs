@@ -146,8 +146,6 @@ public class PlayerStats {
     }
 
     public void AddSustain(int quarters, bool is_released) {
-        if (Single.IsNaN(quarters)) throw new NaNArgumentError("quarters is NaN");
-
         if (is_released) {
             this.last_ranking = Ranking.MISS;
             quarters = -quarters;
@@ -160,7 +158,7 @@ public class PlayerStats {
                     this.iterations++;
                     break;
             }
-            if (!this.can_recover && quarters > 0.0) return;
+            if (!this.can_recover && quarters > 0) return;
 
         }
 

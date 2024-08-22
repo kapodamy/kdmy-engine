@@ -157,9 +157,6 @@ function playerstats_add_hit(playerstats, multiplier, base_note_duration, hit_ti
 }
 
 function playerstats_add_sustain(playerstats, quarters, is_released) {
-    // JS only
-    if (Number.isNaN(quarters)) throw new NaNArgumentError("quarters");
-
     if (is_released) {
         playerstats.last_ranking = RANKING_MISS;
         quarters = -quarters;
@@ -172,7 +169,7 @@ function playerstats_add_sustain(playerstats, quarters, is_released) {
                 playerstats.iterations++;
                 break;
         }
-        if (!playerstats.can_recover && quarters > 0.0) return;
+        if (!playerstats.can_recover && quarters > 0) return;
 
     }
 
@@ -184,7 +181,7 @@ function playerstats_add_sustain(playerstats, quarters, is_released) {
     else if (playerstats.health > 0.0 && playerstats.deads_by_fault > 0)
         playerstats.deads_by_fault = 0;
 
-    playerstats.score += quarters * FUNKIN_SCORE_MISS;
+    playerstats.score += Math.trunc(quarters * FUNKIN_SCORE_MISS);
 }
 
 function playerstats_add_sustain_delayed_hit(playerstats, multiplier, hit_time_difference) {
