@@ -1678,6 +1678,7 @@ public class Week {
                 if (old_players[i].controller != null) old_players[i].controller.Destroy();
             }
             //free(old_players);
+            old_players = null;
             old_players_size = 0;
         }
 

@@ -1663,6 +1663,7 @@ async function week_init_chart_and_players(/**@type {RoundContext}*/roundcontext
             if (old_players[i].controller) gamepad_destroy(old_players[i].controller);
         }
         old_players = undefined;
+        old_players = null;
         old_players_size = 0;
     }
     // remember where players and distributions was picked
