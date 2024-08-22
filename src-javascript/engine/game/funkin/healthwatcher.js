@@ -10,8 +10,8 @@ function healthwatcher_init() {
 function healthwatcher_destroy(healthwatcher) {
     luascript_drop_shared(healthwatcher);
 
-    arraylist_destroy(healthwatcher.players, false);
-    arraylist_destroy(healthwatcher.opponents, false);
+    arraylist_destroy(healthwatcher.players);
+    arraylist_destroy(healthwatcher.opponents);
     healthwatcher = undefined;
 }
 

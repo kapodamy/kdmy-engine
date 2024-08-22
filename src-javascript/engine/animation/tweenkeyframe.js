@@ -56,10 +56,10 @@ function tweenkeyframe_destroy(tweenkeyframe) {
     if (!tweenkeyframe) return;
 
     for (let entry of arraylist_iterate4(tweenkeyframe.entries)) {
-        arraylist_destroy(entry.steps, false);
+        arraylist_destroy(entry.steps);
     }
 
-    arraylist_destroy(tweenkeyframe.entries, false);
+    arraylist_destroy(tweenkeyframe.entries);
     luascript_drop_shared(tweenkeyframe);
 
     tweenkeyframe = undefined;

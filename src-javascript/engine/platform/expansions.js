@@ -72,9 +72,7 @@ async function expansions_load(expansion_name) {
     expansion_base_path = undefined;
     about_path = undefined;
 
-    expansions_chain_array_size = arraylist_trim(chain);
-    expansions_chain_array = arraylist_peek_array(chain);
-    arraylist_destroy(chain, true);
+    arraylist_destroy2(chain, window, "expansions_chain_array_size", "expansions_chain_array");
 }
 
 async function expansions_resolve_path(path, is_file, is_folder) {

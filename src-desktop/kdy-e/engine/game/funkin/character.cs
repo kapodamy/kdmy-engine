@@ -249,7 +249,7 @@ public class Character : IDraw, IAnimate {
             //free(state.extras);
         }
 
-        this.states.Destroy(false);
+        this.states.Destroy();
 
         //for (int i = 0 ; i < this.all_directions_names_size ; i++) {
         //    free(this.all_directions_names[i]);
@@ -271,7 +271,7 @@ public class Character : IDraw, IAnimate {
 
         foreach (CharacterTextureInfo texture_info in this.textures)
             texture_info.texture.Destroy();
-        this.textures.Destroy(false);
+        this.textures.Destroy();
 
         //free(this);
     }

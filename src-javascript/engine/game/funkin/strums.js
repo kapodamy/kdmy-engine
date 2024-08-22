@@ -150,7 +150,7 @@ function strums_destroy(strums) {
 
     for (let decorator of arraylist_iterate4(strums.decorators))
         statesprite_destroy(decorator.statesprite);
-    arraylist_destroy(strums.decorators, false);
+    arraylist_destroy(strums.decorators);
 
     strums.lines = undefined;
     strums.sick_effects = undefined;

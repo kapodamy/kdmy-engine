@@ -35,7 +35,7 @@ public class Conductor {
         Luascript.DropShared(this);
 
         ClearMapping();
-        this.mappings.Destroy(false);
+        this.mappings.Destroy();
         //free(this);
     }
 
@@ -304,7 +304,7 @@ public class Conductor {
         //foreach (MapDirection mapped_sing in mapped_strum.directions) {
         //    free(mapped_sing.name);
         //}
-        mapped_strum.directions.Destroy(false);
+        mapped_strum.directions.Destroy();
         mapped_strum.strum = null;
     }
 

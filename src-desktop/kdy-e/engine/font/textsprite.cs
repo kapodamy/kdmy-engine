@@ -165,7 +165,7 @@ public class TextSprite : IVertex {
 
         //if (this.text_forced_case) free(this.text_forced_case);
 
-        this.paragraph_array.Destroy(false);
+        this.paragraph_array.Destroy();
 
         if (this.animation_selected != null) this.animation_selected.Destroy();
 

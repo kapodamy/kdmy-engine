@@ -131,7 +131,7 @@ function textsprite_destroy(textsprite) {
 
     if (textsprite.text_forced_case) textsprite.text_forced_case = undefined;
 
-    arraylist_destroy(textsprite.paragraph_array, 0);
+    arraylist_destroy(textsprite.paragraph_array);
 
     if (textsprite.animation_selected) animsprite_destroy(textsprite.animation_selected);
 

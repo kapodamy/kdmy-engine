@@ -18,8 +18,8 @@ function arraylist_init2(initial_capacity) {
     };
 }
 
-function arraylist_destroy(arraylist, keep_array_alive) {
-    if (!keep_array_alive) arraylist.array = undefined;
+function arraylist_destroy(arraylist) {
+    arraylist.array = undefined;
     arraylist = undefined;
 }
 

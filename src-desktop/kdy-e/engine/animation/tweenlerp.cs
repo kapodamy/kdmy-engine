@@ -17,7 +17,7 @@ public class TweenLerp : IAnimate {
     }
 
     public void Destroy() {
-        this.arraylist.Destroy(false);
+        this.arraylist.Destroy();
         Luascript.DropShared(this);
         //free(this);
     }

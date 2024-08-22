@@ -267,7 +267,7 @@ async function freeplaymenu_main() {
     await freeplaymenu_internal_drop_soundplayer(state, false);
     freeplaymenu_songicons_destroy(songicons);
     menu_destroy(menu_songs);
-    arraylist_destroy(songs, false);
+    arraylist_destroy(songs);
     layout_destroy(layout);
     modding_destroy(modding);
 

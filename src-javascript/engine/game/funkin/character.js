@@ -191,7 +191,7 @@ function character_destroy(character) {
         state.extras = undefined;
     }
 
-    arraylist_destroy(character.states, false);
+    arraylist_destroy(character.states);
 
     for (let i = 0; i < character.all_directions_names_size; i++) {
         character.all_directions_names[i] = undefined;
@@ -213,7 +213,7 @@ function character_destroy(character) {
 
     for (let texture_info of arraylist_iterate4(character.textures))
         texture_destroy(texture_info.texture);
-    arraylist_destroy(character.textures, false);
+    arraylist_destroy(character.textures);
 
     character = undefined;
 }

@@ -10,7 +10,7 @@ function tweenlerp_init() {
 }
 
 function tweenlerp_destroy(tweenlerp) {
-    arraylist_destroy(tweenlerp.arraylist, false);
+    arraylist_destroy(tweenlerp.arraylist);
     luascript_drop_shared(tweenlerp);
     tweenlerp = undefined;
 }

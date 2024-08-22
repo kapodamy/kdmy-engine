@@ -86,9 +86,7 @@ public static class Expansions {
         //free(expansion_base_path);
         //free(about_path);
 
-        chain_array_size = chain.Trim();
-        chain_array = chain.PeekArray();
-        chain.Destroy(true);
+        chain.Destroy2(out chain_array_size, out chain_array);
     }
 
     public static string ResolvePath(string path, bool is_file, bool is_folder) {

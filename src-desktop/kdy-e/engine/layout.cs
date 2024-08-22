@@ -331,8 +331,8 @@ public class Layout : IDraw, IAnimate {
             //free(definition.path);
         }
 
-        layout_context.resource_pool.textures.Destroy(false);
-        layout_context.resource_pool.atlas.Destroy(false);
+        layout_context.resource_pool.textures.Destroy();
+        layout_context.resource_pool.atlas.Destroy();
 
         if (layout_context.animlist != null) layout_context.animlist.Destroy();
 

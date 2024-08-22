@@ -16,8 +16,8 @@ public class HealthWatcher {
     public void Destroy() {
         Luascript.DropShared(this);
 
-        this.players.Destroy(false);
-        this.opponents.Destroy(false);
+        this.players.Destroy();
+        this.opponents.Destroy();
         //free(this);
     }
 

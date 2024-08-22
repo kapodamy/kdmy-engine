@@ -332,7 +332,7 @@ public class Strum {
 
         if (this.tweenkeyframe_note != null) this.tweenkeyframe_note.Destroy();
 
-        this.sustain_queue.Destroy(false);
+        this.sustain_queue.Destroy();
 
         // Note: do not release "this.marker_sick_state_name"
 

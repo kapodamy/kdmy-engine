@@ -145,7 +145,7 @@ public static class FS {
             FSFolderEnumerator.EnumerateTo(entries, src, false);
 
             if (entries.Size() < 1) {
-                entries.Destroy(false);
+                entries.Destroy();
                 return false;
             }
 

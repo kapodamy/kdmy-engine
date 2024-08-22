@@ -61,9 +61,9 @@ public class TweenKeyframe {
 
     public void Destroy() {
         foreach (Entry entry in this.entries) {
-            entry.steps.Destroy(false);
+            entry.steps.Destroy();
         }
-        this.entries.Destroy(false);
+        this.entries.Destroy();
         Luascript.DropShared(this);
         //free(this);
     }

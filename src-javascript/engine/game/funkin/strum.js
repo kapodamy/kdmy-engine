@@ -279,7 +279,7 @@ function strum_destroy(strum) {
 
     if (strum.tweenkeyframe_note) tweenkeyframe_destroy(strum.tweenkeyframe_note);
 
-    arraylist_destroy(strum.sustain_queue, false);
+    arraylist_destroy(strum.sustain_queue);
 
     // Note: do not release "strum.marker_sick_state_name"
 

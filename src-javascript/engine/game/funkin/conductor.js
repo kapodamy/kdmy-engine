@@ -19,7 +19,7 @@ function conductor_destroy(conductor) {
     luascript_drop_shared(conductor);
 
     conductor_clear_mapping(conductor);
-    arraylist_destroy(conductor.mappings, false);
+    arraylist_destroy(conductor.mappings);
     conductor = undefined;
 }
 
@@ -287,7 +287,7 @@ function conductor_internal_disposed_mapped_strum(mapped_strum) {
     for (let mapped_sing of arraylist_iterate4(mapped_strum.directions)) {
         mapped_sing.name = undefined;
     }
-    arraylist_destroy(mapped_strum.directions, false);
+    arraylist_destroy(mapped_strum.directions);
     mapped_strum.strum = null;
 }
 

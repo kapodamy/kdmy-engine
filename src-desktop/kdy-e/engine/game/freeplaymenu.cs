@@ -277,7 +277,7 @@ public class FreeplayMenu {
         InternalDropSoundplayer(state, false);
         songicons.Destroy();
         menu_songs.Destroy();
-        songs.Destroy(false);
+        songs.Destroy();
         layout.Destroy();
         modding.Destroy();
 

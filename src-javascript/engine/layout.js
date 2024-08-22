@@ -215,8 +215,8 @@ async function layout_init(src) {
         definition.path = undefined;
     }
 
-    arraylist_destroy(layout_context.resource_pool.textures, false);
-    arraylist_destroy(layout_context.resource_pool.atlas, false);
+    arraylist_destroy(layout_context.resource_pool.textures);
+    arraylist_destroy(layout_context.resource_pool.atlas);
 
     if (layout_context.animlist) animlist_destroy(layout_context.animlist);
 

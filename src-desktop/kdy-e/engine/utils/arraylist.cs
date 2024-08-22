@@ -22,8 +22,8 @@ public class ArrayList<T> {
         this.size = 0;
     }
 
-    public void Destroy(bool keep_array_alive) {
-        if (!keep_array_alive) this.array = null;
+    public void Destroy() {
+        //free(this.array);
         //free(arraylist);
     }
 

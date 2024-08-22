@@ -217,7 +217,7 @@ public class Strums : IDraw, IAnimate {
 
         foreach (Decorator decorator in this.decorators)
             decorator.statesprite.Destroy();
-        decorators.Destroy(false);
+        decorators.Destroy();
 
         //free(this.lines);
         //free(this.sick_effects);
