@@ -18,7 +18,7 @@ async function fonttype_init(src) {
     let full_path = await fs_get_full_path_and_override(src);
 
     for (let [id, instance] of FONTTYPE_POOL) {
-        if (instance.instance_path == full_path) {
+        if (string_equals_ignore_case(instance.instance_path, full_path)) {
             full_path = undefined;
             instance.instance_references++;
             return instance;

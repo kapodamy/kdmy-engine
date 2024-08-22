@@ -168,7 +168,7 @@ public class Texture {
         if (src != null) {
             string filename = FS.GetFullPathAndOverride(src);
             foreach (Texture loaded_texture in TEXTURE_POOL) {
-                if (loaded_texture.src_filename == filename) {
+                if (StringUtils.EqualsIgnoreCase(loaded_texture.src_filename, filename)) {
                     texture = loaded_texture;
                     break;
                 }

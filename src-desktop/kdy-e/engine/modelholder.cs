@@ -34,7 +34,7 @@ public class ModelHolder {
 
         // find an instance of this 
         foreach (ModelHolder instance in ModelHolder.POOL) {
-            if (instance.instance_src != full_path) continue;
+            if (!StringUtils.EqualsIgnoreCase(instance.instance_src, full_path)) continue;
 
             instance.instance_references++;
             //free(full_path);
@@ -156,7 +156,7 @@ public class ModelHolder {
 
         // find an instance of this
         foreach (ModelHolder instance in ModelHolder.POOL) {
-            if (instance.instance_src != fake_src) continue;
+            if (!StringUtils.EqualsIgnoreCase(instance.instance_src, fake_src)) continue;
 
             instance.instance_references++;
             //free(fake_src);

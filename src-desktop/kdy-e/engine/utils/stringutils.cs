@@ -176,4 +176,13 @@ public static partial class StringUtils {
         return str != null && str.Length > 0;
     }
 
+    public static bool EqualsIgnoreCase(string str1, string str2) {
+        if (str1 == null && str2 == null)
+            return true;
+        else if (str1 == null || str2 == null)
+            return false;
+        else
+            return String.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
+    }
+
 }

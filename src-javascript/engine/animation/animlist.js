@@ -36,7 +36,7 @@ async function animlist_init(src) {
 
     // find a previous loaded animlist
     for (const [obj] of ANIMLIST_POOL) {
-        if (obj.src == full_path) {
+        if (string_equals_ignore_case(obj.src, full_path)) {
             obj.references++;
             full_path = undefined;
             return obj;

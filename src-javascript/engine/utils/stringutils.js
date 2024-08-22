@@ -168,7 +168,7 @@ function string_trim(string, trim_start, trim_end) {
     let start = trim_start;
     let end = !trim_start && trim_end;
 
-    for (let index = 0; index < string.length ; index++) {
+    for (let index = 0; index < string.length; index++) {
         let whitespace = false;
         switch (string[index]) {
             case 0x0A:
@@ -196,5 +196,14 @@ function string_trim(string, trim_start, trim_end) {
     }
 
     return string.substring(start_index, end_index);
+}
+
+function string_equals_ignore_case(string1, string2) {
+    if (!string1 && !string2)
+        return true;
+    else if (!string1 || !string2)
+        return false;
+    else
+        return string1.toLowerCase() == string2.toLowerCase();
 }
 

@@ -39,7 +39,7 @@ public class FontType : IFont {
         string full_path = FS.GetFullPathAndOverride(src);
 
         foreach (FontType instance in FontType.POOL) {
-            if (instance.instance_path == full_path) {
+            if (StringUtils.EqualsIgnoreCase(instance.instance_path, full_path)) {
                 //free(full_path);
                 instance.instance_references++;
                 return instance;

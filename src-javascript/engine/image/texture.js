@@ -179,7 +179,7 @@ async function texture_get_from_global_pool(src) {
     if (src) {
         let filename = await fs_get_full_path_and_override(src);
         for (let loaded_texture of TEXTURE_POOL.values()) {
-            if (loaded_texture.src_filename == filename) {
+            if (string_equals_ignore_case(loaded_texture.src_filename, filename)) {
                 texture = loaded_texture;
                 break;
             }

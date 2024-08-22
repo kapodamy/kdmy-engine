@@ -11,7 +11,7 @@ async function modelholder_init(src) {
 
     // find an instance of this 
     for (const instance of MODELHOLDER_POOL.values()) {
-        if (instance.instance_src != full_path) continue;
+        if (!string_equals_ignore_case(instance.instance_src, full_path)) continue;
 
         instance.instance_references++;
         full_path = undefined;
@@ -144,7 +144,7 @@ async function modelholder_init2(vertex_color_rgb8, atlas_src, animlist_src) {
 
     // find an instance of this
     for (let [id, instance] of MODELHOLDER_POOL) {
-        if (instance.instance_src != fake_src) continue;
+        if (!string_equals_ignore_case(instance.instance_src, fake_src)) continue;
 
         instance.instance_references++;
         fake_src = undefined;

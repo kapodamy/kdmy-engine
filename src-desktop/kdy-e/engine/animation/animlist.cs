@@ -56,7 +56,7 @@ public class AnimList {
 
         // find a previous loaded animlist
         foreach (AnimList obj in AnimList.POOL) {
-            if (obj.src == full_path) {
+            if (StringUtils.EqualsIgnoreCase(obj.src, full_path)) {
                 obj.references++;
                 //free(full_path);
                 return obj;
