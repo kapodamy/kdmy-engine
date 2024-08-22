@@ -176,6 +176,8 @@ async function week_pause_init(exit_to_weekselector_label) {
         if (index >= 0) menu_set_item_text(menu, index, exit_to_weekselector_label);
     }
 
+    let background_music = await soundplayer_init("/assets/common/music/breakfast.ogg");
+
     let weekpause = {
         menu,
         messagebox,
@@ -183,7 +185,7 @@ async function week_pause_init(exit_to_weekselector_label) {
         layout,
         menu_placeholder,
         menu_external: null,
-        background_menu_music: null,
+        background_music,
         modding,
         modding_choosen_option_name: null
     };
@@ -199,7 +201,7 @@ async function week_pause_destroy(weekpause) {
     messagebox_destroy(weekpause.messagebox);
     sprite_destroy_full(weekpause.sprite_nocontroller);
     if (weekpause.menu_external) menu_destroy(weekpause.menu_external);
-    if (weekpause.background_menu_music) soundplayer_destroy(weekpause.background_menu_music);
+    if (weekpause.background_music) soundplayer_destroy(weekpause.background_music);
     weekpause.modding_choosen_option_name = null;// do not dispose
     weekpause = undefined;
 }
@@ -237,10 +239,15 @@ async function week_pause_external_set_menu(weekpause, menumanifest_src) {
 }
 
 
-async function week_pause_prepare(weekpause) {
-    if (weekpause.background_menu_music) soundplayer_destroy(weekpause.background_menu_music);
-    weekpause.background_menu_music = await soundplayer_init("/assets/common/music/breakfast.ogg");
-    if (weekpause.background_menu_music) soundplayer_loop_enable(weekpause.background_menu_music, true);
+async function week_pause_change_background_music(weekpause, filename) {
+    if (weekpause.background_music) soundplayer_destroy(weekpause.background_music);
+
+    if (filename) {
+        weekpause.background_music = await soundplayer_init(filename);
+        if (weekpause.background_music) soundplayer_loop_enable(weekpause.background_music, true);
+    } else {
+        weekpause.background_music = null;
+    }
 }
 
 async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ roundcontext, dettached_index) {
@@ -249,9 +256,9 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
     gamepad_set_buttons_delay(controller, WEEKPAUSE_DELAY);
 
     messagebox_hide(weekpause.messagebox, false);
-    if (weekpause.background_menu_music) {
-        soundplayer_set_volume(weekpause.background_menu_music, 0.5);
-        soundplayer_play(weekpause.background_menu_music);
+    if (weekpause.background_music) {
+        soundplayer_set_volume(weekpause.background_music, 0.5);
+        soundplayer_play(weekpause.background_music);
     }
     gamepad_clear_buttons(controller);
 
@@ -440,12 +447,12 @@ async function week_pause_helper_show(weekpause,/**@type {RoundContext} */ round
 
     }
 
-    if (weekpause.background_menu_music) soundplayer_fade(weekpause.background_menu_music, false, 100.0);
+    if (weekpause.background_music) soundplayer_fade(weekpause.background_music, false, 100.0);
 
     if (roundcontext.script) await weekscript_notify_pause(roundcontext.script, false);
     while (roundcontext.scriptcontext.halt_flag) await week_pause_internal_render(weekpause, roundcontext);
 
-    if (weekpause.background_menu_music) soundplayer_stop(weekpause.background_menu_music);
+    if (weekpause.background_music) soundplayer_stop(weekpause.background_music);
     messagebox_hide(weekpause.messagebox, true);
 
     if (return_value != 0) {

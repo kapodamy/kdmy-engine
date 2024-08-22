@@ -151,7 +151,7 @@ public class WeekPause {
     private Layout layout;
     private LayoutPlaceholder menu_placeholder;
     private Menu menu_external;
-    private SoundPlayer background_menu_music;
+    private SoundPlayer background_music;
     private Modding modding;
     private string modding_choosen_option_name;
 
@@ -199,13 +199,15 @@ public class WeekPause {
             if (index >= 0) menu.SetItemText(index, exit_to_weekselector_label);
         }
 
+        SoundPlayer background_music = SoundPlayer.Init("/assets/common/music/breakfast.ogg");
+
         this.menu = menu;
         this.messagebox = messagebox;
         this.sprite_nocontroller = sprite_nocontroller;
         this.layout = layout;
         this.menu_placeholder = menu_placeholder;
         this.menu_external = null;
-        this.background_menu_music = null;
+        this.background_music = background_music;
         this.modding = modding;
         this.modding_choosen_option_name = null;
     }
@@ -217,7 +219,7 @@ public class WeekPause {
         this.messagebox.Destroy();
         this.sprite_nocontroller.DestroyFull();
         if (this.menu_external != null) this.menu_external.Destroy();
-        if (this.background_menu_music != null) this.background_menu_music.Destroy();
+        if (this.background_music != null) this.background_music.Destroy();
         this.modding_choosen_option_name = null;// do not dispose
         //free(this);
     }
@@ -255,10 +257,15 @@ public class WeekPause {
     }
 
 
-    public void Prepare() {
-        if (this.background_menu_music != null) this.background_menu_music.Destroy();
-        this.background_menu_music = SoundPlayer.Init("/assets/common/music/breakfast.ogg");
-        if (this.background_menu_music != null) this.background_menu_music.LoopEnable(true);
+    public void ChangeBackgroundMusic(string filename) {
+        if (this.background_music != null) this.background_music.Destroy();
+
+        if (StringUtils.IsNotEmpty(filename)) {
+            this.background_music = SoundPlayer.Init(filename);
+            if (this.background_music != null) this.background_music.LoopEnable(true);
+        } else {
+            this.background_music = null;
+        }
     }
 
     public int HelperShow(RoundContext roundcontext, int dettached_index) {
@@ -267,9 +274,9 @@ public class WeekPause {
         controller.SetButtonsDelay(WeekPause.DELAY);
 
         this.messagebox.Hide(false);
-        if (this.background_menu_music != null) {
-            this.background_menu_music.SetVolume(0.5f);
-            this.background_menu_music.Play();
+        if (this.background_music != null) {
+            this.background_music.SetVolume(0.5f);
+            this.background_music.Play();
         }
         controller.ClearButtons();
 
@@ -459,12 +466,12 @@ public class WeekPause {
 
         }
 
-        if (this.background_menu_music != null) this.background_menu_music.Fade(false, 100.0f);
+        if (this.background_music != null) this.background_music.Fade(false, 100.0f);
 
         if (roundcontext.script != null) roundcontext.script.NotifyPause(false);
         while (roundcontext.scriptcontext.halt_flag) InternalRender(roundcontext);
 
-        if (this.background_menu_music != null) this.background_menu_music.Stop();
+        if (this.background_music != null) this.background_music.Stop();
         this.messagebox.Hide(true);
 
         if (return_value != 0) {

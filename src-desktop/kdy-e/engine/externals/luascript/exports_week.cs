@@ -613,6 +613,16 @@ public static class ExportsWeek {
         return ExportsLayout.script_layout_new(L, ret);
     }
 
+    static int script_week_set_pause_background_music(LuaState L) {
+        RoundContext roundcontext = (RoundContext)L.Context;
+
+        string filename = L.luaL_optstring(1, null);
+
+        Week.SetPauseBackgroundMusic(roundcontext, filename);
+
+        return 0;
+    }
+
 
     static readonly LuaTableFunction[] EXPORTS_FUNCTION = {
         new LuaTableFunction("week_ui_set_visibility", script_week_ui_set_visibility),
@@ -675,6 +685,7 @@ public static class ExportsWeek {
         new LuaTableFunction("week_get_gameover_layout", script_week_get_gameover_layout),
         new LuaTableFunction("week_get_pause_layout", script_week_get_pause_layout),
         new LuaTableFunction("week_get_results_layout", script_week_get_results_layout),
+        new LuaTableFunction("week_set_pause_background_music", script_week_set_pause_background_music),
         new LuaTableFunction(null, null)
     };
 

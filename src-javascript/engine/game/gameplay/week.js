@@ -1057,9 +1057,6 @@ async function week_round_prepare(/**@type {RoundContext}*/roundcontext, gamepla
         await week_init_script(roundcontext, gameplaymanifest.default.script);
     }
 
-    // reload the music only
-    await week_pause_prepare(roundcontext.weekpause);
-
     if (!roundcontext.missnotefx) {
         roundcontext.missnotefx = await missnotefx_init();
     }
@@ -3212,6 +3209,10 @@ function week_get_layout_of(/**@type {RoundContext} */ roundcontext, g_p_r) {
     }
 
     return null;
+}
+
+async function week_set_pause_background_music(/**@type {RoundContext} */ roundcontext, filename) {
+    if (roundcontext.weekpause) await week_pause_change_background_music(roundcontext.weekpause, filename);
 }
 
 

@@ -1064,9 +1064,6 @@ public class Week {
             Week.InitScript(roundcontext, gameplaymanifest.@default.script);
         }
 
-        // reload the music only  
-        roundcontext.weekpause.Prepare();
-
         if (roundcontext.missnotefx == null) {
             roundcontext.missnotefx = new MissNoteFX();
         }
@@ -3221,6 +3218,9 @@ public class Week {
         return null;
     }
 
+    public static void SetPauseBackgroundMusic(RoundContext roundcontext, string filename) {
+        if (roundcontext.weekpause != null) roundcontext.weekpause.ChangeBackgroundMusic(filename);
+    }
 
     internal static string InternalConcatSuffix(string name, int number_suffix) {
         string digits = number_suffix.ToString();

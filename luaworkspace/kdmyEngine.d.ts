@@ -1728,7 +1728,7 @@ declare global {
      */
     function week_gameover_set_sfx_die(filename: string): void;
     /**
-     * Sets the __retry sound effect for the gameover screen
+     * Sets the __retry__ sound effect for the gameover screen
      * @param filename the sound filename or null to use/retore the default sound
      */
     function week_gameover_set_sfx_confirm(filename: string): void;
@@ -1750,6 +1750,12 @@ declare global {
     * Always returns null during the gameplay, call inside of {@link f_beforeresults} or {@link f_afterresults} to adquire the layout.
     */
     function week_get_results_layout(): Layout;
+    /**
+     * Sets the background music for the pause screen
+     * @param filename the sound filename or null to disable
+     */
+    function week_set_pause_background_music(filename: string): void;
+
 
     //
     // Global Timer functions

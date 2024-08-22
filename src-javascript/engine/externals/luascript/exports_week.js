@@ -691,6 +691,17 @@ function script_week_get_results_layout(L) {
     return script_layout_new(L, ret);
 }
 
+function script_week_set_pause_background_music(L) {
+    let luascript = luascript_get_instance(L);
+    let roundcontext = luascript.context;
+
+    let filename = LUA.luaL_optstring(L, 1, null);
+
+    week_set_pause_background_music(roundcontext, filename);
+
+    return 0;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -756,6 +767,7 @@ function script_week_get_results_layout(L) {
     ["week_get_gameover_layout", script_week_get_gameover_layout],
     ["week_get_pause_layout", script_week_get_pause_layout],
     ["week_get_results_layout", script_week_get_results_layout],
+    ["week_set_pause_background_music", script_week_set_pause_background_music],
     [null, null]
 ];
 
