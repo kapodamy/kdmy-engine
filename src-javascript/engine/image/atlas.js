@@ -342,12 +342,6 @@ async function atlas_parse_from_plain_text(src_txt) {
 
     arraylist_destroy2(arraylist, atlas, "size", "entries");
 
-    temp = fs_get_filename_without_extension(src_txt);
-    if (temp != null) {
-        atlas.texture_filename = string_concat(2, temp, ".png");
-        temp = undefined;
-    }
-
     return atlas;
 }
 

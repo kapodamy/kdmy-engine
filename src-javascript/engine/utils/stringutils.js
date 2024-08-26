@@ -163,39 +163,50 @@ function string_lowercase_ends_with(string, substring) {
 function string_trim(string, trim_start, trim_end) {
     if (string == null || string == "" || (!trim_start && !trim_end)) return strdup(string);
 
-    let start_index = 0;
-    let end_index = string.length;
-    let start = trim_start;
-    let end = !trim_start && trim_end;
+    let string_length = strlen(string);
+    let start_index, end_index;
 
-    for (let index = 0; index < string.length; index++) {
-        let whitespace = false;
-        switch (string[index]) {
-            case 0x0A:
-            case 0x0B:
-            case 0x0D:
-            case 0x20:
-            case 0x09:
-                whitespace = true;
-                break;
-        }
-
-        if (start) {
-            if (whitespace) {
-                start_index = index;
-            } else if (trim_end) {
-                start = false;
-                end = true;
-                end_index = index;
-            } else {
-                break;
+    if (trim_start) {
+        start_index = string_length;
+        for (let i = 0; i < string_length; i++) {
+            switch (string.charCodeAt(i)) {
+                case 0x0A:
+                case 0x0B:
+                case 0x0D:
+                case 0x20:
+                case 0x09:
+                    continue;
             }
-        } else if (end && !whitespace) {
-            end_index = index;
+            start_index = i;
+            break;
         }
+    } else {
+        start_index = 0;
     }
 
-    return string.substring(start_index, end_index);
+    if (trim_end) {
+        end_index = 0;
+        for (let i = string_length - 1; i >= 0; i--) {
+            switch (string.charCodeAt(i)) {
+                case 0x0A:
+                case 0x0B:
+                case 0x0D:
+                case 0x20:
+                case 0x09:
+                    continue;
+            }
+            end_index = i + 1;
+            break;
+        }
+    } else {
+        end_index = string_length + 1;
+    }
+    
+    if (start_index < end_index) {
+        return string.substring(start_index, end_index);
+    }
+
+    return strdup("");
 }
 
 function string_equals_ignore_case(string1, string2) {

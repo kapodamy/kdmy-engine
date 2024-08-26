@@ -388,12 +388,6 @@ L_parse_field_failed:
 
         arraylist.Destroy2(out atlas.size, out atlas.entries);
 
-        temp = FS.GetFilenameWithoutExtension(src_txt);
-        if (temp != null) {
-            atlas.texture_filename = StringUtils.Concat(temp, ".png");
-            //free(temp);
-        }
-
         return atlas;
     }
 

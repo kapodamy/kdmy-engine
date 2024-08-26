@@ -79,39 +79,50 @@ public static partial class StringUtils {
     public static string Trim(string str, bool trim_start, bool trim_end) {
         if (StringUtils.IsEmpty(str) || (!trim_start && !trim_end)) return str;
 
-        int start_index = 0;
-        int end_index = str.Length;
-        bool start = trim_start;
-        bool end = !trim_start && trim_end;
+        int str_length = str.Length;
+        int start_index, end_index;
 
-        for (int index = 0 ; index < str.Length ; index++) {
-            bool whitespace = false;
-            switch (str[index]) {
-                case (char)0x0A:
-                case (char)0x0B:
-                case (char)0x0D:
-                case (char)0x20:
-                case (char)0x09:
-                    whitespace = true;
-                    break;
-            }
-
-            if (start) {
-                if (whitespace) {
-                    start_index = index;
-                } else if (trim_end) {
-                    start = false;
-                    end = true;
-                    end_index = index;
-                } else {
-                    break;
+        if (trim_start) {
+            start_index = str_length;
+            for (int i = 0; i < str_length; i++) {
+                switch (str[i]) {
+                    case (char)0x0A:
+                    case (char)0x0B:
+                    case (char)0x0D:
+                    case (char)0x20:
+                    case (char)0x09:
+                        continue;
                 }
-            } else if (end && !whitespace) {
-                end_index = index;
+                start_index = i;
+                break;
             }
+        } else {
+            start_index = 0;
         }
 
-        return str.SubstringKDY(start_index, end_index).ToString();
+        if (trim_end) {
+            end_index = 0;
+            for (int i = str_length - 1; i >= 0; i--) {
+                switch (str[i]) {
+                    case (char)0x0A:
+                    case (char)0x0B:
+                    case (char)0x0D:
+                    case (char)0x20:
+                    case (char)0x09:
+                        continue;
+                }
+                end_index = i + 1;
+                break;
+            }
+        } else {
+            end_index = str_length + 1;
+        }
+
+        if (start_index < end_index) {
+            return str.SubstringKDY(start_index, end_index);
+        }
+
+        return "";
     }
 
 
