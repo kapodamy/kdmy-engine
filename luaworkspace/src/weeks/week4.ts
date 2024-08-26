@@ -1,5 +1,5 @@
-const MILF_ZOOMS_STAGE_INCREMENT:number = 0.018;
-const MILF_ZOOMS_UI_INCREMENT:number = 0.0003;
+const MILF_ZOOMS_STAGE_INCREMENT:number = 0.002;
+const MILF_ZOOMS_UI_INCREMENT:number = 0.00001;
 
 let fastCarCanDrive: boolean = true;
 let limo: Layout = null;

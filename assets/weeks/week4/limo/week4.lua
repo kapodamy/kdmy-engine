@@ -2,8 +2,8 @@
 function resetFastCar()
     fastCarCanDrive = false
 end
-MILF_ZOOMS_STAGE_INCREMENT = 0.018
-MILF_ZOOMS_UI_INCREMENT = 0.0003
+MILF_ZOOMS_STAGE_INCREMENT = 0.002
+MILF_ZOOMS_UI_INCREMENT = 0.00001
 fastCarCanDrive = true
 limo = nil
 cameraUI = nil
