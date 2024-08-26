@@ -1420,10 +1420,21 @@ async function week_init_stage(roundcontext, stage_src) {
         old_layout = null;
     }
 
-    if (stage_src)
-        roundcontext.layout = await layout_init(stage_src);
-    else
+    if (stage_src) {
+        let idx = stage_src.lastIndexOf('.');
+        if (idx < 0) idx = stage_src.length;
+
+        let dreamcast_stage_src = string_copy_and_insert(stage_src, idx, "~dreamcast");
+
+        if (fs_file_exists(dreamcast_stage_src)) {
+            roundcontext.layout = await layout_init(dreamcast_stage_src);
+        } else {
+            roundcontext.layout = await layout_init(stage_src);
+        }
+        dreamcast_stage_src = undefined;
+    } else {
         roundcontext.layout = null;
+    }
 
     if (old_layout) layout_destroy(old_layout);
 

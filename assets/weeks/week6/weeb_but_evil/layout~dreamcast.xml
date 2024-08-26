@@ -120,7 +120,7 @@
 
 	<Sprite name="transition_in" rgb="0xFFFFFF">
 		<Action>
-			<Location z="6" />
+			<Location z="8" />
 			<Size width="311" height="161" />
 			<Hide />
 		</Action>

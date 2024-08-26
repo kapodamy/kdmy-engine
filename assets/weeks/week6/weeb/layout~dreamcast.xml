@@ -97,7 +97,7 @@
 
 	<Sprite name="dialogs_bg" argb="0xFFB3DFd8">
 		<Action>
-			<Location x="0" y="0" z="7" />
+			<Location x="0" y="0" z="8" />
 			<Size width="311" height="161" />
 			<Property name="alpha" value="0.0" />
 		</Action>
