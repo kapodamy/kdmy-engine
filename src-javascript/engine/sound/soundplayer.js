@@ -8,8 +8,12 @@ async function soundplayer_init(src) {
     // needs C version
     let full_path = await fs_get_full_path_and_override(src);
 
-    if (!await fs_file_exists(full_path)) { return null; }
-    if (!IO_WEBKIT_DETECTED) return await soundplayer_init2(full_path, null);
+    if (!await fs_file_exists(full_path)) {
+        return null;
+    }
+    if (IO_WEBKIT_DETECTED) {
+        return await soundplayer_init2(full_path, null, full_path);
+    }
 
     /** @type {ArrayBuffer} */
     let arraybuffer = await fs_readarraybuffer(full_path);
@@ -20,10 +24,10 @@ async function soundplayer_init(src) {
     else if (full_path.endsWith(".mp3")) type = "audio/mp3";
 
     let blob = new Blob([arraybuffer], { type: type });
-    return soundplayer_init2(blob, arraybuffer);
+    return await soundplayer_init2(blob, arraybuffer, full_path);
 }
 
-async function soundplayer_init2(src, arraybuffer) {
+async function soundplayer_init2(src, arraybuffer, absolute_path) {
     //
     // TODO: C version
     //
@@ -43,29 +47,40 @@ async function soundplayer_init2(src, arraybuffer) {
 
     soundplayer.handler.preload = "metadata";
 
-    await new Promise(function (resolve, reject) {
-        soundplayer.handler.oncanplay = async function (evt) {
-            soundplayer.handler.currentTime = 0;
-            soundplayer.handler.oncanplay = null;
-            soundplayer.handler.onerror = null;
-            mastervolume_add_mediaelement(soundplayer.handler);
-            try {
-                let points = await soundplayer_internal_read_looping_points(arraybuffer ?? src);
-                soundplayer.sample_rate = points.sample_rate;
-                soundplayer.loop_start = points.loop_start;
-                soundplayer.loop_length = points.loop_length;
-                soundplayer_internal_loop_listener(soundplayer);
-            } catch (e) {
-                console.warn("soundplayer_init2() failed to read looping points or the file is not OGG", e);
+    try {
+        await new Promise(function (resolve, reject) {
+            soundplayer.handler.oncanplay = async function (evt) {
+                soundplayer.handler.currentTime = 0;
+                soundplayer.handler.oncanplay = null;
+                soundplayer.handler.onerror = null;
+                mastervolume_add_mediaelement(soundplayer.handler);
+                try {
+                    let points = await soundplayer_internal_read_looping_points(arraybuffer ?? src);
+                    soundplayer.sample_rate = points.sample_rate;
+                    soundplayer.loop_start = points.loop_start;
+                    soundplayer.loop_length = points.loop_length;
+                    soundplayer_internal_loop_listener(soundplayer);
+                } catch (e) {
+                    console.warn("soundplayer_init2() failed to read looping points or the file is not OGG", e);
+                }
+                resolve();
+            };
+            soundplayer.handler.onerror = function (evt) {
+                soundplayer.handler.oncanplay = null;
+                soundplayer.handler.onerror = null;
+                reject(this.error);
             }
-            resolve();
-        };
-        soundplayer.handler.onerror = function (evt) {
-            soundplayer.handler.oncanplay = null;
-            soundplayer.handler.onerror = null;
-            reject(this.error);
-        }
-    });
+        });
+    } catch (e) {
+        console.error("soundplayer_init2() failed for " + absolute_path, e);
+
+        soundplayer.handler.src = null;
+        soundplayer.handler = undefined;
+
+        if (soundplayer.blob_url) URL.revokeObjectURL(soundplayer.blob_url);
+
+        return null;
+    }
 
     return soundplayer;
 }
