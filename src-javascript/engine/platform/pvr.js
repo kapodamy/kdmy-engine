@@ -573,6 +573,9 @@ async function pvr_call_entry_point() {
         i++;
     }
 
+    //Initialize WASM versions of Lua and FontAtlas
+    await main_initialize_wasm_modules();
+
     // load selected expansion or default ("funkin" folder)
     await expansions_load(expansion_directory);
 

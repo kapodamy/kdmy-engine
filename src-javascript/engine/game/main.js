@@ -118,9 +118,6 @@ const FUNKIN_LOADING_SCREEN_TEXTURE = "/assets/common/image/funkin/funkay.png";
 
 
 async function main(argc, argv) {
-    // (JS only) Initialize WASM versions of Lua and FontAtlas
-    await main_initialize_wasm_modules();
-
     // vital parts
     fs_init();// intialize filesystem access for the main thread (this thread)
     await pvr_context_init();
