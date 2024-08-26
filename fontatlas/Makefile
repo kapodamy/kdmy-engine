@@ -10,7 +10,7 @@ EMFLAGS = -s STRICT=1 -s ALLOW_MEMORY_GROWTH=1 ${KDMYENGINEFLAGS} ${CFLAGS}
 KDMYENGINEPATH = ./../src-javascript/engine/externals
 
 build-release:
-	$(EMCC) $(SOURCES) libs/libfreetype.a $(INCLUDES) -O2 -std=c17 $(EMFLAGS) $(EMMODULE) -o output/module_fontatlas.js
+	$(EMCC) $(SOURCES) libs/libfreetype.a $(INCLUDES) -O3 -std=c17 $(EMFLAGS) $(EMMODULE) -o output/module_fontatlas.js
 	cp ./output/module_fontatlas.js ${KDMYENGINEPATH}/module_fontatlas.js
 	cp ./output/module_fontatlas.wasm ${KDMYENGINEPATH}/module_fontatlas.wasm
 

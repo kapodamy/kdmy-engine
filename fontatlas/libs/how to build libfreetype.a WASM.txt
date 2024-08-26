@@ -3,13 +3,9 @@
 3. inside of the folder run the following commands (needs emscripten):
 
 mkdir build
-
 cd build
-
 emcmake cmake ..
-
 emmake make
-
 
 4. step 3 fail if the build folder already exists or is not empty
 5. grab "libfreetype.a" file from the build folder
