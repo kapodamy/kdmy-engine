@@ -201,8 +201,12 @@ async function main_initialize_wasm_modules() {
     // files as javascript ES Modules
     //
 
-    // @ts-ignore
-    LUA = await ModuleLua();
+    // LUA is not available when running layoutvisor
+    if ("ModuleLua" in window) {
+        // @ts-ignore
+        LUA = await ModuleLua();
+    }
+
     // @ts-ignore
     FontAtlas = await ModuleFontAtlas();
 
