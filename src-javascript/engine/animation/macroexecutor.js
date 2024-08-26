@@ -389,8 +389,17 @@ function macroexecutor_clone(macroexecutor) {
         instruction.values = clone_array(instruction.values, instruction.values_size);
     }*/
 
+    // (JS only) clone stack entries
     for (let i = 0; i < copy.interpolators_stack_size; i++) {
-        let stack_entry = copy.interpolators_stack[i]?.definition;
+        let stack_entry = copy.interpolators_stack[i].definition;
+
+        copy.interpolators_stack[i].definition = null;
+        copy.interpolators_stack[i] = clone_object(copy.interpolators_stack[i]);
+        copy.interpolators_stack[i].definition = stack_entry;
+    }
+
+    for (let i = 0; i < copy.interpolators_stack_size; i++) {
+        let stack_entry = copy.interpolators_stack[i].definition;
         if (!stack_entry) continue;
 
         for (let j = 0; j < macroexecutor.instructions_size; j++) {
