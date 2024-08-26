@@ -15,11 +15,6 @@ const IO_WEBKIT_DETECTED =
         navigator.userAgent.includes("OPR/")
     ) && location.protocol == "file:";
 
-/** @type {Worker} **/
-var IO_WORKER;
-var IO_IDS = 0;
-var IO_QUEUE = new Map();
-var IO_BASE_URL = null;
 var __fetch = null;
 
 
@@ -56,111 +51,61 @@ if (IO_WEBKIT_DETECTED) {
 
     __fetch = fetch;
     // @ts-ignore
-    self.fetch = io_chromium_workaround;
+    this.fetch = io_chromium_workaround;
 }
 
-if (location.href.endsWith(".js")) {
-    addEventListener("message", function (evt) {
-        if (!IO_BASE_URL) {
-            IO_BASE_URL = evt.data;
-            return;
-        }
-        io_background_load(evt.data.absolute_url, evt.data.request_type, evt.data.operation_id);
-    });
-} else {
-    IO_WORKER = new Worker("engine/platform/io.js", { name: "io" });
-    IO_WORKER.addEventListener("message", function (evt) {
-        io_foreground_fulfill(evt.data.error, evt.data.data, evt.data.operation_id);
-    });
-    IO_BASE_URL = location.href.substring(0, location.href.lastIndexOf('/') + 1);
-    IO_WORKER.postMessage(IO_BASE_URL);
-    window.addEventListener("beforeunload", function () {
-        IO_WORKER.terminate();
-    });
-}
+const IO_BASE_URL = location.href.substring(0, location.href.lastIndexOf('/') + 1);
 
-async function io_background_load(src, type, operation_id) {
-    /** @type {DedicatedWorkerGlobalScope} */
-    /* @ts-ignore */
-    const ctx = self;
 
-    let url = src;
-    let res, data;
+async function io_background_load_resource(url, type) {
+    /**@type {Response} */
+    let res = null;
+
     try {
         if (type == IO_REQUEST_HEAD) {
             res = await fetch(url, { method: 'HEAD' });
-            data = {
+            let data = {
+                is_head_request: true,
                 ok: res.ok,
                 size: res.headers.get("Content-Length"),
                 mime: res.headers.get("content-type"),
                 url: res.url
             };
-            ctx.postMessage({ operation_id, data });
-            return;
+            return data;
         }
 
         res = await fetch(url);
-        let transferable = null;
 
         switch (type) {
             case IO_REQUEST_TEXT:
-                data = await res.text();
-                break;
+                return await res.text();
             case IO_REQUEST_BLOB:
-                data = await res.blob();
-                break;
+                return res.blob();
             case IO_REQUEST_BITMAP:
                 let blob = await res.blob();
-                transferable = await createImageBitmap(blob);
-                data = {
-                    data: transferable,
+                let imagebitmap = await createImageBitmap(blob);
+                return {
+                    data: imagebitmap,
                     size: blob.size,
-                    original_width: transferable.width,
-                    original_height: transferable.height,
-                    width: transferable.width,
-                    height: transferable.height
+                    original_width: imagebitmap.width,
+                    original_height: imagebitmap.height,
+                    width: imagebitmap.width,
+                    height: imagebitmap.height
                 };
-                break;
             case IO_REQUEST_JSON:
-                data = await res.json();
-                break;
+                return await res.json();
             case IO_REQUEST_ARRAYBUFFER:
-                data = await res.arrayBuffer();
-                transferable = data;
-                break;
+                return await res.arrayBuffer();
             default:
-                ctx.postMessage({ operation_id, error: "unknown io request type:" + type });
-                return;
+                throw new Error("unknown io request type:");
         }
-
-        if (transferable) {
-            ctx.postMessage({ operation_id, data }, [transferable]);
-        } else
-            ctx.postMessage({ operation_id, data });
     } catch (e) {
         if (e instanceof ProgressEvent) {
             e = { message: e.target["statusText"] };
             if (!e.message) e.message = "XMLHttpRequest failed (probably the file was not found)";
         }
-        ctx.postMessage({ operation_id, error: io_background_serialize_error(e), data: url });
+        throw new KDMYEngineIOError(io_background_serialize_error(e), url);
     }
-}
-
-function io_foreground_fulfill(error, data, operation_id) {
-    for (const [op_id, callbacks] of IO_QUEUE) {
-        if (op_id != operation_id) continue;
-
-        IO_QUEUE.delete(operation_id);
-
-        if (error)
-            callbacks.reject(new KDMYEngineIOError(error, data));
-        else
-            callbacks.resolve(data);
-        return;
-    }
-
-    if (data instanceof ImageBitmap) data.close();
-    throw new KDMYEngineIOError("Unknown operation id:" + operation_id);
 }
 
 function io_background_serialize_error(e) {
@@ -239,7 +184,7 @@ function io_chromium_workaround(url, options) {
 
 async function io_request_file(absolute_url, request_type) {
     let native_url = await io_native_get_path(absolute_url, true, false, true);
-    return io_native_foreground_request(native_url, request_type);
+    return io_background_load_resource(native_url, request_type);
 }
 
 async function io_file_size(absolute_url) {
@@ -259,18 +204,9 @@ async function io_enumerate_folder(absolute_url) {
     return await io_native_enumerate_folder(native_url);
 }
 
-
-async function io_native_foreground_request(absolute_url, request_type) {
-    return new Promise(function (resolve, reject) {
-        let operation_id = IO_IDS++;
-        IO_QUEUE.set(operation_id, { resolve, reject });
-        IO_WORKER.postMessage({ absolute_url, request_type, operation_id });
-    });
-}
-
 async function io_native_file_size(absolute_file_url) {
     try {
-        let res = await io_native_foreground_request(absolute_file_url, IO_REQUEST_HEAD);
+        let res = await io_background_load_resource(absolute_file_url, IO_REQUEST_HEAD);
         if (!res.ok) return -1;
 
         let length = parseInt(res.headers.get("Content-Length"));
@@ -286,7 +222,7 @@ async function io_native_file_size(absolute_file_url) {
 
 async function io_native_resource_exists(absolute_url, expect_file, expect_folder) {
     try {
-        let res = await io_native_foreground_request(absolute_url, IO_REQUEST_HEAD);
+        let res = await io_background_load_resource(absolute_url, IO_REQUEST_HEAD);
         if (!res.ok) return 0;
 
         if (expect_file && expect_folder) return 1;
@@ -298,12 +234,12 @@ async function io_native_resource_exists(absolute_url, expect_file, expect_folde
             return 0;
         } else if (res.mime == "application/http-index-format") {
             return expect_folder;
-        } else {
+        } else if (res.is_head_request) {
             // should be a file
             return expect_file;
+        } else {
+            throw new Error("No IO implementation for: " + navigator.userAgent + ". When checking " + absolute_url);
         }
-
-        throw new KDMYEngineIOError("No IO implementation for: " + navigator.userAgent);
     } catch (e) {
         return 0;
     }
@@ -311,11 +247,11 @@ async function io_native_resource_exists(absolute_url, expect_file, expect_folde
 
 async function io_native_enumerate_folder(absolute_url) {
     if (navigator.userAgent.includes("Gecko/")) {
-        let text = await io_native_foreground_request(absolute_url, IO_REQUEST_TEXT);
+        let text = await io_background_load_resource(absolute_url, IO_REQUEST_TEXT);
         if (!text) return null;
         return io_native_parse_httpIndexFormat(text);
     } else if (IO_WEBKIT_DETECTED) {
-        let text = await io_native_foreground_request(absolute_url, IO_REQUEST_TEXT);
+        let text = await io_background_load_resource(absolute_url, IO_REQUEST_TEXT);
         if (!text) return null;
         return io_native_parse_webkit_indexDirectory(text);
     }
