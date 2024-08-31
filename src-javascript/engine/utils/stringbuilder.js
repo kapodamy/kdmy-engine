@@ -39,7 +39,7 @@ function stringbuilder_add_char(stringbuilder, str) {
 
 function stringbuilder_add_format(stringbuilder, format, ...values) {
     if (format == null || format.length < 1) return;
-    stringbuilder.buffer += stringbuilder_helper_create_formatted_string(
+    stringbuilder.buffer += stringbuilder_helper_create_formatted_string2(
         format,
         values
     );
@@ -89,11 +89,11 @@ function stringbuilder_lowercase(stringbuilder) {
 }
 
 
-function stringbuilder_helper_create_formatted_string2(format, ...values) {
-    return stringbuilder_helper_create_formatted_string(format, values)
+function stringbuilder_helper_create_formatted_string(format, ...values) {
+    return stringbuilder_helper_create_formatted_string2(format, values)
 }
 
-function stringbuilder_helper_create_formatted_string(format, /*va_list*/values) {
+function stringbuilder_helper_create_formatted_string2(format, /*va_list*/values) {
     /*
         Formatter identifiers:
             $s       UTF-8 string
@@ -104,6 +104,7 @@ function stringbuilder_helper_create_formatted_string(format, /*va_list*/values)
             $F       float with comma
             $D       double with comma
             $c       acsii single char
+            $b       boolean
             $l       int64
             $i       int32
             $L       uint64
@@ -237,6 +238,11 @@ function stringbuilder_helper_create_formatted_string(format, /*va_list*/values)
                 if (values[args_index] != null)
                     text += values[args_index].repeat(modifier);
                 break;
+            case 'b':// boolean
+                check_arg(args_index, "boolean");
+                if (values[args_index] != null)
+                    text += values[args_index] ? "true" : "false";
+                break;
             case 'l':// int64
             case 'i':// int32
             case 'L':// uint64
@@ -246,7 +252,7 @@ function stringbuilder_helper_create_formatted_string(format, /*va_list*/values)
                     text += number_str(Math.trunc(values[args_index]), modifier, 0, 1);
                 break;
             default:
-                console.warn(`stringbuilder_helper_create_formatted_string() unknown identifier ${SPECIAL}` + format.charAt(i));
+                console.warn(`stringbuilder_helper_create_formatted_string2() unknown identifier ${SPECIAL}` + format.charAt(i));
                 break;
         }
 

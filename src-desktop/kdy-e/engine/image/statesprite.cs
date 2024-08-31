@@ -28,9 +28,9 @@ public class StateSprite : IVertex {
     private StateSprite() { }
 
 
-    private Modifier matrix_source;
     private float src_x;
     private float src_y;
+    private Modifier matrix_source;
     private float[] vertex_color;
     private float[] offsetcolor;
     private Texture texture;
@@ -306,11 +306,11 @@ public class StateSprite : IVertex {
     public static StateSprite InitFromTexture(Texture texture) {
         StateSprite statesprite = new StateSprite();
 
-        statesprite.matrix_source = new Modifier();
-        statesprite.matrix_source.Clear();
-
         statesprite.src_x = 0;
         statesprite.src_y = 0;
+
+        statesprite.matrix_source = new Modifier();
+        statesprite.matrix_source.Clear();
 
         statesprite.vertex_color = new float[] { 1.0f, 1.0f, 1.0f };
 

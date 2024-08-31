@@ -2,7 +2,6 @@
 
 const LAYOUTPLACEHOLDER = "LayoutPlaceholder";
 
-// (JS & C# only) internal engine format
 const LAYOUTPLACEHOLDER_INTERNAL_TOSTRING = "{ " +
     "groupId: $i, " +
     "name: $s, " +
@@ -142,25 +141,25 @@ function script_layoutplaceholder_gc(L) {
 function script_layoutplaceholder_tostring(L) {
     let layoutplaceholder = luascript_read_userdata(L, LAYOUTPLACEHOLDER);
 
-    LUA.lua_pushfstring(
-        L,
-        stringbuilder_helper_create_formatted_string2(
-            LAYOUTPLACEHOLDER_INTERNAL_TOSTRING,
-            layoutplaceholder.group_id,
-            layoutplaceholder.name,
-            luascript_helper_enums_stringify(LUASCRIPT_ENUMS_Align, layoutplaceholder.align_vertical),
-            luascript_helper_enums_stringify(LUASCRIPT_ENUMS_Align, layoutplaceholder.align_horizontal),
-            layoutplaceholder.x,
-            layoutplaceholder.y,
-            layoutplaceholder.z,
-            layoutplaceholder.height,
-            layoutplaceholder.width,
-            layoutplaceholder.parallax.x,
-            layoutplaceholder.parallax.y,
-            layoutplaceholder.parallax.z,
-            layoutplaceholder.static_camera
-        )
+    let str = stringbuilder_helper_create_formatted_string(
+        LAYOUTPLACEHOLDER_INTERNAL_TOSTRING,
+        layoutplaceholder.group_id,
+        layoutplaceholder.name,
+        luascript_helper_enums_stringify(LUASCRIPT_ENUMS_Align, layoutplaceholder.align_vertical),
+        luascript_helper_enums_stringify(LUASCRIPT_ENUMS_Align, layoutplaceholder.align_horizontal),
+        layoutplaceholder.x,
+        layoutplaceholder.y,
+        layoutplaceholder.z,
+        layoutplaceholder.height,
+        layoutplaceholder.width,
+        layoutplaceholder.parallax.x,
+        layoutplaceholder.parallax.y,
+        layoutplaceholder.parallax.z,
+        layoutplaceholder.static_camera
     );
+
+    LUA.lua_pushstring(L, str);
+    str = undefined;
 
     return 1;
 }

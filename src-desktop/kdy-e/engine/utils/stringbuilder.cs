@@ -206,7 +206,7 @@ public static class STRINGBUILDER {
                         ((uint)values[args_index]).ToString(), modifier
                     ));
                     break;
-                case 'b':// C# boolean
+                case 'b':// boolean
                     if (values[args_index] is bool)
                         text.Append((bool)values[args_index] == true ? "true" : "false");
                     else if (values[args_index] is bool?)

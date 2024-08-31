@@ -223,11 +223,11 @@ function statesprite_init_from_vertex_color(rgb8_color) {
 function statesprite_init_from_texture(texture) {
     let statesprite = {};
 
-    statesprite.matrix_source = {};
-    pvr_context_helper_clear_modifier(statesprite.matrix_source);
-
     statesprite.src_x = 0.0;
     statesprite.src_y = 0.0;
+
+    statesprite.matrix_source = {};
+    pvr_context_helper_clear_modifier(statesprite.matrix_source);
 
     statesprite.vertex_color = [1.0, 1.0, 1.0];
 

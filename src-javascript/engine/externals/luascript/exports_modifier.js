@@ -2,8 +2,7 @@
 
 const MODIFIER = "Modifier";
 
-// (JS & C# only) internal engine format
-const TOSTRING_INTERNAL_FORMAT = "{ " +
+const MODIFIER_TOSTRING_INTERNAL_FORMAT = "{ " +
     "translateX: $6f, " +
     "translateY: $6f, " +
     "rotate: $6f, " +
@@ -37,31 +36,31 @@ function script_modifier_gc(L) {
 function script_modifier_tostring(L) {
     let modifier = luascript_read_userdata(L, MODIFIER);
 
-    LUA.lua_pushfstring(
-        L,
-        stringbuilder_helper_create_formatted_string2(
-            TOSTRING_INTERNAL_FORMAT,
-            modifier.translate_x,
-            modifier.translate_y,
-            modifier.rotate,
-            modifier.skew_x,
-            modifier.skew_y,
-            modifier.scale_x,
-            modifier.scale_y,
-            modifier.scale_direction_x,
-            modifier.scale_direction_y,
-            modifier.rotate_pivot_enabled >= 1.0,
-            modifier.rotate_pivot_u,
-            modifier.rotate_pivot_v,
-            modifier.translate_rotation >= 1.0,
-            modifier.scale_size >= 1.0,
-            modifier.scale_translation >= 1.0,
-            modifier.x,
-            modifier.y,
-            modifier.width,
-            modifier.height
-        )
+    let str = stringbuilder_helper_create_formatted_string(
+        MODIFIER_TOSTRING_INTERNAL_FORMAT,
+        modifier.translate_x,
+        modifier.translate_y,
+        modifier.rotate,
+        modifier.skew_x,
+        modifier.skew_y,
+        modifier.scale_x,
+        modifier.scale_y,
+        modifier.scale_direction_x,
+        modifier.scale_direction_y,
+        modifier.rotate_pivot_enabled >= 1.0,
+        modifier.rotate_pivot_u,
+        modifier.rotate_pivot_v,
+        modifier.translate_rotation >= 1.0,
+        modifier.scale_size >= 1.0,
+        modifier.scale_translation >= 1.0,
+        modifier.x,
+        modifier.y,
+        modifier.width,
+        modifier.height
     );
+
+    LUA.lua_pushstring(L, str);
+    str = undefined;
 
     return 1;
 }

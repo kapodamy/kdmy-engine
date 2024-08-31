@@ -159,7 +159,7 @@ function textsprite_set_text_intern(textsprite, intern, text) {
 }
 
 function textsprite_set_text_formated(textsprite, format, ...values) {
-    let text = stringbuilder_helper_create_formatted_string(format, values);
+    let text = stringbuilder_helper_create_formatted_string2(format, values);
 
     if (!textsprite.intern) textsprite.text = undefined;
 
@@ -170,7 +170,7 @@ function textsprite_set_text_formated(textsprite, format, ...values) {
 }
 
 function textsprite_set_text_formated2(textsprite, format, va_args) {
-    let text = stringbuilder_helper_create_formatted_string(format, va_args);
+    let text = stringbuilder_helper_create_formatted_string2(format, va_args);
 
     if (!textsprite.intern) textsprite.text = undefined;
 

@@ -8,7 +8,6 @@ public static class ExportsLayoutPlaceholder {
     public const string LAYOUTPLACEHOLDER = "LayoutPlaceholder";
 
 
-    // (JS & C# only) internal engine format
     const string INTERNAL_TOSTRING = "{ " +
     "groupId: $i, " +
     "name: $s, " +
@@ -149,7 +148,8 @@ public static class ExportsLayoutPlaceholder {
     static int script_layoutplaceholder_tostring(LuaState L) {
         LayoutPlaceholder layoutplaceholder = L.ReadUserdata<LayoutPlaceholder>(LAYOUTPLACEHOLDER);
 
-        L.lua_pushstring(StringUtils.CreateFormattedString(INTERNAL_TOSTRING,
+        string str = StringUtils.CreateFormattedString(
+            INTERNAL_TOSTRING,
             layoutplaceholder.group_id,
             layoutplaceholder.name,
             LuascriptHelpers.EnumsStringify(LuascriptEnums.Align, (int)layoutplaceholder.align_vertical),
@@ -163,7 +163,10 @@ public static class ExportsLayoutPlaceholder {
             layoutplaceholder.parallax.y,
             layoutplaceholder.parallax.z,
             layoutplaceholder.static_camera
-        ));
+        );
+
+        L.lua_pushstring(str);
+        //free(str);
 
         return 1;
     }

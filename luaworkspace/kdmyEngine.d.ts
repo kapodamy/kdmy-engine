@@ -833,8 +833,6 @@ declare global {
     }
     /** Abstract represention of an animation, the underlying animation can be a tween, macro or frames */
     interface AnimSprite {
-        init(animlist_item: AnimListItem): AnimSprite;
-        init_from_tweenlerp(tweenlerp: TweenLerp): AnimSprite;
         destroy(): void;
         set_loop(loop: number): void;
         get_name(): string;
@@ -1084,7 +1082,6 @@ declare global {
         kill(): void;
         kill_if_negative_health(): void;
         is_dead(): boolean;
-
     }
     /** UI cosmetic, displays the amount of note hits, the streak always starts at 10 */
     interface StreakCounter {
@@ -1311,6 +1308,18 @@ declare global {
          * @returns a new {@link AnimSprite} instance, never returns null
          */
         init_as_empty(name: string): AnimSprite;
+        /**
+         * Creates a new animation from the specified animlist item
+         * @param animlist_item An {@link AnimListItem} instance to use, can not be null
+         * @returns a new {@link AnimSprite} instance, otherwise, null if fails
+         */
+        init(animlist_item: AnimListItem): AnimSprite;
+        /**
+         * Creates a new animation using a {@link TweenLerp}
+         * @param tweenlerp An {@link TweenLerp} instance to use, can not be null
+         * @returns a new {@link AnimSprite} instance, otherwise, null if fails
+         */
+        init_from_tweenlerp(tweenlerp: TweenLerp): AnimSprite;
     } const AnimSprite: AnimSpriteConstructor;
     interface TweenLerpConstructor {
         /**

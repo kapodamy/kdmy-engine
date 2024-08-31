@@ -224,13 +224,13 @@ function sprite_init_from_rgb8(solid_rgb8_color) {
 function sprite_init(src_texture) {
     let sprite = {};
 
-    sprite.matrix_source = {};
-    pvr_context_helper_clear_modifier(sprite.matrix_source);
-
     sprite.flip_x = false;
     sprite.flip_y = false;
     sprite.flip_correction = true;
     sprite.matrix_corner = { x: 0.0, y: 0.0, angle: 0.0 };
+
+    sprite.matrix_source = {};
+    pvr_context_helper_clear_modifier(sprite.matrix_source);
 
     sprite.src_x = 0.0;
     sprite.src_y = 0.0;

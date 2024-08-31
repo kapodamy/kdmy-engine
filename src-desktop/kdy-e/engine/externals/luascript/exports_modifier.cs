@@ -8,7 +8,6 @@ internal static class ExportsModifier {
 
     private const string MODIFIER = "Modifier";
     
-    // (JS & C# only) internal engine format
     private const string TOSTRING_INTERNAL_FORMAT = "{ " +
                                             "translateX: $6f, " +
                                             "translateY: $6f, " +
@@ -45,7 +44,7 @@ internal static class ExportsModifier {
     static int script_modifier_tostring(LuaState L) {
         Modifier modifier = L.ReadUserdata<Modifier>(MODIFIER);
 
-        L.lua_pushstring(StringUtils.CreateFormattedString(
+        string str = StringUtils.CreateFormattedString(
             TOSTRING_INTERNAL_FORMAT,
             modifier.translate_x,
             modifier.translate_y,
@@ -66,7 +65,10 @@ internal static class ExportsModifier {
             modifier.y,
             modifier.width,
             modifier.height
-        ));
+        );
+
+        L.lua_pushstring(str);
+        //free(str);
 
         return 1;
     }
