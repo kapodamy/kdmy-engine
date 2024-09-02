@@ -73,6 +73,10 @@ async function main_layout_visor() {
     // @ts-ignore
     drawable_draw = layoutvisor_drawable_draw_hook;
 
+    // mastervolume is not necessary
+    mastervolume_disabled = true;
+    mastervolume_current_volume = 1.0;
+
     //cursor: pointer|move
 
     let camera_offset = null;
@@ -606,6 +610,9 @@ function main_layout_add_listeners() {
 
         let picked_file = await filesystemdialog_main(false, parent_folder);
         if (!picked_file) return;
+
+        // @ts-ignore
+        document.getElementById("bind-character_manifest").value = picked_file;
 
         layoutvisor_localstorage_save("characterManifest", picked_file);
         document.getElementById("item-bind-confirm").click();
