@@ -9,23 +9,86 @@ async function videoplayer_init(src) {
 
     if (!await fs_file_exists(full_path)) { return null; }
 
+    const gl = pvr_context.webopengl.gl;
+    let gl_texture = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_2D, gl_texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
     let video = document.createElement("video");
     video.playsInline = true;
     video.preload = "metadata";
     video.src = await io_native_get_path(full_path);
 
+    let videoplayer = {
+        handler: video,
+        texture: null,
+        sprite: sprite_init_from_rgb8(0x000000),
+        fade_id: 0,
+        fade_status: FADING_NONE,
+        last_time: -1
+    };
+
     try {
         await new Promise(function (resolve, reject) {
+            let first_seek = true;
+
+            video.onseeked = function (evt) {
+                if (!videoplayer.texture) {
+                    return;
+                }
+                if (first_seek) {
+                    // anti-bounce for "oncanplay" callback
+                    first_seek = false;
+                    return;
+                }
+
+                //
+                // in theory calling videoplayer_internal_update_texture() should be enough
+                // but in the reality does not work, at least in firefox where the following
+                // error is shown " Driver error unexpected by WebGL: 0x0502".
+                //
+                // Here a canvas is created to pick the current video frame to later update
+                // the webgl texture.
+                //
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const ctx = canvas.getContext("2d", { alpha: false, desynchronized: false, willReadFrequently: false });
+                ctx.drawImage(video, 0, 0);
+
+                // now update texture using a canvas
+                videoplayer_internal_update_texture(videoplayer, canvas);
+            }
             video.oncanplay = function (evt) {
-                video.currentTime = 0;
-                mastervolume_add_mediaelement(video);
                 video.oncanplay = null;
                 video.onerror = null;
+
+                const width = video.videoWidth, height = video.videoHeight;
+
+                if (width > 0 && height > 0) {
+                    const size = width * height * 4/*RGBA*/;
+                    const texture = texture_init_from_raw(gl_texture, size, 1, width, height, width, height);
+
+                    videoplayer.texture = texture;
+                    videoplayer_internal_update_texture(videoplayer, video);
+                    sprite_set_texture(videoplayer.sprite, texture, true);
+                } else {
+                    gl.deleteTexture(gl_texture);
+                }
+
+                mastervolume_add_mediaelement(video);
+
                 resolve();
             };
             video.onerror = function (evt) {
                 video.oncanplay = null;
                 video.onerror = null;
+                video.onseeked = null;
                 reject(this.error);
             }
         });
@@ -34,33 +97,7 @@ async function videoplayer_init(src) {
         return null;
     }
 
-    const gl = pvr_context.webopengl.gl;
-    const width = video.videoWidth, height = video.videoHeight;
-
-    let size = width * height * 4/*RGBA*/;
-    let texture = null;
-
-    if (width > 0 && height > 0) {
-        let gl_texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, gl_texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-
-        texture = texture_init_from_raw(gl_texture, size, 1, width, height, width, height);
-    }
-
-    let sprite = sprite_init_from_rgb8(0x000000);
-    sprite_set_draw_size(sprite, width, height);
-    if (texture) sprite_set_texture(sprite, texture, 0);
-
-    return {
-        handler: video,
-        texture: texture,
-        sprite: sprite,
-        fade_id: 0,
-        fade_status: FADING_NONE,
-        last_time: -1
-    };
+    return videoplayer;
 }
 
 function videoplayer_destroy(videoplayer) {
@@ -85,10 +122,7 @@ var videoplayer_play = soundplayer_play;
 
 var videoplayer_pause = soundplayer_pause;
 
-function videoplayer_stop(videoplayer) {
-    soundplayer_stop(videoplayer);
-    videoplayer.last_time = NaN;
-}
+var videoplayer_stop = soundplayer_stop;
 
 var videoplayer_loop_enable = soundplayer_loop_enable;
 
@@ -100,7 +134,7 @@ var videoplayer_set_mute = soundplayer_set_mute;
 
 function videoplayer_seek(videoplayer, timestamp) {
     soundplayer_seek(videoplayer, timestamp);
-    videoplayer.last_time = NaN;
+    videoplayer.last_time = videoplayer.handler.currentTime;
 }
 
 function videoplayer_set_property(videoplayer, property_id, value) {
@@ -146,19 +180,16 @@ function videoplayer_poll_streams(videoplayer) {
     const time = video.currentTime;
     if (time == videoplayer.last_time) return;
 
-    if (videoplayer.last_time < 0) {
-        // force seeking to adquire the first frame of the video
-        video.currentTime = 0.001;
-    }
+    videoplayer.last_time = time;
 
     // do texture update
-    const gl = pvr_context.webopengl.gl;
-    const width = video.videoWidth, height = video.videoHeight;
-
-    gl.bindTexture(gl.TEXTURE_2D, videoplayer.texture.data_vram);
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, video);
-    gl.bindTexture(gl.TEXTURE_2D, null);
-
-    videoplayer.last_time = time;
+    videoplayer_internal_update_texture(videoplayer, video);
 }
 
+function videoplayer_internal_update_texture(videoplayer, /**@type {TexImageSource}*/src) {
+    const gl = pvr_context.webopengl.gl;
+
+    gl.bindTexture(gl.TEXTURE_2D, videoplayer.texture.data_vram);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+}
