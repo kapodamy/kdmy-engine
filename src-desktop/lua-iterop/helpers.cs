@@ -178,14 +178,22 @@ L_store_and_return:
 
         lua_State* L = luascript.L;
 
-        // aquire lua reference and nullify the object
+        // remove object from shared array
         int @ref = remove_lua_reference(luascript, obj);
         if (@ref == LUA.NOREF) return;
 
-        // LUA.lua_pushinteger(L, @ref);
-        // LUA.lua_pushnil(L);
-        // LUA.lua_settable(L, LUA.REGISTRYINDEX);
-        // return;
+        // adquire lua userdata
+        LUA.lua_pushinteger(L, @ref);
+        LUA.lua_gettable(L, LUA.REGISTRYINDEX);
+
+        // nullify userdata, this is already in the stack if was called by lua GC
+        LuascriptObject* udata = (LuascriptObject*)LUA.lua_touserdata(L, LUA.lua_gettop(L));
+        if (udata != null) {
+            udata->lua_ref = LUA.REFNIL;
+            udata->obj_ptr = null;
+            udata->was_allocated_by_lua = false;
+        }
+        LUA.lua_pop(L, 1);
 
         // remove from lua registry
         LUA.luaL_unref(L, LUA.REGISTRYINDEX, @ref);
@@ -242,8 +250,14 @@ L_store_and_return:
     }
 
     internal static int luascript_userdata_gc(ManagedLuaState luascript, string check_metatable_name) {
-        void* udata = luascript_read_userdata(luascript.L, check_metatable_name);
-        luascript_remove_userdata(luascript, udata);
+        lua_State* L = luascript.L;
+        LuascriptObject* udata = (LuascriptObject*)LUA.luaL_checkudata(L, 1, check_metatable_name);
+
+        if (udata != null && (udata->lua_ref != LUA.REFNIL && udata->lua_ref != LUA.NOREF)) {
+            void* obj = udata->obj_ptr;
+            luascript_remove_userdata(luascript, obj);
+        }
+
         return 0;
     }
 
@@ -255,11 +269,9 @@ L_store_and_return:
 
         void* obj_ptr = udata->obj_ptr;
         bool was_allocated_by_lua = udata->was_allocated_by_lua;
+        LUA.lua_pop(L, 1);
 
         luascript_remove_userdata(luascript_get_instance(L), obj_ptr);
-        udata->obj_ptr = null;
-        udata->lua_ref = LUA.NOREF;
-        udata->was_allocated_by_lua = false;
 
         if (was_allocated_by_lua) {
             GCHandle handle = GCHandle.FromIntPtr((nint)obj_ptr);

@@ -209,14 +209,22 @@ function luascript_remove_userdata(luascript, obj) {
 
     let L = luascript.L;
 
-    // aquire lua reference and nullify the object
+    // remove object from shared array
     let ref = luascript_internal_remove_lua_reference(luascript, obj);
     if (ref == LUA.LUA_NOREF) return;
 
-    // LUA.lua_pushinteger(L, ref);
-    // LUA.lua_pushnil(L);
-    // LUA.lua_settable(L, LUA.LUA_REGISTRYINDEX);
-    // return;
+    // adquire lua userdata
+    LUA.lua_pushinteger(L, ref);
+    LUA.lua_gettable(L, LUA.LUA_REGISTRYINDEX);
+
+    // nullify userdata, this is already in the stack if was called by lua GC
+    let udata = LUA.lua_touserdata(L, LUA.lua_gettop(L));
+    if (udata) {
+        udata.lua_ref = LUA.LUA_REFNIL;
+        udata.obj_ptr = null;
+        udata.was_allocated_by_lua = false;
+    }
+    LUA.lua_pop(L, 1);
 
     // (JS only) allow object to get garbage collected
     LUA.kdmyEngine_forget(L, obj);
@@ -321,8 +329,13 @@ function luascript_userdata_tostring(L, check_metatable_name) {
  * @returns {number}
  */
 function luascript_userdata_gc(L, check_metatable_name) {
-    let udata = luascript_read_userdata(L, check_metatable_name);
-    luascript_remove_userdata(luascript_get_instance(L), udata);
+    let udata = LUA.luaL_checkudata(L, 1, check_metatable_name);
+
+    if (udata && (udata.lua_ref != LUA.LUA_REFNIL && udata.lua_ref != LUA.LUA_NOREF)) {
+        let obj = udata.obj_ptr;
+        luascript_remove_userdata(luascript_get_instance(L), obj);
+    }
+
     return 0;
 }
 
