@@ -187,9 +187,9 @@ public static class GameMain {
         string target;
 
         if (StringUtils.IsNotEmpty(prefix))
-            target = String.Concat(prefix, "-", name, "-", suffix);
+            target = StringUtils.Concat(prefix, "-", name, "-", suffix);
         else
-            target = String.Concat(name, "-", suffix);
+            target = StringUtils.Concat(name, "-", suffix);
 
         layout.TriggerAny(target);
         //free(target);
@@ -199,6 +199,44 @@ public static class GameMain {
         if (index < 0 || index >= menu_manifest.items_size) return;
         string name = menu_manifest.items[index].name ?? menu_manifest.items[index].text;
         GameMain.HelperTriggerActionMenu(layout, prefix, name, selected, choosen);
+    }
+
+
+    public static Layout HelperInitLayoutSuffixed(string src, bool check_exists) {
+        int idx = src.LastIndexOf('.');
+        if (idx < 0) idx = src.Length;
+
+        Layout layout;
+        string dreamcast_src = StringUtils.CopyAndInsert(src, idx, "~dreamcast");
+
+        if (FS.FileExists(dreamcast_src))
+            layout = Layout.Init(dreamcast_src);
+        else if (!check_exists || FS.FileExists(src))
+            layout = Layout.Init(src);
+        else
+            layout = null;
+
+        //free(dreamcast_src);
+        return layout;
+    }
+
+    public static MenuManifest HelperInitMenuManifestSuffixed(string src, bool check_exists) {
+        int idx = src.LastIndexOf('.');
+        if (idx < 0) idx = src.Length;
+
+        MenuManifest menumanifest;
+        string dreamcast_src = StringUtils.CopyAndInsert(src, idx, "~dreamcast");
+
+        if (FS.FileExists(dreamcast_src))
+            menumanifest = new MenuManifest(dreamcast_src);
+        else if (!check_exists || FS.FileExists(src))
+            menumanifest = new MenuManifest(src);
+        else
+            menumanifest = null;
+
+
+        //free(dreamcast_src);
+        return menumanifest;
     }
 
     public static R SpawnCoroutine<R, T>(Layout background_layout, AsyncFunctionWithReturn<R, T> function_routine, T argument_routine) {

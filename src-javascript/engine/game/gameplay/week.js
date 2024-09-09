@@ -1421,17 +1421,7 @@ async function week_init_stage(roundcontext, stage_src) {
     }
 
     if (stage_src) {
-        let idx = stage_src.lastIndexOf('.');
-        if (idx < 0) idx = stage_src.length;
-
-        let dreamcast_stage_src = string_copy_and_insert(stage_src, idx, "~dreamcast");
-
-        if (fs_file_exists(dreamcast_stage_src)) {
-            roundcontext.layout = await layout_init(dreamcast_stage_src);
-        } else {
-            roundcontext.layout = await layout_init(stage_src);
-        }
-        dreamcast_stage_src = undefined;
+        roundcontext.layout = await main_helper_init_layout_suffixed(stage_src, false);
     } else {
         roundcontext.layout = null;
     }

@@ -1443,17 +1443,7 @@ public class Week {
         }
 
         if (StringUtils.IsNotEmpty(stage_src)) {
-            int idx = stage_src.LastIndexOf('.');
-            if (idx < 0) idx = stage_src.Length;
-
-            string dreamcast_stage_src = StringUtils.CopyAndInsert(stage_src, idx, "~dreamcast");
-
-            if (FS.FileExists(dreamcast_stage_src)) {
-                roundcontext.layout = Layout.Init(dreamcast_stage_src);
-            } else {
-                roundcontext.layout = Layout.Init(stage_src);
-            }
-            //free(dreamcast_stage_src);
+            roundcontext.layout = GameMain.HelperInitLayoutSuffixed(stage_src, false);
         } else {
             roundcontext.layout = null;
         }

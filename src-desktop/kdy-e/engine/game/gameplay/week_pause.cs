@@ -172,11 +172,9 @@ public class WeekPause {
         );
         WeekPause.MENU.parameters.items_gap = WeekPause.MENU.parameters.font_size;
 
-        MenuManifest menumanifest = WeekPause.MENU;
-        if (FS.FileExists(WeekPause.MODDING_MENU)) {
-            menumanifest = new MenuManifest(WeekPause.MODDING_MENU);
-            if (menumanifest == null) throw new Exception("failed to load " + WeekPause.MODDING_MENU);
-        }
+        // load custom menumanifest if exists
+        MenuManifest menumanifest = GameMain.HelperInitMenuManifestSuffixed(WeekPause.MODDING_MENU, true);
+        if (menumanifest == null) menumanifest = WeekPause.MENU;
 
         Menu menu = new Menu(
             menumanifest,

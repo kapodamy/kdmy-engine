@@ -277,12 +277,40 @@ function main_helper_trigger_action_menu2(layout, menu_manifest, index, prefix, 
     main_helper_trigger_action_menu(layout, prefix, name, selected, choosen);
 }
 
-function main_get_weekinfo_from_week_name(week_name) {
-    for (let i = 0; i < weeks_array.size; i++) {
-        if (weeks_array.array[i].name == week_name)
-            return weeks_array.array[i];
-    }
-    return null;
+async function main_helper_init_layout_suffixed(src, check_exists) {
+    let idx = src.lastIndexOf('.');
+    if (idx < 0) idx = src.length;
+
+    let layout;
+    let dreamcast_src = string_copy_and_insert(src, idx, "~dreamcast");
+
+    if (await fs_file_exists(dreamcast_src))
+        layout = await layout_init(dreamcast_src);
+    else if (!check_exists || await fs_file_exists(src))
+        layout = await layout_init(src);
+    else
+        layout = null;
+
+    dreamcast_src = undefined;
+    return layout;
+}
+
+async function main_helper_init_menumanifest_suffixed(src, check_exists) {
+    let idx = src.lastIndexOf('.');
+    if (idx < 0) idx = src.length;
+
+    let menumanifest;
+    let dreamcast_src = string_copy_and_insert(src, idx, "~dreamcast");
+
+    if (await fs_file_exists(dreamcast_src))
+        menumanifest = await menumanifest_init(dreamcast_src);
+    else if (!check_exists || await fs_file_exists(src))
+        menumanifest = await menumanifest_init(src);
+    else
+        menumanifest = null;
+
+    dreamcast_src = undefined;
+    return menumanifest;
 }
 
 

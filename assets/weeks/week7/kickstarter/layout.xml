@@ -2,7 +2,7 @@
 <Layout
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../../docs/Layout.xsd"
-    width="1280" height="720" animationList="./anims.xml">
+    width="1280" height="720" animationList="./anims.xml" keepAspectRatio="true">
 
     <Font name="fnf" path="/assets/common/font/default.xml" colorByAddition="true" glyphAnimate="true" />
 
@@ -32,6 +32,7 @@
                         float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, distance);
                         alpha *= 0.55 - (uv.y * uv.x);
 
+                        // to test in shadertoy use "fragColor = vec4(color * alpha, 1.0);" instead
                         fragColor = vec4(color, alpha);
                     }
                 </FragmentSource>

@@ -371,13 +371,11 @@ async function settingsmenu_main() {
     let menu_placeholder = layout_get_placeholder(layout, "menu");
     if (!menu_placeholder) throw new Error("Missing menu placeholder");
 
-    let menumanifest = SETTINGSMENU_MENU;
     let options_help = main_options_help;
 
-    if (await fs_file_exists(SETTINGSMENU_MODDING_MENU)) {
-        menumanifest = await menumanifest_init(SETTINGSMENU_MODDING_MENU);
-        if (!menumanifest) throw new Error("failed to load " + SETTINGSMENU_MODDING_MENU);
-
+    // load custom menumanifest if exists
+    let menumanifest = await main_helper_init_menumanifest_suffixed(SETTINGSMENU_MODDING_MENU, true);
+    if (menumanifest) {
         // since a custom menu was provided, remap option descriptions
         options_help = new Array[menumanifest.items_size];
 
@@ -397,6 +395,8 @@ async function settingsmenu_main() {
                 }
             }
         }
+    } else {
+        menumanifest = SETTINGSMENU_MENU;
     }
 
     let menu = await menu_init(

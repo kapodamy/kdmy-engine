@@ -150,11 +150,9 @@ async function week_pause_init(exit_to_weekselector_label) {
     );
     WEEKPAUSE_MENU.parameters.items_gap = WEEKPAUSE_MENU.parameters.font_size;
 
-    let menumanifest = WEEKPAUSE_MENU;
-    if (await fs_file_exists(WEEKPAUSE_MODDING_MENU)) {
-        menumanifest = await menumanifest_init(WEEKPAUSE_MODDING_MENU);
-        if (!menumanifest) throw new Error("failed to load " + WEEKPAUSE_MODDING_MENU);
-    }
+    // load custom menumanifest if exists
+    let menumanifest = await main_helper_init_menumanifest_suffixed(WEEKPAUSE_MODDING_MENU, true);
+    if (!menumanifest) menumanifest = WEEKPAUSE_MENU;
 
     let menu = await menu_init(
         menumanifest,

@@ -177,11 +177,9 @@ async function mainmenu_main() {
         );
     }
 
-    let menumanifest = MAINMENU_MENU_MANIFEST;
-    if (await fs_file_exists(MAINMENU_MODDING_MENU)) {
-        menumanifest = await menumanifest_init(MAINMENU_MODDING_MENU);
-        if (!menumanifest) throw new Error("failed to load " + MAINMENU_MODDING_MENU);
-    }
+    // load custom menumanifest if exists
+    let menumanifest = await main_helper_init_menumanifest_suffixed(MAINMENU_MODDING_MENU, true);
+    if (!menumanifest) menumanifest = MAINMENU_MENU_MANIFEST;
 
     let menu = await menu_init(menumanifest, x, y, z, size[0], size[1]);
     menu_trasition_in(menu);

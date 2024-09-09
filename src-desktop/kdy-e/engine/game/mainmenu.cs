@@ -191,11 +191,9 @@ public class MainMenu {
             );
         }
 
-        MenuManifest menumanifest = MainMenu.MENU_MANIFEST;
-        if (FS.FileExists(MainMenu.MODDING_MENU)) {
-            menumanifest = new MenuManifest(MainMenu.MODDING_MENU);
-            if (menumanifest == null) throw new Exception("failed to load " + MainMenu.MODDING_MENU);
-        }
+        // load custom menumanifest if exists
+        MenuManifest menumanifest = GameMain.HelperInitMenuManifestSuffixed(MainMenu.MODDING_MENU, true);
+        if (menumanifest == null) menumanifest = MainMenu.MENU_MANIFEST;
 
         Menu menu = new Menu(menumanifest, x, y, z, size_width, size_height);
         menu.TrasitionIn();

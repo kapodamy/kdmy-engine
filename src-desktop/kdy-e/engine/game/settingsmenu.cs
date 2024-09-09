@@ -392,13 +392,11 @@ public static class SettingsMenu {
         LayoutPlaceholder menu_placeholder = layout.GetPlaceholder("menu");
         if (menu_placeholder == null) throw new Exception("Missing menu placeholder");
 
-        MenuManifest menumanifest = SettingsMenu.MENU;
         SettingOption[] options_help = main_options_help;
 
-        if (FS.FileExists(SettingsMenu.MODDING_MENU)) {
-            menumanifest = new MenuManifest(SettingsMenu.MODDING_MENU);
-            if (menumanifest == null) throw new Exception("failed to load " + SettingsMenu.MODDING_MENU);
-
+        // load custom menumanifest if exists
+        MenuManifest menumanifest = GameMain.HelperInitMenuManifestSuffixed(SettingsMenu.MODDING_MENU, true);
+        if (menumanifest != null) {
             // since a custom menu was provided, remap option descriptions
             options_help = EngineUtils.CreateArray<SettingOption>(menumanifest.items_size);
 
@@ -418,6 +416,8 @@ public static class SettingsMenu {
                     }
                 }
             }
+        } else {
+            menumanifest = SettingsMenu.MENU;
         }
 
         Menu menu = new Menu(
