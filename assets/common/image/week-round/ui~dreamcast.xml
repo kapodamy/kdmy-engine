@@ -6,7 +6,6 @@
     
         Layout for UI elements:
             * Most of the values are expressed in pixels.
-            * The streakcounter & rankingcounter can be overrided by stage layout.
             * All UI elements have a Z-Index (draw order) starting from 100.
             * Dimmens depends of the orientation (whatever is vertical or not) of the element
                 * Vertical: 
@@ -19,7 +18,7 @@
             * In some placeholders only "width" or "height" is required depending on the orientation
             * RANKINGCOUNTER and STREAKCOUNTER can be overrided by stage layout
 
-        ANY SPRITE, SOUND OR TEXTSPRITE IS IGNORED (NEVER DRAWN IN SCREEN)
+        ANY SPRITE, SOUND, VIDEO OR TEXTSPRITE IS IGNORED (NEVER DRAWN IN SCREEN)
 
     ******************************************************************************* -->
 
@@ -42,6 +41,7 @@
 	<AttachValue name="ui_songprogressbar_colorRGBA8_background" type="hex" value="0x000000FF" />
 	<AttachValue name="ui_songprogressbar_colorRGBA8_barBack"    type="hex" value="0x808080FF" />
 	<AttachValue name="ui_songprogressbar_colorRGBA8_barFront"   type="hex" value="0xFFFFFFFF" />
+
 
 
     <!-- ******************* STRUMS DEFINITIONS ******************* -->
@@ -117,19 +117,19 @@
     <!-- Important: -->
     <!--    if the user enables the "inverted strum scrolling" option in settings menu -->
     <!--    the scroll direction is inverted keeping the declared orientation (vertical or horizontal). -->
-    <!--    UI elements should be moved are: song progressbar, healthbar, roundstats and songinfo -->
+    <!--    UI elements that should be moved are: songprogressbar, strums, healthbar, roundstats and songinfo -->
 	<!--    For this layout strums are inverted from UPSCROLL to DOWNSCROLL because the orientation is vertical. -->
 	<!--    In custom layouts with horizontal scrolling, this changes from RIGHTSCROLL to LEFTSCROLL -->
     <Placeholder name="ui_strums_inverted0" x="26" y="0" z="101" height="456" />
     <Placeholder name="ui_strums_inverted1" x="390" y="0" z="101" height= "456" />
-	<Placeholder name="ui_songprogressbar_inverted" x="200" y="22" z="102" width="240" height="8" alignHorizontal="center" />
-    <Placeholder name="ui_healthbar_inverted" x="170" y="432" z="100" width="300" height="8" />
-    <Placeholder name="ui_roundstats_inverted" x="0" y="465" z="102" />
-    <Placeholder name="ui_song_info_inverted" x="5" y="465" z="101" />
+	<Placeholder name="ui_songprogressbar_inverted" x="200" y="458" z="102" width="240" height="8" alignHorizontal="center" />
+    <Placeholder name="ui_healthbar_inverted" x="170" y="48" z="100" width="300" height="8" />
+    <Placeholder name="ui_roundstats_inverted" x="0" y="14" z="102" />
+    <Placeholder name="ui_song_info_inverted" x="5" y="14" z="101" />
 	
 
 	<!-- **************************************************************************************************** -->
-    <!-- Example of placing characters in the layout in the stage layout -->
+    <!-- Example of placing characters in the stage layout -->
     <!--                                                                 -->
     <!-- Notes: -->
     <!--   * Characters placed here (ui layout) are ignored by the engine. -->
@@ -137,7 +137,7 @@
     <!--   * If "alignVertical" or "alignHorizontal" is not present, is assumed as "none" aligned. -->
     <!--   * In "alignVertical" and/or "alignHorizontal" use "none" to use the align from -->
     <!--       the character manifest (json file of the character). -->
-    <!--   * If the placeholder as "width" or "height" or both , is taken as reference box. -->
+    <!--   * If the placeholder as "width" or "height" or both, is taken as reference box. -->
     <!--   * "character_girlfriend_scale" and "character_scale_###" defines the sprite scale (optional, defaults to 1.0) -->
 
     <!-- <Placeholder name="character_girlfriend" x="1" y="4" z="0" /> -->
@@ -147,10 +147,8 @@
     <!-- <AttachValue name="character_count" type="integer" value="3" /> -->
     
     <!-- <AttachValue name="character_scale_0" type="float" value="0.5" /> -->
+
     <!-- <Placeholder name="character_0" x="2" y="3" z="0" width="320" height="240" /> -->
-    
-    <!-- <AttachValue name="character_scale_1" type="float" value="1.0" /> -->
-    
     <!-- <Placeholder name="character_1" x="3" y="2" z="0" alignVertical="none" alignHorizontal="end" /> -->
     <!-- <Placeholder name="character_2" x="4" y="1" z="0" alignVertical="start" alignHorizontal="start" /> -->
     
