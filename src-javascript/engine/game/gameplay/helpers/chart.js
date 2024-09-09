@@ -149,7 +149,7 @@ async function chart_init(src, difficult) {
                 data = alt_note ? Infinity : -Infinity;
             } else {
                 alt_note = 0.0;
-                data = json_read_array_item_number(self_notes, 3, 0.0);
+                data = json_read_array_item_number(self_notes, 3, NaN);
             }
 
             if (set_camera) {
@@ -221,7 +221,13 @@ async function chart_init(src, difficult) {
                 // self notes
                 target = must_hit_section ? player_notes : opponent_notes;
             }
-            arraylist_add(target, { timestamp, direction, duration, alt_anim, data });
+            arraylist_add(target, {
+                timestamp: timestamp,
+                direction: direction,
+                duration: duration,
+                alt_anim: alt_note,
+                data: data
+            });
         }
     }
 

@@ -199,17 +199,17 @@ public class WeekPause {
             if (index >= 0) menu.SetItemText(index, exit_to_weekselector_label);
         }
 
-        SoundPlayer background_music = SoundPlayer.Init("/assets/common/music/breakfast.ogg");
-
         this.menu = menu;
         this.messagebox = messagebox;
         this.sprite_nocontroller = sprite_nocontroller;
         this.layout = layout;
         this.menu_placeholder = menu_placeholder;
         this.menu_external = null;
-        this.background_music = background_music;
+        this.background_music = null;
         this.modding = modding;
         this.modding_choosen_option_name = null;
+
+        ChangeBackgroundMusic("/assets/common/music/breakfast.ogg");
     }
 
     public void Destroy() {
@@ -262,7 +262,10 @@ public class WeekPause {
 
         if (StringUtils.IsNotEmpty(filename)) {
             this.background_music = SoundPlayer.Init(filename);
-            if (this.background_music != null) this.background_music.LoopEnable(true);
+            if (this.background_music != null) {
+                this.background_music.LoopEnable(true);
+                this.background_music.SetVolume(0.5f);
+            }
         } else {
             this.background_music = null;
         }
@@ -274,10 +277,7 @@ public class WeekPause {
         controller.SetButtonsDelay(WeekPause.DELAY);
 
         this.messagebox.Hide(false);
-        if (this.background_music != null) {
-            this.background_music.SetVolume(0.5f);
-            this.background_music.Play();
-        }
+        if (this.background_music != null) this.background_music.Play();
         controller.ClearButtons();
 
         bool current_menu_is_external = false;

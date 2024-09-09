@@ -155,7 +155,7 @@ public class Chart {
                     data = alt_note ? Double.PositiveInfinity : Double.NegativeInfinity;
                 } else {
                     alt_note = false;
-                    data = JSONParser.ReadArrayItemNumberDouble(self_notes, 3, 0.0);
+                    data = JSONParser.ReadArrayItemNumberDouble(self_notes, 3, Double.NaN);
                 }
 
                 if (set_camera) {
