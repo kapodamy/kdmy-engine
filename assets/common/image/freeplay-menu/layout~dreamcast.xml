@@ -156,16 +156,18 @@
 
     <!-- Help -->
     <Group>
-        <Sprite r="0" g="0" b="0" a="0.25">
+        <Sprite r="0" g="0" b="0" a="0.40">
             <Action>
-                <Location x="0" y="694" z="5" />
-                <Size width="960" height="30" />
+                <Location x="0" y="650" z="5" />
+                <Size width="960" height="68" />
             </Action>
         </Sprite>
-        <Text fontName="vcr" fontSize="17" rgb="0xFFFFFF">
+        <Text fontName="vcr" fontSize="20" rgb="0xFFFFFF">
             <Action>
-                <Location x="6" y="698" z="5" />
-                <String>UP/DOWN: choose song. LEFT/RIGHT: choose difficult. For songs with alternative tracks press X.</String>
+                <Location x="6" y="654" z="5" />
+                <String>UP/DOWN: choose song.
+LEFT/RIGHT: choose difficult.
+For songs with alternative tracks press X.</String>
             </Action>
         </Text>
     </Group>

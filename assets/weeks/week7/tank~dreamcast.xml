@@ -407,8 +407,8 @@
     <Sprite name="fade-effect" rgb="0x000000">
         <Action>
             <Static />
-            <Location x="0" y="0" z="1000" />
-            <Size width="1280" height="720"/>
+            <Location x="-288" y="-120" z="1000" />
+            <Size width="1792" height="1008" />
             <Property name="alpha" value="0.0" />
         </Action>
         <Action name="bounce_fade">

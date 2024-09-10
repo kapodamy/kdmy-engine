@@ -34,7 +34,7 @@
 	<!-- songprogressbar additional parameters -->
 	<AttachValue name="ui_songprogressbar_borderSize" type="float" value="4" />
 	<AttachValue name="ui_songprogressbar_fontSize" type="float" value="22" />
-	<AttachValue name="ui_songprogressbar_fontBorderSize" type="float" value="1.5" />
+	<AttachValue name="ui_songprogressbar_fontBorderSize" type="float" value="1.7" />
 	<AttachValue name="ui_songprogressbar_isVertical" type="boolean" value="false" />
 	<AttachValue name="ui_songprogressbar_showTime" type="boolean" value="true" />
 	<AttachValue name="ui_songprogressbar_colorRGBA8_text"       type="hex" value="0xFFFFFFFF" />
