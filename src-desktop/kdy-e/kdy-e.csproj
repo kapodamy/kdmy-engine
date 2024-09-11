@@ -7,11 +7,11 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-	<UpdateAssemblyInfo>true</UpdateAssemblyInfo>
+    <UpdateAssemblyInfo>true</UpdateAssemblyInfo>
     <UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-	<OutputType>WinExe</OutputType>
+    <OutputType>WinExe</OutputType>
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>false</SignManifests>
@@ -46,11 +46,20 @@
     <Content Include="Properties\icon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\expansionsloader\expansionsloader.csproj" />
     <ProjectReference Include="..\ffgraph\ffgraph.csproj" />
     <ProjectReference Include="..\fontatlas\fontatlas.csproj" />
     <ProjectReference Include="..\lua-iterop\lua-iterop.csproj" />
     <ProjectReference Include="..\soundbridge\soundbridge.csproj" />
     <ProjectReference Include="..\texture-mgr\texture-mgr.csproj" />
   </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <Reference Include="kdy_expansionsloader">
+      <HintPath>..\expansionsloader\bin\x64\Debug\kdy_expansionsloader.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+    <ItemGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+        <Reference Include="kdy_expansionsloader">
+            <HintPath>..\expansionsloader\bin\x64\Release\kdy_expansionsloader.dll</HintPath>
+        </Reference>
+    </ItemGroup>
 </Project>

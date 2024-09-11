@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using CsharpWrapperExpansionsLoader;
 using Engine;
 using Engine.Externals.GLFW;
 using Engine.Game;
@@ -158,8 +159,15 @@ class Program {
             i++;
         }
 
-        // load selected expansion or default ("funkin" folder)
-        Expansions.Load(expansion_directory);
+
+        // run in a separate thread because the FileSystem is not available yet
+        Thread loader = new Thread(delegate () {
+            FS.Init();
+            // load selected expansion or default ("funkin" folder)
+            Expansions.Load(expansion_directory);
+        });
+        loader.Start();
+        loader.Join();
 
         // initialize GLFW and OpenGL
         PVRContext.Init();
@@ -212,8 +220,6 @@ class Program {
             expansion.description = JSONParser.ReadString(json, "description", null);
             string screenshoot_path = JSONParser.ReadString(json, "screenshoot", null);
             string icon_path = JSONParser.ReadString(json, "icon", null);
-            string window_icon_path = JSONParser.ReadString(json, "windowIcon", null);
-            expansion.window_title = JSONParser.ReadString(json, "windowTitle", null);
             JSONParser.Destroy(json);
 
             if (screenshoot_path != null) {
@@ -232,17 +238,6 @@ class Program {
 
                 if (File.Exists(icon_path)) {
                     expansion.icon_native_path = icon_path;
-                }
-            }
-            if (window_icon_path != null) {
-                window_icon_path = IO.GetNativePath(
-                    FS.ResolvePath($"{dir_relative_path}{window_icon_path}"), true, false, false
-                );
-
-                if (File.Exists(window_icon_path)) {
-                    expansion.window_icon_native_path = window_icon_path;
-                } else {
-                    Logger.Warn($"ExpansionsLoader::LoadExpansions() file '{window_icon_path}' not found");
                 }
             }
 

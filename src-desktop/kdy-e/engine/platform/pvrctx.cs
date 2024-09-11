@@ -404,7 +404,7 @@ public class PVRContext {
 #if DEBUG
             title = $"{Engine.Game.GameMain.ENGINE_NAME} {Engine.Game.GameMain.ENGINE_VERSION}";
 #else
-            title = Funkin.FUNKY.Replace("--", "\x20");
+            title = Engine.Game.Common.Funkin.FUNKY.Replace("--", "\x20");
 #endif
         }
 

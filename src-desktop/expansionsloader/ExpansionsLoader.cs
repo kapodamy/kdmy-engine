@@ -7,7 +7,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace CsharpWrapper {
+namespace CsharpWrapperExpansionsLoader {
 
     public struct ExpansionInfo {
         public string name;
@@ -17,8 +17,6 @@ namespace CsharpWrapper {
         public string description;
         public string screenshoot_native_path;
         public string icon_native_path;
-        public string window_icon_native_path;
-        public string window_title;
 
         public ExpansionInfo(string directory_name) {
             this.name = this.directory = directory_name;
@@ -27,8 +25,6 @@ namespace CsharpWrapper {
             this.description = "";
             this.screenshoot_native_path = null;
             this.icon_native_path = null;
-            this.window_icon_native_path = null;
-            this.window_title = null;
         }
 
     }
@@ -154,6 +150,12 @@ namespace CsharpWrapper {
 
             // load all icons
             for (int i = 0 ; i < expansions_found_size ; i++) {
+                expansions[i] = new Expansion(expansions_found[i].directory);
+                expansions[i].name = expansions_found[i].name;
+                expansions[i].version = expansions_found[i].version;
+                expansions[i].submiter = expansions_found[i].submiter;
+                expansions[i].description = expansions_found[i].description;
+
                 if (expansions_found[i].screenshoot_native_path != null) {
                     expansions[i].screenshoot = Image.FromFile(expansions_found[i].screenshoot_native_path);
                 }

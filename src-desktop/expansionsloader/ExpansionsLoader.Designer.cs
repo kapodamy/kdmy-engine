@@ -1,4 +1,4 @@
-﻿namespace CsharpWrapper
+﻿namespace CsharpWrapperExpansionsLoader
 {
     partial class ExpansionsLoader
     {
