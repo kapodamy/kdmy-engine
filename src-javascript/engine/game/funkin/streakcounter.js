@@ -61,7 +61,7 @@ function streakcounter_init(placeholder, combo_height, number_gap, delay) {
 }
 
 function streakcounter_destroy(streakcounter) {
-    luascript_drop_shared
+    luascript_drop_shared(streakcounter);
 
     drawable_destroy(streakcounter.drawable);
 

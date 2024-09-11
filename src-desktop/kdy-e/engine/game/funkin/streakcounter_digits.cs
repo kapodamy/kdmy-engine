@@ -8,7 +8,7 @@ namespace Engine.Game;
 public class StreakCounterDigits : IAnimate, IDraw {
 
     internal const string STREAKCOUNTER_UI_STREAK_ANIM = "streak_number";// picked from UI animlist
-    private static readonly char[] STREAKCOUNTER_NUMBERS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+    private static readonly string[] STREAKCOUNTER_NUMBERS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
     private const int STREAKCOUNTER_DIGITS = 4;// maximum visible digits
     internal const int STREAKCOUNTER_MAX_VALUE = 9999;// ¡¡this must match the STREAKCOUNTER_DIGITS!!
 
@@ -201,7 +201,7 @@ public class StreakCounterDigits : IAnimate, IDraw {
                 continue;
             }
 
-            string number = StreakCounterDigits.STREAKCOUNTER_NUMBERS[digit].ToString();
+            string number = StreakCounterDigits.STREAKCOUNTER_NUMBERS[digit];
 
             StateSprite statesprite = this.digits[i];
             string state_name = StringUtils.ConcatForStateName(

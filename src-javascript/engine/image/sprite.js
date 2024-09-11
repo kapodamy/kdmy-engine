@@ -315,7 +315,7 @@ function sprite_destroy(sprite) {
 
     SPRITE_POOL.delete(sprite.id);
     luascript_drop_shared(sprite.matrix_source);
-    luascript_drop_shared
+    luascript_drop_shared(sprite);
     sprite.trailing_buffer = undefined;
     sprite = undefined;
 }

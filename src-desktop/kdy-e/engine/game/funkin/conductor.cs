@@ -193,7 +193,16 @@ public class Conductor {
             bool press_state_use_alt_anim = array[i].strum.GetPressStateUseAltAnim();
 
             // check if the strums was updated
-            if (press_changes == array[i].last_change_count) continue;
+            if (press_changes == array[i].last_change_count) {
+                // if was not updated, check if still holding a note (sustain or not)
+                switch (press_state) {
+                    case StrumPressState.HIT:
+                    case StrumPressState.HIT_SUSTAIN:
+                        this.has_hits = true;
+                        break;
+                }
+                continue;
+            }
             array[i].last_change_count = press_changes;
 
             if (press_state_use_alt_anim) this.character.UseAlternateSingAnimations(true);

@@ -1,7 +1,7 @@
 "use strict";
 
 const STREAKCOUNTER_UI_STREAK_ANIM = "streak_number";// picked from UI animlist
-const STREAKCOUNTER_NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const STREAKCOUNTER_NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const STREAKCOUNTER_DIGITS = 4;// maximum visible digits
 const STREAKCOUNTER_MAX_VALUE = 9999;// ¡¡this must match the STREAKCOUNTER_DIGITS!!
 
@@ -193,10 +193,10 @@ function streakcounter_digits_measure(streakcounter_digits, value) {
         }
 
         // C only
-        //const char number[] = { STREAKCOUNTER_NUMBERS[i], '\0' };
+        //const char number[] = { STREAKCOUNTER_NUMBERS[digit], '\0' };
 
         // JS & C# only
-        const number = STREAKCOUNTER_NUMBERS[i];
+        const number = STREAKCOUNTER_NUMBERS[digit];
 
         let statesprite = streakcounter_digits.digits[i];
         let state_name = string_concat_for_state_name(
