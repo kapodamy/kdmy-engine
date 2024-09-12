@@ -2,11 +2,11 @@
 /test files/re pics/haxe/
 /test files/backups/
 
-/fontatlas/.vscode/*.log
-/fontatlas/output/
+/fontatlas-javascript/.vscode/*.log
+/fontatlas-javascript/output/
 
-/luascript-js/.vscode/*.log
-/luascript-js/output/
+/luascript-javascript/.vscode/*.log
+/luascript-javascript/output/
 
 /luaworkspace/build/
 /luaworkspace/node_modules/
