@@ -19,6 +19,12 @@
 !/expansions/funkin/
 !/expansions/example-expansion/
 
+/src-dreamcast/.vscode/*.log
+/src-dreamcast/output/cd_root/*
+/src-dreamcast/output/*
+!/src-dreamcast/output/cd_root/
+!/src-dreamcast/output/cd_root/assets
+
 Thumbs.db
 
 /work-in-progress/

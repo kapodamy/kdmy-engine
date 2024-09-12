@@ -1,0 +1,53 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "clean dreamcast",
+            "type": "shell",
+            "group": {
+                "kind": "test",
+                "isDefault": false
+            },
+            "command": "make",
+            "args": [
+                "clean"
+            ]
+        },
+        {
+            "label": "build dreamcast (debug)",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "command": "make",
+            "args": [
+                "build-debug"
+            ],
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "build dreamcast (release)",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "command": "make",
+            "args": [
+                "build-release"
+            ],
+            "presentation": {
+                "clear": true
+            }
+        }
+    ]
+}

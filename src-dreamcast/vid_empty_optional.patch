@@ -1,0 +1,63 @@
+diff --git a/include/kos/init.h b/include/kos/init.h
+index de199b9e..c7502ef9 100644
+--- a/include/kos/init.h
++++ b/include/kos/init.h
+@@ -140,6 +140,7 @@ extern const void * __kos_romdisk;
+ #define INIT_EXPORT      0x00000020  /**< \brief Export kernel symbols */
+ #define INIT_FS_ROMDISK  0x00000040  /**< \brief Enable support for romdisks */
+ #define INIT_NO_SHUTDOWN 0x00000080  /**< \brief Disable hardware shutdown */
++#define INIT_NO_VID_EMPTY 0x00000080  /**< \brief Do not call vid_empty() on pvr_init() and vid_init() functions */
+ /** @} */
+ 
+ __END_DECLS
+diff --git a/kernel/arch/dreamcast/hardware/pvr/pvr_init_shutdown.c b/kernel/arch/dreamcast/hardware/pvr/pvr_init_shutdown.c
+index 630835de..f92aa4af 100644
+--- a/kernel/arch/dreamcast/hardware/pvr/pvr_init_shutdown.c
++++ b/kernel/arch/dreamcast/hardware/pvr/pvr_init_shutdown.c
+@@ -12,6 +12,7 @@
+ #include <dc/video.h>
+ #include <dc/asic.h>
+ #include <dc/vblank.h>
++#include <kos/init.h>
+ #include "pvr_internal.h"
+ 
+ /*
+@@ -74,7 +75,9 @@ int pvr_init(pvr_init_params_t *params) {
+     }
+ 
+     /* Clear out video memory */
+-    vid_empty();
++    if (__kos_init_flags & ~INIT_NO_VID_EMPTY) {
++        vid_empty();
++    }
+ 
+     /* Reset all PVR systems (in case it's still doing something) */
+     PVR_SET(PVR_RESET, PVR_RESET_ALL);
+diff --git a/kernel/arch/dreamcast/hardware/video.c b/kernel/arch/dreamcast/hardware/video.c
+index df945333..3be737d6 100644
+--- a/kernel/arch/dreamcast/hardware/video.c
++++ b/kernel/arch/dreamcast/hardware/video.c
+@@ -10,6 +10,7 @@
+ #include <dc/video.h>
+ #include <dc/pvr.h>
+ #include <dc/sq.h>
++#include <kos/init.h>
+ #include <kos/platform.h>
+ #include <string.h>
+ #include <stdio.h>
+@@ -571,9 +572,13 @@ void vid_waitvbl(void) {
+ 
+ /*-----------------------------------------------------------------------------*/
+ void vid_init(int disp_mode, vid_pixel_mode_t pixel_mode) {
+-    /* Set mode and clear vram */
++    /* Set mode */
+     vid_set_mode(disp_mode, pixel_mode);
+-    vid_empty();
++
++    /* clear vram */
++    if (__kos_init_flags & ~INIT_NO_VID_EMPTY) {
++        vid_empty();
++    }
+ }
+ 
+ /*-----------------------------------------------------------------------------*/

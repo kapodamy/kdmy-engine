@@ -1,0 +1,15 @@
+0
+
+README:
+* this file indicates if "gameover.xml" is vainilla (not overrided).
+* if the week overrides "gameover.xml" (changing the path to /assets/common/ folder) you SHOULD CHANGE THE FIRST LINE.
+* the value "0" (zero) means the layout "gameover.xml" is not custom.
+* the engine reads this file in before any week round (or track) gameplay.
+* the engine ONLY reads the first character of this file, so not be creative.
+* if the week uses different gameover screens on each track, the "gameover_version.txt" should be different.
+* ¿how you override the "commons" folder?:
+*	in "gameplay.json" file, property "customFolder".
+*	via scripting, calling the function "fs_override_common_folder()".
+* the "_version" honors the funkin behavior.
+
+godspeed

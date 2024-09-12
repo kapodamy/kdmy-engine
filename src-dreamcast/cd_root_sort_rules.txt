@@ -1,0 +1,4 @@
+output/cd_root/1ST_READ.BIN 0
+output/cd_root/IP.BIN 1
+output/cd_root/*/*.ogg   -2
+output/cd_root/*/*.mvqa  -3

@@ -1,0 +1,29 @@
+{
+  "files.associations": {},
+  "C_Cpp.clang_format_style": "file",
+  "C_Cpp.formatting": "clangFormat",
+  "terminal.integrated.profiles.windows": {
+    "mingw64-shell": {
+      "path": "C:\\msys64\\usr\\bin\\bash.exe",
+      "args": [
+        "--login"
+      ]
+    },
+    "DreamShell": {
+      "path": "${env:DREAMSDK_HOME}\\msys\\1.0\\bin\\bash.exe",
+      "args": [
+        "--login",
+        "-i"
+      ]
+    }
+  },
+  "terminal.integrated.cwd": "${workspaceFolder}",
+  "terminal.integrated.defaultProfile.windows": "DreamShell",
+  "makefile.makePath": "C:\\msys64\\mingw64\\bin\\mingw32-make.exe",
+  "terminal.integrated.env.windows": {
+    "CHERE_INVOKING": "1",
+    "MSYSTEM": "MINGW64",
+    "HOME": "."
+  },
+  "git.enabled": false
+}

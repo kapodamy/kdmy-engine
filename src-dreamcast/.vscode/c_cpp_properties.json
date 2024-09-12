@@ -1,0 +1,43 @@
+{
+    "configurations": [
+        {
+            "name": "KOS",
+            "includePath": [
+                //"${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/sh-elf/sh-elf/include",
+
+                "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/kos/include",
+                "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/kos/kernel/arch/dreamcast/include",
+
+                "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/kos/addons/include",
+                "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/kos-ports/include",
+
+                "${workspaceFolder}/include",
+
+                /*** required by SoundBridge ***/
+                "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/kos-ports/include/ogg",
+                "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/kos/kernel/arch/dreamcast/sound",
+                "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/kos/kernel/arch/dreamcast/include/dc/sound",
+
+                /*** required by FontAtlas ***/
+                "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/kos-ports/include/freetype2"
+            ],
+            "defines": [
+                "_arch_dreamcast",
+                "SNDBRINDE_TREMOR",
+                "DEBUG"
+            ],
+            "compilerPath": "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/sh-elf/bin/sh-elf-gcc.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x86",// must be 32-bits like the SH-4 CPU
+            "compilerArgs": [
+                "-Wall",
+                "-Wextra",
+                "-Wfloat-conversion",
+                "-Wno-sign-compare",
+                "-Wsign-conversion"
+            ]
+        }
+    ],
+    "version": 4
+}

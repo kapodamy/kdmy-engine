@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // Note: required the extension "Native Debug" by "WebFreak" to work
+            "type": "gdb",
+            "request": "attach",
+            "name": "Attach to Flycast (dreamcast emulator)",
+            "executable": "${workspaceFolder}/output/pvrcontext.elf",
+            "target": "localhost:3263",
+            "remote": true,
+            "cwd": "${workspaceFolder}",
+            "gdbpath": "${env:DREAMSDK_HOME}/msys/1.0/opt/toolchains/dc/sh-elf/bin/sh-elf-gdb.exe",
+            //"gdbpath": "C:/msys64/mingw64/bin/gdb-multiarch.exe",
+            "autorun": [
+                //"set arch sh4",
+                //"set endian little",
+                "set print pretty on",
+                "set remotetimeout 20",
+                "nexti"
+            ],
+            "valuesFormatting": "prettyPrinters"
+        }
+    ]
+}

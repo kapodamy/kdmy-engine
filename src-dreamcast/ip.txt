@@ -1,0 +1,9 @@
+Device Info   : CD-ROM1/1
+Area Symbols  : UE
+Peripherals   : E000F10
+Product No    : T0000
+Version       : V0.620
+Release Date  : 20000627
+Boot Filename : 1ST_READ.BIN
+SW Maker Name : KAPODAMY
+Game Title    : [KDMY-Engine] Friday Night Funkin

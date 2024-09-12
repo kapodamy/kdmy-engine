@@ -1,0 +1,83 @@
+diff --git a/kernel/arch/dreamcast/fs/fs_iso9660.c b/kernel/arch/dreamcast/fs/fs_iso9660.c
+index f8445cad..e66638b6 100644
+--- a/kernel/arch/dreamcast/fs/fs_iso9660.c
++++ b/kernel/arch/dreamcast/fs/fs_iso9660.c
+@@ -36,6 +36,7 @@ ISO9660 systems, as these were used as references as well.
+ #include <kos/mutex.h>
+ #include <kos/fs.h>
+ #include <kos/opts.h>
++#include <kos/dbglog.h>
+ 
+ #include <stdlib.h>
+ #include <stdio.h>
+@@ -48,6 +49,16 @@ ISO9660 systems, as these were used as references as well.
+ static int init_percd(void);
+ static int percd_done;
+ 
++#ifdef FS_ISO9660_DMA_SUPPORT
++/********************************************************************************/
++/* Sector reading mode PIO/DMA */
++static int fs_iso9660_reading_mode;
++
++void fs_iso9660_enable_dma(int enabled) {
++    fs_iso9660_reading_mode = enabled ? CDROM_READ_DMA : CDROM_READ_PIO;
++}
++#endif
++
+ /********************************************************************************/
+ /* Low-level Joliet utils */
+ 
+@@ -268,7 +279,11 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
+     }
+ 
+     /* Load the requested block */
++#ifdef FS_ISO9660_DMA_SUPPORT
++    j = cdrom_read_sectors_ex(cache[i]->data, sector + 150, 1, fs_iso9660_reading_mode);
++#else
+     j = cdrom_read_sectors(cache[i]->data, sector + 150, 1);
++#endif
+ 
+     if(j < 0) {
+         //dbglog(DBG_ERROR, "fs_iso9660: can't read_sectors for %d: %d\n",
+@@ -705,9 +720,15 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
+                 thissect);
+ 
+             // Do the read
++#ifdef FS_ISO9660_DMA_SUPPORT
++            if(cdrom_read_sectors_ex(outbuf,
++                fh[fd].first_extent + fh[fd].ptr/2048 + 150,
++                thissect, fs_iso9660_reading_mode) < 0)
++#else
+             if(cdrom_read_sectors(outbuf,
+                 fh[fd].first_extent + fh[fd].ptr/2048 + 150,
+                 thissect) < 0)
++#endif
+             {
+                 // Something went wrong...
+                 return -1;
+diff --git a/kernel/arch/dreamcast/include/dc/fs_iso9660.h b/kernel/arch/dreamcast/include/dc/fs_iso9660.h
+index e2f245b7..43d01d39 100644
+--- a/kernel/arch/dreamcast/include/dc/fs_iso9660.h
++++ b/kernel/arch/dreamcast/include/dc/fs_iso9660.h
+@@ -52,6 +52,21 @@ void fs_iso9660_init(void);
+ void fs_iso9660_shutdown(void);
+ /* \endcond */
+ 
++#define FS_ISO9660_DMA_SUPPORT
++#ifdef FS_ISO9660_DMA_SUPPORT
++/** \brief  Enable/Disable DMA Mode (disabled by default)
++
++    This function switches between DMA and PIO read modes where DMA is
++    faster.
++    Warning: DMA Mode may conflict when a second G1ATA device is connected.
++    If the console does not have any modification (exactly in the G1 BUS), feel
++    free to enable DMA mode.
++
++    \param enabled      1 to use DMA Mode, otherwise, 0 to use PIO Mode
++*/
++void fs_iso9660_enable_dma(int enabled);
++#endif
++
+ /** @} */
+ 
+ __END_DECLS
