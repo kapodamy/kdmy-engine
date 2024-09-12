@@ -1,13 +1,8 @@
 {
     "files.associations": {
-      "stdlib.h": "c",
-      "assert.h": "c",
-      "features.h": "c",
-      "arch.h": "c",
-      "float64.h": "c",
-      "stdint.h": "c",
-      "stddef.h": "c",
-      "fontatlas.h": "c"
+      "ft2build.h": "c",
+      "timer.h": "c",
+      "rtc.h": "c"
     },
     "C_Cpp.clang_format_style": "file",
     "C_Cpp.formatting": "clangFormat",

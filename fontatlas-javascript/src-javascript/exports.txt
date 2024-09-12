@@ -1,6 +1,6 @@
 _fontatlas_enable_sdf
 _fontatlas_init
-_fontatlas_destroy
+_fontatlas_destroy_JS
 _fontatlas_atlas_build
 _fontatlas_atlas_build_complete
 _fontatlas_atlas_destroy_texture_only

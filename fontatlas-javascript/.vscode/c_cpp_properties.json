@@ -3,15 +3,16 @@
         {
             "name": "WASM",
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/include-javascript/freetype2",
+                "${workspaceFolder}/include-javascript",
                 "${workspaceFolder}/include",
                 "${env:EMSDK}/upstream/emscripten/cache/sysroot/include"
             ],
             "defines": [
-                "UNICODE",
+                "UNICODE"
             ],
             "windowsSdkVersion": "8.1",
-            "compilerPath": "${env:EMSDK}\\upstream\\emscripten\\emcc.bat",//"C:/msys64/mingw64/bin/gcc.exe",
+            "compilerPath": "${env:EMSDK}\\upstream\\emscripten\\emcc.bat",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-clang-x86",
@@ -19,7 +20,10 @@
             "compilerArgs": [
                 "-Wall",
                 "-Wextra",
-                "-Wfloat-conversion"
+                "-Wno-sign-compare",
+                "-Wsign-conversion",
+                "-Wfloat-conversion",
+                "-Wstring-compare"
             ]
         }
     ],

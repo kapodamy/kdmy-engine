@@ -1,18 +1,18 @@
-CFLAGS = -Wall -Wfloat-conversion -Wextra -std=c17
+CFLAGS = -Wall -Wextra -Wno-sign-compare -Wsign-conversion -Wfloat-conversion -Wstring-compare -std=c17
 EMCC = "${EMSDK}/upstream/emscripten/emcc"
-SOURCES = $(wildcard src/*.c)  $(wildcard src/utils/*.c)
+SOURCES = $(wildcard src/externals/fontatlas/*.c) src/logger.c $(wildcard src-javascript/*.c)
 WINDOWS_STUBS_SOURCES = $(wildcard src/windows_stubs/*.c)
-INCLUDES = -Iinclude -Iinclude/freetype2 -Isrc
+INCLUDES = -Iinclude-javascript/freetype2 -Iinclude-javascript -Iinclude
 EMMODULE = -s MODULARIZE -s EXPORT_NAME=ModuleFontAtlas
-EMMODULE := $(EMMODULE) -s EXPORTED_FUNCTIONS=@./src/exports.txt --pre-js ./src/kdmyEngine.js
+EMMODULE := $(EMMODULE) -s EXPORTED_FUNCTIONS=@./src-javascript/exports.txt --pre-js ./src-javascript/kdmyEngine.js
 EMMODULE := $(EMMODULE) -s INCOMING_MODULE_JS_API=print,printErr
 EMFLAGS = -s STRICT=1 -s ALLOW_MEMORY_GROWTH=1 ${KDMYENGINEFLAGS} ${CFLAGS}
 KDMYENGINEPATH = ./../src-javascript/engine/externals
 
 build-release:
 	$(EMCC) $(SOURCES) libs/libfreetype.a $(INCLUDES) -O3 -std=c17 $(EMFLAGS) $(EMMODULE) -o output/module_fontatlas.js
-	cp ./output/module_fontatlas.js ${KDMYENGINEPATH}/module_fontatlas.js
-	cp ./output/module_fontatlas.wasm ${KDMYENGINEPATH}/module_fontatlas.wasm
+#	cp ./output/module_fontatlas.js ${KDMYENGINEPATH}/module_fontatlas.js
+#	cp ./output/module_fontatlas.wasm ${KDMYENGINEPATH}/module_fontatlas.wasm
 
 build-debug:
 	$(EMCC) $(SOURCES) libs/libfreetype.a $(INCLUDES) -O0 -std=c17 -g3 $(EMFLAGS) $(EMMODULE) -o output/module_fontatlas.js

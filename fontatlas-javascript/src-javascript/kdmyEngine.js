@@ -132,7 +132,7 @@ function kdmyEngine_ptrToString(/**@type {number}*/ptr) {
     return textDecoder.decode(char_array, { stream: false });
 }
 
-/**@type {FontAtlas} */
+/**@type {ModuleFontAtlas} */
 const FONTATLAS_EXPORTS = {
     enable_sdf: function (enable) {
         _fontatlas_enable_sdf(enable ? 1 : 0);
@@ -161,7 +161,7 @@ const FONTATLAS_EXPORTS = {
         };
     },
     destroy: function (fontatlas) {
-        _fontatlas_destroy(fontatlas.fontatlas_ptr);
+        _fontatlas_destroy_JS(fontatlas.fontatlas_ptr);
         _free(fontatlas.font_data_ptr);
 
         fontatlas.fontatlas_ptr = fontatlas.font_data_ptr = undefined;

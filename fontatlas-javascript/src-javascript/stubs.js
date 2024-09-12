@@ -87,7 +87,7 @@ function _fontatlas_init(...stubs) { return 0; }
 /** 
 * @param {number} stub
 */
-function _fontatlas_destroy(stub) { }
+function _fontatlas_destroy_JS(stub) { }
 
 /** 
 * @param {...number} stubs

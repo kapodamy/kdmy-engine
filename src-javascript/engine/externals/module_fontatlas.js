@@ -153,7 +153,7 @@ var ModuleFontAtlas = (() => {//@ts-ignore
                 }
             },
             destroy: function (fontatlas) {
-                _fontatlas_destroy(fontatlas.fontatlas_ptr);
+                _fontatlas_destroy_JS(fontatlas.fontatlas_ptr);
                 _free(fontatlas.font_data_ptr);
                 fontatlas.fontatlas_ptr = fontatlas.font_data_ptr = undefined
             },
@@ -3111,7 +3111,7 @@ var ModuleFontAtlas = (() => {//@ts-ignore
         var _fontatlas_init = Module["_fontatlas_init"] = (a0, a1) => (_fontatlas_init = Module["_fontatlas_init"] = wasmExports["y"])(a0, a1);
         var _malloc = Module["_malloc"] = a0 => (_malloc = Module["_malloc"] = wasmExports["z"])(a0);
         var _free = Module["_free"] = a0 => (_free = Module["_free"] = wasmExports["A"])(a0);
-        var _fontatlas_destroy = Module["_fontatlas_destroy"] = a0 => (_fontatlas_destroy = Module["_fontatlas_destroy"] = wasmExports["B"])(a0);
+        var _fontatlas_destroy_JS = Module["_fontatlas_destroy_JS"] = a0 => (_fontatlas_destroy_JS = Module["_fontatlas_destroy_JS"] = wasmExports["B"])(a0);
         var _fontatlas_atlas_build = Module["_fontatlas_atlas_build"] = (a0, a1, a2, a3) => (_fontatlas_atlas_build = Module["_fontatlas_atlas_build"] = wasmExports["C"])(a0, a1, a2, a3);
         var _fontatlas_atlas_destroy_texture_only = Module["_fontatlas_atlas_destroy_texture_only"] = a0 => (_fontatlas_atlas_destroy_texture_only = Module["_fontatlas_atlas_destroy_texture_only"] = wasmExports["D"])(a0);
         var _fontatlas_atlas_destroy = Module["_fontatlas_atlas_destroy"] = a0 => (_fontatlas_atlas_destroy = Module["_fontatlas_atlas_destroy"] = wasmExports["E"])(a0);
