@@ -467,6 +467,11 @@ public class TextSprite : IVertex {
         int last_known_break_index = 0;
         int loose_index = 0;
         float last_known_break_width = 0f;
+        float border_size = 0f;
+
+        if (this.fontparams.border_enable && this.fontparams.border_size > 0f && this.fontparams.border_color[3] > 0f) {
+            border_size = this.fontparams.border_size;
+        }
 
         while (true) {
             bool eof_reached = !StringUtils.GetCharacterCodepoint(text, index, ref grapheme);
@@ -488,8 +493,8 @@ public class TextSprite : IVertex {
                 index_last_detected_break = index_current_line = new_index;
                 last_break_was_dotcommatab = true;
 
-                calculated_text_height += this.fontparams.height + this.fontparams.paragraph_space;
-                if (calculated_text_height >= max_height) break;
+                calculated_text_height += lineinfo.last_char_height + this.fontparams.paragraph_space;
+                if ((calculated_text_height + border_size) >= max_height) break;
 
                 lineinfo.line_char_count = 0;
                 lineinfo.previous_codepoint = 0x0000;
@@ -537,7 +542,7 @@ public class TextSprite : IVertex {
 
             accumulated_width += lineinfo.last_char_width;
 
-            if (accumulated_width > max_width) {
+            if ((accumulated_width + border_size) > max_width) {
                 if (current_is_break) {
                     break_in_index = index;
                     break_char_count = 0;
@@ -576,8 +581,8 @@ public class TextSprite : IVertex {
                     offset = accumulated_width// temporal
                 });
 
-                calculated_text_height += this.fontparams.height + this.fontparams.paragraph_space;
-                if (calculated_text_height >= max_height) break;
+                calculated_text_height += lineinfo.last_char_height + this.fontparams.paragraph_space;
+                if ((calculated_text_height + border_size) >= max_height) break;
 
                 index_last_detected_break = index_current_line = break_in_index;
                 last_break_was_dotcommatab = false;
@@ -625,8 +630,8 @@ public class TextSprite : IVertex {
         }
 
         this.modified_string = false;
-        this.last_draw_width = max_line_width;
-        this.last_draw_height = calculated_text_height;
+        this.last_draw_width = max_line_width + border_size;
+        this.last_draw_height = calculated_text_height + border_size;
     }
 
     public void SetProperty(int property_id, float value) {

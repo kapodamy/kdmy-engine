@@ -17,8 +17,11 @@ uniform bool u_offsetcolor_enabled;
 uniform vec4 u_offsetcolor;
 
 #ifdef SDF_FONT
-uniform float u_sdf_size;// this is the 25% of FONTTYPE_GLYPHS_HEIGHT
+uniform float u_sdf_size;// this is the 25% of FONTTYPE_GLYPHS_OUTLINE_HEIGHT
 uniform float u_sdf_padding;// padding percent
+uniform float u_sdf_padding_thickness;
+uniform sampler2D u_texture_outline0;
+uniform sampler2D u_texture_outline1;
 
 float calculate_sdf_pixel_alpha(float lumma, ivec2 tex_size) {
     //
@@ -38,7 +41,6 @@ float calculate_sdf_pixel_alpha(float lumma, ivec2 tex_size) {
 vec4 calculate_sdf() {
     float luminance;
     ivec2 tex_size;
-    vec4 color;
 
     if(bool(v_texalt)) {
         luminance = texture(u_texture1, v_texcoord).r;
@@ -55,30 +57,34 @@ vec4 calculate_sdf() {
 
     // change range from [0.0, 1.0] to [-0.5, 0.5]
     float lumma = luminance - 0.5;
-
     float alpha = calculate_sdf_pixel_alpha(lumma, tex_size);
 
-    if(bool(v_coloralt)) {
-        // u_sdf_padding is calculated as (border_size / FONTTYPE_GLYPHS_HEIGHT)
-        float lumma_outline = luminance - mix(0.5, 0.0, u_sdf_padding);
+    return vec4(u_color.rgb, u_color.a * alpha);
+}
 
-        float alpha_outline = calculate_sdf_pixel_alpha(lumma_outline, tex_size);
+vec4 calculate_sdf_outline() {
+    float luminance;
+    ivec2 tex_size;
 
-        if(alpha != 0.0) {
-            // do not draw the outline behind the glyph
-            return vec4(0.0);
-        }
-
-        alpha = alpha_outline;
-        color = u_color_outline;
+    if(bool(v_texalt)) {
+        luminance = texture(u_texture_outline1, v_texcoord).r;
+        tex_size = textureSize(u_texture_outline1, 0);
     } else {
-        color = u_color;
+        luminance = texture(u_texture_outline0, v_texcoord).r;
+        tex_size = textureSize(u_texture_outline0, 0);
     }
 
-    // apply alpha
-    color.a *= alpha;
+    if(luminance <= 0.0) {
+        // avoid tranparent pixels become visible with outlines
+        return vec4(0.0);
+    }
 
-    return color;
+        // u_sdf_padding is calculated as (border_size / FONTTYPE_GLYPHS_OUTLINE_HEIGHT)
+    float lumma = luminance - mix(0.5, 0.0, u_sdf_padding);
+    lumma *= u_sdf_padding_thickness;
+    float alpha = calculate_sdf_pixel_alpha(lumma, tex_size);
+
+    return vec4(u_color_outline.rgb, u_color_outline.a * alpha);
 }
 #endif
 
@@ -128,7 +134,11 @@ void main() {
 
     if(u_grayscale) {
 #ifdef SDF_FONT
-        color = calculate_sdf();
+        if(bool(v_coloralt)) {
+            color = calculate_sdf_outline();
+        } else {
+            color = calculate_sdf();
+        }
 #else
         color = calculate_lumma();
 #endif

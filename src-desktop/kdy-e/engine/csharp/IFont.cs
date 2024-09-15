@@ -30,6 +30,7 @@ public struct FontParams {
 public struct FontLineInfo {
     public float space_width;
     public float last_char_width;
+    public float last_char_height;
     public int line_char_count;
     public int previous_codepoint;
 }

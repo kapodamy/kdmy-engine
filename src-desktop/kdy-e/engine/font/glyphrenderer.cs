@@ -100,14 +100,14 @@ public static class GlyphRenderer {
         glyphrenderer_context_array[index + 6] = dw;
         glyphrenderer_context_array[index + 7] = dh;
         // texture id
-        glyphrenderer_context_array[index + 8] = is_tex1 ? 1 : 0;
+        glyphrenderer_context_array[index + 8] = is_tex1 ? 1f : 0f;
         // color selection (for outlines)
-        glyphrenderer_context_array[index + 9] = is_outline ? 1 : 0;
+        glyphrenderer_context_array[index + 9] = is_outline ? 1f : 0f;
 
         glyphrenderer_glyphs_added++;
     }
 
-    public static void Draw(PVRContext pvrctx, float[] color, float[] color_outline, bool by_add, bool is_gryscl, Texture tex0, Texture tex1) {
+    public static void Draw(PVRContext pvrctx, float[] color, float[] color_outline, bool by_add, bool is_gryscl, Texture tex0, Texture tex1, Texture tex_ol0, Texture tex_ol1) {
         WebGL2RenderingContext gl = pvrctx.webopengl.gl;
         WebGLContextProgramGlyphs program_glyphs = pvrctx.webopengl.program_glyphs;
 
@@ -144,6 +144,24 @@ public static class GlyphRenderer {
             // update antialiasing
             if (change_filtering) pvrctx.webopengl.ChangeTextureFiltering(pvrctx, tex1.has_mipmaps);
         }
+#if SDF_FONT
+        if (tex_ol0 != null) {
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, tex_ol0.data_vram);
+            gl.uniform1i(program_glyphs.u_texture_outline0, 2);
+
+            // update antialiasing
+            if (change_filtering) pvrctx.webopengl.ChangeTextureFiltering(pvrctx, tex_ol0.has_mipmaps);
+        }
+        if (tex_ol1 != null) {
+            gl.activeTexture(gl.TEXTURE3);
+            gl.bindTexture(gl.TEXTURE_2D, tex_ol1.data_vram);
+            gl.uniform1i(program_glyphs.u_texture_outline1, 3);
+
+            // update antialiasing
+            if (change_filtering) pvrctx.webopengl.ChangeTextureFiltering(pvrctx, tex_ol1.has_mipmaps);
+        }
+#endif
 
         // send quad units
         gl.bindBuffer(gl.ARRAY_BUFFER, program_glyphs.buffer_vertex);
@@ -215,10 +233,16 @@ public static class GlyphRenderer {
 
 
         // unbind textures
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
+#if SDF_FONT
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
+#endif
 
         // unbind buffers
         gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
@@ -227,13 +251,14 @@ public static class GlyphRenderer {
     }
 
 #if SDF_FONT
-    public static void SetParamsSDF(PVRContext pvrctx, byte size, float padding) {
+    public static void SetParamsSDF(PVRContext pvrctx, byte size, float padding, float thickness) {
         WebGL2RenderingContext gl = pvrctx.webopengl.gl;
         WebGLContextProgramGlyphs program_glyphs = pvrctx.webopengl.program_glyphs;
 
         gl.useProgram(program_glyphs.program);
         gl.uniform1f(program_glyphs.u_sdf_size, size);
         gl.uniform1f(program_glyphs.u_sdf_padding, padding);
+        gl.uniform1f(program_glyphs.u_sdf_padding_thickness, thickness);
     }
 #endif
 

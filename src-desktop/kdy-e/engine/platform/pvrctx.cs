@@ -337,7 +337,7 @@ public class PVRContext {
         if (this.fps_text == null) {
             FontHolder font = new FontHolder("/assets/common/font/vcr.ttf", -1, null, false);
             this.fps_text = TextSprite.Init2(font, 64f, 0xAAFFAA);
-            this.fps_text.SetDrawLocation(2f, 0f);
+            this.fps_text.SetDrawLocation(0f, 4f);
         }
 
         if (this.fps_resolution_changes != this.resolution_changes) {
@@ -358,7 +358,7 @@ public class PVRContext {
         this.fps_text.GetDrawSize(out width, out height);
 
         this.render_alpha = PVRContext.FPS_BG_COLOR[3];
-        DrawSolidColor(PVRContext.FPS_BG_COLOR, 0, 0, width * 1.1f, height * 1.1f);
+        DrawSolidColor(PVRContext.FPS_BG_COLOR, 0f, 0f, (width * 1.25f), height);
 
         float global_alpha = this.global_alpha;// backup global alpha
         this.global_alpha = 1.0f;

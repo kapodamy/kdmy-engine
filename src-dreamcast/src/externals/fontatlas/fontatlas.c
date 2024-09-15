@@ -235,6 +235,7 @@ static inline void pick_metrics(FT_GlyphSlot glyph, FontCharData* chardata, int3
         .offset_x = glyph->bitmap_left + (glyph->metrics.horiBearingX >> 6),
         .offset_y = font_height - (glyph->metrics.horiBearingY >> 6),
         .advancex = glyph->metrics.horiAdvance >> 6,
+        .advancey = glyph->metrics.vertAdvance >> 6,
         .width = glyph->bitmap.width, // glyph->metrics.width >> 6,
         .height = glyph->bitmap.rows, // glyph->metrics.height >> 6,
         .kernings = NULL,

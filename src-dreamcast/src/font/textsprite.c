@@ -495,7 +495,9 @@ static void textsprite_matrix_calculate(TextSprite textsprite, PVRContext pvrctx
 
 void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
     Grapheme grapheme = {.code = 0, .size = 0};
-    FontLineInfo lineinfo = {.line_char_count = 0, .last_char_width = 0.0f, .previous_codepoint = 0x0000, .space_width = -1.0f};
+    FontLineInfo lineinfo = {
+        .line_char_count = 0, .last_char_width = 0.0f, .last_char_height = 0.0f, .previous_codepoint = 0x0000, .space_width = -1.0f
+    };
 
     if (!textsprite->modified_string && !textsprite->modified_coords) return;
 
@@ -555,6 +557,11 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
     int32_t last_known_break_index = 0;
     int32_t loose_index = 0;
     float last_known_break_width = 0.0f;
+    float border_size = 0.0f;
+
+    if (textsprite->fontparams.border_enable && textsprite->fontparams.border_size > 0.0f && textsprite->fontparams.border_color[3] > 0.0f) {
+        border_size = textsprite->fontparams.border_size;
+    }
 
     while (true) {
         bool eof_reached = !string_get_character_codepoint(text, index, text_length, &grapheme);
@@ -578,8 +585,8 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
             index_last_detected_break = index_current_line = new_index;
             last_break_was_dotcommatab = true;
 
-            calculated_text_height += textsprite->fontparams.height + textsprite->fontparams.paragraph_space;
-            if (calculated_text_height >= max_height) break;
+            calculated_text_height += lineinfo.last_char_height + textsprite->fontparams.paragraph_space;
+            if ((calculated_text_height + border_size) >= max_height) break;
 
             lineinfo.line_char_count = 0;
             lineinfo.previous_codepoint = 0x0000;
@@ -627,7 +634,7 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
 
         accumulated_width += lineinfo.last_char_width;
 
-        if (accumulated_width > max_width) {
+        if ((accumulated_width + border_size) > max_width) {
             if (current_is_break) {
                 break_in_index = index;
                 break_char_count = 0;
@@ -668,8 +675,8 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
                 }
             );
 
-            calculated_text_height += textsprite->fontparams.height + textsprite->fontparams.paragraph_space;
-            if (calculated_text_height >= max_height) break;
+            calculated_text_height += lineinfo.last_char_height + textsprite->fontparams.paragraph_space;
+            if ((calculated_text_height + border_size) >= max_height) break;
 
             index_last_detected_break = index_current_line = break_in_index;
             last_break_was_dotcommatab = false;
@@ -717,8 +724,8 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
     }
 
     textsprite->modified_string = false;
-    textsprite->last_draw_width = max_line_width;
-    textsprite->last_draw_height = calculated_text_height;
+    textsprite->last_draw_width = max_line_width + border_size;
+    textsprite->last_draw_height = calculated_text_height + border_size;
 }
 
 

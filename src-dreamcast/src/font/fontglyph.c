@@ -40,7 +40,7 @@ struct FontGlyph_s {
 };
 
 
-static const float FONTGLYPH_SPACE_WIDTH_RATIO = 0.8f;
+static const float FONTGLYPH_SPACE_WIDTH_RATIO = 0.9f;
 
 
 static bool fontglyph_internal_parse(const AtlasEntry* atlas_entry, const char* match_suffix, size_t match_suffix_length, bool allow_animation, GlyphInfo* table, int32_t table_index);
@@ -243,6 +243,8 @@ void fontglyph_measure_char(FontGlyph fontglyph, uint32_t codepoint, float heigh
     if (lineinfo->space_width < 0.0f) {
         lineinfo->space_width = fontglyph_internal_find_space_width(fontglyph, height);
     }
+
+    lineinfo->last_char_height = height;
 
     GlyphInfo* info = NULL;
 

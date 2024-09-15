@@ -67,6 +67,7 @@ public enum GLenum : uint {
     GL_TEXTURE0 = 0x84C0,
     GL_TEXTURE1 = 0x84C1,
     GL_TEXTURE2 = 0x84C2,
+    GL_TEXTURE3 = 0x84C3,
     GL_ELEMENT_ARRAY_BUFFER = 0x8893,
     GL_DYNAMIC_DRAW = 0x88E8,
     GL_UNSIGNED_INT = 0x1405,
@@ -171,6 +172,7 @@ public partial class WebGL2RenderingContext {
     public readonly GLenum TEXTURE0 = GLenum.GL_TEXTURE0;
     public readonly GLenum TEXTURE1 = GLenum.GL_TEXTURE1;
     public readonly GLenum TEXTURE2 = GLenum.GL_TEXTURE2;
+    public readonly GLenum TEXTURE3 = GLenum.GL_TEXTURE3;
     public readonly GLenum ELEMENT_ARRAY_BUFFER = GLenum.GL_ELEMENT_ARRAY_BUFFER;
     public readonly GLenum DYNAMIC_DRAW = GLenum.GL_DYNAMIC_DRAW;
     public readonly GLenum UNSIGNED_INT = GLenum.GL_UNSIGNED_INT;

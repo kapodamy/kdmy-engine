@@ -129,7 +129,7 @@ async function main(argc, argv) {
     console.info(`Console: ${osinfo.machine}`);
     console.info(`OS: ${osinfo.version}\r\n`);
 
-    // (JS & CS only) preload fonts
+    console.info("preloading fonts: vcr and alphabet. This will take a while...");
     await Promise.all([
         fontholder_init("/assets/common/font/vcr.ttf", -1.0, null, false),
         //fontholder_init("/assets/common/font/pixel.otf", -1.0, null, false),

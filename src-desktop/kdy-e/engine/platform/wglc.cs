@@ -776,6 +776,9 @@ public class WebGLContextProgramGlyphs {
 #if SDF_FONT
     internal WebGLUniformLocation u_sdf_size;
     internal WebGLUniformLocation u_sdf_padding;
+    internal WebGLUniformLocation u_sdf_padding_thickness;
+    internal WebGLUniformLocation u_texture_outline0;
+    internal WebGLUniformLocation u_texture_outline1;
 #endif
 
     internal WebGLBuffer buffer_indices;
@@ -811,6 +814,9 @@ public class WebGLContextProgramGlyphs {
         // sdf specific uniforms
         this.u_sdf_size = gl.getUniformLocation(program, "u_sdf_size");
         this.u_sdf_padding = gl.getUniformLocation(program, "u_sdf_padding");
+        this.u_sdf_padding_thickness = gl.getUniformLocation(program, "u_sdf_padding_thickness");
+        this.u_texture_outline0 = gl.getUniformLocation(program, "u_texture_outline0");
+        this.u_texture_outline1 = gl.getUniformLocation(program, "u_texture_outline1");
 #endif
 
         // glyphs buffer

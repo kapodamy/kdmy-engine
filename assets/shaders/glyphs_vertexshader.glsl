@@ -1,4 +1,3 @@
-
 in vec4 a_position;
 in vec4 a_source_coords;
 in vec4 a_draw_coords;

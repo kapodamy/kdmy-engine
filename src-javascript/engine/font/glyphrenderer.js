@@ -87,14 +87,14 @@ function glyphrenderer_append_glyph(texture, is_tex1, is_outline, sx, sy, sw, sh
     glyphrenderer_context_array[index + 6] = dw;
     glyphrenderer_context_array[index + 7] = dh;
     // texture id
-    glyphrenderer_context_array[index + 8] = is_tex1 ? 1 : 0;
+    glyphrenderer_context_array[index + 8] = is_tex1 ? 1.0 : 0.0;
     // color selection (for outlines)
-    glyphrenderer_context_array[index + 9] = is_outline ? 1 : 0;
+    glyphrenderer_context_array[index + 9] = is_outline ? 1.0 : 0.0;
 
     glyphrenderer_glyphs_added++;
 }
 
-function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline, by_add, is_gryscl, tex0, tex1) {
+function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline, by_add, is_gryscl, tex0, tex1, tex_ol0, tex_ol1) {
     const gl = pvrctx.webopengl.gl;
     const program_glyphs = pvrctx.webopengl.program_glyphs;
 
@@ -135,6 +135,24 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
 
         // update antialiasing
         if (change_filtering) webopengl_change_texture_filtering(pvrctx, tex1.has_mipmaps);
+    }
+    if (SDF_FONT) {
+        if (tex_ol0 != null) {
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, tex_ol0.data_vram);
+            gl.uniform1i(program_glyphs.u_texture_outline0, 2);
+
+            // update antialiasing
+            if (change_filtering) webopengl_change_texture_filtering(pvrctx, tex_ol0.has_mipmaps);
+        }
+        if (tex_ol1 != null) {
+            gl.activeTexture(gl.TEXTURE3);
+            gl.bindTexture(gl.TEXTURE_2D, tex_ol1.data_vram);
+            gl.uniform1i(program_glyphs.u_texture_outline1, 3);
+
+            // update antialiasing
+            if (change_filtering) webopengl_change_texture_filtering(pvrctx, tex_ol1.has_mipmaps);
+        }
     }
 
     // send quad units
@@ -208,22 +226,29 @@ function glyphrenderer_draw(/**@type {PVRContext}*/pvrctx, color, color_outline,
     );
 
     // unbind textures
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, null);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    if (SDF_FONT) {
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }
 
     // unbind buffers
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
 
-function glyphrenderer_set_params_sdf(pvrctx, size, padding) {
+function glyphrenderer_set_params_sdf(pvrctx, size, padding, thickness) {
     const gl = pvrctx.webopengl.gl;
     let program_glyphs = pvrctx.webopengl.program_glyphs;
 
     gl.useProgram(program_glyphs.program);
     gl.uniform1f(program_glyphs.u_sdf_size, size);
     gl.uniform1f(program_glyphs.u_sdf_padding, padding);
+    gl.uniform1f(program_glyphs.u_sdf_padding_thickness, thickness);
 }
 

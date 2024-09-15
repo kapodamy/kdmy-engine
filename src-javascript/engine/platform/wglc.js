@@ -114,8 +114,11 @@ class WebGLContextProgramGlyphs {
     /**@type {WebGLUniformLocation}*/u_offsetcolor_mul_or_add;
     /**@type {WebGLUniformLocation}*/u_texture0;
     /**@type {WebGLUniformLocation}*/u_texture1;
+    /**@type {WebGLUniformLocation}*/u_texture_outline0;
+    /**@type {WebGLUniformLocation}*/u_texture_outline1;
     /**@type {WebGLUniformLocation}*/u_sdf_size;
     /**@type {WebGLUniformLocation}*/u_sdf_padding;
+    /**@type {WebGLUniformLocation}*/u_sdf_padding_thickness;
 
     /**@type {WebGLBuffer}*/buffer_indices;
     /**@type {WebGLBuffer}*/buffer_vertex;
@@ -145,11 +148,14 @@ class WebGLContextProgramGlyphs {
         this.u_offsetcolor_mul_or_add = gl.getUniformLocation(program, "u_offsetcolor_mul_or_add");
         this.u_texture0 = gl.getUniformLocation(program, "u_texture0");
         this.u_texture1 = gl.getUniformLocation(program, "u_texture1");
+        this.u_texture_outline0 = gl.getUniformLocation(program, "u_texture_outline0");
+        this.u_texture_outline1 = gl.getUniformLocation(program, "u_texture_outline1");
 
         if (SDF_FONT) {
             // sdf specific uniforms
             this.u_sdf_size = gl.getUniformLocation(program, "u_sdf_size");
             this.u_sdf_padding = gl.getUniformLocation(program, "u_sdf_padding");
+            this.u_sdf_padding_thickness = gl.getUniformLocation(program, "u_sdf_padding_thickness");
         }
 
         // glyphs buffer

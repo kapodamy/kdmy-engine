@@ -70,6 +70,7 @@ var ModuleFontAtlas = (() => {//@ts-ignore
                 let field_offset_x = fontcharmap_char_array.getInt16();
                 let field_offset_y = fontcharmap_char_array.getInt16();
                 let field_advancex = fontcharmap_char_array.getInt16();
+                let field_advancey = fontcharmap_char_array.getInt16();
                 let field_width = fontcharmap_char_array.getInt16();
                 let field_height = fontcharmap_char_array.getInt16();
                 let field_kernings = fontcharmap_char_array.getPointer();
@@ -82,6 +83,7 @@ var ModuleFontAtlas = (() => {//@ts-ignore
                     offset_x: field_offset_x,
                     offset_y: field_offset_y,
                     advancex: field_advancex,
+                    advancey: field_advancey,
                     width: field_width,
                     height: field_height,
                     kernings: malloc_for_array(field_kernings_size),
@@ -90,7 +92,7 @@ var ModuleFontAtlas = (() => {//@ts-ignore
                         x: atlas_entry_x,
                         y: atlas_entry_y
                     },
-                    has_entry: field_has_atlas_entry != 0
+                    has_atlas_entry: field_has_atlas_entry != 0
                 };
                 if (field_kernings != 0) {
                     let kernings_dataReader = new DataReader(wasmMemory.buffer, field_kernings);

@@ -21,6 +21,7 @@ public class FontCharData {
     public short offset_x;
     public short offset_y;
     public short advancex;
+    public short advancey;
     public int width;
     public int height;
     public FontCharDataKerning[] kernings;
@@ -85,6 +86,7 @@ internal unsafe struct CharData {
     public int offset_x;
     public int offset_y;
     public int advancex;
+    public int advancey;
     public uint width;
     public uint height;
     public FontCharDataKerning[] kernings;
@@ -267,6 +269,7 @@ L_failed:
         chardata.offset_x = glyph->bitmap_left + (glyph->metrics.horiBearingX >> 6);
         chardata.offset_y = font_height - (glyph->metrics.horiBearingY >> 6);
         chardata.advancex = glyph->metrics.horiAdvance >> 6;
+        chardata.advancey = glyph->metrics.vertAdvance >> 6;
         chardata.kernings = null;
         chardata.kernings_size = 0;
         chardata.has_atlas_entry = false;
@@ -488,6 +491,7 @@ L_build_map:
 
                 obj.char_array[j] = new FontCharData() {
                     advancex = (short)chardata[i].advancex,
+                    advancey = (short)chardata[i].advancey,
                     atlas_entry = chardata[i].atlas_entry,
                     codepoint = chardata[i].codepoint,
                     has_atlas_entry = chardata[i].has_atlas_entry,

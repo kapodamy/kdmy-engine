@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using Engine.Externals;
 using Engine.Externals.FontAtlasInterop;
 using Engine.Image;
@@ -11,10 +10,19 @@ namespace Engine.Font;
 
 public class FontType : IFont {
 
-    private const byte GLYPHS_HEIGHT = 72;// in the dreamcast use 32px, 64px is enough for SDF
-    private const byte GLYPHS_SDF_SIZE = GLYPHS_HEIGHT >> 2;// 25% of FONTTYPE_GLYPHS_HEIGHT
-    private const byte GLYPHS_GAPS = 16;// space between glyph in pixels (must be high for SDF)
-    private const float FAKE_SPACE = 0.75f;// 75% of the height
+#if SDF_FONT
+    private const byte GLYPHS_HEIGHT = 72;// 72px is enough for SDF
+    private const byte GLYPHS_GAP = 16;// space between glyphs in pixels (must be high)
+    private const byte GLYPHS_OUTLINE_HEIGHT = GLYPHS_HEIGHT >>> 1;
+    private const byte GLYPHS_OUTLINE_GAP = GLYPHS_GAP >>> 1;
+    private const byte GLYPHS_OUTLINE_RATIO = GLYPHS_OUTLINE_HEIGHT >>> 2;// 25% of FONTTYPE_GLYPHS_OUTLINE_HEIGHT
+    private const float GLYPHS_OUTLINE_THICKNESS = 1.25f;// 125%
+#else
+    private const byte GLYPHS_HEIGHT = 42;
+    private const byte GLYPHS_GAP = 4;// space between glyphs in pixels
+#endif
+    private const float FAKE_SPACE = 0.9f;// 90% of the height
+
 
     private static Map<FontType> POOL = new Map<FontType>();
     private static int IDS = 0;
@@ -28,10 +36,8 @@ public class FontType : IFont {
     private FontAtlas fontatlas;
     private byte[] font;
     private float space_width;
-    private FontCharMap fontcharmap_primary;
-    private Texture fontcharmap_primary_texture;
-    private FontCharMap fontcharmap_secondary;
-    private Texture fontcharmap_secondary_texture;
+    private FCAtlas atlas_primary;
+    private FCAtlas atlas_secondary;
     private byte[] lookup_table;
 
 
@@ -51,14 +57,17 @@ public class FontType : IFont {
             instance_references = 1,
             instance_path = full_path,
 
+            font = null,
             fontatlas = null,
             space_width = FontType.GLYPHS_HEIGHT * FontType.FAKE_SPACE,
 
-            fontcharmap_primary = null,
-            fontcharmap_primary_texture = null,
-
-            fontcharmap_secondary = null,
-            fontcharmap_secondary_texture = null,
+#if SDF_FONT
+            atlas_primary = { map_outline = null, texture_outline = null, map = null, texture = null },
+            atlas_secondary = { map_outline = null, texture_outline = null, map = null, texture = null },
+#else
+            atlas_primary = { map = null, texture = null },
+            atlas_secondary = { map = null, texture = null },
+#endif
 
             lookup_table = new byte[FontGlyph.LOOKUP_TABLE_LENGTH]
         };
@@ -74,12 +83,11 @@ public class FontType : IFont {
         }
 
         // create a texture atlas and glyphs map with all common letters, numbers and symbols
-        fonttype.fontcharmap_primary = fonttype.InternalRetrieveFontcharmap(null);
-        fonttype.fontcharmap_primary_texture = FontType.InternalUploadTexture(fonttype.fontcharmap_primary);
+        fonttype.InternalCreateAtlas(ref fonttype.atlas_primary, null);
 
-        if (fonttype.fontcharmap_primary != null) {
-            FontCharData[] char_array = fonttype.fontcharmap_primary.char_array;
-            int char_array_size = fonttype.fontcharmap_primary.char_array_size;
+        if (fonttype.atlas_primary.map != null) {
+            FontCharData[] char_array = fonttype.atlas_primary.map.char_array;
+            int char_array_size = fonttype.atlas_primary.map.char_array_size;
 
             for (int i = 0 ; i < char_array_size ; i++) {
                 if (char_array[i].codepoint == FontGlyph.SPACE) {
@@ -107,18 +115,10 @@ public class FontType : IFont {
         if (this.instance_references > 0) return;
         FontType.POOL.Delete(this.instance_id);
 
-        if (this.fontcharmap_primary != null) {
-            this.fontcharmap_primary.Destroy();
-            if (this.fontcharmap_primary_texture != null) this.fontcharmap_primary_texture.Destroy();
-        }
-
-        if (this.fontcharmap_secondary != null) {
-            this.fontcharmap_secondary.Destroy();
-            if (this.fontcharmap_secondary_texture != null) this.fontcharmap_secondary_texture.Destroy();
-        }
+        FontType.InternalDestroyAtlas(ref this.atlas_primary);
+        FontType.InternalDestroyAtlas(ref this.atlas_secondary);
 
         if (this.fontatlas != null) this.fontatlas.Destroy();
-
 
         //free(this.font);
         //free(this.instance_path);
@@ -157,10 +157,12 @@ public class FontType : IFont {
                 continue;
             }
 
-            FontCharData fontchardata = InternalGetFontchardata2(this.lookup_table, this.fontcharmap_primary, grapheme.code);
-            if (fontchardata == null) {
-                fontchardata = InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code);
-                if (fontchardata == null) {
+            FontCharData fontchardata;
+            int map_index = FontType.InternalGetFontchardata2(this.lookup_table, this.atlas_primary, grapheme.code);
+
+            if (map_index < 0) {
+                map_index = FontType.InternalGetFontchardata(this.atlas_secondary, grapheme.code);
+                if (map_index < 0) {
                     if (grapheme.code == FontGlyph.TAB) {
                         int filler = FontGlyph.InternalCalcTabstop(line_chars);
                         if (filler > 0) {
@@ -172,9 +174,12 @@ public class FontType : IFont {
                         width += this.space_width * scale;
                         line_chars++;
                     }
+                    continue;
+                } else {
+                    fontchardata = this.atlas_secondary.map.char_array[map_index];
                 }
-
-                continue;
+            } else {
+                fontchardata = this.atlas_primary.map.char_array[map_index];
             }
 
             if (previous_codepoint != 0x0000) {
@@ -201,23 +206,31 @@ public class FontType : IFont {
         //override hard-spaces with white-spaces
         if (codepoint == 0xA0) codepoint = 0x20;
 
-        FontCharData fontchardata = FontType.InternalGetFontchardata2(this.lookup_table, this.fontcharmap_primary, codepoint);
-        if (fontchardata == null) {
-            fontchardata = FontType.InternalGetFontchardata(this.fontcharmap_secondary, codepoint);
-            if (fontchardata == null) {
+        FontCharData fontchardata;
+        int map_index = FontType.InternalGetFontchardata2(this.lookup_table, this.atlas_primary, codepoint);
+
+        if (map_index < 0) {
+            map_index = FontType.InternalGetFontchardata(this.atlas_secondary, codepoint);
+            if (map_index < 0) {
                 if (codepoint == FontGlyph.TAB) {
                     int filler = FontGlyph.InternalCalcTabstop(lineinfo.line_char_count);
                     if (filler > 0) {
                         lineinfo.last_char_width = this.space_width * filler * scale;
+                        lineinfo.last_char_height = height;
                         lineinfo.line_char_count += filler;
                     }
                 } else {
                     // space, hard space or unknown characters
                     lineinfo.last_char_width = this.space_width * scale;
+                    lineinfo.last_char_height = height;
                     lineinfo.line_char_count++;
                 }
+                return;
+            } else {
+                fontchardata = this.atlas_secondary.map.char_array[map_index];
             }
-            return;
+        } else {
+            fontchardata = this.atlas_primary.map.char_array[map_index];
         }
 
         if (lineinfo.previous_codepoint != 0x0000) {
@@ -231,45 +244,45 @@ public class FontType : IFont {
         }
 
         lineinfo.last_char_width = fontchardata.advancex * scale;
+        lineinfo.last_char_height = fontchardata.advancey * scale;
         lineinfo.previous_codepoint = codepoint;
         lineinfo.line_char_count++;
     }
 
     public float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text) {
-        if (text == null || text_length < 1) return 0;
+        if (StringUtils.IsEmpty(text)) return 0f;
 
         Grapheme grapheme = new Grapheme();
-        FontCharMap primary = this.fontcharmap_primary;
-        Texture primary_texture = this.fontcharmap_primary_texture;
-        FontCharMap secondary = this.fontcharmap_secondary;
-        Texture secondary_texture = this.fontcharmap_secondary_texture;
         bool has_border = @params.border_enable && @params.border_color[3] > 0f && @params.border_size >= 0f;
-        float outline_size = @params.border_size * 2;
-        float scale = @params.height / FontType.GLYPHS_HEIGHT;
-        float ascender = ((primary ?? secondary).ascender / 2f) * scale;// FIXME: ¿why does dividing by 2 works?
+        float outline_size = @params.border_size * 2f;
+        float scale_glyph = @params.height / FontType.GLYPHS_HEIGHT;
         int text_end_index = text_index + text_length;
+        float ascender_glyph = (this.atlas_primary.map ?? this.atlas_secondary.map).ascender * scale_glyph;
 
 #if SDF_FONT
+        float scale_outline = @params.height / FontType.GLYPHS_OUTLINE_HEIGHT;
+
         if (has_border) {
             // calculate sdf padding
             float padding;
-            padding = @params.border_size / FontType.GLYPHS_SDF_SIZE;
-            padding /= @params.height / FontType.GLYPHS_HEIGHT;
+            padding = @params.border_size / FontType.GLYPHS_OUTLINE_RATIO;
+            padding /= @params.height / FontType.GLYPHS_OUTLINE_HEIGHT;
 
-            GlyphRenderer.SetParamsSDF(pvrctx, FontType.GLYPHS_SDF_SIZE, padding);
+            GlyphRenderer.SetParamsSDF(pvrctx, FontType.GLYPHS_OUTLINE_RATIO, padding, FontType.GLYPHS_OUTLINE_THICKNESS);
         } else {
-            GlyphRenderer.SetParamsSDF(pvrctx, FontType.GLYPHS_SDF_SIZE, -1f);
+            GlyphRenderer.SetParamsSDF(pvrctx, FontType.GLYPHS_OUTLINE_RATIO, -1f, -1f);
         }
 #endif
 
-        float draw_x = 0;
-        float draw_y = 0 - ascender;
+        float draw_glyph_x = 0f;
+        float draw_glyph_y = -ascender_glyph;
+        float max_draw_y = 0f;
         int line_chars = 0;
 
         int index = text_index;
         int previous_codepoint = 0x0000;
         int total_glyphs = 0;
-        FontCharData fontchardata;
+        int map_index;
 
         pvrctx.Save();
         pvrctx.SetVertexAlpha(@params.tint_color[3]);
@@ -283,12 +296,14 @@ public class FontType : IFont {
 
             if (grapheme.code == 0xA0) continue;
 
-            if ((fontchardata = InternalGetFontchardata2(this.lookup_table, primary, grapheme.code)) != null) {
-                if (fontchardata.has_atlas_entry) total_glyphs++;
+            map_index = FontType.InternalGetFontchardata2(this.lookup_table, this.atlas_primary, grapheme.code);
+            if (map_index >= 0) {
+                if (this.atlas_primary.map.char_array[map_index].has_atlas_entry) total_glyphs++;
                 continue;
             }
-            if ((fontchardata = InternalGetFontchardata(secondary, grapheme.code)) != null) {
-                if (fontchardata.has_atlas_entry) total_glyphs++;
+            map_index = FontType.InternalGetFontchardata(this.atlas_secondary, grapheme.code);
+            if (map_index >= 0) {
+                if (this.atlas_secondary.map.char_array[map_index].has_atlas_entry) total_glyphs++;
                 continue;
             }
         }
@@ -313,34 +328,34 @@ public class FontType : IFont {
             }
 
             if (grapheme.code == FontGlyph.LINEFEED) {
-                draw_x = 0;
-                draw_y += @params.height + @params.paragraph_space - ascender;
+                draw_glyph_x = 0f;
+                draw_glyph_y += @params.height + @params.paragraph_space - ascender_glyph;
                 previous_codepoint = grapheme.code;
                 line_chars = 0;
                 continue;
             }
 
-            fontchardata = FontType.InternalGetFontchardata2(this.lookup_table, primary, grapheme.code);
+            ref FCAtlas atlas = ref this.atlas_primary;
             bool is_secondary = false;
-            Texture texture = primary_texture;
+            map_index = FontType.InternalGetFontchardata2(this.lookup_table, atlas, grapheme.code);
 
-            if (fontchardata == null) {
-                fontchardata = FontType.InternalGetFontchardata(secondary, grapheme.code);
+            if (map_index < 0) {
+                atlas = ref this.atlas_secondary;
                 is_secondary = true;
-                texture = secondary_texture;
+                map_index = FontType.InternalGetFontchardata(atlas, grapheme.code);
             }
 
-            if (fontchardata == null) {
+            if (map_index < 0) {
                 // codepoint not mapped or FontType.measure() was not called previously to map it
                 if (grapheme.code == FontGlyph.TAB) {
                     int filler = FontGlyph.InternalCalcTabstop(line_chars);
                     if (filler > 0) {
-                        draw_x += this.space_width * filler * scale;
+                        draw_glyph_x += this.space_width * filler * scale_glyph;
                         line_chars += filler;
                     }
                 } else {
                     // space, hard space or unknown characters
-                    draw_x += this.space_width * scale;
+                    draw_glyph_x += this.space_width * scale_glyph;
                     line_chars++;
                 }
 
@@ -348,36 +363,47 @@ public class FontType : IFont {
                 continue;
             }
 
-            // apply kerking before continue
+            FontCharData fontchardata_glyph = atlas.map.char_array[map_index];
+
+            // apply kerning before continue
             if (previous_codepoint != 0x0000) {
-                for (int i = 0 ; i < fontchardata.kernings_size ; i++) {
-                    if (fontchardata.kernings[i].codepoint == previous_codepoint) {
-                        draw_x += fontchardata.kernings[i].x * scale;
+                for (int i = 0 ; i < fontchardata_glyph.kernings_size ; i++) {
+                    if (fontchardata_glyph.kernings[i].codepoint == previous_codepoint) {
+                        draw_glyph_x += fontchardata_glyph.kernings[i].x * scale_glyph;
                         break;
                     }
                 }
             }
 
-            if (fontchardata.has_atlas_entry) {
+            if (fontchardata_glyph.has_atlas_entry) {
                 // compute draw location and size
-                float dx = x + draw_x + (fontchardata.offset_x * scale);
-                float dy = y + draw_y + (fontchardata.offset_y * scale);
-                float dw = fontchardata.width * scale;
-                float dh = fontchardata.height * scale;
+                float dx = x + draw_glyph_x + (fontchardata_glyph.offset_x * scale_glyph);
+                float dy = y + draw_glyph_y + (fontchardata_glyph.offset_y * scale_glyph);
+                float dw = fontchardata_glyph.width * scale_glyph;
+                float dh = fontchardata_glyph.height * scale_glyph;
 
                 if (has_border) {
                     float sdx, sdy, sdw, sdh;
+                    Texture texture_outline;
+                    FontCharData fontchardata_outline;
+
 #if SDF_FONT
-                    sdx = dx;
-                    sdy = dy;
-                    sdw = dw;
-                    sdh = dh;
+                    texture_outline = atlas.texture_outline;
+                    fontchardata_outline = atlas.map_outline.char_array[map_index];
+
+                    sdw = dw + ((fontchardata_outline.width * scale_outline) - dw);
+                    sdh = dh + ((fontchardata_outline.height * scale_outline) - dh);
+                    sdx = dx - ((sdw - dw) / 2f);
+                    sdy = dy - ((sdh - dh) / 2f);
 #else
+                    texture_outline = atlas.texture;
+                    fontchardata_outline = fontchardata_glyph;
+
                     // compute border location and outline size
-                    sdx = dx - this.border_size;
-                    sdy = dy - this.border_size;
                     sdw = dw + outline_size;
                     sdh = dh + outline_size;
+                    sdx = dx - @params.border_size;
+                    sdy = dy - @params.border_size;
 #endif
 
                     sdx += @params.border_offset_x;
@@ -385,8 +411,9 @@ public class FontType : IFont {
 
                     // queue outlined glyph for batch rendering
                     GlyphRenderer.AppendGlyph(
-                        texture, is_secondary, true,
-                        fontchardata.atlas_entry.x, fontchardata.atlas_entry.y, fontchardata.width, fontchardata.height,
+                        texture_outline, is_secondary, true,
+                        fontchardata_outline.atlas_entry.x, fontchardata_outline.atlas_entry.y,
+                        fontchardata_outline.width, fontchardata_outline.height,
                         sdx, sdy, sdw, sdh
                     );
                     added++;
@@ -394,26 +421,50 @@ public class FontType : IFont {
 
                 // queue glyph for batch rendering
                 GlyphRenderer.AppendGlyph(
-                    texture, is_secondary, false,
-                    fontchardata.atlas_entry.x, fontchardata.atlas_entry.y, fontchardata.width, fontchardata.height,
+                    atlas.texture, is_secondary, false,
+                    fontchardata_glyph.atlas_entry.x, fontchardata_glyph.atlas_entry.y,
+                    fontchardata_glyph.width, fontchardata_glyph.height,
                     dx, dy, dw, dh
                 );
                 added++;
+
+                float ddy = draw_glyph_y + dh;
+                if (ddy > max_draw_y) max_draw_y = ddy;
             }
 
-            draw_x += fontchardata.advancex * scale;
+            draw_glyph_x += fontchardata_glyph.advancex * scale_glyph;
             line_chars++;
         }
 
         // commit draw
-        GlyphRenderer.Draw(pvrctx, @params.tint_color, @params.border_color, false, true, primary_texture, secondary_texture);
+#if SDF_FONT
+        if (has_border) {
+            GlyphRenderer.Draw(
+                pvrctx,
+                @params.tint_color, @params.border_color,
+                false, true,
+                this.atlas_primary.texture, this.atlas_secondary.texture,
+                this.atlas_primary.texture_outline, this.atlas_secondary.texture_outline
+            );
+        } else {
+#else
+        {
+#endif
+            GlyphRenderer.Draw(
+                pvrctx,
+                @params.tint_color, @params.border_color,
+                false, true,
+                this.atlas_primary.texture, this.atlas_secondary.texture,
+                null, null
+            );
+        }
 
         pvrctx.Restore();
-        return draw_y + @params.height;
+        return max_draw_y;
     }
 
     public void MapCodepoints(string text, int text_index, int text_length) {
-        int actual = this.fontcharmap_secondary != null ? this.fontcharmap_secondary.char_array_size : 0;
+        int actual = this.atlas_secondary.map != null ? this.atlas_secondary.map.char_array_size : 0;
         int new_codepoints = 0;
         Grapheme grapheme = new Grapheme();
         int index = text_index;
@@ -428,9 +479,9 @@ public class FontType : IFont {
                     continue;
             }
 
-            if (FontType.InternalGetFontchardata2(this.lookup_table, this.fontcharmap_primary, grapheme.code) != null)
+            if (FontType.InternalGetFontchardata2(this.lookup_table, this.atlas_primary, grapheme.code) >= 0)
                 continue;
-            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null)
+            if (FontType.InternalGetFontchardata(this.atlas_secondary, grapheme.code) >= 0)
                 continue;
 
             // not present, count it
@@ -444,10 +495,10 @@ public class FontType : IFont {
         uint[] codepoints = EngineUtils.CreateArray<uint>(codepoints_size);
         codepoints[actual + new_codepoints] = 0x00000000;
 
-        if (this.fontcharmap_secondary != null) {
+        if (this.atlas_secondary.map != null) {
             // add existing secondary codepoints
-            for (int i = 0 ; i < this.fontcharmap_secondary.char_array_size ; i++) {
-                codepoints[i] = this.fontcharmap_secondary.char_array[i].codepoint;
+            for (int i = 0 ; i < this.atlas_secondary.map.char_array_size ; i++) {
+                codepoints[i] = this.atlas_secondary.map.char_array[i].codepoint;
             }
         }
 
@@ -456,26 +507,17 @@ public class FontType : IFont {
         while (index < text_length && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
             index += grapheme.size;
 
-            if (FontType.InternalGetFontchardata2(this.lookup_table, this.fontcharmap_primary, grapheme.code) != null)
+            if (FontType.InternalGetFontchardata2(this.lookup_table, this.atlas_primary, grapheme.code) >= 0)
                 continue;
-            if (FontType.InternalGetFontchardata(this.fontcharmap_secondary, grapheme.code) != null)
+            if (FontType.InternalGetFontchardata(this.atlas_secondary, grapheme.code) >= 0)
                 continue;
 
             codepoints[new_codepoints++] = (uint)grapheme.code;
         }
 
         // step 3: rebuild the secondary char map
-        if (this.fontcharmap_secondary != null) {
-            // dispose previous instance
-            this.fontcharmap_secondary.Destroy();
-            //free(this.fontcharmap_secondary.char_array);
-            //free(this.fontcharmap_secondary);
-            if (this.fontcharmap_secondary_texture != null) this.fontcharmap_secondary_texture.Destroy();
-        }
-
-        // build map and upload texture
-        this.fontcharmap_secondary = InternalRetrieveFontcharmap(codepoints);
-        this.fontcharmap_secondary_texture = FontType.InternalUploadTexture(this.fontcharmap_secondary);
+        FontType.InternalDestroyAtlas(ref this.atlas_secondary);
+        InternalCreateAtlas(ref this.atlas_secondary, codepoints);
 
         // dispose secondary codepoints array
         //free(codepoints);
@@ -504,7 +546,7 @@ public class FontType : IFont {
         return this.fontatlas == null;
     }
 
-    private FontCharMap InternalRetrieveFontcharmap(uint[] characters_map) {
+    private FontCharMap InternalCreateFontcharmap(uint[] characters_map, byte glyphs_height, byte glyphs_gap) {
         FontCharMap fontcharmap = null;
 
 #if SDF_FONT
@@ -515,11 +557,11 @@ public class FontType : IFont {
 
         if (characters_map != null) {
             fontcharmap = this.fontatlas.AtlasBuild(
-                FontType.GLYPHS_HEIGHT, FontType.GLYPHS_GAPS, characters_map
+                glyphs_height, glyphs_gap, characters_map
             );
         } else {
             fontcharmap = this.fontatlas.AtlasBuildComplete(
-                FontType.GLYPHS_HEIGHT, FontType.GLYPHS_GAPS
+                glyphs_height, glyphs_gap
             );
         }
 
@@ -532,10 +574,6 @@ public class FontType : IFont {
         if (fontcharmap == null) return null;
 
         WebGL2RenderingContext gl = PVRContext.global_context.webopengl.gl;
-
-        //int unpack_alignment = gl.getParameter(gl.UNPACK_ALIGNMENT);
-        //gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-
 
         WebGLTexture texture = gl.createTexture();
         gl.activeTexture(gl.TEXTURE0);
@@ -561,9 +599,11 @@ public class FontType : IFont {
         gl.generateMipmap(gl.TEXTURE_2D);
 #endif
 
-        //gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpack_alignment);
+        gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
 
-        fontcharmap.texture = 0x00;
+        // FIXME: calling this method also deallocates the vram texture, ¿is this a gpu driver bug?
+        // now deallocate texture data
+        //fontcharmap.DestroyTextureOnly();
 
         Texture tex = Texture.InitFromRAW(
             texture, (int)fontcharmap.texture_byte_size, true,
@@ -578,23 +618,87 @@ public class FontType : IFont {
         return tex;
     }
 
-    private static FontCharData InternalGetFontchardata(FontCharMap fontcharmap, int codepoint) {
-        if (fontcharmap != null) {
-            for (int i = 0 ; i < fontcharmap.char_array_size ; i++) {
-                if (codepoint == fontcharmap.char_array[i].codepoint) return fontcharmap.char_array[i];
+    private static int InternalGetFontchardata(FCAtlas atlas, int codepoint) {
+        if (atlas.map != null) {
+            for (int i = 0 ; i < atlas.map.char_array_size ; i++) {
+                if (codepoint == atlas.map.char_array[i].codepoint) return i;
             }
         }
-        return null;
+        return -1;
     }
 
-    private static FontCharData InternalGetFontchardata2(byte[] lookup_table, FontCharMap fontcharmap, int codepoint) {
+    private static int InternalGetFontchardata2(byte[] lookup_table, FCAtlas atlas, int codepoint) {
         if (codepoint < FontGlyph.LOOKUP_TABLE_LENGTH) {
             byte index = lookup_table[codepoint];
             if (index < FontGlyph.LOOKUP_TABLE_LENGTH) {
-                return fontcharmap.char_array[index];
+                return index;
             }
         }
-        return InternalGetFontchardata(fontcharmap, codepoint);
+        return InternalGetFontchardata(atlas, codepoint);
+    }
+
+    private void InternalCreateAtlas(ref FCAtlas atlas, uint[] codepoints) {
+        FontCharMap fontcharmap = InternalCreateFontcharmap(codepoints, FontType.GLYPHS_HEIGHT, FontType.GLYPHS_GAP);
+        Texture texture = FontType.InternalUploadTexture(fontcharmap);
+
+#if SDF_FONT
+        if (fontcharmap != null) {
+            FontCharMap fontcharmap_outline = InternalCreateFontcharmap(codepoints, FontType.GLYPHS_OUTLINE_HEIGHT, FontType.GLYPHS_OUTLINE_GAP);
+            Texture texture_outline = FontType.InternalUploadTexture(fontcharmap_outline);
+
+            if (fontcharmap_outline == null) {
+                throw new NullReferenceException("fontcharmap_outline was null");
+            }
+            if (fontcharmap.char_array_size != fontcharmap_outline.char_array_size) {
+                throw new Exception("char_array_size fontcharmap != fontcharmap_outline");
+            }
+
+            for (int i = 0 ; i < fontcharmap.char_array_size ; i++) {
+                FontCharData entry = fontcharmap.char_array[i];
+                FontCharData entry_outline = fontcharmap_outline.char_array[i];
+
+                if (entry.has_atlas_entry != entry_outline.has_atlas_entry) {
+                    throw new Exception("entry.has_atlas_entry != entry_outline.has_atlas_entry");
+                }
+            }
+
+            atlas.map_outline = fontcharmap_outline;
+            atlas.texture_outline = texture_outline;
+        }
+#endif
+        atlas.map = fontcharmap;
+        atlas.texture = texture;
+    }
+
+    private static void InternalDestroyAtlas(ref FCAtlas atlas) {
+#if SDF_FONT
+        if (atlas.map_outline != null) {
+            atlas.map_outline.Destroy();
+            atlas.map_outline = null;
+        }
+        if (atlas.texture_outline != null) {
+            atlas.texture_outline.Destroy();
+            atlas.texture_outline = null;
+        }
+#endif
+        if (atlas.map != null) {
+            atlas.map.Destroy();
+            atlas.map = null;
+        }
+        if (atlas.texture != null) {
+            atlas.texture.Destroy();
+            atlas.texture = null;
+        }
+    }
+
+
+    private struct FCAtlas {
+#if SDF_FONT
+        public FontCharMap map_outline;
+        public Texture texture_outline;
+#endif
+        public FontCharMap map;
+        public Texture texture;
     }
 
 }

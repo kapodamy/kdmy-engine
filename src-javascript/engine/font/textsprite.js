@@ -9,7 +9,7 @@ const TEXTSPRITE_POOL = new Map();
 var TEXTSPRITE_IDS = 0;
 
 
-function textsprite_init(font, font_is_truetype, color_by_addition, size, rbg8_color) {  
+function textsprite_init(font, font_is_truetype, color_by_addition, size, rbg8_color) {
     let textsprite = {
         font,
 
@@ -435,6 +435,11 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
     let last_known_break_index = 0;
     let loose_index = 0;
     let last_known_break_width = 0.0;
+    let border_size = 0.0;
+
+    if (textsprite.fontparams.border_enable && textsprite.fontparams.border_size > 0.0 && textsprite.fontparams.border_color[3] > 0.0) {
+        border_size = textsprite.fontparams.border_size;
+    }
 
     while (true) {
         let eof_reached = !string_get_character_codepoint(text, index, grapheme);
@@ -456,8 +461,8 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             index_last_detected_break = index_current_line = new_index;
             last_break_was_dotcommatab = true;
 
-            calculated_text_height += textsprite.fontparams.height + textsprite.fontparams.paragraph_space;
-            if (calculated_text_height >= max_height) break;
+            calculated_text_height += lineinfo.last_char_height + textsprite.fontparams.paragraph_space;
+            if ((calculated_text_height + border_size) >= max_height) break;
 
             lineinfo.line_char_count = 0;
             lineinfo.previous_codepoint = 0x0000;
@@ -505,7 +510,7 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
 
         accumulated_width += lineinfo.last_char_width;
 
-        if (accumulated_width > max_width) {
+        if ((accumulated_width + border_size) > max_width) {
             if (current_is_break) {
                 break_in_index = index;
                 break_char_count = 0;
@@ -543,8 +548,8 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
                 offset: accumulated_width// temporal
             });
 
-            calculated_text_height += textsprite.fontparams.height + textsprite.fontparams.paragraph_space;
-            if (calculated_text_height >= max_height) break;
+            calculated_text_height += lineinfo.last_char_height + textsprite.fontparams.paragraph_space;
+            if ((calculated_text_height + border_size) >= max_height) break;
 
             index_last_detected_break = index_current_line = break_in_index;
             last_break_was_dotcommatab = false;
@@ -592,8 +597,8 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
     }
 
     textsprite.modified_string = false;
-    textsprite.last_draw_width = max_line_width;
-    textsprite.last_draw_height = calculated_text_height;
+    textsprite.last_draw_width = max_line_width + border_size;
+    textsprite.last_draw_height = calculated_text_height + border_size;
 }
 
 

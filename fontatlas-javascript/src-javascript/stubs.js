@@ -35,12 +35,13 @@
  * @property {number} offset_y
  * @property {number} offset_x
  * @property {number} advancex
+ * @property {number} advancey
  * @property {number} width
  * @property {number} height
  * @property {FontCharDataKerning[]} kernings
  * @property {number} kernings_size
  * @property {FontCharDataAtlasEntry} atlas_entry
- * @property {boolean} has_entry
+ * @property {boolean} has_atlas_entry
  */
 
 /**

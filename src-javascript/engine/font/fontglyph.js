@@ -4,7 +4,7 @@ const FONTGLYPH_HARDSPACE = 0xA0;
 const FONTGLYPH_LINEFEED = 0x0A;
 const FONTGLYPH_TAB = 0x09;
 const FONTGLYPH_CARRIAGERETURN = 0x0D;
-const FONTGLYPH_SPACE_WIDTH_RATIO = 0.8;
+const FONTGLYPH_SPACE_WIDTH_RATIO = 0.9;
 const FONTGLYPH_TABSTOP = 8;
 const FONTGLYPH_LOOKUP_TABLE_LENGTH = 128; // this covers all ascii characters
 
@@ -197,6 +197,8 @@ function fontglyph_measure_char(fontglyph, codepoint, height, lineinfo) {
         lineinfo.space_width = fontglyph_internal_find_space_width(fontglyph, height);
     }
 
+    lineinfo.last_char_height = height;
+
     let info = null;
 
     L_find_glyph_info: {
@@ -376,7 +378,10 @@ function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_l
         line_chars++;
     }
 
-    glyphrenderer_draw(pvrctx, params.tint_color, params.border_color, by_add, false, fontglyph.texture, null);
+    glyphrenderer_draw(
+        pvrctx, params.tint_color, params.border_color, by_add, false,
+        fontglyph.texture, null, null, null
+    );
 
     pvr_context_restore(pvrctx);
     return draw_y + params.height;

@@ -18,6 +18,7 @@
 typedef struct FontLineInfo_s {
     float space_width;
     float last_char_width;
+    float last_char_height;
     int32_t line_char_count;
     uint32_t previous_codepoint;
 } FontLineInfo;

@@ -13,7 +13,7 @@ public class FontGlyph : IFont {
     public const byte LINEFEED = 0x0A;
     public const byte TAB = 0x09;
     public const byte CARRIAGERETURN = 0x0D;
-    public const float SPACE_WIDTH_RATIO = 0.8f;
+    public const float SPACE_WIDTH_RATIO = 0.9f;
     public const byte TABSTOP = 8;
     public const byte LOOKUP_TABLE_LENGTH = 128;// this covers all ascii characters
 
@@ -211,6 +211,8 @@ L_measure:
             lineinfo.space_width = InternalFindSpaceWidth(height);
         }
 
+        lineinfo.last_char_height = height;
+
         GlyphInfo info = null;
 
         if (codepoint < FontGlyph.LOOKUP_TABLE_LENGTH) {
@@ -389,7 +391,10 @@ L_measure:
             line_chars++;
         }
 
-        GlyphRenderer.Draw(pvrctx, @params.tint_color, @params.border_color, by_add, false, this.texture, null);
+        GlyphRenderer.Draw(
+            pvrctx, @params.tint_color, @params.border_color, by_add, false,
+            this.texture, null, null, null
+        );
 
         pvrctx.Restore();
         return draw_y + @params.height;

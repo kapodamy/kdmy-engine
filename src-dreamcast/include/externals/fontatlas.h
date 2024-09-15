@@ -26,6 +26,7 @@ typedef struct _FONT_STRUCTS_ATTRIB {
     int16_t offset_x;
     int16_t offset_y;
     int16_t advancex;
+    int16_t advancey;
     int16_t width;
     int16_t height;
     FontKerning* kernings;
