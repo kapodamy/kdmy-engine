@@ -184,7 +184,12 @@ function io_chromium_workaround(url, options) {
 
 async function io_request_file(absolute_url, request_type) {
     let native_url = await io_native_get_path(absolute_url, true, false, true);
-    return io_background_load_resource(native_url, request_type);
+    try {
+        return await io_background_load_resource(native_url, request_type);
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
 }
 
 async function io_file_size(absolute_url) {
@@ -223,14 +228,14 @@ async function io_native_file_size(absolute_file_url) {
 async function io_native_resource_exists(absolute_url, expect_file, expect_folder) {
     try {
         let res = await io_background_load_resource(absolute_url, IO_REQUEST_HEAD);
-        if (!res.ok) return 0;
+        if (!res.ok) return false;
 
-        if (expect_file && expect_folder) return 1;
+        if (expect_file && expect_folder) return true;
 
         if (IO_WEBKIT_DETECTED) {
             let is_folder = res.url.endsWith("/");
-            if (expect_folder && is_folder) return 1;
-            if (expect_file && !is_folder) return 1;
+            if (expect_folder && is_folder) return true;
+            if (expect_file && !is_folder) return true;
             return 0;
         } else if (res.mime == "application/http-index-format") {
             return expect_folder;
@@ -238,10 +243,13 @@ async function io_native_resource_exists(absolute_url, expect_file, expect_folde
             // should be a file
             return expect_file;
         } else {
-            throw new Error("No IO implementation for: " + navigator.userAgent + ". When checking " + absolute_url);
+            let unimpl = new Error("No IO implementation for: " + navigator.userAgent + ". When checking " + absolute_url);
+            console.error(unimpl);
+            throw unimpl;
         }
     } catch (e) {
-        return 0;
+        //console.error(e);
+        return false;
     }
 }
 

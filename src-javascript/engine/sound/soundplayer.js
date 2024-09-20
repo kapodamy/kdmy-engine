@@ -11,7 +11,7 @@ async function soundplayer_init(src) {
     if (!await fs_file_exists(full_path)) {
         return null;
     }
-    if (IO_WEBKIT_DETECTED) {
+    if (!IO_WEBKIT_DETECTED) {
         return await soundplayer_init2(full_path, null, full_path);
     }
 

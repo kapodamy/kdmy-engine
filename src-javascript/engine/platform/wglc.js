@@ -605,6 +605,7 @@ class PSShader {
         gl.bindVertexArray(this.vao);
 
         // bind texture and update antialiasing
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, from_framebuffer.texture);
         //webopengl_change_texture_filtering(this.pvrctx);
 
@@ -733,6 +734,7 @@ class PSFramebuffer {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
 
         this.texture = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.pow2_width, this.pow2_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -773,6 +775,7 @@ class PSFramebuffer {
         this.texture_dimmens[2] = this.pow2_width / this.pow2_height;
 
         // resize color attachment
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.pow2_width, this.pow2_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
@@ -966,6 +969,8 @@ function webopengl_create_texture(/**@type {WebGL2Context}*/wglc, texture_width,
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
     //
     // Note:
     //       most of uncompresed textures are 8192x8192 and requires
@@ -1040,6 +1045,7 @@ function webopengl_draw_texture(/**@type {PVRContext}*/pvrctx, tex, sx, sy, sw, 
     gl.bindVertexArray(wglc.program_textured.vao);
 
     // bind texture and update antialiasing
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, tex.data_vram);
     webopengl_change_texture_filtering(pvrctx, tex.has_mipmaps);
 
@@ -1174,6 +1180,7 @@ function webopengl_draw_framebuffer(/**@type {PVRContext}*/pvrctx, frmbffr, sx, 
     gl.bindVertexArray(wglc.program_framebuffer.vao);
 
     // bind texture and update antialiasing
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, frmbffr.texture);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, wglc.position_buffer);

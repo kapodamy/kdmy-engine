@@ -6,18 +6,10 @@ async function atlas_init(src) {
     }
 
     let atlas = {};
-    let xml;
 
-    try {
-        xml = await fs_readxml(src);
-    } catch (e) {
-        if (e instanceof KDMYEngineIOError) {
-            console.error(`atlas_init() error loading "${src}"`, e);
-            return null;
-        }
-
-        // malformed/corrupt xml file
-        throw e;
+    let xml = await fs_readxml(src);
+    if (!xml) {
+        return null;
     }
 
     let xml_atlas = xml.querySelector("TextureAtlas");
@@ -186,7 +178,7 @@ function atlas_name_has_number_suffix(atlas_entry_name, start_index) {
                 switch (code) {
                     case 0x09:// tabulation
                     case 0x20:// white space
-                    //case 0xff:// hard space
+                        //case 0xff:// hard space
                         // case 0x5F:// underscore (used in plain-text atlas)
                         ignore_space = false;
                         continue;

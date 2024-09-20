@@ -10,8 +10,9 @@ async function videoplayer_init(src) {
     if (!await fs_file_exists(full_path)) { return null; }
 
     const gl = pvr_context.webopengl.gl;
-    let gl_texture = gl.createTexture();
 
+    let gl_texture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, gl_texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -189,6 +190,7 @@ function videoplayer_poll_streams(videoplayer) {
 function videoplayer_internal_update_texture(videoplayer, /**@type {TexImageSource}*/src) {
     const gl = pvr_context.webopengl.gl;
 
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, videoplayer.texture.data_vram);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
     gl.bindTexture(gl.TEXTURE_2D, null);

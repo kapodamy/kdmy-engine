@@ -163,7 +163,7 @@ function string_lowercase_ends_with(string, substring) {
 function string_trim(string, trim_start, trim_end) {
     if (string == null || string == "" || (!trim_start && !trim_end)) return strdup(string);
 
-    let string_length = strlen(string);
+    let string_length = string.length;
     let start_index, end_index;
 
     if (trim_start) {
@@ -199,9 +199,9 @@ function string_trim(string, trim_start, trim_end) {
             break;
         }
     } else {
-        end_index = string_length + 1;
+        end_index = string_length;
     }
-    
+
     if (start_index < end_index) {
         return string.substring(start_index, end_index);
     }
@@ -218,3 +218,27 @@ function string_equals_ignore_case(string1, string2) {
         return string1.toLowerCase() == string2.toLowerCase();
 }
 
+function string_index_of_any_char(string, utf8_chars_list) {
+    let found_index = -1;
+
+    const grapheme1 = { code: 0, size: 0 };
+    const grapheme2 = { code: 0, size: 0 };
+
+    let index1 = 0;
+    while (string_get_character_codepoint(string, index1, grapheme1)) {
+
+        let index2 = 0;
+        while (string_get_character_codepoint(utf8_chars_list, index2, grapheme2)) {
+            if (grapheme1.code == grapheme2.code) {
+                if (found_index < 0 || index1 < found_index) {
+                    found_index = index1;
+                }
+                break;
+            }
+            index2 += grapheme2.size;
+        }
+        index1 += grapheme1.size;
+    }
+
+    return found_index;
+}

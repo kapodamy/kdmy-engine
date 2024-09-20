@@ -223,6 +223,8 @@ int32_t string_index_of(const char* string, int32_t start_index, const char* sub
 }
 
 int32_t string_index_of_any_char(const char* string, const char* utf8_chars_list) {
+    int32_t found_index = -1;
+
     Grapheme grapheme1;
     size_t length1 = strlen(string);
 
@@ -235,14 +237,17 @@ int32_t string_index_of_any_char(const char* string, const char* utf8_chars_list
         int32_t index2 = 0;
         while (string_get_character_codepoint(utf8_chars_list, index2, length2, &grapheme2)) {
             if (grapheme1.code == grapheme2.code) {
-                return index1;
+                if (found_index < 0 || index1 < found_index) {
+                    found_index = index1;
+                }
+                break;
             }
             index2 += grapheme2.size;
         }
         index1 += grapheme1.size;
     }
 
-    return -1;
+    return found_index;
 }
 
 
@@ -596,7 +601,7 @@ char* string_trim(const char* string, bool trim_start, bool trim_end) {
             break;
         }
     } else {
-        end_index = string_length + 1;
+        end_index = string_length;
     }
 
     if (start_index < end_index) {

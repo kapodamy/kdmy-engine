@@ -43,20 +43,10 @@ async function animlist_init(src) {
         }
     }
 
-    let xml;
-
-    try {
-        xml = await fs_readxml(src);
-    } catch (e) {
+    let xml = await fs_readxml(src);
+    if (!xml) {
         full_path = undefined;
-
-        if (e instanceof KDMYEngineIOError) {
-            console.error(`animlist_init() error loading "${src}"`, e);
-            return null;
-        }
-
-        // malformed/corrupt xml file
-        throw e;
+        return null;
     }
 
     // C and C# only

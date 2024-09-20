@@ -115,7 +115,7 @@ public static partial class StringUtils {
                 break;
             }
         } else {
-            end_index = str_length + 1;
+            end_index = str_length;
         }
 
         if (start_index < end_index) {

@@ -17,11 +17,8 @@ async function texture_init_deferred(src, deffered) {
         return loaded_texture;
     }
 
-    let tex;
-    try {
-        tex = await fs_readimagebitmap(src);
-    } catch (e) {
-        console.error(e);
+    let tex = await fs_readimagebitmap(src);
+    if (!tex) {
         return null;
     }
 

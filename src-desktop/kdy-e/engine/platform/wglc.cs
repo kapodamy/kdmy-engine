@@ -363,9 +363,17 @@ public class WebGLContext {
         // draw the quad (2 triangles, 6 vertices)
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-        // unbind buffers and texture
+        // unbind buffers
         gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
         gl.bindVertexArray(WebGLVertexArrayObject.Null);
+
+        // unbind textures
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
 
         // required to avoid GL_OUT_OF_MEMORY
         //gl.flush();
@@ -479,7 +487,6 @@ public class WebGLContext {
 
         // unbind buffers and texture
         gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
-        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         gl.bindVertexArray(WebGLVertexArrayObject.Null);
     }
@@ -1049,6 +1056,7 @@ public class PSShader {
         gl.bindVertexArray(this.vao);
 
         // bind texture and update antialiasing
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, from_framebuffer.texture);
         //webopengl_change_texture_filtering(this.pvrctx);
 
@@ -1069,7 +1077,6 @@ public class PSShader {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
-        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         gl.bindVertexArray(WebGLVertexArrayObject.Null);
         //gl.useProgram(WebGLProgram.NULL);
@@ -1181,6 +1188,7 @@ public class PSFramebuffer {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
 
         this.texture = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.pow2_width, this.pow2_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, 0x00);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -1200,7 +1208,6 @@ public class PSFramebuffer {
         }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, WebGLFramebuffer.Null);
-        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         //gl.bindRenderbuffer(gl.RENDERBUFFER, WebGLRenderbuffer.Null);
     }
@@ -1236,7 +1243,6 @@ public class PSFramebuffer {
         gl.invalidateFramebuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, WebGLFramebuffer.Null);
-        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     }

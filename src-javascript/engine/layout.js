@@ -48,11 +48,8 @@ var LAYOUT_DEBUG_PRINT_TRIGGER_CALLS = false;
 
 
 async function layout_init(src) {
-    let xml;
-    try {
-        xml = await fs_readxml(src);
-    } catch (e) {
-        console.error("layout_init() error reading: " + src, e);
+    let xml = await fs_readxml(src);
+    if (!xml) {
         return null;
     }
 
