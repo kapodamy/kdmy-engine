@@ -822,7 +822,7 @@ public class Week {
             roundcontext.messagebox.SetTitle("Saving progress...");
             roundcontext.messagebox.HideButtons();
             roundcontext.messagebox.SetMessage(null);
-            roundcontext.messagebox.Show(true);
+            roundcontext.messagebox.Show(false);
 
             // do save
             Layout layout = roundcontext.layout ?? roundcontext.ui_layout;

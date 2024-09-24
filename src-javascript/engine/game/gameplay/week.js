@@ -819,7 +819,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
         messagebox_set_title(roundcontext.messagebox, "Saving progress...");
         messagebox_hide_buttons(roundcontext.messagebox);
         messagebox_set_message(roundcontext.messagebox, null);
-        messagebox_show(roundcontext.messagebox, true);
+        messagebox_show(roundcontext.messagebox, false);
 
         // do save
         const layout = roundcontext.layout ?? roundcontext.ui_layout;
