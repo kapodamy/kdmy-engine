@@ -220,7 +220,7 @@ async function main(argc, argv) {
     while (true) {
         if (await startscreen_main()) break;
         while (await mainmenu_main());
-        soundplayer_replay(background_menu_music);
+        if (background_menu_music) soundplayer_replay(background_menu_music);
     }
 
     return 1;

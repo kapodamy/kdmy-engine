@@ -92,7 +92,7 @@ async function main_layout_visor() {
     layoutvisor_uianimlist = await animlist_init("/assets/common/anims/week-round.xml");
     layoutvisor_rankingmodelholder = await modelholder_init("/assets/common/image/week-round/ranking");
     layoutvisor_streakmodelholder = await modelholder_init("/assets/common/font/numbers");
-    layoutvisor_uifont = await fontholder_init("/assets/common/font/vcr.ttf", -1);
+    layoutvisor_uifont = await fontholder_init("/assets/common/font/vcr.ttf", null, false);
     layoutvisor_autouicosmetics = autouicosmetics_init();
 
     layoutvisor_dotted_psshader = PSShader.BuildFromSource(pvr_context, null,

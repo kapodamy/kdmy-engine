@@ -96,9 +96,10 @@ public class PVRContext {
         if (EngineSettings.show_fps) DrawFPS();// if enabled draw it
         Engine.Game.MasterVolume.Draw(this);
 
-        // swap the buffers if something was drawn (avoid screen flickering)
+        Glfw.MakeContextCurrent(this.nativeWindow);
+
         if (Engine.Externals.WebGL2RenderingContext.KDY_draw_calls_count > 0) {
-            Glfw.MakeContextCurrent(this.nativeWindow);
+            // swap the buffers if something was drawn (avoid screen flickering)
             Glfw.SwapBuffers(this.nativeWindow);
 
             Engine.Externals.WebGL2RenderingContext.KDY_draw_calls_count = 0;

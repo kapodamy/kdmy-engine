@@ -35,7 +35,7 @@ function json_load_from_string(json_sourcecode) {
 }
 async function json_load_direct(src) {
     try {
-        return await io_native_foreground_request(src, IO_REQUEST_JSON);
+        return await io_background_load_resource(src, IO_REQUEST_JSON);
     } catch (e) {
         console.error("json_load_direct() failed", e);
         return null;

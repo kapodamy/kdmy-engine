@@ -160,7 +160,7 @@ async function expansions_internal_load_dependency(chain, expansion_name) {
         return;
     }
 
-    let unparsed_chain = await io_native_foreground_request(chain_ini_path, IO_REQUEST_TEXT);
+    let unparsed_chain = await io_background_load_resource(chain_ini_path, IO_REQUEST_TEXT);
     chain_ini_path = undefined;
 
     if (!unparsed_chain) return;

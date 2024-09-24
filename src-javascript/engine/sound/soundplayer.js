@@ -5,37 +5,36 @@ const FADING_IN = 1;
 const FADING_OUT = 2;
 
 async function soundplayer_init(src) {
-    // needs C version
-    let full_path = await fs_get_full_path_and_override(src);
+    let absolute_path = await fs_get_full_path_and_override(src);
 
-    if (!await fs_file_exists(full_path)) {
+    if (!await fs_file_exists(absolute_path)) {
         return null;
     }
     if (!IO_WEBKIT_DETECTED) {
-        return await soundplayer_init2(full_path, null, full_path);
+        let native_path = await io_native_get_path(absolute_path, true, false, true);
+        return await soundplayer_init2(src, null, native_path);
     }
 
     /** @type {ArrayBuffer} */
-    let arraybuffer = await fs_readarraybuffer(full_path);
+    let arraybuffer = await fs_readarraybuffer(absolute_path);
     let type = "application/octet-stream";
 
-    if (full_path.endsWith(".ogg") || full_path.endsWith(".logg")) type = "audio/ogg";
-    else if (full_path.endsWith(".wav")) type = "audio/wav";
-    else if (full_path.endsWith(".mp3")) type = "audio/mp3";
+    if (absolute_path.endsWith(".ogg") || absolute_path.endsWith(".logg")) type = "audio/ogg";
+    else if (absolute_path.endsWith(".wav")) type = "audio/wav";
+    else if (absolute_path.endsWith(".mp3")) type = "audio/mp3";
 
     let blob = new Blob([arraybuffer], { type: type });
-    return await soundplayer_init2(blob, arraybuffer, full_path);
+    return await soundplayer_init2(src, arraybuffer, blob);
 }
 
-async function soundplayer_init2(src, arraybuffer, absolute_path) {
-    //
-    // TODO: C version
-    //
+async function soundplayer_init2(src, arraybuffer, native_path_or_blob) {
     let blob_url = null;
-    if (src instanceof Blob) src = blob_url = URL.createObjectURL(src);
+    if (native_path_or_blob instanceof Blob) {
+        native_path_or_blob = blob_url = URL.createObjectURL(native_path_or_blob);
+    }
 
     let soundplayer = {
-        handler: new Audio(src),
+        handler: new Audio(native_path_or_blob),
         fade_id: 0,
         fade_status: FADING_NONE,
         blob_url,
@@ -72,7 +71,7 @@ async function soundplayer_init2(src, arraybuffer, absolute_path) {
             }
         });
     } catch (e) {
-        console.error("soundplayer_init2() failed for " + absolute_path, e);
+        console.error("soundplayer_init2() failed for " + src, e);
 
         soundplayer.handler.src = null;
         soundplayer.handler = undefined;

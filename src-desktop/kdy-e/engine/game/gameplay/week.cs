@@ -875,17 +875,17 @@ public class Week {
         initparams.animlist = StringUtils.IsNotEmpty(src_animlist) ? AnimList.Init(src_animlist) : null;
         if (old_animlist != null) old_animlist.Destroy();
 
-        initparams.layout_strums_size = (int)((long)layout.GetAttachedValue("ui_strums_count", AttachedValueType.INTEGER, 0));
+        initparams.layout_strums_size = (int)(long)layout.GetAttachedValue("ui_strums_count", AttachedValueType.INTEGER, 0);
         initparams.layout_strums = EngineUtils.CreateArray<LayoutStrum>(initparams.layout_strums_size);
         for (int i = 0 ; i < initparams.layout_strums_size ; i++) {
             placeholder = Week.InternalReadPlaceholder(layout, "ui_strums", i);
             if (placeholder == null) placeholder = UI_STRUMS_LAYOUT_PLACEHOLDER;
 
             initparams.layout_strums[i] = new LayoutStrum() {
-                marker_dimmen = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_markerDimmen", i, AttachedValueType.DOUBLE, 50.0)),
-                invdimmen = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_markerInvdimmen", i, AttachedValueType.DOUBLE, 50.0)),
-                sustain_alpha = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_sustainAlpha", i, AttachedValueType.DOUBLE, 1.0)),
-                gap = (float)((double)Week.InternalReadValuePrefix(layout, "ui_strums_gap", i, AttachedValueType.DOUBLE, 0.0)),
+                marker_dimmen = (float)(double)Week.InternalReadValuePrefix(layout, "ui_strums_markerDimmen", i, AttachedValueType.DOUBLE, 50.0),
+                invdimmen = (float)(double)Week.InternalReadValuePrefix(layout, "ui_strums_markerInvdimmen", i, AttachedValueType.DOUBLE, 50.0),
+                sustain_alpha = (float)(double)Week.InternalReadValuePrefix(layout, "ui_strums_sustainAlpha", i, AttachedValueType.DOUBLE, 1.0),
+                gap = (float)(double)Week.InternalReadValuePrefix(layout, "ui_strums_gap", i, AttachedValueType.DOUBLE, 0.0),
                 keep_marker_scale = (bool)Week.InternalReadValuePrefix(layout, "ui_strums_keepMarkerScale", i, AttachedValueType.BOOLEAN, true),
                 is_vertical = (bool)Week.InternalReadValuePrefix(layout, "ui_strums_verticalScroll", i, AttachedValueType.BOOLEAN, true),
                 length = 0f,
@@ -903,10 +903,10 @@ public class Week {
         }
         ui.healthbar_is_vertical = (bool)layout.GetAttachedValue("ui_healthbar_isVertical", AttachedValueType.BOOLEAN, false);
         ui.healthbar_nowarns = !(bool)layout.GetAttachedValue("ui_healthbar_showWarnings", AttachedValueType.BOOLEAN, true);
-        ui.healthbar_border = (float)((double)layout.GetAttachedValue("ui_healthbar_borderSize", AttachedValueType.DOUBLE, 0.0));
-        ui.healthbar_iconoverlap = (float)((double)layout.GetAttachedValue("ui_healthbar_iconOverlap", AttachedValueType.DOUBLE, 0.0));
-        ui.healthbar_warnheight = (float)((double)layout.GetAttachedValue("ui_healthbar_warningHeight", AttachedValueType.DOUBLE, 0.0));
-        ui.healthbar_lockheight = (float)((double)layout.GetAttachedValue("ui_healthbar_lockedHeight", AttachedValueType.DOUBLE, 0.0));
+        ui.healthbar_border = (float)(double)layout.GetAttachedValue("ui_healthbar_borderSize", AttachedValueType.DOUBLE, 0.0);
+        ui.healthbar_iconoverlap = (float)(double)layout.GetAttachedValue("ui_healthbar_iconOverlap", AttachedValueType.DOUBLE, 0.0);
+        ui.healthbar_warnheight = (float)(double)layout.GetAttachedValue("ui_healthbar_warningHeight", AttachedValueType.DOUBLE, 0.0);
+        ui.healthbar_lockheight = (float)(double)layout.GetAttachedValue("ui_healthbar_lockedHeight", AttachedValueType.DOUBLE, 0.0);
         ui.healthbar_x = placeholder.x;
         ui.healthbar_y = placeholder.y;
         ui.healthbar_z = placeholder.z;
