@@ -58,6 +58,7 @@ var layoutvisor_itemvisiblecheckbox = null;
 var layoutvisor_tempdatalist = null;
 var layoutvisor_tempdatalistadded = null;
 var layoutvisor_dotted_psshader = null;
+var layoutvisor_datatransfer = new DataTransfer();
 
 
 async function main_layout_visor() {
@@ -1648,6 +1649,8 @@ function layoutvisor_list_fs_use_fallback_values(fallback_datalist_name, fallbac
 async function layoutvisor_from_filesystem(is_fake_path_or_layout_file) {
     /**@type {HTMLInputElement} */// @ts-ignore
     let input_basefolder = document.querySelector("input[name=base-folder]");
+    /**@type {HTMLInputElement} */// @ts-ignore
+    let input_file = document.getElementById("load-layout-file");
 
     let ret = null;
     try {
@@ -1669,29 +1672,27 @@ async function layoutvisor_from_filesystem(is_fake_path_or_layout_file) {
         return;
     }
 
-    /**@type {File} */
-    let file = await fs_readblob(ret);
-    if (!file) {
+    /**@type {Blob} */
+    let blob = await fs_readblob(ret);
+    if (!blob) {
         alert("failed to read " + ret);
         return;
     }
 
-    //
-    // Mozilla Firefox does not allow to change the name property, clone object
-    //
-    let file_wrapper = clone_object_shallow(file);
-
-    file_wrapper.arrayBuffer = () => file.arrayBuffer();
-    file_wrapper.slice = (s, e, c) => file.slice(s, e, c);
-    file_wrapper.stream = () => file.stream();
-    file_wrapper.text = () => file.text();
 
     let idx = ret.lastIndexOf(FS_CHAR_SEPARATOR);
+    let filename = ret.substring(idx + 1);
+    let folder = ret.substring(0, idx >= 0 ? idx : ret.length);
+    let file = new File([blob], filename, { type: "application/xml" });
 
-    file_wrapper.name = ret.substring(idx + 1);
-    input_basefolder.value = ret.substring(0, idx >= 0 ? idx : ret.length);
+    layoutvisor_datatransfer.items.clear();
+    layoutvisor_datatransfer.items.add(file);
+
+    // override loaded file
+    input_basefolder.value = folder;
+    input_file.files = layoutvisor_datatransfer.files;
 
     layoutvisor_localstorage_save("baseLayoutFolder", input_basefolder.value);
-    await layoutvisor_load({ target: { files: [file_wrapper], value: "" } });
+    await layoutvisor_load({ target: { files: [file], value: "" } });
 }
 

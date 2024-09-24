@@ -18,7 +18,10 @@ var /**@type {function(string):void}*/ filesystemdialog_resolve = null;
     document.getElementById("ase-cancel").addEventListener(
         "click", filesystemdialog_internal_button_cancel, false
     );
-    document.getElementById("ase-pick").addEventListener(
+    document.getElementById("ase-pick-file").addEventListener(
+        "click", filesystemdialog_internal_button_pick, false
+    );
+    document.getElementById("ase-pick-folder").addEventListener(
         "click", filesystemdialog_internal_button_pick, false
     );
     document.getElementById("ase-path").addEventListener(
@@ -276,6 +279,12 @@ function filesystemdialog_internal_toggle_visibility(is_visible) {
         document.body.classList.add("fs-dialog-visible");
     else
         document.body.classList.remove("fs-dialog-visible");
+
+    let file_btn = document.getElementById("ase-pick-file");
+    let folder_btn = document.getElementById("ase-pick-folder");
+
+    file_btn.style.display = filesystemdialog_choosing_folder ? "none" : "";
+    folder_btn.style.display = filesystemdialog_choosing_folder ? "" : "none";
 }
 
 function filesystemdialog_internal_open(index) {

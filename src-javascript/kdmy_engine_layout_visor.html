@@ -580,7 +580,7 @@
             </fieldset>
             <fieldset>
                 <legend>Layout</legend>
-                <label>Fake layout path: <input type="text" name="base-folder" list="temp-datalist" /></label><button id="base-folder-fs" style="margin-left: 4px">📁</button>
+                <label>Fake path: <input type="text" name="base-folder" list="temp-datalist" /></label><button id="base-folder-fs" style="margin-left: 4px">🗂️</button>
                 <br>
                 <div style="height: 4px;"></div>
                 <span>Load layout: <button id="load-layout-file-fs" style="margin-right: 4px">📁</button><input type="file" id="load-layout-file" /></span>
@@ -635,7 +635,8 @@
             <ul id="ase-list"></ul>
         </div>
         <div class="ase-buttons">
-            <button id="ase-pick">Pick</button>
+            <button id="ase-pick-file">Open</button>
+            <button id="ase-pick-folder" style="display: none;">Choose current folder</button>
             &nbsp;&nbsp;
             <button id="ase-cancel">Cancel</button>
         </div>
