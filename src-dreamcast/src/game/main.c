@@ -11,6 +11,7 @@
 #include <kos/init.h>
 #include <kos/thread.h>
 
+#include "expansions.h"
 #include "float64.h"
 #include "fontholder.h"
 #include "fs.h"
@@ -88,6 +89,10 @@ int main_argc;
 char** main_argv;
 #include "preloadcache.h"
 
+
+static void main_check_for_expansion();
+
+
 int main(int argc, char* argv[]) {
     main_argc = argc;
     main_argv = argv;
@@ -97,6 +102,7 @@ int main(int argc, char* argv[]) {
     pvr_context_init();
     sndbridge_init();
     sndbride_sfx_startup();
+    main_check_for_expansion();
     // mastervolume_init();
 
     logger_info("SoundBridge: %s", sndbridge_get_runtime_info());
@@ -414,6 +420,26 @@ EngineSettings SETTINGS = {
     .reload_settings = load_settings_from_funkinsave,
     .save_settings = save_settings_from_funkinsave
 };
+
+static void main_check_for_expansion() {
+    const char* EXPANSION_TXT = "/~expansions/expansion.txt";
+    if (!fs_file_exists(EXPANSION_TXT)) return;
+
+    char* expansion = fs_readtext("/~expansions/expansion.txt");
+    if (!expansion) goto L_return;
+
+    // just in case
+    int32_t idx = string_index_of_any_char(expansion, "\r\n");
+    if (idx >= 0) expansion[idx] = '\0';
+
+    if (fs_is_invalid_filename(expansion)) goto L_return;
+
+    logger_info("loading expansion: %s", expansion);
+    expansions_load(expansion);
+
+L_return:
+    free_chk(expansion);
+}
 
 
 #ifdef FS_ISO9660_DMA_SUPPORT

@@ -120,6 +120,7 @@ const FUNKIN_LOADING_SCREEN_TEXTURE = "/assets/common/image/funkin/funkay.png";
 async function main(argc, argv) {
     // vital parts
     fs_init();// intialize filesystem access for the main thread (this thread)
+    await main_check_for_expansion();
     await pvr_context_init();
     await mastervolume_init();
 
@@ -386,6 +387,26 @@ async function main_spawn_coroutine(background_layout, function_routine, argumen
     }
 
     return ret;
+}
+
+async function main_check_for_expansion() {
+    const EXPANSION_TXT = "/~expansions/expansion.txt";
+    if (!await fs_file_exists(EXPANSION_TXT)) return;
+
+    let expansion = await fs_readtext(EXPANSION_TXT);
+
+    // just in case
+    let idx = string_index_of_any_char(expansion, "\r\n");
+    if (idx >= 0) expansion = expansion.substring(0, idx);
+
+    L_load: {
+        if (!expansion || fs_is_invalid_filename(expansion)) break L_load;
+
+        console.info(`loading expansion: ${expansion}`);
+        await expansions_load(expansion);
+
+    }
+    expansion = undefined;
 }
 
 

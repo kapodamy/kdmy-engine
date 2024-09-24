@@ -36,6 +36,7 @@ public static class GameMain {
     public static int Main(int argc, string[] argv) {
         // vital parts
         FS.Init();
+        GameMain.CheckForExpansion();
         PVRContext.Init();
         MasterVolume.Init();
 
@@ -309,6 +310,26 @@ public static class GameMain {
 
         // now execute the routine
         return routine(@params);
+    }
+
+
+    private static void CheckForExpansion() {
+        const string EXPANSION_TXT = "/~expansions/expansion.txt";
+        if (!FS.FileExists(EXPANSION_TXT)) {
+            return;
+        }
+
+        string expansion = FS.ReadText(EXPANSION_TXT);
+        if (expansion == null) return;
+
+        // just in case
+        int idx = expansion.IndexOfAny(['\r', '\n']);
+        if (idx >= 0) expansion = expansion.SubstringKDY(0, idx);
+
+        if (FS.IsInvalidFilename(expansion)) return;
+
+        Logger.Info($"loading expansion: {expansion}");
+        Expansions.Load(expansion);
     }
 
 
