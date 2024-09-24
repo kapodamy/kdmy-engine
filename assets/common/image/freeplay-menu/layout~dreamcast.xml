@@ -32,20 +32,20 @@
         <Sprite name="background_song_info" r="0" g="0" b="0" a="0.5">
             <Action>
                 <Location x="0" y="0" z="2" />
-                <Size width="392" height="82" />
+                <Size width="482" height="82" />
             </Action>
         </Sprite>
 
-        <Text fontName="vcr" fontSize="22" rgb="0xFFFFFF" name="personal_best">
+        <Text fontName="vcr" fontSize="26" rgb="0xFFFFFF" name="personal_best">
             <Action>
                 <Location x="12" y="16" z="3" />
-                <!--<String>PERSONAL BEST SCORE: 123456789</String>-->
+                <!-- <String>PERSONAL BEST SCORE: 123456789</String> -->
             </Action>
         </Text>
-        <Text fontName="vcr" fontSize="16" rgb="0xFFFFFF" name="info">
+        <Text fontName="vcr" fontSize="20" rgb="0xFFFFFF" name="info">
             <Action>
                 <Location x="12" y="46" z="3.1" />
-                <!--<String>Week1 [EASY]</String>-->
+                <!-- <String>Week1 [EASY]</String> -->
             </Action>
         </Text>
     </Group>
@@ -65,13 +65,13 @@
                 <Size width="960" height="96" />
             </Action>
         </Sprite>-->
-        <Text fontName="vcr" fontSize="18" rgb="0xFFFFFF" name="description">
+        <Text fontName="vcr" fontSize="20" rgb="0xFFFFFF" name="description">
             <Action>
                 <Location x="8" y="82" z="3.2" />
                 <MaxSize width="936" />
                 <Background enable="true" size="8" offsetY="8" />
                 <BackgroundColor r="0" g="0" b="0" a="0.5" />
-                <!--<String>¡Rap-battle against Daddy Dearest!&#10;Composed by kawaisprite</String>-->
+                <String>¡Rap-battle against Daddy Dearest!&#10;Composed by kawaisprite</String>
             </Action>
         </Text>
     </Group>
@@ -133,14 +133,14 @@
 
         <Sprite rgba="0x0000007F">
             <Action>
-                <Location x="553" y="0" z="2" />
+                <Location x="548" y="0" z="2" />
                 <Size width="406" height="41" />
             </Action>
         </Sprite>
         <Sprite></Sprite>
-        <Text fontName="vcr" fontSize="36" rgb="0xFFFFFF">
+        <Text fontName="vcr" fontSize="28" rgb="0xFFFFFF">
             <Action>
-                <Location x="553" y="0" z="2.1" />
+                <Location x="548" y="0" z="2.1" />
                 <MaxSize width="406" height="41" />
                 <Property name="alignVertical" value="center" />
                 <Property name="alignHorizontal" value="center" />
@@ -159,7 +159,7 @@
         <Sprite r="0" g="0" b="0" a="0.40">
             <Action>
                 <Location x="0" y="650" z="5" />
-                <Size width="960" height="68" />
+                <Size width="960" height="70" />
             </Action>
         </Sprite>
         <Text fontName="vcr" fontSize="20" rgb="0xFFFFFF">

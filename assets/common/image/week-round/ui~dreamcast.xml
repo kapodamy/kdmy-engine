@@ -34,7 +34,7 @@
 	<!-- songprogressbar additional parameters -->
 	<AttachValue name="ui_songprogressbar_borderSize" type="float" value="2" />
 	<AttachValue name="ui_songprogressbar_fontSize" type="float" value="18" />
-	<AttachValue name="ui_songprogressbar_fontBorderSize" type="float" value="1.6" />
+	<AttachValue name="ui_songprogressbar_fontBorderSize" type="float" value="2" />
 	<AttachValue name="ui_songprogressbar_isVertical" type="boolean" value="false" />
 	<AttachValue name="ui_songprogressbar_showTime" type="boolean" value="true" />
 	<AttachValue name="ui_songprogressbar_colorRGBA8_text"       type="hex" value="0xFFFFFFFF" />
@@ -84,7 +84,8 @@
 
     <!-- roundstats additional parameters -->
     <AttachValue name="ui_roundstats_hidden" type="boolean" value="false" />
-    <AttachValue name="ui_roundstats_fontSize" type="float" value="12" />
+    <AttachValue name="ui_roundstats_fontSize" type="float" value="14" />
+    <AttachValue name="ui_roundstats_fontBorderSize" type="float" value="2.5" />
     <AttachValue name="ui_roundstats_fontColor" type="hex" value="0xFFFFFF" />
 
 
@@ -109,7 +110,8 @@
     <Placeholder name="ui_song_info" x="5" y="462" z="101" />
 
     <!-- rankingcounter additional parameters -->
-    <AttachValue name="ui_song_info_fontSize" type="float" value="12" />
+    <AttachValue name="ui_song_info_fontSize" type="float" value="13" />
+    <AttachValue name="ui_song_info_fontBorderSize" type="float" value="2.5" />
     <AttachValue name="ui_song_info_fontColor" type="hex" value="0xFFFFFF" />
     
     

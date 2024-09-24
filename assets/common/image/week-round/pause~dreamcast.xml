@@ -15,7 +15,7 @@
     <Text name="stats" fontSize="24" fontName="vcr" color="0xFFFFFF">
         <Action>
             <Location x="0" y="0" z="1" />
-            <MaxSize width="640" height="-1" />
+            <MaxSize width="630" height="-1" />
             <Property name="alignParagraph" value="end" />
             <Property name="alignHorizontal" value="end" />
             <!-- <String>Boopedo&#10;NORMAL</String> -->
