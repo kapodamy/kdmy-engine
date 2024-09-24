@@ -13,7 +13,7 @@ public class FontGlyph : IFont {
     public const byte LINEFEED = 0x0A;
     public const byte TAB = 0x09;
     public const byte CARRIAGERETURN = 0x0D;
-    public const float SPACE_WIDTH_RATIO = 0.9f;
+    public const float SPACE_WIDTH_RATIO = 0.625f;
     public const byte TABSTOP = 8;
     public const byte LOOKUP_TABLE_LENGTH = 128;// this covers all ascii characters
 
@@ -24,6 +24,7 @@ public class FontGlyph : IFont {
     private int table_size;
     private double frame_time;
     private double frame_progress;
+    private float space_scale;
     private byte[] lookup_table;
 
     public static FontGlyph Init(string src_atlas, string suffix, bool allow_animation) {
@@ -59,6 +60,7 @@ public class FontGlyph : IFont {
 
             frame_time = 0f,
             frame_progress = 0f,
+            space_scale = FontGlyph.SPACE_WIDTH_RATIO,
             lookup_table = new byte[FontGlyph.LOOKUP_TABLE_LENGTH]
         };
 
@@ -130,6 +132,9 @@ public class FontGlyph : IFont {
             }
         }
 
+        // find space width scale (normally only applies to the first frame)
+        fontglyph.InternalCalcSpaceScale();
+
         return fontglyph;
     }
 
@@ -146,14 +151,14 @@ public class FontGlyph : IFont {
     }
 
 
-    public float Measure(ref FontParams @params, string text, int text_index, int text_length) {
+    public void Measure(ref FontParams @params, string text, int text_index, int text_length, ref FontLinesInfo lines_info) {
         Grapheme grapheme = new Grapheme();
         int text_end_index = text_index + text_length;
 
         float width = 0;
         float max_width = 0;
         int line_chars = 0;
-        float space_width = InternalFindSpaceWidth(@params.height);
+        int lines = 1;
 
         for (int i = text_index ; i < text_end_index ; i++) {
             if (!StringUtils.GetCharacterCodepoint(text, i, ref grapheme)) continue;
@@ -163,10 +168,11 @@ public class FontGlyph : IFont {
                 if (width > max_width) max_width = width;
                 width = 0;
                 line_chars = 0;
+                lines++;
                 continue;
             }
 
-            GlyphInfo info = null;
+            GlyphInfo info;
 
             if (grapheme.code < FontGlyph.LOOKUP_TABLE_LENGTH) {
                 if (this.lookup_table[grapheme.code] != FontGlyph.LOOKUP_TABLE_LENGTH) {
@@ -186,12 +192,12 @@ public class FontGlyph : IFont {
             if (grapheme.code == FontGlyph.TAB) {
                 int filler = FontGlyph.InternalCalcTabstop(line_chars);
                 if (filler > 0) {
-                    width += space_width * filler;
+                    width += this.space_scale * filler;
                     line_chars += filler;
                 }
             } else {
                 // space, hard space or unknown character
-                width += @params.height * FontGlyph.SPACE_WIDTH_RATIO;
+                width += @params.height * this.space_scale;
                 line_chars++;
             }
 
@@ -203,17 +209,16 @@ L_measure:
             line_chars++;
         }
 
-        return Math.Max(width, max_width);
+        lines_info.max_width = Math.Max(width, max_width);
+        lines_info.total_height = (@params.height * lines) + (@params.paragraph_space * (lines - 1));
     }
 
-    public void MeasureChar(int codepoint, float height, ref FontLineInfo lineinfo) {
-        if (lineinfo.space_width < 0) {
-            lineinfo.space_width = InternalFindSpaceWidth(height);
-        }
+    public void MeasureChar(int codepoint, float height, ref FontCharInfo char_info) {
+        GlyphInfo info;
 
-        lineinfo.last_char_height = height;
-
-        GlyphInfo info = null;
+        char_info.last_char_height = height;
+        char_info.previous_codepoint = codepoint;
+        char_info.last_char_width_end = 0f;
 
         if (codepoint < FontGlyph.LOOKUP_TABLE_LENGTH) {
             if (this.lookup_table[codepoint] != FontGlyph.LOOKUP_TABLE_LENGTH) {
@@ -231,23 +236,27 @@ L_measure:
         }
 
         if (codepoint == FontGlyph.TAB) {
-            int filler = FontGlyph.InternalCalcTabstop(lineinfo.line_char_count);
+            int filler = FontGlyph.InternalCalcTabstop(char_info.line_char_count);
             if (filler > 0) {
-                lineinfo.last_char_width = lineinfo.space_width * filler;
-                lineinfo.line_char_count += filler;
+                char_info.last_char_width = height * this.space_scale * filler;
+                char_info.line_char_count += filler;
             }
         } else {
             // space, hard space or unknown character
-            lineinfo.last_char_width = height * FontGlyph.SPACE_WIDTH_RATIO;
-            lineinfo.line_char_count++;
+            char_info.last_char_width = height * this.space_scale;
+            char_info.line_char_count++;
         }
 
         return;
 
 L_measure:
         GlyphFrame frame = info.frames[info.actual_frame];
-        lineinfo.last_char_width = frame.glyph_width_ratio * height;
-        lineinfo.line_char_count++;
+        char_info.last_char_width = frame.glyph_width_ratio * height;
+        char_info.line_char_count++;
+    }
+
+    public float MeasureLineHeight(float height) {
+        return height;
     }
 
     public float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text) {
@@ -262,9 +271,7 @@ L_measure:
         int index = text_index;
         int total_glyphs = 0;
         int line_chars = 0;
-
-        // get space glyph width (if present)
-        float space_width = InternalFindSpaceWidth(@params.height);
+        int lines = 1;
 
         this.texture.UploadToPVR();
         pvrctx.Save();
@@ -309,6 +316,7 @@ L_measure:
                 draw_y += @params.height + @params.paragraph_space;
                 draw_x = 0;
                 line_chars = 0;
+                lines++;
                 continue;
             }
 
@@ -330,12 +338,12 @@ L_measure:
                 if (grapheme.code == FontGlyph.TAB) {
                     int filler = FontGlyph.InternalCalcTabstop(line_chars);
                     if (filler > 0) {
-                        draw_x += space_width * filler;
+                        draw_x += @params.height * this.space_scale * filler;
                         line_chars += filler;
                     }
                 } else {
                     // space, hard space or unknown characters
-                    draw_x += @params.height * FontGlyph.SPACE_WIDTH_RATIO;
+                    draw_x += @params.height * this.space_scale;
                     line_chars++;
                 }
                 continue;
@@ -397,7 +405,8 @@ L_measure:
         );
 
         pvrctx.Restore();
-        return draw_y + @params.height;
+
+        return (@params.height * lines) + (@params.paragraph_space * (lines - 1));
     }
 
     public int Animate(float elapsed) {
@@ -409,6 +418,8 @@ L_measure:
             if (this.table[i].frames_size < 2) continue;
             this.table[i].actual_frame = frame_index % this.table[i].frames_size;
         }
+
+        InternalCalcSpaceScale();
 
         this.frame_progress += elapsed;
         return 0;
@@ -531,14 +542,14 @@ L_measure:
         return FontGlyph.TABSTOP - space;
     }
 
-    private float InternalFindSpaceWidth(float height) {
+    private void InternalCalcSpaceScale() {
         for (int i = 0 ; i < this.table_size ; i++) {
             if (this.table[i].code == FontGlyph.SPACE || this.table[i].code == FontGlyph.HARDSPACE) {
                 GlyphFrame frame = this.table[i].frames[this.table[i].actual_frame];
-                return height * frame.glyph_width_ratio;
+                this.space_scale = frame.glyph_width_ratio;
+                break;
             }
         }
-        return height * FontGlyph.SPACE_WIDTH_RATIO; ;
     }
 
     private static int InternalTableSort(GlyphInfo x, GlyphInfo y) {

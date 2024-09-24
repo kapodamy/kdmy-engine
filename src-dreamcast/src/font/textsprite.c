@@ -15,8 +15,9 @@
 #include "vertexprops.h"
 
 
-typedef float (*MeasureFn)(void* font, FontParams* params, const char* text, int32_t text_index, size_t text_length);
-typedef void (*MeasureCharFn)(void* font, uint32_t codepoint, float height, FontLineInfo* lineinfo);
+typedef void (*MeasureFn)(void* font, FontParams* params, const char* text, int32_t text_index, size_t text_length, FontLinesInfo* lineinfo);
+typedef void (*MeasureCharFn)(void* font, uint32_t codepoint, float height, FontCharInfo* charinfo);
+typedef float (*measureLineHeight)(void* font, float height);
 typedef float (*DrawTextFn)(void* font, PVRContext pvrctx, FontParams* params, float x, float y, int32_t text_index, size_t text_length, const char* text);
 typedef int32_t (*AnimateFn)(void* font, float elapsed);
 typedef void (*MapCodepointsFn)(void* font, const char* text, int32_t text_index, size_t text_length);
@@ -28,6 +29,7 @@ typedef struct {
     DrawTextFn draw_text;
     AnimateFn animate;
     MapCodepointsFn map_codepoints;
+    measureLineHeight measure_line_height;
 } FontFunctions;
 
 typedef struct {
@@ -209,12 +211,14 @@ TextSprite textsprite_init(void* font, bool font_is_truetype, bool color_by_addi
     if (font_is_truetype) {
         textsprite->fontfunctions.measure = (MeasureFn)fonttype_measure;
         textsprite->fontfunctions.measure_char = (MeasureCharFn)fonttype_measure_char;
+        textsprite->fontfunctions.measure_line_height = (measureLineHeight)fonttype_measure_line_height;
         textsprite->fontfunctions.draw_text = (DrawTextFn)fonttype_draw_text;
         textsprite->fontfunctions.animate = (AnimateFn)fonttype_animate;
         textsprite->fontfunctions.map_codepoints = (MapCodepointsFn)fonttype_map_codepoints;
     } else {
         textsprite->fontfunctions.measure = (MeasureFn)fontglyph_measure;
         textsprite->fontfunctions.measure_char = (MeasureCharFn)fontglyph_measure_char;
+        textsprite->fontfunctions.measure_line_height = (measureLineHeight)fontglyph_measure_line_height;
         textsprite->fontfunctions.draw_text = (DrawTextFn)fontglyph_draw_text;
         textsprite->fontfunctions.animate = (AnimateFn)fontglyph_animate;
         textsprite->fontfunctions.map_codepoints = (MapCodepointsFn)fontglyph_map_codepoints;
@@ -494,9 +498,11 @@ static void textsprite_matrix_calculate(TextSprite textsprite, PVRContext pvrctx
 
 
 void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
-    Grapheme grapheme = {.code = 0, .size = 0};
-    FontLineInfo lineinfo = {
-        .line_char_count = 0, .last_char_width = 0.0f, .last_char_height = 0.0f, .previous_codepoint = 0x0000, .space_width = -1.0f
+    Grapheme grapheme = {
+        .code = 0, .size = 0
+    };
+    FontCharInfo char_info = {
+        .line_char_count = 0, .last_char_width = 0.0f, .last_char_height = 0.0f, .previous_codepoint = 0x0000
     };
 
     if (!textsprite->modified_string && !textsprite->modified_coords) return;
@@ -534,14 +540,17 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
     size_t text_length = strlen(text);
     if (textsprite->modified_string) {
         textsprite->fontfunctions.map_codepoints(textsprite->font, text, 0, text_length);
-        textsprite->fontfunctions.measure(textsprite->font, &textsprite->fontparams, text, 0, text_length);
     }
 
-    // step 1: count the paragraphs
-    int32_t line_count = MATH2D_MAX_INT32;
-    if (textsprite->max_lines > 0) {
-        line_count = string_occurrences_of_char(text, '\n') + 1;
-        if (line_count > textsprite->max_lines) line_count = textsprite->max_lines;
+    // step 1: count amount of required paragraphs
+    float line_height = textsprite->fontfunctions.measure_line_height(textsprite->font, textsprite->fontparams.height);
+    float max_height;
+    if (textsprite->max_lines > 0 || textsprite->max_height >= 0.0f) {
+        float limit1 = textsprite->max_lines < 0 ? FLOAT_Inf : (line_height * textsprite->max_lines);
+        float limit2 = textsprite->max_height < 0.0f ? FLOAT_Inf : textsprite->max_height;
+        max_height = math2d_min_float(limit1, limit2);
+    } else {
+        max_height = FLOAT_Inf;
     }
 
     // step 2: build paragraph info array and store in paragraph info offset the paragraph width
@@ -552,16 +561,11 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
     int32_t index_last_detected_break = 0;
     bool last_break_was_dotcommatab = true;
     float calculated_text_height = 0.0f;
-    float max_height = textsprite->max_height < 0.0f ? FLOAT_Inf : textsprite->max_height;
     float max_width = textsprite->max_width < 0.0f ? FLOAT_Inf : textsprite->max_width;
+    float max_line_width = 0.0f;
     int32_t last_known_break_index = 0;
     int32_t loose_index = 0;
     float last_known_break_width = 0.0f;
-    float border_size = 0.0f;
-
-    if (textsprite->fontparams.border_enable && textsprite->fontparams.border_size > 0.0f && textsprite->fontparams.border_color[3] > 0.0f) {
-        border_size = textsprite->fontparams.border_size;
-    }
 
     while (true) {
         bool eof_reached = !string_get_character_codepoint(text, index, text_length, &grapheme);
@@ -585,11 +589,14 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
             index_last_detected_break = index_current_line = new_index;
             last_break_was_dotcommatab = true;
 
-            calculated_text_height += lineinfo.last_char_height + textsprite->fontparams.paragraph_space;
-            if ((calculated_text_height + border_size) >= max_height) break;
+            float line_width = accumulated_width + char_info.last_char_width_end;
+            if (line_width >= max_line_width) max_line_width = line_width;
 
-            lineinfo.line_char_count = 0;
-            lineinfo.previous_codepoint = 0x0000;
+            calculated_text_height += line_height;
+            if (calculated_text_height >= max_height) break;
+
+            char_info.line_char_count = 0;
+            char_info.previous_codepoint = 0x0000;
             index_previous = index;
             index = new_index;
             accumulated_width = 0.0f;
@@ -600,15 +607,21 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
             continue;
         }
 
+        if (grapheme.code == FONTGLYPH_CARRIAGERETURN) {
+            index += grapheme.size;
+            continue;
+        }
+
         // measure char width
-        textsprite->fontfunctions.measure_char(textsprite->font, grapheme.code, textsprite->fontparams.height, &lineinfo);
+        textsprite->fontfunctions.measure_char(textsprite->font, grapheme.code, textsprite->fontparams.height, &char_info);
 
         // check if the current codepoint is breakable
         bool current_is_break = false;
         int32_t break_in_index = -1;
         int32_t break_char_count = 1;
         uint32_t break_codepoint = grapheme.code;
-        float break_width = lineinfo.last_char_width;
+        float break_width_end = char_info.last_char_width_end;
+        float break_width = char_info.last_char_width;
 
         switch (grapheme.code) {
             case FONTGLYPH_SPACE:
@@ -632,9 +645,9 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
                 break;
         }
 
-        accumulated_width += lineinfo.last_char_width;
+        accumulated_width += char_info.last_char_width;
 
-        if ((accumulated_width + border_size) > max_width) {
+        if (accumulated_width > max_width) {
             if (current_is_break) {
                 break_in_index = index;
                 break_char_count = 0;
@@ -675,14 +688,17 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
                 }
             );
 
-            calculated_text_height += lineinfo.last_char_height + textsprite->fontparams.paragraph_space;
-            if ((calculated_text_height + border_size) >= max_height) break;
+            float line_width = accumulated_width + break_width_end;
+            if (line_width >= max_line_width) max_line_width = line_width;
+
+            calculated_text_height += line_height;
+            if (calculated_text_height >= max_height) break;
 
             index_last_detected_break = index_current_line = break_in_index;
             last_break_was_dotcommatab = false;
 
-            lineinfo.line_char_count = break_char_count;
-            lineinfo.previous_codepoint = break_codepoint;
+            char_info.line_char_count = break_char_count;
+            char_info.previous_codepoint = break_codepoint;
             accumulated_width = break_width;
             last_known_break_index = break_in_index;
             last_known_break_width = -1.0f;
@@ -692,18 +708,9 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
         index += grapheme.size;
     }
 
-    if (arraylist_size(textsprite->paragraph_array) > line_count) {
-        arraylist_cut_size(textsprite->paragraph_array, line_count);
-    }
-
-    // step 3: find the longest/wide paragraph
-    float max_line_width = 0.0f;
+    // step 3: align paragraphs
     bool align_to_start = textsprite->paragraph_align == ALIGN_START;
     bool align_to_center = textsprite->paragraph_align == ALIGN_CENTER;
-
-    foreach (ParagraphInfo*, paragraphinfo, ARRAYLIST_ITERATOR, textsprite->paragraph_array) {
-        if (paragraphinfo->offset > max_line_width) max_line_width = paragraphinfo->offset;
-    }
 
     if (max_line_width == 0.0f || align_to_start) {
         foreach (ParagraphInfo*, paragraphinfo, ARRAYLIST_ITERATOR, textsprite->paragraph_array) {
@@ -724,8 +731,8 @@ void textsprite_calculate_paragraph_alignment(TextSprite textsprite) {
     }
 
     textsprite->modified_string = false;
-    textsprite->last_draw_width = max_line_width + border_size;
-    textsprite->last_draw_height = calculated_text_height + border_size;
+    textsprite->last_draw_width = max_line_width;
+    textsprite->last_draw_height = calculated_text_height;
 }
 
 
@@ -989,16 +996,20 @@ static void textsprite_draw_internal(TextSprite textsprite, PVRContext pvrctx) {
     } else {
         // paragraph by paragraph draw
         float y = textsprite->last_draw_y;
-        float line_height = textsprite->fontparams.height + textsprite->fontparams.paragraph_space;
+        float line_height_default = textsprite->fontparams.height + textsprite->fontparams.paragraph_space;
 
         foreach (ParagraphInfo*, paragraphinfo, ARRAYLIST_ITERATOR, textsprite->paragraph_array) {
+            float line_height;
             if (paragraphinfo->length > 0) {
-                textsprite->fontfunctions.draw_text(
+                line_height = textsprite->fontfunctions.draw_text(
                     textsprite->font, pvrctx, &textsprite->fontparams,
                     textsprite->last_draw_x + paragraphinfo->offset, y,
                     paragraphinfo->index, (size_t)paragraphinfo->length, text
                 );
+            } else {
+                line_height = line_height_default;
             }
+
             y += line_height;
         }
     }

@@ -126,15 +126,16 @@ public class FontType : IFont {
     }
 
 
-    public float Measure(ref FontParams @params, string text, int text_index, int text_length) {
+    public void Measure(ref FontParams @params, string text, int text_index, int text_length, ref FontLinesInfo info) {
         float scale = @params.height / FontType.GLYPHS_HEIGHT;
         int text_end_index = text_index + text_length;
-
-        float max_width = 0;
-        float width = 0;
+        float max_width = 0f;
+        float width = 0f;
         int index = text_index;
         int previous_codepoint = 0;
         int line_chars = 0;
+        int lines = 1;
+        int last_glyph_width_correction = 0;
         Grapheme grapheme = new Grapheme();
 
         while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
@@ -151,9 +152,11 @@ public class FontType : IFont {
 
             if (grapheme.code == FontGlyph.LINEFEED) {
                 if (width > max_width) max_width = width;
-                width = 0;
+                width = 0f;
                 previous_codepoint = grapheme.code;
                 line_chars = 0;
+                lines++;
+                last_glyph_width_correction = 0;
                 continue;
             }
 
@@ -166,14 +169,15 @@ public class FontType : IFont {
                     if (grapheme.code == FontGlyph.TAB) {
                         int filler = FontGlyph.InternalCalcTabstop(line_chars);
                         if (filler > 0) {
-                            width += this.space_width * filler * scale;
+                            width += this.space_width * filler;
                             line_chars += filler;
                         }
                     } else {
                         // space, hard space or unknown characters
-                        width += this.space_width * scale;
+                        width += this.space_width;
                         line_chars++;
                     }
+                    last_glyph_width_correction = 0;
                     continue;
                 } else {
                     fontchardata = this.atlas_secondary.map.char_array[map_index];
@@ -182,25 +186,29 @@ public class FontType : IFont {
                 fontchardata = this.atlas_primary.map.char_array[map_index];
             }
 
+            int kerning_x = 0;
             if (previous_codepoint != 0x0000) {
                 // compute kerning
                 for (int i = 0 ; i < fontchardata.kernings_size ; i++) {
                     if (fontchardata.kernings[i].codepoint == previous_codepoint) {
-                        width += fontchardata.kernings[i].x * scale;
+                        kerning_x = fontchardata.kernings[i].x;
                         break;
                     }
                 }
             }
 
-            width += fontchardata.advancex * scale;
+            last_glyph_width_correction = fontchardata.width + fontchardata.offset_x - fontchardata.advancex + kerning_x;
+            width += fontchardata.advancex + kerning_x;
             previous_codepoint = grapheme.code;
             line_chars++;
         }
 
-        return Math.Max(width, max_width);
+        float line_height = MeasureLineHeight(@params.height);
+        info.max_width = (Math.Max(width, max_width) + last_glyph_width_correction) * scale;
+        info.total_height = (line_height * lines) + (@params.paragraph_space * (lines - 1));
     }
 
-    public void MeasureChar(int codepoint, float height, ref FontLineInfo lineinfo) {
+    public void MeasureChar(int codepoint, float height, ref FontCharInfo info) {
         float scale = height / FontType.GLYPHS_HEIGHT;
 
         //override hard-spaces with white-spaces
@@ -213,18 +221,19 @@ public class FontType : IFont {
             map_index = FontType.InternalGetFontchardata(this.atlas_secondary, codepoint);
             if (map_index < 0) {
                 if (codepoint == FontGlyph.TAB) {
-                    int filler = FontGlyph.InternalCalcTabstop(lineinfo.line_char_count);
+                    int filler = FontGlyph.InternalCalcTabstop(info.line_char_count);
                     if (filler > 0) {
-                        lineinfo.last_char_width = this.space_width * filler * scale;
-                        lineinfo.last_char_height = height;
-                        lineinfo.line_char_count += filler;
+                        info.last_char_width = this.space_width * filler;
+                        info.line_char_count += filler;
                     }
                 } else {
                     // space, hard space or unknown characters
-                    lineinfo.last_char_width = this.space_width * scale;
-                    lineinfo.last_char_height = height;
-                    lineinfo.line_char_count++;
+                    info.last_char_width = this.space_width;
+                    info.line_char_count++;
                 }
+                info.last_char_width *= scale;
+                info.last_char_height = height;
+                info.last_char_width_end = 0f;
                 return;
             } else {
                 fontchardata = this.atlas_secondary.map.char_array[map_index];
@@ -233,20 +242,33 @@ public class FontType : IFont {
             fontchardata = this.atlas_primary.map.char_array[map_index];
         }
 
-        if (lineinfo.previous_codepoint != 0x0000) {
+        int kerning_x = 0;
+        if (info.previous_codepoint != 0x0000) {
             // compute kerning
             for (int i = 0 ; i < fontchardata.kernings_size ; i++) {
-                if (fontchardata.kernings[i].codepoint == lineinfo.previous_codepoint) {
-                    lineinfo.last_char_width = fontchardata.kernings[i].x * scale;
+                if (fontchardata.kernings[i].codepoint == info.previous_codepoint) {
+                    kerning_x = fontchardata.kernings[i].x;
                     break;
                 }
             }
         }
 
-        lineinfo.last_char_width = fontchardata.advancex * scale;
-        lineinfo.last_char_height = fontchardata.advancey * scale;
-        lineinfo.previous_codepoint = codepoint;
-        lineinfo.line_char_count++;
+        info.last_char_width = (fontchardata.advancex + kerning_x) * scale;
+        info.last_char_height = fontchardata.advancey * scale;
+        info.last_char_width_end = (fontchardata.width + fontchardata.offset_x - fontchardata.advancex + kerning_x) * scale;
+        info.previous_codepoint = codepoint;
+        info.line_char_count++;
+    }
+
+    public float MeasureLineHeight(float height) {
+        float line_height;
+        if (this.atlas_primary.map != null)
+            line_height = this.atlas_primary.map.line_height;
+        else
+            line_height = this.atlas_secondary.map.line_height;
+
+        float scale = height / FontType.GLYPHS_HEIGHT;
+        return Math.Max(height, (height * 2f) - (line_height * scale));
     }
 
     public float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text) {
@@ -257,7 +279,8 @@ public class FontType : IFont {
         float outline_size = @params.border_size * 2f;
         float scale_glyph = @params.height / FontType.GLYPHS_HEIGHT;
         int text_end_index = text_index + text_length;
-        float ascender_glyph = (this.atlas_primary.map ?? this.atlas_secondary.map).ascender * scale_glyph;
+        float line_height = MeasureLineHeight(@params.height);
+        float ascender = (this.atlas_primary.map ?? this.atlas_secondary.map).ascender;
 
 #if SDF_FONT
         float scale_outline = @params.height / FontType.GLYPHS_OUTLINE_HEIGHT;
@@ -275,9 +298,9 @@ public class FontType : IFont {
 #endif
 
         float draw_glyph_x = 0f;
-        float draw_glyph_y = -ascender_glyph;
-        float max_draw_y = 0f;
+        float draw_glyph_y = ascender;
         int line_chars = 0;
+        int lines = 1;
 
         int index = text_index;
         int previous_codepoint = 0x0000;
@@ -288,7 +311,6 @@ public class FontType : IFont {
         pvrctx.SetVertexAlpha(@params.tint_color[3]);
         pvrctx.SetGlobalOffsetColor(PVRContext.DEFAULT_OFFSET_COLOR);
         pvrctx.SetVertexAntialiasing(PVRFlag.DEFAULT);
-
 
         // count the amount of glyph required
         while (index < text_end_index && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
@@ -329,9 +351,10 @@ public class FontType : IFont {
 
             if (grapheme.code == FontGlyph.LINEFEED) {
                 draw_glyph_x = 0f;
-                draw_glyph_y += @params.height + @params.paragraph_space - ascender_glyph;
+                draw_glyph_y += line_height + @params.paragraph_space;
                 previous_codepoint = grapheme.code;
                 line_chars = 0;
+                lines++;
                 continue;
             }
 
@@ -350,12 +373,12 @@ public class FontType : IFont {
                 if (grapheme.code == FontGlyph.TAB) {
                     int filler = FontGlyph.InternalCalcTabstop(line_chars);
                     if (filler > 0) {
-                        draw_glyph_x += this.space_width * filler * scale_glyph;
+                        draw_glyph_x += this.space_width * filler;
                         line_chars += filler;
                     }
                 } else {
                     // space, hard space or unknown characters
-                    draw_glyph_x += this.space_width * scale_glyph;
+                    draw_glyph_x += this.space_width;
                     line_chars++;
                 }
 
@@ -369,7 +392,7 @@ public class FontType : IFont {
             if (previous_codepoint != 0x0000) {
                 for (int i = 0 ; i < fontchardata_glyph.kernings_size ; i++) {
                     if (fontchardata_glyph.kernings[i].codepoint == previous_codepoint) {
-                        draw_glyph_x += fontchardata_glyph.kernings[i].x * scale_glyph;
+                        draw_glyph_x += fontchardata_glyph.kernings[i].x;
                         break;
                     }
                 }
@@ -377,8 +400,8 @@ public class FontType : IFont {
 
             if (fontchardata_glyph.has_atlas_entry) {
                 // compute draw location and size
-                float dx = x + draw_glyph_x + (fontchardata_glyph.offset_x * scale_glyph);
-                float dy = y + draw_glyph_y + (fontchardata_glyph.offset_y * scale_glyph);
+                float dx = x + ((draw_glyph_x + fontchardata_glyph.offset_x) * scale_glyph);
+                float dy = y + ((draw_glyph_y + fontchardata_glyph.offset_y) * scale_glyph);
                 float dw = fontchardata_glyph.width * scale_glyph;
                 float dh = fontchardata_glyph.height * scale_glyph;
 
@@ -427,12 +450,9 @@ public class FontType : IFont {
                     dx, dy, dw, dh
                 );
                 added++;
-
-                float ddy = draw_glyph_y + dh;
-                if (ddy > max_draw_y) max_draw_y = ddy;
             }
 
-            draw_glyph_x += fontchardata_glyph.advancex * scale_glyph;
+            draw_glyph_x += fontchardata_glyph.advancex;
             line_chars++;
         }
 
@@ -460,7 +480,7 @@ public class FontType : IFont {
         }
 
         pvrctx.Restore();
-        return max_draw_y;
+        return (line_height * lines) + (@params.paragraph_space * (lines - 1));
     }
 
     public void MapCodepoints(string text, int text_index, int text_length) {
@@ -533,7 +553,7 @@ public class FontType : IFont {
         //if (this.font_ptr) throw new Error("The font is already initialized");
 
         byte[] font = FS.ReadArrayBuffer(src);
-        if (font == null) return false;
+        if (font == null) return true;
 
         mutex.Lock(FontType.fontatlas_mutex);
 
@@ -601,7 +621,7 @@ public class FontType : IFont {
 
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
 
-        // FIXME: calling this method also deallocates the vram texture, ¿is this a gpu driver bug?
+        // FIXME: calling this method also deallocates the vram texture, ï¿½is this a gpu driver bug?
         // now deallocate texture data
         //fontcharmap.DestroyTextureOnly();
 

@@ -2050,7 +2050,7 @@ async function dialogue_internal_parse_font(node, fonts) {
 
     let font = {
         name: name,
-        fontholder: fontholder_init2(instance, is_atlas, 18.0, color_by_addition)
+        fontholder: fontholder_init2(instance, is_atlas, color_by_addition)
     };
 
     arraylist_add(fonts, font);

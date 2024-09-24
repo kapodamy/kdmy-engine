@@ -21,11 +21,12 @@
  * @typedef {object} FontCharMap
  * @property {FontCharData[]} char_array
  * @property {number} char_array_size
- * @property {Uint8Array} texture 8bpp grayscale texture
+ * @property {Uint8Array} texture
  * @property {number} texture_width
  * @property {number} texture_height
  * @property {number} texture_byte_size
  * @property {number} ascender
+ * @property {number} line_height
  * @property {number} __ptr
  */
 

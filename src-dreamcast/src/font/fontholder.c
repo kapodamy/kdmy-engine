@@ -6,7 +6,7 @@
 #include "stringutils.h"
 
 
-FontHolder fontholder_init(const char* src, float default_size_px, const char* glyph_suffix, bool color_by_addition) {
+FontHolder fontholder_init(const char* src, const char* glyph_suffix, bool color_by_addition) {
     void* font_instance;
     bool is_altas_type = string_lowercase_ends_with(src, ".xml");
 
@@ -15,17 +15,16 @@ FontHolder fontholder_init(const char* src, float default_size_px, const char* g
     else
         font_instance = fonttype_init(src);
 
-    return fontholder_init2(font_instance, is_altas_type, default_size_px, color_by_addition);
+    return fontholder_init2(font_instance, is_altas_type, color_by_addition);
 }
 
-FontHolder fontholder_init2(void* font_instance, bool is_altas_type, float default_size_px, bool color_by_addition) {
+FontHolder fontholder_init2(void* font_instance, bool is_altas_type, bool color_by_addition) {
     FontHolder fontholder = malloc_chk(sizeof(struct FontHolder_s));
     malloc_assert(fontholder, FontHolder);
 
     *fontholder = (struct FontHolder_s){
         .font = font_instance,
         .font_from_atlas = is_altas_type,
-        .font_size = default_size_px > 0.0f ? default_size_px : FONTHOLDER_DEFAULT_SIZE_PIXELS,
         .font_color_by_addition = color_by_addition
     };
 

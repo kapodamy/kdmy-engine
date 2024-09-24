@@ -330,10 +330,11 @@ async function settingsmenu_main() {
         return;
     }
 
+    // (JS only)
     let submenus_font = null;
     if (await fs_file_exists(SETTINGSMENU_MENU_COMMON.parameters.font)) {
         // little improvement, keep loaded the "pixel.otf" font to improve loading times
-        submenus_font = await fontholder_init(SETTINGSMENU_MENU_COMMON.parameters.font, -1.0, null, false);
+        submenus_font = await fontholder_init(SETTINGSMENU_MENU_COMMON.parameters.font, null, false);
     }
 
     let animlist = await animlist_init("/assets/common/anims/settings-menu.xml");
@@ -484,7 +485,7 @@ async function settingsmenu_main() {
     layout_destroy(layout);
     modding_destroy(modding);
     gamepad_destroy(gamepad);
-    if (submenus_font) fontholder_destroy(submenus_font);
+    if (submenus_font) fontholder_destroy(submenus_font);// (JS only)
 
     settingsmenu_is_running = false;
 

@@ -2473,7 +2473,7 @@ async function layout_parse_fonts(unparsed_root, layout_context) {
             }
 
             if (!font) throw new Error("missing or invalid font: " + path);
-            let fontholder = fontholder_init2(font, is_atlas, -1, glyph_color_by_addition);
+            let fontholder = fontholder_init2(font, is_atlas, glyph_color_by_addition);
 
             arraylist_add(fonts_arraylist, { name: strdup(name), fontholder: fontholder });
         } catch (e) {

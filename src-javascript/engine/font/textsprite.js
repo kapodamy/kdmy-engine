@@ -90,6 +90,7 @@ function textsprite_init(font, font_is_truetype, color_by_addition, size, rbg8_c
         fontfunctions: {
             measure: null,
             measure_char: null,
+            measure_line_height: null,
             draw_text: null,
             animate: null,
             map_codepoints: null
@@ -105,12 +106,14 @@ function textsprite_init(font, font_is_truetype, color_by_addition, size, rbg8_c
     if (font_is_truetype) {
         textsprite.fontfunctions.measure = fonttype_measure;
         textsprite.fontfunctions.measure_char = fonttype_measure_char;
+        textsprite.fontfunctions.measure_line_height = fonttype_measure_line_height;
         textsprite.fontfunctions.draw_text = fonttype_draw_text;
         textsprite.fontfunctions.animate = fonttype_animate;
         textsprite.fontfunctions.map_codepoints = fonttype_map_codepoints;
     } else {
         textsprite.fontfunctions.measure = fontglyph_measure;
         textsprite.fontfunctions.measure_char = fontglyph_measure_char;
+        textsprite.fontfunctions.measure_line_height = fontglyph_measure_line_height;
         textsprite.fontfunctions.draw_text = fontglyph_draw_text;
         textsprite.fontfunctions.animate = fontglyph_animate;
         textsprite.fontfunctions.map_codepoints = fontglyph_map_codepoints;
@@ -374,8 +377,12 @@ function textsprite_matrix_calculate(textsprite, pvrctx) {
 
 
 function textsprite_calculate_paragraph_alignment(textsprite) {
-    const grapheme = { code: 0, size: 0 };
-    const lineinfo = { line_char_count: 0, last_char_width: 0.0, previous_codepoint: 0x0000, space_width: -1.0 };
+    const grapheme = {
+        code: 0, size: 0
+    };
+    const char_info = {
+        line_char_count: 0, last_char_width: 0.0, previous_codepoint: 0x0000
+    };
 
     if (!textsprite.modified_string && !textsprite.modified_coords) return;
 
@@ -412,14 +419,17 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
     let text_length = text.length;
     if (textsprite.modified_string) {
         textsprite.fontfunctions.map_codepoints(textsprite.font, text, 0, text_length);
-        textsprite.fontfunctions.measure(textsprite.font, textsprite.fontparams, text, 0, text_length);
     }
 
-    // step 1: count the paragraphs
-    let line_count = MATH2D_MAX_INT32;
-    if (textsprite.max_lines > 0) {
-        line_count = string_occurrences_of_string(text, "\n") + 1;
-        if (line_count > textsprite.max_lines) line_count = textsprite.max_lines;
+    // step 1: count amount of required paragraphs
+    let line_height = textsprite.fontfunctions.measure_line_height(textsprite.font, textsprite.fontparams.height);
+    let max_height;
+    if (textsprite.max_lines > 0 || textsprite.max_height >= 0.0) {
+        let limit1 = textsprite.max_lines < 0 ? Infinity : (line_height * textsprite.max_lines);
+        let limit2 = textsprite.max_height < 0.0 ? Infinity : textsprite.max_height;
+        max_height = Math.min(limit1, limit2);
+    } else {
+        max_height = Infinity;
     }
 
     // step 2: build paragraph info array and store in paragraph info offset the paragraph width
@@ -430,16 +440,11 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
     let index_last_detected_break = 0;
     let last_break_was_dotcommatab = false;
     let calculated_text_height = 0.0;
-    let max_height = textsprite.max_height < 0.0 ? Infinity : textsprite.max_height;
     let max_width = textsprite.max_width < 0.0 ? Infinity : textsprite.max_width;
+    let max_line_width = 0.0;
     let last_known_break_index = 0;
     let loose_index = 0;
     let last_known_break_width = 0.0;
-    let border_size = 0.0;
-
-    if (textsprite.fontparams.border_enable && textsprite.fontparams.border_size > 0.0 && textsprite.fontparams.border_color[3] > 0.0) {
-        border_size = textsprite.fontparams.border_size;
-    }
 
     while (true) {
         let eof_reached = !string_get_character_codepoint(text, index, grapheme);
@@ -461,11 +466,14 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             index_last_detected_break = index_current_line = new_index;
             last_break_was_dotcommatab = true;
 
-            calculated_text_height += lineinfo.last_char_height + textsprite.fontparams.paragraph_space;
-            if ((calculated_text_height + border_size) >= max_height) break;
+            let line_width = accumulated_width + char_info.last_char_width_end;
+            if (line_width >= max_line_width) max_line_width = line_width;
 
-            lineinfo.line_char_count = 0;
-            lineinfo.previous_codepoint = 0x0000;
+            calculated_text_height += line_height;
+            if (calculated_text_height >= max_height) break;
+
+            char_info.line_char_count = 0;
+            char_info.previous_codepoint = 0x0000;
             index_previous = index;
             index = new_index;
             accumulated_width = 0.0;
@@ -476,15 +484,21 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
             continue;
         }
 
+        if (grapheme.code == FONTGLYPH_CARRIAGERETURN) {
+            index += grapheme.size;
+            continue;
+        }
+
         // measure char width
-        textsprite.fontfunctions.measure_char(textsprite.font, grapheme.code, textsprite.fontparams.height, lineinfo);
+        textsprite.fontfunctions.measure_char(textsprite.font, grapheme.code, textsprite.fontparams.height, char_info);
 
         // check if the current codepoint is breakable
         let current_is_break = false;
         let break_in_index = -1;
         let break_char_count = 1;
         let break_codepoint = grapheme.code;
-        let break_width = lineinfo.last_char_width;
+        let break_width_end = char_info.last_char_width_end;
+        let break_width = char_info.last_char_width;
 
         switch (grapheme.code) {
             case FONTGLYPH_SPACE:
@@ -508,9 +522,9 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
                 break;
         }
 
-        accumulated_width += lineinfo.last_char_width;
+        accumulated_width += char_info.last_char_width;
 
-        if ((accumulated_width + border_size) > max_width) {
+        if (accumulated_width > max_width) {
             if (current_is_break) {
                 break_in_index = index;
                 break_char_count = 0;
@@ -548,14 +562,17 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
                 offset: accumulated_width// temporal
             });
 
-            calculated_text_height += lineinfo.last_char_height + textsprite.fontparams.paragraph_space;
-            if ((calculated_text_height + border_size) >= max_height) break;
+            let line_width = accumulated_width + break_width_end;
+            if (line_width >= max_line_width) max_line_width = line_width;
+
+            calculated_text_height += line_height;
+            if (calculated_text_height >= max_height) break;
 
             index_last_detected_break = index_current_line = break_in_index;
             last_break_was_dotcommatab = false;
 
-            lineinfo.line_char_count = break_char_count;
-            lineinfo.previous_codepoint = break_codepoint;
+            char_info.line_char_count = break_char_count;
+            char_info.previous_codepoint = break_codepoint;
             accumulated_width = break_width;
             last_known_break_index = break_in_index;
             last_known_break_width = -1.0;
@@ -565,18 +582,9 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
         index += grapheme.size;
     }
 
-    if (arraylist_size(textsprite.paragraph_array) > line_count) {
-        arraylist_cut_size(textsprite.paragraph_array, line_count);
-    }
-
-    // step 3: find the longest/wide paragraph
-    let max_line_width = 0.0;
+    // step 3: align paragraphs
     let align_to_start = textsprite.paragraph_align == ALIGN_START;
     let align_to_center = textsprite.paragraph_align == ALIGN_CENTER;
-
-    for (let paragraphinfo of arraylist_iterate4(textsprite.paragraph_array)) {
-        if (paragraphinfo.offset > max_line_width) max_line_width = paragraphinfo.offset;
-    }
 
     if (max_line_width == 0.0 || align_to_start) {
         for (let paragraphinfo of arraylist_iterate4(textsprite.paragraph_array)) {
@@ -597,8 +605,8 @@ function textsprite_calculate_paragraph_alignment(textsprite) {
     }
 
     textsprite.modified_string = false;
-    textsprite.last_draw_width = max_line_width + border_size;
-    textsprite.last_draw_height = calculated_text_height + border_size;
+    textsprite.last_draw_width = max_line_width;
+    textsprite.last_draw_height = calculated_text_height;
 }
 
 
@@ -865,16 +873,20 @@ function textsprite_draw_internal(textsprite, pvrctx) {
     } else {
         // paragraph by paragraph draw
         let y = textsprite.last_draw_y;
-        let line_height = textsprite.fontparams.height + textsprite.fontparams.paragraph_space;
+        let line_height_default = textsprite.fontparams.height + textsprite.fontparams.paragraph_space;
 
         for (let paragraphinfo of arraylist_iterate4(textsprite.paragraph_array)) {
+            let line_height;
             if (paragraphinfo.length > 0) {
-                textsprite.fontfunctions.draw_text(
+                line_height = textsprite.fontfunctions.draw_text(
                     textsprite.font, pvrctx, textsprite.fontparams,
                     textsprite.last_draw_x + paragraphinfo.offset, y,
                     paragraphinfo.index, paragraphinfo.length, text
                 );
+            } else {
+                line_height = line_height_default;
             }
+
             y += line_height;
         }
     }

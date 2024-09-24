@@ -62,6 +62,7 @@ var ModuleFontAtlas = (() => {//@ts-ignore
             let fontcharmap_texture_height = dataReader.getUint16();
             let fontcharmap_texture_byte_size = dataReader.getInt32();
             let fontcharmap_ascender = dataReader.getInt16();
+            let fontcharmap_line_height = dataReader.getInt16();
             dataReader.getPointer();
             let texture = HEAPU8.subarray(fontcharmap_texture, fontcharmap_texture + fontcharmap_texture_byte_size);
             let char_array = malloc_for_array(fontcharmap_char_array_size);
@@ -71,8 +72,8 @@ var ModuleFontAtlas = (() => {//@ts-ignore
                 let field_offset_y = fontcharmap_char_array.getInt16();
                 let field_advancex = fontcharmap_char_array.getInt16();
                 let field_advancey = fontcharmap_char_array.getInt16();
-                let field_width = fontcharmap_char_array.getInt16();
-                let field_height = fontcharmap_char_array.getInt16();
+                let field_width = fontcharmap_char_array.getUint16();
+                let field_height = fontcharmap_char_array.getUint16();
                 let field_kernings = fontcharmap_char_array.getPointer();
                 let field_kernings_size = fontcharmap_char_array.getInt32();
                 let atlas_entry_x = fontcharmap_char_array.getUint16();
@@ -112,6 +113,7 @@ var ModuleFontAtlas = (() => {//@ts-ignore
                 texture_height: fontcharmap_texture_height,
                 texture_byte_size: fontcharmap_texture_byte_size,
                 ascender: fontcharmap_ascender,
+                line_height: fontcharmap_line_height,
                 __ptr: ptr
             }
         }
@@ -421,17 +423,18 @@ var ModuleFontAtlas = (() => {//@ts-ignore
         }
         function getWasmImports() {
             return {
-                a: wasmImports
+                env: wasmImports,
+                wasi_snapshot_preview1: wasmImports
             }
         }
         function createWasm() {
             var info = getWasmImports();
             function receiveInstance(instance, module) {
                 wasmExports = instance.exports;
-                wasmMemory = wasmExports["v"];
+                wasmMemory = wasmExports["memory"];
                 updateMemoryViews();
-                wasmTable = wasmExports["H"];
-                addOnInit(wasmExports["w"]);
+                wasmTable = wasmExports["__indirect_function_table"];
+                addOnInit(wasmExports["__wasm_call_ctors"]);
                 removeRunDependency("wasm-instantiate");
                 return wasmExports
             }
@@ -2847,6 +2850,16 @@ var ModuleFontAtlas = (() => {//@ts-ignore
                 return -e.errno
             }
         }
+        function ___syscall_lstat64(path, buf) {
+            try {
+                path = SYSCALLS.getStr(path);
+                return SYSCALLS.doStat(FS.lstat, path, buf)
+            } catch (e) {
+                if (typeof FS == "undefined" || !(e.name === "ErrnoError"))
+                    throw e;
+                return -e.errno
+            }
+        }
         function ___syscall_newfstatat(dirfd, path, buf, flags) {
             try {
                 path = SYSCALLS.getStr(path);
@@ -3085,44 +3098,47 @@ var ModuleFontAtlas = (() => {//@ts-ignore
         FS.createPreloadedFile = FS_createPreloadedFile;
         FS.staticInit();
         var wasmImports = {
-            a: ___assert_fail,
-            e: ___syscall_fcntl64,
-            d: ___syscall_fstat64,
-            s: ___syscall_newfstatat,
-            p: ___syscall_openat,
-            t: ___syscall_stat64,
-            f: __emscripten_memcpy_js,
-            m: __emscripten_throw_longjmp,
-            j: __mmap_js,
-            l: __munmap_js,
-            n: _emscripten_resize_heap,
-            q: _environ_get,
-            r: _environ_sizes_get,
-            g: _fd_close,
-            o: _fd_read,
-            c: _fd_write,
-            k: invoke_iii,
-            h: invoke_iiii,
-            i: invoke_iiiii,
-            b: invoke_v,
-            u: invoke_viiii
+            __assert_fail: ___assert_fail,
+            __syscall_fcntl64: ___syscall_fcntl64,
+            __syscall_fstat64: ___syscall_fstat64,
+            __syscall_lstat64: ___syscall_lstat64,
+            __syscall_newfstatat: ___syscall_newfstatat,
+            __syscall_openat: ___syscall_openat,
+            __syscall_stat64: ___syscall_stat64,
+            _emscripten_memcpy_js: __emscripten_memcpy_js,
+            _emscripten_throw_longjmp: __emscripten_throw_longjmp,
+            _mmap_js: __mmap_js,
+            _munmap_js: __munmap_js,
+            emscripten_resize_heap: _emscripten_resize_heap,
+            environ_get: _environ_get,
+            environ_sizes_get: _environ_sizes_get,
+            fd_close: _fd_close,
+            fd_read: _fd_read,
+            fd_write: _fd_write,
+            invoke_iii: invoke_iii,
+            invoke_iiii: invoke_iiii,
+            invoke_iiiii: invoke_iiiii,
+            invoke_v: invoke_v,
+            invoke_viiii: invoke_viiii
         };
         var wasmExports = createWasm();
-        var ___wasm_call_ctors = () => (___wasm_call_ctors = wasmExports["w"])();
-        var _fontatlas_enable_sdf = Module["_fontatlas_enable_sdf"] = a0 => (_fontatlas_enable_sdf = Module["_fontatlas_enable_sdf"] = wasmExports["x"])(a0);
-        var _fontatlas_init = Module["_fontatlas_init"] = (a0, a1) => (_fontatlas_init = Module["_fontatlas_init"] = wasmExports["y"])(a0, a1);
-        var _malloc = Module["_malloc"] = a0 => (_malloc = Module["_malloc"] = wasmExports["z"])(a0);
-        var _free = Module["_free"] = a0 => (_free = Module["_free"] = wasmExports["A"])(a0);
-        var _fontatlas_destroy_JS = Module["_fontatlas_destroy_JS"] = a0 => (_fontatlas_destroy_JS = Module["_fontatlas_destroy_JS"] = wasmExports["B"])(a0);
-        var _fontatlas_atlas_build = Module["_fontatlas_atlas_build"] = (a0, a1, a2, a3) => (_fontatlas_atlas_build = Module["_fontatlas_atlas_build"] = wasmExports["C"])(a0, a1, a2, a3);
-        var _fontatlas_atlas_destroy_texture_only = Module["_fontatlas_atlas_destroy_texture_only"] = a0 => (_fontatlas_atlas_destroy_texture_only = Module["_fontatlas_atlas_destroy_texture_only"] = wasmExports["D"])(a0);
-        var _fontatlas_atlas_destroy = Module["_fontatlas_atlas_destroy"] = a0 => (_fontatlas_atlas_destroy = Module["_fontatlas_atlas_destroy"] = wasmExports["E"])(a0);
-        var _fontatlas_atlas_build_complete = Module["_fontatlas_atlas_build_complete"] = (a0, a1, a2) => (_fontatlas_atlas_build_complete = Module["_fontatlas_atlas_build_complete"] = wasmExports["F"])(a0, a1, a2);
-        var _fontatlas_get_version = Module["_fontatlas_get_version"] = () => (_fontatlas_get_version = Module["_fontatlas_get_version"] = wasmExports["G"])();
-        var _emscripten_builtin_memalign = (a0, a1) => (_emscripten_builtin_memalign = wasmExports["I"])(a0, a1);
-        var _setThrew = (a0, a1) => (_setThrew = wasmExports["J"])(a0, a1);
-        var __emscripten_stack_restore = a0 => (__emscripten_stack_restore = wasmExports["K"])(a0);
-        var _emscripten_stack_get_current = () => (_emscripten_stack_get_current = wasmExports["L"])();
+        var ___wasm_call_ctors = () => (___wasm_call_ctors = wasmExports["__wasm_call_ctors"])();
+        var _fontatlas_enable_sdf = Module["_fontatlas_enable_sdf"] = a0 => (_fontatlas_enable_sdf = Module["_fontatlas_enable_sdf"] = wasmExports["fontatlas_enable_sdf"])(a0);
+        var _fontatlas_init = Module["_fontatlas_init"] = (a0, a1) => (_fontatlas_init = Module["_fontatlas_init"] = wasmExports["fontatlas_init"])(a0, a1);
+        var _malloc = Module["_malloc"] = a0 => (_malloc = Module["_malloc"] = wasmExports["malloc"])(a0);
+        var _free = Module["_free"] = a0 => (_free = Module["_free"] = wasmExports["free"])(a0);
+        var _fontatlas_destroy_JS = Module["_fontatlas_destroy_JS"] = a0 => (_fontatlas_destroy_JS = Module["_fontatlas_destroy_JS"] = wasmExports["fontatlas_destroy_JS"])(a0);
+        var _fontatlas_atlas_build = Module["_fontatlas_atlas_build"] = (a0, a1, a2, a3) => (_fontatlas_atlas_build = Module["_fontatlas_atlas_build"] = wasmExports["fontatlas_atlas_build"])(a0, a1, a2, a3);
+        var _fontatlas_atlas_destroy_texture_only = Module["_fontatlas_atlas_destroy_texture_only"] = a0 => (_fontatlas_atlas_destroy_texture_only = Module["_fontatlas_atlas_destroy_texture_only"] = wasmExports["fontatlas_atlas_destroy_texture_only"])(a0);
+        var _fontatlas_atlas_destroy = Module["_fontatlas_atlas_destroy"] = a0 => (_fontatlas_atlas_destroy = Module["_fontatlas_atlas_destroy"] = wasmExports["fontatlas_atlas_destroy"])(a0);
+        var _fontatlas_atlas_build_complete = Module["_fontatlas_atlas_build_complete"] = (a0, a1, a2) => (_fontatlas_atlas_build_complete = Module["_fontatlas_atlas_build_complete"] = wasmExports["fontatlas_atlas_build_complete"])(a0, a1, a2);
+        var _fontatlas_get_version = Module["_fontatlas_get_version"] = () => (_fontatlas_get_version = Module["_fontatlas_get_version"] = wasmExports["fontatlas_get_version"])();
+        var _emscripten_builtin_memalign = (a0, a1) => (_emscripten_builtin_memalign = wasmExports["emscripten_builtin_memalign"])(a0, a1);
+        var _setThrew = (a0, a1) => (_setThrew = wasmExports["setThrew"])(a0, a1);
+        var __emscripten_stack_restore = a0 => (__emscripten_stack_restore = wasmExports["_emscripten_stack_restore"])(a0);
+        var __emscripten_stack_alloc = a0 => (__emscripten_stack_alloc = wasmExports["_emscripten_stack_alloc"])(a0);
+        var _emscripten_stack_get_current = () => (_emscripten_stack_get_current = wasmExports["emscripten_stack_get_current"])();
+        var dynCall_jiji = Module["dynCall_jiji"] = (a0, a1, a2, a3, a4) => (dynCall_jiji = Module["dynCall_jiji"] = wasmExports["dynCall_jiji"])(a0, a1, a2, a3, a4);
         function invoke_viiii(index, a1, a2, a3, a4) {
             var sp = stackSave();
             try {

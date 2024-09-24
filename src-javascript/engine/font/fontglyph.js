@@ -1,10 +1,11 @@
 "use strict";
+
 const FONTGLYPH_SPACE = 0x20;
 const FONTGLYPH_HARDSPACE = 0xA0;
 const FONTGLYPH_LINEFEED = 0x0A;
 const FONTGLYPH_TAB = 0x09;
 const FONTGLYPH_CARRIAGERETURN = 0x0D;
-const FONTGLYPH_SPACE_WIDTH_RATIO = 0.9;
+const FONTGLYPH_SPACE_WIDTH_RATIO = 0.625;
 const FONTGLYPH_TABSTOP = 8;
 const FONTGLYPH_LOOKUP_TABLE_LENGTH = 128; // this covers all ascii characters
 
@@ -42,6 +43,8 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
 
         frame_time: 0.0,
         frame_progress: 0.0,
+        space_scale: FONTGLYPH_SPACE_WIDTH_RATIO,
+
         lookup_table: new Array(FONTGLYPH_LOOKUP_TABLE_LENGTH)
     };
 
@@ -118,6 +121,9 @@ function fontglyph_init2(texture, atlas, suffix, allow_animation) {
         }
     }
 
+    // find space width scale (normally only applies to the first frame)
+    fontglyph_internal_calc_space_scale(fontglyph);
+
     return fontglyph;
 }
 
@@ -131,14 +137,14 @@ function fontglyph_destroy(fontglyph) {
 }
 
 
-function fontglyph_measure(fontglyph, params, text, text_index, text_length) {
+function fontglyph_measure(fontglyph, params, text, text_index, text_length, lines_info) {
     const grapheme = { code: 0, size: 0 };
     const text_end_index = text_index + text_length;
 
     let width = 0.0;
     let max_width = 0.0;
     let line_chars = 0;
-    let space_width = fontglyph_internal_find_space_width(fontglyph, params.height);
+    let lines = 1;
 
     for (let i = text_index; i < text_end_index; i++) {
         if (!string_get_character_codepoint(text, i, grapheme)) continue;
@@ -148,6 +154,7 @@ function fontglyph_measure(fontglyph, params, text, text_index, text_length) {
             if (width > max_width) max_width = width;
             width = 0.0;
             line_chars = 0;
+            lines++;
             continue;
         }
 
@@ -172,12 +179,12 @@ function fontglyph_measure(fontglyph, params, text, text_index, text_length) {
             if (grapheme.code == FONTGLYPH_TAB) {
                 let filler = fontglyph_internal_calc_tabstop(line_chars);
                 if (filler > 0) {
-                    width += space_width * filler;
+                    width += fontglyph.space_scale * filler;
                     line_chars += filler;
                 }
             } else {
                 // space, hard space or unknown character
-                width += params.height * FONTGLYPH_SPACE_WIDTH_RATIO;
+                width += params.height * fontglyph.space_scale;
                 line_chars++;
             }
 
@@ -189,17 +196,16 @@ function fontglyph_measure(fontglyph, params, text, text_index, text_length) {
         line_chars++;
     }
 
-    return Math.max(width, max_width);
+    lines_info.max_width = Math.max(width, max_width);
+    lines_info.total_height = (params.height * lines) + (params.paragraph_space * (lines - 1));
 }
 
-function fontglyph_measure_char(fontglyph, codepoint, height, lineinfo) {
-    if (lineinfo.space_width < 0.0) {
-        lineinfo.space_width = fontglyph_internal_find_space_width(fontglyph, height);
-    }
+function fontglyph_measure_char(fontglyph, codepoint, height, char_info) {
+    let info;
 
-    lineinfo.last_char_height = height;
-
-    let info = null;
+    char_info.last_char_height = height;
+    char_info.previous_codepoint = codepoint;
+    char_info.last_char_width_end = 0.0;
 
     L_find_glyph_info: {
         if (codepoint < FONTGLYPH_LOOKUP_TABLE_LENGTH) {
@@ -218,23 +224,28 @@ function fontglyph_measure_char(fontglyph, codepoint, height, lineinfo) {
         }
 
         if (codepoint == FONTGLYPH_TAB) {
-            let filler = fontglyph_internal_calc_tabstop(lineinfo.line_char_count);
+            let filler = fontglyph_internal_calc_tabstop(char_info.line_char_count);
             if (filler > 0) {
-                lineinfo.last_char_width = lineinfo.space_width * filler;
-                lineinfo.line_char_count += filler;
+                char_info.last_char_width = height * fontglyph.space_scale * filler;
+                char_info.line_char_count += filler;
             }
         } else {
             // space, hard space or unknown character
-            lineinfo.last_char_width = height * FONTGLYPH_SPACE_WIDTH_RATIO;
-            lineinfo.line_char_count++;
+            char_info.last_char_width = height * fontglyph.space_scale;
+            char_info.line_char_count++;
         }
 
         return;
     }
 
     let frame = info.frames[info.actual_frame];
-    lineinfo.last_char_width = frame.glyph_width_ratio * height;
-    lineinfo.line_char_count++;
+    char_info.last_char_width = frame.glyph_width_ratio * height;
+    char_info.line_char_count++;
+}
+
+function fontglyph_measure_line_height(fontglyph, height) {
+    void fontglyph;
+    return height;
 }
 
 function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_length, text) {
@@ -249,9 +260,7 @@ function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_l
     let index = text_index;
     let total_glyphs = 0;
     let line_chars = 0;
-
-    // get space glyph width (if present)
-    let space_width = fontglyph_internal_find_space_width(fontglyph, params.height);
+    let lines = 1;
 
     texture_upload_to_pvr(fontglyph.texture);
     pvr_context_save(pvrctx);
@@ -296,6 +305,7 @@ function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_l
             draw_y += params.height + params.paragraph_space;
             draw_x = 0.0;
             line_chars = 0;
+            lines++;
             continue;
         }
 
@@ -317,12 +327,12 @@ function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_l
             if (grapheme.code == FONTGLYPH_TAB) {
                 let filler = fontglyph_internal_calc_tabstop(line_chars);
                 if (filler > 0) {
-                    draw_x += space_width * filler;
+                    draw_x += params.height * fontglyph.space_scale * filler;
                     line_chars += filler;
                 }
             } else {
                 // space, hard space or unknown characters
-                draw_x += params.height * FONTGLYPH_SPACE_WIDTH_RATIO;
+                draw_x += params.height * fontglyph.space_scale;
                 line_chars++;
             }
             continue;
@@ -384,7 +394,8 @@ function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_l
     );
 
     pvr_context_restore(pvrctx);
-    return draw_y + params.height;
+
+    return (params.height * lines) + (params.paragraph_space * (lines - 1));
 }
 
 function fontglyph_animate(fontglyph, elapsed) {
@@ -396,6 +407,8 @@ function fontglyph_animate(fontglyph, elapsed) {
         if (fontglyph.table[i].frames_size < 2) continue;
         fontglyph.table[i].actual_frame = Math.trunc(frame_index % fontglyph.table[i].frames_size);
     }
+
+    fontglyph_internal_calc_space_scale(fontglyph);
 
     fontglyph.frame_progress += elapsed;
     return 0;
@@ -516,14 +529,14 @@ function fontglyph_internal_calc_tabstop(characters_in_the_line) {
     return FONTGLYPH_TABSTOP - space;
 }
 
-function fontglyph_internal_find_space_width(fontglyph, height) {
+function fontglyph_internal_calc_space_scale(fontglyph) {
     for (let i = 0; i < fontglyph.table_size; i++) {
         if (fontglyph.table[i].code == FONTGLYPH_SPACE || fontglyph.table[i].code == FONTGLYPH_HARDSPACE) {
-            let frame = fontglyph.table[i].frames[fontglyph.table[i].actual_frame];
-            return height * frame.glyph_width_ratio;
+            const frame = fontglyph.table[i].frames[fontglyph.table[i].actual_frame];
+            fontglyph.space_scale = frame.glyph_width_ratio;
+            break;
         }
     }
-    return height * FONTGLYPH_SPACE_WIDTH_RATIO;
 }
 
 function fontglyph_internal_table_sort(x, y) {

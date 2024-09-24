@@ -98,7 +98,7 @@ Menu menu_init(MenuManifest menumanifest, float x, float y, float z, float width
 
     FontHolder fontholder = NULL;
     if (params->font) {
-        fontholder = fontholder_init(params->font, params->font_size, params->font_glyph_suffix, params->font_color_by_addition);
+        fontholder = fontholder_init(params->font, params->font_glyph_suffix, params->font_color_by_addition);
         if (!fontholder) {
             logger_error("Missing or invalid font: %s", params->font);
             assert(fontholder);

@@ -38,8 +38,8 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct FT_BBox {
-    readonly FT_Pos xMin, yMin;
-    readonly FT_Pos xMax, yMax;
+    public readonly FT_Pos xMin, yMin;
+    public readonly FT_Pos xMax, yMax;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -48,6 +48,28 @@ internal struct FT_Generic {
     readonly FT_Generic_Finalizer finalizer;
 }
 
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe struct FT_Size_Metrics {
+    public readonly FT_UShort x_ppem;
+    public readonly FT_UShort y_ppem;
+
+    public readonly FT_Fixed x_scale;
+    public readonly FT_Fixed y_scale;
+
+    public readonly FT_Pos ascender;
+    public readonly FT_Pos descender;
+    public readonly FT_Pos height;
+    public readonly FT_Pos max_advance;
+}
+
+
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe struct FT_Size {
+    readonly FT_Face* face;
+    readonly FT_Generic generic;
+    public readonly FT_Size_Metrics metrics;
+    readonly nint @internal;
+}
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct FT_Library { }
@@ -73,7 +95,7 @@ internal unsafe struct FT_Face {
 
     readonly FT_Generic generic;
 
-    readonly FT_BBox bbox;
+    public readonly FT_BBox bbox;
 
     readonly FT_UShort units_per_EM;
     public FT_Short ascender;
@@ -87,6 +109,8 @@ internal unsafe struct FT_Face {
     readonly FT_Short underline_thickness;
 
     public FT_GlyphSlot* glyph;
+
+    public FT_Size* size;
 
     /*  truncated struct  truncated struct  truncated struct  truncated struct  */
 }
@@ -126,7 +150,7 @@ internal unsafe struct FT_Bitmap {
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct FT_GlyphSlot {
     readonly FT_Library* library;
-    readonly FT_Face* face;
+    public readonly FT_Face* face;
     readonly FT_GlyphSlot* next;
     readonly FT_UInt glyph_index;
     readonly FT_Generic generic;
@@ -227,7 +251,7 @@ internal static unsafe partial class FreeType {
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern void FT_Library_Version(FT_Library* library, FT_Int* amajor, FT_Int* aminor, FT_Int* apatch);
-    
+
     public static string FT_Error_String(FT_Error error_code) {
         switch (error_code) {
             case 0x00:

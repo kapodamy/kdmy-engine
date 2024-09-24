@@ -15,8 +15,9 @@ typedef struct FontType_s* FontType;
 FontType fonttype_init(const char* src);
 void fonttype_destroy(FontType* fonttype);
 
-float fonttype_measure(FontType fonttype, FontParams* params, const char* text, int32_t text_index, size_t text_length);
-void fonttype_measure_char(FontType fonttype, uint32_t codepoint, float height, FontLineInfo* lineinfo);
+void fonttype_measure(FontType fonttype, FontParams* params, const char* text, int32_t text_index, size_t text_length, FontLinesInfo* lineinfo);
+void fonttype_measure_char(FontType fonttype, uint32_t codepoint, float height, FontCharInfo* charinfo);
+float fonttype_measure_line_height(FontType fonttype, float height);
 float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* params, float x, float y, int32_t text_index, size_t text_length, const char* text);
 void fonttype_map_codepoints(FontType fonttype, const char* text, int32_t text_index, size_t text_end_index);
 int32_t fonttype_animate(FontType fonttype, float elapsed);

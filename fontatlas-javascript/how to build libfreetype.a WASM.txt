@@ -4,8 +4,15 @@
 
 mkdir build
 cd build
-emcmake cmake ..
+emcmake cmake \
+        -D FT_DISABLE_ZLIB=TRUE \
+        -D FT_DISABLE_BZIP2=TRUE \
+        -D FT_DISABLE_PNG=TRUE \
+        -D FT_DISABLE_HARFBUZZ=TRUE \
+        -D FT_REQUIRE_BROTLI=FALSE \
+        ..
 emmake make
+emmake make install
 
 4. step 3 fail if the build folder already exists or is not empty
 5. grab "libfreetype.a" file from the build folder

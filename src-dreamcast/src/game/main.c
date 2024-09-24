@@ -109,11 +109,11 @@ int main(int argc, char* argv[]) {
 
     main_helper_draw_loading_screen();
 
-    // preload fonts
-    fontholder_init("/assets/common/font/vcr.ttf", -1, NULL, false);
+    logger_info("preloading fonts, this will take a while...");
+    fontholder_init("/assets/common/font/vcr.ttf", NULL, false);
     if (DBL_MEM_CHECK != 0) {
-        fontholder_init("/assets/common/font/alphabet.xml", -1, NULL, false);
-        fontholder_init("/assets/common/font/pixel.otf", -1, NULL, false);
+        fontholder_init("/assets/common/font/alphabet.xml", "bold", false);
+        fontholder_init("/assets/common/font/pixel.otf", NULL, false);
     }
 
     weekenumerator_enumerate();

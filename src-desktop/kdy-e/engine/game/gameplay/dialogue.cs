@@ -2080,7 +2080,7 @@ public class Dialogue : IAnimate, IDraw {
 
         Font font = new Font() {
             name = name,
-            fontholder = new FontHolder(instance, is_atlas, 18f, color_by_addition)
+            fontholder = new FontHolder(instance, is_atlas, color_by_addition)
         };
 
         fonts.Add(font);

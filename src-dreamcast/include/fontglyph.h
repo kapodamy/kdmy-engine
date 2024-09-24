@@ -13,8 +13,9 @@ FontGlyph fontglyph_init(const char* src_atlas, const char* suffix, bool allow_a
 FontGlyph fontglyph_init2(Texture texture, Atlas atlas, const char* suffix, bool allow_animation);
 void fontglyph_destroy(FontGlyph* fontglyph);
 
-float fontglyph_measure(FontGlyph fontglyph, FontParams* params, const char* text, int32_t text_index, size_t text_length);
-void fontglyph_measure_char(FontGlyph fontglyph, uint32_t codepoint, float height, FontLineInfo* lineinfo);
+void fontglyph_measure(FontGlyph fontglyph, FontParams* params, const char* text, int32_t text_index, size_t text_length, FontLinesInfo* lines_info);
+void fontglyph_measure_char(FontGlyph fontglyph, uint32_t codepoint, float height, FontCharInfo* char_info);
+float fontglyph_measure_line_height(FontGlyph fontglyph, float height);
 float fontglyph_draw_text(FontGlyph fontglyph, PVRContext pvrctx, FontParams* params, float x, float y, int32_t text_index, size_t text_length, const char* text);
 int32_t fontglyph_animate(FontGlyph fontglyph, float elapsed);
 void fontglyph_map_codepoints(FontGlyph fontglyph, const char* text, int32_t text_index, size_t text_length);

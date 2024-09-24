@@ -425,7 +425,7 @@ void settingsmenu_main() {
     FontHolder submenus_font = NULL;
     if (fs_file_exists(SETTINGSMENU_MENU_COMMON.parameters.font)) {
         // little improvement, keep loaded the "pixel.otf" font to improve loading times
-        submenus_font = fontholder_init(SETTINGSMENU_MENU_COMMON.parameters.font, -1.0f, NULL, false);
+        submenus_font = fontholder_init(SETTINGSMENU_MENU_COMMON.parameters.font, NULL, false);
     }
 
     AnimList animlist = animlist_init("/assets/common/anims/settings-menu.xml");

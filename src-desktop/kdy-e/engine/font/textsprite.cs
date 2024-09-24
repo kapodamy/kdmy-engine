@@ -407,7 +407,7 @@ public class TextSprite : IVertex {
 
     public void CalculateParagraphAlignment() {
         Grapheme grapheme = new Grapheme();
-        FontLineInfo lineinfo = new FontLineInfo() { space_width = -1f };
+        FontCharInfo char_info = new FontCharInfo();
 
         if (!this.modified_string && !this.modified_coords) return;
 
@@ -444,14 +444,17 @@ public class TextSprite : IVertex {
         int text_length = text.Length;
         if (this.modified_string) {
             this.font.MapCodepoints(text, 0, text_length);
-            this.font.Measure(ref this.fontparams, text, 0, text_length);
         }
 
-        // step 1: count the paragraphs
-        int line_count = Math2D.MAX_INT32;
-        if (this.max_lines > 0) {
-            line_count = text.OccurrencesOfKDY("\n") + 1;
-            if (line_count > this.max_lines) line_count = this.max_lines;
+        // step 1: count amount of required paragraphs
+        float line_height = this.font.MeasureLineHeight(this.fontparams.height);
+        float max_height;
+        if (this.max_lines > 0 || this.max_height >= 0f) {
+            float limit1 = this.max_lines < 0 ? Single.PositiveInfinity : (line_height * this.max_lines);
+            float limit2 = this.max_height < 0f ? Single.PositiveInfinity : this.max_height;
+            max_height = Math.Min(limit1, limit2);
+        } else {
+            max_height = Single.PositiveInfinity;
         }
 
         // step 2: build paragraph info array and store in paragraph info offset the paragraph width
@@ -462,16 +465,11 @@ public class TextSprite : IVertex {
         int index_last_detected_break = 0;
         bool last_break_was_dotcommatab = false;
         float calculated_text_height = 0f;
-        float max_height = this.max_height < 0f ? Single.PositiveInfinity : this.max_height;
         float max_width = this.max_width < 0f ? Single.PositiveInfinity : this.max_width;
+        float max_line_width = 0f;
         int last_known_break_index = 0;
         int loose_index = 0;
         float last_known_break_width = 0f;
-        float border_size = 0f;
-
-        if (this.fontparams.border_enable && this.fontparams.border_size > 0f && this.fontparams.border_color[3] > 0f) {
-            border_size = this.fontparams.border_size;
-        }
 
         while (true) {
             bool eof_reached = !StringUtils.GetCharacterCodepoint(text, index, ref grapheme);
@@ -493,11 +491,14 @@ public class TextSprite : IVertex {
                 index_last_detected_break = index_current_line = new_index;
                 last_break_was_dotcommatab = true;
 
-                calculated_text_height += lineinfo.last_char_height + this.fontparams.paragraph_space;
-                if ((calculated_text_height + border_size) >= max_height) break;
+                float line_width = accumulated_width + char_info.last_char_width_end;
+                if (line_width >= max_line_width) max_line_width = line_width;
 
-                lineinfo.line_char_count = 0;
-                lineinfo.previous_codepoint = 0x0000;
+                calculated_text_height += line_height;
+                if (calculated_text_height >= max_height) break;
+
+                char_info.line_char_count = 0;
+                char_info.previous_codepoint = 0x0000;
                 index_previous = index;
                 index = new_index;
                 accumulated_width = 0;
@@ -508,15 +509,21 @@ public class TextSprite : IVertex {
                 continue;
             }
 
+            if (grapheme.code == FontGlyph.CARRIAGERETURN) {
+                index += grapheme.size;
+                continue;
+            }
+
             // measure char width
-            this.font.MeasureChar(grapheme.code, this.fontparams.height, ref lineinfo);
+            this.font.MeasureChar(grapheme.code, this.fontparams.height, ref char_info);
 
             // check if the current codepoint is breakable
             bool current_is_break = false;
             int break_in_index = -1;
             int break_char_count = 1;
             int break_codepoint = grapheme.code;
-            float break_width = lineinfo.last_char_width;
+            float break_width_end = char_info.last_char_width_end;
+            float break_width = char_info.last_char_width;
 
             switch (grapheme.code) {
                 case FontGlyph.SPACE:
@@ -540,9 +547,9 @@ public class TextSprite : IVertex {
                     break;
             }
 
-            accumulated_width += lineinfo.last_char_width;
+            accumulated_width += char_info.last_char_width;
 
-            if ((accumulated_width + border_size) > max_width) {
+            if (accumulated_width > max_width) {
                 if (current_is_break) {
                     break_in_index = index;
                     break_char_count = 0;
@@ -581,14 +588,17 @@ public class TextSprite : IVertex {
                     offset = accumulated_width// temporal
                 });
 
-                calculated_text_height += lineinfo.last_char_height + this.fontparams.paragraph_space;
-                if ((calculated_text_height + border_size) >= max_height) break;
+                float line_width = accumulated_width + break_width_end;
+                if (line_width >= max_line_width) max_line_width = line_width;
+
+                calculated_text_height += line_height;
+                if (calculated_text_height >= max_height) break;
 
                 index_last_detected_break = index_current_line = break_in_index;
                 last_break_was_dotcommatab = false;
 
-                lineinfo.line_char_count = break_char_count;
-                lineinfo.previous_codepoint = break_codepoint;
+                char_info.line_char_count = break_char_count;
+                char_info.previous_codepoint = break_codepoint;
                 accumulated_width = break_width;
                 last_known_break_index = break_in_index;
                 last_known_break_width = -1;
@@ -598,40 +608,31 @@ public class TextSprite : IVertex {
             index += grapheme.size;
         }
 
-        if (this.paragraph_array.Size() > line_count) {
-            this.paragraph_array.CutSize(line_count);
-        }
-
-        // step 3: find the longest/wide paragraph
-        float max_line_width = 0;
+        // step 3: align paragraphs
         bool align_to_start = this.paragraph_align == Align.START;
         bool align_to_center = this.paragraph_align == Align.CENTER;
 
-        foreach (ParagraphInfo paragraphinfo in this.paragraph_array) {
-            if (paragraphinfo.offset > max_line_width) max_line_width = paragraphinfo.offset;
-        }
-
-        if (max_line_width == 0 || align_to_start) {
+        if (max_line_width == 0f || align_to_start) {
             foreach (ParagraphInfo paragraphinfo in this.paragraph_array) {
                 // Align.START is used, put all offsets in zero
-                paragraphinfo.offset = 0;
+                paragraphinfo.offset = 0f;
             }
         } else {
             // step 5: calculate paragraph offsets
             foreach (ParagraphInfo paragraphinfo in this.paragraph_array) {
                 if (max_line_width == paragraphinfo.offset) {
-                    paragraphinfo.offset = 0;
+                    paragraphinfo.offset = 0f;
                     continue;
                 }
 
                 paragraphinfo.offset = max_line_width - paragraphinfo.offset;// align to end
-                if (align_to_center) paragraphinfo.offset /= 2;// align to center
+                if (align_to_center) paragraphinfo.offset /= 2f;// align to center
             }
         }
 
         this.modified_string = false;
-        this.last_draw_width = max_line_width + border_size;
-        this.last_draw_height = calculated_text_height + border_size;
+        this.last_draw_width = max_line_width;
+        this.last_draw_height = calculated_text_height;
     }
 
     public void SetProperty(int property_id, float value) {
@@ -864,7 +865,7 @@ public class TextSprite : IVertex {
         string text = this.text_forced_case ?? this.text;
 
         if (this.background_enabled) {
-            float size = this.background_size * 2;
+            float size = this.background_size * 2f;
             float x = this.last_draw_x - this.background_size + this.background_offset_x;
             float y = this.last_draw_y - this.background_size + this.background_offset_y;
             float width = this.last_draw_width + size;
@@ -885,16 +886,20 @@ public class TextSprite : IVertex {
         } else {
             // paragraph by paragraph draw
             float y = this.last_draw_y;
-            float line_height = this.fontparams.height + this.fontparams.paragraph_space;
+            float line_height_default = this.fontparams.height + this.fontparams.paragraph_space;
 
             foreach (ParagraphInfo paragraphinfo in this.paragraph_array) {
+                float line_height;
                 if (paragraphinfo.length > 0) {
-                    this.font.DrawText(
-                         pvrctx, ref this.fontparams,
+                    line_height = this.font.DrawText(
+                        pvrctx, ref this.fontparams,
                         this.last_draw_x + paragraphinfo.offset, y,
                         paragraphinfo.index, paragraphinfo.length, text
                     );
+                } else {
+                    line_height = line_height_default;
                 }
+
                 y += line_height;
             }
         }

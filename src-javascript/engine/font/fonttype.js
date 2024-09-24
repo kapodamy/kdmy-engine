@@ -98,7 +98,7 @@ function fonttype_destroy(fonttype) {
 }
 
 
-function fonttype_measure(fonttype, params, text, text_index, text_length) {
+function fonttype_measure(fonttype, params, text, text_index, text_length, info) {
     const scale = params.height / FONTTYPE_GLYPHS_HEIGHT;
     const text_end_index = text_index + text_length;
 
@@ -107,6 +107,8 @@ function fonttype_measure(fonttype, params, text, text_index, text_length) {
     let index = text_index;
     let previous_codepoint = 0;
     let line_chars = 0;
+    let lines = 1;
+    let last_glyph_width_correction = 0;
     const grapheme = { code: 0, size: 0 };
 
     while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
@@ -126,6 +128,8 @@ function fonttype_measure(fonttype, params, text, text_index, text_length) {
             width = 0.0;
             previous_codepoint = grapheme.code;
             line_chars = 0;
+            lines++;
+            last_glyph_width_correction = 0;
             continue;
         }
 
@@ -138,14 +142,15 @@ function fonttype_measure(fonttype, params, text, text_index, text_length) {
                 if (grapheme.code == FONTGLYPH_TAB) {
                     let filler = fontglyph_internal_calc_tabstop(line_chars);
                     if (filler > 0) {
-                        width += fonttype.space_width * filler * scale;
+                        width += fonttype.space_width * filler;
                         line_chars += filler;
                     }
                 } else {
                     // space, hard space or unknown characters
-                    width += fonttype.space_width * scale;
+                    width += fonttype.space_width;
                     line_chars++;
                 }
+                last_glyph_width_correction = 0;
                 continue;
             } else {
                 fontchardata = fonttype.atlas_secondary.map.char_array[map_index];
@@ -154,25 +159,29 @@ function fonttype_measure(fonttype, params, text, text_index, text_length) {
             fontchardata = fonttype.atlas_primary.map.char_array[map_index];
         }
 
+        let kerning_x = 0;
         if (previous_codepoint) {
             // compute kerning
             for (let i = 0; i < fontchardata.kernings_size; i++) {
                 if (fontchardata.kernings[i].codepoint == previous_codepoint) {
-                    width += fontchardata.kernings[i].x * scale;
+                    kerning_x = fontchardata.kernings[i].x;
                     break;
                 }
             }
         }
 
-        width += fontchardata.advancex * scale;
+        last_glyph_width_correction = fontchardata.width + fontchardata.offset_x - fontchardata.advancex + kerning_x;
+        width += fontchardata.advancex + kerning_x;
         previous_codepoint = grapheme.code;
         line_chars++;
     }
 
-    return Math.max(width, max_width);
+    let line_height = fonttype_measure_line_height(fonttype, params.height);
+    info.max_width = (Math.max(width, max_width) + last_glyph_width_correction) * scale;
+    info.total_height = (line_height * lines) + (params.paragraph_space * (lines - 1));
 }
 
-function fonttype_measure_char(fonttype, codepoint, height, lineinfo) {
+function fonttype_measure_char(fonttype, codepoint, height, info) {
     const scale = height / FONTTYPE_GLYPHS_HEIGHT;
 
     //override hard-spaces with white-spaces
@@ -185,18 +194,19 @@ function fonttype_measure_char(fonttype, codepoint, height, lineinfo) {
         map_index = fonttype_internal_get_fontchardata(fonttype.atlas_secondary, codepoint);
         if (map_index < 0) {
             if (codepoint == FONTGLYPH_TAB) {
-                let filler = fontglyph_internal_calc_tabstop(lineinfo.line_char_count);
+                let filler = fontglyph_internal_calc_tabstop(info.line_char_count);
                 if (filler > 0) {
-                    lineinfo.last_char_width = fonttype.space_width * filler * scale;
-                    lineinfo.last_char_height = height;
-                    lineinfo.line_char_count += filler;
+                    info.last_char_width = fonttype.space_width * filler;
+                    info.line_char_count += filler;
                 }
             } else {
                 // space, hard space or unknown characters
-                lineinfo.last_char_width = fonttype.space_width * scale;
-                lineinfo.last_char_height = height;
-                lineinfo.line_char_count++;
+                info.last_char_width = fonttype.space_width;
+                info.line_char_count++;
             }
+            info.last_char_width *= scale;
+            info.last_char_height = height;
+            info.last_char_width_end = 0.0;
             return;
         } else {
             fontchardata = fonttype.atlas_secondary.map.char_array[map_index];
@@ -205,32 +215,44 @@ function fonttype_measure_char(fonttype, codepoint, height, lineinfo) {
         fontchardata = fonttype.atlas_primary.map.char_array[map_index];
     }
 
-    if (lineinfo.previous_codepoint) {
+    let kerning_x = 0;
+    if (info.previous_codepoint) {
         // compute kerning
         for (let i = 0; i < fontchardata.kernings_size; i++) {
-            if (fontchardata.kernings[i].codepoint == lineinfo.previous_codepoint) {
-                lineinfo.last_char_width = fontchardata.kernings[i].x * scale;
+            if (fontchardata.kernings[i].codepoint == info.previous_codepoint) {
+                kerning_x = fontchardata.kernings[i].x;
                 break;
             }
         }
     }
 
-    lineinfo.last_char_width = fontchardata.advancex * scale;
-    lineinfo.last_char_height = fontchardata.advancey * scale;
-    lineinfo.previous_codepoint = codepoint;
-    lineinfo.line_char_count++;
+    info.last_char_width = (fontchardata.advancex + kerning_x) * scale;
+    info.last_char_height = fontchardata.advancey * scale;
+    info.last_char_width_end = (fontchardata.width + fontchardata.offset_x - fontchardata.advancex + kerning_x) * scale;
+    info.previous_codepoint = codepoint;
+    info.line_char_count++;
+}
+
+function fonttype_measure_line_height(fonttype, height) {
+    let line_height;
+    if (fonttype.atlas_primary.map)
+        line_height = fonttype.atlas_primary.map.line_height;
+    else
+        line_height = fonttype.atlas_secondary.map.line_height;
+
+    let scale = height / FONTTYPE_GLYPHS_HEIGHT;
+    return Math.max(height, (height * 2.0) - (line_height * scale));
 }
 
 function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_length, text) {
-    if (!text) return 0.0;
-
     const grapheme = { code: 0, size: 0 };
     const has_border = params.border_enable && params.border_color[3] > 0.0 && params.border_size >= 0.0;
     const outline_size = params.border_size * 2.0;
     const scale_glyph = params.height / FONTTYPE_GLYPHS_HEIGHT;
     const scale_outline = params.height / FONTTYPE_GLYPHS_OUTLINE_HEIGHT;
     const text_end_index = text_index + text_length;
-    const ascender_glyph = (fonttype.atlas_primary.map ?? fonttype.atlas_secondary.map).ascender * scale_glyph;
+    const line_height = fonttype_measure_line_height(fonttype, params.height);
+    const ascender = (fonttype.atlas_primary.map ?? fonttype.atlas_secondary.map).ascender;
 
     if (SDF_FONT) {
         if (has_border) {
@@ -246,9 +268,10 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
     }
 
     let draw_glyph_x = 0.0;
-    let draw_glyph_y = -ascender_glyph;
+    let draw_glyph_y = ascender;
     let max_draw_y = 0.0;
     let line_chars = 0;
+    let lines = 1;
 
     let index = text_index;
     let previous_codepoint = 0x0000;
@@ -259,7 +282,6 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
     pvr_context_set_vertex_alpha(pvrctx, params.tint_color[3]);
     pvr_context_set_vertex_offsetcolor(pvrctx, PVRCTX_DEFAULT_OFFSET_COLOR);
     pvr_context_set_vertex_antialiasing(pvrctx, PVRCTX_FLAG_DEFAULT);
-
 
     // count the amount of glyph required
     while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
@@ -300,9 +322,10 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
 
         if (grapheme.code == FONTGLYPH_LINEFEED) {
             draw_glyph_x = 0.0;
-            draw_glyph_y += params.height + params.paragraph_space - ascender_glyph;
+            draw_glyph_y += line_height + params.paragraph_space;
             previous_codepoint = grapheme.code;
             line_chars = 0;
+            lines++;
             continue;
         }
 
@@ -321,12 +344,12 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
             if (grapheme.code == FONTGLYPH_TAB) {
                 let filler = fontglyph_internal_calc_tabstop(line_chars);
                 if (filler > 0) {
-                    draw_glyph_x += fonttype.space_width * filler * scale_glyph;
+                    draw_glyph_x += fonttype.space_width * filler;
                     line_chars += filler;
                 }
             } else {
                 // space, hard space or unknown characters
-                draw_glyph_x += fonttype.space_width * scale_glyph;
+                draw_glyph_x += fonttype.space_width;
                 line_chars++;
             }
 
@@ -340,7 +363,7 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
         if (previous_codepoint != 0x0000) {
             for (let i = 0; i < fontchardata_glyph.kernings_size; i++) {
                 if (fontchardata_glyph.kernings[i].codepoint == previous_codepoint) {
-                    draw_glyph_x += fontchardata_glyph.kernings[i].x * scale_glyph;
+                    draw_glyph_x += fontchardata_glyph.kernings[i].x;
                     break;
                 }
             }
@@ -348,8 +371,8 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
 
         if (fontchardata_glyph.has_atlas_entry) {
             // compute draw location and size
-            let dx = x + draw_glyph_x + (fontchardata_glyph.offset_x * scale_glyph);
-            let dy = y + draw_glyph_y + (fontchardata_glyph.offset_y * scale_glyph);
+            let dx = x + ((draw_glyph_x + fontchardata_glyph.offset_x) * scale_glyph);
+            let dy = y + ((draw_glyph_y + fontchardata_glyph.offset_y) * scale_glyph);
             let dw = fontchardata_glyph.width * scale_glyph;
             let dh = fontchardata_glyph.height * scale_glyph;
 
@@ -398,12 +421,9 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
                 dx, dy, dw, dh
             );
             added++;
-
-            let ddy = draw_glyph_y + dh;
-            if (ddy > max_draw_y) max_draw_y = ddy;
         }
 
-        draw_glyph_x += fontchardata_glyph.advancex * scale_glyph;
+        draw_glyph_x += fontchardata_glyph.advancex;
         line_chars++;
     }
 
@@ -427,7 +447,7 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
     }
 
     pvr_context_restore(pvrctx);
-    return max_draw_y;
+    return (line_height * lines) + (params.paragraph_space * (lines - 1));
 }
 
 function fonttype_map_codepoints(fonttype, text, text_index, text_end_index) {
@@ -502,7 +522,7 @@ async function fonttype_internal_init_freetype(fonttype, src) {
     //if (fonttype.font) throw new Error("The font is already initialized");
 
     let font = await fs_readarraybuffer(src);
-    if (!font) return 0;
+    if (!font) return true;
 
     if (SDF_FONT) {
         fontatlas_enable_sdf(true);
@@ -661,7 +681,7 @@ function fonttype_internal_create_atlas(fonttype, atlas, codepoints) {
     atlas.texture = texture;
 }
 
-function fonttype_internal_destroy_atlas( atlas) {
+function fonttype_internal_destroy_atlas(atlas) {
     if (SDF_FONT) {
         if (atlas.map_outline != null) {
             fontatlas_atlas_destroy(atlas.map_outline);

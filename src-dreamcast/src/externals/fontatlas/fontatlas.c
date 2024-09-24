@@ -178,7 +178,7 @@ static inline bool pick_glyph(FT_Face face, FontCharData* chardata, uint32_t cod
     return false;
 }
 
-static inline unsigned char* render_glyph_bitmap(FT_GlyphSlot glyph) {
+static unsigned char* render_glyph_bitmap(FT_GlyphSlot glyph) {
     FT_Error error;
 
 #ifdef _arch_dreamcast
@@ -195,7 +195,7 @@ static inline unsigned char* render_glyph_bitmap(FT_GlyphSlot glyph) {
     }
 #endif
 
-    if (error) {
+    if (error != 0) {
         /*logger_error(
             "fontatlas_atlas_build() Failed to pick the glyph bitmap of glyph index: " FMT_U4 ". Reason: %s\n",
             glyph->glyph_index,
@@ -227,17 +227,15 @@ static inline unsigned char* render_glyph_bitmap(FT_GlyphSlot glyph) {
     return buffer;
 }
 
-static inline void pick_metrics(FT_GlyphSlot glyph, FontCharData* chardata, int32_t font_height) {
-    (void)font_height;
-
+static inline void pick_metrics(FT_GlyphSlot glyph, FontCharData* chardata) {
     *chardata = (FontCharData){
         .codepoint = chardata->codepoint,
-        .offset_x = glyph->bitmap_left + (glyph->metrics.horiBearingX >> 6),
-        .offset_y = font_height - (glyph->metrics.horiBearingY >> 6),
-        .advancex = glyph->metrics.horiAdvance >> 6,
-        .advancey = glyph->metrics.vertAdvance >> 6,
-        .width = glyph->bitmap.width, // glyph->metrics.width >> 6,
-        .height = glyph->bitmap.rows, // glyph->metrics.height >> 6,
+        .width = glyph->bitmap.width,
+        .height = glyph->bitmap.rows,
+        .offset_x = (int16_t)(glyph->bitmap_left + (glyph->metrics.horiBearingX >> 6)),
+        .offset_y = (int16_t)((glyph->face->bbox.yMax - glyph->metrics.horiBearingY) >> 6),
+        .advancex = (int16_t)(glyph->metrics.horiAdvance >> 6),
+        .advancey = (int16_t)(glyph->metrics.vertAdvance >> 6),
         .kernings = NULL,
         .kernings_size = 0,
         .has_atlas_entry = false
@@ -257,7 +255,7 @@ static inline FontKerning* allocate_kernings(FT_Face face, FontCharData* chardat
             FT_UInt previous = chardata_array[j].codepoint;
 
             FT_Error error = FT_Get_Kerning(face, previous, current, FT_KERNING_DEFAULT, &kerning);
-            if (error) {
+            if (error != 0) {
                 /*logger_error(
                     "fontatlas_atlas_build() cannot load kernigs of previous=" FMT_U4 " current=" FMT_U4 ": %s",
                     previous,
@@ -295,7 +293,7 @@ static inline void pick_kernings(FT_Face face, FontCharData* array, int32_t size
         for (int32_t j = 0; j < size; j++) {
             FT_UInt previous = array[j].codepoint;
 
-            if (FT_Get_Kerning(face, previous, current, FT_KERNING_DEFAULT, &kerning)) continue;
+            if (FT_Get_Kerning(face, previous, current, FT_KERNING_DEFAULT, &kerning) != 0) continue;
 
             FT_Pos kerning_x = kerning.x >> 6;
             if (kerning_x == 0) continue;
@@ -440,14 +438,9 @@ FontCharMap* fontatlas_atlas_build(FontAtlas fontatlas, uint8_t font_height, int
             continue;
         }
 
-#ifndef _arch_dreamcast
-        if (sdf_enabled) {
-            // render the glyph and later pick the metrics because can change after rendering ¿but why?
-            render_glyph_bitmap(glyph);
-        }
-#endif
-
-        pick_metrics(glyph, &chardata[i], font_height);
+        // render the glyph and later pick the metrics because can change after rendering ¿but why?
+        render_glyph_bitmap(glyph);
+        pick_metrics(glyph, &chardata[i]);
         codepoints_parsed++;
     }
     if (codepoints_parsed < 1) goto L_build_map;
@@ -474,7 +467,7 @@ FontCharMap* fontatlas_atlas_build(FontAtlas fontatlas, uint8_t font_height, int
     for (int32_t i = 0; i < codepoints_count; i++) {
         if (pick_glyph(fontatlas->face, &chardata[i], codepoints_to_add[i])) continue;
 
-        // render again the glyph
+        // render the glyph again
         unsigned char* glyph_bitmap = render_glyph_bitmap(glyph);
         if (glyph_bitmap) {
             place_in_texture(&chardata[i], &atlas, glyph_bitmap);
@@ -501,7 +494,8 @@ L_build_map:
         .texture = atlas.texture,
         .texture_width = atlas.width,
         .texture_height = atlas.height,
-        .ascender = (int16_t)(fontatlas->face->ascender >> 6),
+        .ascender = fontatlas->face->ascender >> 6,
+        .line_height = fontatlas->face->size->metrics.height >> 6,
         .kernings_array = kernings_array,
     };
 

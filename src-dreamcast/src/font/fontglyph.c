@@ -36,16 +36,17 @@ struct FontGlyph_s {
     int32_t table_size;
     float64 frame_time;
     float64 frame_progress;
+    float space_scale;
     uint8_t lookup_table[FONTGLYPH_LOOKUP_TABLE_LENGTH];
 };
 
 
-static const float FONTGLYPH_SPACE_WIDTH_RATIO = 0.9f;
+static const float FONTGLYPH_SPACE_WIDTH_RATIO = 0.625f;
 
 
 static bool fontglyph_internal_parse(const AtlasEntry* atlas_entry, const char* match_suffix, size_t match_suffix_length, bool allow_animation, GlyphInfo* table, int32_t table_index);
 static void fontglyph_internal_add_frame(const AtlasEntry* atlas_entry, GlyphInfo* glyph);
-static float fontglyph_internal_find_space_width(FontGlyph fontglyph, float height);
+static void fontglyph_internal_calc_space_scale(FontGlyph fontglyph);
 static int fontglyph_internal_table_sort(const void* x, const void* y);
 
 
@@ -90,6 +91,7 @@ FontGlyph fontglyph_init2(Texture texture, Atlas atlas, const char* suffix, bool
 
         .frame_time = 0.0,
         .frame_progress = 0.0,
+        .space_scale = FONTGLYPH_SPACE_WIDTH_RATIO,
     };
 
     memset(fontglyph->lookup_table, (uint8_t)FONTGLYPH_LOOKUP_TABLE_LENGTH, FONTGLYPH_LOOKUP_TABLE_LENGTH);
@@ -162,6 +164,9 @@ FontGlyph fontglyph_init2(Texture texture, Atlas atlas, const char* suffix, bool
         }
     }
 
+    // find space width scale (normally only applies to the first frame)
+    fontglyph_internal_calc_space_scale(fontglyph);
+
     return fontglyph;
 }
 
@@ -179,14 +184,14 @@ void fontglyph_destroy(FontGlyph* fontglyph_ptr) {
 }
 
 
-float fontglyph_measure(FontGlyph fontglyph, FontParams* params, const char* text, int32_t text_index, size_t text_length) {
+void fontglyph_measure(FontGlyph fontglyph, FontParams* params, const char* text, int32_t text_index, size_t text_length, FontLinesInfo* lines_info) {
     Grapheme grapheme = {.code = 0, .size = 0};
     const size_t text_end_index = (size_t)text_index + text_length;
 
     float width = 0.0f;
     float max_width = 0.0f;
     int32_t line_chars = 0;
-    float space_width = fontglyph_internal_find_space_width(fontglyph, params->height);
+    int32_t lines = 1;
 
     for (int32_t i = text_index; i < text_end_index; i++) {
         if (!string_get_character_codepoint(text, i, text_end_index, &grapheme)) continue;
@@ -196,6 +201,7 @@ float fontglyph_measure(FontGlyph fontglyph, FontParams* params, const char* tex
             if (width > max_width) max_width = width;
             width = 0.0f;
             line_chars = 0;
+            lines++;
             continue;
         }
 
@@ -219,12 +225,12 @@ float fontglyph_measure(FontGlyph fontglyph, FontParams* params, const char* tex
         if (grapheme.code == FONTGLYPH_TAB) {
             int32_t filler = fontglyph_internal_calc_tabstop(line_chars);
             if (filler > 0) {
-                width += space_width * filler;
+                width += fontglyph->space_scale * filler;
                 line_chars += filler;
             }
         } else {
             // space, hard space or unknown character
-            width += params->height * FONTGLYPH_SPACE_WIDTH_RATIO;
+            width += params->height * fontglyph->space_scale;
             line_chars++;
         }
 
@@ -236,17 +242,16 @@ float fontglyph_measure(FontGlyph fontglyph, FontParams* params, const char* tex
         line_chars++;
     }
 
-    return math2d_max_float(width, max_width);
+    lines_info->max_width = math2d_max_float(width, max_width);
+    lines_info->total_height = (params->height * lines) + (params->paragraph_space * (lines - 1));
 }
 
-void fontglyph_measure_char(FontGlyph fontglyph, uint32_t codepoint, float height, FontLineInfo* lineinfo) {
-    if (lineinfo->space_width < 0.0f) {
-        lineinfo->space_width = fontglyph_internal_find_space_width(fontglyph, height);
-    }
+void fontglyph_measure_char(FontGlyph fontglyph, uint32_t codepoint, float height, FontCharInfo* char_info) {
+    GlyphInfo* info;
 
-    lineinfo->last_char_height = height;
-
-    GlyphInfo* info = NULL;
+    char_info->last_char_height = height;
+    char_info->previous_codepoint = codepoint;
+    char_info->last_char_width_end = 0.0f;
 
     if (codepoint < FONTGLYPH_LOOKUP_TABLE_LENGTH) {
         if (fontglyph->lookup_table[codepoint] != FONTGLYPH_LOOKUP_TABLE_LENGTH) {
@@ -264,23 +269,28 @@ void fontglyph_measure_char(FontGlyph fontglyph, uint32_t codepoint, float heigh
     }
 
     if (codepoint == FONTGLYPH_TAB) {
-        int32_t filler = fontglyph_internal_calc_tabstop(lineinfo->line_char_count);
+        int32_t filler = fontglyph_internal_calc_tabstop(char_info->line_char_count);
         if (filler > 0) {
-            lineinfo->last_char_width = lineinfo->space_width * filler;
-            lineinfo->line_char_count += filler;
+            char_info->last_char_width = height * fontglyph->space_scale * filler;
+            char_info->line_char_count += filler;
         }
     } else {
         // space, hard space or unknown character
-        lineinfo->last_char_width = height * FONTGLYPH_SPACE_WIDTH_RATIO;
-        lineinfo->line_char_count++;
+        char_info->last_char_width = height * fontglyph->space_scale;
+        char_info->line_char_count++;
     }
 
     return;
 
 L_measure:
     GlyphFrame* frame = &info->frames[info->actual_frame];
-    lineinfo->last_char_width = frame->glyph_width_ratio * height;
-    lineinfo->line_char_count++;
+    char_info->last_char_width = frame->glyph_width_ratio * height;
+    char_info->line_char_count++;
+}
+
+float fontglyph_measure_line_height(FontGlyph fontglyph, float height) {
+    (void)fontglyph;
+    return height;
 }
 
 float fontglyph_draw_text(FontGlyph fontglyph, PVRContext pvrctx, FontParams* params, float x, float y, int32_t text_index, size_t text_length, const char* text) {
@@ -295,9 +305,7 @@ float fontglyph_draw_text(FontGlyph fontglyph, PVRContext pvrctx, FontParams* pa
     int32_t index = text_index;
     int32_t total_glyphs = 0;
     int32_t line_chars = 0;
-
-    // get space glyph width (if present)
-    float space_width = fontglyph_internal_find_space_width(fontglyph, params->height);
+    int32_t lines = 1;
 
     texture_upload_to_pvr(fontglyph->texture);
     pvr_context_save(pvrctx);
@@ -347,6 +355,7 @@ float fontglyph_draw_text(FontGlyph fontglyph, PVRContext pvrctx, FontParams* pa
             draw_y += params->height + params->paragraph_space;
             draw_x = 0.0f;
             line_chars = 0;
+            lines++;
             continue;
         }
 
@@ -368,12 +377,12 @@ float fontglyph_draw_text(FontGlyph fontglyph, PVRContext pvrctx, FontParams* pa
             if (grapheme.code == FONTGLYPH_TAB) {
                 int32_t filler = fontglyph_internal_calc_tabstop(line_chars);
                 if (filler > 0) {
-                    draw_x += space_width * filler;
+                    draw_x += params->height * fontglyph->space_scale * filler;
                     line_chars += filler;
                 }
             } else {
                 // space, hard space or unknown characters
-                draw_x += params->height * FONTGLYPH_SPACE_WIDTH_RATIO;
+                draw_x += params->height * fontglyph->space_scale;
                 line_chars++;
             }
             continue;
@@ -430,7 +439,8 @@ float fontglyph_draw_text(FontGlyph fontglyph, PVRContext pvrctx, FontParams* pa
     }
 
     pvr_context_restore(pvrctx);
-    return draw_y + params->height;
+
+    return (params->height * lines) + (params->paragraph_space * (lines - 1));
 }
 
 int32_t fontglyph_animate(FontGlyph fontglyph, float elapsed) {
@@ -442,6 +452,8 @@ int32_t fontglyph_animate(FontGlyph fontglyph, float elapsed) {
         if (fontglyph->table[i].frames_size < 2) continue;
         fontglyph->table[i].actual_frame = frame_index % fontglyph->table[i].frames_size;
     }
+
+    fontglyph_internal_calc_space_scale(fontglyph);
 
     fontglyph->frame_progress += elapsed;
     return 0;
@@ -564,14 +576,14 @@ int32_t fontglyph_internal_calc_tabstop(int32_t characters_in_the_line) {
     return FONTGLYPH_TABSTOP - space;
 }
 
-static float fontglyph_internal_find_space_width(FontGlyph fontglyph, float height) {
+static void fontglyph_internal_calc_space_scale(FontGlyph fontglyph) {
     for (int32_t i = 0; i < fontglyph->table_size; i++) {
         if (fontglyph->table[i].code == FONTGLYPH_SPACE || fontglyph->table[i].code == FONTGLYPH_HARDSPACE) {
-            GlyphFrame* frame = &fontglyph->table[i].frames[fontglyph->table[i].actual_frame];
-            return height * frame->glyph_width_ratio;
+            const GlyphFrame* frame = &fontglyph->table[i].frames[fontglyph->table[i].actual_frame];
+            fontglyph->space_scale = frame->glyph_width_ratio;
+            break;
         }
     }
-    return height * FONTGLYPH_SPACE_WIDTH_RATIO;
 }
 
 static int fontglyph_internal_table_sort(const void* x, const void* y) {

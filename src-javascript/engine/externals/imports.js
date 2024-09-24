@@ -26,6 +26,7 @@
  * @property {number} texture_height
  * @property {number} texture_byte_size
  * @property {number} ascender
+ * @property {number} line_height
  * @property {number} __ptr
  */
 

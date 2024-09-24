@@ -62,6 +62,7 @@ function kdmyEngine_parseFontCharMap(ptr) {
     let fontcharmap_texture_height = dataReader.getUint16();
     let fontcharmap_texture_byte_size = dataReader.getInt32();
     let fontcharmap_ascender = dataReader.getInt16();
+    let fontcharmap_line_height = dataReader.getInt16();
     dataReader.getPointer();// kernings_array
 
     let texture = HEAPU8.subarray(fontcharmap_texture, fontcharmap_texture + fontcharmap_texture_byte_size);
@@ -75,8 +76,8 @@ function kdmyEngine_parseFontCharMap(ptr) {
         let field_offset_y = fontcharmap_char_array.getInt16();
         let field_advancex = fontcharmap_char_array.getInt16();
         let field_advancey = fontcharmap_char_array.getInt16();
-        let field_width = fontcharmap_char_array.getInt16();
-        let field_height = fontcharmap_char_array.getInt16();
+        let field_width = fontcharmap_char_array.getUint16();
+        let field_height = fontcharmap_char_array.getUint16();
         let field_kernings = fontcharmap_char_array.getPointer();
         let field_kernings_size = fontcharmap_char_array.getInt32();
         let atlas_entry_x = fontcharmap_char_array.getUint16();
@@ -119,6 +120,7 @@ function kdmyEngine_parseFontCharMap(ptr) {
         texture_height: fontcharmap_texture_height,
         texture_byte_size: fontcharmap_texture_byte_size,
         ascender: fontcharmap_ascender,
+        line_height: fontcharmap_line_height,
         __ptr: ptr
     };
 }

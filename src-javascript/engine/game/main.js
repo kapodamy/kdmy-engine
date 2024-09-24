@@ -129,11 +129,11 @@ async function main(argc, argv) {
     console.info(`Console: ${osinfo.machine}`);
     console.info(`OS: ${osinfo.version}\r\n`);
 
-    console.info("preloading fonts: vcr and alphabet. This will take a while...");
+    console.info("preloading fonts, this will take a while...");
     await Promise.all([
-        fontholder_init("/assets/common/font/vcr.ttf", -1.0, null, false),
-        //fontholder_init("/assets/common/font/pixel.otf", -1.0, null, false),
-        fontholder_init("/assets/common/font/alphabet.xml", -1.0, null, false)
+        fontholder_init("/assets/common/font/vcr.ttf", null, false),
+        //fontholder_init("/assets/common/font/pixel.otf", null, false),
+        fontholder_init("/assets/common/font/alphabet.xml", "bold", false)
     ]);
 
     await weekenumerator_enumerate();
@@ -391,10 +391,14 @@ async function main_spawn_coroutine(background_layout, function_routine, argumen
 
 
 async function main_tests(argc, argv) {
-    console.log("FNF tests mode");
-    //    await www_autoplay();
+    // vital parts
+    fs_init();// intialize filesystem access for the main thread (this thread)
+    await main_check_for_expansion();
+    await pvr_context_init();
+    await mastervolume_init();
+    //await www_autoplay();
 
-    fs_init();
+    console.log("FNF tests mode");
 
     /*let layout = await layout_init("/assets/test/layout_test.xml");
     window["layout"] = layout;
@@ -513,7 +517,8 @@ let d = `#pragma header
     //await weekenumerator_enumerate();
 
     /*let fontholder = await fontholder_init("/assets/test/Lato-Regular.ttf");
-    let textsprite = textsprite_init2(fontholder, 24, 0x000000);
+    let fontholder = await fontholder_init("/assets/common/font/vcr.ttf", null, false);
+    let textsprite = textsprite_init2(fontholder, 18.5, 0x000000);
     textsprite_set_draw_location(textsprite, 150, 100);
     textsprite_set_max_draw_size(textsprite, 293, 172);
     textsprite_set_wordbreak(textsprite, FONT_WORDBREAK_LOOSE);
@@ -1307,7 +1312,7 @@ let d = `#pragma header
     healthbar_set_health_position(healthbar, 1.0, 0.5, 0);
     window["healthbar"] = healthbar;
 
-    let font = await fontholder_init("/assets/common/font/vcr.ttf", 48, null);
+    let font = await fontholder_init("/assets/common/font/vcr.ttf", null, false);
     // @ts-ignore
     let font_tt = 1;
     let font_size = 48;

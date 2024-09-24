@@ -27,18 +27,24 @@ public struct FontParams {
 
 }
 
-public struct FontLineInfo {
-    public float space_width;
+public struct FontCharInfo {
     public float last_char_width;
     public float last_char_height;
     public int line_char_count;
     public int previous_codepoint;
+    public float last_char_width_end;
+}
+
+public struct FontLinesInfo {
+    public float max_width;
+    public float total_height;
 }
 
 public interface IFont : IAnimate {
     void Destroy();
     float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text);
-    void MeasureChar(int codepoint, float height, ref FontLineInfo lineinfo);
-    float Measure(ref FontParams @params, string text, int text_index, int text_length);
+    void MeasureChar(int codepoint, float height, ref FontCharInfo charinfo);
+    void Measure(ref FontParams @params, string text, int text_index, int text_length, ref FontLinesInfo linesinfo);
+    float MeasureLineHeight(float height);
     void MapCodepoints(string text, int text_index, int text_length);
 }

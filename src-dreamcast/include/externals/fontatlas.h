@@ -27,8 +27,8 @@ typedef struct _FONT_STRUCTS_ATTRIB {
     int16_t offset_y;
     int16_t advancex;
     int16_t advancey;
-    int16_t width;
-    int16_t height;
+    uint16_t width;
+    uint16_t height;
     FontKerning* kernings;
     int32_t kernings_size;
     FontAtlasEntry atlas_entry;
@@ -43,6 +43,7 @@ typedef struct _FONT_STRUCTS_ATTRIB {
     uint16_t texture_height;
     int32_t texture_byte_size;
     int16_t ascender;
+    int16_t line_height;
     FontKerning* kernings_array;
 } FontCharMap;
 

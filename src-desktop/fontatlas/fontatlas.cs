@@ -22,8 +22,8 @@ public class FontCharData {
     public short offset_y;
     public short advancex;
     public short advancey;
-    public int width;
-    public int height;
+    public ushort width;
+    public ushort height;
     public FontCharDataKerning[] kernings;
     public int kernings_size;
     public FontCharDataAtlasEntry atlas_entry;
@@ -38,6 +38,7 @@ public class FontCharMap {
     public ushort texture_height;
     public uint texture_byte_size;
     public short ascender;
+    public short line_height;
 
     public void DestroyTextureOnly() {
         if (this.texture == 0x00) return;
@@ -98,7 +99,7 @@ internal unsafe struct CharData {
 }
 
 
-public partial class FontAtlas {
+public class FontAtlas {
 
     private const string FONTATLAS_BASE_LIST_COMMON = "  !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     private const string FONTATLAS_BASE_LIST_EXTENDED = "¿¡¢¥¦¤§¨©ª«»¬®¯°±´³²¹ºµ¶·ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßŸàáâãäåæçèéêëìíîïðñòóôõö×øùúûüýþßÿ";
@@ -193,7 +194,7 @@ L_failed:
 
         if (glyph_index == 0) {
             // no glyph for the codepoint
-            goto L_failed;
+            return true;
         }
 
         int error = FreeType.FT_Load_Glyph(face, glyph_index, FreeType.FT_LOAD_RENDER);
@@ -201,18 +202,13 @@ L_failed:
             string e = FreeType.FT_Error_String(error);
             Logger.Warn($"FontAtlas::PickGlyph() failed to load glyph for codepoint {codepoint}, error: {e}");
 
-            goto L_failed;
+            return true;
         }
 
         // Note: the glyph data is loaded in "this.face->glyph" field
         chardata.glyph_index = glyph_index;
         chardata.codepoint = codepoint;
         return false;
-
-L_failed:
-        chardata.width = chardata.height = 0;
-        chardata.codepoint = 0x0000;
-        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -260,14 +256,14 @@ L_failed:
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private unsafe static void PickMetrics(FT_GlyphSlot* glyph, ref CharData chardata, int font_height) {
+    private unsafe static void PickMetrics(FT_GlyphSlot* glyph, ref CharData chardata) {
         // just in case, this never should happen
         //Debug.Assert(glyph != null);
 
-        chardata.width = glyph->bitmap.width;// glyph->metrics.width >> 6;
-        chardata.height = glyph->bitmap.rows;// glyph->metrics.height >> 6;
+        chardata.width = glyph->bitmap.width;
+        chardata.height = glyph->bitmap.rows;
         chardata.offset_x = glyph->bitmap_left + (glyph->metrics.horiBearingX >> 6);
-        chardata.offset_y = font_height - (glyph->metrics.horiBearingY >> 6);
+        chardata.offset_y = (glyph->face->bbox.yMax - glyph->metrics.horiBearingY) >> 6;
         chardata.advancex = glyph->metrics.horiAdvance >> 6;
         chardata.advancey = glyph->metrics.vertAdvance >> 6;
         chardata.kernings = null;
@@ -439,17 +435,24 @@ L_failed:
             }
 
             for (int i = 0 ; i < codepoints_count ; i++) {
-                if (FontAtlas.PickGlyph(this.face, ref chardata[i], codepoints_to_add[i])) continue;
+                if (FontAtlas.PickGlyph(this.face, ref chardata[i], codepoints_to_add[i])) {
+                    // glyph not available
+                    chardata[i].width = chardata[i].height = 0;
+                    chardata[i].codepoint = chardata[i].glyph_index = 0x0000;
+                    continue;
+                }
+
+                // render the glyph and later pick the metrics because can change after rendering ¿but why?
                 FontAtlas.PickBitmap(this.face, ref chardata[i], glyph);
-                FontAtlas.PickMetrics(glyph, ref chardata[i], font_height);
+                FontAtlas.PickMetrics(glyph, ref chardata[i]);
                 codepoints_parsed++;
             }
+            if (codepoints_parsed < 1) goto L_build_map;
 
+            // pick kernings of each codepoint
             for (int i = 0 ; i < codepoints_count ; i++) {
                 FontAtlas.PickKernings(this.face, chardata, codepoints_count);
             }
-
-            if (codepoints_parsed < 1) goto L_build_map;
 
             // calculate texture dimmensions
             FontAtlas.BuildAtlas(chardata, codepoints_count, gaps, MAX_TEXTURE_DIMMEN, ref atlas);
@@ -482,6 +485,7 @@ L_build_map:
             obj.texture_width = (ushort)atlas.width;
             obj.texture_height = (ushort)atlas.height;
             obj.ascender = (short)(this.face->ascender >> 6);
+            obj.line_height = (short)(this.face->size->metrics.height >> 6);
 
             //if (codepoints_parsed > 0) Debug.Assert(obj.char_array != null);
 
@@ -495,12 +499,12 @@ L_build_map:
                     atlas_entry = chardata[i].atlas_entry,
                     codepoint = chardata[i].codepoint,
                     has_atlas_entry = chardata[i].has_atlas_entry,
-                    height = (int)chardata[i].height,
+                    height = (short)chardata[i].height,
                     kernings = chardata[i].kernings,
                     kernings_size = chardata[i].kernings_size,
                     offset_x = (short)chardata[i].offset_x,
                     offset_y = (short)chardata[i].offset_y,
-                    width = (int)chardata[i].width,
+                    width = (short)chardata[i].width,
                 };
                 j++;
             }

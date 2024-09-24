@@ -65,13 +65,14 @@ async function mastervolume_init() {
         border_offset_y: 0.0
     };
 
-    let width = fonttype_measure(
+    const info = { max_width: 0.0, total_height: 0.0 };
+    fonttype_measure(
         mastervolume_label_font,
-        mastervolume_fontparams, MASTERVOLUME_LABEL_STRING, 0, MASTERVOLUME_LABEL_STRING.length
+        mastervolume_fontparams, MASTERVOLUME_LABEL_STRING, 0, MASTERVOLUME_LABEL_STRING.length, info
     );
 
     mastervolume_is_visible = false;
-    mastervolume_label_x_offset = (FUNKIN_SCREEN_RESOLUTION_WIDTH - width) / 2.0;
+    mastervolume_label_x_offset = (FUNKIN_SCREEN_RESOLUTION_WIDTH - info.max_width) / 2.0;
     mastervolume_beep = await soundplayer_init("/assets/common/sound/volume_beep.ogg");
     mastervolume_hide_timestamp = 0.0;
     //mastervolume_antibounce_timestamp = 0.0;

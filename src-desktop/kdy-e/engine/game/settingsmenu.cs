@@ -351,12 +351,6 @@ public static class SettingsMenu {
             return;
         }
 
-        FontHolder submenus_font = null;
-        if (FS.FileExists(SettingsMenu.MENU_COMMON.parameters.font)) {
-            // little improvement, keep loaded the "pixel.otf" font to improve loading times
-            submenus_font = new FontHolder(SettingsMenu.MENU_COMMON.parameters.font, -1f, null, false);
-        }
-
         AnimList animlist = AnimList.Init("/assets/common/anims/settings-menu.xml");
         AnimSprite anim_binding, anim_binding_rollback;
 
@@ -505,7 +499,6 @@ public static class SettingsMenu {
         layout.Destroy();
         modding.Destroy();
         gamepad.Destroy();
-        if (submenus_font != null) submenus_font.Destroy();
 
         SettingsMenu.is_running = false;
 

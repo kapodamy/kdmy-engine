@@ -2887,7 +2887,7 @@ static void layout_parse_fonts(XmlNode unparsed_root, LayoutContext* layout_cont
         }
 
         if (font) {
-            FontHolder fontholder = fontholder_init2(font, is_atlas, -1, glyph_color_by_addition);
+            FontHolder fontholder = fontholder_init2(font, is_atlas, glyph_color_by_addition);
             arraylist_add(fonts_arraylist, &(Font){.name = string_duplicate(name), .fontholder = fontholder});
         } else {
             logger_error("layout_parse_fonts() unable to read the font: %s", path);

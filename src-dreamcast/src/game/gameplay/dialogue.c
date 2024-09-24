@@ -2268,7 +2268,7 @@ static void dialogue_internal_parse_font(XmlNode node, ArrayList fonts) {
 
     Font font = {
         .name = string_duplicate(name),
-        .fontholder = fontholder_init2(instance, is_atlas, 18.0f, color_by_addition)
+        .fontholder = fontholder_init2(instance, is_atlas, color_by_addition)
     };
 
     arraylist_add(fonts, &font);

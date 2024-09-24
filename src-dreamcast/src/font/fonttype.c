@@ -41,7 +41,7 @@ static const int8_t FONTTYPE_GLYPHS_GAP = 16;     // space between glyphs in pix
 static const uint8_t FONTTYPE_GLYPHS_OUTLINE_HEIGHT = GLYPHS_HEIGHT >>> 1;
 static const int8_t FONTTYPE_GLYPHS_OUTLINE_GAP = GLYPHS_GAP >>> 1;
 static const uint8_t FONTTYPE_GLYPHS_OUTLINE_RATIO = GLYPHS_OUTLINE_HEIGHT >>> 2; // 25% of FONTTYPE_GLYPHS_OUTLINE_HEIGHT
-static const float FONTTYPE_GLYPHS_OUTLINE_THICKNESS = 1.25f;// 125%
+static const float FONTTYPE_GLYPHS_OUTLINE_THICKNESS = 1.25f;                     // 125%
 #else
 static const uint8_t FONTTYPE_GLYPHS_HEIGHT = 42;
 static const int8_t FONTTYPE_GLYPHS_GAP = 4; // space between glyphs in pixels
@@ -157,7 +157,7 @@ void fonttype_destroy(FontType* fonttype_ptr) {
 }
 
 
-float fonttype_measure(FontType fonttype, FontParams* params, const char* text, int32_t text_index, size_t text_length) {
+void fonttype_measure(FontType fonttype, FontParams* params, const char* text, int32_t text_index, size_t text_length, FontLinesInfo* info) {
     const float scale = params->height / FONTTYPE_GLYPHS_HEIGHT;
     const size_t text_end_index = (size_t)text_index + text_length;
 
@@ -166,6 +166,8 @@ float fonttype_measure(FontType fonttype, FontParams* params, const char* text, 
     int32_t index = text_index;
     uint32_t previous_codepoint = 0;
     int32_t line_chars = 0;
+    int32_t lines = 1;
+    int32_t last_glyph_width_correction = 0;
     Grapheme grapheme = {.code = 0, .size = 0};
 
     while (index < text_end_index && string_get_character_codepoint(text, index, text_end_index, &grapheme)) {
@@ -185,6 +187,8 @@ float fonttype_measure(FontType fonttype, FontParams* params, const char* text, 
             width = 0.0f;
             previous_codepoint = grapheme.code;
             line_chars = 0;
+            lines++;
+            last_glyph_width_correction = 0;
             continue;
         }
 
@@ -197,14 +201,15 @@ float fonttype_measure(FontType fonttype, FontParams* params, const char* text, 
                 if (grapheme.code == FONTGLYPH_TAB) {
                     int32_t filler = fontglyph_internal_calc_tabstop(line_chars);
                     if (filler > 0) {
-                        width += fonttype->space_width * filler * scale;
+                        width += fonttype->space_width * filler;
                         line_chars += filler;
                     }
                 } else {
                     // space, hard space or unknown characters
-                    width += fonttype->space_width * scale;
+                    width += fonttype->space_width;
                     line_chars++;
                 }
+                last_glyph_width_correction = 0;
                 continue;
             } else {
                 fontchardata = &fonttype->atlas_secondary.map->char_array[map_index];
@@ -213,25 +218,29 @@ float fonttype_measure(FontType fonttype, FontParams* params, const char* text, 
             fontchardata = &fonttype->atlas_primary.map->char_array[map_index];
         }
 
+        int32_t kerning_x = 0;
         if (previous_codepoint) {
             // compute kerning
             for (int32_t i = 0; i < fontchardata->kernings_size; i++) {
                 if (fontchardata->kernings[i].codepoint == previous_codepoint) {
-                    width += fontchardata->kernings[i].x * scale;
+                    kerning_x = fontchardata->kernings[i].x;
                     break;
                 }
             }
         }
 
-        width += fontchardata->advancex * scale;
+        last_glyph_width_correction = fontchardata->width + fontchardata->offset_x - fontchardata->advancex + kerning_x;
+        width += fontchardata->advancex + kerning_x;
         previous_codepoint = grapheme.code;
         line_chars++;
     }
 
-    return math2d_max_float(width, max_width);
+    float line_height = fonttype_measure_line_height(fonttype, params->height);
+    info->max_width = (math2d_max_float(width, max_width) + last_glyph_width_correction) * scale;
+    info->total_height = (line_height * lines) + (params->paragraph_space * (lines - 1));
 }
 
-void fonttype_measure_char(FontType fonttype, uint32_t codepoint, float height, FontLineInfo* lineinfo) {
+void fonttype_measure_char(FontType fonttype, uint32_t codepoint, float height, FontCharInfo* info) {
     const float scale = height / FONTTYPE_GLYPHS_HEIGHT;
 
     // override hard-spaces with white-spaces
@@ -244,18 +253,19 @@ void fonttype_measure_char(FontType fonttype, uint32_t codepoint, float height, 
         map_index = fonttype_internal_get_fontchardata(&fonttype->atlas_secondary, codepoint);
         if (map_index < 0) {
             if (codepoint == FONTGLYPH_TAB) {
-                int32_t filler = fontglyph_internal_calc_tabstop(lineinfo->line_char_count);
+                int32_t filler = fontglyph_internal_calc_tabstop(info->line_char_count);
                 if (filler > 0) {
-                    lineinfo->last_char_width = fonttype->space_width * filler * scale;
-                    lineinfo->last_char_height = height;
-                    lineinfo->line_char_count += filler;
+                    info->last_char_width = fonttype->space_width * filler;
+                    info->line_char_count += filler;
                 }
             } else {
                 // space, hard space or unknown characters
-                lineinfo->last_char_width = fonttype->space_width * scale;
-                lineinfo->last_char_height = height;
-                lineinfo->line_char_count++;
+                info->last_char_width = fonttype->space_width;
+                info->line_char_count++;
             }
+            info->last_char_width *= scale;
+            info->last_char_height = height;
+            info->last_char_width_end = 0.0f;
             return;
         } else {
             fontchardata = &fonttype->atlas_secondary.map->char_array[map_index];
@@ -264,31 +274,43 @@ void fonttype_measure_char(FontType fonttype, uint32_t codepoint, float height, 
         fontchardata = &fonttype->atlas_primary.map->char_array[map_index];
     }
 
-    if (lineinfo->previous_codepoint) {
+    int32_t kerning_x = 0;
+    if (info->previous_codepoint) {
         // compute kerning
         for (int32_t i = 0; i < fontchardata->kernings_size; i++) {
-            if (fontchardata->kernings[i].codepoint == lineinfo->previous_codepoint) {
-                lineinfo->last_char_width = fontchardata->kernings[i].x * scale;
+            if (fontchardata->kernings[i].codepoint == info->previous_codepoint) {
+                kerning_x = fontchardata->kernings[i].x;
                 break;
             }
         }
     }
 
-    lineinfo->last_char_width = fontchardata->advancex * scale;
-    lineinfo->last_char_height = fontchardata->advancey * scale;
-    lineinfo->previous_codepoint = codepoint;
-    lineinfo->line_char_count++;
+    info->last_char_width = (fontchardata->advancex + kerning_x) * scale;
+    info->last_char_height = fontchardata->advancey * scale;
+    info->last_char_width_end = (fontchardata->width + fontchardata->offset_x - fontchardata->advancex + kerning_x) * scale;
+    info->previous_codepoint = codepoint;
+    info->line_char_count++;
+}
+
+float fonttype_measure_line_height(FontType fonttype, float height) {
+    float line_height;
+    if (fonttype->atlas_primary.map)
+        line_height = fonttype->atlas_primary.map->line_height;
+    else
+        line_height = fonttype->atlas_secondary.map->line_height;
+
+    float scale = height / FONTTYPE_GLYPHS_HEIGHT;
+    return math2d_max_float(height, (height * 2.0f) - (line_height * scale));
 }
 
 float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* params, float x, float y, int32_t text_index, size_t text_length, const char* text) {
-    if (string_is_empty(text)) return 0.0f;
-
     Grapheme grapheme = {.code = 0, .size = 0};
     const bool has_border = params->border_enable && params->border_color[3] > 0.0f && params->border_size >= 0.0f;
     const float outline_size = params->border_size * 2.0f;
     const float scale_glyph = params->height / FONTTYPE_GLYPHS_HEIGHT;
     const size_t text_end_index = (size_t)text_index + text_length;
-    const float ascender_glyph = (fonttype->atlas_primary.map ? fonttype->atlas_primary.map : fonttype->atlas_secondary.map)->ascender * scale_glyph;
+    const float line_height = fonttype_measure_line_height(fonttype, params->height);
+    const float ascender = (fonttype->atlas_primary.map ? fonttype->atlas_primary.map : fonttype->atlas_secondary.map)->ascender;
 
 #if !defined(_arch_dreamcast) && defined(SDF_FONT)
     const float scale_outline = params->height / FONTTYPE_GLYPHS_OUTLINE_HEIGHT;
@@ -306,9 +328,9 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
 #endif
 
     float draw_glyph_x = 0.0f;
-    float draw_glyph_y = -ascender_glyph;
-    float max_draw_y = 0.0f;
+    float draw_glyph_y = ascender;
     int32_t line_chars = 0;
+    int32_t lines = 1;
 
     int32_t index = text_index;
     uint32_t previous_codepoint = 0x0000;
@@ -365,9 +387,10 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
 
         if (grapheme.code == FONTGLYPH_LINEFEED) {
             draw_glyph_x = 0.0f;
-            draw_glyph_y += params->height + params->paragraph_space - ascender_glyph;
+            draw_glyph_y += line_height + params->paragraph_space;
             previous_codepoint = grapheme.code;
             line_chars = 0;
+            lines++;
             continue;
         }
 
@@ -387,12 +410,12 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
             if (grapheme.code == FONTGLYPH_TAB) {
                 int32_t filler = fontglyph_internal_calc_tabstop(line_chars);
                 if (filler > 0) {
-                    draw_glyph_x += fonttype->space_width * filler * scale_glyph;
+                    draw_glyph_x += fonttype->space_width * filler;
                     line_chars += filler;
                 }
             } else {
                 // space, hard space or unknown characters
-                draw_glyph_x += fonttype->space_width * scale_glyph;
+                draw_glyph_x += fonttype->space_width;
                 line_chars++;
             }
 
@@ -406,7 +429,7 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
         if (previous_codepoint != 0x0000) {
             for (int32_t i = 0; i < fontchardata_glyph->kernings_size; i++) {
                 if (fontchardata_glyph->kernings[i].codepoint == previous_codepoint) {
-                    draw_glyph_x += fontchardata_glyph->kernings[i].x * scale_glyph;
+                    draw_glyph_x += fontchardata_glyph->kernings[i].x;
                     break;
                 }
             }
@@ -414,8 +437,8 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
 
         if (fontchardata_glyph->has_atlas_entry) {
             // compute draw location and size
-            float dx = x + draw_glyph_x + (fontchardata_glyph->offset_x * scale_glyph);
-            float dy = y + draw_glyph_y + (fontchardata_glyph->offset_y * scale_glyph);
+            float dx = x + ((draw_glyph_x + fontchardata_glyph->offset_x) * scale_glyph);
+            float dy = y + ((draw_glyph_y + fontchardata_glyph->offset_y) * scale_glyph);
             float dw = fontchardata_glyph->width * scale_glyph;
             float dh = fontchardata_glyph->height * scale_glyph;
 
@@ -472,9 +495,6 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
                 added++;
             }
 
-            float ddy = draw_glyph_y + dh;
-            if (ddy > max_draw_y) max_draw_y = ddy;
-
 #ifdef _arch_dreamcast
             // queue glyph for batch rendering
             glyphrenderer_draw_glyph(
@@ -508,12 +528,12 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
             }
 #endif
 
-        draw_glyph_x += fontchardata_glyph->advancex * scale_glyph;
+        draw_glyph_x += fontchardata_glyph->advancex;
         line_chars++;
     }
 
     pvr_context_restore(pvrctx);
-    return max_draw_y;
+    return (line_height * lines) + (params->paragraph_space * (lines - 1));
 }
 
 void fonttype_map_codepoints(FontType fonttype, const char* text, int32_t text_index, size_t text_end_index) {
@@ -588,7 +608,7 @@ int32_t fonttype_animate(FontType fonttype, float elapsed) {
 
 static bool fonttype_internal_init_freetype(FontType fonttype, const char* src) {
     ArrayBuffer font = fs_readarraybuffer(src);
-    if (!font) return false;
+    if (!font) return true;
 
 #if !defined(_arch_dreamcast) && defined(SDF_FONT)
     fontatlas_enable_sdf(true);

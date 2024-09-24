@@ -15,13 +15,18 @@
 #define FONTGLYPH_LOOKUP_TABLE_LENGTH 128 // this covers all ascii characters
 
 
-typedef struct FontLineInfo_s {
-    float space_width;
+typedef struct FontCharInfo_s {
     float last_char_width;
     float last_char_height;
     int32_t line_char_count;
     uint32_t previous_codepoint;
-} FontLineInfo;
+    float last_char_width_end;
+} FontCharInfo;
+
+typedef struct FontLinesInfo_s {
+    float max_width;
+    float total_height;
+} FontLinesInfo;
 
 typedef struct FontParams_s {
     float height;

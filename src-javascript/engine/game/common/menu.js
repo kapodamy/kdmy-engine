@@ -10,7 +10,7 @@ async function menu_init(menumanifest, x, y, z, width, height) {
 
     let fontholder = null;
     if (params.font) {
-        fontholder = await fontholder_init(params.font, params.font_size, params.font_glyph_suffix, params.font_color_by_addition);
+        fontholder = await fontholder_init(params.font, params.font_glyph_suffix, params.font_color_by_addition);
         if (!fontholder) throw new Error("Missing or invalid font: " + params.font);
     }
 

@@ -3,10 +3,9 @@
         {
             "name": "WASM",
             "includePath": [
-                "${workspaceFolder}/include-javascript/freetype2",
-                "${workspaceFolder}/include-javascript",
-                "${workspaceFolder}/include",
-                "${env:EMSDK}/upstream/emscripten/cache/sysroot/include"
+                "${env:EMSDK}/upstream/emscripten/cache/sysroot/include",
+                "${env:EMSDK}/upstream/emscripten/cache/sysroot/include/freetype2",
+                "${workspaceFolder}/include"
             ],
             "defines": [
                 "UNICODE"

@@ -57,16 +57,17 @@ public class MasterVolume {
             border_offset_y = 0f
         };
 
-        float width = MasterVolume.label_font.Measure(
-            ref MasterVolume.fontparams, MasterVolume.LABEL_STRING, 0, MasterVolume.LABEL_STRING.Length
+        FontLinesInfo info = new FontLinesInfo();
+
+        MasterVolume.label_font.Measure(
+            ref MasterVolume.fontparams, MasterVolume.LABEL_STRING, 0, MasterVolume.LABEL_STRING.Length, ref info
         );
 
         MasterVolume.is_visible = false;
-        MasterVolume.label_x_offset = (Funkin.SCREEN_RESOLUTION_WIDTH - width) / 2f;
+        MasterVolume.label_x_offset = (Funkin.SCREEN_RESOLUTION_WIDTH - info.max_width) / 2f;
         MasterVolume.beep = SoundPlayer.Init("/assets/common/sound/volume_beep.ogg");
         MasterVolume.hide_timestamp = 0.0;
         //MasterVolume.antibounce_timestamp = 0.0;
-
 
         SoundBridge.SetMasterVolume(EngineSettings.master_volume / 100f);
 

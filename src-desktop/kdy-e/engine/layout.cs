@@ -2539,7 +2539,7 @@ public class Layout : IDraw, IAnimate {
                 }
 
                 if (font == null) throw new Exception("missing or invalid font: " + path);
-                FontHolder fontholder = new FontHolder(font, is_atlas, -1, glyph_color_by_addition);
+                FontHolder fontholder = new FontHolder(font, is_atlas, glyph_color_by_addition);
 
                 fonts_arraylist.Add(new Font() { name = name, fontholder = fontholder });
             } catch (Exception e) {
