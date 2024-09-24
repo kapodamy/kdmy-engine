@@ -1,3 +1,6 @@
+
+# Note: this script must be run from DreamSDK shell
+
 DC_TOOLCHAIN=$(DREAMSDK_HOME)/msys/1.0/opt/toolchains/dc
 
 # misc libraries goes here
@@ -143,3 +146,8 @@ build-release: $(TARGET)
 
 
 	@echo -e "\033[38;5;15m\033[37;42m objs+elf+cdi build success \033[0m"
+
+
+disc:
+	makedisc output/kdy_e.cdi ./output/cd_root output/IP.BIN "KDMY-ENGINE" --data --rock ./cd_root_sort_rules.txt>/dev/null
+	@echo -e "\033[38;5;15m\033[37;42m cdi build success \033[0m"

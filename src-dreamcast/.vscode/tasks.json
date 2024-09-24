@@ -48,6 +48,18 @@
             "presentation": {
                 "clear": true
             }
+        },
+        {
+            "label": "build dreamcast disc",
+            "type": "shell",
+            "group": {
+                "kind": "test",
+                "isDefault": false
+            },
+            "command": "make",
+            "args": [
+                "disc"
+            ]
         }
     ]
 }

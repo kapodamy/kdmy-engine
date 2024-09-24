@@ -24,6 +24,5 @@
     "CHERE_INVOKING": "1",
     "MSYSTEM": "MINGW64",
     "HOME": "."
-  },
-  "git.enabled": false
+  }
 }

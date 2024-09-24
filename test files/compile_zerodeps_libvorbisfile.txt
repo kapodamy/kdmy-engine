@@ -1,3 +1,8 @@
+*********************
+FIXME
+the generated dll is unstable, sometimes plays silence
+*********************
+
 1. download and build libogg
 3. download and build libvorbis
 2. copy the files from "libogg" to "libvorbis/lib/.libs": framing.lo bitwise.lo framing.o bitwise.o
