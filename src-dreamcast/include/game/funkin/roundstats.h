@@ -20,10 +20,7 @@ typedef struct TweenKeyframe_s* TweenKeyframe;
 typedef struct RoundStats_s* RoundStats;
 
 
-extern const float ROUNDSTATS_FONT_BORDER_SIZE;
-
-
-RoundStats roundstats_init(float x, float y, float z, FontHolder fontholder, float font_size, float layout_width);
+RoundStats roundstats_init(float x, float y, float z, FontHolder fontholder, float font_size, float font_border_size, float layout_width);
 void roundstats_destroy(RoundStats* roundstats);
 void roundstats_hide(RoundStats roundstats, bool hide);
 void roundstats_hide_nps(RoundStats roundstats, bool hide);

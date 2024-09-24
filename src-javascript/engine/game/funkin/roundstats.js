@@ -2,10 +2,9 @@
 
 const ROUNDSTATS_FONT_COLOR = 0xFFFFFF;// white
 const ROUNDSTATS_FONT_BORDER_COLOR = 0x000000FF;// black
-const ROUNDSTATS_FONT_BORDER_SIZE = 2;
 const ROUNDSTATS_SEPARATOR = " | ";
 
-function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
+function roundstats_init(x, y, z, fontholder, font_size, font_border_size, layout_width) {
     const STRUCT = {
         tweenkeyframe: null,
         rollback_beats: 0.0,
@@ -49,7 +48,7 @@ function roundstats_init(x, y, z, fontholder, font_size, layout_width) {
 
     textsprite_border_enable(roundstats.textsprite, true);
     textsprite_border_set_color_rgba8(roundstats.textsprite, ROUNDSTATS_FONT_BORDER_COLOR);
-    textsprite_border_set_size(roundstats.textsprite, ROUNDSTATS_FONT_BORDER_SIZE);
+    textsprite_border_set_size(roundstats.textsprite, font_border_size);
     textsprite_set_visible(roundstats.textsprite, false);
     textsprite_set_draw_location(roundstats.textsprite, x, y);
     textsprite_set_max_draw_size(roundstats.textsprite, layout_width, -1.0);

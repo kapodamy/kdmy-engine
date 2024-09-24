@@ -90,7 +90,8 @@ public class UIParams {
     public float roundstats_x;
     public float roundstats_y;
     public float roundstats_z;
-    public float roundstats_size;
+    public float roundstats_fontsize;
+    public float roundstats_fontbordersize;
     public uint roundstats_fontcolor;
     public float streakcounter_comboheight;
     public float streakcounter_numbergap;
@@ -104,6 +105,7 @@ public class UIParams {
     public Align songinfo_alignvertical;
     public Align songinfo_alignhorinzontal;
     public float songinfo_fontsize;
+    public float songinfo_fontbordersize;
     public uint songinfo_fontcolor;
     public float countdown_height;
     public float songprogressbar_x;
@@ -481,7 +483,8 @@ public class Week {
                     roundstats_x = 0f,
                     roundstats_y = 0f,
                     roundstats_z = 0f,
-                    roundstats_size = 0f,
+                    roundstats_fontsize = 0f,
+                    roundstats_fontbordersize = 0f,
                     roundstats_fontcolor = 0x00,
                     roundstats_hide = false,
                     streakcounter_comboheight = 0f,
@@ -496,7 +499,8 @@ public class Week {
                     songinfo_alignvertical = Align.START,
                     songinfo_alignhorinzontal = Align.START,
                     songinfo_fontcolor = 0x00,
-                    songinfo_fontsize = 0x00,
+                    songinfo_fontsize = 0f,
+                    songinfo_fontbordersize = 0f,
                     countdown_height = 0f,
                     songprogressbar_x = 0f,
                     songprogressbar_y = 0f,
@@ -923,7 +927,8 @@ public class Week {
         ui.roundstats_y = placeholder.y;
         ui.roundstats_z = placeholder.z;
         ui.roundstats_hide = (bool)layout.GetAttachedValue("ui_roundstats_hidden", AttachedValueType.BOOLEAN, false);
-        ui.roundstats_size = (float)((double)layout.GetAttachedValue("ui_roundstats_fontSize", AttachedValueType.DOUBLE, 12.0));
+        ui.roundstats_fontsize = (float)(double)layout.GetAttachedValue("ui_roundstats_fontSize", AttachedValueType.DOUBLE, 12.0);
+        ui.roundstats_fontbordersize = (float)(double)layout.GetAttachedValue("ui_roundstats_fontBorderSize", AttachedValueType.DOUBLE, 2.0);
         ui.roundstats_fontcolor = (uint)layout.GetAttachedValue("ui_roundstats_fontColor", AttachedValueType.HEX, 0xFFFFFFU);
 
         placeholder = layout.GetPlaceholder("ui_songprogressbar");
@@ -932,8 +937,8 @@ public class Week {
             placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
         }
         ui.songprogressbar_bordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_borderSize", AttachedValueType.DOUBLE, 2.0);
-        ui.songprogressbar_fontsize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontSize", AttachedValueType.DOUBLE, 11.0);
-        ui.songprogressbar_fontbordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontBorderSize", AttachedValueType.DOUBLE, 1.4);
+        ui.songprogressbar_fontsize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontSize", AttachedValueType.DOUBLE, 14.0);
+        ui.songprogressbar_fontbordersize = (float)(double)layout.GetAttachedValue("ui_songprogressbar_fontBorderSize", AttachedValueType.DOUBLE, 2.0);
         ui.songprogressbar_isvertical = (bool)layout.GetAttachedValue("ui_songprogressbar_isVertical", AttachedValueType.BOOLEAN, false);
         ui.songprogressbar_showtime = (bool)layout.GetAttachedValue("ui_songprogressbar_showTime", AttachedValueType.BOOLEAN, true);
         ui.songprogressbar_colorrgba8_text = (uint)layout.GetAttachedValue("ui_songprogressbar_colorRGBA8_text", AttachedValueType.HEX, 0xFFFFFFFFU);
@@ -959,7 +964,8 @@ public class Week {
         ui.songinfo_maxheight = placeholder.height;
         ui.songinfo_alignvertical = placeholder.align_vertical;
         ui.songinfo_alignhorinzontal = placeholder.align_horizontal;
-        ui.songinfo_fontsize = (float)((double)layout.GetAttachedValue("ui_song_info_fontSize", AttachedValueType.DOUBLE, 10.0));
+        ui.songinfo_fontsize = (float)(double)layout.GetAttachedValue("ui_song_info_fontSize", AttachedValueType.DOUBLE, 12.0);
+        ui.songinfo_fontbordersize = (float)(double)layout.GetAttachedValue("ui_song_info_fontBorderSize", AttachedValueType.DOUBLE, 2.0);
         ui.songinfo_fontcolor = (uint)layout.GetAttachedValue("ui_song_info_fontColor", AttachedValueType.HEX, 0xFFFFFFU);
 
         // initialize adaptation of the UI elements in the stage layout
@@ -2008,7 +2014,8 @@ public class Week {
             initparams.ui.roundstats_y,
             initparams.ui.roundstats_z,
             initparams.font,
-            initparams.ui.roundstats_size,
+            initparams.ui.roundstats_fontsize,
+            initparams.ui.roundstats_fontbordersize,
             viewport_width
         );
         roundcontext.roundstats.HideNps(initparams.ui.roundstats_hide);
@@ -2064,7 +2071,7 @@ public class Week {
         );
         roundcontext.songinfo.SetZIndex(initparams.ui.songinfo_z);
         roundcontext.songinfo.BorderEnable(true);
-        roundcontext.songinfo.BorderSetSize(RoundStats.FONT_BORDER_SIZE);
+        roundcontext.songinfo.BorderSetSize(initparams.ui.songinfo_fontbordersize);
         roundcontext.songinfo.BorderSetColorRGBA8(0x000000FF);// black
 
         // step 2: dispose all modelholders used

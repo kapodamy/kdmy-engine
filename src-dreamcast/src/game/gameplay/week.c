@@ -327,7 +327,8 @@ int32_t week_main(WeekInfo* weekinfo, bool alt_tracks, const char* difficult, co
                 .roundstats_x = 0.0f,
                 .roundstats_y = 0.0f,
                 .roundstats_z = 0.0f,
-                .roundstats_size = 0.0f,
+                .roundstats_fontsize = 0.0f,
+                .roundstats_fontbordersize = 0.0f,
                 .roundstats_fontcolor = 0x00,
                 .roundstats_hide = false,
                 .streakcounter_comboheight = 0.0f,
@@ -343,6 +344,7 @@ int32_t week_main(WeekInfo* weekinfo, bool alt_tracks, const char* difficult, co
                 .songinfo_alignhorinzontal = ALIGN_START,
                 .songinfo_fontcolor = 0x00,
                 .songinfo_fontsize = 0.0f,
+                .songinfo_fontbordersize = 0.0f,
                 .countdown_height = 0.0f,
                 .songprogressbar_x = 0.0f,
                 .songprogressbar_y = 0.0f,
@@ -775,7 +777,8 @@ static void week_init_ui_layout(const char* src_layout, InitParams* initparams, 
     ui->roundstats_y = placeholder->y;
     ui->roundstats_z = placeholder->z;
     ui->roundstats_hide = layout_get_attached_value_boolean(layout, "ui_roundstats_hidden", false);
-    ui->roundstats_size = (float)layout_get_attached_value_double(layout, "ui_roundstats_fontSize", 12.0f);
+    ui->roundstats_fontsize = (float)layout_get_attached_value_double(layout, "ui_roundstats_fontSize", 12.0);
+    ui->roundstats_fontbordersize = (float)layout_get_attached_value_double(layout, "ui_roundstats_fontBorderSize", 2.0);
     ui->roundstats_fontcolor = layout_get_attached_value_hex(layout, "ui_roundstats_fontColor", 0xFFFFFF);
 
 
@@ -785,8 +788,8 @@ static void week_init_ui_layout(const char* src_layout, InitParams* initparams, 
         placeholder = &UI_STUB_LAYOUT_PLACEHOLDER;
     }
     ui->songprogressbar_bordersize = (float)layout_get_attached_value_double(layout, "ui_songprogressbar_borderSize", 2.0);
-    ui->songprogressbar_fontsize = (float)layout_get_attached_value_double(layout, "ui_songprogressbar_fontSize", 11.0);
-    ui->songprogressbar_fontbordersize = (float)layout_get_attached_value_double(layout, "ui_songprogressbar_fontBorderSize", 1.4);
+    ui->songprogressbar_fontsize = (float)layout_get_attached_value_double(layout, "ui_songprogressbar_fontSize", 14.0);
+    ui->songprogressbar_fontbordersize = (float)layout_get_attached_value_double(layout, "ui_songprogressbar_fontBorderSize", 2);
     ui->songprogressbar_isvertical = layout_get_attached_value_boolean(layout, "ui_songprogressbar_isVertical", false);
     ui->songprogressbar_showtime = layout_get_attached_value_boolean(layout, "ui_songprogressbar_showTime", true);
     ui->songprogressbar_colorrgba8_text = layout_get_attached_value_hex(layout, "ui_songprogressbar_colorRGBA8_text", 0xFFFFFFFF);
@@ -812,7 +815,8 @@ static void week_init_ui_layout(const char* src_layout, InitParams* initparams, 
     ui->songinfo_maxheight = placeholder->height;
     ui->songinfo_alignvertical = placeholder->align_vertical;
     ui->songinfo_alignhorinzontal = placeholder->align_horizontal;
-    ui->songinfo_fontsize = (float)layout_get_attached_value_double(layout, "ui_song_info_fontSize", 10.0);
+    ui->songinfo_fontsize = (float)layout_get_attached_value_double(layout, "ui_song_info_fontSize", 12.0);
+    ui->songinfo_fontbordersize = (float)layout_get_attached_value_double(layout, "ui_song_info_fontBorderSize", 2.0);
     ui->songinfo_fontcolor = layout_get_attached_value_hex(layout, "ui_song_info_fontColor", 0xFFFFFF);
 
     // initialize adaptation of the UI elements in the stage layout
@@ -1851,7 +1855,8 @@ static void week_init_ui_cosmetics(RoundContext roundcontext) {
         initparams->ui.roundstats_y,
         initparams->ui.roundstats_z,
         initparams->font,
-        initparams->ui.roundstats_size,
+        initparams->ui.roundstats_fontsize,
+        initparams->ui.roundstats_fontbordersize,
         viewport_width
     );
     roundstats_hide_nps(roundcontext->roundstats, initparams->ui.roundstats_hide);
@@ -1908,7 +1913,7 @@ static void week_init_ui_cosmetics(RoundContext roundcontext) {
     );
     textsprite_set_z_index(roundcontext->songinfo, initparams->ui.songinfo_z);
     textsprite_border_enable(roundcontext->songinfo, true);
-    textsprite_border_set_size(roundcontext->songinfo, ROUNDSTATS_FONT_BORDER_SIZE);
+    textsprite_border_set_size(roundcontext->songinfo, initparams->ui.songinfo_fontbordersize);
     textsprite_border_set_color_rgba8(roundcontext->songinfo, 0x000000FF); // black
 
     // step 2: dispose all modelholders used

@@ -125,7 +125,8 @@ typedef struct {
     float roundstats_x;
     float roundstats_y;
     float roundstats_z;
-    float roundstats_size;
+    float roundstats_fontsize;
+    float roundstats_fontbordersize;
     uint32_t roundstats_fontcolor;
     float streakcounter_comboheight;
     float streakcounter_numbergap;
@@ -139,6 +140,7 @@ typedef struct {
     Align songinfo_alignvertical;
     Align songinfo_alignhorinzontal;
     float songinfo_fontsize;
+    float songinfo_fontbordersize;
     uint32_t songinfo_fontcolor;
     float countdown_height;
     float songprogressbar_x;

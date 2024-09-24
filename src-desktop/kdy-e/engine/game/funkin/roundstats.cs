@@ -13,7 +13,6 @@ public class RoundStats : IDraw, IAnimate {
 
     private const uint FONT_COLOR = 0xFFFFFF;// white
     private const uint FONT_BORDER_COLOR = 0x000000FF;// black
-    public const float FONT_BORDER_SIZE = 2f;
     private const string SEPARATOR = " | ";
 
 
@@ -33,7 +32,7 @@ public class RoundStats : IDraw, IAnimate {
     private bool enable_nps;
 
 
-    public RoundStats(float x, float y, float z, FontHolder fontholder, float font_size, float layout_width) {
+    public RoundStats(float x, float y, float z, FontHolder fontholder, float font_size, float font_border_size, float layout_width) {
 
         this.textsprite = TextSprite.Init2(fontholder, font_size, RoundStats.FONT_COLOR);
         this.next_clear = 0.0;
@@ -65,7 +64,7 @@ public class RoundStats : IDraw, IAnimate {
 
         this.textsprite.BorderEnable(true);
         this.textsprite.BorderSetColorRGBA8(RoundStats.FONT_BORDER_COLOR);
-        this.textsprite.BorderSetSize(RoundStats.FONT_BORDER_SIZE);
+        this.textsprite.BorderSetSize(font_border_size);
         this.textsprite.SetVisible(false);
         this.textsprite.SetDrawLocation(x, y);
         this.textsprite.SetMaxDrawSize(layout_width, -1);

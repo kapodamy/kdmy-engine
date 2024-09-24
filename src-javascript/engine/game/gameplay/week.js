@@ -114,7 +114,8 @@ const CHARACTERTYPE = {
  * @property {number} roundstats_x
  * @property {number} roundstats_y
  * @property {number} roundstats_z
- * @property {number} roundstats_size
+ * @property {number} roundstats_fontsize
+ * @property {number} roundstats_fontbordersize
  * @property {number} roundstats_fontcolor
  * @property {number} streakcounter_comboheight
  * @property {number} streakcounter_numbergap
@@ -128,6 +129,7 @@ const CHARACTERTYPE = {
  * @property {number} songinfo_alignvertical
  * @property {number} songinfo_alignhorinzontal
  * @property {number} songinfo_fontsize
+ * @property {number} songinfo_fontbordersize
  * @property {number} songinfo_fontcolor
  * @property {number} countdown_height
  * @property {number} songprogressbar_x
@@ -478,7 +480,8 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
                 roundstats_x: 0.0,
                 roundstats_y: 0.0,
                 roundstats_z: 0.0,
-                roundstats_size: 0.0,
+                roundstats_fontsize: 0.0,
+                roundstats_fontbordersize: 0.0,
                 roundstats_fontcolor: 0x00,
                 roundstats_hide: false,
                 streakcounter_comboheight: 0.0,
@@ -494,6 +497,7 @@ async function week_main(weekinfo, alt_tracks, difficult, default_bf, default_gf
                 songinfo_alignhorinzontal: ALIGN_START,
                 songinfo_fontcolor: 0x00,
                 songinfo_fontsize: 0.0,
+                songinfo_fontbordersize: 0.0,
                 countdown_height: 0.0,
                 songprogressbar_x: 0.0,
                 songprogressbar_y: 0.0,
@@ -919,7 +923,8 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     ui.roundstats_y = placeholder.y;
     ui.roundstats_z = placeholder.z;
     ui.roundstats_hide = layout_get_attached_value(layout, "ui_roundstats_hidden", LAYOUT_TYPE_BOOLEAN, false);
-    ui.roundstats_size = layout_get_attached_value(layout, "ui_roundstats_fontSize", LAYOUT_TYPE_DOUBLE, 12.0);
+    ui.roundstats_fontsize = layout_get_attached_value(layout, "ui_roundstats_fontSize", LAYOUT_TYPE_DOUBLE, 12.0);
+    ui.roundstats_fontbordersize = layout_get_attached_value(layout, "ui_roundstats_fontBorderSize", LAYOUT_TYPE_DOUBLE, 2.0);
     ui.roundstats_fontcolor = layout_get_attached_value(layout, "ui_roundstats_fontColor", LAYOUT_TYPE_HEX, 0xFFFFFF);
 
 
@@ -929,8 +934,8 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
         placeholder = UI_STUB_LAYOUT_PLACEHOLDER;
     }
     ui.songprogressbar_bordersize = layout_get_attached_value(layout, "ui_songprogressbar_borderSize", LAYOUT_TYPE_DOUBLE, 2.0);
-    ui.songprogressbar_fontsize = layout_get_attached_value(layout, "ui_songprogressbar_fontSize", LAYOUT_TYPE_DOUBLE, 11.0);
-    ui.songprogressbar_fontbordersize = layout_get_attached_value(layout, "ui_songprogressbar_fontBorderSize", LAYOUT_TYPE_DOUBLE, 1.4);
+    ui.songprogressbar_fontsize = layout_get_attached_value(layout, "ui_songprogressbar_fontSize", LAYOUT_TYPE_DOUBLE, 14.0);
+    ui.songprogressbar_fontbordersize = layout_get_attached_value(layout, "ui_songprogressbar_fontBorderSize", LAYOUT_TYPE_DOUBLE, 2.0);
     ui.songprogressbar_isvertical = layout_get_attached_value(layout, "ui_songprogressbar_isVertical", LAYOUT_TYPE_BOOLEAN, false);
     ui.songprogressbar_showtime = layout_get_attached_value(layout, "ui_songprogressbar_showTime", LAYOUT_TYPE_BOOLEAN, true);
     ui.songprogressbar_colorrgba8_text = layout_get_attached_value(layout, "ui_songprogressbar_colorRGBA8_text", LAYOUT_TYPE_HEX, 0xFFFFFFFF);
@@ -956,7 +961,8 @@ async function week_init_ui_layout(src_layout,/** @type {InitParams} */ initpara
     ui.songinfo_maxheight = placeholder.height;
     ui.songinfo_alignvertical = placeholder.align_vertical;
     ui.songinfo_alignhorinzontal = placeholder.align_horizontal;
-    ui.songinfo_fontsize = layout_get_attached_value(layout, "ui_song_info_fontSize", LAYOUT_TYPE_DOUBLE, 10.0);
+    ui.songinfo_fontsize = layout_get_attached_value(layout, "ui_song_info_fontSize", LAYOUT_TYPE_DOUBLE, 12.0);
+    ui.songinfo_fontbordersize = layout_get_attached_value(layout, "ui_song_info_fontBorderSize", LAYOUT_TYPE_DOUBLE, 2.0);
     ui.songinfo_fontcolor = layout_get_attached_value(layout, "ui_song_info_fontColor", LAYOUT_TYPE_HEX, 0xFFFFFF);
 
     // initialize adaptation of the UI elements in the stage layout
@@ -2000,7 +2006,8 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
         initparams.ui.roundstats_y,
         initparams.ui.roundstats_z,
         initparams.font,
-        initparams.ui.roundstats_size,
+        initparams.ui.roundstats_fontsize,
+        initparams.ui.roundstats_fontbordersize,
         viewport_size[0]
     );
     roundstats_hide_nps(roundcontext.roundstats, initparams.ui.roundstats_hide);
@@ -2057,7 +2064,7 @@ async function week_init_ui_cosmetics(/**@type {RoundContext}*/roundcontext) {
     );
     textsprite_set_z_index(roundcontext.songinfo, initparams.ui.songinfo_z);
     textsprite_border_enable(roundcontext.songinfo, true);
-    textsprite_border_set_size(roundcontext.songinfo, ROUNDSTATS_FONT_BORDER_SIZE);
+    textsprite_border_set_size(roundcontext.songinfo, initparams.ui.songinfo_fontbordersize);
     textsprite_border_set_color_rgba8(roundcontext.songinfo, 0x000000FF);// black
 
     // step 2: dispose all modelholders used

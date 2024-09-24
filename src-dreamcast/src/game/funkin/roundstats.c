@@ -46,7 +46,6 @@ struct RoundStats_s {
 
 static const uint32_t ROUNDSTATS_FONT_COLOR = 0xFFFFFF;          // white
 static const uint32_t ROUNDSTATS_FONT_BORDER_COLOR = 0x000000FF; // black
-const float ROUNDSTATS_FONT_BORDER_SIZE = 2.0f;
 static const char* ROUNDSTATS_SEPARATOR = " | ";
 
 
@@ -56,7 +55,7 @@ static bool roundstats_internal_tweenkeyframe_run(RoundStats roundstats, TweenKe
 static bool roundstats_internal_tweenkeyframe_setup(TweenKeyframeInfo* tweenkeyframe_info, bool rollback);
 
 
-RoundStats roundstats_init(float x, float y, float z, FontHolder fontholder, float font_size, float layout_width) {
+RoundStats roundstats_init(float x, float y, float z, FontHolder fontholder, float font_size, float font_border_size, float layout_width) {
     RoundStats roundstats = malloc_chk(sizeof(struct RoundStats_s));
     malloc_assert(roundstats, RoundStats);
 
@@ -96,7 +95,7 @@ RoundStats roundstats_init(float x, float y, float z, FontHolder fontholder, flo
 
     textsprite_border_enable(roundstats->textsprite, true);
     textsprite_border_set_color_rgba8(roundstats->textsprite, ROUNDSTATS_FONT_BORDER_COLOR);
-    textsprite_border_set_size(roundstats->textsprite, ROUNDSTATS_FONT_BORDER_SIZE);
+    textsprite_border_set_size(roundstats->textsprite, font_border_size);
     textsprite_set_visible(roundstats->textsprite, false);
     textsprite_set_draw_location(roundstats->textsprite, x, y);
     textsprite_set_max_draw_size(roundstats->textsprite, layout_width, -1.0f);
