@@ -205,7 +205,7 @@ internal enum FT_Kerning_Mode : uint {
 }
 
 
-internal static unsafe partial class FreeType {
+internal static unsafe class FreeType {
 
     private const string DLL = "freetype";// "freetype.dll"
     public const FT_Int32 FT_LOAD_RENDER = 1 << 2;

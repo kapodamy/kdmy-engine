@@ -99,7 +99,7 @@ internal unsafe struct CharData {
 }
 
 
-public class FontAtlas {
+public partial class FontAtlas {
 
     private const string FONTATLAS_BASE_LIST_COMMON = "  !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
     private const string FONTATLAS_BASE_LIST_EXTENDED = "¿¡¢¥¦¤§¨©ª«»¬®¯°±´³²¹ºµ¶·ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßŸàáâãäåæçèéêëìíîïðñòóôõö×øùúûüýþßÿ";
@@ -499,12 +499,12 @@ L_build_map:
                     atlas_entry = chardata[i].atlas_entry,
                     codepoint = chardata[i].codepoint,
                     has_atlas_entry = chardata[i].has_atlas_entry,
-                    height = (short)chardata[i].height,
+                    height = (ushort)chardata[i].height,
                     kernings = chardata[i].kernings,
                     kernings_size = chardata[i].kernings_size,
                     offset_x = (short)chardata[i].offset_x,
                     offset_y = (short)chardata[i].offset_y,
-                    width = (short)chardata[i].width,
+                    width = (ushort)chardata[i].width,
                 };
                 j++;
             }
