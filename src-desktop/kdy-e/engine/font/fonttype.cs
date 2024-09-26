@@ -132,7 +132,7 @@ public class FontType : IFont {
         float max_width = 0f;
         float width = 0f;
         int index = text_index;
-        int previous_codepoint = 0;
+        uint previous_codepoint = 0;
         int line_chars = 0;
         int lines = 1;
         int last_glyph_width_correction = 0;
@@ -208,7 +208,7 @@ public class FontType : IFont {
         info.total_height = (line_height * lines) + (@params.paragraph_space * (lines - 1));
     }
 
-    public void MeasureChar(int codepoint, float height, ref FontCharInfo info) {
+    public void MeasureChar(uint codepoint, float height, ref FontCharInfo info) {
         float scale = height / FontType.GLYPHS_HEIGHT;
 
         //override hard-spaces with white-spaces
@@ -303,7 +303,7 @@ public class FontType : IFont {
         int lines = 1;
 
         int index = text_index;
-        int previous_codepoint = 0x0000;
+        uint previous_codepoint = 0x0000;
         int total_glyphs = 0;
         int map_index;
 
@@ -638,7 +638,7 @@ public class FontType : IFont {
         return tex;
     }
 
-    private static int InternalGetFontchardata(FCAtlas atlas, int codepoint) {
+    private static int InternalGetFontchardata(FCAtlas atlas, uint codepoint) {
         if (atlas.map != null) {
             for (int i = 0 ; i < atlas.map.char_array_size ; i++) {
                 if (codepoint == atlas.map.char_array[i].codepoint) return i;
@@ -647,7 +647,7 @@ public class FontType : IFont {
         return -1;
     }
 
-    private static int InternalGetFontchardata2(byte[] lookup_table, FCAtlas atlas, int codepoint) {
+    private static int InternalGetFontchardata2(byte[] lookup_table, FCAtlas atlas, uint codepoint) {
         if (codepoint < FontGlyph.LOOKUP_TABLE_LENGTH) {
             byte index = lookup_table[codepoint];
             if (index < FontGlyph.LOOKUP_TABLE_LENGTH) {

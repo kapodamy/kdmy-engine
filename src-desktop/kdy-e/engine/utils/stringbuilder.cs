@@ -25,8 +25,12 @@ public static class STRINGBUILDER {
         return builder;
     }
 
-    public static StringBuilder AddCharCodepointKDY(this StringBuilder builder, int codepoint) {
-        builder.Append(Char.ConvertFromUtf32(codepoint));
+    public static StringBuilder AddCharCodepointKDY(this StringBuilder builder, uint codepoint) {
+#if DEBUG
+        builder.Append(Char.ConvertFromUtf32(checked((int)codepoint)));
+#else
+        builder.Append(Char.ConvertFromUtf32(unchecked((int)codepoint)));
+#endif
         return builder;
     }
 

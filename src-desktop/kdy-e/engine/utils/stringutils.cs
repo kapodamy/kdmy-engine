@@ -5,7 +5,7 @@ using System.Text;
 namespace Engine.Utils;
 
 public ref struct Grapheme {
-    public int code;
+    public uint code;
     public int size;
 }
 
@@ -84,7 +84,7 @@ public static partial class StringUtils {
 
         if (trim_start) {
             start_index = str_length;
-            for (int i = 0; i < str_length; i++) {
+            for (int i = 0 ; i < str_length ; i++) {
                 switch (str[i]) {
                     case (char)0x0A:
                     case (char)0x0B:
@@ -102,7 +102,7 @@ public static partial class StringUtils {
 
         if (trim_end) {
             end_index = 0;
-            for (int i = str_length - 1; i >= 0; i--) {
+            for (int i = str_length - 1 ; i >= 0 ; i--) {
                 switch (str[i]) {
                     case (char)0x0A:
                     case (char)0x0B:
@@ -147,8 +147,11 @@ public static partial class StringUtils {
 
     public static bool GetCharacterCodepoint(string str, int index, ref Grapheme grapheme) {
         if (index >= str.Length) return false;
-
-        grapheme.code = Char.ConvertToUtf32(str, index);
+#if DEBUG
+        grapheme.code = checked((uint)Char.ConvertToUtf32(str, index));
+#else
+        grapheme.code = unchecked((uint)Char.ConvertToUtf32(str, index));
+#endif
         grapheme.size = Char.IsHighSurrogate(str[index]) ? 2 : 1;
         return true;
     }

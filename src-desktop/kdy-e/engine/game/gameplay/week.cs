@@ -232,7 +232,7 @@ public class RoundContext {
     public bool stage_from_default;
     public bool script_from_default;
     public bool dialogue_from_default;
-    public int weekgameover_from_version;
+    public uint weekgameover_from_version;
     public bool ui_from_default;
     public bool pause_menu_from_default;
 
@@ -2099,7 +2099,7 @@ public class Week {
 
     public static void InitUIGameover(RoundContext roundcontext) {
         WeekGameOver old_weekgameover = roundcontext.weekgameover;
-        int version = WeekGameOver.ReadVersion();
+        uint version = WeekGameOver.ReadVersion();
         bool disable_resource_cache = roundcontext.initparams.gameplaymanifest.songs[roundcontext.song_index].disable_resource_cache_between_songs;
 
         if (old_weekgameover != null && version == roundcontext.weekgameover_from_version) return;

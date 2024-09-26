@@ -521,7 +521,7 @@ public class TextSprite : IVertex {
             bool current_is_break = false;
             int break_in_index = -1;
             int break_char_count = 1;
-            int break_codepoint = grapheme.code;
+            uint break_codepoint = grapheme.code;
             float break_width_end = char_info.last_char_width_end;
             float break_width = char_info.last_char_width;
 

@@ -31,7 +31,7 @@ public struct FontCharInfo {
     public float last_char_width;
     public float last_char_height;
     public int line_char_count;
-    public int previous_codepoint;
+    public uint previous_codepoint;
     public float last_char_width_end;
 }
 
@@ -43,7 +43,7 @@ public struct FontLinesInfo {
 public interface IFont : IAnimate {
     void Destroy();
     float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text);
-    void MeasureChar(int codepoint, float height, ref FontCharInfo charinfo);
+    void MeasureChar(uint codepoint, float height, ref FontCharInfo charinfo);
     void Measure(ref FontParams @params, string text, int text_index, int text_length, ref FontLinesInfo linesinfo);
     float MeasureLineHeight(float height);
     void MapCodepoints(string text, int text_index, int text_length);

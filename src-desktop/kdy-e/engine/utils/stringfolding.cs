@@ -11,7 +11,7 @@ namespace Engine.Utils;
 
 public static partial class StringUtils {
 
-    private static readonly int[] STRING_UPPERCASES = new int[] {
+    private static readonly uint[] STRING_UPPERCASES = new uint[] {
         /*0x41,
         0x42,
         0x43,
@@ -1469,7 +1469,7 @@ public static partial class StringUtils {
         0x00000
     };
 
-    private static readonly int[] STRING_LOWERCASES = new int[] {
+    private static readonly uint[] STRING_LOWERCASES = new uint[] {
         /*0x61,
         0x62,
         0x63,
@@ -2927,7 +2927,7 @@ public static partial class StringUtils {
         0x0000
     };
 
-    private static readonly int[,] STRING_LOWERCASE_TO_COMPONENTS = new int[,] {
+    private static readonly uint[,] STRING_LOWERCASE_TO_COMPONENTS = new uint[,] {
         {0x00DF, 0x0073, 0x0073, 0x0000, 0x0000},
         {0x0130, 0x0069, 0x0307, 0x0000, 0x0000},
         {0x0149, 0x02BC, 0x006E, 0x0000, 0x0000},
@@ -3047,7 +3047,7 @@ public static partial class StringUtils {
         while (StringUtils.GetCharacterCodepoint(str, index, ref grapheme)) {
             index += grapheme.size;
 
-            int ascii_codepoint = InternalASCIIToUppercase(grapheme.code);
+            uint ascii_codepoint = InternalASCIIToUppercase(grapheme.code);
             if (ascii_codepoint != 0x00) {
                 stringbuilder.AddCharCodepointKDY(ascii_codepoint);
                 continue;
@@ -3085,7 +3085,7 @@ L_stop_searching:
         while (StringUtils.GetCharacterCodepoint(str, index, ref grapheme)) {
             index += grapheme.size;
 
-            int ascii_codepoint = InternalASCIIToLowercase(grapheme.code);
+            uint ascii_codepoint = InternalASCIIToLowercase(grapheme.code);
             if (ascii_codepoint != 0x00) {
                 stringbuilder.AddCharCodepointKDY(ascii_codepoint);
                 continue;
@@ -3109,8 +3109,8 @@ L_stop_list_checking:
     }
 
 
-    private static void InternalDirectUppercaseConversion(int codepoint, StringBuilder stringbuilder) {
-        int ascii_codepoint = InternalASCIIToUppercase(codepoint);
+    private static void InternalDirectUppercaseConversion(uint codepoint, StringBuilder stringbuilder) {
+        uint ascii_codepoint = InternalASCIIToUppercase(codepoint);
         if (ascii_codepoint != 0x00) {
             stringbuilder.AddCharCodepointKDY(codepoint);
             return;
@@ -3128,7 +3128,7 @@ L_stop_list_checking:
     }
 
 
-    private static int InternalASCIIToLowercase(int codepoint) {
+    private static uint InternalASCIIToLowercase(uint codepoint) {
         // if the codepoint is ASCII, do a quick lookup
         if (codepoint >= 0x41 && codepoint <= 0x5A) {
             // A to Z uppercase letters
@@ -3142,7 +3142,7 @@ L_stop_list_checking:
         }
     }
 
-    private static int InternalASCIIToUppercase(int codepoint) {
+    private static uint InternalASCIIToUppercase(uint codepoint) {
         // if the codepoint is ASCII, do a quick lookup
         if (codepoint >= 0x61 && codepoint <= 0x7A) {
             // a to z lowercase letters

@@ -126,7 +126,7 @@ public class FontGlyph : IFont {
 
         // populate lookup table
         for (byte i = 0 ; i < fontglyph.table_size && i <= FontGlyph.LOOKUP_TABLE_LENGTH ; i++) {
-            int code = fontglyph.table[i].code;
+            uint code = fontglyph.table[i].code;
             if (code < FontGlyph.LOOKUP_TABLE_LENGTH) {
                 fontglyph.lookup_table[code] = i;
             }
@@ -213,7 +213,7 @@ L_measure:
         lines_info.total_height = (@params.height * lines) + (@params.paragraph_space * (lines - 1));
     }
 
-    public void MeasureChar(int codepoint, float height, ref FontCharInfo char_info) {
+    public void MeasureChar(uint codepoint, float height, ref FontCharInfo char_info) {
         GlyphInfo info;
 
         char_info.last_char_height = height;
@@ -560,7 +560,7 @@ L_measure:
     private class GlyphInfo {
         public GlyphFrame[] frames;
         public int frames_size;
-        public int code;
+        public uint code;
         public int actual_frame;
     }
 

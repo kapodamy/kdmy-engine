@@ -192,7 +192,7 @@ public class WeekGameOver : IDraw, IAnimate {
         //free(this);
     }
 
-    public static int ReadVersion() {
+    public static uint ReadVersion() {
         Grapheme garapheme = new Grapheme() { code = 0, size = 0 };
         string version = FS.ReadText(WeekGameOver.LAYOUT_VERSION);
 
