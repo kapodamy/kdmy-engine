@@ -66,9 +66,9 @@ public class WebGLContext {
         gl.disable(gl.DEPTH_TEST);
         gl.depthMask(false);
 
+        gl.enable(gl.BLEND);
         //gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        gl.enable(gl.BLEND);
 
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
 
