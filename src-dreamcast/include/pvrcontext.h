@@ -90,6 +90,7 @@ void pvr_context_reset(PVRContext pvrctx);
 void pvr_context_apply_modifier(PVRContext pvrctx, Modifier* modifier);
 void pvr_context_apply_modifier2(PVRContext pvrctx, Modifier* modifier, float draw_x, float draw_y, float draw_width, float draw_height);
 void pvr_context_clear_screen(PVRContext pvrctx, const RGBA rgba_color);
+void pvr_context_prepare(PVRContext pvrctx);
 void pvr_context_flush(PVRContext pvrctx);
 bool pvr_context_save(PVRContext pvrctx);
 bool pvr_context_restore(PVRContext pvrctx);

@@ -1,13 +1,12 @@
 #include "game/main.h"
 
 #include <assert.h>
-#include <stdio.h>
 
 #include <arch/arch.h>
 #include <arch/timer.h>
 #include <dc/biosfont.h>
 #include <dc/fs_iso9660.h>
-#include <dc/video.h>
+#include <dc/maple/controller.h>
 #include <kos/init.h>
 #include <kos/thread.h>
 
@@ -84,13 +83,22 @@ const char* ENGINE_VERSION = "0.60";
  * The background music used in all menus, inherited from introscreen
  */
 SoundPlayer background_menu_music = NULL;
-
 int main_argc;
 char** main_argv;
-#include "preloadcache.h"
 
 
 static void main_check_for_expansion();
+
+static void main_print_thread_list(uint8_t addr, uint32_t btns) {
+    (void)addr;
+    (void)btns;
+
+    logger_info("main_print_thread_list() thread list:");
+    thd_pslist(printf);
+    thd_pslist_queue(printf);
+    logger_info("-------------------------------------");
+    fflush(stdout);
+}
 
 
 int main(int argc, char* argv[]) {
@@ -110,6 +118,9 @@ int main(int argc, char* argv[]) {
     logger_info("LuaScript:  %s", luascript_get_version());
     logger_info("FFGraph:  %s\n", ffgraph_get_runtime_info());
     logger_info("%s %s", ENGINE_NAME, ENGINE_VERSION);
+
+    // FIXME: on release builds there a deadlock somewhere
+    cont_btn_callback(0, CONT_START | CONT_Y | CONT_A, main_print_thread_list);
 
     // return main_debug(argc, argv);
 

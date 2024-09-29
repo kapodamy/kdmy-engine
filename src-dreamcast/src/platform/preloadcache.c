@@ -151,6 +151,10 @@ static ArrayPointerList preloadcache_internal_list_files_of_folder(char* root_di
                 continue;
             }
 
+            if (string_equals(dir_entry->name, ".") || string_equals(dir_entry->name, "..")) {
+                continue;
+            }
+
             bool is_file = dir_entry->size >= 0 && dir_entry->attr == 0;
 
             char* entry_path;

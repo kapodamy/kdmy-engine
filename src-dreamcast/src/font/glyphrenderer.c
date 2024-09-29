@@ -196,6 +196,9 @@ int32_t glyphrenderer_prepare(PVRContext pvrctx, int32_t glyph_count, bool has_o
     // tranform draw coordinates
     mat_load((matrix_t*)pvrctx->current_matrix);
 
+    // begin scene and polygon list (if necessary)
+    pvr_context_prepare(pvrctx);
+
     // calculate how many glyphs can be rendered
     pvr_stats_t stat;
     if (pvr_get_stats(&stat) != 0) {

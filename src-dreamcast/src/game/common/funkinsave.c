@@ -243,21 +243,19 @@ int32_t funkinsave_read_from_vmu() {
     uint16_t last_played_difficulty_name_index_in_table = dataview_read_u16(savedata);
 
     for (uint16_t i = 0; i < settings_count; i++) {
-        Setting entry = {
-            .id = dataview_read_u16(savedata),
-            .value = dataview_read_pack4(savedata)
-        };
+        Setting entry;
+        entry.id = dataview_read_u16(savedata);
+        entry.value = dataview_read_pack4(savedata);
 
         void* entry_ptr = funkinsave_internal_alloc(sizeof(Setting), &entry, -1, -1, 0);
         linkedlist_add_item(funkinsave.settings, entry_ptr);
     }
 
     for (uint16_t i = 0; i < directives_count; i++) {
-        Directive entry = {
-            .type = dataview_read_u8(savedata),
-            .name = (char*)funkinsave_internal_read_string(&savedata),
-            .value = dataview_read_f64(savedata)
-        };
+        Directive entry;
+        entry.type = dataview_read_u8(savedata);
+        entry.name = (char*)funkinsave_internal_read_string(&savedata);
+        entry.value = dataview_read_f64(savedata);
 
         void* entry_ptr = funkinsave_internal_alloc(sizeof(Directive), &entry, offsetof(Directive, name), -1, 0);
         linkedlist_add_item(funkinsave.directives, entry_ptr);
@@ -278,11 +276,10 @@ int32_t funkinsave_read_from_vmu() {
     }
 
     for (uint16_t i = 0; i < progress_count; i++) {
-        Progress entry = {
-            .week_name_index_in_table = dataview_read_u16(savedata),
-            .difficulty_name_index_in_table = dataview_read_u16(savedata),
-            .score = dataview_read_i64(savedata)
-        };
+        Progress entry;
+        entry.week_name_index_in_table = dataview_read_u16(savedata);
+        entry.difficulty_name_index_in_table = dataview_read_u16(savedata);
+        entry.score = dataview_read_i64(savedata);
 
         assert(entry.week_name_index_in_table < week_names_table_size);
         assert(entry.difficulty_name_index_in_table < difficulty_names_table_size);
@@ -292,12 +289,11 @@ int32_t funkinsave_read_from_vmu() {
     }
 
     for (uint16_t i = 0; i < storages_count; i++) {
-        Storage entry = {
-            .week_name_index_in_table = dataview_read_u16(savedata),
-            .name = (char*)funkinsave_internal_read_string(&savedata),
-            .data_size = dataview_read_u32(savedata),
-            .data = dataview_pointer(savedata)
-        };
+        Storage entry;
+        entry.week_name_index_in_table = dataview_read_u16(savedata);
+        entry.name = (char*)funkinsave_internal_read_string(&savedata);
+        entry.data_size = dataview_read_u32(savedata);
+        entry.data = dataview_pointer(savedata);
 
         dataview_skip(savedata, entry.data_size);
 
@@ -313,12 +309,11 @@ int32_t funkinsave_read_from_vmu() {
         uint32_t freeplay_progress_count = dataview_read_u32(savedata);
 
         for (uint32_t i = 0; i < freeplay_progress_count; i++) {
-            FreeplayProgress entry = {
-                .week_name_index_in_table = dataview_read_u16(savedata),
-                .difficulty_name_index_in_table = dataview_read_u16(savedata),
-                .score = dataview_read_i64(savedata),
-                .song_name = (char*)funkinsave_internal_read_string(&savedata)
-            };
+            FreeplayProgress entry;
+            entry.week_name_index_in_table = dataview_read_u16(savedata);
+            entry.difficulty_name_index_in_table = dataview_read_u16(savedata);
+            entry.score = dataview_read_i64(savedata);
+            entry.song_name = (char*)funkinsave_internal_read_string(&savedata);
 
             assert(entry.week_name_index_in_table < week_names_table_size);
             assert(entry.difficulty_name_index_in_table < difficulty_names_table_size);
@@ -528,7 +523,7 @@ int32_t funkinsave_write_to_vmu() {
     }
 
     // the VMU stores data in blocks of 512 bytes, calculates how many blocks is required
-    size_t required_size = (size_t)(ceilf((sizeof(FUNKINSAVE_VMS_HEADER) + savedata_length) / 512.0f) * 512.0f);
+    size_t required_size = ((sizeof(FUNKINSAVE_VMS_HEADER) + savedata_length + 511) / 512) * 512;
     if (required_size > available_space) return 2; // no space left
 
     // delete savedata

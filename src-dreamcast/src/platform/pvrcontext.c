@@ -25,7 +25,7 @@ static const float MIN_FRAME_FPS = 15.0f;
 static const uint64_t MIN_FRAME_TIME_NS = (1000UL * 1000UL * 1000UL) / MIN_FRAME_FPS;
 static const uint64_t THRESHOLD_FRAME_TIME_TO_ZERO = 200UL * 1000UL * 1000UL; // 5fps
 const RGBA PVR_DEFAULT_OFFSET_COLOR = {1.0f, 1.0f, 1.0f, -1.0f};
-float pvr_context_current_z_index = 1.0f;
+float pvr_context_current_z_index = 0.0f;
 
 struct PVRContext_s pvr_context = {
     .last_timestamp = 0,
@@ -179,17 +179,14 @@ void pvr_context_init() {
 
     // gl_helper_initialize();
     // pvr_context.shader_stack = stacklist_init(PVRCTX_SHADER_STACK_LENGTH);
-
-    // prepare scene
-    pvr_scene_begin();
-    pvr_list_begin(PVR_LIST_TR_POLY);
 }
 
 float pvrctx_wait_ready() {
 #ifdef _arch_dreamcast
-    if (pvr_context_current_z_index != 1.0f) {
+    if (pvr_context_current_z_index != 0.0f) {
         pvr_list_finish();
         pvr_scene_finish();
+        pvr_context_current_z_index = 0.0f;
     }
 #else
     if (pvr_context.glhelper.has_texture_uploads) {
@@ -240,13 +237,7 @@ float pvrctx_wait_ready() {
     pvr_context.last_timestamp = now;
     pvr_context.last_elapsed = elapsed;
 
-#ifdef _arch_dreamcast
-    if (pvr_context_current_z_index != 1.0f) {
-        pvr_scene_begin();
-        pvr_list_begin(PVR_LIST_TR_POLY);
-        pvr_context_current_z_index = 1.0f;
-    }
-#else
+#ifndef _arch_dreamcast
     pvr_context.frame_rendered++;
 
     // resize framebuffers if the screen size has changed
@@ -389,6 +380,16 @@ void pvr_context_clear_screen(PVRContext pvrctx, const RGBA rgba_color) {
         (uint8_t)(rgba_color[1] * 255.0f),
         (uint8_t)(rgba_color[2] * 255.0f)
     );
+}
+
+void pvr_context_prepare(PVRContext pvrctx) {
+    (void)pvrctx;
+
+    if (pvr_context_current_z_index == 0.0f) {
+        pvr_scene_begin();
+        pvr_list_begin(PVR_LIST_TR_POLY);
+        pvr_context_current_z_index = 1.0f;
+    }
 }
 
 void pvr_context_flush(PVRContext pvrctx) {
@@ -619,6 +620,9 @@ void pvr_context_draw_texture(PVRContext pvrctx, Texture texture, float sx, floa
     // tranform draw coordinates
     mat_load((matrix_t*)pvrctx->current_matrix);
 
+    // begin scene and polygon list (if necessary)
+    pvr_context_prepare(pvrctx);
+
     if (texture->slices) {
         uint32_t cmd_flags = enable_offsetcolor ? 0x04 : 0x00;
         pvr_context_draw_sliced_texture(
@@ -749,6 +753,9 @@ void pvr_context_draw_solid_color(PVRContext pvrctx, const RGBA rgb_color, float
             );
         }
     }
+
+    // begin scene and polygon list (if necessary)
+    pvr_context_prepare(pvrctx);
 
     // tranform draw coordinates
     mat_load((matrix_t*)pvrctx->current_matrix);

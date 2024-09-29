@@ -38,9 +38,15 @@ bool io_read_folder(IOFolderHandle fldrhnd, const char** name, int* size) {
     file_t hnd = (file_t)fldrhnd;
     if (hnd == FILEHND_INVALID) return false;
 
+L_read_dir:
     dirent_t* dirent = fs_readdir(hnd);
 
     if (dirent) {
+        if (string_equals(dirent->name, ".") || string_equals(dirent->name, "..")) {
+            // i do not see benefits of returning "." and ".."
+            goto L_read_dir;
+        }
+
         *name = dirent->name;
         *size = (dirent->attr & O_DIR) ? -1 : dirent->size;
         return true;
