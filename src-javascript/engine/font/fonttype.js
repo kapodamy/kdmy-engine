@@ -234,14 +234,10 @@ function fonttype_measure_char(fonttype, codepoint, height, info) {
 }
 
 function fonttype_measure_line_height(fonttype, height) {
-    let line_height;
-    if (fonttype.atlas_primary.map)
-        line_height = fonttype.atlas_primary.map.line_height;
-    else
-        line_height = fonttype.atlas_secondary.map.line_height;
+    let line_height = (fonttype.atlas_primary.map ?? fonttype.atlas_secondary.map).line_height;
 
     let scale = height / FONTTYPE_GLYPHS_HEIGHT;
-    return Math.max(height, (height * 2.0) - (line_height * scale));
+    return line_height * scale;
 }
 
 function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_length, text) {
@@ -251,8 +247,8 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
     const scale_glyph = params.height / FONTTYPE_GLYPHS_HEIGHT;
     const scale_outline = params.height / FONTTYPE_GLYPHS_OUTLINE_HEIGHT;
     const text_end_index = text_index + text_length;
-    const line_height = fonttype_measure_line_height(fonttype, params.height);
     const ascender = (fonttype.atlas_primary.map ?? fonttype.atlas_secondary.map).ascender;
+    const line_height = (fonttype.atlas_primary.map ?? fonttype.atlas_secondary.map).line_height;
 
     if (SDF_FONT) {
         if (has_border) {
@@ -322,7 +318,7 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
 
         if (grapheme.code == FONTGLYPH_LINEFEED) {
             draw_glyph_x = 0.0;
-            draw_glyph_y += line_height + params.paragraph_space;
+            draw_glyph_y += line_height + (params.paragraph_space / scale_glyph);
             previous_codepoint = grapheme.code;
             line_chars = 0;
             lines++;
@@ -451,14 +447,34 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
 }
 
 function fonttype_map_codepoints(fonttype, text, text_index, text_end_index) {
-    let actual = fonttype.atlas_secondary.map != null ? fonttype.atlas_secondary.map.char_array_size : 0;;
-    let new_codepoints = 0;
-    let grapheme = { code: 0, size: 0 };
-    let index = text_index;
+    const grapheme = { code: 0, size: 0 };
 
-    // step 1: count all unmapped codepoints
-    while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
-        index += grapheme.size;
+    let codepoints_length;
+    let codepoints_used;
+    let codepoints;
+    let existing_count;
+
+    if (fonttype.atlas_secondary.map) {
+        codepoints_used = fonttype.atlas_secondary.map.char_array_size;
+        codepoints_length = codepoints_used + 32;
+        codepoints = malloc_for_array(codepoints_length);
+        existing_count = codepoints_used;
+
+        // add existing secondary codepoints
+        for (let i = 0; i < fonttype.atlas_secondary.map.char_array_size; i++) {
+            codepoints[i] = fonttype.atlas_secondary.map.char_array[i].codepoint;
+        }
+    } else {
+        codepoints_used = 0;
+        codepoints_length = 64;
+        codepoints = malloc_for_array(codepoints_length);
+        existing_count = 0;
+    }
+
+    // step 1: add all unmapped codepoints
+    L_find_unmaped_codepoints:
+    while (text_index < text_end_index && string_get_character_codepoint(text, text_index, grapheme)) {
+        text_index += grapheme.size;
 
         switch (grapheme.code) {
             case FONTGLYPH_LINEFEED:
@@ -471,41 +487,30 @@ function fonttype_map_codepoints(fonttype, text, text_index, text_end_index) {
         if (fonttype_internal_get_fontchardata(fonttype.atlas_secondary, grapheme.code) >= 0)
             continue;
 
-        // not present, count it
-        new_codepoints++;
-    }
+        // check if the codepoint is already added
+        for (let i = 0; i < codepoints_used; i++) {
+            if (codepoints[i] == grapheme.code) continue L_find_unmaped_codepoints;
+        }
 
-    if (new_codepoints < 1) return;// nothing to do
+        codepoints[codepoints_used++] = grapheme.code;
 
-    // step 2: allocate codepoints array
-    let codepoints = new Uint32Array(actual + new_codepoints + 1);
-    codepoints[actual + new_codepoints] = 0x00000000;
-
-    if (fonttype.atlas_secondary.map) {
-        // add existing secondary codepoints
-        for (let i = 0; i < fonttype.atlas_secondary.map.char_array_size; i++) {
-            codepoints[i] = fonttype.atlas_secondary.map.char_array[i].codepoint;
+        if ((codepoints_used + 1) >= codepoints_length) {
+            codepoints_length += 16;
+            realloc_for_array(codepoints, codepoints_length);
         }
     }
 
-    index = text_index;
-    new_codepoints = actual;
-    while (index < text_end_index && string_get_character_codepoint(text, index, grapheme)) {
-        index += grapheme.size;
-
-        if (fonttype_internal_get_fontchardata2(fonttype.lookup_table, fonttype.atlas_primary, grapheme.code) >= 0)
-            continue;
-        if (fonttype_internal_get_fontchardata(fonttype.atlas_secondary, grapheme.code) >= 0)
-            continue;
-
-        codepoints[new_codepoints++] = grapheme.code;
+    if (codepoints_used <= existing_count) {
+        // nothing to do
+        codepoints = undefined;
+        return;
     }
+
+    codepoints[codepoints_used++] = 0x00000000;
 
     // step 3: rebuild the secondary char map
     fonttype_internal_destroy_atlas(fonttype.atlas_secondary);
     fonttype_internal_create_atlas(fonttype, fonttype.atlas_secondary, codepoints);
-
-    // dispose secondary codepoints array
     codepoints = undefined;
 }
 

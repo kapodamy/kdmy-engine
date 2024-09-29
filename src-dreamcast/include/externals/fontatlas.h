@@ -42,7 +42,7 @@ typedef struct _FONT_STRUCTS_ATTRIB {
     uint16_t texture_width;
     uint16_t texture_height;
     int32_t texture_byte_size;
-    int16_t ascender;
+    float ascender;
     int16_t line_height;
     FontKerning* kernings_array;
 } FontCharMap;

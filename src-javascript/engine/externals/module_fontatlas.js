@@ -27,6 +27,11 @@ var ModuleFontAtlas = (() => {//@ts-ignore
             getPointer() {
                 return this.getUint32()
             }
+            getFloat32() {
+                let value = this._dataview.getFloat32(this._offset, this._little_endian);
+                this._offset += Float32Array.BYTES_PER_ELEMENT;
+                return value
+            }
             getUint32() {
                 let value = this._dataview.getUint32(this._offset, this._little_endian);
                 this._offset += Uint32Array.BYTES_PER_ELEMENT;
@@ -60,8 +65,8 @@ var ModuleFontAtlas = (() => {//@ts-ignore
             let fontcharmap_texture = dataReader.getPointer();
             let fontcharmap_texture_width = dataReader.getUint16();
             let fontcharmap_texture_height = dataReader.getUint16();
-            let fontcharmap_texture_byte_size = dataReader.getInt32();
-            let fontcharmap_ascender = dataReader.getInt16();
+            let fontcharmap_texture_byte_size = dataReader.getUint32();
+            let fontcharmap_ascender = dataReader.getFloat32();
             let fontcharmap_line_height = dataReader.getInt16();
             dataReader.getPointer();
             let texture = HEAPU8.subarray(fontcharmap_texture, fontcharmap_texture + fontcharmap_texture_byte_size);

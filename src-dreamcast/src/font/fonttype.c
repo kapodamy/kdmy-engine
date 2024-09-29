@@ -13,6 +13,10 @@
 #include "pvrcontext.h"
 #include "stringutils.h"
 
+
+#define COALESCE(A, B) ((A) ? (A) : (B))
+
+
 typedef struct {
 #if !defined(_arch_dreamcast) && defined(SDF_FONT)
     FontCharMap* map_outline;
@@ -293,14 +297,10 @@ void fonttype_measure_char(FontType fonttype, uint32_t codepoint, float height, 
 }
 
 float fonttype_measure_line_height(FontType fonttype, float height) {
-    float line_height;
-    if (fonttype->atlas_primary.map)
-        line_height = fonttype->atlas_primary.map->line_height;
-    else
-        line_height = fonttype->atlas_secondary.map->line_height;
+    float line_height = COALESCE(fonttype->atlas_primary.map, fonttype->atlas_secondary.map)->line_height;
 
     float scale = height / FONTTYPE_GLYPHS_HEIGHT;
-    return math2d_max_float(height, (height * 2.0f) - (line_height * scale));
+    return line_height * scale;
 }
 
 float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* params, float x, float y, int32_t text_index, size_t text_length, const char* text) {
@@ -309,8 +309,8 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
     const float outline_size = params->border_size * 2.0f;
     const float scale_glyph = params->height / FONTTYPE_GLYPHS_HEIGHT;
     const size_t text_end_index = (size_t)text_index + text_length;
-    const float line_height = fonttype_measure_line_height(fonttype, params->height);
-    const float ascender = (fonttype->atlas_primary.map ? fonttype->atlas_primary.map : fonttype->atlas_secondary.map)->ascender;
+    const float ascender = COALESCE(fonttype->atlas_primary.map, fonttype->atlas_secondary.map)->ascender;
+    const float line_height = COALESCE(fonttype->atlas_primary.map, fonttype->atlas_secondary.map)->line_height;
 
 #if !defined(_arch_dreamcast) && defined(SDF_FONT)
     const float scale_outline = params->height / FONTTYPE_GLYPHS_OUTLINE_HEIGHT;
@@ -387,7 +387,7 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
 
         if (grapheme.code == FONTGLYPH_LINEFEED) {
             draw_glyph_x = 0.0f;
-            draw_glyph_y += line_height + params->paragraph_space;
+            draw_glyph_y += line_height + (params->paragraph_space / scale_glyph);
             previous_codepoint = grapheme.code;
             line_chars = 0;
             lines++;
@@ -537,14 +537,34 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
 }
 
 void fonttype_map_codepoints(FontType fonttype, const char* text, int32_t text_index, size_t text_end_index) {
-    int32_t actual = fonttype->atlas_secondary.map ? fonttype->atlas_secondary.map->char_array_size : 0;
-    int32_t new_codepoints = 0;
     Grapheme grapheme = {.code = 0, .size = 0};
-    int32_t index = text_index;
 
-    // step 1: count all unmapped codepoints
-    while (index < text_end_index && string_get_character_codepoint(text, index, text_end_index, &grapheme)) {
-        index += grapheme.size;
+    int32_t codepoints_length;
+    int32_t codepoints_used;
+    uint32_t* codepoints;
+    int32_t existing_count;
+
+    if (fonttype->atlas_secondary.map) {
+        codepoints_used = fonttype->atlas_secondary.map->char_array_size;
+        codepoints_length = codepoints_used + 32;
+        codepoints = malloc_for_array(uint32_t, codepoints_length);
+        existing_count = codepoints_used;
+
+        // add existing secondary codepoints
+        for (int32_t i = 0; i < fonttype->atlas_secondary.map->char_array_size; i++) {
+            codepoints[i] = fonttype->atlas_secondary.map->char_array[i].codepoint;
+        }
+    } else {
+        codepoints_used = 0;
+        codepoints_length = 64;
+        codepoints = malloc_for_array(uint32_t, codepoints_length);
+        existing_count = 0;
+    }
+
+// step 1: add all unmapped codepoints
+L_find_unmaped_codepoints:
+    while (text_index < text_end_index && string_get_character_codepoint(text, text_index, text_end_index, &grapheme)) {
+        text_index += grapheme.size;
 
         switch (grapheme.code) {
             case FONTGLYPH_LINEFEED:
@@ -557,43 +577,30 @@ void fonttype_map_codepoints(FontType fonttype, const char* text, int32_t text_i
         if (fonttype_internal_get_fontchardata(&fonttype->atlas_secondary, grapheme.code) >= 0)
             continue;
 
-        // not present, count it
-        new_codepoints++;
-    }
+        // check if the codepoint is already added
+        for (int32_t i = 0; i < codepoints_used; i++) {
+            if (codepoints[i] == grapheme.code) goto L_find_unmaped_codepoints;
+        }
 
-    if (new_codepoints < 1) return; // nothing to do
+        codepoints[codepoints_used++] = grapheme.code;
 
-    // step 2: allocate codepoints array
-    int32_t codepoints_size = actual + new_codepoints + 1;
-    uint32_t* codepoints = malloc_for_array(uint32_t, codepoints_size);
-
-    codepoints[actual + new_codepoints] = 0x00000000;
-
-    if (fonttype->atlas_secondary.map) {
-        // add existing secondary codepoints
-        for (int32_t i = 0; i < fonttype->atlas_secondary.map->char_array_size; i++) {
-            codepoints[i] = fonttype->atlas_secondary.map->char_array[i].codepoint;
+        if ((codepoints_used + 1) >= codepoints_length) {
+            codepoints_length += 16;
+            realloc_for_array(codepoints, codepoints_length, uint32_t);
         }
     }
 
-    index = text_index;
-    new_codepoints = actual;
-    while (index < text_end_index && string_get_character_codepoint(text, index, text_end_index, &grapheme)) {
-        index += grapheme.size;
-
-        if (fonttype_internal_get_fontchardata2(fonttype->lookup_table, &fonttype->atlas_primary, grapheme.code) >= 0)
-            continue;
-        if (fonttype_internal_get_fontchardata(&fonttype->atlas_secondary, grapheme.code) >= 0)
-            continue;
-
-        codepoints[new_codepoints++] = grapheme.code;
+    if (codepoints_used <= existing_count) {
+        // nothing to do
+        free_chk(codepoints);
+        return;
     }
+
+    codepoints[codepoints_used++] = 0x00000000;
 
     // step 3: rebuild the secondary char map
     fonttype_internal_destroy_atlas(&fonttype->atlas_secondary);
     fonttype_internal_create_atlas(fonttype, &fonttype->atlas_secondary, codepoints);
-
-    // dispose secondary codepoints array
     free_chk(codepoints);
 }
 

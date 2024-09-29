@@ -37,7 +37,7 @@ public class FontCharMap {
     public ushort texture_width;
     public ushort texture_height;
     public uint texture_byte_size;
-    public short ascender;
+    public float ascender;
     public short line_height;
 
     public void DestroyTextureOnly() {
@@ -84,8 +84,8 @@ internal unsafe struct TextureAtlas {
 
 internal unsafe struct CharData {
     public uint codepoint;
-    public int offset_x;
-    public int offset_y;
+    public short offset_x;
+    public short offset_y;
     public int advancex;
     public int advancey;
     public uint width;
@@ -94,7 +94,8 @@ internal unsafe struct CharData {
     public int kernings_size;
     public FontCharDataAtlasEntry atlas_entry;
     public bool has_atlas_entry;
-    public byte* bitmap;
+    public byte* bitmap_buffer;
+    public int bitmap_pitch;
     public uint glyph_index;
 }
 
@@ -197,7 +198,7 @@ L_failed:
             return true;
         }
 
-        int error = FreeType.FT_Load_Glyph(face, glyph_index, FreeType.FT_LOAD_RENDER);
+        int error = FreeType.FT_Load_Glyph(face, glyph_index, FreeType.FT_LOAD_RENDER | FreeType.FT_LOAD_IGNORE_TRANSFORM);
         if (error != 0) {
             string e = FreeType.FT_Error_String(error);
             Logger.Warn($"FontAtlas::PickGlyph() failed to load glyph for codepoint {codepoint}, error: {e}");
@@ -231,24 +232,25 @@ L_failed:
             string e = FreeType.FT_Error_String(error);
             Logger.Warn($"FontAtlas::PickBitmap() failed to pick the glyph bitmap of codepoint {c}, error: {e}");
             */
-            chardata.bitmap = null;
+            chardata.bitmap_buffer = null;
             return;
         }
 
         byte* buffer = glyph->bitmap.buffer;
-        uint width = glyph->bitmap.width;
+        int pitch = glyph->bitmap.pitch;
         uint height = glyph->bitmap.rows;
-        nuint texture_size = width * height;
+        nuint texture_size = (uint)(pitch * height);
 
         if (texture_size < 1 || buffer == null) {
-            chardata.bitmap = null;
+            chardata.bitmap_buffer = null;
             return;
         }
 
-        chardata.bitmap = (byte*)NativeMemory.Alloc(texture_size);
+        chardata.bitmap_pitch = pitch;
+        chardata.bitmap_buffer = (byte*)NativeMemory.Alloc(texture_size);
         //Debug.Assert(chardata->bitmap);
 
-        NativeMemory.Copy(buffer, chardata.bitmap, texture_size);
+        NativeMemory.Copy(buffer, chardata.bitmap_buffer, texture_size);
 
         if (glyph->bitmap.pixel_mode != FT_Pixel_Mode.GRAY) {
             Logger.Warn($"FontAtlas::PickBitmap() glyph pixel_mode is not FT_PIXEL_MODE_GRAY in codepoint {chardata.codepoint}");
@@ -256,16 +258,16 @@ L_failed:
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private unsafe static void PickMetrics(FT_GlyphSlot* glyph, ref CharData chardata) {
-        // just in case, this never should happen
-        //Debug.Assert(glyph != null);
+    private unsafe static void PickMetrics(FT_GlyphSlot* glyph, ref CharData chardata, byte font_height) {
+        FT_BBox acbox;
+        FreeType.FT_Outline_Get_CBox(&glyph->outline, &acbox);
 
         chardata.width = glyph->bitmap.width;
         chardata.height = glyph->bitmap.rows;
-        chardata.offset_x = glyph->bitmap_left + (glyph->metrics.horiBearingX >> 6);
-        chardata.offset_y = (glyph->face->bbox.yMax - glyph->metrics.horiBearingY) >> 6;
-        chardata.advancex = glyph->metrics.horiAdvance >> 6;
-        chardata.advancey = glyph->metrics.vertAdvance >> 6;
+        chardata.offset_x = (short)glyph->bitmap_left;
+        chardata.offset_y = (short)(-(acbox.yMax >>> 6));
+        chardata.advancex = glyph->advance.x >>> 6;
+        chardata.advancey = glyph->advance.y >>> 6;
         chardata.kernings = null;
         chardata.kernings_size = 0;
         chardata.has_atlas_entry = false;
@@ -294,7 +296,7 @@ L_failed:
                     continue;
                 }
 
-                long kerning_x = kerning.x >> 6;
+                long kerning_x = kerning.x >>> 6;
                 if (kerning_x == 0) continue;
 
                 kernings_count++;
@@ -315,11 +317,11 @@ L_failed:
 
                 if (FreeType.FT_Get_Kerning(face, previous, current, FT_Kerning_Mode.DEFAULT, &kerning) != 0) continue;
 
-                long kerning_x = kerning.x >> 6;
+                long kerning_x = kerning.x >>> 6;
                 if (kerning_x == 0) continue;
 
                 kernings[kerning_index].codepoint = chardata_array[j].codepoint;
-                kernings[kerning_index].x = kerning.x >> 6;
+                kernings[kerning_index].x = kerning.x >>> 6;
                 kerning_index++;
             }
 
@@ -389,9 +391,10 @@ L_failed:
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private unsafe static void PutInAtlasTexture(ref CharData chardata, ref TextureAtlas atlas) {
-        if (atlas.texture == null || !chardata.has_atlas_entry || chardata.bitmap == null) return;
+        if (atlas.texture == null || !chardata.has_atlas_entry || chardata.bitmap_buffer == null) return;
 
-        byte* buffer = chardata.bitmap;
+        byte* buffer = chardata.bitmap_buffer;
+        int pitch = chardata.bitmap_pitch;
         uint char_width = chardata.width;
         uint char_height = chardata.height;
         int atlas_y = chardata.atlas_entry.y;
@@ -402,12 +405,12 @@ L_failed:
 
             NativeMemory.Copy(buffer, atlas.texture + offset, char_width);
 
-            buffer += char_width;
+            buffer += pitch;
             atlas_y++;
         }
 
-        NativeMemory.Free(chardata.bitmap);
-        chardata.bitmap = null;
+        NativeMemory.Free(chardata.bitmap_buffer);
+        chardata.bitmap_buffer = null;
     }
 
 
@@ -428,10 +431,8 @@ L_failed:
 
             if ((error = FreeType.FT_Set_Pixel_Sizes(this.face, 0, font_height)) != 0) {
                 string s = FreeType.FT_Error_String(error);
-                Logger.Warn($"FontAtlas::AtlasBuild() failed to use font_height {font_height} using 64 instead, error: {s}");
-
-                // fallback to 64px
-                FreeType.FT_Set_Pixel_Sizes(this.face, 0, 64);
+                Logger.Warn($"FontAtlas::AtlasBuild() failed to use font_height {font_height}px, error: {s}");
+                return null;
             }
 
             for (int i = 0 ; i < codepoints_count ; i++) {
@@ -442,9 +443,9 @@ L_failed:
                     continue;
                 }
 
-                // render the glyph and later pick the metrics because can change after rendering ¿but why?
-                FontAtlas.PickBitmap(this.face, ref chardata[i], glyph);
-                FontAtlas.PickMetrics(glyph, ref chardata[i]);
+                // render the glyph and later pick the metrics
+                FontAtlas.PickBitmap(this.face, ref chardata[i], glyph);//FT_LOAD_BITMAP_METRICS_ONLY
+                FontAtlas.PickMetrics(glyph, ref chardata[i], font_height);
                 codepoints_parsed++;
             }
             if (codepoints_parsed < 1) goto L_build_map;
@@ -466,7 +467,7 @@ L_failed:
 
             // allocate texture
             atlas.texture_byte_size = (uint)(atlas.width * atlas.height);
-            atlas.texture = (byte*)NativeMemory.AllocZeroed(1, (nuint)atlas.texture_byte_size);
+            atlas.texture = (byte*)NativeMemory.AllocZeroed(1, atlas.texture_byte_size);
             //Debug.Assert(atlas.texture, "Texture creation failed, not enough memory");
 
             // place glyph bitmaps in the texture
@@ -477,23 +478,28 @@ L_failed:
 
 
 L_build_map:
-            FontCharMap obj = new FontCharMap();
-            obj.char_array_size = codepoints_parsed;
-            obj.char_array = new FontCharData[codepoints_parsed];
-            obj.texture_byte_size = atlas.texture_byte_size;
-            obj.texture = (nint)atlas.texture;
-            obj.texture_width = (ushort)atlas.width;
-            obj.texture_height = (ushort)atlas.height;
-            obj.ascender = (short)(this.face->ascender >> 6);
-            obj.line_height = (short)(this.face->size->metrics.height >> 6);
+            FontCharMap charmap = new FontCharMap();
+            charmap.char_array_size = codepoints_parsed;
+            charmap.char_array = new FontCharData[codepoints_parsed];
+            charmap.texture_byte_size = atlas.texture_byte_size;
+            charmap.texture = (nint)atlas.texture;
+            charmap.texture_width = (ushort)atlas.width;
+            charmap.texture_height = (ushort)atlas.height;
+            charmap.line_height = font_height;
 
-            //if (codepoints_parsed > 0) Debug.Assert(obj.char_array != null);
+            FT_Size_Metrics* metrics = &this.face->size->metrics;
+            charmap.ascender = Math.Max(metrics->ascender + metrics->descender, this.face->bbox.yMax) / 64f;
+
+            if (sdf_enabled) {
+                // FIXME: offset of 10% ¿but why?
+                charmap.ascender -= font_height * 0.10f;
+            }
 
             // place character data in the map
             for (int i = 0, j = 0 ; i < codepoints_count ; i++) {
                 if (chardata[i].codepoint == 0) continue;
 
-                obj.char_array[j] = new FontCharData() {
+                charmap.char_array[j] = new FontCharData() {
                     advancex = (short)chardata[i].advancex,
                     advancey = (short)chardata[i].advancey,
                     atlas_entry = chardata[i].atlas_entry,
@@ -509,7 +515,7 @@ L_build_map:
                 j++;
             }
 
-            return obj;
+            return charmap;
         }
     }
 

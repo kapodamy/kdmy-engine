@@ -14,6 +14,7 @@
 #include FT_IMAGE_H
 #include FT_GLYPH_H
 #include FT_ERRORS_H
+#include FT_OUTLINE_H
 
 #include "logger.h"
 #include "malloc_utils.h"
@@ -143,7 +144,7 @@ static inline int32_t convert_8bpp_to_4bpp(uint8_t* texture_8bpp, int32_t textur
 }
 #endif
 
-static inline bool pick_glyph(FT_Face face, FontCharData* chardata, uint32_t codepoint) {
+static bool pick_glyph(FT_Face face, FontCharData* chardata, uint32_t codepoint) {
     FT_ULong charcode;
     FT_UInt glyph_index = 0x0000;
 
@@ -158,7 +159,7 @@ static inline bool pick_glyph(FT_Face face, FontCharData* chardata, uint32_t cod
         return true;
     }
 
-    FT_Error error = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+    FT_Error error = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER | FT_LOAD_IGNORE_TRANSFORM);
     if (error) {
         logger_error(
             "fontatlas_atlas_build() Failed to load glyph for codepoint " FMT_U4 ", error: %s\n",
@@ -227,15 +228,18 @@ static unsigned char* render_glyph_bitmap(FT_GlyphSlot glyph) {
     return buffer;
 }
 
-static inline void pick_metrics(FT_GlyphSlot glyph, FontCharData* chardata) {
+static void pick_metrics(FT_GlyphSlot glyph, FontCharData* chardata) {
+    FT_BBox acbox;
+    FT_Outline_Get_CBox(&glyph->outline, &acbox);
+
     *chardata = (FontCharData){
         .codepoint = chardata->codepoint,
         .width = glyph->bitmap.width,
         .height = glyph->bitmap.rows,
-        .offset_x = (int16_t)(glyph->bitmap_left + (glyph->metrics.horiBearingX >> 6)),
-        .offset_y = (int16_t)((glyph->face->bbox.yMax - glyph->metrics.horiBearingY) >> 6),
-        .advancex = (int16_t)(glyph->metrics.horiAdvance >> 6),
-        .advancey = (int16_t)(glyph->metrics.vertAdvance >> 6),
+        .offset_x = (int16_t)glyph->bitmap_left,
+        .offset_y = (int16_t)(-(acbox.yMax >> 6)),
+        .advancex = glyph->advance.x >> 6,
+        .advancey = glyph->advance.y >> 6,
         .kernings = NULL,
         .kernings_size = 0,
         .has_atlas_entry = false
@@ -374,7 +378,7 @@ static inline void build_atlas(FontCharData* array, int32_t array_size, int32_t 
     atlas->height = max_height;
 }
 
-static inline void place_in_texture(FontCharData* chardata, TextureAtlas* atlas, unsigned char* glyph_bitmap) {
+static inline void place_in_texture(FontCharData* chardata, TextureAtlas* atlas, unsigned char* glyph_bitmap, int pitch) {
     if (!atlas->texture || !chardata->has_atlas_entry || !glyph_bitmap) return;
 
     size_t char_width = (size_t)chardata->width;
@@ -387,7 +391,7 @@ static inline void place_in_texture(FontCharData* chardata, TextureAtlas* atlas,
 
         memcpy(atlas->texture + offset, glyph_bitmap, char_width);
 
-        glyph_bitmap += char_width;
+        glyph_bitmap += pitch;
         atlas_y++;
     }
 }
@@ -407,18 +411,7 @@ FontCharMap* fontatlas_atlas_build(FontAtlas fontatlas, uint8_t font_height, int
             FT_Error_String(error)
         );
 
-        // fallback to 64px
-        font_height = 64;
-
-        if ((error = FT_Set_Pixel_Sizes(fontatlas->face, 0, font_height))) {
-            logger_error(
-                "fontatlas_atlas_build() Failed to use %ipx font height. Reason: %s\n",
-                (int)font_height,
-                FT_Error_String(error)
-            );
-
-            return NULL;
-        }
+        return NULL;
     }
 
     int32_t codepoints_count = 0;
@@ -438,7 +431,7 @@ FontCharMap* fontatlas_atlas_build(FontAtlas fontatlas, uint8_t font_height, int
             continue;
         }
 
-        // render the glyph and later pick the metrics because can change after rendering ¿but why?
+        // render the glyph and later pick the metrics
         render_glyph_bitmap(glyph);
         pick_metrics(glyph, &chardata[i]);
         codepoints_parsed++;
@@ -467,10 +460,10 @@ FontCharMap* fontatlas_atlas_build(FontAtlas fontatlas, uint8_t font_height, int
     for (int32_t i = 0; i < codepoints_count; i++) {
         if (pick_glyph(fontatlas->face, &chardata[i], codepoints_to_add[i])) continue;
 
-        // render the glyph again
+        // render again
         unsigned char* glyph_bitmap = render_glyph_bitmap(glyph);
         if (glyph_bitmap) {
-            place_in_texture(&chardata[i], &atlas, glyph_bitmap);
+            place_in_texture(&chardata[i], &atlas, glyph_bitmap, glyph->bitmap.pitch);
         }
 
         // replace the "glyph index" with the actual codepoint
@@ -494,10 +487,20 @@ L_build_map:
         .texture = atlas.texture,
         .texture_width = atlas.width,
         .texture_height = atlas.height,
-        .ascender = fontatlas->face->ascender >> 6,
-        .line_height = fontatlas->face->size->metrics.height >> 6,
+        .ascender = 0.0f,
+        .line_height = font_height,
         .kernings_array = kernings_array,
     };
+
+    FT_Size_Metrics* metrics = &fontatlas->face->size->metrics;
+    charmap->ascender = math2d_max_int(metrics->ascender + metrics->descender, fontatlas->face->bbox.yMax) / 64.0f;
+
+#ifndef _arch_dreamcast
+    if (sdf_enabled) {
+        // FIXME: offset of 10% ¿but why?
+        charmap->ascender -= font_height * 0.10f;
+    }
+#endif
 
     return charmap;
 }

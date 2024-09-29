@@ -261,14 +261,10 @@ public class FontType : IFont {
     }
 
     public float MeasureLineHeight(float height) {
-        float line_height;
-        if (this.atlas_primary.map != null)
-            line_height = this.atlas_primary.map.line_height;
-        else
-            line_height = this.atlas_secondary.map.line_height;
+        float line_height = (this.atlas_primary.map ?? this.atlas_secondary.map).line_height;
 
         float scale = height / FontType.GLYPHS_HEIGHT;
-        return Math.Max(height, (height * 2f) - (line_height * scale));
+        return line_height * scale;
     }
 
     public float DrawText(PVRContext pvrctx, ref FontParams @params, float x, float y, int text_index, int text_length, string text) {
@@ -279,8 +275,8 @@ public class FontType : IFont {
         float outline_size = @params.border_size * 2f;
         float scale_glyph = @params.height / FontType.GLYPHS_HEIGHT;
         int text_end_index = text_index + text_length;
-        float line_height = MeasureLineHeight(@params.height);
         float ascender = (this.atlas_primary.map ?? this.atlas_secondary.map).ascender;
+        float line_height = (this.atlas_primary.map ?? this.atlas_secondary.map).line_height;
 
 #if SDF_FONT
         float scale_outline = @params.height / FontType.GLYPHS_OUTLINE_HEIGHT;
@@ -351,7 +347,7 @@ public class FontType : IFont {
 
             if (grapheme.code == FontGlyph.LINEFEED) {
                 draw_glyph_x = 0f;
-                draw_glyph_y += line_height + @params.paragraph_space;
+                draw_glyph_y += line_height + (@params.paragraph_space / scale_glyph);
                 previous_codepoint = grapheme.code;
                 line_chars = 0;
                 lines++;
@@ -484,14 +480,34 @@ public class FontType : IFont {
     }
 
     public void MapCodepoints(string text, int text_index, int text_length) {
-        int actual = this.atlas_secondary.map != null ? this.atlas_secondary.map.char_array_size : 0;
-        int new_codepoints = 0;
         Grapheme grapheme = new Grapheme();
-        int index = text_index;
 
-        // step 1: count all unmapped codepoints
-        while (index < text_length && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
-            index += grapheme.size;
+        int codepoints_length;
+        int codepoints_used;
+        uint[] codepoints;
+        int existing_count;
+
+        if (this.atlas_secondary.map != null) {
+            codepoints_used = this.atlas_secondary.map.char_array_size;
+            codepoints_length = codepoints_used + 32;
+            codepoints = EngineUtils.CreateArray<uint>(codepoints_length);
+            existing_count = codepoints_used;
+
+            // add existing secondary codepoints
+            for (int i = 0 ; i < this.atlas_secondary.map.char_array_size ; i++) {
+                codepoints[i] = this.atlas_secondary.map.char_array[i].codepoint;
+            }
+        } else {
+            codepoints_used = 0;
+            codepoints_length = 64;
+            codepoints = EngineUtils.CreateArray<uint>(codepoints_length);
+            existing_count = 0;
+        }
+
+// step 1: add all unmapped codepoints
+L_find_unmaped_codepoints:
+        while (text_index < text_length && StringUtils.GetCharacterCodepoint(text, text_index, ref grapheme)) {
+            text_index += grapheme.size;
 
             switch (grapheme.code) {
                 case FontGlyph.LINEFEED:
@@ -504,42 +520,30 @@ public class FontType : IFont {
             if (FontType.InternalGetFontchardata(this.atlas_secondary, grapheme.code) >= 0)
                 continue;
 
-            // not present, count it
-            new_codepoints++;
-        }
+            // check if the codepoint is already added
+            for (int i = 0 ; i < codepoints_used ; i++) {
+                if (codepoints[i] == grapheme.code) goto L_find_unmaped_codepoints;
+            }
 
-        if (new_codepoints < 1) return;// nothing to do
+            codepoints[codepoints_used++] = grapheme.code;
 
-        // step 2: allocate codepoints array
-        int codepoints_size = actual + new_codepoints + 1;
-        uint[] codepoints = EngineUtils.CreateArray<uint>(codepoints_size);
-        codepoints[actual + new_codepoints] = 0x00000000;
-
-        if (this.atlas_secondary.map != null) {
-            // add existing secondary codepoints
-            for (int i = 0 ; i < this.atlas_secondary.map.char_array_size ; i++) {
-                codepoints[i] = this.atlas_secondary.map.char_array[i].codepoint;
+            if ((codepoints_used + 1) >= codepoints_length) {
+                codepoints_length += 16;
+                EngineUtils.ResizeArray(ref codepoints, codepoints_length);
             }
         }
 
-        index = text_index;
-        new_codepoints = actual;
-        while (index < text_length && StringUtils.GetCharacterCodepoint(text, index, ref grapheme)) {
-            index += grapheme.size;
-
-            if (FontType.InternalGetFontchardata2(this.lookup_table, this.atlas_primary, grapheme.code) >= 0)
-                continue;
-            if (FontType.InternalGetFontchardata(this.atlas_secondary, grapheme.code) >= 0)
-                continue;
-
-            codepoints[new_codepoints++] = (uint)grapheme.code;
+        if (codepoints_used <= existing_count) {
+            // nothing to do
+            //free(codepoints);
+            return;
         }
+
+        codepoints[codepoints_used++] = 0x00000000;
 
         // step 3: rebuild the secondary char map
         FontType.InternalDestroyAtlas(ref this.atlas_secondary);
         InternalCreateAtlas(ref this.atlas_secondary, codepoints);
-
-        // dispose secondary codepoints array
         //free(codepoints);
     }
 

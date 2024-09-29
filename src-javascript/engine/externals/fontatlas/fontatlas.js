@@ -29,11 +29,14 @@ function fontatlas_destroy(fontatlas) {
  * @param {FontAtlas} fontatlas 
  * @param {number} font_height 
  * @param {number} gaps 
- * @param {Uint32Array} characters_to_add 
+ * @param {Uint32Array|Array<number>} characters_to_add 
  * @returns {FontCharMap}
  */
 function fontatlas_atlas_build(fontatlas, font_height, gaps, characters_to_add) {
-    return FontAtlas.atlas_build(fontatlas, font_height, gaps, characters_to_add);
+    if (characters_to_add instanceof Uint32Array)
+        return FontAtlas.atlas_build(fontatlas, font_height, gaps, characters_to_add);
+    else
+        return FontAtlas.atlas_build(fontatlas, font_height, gaps, new Uint32Array(characters_to_add));
 }
 
 /**

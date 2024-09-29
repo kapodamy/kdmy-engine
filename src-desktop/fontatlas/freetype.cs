@@ -29,27 +29,25 @@ using FT_String = Byte;
 using FT_UInt = UInt32;
 using FT_ULong = UInt32;
 using FT_UShort = UInt16;
-using FT_Glyph_Format = UInt32;
-
-/* struct pointer stubs */
-using FT_Generic_Finalizer = nint;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using FT_F26Dot6 = Int32;
 
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct FT_BBox {
-    public readonly FT_Pos xMin, yMin;
-    public readonly FT_Pos xMax, yMax;
+internal readonly struct FT_BBox {
+    public readonly FT_Pos xMin;
+    public readonly FT_Pos yMin;
+    public readonly FT_Pos xMax;
+    public readonly FT_Pos yMax;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct FT_Generic {
-    readonly nint data;
-    readonly FT_Generic_Finalizer finalizer;
+internal unsafe readonly struct FT_Generic {
+    readonly void* data;
+    readonly void* finalizer;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct FT_Size_Metrics {
+internal unsafe readonly struct FT_Size_Metrics {
     public readonly FT_UShort x_ppem;
     public readonly FT_UShort y_ppem;
 
@@ -62,20 +60,25 @@ internal unsafe struct FT_Size_Metrics {
     public readonly FT_Pos max_advance;
 }
 
-
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct FT_Size {
+internal unsafe readonly struct FT_Size {
     readonly FT_Face* face;
     readonly FT_Generic generic;
     public readonly FT_Size_Metrics metrics;
-    readonly nint @internal;
+    readonly void* @internal;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct FT_Library { }
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct FT_Face {
+internal struct FT_Bitmap_Size { }
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct FT_CharMap { }
+
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe readonly struct FT_Face {
     readonly FT_Long num_faces;
     readonly FT_Long face_index;
 
@@ -88,19 +91,20 @@ internal unsafe struct FT_Face {
     readonly FT_String* style_name;
 
     readonly FT_Int num_fixed_sizes;
-    readonly nint available_sizes;
+    readonly FT_Bitmap_Size* available_sizes;
 
     readonly FT_Int num_charmaps;
-    readonly nint charmaps;
+    readonly FT_CharMap** charmaps;
 
     readonly FT_Generic generic;
+
 
     public readonly FT_BBox bbox;
 
     readonly FT_UShort units_per_EM;
-    public FT_Short ascender;
-    readonly FT_Short descender;
-    readonly FT_Short height;
+    public readonly FT_Short ascender;
+    public readonly FT_Short descender;
+    public readonly FT_Short height;
 
     readonly FT_Short max_advance_width;
     readonly FT_Short max_advance_height;
@@ -108,65 +112,78 @@ internal unsafe struct FT_Face {
     readonly FT_Short underline_position;
     readonly FT_Short underline_thickness;
 
-    public FT_GlyphSlot* glyph;
+    public readonly FT_GlyphSlot* glyph;
+    public readonly FT_Size* size;
 
-    public FT_Size* size;
-
-    /*  truncated struct  truncated struct  truncated struct  truncated struct  */
+    /* TRUNCATED TRUNCATED TRUNCATED TRUNCATED TRUNCATED TRUNCATED TRUNCATED TRUNCATED */
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct FT_Glyph_Metrics {
-    public FT_Pos width;
-    public FT_Pos height;
+internal unsafe readonly struct FT_Glyph_Metrics {
+    public readonly FT_Pos width;
+    public readonly FT_Pos height;
 
-    public FT_Pos horiBearingX;
-    public FT_Pos horiBearingY;
-    public FT_Pos horiAdvance;
+    public readonly FT_Pos horiBearingX;
+    public readonly FT_Pos horiBearingY;
+    public readonly FT_Pos horiAdvance;
 
-    public FT_Pos vertBearingX;
-    public FT_Pos vertBearingY;
-    public FT_Pos vertAdvance;
+    public readonly FT_Pos vertBearingX;
+    public readonly FT_Pos vertBearingY;
+    public readonly FT_Pos vertAdvance;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct FT_Vector {
-    public FT_Pos x;
-    public FT_Pos y;
+internal unsafe readonly struct FT_Vector {
+    public readonly FT_Pos x;
+    public readonly FT_Pos y;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct FT_Bitmap {
-    public uint rows;
-    public uint width;
-    readonly int pitch;
-    public byte* buffer;
+internal unsafe readonly struct FT_Bitmap {
+    public readonly uint rows;
+    public readonly uint width;
+    public readonly int pitch;
+    public readonly byte* buffer;
     readonly ushort num_grays;
-    public FT_Pixel_Mode pixel_mode;
-
-    /*  truncated struct  truncated struct  truncated struct  truncated struct  */
+    public readonly FT_Pixel_Mode pixel_mode;
+    readonly byte palette_mode;
+    readonly void* palette;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct FT_GlyphSlot {
+internal unsafe readonly struct FT_GlyphSlot {
     readonly FT_Library* library;
     public readonly FT_Face* face;
     readonly FT_GlyphSlot* next;
     readonly FT_UInt glyph_index;
     readonly FT_Generic generic;
 
-    public FT_Glyph_Metrics metrics;
+    public readonly FT_Glyph_Metrics metrics;
     readonly FT_Fixed linearHoriAdvance;
     readonly FT_Fixed linearVertAdvance;
-    readonly FT_Vector advance;
+    public readonly FT_Vector advance;
 
     readonly FT_Glyph_Format format;
 
-    public FT_Bitmap bitmap;
-    public FT_Int bitmap_left;
-    public FT_Int bitmap_top;
+    public readonly FT_Bitmap bitmap;
+    public readonly FT_Int bitmap_left;
+    public readonly FT_Int bitmap_top;
 
-    /*  truncated struct  truncated struct  truncated struct  truncated struct  */
+    public readonly FT_Outline outline;
+
+    /* TRUNCATED TRUNCATED TRUNCATED TRUNCATED TRUNCATED TRUNCATED TRUNCATED TRUNCATED */
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe readonly struct FT_Outline {
+    readonly ushort n_contours;
+    readonly ushort n_points;
+
+    readonly FT_Vector* points;
+    readonly byte* tags;
+    readonly ushort* contours;
+
+    readonly int flags;
 }
 
 
@@ -183,11 +200,11 @@ internal enum FT_Pixel_Mode : byte {
     MAX
 }
 
-internal enum FT_Encoding : uint {
-    UNICODE = ('u' << 24) | ('n' << 16) | ('i' << 8) | 'c'
+internal enum FT_Encoding : int {
+    UNICODE = 1970170211,
 }
 
-internal enum FT_Render_Mode : uint {
+internal enum FT_Render_Mode : int {
     NORMAL = 0,
     LIGHT,
     MONO,
@@ -198,26 +215,32 @@ internal enum FT_Render_Mode : uint {
     MAX
 }
 
-internal enum FT_Kerning_Mode : uint {
+internal enum FT_Kerning_Mode : int {
     DEFAULT = 0,
     UNFITTED,
     UNSCALED
 }
 
+internal enum FT_Glyph_Format : int {
+    NONE = 0,
+    COMPOSITE = 1668246896,
+    BITMAP = 1651078259,
+    OUTLINE = 1869968492,
+    PLOTTER = 1886154612,
+    SVG = 1398163232
+};
+
 
 internal static unsafe class FreeType {
 
     private const string DLL = "freetype";// "freetype.dll"
+
     public const FT_Int32 FT_LOAD_RENDER = 1 << 2;
+    public const FT_Int32 FT_LOAD_IGNORE_TRANSFORM = 1 << 11;
 
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern FT_Error FT_Init_FreeType(FT_Library** alibrary);
-
-    /*[LibraryImport(DLL)]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    [return: MarshalAs(UnmanagedType.LPStr)]
-    public static partial string FT_Error_String(FT_Error error_code);*/
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern FT_Error FT_New_Memory_Face(FT_Library* library, FT_Byte* file_base, FT_Long file_size, FT_Long face_index, FT_Face** aface);
@@ -251,6 +274,10 @@ internal static unsafe class FreeType {
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern void FT_Library_Version(FT_Library* library, FT_Int* amajor, FT_Int* aminor, FT_Int* apatch);
+
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void FT_Outline_Get_CBox(FT_Outline* outline, FT_BBox* acbox);
+
 
     public static string FT_Error_String(FT_Error error_code) {
         switch (error_code) {
