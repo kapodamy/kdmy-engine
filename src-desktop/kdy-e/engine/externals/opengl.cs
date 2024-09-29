@@ -71,10 +71,6 @@ public partial class WebGL2RenderingContext {
 
 #pragma warning disable IDE1006
 
-    public void flush() {
-        NativeMethods.glFlush();
-    }
-
     public string getString(GLenum name) {
         nint ptr = NativeMethods.glGetString(name);
         if (ptr == 0x00) return null;
@@ -566,10 +562,6 @@ public partial class WebGL2RenderingContext {
 
     internal bool unmapBuffer(GLenum target) {
         return NativeMethods.glUnmapBuffer(target) != 0;
-    }
-
-    internal void finish() {
-        NativeMethods.glFinish();
     }
 
     internal void texSubImage2D(GLenum target, int level, int xoffset, int yoffset, int width, int height, GLenum format, GLenum type, nint pixels) {

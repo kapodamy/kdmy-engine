@@ -294,9 +294,6 @@ public class WebGLContext {
         gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         gl.bindVertexArray(WebGLVertexArrayObject.Null);
-
-        // required to avoid GL_OUT_OF_MEMORY
-        //gl.flush();
     }
 
     public void DrawTextureYUV(PVRContext pvrctx, Texture tex, float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh) {
@@ -374,9 +371,6 @@ public class WebGLContext {
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         gl.activeTexture(gl.TEXTURE2);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
-
-        // required to avoid GL_OUT_OF_MEMORY
-        //gl.flush();
     }
 
     public void DrawSolid(PVRContext pvrctx, float[] rgb_color, float dx, float dy, float dw, float dh) {
@@ -489,10 +483,6 @@ public class WebGLContext {
         gl.bindBuffer(gl.ARRAY_BUFFER, WebGLBuffer.Null);
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
         gl.bindVertexArray(WebGLVertexArrayObject.Null);
-    }
-
-    public void Flush() {
-        //this.gl.flush();
     }
 
     public nint ReadFrameBufferBGRA(out int width, out int height) {

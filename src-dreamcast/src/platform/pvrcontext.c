@@ -189,12 +189,6 @@ float pvrctx_wait_ready() {
         pvr_context_current_z_index = 0.0f;
     }
 #else
-    if (pvr_context.glhelper.has_texture_uploads) {
-        // wait until all textures are completely uploaded
-        pvr_context.glhelper.has_texture_uploads = false;
-        glFlush(pvr_context.glhelper);
-    }
-
     // flush front framebuffer if there anything drawn
     pvr_context.FlushFramebuffer();
     pvr_context.shader_framebuffer_front.Invalidate();

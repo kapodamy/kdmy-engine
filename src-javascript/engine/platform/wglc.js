@@ -24,8 +24,6 @@ class WebGL2Context {
     /**@type {WebGLShader}*/stock_shadervertex;
     /**@type {WebGLShader}*/stock_shaderfragment;
 
-    /**@type {boolean}*/has_texture_uploads;
-
     /**@type {WEBGL_compressed_texture_s3tc}*/s3tc_ext;
 
     constructor(/**@type {HTMLCanvasElement}*/canvas) {
@@ -897,8 +895,6 @@ async function webopengl_init(canvas) {
         gl, webopengl_patch_shader(await webopengl_internal_load_shader("stock", false), false), false, true
     );
 
-    wglc.has_texture_uploads = false;
-
     // required to support compressed textures
     wglc.s3tc_ext = gl.getExtension("WEBGL_compressed_texture_s3tc");
 
@@ -979,8 +975,6 @@ function webopengl_create_texture(/**@type {WebGL2Context}*/wglc, texture_width,
     //       normally requires 512MiB~1.2GiB of vram. This increases the
     //       requeriments to 1.4Gib~2.25GiB of vram.
     //gl.generateMipmap(gl.TEXTURE_2D);
-
-    wglc.has_texture_uploads = true;
 
     return tex;
 }

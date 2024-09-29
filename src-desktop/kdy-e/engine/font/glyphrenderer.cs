@@ -49,7 +49,7 @@ public static class GlyphRenderer {
         glyphrenderer_glyphs_index_outlines = 0;
 
         if (glyphrenderer_prefill) {
-#pragma warning disable CS0162 // Se detectó código inaccesible
+#pragma warning disable CS0162 // Se detectï¿½ cï¿½digo inaccesible
             // fill indices buffer
             for (uint i = 0, j = 0, k = 0 ; i < glyph_count ; i++) {
                 for (uint l = 0 ; l < GlyphRenderer.QUAD_INDICES.Length ; l++) {
@@ -60,7 +60,7 @@ public static class GlyphRenderer {
                 // FIXME: alpha works if this break is here
                 if (true) break;
             }
-#pragma warning restore CS0162 // Se detectó código inaccesible
+#pragma warning restore CS0162 // Se detectï¿½ cï¿½digo inaccesible
 
             // fill vertex buffer
             for (int i = 0, j = 0 ; i < glyph_count ; i++) {
@@ -229,8 +229,6 @@ public static class GlyphRenderer {
         gl.drawElementsInstanced(
             gl.TRIANGLES, total_indices, gl.UNSIGNED_INT, 0, glyphrenderer_glyphs_total
         );
-        //gl.flush();
-
 
         // unbind textures
         gl.activeTexture(gl.TEXTURE0);

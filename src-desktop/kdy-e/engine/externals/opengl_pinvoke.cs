@@ -25,7 +25,6 @@ public partial class WebGL2RenderingContext {
         internal delegate void DglShadeModel(GLenum mode);
         internal delegate nint DglGetString(GLenum name);
         internal delegate nint DglGetStringi(GLenum name, GLuint index);
-        internal delegate void DglFlush();
         internal delegate GLenum DglGetError();
         internal delegate void DglActiveTexture(GLenum texture);
         internal delegate void DglBindTexture(GLenum target, GLuint texture);
@@ -98,7 +97,6 @@ public partial class WebGL2RenderingContext {
         internal delegate void DglDeleteFramebuffers(GLsizei n, [In, Out] GLuint[] framebuffers);
         internal delegate nint DglMapBuffer(GLenum target, GLenum access);
         internal delegate GLboolean DglUnmapBuffer(GLenum target);
-        internal delegate void DglFinish();
         internal delegate void DglTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, nint pixels);
         internal delegate void DglCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, nint data);
 
@@ -110,7 +108,6 @@ public partial class WebGL2RenderingContext {
         internal static readonly DglShadeModel glShadeModel;
         internal static readonly DglGetString glGetString;
         internal static readonly DglGetStringi glGetStringi;
-        internal static readonly DglFlush glFlush;
         internal static readonly DglGetError glGetError;
         internal static readonly DglActiveTexture glActiveTexture;
         internal static readonly DglBindTexture glBindTexture;
@@ -183,7 +180,6 @@ public partial class WebGL2RenderingContext {
         internal static readonly DglDeleteFramebuffers glDeleteFramebuffers;
         internal static readonly DglMapBuffer glMapBuffer;
         internal static readonly DglUnmapBuffer glUnmapBuffer;
-        internal static readonly DglFinish glFinish;
         internal static readonly DglTexSubImage2D glTexSubImage2D;
         internal static readonly DglCompressedTexImage2D glCompressedTexImage2D;
 #pragma warning restore CS0649

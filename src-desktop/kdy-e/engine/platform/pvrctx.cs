@@ -82,12 +82,6 @@ public class PVRContext {
             return Single.NaN;
         }
 
-        if (this.webopengl.has_texture_uploads) {
-            // wait until all textures are completely uploaded
-            this.webopengl.has_texture_uploads = false;
-            this.webopengl.gl.flush();
-        }
-
         // flush front framebuffer if there anything drawn
         this.FlushFramebuffer();
         this.shader_framebuffer_front.Invalidate();
@@ -559,7 +553,6 @@ public class PVRContext {
 
     [Obsolete]
     public void Flush() {
-        webopengl.Flush();
     }
 
     public bool Save() {
