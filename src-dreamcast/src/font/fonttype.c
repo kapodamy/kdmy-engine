@@ -241,7 +241,7 @@ void fonttype_measure(FontType fonttype, FontParams* params, const char* text, i
 
     float line_height = fonttype_measure_line_height(fonttype, params->height);
     info->max_width = (math2d_max_float(width, max_width) + last_glyph_width_correction) * scale;
-    info->total_height = (line_height * lines) + (params->paragraph_space * (lines - 1));
+    info->total_height = (line_height + params->paragraph_space) * lines;
 }
 
 void fonttype_measure_char(FontType fonttype, uint32_t codepoint, float height, FontCharInfo* info) {
@@ -533,7 +533,7 @@ float fonttype_draw_text(FontType fonttype, PVRContext pvrctx, FontParams* param
     }
 
     pvr_context_restore(pvrctx);
-    return (line_height * lines) + (params->paragraph_space * (lines - 1));
+    return ((line_height * scale_glyph) + params->paragraph_space) * lines;
 }
 
 void fonttype_map_codepoints(FontType fonttype, const char* text, int32_t text_index, size_t text_end_index) {

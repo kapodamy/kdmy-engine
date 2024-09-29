@@ -173,7 +173,7 @@ public class WeekPause {
         WeekPause.MENU.parameters.items_gap = WeekPause.MENU.parameters.font_size;
 
         // load custom menumanifest if exists
-        MenuManifest menumanifest = GameMain.HelperInitMenuManifestSuffixed(WeekPause.MODDING_MENU, true);
+        MenuManifest menumanifest = GameMain.HelperInitMenuManifestForDreamcast(WeekPause.MODDING_MENU);
         if (menumanifest == null) menumanifest = WeekPause.MENU;
 
         Menu menu = new Menu(

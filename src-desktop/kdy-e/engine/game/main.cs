@@ -203,7 +203,11 @@ public static class GameMain {
     }
 
 
-    public static Layout HelperInitLayoutSuffixed(string src, bool check_exists) {
+    public static Layout HelperInitLayoutForDreamcast(string src) {
+        if (PVRContext.global_context.IsWidescreen()) {
+            return Layout.Init(src);
+        }
+
         int idx = src.LastIndexOf('.');
         if (idx < 0) idx = src.Length;
 
@@ -212,7 +216,7 @@ public static class GameMain {
 
         if (FS.FileExists(dreamcast_src))
             layout = Layout.Init(dreamcast_src);
-        else if (!check_exists || FS.FileExists(src))
+        else if (FS.FileExists(src))
             layout = Layout.Init(src);
         else
             layout = null;
@@ -221,7 +225,14 @@ public static class GameMain {
         return layout;
     }
 
-    public static MenuManifest HelperInitMenuManifestSuffixed(string src, bool check_exists) {
+    public static MenuManifest HelperInitMenuManifestForDreamcast(string src) {
+        if (PVRContext.global_context.IsWidescreen()) {
+            if (FS.FileExists(src))
+                return new MenuManifest(src);
+            else
+                return null;
+        }
+
         int idx = src.LastIndexOf('.');
         if (idx < 0) idx = src.Length;
 
@@ -230,11 +241,10 @@ public static class GameMain {
 
         if (FS.FileExists(dreamcast_src))
             menumanifest = new MenuManifest(dreamcast_src);
-        else if (!check_exists || FS.FileExists(src))
+        else if (FS.FileExists(src))
             menumanifest = new MenuManifest(src);
         else
             menumanifest = null;
-
 
         //free(dreamcast_src);
         return menumanifest;

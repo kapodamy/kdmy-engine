@@ -212,7 +212,7 @@ bool mainmenu_main() {
     }
 
     // load custom menumanifest if exists
-    MenuManifest menumanifest = main_helper_init_menumanifest_suffixed(MAINMENU_MODDING_MENU, true);
+    MenuManifest menumanifest = main_helper_init_menumanifest_for_dreamcast(MAINMENU_MODDING_MENU);
     if (!menumanifest) menumanifest = &MAINMENU_MENU_MANIFEST;
 
     Menu menu = menu_init(menumanifest, x, y, z, size_width, size_height);

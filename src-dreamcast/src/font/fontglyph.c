@@ -243,7 +243,7 @@ void fontglyph_measure(FontGlyph fontglyph, FontParams* params, const char* text
     }
 
     lines_info->max_width = math2d_max_float(width, max_width);
-    lines_info->total_height = (params->height * lines) + (params->paragraph_space * (lines - 1));
+    lines_info->total_height = (params->height + params->paragraph_space) * lines;
 }
 
 void fontglyph_measure_char(FontGlyph fontglyph, uint32_t codepoint, float height, FontCharInfo* char_info) {
@@ -440,7 +440,7 @@ float fontglyph_draw_text(FontGlyph fontglyph, PVRContext pvrctx, FontParams* pa
 
     pvr_context_restore(pvrctx);
 
-    return (params->height * lines) + (params->paragraph_space * (lines - 1));
+    return (params->height + params->paragraph_space) * lines;
 }
 
 int32_t fontglyph_animate(FontGlyph fontglyph, float elapsed) {

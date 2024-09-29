@@ -292,7 +292,11 @@ void main_helper_trigger_action_menu2(Layout layout, MenuManifest menu_manifest,
     main_helper_trigger_action_menu(layout, prefix, name, selected, choosen);
 }
 
-Layout main_helper_init_layout_suffixed(const char* src, bool check_exists) {
+Layout main_helper_init_layout_for_dreamcast(const char* src) {
+    if (pvr_context_is_widescreen()) {
+        return layout_init(src);
+    }
+
     int32_t idx = string_last_index_of_char(src, '.');
     if (idx < 0) idx = (int32_t)strlen(src);
 
@@ -301,7 +305,7 @@ Layout main_helper_init_layout_suffixed(const char* src, bool check_exists) {
 
     if (fs_file_exists(dreamcast_src))
         layout = layout_init(dreamcast_src);
-    else if (!check_exists || fs_file_exists(src))
+    else if (fs_file_exists(src))
         layout = layout_init(src);
     else
         layout = NULL;
@@ -310,7 +314,14 @@ Layout main_helper_init_layout_suffixed(const char* src, bool check_exists) {
     return layout;
 }
 
-MenuManifest main_helper_init_menumanifest_suffixed(const char* src, bool check_exists) {
+MenuManifest main_helper_init_menumanifest_for_dreamcast(const char* src) {
+    if (pvr_context_is_widescreen()) {
+        if (fs_file_exists(src))
+            return menumanifest_init(src);
+        else
+            return NULL;
+    }
+    
     int32_t idx = string_last_index_of_char(src, '.');
     if (idx < 0) idx = (int32_t)strlen(src);
 
@@ -319,7 +330,7 @@ MenuManifest main_helper_init_menumanifest_suffixed(const char* src, bool check_
 
     if (fs_file_exists(dreamcast_src))
         menumanifest = menumanifest_init(dreamcast_src);
-    else if (!check_exists || fs_file_exists(src))
+    else if (fs_file_exists(src))
         menumanifest = menumanifest_init(src);
     else
         menumanifest = NULL;

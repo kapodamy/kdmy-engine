@@ -79,7 +79,7 @@ void main_helper_draw_loading_screen();
 void main_helper_trigger_action_menu(Layout layout, const char* prefix, const char* name, bool selected, bool choosen);
 void main_helper_trigger_action_menu2(Layout layout, MenuManifest menu_manifest, int32_t index, const char* prefix, bool selected, bool choosen);
 
-Layout main_helper_init_layout_suffixed(const char* src, bool check_exists);
-MenuManifest main_helper_init_menumanifest_suffixed(const char* src, bool check_exists);
+Layout main_helper_init_layout_for_dreamcast(const char* src);
+MenuManifest main_helper_init_menumanifest_for_dreamcast(const char* src);
 
 #endif

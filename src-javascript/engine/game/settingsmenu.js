@@ -375,7 +375,7 @@ async function settingsmenu_main() {
     let options_help = main_options_help;
 
     // load custom menumanifest if exists
-    let menumanifest = await main_helper_init_menumanifest_suffixed(SETTINGSMENU_MODDING_MENU, true);
+    let menumanifest = await main_helper_init_menumanifest_for_dreamcast(SETTINGSMENU_MODDING_MENU);
     if (menumanifest) {
         // since a custom menu was provided, remap option descriptions
         options_help = new Array[menumanifest.items_size];

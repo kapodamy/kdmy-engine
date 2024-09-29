@@ -1427,7 +1427,7 @@ async function week_init_stage(roundcontext, stage_src) {
     }
 
     if (stage_src) {
-        roundcontext.layout = await main_helper_init_layout_suffixed(stage_src, false);
+        roundcontext.layout = await main_helper_init_layout_for_dreamcast(stage_src);
     } else {
         roundcontext.layout = null;
     }

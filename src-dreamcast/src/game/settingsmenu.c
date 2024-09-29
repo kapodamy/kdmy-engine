@@ -469,7 +469,7 @@ void settingsmenu_main() {
     SettingOption* options_help = (SettingOption*)main_options_help;
 
     // load custom menumanifest if exists
-    MenuManifest menumanifest = main_helper_init_menumanifest_suffixed(SETTINGSMENU_MODDING_MENU, true);
+    MenuManifest menumanifest = main_helper_init_menumanifest_for_dreamcast(SETTINGSMENU_MODDING_MENU);
     if (menumanifest) {
         // since a custom menu was provided, remap option descriptions
         options_help = malloc_for_array(SettingOption, menumanifest->items_size);

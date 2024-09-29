@@ -205,7 +205,7 @@ public class FontType : IFont {
 
         float line_height = MeasureLineHeight(@params.height);
         info.max_width = (Math.Max(width, max_width) + last_glyph_width_correction) * scale;
-        info.total_height = (line_height * lines) + (@params.paragraph_space * (lines - 1));
+        info.total_height = (line_height + @params.paragraph_space) * lines;
     }
 
     public void MeasureChar(uint codepoint, float height, ref FontCharInfo info) {
@@ -476,7 +476,7 @@ public class FontType : IFont {
         }
 
         pvrctx.Restore();
-        return (line_height * lines) + (@params.paragraph_space * (lines - 1));
+        return ((line_height * scale_glyph) + @params.paragraph_space) * lines;
     }
 
     public void MapCodepoints(string text, int text_index, int text_length) {

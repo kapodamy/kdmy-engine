@@ -1284,7 +1284,7 @@ static void week_init_stage(RoundContext roundcontext, const char* stage_src) {
     }
 
     if (string_is_not_empty(stage_src)) {
-        roundcontext->layout = main_helper_init_layout_suffixed(stage_src, false);
+        roundcontext->layout = main_helper_init_layout_for_dreamcast(stage_src);
     } else {
         roundcontext->layout = NULL;
     }

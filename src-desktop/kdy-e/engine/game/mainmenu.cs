@@ -192,7 +192,7 @@ public class MainMenu {
         }
 
         // load custom menumanifest if exists
-        MenuManifest menumanifest = GameMain.HelperInitMenuManifestSuffixed(MainMenu.MODDING_MENU, true);
+        MenuManifest menumanifest = GameMain.HelperInitMenuManifestForDreamcast(MainMenu.MODDING_MENU);
         if (menumanifest == null) menumanifest = MainMenu.MENU_MANIFEST;
 
         Menu menu = new Menu(menumanifest, x, y, z, size_width, size_height);

@@ -178,7 +178,7 @@ async function mainmenu_main() {
     }
 
     // load custom menumanifest if exists
-    let menumanifest = await main_helper_init_menumanifest_suffixed(MAINMENU_MODDING_MENU, true);
+    let menumanifest = await main_helper_init_menumanifest_for_dreamcast(MAINMENU_MODDING_MENU);
     if (!menumanifest) menumanifest = MAINMENU_MENU_MANIFEST;
 
     let menu = await menu_init(menumanifest, x, y, z, size[0], size[1]);

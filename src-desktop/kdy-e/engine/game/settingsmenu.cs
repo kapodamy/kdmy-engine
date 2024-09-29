@@ -389,7 +389,7 @@ public static class SettingsMenu {
         SettingOption[] options_help = main_options_help;
 
         // load custom menumanifest if exists
-        MenuManifest menumanifest = GameMain.HelperInitMenuManifestSuffixed(SettingsMenu.MODDING_MENU, true);
+        MenuManifest menumanifest = GameMain.HelperInitMenuManifestForDreamcast(SettingsMenu.MODDING_MENU);
         if (menumanifest != null) {
             // since a custom menu was provided, remap option descriptions
             options_help = EngineUtils.CreateArray<SettingOption>(menumanifest.items_size);

@@ -178,7 +178,7 @@ function fonttype_measure(fonttype, params, text, text_index, text_length, info)
 
     let line_height = fonttype_measure_line_height(fonttype, params.height);
     info.max_width = (Math.max(width, max_width) + last_glyph_width_correction) * scale;
-    info.total_height = (line_height * lines) + (params.paragraph_space * (lines - 1));
+    info.total_height = (line_height + params.paragraph_space) * lines;
 }
 
 function fonttype_measure_char(fonttype, codepoint, height, info) {
@@ -443,7 +443,7 @@ function fonttype_draw_text(fonttype, pvrctx, params, x, y, text_index, text_len
     }
 
     pvr_context_restore(pvrctx);
-    return (line_height * lines) + (params.paragraph_space * (lines - 1));
+    return ((line_height * scale_glyph) + params.paragraph_space) * lines;
 }
 
 function fonttype_map_codepoints(fonttype, text, text_index, text_end_index) {

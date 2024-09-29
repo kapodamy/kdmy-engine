@@ -210,7 +210,7 @@ L_measure:
         }
 
         lines_info.max_width = Math.Max(width, max_width);
-        lines_info.total_height = (@params.height * lines) + (@params.paragraph_space * (lines - 1));
+        lines_info.total_height = (@params.height + @params.paragraph_space) * lines;
     }
 
     public void MeasureChar(uint codepoint, float height, ref FontCharInfo char_info) {
@@ -406,7 +406,7 @@ L_measure:
 
         pvrctx.Restore();
 
-        return (@params.height * lines) + (@params.paragraph_space * (lines - 1));
+        return (@params.height + @params.paragraph_space) * lines;
     }
 
     public int Animate(float elapsed) {

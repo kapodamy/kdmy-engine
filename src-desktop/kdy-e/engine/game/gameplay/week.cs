@@ -1449,7 +1449,7 @@ public class Week {
         }
 
         if (StringUtils.IsNotEmpty(stage_src)) {
-            roundcontext.layout = GameMain.HelperInitLayoutSuffixed(stage_src, false);
+            roundcontext.layout = GameMain.HelperInitLayoutForDreamcast(stage_src);
         } else {
             roundcontext.layout = null;
         }

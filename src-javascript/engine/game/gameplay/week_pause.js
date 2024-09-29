@@ -151,7 +151,7 @@ async function week_pause_init(exit_to_weekselector_label) {
     WEEKPAUSE_MENU.parameters.items_gap = WEEKPAUSE_MENU.parameters.font_size;
 
     // load custom menumanifest if exists
-    let menumanifest = await main_helper_init_menumanifest_suffixed(WEEKPAUSE_MODDING_MENU, true);
+    let menumanifest = await main_helper_init_menumanifest_for_dreamcast(WEEKPAUSE_MODDING_MENU);
     if (!menumanifest) menumanifest = WEEKPAUSE_MENU;
 
     let menu = await menu_init(

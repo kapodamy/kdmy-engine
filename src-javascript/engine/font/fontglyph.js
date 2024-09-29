@@ -197,7 +197,7 @@ function fontglyph_measure(fontglyph, params, text, text_index, text_length, lin
     }
 
     lines_info.max_width = Math.max(width, max_width);
-    lines_info.total_height = (params.height * lines) + (params.paragraph_space * (lines - 1));
+    lines_info.total_height = (params.height + params.paragraph_space) * lines;
 }
 
 function fontglyph_measure_char(fontglyph, codepoint, height, char_info) {
@@ -395,7 +395,7 @@ function fontglyph_draw_text(fontglyph, pvrctx, params, x, y, text_index, text_l
 
     pvr_context_restore(pvrctx);
 
-    return (params.height * lines) + (params.paragraph_space * (lines - 1));
+    return (params.height + params.paragraph_space) * lines;
 }
 
 function fontglyph_animate(fontglyph, elapsed) {
