@@ -15,7 +15,7 @@ namespace Engine.Platform;
 
 public class SIMDMatrix {
     private const int LENGTH = 16;
-    private const int BYTE_SIZE = sizeof(float) * LENGTH;
+    private const ushort BYTE_SIZE = sizeof(float) * LENGTH;
     private const int SSE_ALIGNMENT = 0x10;
     private const int ROW0 = 0x00;
     private const int ROW1 = 0x04;
@@ -255,7 +255,7 @@ public class SIMDMatrix {
 
     public void CopyTo(SIMDMatrix dest) {
         unsafe {
-            Buffer.MemoryCopy(this.matrix, dest.matrix, BYTE_SIZE, BYTE_SIZE);
+            NativeMemory.Copy(this.matrix, dest.matrix, BYTE_SIZE);
         }
     }
 

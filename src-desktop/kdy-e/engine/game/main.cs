@@ -57,6 +57,7 @@ public static class GameMain {
         new FontHolder("/assets/common/font/pixel.otf", null, false);
         new FontHolder("/assets/common/font/alphabet.xml", "bold", false);
 
+        Logger.Info("loading available weeks...");
         WeekEnumerator.Enumerate();
 
         if (Funkin.weeks_array.size < 1) Logger.Warn("main() no weeks detected");
