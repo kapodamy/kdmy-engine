@@ -128,7 +128,7 @@ public class WeekSelector {
         StringBuilder list = ui.stringbuilder;
         list.Clear();
 
-        for (int i = 0 ; i < weekinfo.songs_count ; i++) {
+        for (int i = 0 ; i < songs_count ; i++) {
             if (weekinfo.songs[i].freeplay_only) continue;
             list.AddKDY("\n");
             list.AddKDY(weekinfo.songs[i].name);
