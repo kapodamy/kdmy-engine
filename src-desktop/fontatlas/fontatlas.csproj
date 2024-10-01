@@ -17,4 +17,7 @@
   <ItemGroup>
     <Compile Include="..\kdy-e\engine\csharp\Logger.cs" Link="Logger.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="9.0.0-rc.1.24431.7" />
+  </ItemGroup>
 </Project>

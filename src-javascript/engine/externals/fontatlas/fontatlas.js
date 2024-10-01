@@ -69,3 +69,34 @@ function fontatlas_atlas_destroy(fontcharmap) {
 function fontatlas_get_version() {
     return FontAtlas.get_version();
 }
+
+///**
+// * @param {FontAtlas} fontatlas
+// * @param {FontCharMap} charmap
+// * @param {number} font_height
+// * @param {number} revision
+// * @returns {ArrayBuffer}
+// */
+//function fontatlas_serialize_atlas(fontatlas, charmap, font_height, revision) {
+//    return FontAtlas.serialize_atlas(fontatlas, charmap, font_height, revision);
+//}
+//
+///**
+// * @param {FontAtlas} fontatlas
+// * @param {ArrayBuffer} buffer
+// * @param {number} expected_font_height
+// * @param {number} expected_revision
+// * @returns {FontCharMap}
+// */
+//function fontatlas_deserialize_atlas(fontatlas, buffer, expected_font_height, expected_revision) {
+//    return FontAtlas.deserialize_atlas(fontatlas, buffer, expected_font_height, expected_revision);
+//}
+//
+///**
+// * @param {FontAtlas} fontatlas
+// * @returns {BigInt}
+// */
+//function fontatlas_xxhash(fontatlas) {
+//    return FontAtlas.xxhash(fontatlas);
+//}
+

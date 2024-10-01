@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.IO.Hashing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Engine.Externals.FontAtlasInterop.FreeTypeInterop;
@@ -39,20 +40,6 @@ public class FontCharMap {
     public uint texture_byte_size;
     public float ascender;
     public short line_height;
-
-    public void DestroyTextureOnly() {
-        if (this.texture == 0x00) return;
-
-        unsafe {
-            NativeMemory.Free((void*)this.texture);
-        }
-
-        this.texture = 0x00;
-        this.texture_byte_size = 0;
-        this.texture_width = 0;
-        this.texture_height = 0;
-    }
-
     public void Destroy() {
         //for (int i = 0 ; i < this.char_array_size ; i++) {
         //    if (this.char_array[i].kernings == null) continue;
@@ -71,6 +58,7 @@ public class FontCharMap {
 public partial class FontAtlas {
     private unsafe byte* font;
     private int font_size;
+    private ulong font_xxhash;
     private unsafe FT_Library* lib;
     private unsafe FT_Face* face;
 }
@@ -102,10 +90,13 @@ internal unsafe struct CharData {
 
 public partial class FontAtlas {
 
-    private const string FONTATLAS_BASE_LIST_COMMON = "  !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-    private const string FONTATLAS_BASE_LIST_EXTENDED = "¿¡¢¥¦¤§¨©ª«»¬®¯°±´³²¹ºµ¶·ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßŸàáâãäåæçèéêëìíîïðñòóôõö×øùúûüýþßÿ";
+    private const string BASE_LIST_COMMON = "  !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+    private const string BASE_LIST_EXTENDED = "¿¡¢¥¦¤§¨©ª«»¬®¯°±´³²¹ºµ¶·ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßŸàáâãäåæçèéêëìíîïðñòóôõö×øùúûüýþßÿ";
 
+    private const uint SERIALIZED_VERSION = 1;
+    private const uint SERIALIZED_SIGNATURE = ('F' << 0) | ('A' << 8) | ('C' << 16) | ('M' << 24);
     private const int MAX_TEXTURE_DIMMEN = 2048;
+
     private static bool sdf_enabled = false;
 
     private FontAtlas() { }
@@ -136,6 +127,7 @@ public partial class FontAtlas {
             FontAtlas fontatlas = new FontAtlas();
             fontatlas.font = (byte*)NativeMemory.Alloc((nuint)font_data_size);
             fontatlas.font_size = font_data_size;
+            fontatlas.font_xxhash = BitConverter.ToUInt64(XxHash64.Hash(font_data), 0);
 
             int error;
             FT_Library* lib;
@@ -520,14 +512,14 @@ L_build_map:
     }
 
     public FontCharMap AtlasBuildComplete(byte font_height, byte gaps) {
-        int size_common = FONTATLAS_BASE_LIST_COMMON.Length;
-        int size_extended = FONTATLAS_BASE_LIST_EXTENDED.Length;
+        int size_common = FontAtlas.BASE_LIST_COMMON.Length;
+        int size_extended = FontAtlas.BASE_LIST_EXTENDED.Length;
         int size_total = size_extended + size_common;
         uint[] list_complete = new uint[size_total + 1];
         uint j = 0;
 
-        for (int i = 0 ; i < size_common ; i++) list_complete[j++] = (uint)Char.ConvertToUtf32(FONTATLAS_BASE_LIST_COMMON, i);
-        for (int i = 0 ; i < size_extended ; i++) list_complete[j++] = (uint)Char.ConvertToUtf32(FONTATLAS_BASE_LIST_EXTENDED, i);
+        for (int i = 0 ; i < size_common ; i++) list_complete[j++] = (uint)Char.ConvertToUtf32(FontAtlas.BASE_LIST_COMMON, i);
+        for (int i = 0 ; i < size_extended ; i++) list_complete[j++] = (uint)Char.ConvertToUtf32(FontAtlas.BASE_LIST_EXTENDED, i);
         list_complete[size_total] = 0;
 
         // place ascii characters first
@@ -540,6 +532,145 @@ L_build_map:
         return charmap;
     }
 
+    public byte[] SerializeAtlas(FontCharMap charmap, byte font_height, ushort revision) {
+        if (charmap == null) return null;
+
+        // count the amount of bytes required
+        byte[] buffer = null;
+        GCHandle gchnd = default;
+        DataView dataview = new DataView(Int32.MaxValue);
+
+L_serialize_to_dataview:
+        dataview.SetUInt32(FontAtlas.SERIALIZED_SIGNATURE);
+        dataview.SetUInt32(FontAtlas.SERIALIZED_VERSION);
+        dataview.SetUInt64(this.font_xxhash);
+        dataview.SetBool(FontAtlas.sdf_enabled);
+        dataview.SetUInt16(font_height);
+        dataview.SetUInt16(revision);
+
+        dataview.SetInt32(charmap.char_array_size);
+        dataview.SetUInt16(charmap.texture_width);
+        dataview.SetUInt16(charmap.texture_height);
+        dataview.SetUInt32(charmap.texture_byte_size);
+        dataview.SetFloat32(charmap.ascender);
+        dataview.SetInt16(charmap.line_height);
+
+        for (int i = 0 ; i < charmap.char_array_size ; i++) {
+            FontCharData chardata = charmap.char_array[i];
+
+            dataview.SetUInt32(chardata.codepoint);
+            dataview.SetInt16(chardata.offset_x);
+            dataview.SetInt16(chardata.offset_y);
+            dataview.SetInt16(chardata.advancex);
+            dataview.SetInt16(chardata.advancey);
+            dataview.SetUInt16(chardata.width);
+            dataview.SetUInt16(chardata.height);
+            dataview.SetInt32(chardata.kernings_size);
+            dataview.SetBool(chardata.has_atlas_entry);
+
+            dataview.SetUInt16(chardata.atlas_entry.x);
+            dataview.SetUInt16(chardata.atlas_entry.y);
+
+            for (int j = 0 ; j < chardata.kernings_size ; j++) {
+                ref FontCharDataKerning kerning = ref chardata.kernings[j];
+
+                dataview.SetUInt32(kerning.codepoint);
+                dataview.SetInt32(kerning.x);
+            }
+        }
+
+        dataview.WriteData(charmap.texture, charmap.texture_byte_size);
+
+        if (buffer == null) {
+            // now allocate the buffer and serialize again
+            buffer = new byte[dataview.size];
+            gchnd = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            dataview = new DataView(gchnd.AddrOfPinnedObject(), buffer.Length);
+            goto L_serialize_to_dataview;
+        }
+
+        gchnd.Free();
+        return buffer;
+    }
+
+    public FontCharMap DeserializeAtlas(byte[] buffer, byte expected_font_height, ushort expected_revision) {
+        if (buffer == null) return null;
+
+        FontCharMap charmap = new FontCharMap();
+        GCHandle gchnd = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+        DataView dataview = new DataView(gchnd.AddrOfPinnedObject(), buffer.Length);
+
+        if (dataview.GetUInt32() != FontAtlas.SERIALIZED_SIGNATURE) {
+            Logger.Error("fontatlas_deserialize_atlas() invalid signature");
+            return null;
+        }
+        if (dataview.GetUInt32() != FontAtlas.SERIALIZED_VERSION) {
+            Logger.Error("fontatlas_deserialize_atlas() unsupported data version");
+            return null;
+        }
+        if (dataview.GetUInt64() != this.font_xxhash) {
+            Logger.Error("fontatlas_deserialize_atlas() hash missmatch");
+            return null;
+        }
+        if (dataview.GetBool() != FontAtlas.sdf_enabled) {
+            Logger.Error("fontatlas_deserialize_atlas() sdf missmatch");
+            return null;
+        }
+        if (dataview.GetUInt16() != expected_font_height) {
+            Logger.Error("fontatlas_deserialize_atlas() unexpected height");
+            return null;
+        }
+        if (dataview.GetUInt16() != expected_revision) {
+            Logger.Error("fontatlas_deserialize_atlas() unexpected revision");
+            return null;
+        }
+
+        charmap.char_array_size = dataview.GetInt32();
+        charmap.texture_width = dataview.GetUInt16();
+        charmap.texture_height = dataview.GetUInt16();
+        charmap.texture_byte_size = dataview.GetUInt32();
+        charmap.ascender = dataview.GetFloat32();
+        charmap.line_height = dataview.GetInt16();
+
+        if (charmap.char_array_size > 0) {
+            charmap.char_array = new FontCharData[charmap.char_array_size];
+        }
+        for (int i = 0 ; i < charmap.char_array_size ; i++) {
+            FontCharData chardata = charmap.char_array[i] = new FontCharData();
+
+            chardata.codepoint = dataview.GetUInt32();
+            chardata.offset_x = dataview.GetInt16();
+            chardata.offset_y = dataview.GetInt16();
+            chardata.advancex = dataview.GetInt16();
+            chardata.advancey = dataview.GetInt16();
+            chardata.width = dataview.GetUInt16();
+            chardata.height = dataview.GetUInt16();
+            chardata.kernings_size = dataview.GetInt32();
+            chardata.has_atlas_entry = dataview.GetBool();
+
+            chardata.atlas_entry.x = dataview.GetUInt16();
+            chardata.atlas_entry.y = dataview.GetUInt16();
+
+            if (chardata.kernings_size > 0) {
+                chardata.kernings = new FontCharDataKerning[chardata.kernings_size];
+            }
+            for (int j = 0 ; j < chardata.kernings_size ; j++) {
+                ref FontCharDataKerning kerning = ref chardata.kernings[j];
+
+                kerning.codepoint = dataview.GetUInt32();
+                kerning.x = dataview.GetInt32();
+            }
+        }
+
+        charmap.texture = dataview.ReadData(charmap.texture_byte_size);
+
+        gchnd.Free();
+        return charmap;
+    }
+
+    public ulong Xxhash() {
+        return this.font_xxhash;
+    }
 
     public static string GetVersion() {
         unsafe {
@@ -554,6 +685,206 @@ L_build_map:
 
             return $"{amajor}.{aminor}.{apatch}";
         }
+    }
+
+
+    private unsafe struct DataView {
+        void* ptr_start;
+        void* ptr_end;
+        public int size;
+
+
+        public DataView(nint buffer, int length) {
+            this.ptr_start = (byte*)buffer;
+            this.ptr_end = (byte*)this.ptr_start + length;
+            this.size = 0;
+        }
+
+        public DataView(int length) {
+            this.ptr_start = null;
+            this.ptr_end = (void*)(nint)length;
+            this.size = 0;
+        }
+
+
+        public void SetBool(bool value) {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            byte* ptr = (byte*)ptr_start;
+            if (ptr != null) {
+                *ptr++ = (byte)(value ? 1 : 0);
+                ptr_start = ptr;
+            }
+            this.size += sizeof(byte);
+        }
+
+        public void SetFloat32(float value) {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            float* ptr = (float*)ptr_start;
+            if (ptr != null) {
+                *ptr++ = value;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(float);
+        }
+
+        public void SetUInt64(ulong value) {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            ulong* ptr = (ulong*)ptr_start;
+            if (ptr != null) {
+                *ptr++ = value;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(ulong);
+        }
+
+        public void SetUInt16(ushort value) {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            ushort* ptr = (ushort*)ptr_start;
+            if (ptr != null) {
+                *ptr++ = value;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(ushort);
+        }
+
+        public void SetInt16(short value) {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            short* ptr = (short*)ptr_start;
+            if (ptr != null) {
+                *ptr++ = value;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(short);
+        }
+
+        public void SetUInt32(uint value) {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            uint* ptr = (uint*)ptr_start;
+            if (ptr != null) {
+                *ptr++ = value;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(uint);
+        }
+
+        public void SetInt32(int value) {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            int* ptr = (int*)ptr_start;
+            if (ptr != null) {
+                *ptr++ = value;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(int);
+        }
+
+        public void WriteData(nint data_ptr, uint length) {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            byte* ptr = (byte*)ptr_start;
+            if (ptr != null) {
+                NativeMemory.Copy((void*)data_ptr, ptr, length);
+                ptr_start = ptr + length;
+            }
+            this.size += (int)length;
+        }
+
+
+        public bool GetBool() {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            byte value = default;
+            byte* ptr = (byte*)ptr_start;
+            if (ptr != null) {
+                value = *ptr++;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(byte);
+            return value != 0;
+        }
+
+        public float GetFloat32() {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            float value = default;
+            float* ptr = (float*)ptr_start;
+            if (ptr != null) {
+                value = *ptr++;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(float);
+            return value;
+        }
+
+        public ulong GetUInt64() {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            ulong value = default;
+            ulong* ptr = (ulong*)ptr_start;
+            if (ptr != null) {
+                value = *ptr++;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(ulong);
+            return value;
+        }
+
+        public ushort GetUInt16() {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            ushort value = default;
+            ushort* ptr = (ushort*)ptr_start;
+            if (ptr != null) {
+                value = *ptr++;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(ushort);
+            return value;
+        }
+
+        public short GetInt16() {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            short value = default;
+            short* ptr = (short*)ptr_start;
+            if (ptr != null) {
+                value = *ptr++;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(short);
+            return value;
+        }
+
+        public uint GetUInt32() {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            uint value = default;
+            uint* ptr = (uint*)ptr_start;
+            if (ptr != null) {
+                value = *ptr++;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(uint);
+            return value;
+        }
+
+        public int GetInt32() {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            int value = default;
+            int* ptr = (int*)ptr_start;
+            if (ptr != null) {
+                value = *ptr++;
+                ptr_start = ptr;
+            }
+            this.size += sizeof(int);
+            return value;
+        }
+
+        public nint ReadData(uint length) {
+            if (ptr_start >= ptr_end) throw new IndexOutOfRangeException();
+            nint value = default;
+            byte* ptr = (byte*)ptr_start;
+            if (ptr != null) {
+                value = (nint)NativeMemory.Alloc(length);
+                NativeMemory.Copy(ptr, (void*)value, length);
+                ptr_start = ptr + length;
+            }
+            this.size += (int)length;
+            return value;
+        }
+
     }
 
 }

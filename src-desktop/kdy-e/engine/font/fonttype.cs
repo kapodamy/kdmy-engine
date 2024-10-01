@@ -22,6 +22,7 @@ public class FontType : IFont {
     private const byte GLYPHS_GAP = 4;// space between glyphs in pixels
 #endif
     private const float FAKE_SPACE = 0.9f;// 90% of the height
+    private const ushort CACHE_REVISION = 0;
 
 
     private static Map<FontType> POOL = new Map<FontType>();
@@ -570,7 +571,7 @@ L_find_unmaped_codepoints:
         return this.fontatlas == null;
     }
 
-    private FontCharMap InternalCreateFontcharmap(uint[] characters_map, byte glyphs_height, byte glyphs_gap) {
+    private FontCharMap InternalCreateFontcharmap(uint[] characters_map, byte glyphs_height, byte glyphs_gap, bool is_outline) {
         FontCharMap fontcharmap = null;
 
 #if SDF_FONT
@@ -584,9 +585,19 @@ L_find_unmaped_codepoints:
                 glyphs_height, glyphs_gap, characters_map
             );
         } else {
-            fontcharmap = this.fontatlas.AtlasBuildComplete(
-                glyphs_height, glyphs_gap
+            string cache_suffix = is_outline ? "_outline" : "_common";
+
+            fontcharmap = FontCache.Load(
+                this.fontatlas, FontType.GLYPHS_HEIGHT, FontType.CACHE_REVISION, cache_suffix
             );
+            if (fontcharmap == null) {
+                fontcharmap = this.fontatlas.AtlasBuildComplete(
+                    glyphs_height, glyphs_gap
+                );
+                FontCache.Store(
+                    this.fontatlas, fontcharmap, FontType.GLYPHS_HEIGHT, FontType.CACHE_REVISION, cache_suffix
+                );
+            }
         }
 
         mutex.Unlock(FontType.fontatlas_mutex);
@@ -625,10 +636,6 @@ L_find_unmaped_codepoints:
 
         gl.bindTexture(gl.TEXTURE_2D, WebGLTexture.Null);
 
-        // FIXME: calling this method also deallocates the vram texture, �is this a gpu driver bug?
-        // now deallocate texture data
-        //fontcharmap.DestroyTextureOnly();
-
         Texture tex = Texture.InitFromRAW(
             texture, (int)fontcharmap.texture_byte_size, true,
             fontcharmap.texture_width, fontcharmap.texture_height,
@@ -662,12 +669,12 @@ L_find_unmaped_codepoints:
     }
 
     private void InternalCreateAtlas(ref FCAtlas atlas, uint[] codepoints) {
-        FontCharMap fontcharmap = InternalCreateFontcharmap(codepoints, FontType.GLYPHS_HEIGHT, FontType.GLYPHS_GAP);
+        FontCharMap fontcharmap = InternalCreateFontcharmap(codepoints, FontType.GLYPHS_HEIGHT, FontType.GLYPHS_GAP, false);
         Texture texture = FontType.InternalUploadTexture(fontcharmap);
 
 #if SDF_FONT
         if (fontcharmap != null) {
-            FontCharMap fontcharmap_outline = InternalCreateFontcharmap(codepoints, FontType.GLYPHS_OUTLINE_HEIGHT, FontType.GLYPHS_OUTLINE_GAP);
+            FontCharMap fontcharmap_outline = InternalCreateFontcharmap(codepoints, FontType.GLYPHS_OUTLINE_HEIGHT, FontType.GLYPHS_OUTLINE_GAP, true);
             Texture texture_outline = FontType.InternalUploadTexture(fontcharmap_outline);
 
             if (fontcharmap_outline == null) {
