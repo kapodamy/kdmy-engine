@@ -9,6 +9,9 @@
 #include "math2d.h"
 
 
+#define DDRKEYMON_PERIODIC_MS 4 // 4ms
+
+
 typedef struct {
     bool is_visible;
     GamepadButtons button_flags;
@@ -25,6 +28,10 @@ struct DDRKeymon_s {
     volatile bool thd_running;
     Gamepad gamepad;
 };
+
+
+// this timestamp is used to avoid duplicate calls to "controller_dvr->periodic()" callback
+static uint64_t ddrkeymon_next_periodic_timestamp = 0;
 
 
 static void ddrkeymon_internal_append_key(DDRKeymon ddrkeymon, uint64_t timestamp, int32_t strum_id, int32_t button_id, GamepadButtons holding);
@@ -257,12 +264,15 @@ static void* ddrkeymon_internal_thd(void* param) {
         }
 
         //
-        // this callback is normally called every vblank (~16.6ms), but force
-        // to call it every ~5ms. Note: still called every vblank
+        // This callback is normally called every vblank (~16.6ms), but force
+        // to call it every ~4ms. Note: still called every vblank
         //
-        cont_dvr->periodic(cont_dvr);
+        if (timestamp >= ddrkeymon_next_periodic_timestamp) {
+            ddrkeymon_next_periodic_timestamp = timestamp + DDRKEYMON_PERIODIC_MS;
+            cont_dvr->periodic(cont_dvr);
+        }
 
-        thd_sleep(5);
+        thd_sleep(DDRKEYMON_PERIODIC_MS);
     }
 
     return NULL;
