@@ -72,7 +72,7 @@
 		<Group name="holder-boolean" visible="false">
 			<Sprite rgb="0xECBE23">
 				<Action>
-					<Location x="230" y="340" z="101" />
+					<Location x="230" y="348" z="101" />
 					<Size width="250" height="58" />
 				</Action>
 				<Action name="bool-true">
@@ -98,7 +98,7 @@
 			</Text>
 			<Sprite rgb="0xECBE23">
 				<Action>
-					<Location x="480" y="340" z="101" />
+					<Location x="480" y="348" z="101" />
 					<Size width="240" height="58" />
 				</Action>
 				<Action name="bool-true">
@@ -141,7 +141,7 @@
 			</Sprite>
 			<Text name="number-value"  fontName="values" fontSize="48" rgb="0xFFFFFF">
 				<Action>
-					<Location x="0" y="348" z="102"/>
+					<Location x="0" y="335" z="102"/>
 					<MaxSize width="960" height="60" />
 					<Properties alignHorizontal="center" alignVertical="center" />
 					<!-- <String>0123456789</String> -->
