@@ -95,6 +95,7 @@ public class PVRContext {
         if (Engine.Externals.WebGL2RenderingContext.KDY_draw_calls_count > 0) {
             // swap the buffers if something was drawn (avoid screen flickering)
             Glfw.SwapBuffers(this.nativeWindow);
+            this.webopengl.gl.clear(this.webopengl.gl.COLOR_BUFFER_BIT);
 
             Engine.Externals.WebGL2RenderingContext.KDY_draw_calls_count = 0;
         }
