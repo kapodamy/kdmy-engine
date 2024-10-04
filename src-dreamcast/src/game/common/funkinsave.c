@@ -5,8 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <dc/biosfont.h>
 #include <dc/maple.h>
+#include <dc/maple/vmu.h>
+#include <dc/vmu_fb.h>
 #include <dc/vmu_pkg.h>
+#include <dc/vmufs.h>
 #include <kos/fs.h>
 
 #include "dataview.h"
@@ -151,6 +155,7 @@ static const char* funkinsave_internal_read_string(DataView* dataview);
 static uint32_t funkinsave_internal_calc_crc16(uint8_t* buffer, size_t size, uint32_t crc);
 static int32_t funkinsave_internal_name_index(LinkedList linkedlist, const char* name);
 static void* funkinsave_internal_alloc(size_t val_size, const void* val, ssize_t str_offst, ssize_t xtr_offst, size_t xtr_size);
+static void funkinsave_internal_lcd_manage(bool clear_or_show);
 
 
 void __attribute__((constructor)) __ctor_funkinsave() {
@@ -855,8 +860,14 @@ bool funkinsave_has_savedata_in_vmu(int8_t port, int8_t unit) {
 
 
 void funkinsave_set_vmu(int8_t port, int8_t unit) {
+    // display default logo, normally a smile
+    funkinsave_internal_lcd_manage(true);
+
     funkinsave.maple_port = port;
     funkinsave.maple_unit = unit;
+
+    // display funkin logo in the VMU LCD
+    funkinsave_internal_lcd_manage(false);
 }
 
 bool funkinsave_is_vmu_missing() {
@@ -867,6 +878,9 @@ bool funkinsave_is_vmu_missing() {
 void funkinsave_pick_first_available_vmu() {
     bool pick_first_device = true;
     int32_t found = 0;
+
+    // display default logo, normally a smile
+    funkinsave_internal_lcd_manage(true);
 
     for (int i = 0, count = maple_enum_count(); i < count; i++) {
         maple_device_t* dev = maple_enum_type(i, MAPLE_FUNC_MEMCARD);
@@ -885,6 +899,9 @@ void funkinsave_pick_first_available_vmu() {
         // more than 1 virtual saveslots found, dont pick an vmu
         funkinsave.maple_port = -1;
         funkinsave.maple_unit = -1;
+    } else {
+        // display funkin logo in the VMU LCD
+        funkinsave_internal_lcd_manage(false);
     }
 }
 
@@ -1063,4 +1080,51 @@ static void* funkinsave_internal_alloc(size_t val_size, const void* val, ssize_t
     }
 
     return entry;
+}
+
+static void funkinsave_internal_lcd_manage(bool clear_or_show) {
+    if (funkinsave.maple_port < 0 || funkinsave.maple_port >= MAPLE_PORT_COUNT) return;
+    if (funkinsave.maple_unit < 0 || funkinsave.maple_unit >= MAPLE_UNIT_COUNT) return;
+
+    maple_device_t* dev = maple_enum_dev(funkinsave.maple_port, funkinsave.maple_unit);
+    if (!dev || !(dev->info.functions & MAPLE_FUNC_LCD)) return;
+
+    if (clear_or_show) {
+        uint8_t icon_shape;
+
+        //
+        // For some reason vmu_get_icon_shape() is not implemented
+        // in KalistiOS but the icon can be readed anyway
+        //
+#if USE_VMU_GET_ICON_SHAPE
+        if (vmu_get_icon_shape(dev, &icon_shape) == 0) {
+#else
+        vmu_root_t root;
+        if (vmufs_root_read(dev, &root) == 0) {
+            icon_shape = root.icon_shape + BFONT_ICON_VMUICON;
+#endif
+            vmufb_t canvas = {.data = {0}};
+
+            uint8_t* bitmap = bfont_find_icon(icon_shape);
+            if (bitmap) {
+                vmufb_paint_area(&canvas, 8, 0, BFONT_ICON_DIMEN, BFONT_ICON_DIMEN, (const char*)bitmap);
+            }
+            vmufb_present(&canvas, dev);
+        }
+        return;
+    }
+
+    const vmufb_t funkin_logo = {
+        .data = {
+            0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+            0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x10000000,
+            0xb1cb0700, 0x380010e8, 0x2037cb74, 0x4544c001, 0x00028024, 0x40c46842,
+            0x48420004, 0x1f0860a8, 0xc02243fa, 0x44092705, 0x070780a1, 0x80a04009,
+            0x4c080901, 0x31018094, 0x40487c12, 0x3c120802, 0x10042048, 0x10440c11,
+            0x091d1008, 0xb00bf0cd, 0xf0df9b3d, 0xbea3fb0f, 0x0b046078, 0x4030e0c0,
+            0x40400400, 0x00000020, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+            0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+        }
+    };
+    vmufb_present(&funkin_logo, dev);
 }
