@@ -15,6 +15,7 @@ Engine specific APIs
   * Antialiasing control, for use in pixelated stages.
   * Actions, partial scripted layout modifications.
   * Video playback.
+  * GLSL shader support.
 * Non-scripted animations
   * Also written in XML.
   * Frame-based animations:

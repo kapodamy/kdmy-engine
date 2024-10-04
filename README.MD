@@ -1,11 +1,11 @@
 
 # KDMY Engine: Friday Night Funkin'
 
-![dreamcast](https://img.shields.io/badge/dreamcast%20build-failing-red) ![C#](https://img.shields.io/badge/contains-C%23-informational) ![JS](https://img.shields.io/badge/contains-Javascript-informational) ![C](https://img.shields.io/badge/contains-C-informational) ![haxe](https://img.shields.io/badge/contains%20haxe%3F-haxen't-inactive) [![buymeacoffee](https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/kapodamy)
+![dreamcast](https://img.shields.io/badge/dreamcast%20build-success-green) ![C#](https://img.shields.io/badge/contains-C%23-informational) ![JS](https://img.shields.io/badge/contains-Javascript-informational) ![C](https://img.shields.io/badge/contains-C-informational) ![haxe](https://img.shields.io/badge/contains%20haxe%3F-haxen't-inactive) [![buymeacoffee](https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/kapodamy)
 
-kdy-e is an engine for FNF, written from scratch in javascript|C|C# (no haxe here). It was build specifically for the Sega Dreamcast, it was . . .
+kdy-e is an engine for FNF, written from scratch in javascript|C|C# (no haxe here). Created specifically for the Sega Dreamcast
 
-![at last 2](./test%20files/kdmy%20pics/at%20last%202.PNG)
+![hola mundo](./test%20files/kdmy%20pics/savedata.PNG)
 
 ## Features
 
@@ -60,8 +60,7 @@ See [BUILDING.MD](BUILDING.MD "BUILDING.MD") and [INSTALLING.MD](INSTALLING.MD "
 
 ## A brief history
 
-The idea was to bring the game to the console but due to the lack of an emulator without the ability to debug homebrew, the project was nearly impossible. Knowing this limitation, the engine was developed in javascript and the source code was written in "C style" to later transpile it once its development was completed. Even so, it was necessary to write specific code for the console (audio and graphics) and in the end the development was canceled.
-Currently, the engine is ported to C# to make it playable with the exception of some low level libraries which are written in C.
+The idea was to bring the game to the dreamcast, and it works.
 
 ## More to know
 
