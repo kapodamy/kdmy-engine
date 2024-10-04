@@ -20,7 +20,7 @@ public static class GameMain {
 
     // this file contains all shared data across the game
     public const string ENGINE_NAME = "kdmy-engine";
-    public const string ENGINE_VERSION = "0.60";
+    public const string ENGINE_VERSION = "0.62";
 
     /**
      * The background music used in all menus, inherited from introscreen
@@ -51,6 +51,8 @@ public static class GameMain {
         Logger.Log($"{ENGINE_NAME} {ENGINE_VERSION}");
         Logger.Log($"Console: {osinfo.machine}");
         Logger.Log($"OS: {osinfo.version}\r\n");
+
+        GameMain.HelperDrawLoadingScreen();
 
         Logger.Info("preloading fonts: vcr, pixel and alphabet. This will take a while...");
         new FontHolder("/assets/common/font/vcr.ttf", null, false);

@@ -46,24 +46,17 @@
 
 /* These macros tell KOS how to initialize itself. All of this initialization
    happens before main() gets called, and the shutdown happens afterwards. So
-   you need to set any flags you want here. Here are some possibilities:
-
-   INIT_NONE         -- don't do any auto init
-   INIT_IRQ          -- Enable IRQs (DO NOT ENABLE, breaks video playback)
-   INIT_THD_PREEMPT  -- Enable pre-emptive threading (already in default mode)
-   INIT_NET          -- Enable networking (doesn't imply lwIP!)
-   INIT_MALLOCSTATS  -- Enable a call to malloc_stats() right before shutdown
-   INIT_NO_DCLOAD    -- Disable dcload
+   you need to set any flags you want here.
 
    You can OR any or all of those together. If you want to start out with
    the current KOS defaults, use INIT_DEFAULT (or leave void * __kos_romdiske it out entirely). */
 KOS_INIT_FLAGS(
-    /*INIT_IRQ | */ INIT_CDROM | INIT_CONTROLLER | INIT_VMU | INIT_PURUPURU | INIT_NO_DCLOAD | INIT_NO_SHUTDOWN
+    INIT_IRQ | INIT_CDROM | INIT_CONTROLLER | INIT_VMU | INIT_NO_DCLOAD | INIT_NO_SHUTDOWN
 );
 
 /* Declaration of the romdisk
    You can access the files inside it by using the "/rd" mounting point. */
-const void* __kos_romdisk = KOS_INIT_ROMDISK_NONE;
+// const void* __kos_romdisk = KOS_INIT_ROMDISK_NONE;
 
 
 typedef struct {
@@ -77,7 +70,7 @@ typedef struct {
 //
 
 const char* ENGINE_NAME = "kdmy-engine";
-const char* ENGINE_VERSION = "0.60";
+const char* ENGINE_VERSION = "0.62";
 
 /**
  * The background music used in all menus, inherited from introscreen
@@ -321,7 +314,7 @@ MenuManifest main_helper_init_menumanifest_for_dreamcast(const char* src) {
         else
             return NULL;
     }
-    
+
     int32_t idx = string_last_index_of_char(src, '.');
     if (idx < 0) idx = (int32_t)strlen(src);
 
