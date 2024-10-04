@@ -17,6 +17,7 @@
 #define PVRCTX_STATE_STACK_LENGTH 16
 #define PVRCTX_STATE_VERTEX_BUFFER_SIZE (512 * 1024) // 512KiB
 #define PVRCTX_Z_INDEX_STEPS 1.0f
+#define PVRCTX_DMA_ENABLED 1// workaround for sq functions deadlock
 
 typedef struct {
     alignas(32) SH4Matrix matrix;

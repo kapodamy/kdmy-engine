@@ -15,6 +15,7 @@
 #include "externals/luascript_platform.h"
 #include "kdt.h"
 #include "logger.h"
+#include "malloc_utils.h"
 #include "math2d.h"
 #include "pvrcontext.h"
 
@@ -81,8 +82,8 @@ void pvr_context_init() {
         // Vertex buffer size
         .vertex_buf_size = PVRCTX_STATE_VERTEX_BUFFER_SIZE,
 
-        // No DMA
-        .dma_enabled = 0,
+        // ¿Enable DMA?
+        .dma_enabled = PVRCTX_DMA_ENABLED,
 
         // No FSAA
         .fsaa_enabled = 0,
@@ -93,6 +94,13 @@ void pvr_context_init() {
         // Extra OPBs
         .opb_overflow_count = 0
     });
+
+#if PVRCTX_DMA_ENABLED
+    if (pvr_vertex_dma_enabled() != 0) {
+        void* buffer = memalign_chk(32, PVRCTX_STATE_VERTEX_BUFFER_SIZE * 2);
+        pvr_set_vertbuf(PVR_LIST_TR_POLY, buffer, PVRCTX_STATE_VERTEX_BUFFER_SIZE * 2);
+    }
+#endif
 
 #ifndef INIT_NO_VID_EMPTY
     pvr_context_clear_screen(&pvr_context, PVRCONTEXT_CLEAR_COLOR);
