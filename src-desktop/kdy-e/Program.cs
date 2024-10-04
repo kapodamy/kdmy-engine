@@ -122,6 +122,11 @@ class Program {
                     if (is_last_argument) continue;
                     if (!Int32.TryParse(args[next_argument], out EngineSettings.saveslots)) EngineSettings.saveslots = 1;
                     break;
+                case "-indexlisting":
+                    Logger.Log("Creating index listing indexlisting.json file... ");
+                    IndexListingCreator.SerializeDirectory(EngineSettings.EngineDir);
+                    Logger.Log("Done");
+                    return 1;
                 case "-h":
                 case "-help":
                 case "--help":
@@ -130,7 +135,7 @@ class Program {
                     Console.WriteLine(
                         $"{GameMain.ENGINE_NAME} {GameMain.ENGINE_VERSION}\r\n" +
                         "\r\n" +
-                        $"    {args[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionloader] [-layoutdebugtriggercalls]\r\n" +
+                        $"    {args[0]} [-help] [-saveslots #] [-expansion FOLDER_NAME] [-style WEEK_NAME] [-fullscreen] [-nowidescreen] [-console] [-expansionloader] [-layoutdebugtriggercalls] [-indexlisting]\r\n" +
                         "\r\n" +
                         "Options:\r\n" +
                         "    -help                      Show this help message\r\n" +
@@ -142,6 +147,7 @@ class Program {
                         "    -console                   Opens a console window for all engine and lua scripts messages\r\n" +
                         "    -expansionloader           Opens a window to choose the expansion to use\r\n" +
                         "    -layoutdebugtriggercalls   Prints in console all layout_triger_***() calls\r\n" +
+                        "    -indexlisting              Creates a JSON file listing all files and directories in '/assets' and '/expansions', which is necessary for javascript version\r\n" +
                         "\r\n" +
                         "Notes:\r\n" +
                         "  -nowidescreen uses the 640x480 window size, otherwise defaults to 950x540. Anyways, the window still can be resized.\r\n" +
@@ -158,7 +164,6 @@ class Program {
             }
             i++;
         }
-
 
         // run in a separate thread because the FileSystem is not available yet
         Thread loader = new Thread(delegate () {

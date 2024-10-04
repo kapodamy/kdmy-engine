@@ -1,5 +1,18 @@
 "use strict";
 
+/**
+ * @typedef {object} IndexListingEntry
+ * @property {string} name
+ * @property {'file'|'directory'|'unknown'} type
+ * @property {number} fileLength
+ * @property {number} directoryIndex
+**/
+/**
+ * @typedef {object} IndexListing
+ * @property {IndexListingEntry[][]} directories
+ * @property {number} rootIndex
+**/
+
 const IO_REQUEST_TEXT = 0;
 const IO_REQUEST_BLOB = 1;
 const IO_REQUEST_BITMAP = 2;
@@ -16,6 +29,10 @@ const IO_WEBKIT_DETECTED =
     ) && location.protocol == "file:";
 
 var __fetch = null;
+
+/**@type {IndexListing}*/
+var io_indexlisting = null;
+var io_indexlisting_loaded = false;
 
 
 class KDMYEngineIOError extends Error {
@@ -211,6 +228,10 @@ async function io_enumerate_folder(absolute_url) {
 
 async function io_native_file_size(absolute_file_url) {
     try {
+        if (io_indexlisting || await io_native_indexListing_file_size()) {
+            return io_native_indexListing_file_size(absolute_file_url);
+        }
+
         let res = await io_background_load_resource(absolute_file_url, IO_REQUEST_HEAD);
         if (!res.ok) return -1;
 
@@ -227,6 +248,10 @@ async function io_native_file_size(absolute_file_url) {
 
 async function io_native_resource_exists(absolute_url, expect_file, expect_folder) {
     try {
+        if (io_indexlisting || await io_native_indexListing_load()) {
+            return io_native_indexListing_exists(absolute_url, expect_file, expect_folder);
+        }
+
         let res = await io_background_load_resource(absolute_url, IO_REQUEST_HEAD);
         if (!res.ok) return false;
 
@@ -254,7 +279,9 @@ async function io_native_resource_exists(absolute_url, expect_file, expect_folde
 }
 
 async function io_native_enumerate_folder(absolute_url) {
-    if (navigator.userAgent.includes("Gecko/")) {
+    if (io_indexlisting || await io_native_indexListing_load()) {
+        return io_native_indexListing_enumerate_folder(absolute_url);
+    } else if (navigator.userAgent.includes("Gecko/")) {
         let text = await io_background_load_resource(absolute_url, IO_REQUEST_TEXT);
         if (!text) return null;
         return io_native_parse_httpIndexFormat(text);
@@ -299,6 +326,7 @@ async function io_native_get_path(absolute_url, is_file, is_folder, resolve_expa
 
 
 function io_native_parse_httpIndexFormat(/**@type {string}*/content) {
+    /**@type {Array<{ name: string, length: number, is_file: boolean, is_folder: boolean }>} */
     let parsed_entries = new Array();
 
     let lines = content.split("\n");
@@ -378,6 +406,7 @@ function io_native_parse_webkit_indexDirectory(/**@type {string}*/html) {
     //const INDEX_DATE_MODIFIED = 5;
     //const INDEX_DATE_MODIFIED_STRING = 6;
 
+    /**@type {Array<{ name: string, length: number, is_file: boolean, is_folder: boolean }>} */
     let parsed_entries = new Array();
     let doc = (new DOMParser()).parseFromString(html, "text/html");
 
@@ -405,5 +434,122 @@ function io_native_parse_webkit_indexDirectory(/**@type {string}*/html) {
     }
 
     return parsed_entries;
+}
+
+
+async function io_native_indexListing_load() {
+    if (io_indexlisting_loaded) return;
+
+    let indexlisting_src = new URL("indexlisting.json", IO_BASE_URL);
+    console.log(`io_native_enumerate_folder() attemping to read ${indexlisting_src}`);
+    console.info("io_native_enumerate_folder() hint: to update/create indexlisting.json file " +
+        'run "kdy_e.exe -indexlisting" or "funkin.exe -indexlisting"'
+    );
+
+    io_indexlisting_loaded = true;
+    io_indexlisting = await io_background_load_resource(indexlisting_src, IO_REQUEST_JSON);
+
+    if (io_indexlisting && io_indexlisting.directories?.length > 0) {
+        console.log(`io_native_enumerate_folder() loaded with ${io_indexlisting.directories.length} entries`);
+        return true;
+    }
+
+    console.log(`io_native_enumerate_folder() invalid indexlisting.json file`);
+    return false;
+}
+
+function io_native_indexListing_enumerate_folder(/**@type {string}*/absolute_url) {
+    absolute_url = absolute_url.substring(IO_BASE_URL.length);
+
+    let subs = absolute_url.split(FS_CHAR_SEPARATOR).filter(sub => sub.length > 0);
+    let current = io_indexlisting.directories[io_indexlisting.rootIndex];
+
+    for (let sub of subs) {
+        L_search: {
+            for (let cur of current) {
+                if (cur.type != "directory") continue;
+                if (cur.name.localeCompare(sub, undefined, { sensitivity: "accent" }) != 0) continue;
+
+                current = io_indexlisting.directories[cur.directoryIndex];
+                break L_search;
+            }
+
+            // subdirectory not found
+            return null;
+        }
+    }
+
+    /**@type {Array<{ name: string, length: number, is_file: boolean, is_folder: boolean }>} */
+    let entries = new Array(current.length);
+
+    // process entries
+    for (let i = 0; i < entries.length; i++) {
+        let entry = current[i];
+
+        entries[i] = {
+            name: entry.name,
+            length: entry.type == "file" ? entry.fileLength : -1,
+            is_file: entry.type == "file",
+            is_folder: entry.type == "directory"
+        };
+    }
+
+    return entries;
+}
+
+function io_native_indexListing_exists(/**@type {string}*/absolute_url, is_file, is_folder) {
+    absolute_url = absolute_url.substring(IO_BASE_URL.length);
+
+    let subs = absolute_url.split(FS_CHAR_SEPARATOR).filter(sub => sub.length > 0);
+    let current = io_indexlisting.directories[io_indexlisting.rootIndex];
+    let last = subs.length - 1;
+
+    for (let i = 0; i < subs.length; i++) {
+        L_search: {
+            for (let cur of current) {
+                if (cur.name.localeCompare(subs[i], undefined, { sensitivity: "accent" }) != 0) {
+                    continue;
+                } else if (i == last) {
+                    return (cur.type == "file" && is_file) || (cur.type == "directory" && is_folder);
+                } else if (cur.type == "directory") {
+                    current = io_indexlisting.directories[cur.directoryIndex];
+                    break L_search;
+                }
+            }
+
+            // subdirectory not found
+            break;
+        }
+    }
+
+    return false;
+}
+
+function io_native_indexListing_file_size(/**@type {string}*/absolute_url) {
+    absolute_url = absolute_url.substring(IO_BASE_URL.length);
+
+    let subs = absolute_url.split(FS_CHAR_SEPARATOR).filter(sub => sub.length > 0);
+    let current = io_indexlisting.directories[io_indexlisting.rootIndex];
+    let last = subs.length - 1;
+
+    for (let i = 0; i < subs.length; i++) {
+        L_search: {
+            for (let cur of current) {
+                if (cur.name.localeCompare(subs[i], undefined, { sensitivity: "accent" }) != 0) {
+                    continue;
+                } else if (i == last) {
+                    return cur.type == "file" ? cur.fileLength : -2;
+                } else if (cur.type == "directory") {
+                    current = io_indexlisting.directories[cur.directoryIndex];
+                    break L_search;
+                }
+            }
+
+            // subdirectory not found
+            break;
+        }
+    }
+
+    return -1;
 }
 
