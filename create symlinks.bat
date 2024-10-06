@@ -32,13 +32,13 @@ echo.
 setlocal enableextensions
 pushd  "%~dp0"
 
-rmdir /Q src-dreamcast\output\cd_root\assets
-rmdir /Q src-javascript\assets
-rmdir /Q src-javascript\expansions
-rmdir /Q src-desktop\kdy-e\bin\x64\Debug\assets
-rmdir /Q src-desktop\kdy-e\bin\x64\Debug\expansions
-rmdir /Q fontatlas-javascript\src
-rmdir /Q fontatlas-javascript\include
+rmdir /Q /S src-dreamcast\output\cd_root\assets
+rmdir /Q /S src-javascript\assets
+rmdir /Q /S src-javascript\expansions
+rmdir /Q /S src-desktop\kdy-e\bin\x64\Debug\assets
+rmdir /Q /S src-desktop\kdy-e\bin\x64\Debug\expansions
+rmdir /Q /S fontatlas-javascript\src
+rmdir /Q /S fontatlas-javascript\include
 
 echo.
 echo.
